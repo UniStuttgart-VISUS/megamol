@@ -11,7 +11,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   #find_package(Qhull REQUIRED)
 
-
   if(WIN32)
     set(QHULL_IMPORT_LIB "lib/qhull.lib")
     set(QHULL_LIB "bin/qhull.dll")
@@ -21,7 +20,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     set(QUHULL_LIB "lib/libqhull.so")
   endif()
 
-  add_external_project(qhull_ext
+  add_external_project(qhull SHARED
     GIT_REPOSITORY https://github.com/qhull/qhull.git
     GIT_TAG "v7.3.2"
     BUILD_BYPRODUCTS "<INSTALL_DIR>/${QHULL_IMPORT_LIB}"
@@ -29,20 +28,19 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     PATCH_COMMAND ${CMAKE_COMMAND} -E copy
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake/qhull/CMakeLists.txt"
       "<SOURCE_DIR>/CMakeLists.txt")
-  add_external_library(qhull SHARED
-    DEPENDS qhull_ext
+  add_external_library(qhull
     INCLUDE_DIR "include"
     IMPORT_LIBRARY ${QHULL_IMPORT_LIB}
     LIBRARY ${QHULL_LIB})
 
-  add_external_project(asmjit_ext
+  add_external_project(asmjit INTERFACE
     GIT_REPOSITORY https://github.com/asmjit/asmjit.git
+    BUILD_BYPRODUCTS ""
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
     TEST_COMMAND "")
-  add_external_library(asmjit INTERFACE
-    DEPENDS asmjit_ext
+  add_external_library(asmjit
     INCLUDE_DIR "src/asmjit_ext/")
     
   if(WIN32)
@@ -54,12 +52,13 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     set(BLEND2D_LIB "lib/libblend2d.so")
   endif()
 
-  add_external_project(blend2d_ext
+  external_get_property(asmjit SOURCE_DIR)
+  add_external_project(blend2d SHARED
     GIT_REPOSITORY https://github.com/blend2d/blend2d.git
     BUILD_BYPRODUCTS "<INSTALL_DIR>/${BLEND2D_IMPORT_LIB}"
-    CMAKE_ARGS -DASMJIT_DIR=${CMAKE_CURRENT_BINARY_DIR}/asmjit_ext-prefix/src/asmjit_ext)
-  add_external_library(blend2d SHARED
-    DEPENDS blend2d_ext asmjit_ext 
+    CMAKE_ARGS -DASMJIT_DIR=${SOURCE_DIR})
+  add_external_library(blend2d
+    DEPENDS asmjit
     INCLUDE_DIR "include"
     IMPORT_LIBRARY ${BLEND2D_IMPORT_LIB}
     LIBRARY ${BLEND2D_LIB})
@@ -111,8 +110,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
-  install_external(TARGETS qhull)
-  install_external(TARGETS blend2d)
+
   #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")

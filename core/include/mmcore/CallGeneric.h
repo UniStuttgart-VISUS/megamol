@@ -38,9 +38,6 @@ struct Spatial3DMetaData {
     megamol::core::BoundingBoxes_2 m_bboxs;
 };
 
-struct EmptyMetaData {
-};
-
 template <typename DataType, typename MetaDataType> class CallGeneric : public Call {
 public:
     using data_type = DataType;
