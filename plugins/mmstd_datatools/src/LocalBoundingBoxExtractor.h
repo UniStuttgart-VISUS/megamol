@@ -71,7 +71,7 @@ private:
     core::param::ParamSlot colorSlot;
 
     std::vector<geocalls::LinesDataCall::Lines> lines;
-    std::map<std::string, std::vector<float>> lineMap;
+    std::map<std::string, std::array<float,6>> lineMap;
     
     
     geocalls::CallTriMeshData::Mesh mesh;

@@ -13,7 +13,7 @@ LocalBoundingBoxExtractor::LocalBoundingBoxExtractor()
     , inDataSlot("inDataSlot","MPDC connection")
     , outLinesSlot("outLinesSlot","Line connection")
     , outMeshSlot("outMeshSlot","Mesh connection")
-    , colorSlot ("colorSlot", "Sets color of bounding box rendering") {
+    , colorSlot ("color", "Sets color of bounding box rendering") {
 
     this->outLinesSlot.SetCallback(geocalls::LinesDataCall::ClassName(), "GetData", &LocalBoundingBoxExtractor::getDataCallback);
     this->outLinesSlot.SetCallback(
@@ -67,14 +67,14 @@ bool LocalBoundingBoxExtractor::getDataCallback(megamol::core::Call& c) {
 
     typedef vislib::math::AbstractCuboid<float, float[6]> Super;
 
-    std::vector<float> lbf = { a.Left(), a.Bottom() ,a.Front()};
-    std::vector<float> lbb = {a.Left(), a.Bottom()  ,a.Back() };
-    std::vector<float> ltf = { a.Left(), a.Top()    ,a.Front()};
-    std::vector<float> ltb = {a.Left(), a.Top()     ,a.Back() };
-    std::vector<float> rbf = { a.Right(), a.Bottom(),a.Front()};
-    std::vector<float> rbb = {a.Right(), a.Bottom() ,a.Back() };
-    std::vector<float> rtf = { a.Right(), a.Top()   ,a.Front()};
-    std::vector<float> rtb = {a.Right(), a.Top()    ,a.Back() };
+    std::array<float, 3> lbf = {a.Left(), a.Bottom(), a.Front()};
+    std::array<float, 3> lbb = {a.Left(), a.Bottom(), a.Back()};
+    std::array<float, 3> ltf = {a.Left(), a.Top(), a.Front()};
+    std::array<float, 3> ltb = {a.Left(), a.Top(), a.Back()};
+    std::array<float, 3> rbf = {a.Right(), a.Bottom(), a.Front()};
+    std::array<float, 3> rbb = {a.Right(), a.Bottom(), a.Back()};
+    std::array<float, 3> rtf = {a.Right(), a.Top(), a.Front()};
+    std::array<float, 3> rtb = {a.Right(), a.Top(), a.Back()};
                                                     
     // set line data
     if (ldc != nullptr) {
@@ -83,32 +83,44 @@ bool LocalBoundingBoxExtractor::getDataCallback(megamol::core::Call& c) {
 
         // 12 combinations 
         lineMap.clear();
-        lineMap["l1"] = lbf;
-        lineMap["l1"].insert(lineMap["l1"].end(), rbf.begin(), rbf.end());
-        lineMap["l2"] = lbf;
-        lineMap["l2"].insert(lineMap["l2"].end(), ltf.begin(), ltf.end());
-        lineMap["l3"] = lbf;
-        lineMap["l3"].insert(lineMap["l3"].end(), lbb.begin(), lbb.end());
-        lineMap["l4"] = rtf;
-        lineMap["l4"].insert(lineMap["l4"].end(), rbf.begin(), rbf.end());
-        lineMap["l5"] = rtf;
-        lineMap["l5"].insert(lineMap["l5"].end(), ltf.begin(), ltf.end());
-        lineMap["l6"] = rtf;
-        lineMap["l6"].insert(lineMap["l6"].end(), rtb.begin(), rtb.end());
-        lineMap["l7"] = ltb;
-        lineMap["l7"].insert(lineMap["l7"].end(), ltf.begin(), ltf.end());
-        lineMap["l8"] = ltb;
-        lineMap["l8"].insert(lineMap["l8"].end(), rtb.begin(), rtb.end());
-        lineMap["l9"] = ltb;
-        lineMap["l9"].insert(lineMap["l9"].end(), lbb.begin(), lbb.end());
-        lineMap["l10"] = rbb;
-        lineMap["l10"].insert(lineMap["l10"].end(), lbb.begin(), lbb.end());
-        lineMap["l11"] = rbb;
-        lineMap["l11"].insert(lineMap["l11"].end(), rtb.begin(), rtb.end());
-        lineMap["l12"] = rbb;
-        lineMap["l12"].insert(lineMap["l12"].end(), rbf.begin(), rbf.end());
+        lineMap["l1"] = std::array<float, 6>();
+        lineMap["l2"] = std::array<float, 6>();
+        lineMap["l3"] = std::array<float, 6>();
+        lineMap["l4"] = std::array<float, 6>();
+        lineMap["l5"] = std::array<float, 6>();
+        lineMap["l6"] = std::array<float, 6>();
+        lineMap["l7"] = std::array<float, 6>();
+        lineMap["l8"] = std::array<float, 6>();
+        lineMap["l9"] = std::array<float, 6>();
+        lineMap["l10"] = std::array<float, 6>();
+        lineMap["l11"] = std::array<float, 6>();
+        lineMap["l12"] = std::array<float, 6>();
+        std::copy(lbf.begin(), lbf.end(), lineMap["l1"].begin());
+        std::copy(rbf.begin(), rbf.end(), lineMap["l1"].begin() + 3);
+        std::copy(lbf.begin(), lbf.end(), lineMap["l2"].begin());
+        std::copy(ltf.begin(), ltf.end(), lineMap["l2"].begin() + 3);
+        std::copy(lbf.begin(), lbf.end(), lineMap["l3"].begin());
+        std::copy(lbb.begin(), lbb.end(), lineMap["l3"].begin() + 3);
+        std::copy(rtf.begin(), rtf.end(), lineMap["l4"].begin());
+        std::copy(rbf.begin(), rbf.end(), lineMap["l4"].begin() + 3);
+        std::copy(rtf.begin(), rtf.end(), lineMap["l5"].begin());
+        std::copy(ltf.begin(), ltf.end(), lineMap["l5"].begin() + 3);
+        std::copy(rtf.begin(), rtf.end(), lineMap["l6"].begin());
+        std::copy(rtb.begin(), rtb.end(), lineMap["l6"].begin() + 3);
+        std::copy(ltb.begin(), ltb.end(), lineMap["l7"].begin());
+        std::copy(ltf.begin(), ltf.end(), lineMap["l7"].begin() + 3);
+        std::copy(ltb.begin(), ltb.end(), lineMap["l8"].begin());
+        std::copy(rtb.begin(), rtb.end(), lineMap["l8"].begin() + 3);
+        std::copy(ltb.begin(), ltb.end(), lineMap["l9"].begin());
+        std::copy(lbb.begin(), lbb.end(), lineMap["l9"].begin() + 3);
+        std::copy(rbb.begin(), rbb.end(), lineMap["l10"].begin());
+        std::copy(lbb.begin(), lbb.end(), lineMap["l10"].begin() + 3);
+        std::copy(rbb.begin(), rbb.end(), lineMap["l11"].begin());
+        std::copy(rtb.begin(), rtb.end(), lineMap["l11"].begin() + 3);
+        std::copy(rbb.begin(), rbb.end(), lineMap["l12"].begin());
+        std::copy(rbf.begin(), rbf.end(), lineMap["l12"].begin() + 3);
 
-        std::vector<unsigned char> rgba = { 
+        std::array<unsigned char,4> rgba = {
             static_cast<unsigned char>(this->colorSlot.Param<core::param::ColorParam>()->Value()[0] * 255),
             static_cast<unsigned char>(this->colorSlot.Param<core::param::ColorParam>()->Value()[1] * 255),
             static_cast<unsigned char>(this->colorSlot.Param<core::param::ColorParam>()->Value()[2] * 255),
