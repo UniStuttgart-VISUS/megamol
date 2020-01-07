@@ -77,7 +77,11 @@ void main()
     vertex = mix(center, vertex, alpha);
   }
 #endif
-
+  if (bitflag_test(flags[out_.itemID], fragmentTestMask, fragmentPassMask)) {
+    gl_ClipDistance[0] = 1.0;
+  } else {
+    gl_ClipDistance[0] = -1.0;
+  }
   gl_Position = projection * modelView * vertex;
 }
     ]]>

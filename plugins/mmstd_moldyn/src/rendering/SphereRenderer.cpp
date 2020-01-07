@@ -981,9 +981,6 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
 
     // timer.BeginFrame();
 
-    auto cr3d = &call;
-    if (cr3d == nullptr) return false;
-
     auto cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     auto flagc = this->getFlagsSlot.CallAs<FlagCall>();
 
@@ -998,7 +995,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
 
     // Get data
     float scaling = 1.0f;
-    MultiParticleDataCall* mpdc = this->getData(static_cast<unsigned int>(cr3d->Time()), scaling);
+    MultiParticleDataCall* mpdc = this->getData(static_cast<unsigned int>(call.Time()), scaling);
     if (mpdc == nullptr) return false;
 
     // Update parameter visibility
@@ -1035,7 +1032,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
 
     // Camera 
     view::Camera_2 cam;
-    cr3d->GetCamera(cam);
+    call.GetCamera(cam);
     cam_type::snapshot_type snapshot;
     cam_type::matrix_type viewTemp, projTemp;
     // Generate complete snapshot and calculate matrices
@@ -1057,37 +1054,47 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
 
     // Lights
     this->GetLights();
-    this->curlightDir = { 0.0f, 0.0f, 10.0f, 1.0f };
+    this->curlightDir = { 0.0f, 0.0f, 0.0f, 1.0f };
     if (this->lightMap.size() > 1) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only one single distant (directional) light source is supported by this renderer");
+        vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only one single 'Distant Light' source is supported by this renderer");
     }
     for (auto light : this->lightMap) {
         if (light.second.lightType != core::view::light::DISTANTLIGHT) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only single distant (directional) light source is supported by this renderer");
+            vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only single 'Distant Light' source is supported by this renderer");
         }
         else {
-            auto lightDir = this->lightMap.begin()->second.dl_direction;
-            if (lightDir.size() == 3) {
-                this->curlightDir[0] = lightDir[0];
-                this->curlightDir[1] = lightDir[1];
-                this->curlightDir[2] = lightDir[2];
+            auto use_eyedir = light.second.dl_eye_direction;
+            if (use_eyedir) {
+                this->curlightDir = -this->curCamView;
             }
-            if (lightDir.size() == 4) {
-                this->curlightDir[3] = lightDir[3];
+            else {
+                auto lightDir = light.second.dl_direction;
+                if (lightDir.size() == 3) {
+                    this->curlightDir[0] = lightDir[0];
+                    this->curlightDir[1] = lightDir[1];
+                    this->curlightDir[2] = lightDir[2];
+                }
+                if (lightDir.size() == 4) {
+                    this->curlightDir[3] = lightDir[3];
+                }
+                /// View Space Lighting. Comment line to change to Object Space Lighting.
+                //this->curlightDir = this->curMVtransp * this->curlightDir;
             }
+/// TODO Implement missing distant light parameters:
+            //light.second.dl_angularDiameter;
+            //light.second.lightColor;
+            //light.second.lightIntensity;
         }
     }
-    this->curlightDir = glm::normalize(this->curMVtransp * this->curlightDir);
 
     // Viewport
-    if (!cam.image_tile().empty()) {
-        this->curViewAttrib = glm::vec4(cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
-    }
-    else {
-        this->curViewAttrib = glm::vec4(0.0f , 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
-    }
-    this->curVpWidth = static_cast<int>(this->curViewAttrib[2]);
-    this->curVpHeight = static_cast<int>(this->curViewAttrib[3]);
+    auto viewport = call.GetViewport();
+    this->curVpWidth = viewport.Width();
+    this->curVpHeight = viewport.Height();
+    this->curViewAttrib[0] = 0.0f;
+    this->curViewAttrib[1] = 0.0f;
+    this->curViewAttrib[2] = static_cast<float>(viewport.Width());
+    this->curViewAttrib[3] = static_cast<float>(viewport.Height());
     if (this->curViewAttrib[2] < 1.0f) this->curViewAttrib[2] = 1.0f;
     if (this->curViewAttrib[3] < 1.0f) this->curViewAttrib[3] = 1.0f;
     this->curViewAttrib[2] = 2.0f / this->curViewAttrib[2];
@@ -1105,27 +1112,27 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     bool retval = false;
     switch (currentRenderMode) {
     case (RenderMode::SIMPLE):
-        retval = this->renderSimple(cr3d, mpdc);
+        retval = this->renderSimple(call, mpdc);
         break;
     case (RenderMode::SIMPLE_CLUSTERED):
-        retval = this->renderSimple(cr3d, mpdc);
+        retval = this->renderSimple(call, mpdc);
         break;
     case (RenderMode::GEOMETRY_SHADER):
-        retval = this->renderGeometryShader(cr3d, mpdc);
+        retval = this->renderGeometryShader(call, mpdc);
         break;
     case (RenderMode::SSBO_STREAM):
-        retval = this->renderSSBO(cr3d, mpdc);
+        retval = this->renderSSBO(call, mpdc);
         break;
     case (RenderMode::SPLAT):
-        retval = this->renderSplat(cr3d, mpdc);
+        retval = this->renderSplat(call, mpdc);
         break;
     case (RenderMode::BUFFER_ARRAY):
-        retval = this->renderBufferArray(cr3d, mpdc);
+        retval = this->renderBufferArray(call, mpdc);
         break;
     case (RenderMode::AMBIENT_OCCLUSION):
-        retval = this->renderAmbientOcclusion(cr3d, mpdc); break;
+        retval = this->renderAmbientOcclusion(call, mpdc); break;
     case (RenderMode::OUTLINE):
-        retval = this->renderOutline(cr3d, mpdc); break;
+        retval = this->renderOutline(call, mpdc); break;
     default:
         break;
     }
@@ -1148,7 +1155,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
 }
 
 
-bool SphereRenderer::renderSimple(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderSimple(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
 
@@ -1219,7 +1226,7 @@ bool SphereRenderer::renderSimple(view::CallRender3D_2* cr3d, MultiParticleDataC
 }
 
 
-bool SphereRenderer::renderSSBO(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderSSBO(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
 
 #ifdef CHRONOTIMING
     std::vector<std::chrono::steady_clock::time_point> deltas;
@@ -1395,7 +1402,7 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2* cr3d, MultiParticleDataCal
 }
 
 
-bool SphereRenderer::renderSplat(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
 
     glDisable(GL_DEPTH_TEST);
 
@@ -1522,7 +1529,7 @@ bool SphereRenderer::renderSplat(view::CallRender3D_2* cr3d, MultiParticleDataCa
 }
 
 
-bool SphereRenderer::renderBufferArray(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderBufferArray(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
 
@@ -1621,7 +1628,7 @@ bool SphereRenderer::renderBufferArray(view::CallRender3D_2* cr3d, MultiParticle
 }
 
 
-bool SphereRenderer::renderGeometryShader(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderGeometryShader(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
 
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
@@ -1690,7 +1697,7 @@ bool SphereRenderer::renderGeometryShader(view::CallRender3D_2* cr3d, MultiParti
 }
 
 
-bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
 
     // We need to regenerate the shader if certain settings are changed
     if (this->enableLightingSlot.IsDirty() || this->aoConeApexSlot.IsDirty()) {
@@ -1711,7 +1718,7 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2* cr3d, MultiPar
     vislib::graphics::gl::GLSLShader& theShader = useGeo ? this->sphereGeometryShader : this->sphereShader;
 
     // Rebuild and reupload working data if neccessary
-    this->rebuildWorkingData(cr3d, mpdc, theShader);
+    this->rebuildWorkingData(call, mpdc, theShader);
 
     GLint prevFBO;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
@@ -1774,13 +1781,13 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2* cr3d, MultiPar
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 
     // Deferred rendering pass
-    this->renderDeferredPass(cr3d);
+    this->renderDeferredPass(call);
 
     return true;
 }
 
 
-bool SphereRenderer::renderOutline(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderOutline(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
 
@@ -2529,7 +2536,7 @@ bool SphereRenderer::rebuildGBuffer() {
 }
 
 
-void SphereRenderer::rebuildWorkingData(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader) {
+void SphereRenderer::rebuildWorkingData(view::CallRender3D_2& call, MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader) {
 
     // Upload new data if neccessary
     if (stateInvalid) {
@@ -2625,7 +2632,7 @@ void SphereRenderer::rebuildWorkingData(view::CallRender3D_2* cr3d, MultiParticl
 
 
 
-void SphereRenderer::renderDeferredPass(view::CallRender3D_2* cr3d) {
+void SphereRenderer::renderDeferredPass(view::CallRender3D_2& call) {
 
     bool enableLighting = this->enableLightingSlot.Param<param::BoolParam>()->Value();
     bool highPrecision = this->useHPTexturesSlot.Param<param::BoolParam>()->Value();

@@ -31,19 +31,20 @@ SSBOBufferArray::~SSBOBufferArray() {
     if (!this->theSSBOs.empty()) {
         glDeleteBuffers(this->theSSBOs.size(), this->theSSBOs.data());
     }
-    //if (this->fence) {
-    //    glDeleteSync(this->fence);
-    //}
 }
 
 
 void SSBOBufferArray::upload(const std::function<void(void *, const void *)> &copyOp) {
     const auto chunk_src_size = this->srcStride * this->numItemsPerChunk;
 
+    if (this->maxSSBOSize == 0) {
+        glGetInteger64v(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &this->maxSSBOSize);
+    }
+    ASSERT(this->maxBufferSize <= this->maxSSBOSize && "The size per SSBO is larger than you OpenGL implementation allows!");
+
     // either we can grab all the data at once or we need the copyOp to re-arrange stuff for us
     ASSERT(this->dstStride == this->srcStride || copyOp);
 
-    //this->waitSignal(this->fence);
     if (!this->theSSBOs.empty()) {
         glDeleteBuffers(this->theSSBOs.size(), this->theSSBOs.data());
     }
@@ -81,6 +82,25 @@ void SSBOBufferArray::upload(const std::function<void(void *, const void *)> &co
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
+void SSBOBufferArray::SetData(const void* data, GLuint srcStride, GLuint dstStride, size_t numItems,
+    const std::function<void(void*, const void*)>& copyOp) {
+
+    if (data == nullptr || srcStride == 0 || dstStride == 0 || numItems == 0) {
+        this->theData = nullptr;
+        return;
+    }
+
+    this->dstStride = dstStride;
+    this->srcStride = srcStride;
+    this->numItems = numItems;
+    this->theData = data;
+    this->numItemsPerChunk = numItems;
+    this->numChunks = 1;
+    this->maxBufferSize = numItems * dstStride;
+
+    upload(copyOp);
+}
+
 GLuint SSBOBufferArray::SetDataWithSize(const void* data, GLuint srcStride, GLuint dstStride, size_t numItems,
     GLuint maxBufferSize, const std::function<void(void*, const void*)>& copyOp) {
 
@@ -93,7 +113,7 @@ GLuint SSBOBufferArray::SetDataWithSize(const void* data, GLuint srcStride, GLui
     this->srcStride = srcStride;
     this->numItems = numItems;
     this->theData = data;
-    this->numItemsPerChunk = this->GetNumItemsPerChunkAligned(maxBufferSize / dstStride);
+    this->numItemsPerChunk = maxBufferSize / dstStride;
     this->numChunks = (this->numItems + this->numItemsPerChunk - 1) / this->numItemsPerChunk; // round up int division!
     this->maxBufferSize = maxBufferSize;
 
@@ -125,45 +145,3 @@ GLuint SSBOBufferArray::SetDataWithItems(const void* data, GLuint srcStride, GLu
 }
 
 
-GLuint SSBOBufferArray::GetNumItemsPerChunkAligned(GLuint numItemsPerChunk, bool up) const {
-
-    // Lazy initialization of offset alignment because OGl context must be available.
-    if (this->offsetAlignment == 0) {
-        glGetIntegerv(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT, (GLint*)&this->offsetAlignment);
-    }
-
-    // Rounding the number of items per chunk is important for alignment and thus performance.
-    // That means, if we synchronize with another buffer that has tiny items, we have to make
-    // sure that we do not get non-aligned chunks with due to the number of items.
-    // For modern GPUs, we use GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT (which for NVidia results in 32),
-    // i.e., we upload in multiples of eight to get 8 * 4 = 32 (no data shorter than uint32_t is allowed).
-    const GLuint multiRound = this->offsetAlignment / 4;
-
-    return (((numItemsPerChunk) / multiRound) + (up ? 1 : 0)) * multiRound;
-}
-
-
-//void SSBOBufferArray::SignalCompletion() { queueSignal(this->fence); }
-//
-//
-//void SSBOBufferArray::queueSignal(GLsync& syncObj) {
-//
-//    if (syncObj) {
-//        glDeleteSync(syncObj);
-//    }
-//    syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-//}
-//
-//
-//void SSBOBufferArray::waitSignal(GLsync& syncObj) {
-//
-//    if (syncObj) {
-//        // XXX: Spin locks in user code are a really bad idea.
-//        while (true) {
-//            const GLenum wait = glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
-//            if (wait == GL_ALREADY_SIGNALED || wait == GL_CONDITION_SATISFIED) {
-//                return;
-//            }
-//        }
-//    }
-//}

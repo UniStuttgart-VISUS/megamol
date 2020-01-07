@@ -652,9 +652,11 @@ mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key, mmcValu
             this->preInit->SetConfigFileOverrides(utility::APIValueUtil::AsStringW(type, value));
             break;
         default:
+            vislib::sys::Log::DefaultLog.WriteError("CoreInstance::SetInitValue: unknown initval");
             return MMC_ERR_UNKNOWN;
         }
     } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("CoreInstance::SetInitValue: exception during evaluation of initval");
         return MMC_ERR_UNKNOWN;
     }
     return MMC_ERR_NO_ERROR;
