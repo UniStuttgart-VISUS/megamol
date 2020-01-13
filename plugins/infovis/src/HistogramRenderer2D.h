@@ -3,7 +3,7 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/FlagCall.h"
+#include "mmcore/FlagCall_GL.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/view/CallGetTransferFunction.h"
@@ -88,14 +88,13 @@ protected:
 private:
     core::CallerSlot tableDataCallerSlot;
     core::CallerSlot transferFunctionCallerSlot;
-    core::CallerSlot flagStorageCallerSlot;
+    core::CallerSlot flagStorageReadCallerSlot;
 
     core::param::ParamSlot numberOfBinsParam;
     core::param::ParamSlot logPlotParam;
 
     size_t currentTableDataHash;
     unsigned int currentTableFrameId;
-    core::FlagStorage::FlagVersionType currentFlagStorageVersion;
 
     size_t bins;
     size_t colCount;

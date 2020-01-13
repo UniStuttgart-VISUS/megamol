@@ -14,12 +14,11 @@ HistogramRenderer2D::HistogramRenderer2D()
     : Renderer2D()
     , tableDataCallerSlot("getData", "Float table input")
     , transferFunctionCallerSlot("getTransferFunction", "Transfer function input")
-    , flagStorageCallerSlot("getFlagStorage", "Flag storage input")
+    , flagStorageReadCallerSlot("readFlagStorage", "Flag storage read input")
     , numberOfBinsParam("numberOfBins", "Number of bins")
     , logPlotParam("logPlot", "Logarithmic scale")
     , currentTableDataHash(std::numeric_limits<std::size_t>::max())
     , currentTableFrameId(std::numeric_limits<unsigned int>::max())
-    , currentFlagStorageVersion(std::numeric_limits<core::FlagStorage::FlagVersionType>::max())
     , bins(10)
     , colCount(0)
     , maxBinValue(0)
@@ -30,8 +29,8 @@ HistogramRenderer2D::HistogramRenderer2D()
     this->transferFunctionCallerSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->transferFunctionCallerSlot);
 
-    this->flagStorageCallerSlot.SetCompatibleCall<core::FlagCallDescription>();
-    this->MakeSlotAvailable(&this->flagStorageCallerSlot);
+    this->flagStorageReadCallerSlot.SetCompatibleCall<core::FlagCallRead_GLDescription>();
+    this->MakeSlotAvailable(&this->flagStorageReadCallerSlot);
 
     this->numberOfBinsParam << new core::param::IntParam(this->bins, 1);
     this->MakeSlotAvailable(&this->numberOfBinsParam);
@@ -199,8 +198,8 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
             vislib::sys::Log::LEVEL_ERROR, "HistogramRenderer2D requires a transfer function!");
         return false;
     }
-    auto flagsCall = this->flagStorageCallerSlot.CallAs<core::FlagCall>();
-    if (flagsCall == nullptr) {
+    auto readFlagsCall = this->flagStorageReadCallerSlot.CallAs<core::FlagCallRead_GL>();
+    if (readFlagsCall == nullptr) {
         vislib::sys::Log::DefaultLog.WriteMsg(
             vislib::sys::Log::LEVEL_ERROR, "HistogramRenderer2D requires a flag storage!");
         return false;
@@ -213,12 +212,11 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
     auto hash = floatTableCall->DataHash();
     auto frameId = floatTableCall->GetFrameID();
     (*tfCall)(0);
-    (*flagsCall)(core::FlagCall::CallMapFlags);
-    auto version = flagsCall->GetVersion();
+    (*readFlagsCall)(core::FlagCallRead_GL::CallGetData);
 
     auto binsParam = static_cast<size_t>(this->numberOfBinsParam.Param<core::param::IntParam>()->Value());
     if (this->currentTableDataHash != hash || this->currentTableFrameId != frameId ||
-        this->currentFlagStorageVersion != version || this->bins != binsParam) {
+        readFlagsCall->hasUpdate() || this->bins != binsParam) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Calculate Histogram");
 
         this->bins = binsParam;
@@ -226,10 +224,15 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
         this->colCount = floatTableCall->GetColumnsCount();
         size_t rowCount = floatTableCall->GetRowsCount();
 
-        flagsCall->validateFlagsCount(rowCount);
+        readFlagsCall->getData()->validateFlagCount(floatTableCall->GetRowsCount());
 
-        auto flags = flagsCall->GetFlags();
         auto data = floatTableCall->GetData(); // use data pointer for direct access without assert checks
+
+        // TODO do histogram calculation on GPU, for now download flag buffer to use old CPU code with new GPU flag storage
+        auto flags = readFlagsCall->getData()->flags;
+        uint32_t *flagsData = new uint32_t[flags->getByteSize() / sizeof(uint32_t)];
+        flags->bind();
+        glGetBufferSubData(flags->getTarget(), 0, flags->getByteSize(), flagsData);
 
         this->colMinimums.resize(this->colCount);
         this->colMaximums.resize(this->colCount);
@@ -258,7 +261,7 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
 #pragma omp parallel for
         for (int c = 0; c < static_cast<int>(this->colCount); ++c) {
             for (size_t r = 0; r < rowCount; ++r) {
-                auto f = flags->operator[](r);
+                auto f = flagsData[r];
                 if ((f & filteredTestMask) == filteredPassMask) {
                     float val = (data[r * this->colCount + c] - this->colMinimums[c]) /
                                 (this->colMaximums[c] - this->colMinimums[c]);
@@ -273,15 +276,11 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
 
         this->maxBinValue = *std::max_element(this->histogram.begin(), this->histogram.end());
 
-        // we do read only, therefore version does not change
-        flagsCall->SetFlags(flags, version);
+        delete[] flagsData; // TODO remove
 
         this->currentTableDataHash = hash;
         this->currentTableFrameId = frameId;
-        this->currentFlagStorageVersion = version;
     }
-
-    (*flagsCall)(core::FlagCall::CallUnmapFlags);
 
     return true;
 }
