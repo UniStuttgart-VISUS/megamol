@@ -30,6 +30,26 @@ megamol::gui::Graph::~Graph(void) {
 
 bool megamol::gui::Graph::AddModule(const std::string& module_class_name) {
 
+    Graph::Module mod;
+    mod.basic.class_name.clear();
+    for (auto& m : this->modules_list) {
+        if (module_class_name == m.class_name) {
+            mod.basic = m;
+        }
+    }
+    if (mod.basic.class_name.empty()) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to find module for class name: %s [%s, %s, line %d]\n", module_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    //TODO Replace dummy names
+    mod.name = mod.basic.class_name + "XXX";
+    mod.full_name = "XXX::" + mod.name;
+
+    //TODO Adjuist size depending on size of content
+    mod.gui.position = ImVec2(0.0f, 0.0f);
+    mod.gui.size = ImVec2(200.0f, 100.0f);
+
+    this->mods.emplace_back(mod);
 
     return true;
 }
@@ -246,7 +266,7 @@ bool megamol::gui::Graph::read_module_data(Graph::ModuleData& mod_data, const st
             }
         }
 
-        mod_data.caller_slots.emplace_back(csd);
+        mod_data.callee_slots.emplace_back(csd);
     }
 
     paramSlots.clear();

@@ -47,6 +47,7 @@ namespace gui {
 class Graph {
 public:
 
+    // DATA STRUCTS -------------------
     struct ParamSlotData {
         std::string class_name;
         std::string description;
@@ -75,6 +76,47 @@ public:
     };
 
 
+    // GRAPH STRUCTS ------------------
+    class Slot {
+    public:
+        Graph::CallSlotData basic;
+        struct Gui {
+
+        } gui;
+    };
+
+    class Call {
+    public:
+        Graph::CallData basic;
+        std::shared_ptr<Graph::Slot> callee_slot; // = std::make_shared<Slot>(node.data.callee_slots[idx]);
+        std::shared_ptr<Graph::Slot> caller_slot; // = std::make_shared<Slot>(node.data.caller_slots[idx]);
+        struct Gui {
+
+        } gui;
+    };
+
+    class Module {
+    public:
+
+        inline ImVec2 GetCalleeSlotPos(int slot_idx) const {
+            return ImVec2(this->gui.position.x, this->gui.position.y + this->gui.size.y * ((float)slot_idx + 1) / ((float)this->basic.callee_slots.size() + 1));
+        }
+
+        inline ImVec2 GetCallerSlotPos(int slot_idx) const {
+            return ImVec2(this->gui.position.x + this->gui.size.x, this->gui.position.y + this->gui.size.y * ((float)slot_idx + 1) / ((float)this->basic.caller_slots.size() + 1));
+        }
+
+        std::string name;
+        std::string full_name;
+        Graph::ModuleData basic;
+        struct Gui {
+            ImVec2 position;
+            ImVec2 size;
+        } gui;
+    };
+
+    // --------------------------------
+
     Graph(void);
 
     virtual ~Graph(void);
@@ -95,37 +137,9 @@ public:
         return std::string();
     }
 
+    inline std::vector<Graph::Module>& GetGraphModules(void) { return this->mods; }
+
 private:
-
-    // DATA STRUCTURE ---------------------------------------------------------
-
-    struct Slot {
-        Graph::CallSlotData basic;
-        struct Gui {
-            ImGuiID id;
-
-        } gui;
-    };
-
-    struct Call {
-        Graph::CallData basic;
-        std::shared_ptr<Graph::Slot> callee_slot; // = std::make_shared<Slot>(node.data.callee_slots[idx]);
-        std::shared_ptr<Graph::Slot> caller_slot; // = std::make_shared<Slot>(node.data.caller_slots[idx]);
-        struct Gui {
-            ImGuiID id;
-
-        } gui;
-    };
-
-    struct Module {
-        std::string name;
-        std::string full_name;
-        Graph::ModuleData basic;
-        struct Gui {
-            ImGuiID id;
-
-        } gui;
-    };
 
     // VARIABLES --------------------------------------------------------------
 
