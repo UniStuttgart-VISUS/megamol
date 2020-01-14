@@ -14,8 +14,6 @@
 #ifndef MEGAMOL_GUI_CONFIGURATOR_H_INCLUDED
 #define MEGAMOL_GUI_CONFIGURATOR_H_INCLUDED
 
-#include "vislib/sys/Log.h"
-
 #include <imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
@@ -30,7 +28,10 @@
 #include "mmcore/view//Input.h"
 
 #include "GUIUtils.h"
+#include "Graph.h"
 #include "WindowManager.h"
+
+#include "vislib/sys/Log.h"
 
 
 namespace megamol {
@@ -52,7 +53,7 @@ public:
      * Draw configurator ImGui window.
      * (Call in GUIView::drawConfiguratorCallback())
      */
-    bool Draw(WindowManager::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance);
+    bool Draw(WindowManager::WindowConfiguration& wc, const megamol::core::CoreInstance* core_instance);
 
     /**
      * Checks if any hotkeys are pressed.
@@ -63,24 +64,7 @@ public:
     bool CheckHotkeys(void);
 
 private:
-    class Node {
-    public:
-    private:
-        struct ModuleData {
-            std::string name;
-            std::string description;
-            // std::vector<> input_slots;
-            // std::vector<> output_slots;
-
-        } module_data;
-
-        struct ImGuiData {
-
-
-        } imgui_data;
-    };
-
-    std::list<Configurator::Node> nodes;
+    Graph graph;
 
     // VARIABLES --------------------------------------------------------------
 
@@ -93,10 +77,6 @@ private:
     struct State {
         int module_selected_id;
     } state;
-
-
-    std::vector<std::string> modules_map;
-    std::map<UINT, std::string> calls_map;
 
     // FUNCTIONS --------------------------------------------------------------
 

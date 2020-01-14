@@ -20,7 +20,7 @@ using namespace megamol::gui;
 using vislib::sys::Log;
 
 
-Configurator::Configurator() : hotkeys(), utils(), state(), modules_map(), calls_map() {
+Configurator::Configurator() : graph(), hotkeys(), utils(), state() {
 
     // Init HotKeys
     this->hotkeys[HotkeyIndex::MODULE_SEARCH] =
@@ -39,7 +39,7 @@ Configurator::~Configurator() {}
 bool megamol::gui::Configurator::CheckHotkeys(void) {
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
-            "No ImGui context available. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
+            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     ImGuiIO& io = ImGui::GetIO();
@@ -60,42 +60,28 @@ bool megamol::gui::Configurator::CheckHotkeys(void) {
 
 
 bool megamol::gui::Configurator::Draw(
-    WindowManager::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance) {
+    WindowManager::WindowConfiguration& wc, const megamol::core::CoreInstance* core_instance) {
     if (core_instance == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
-            "Pointer to Core Instance is nullptr. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
+            "Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
-            "No ImGui context available. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
+            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
+
     // DEMO DUMMY -------------------------------------------------------------
+    /*
     this->demo_dummy();
     return true;
+    */
 
+    // THE REAL STUFF ---------------------------------------------------------
 
-    // One time initialisation ------------------------------------------------
-    // Getting all available MODULE names
-    if (this->modules_map.empty()) {
-        for (auto& m : core_instance->GetModuleDescriptionManager()) {
-            std::string name(m->ClassName());
-            this->modules_map.emplace_back(name);
-        }
-        // Sorting module names alphabetically ascending
-        std::sort(modules_map.begin(), modules_map.end());
-    }
-    // Getting all available CALL names
-    if (this->calls_map.empty()) {
-        UINT index = 0;
-        for (auto& c : core_instance->GetCallDescriptionManager()) {
-            std::string name(c->ClassName());
-            this->calls_map.emplace(index, name);
-            index++;
-        }
-    }
+    this->graph.UpdateAvailableModulesCallsOnce(core_instance);
 
     // Draw a list of modules on the left side --------------------------------
     ImGui::BeginChild("module_list", ImVec2(250.0f, 0.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
@@ -115,12 +101,36 @@ bool megamol::gui::Configurator::Draw(
     ImGui::Separator();
 
     int id = 0;
-    for (auto& m : this->modules_map) {
-        if (search_string.empty() || this->utils.FindCaseInsensitiveSubstring(m, search_string)) {
+    for (auto& m : this->graph.GetAvailableModulesList()) {
+        if (search_string.empty() || this->utils.FindCaseInsensitiveSubstring(m.class_name, search_string)) {
             ImGui::PushID(id);
-            if (ImGui::Selectable(m.c_str(), id == this->state.module_selected_id)) {
+            std::string label = m.class_name + " (" + m.plugin_name + ")";
+            if (ImGui::Selectable(label.c_str(), id == this->state.module_selected_id)) {
                 this->state.module_selected_id = id;
             }
+            // Left mouse button click action
+            if (ImGui::IsItemClicked(0)) {
+                // Single click
+
+
+            } else if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
+                // Double click
+
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "DEBUG: Adding module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            }
+            // Context menu
+            if (ImGui::BeginPopupContextItem()) {
+                if (ImGui::MenuItem("Add Module")) {
+
+                }
+                if (ImGui::MenuItem("...")) {
+
+                }
+                ImGui::EndPopup();
+            }
+            // Hover tool tip
+            this->utils.HoverToolTip(m.description, id, 0.5f, 5.0f);
             ImGui::PopID();
         }
         id++;
