@@ -98,6 +98,7 @@ private:
 
     size_t bins;
     size_t colCount;
+    size_t rowCount;
     std::vector<float> colMinimums;
     std::vector<float> colMaximums;
     std::vector<std::string> colNames;
@@ -105,8 +106,15 @@ private:
     std::vector<float> selectedHistogram;
     size_t maxBinValue;
 
+    vislib::graphics::gl::GLSLComputeShader calcHistogramProgram;
     vislib::graphics::gl::GLSLShader histogramProgram;
     vislib::graphics::gl::GLSLShader axesProgram;
+
+    GLuint floatDataBuffer = 0;
+    GLuint minBuffer = 0;
+    GLuint maxBuffer = 0;
+    GLuint histogramBuffer = 0;
+    GLuint selectedHistogramBuffer = 0;
 
     GLuint quadVertexArray;
     GLuint quadVertexBuffer;
