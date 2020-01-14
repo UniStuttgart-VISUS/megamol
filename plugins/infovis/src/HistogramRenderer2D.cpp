@@ -268,10 +268,13 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
 
         this->bins = binsParam;
 
+        float zero = 0.0;
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->histogramBuffer);
         glBufferData(GL_SHADER_STORAGE_BUFFER, this->colCount * this->bins * sizeof(float), nullptr, GL_STATIC_COPY);
+        glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32F, GL_RED, GL_FLOAT, &zero);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->selectedHistogramBuffer);
         glBufferData(GL_SHADER_STORAGE_BUFFER, this->colCount * this->bins * sizeof(float), nullptr, GL_STATIC_COPY);
+        glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32F, GL_RED, GL_FLOAT, &zero);
 
         readFlagsCall->getData()->validateFlagCount(floatTableCall->GetRowsCount());
 
@@ -291,6 +294,8 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
         this->calcHistogramProgram.Dispatch(1, 1, 1);
 
         this->calcHistogramProgram.Disable();
+
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
         // TODO use histogram buffer directly in draw, for now download histograms to use old draw code
         this->histogram.resize(this->colCount * this->bins);

@@ -32,27 +32,21 @@ uniform uint binCount = 0;
 uniform uint colCount = 0;
 uniform uint rowCount = 0;
 
-layout(local_size_x = 1) in;
+layout(local_size_x = 1024) in;
 
 void main() {
-    // TODO this is just a copy of the old CPU code, at the moment this is sequential shader code and pretty useless
-    if (gl_GlobalInvocationID.x == 0) {
-        // buffer memory is uninitialized
-        for (int i = 0; i < colCount * binCount; i++) {
-            histogram[i] = 0.0;
-            selectedHistogram[i] = 0.0;
-        }
+    uint col = gl_GlobalInvocationID.x;
+    if (col >= colCount) {
+        return;
+    }
 
-        for (uint c = 0; c < colCount; c++) {
-            for (uint r = 0; r < rowCount; r++) {
-                if (bitflag_isVisible(flags[r])) {
-                    float val = (floatData[r * colCount + c] - minimums[c]) / (maximums[c] - minimums[c]);
-                    int bin_idx = clamp(int(val * binCount), 0, int(binCount) - 1);
-                    histogram[bin_idx * colCount + c] += 1.0;
-                    if (bitflag_isVisibleSelected(flags[r])) {
-                        selectedHistogram[bin_idx * colCount + c] += 1.0;
-                    }
-                }
+    for (uint r = 0; r < rowCount; r++) {
+        if (bitflag_isVisible(flags[r])) {
+            float val = (floatData[r * colCount + col] - minimums[col]) / (maximums[col] - minimums[col]);
+            int bin_idx = clamp(int(val * binCount), 0, int(binCount) - 1);
+            histogram[bin_idx * colCount + col] += 1.0;
+            if (bitflag_isVisibleSelected(flags[r])) {
+                selectedHistogram[bin_idx * colCount + col] += 1.0;
             }
         }
     }
