@@ -27,6 +27,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view//Input.h"
 
+#include "FileUtils.h"
 #include "GUIUtils.h"
 #include "Graph.h"
 #include "WindowManager.h"
@@ -53,7 +54,7 @@ public:
      * Draw configurator ImGui window.
      * (Call in GUIView::drawConfiguratorCallback())
      */
-    bool Draw(WindowManager::WindowConfiguration& wc, const megamol::core::CoreInstance* core_instance);
+    bool Draw(WindowManager::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance);
 
     /**
      * Checks if any hotkeys are pressed.
@@ -81,12 +82,17 @@ private:
         ImVec2 scrolling;
         float zooming;
         bool show_grid;
+        std::string desc;
     } state;
+
+    std::string project_filename;
 
     // FUNCTIONS --------------------------------------------------------------
 
-    bool draw_module_list(void);
-    bool draw_graph_canvas(void);
+    bool draw_window_menu(megamol::core::CoreInstance* core_instance);
+    bool draw_window_module_list(void);
+    bool draw_window_graph_canvas(void);
+    bool draw_canvas_grid(ImVec2 scrolling, float zooming);
 
     void demo_dummy(void);
 
