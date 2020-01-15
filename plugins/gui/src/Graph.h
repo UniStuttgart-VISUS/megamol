@@ -57,7 +57,7 @@ public:
     struct CallSlotData {
         std::string class_name;
         std::string description;
-        std::vector<size_t> compatible_call_idxs;
+        std::vector<size_t> compatible_call_idxs; // (Storing only indices of compatible calls for faster comparison.)
     };
 
     struct ModuleData {
@@ -80,6 +80,7 @@ public:
     class Slot {
     public:
         Graph::CallSlotData basic;
+
         struct Gui {
 
         } gui;
@@ -90,6 +91,7 @@ public:
         Graph::CallData basic;
         std::shared_ptr<Graph::Slot> callee_slot; // = std::make_shared<Slot>(node.data.callee_slots[idx]);
         std::shared_ptr<Graph::Slot> caller_slot; // = std::make_shared<Slot>(node.data.caller_slots[idx]);
+
         struct Gui {
 
         } gui;
@@ -109,6 +111,7 @@ public:
         std::string name;
         std::string full_name;
         Graph::ModuleData basic;
+
         struct Gui {
             ImVec2 position;
             ImVec2 size;

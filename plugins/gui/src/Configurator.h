@@ -64,8 +64,6 @@ public:
     bool CheckHotkeys(void);
 
 private:
-    Graph graph;
-
     // VARIABLES --------------------------------------------------------------
 
     typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyData;
@@ -74,14 +72,23 @@ private:
 
     GUIUtils utils;
 
+    int window_rendering_state;
+    Graph graph;
+
     struct State {
-        int module_selected_id;
+        int selected_module_list;
+        int selected_module_graph;
+        ImVec2 scrolling;
+        float zooming;
+        bool show_grid;
     } state;
 
     // FUNCTIONS --------------------------------------------------------------
 
-    void demo_dummy(void);
+    bool draw_module_list(void);
+    bool draw_graph_canvas(void);
 
+    void demo_dummy(void);
 
     // ------------------------------------------------------------------------
 };

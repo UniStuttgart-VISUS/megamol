@@ -141,13 +141,13 @@ bool megamol::gui::Graph::read_module_data(Graph::ModuleData& mod_data, const st
 
     mod_data.class_name = std::string(mod_desc->ClassName());
     mod_data.description = std::string(mod_desc->Description());
-    /// mod_data.plugin_name is not available here. 
+    /// mod_data.plugin_name is not available here (set above). 
     mod_data.param_slots.clear();
     mod_data.callee_slots.clear();
     mod_data.caller_slots.clear();
 
     // SLOTS ------------------------------------------------------------------
-    /// Folowing code is adapted from megamol::core::job::job::PluginsStateFileGeneratorJob.cpp
+    /// (Following code is adapted from megamol::core::job::job::PluginsStateFileGeneratorJob.cpp)
 
     megamol::core::Module::ptr_type new_mod(mod_desc->CreateModule(nullptr));
     if (new_mod == nullptr) {
@@ -285,7 +285,7 @@ bool megamol::gui::Graph::read_call_data(Graph::CallData& call_data, const std::
 
     call_data.class_name = std::string(call_desc->ClassName());
     call_data.description = std::string(call_desc->Description());
-    /// call_data.plugin_name is not available here. 
+    /// call_data.plugin_name is not available here (set above).
 
     return true;
 }

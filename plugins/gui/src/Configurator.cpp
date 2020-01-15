@@ -20,7 +20,7 @@ using namespace megamol::gui;
 using vislib::sys::Log;
 
 
-Configurator::Configurator() : graph(), hotkeys(), utils(), state() {
+Configurator::Configurator() : hotkeys(), utils(), graph(), window_rendering_state(0), state() {
 
     // Init HotKeys
     this->hotkeys[HotkeyIndex::MODULE_SEARCH] =
@@ -29,7 +29,11 @@ Configurator::Configurator() : graph(), hotkeys(), utils(), state() {
             false);
 
     // Init state
-    this->state.module_selected_id = -1;
+    this->state.selected_module_list = -1;
+    this->state.scrolling = ImVec2(0.0f, 0.0f);
+    this->state.zooming = 0.0f;
+    this->state.show_grid = true;
+    this->state.selected_module_graph = -1;
 }
 
 
@@ -72,21 +76,57 @@ bool megamol::gui::Configurator::Draw(
         return false;
     }
 
+    // DEMO DUMMY:
+    // this->demo_dummy();
+    // return true;
+
+    bool retval = true;
+
+    if (this->window_rendering_state < 2) {
+        // 1] Show pop-up before before calling UpdateAvailableModulesCallsOnce of graph.
+        /// Rendering of pop-up requires two complete Draw calls!
+
+        bool open = true;
+        std::string popup_label = "Loading";
+        if (this->window_rendering_state == 0) {
+            ImGui::OpenPopup(popup_label.c_str());
+        }
+        ImGuiWindowFlags popup_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove;
+        if (ImGui::BeginPopupModal(popup_label.c_str(), &open, popup_flags)) {
+            ImGui::Text("Please wait.\nLoading available modules and calls for configurator ...");
+            ImGui::EndPopup();
+        }
+        this->window_rendering_state++;
+    } else if (this->window_rendering_state == 2) {
+        // 2] Load available modules and calls once
+
+        this->graph.UpdateAvailableModulesCallsOnce(core_instance);
+        this->window_rendering_state++;
+    } else {
+        // 3] Render final configurator content
+
+        bool state_draw_module_list = this->draw_module_list();
+        ImGui::SameLine(); // Draws module list and graph canvas next to each other
+        bool state_draw_graph_canvas = this->draw_graph_canvas();
+
+        retval = (state_draw_module_list && state_draw_graph_canvas);
+    }
+
+    return retval;
+}
+
+
+bool megamol::gui::Configurator::draw_module_list(void) {
+
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
-    // DEMO DUMMY -------------------------------------------------------------
-    /*
-    this->demo_dummy();
-    return true;
-    */
+    const float child_width = 250.0f;
+    const float child_height = 2.5f * ImGui::GetItemsLineHeightWithSpacing();
 
-    // THE REAL STUFF ---------------------------------------------------------
+    ImGui::BeginGroup();
 
-    this->graph.UpdateAvailableModulesCallsOnce(core_instance);
-
-    // Draw a list of modules on the left side --------------------------------
-    ImGui::BeginChild("module_list", ImVec2(250.0f, 0.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
+    ImGui::BeginChild("module_search", ImVec2(child_width, child_height), true, ImGuiWindowFlags_None);
 
     ImGui::Text("Available Modules");
     ImGui::Separator();
@@ -100,15 +140,18 @@ bool megamol::gui::Configurator::Draw(
                             "Case insensitive substring search in module names.";
     this->utils.StringSearch("Search Modules", help_text);
     auto search_string = this->utils.GetSearchString();
-    ImGui::Separator();
 
-    int id = 0;
+    ImGui::EndChild();
+
+    ImGui::BeginChild("module_list", ImVec2(child_width, 0.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
+
+    int id = 1;
     for (auto& m : this->graph.GetAvailableModulesList()) {
         if (search_string.empty() || this->utils.FindCaseInsensitiveSubstring(m.class_name, search_string)) {
             ImGui::PushID(id);
-            std::string label = m.class_name + " (" + m.plugin_name + ")";
-            if (ImGui::Selectable(label.c_str(), id == this->state.module_selected_id)) {
-                this->state.module_selected_id = id;
+            std::string label = std::to_string(id) + " " + m.class_name + " (" + m.plugin_name + ")";
+            if (ImGui::Selectable(label.c_str(), id == this->state.selected_module_list)) {
+                this->state.selected_module_list = id;
             }
             // Left mouse button double click action
             if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
@@ -130,15 +173,18 @@ bool megamol::gui::Configurator::Draw(
 
     ImGui::EndChild();
 
-    // Draw graph canvas ------------------------------------------------------
-    ImGui::SameLine();
-    ImGui::BeginGroup();
+    ImGui::EndGroup();
 
-    static ImVec2 scrolling = ImVec2(0.0f, 0.0f);
-    static float zooming = 0.0f;
-    static bool show_grid = true;
-    static int node_selected = -1;
-    bool open_context_menu = false;
+    return true;
+}
+
+
+bool megamol::gui::Configurator::draw_graph_canvas(void) {
+
+    ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    ImGui::BeginGroup();
 
     const float NODE_SLOT_RADIUS = 4.0f;
     const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
@@ -146,32 +192,30 @@ bool megamol::gui::Configurator::Draw(
     int node_hovered_in_list = -1;
 
     // Create our child canvas
-    ImGui::Text("Hold middle mouse button to scroll (%.2f,%.2f) | Use mouse wheel to zoom (%.2f)", scrolling.x,
-        scrolling.y, zooming);
+    ImGui::Text("Hold middle mouse button to scroll (%.2f,%.2f) | Use mouse wheel to zoom (%.2f)",
+        this->state.scrolling.x, this->state.scrolling.y, this->state.zooming);
     ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - 100);
-    ImGui::Checkbox("Show grid", &show_grid);
+    ImGui::Checkbox("Show grid", &this->state.show_grid);
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, IM_COL32(60, 60, 70, 200));
     ImGui::BeginChild("region", ImVec2(0, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
     ImGui::PushItemWidth(120.0f);
-    ImVec2 offset = ImGui::GetCursorScreenPos() + scrolling;
+    ImVec2 offset = ImGui::GetCursorScreenPos() + this->state.scrolling;
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
     // Display grid
-    if (show_grid) {
+    if (this->state.show_grid) {
         ImU32 GRID_COLOR = IM_COL32(200, 200, 200, 40);
         float GRID_SZ = 64.0f;
         ImVec2 win_pos = ImGui::GetCursorScreenPos();
         ImVec2 canvas_sz = ImGui::GetWindowSize();
-        for (float x = fmodf(scrolling.x, GRID_SZ); x < canvas_sz.x; x += GRID_SZ)
+        for (float x = fmodf(this->state.scrolling.x, GRID_SZ); x < canvas_sz.x; x += GRID_SZ)
             draw_list->AddLine(ImVec2(x, 0.0f) + win_pos, ImVec2(x, canvas_sz.y) + win_pos, GRID_COLOR);
-        for (float y = fmodf(scrolling.y, GRID_SZ); y < canvas_sz.y; y += GRID_SZ)
+        for (float y = fmodf(this->state.scrolling.y, GRID_SZ); y < canvas_sz.y; y += GRID_SZ)
             draw_list->AddLine(ImVec2(0.0f, y) + win_pos, ImVec2(canvas_sz.x, y) + win_pos, GRID_COLOR);
     }
 
-    draw_list->ChannelsSplit(2);
-    draw_list->ChannelsSetCurrent(0); // Background
 
     // Display links
     /*
@@ -186,7 +230,10 @@ bool megamol::gui::Configurator::Draw(
     */
 
     // Display nodes
-    id = 0;
+    draw_list->ChannelsSplit(2);
+    draw_list->ChannelsSetCurrent(0); // Background
+
+    int id = 0;
     for (auto& node : this->graph.GetGraphModules()) {
         ImGui::PushID(id);
         ImVec2 node_rect_min = offset + node.gui.position;
@@ -211,15 +258,17 @@ bool megamol::gui::Configurator::Draw(
         ImGui::InvisibleButton("node", node.gui.size);
         if (ImGui::IsItemHovered()) {
             node_hovered_in_scene = id;
-            open_context_menu |= ImGui::IsMouseClicked(1);
         }
-        bool node_moving_active = ImGui::IsItemActive();
-        if (node_widgets_active || node_moving_active) node_selected = id;
-        if (node_moving_active && ImGui::IsMouseDragging(0))
-            node.gui.position = node.gui.position + ImGui::GetIO().MouseDelta;
 
-        ImU32 node_bg_color = (node_hovered_in_list == id || node_hovered_in_scene == id ||
-                                  (node_hovered_in_list == -1 && node_selected == id))
+        bool node_moving_active = ImGui::IsItemActive();
+        if (node_widgets_active || node_moving_active) {
+            this->state.selected_module_graph = id;
+        }
+        if (node_moving_active && ImGui::IsMouseDragging(0)) {
+            node.gui.position = node.gui.position + ImGui::GetIO().MouseDelta;
+        }
+
+        ImU32 node_bg_color = (node_hovered_in_scene == id || this->state.selected_module_graph == id)
                                   ? IM_COL32(75, 75, 75, 255)
                                   : IM_COL32(60, 60, 60, 255);
         draw_list->AddRectFilled(node_rect_min, node_rect_max, node_bg_color, 4.0f);
@@ -255,12 +304,11 @@ bool megamol::gui::Configurator::Draw(
     if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) {
         // Scrolling
         if (ImGui::IsMouseDragging(2, 0.0f)) { // 2 = Middle Mouse Button
-            scrolling = scrolling + ImGui::GetIO().MouseDelta;
+            this->state.scrolling = this->state.scrolling + ImGui::GetIO().MouseDelta;
         }
         // Zooming
-        zooming = zooming + io.MouseWheel;
+        this->state.zooming = this->state.zooming + io.MouseWheel;
     }
-
 
     ImGui::PopItemWidth();
     ImGui::EndChild();
@@ -317,7 +365,7 @@ void megamol::gui::Configurator::demo_dummy(void) {
     static bool inited = false;
     static ImVec2 scrolling = ImVec2(0.0f, 0.0f);
     static bool show_grid = true;
-    static int node_selected = -1;
+    static int selected_module_graph = -1;
     if (!inited) {
         nodes.push_back(Node(0, "MainTex", ImVec2(40, 50), 0.5f, ImColor(255, 100, 100), 1, 1));
         nodes.push_back(Node(1, "BumpMap", ImVec2(40, 150), 0.42f, ImColor(200, 100, 200), 1, 1));
@@ -337,7 +385,7 @@ void megamol::gui::Configurator::demo_dummy(void) {
     for (int node_idx = 0; node_idx < nodes.Size; node_idx++) {
         Node* node = &nodes[node_idx];
         ImGui::PushID(node->ID);
-        if (ImGui::Selectable(node->Name, node->ID == node_selected)) node_selected = node->ID;
+        if (ImGui::Selectable(node->Name, node->ID == selected_module_graph)) selected_module_graph = node->ID;
         if (ImGui::IsItemHovered()) {
             node_hovered_in_list = node->ID;
             open_context_menu |= ImGui::IsMouseClicked(1);
@@ -417,11 +465,11 @@ void megamol::gui::Configurator::demo_dummy(void) {
             open_context_menu |= ImGui::IsMouseClicked(1);
         }
         bool node_moving_active = ImGui::IsItemActive();
-        if (node_widgets_active || node_moving_active) node_selected = node->ID;
+        if (node_widgets_active || node_moving_active) selected_module_graph = node->ID;
         if (node_moving_active && ImGui::IsMouseDragging(0)) node->Pos = node->Pos + ImGui::GetIO().MouseDelta;
 
         ImU32 node_bg_color = (node_hovered_in_list == node->ID || node_hovered_in_scene == node->ID ||
-                                  (node_hovered_in_list == -1 && node_selected == node->ID))
+                                  (node_hovered_in_list == -1 && selected_module_graph == node->ID))
                                   ? IM_COL32(75, 75, 75, 255)
                                   : IM_COL32(60, 60, 60, 255);
         draw_list->AddRectFilled(node_rect_min, node_rect_max, node_bg_color, 4.0f);
@@ -439,19 +487,19 @@ void megamol::gui::Configurator::demo_dummy(void) {
 
     // Open context menu
     if (!ImGui::IsAnyItemHovered() && ImGui::IsMouseHoveringWindow() && ImGui::IsMouseClicked(1)) {
-        node_selected = node_hovered_in_list = node_hovered_in_scene = -1;
+        selected_module_graph = node_hovered_in_list = node_hovered_in_scene = -1;
         open_context_menu = true;
     }
     if (open_context_menu) {
         ImGui::OpenPopup("context_menu");
-        if (node_hovered_in_list != -1) node_selected = node_hovered_in_list;
-        if (node_hovered_in_scene != -1) node_selected = node_hovered_in_scene;
+        if (node_hovered_in_list != -1) selected_module_graph = node_hovered_in_list;
+        if (node_hovered_in_scene != -1) selected_module_graph = node_hovered_in_scene;
     }
 
     // Draw context menu
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
     if (ImGui::BeginPopup("context_menu")) {
-        Node* node = node_selected != -1 ? &nodes[node_selected] : NULL;
+        Node* node = selected_module_graph != -1 ? &nodes[selected_module_graph] : NULL;
         ImVec2 scene_pos = ImGui::GetMousePosOnOpeningCurrentPopup() - offset;
         if (node) {
             ImGui::Text("Node '%s'", node->Name);
