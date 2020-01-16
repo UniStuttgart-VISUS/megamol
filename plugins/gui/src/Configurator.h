@@ -82,7 +82,6 @@ private:
         ImVec2 scrolling;
         float zooming;
         bool show_grid;
-        std::string desc;
     } state;
 
     std::string project_filename;

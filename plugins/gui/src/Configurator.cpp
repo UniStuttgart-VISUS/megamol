@@ -34,7 +34,6 @@ Configurator::Configurator() : hotkeys(), utils(), graph(), window_rendering_sta
     this->state.zooming = 1.0f;
     this->state.show_grid = true;
     this->state.selected_module_graph = -1;
-    this->state.desc = "";
 }
 
 
@@ -122,36 +121,40 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
     bool open_popup_project = false;
     std::string save_project_label = "Save Project";
     if (ImGui::BeginMenuBar()) {
+
         if (ImGui::BeginMenu("File")) {
 #ifdef GUI_USE_FILEUTILS
             // Load/save parameter values to LUA file
             if (ImGui::MenuItem(save_project_label.c_str(), "no hotkey set")) {
-                /// disabled:
-                // open_popup_project = true;
+                open_popup_project = true;
             }
             /// Not supported so far
             // if (ImGui::MenuItem("Load Project", "no hotkey set")) {
-            //    // TODO:  Load parameter file
-            //    std::string projectFilename;
-            //    this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
-            //}
+/// TODO:  Load parameter file
+//    std::string projectFilename;
+//    this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
+//}
 #endif // GUI_USE_FILEUTILS
             ImGui::EndMenu();
         }
+
+        ImGui::Separator();
         if (ImGui::BeginMenu("Graph")) {
-            ImGui::Checkbox("Show grid", &this->state.show_grid);
+            ImGui::Checkbox("Show Grid", &this->state.show_grid);
+            if (ImGui::MenuItem("Reset Scrolling")) {
+                this->state.scrolling = ImVec2(0.0f, 0.0f);
+            }
+            if (ImGui::MenuItem("Reset Zooming")) {
+                this->state.zooming = 1.0f;
+            }
             ImGui::EndMenu();
         }
+
         ImGui::Separator();
         ImGui::Text("Scrolling: %.2f,%.2f (Middle Mouse Button)", this->state.scrolling.x, this->state.scrolling.y);
-        if (ImGui::Button("Reset###Scrolling")) {
-            this->state.scrolling = ImVec2(0.0f, 0.0f);
-        }
         ImGui::Separator();
         ImGui::Text("Zooming: %.2f (Mouse Wheel)", this->state.zooming);
-        if (ImGui::Button("Reset###Zooming")) {
-            this->state.zooming = 1.0f;
-        }
+
         ImGui::EndMenuBar();
     }
 
@@ -183,7 +186,7 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
         }
         if (ImGui::Button("Save")) {
             if (valid) {
-                if (SaveProjectFile(project_filename, core_instance)) {
+                if (this->graph.PROTOTYPE_SaveGraph(project_filename, core_instance)) {
                     ImGui::CloseCurrentPopup();
                 }
             }
@@ -273,7 +276,7 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(void) {
     ImGui::BeginGroup();
 
     int module_hovered_in_scene = -1;
-    int module_hovered_in_list = -1;
+    std::string hovered_desc;
 
     // CONSTS -----------------------------------------------------------------
 
@@ -282,18 +285,27 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(void) {
     const auto COLOR_SLOT_CALLER_HIGHTL = IM_COL32(0, 192, 192, 255);
     const auto COLOR_SLOT_CALLEE_LABEL = IM_COL32(192, 192, 0, 255);
     const auto COLOR_SLOT_CALLEE_HIGHTL = IM_COL32(192, 192, 0, 255);
-    const auto COLOR_SLOT = IM_COL32(175, 175, 175, 192);
+
+    const auto COLOR_SLOT = IM_COL32(175, 175, 175, 255);
+    const auto COLOR_SLOT_BORDER = IM_COL32(225, 225, 225, 255);
+
+    const auto COLOR_MODULE = IM_COL32(60, 60, 60, 255);
+    const auto COLOR_MODULE_HIGHTL = IM_COL32(75, 75, 75, 255);
+    const auto COLOR_MODULE_BORDER = IM_COL32(100, 100, 100, 255);
+
     //  Misc
     const float SLOT_LABEL_OFFSET = 5.0f;
-    const float MODULE_SLOT_RADIUS = 10.0f;
+    const float MODULE_SLOT_RADIUS = 8.0f;
     const float MODULE_SLOT_DIAMETER = MODULE_SLOT_RADIUS * 2.0f;
     const ImVec2 MODULE_WINDOW_PADDING(10.0f, 10.0f);
 
     // Info -------------------------------------------------------------------
-    ImGui::BeginChild("desc", ImVec2(0.0f, (1.5f * ImGui::GetItemsLineHeightWithSpacing())), true,
+    ImGui::BeginChild("info", ImVec2(0.0f, (2.0f * ImGui::GetItemsLineHeightWithSpacing())), true,
         ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
-    std::string label = "Description: " + this->state.desc;
-    ImGui::Text(label.c_str());
+    std::string label =
+        "This is a PROTOTYPE. Any changes will NOT EFFECT the currently loaded project.\n"
+        "You can save the modified graph to a SEPARATE PROJECT FILE (parameters are not considered yet).";
+    ImGui::TextColored(ImVec4(0.9f, 0.2f, 0.2f, 1.0f), label.c_str());
     ImGui::EndChild();
 
     // Create child canvas ----------------------------------------------------
@@ -323,10 +335,10 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(void) {
     */
 
     // Display Modules
+    /// TODO Automatic layouting of modules
     int id = 0;
     draw_list->ChannelsSplit(2);
     draw_list->ChannelsSetCurrent(0); // Background
-    this->state.desc = "";
     for (auto& mod : this->graph.GetGraphModules()) {
         ImGui::PushID(id);
         ImVec2 module_rect_min = offset + mod.gui.position;
@@ -337,8 +349,12 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(void) {
         bool old_any_active = ImGui::IsAnyItemActive();
         ImGui::SetCursorScreenPos(module_rect_min + MODULE_WINDOW_PADDING);
         ImGui::BeginGroup(); // Lock horizontal position
-        ImGui::Text("%s", mod.basic.class_name.c_str());
-        ImGui::Text("%s", mod.name.c_str());
+        std::string module_class_name = mod.class_name;
+        if (mod.is_view) {
+            module_class_name += "[VIEW]";
+        }
+        ImGui::Text(module_class_name.c_str());
+        ImGui::Text(mod.name.c_str());
         ImGui::EndGroup();
 
         // Save the size of what we have emitted and whether any of the widgets are being used
@@ -352,7 +368,7 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(void) {
         ImGui::InvisibleButton("module", mod.gui.size);
         if (ImGui::IsItemHovered()) {
             module_hovered_in_scene = id;
-            this->state.desc = mod.basic.description;
+            hovered_desc = mod.description;
         }
 
         bool module_moving_active = ImGui::IsItemActive();
@@ -364,16 +380,16 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(void) {
         }
 
         ImU32 module_bg_color = (module_hovered_in_scene == id || this->state.selected_module_graph == id)
-                                    ? IM_COL32(75, 75, 75, 255)
-                                    : IM_COL32(60, 60, 60, 255);
+                                    ? COLOR_MODULE_HIGHTL
+                                    : COLOR_MODULE;
         draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 4.0f);
-        draw_list->AddRect(module_rect_min, module_rect_max, IM_COL32(100, 100, 100, 255), 4.0f);
+        draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 4.0f);
 
         // Draw SLOTS ---------------------------------------------------------
         auto current_slot_color = COLOR_SLOT;
 
         // Caller Slots
-        size_t caller_slots_count = mod.basic.caller_slots.size();
+        size_t caller_slots_count = mod.caller_slots.size();
         for (int slot_idx = 0; slot_idx < caller_slots_count; slot_idx++) {
             draw_list->ChannelsSetCurrent(0); // Background
 
@@ -385,14 +401,15 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(void) {
             current_slot_color = COLOR_SLOT;
             if (ImGui::IsItemHovered()) {
                 current_slot_color = COLOR_SLOT_CALLER_HIGHTL;
-                this->state.desc = mod.basic.caller_slots[slot_idx].description;
+                hovered_desc = mod.caller_slots[slot_idx].description;
             }
             ImGui::SetCursorScreenPos(slot_position);
             draw_list->AddCircleFilled(slot_position, MODULE_SLOT_RADIUS, current_slot_color);
+            draw_list->AddCircle(slot_position, MODULE_SLOT_RADIUS, COLOR_SLOT_BORDER);
 
             draw_list->ChannelsSetCurrent(1); // Foreground
 
-            std::string label = mod.basic.caller_slots[slot_idx].class_name;
+            std::string label = mod.caller_slots[slot_idx].name;
             ImVec2 text_pos = slot_position;
             text_pos.x = text_pos.x - this->utils.TextWidgetWidth(label) - MODULE_SLOT_RADIUS - SLOT_LABEL_OFFSET;
             text_pos.y = text_pos.y - io.FontDefault->FontSize / 2.0f;
@@ -400,7 +417,7 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(void) {
         }
 
         // Callee Slots
-        size_t callee_slots_count = mod.basic.callee_slots.size();
+        size_t callee_slots_count = mod.callee_slots.size();
         for (int slot_idx = 0; slot_idx < callee_slots_count; slot_idx++) {
             draw_list->ChannelsSetCurrent(0); // Background
 
@@ -412,14 +429,15 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(void) {
             current_slot_color = COLOR_SLOT;
             if (ImGui::IsItemHovered()) {
                 current_slot_color = COLOR_SLOT_CALLEE_HIGHTL;
-                this->state.desc = mod.basic.callee_slots[slot_idx].description;
+                hovered_desc = mod.callee_slots[slot_idx].description;
             }
             ImGui::SetCursorScreenPos(slot_position);
             draw_list->AddCircleFilled(slot_position, MODULE_SLOT_RADIUS, current_slot_color);
+            draw_list->AddCircle(slot_position, MODULE_SLOT_RADIUS, COLOR_SLOT_BORDER);
 
             draw_list->ChannelsSetCurrent(1); // Foreground
 
-            std::string label = mod.basic.callee_slots[slot_idx].class_name;
+            std::string label = mod.callee_slots[slot_idx].name;
             ImVec2 text_pos = slot_position;
             text_pos.x = text_pos.x + MODULE_SLOT_RADIUS + SLOT_LABEL_OFFSET;
             text_pos.y = text_pos.y - io.FontDefault->FontSize / 2.0f;
@@ -433,7 +451,6 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(void) {
     }
     draw_list->ChannelsMerge();
 
-
     if (ImGui::IsWindowHovered()) { // && !ImGui::IsAnyItemActive()) {
         // Scrolling (2 = Middle Mouse Button)
         if (ImGui::IsMouseDragging(2, 0.0f)) {
@@ -444,15 +461,24 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(void) {
         this->state.zooming = this->state.zooming + io.MouseWheel / 10.0f;
         this->state.zooming = (this->state.zooming < 0.1f) ? (0.1f) : (this->state.zooming);
         if (last_zooming != this->state.zooming) {
-            // TODO Adapt scrolling for zooming at current mouse position
+            /// TODO Adapt scrolling for zooming at current mouse position
         }
     }
-
 
     ImGui::PopItemWidth();
     ImGui::EndChild();
     ImGui::PopStyleColor();
     ImGui::PopStyleVar(2);
+
+    // Hovered text -----------------------------------------------------------
+    /*
+    ImGui::BeginChild("desc", ImVec2(0.0f, 0.0f), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
+
+
+
+    ImGui::EndChild();
+    */
+
     ImGui::EndGroup();
 
     return true;

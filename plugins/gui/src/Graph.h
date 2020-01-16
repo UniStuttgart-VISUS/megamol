@@ -47,50 +47,63 @@ namespace gui {
 class Graph {
 public:
 
-    // DATA STRUCTS -------------------
-    struct ParamSlotData {
-        std::string class_name;
-        std::string description;
-        std::string type;
+    // GRAPH ------------------------------------------------------------------
+
+    enum ParamType {
+        BUTTON,
+        BOOL,
+        COLOR,
+        ENUM,
+        FILEPATH,
+        FLEXENUM,
+        FLOAT,
+        INT,
+        STRING,
+        TERNARY,
+        TRANSFERFUNCTION,
+        VECTOR2F,
+        VECTOR3F,
+        VECTOR4F,
+        UNKNOWN
     };
 
-    struct CallSlotData {
+    // Forward declaration
+    class Call;
+    class Module;
+
+    class ParamSlot {
+    public:
+        // Initialized on loading
         std::string class_name;
+        std::string description;
+        Graph::ParamType type;
+
+        // Initilized after/on creation
+        std::string full_name;
+    };
+
+    class CallSlot {
+    public:
+        // Initialized on loading 
+        std::string name;
         std::string description;
         std::vector<size_t> compatible_call_idxs; // (Storing only indices of compatible calls for faster comparison.)
-    };
+        std::shared_ptr<Graph::Module> parent_module;
 
-    struct ModuleData {
-        std::string class_name;
-        std::string description;
-        std::string plugin_name;
-        std::vector<Graph::ParamSlotData> param_slots;
-        std::vector<Graph::CallSlotData> callee_slots;
-        std::vector<Graph::CallSlotData> caller_slots;
-    };
-
-    struct CallData {
-        std::string class_name;
-        std::string description;
-        std::string plugin_name;
-    };
-
-
-    // GRAPH STRUCTS ------------------
-    class Slot {
-    public:
-        Graph::CallSlotData basic;
-
-        struct Gui {
-
-        } gui;
+        // Initilized after/on creation
+        std::vector<std::shared_ptr<Graph::Call>> connected_calls;
     };
 
     class Call {
     public:
-        Graph::CallData basic;
-        std::shared_ptr<Graph::Slot> callee_slot; // = std::make_shared<Slot>(node.data.callee_slots[idx]);
-        std::shared_ptr<Graph::Slot> caller_slot; // = std::make_shared<Slot>(node.data.caller_slots[idx]);
+        // Initialized on loading 
+        std::string class_name;
+        std::string description;
+        std::string plugin_name;
+
+        // Initilized after/on creation
+        std::shared_ptr<Graph::CallSlot> connected_callee_slot; /// = std::make_shared<Slot>(node.data.callee_slots[idx]);
+        std::shared_ptr<Graph::CallSlot> connected_caller_slot; /// = std::make_shared<Slot>(node.data.caller_slots[idx]);
 
         struct Gui {
 
@@ -100,22 +113,34 @@ public:
     class Module {
     public:
 
-        inline ImVec2 GetCalleeSlotPos(int slot_idx) const {
-            return ImVec2(this->gui.position.x, this->gui.position.y + this->gui.size.y * ((float)slot_idx + 1) / ((float)this->basic.callee_slots.size() + 1));
-        }
+        // Initialized on loading 
+        std::string class_name;
+        std::string description;
+        std::string plugin_name;
+        std::vector<Graph::ParamSlot> param_slots;
+        std::vector<Graph::CallSlot> callee_slots;
+        std::vector<Graph::CallSlot> caller_slots;
+        bool is_view;
 
-        inline ImVec2 GetCallerSlotPos(int slot_idx) const {
-            return ImVec2(this->gui.position.x + this->gui.size.x, this->gui.position.y + this->gui.size.y * ((float)slot_idx + 1) / ((float)this->basic.caller_slots.size() + 1));
-        }
-
+        // Initilized after/on creation
         std::string name;
         std::string full_name;
-        Graph::ModuleData basic;
+        std::string instance;
 
         struct Gui {
             ImVec2 position;
             ImVec2 size;
         } gui;
+
+        // Functions ----------------------------------------------------------
+
+        inline ImVec2 GetCalleeSlotPos(int slot_idx) const {
+            return ImVec2(this->gui.position.x, this->gui.position.y + this->gui.size.y * ((float)slot_idx + 1) / ((float)this->callee_slots.size() + 1));
+        }
+
+        inline ImVec2 GetCallerSlotPos(int slot_idx) const {
+            return ImVec2(this->gui.position.x + this->gui.size.x, this->gui.position.y + this->gui.size.y * ((float)slot_idx + 1) / ((float)this->caller_slots.size() + 1));
+        }
     };
 
     // --------------------------------
@@ -131,7 +156,7 @@ public:
 
     bool UpdateAvailableModulesCallsOnce(const megamol::core::CoreInstance* core_instance);
 
-    inline const std::vector<Graph::ModuleData>& GetAvailableModulesList(void) const { return this->modules_list; }
+    inline const std::vector<Graph::Module>& GetAvailableModulesList(void) const { return this->modules_list; }
 
     inline const std::string GetCompatibleCallNamet(size_t idx) const {
         if (idx < this->calls_list.size()) {
@@ -140,22 +165,28 @@ public:
         return std::string();
     }
 
-    inline std::vector<Graph::Module>& GetGraphModules(void) { return this->mods; }
+    inline std::vector<Graph::Module>& GetGraphModules(void) { return this->modules_graph; }
+
+    /**
+     * Only used for prototype to be able to store current graph to lua project file.
+     * Later use FileUtils->SaveProjectFile provided in GUI menu.
+     */
+    bool PROTOTYPE_SaveGraph(std::string project_filename, megamol::core::CoreInstance* cor_iInstance);
 
 private:
 
     // VARIABLES --------------------------------------------------------------
 
-    std::vector<Graph::Module> mods;
-    std::vector<Graph::Call> calls;
+    std::vector<Graph::Module> modules_graph;
+    std::vector<Graph::Call> calls_graph;
 
-    std::vector<Graph::CallData> calls_list;
-    std::vector<Graph::ModuleData> modules_list;
+    std::vector<Graph::Call> calls_list;
+    std::vector<Graph::Module> modules_list;
 
     // FUNCTIONS --------------------------------------------------------------
 
-    bool read_module_data(Graph::ModuleData& mod_data, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc, const megamol::core::CoreInstance* core_instance);
-    bool read_call_data(Graph::CallData& call_data, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);
+    bool read_module_data(Graph::Module& mod_data, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc, const megamol::core::CoreInstance* core_instance);
+    bool read_call_data(Graph::Call& call_data, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);
 
 
     // ------------------------------------------------------------------------
