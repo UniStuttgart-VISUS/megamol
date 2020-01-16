@@ -756,8 +756,6 @@
             this.tabViews.TabIndex = 0;
             this.tabViews.SelectedIndexChanged += new System.EventHandler(this.tabViews_SelectedIndexChanged);
             this.tabViews.MouseClick += new System.Windows.Forms.MouseEventHandler(this.tabViews_MouseClick);
-            this.tabViews.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.tabViews_MouseWheel);
-            this.tabViews.KeyPress += new System.Windows.Forms.MouseEventHandler(this.tabView_KeyPress);
             // 
             // imageList1
             // 
