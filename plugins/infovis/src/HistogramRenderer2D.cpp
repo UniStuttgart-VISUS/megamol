@@ -255,11 +255,14 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->floatDataBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, this->colCount * this->rowCount * sizeof(float), floatTableCall->GetData(), GL_STATIC_DRAW);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, this->colCount * this->rowCount * sizeof(float),
+            floatTableCall->GetData(), GL_STATIC_DRAW);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->minBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, this->colCount * sizeof(float), this->colMinimums.data(), GL_STATIC_DRAW);
+        glBufferData(
+            GL_SHADER_STORAGE_BUFFER, this->colCount * sizeof(float), this->colMinimums.data(), GL_STATIC_DRAW);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->maxBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, this->colCount * sizeof(float), this->colMaximums.data(), GL_STATIC_DRAW);
+        glBufferData(
+            GL_SHADER_STORAGE_BUFFER, this->colCount * sizeof(float), this->colMaximums.data(), GL_STATIC_DRAW);
     }
 
     auto binsParam = static_cast<size_t>(this->numberOfBinsParam.Param<core::param::IntParam>()->Value());
@@ -301,9 +304,11 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
         this->histogram.resize(this->colCount * this->bins);
         this->selectedHistogram.resize(this->colCount * this->bins);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->histogramBuffer);
-        glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->colCount * this->bins * sizeof(float), this->histogram.data());
+        glGetBufferSubData(
+            GL_SHADER_STORAGE_BUFFER, 0, this->colCount * this->bins * sizeof(float), this->histogram.data());
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->selectedHistogramBuffer);
-        glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->colCount * this->bins * sizeof(float), this->selectedHistogram.data());
+        glGetBufferSubData(
+            GL_SHADER_STORAGE_BUFFER, 0, this->colCount * this->bins * sizeof(float), this->selectedHistogram.data());
 
         this->maxBinValue = *std::max_element(this->histogram.begin(), this->histogram.end());
 
