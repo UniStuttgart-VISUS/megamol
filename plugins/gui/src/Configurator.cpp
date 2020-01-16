@@ -237,26 +237,26 @@ bool megamol::gui::Configurator::draw_window_module_list(void) {
     ImGui::BeginChild("module_list", ImVec2(child_width, 0.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
 
     int id = 1; // Start with 1 because it is used as enumeration
-    for (auto& m : this->graph.GetAvailableModulesList()) {
-        if (search_string.empty() || this->utils.FindCaseInsensitiveSubstring(m.class_name, search_string)) {
+    for (auto& mod : this->graph.GetAvailableModulesList()) {
+        if (search_string.empty() || this->utils.FindCaseInsensitiveSubstring(mod.class_name, search_string)) {
             ImGui::PushID(id);
-            std::string label = std::to_string(id) + " " + m.class_name + " (" + m.plugin_name + ")";
+            std::string label = std::to_string(id) + " " + mod.class_name + " (" + mod.plugin_name + ")";
             if (ImGui::Selectable(label.c_str(), (id == this->state.selected_module_list))) {
                 this->state.selected_module_list = id;
             }
             // Left mouse button double click action
             if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
-                this->graph.AddModule(m.class_name);
+                this->graph.AddModule(mod.class_name);
             }
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Add Module")) {
-                    this->graph.AddModule(m.class_name);
+                    this->graph.AddModule(mod.class_name);
                 }
                 ImGui::EndPopup();
             }
             // Hover tool tip
-            this->utils.HoverToolTip(m.description, id, 0.5f, 5.0f);
+            this->utils.HoverToolTip(mod.description, id, 0.5f, 5.0f);
             ImGui::PopID();
         }
         id++;
@@ -301,7 +301,11 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(void) {
         this->draw_canvas_grid(this->state.scrolling, this->state.zooming);
     }
 
-    // Display links ----------------------------------------------------------
+    // Draw selected call slot link -------------------------------------------
+    /// Call this before rendering module call slots.
+    this->draw_canvas_selected_call(position_offset);
+
+    // Display call links -----------------------------------------------------
     this->draw_canvas_calls(this->graph.GetGraphCalls(), position_offset);
 
     // Display Modules --------------------------------------------------------
@@ -321,22 +325,21 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(void) {
     for (auto& mod : this->graph.GetGraphModules()) {
 
         // Init size of module (prior to position)
-        if ((mod.gui.size.x == -1.0f) && (mod.gui.size.y == -1.0f)) {
+        if ((mod.gui.size.x < 0.0f) && (mod.gui.size.y < 0.0f)) {
             /// Assuming mod.name is longest used string for module label
             float max_label_length = this->utils.TextWidgetWidth(mod.name);
             float max_slot_name_length = 0.0f;
-            for (auto& s : mod.callee_slots) {
-                float slot_name_length = this->utils.TextWidgetWidth(s.name);
-                max_slot_name_length = std::max(max_slot_name_length, slot_name_length);
-            }
-            for (auto& s : mod.caller_slots) {
-                float slot_name_length = this->utils.TextWidgetWidth(s.name);
-                max_slot_name_length = std::max(slot_name_length, max_slot_name_length);
+            for (auto& call_slot_type_list : mod.call_slots) {
+                for (auto& call_slot : call_slot_type_list.second) {
+                    float slot_name_length = this->utils.TextWidgetWidth(call_slot.name);
+                    max_slot_name_length = std::max(slot_name_length, max_slot_name_length);
+                }
             }
             float module_width = (max_label_length + 2.0f * max_slot_name_length) + (2.0f * MODULE_SLOT_RADIUS) +
                                  (4.0f * SLOT_LABEL_OFFSET);
 
-            auto max_slot_count = std::max(mod.callee_slots.size(), mod.caller_slots.size());
+            auto max_slot_count = std::max(
+                mod.call_slots[Graph::CallSlotType::CALLEE].size(), mod.call_slots[Graph::CallSlotType::CALLER].size());
             float module_slot_height = (static_cast<float>(max_slot_count) * (MODULE_SLOT_RADIUS * 2.0f) * 1.5f) +
                                        ((MODULE_SLOT_RADIUS * 2.0f) * 0.5f);
             float module_height = std::max(
@@ -345,7 +348,7 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(void) {
             mod.gui.size = ImVec2(module_width, module_height);
         }
         // Init position of module
-        if ((mod.gui.position.x == -1.0f) && (mod.gui.position.y == -1.0f)) {
+        if ((mod.gui.position.x < 0.0f) && (mod.gui.position.y < 0.0f)) {
             ImVec2 canvas_size = ImGui::GetWindowSize();
             mod.gui.position = ImVec2((canvas_size.x - mod.gui.size.x) / 2.0f, (canvas_size.y - mod.gui.size.y) / 2.0f);
         }
@@ -412,10 +415,10 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(void) {
 
         // Draw call slots ----------------------------------------------------
         this->draw_canvas_module_call_slot(
-            Configurator::CallSlotType::CALLER, mod, position_offset, MODULE_SLOT_RADIUS, SLOT_LABEL_OFFSET);
+            Graph::CallSlotType::CALLER, mod, position_offset, MODULE_SLOT_RADIUS, SLOT_LABEL_OFFSET);
 
         this->draw_canvas_module_call_slot(
-            Configurator::CallSlotType::CALLEE, mod, position_offset, MODULE_SLOT_RADIUS, SLOT_LABEL_OFFSET);
+            Graph::CallSlotType::CALLEE, mod, position_offset, MODULE_SLOT_RADIUS, SLOT_LABEL_OFFSET);
 
         // --------------------------------------------------------------------
 
@@ -478,40 +481,24 @@ bool megamol::gui::Configurator::draw_canvas_grid(ImVec2 scrolling, float zoomin
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_calls(std::vector<Graph::Call>& calls, ImVec2 offset) const {
+bool megamol::gui::Configurator::draw_canvas_calls(std::vector<Graph::Call>& calls, ImVec2 position_offset) const {
 
     const auto COLOR_CALL_CURVE = IM_COL32(200, 200, 100, 255);
 
     for (auto& call : calls) {
-        int caller_idx = -1;
-        int caller_count = call.connected_caller_slot->parent_module->caller_slots.size();
-        for (int i = 0; i < caller_count; i++) {
-            if (call.connected_caller_slot->name == call.connected_caller_slot->parent_module->caller_slots[i].name) {
-                caller_idx = i;
-            }
-        }
-        int callee_idx = -1;
-        int callee_count = call.connected_callee_slot->parent_module->callee_slots.size();
-        for (int i = 0; i < callee_count; i++) {
-            if (call.connected_callee_slot->name == call.connected_callee_slot->parent_module->callee_slots[i].name) {
-                callee_idx = i;
-            }
-        }
-
-        if ((caller_idx > 0) && (callee_idx > 0)) {
-            ImDrawList* draw_list = ImGui::GetWindowDrawList();
-            ImVec2 p1 = offset + call.connected_caller_slot->parent_module->GetCallerSlotPos(caller_idx);
-            ImVec2 p2 = offset + call.connected_callee_slot->parent_module->GetCalleeSlotPos(callee_idx);
-            draw_list->AddBezierCurve(p1, p1 + ImVec2(+50, 0), p2 + ImVec2(-50, 0), p2, COLOR_CALL_CURVE, 3.0f);
-        }
+        /// Assuming connected calls are not nullptr
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        ImVec2 p1 = position_offset + call.connected_call_slots[Graph::CallSlotType::CALLER]->GetCallSlotPos();
+        ImVec2 p2 = position_offset + call.connected_call_slots[Graph::CallSlotType::CALLEE]->GetCallSlotPos();
+        draw_list->AddBezierCurve(p1, p1 + ImVec2(+50, 0), p2 + ImVec2(-50, 0), p2, COLOR_CALL_CURVE, 3.0f);
     }
 
     return true;
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_module_call_slot(Configurator::CallSlotType type, Graph::Module& mod,
-    ImVec2 position_offset, float slot_radius, float slot_label_offset) const {
+bool megamol::gui::Configurator::draw_canvas_module_call_slot(
+    Graph::CallSlotType type, Graph::Module& mod, ImVec2 position_offset, float slot_radius, float slot_label_offset) {
 
     ImGuiIO& io = ImGui::GetIO();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -522,36 +509,25 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slot(Configurator::Call
     const ImU32 COLOR_SLOT_CALLER_HIGHTL = IM_COL32(0, 192, 192, 255);
     const ImU32 COLOR_SLOT_CALLEE_LABEL = IM_COL32(192, 192, 0, 255);
     const ImU32 COLOR_SLOT_CALLEE_HIGHTL = IM_COL32(192, 192, 0, 255);
-
     ImU32 slot_color = COLOR_SLOT;
     ImU32 slot_highl_color;
     ImU32 slot_label_color;
-    size_t slots_count = 0;
-    if (type == CallSlotType::CALLER) {
-        slots_count = mod.caller_slots.size();
+    if (type == Graph::CallSlotType::CALLER) {
         slot_highl_color = COLOR_SLOT_CALLER_HIGHTL;
         slot_label_color = COLOR_SLOT_CALLER_LABEL;
-    } else if (type == CallSlotType::CALLEE) {
-        slots_count = mod.callee_slots.size();
+    } else if (type == Graph::CallSlotType::CALLEE) {
         slot_highl_color = COLOR_SLOT_CALLEE_HIGHTL;
         slot_label_color = COLOR_SLOT_CALLEE_LABEL;
     }
 
-    for (int slot_idx = 0; slot_idx < slots_count; slot_idx++) {
+    for (auto& slot : mod.call_slots[type]) {
         draw_list->ChannelsSetCurrent(0); // Background
 
-        ImVec2 slot_position;
-        std::string slot_name;
-        if (type == CallSlotType::CALLER) {
-            slot_name = mod.caller_slots[slot_idx].name;
-            slot_position = position_offset + mod.GetCallerSlotPos(slot_idx);
-        } else if (type == CallSlotType::CALLEE) {
-            slot_name = mod.callee_slots[slot_idx].name;
-            slot_position = position_offset + mod.GetCalleeSlotPos(slot_idx);
-        }
+        ImVec2 slot_position = position_offset + slot.GetCallSlotPos();
+        std::string slot_name = slot.name;
 
         ImGui::SetCursorScreenPos(slot_position - ImVec2(slot_radius, slot_radius));
-        // Label must be unique
+        // (Label must be unique)
         std::string label = slot_name + "###" + mod.full_name;
         ImGui::InvisibleButton(label.c_str(), ImVec2(slot_radius * 2.0f, slot_radius * 2.0f));
         slot_color = COLOR_SLOT;
@@ -559,8 +535,9 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slot(Configurator::Call
             slot_color = slot_highl_color;
         }
         if (ImGui::IsItemClicked()) {
-            // ImGui::GetID(label.c_str());
+            this->graph.SetSelectedCallSlot(mod.full_name, slot_name);
         }
+
         ImGui::SetCursorScreenPos(slot_position);
         draw_list->AddCircleFilled(slot_position, slot_radius, slot_color);
         draw_list->AddCircle(slot_position, slot_radius, COLOR_SLOT_BORDER);
@@ -569,15 +546,38 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slot(Configurator::Call
 
         ImVec2 text_pos;
         text_pos.y = slot_position.y - io.FontDefault->FontSize / 2.0f;
-        if (type == CallSlotType::CALLER) {
+        if (type == Graph::CallSlotType::CALLER) {
             text_pos.x = slot_position.x - this->utils.TextWidgetWidth(slot_name) - slot_radius - slot_label_offset;
-        } else if (type == CallSlotType::CALLEE) {
+        } else if (type == Graph::CallSlotType::CALLEE) {
             text_pos.x = slot_position.x + slot_radius + slot_label_offset;
         }
         draw_list->AddText(text_pos, slot_label_color, slot_name.c_str());
     }
 
     return true;
+}
+
+
+bool megamol::gui::Configurator::draw_canvas_selected_call(ImVec2 position_offset) {
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    const auto COLOR_CALL_CURVE = IM_COL32(200, 200, 100, 255);
+
+    bool mouse_down = io.MouseDown[0]; // 0 = left mouse button
+    if (mouse_down) {
+        auto selected_call_slot = this->graph.GetSelectedCallSlot();
+        if (selected_call_slot != nullptr) {
+            ImDrawList* draw_list = ImGui::GetWindowDrawList();
+            ImVec2 p1 = position_offset + selected_call_slot->GetCallSlotPos();
+            ImVec2 p2 = io.MousePos;
+            draw_list->AddBezierCurve(p1, p1 + ImVec2(+50, 0), p2 + ImVec2(-50, 0), p2, COLOR_CALL_CURVE, 3.0f);
+        }
+    } else {
+        this->graph.ResetSelectedCallSlot();
+    }
+
+    return false;
 }
 
 

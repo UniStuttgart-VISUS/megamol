@@ -65,8 +65,6 @@ public:
     bool CheckHotkeys(void);
 
 private:
-    enum CallSlotType { CALLEE, CALLER };
-
     // VARIABLES --------------------------------------------------------------
 
     typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyData;
@@ -88,17 +86,17 @@ private:
         bool show_grid;
     } state;
 
-    struct ActiveCall {};
-
     // FUNCTIONS --------------------------------------------------------------
 
     bool draw_window_menu(megamol::core::CoreInstance* core_instance);
     bool draw_window_module_list(void);
     bool draw_window_graph_canvas(void);
     bool draw_canvas_grid(ImVec2 scrolling, float zooming) const;
-    bool draw_canvas_calls(std::vector<Graph::Call>& calls, ImVec2 offset) const;
-    bool draw_canvas_module_call_slot(Configurator::CallSlotType type, Graph::Module& mod, ImVec2 position_offset,
-        float slot_radius, float slot_label_offset) const;
+    bool draw_canvas_calls(std::vector<Graph::Call>& calls, ImVec2 position_offset) const;
+    bool draw_canvas_module_call_slot(Graph::CallSlotType type, Graph::Module& mod, ImVec2 position_offset,
+        float slot_radius, float slot_label_offset);
+
+    bool draw_canvas_selected_call(ImVec2 position_offset);
 
     void demo_dummy(void);
 

@@ -67,6 +67,8 @@ public:
         UNKNOWN
     };
 
+    enum CallSlotType { CALLEE, CALLER };
+
     // Forward declaration
     class Call;
     class Module;
@@ -89,9 +91,29 @@ public:
         std::string description;
         std::vector<size_t> compatible_call_idxs; // (Storing only indices of compatible calls for faster comparison.)
         std::shared_ptr<Graph::Module> parent_module;
+        Graph::CallSlotType type;
 
         // Initilized after/on creation
         std::vector<std::shared_ptr<Graph::Call>> connected_calls;
+
+        // Functions ------------------
+
+        inline ImVec2 GetCallSlotPos(void) const {
+            ImVec2 retpos = ImVec2(-1.0f, -1.0f);
+            if (this->parent_module != nullptr) {
+                auto slot_count = this->parent_module->call_slots[this->type].size();
+                size_t slot_idx = 0;
+                for (size_t i = 0; i < slot_count; i++) {
+                    if (this->name == this->parent_module->call_slots[this->type][i].name) {
+                        slot_idx = i;
+                    }
+                }
+                auto pos = this->parent_module->gui.position;
+                auto size = this->parent_module->gui.size;
+                retpos = ImVec2(pos.x + ((this->type == Graph::CallSlotType::CALLER)?(size.x):(0.0f)), pos.y + size.y * ((float)slot_idx + 1) / ((float)slot_count + 1));
+            }
+            return retpos;
+        }
     };
 
     class Call {
@@ -103,8 +125,7 @@ public:
         std::vector<std::string> functions;
 
         // Initilized after/on creation
-        std::shared_ptr<Graph::CallSlot> connected_callee_slot; /// = std::make_shared<Slot>(node.data.callee_slots[idx]);
-        std::shared_ptr<Graph::CallSlot> connected_caller_slot; /// = std::make_shared<Slot>(node.data.caller_slots[idx]);
+        std::map<Graph::CallSlotType, std::shared_ptr<Graph::CallSlot>> connected_call_slots; 
 
         struct Gui {
 
@@ -119,8 +140,7 @@ public:
         std::string description;
         std::string plugin_name;
         std::vector<Graph::ParamSlot> param_slots;
-        std::vector<Graph::CallSlot> callee_slots;
-        std::vector<Graph::CallSlot> caller_slots;
+        std::map<Graph::CallSlotType, std::vector<Graph::CallSlot>> call_slots;
         bool is_view;
 
         // Initilized after/on creation
@@ -132,16 +152,6 @@ public:
             ImVec2 position;
             ImVec2 size;
         } gui;
-
-        // Functions ------------------
-
-        inline ImVec2 GetCalleeSlotPos(int slot_idx) const {
-            return ImVec2(this->gui.position.x, this->gui.position.y + this->gui.size.y * ((float)slot_idx + 1) / ((float)this->callee_slots.size() + 1));
-        }
-
-        inline ImVec2 GetCallerSlotPos(int slot_idx) const {
-            return ImVec2(this->gui.position.x + this->gui.size.x, this->gui.position.y + this->gui.size.y * ((float)slot_idx + 1) / ((float)this->caller_slots.size() + 1));
-        }
     };
 
     // CLASS ------------------------------------------------------------------
@@ -169,6 +179,16 @@ public:
 
     inline std::vector<Graph::Call>& GetGraphCalls(void) { return this->calls_graph; }
 
+    bool SetSelectedCallSlot(const std::string& module_full_name, const std::string& slot_name);
+
+    std::shared_ptr<Graph::CallSlot>& GetSelectedCallSlot(void) {
+        return this->selected_call_slot;
+    }
+
+    inline void ResetSelectedCallSlot(void) {
+        this->selected_call_slot.reset();
+    }
+
     /**
      * Only used for prototype to be able to store current graph to lua project file.
      * Later use FileUtils->SaveProjectFile provided in GUI menu.
@@ -184,6 +204,8 @@ private:
 
     std::vector<Graph::Call> calls_list;
     std::vector<Graph::Module> modules_list;
+
+    std::shared_ptr<Graph::CallSlot> selected_call_slot;
 
     // FUNCTIONS --------------------------------------------------------------
 
