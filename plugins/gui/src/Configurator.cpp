@@ -20,7 +20,7 @@ using namespace megamol::gui;
 using vislib::sys::Log;
 
 
-Configurator::Configurator() : hotkeys(), utils(), graph(), window_rendering_state(0), state(), project_filename() {
+Configurator::Configurator() : hotkeys(), graph(), utils(), window_rendering_state(0), project_filename(), state() {
 
     // Init HotKeys
     this->hotkeys[HotkeyIndex::MODULE_SEARCH] =
@@ -65,6 +65,7 @@ bool megamol::gui::Configurator::CheckHotkeys(void) {
 
 bool megamol::gui::Configurator::Draw(
     WindowManager::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance) {
+
     if (core_instance == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -118,6 +119,12 @@ bool megamol::gui::Configurator::Draw(
 
 bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* core_instance) {
 
+    if (core_instance == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
     bool open_popup_project = false;
     std::string save_project_label = "Save Project";
     if (ImGui::BeginMenuBar()) {
@@ -154,6 +161,7 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
         ImGui::Text("Scrolling: %.2f,%.2f (Middle Mouse Button)", this->state.scrolling.x, this->state.scrolling.y);
         ImGui::Separator();
         ImGui::Text("Zooming: %.2f (Mouse Wheel)", this->state.zooming);
+        ImGui::Separator();
 
         ImGui::EndMenuBar();
     }

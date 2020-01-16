@@ -69,12 +69,14 @@ private:
 
     typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyData;
     enum HotkeyIndex : size_t { MODULE_SEARCH = 0, INDEX_COUNT = 1 };
+
     std::array<HotkeyData, HotkeyIndex::INDEX_COUNT> hotkeys;
 
+    Graph graph;
     GUIUtils utils;
 
     int window_rendering_state;
-    Graph graph;
+    std::string project_filename;
 
     struct State {
         int selected_module_list;
@@ -83,8 +85,6 @@ private:
         float zooming;
         bool show_grid;
     } state;
-
-    std::string project_filename;
 
     // FUNCTIONS --------------------------------------------------------------
 

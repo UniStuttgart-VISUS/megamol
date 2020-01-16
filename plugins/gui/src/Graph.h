@@ -47,7 +47,7 @@ namespace gui {
 class Graph {
 public:
 
-    // GRAPH ------------------------------------------------------------------
+    // GRAPH DATA STRUCTURE ---------------------------------------------------
 
     enum ParamType {
         BUTTON,
@@ -132,7 +132,7 @@ public:
             ImVec2 size;
         } gui;
 
-        // Functions ----------------------------------------------------------
+        // Functions ------------------
 
         inline ImVec2 GetCalleeSlotPos(int slot_idx) const {
             return ImVec2(this->gui.position.x, this->gui.position.y + this->gui.size.y * ((float)slot_idx + 1) / ((float)this->callee_slots.size() + 1));
@@ -143,12 +143,11 @@ public:
         }
     };
 
-    // --------------------------------
+    // CLASS ------------------------------------------------------------------
 
     Graph(void);
 
     virtual ~Graph(void);
-
 
     bool AddModule(const std::string& module_class_name);
 
@@ -158,7 +157,7 @@ public:
 
     inline const std::vector<Graph::Module>& GetAvailableModulesList(void) const { return this->modules_list; }
 
-    inline const std::string GetCompatibleCallNamet(size_t idx) const {
+    inline const std::string GetCompatibleCallNames(size_t idx) const {
         if (idx < this->calls_list.size()) {
             return this->calls_list[idx].class_name;
         }
@@ -185,8 +184,8 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    bool read_module_data(Graph::Module& mod_data, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc, const megamol::core::CoreInstance* core_instance);
-    bool read_call_data(Graph::Call& call_data, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);
+    bool read_module_data(std::shared_ptr<Graph::Module> mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc, const megamol::core::CoreInstance* core_instance);
+    bool read_call_data(Graph::Call& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);
 
 
     // ------------------------------------------------------------------------
