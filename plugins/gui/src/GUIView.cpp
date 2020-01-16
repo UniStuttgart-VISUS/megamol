@@ -855,6 +855,7 @@ void GUIView::drawMainWindowCallback(const std::string& wn, WindowManager::Windo
                                    "[Drag & Drop] Move Module to other Parameter Window\n"
                                    "[Enter],[Tab],[Left-Click outside Widget] Confirm input changes";
     this->utils.HelpMarkerToolTip(color_param_help);
+    ImGui::Separator();
 
     this->drawParametersCallback(wn, wc);
 }
@@ -888,7 +889,6 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
     bool show_only_hotkeys = wc.param_show_hotkeys;
     ImGui::Checkbox("Show Hotkeys", &show_only_hotkeys);
     wc.param_show_hotkeys = show_only_hotkeys;
-    ImGui::Separator();
 
     // Paramter substring name filtering (only for main parameter view)
     if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
@@ -902,7 +902,6 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
             "Case insensitive substring search in\nparameter names.\nGlobally in all parameter views.\n";
         this->utils.StringSearch("Search Parameters", help_test);
     }
-    ImGui::Separator();
 
     // Module filtering (only for main parameter view)
     if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
@@ -994,8 +993,8 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
         }
         this->utils.HelpMarkerToolTip("Selected filter is not refreshed on graph changes.\n"
                                       "Select filter again to trigger refresh.");
-        ImGui::Separator();
     }
+    ImGui::Separator();
 
     // Create child window for sepearte scroll bar and keeping header always visible on top of parameter list
     ImGui::BeginChild("###ParameterList");
@@ -1046,10 +1045,11 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
                 ImGui::PopStyleColor();
             }
 
-            /// TODO:  Add module description as hover tooltip
-            /// this->utils.HoverToolTip(std::string(mod.Description()), ImGui::GetID(label.c_str()), 0.5f);
-            /// Test:
-            /// this->utils.HoverToolTip(std::string(mod.FullName().PeekBuffer()), ImGui::GetID(label.c_str()), 0.5f);
+            // Module description as hover tooltip
+            auto mod_desc = this->GetCoreInstance()->GetModuleDescriptionManager().Find(mod.ClassName());
+            if (mod_desc != nullptr) {
+                this->utils.HoverToolTip(std::string(mod_desc->Description()), ImGui::GetID(label.c_str()), 0.5f, 5.0f);
+            }
 
             // Context menu
             if (ImGui::BeginPopupContextItem()) {

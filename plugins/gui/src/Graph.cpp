@@ -31,14 +31,16 @@ megamol::gui::Graph::~Graph(void) {
 bool megamol::gui::Graph::AddModule(const std::string& module_class_name) {
 
     Graph::Module mod;
-    mod.class_name.clear();
+    bool found = false;
     for (auto& m : this->modules_list) {
         if (module_class_name == m.class_name) {
             mod = m;
+            found = true;
+            break;
         }
     }
-    if (mod.class_name.empty()) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to find module for class name: %s [%s, %s, line %d]\n", module_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+    if (!found) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to find module: %s [%s, %s, line %d]\n", module_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -101,19 +103,14 @@ bool megamol::gui::Graph::UpdateAvailableModulesCallsOnce(const megamol::core::C
 
     // MODULES ----------------------------------------------------------------
     if (this->modules_list.empty()) {
-        std::vector<std::thread> threads;
 
         // Get core modules
         std::string plugin_name = "Core";
         for (auto& m_desc : core_instance->GetModuleDescriptionManager()) {
             Graph::Module mod;
             mod.plugin_name = plugin_name;
+            this->read_module_data(mod, m_desc);
             this->modules_list.emplace_back(mod);
-            auto mod_ptr = std::make_shared<Graph::Module>(this->modules_list.back());
-            threads.emplace_back([this, mod_ptr, m_desc, core_instance]() {
-                this->read_module_data(mod_ptr, m_desc, core_instance);
-            });
-            threads.back().detach();
         }
 
         // Get plugin modules
@@ -123,18 +120,9 @@ bool megamol::gui::Graph::UpdateAvailableModulesCallsOnce(const megamol::core::C
             for (auto& m_desc : plugin->GetModuleDescriptionManager()) {
                 Graph::Module mod;
                 mod.plugin_name = plugin_name;
+                this->read_module_data(mod, m_desc);
                 this->modules_list.emplace_back(mod);
-                auto mod_ptr = std::make_shared<Graph::Module>(this->modules_list.back());
-                threads.emplace_back([this, mod_ptr, m_desc, core_instance]() {
-                    this->read_module_data(mod_ptr, m_desc, core_instance);
-                });
-                threads.back().detach();
             }
-        }
-
-        // Join all threads
-        for (auto& th : threads) {
-            th.join();
         }
 
         // Sorting module names alphabetically ascending
@@ -154,20 +142,19 @@ bool megamol::gui::Graph::UpdateAvailableModulesCallsOnce(const megamol::core::C
 }
 
 
-bool megamol::gui::Graph::read_module_data(const std::shared_ptr<Graph::Module> mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc, const megamol::core::CoreInstance* core_instance) {
+bool megamol::gui::Graph::read_module_data(Graph::Module& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc) {
 
-    if (core_instance == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    /// modplugin_name is not available here (set above). 
+    mod.class_name = std::string(mod_desc->ClassName());
+    mod.description = std::string(mod_desc->Description());
+    mod.param_slots.clear();
+    mod.callee_slots.clear();
+    mod.caller_slots.clear();
+
+    if (this->calls_list.empty()) {
+        vislib::sys::Log::DefaultLog.WriteError("Call list is empty. Call read_call_data() prior to that. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-
-    /// mod->plugin_name is not available here (set above). 
-    mod->class_name = std::string(mod_desc->ClassName());
-    mod->description = std::string(mod_desc->Description());
-    mod->param_slots.clear();
-    mod->callee_slots.clear();
-    mod->caller_slots.clear();
 
     // SLOTS ------------------------------------------------------------------
     /// (Following code is adapted from megamol::core::job::job::PluginsStateFileGeneratorJob.cpp)
@@ -181,7 +168,7 @@ bool megamol::gui::Graph::read_module_data(const std::shared_ptr<Graph::Module> 
     root_mod_ns->AddChild(new_mod);
 
     std::shared_ptr<const core::view::AbstractView> viewptr = std::dynamic_pointer_cast<const core::view::AbstractView>(new_mod);
-    mod->is_view = (viewptr != nullptr);
+    mod.is_view = (viewptr != nullptr);
 
     std::vector<std::shared_ptr<core::param::ParamSlot> > paramSlots;
     std::vector<std::shared_ptr<core::CallerSlot> > callerSlots;
@@ -219,7 +206,7 @@ bool megamol::gui::Graph::read_module_data(const std::shared_ptr<Graph::Module> 
         else if (auto* p_ptr = param_slot->Param<core::param::Vector4fParam>()) { psd.type = Graph::ParamType::VECTOR4F; }
         else { psd.type = Graph::ParamType::UNKNOWN; }
 
-        mod->param_slots.emplace_back(psd);
+        mod.param_slots.emplace_back(psd);
     }
 
     
@@ -230,7 +217,7 @@ bool megamol::gui::Graph::read_module_data(const std::shared_ptr<Graph::Module> 
         csd.description = std::string(caller_slot->Description().PeekBuffer());
         csd.compatible_call_idxs.clear();
         csd.connected_calls.clear();
-        csd.parent_module = mod;
+        csd.parent_module = std::make_shared<Graph::Module>(mod);
 
         SIZE_T callCount = caller_slot->GetCompCallCount();
         for (SIZE_T i = 0; i < callCount; ++i) {
@@ -243,7 +230,7 @@ bool megamol::gui::Graph::read_module_data(const std::shared_ptr<Graph::Module> 
             }
         }
 
-        mod->caller_slots.emplace_back(csd);
+        mod.caller_slots.emplace_back(csd);
     }
 
     // CalleeSlots
@@ -253,7 +240,7 @@ bool megamol::gui::Graph::read_module_data(const std::shared_ptr<Graph::Module> 
         csd.description = std::string(callee_slot->Description().PeekBuffer());
         csd.compatible_call_idxs.clear();
         csd.connected_calls.clear();
-        csd.parent_module = mod;
+        csd.parent_module = std::make_shared<Graph::Module>(mod);
 
         SIZE_T callbackCount = callee_slot->GetCallbackCount();
         std::vector<std::string> callNames, funcNames;
@@ -266,14 +253,21 @@ bool megamol::gui::Graph::read_module_data(const std::shared_ptr<Graph::Module> 
         size_t ll = callNames.size();
         assert(ll == funcNames.size());
         for (std::string callName : uniqueCallNames) {
-            core::factories::CallDescriptionManager::description_ptr_type desc = core_instance->GetCallDescriptionManager().Find(callName.c_str());
+            bool found_call = false;
+            Graph::Call call;
+            for (auto& c : this->calls_list) {
+                if (callName == c.class_name) {
+                    call = c;
+                    found_call = true;
+                    break;
+                }
+            }
             bool allFound = true;
-            if (desc != nullptr) {
-                for (unsigned int i = 0; i < desc->FunctionCount(); ++i) {
-                    std::string fn = desc->FunctionName(i);
+            if (found_call) {
+                for (auto& func_name : call.functions) {
                     bool found = false;
                     for (size_t j = 0; j < ll; ++j) {
-                        if ((callNames[j] == callName) && (funcNames[j] == fn)) {
+                        if ((callNames[j] == callName) && (funcNames[j] == func_name)) {
                             found = true;
                             break;
                         }
@@ -291,7 +285,6 @@ bool megamol::gui::Graph::read_module_data(const std::shared_ptr<Graph::Module> 
                 completeCallNames.insert(callName);
             }
         }
-
         for (std::string callName : completeCallNames) {
             auto calls_cnt = this->calls_list.size();
             for (size_t idx = 0; idx < calls_cnt; ++idx) {
@@ -301,7 +294,7 @@ bool megamol::gui::Graph::read_module_data(const std::shared_ptr<Graph::Module> 
             }
         }
 
-        mod->callee_slots.emplace_back(csd);
+        mod.callee_slots.emplace_back(csd);
     }
 
     paramSlots.clear();
@@ -323,6 +316,10 @@ bool megamol::gui::Graph::read_call_data(Graph::Call& call, const std::shared_pt
     call.description = std::string(call_desc->Description());
     call.connected_callee_slot.reset();
     call.connected_caller_slot.reset();
+    call.functions.clear();
+    for (unsigned int i = 0; i < call_desc->FunctionCount(); ++i) {
+        call.functions.emplace_back(call_desc->FunctionName(i));
+    }
 
     return true;
 }

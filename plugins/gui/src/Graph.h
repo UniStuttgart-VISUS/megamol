@@ -100,6 +100,7 @@ public:
         std::string class_name;
         std::string description;
         std::string plugin_name;
+        std::vector<std::string> functions;
 
         // Initilized after/on creation
         std::shared_ptr<Graph::CallSlot> connected_callee_slot; /// = std::make_shared<Slot>(node.data.callee_slots[idx]);
@@ -166,6 +167,8 @@ public:
 
     inline std::vector<Graph::Module>& GetGraphModules(void) { return this->modules_graph; }
 
+    inline std::vector<Graph::Call>& GetGraphCalls(void) { return this->calls_graph; }
+
     /**
      * Only used for prototype to be able to store current graph to lua project file.
      * Later use FileUtils->SaveProjectFile provided in GUI menu.
@@ -184,10 +187,9 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    bool read_module_data(std::shared_ptr<Graph::Module> mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc, const megamol::core::CoreInstance* core_instance);
-    bool read_call_data(Graph::Call& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);
-
-
+    bool read_call_data(Graph::Call& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc); 
+    bool read_module_data(Graph::Module& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
+    
     // ------------------------------------------------------------------------
 };
 
