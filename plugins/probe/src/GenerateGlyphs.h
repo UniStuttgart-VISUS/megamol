@@ -64,9 +64,9 @@ private:
     bool getTexture(core::Call& call);
     bool getTextureMetaData(core::Call& call);
 
-    void doGlyphGeneration();
+    bool doGlyphGeneration();
 
-    uint32_t _version;
+    uint32_t _version = 0;
 
     std::shared_ptr<ProbeCollection> _probe_data;
     std::shared_ptr<mesh::MeshDataAccessCollection> _mesh_data;

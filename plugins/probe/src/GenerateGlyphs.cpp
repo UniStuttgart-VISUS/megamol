@@ -41,7 +41,7 @@ GenerateGlyphs::~GenerateGlyphs() {
 }
 
 
-void GenerateGlyphs::doGlyphGeneration() {
+bool GenerateGlyphs::doGlyphGeneration() {
 
     this->_mesh_data = std::make_shared<mesh::MeshDataAccessCollection>();
     this->_tex_data = std::make_shared<mesh::ImageDataAccessCollection>();
@@ -65,7 +65,7 @@ void GenerateGlyphs::doGlyphGeneration() {
 
         if (samples->samples.empty()) {
             vislib::sys::Log::DefaultLog.WriteError("[GenerateGlyphs] Probes have not been sampled.");
-            return;
+            return false;
         }
 
         // calc vertices
@@ -168,6 +168,8 @@ void GenerateGlyphs::doGlyphGeneration() {
             _dtu[i].getPixelHeight());
 
     } // end for probe count
+
+    return true;
 }
 
 
@@ -242,7 +244,7 @@ bool GenerateGlyphs::getTexture(core::Call& call) {
         ++_version;
         this->_probe_data = cprobes->getData();
         if (this->scale < 0) this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 2e-2;
-        doGlyphGeneration();
+        if(!doGlyphGeneration()) return false;
     }
 
     ctex->setData(this->_tex_data,_version);
