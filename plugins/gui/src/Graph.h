@@ -47,12 +47,11 @@ namespace gui {
 class Graph {
 public:
 
-    // GRAPH DATA STRUCTURE ---------------------------------------------------
-
     // Forward declaration
     class Module;
     class Call;
     class CallSlot;
+    class ParamSlot;
 
     typedef std::shared_ptr<Graph::CallSlot> CallSlotPtr;
     typedef std::shared_ptr<Graph::Call> CallPtr;
@@ -87,6 +86,9 @@ public:
 
     class ParamSlot {
     public:
+        ParamSlot() {}
+        ~ParamSlot() {}
+
         // Initialized on loading
         std::string class_name;
         std::string description;
@@ -94,36 +96,61 @@ public:
 
         // Initilized after/on creation
         std::string full_name;
+
+    private:
+
     };
 
     class CallSlot {
     public:
+        CallSlot() {
+            this->parent_module.reset();
+            connected_calls.clear();
+        }
+        ~CallSlot() {}
+
         // Initialized on loading 
         std::string name;
         std::string description;
         std::vector<size_t> compatible_call_idxs; // (Storing only indices of compatible calls for faster comparison.)
         Graph::CallSlotType type;
 
-        // Initilized after/on creation
-        Graph::ModulePtr parent_module; 
-        std::vector<Graph::CallPtr> connected_calls;
-
         // Functions ------------------
 
         ImVec2 GetGuiPos(void);
 
+        bool CallsConnected(void) const;
+        bool ConnectCall(Graph::CallPtr call);
+        bool DisConnectCall(Graph::CallPtr call);
+        bool DisConnectCalls(void);
+        const std::vector<Graph::CallPtr> GetConnectedCalls(void);
+
+        bool ParentModuleConnected(void) const;
+        bool AddParentModule(Graph::ModulePtr parent_module);
+        bool RemoveParentModule(void);
+        const Graph::ModulePtr GetParentModule(void);
+
+    private:
+
+        // Initilized after/on creation
+        Graph::ModulePtr parent_module;
+        std::vector<Graph::CallPtr> connected_calls;
     };
 
     class Call {
     public:
+        Call() {
+            this->connected_call_slots.clear();
+            this->connected_call_slots.emplace(Graph::CallSlotType::CALLER, nullptr);
+            this->connected_call_slots.emplace(Graph::CallSlotType::CALLEE, nullptr);
+        }
+        ~Call() {}
+
         // Initialized on loading 
         std::string class_name;
         std::string description;
         std::string plugin_name;
         std::vector<std::string> functions;
-
-        // Initilized after/on creation
-        std::map<Graph::CallSlotType, Graph::CallSlotPtr> connected_call_slots; 
 
         struct Gui {
             int id;
@@ -131,22 +158,31 @@ public:
 
         // Functions ------------------
 
-        inline bool IsConnected(void) {
-            return ((this->connected_call_slots[Graph::CallSlotType::CALLER] != nullptr) && 
-                (this->connected_call_slots[Graph::CallSlotType::CALLEE] != nullptr));
-        }
+        bool IsConnected(void);
+        bool ConnectCallSlot(Graph::CallSlotType type, Graph::CallSlotPtr call_slot);
+        bool DisConnectCallSlot(Graph::CallSlotType type);
+        const Graph::CallSlotPtr GetCallSlot(Graph::CallSlotType type);
 
+    private:
+
+        // Initilized after/on creation
+        std::map<Graph::CallSlotType, Graph::CallSlotPtr> connected_call_slots;
     };
 
     class Module {
     public:
+        Module() {
+            this->call_slots.clear();
+            this->call_slots.emplace(Graph::CallSlotType::CALLER, std::vector<Graph::CallSlotPtr>());
+            this->call_slots.emplace(Graph::CallSlotType::CALLEE, std::vector<Graph::CallSlotPtr>());
+        }
+        ~Module() {}
 
         // Initialized on loading 
         std::string class_name;
         std::string description;
         std::string plugin_name;
         std::vector<Graph::ParamSlot> param_slots;
-        std::map<Graph::CallSlotType, std::vector<Graph::CallSlotPtr>> call_slots;
         bool is_view;
 
         // Initilized after/on creation
@@ -159,9 +195,23 @@ public:
             ImVec2 position;
             ImVec2 size;
         } gui;
+
+        // Functions ------------------
+
+        bool AddCallSlot(Graph::CallSlotType type, Graph::CallSlotPtr call_slot);
+        bool RemoveCallSlot(Graph::CallSlotType type, Graph::CallSlotPtr call_slot);
+        bool RemoveAllCallSlot(Graph::CallSlotType type);
+        bool RemoveAllCallSlot(void);
+        const std::vector<Graph::CallSlotPtr> GetCallSlots(Graph::CallSlotType type);
+        const std::map<Graph::CallSlotType, std::vector<Graph::CallSlotPtr>> GetCallSlots(void);
+
+    private:
+
+        // Initialized on loading 
+        std::map<Graph::CallSlotType, std::vector<Graph::CallSlotPtr>> call_slots;
     };
             
-    // CLASS ------------------------------------------------------------------
+    // GRAPH ------------------------------------------------------------------
 
     Graph(void);
 
@@ -177,20 +227,19 @@ public:
 
     inline const ModuleListType& GetAvailableModulesList(void) const { return this->modules_list; }
 
-    inline const std::string GetCompatibleCallNames(size_t idx) const {
-        if (idx < this->calls_list.size()) {
-            return this->calls_list[idx].class_name;
-        }
-        return std::string();
-    }
-
     inline ModuleGraphType& GetGraphModules(void) { return this->modules_graph; }
-
     inline CallGraphType& GetGraphCalls(void) { return this->calls_graph; }
+
+    //inline const std::string GetCompatibleCallNames(size_t idx) const {
+    //    if (idx < this->calls_list.size()) {
+    //        return this->calls_list[idx].class_name;
+    //    }
+    //    return std::string();
+    //}
 
     bool SetSelectedCallSlot(const std::string& module_full_name, const std::string& slot_name);
 
-    CallSlotPtr GetSelectedCallSlot(void) {
+    inline CallSlotPtr GetSelectedCallSlot(void) {
         return this->selected_call_slot;
     }
 

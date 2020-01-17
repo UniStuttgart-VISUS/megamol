@@ -333,7 +333,7 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(void) {
                 /// Assuming mod->name is longest used string for module label
                 float max_label_length = this->utils.TextWidgetWidth(mod->name);
                 float max_slot_name_length = 0.0f;
-                for (auto& call_slot_type_list : mod->call_slots) {
+                for (auto& call_slot_type_list : mod->GetCallSlots()) {
                     for (auto& call_slot : call_slot_type_list.second) {
                         float slot_name_length = this->utils.TextWidgetWidth(call_slot->name);
                         max_slot_name_length = std::max(slot_name_length, max_slot_name_length);
@@ -342,8 +342,8 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(void) {
                 float module_width = (max_label_length + 2.0f * max_slot_name_length) + (2.0f * MODULE_SLOT_RADIUS) +
                                      (4.0f * SLOT_LABEL_OFFSET);
 
-                auto max_slot_count = std::max(mod->call_slots[Graph::CallSlotType::CALLEE].size(),
-                    mod->call_slots[Graph::CallSlotType::CALLER].size());
+                auto max_slot_count = std::max(mod->GetCallSlots(Graph::CallSlotType::CALLEE).size(),
+                    mod->GetCallSlots(Graph::CallSlotType::CALLER).size());
                 float module_slot_height = (static_cast<float>(max_slot_count) * (MODULE_SLOT_RADIUS * 2.0f) * 1.5f) +
                                            ((MODULE_SLOT_RADIUS * 2.0f) * 0.5f);
                 float module_height = std::max(
@@ -505,8 +505,8 @@ bool megamol::gui::Configurator::draw_canvas_calls(Graph::CallGraphType calls, I
             /// Assuming connected calls are not nullptr
             ImDrawList* draw_list = ImGui::GetWindowDrawList();
             if (call->IsConnected()) {
-                ImVec2 p1 = position_offset + call->connected_call_slots[Graph::CallSlotType::CALLER]->GetGuiPos();
-                ImVec2 p2 = position_offset + call->connected_call_slots[Graph::CallSlotType::CALLEE]->GetGuiPos();
+                ImVec2 p1 = position_offset + call->GetCallSlot(Graph::CallSlotType::CALLER)->GetGuiPos();
+                ImVec2 p2 = position_offset + call->GetCallSlot(Graph::CallSlotType::CALLEE)->GetGuiPos();
                 draw_list->AddBezierCurve(
                     p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2, COLOR_CALL_CURVE, 3.0f);
             } else {
@@ -543,7 +543,7 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slots(
     ImU32 slot_label_color;
 
     try {
-        for (auto& slot_pair : mod->call_slots) {
+        for (auto& slot_pair : mod->GetCallSlots()) {
 
             if (slot_pair.first == Graph::CallSlotType::CALLER) {
                 slot_highl_color = COLOR_SLOT_CALLER_HIGHTL;
