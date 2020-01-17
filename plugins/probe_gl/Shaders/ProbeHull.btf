@@ -14,4 +14,16 @@
         <snippet name="Main"             type="file">hull/dfr_hull_fragment.glsl</snippet>
     </shader>
 
+    <shader name="tessellation_control">
+        <snippet type="version">450</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Main"             type="file">hull/dfr_hull_tessCtrl.glsl</snippet>
+    </shader>
+
+    <shader name="tessellation_evaluation">
+        <snippet type="version">450</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Main"             type="file">hull/dfr_hull_tessEval.glsl</snippet>
+    </shader>
+
 </btf>

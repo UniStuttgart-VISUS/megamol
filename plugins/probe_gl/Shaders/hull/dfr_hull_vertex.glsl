@@ -16,8 +16,8 @@ layout(location = 1) in vec3 v_normal;
 //layout(location = 2) in vec4 v_tangent;
 //layout(location = 3) in vec2 v_uv;
 
-out vec3 normal;
-out vec3 world_pos;
+layout(location = 0) out vec3 world_pos;
+layout(location = 1) out vec3 normal;
 
 void main()
 {
@@ -25,5 +25,7 @@ void main()
     world_pos = v_position;
     
     mat4 object_transform = mesh_shader_params[gl_DrawIDARB].transform;
-    gl_Position =  proj_mx * view_mx * object_transform * vec4(v_position,1.0);
+    //gl_Position =  proj_mx * view_mx * object_transform * vec4(v_position,1.0);
+    //gl_Position =  object_transform * vec4(v_position,1.0);
+    gl_Position =  vec4(v_position,1.0);
 }

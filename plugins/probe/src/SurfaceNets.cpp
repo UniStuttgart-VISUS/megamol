@@ -495,6 +495,7 @@ bool SurfaceNets::getData(core::Call& call) {
             _mesh_attribs[0].byte_size = _vertices.size() * sizeof(std::array<float,3>);
             _mesh_attribs[0].component_cnt = 3;
             _mesh_attribs[0].stride = sizeof(std::array<float, 3>);
+            _mesh_attribs[0].offset = 0;
             _mesh_attribs[0].data = reinterpret_cast<uint8_t*>(_vertices.data());
             _mesh_attribs[0].semantic = mesh::MeshDataAccessCollection::POSITION;
 
@@ -502,6 +503,7 @@ bool SurfaceNets::getData(core::Call& call) {
             _mesh_attribs[1].byte_size = _normals.size() * sizeof(std::array<float, 3>);
             _mesh_attribs[1].component_cnt = 3;
             _mesh_attribs[1].stride = sizeof(std::array<float, 3>);
+            _mesh_attribs[1].offset = 0;
             _mesh_attribs[1].data = reinterpret_cast<uint8_t*>(_normals.data());
             _mesh_attribs[1].semantic = mesh::MeshDataAccessCollection::NORMAL;
 

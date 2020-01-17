@@ -30,6 +30,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
     CallMesh* mc = this->m_mesh_slot.CallAs<CallMesh>();
     if (mc == NULL) return false;
+    if (!(*mc)(0)) return false;
 
     bool something_has_changed = mc->hasUpdate(); // something has changed in the neath...
 
@@ -49,6 +50,12 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
         for (auto& mesh : meshes) {
 
+            // check if primtives type
+            GLenum primtive_type = GL_TRIANGLES;
+            if (mesh.primitive_type == MeshDataAccessCollection::QUADS) {
+                primtive_type = GL_PATCHES;
+            }
+
             std::vector<glowl::VertexLayout::Attribute> attribs;
             std::vector<std::pair<uint8_t*, uint8_t*>> vb_iterators;
             std::pair<uint8_t*, uint8_t*> ib_iterators;
@@ -67,7 +74,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
             glowl::VertexLayout vertex_descriptor(0, attribs);
             mesh_collection->addMesh(vertex_descriptor, vb_iterators, ib_iterators,
-                MeshDataAccessCollection::convertToGLType(mesh.indices.type), GL_STATIC_DRAW, GL_TRIANGLES);
+                MeshDataAccessCollection::convertToGLType(mesh.indices.type), GL_STATIC_DRAW, primtive_type);
         }
     }
 
