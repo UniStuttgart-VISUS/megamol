@@ -33,15 +33,10 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     IMPORT_LIBRARY ${QHULL_IMPORT_LIB}
     LIBRARY ${QHULL_LIB})
 
-  add_external_project(asmjit INTERFACE
-    GIT_REPOSITORY https://github.com/asmjit/asmjit.git
-    BUILD_BYPRODUCTS ""
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    TEST_COMMAND "")
-  add_external_library(asmjit
-    INCLUDE_DIR "src/asmjit_ext/")
+  add_external_headeronly_project(asmjit INTERFACE
+    GIT_REPOSITORY https://github.com/asmjit/asmjit.git)
+  #add_external_library(asmjit
+  #  INCLUDE_DIR "src/asmjit_ext/")
     
   if(WIN32)
     set(BLEND2D_IMPORT_LIB "lib/blend2d.lib")
