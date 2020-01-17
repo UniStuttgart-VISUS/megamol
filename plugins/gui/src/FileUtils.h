@@ -126,9 +126,14 @@ inline bool SaveProjectFile(std::string projectFilename, megamol::core::CoreInst
             file.close();
             return false;
         }
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
     } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
     }
-
     return true;
 }
 

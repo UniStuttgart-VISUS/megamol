@@ -92,13 +92,10 @@ private:
     bool draw_window_module_list(void);
     bool draw_window_graph_canvas(void);
     bool draw_canvas_grid(ImVec2 scrolling, float zooming) const;
-    bool draw_canvas_calls(std::vector<Graph::Call>& calls, ImVec2 position_offset) const;
-    bool draw_canvas_module_call_slot(Graph::CallSlotType type, Graph::Module& mod, ImVec2 position_offset,
-        float slot_radius, float slot_label_offset);
-
+    bool draw_canvas_calls(Graph::CallGraphType calls, ImVec2 position_offset) const;
+    bool draw_canvas_module_call_slots(
+        Graph::ModulePtr mod, ImVec2 position_offset, float slot_radius, float slot_label_offset);
     bool draw_canvas_selected_call(ImVec2 position_offset);
-
-    void demo_dummy(void);
 
     // ------------------------------------------------------------------------
 };
