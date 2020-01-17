@@ -465,7 +465,7 @@ bool SurfaceNets::getData(core::Call& call) {
 
     // get data from adios
     if (cd->DataHash() != _old_datahash) {
-        if (!(*cd)(0)) return false;
+        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
         something_changed = true;
 
         auto mesh_meta_data = cm->getMetaData();
@@ -537,7 +537,7 @@ bool SurfaceNets::getMetaData(core::Call& call) {
 
     // get metadata from adios
     cd->SetFrameID(meta_data.m_frame_ID);
-    if (!(*cd)(1)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
 
     if (cd->DataHash() == _old_datahash && !_recalc) return true;
 
@@ -567,7 +567,7 @@ bool SurfaceNets::getNormalData(core::Call& call) {
     if (cd == nullptr) return false;
 
     if (cd->DataHash() != _old_datahash) {
-        if (!(*cd)(0)) return false;
+        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
         something_changed = true;
     }
 
@@ -586,7 +586,6 @@ bool SurfaceNets::getNormalData(core::Call& call) {
 
     if (something_changed || _recalc) {
         this->calculateSurfaceNets2();
-  
     }
 
     mpd->SetParticleListCount(1);
@@ -613,7 +612,7 @@ bool SurfaceNets::getNormalMetaData(core::Call& call) {
     if (cd->DataHash() == _old_datahash && !_recalc) return true;
 
     // get metadata from adios
-    if (!(*cd)(1)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
 
     mpd->AccessBoundingBoxes() = cd->AccessBoundingBoxes();
     mpd->SetFrameCount(cd->FrameCount());

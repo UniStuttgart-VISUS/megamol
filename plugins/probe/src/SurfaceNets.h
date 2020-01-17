@@ -78,7 +78,7 @@ private:
     mesh::MeshDataAccessCollection::IndexData _mesh_indices;
     uint32_t _version = 0;
 
-    size_t _old_datahash = 0;
+    size_t _old_datahash;
     bool _recalc = true;
 
     std::array<uint32_t, 3> _dims;
