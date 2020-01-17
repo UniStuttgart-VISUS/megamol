@@ -201,16 +201,7 @@ bool megamol::gui::Graph::Module::RemoveAllCallSlot(Graph::CallSlotType type) {
 
 
 bool megamol::gui::Graph::Module::RemoveAllCallSlot(void) {
-    bool removed_all = true;
-    auto type = Graph::CallSlotType::CALLEE;
-    while (!this->call_slots[type].empty()) {
-        removed_all = removed_all && this->RemoveCallSlot(type, this->call_slots[type].front());
-    }
-    type = Graph::CallSlotType::CALLER;
-    while (!this->call_slots[type].empty()) {
-        removed_all = removed_all && this->RemoveCallSlot(type, this->call_slots[type].front());
-    }
-    return removed_all;
+    return (this->RemoveAllCallSlot(Graph::CallSlotType::CALLEE) && RemoveAllCallSlot(Graph::CallSlotType::CALLER));
 }
 
 
@@ -270,13 +261,12 @@ bool megamol::gui::Graph::AddModule(const std::string& module_class_name) {
         mod.gui.size = ImVec2(-1.0f, -1.0f);
 
         auto mod_ptr = std::make_shared<Graph::Module>(mod);
-        this->modules_graph.emplace_back(mod_ptr);
-
         for (auto& call_slot_type_list : mod_ptr->GetCallSlots()) {
             for (auto& call_slot : call_slot_type_list.second) {
                 call_slot->AddParentModule(mod_ptr);
             }
         }
+        this->modules_graph.emplace_back(mod_ptr);
     }
     catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -298,8 +288,8 @@ bool megamol::gui::Graph::DeleteModule(int gui_id) {
         for (auto i = this->modules_graph.begin(); i != this->modules_graph.end(); i++) {
             if ((*i)->gui.id == gui_id) {
                 (*i)->RemoveAllCallSlot();
-                vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to module. [%s, %s, line %d]\n", iter_delete->use_count(), __FILE__, __FUNCTION__, __LINE__);
-                assert(iter_delete->use_count() == 1);
+                //vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to module. [%s, %s, line %d]\n", i->use_count(), __FILE__, __FUNCTION__, __LINE__);
+                assert(i->use_count() == 1);
                 this->modules_graph.erase(i);
                 return true;
             }
@@ -401,7 +391,7 @@ bool megamol::gui::Graph::UpdateAvailableModulesCallsOnce(const megamol::core::C
 ///TODO remove duplicates
 
             // Get core modules
-            std::string plugin_name = core_instance->GetAssemblyName();
+            std::string plugin_name = "Core";
             for (auto& m_desc : core_instance->GetModuleDescriptionManager()) {
                 Graph::Module mod;
                 mod.plugin_name = plugin_name;
