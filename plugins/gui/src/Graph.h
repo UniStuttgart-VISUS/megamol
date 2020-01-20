@@ -104,22 +104,22 @@ public:
     // GRAPH DATA STRUCTURE ---------------------------------------------------
 
     // Forward declaration
-    class GraphModule;
-    class GraphCall;
-    class GraphCallSlot;
-    class GraphParamSlot;
+    class Module;
+    class Call;
+    class CallSlot;
+    class ParamSlot;
 
-    typedef std::shared_ptr<Graph::GraphCallSlot> CallSlotPtr;
-    typedef std::shared_ptr<Graph::GraphCall> CallPtr;
-    typedef std::shared_ptr<Graph::GraphModule> ModulePtr;
+    typedef std::shared_ptr<Graph::CallSlot> CallSlotPtr;
+    typedef std::shared_ptr<Graph::Call> CallPtr;
+    typedef std::shared_ptr<Graph::Module> ModulePtr;
 
     typedef std::vector<ModulePtr> ModuleGraphType;
     typedef std::vector<CallPtr> CallGraphType;
 
-    class GraphParamSlot {
+    class ParamSlot {
     public:
-        GraphParamSlot() {}
-        ~GraphParamSlot() {}
+        ParamSlot() {}
+        ~ParamSlot() {}
 
         std::string class_name;
         std::string description;
@@ -131,13 +131,13 @@ public:
 
     };
 
-    class GraphCallSlot {
+    class CallSlot {
     public:
-        GraphCallSlot() {
+        CallSlot() {
             this->parent_module.reset();
             connected_calls.clear();
         }
-        ~GraphCallSlot() {}
+        ~CallSlot() {}
 
         std::string name;
         std::string description;
@@ -165,14 +165,14 @@ public:
         std::vector<Graph::CallPtr> connected_calls;
     };
 
-    class GraphCall {
+    class Call {
     public:
-        GraphCall() {
+        Call() {
             this->connected_call_slots.clear();
             this->connected_call_slots.emplace(Graph::CallSlotType::CALLER, nullptr);
             this->connected_call_slots.emplace(Graph::CallSlotType::CALLEE, nullptr);
         }
-        ~GraphCall() {}
+        ~Call() {}
 
         std::string class_name;
         std::string description;
@@ -186,7 +186,7 @@ public:
         // Functions ------------------
 
         bool IsConnected(void);
-        bool ConnectCallSlot(Graph::CallSlotType type, Graph::CallSlotPtr call_slot);
+        bool ConnectCallSlot(Graph::CallSlotPtr call_slot);
         bool DisConnectCallSlot(Graph::CallSlotType type);
         bool DisConnectCallSlots(void);
         const Graph::CallSlotPtr GetCallSlot(Graph::CallSlotType type);
@@ -196,21 +196,21 @@ public:
         std::map<Graph::CallSlotType, Graph::CallSlotPtr> connected_call_slots;
     };
 
-    class GraphModule {
+    class Module {
     public:
-        GraphModule() {
+        Module() {
             this->call_slots.clear();
             this->call_slots.emplace(Graph::CallSlotType::CALLER, std::vector<Graph::CallSlotPtr>());
             this->call_slots.emplace(Graph::CallSlotType::CALLEE, std::vector<Graph::CallSlotPtr>());
         }
-        ~GraphModule() {}
+        ~Module() {}
 
         std::string class_name;
         std::string description;
         std::string plugin_name;
         bool is_view;
 
-        std::vector<Graph::GraphParamSlot> param_slots;
+        std::vector<Graph::ParamSlot> param_slots;
 
         std::string name;
         std::string full_name;
@@ -220,6 +220,7 @@ public:
             int id;
             ImVec2 position;
             ImVec2 size;
+            bool initialized;
         } gui;
 
         // Functions ------------------
@@ -246,37 +247,16 @@ public:
     bool AddModule(const std::string& module_class_name);
     bool DeleteModule(int gui_id);
 
-    bool AddCall(const std::string& call_class_name, CallSlotPtr caller, CallSlotPtr callee);
+    bool AddCall(size_t call_idx, CallSlotPtr call_slot_1, CallSlotPtr call_slot_2);
     bool DeleteCall(int gui_id);
 
     bool UpdateAvailableModulesCallsOnce(const megamol::core::CoreInstance* core_instance);
 
-    inline const ModuleStockType& GetAvailableModulesList(void) const { return this->modules_stock; }
+    inline const ModuleStockType& GetModulesStock(void) const { return this->modules_stock; }
+    inline const CallStockType& GetCallsStock(void) const { return this->calls_stock; }
 
     inline const ModuleGraphType& GetGraphModules(void) { return this->modules_graph; }
     inline const CallGraphType& GetGraphCalls(void) { return this->calls_graph; }
-
-    // Selected call slot -------------
-    inline bool IsCallSlotSelected(void) const {
-        return (this->selected_call_slot != nullptr);
-    }
-
-    bool SetSelectedCallSlot(CallSlotPtr call_slot) {
-        if (call_slot == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteWarn("Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        }
-        this->selected_call_slot = call_slot;
-        return true;
-    }
-
-    inline CallSlotPtr GetSelectedCallSlot(void) const {
-        return this->selected_call_slot;
-    }
-
-    inline void ResetSelectedCallSlot(void) {
-        this->selected_call_slot = nullptr;
-    }
-    // --------------------------------
 
     /**
      * Only used for prototype to be able to store current graph to lua project file.
@@ -293,8 +273,6 @@ private:
 
     ModuleStockType modules_stock;
     CallStockType calls_stock;
-
-    CallSlotPtr selected_call_slot;
 
     // FUNCTIONS --------------------------------------------------------------
 

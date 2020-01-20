@@ -84,7 +84,9 @@ private:
         ImVec2 scrolling;
         float zooming;
         bool show_grid;
-        bool slot_hovered;
+        bool any_hovered_slot;
+        Graph::CallSlotPtr selected_slot;
+        unsigned int processing_selected_slot;
     } state;
 
     // FUNCTIONS --------------------------------------------------------------
@@ -96,9 +98,11 @@ private:
     bool draw_canvas_grid(ImVec2 scrolling, float zooming);
     bool draw_canvas_calls(ImVec2 position_offset);
     bool draw_canvas_modules(ImVec2 position_offset);
-    bool draw_canvas_module_call_slots(
-        Graph::ModulePtr mod, ImVec2 position_offset, float slot_radius, float slot_label_offset);
-    bool draw_canvas_selected_call(ImVec2 position_offset);
+    bool draw_canvas_module_call_slots(Graph::ModulePtr mod, ImVec2 position_offset);
+
+    bool draw_canvas_selected_dnd_call(ImVec2 position_offset);
+
+    bool init_module_gui_params(Graph::ModulePtr mod);
 
     // ------------------------------------------------------------------------
 };
