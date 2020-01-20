@@ -256,6 +256,7 @@ bool megamol::gui::Graph::AddModule(const std::string& module_class_name) {
                 mod_ptr->full_name = "full_name"; /// TODO Set ...
                 mod_ptr->instance = "instance"; /// TODO Set ...
                 // Init gui vaiables with values < 0.0, see Configurator.cpp line 442
+                mod_ptr->gui.id = -1;
                 mod_ptr->gui.position = ImVec2(-1.0f, -1.0f);
                 mod_ptr->gui.size = ImVec2(-1.0f, -1.0f);
                 for (auto& p : mod.param_slots) {
@@ -330,12 +331,30 @@ bool megamol::gui::Graph::DeleteModule(int gui_id) {
 }
 
 
-bool megamol::gui::Graph::AddCall(const std::string& call_class_name) {
+bool megamol::gui::Graph::AddCall(const std::string& call_class_name, CallSlotPtr caller, CallSlotPtr callee) {
 
     try {
+        bool found = false;
+        for (auto& call : this->calls_stock) {
+            if (call_class_name == call.class_name) {
+                auto call_ptr = std::make_shared<Graph::GraphCall>();
+                call_ptr->class_name = call.class_name;
+                call_ptr->description = call.description;
+                call_ptr->plugin_name = call.plugin_name;
+                call_ptr->functions = call.functions;
+                call_ptr->gui.id = -1;
 
 
 
+                this->calls_graph.emplace_back(call_ptr);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            vislib::sys::Log::DefaultLog.WriteError("Unable to find call: %s [%s, %s, line %d]\n", call_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
     }
     catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -669,35 +688,6 @@ bool megamol::gui::Graph::read_call_data(Graph::StockCall& call, const std::shar
         return false;
     }
     return true;
-}
-
-
-bool megamol::gui::Graph::SetSelectedCallSlot(const std::string & module_full_name, const std::string & slot_name) {
-
-    try {
-        /// Assuming caller and callee slot have unique names within a module
-        for (auto& mod : this->modules_graph) {
-            if (mod->full_name == module_full_name) {
-                for (auto& call_slot_type_list : mod->GetCallSlots()) {
-                    for (auto& call_slot : call_slot_type_list.second) {
-                        if (call_slot->name == slot_name) {
-                            this->selected_call_slot = call_slot;
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError("Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    return false;
 }
 
 

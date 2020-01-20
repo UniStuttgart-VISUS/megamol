@@ -84,6 +84,7 @@ private:
         ImVec2 scrolling;
         float zooming;
         bool show_grid;
+        bool slot_hovered;
     } state;
 
     // FUNCTIONS --------------------------------------------------------------

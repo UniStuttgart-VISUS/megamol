@@ -67,6 +67,8 @@ public:
 
     enum CallSlotType { CALLEE, CALLER };
 
+    // STOCK DATA STRUCTURE ---------------------------------------------------
+
     struct StockParamSlot {
         std::string class_name;
         std::string description;
@@ -98,6 +100,8 @@ public:
 
     typedef std::vector<Graph::StockModule> ModuleStockType;
     typedef std::vector<Graph::StockCall> CallStockType;
+
+    // GRAPH DATA STRUCTURE ---------------------------------------------------
 
     // Forward declaration
     class GraphModule;
@@ -242,29 +246,37 @@ public:
     bool AddModule(const std::string& module_class_name);
     bool DeleteModule(int gui_id);
 
-    bool AddCall(const std::string& call_class_name);
+    bool AddCall(const std::string& call_class_name, CallSlotPtr caller, CallSlotPtr callee);
     bool DeleteCall(int gui_id);
 
     bool UpdateAvailableModulesCallsOnce(const megamol::core::CoreInstance* core_instance);
 
     inline const ModuleStockType& GetAvailableModulesList(void) const { return this->modules_stock; }
 
-    inline ModuleGraphType& GetGraphModules(void) { return this->modules_graph; }
-    inline CallGraphType& GetGraphCalls(void) { return this->calls_graph; }
+    inline const ModuleGraphType& GetGraphModules(void) { return this->modules_graph; }
+    inline const CallGraphType& GetGraphCalls(void) { return this->calls_graph; }
 
+    // Selected call slot -------------
     inline bool IsCallSlotSelected(void) const {
         return (this->selected_call_slot != nullptr);
     }
 
-    bool SetSelectedCallSlot(const std::string& module_full_name, const std::string& slot_name);
+    bool SetSelectedCallSlot(CallSlotPtr call_slot) {
+        if (call_slot == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteWarn("Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        }
+        this->selected_call_slot = call_slot;
+        return true;
+    }
 
-    inline CallSlotPtr GetSelectedCallSlot(void) {
+    inline CallSlotPtr GetSelectedCallSlot(void) const {
         return this->selected_call_slot;
     }
 
     inline void ResetSelectedCallSlot(void) {
         this->selected_call_slot = nullptr;
     }
+    // --------------------------------
 
     /**
      * Only used for prototype to be able to store current graph to lua project file.
