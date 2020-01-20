@@ -745,7 +745,10 @@ namespace vislib {
         this->Lock();
         if (idx < this->count) {
             /* Destruct element to erase. */
-            C::Dtor(this->elements + idx);
+            // WTF?
+            // Object is destroyed, but below operator =() is used on this object.
+            // This is undefined behavior.
+            //C::Dtor(this->elements + idx);
 
             /* Move elements forward. */
             for (SIZE_T i = idx + 1; i < this->count; i++) {
@@ -754,7 +757,8 @@ namespace vislib {
             this->count--;
 
             /* Element after valid range must now be reconstructed. */
-            C::Ctor(this->elements + this->count);
+            // WTF?
+            //C::Ctor(this->elements + this->count);
         }
         this->Unlock();
     }
