@@ -161,6 +161,7 @@ public:
         bool IsConnected(void);
         bool ConnectCallSlot(Graph::CallSlotType type, Graph::CallSlotPtr call_slot);
         bool DisConnectCallSlot(Graph::CallSlotType type);
+        bool DisConnectCallSlots(void);
         const Graph::CallSlotPtr GetCallSlot(Graph::CallSlotType type);
 
     private:
@@ -225,17 +226,14 @@ public:
 
     bool UpdateAvailableModulesCallsOnce(const megamol::core::CoreInstance* core_instance);
 
-    inline const ModuleListType& GetAvailableModulesList(void) const { return this->modules_list; }
+    inline const ModuleListType& GetAvailableModulesList(void) const { return this->modules_stock; }
 
     inline ModuleGraphType& GetGraphModules(void) { return this->modules_graph; }
     inline CallGraphType& GetGraphCalls(void) { return this->calls_graph; }
 
-    //inline const std::string GetCompatibleCallNames(size_t idx) const {
-    //    if (idx < this->calls_list.size()) {
-    //        return this->calls_list[idx].class_name;
-    //    }
-    //    return std::string();
-    //}
+    inline bool IsCallSlotSelected(void) const {
+        return (this->selected_call_slot != nullptr);
+    }
 
     bool SetSelectedCallSlot(const std::string& module_full_name, const std::string& slot_name);
 
@@ -260,8 +258,8 @@ private:
     ModuleGraphType modules_graph;
     CallGraphType calls_graph;
 
-    ModuleListType modules_list;
-    CallListType calls_list;
+    ModuleListType modules_stock;
+    CallListType calls_stock;
 
     CallSlotPtr selected_call_slot;
 
