@@ -441,7 +441,7 @@ bool megamol::gui::Configurator::draw_canvas_modules(ImVec2 position_offset) {
             // Init size of module once (prior to position)
             if ((mod->gui.size.x < 0.0f) && (mod->gui.size.y < 0.0f)) {
                 /// Assuming mod->name is longest used string for module label
-                float max_label_length = this->utils.TextWidgetWidth(mod->name);
+                float max_label_length = this->utils.TextWidgetWidth(mod->class_name); /// TODO change to full_name
                 float max_slot_name_length = 0.0f;
                 for (auto& call_slot_type_list : mod->GetCallSlots()) {
                     for (auto& call_slot : call_slot_type_list.second) {

@@ -47,22 +47,6 @@ namespace gui {
 class Graph {
 public:
 
-    // Forward declaration
-    class Module;
-    class Call;
-    class CallSlot;
-    class ParamSlot;
-
-    typedef std::shared_ptr<Graph::CallSlot> CallSlotPtr;
-    typedef std::shared_ptr<Graph::Call> CallPtr;
-    typedef std::shared_ptr<Graph::Module> ModulePtr;
-
-    typedef std::vector<ModulePtr> ModuleGraphType;
-    typedef std::vector<CallPtr> CallGraphType;
-
-    typedef std::vector<Graph::Module> ModuleListType;
-    typedef std::vector<Graph::Call> CallListType;
-
     enum ParamType {
         BUTTON,
         BOOL,
@@ -83,33 +67,74 @@ public:
 
     enum CallSlotType { CALLEE, CALLER };
 
+    struct StockParamSlot {
+        std::string class_name;
+        std::string description;
+        Graph::ParamType type;
+    };
 
-    class ParamSlot {
+    struct StockCallSlot {
+        std::string name;
+        std::string description;
+        std::vector<size_t> compatible_call_idxs;
+        Graph::CallSlotType type;
+    };
+
+    struct StockCall {
+        std::string class_name;
+        std::string description;
+        std::string plugin_name;
+        std::vector<std::string> functions;
+    };
+
+    struct StockModule {
+        std::string class_name;
+        std::string description;
+        std::string plugin_name;
+        bool is_view;
+        std::vector<Graph::StockParamSlot> param_slots;
+        std::map<Graph::CallSlotType, std::vector<Graph::StockCallSlot>> call_slots;
+    };
+
+    typedef std::vector<Graph::StockModule> ModuleStockType;
+    typedef std::vector<Graph::StockCall> CallStockType;
+
+    // Forward declaration
+    class GraphModule;
+    class GraphCall;
+    class GraphCallSlot;
+    class GraphParamSlot;
+
+    typedef std::shared_ptr<Graph::GraphCallSlot> CallSlotPtr;
+    typedef std::shared_ptr<Graph::GraphCall> CallPtr;
+    typedef std::shared_ptr<Graph::GraphModule> ModulePtr;
+
+    typedef std::vector<ModulePtr> ModuleGraphType;
+    typedef std::vector<CallPtr> CallGraphType;
+
+    class GraphParamSlot {
     public:
-        ParamSlot() {}
-        ~ParamSlot() {}
+        GraphParamSlot() {}
+        ~GraphParamSlot() {}
 
-        // Initialized on loading
         std::string class_name;
         std::string description;
         Graph::ParamType type;
 
-        // Initilized after/on creation
         std::string full_name;
 
     private:
 
     };
 
-    class CallSlot {
+    class GraphCallSlot {
     public:
-        CallSlot() {
+        GraphCallSlot() {
             this->parent_module.reset();
             connected_calls.clear();
         }
-        ~CallSlot() {}
+        ~GraphCallSlot() {}
 
-        // Initialized on loading 
         std::string name;
         std::string description;
         std::vector<size_t> compatible_call_idxs; // (Storing only indices of compatible calls for faster comparison.)
@@ -132,21 +157,19 @@ public:
 
     private:
 
-        // Initilized after/on creation
         Graph::ModulePtr parent_module;
         std::vector<Graph::CallPtr> connected_calls;
     };
 
-    class Call {
+    class GraphCall {
     public:
-        Call() {
+        GraphCall() {
             this->connected_call_slots.clear();
             this->connected_call_slots.emplace(Graph::CallSlotType::CALLER, nullptr);
             this->connected_call_slots.emplace(Graph::CallSlotType::CALLEE, nullptr);
         }
-        ~Call() {}
+        ~GraphCall() {}
 
-        // Initialized on loading 
         std::string class_name;
         std::string description;
         std::string plugin_name;
@@ -166,27 +189,25 @@ public:
 
     private:
 
-        // Initilized after/on creation
         std::map<Graph::CallSlotType, Graph::CallSlotPtr> connected_call_slots;
     };
 
-    class Module {
+    class GraphModule {
     public:
-        Module() {
+        GraphModule() {
             this->call_slots.clear();
             this->call_slots.emplace(Graph::CallSlotType::CALLER, std::vector<Graph::CallSlotPtr>());
             this->call_slots.emplace(Graph::CallSlotType::CALLEE, std::vector<Graph::CallSlotPtr>());
         }
-        ~Module() {}
+        ~GraphModule() {}
 
-        // Initialized on loading 
         std::string class_name;
         std::string description;
         std::string plugin_name;
-        std::vector<Graph::ParamSlot> param_slots;
         bool is_view;
 
-        // Initilized after/on creation
+        std::vector<Graph::GraphParamSlot> param_slots;
+
         std::string name;
         std::string full_name;
         std::string instance;
@@ -208,9 +229,9 @@ public:
 
     private:
 
-        // Initialized on loading 
         std::map<Graph::CallSlotType, std::vector<Graph::CallSlotPtr>> call_slots;
     };
+
             
     // GRAPH ------------------------------------------------------------------
 
@@ -226,7 +247,7 @@ public:
 
     bool UpdateAvailableModulesCallsOnce(const megamol::core::CoreInstance* core_instance);
 
-    inline const ModuleListType& GetAvailableModulesList(void) const { return this->modules_stock; }
+    inline const ModuleStockType& GetAvailableModulesList(void) const { return this->modules_stock; }
 
     inline ModuleGraphType& GetGraphModules(void) { return this->modules_graph; }
     inline CallGraphType& GetGraphCalls(void) { return this->calls_graph; }
@@ -258,15 +279,15 @@ private:
     ModuleGraphType modules_graph;
     CallGraphType calls_graph;
 
-    ModuleListType modules_stock;
-    CallListType calls_stock;
+    ModuleStockType modules_stock;
+    CallStockType calls_stock;
 
     CallSlotPtr selected_call_slot;
 
     // FUNCTIONS --------------------------------------------------------------
 
-    bool read_call_data(Graph::Call& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc); 
-    bool read_module_data(Graph::Module& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
+    bool read_call_data(Graph::StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc); 
+    bool read_module_data(Graph::StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
     
     // ------------------------------------------------------------------------
 };
