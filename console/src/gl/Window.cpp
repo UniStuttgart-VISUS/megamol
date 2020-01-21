@@ -262,9 +262,11 @@ void gl::Window::glfw_onKey_func(GLFWwindow* wnd, int k, int s, int a, int m) {
     }
 
     core::view::Modifiers mods;
-    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods |=  core::view::Modifier::SHIFT;
-    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= core::view::Modifier::CTRL;
-    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= core::view::Modifier::ALT;
+    // Parameter m is not platform independent, see https://github.com/glfw/glfw/issues/1630.
+    // Therefore set modifiers by checking key status for platform independent uniform behavior.
+    if (glfwGetKey(wnd, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) mods |= core::view::Modifier::SHIFT;
+    if (glfwGetKey(wnd, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS) mods |= core::view::Modifier::CTRL;
+    if (glfwGetKey(wnd, GLFW_KEY_LEFT_ALT) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS) mods |= core::view::Modifier::ALT;
 
 	that->uiLayers.OnKey(key, action, mods);
 }
@@ -296,9 +298,11 @@ void gl::Window::glfw_onMouseButton_func(GLFWwindow* wnd, int b, int a, int m) {
             : core::view::MouseButtonAction::RELEASE;
 
     core::view::Modifiers mods;
-    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods |= core::view::Modifier::SHIFT;
-    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= core::view::Modifier::CTRL;
-    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= core::view::Modifier::ALT;
+    // Parameter m is not platform independent, see https://github.com/glfw/glfw/issues/1630.
+    // Therefore set modifiers by checking key status for platform independent uniform behavior.
+    if (glfwGetKey(wnd, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) mods |= core::view::Modifier::SHIFT;
+    if (glfwGetKey(wnd, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS) mods |= core::view::Modifier::CTRL;
+    if (glfwGetKey(wnd, GLFW_KEY_LEFT_ALT) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS) mods |= core::view::Modifier::ALT;
 
     if (that->mouseCapture) {
         that->mouseCapture->OnMouseButton(btn, action, mods);
