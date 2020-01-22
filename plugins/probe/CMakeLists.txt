@@ -23,7 +23,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   add_external_project(qhull SHARED
     GIT_REPOSITORY https://github.com/qhull/qhull.git
     GIT_TAG "v7.3.2"
-    BUILD_BYPRODUCTS "<INSTALL_DIR>/${QHULL_IMPORT_LIB}"
+    BUILD_BYPRODUCTS "<INSTALL_DIR>/${QHULL_IMPORT_LIB}" "<INSTALL_DIR>/${QHULL_LIB}"
     #CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
     PATCH_COMMAND ${CMAKE_COMMAND} -E copy
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake/qhull/CMakeLists.txt"
@@ -50,7 +50,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   external_get_property(asmjit SOURCE_DIR)
   add_external_project(blend2d SHARED
     GIT_REPOSITORY https://github.com/blend2d/blend2d.git
-    BUILD_BYPRODUCTS "<INSTALL_DIR>/${BLEND2D_IMPORT_LIB}"
+    GIT_TAG "c102cd5ce8c4ab999e54ab7359d2189c72233bc7"
+    BUILD_BYPRODUCTS "<INSTALL_DIR>/${BLEND2D_IMPORT_LIB}" "<INSTALL_DIR>/${BLEND2D_LIB}"
     CMAKE_ARGS -DASMJIT_DIR=${SOURCE_DIR})
   add_external_library(blend2d
     DEPENDS asmjit
