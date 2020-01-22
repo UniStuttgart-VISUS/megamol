@@ -104,7 +104,7 @@ bool megamol::gui::Configurator::Draw(
         this->window_rendering_state++;
     } else if (this->window_rendering_state == 2) {
         // 2] Load available modules and calls once(!)
-        this->graph.UpdateAvailableModulesCallsOnce(core_instance);
+        this->graph.UpdateModulesCallsStock(core_instance);
         this->window_rendering_state++;
     } else {
         // 3] Render configurator gui content
