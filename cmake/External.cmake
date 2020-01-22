@@ -134,7 +134,7 @@ function(add_external_project TARGET)
 
     # Configure project
     execute_process(
-      COMMAND ${CMAKE_COMMAND} "-G${CMAKE_GENERATOR}" ${GEN_ARGS} ${CONF_ARGS}
+      COMMAND ${CMAKE_COMMAND} "--no-warn-unused-cli" "-G${CMAKE_GENERATOR}" ${GEN_ARGS} ${CONF_ARGS}
         -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}

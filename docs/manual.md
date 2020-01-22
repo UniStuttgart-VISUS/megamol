@@ -22,7 +22,7 @@ The MegaMol project was started in the Collaborative Research Center 716, subpro
 Today, it is governed by a number of teams at the TU Dresden and the University of Stuttgart.
 
 The goal of the project is to provide a software base for visualization research and to provide a stable environment to deploy newest visualization prototypes to application domain researchers. MegaMol is not a visualization tool. MegaMol is a platform for visualization research.
-Visit the project [website](https://github.com/UniStuttgart-VISUS/megamol.git "Megamol homepage") for downloads and more information.
+Visit the project [website](https://github.com/UniStuttgart-VISUS/megamol.git "Megamol Homepage") for downloads and more information.
 
 ### License
 
@@ -51,7 +51,7 @@ Further platforms are not considered during the development. While MegaMol might
 
 #### Windows
 
-For Windows, you have to install (CMake)[https://cmake.org/], and load the `CMakeLists.txt` present in the root directory of the repository. 
+For Windows, you have to install [CMake](https://cmake.org/), and load the `CMakeLists.txt` present in the root directory of the repository. 
 Next, click `Configure` a few times (until all red entries disappear).
 Then click `Generate` to generate the build files.
 
@@ -200,7 +200,13 @@ Test your installation following the description in the following section.
 The test MegaMol simple start the front end executable. Open a console and change your working directory to the MegaMol install directory. Start
 the MegaMol start script:
 
-    ./megamol.sh
+Linux:
+
+    $ ./megamol.sh
+
+Windows:
+
+    > mmconsole.exe
 
 The resulting output should look something like this:
 
@@ -254,7 +260,13 @@ Alternatively, you can descend into the bin directory and start the front end di
 
 This direct invocation is not recommended. Thus, the remaining examples in this manual will assume that you use the start shell script. MegaMol should start and print several messages to the console. The leading number of each line is the log level. There should be no output of warnings (log level of 100 or less) or errors (log level 1). The output should match the one above. For a better test, you should invoke MegaMol requesting a simple rendering. Then you can be sure that the graphics drivers, graphics libraries, and shader codes are correctly found and are working. To do this, try: 
 
-    $ ./megamol.sh -i testspheres inst
+Linux: 
+
+    $ ./megamol.sh -p ../examples/testspheres.lua
+
+Windows: 
+
+    > mmconsole.exe -p ..\examples\testspheres.lua
 
 <center>
 <a name="testrunpic"></a>
