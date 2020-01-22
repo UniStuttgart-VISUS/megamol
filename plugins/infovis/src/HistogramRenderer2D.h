@@ -116,10 +116,6 @@ private:
     GLuint histogramBuffer = 0;
     GLuint selectedHistogramBuffer = 0;
 
-    GLuint quadVertexArray;
-    GLuint quadVertexBuffer;
-    GLuint quadIndexBuffer;
-
     megamol::core::utility::SDFFont font;
 };
 

@@ -56,33 +56,6 @@ bool HistogramRenderer2D::create() {
     glGenBuffers(1, &this->histogramBuffer);
     glGenBuffers(1, &this->selectedHistogramBuffer);
 
-    // clang-format off
-    static const GLfloat quadVertices[] = {
-        0.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f,
-        1.0f, 1.0f, 0.0f,
-    };
-
-    static const GLuint quadIndices[] = {
-        0, 1, 2,
-        1, 2, 3,
-    };
-    // clang-format on
-
-    glGenVertexArrays(1, &this->quadVertexArray);
-    glGenBuffers(1, &this->quadVertexBuffer);
-    glGenBuffers(1, &this->quadIndexBuffer);
-
-    glBindVertexArray(this->quadVertexArray);
-    glBindBuffer(GL_ARRAY_BUFFER, this->quadVertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 3 * 4, quadVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->quadIndexBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 2 * 3 * sizeof(GLuint), quadIndices, GL_STATIC_DRAW);
-    glBindVertexArray(0);
-
     return true;
 }
 
@@ -98,10 +71,6 @@ void HistogramRenderer2D::release() {
     glDeleteBuffers(1, &this->maxBuffer);
     glDeleteBuffers(1, &this->histogramBuffer);
     glDeleteBuffers(1, &this->selectedHistogramBuffer);
-
-    glDeleteVertexArrays(1, &this->quadVertexArray);
-    glDeleteBuffers(1, &this->quadVertexBuffer);
-    glDeleteBuffers(1, &this->quadIndexBuffer);
 }
 
 bool HistogramRenderer2D::GetExtents(core::view::CallRender2D& call) {
@@ -136,7 +105,6 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D& call) {
     glUniformMatrix4fv(this->histogramProgram.ParameterLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
     glUniformMatrix4fv(this->histogramProgram.ParameterLocation("projection"), 1, GL_FALSE, projMatrix_column);
 
-    glBindVertexArray(this->quadVertexArray);
     tfCall->BindConvenience(this->histogramProgram, GL_TEXTURE0, 0);
 
     // TODO use something better like instanced rendering
@@ -162,12 +130,12 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D& call) {
             glUniform1f(this->histogramProgram.ParameterLocation("width"), width);
             glUniform1f(this->histogramProgram.ParameterLocation("height"), height);
             glUniform1i(this->histogramProgram.ParameterLocation("selected"), 0);
-            glDrawElements(GL_TRIANGLES, 2 * 3, GL_UNSIGNED_INT, nullptr);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
             height = 10.0f * selectedHistoVal / maxHistoVal;
             glUniform1f(this->histogramProgram.ParameterLocation("height"), height);
             glUniform1i(this->histogramProgram.ParameterLocation("selected"), 1);
-            glDrawElements(GL_TRIANGLES, 2 * 3, GL_UNSIGNED_INT, nullptr);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         }
     }
 
