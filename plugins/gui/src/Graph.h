@@ -16,8 +16,8 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
 
-#include <vector>
 #include <map>
+#include <vector>
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
@@ -38,7 +38,7 @@
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "mmcore/param/Vector4fParam.h" 
+#include "mmcore/param/Vector4fParam.h"
 
 
 namespace megamol {
@@ -46,7 +46,6 @@ namespace gui {
 
 class Graph {
 public:
-
     enum ParamType {
         BUTTON,
         BOOL,
@@ -118,8 +117,10 @@ public:
 
     class ParamSlot {
     public:
-        ParamSlot() {}
+        ParamSlot(int gui_id) : gui_uid(gui_id) {}
         ~ParamSlot() {}
+
+        const int gui_uid;
 
         std::string class_name;
         std::string description;
@@ -128,16 +129,17 @@ public:
         std::string full_name;
 
     private:
-
     };
 
     class CallSlot {
     public:
-        CallSlot() {
+        CallSlot(int gui_id) : gui_uid(gui_id) {
             this->parent_module.reset();
             connected_calls.clear();
         }
         ~CallSlot() {}
+
+        const int gui_uid;
 
         std::string name;
         std::string description;
@@ -160,28 +162,25 @@ public:
         const Graph::ModulePtr GetParentModule(void);
 
     private:
-
         Graph::ModulePtr parent_module;
         std::vector<Graph::CallPtr> connected_calls;
     };
 
     class Call {
     public:
-        Call() {
+        Call(int gui_id) : gui_uid(gui_id) {
             this->connected_call_slots.clear();
             this->connected_call_slots.emplace(Graph::CallSlotType::CALLER, nullptr);
             this->connected_call_slots.emplace(Graph::CallSlotType::CALLEE, nullptr);
         }
         ~Call() {}
 
+        const int gui_uid;
+
         std::string class_name;
         std::string description;
         std::string plugin_name;
         std::vector<std::string> functions;
-
-        struct Gui {
-            int id;
-        } gui;
 
         // Functions ------------------
 
@@ -192,18 +191,19 @@ public:
         const Graph::CallSlotPtr GetCallSlot(Graph::CallSlotType type);
 
     private:
-
         std::map<Graph::CallSlotType, Graph::CallSlotPtr> connected_call_slots;
     };
 
     class Module {
     public:
-        Module() {
+        Module(int gui_id) : gui_uid(gui_id) {
             this->call_slots.clear();
             this->call_slots.emplace(Graph::CallSlotType::CALLER, std::vector<Graph::CallSlotPtr>());
             this->call_slots.emplace(Graph::CallSlotType::CALLEE, std::vector<Graph::CallSlotPtr>());
         }
         ~Module() {}
+
+        const int gui_uid;
 
         std::string class_name;
         std::string description;
@@ -217,7 +217,6 @@ public:
         std::string instance;
 
         struct Gui {
-            int id;
             ImVec2 position;
             ImVec2 size;
             bool initialized;
@@ -225,19 +224,23 @@ public:
 
         // Functions ------------------
 
-        bool AddCallSlot(Graph::CallSlotType type, Graph::CallSlotPtr call_slot);
-        bool RemoveCallSlot(Graph::CallSlotType type, Graph::CallSlotPtr call_slot);
-        bool RemoveAllCallSlot(Graph::CallSlotType type);
-        bool RemoveAllCallSlot(void);
+        bool AddCallSlot(Graph::CallSlotPtr call_slot);
+        bool RemoveCallSlot(Graph::CallSlotPtr call_slot);
+        bool RemoveAllCallSlots(Graph::CallSlotType type);
+        bool RemoveAllCallSlots(void);
         const std::vector<Graph::CallSlotPtr> GetCallSlots(Graph::CallSlotType type);
         const std::map<Graph::CallSlotType, std::vector<Graph::CallSlotPtr>> GetCallSlots(void);
 
     private:
-
         std::map<Graph::CallSlotType, std::vector<Graph::CallSlotPtr>> call_slots;
     };
 
-            
+    struct GraphData {
+        ModuleGraphType modules;
+        CallGraphType calls;
+    };
+
+
     // GRAPH ------------------------------------------------------------------
 
     Graph(void);
@@ -245,10 +248,10 @@ public:
     virtual ~Graph(void);
 
     bool AddModule(const std::string& module_class_name);
-    bool DeleteModule(int gui_id);
+    bool DeleteModule(int uid);
 
-    bool AddCall(size_t call_idx, CallSlotPtr call_slot_1, CallSlotPtr call_slot_2);
-    bool DeleteCall(int gui_id);
+    bool AddCall(int call_idx, CallSlotPtr call_slot_1, CallSlotPtr call_slot_2);
+    bool DeleteCall(int uid);
 
     bool UpdateAvailableModulesCallsOnce(const megamol::core::CoreInstance* core_instance);
 
@@ -258,6 +261,9 @@ public:
     inline const ModuleGraphType& GetGraphModules(void) { return this->modules_graph; }
     inline const CallGraphType& GetGraphCalls(void) { return this->calls_graph; }
 
+    int GetCompatibleCallIndex(CallSlotPtr call_slot_1, CallSlotPtr call_slot_2);
+    int GetCompatibleCallIndex(CallSlotPtr call_slot_1, StockCallSlot stock_call_slot_2);
+
     /**
      * Only used for prototype to be able to store current graph to lua project file.
      * Later use FileUtils->SaveProjectFile provided in GUI menu.
@@ -265,7 +271,6 @@ public:
     bool PROTOTYPE_SaveGraph(std::string project_filename, megamol::core::CoreInstance* cor_iInstance);
 
 private:
-
     // VARIABLES --------------------------------------------------------------
 
     ModuleGraphType modules_graph;
@@ -274,11 +279,19 @@ private:
     ModuleStockType modules_stock;
     CallStockType calls_stock;
 
+    std::vector<GraphData> graphs;
+
+    int uid;
+
     // FUNCTIONS --------------------------------------------------------------
 
-    bool read_call_data(Graph::StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc); 
-    bool read_module_data(Graph::StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
-    
+    bool read_call_data(
+        Graph::StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);
+    bool read_module_data(
+        Graph::StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
+
+    int get_unique_id(void) { return (++this->uid); }
+
     // ------------------------------------------------------------------------
 };
 

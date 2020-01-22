@@ -86,7 +86,8 @@ private:
         bool show_grid;
         bool any_hovered_slot;
         Graph::CallSlotPtr selected_slot;
-        unsigned int processing_selected_slot;
+        bool process_selected_slot;
+        bool canvas_hovered;
     } state;
 
     // FUNCTIONS --------------------------------------------------------------
