@@ -34,27 +34,24 @@ void main()
     }
     binColor = float(binId) / float(binCount - 1);
 
-    vec3 pos = vec3(0.0);
-    selection = 0.0;
-    if (gl_VertexID == 0) { // bottom left
-        pos = vec3(0.0, 0.0, 0.0);
-    } else if (gl_VertexID == 1) { // bottom right
-        pos = vec3(1.0, 0.0, 0.0);
-    } else if (gl_VertexID == 2) { // top left
-        pos = vec3(0.0, 1.0, 0.0);
-        selection = histoVal / selectedHistoVal;
-    } else if (gl_VertexID == 3) { // top right
-        pos = vec3(1.0, 1.0, 0.0);
-        selection = histoVal / selectedHistoVal;
-    }
-
     float width = 10.0 / float(binCount);
     float height = 10.0 * histoVal / maxHistoVal;
     float posX = 12.0 * float(colId) + 1.0 + float(binId) * width;
     float posY = 2.0;
 
-    pos.x = pos.x * width + posX;
-    pos.y = pos.y * height + posY;
+    vec2 pos = vec2(0.0);
+    selection = 0.0;
+    if (gl_VertexID == 0) { // bottom left
+        pos = vec2(posX, posY);
+    } else if (gl_VertexID == 1) { // bottom right
+        pos = vec2(posX + width, posY);
+    } else if (gl_VertexID == 2) { // top left
+        pos = vec2(posX, posY + height);
+        selection = histoVal / selectedHistoVal;
+    } else if (gl_VertexID == 3) { // top right
+        pos = vec2(posX + width, posY + height);
+        selection = histoVal / selectedHistoVal;
+    }
 
-    gl_Position = projection * modelView * vec4(pos, 1.0);
+    gl_Position = projection * modelView * vec4(pos, 0.0, 1.0);
 }
