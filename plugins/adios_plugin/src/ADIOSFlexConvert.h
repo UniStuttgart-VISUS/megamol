@@ -75,9 +75,13 @@ private:
     core::CalleeSlot mpSlot;
     core::CallerSlot adiosSlot;
 
-    core::param::ParamSlot flexPos;
-    core::param::ParamSlot flexCol;
-    core::param::ParamSlot flexBox;
+    core::param::ParamSlot flexPosSlot;
+    core::param::ParamSlot flexColSlot;
+    core::param::ParamSlot flexBoxSlot;
+    core::param::ParamSlot flexXSlot;
+    core::param::ParamSlot flexYSlot;
+    core::param::ParamSlot flexZSlot;
+
 
     std::vector<float> mix;
 
