@@ -119,6 +119,7 @@ function(require_external NAME)
       CMAKE_ARGS 
         -DBUILD_SHARED_LIBS=OFF
         -DBUILD_TESTING=OFF
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON
         -DADIOS2_USE_BZip2=OFF
         -DADIOS2_USE_Fortran=OFF
         -DADIOS2_USE_HDF5=OFF
@@ -563,6 +564,60 @@ function(require_external NAME)
     mark_as_advanced(FORCE ZLIB_VERSION_MINOR)
     mark_as_advanced(FORCE ZLIB_VERSION_PATCH)
     mark_as_advanced(FORCE ZLIB_VERSION_TWEAK)
+
+  # vtkm
+  elseif(NAME STREQUAL "vtkm")
+    if(TARGET vtkm)
+      return()
+    endif()
+
+    set(VTKM_VER 1.4)
+
+    if(WIN32)
+      set(VTKM_LIB_CONT "lib/vtkm_cont-${VTKM_VER}.lib")
+      set(VTKM_LIB_DEBUG_CONT "lib/vtkm_cont-${VTKM_VER}.lib")
+      set(VTKM_LIB_RENDERER "lib/vtkm_rendering-${VTKM_VER}.lib")
+      set(VTKM_LIB_DEBUG_RENDERER "lib/vtkm_rendering-${VTKM_VER}.lib")
+      set(VTKM_LIB_WORKLET "lib/vtkm_worklet-${VTKM_VER}.lib")
+      set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-${VTKM_VER}.lib")
+    else()
+      include(GNUInstallDirs)
+      set(VTKM_LIB_CONT "lib/vtkm_cont-${VTKM_VER}.a")
+      set(VTKM_LIB_DEBUG_CONT "lib/vtkm_cont-${VTKM_VER}.a")
+      set(VTKM_LIB_RENDERER "lib/vtkm_rendering-${VTKM_VER}.a")
+      set(VTKM_LIB_DEBUG_RENDERER "lib/vtkm_rendering-${VTKM_VER}.a")
+      set(VTKM_LIB_WORKLET "lib/vtkm_worklet-${VTKM_VER}.a")
+      set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-${VTKM_VER}.a")
+    endif()
+
+    option(vtkm_ENABLE_CUDA "Option to build vtkm with cuda enabled" OFF)
+    
+    add_external_project(vtkm
+      GIT_REPOSITORY https://gitlab.kitware.com/vtk/vtk-m.git
+      GIT_TAG "v1.4.0"
+      CMAKE_ARGS
+        -DBUILD_SHARED_LIBS:BOOL=OFF
+        -DVTKm_ENABLE_TESTING:BOOL=OFF
+        -DVTKm_ENABLE_CUDA:BOOL=${vtkm_ENABLE_CUDA}
+        -DBUILD_TESTING:BOOL=OFF
+        -VTKm_ENABLE_DEVELOPER_FLAGS:BOOL=OFF
+        -DCMAKE_BUILD_TYPE=Release
+        )
+
+    add_external_library(vtkm_cont STATIC
+      PROJECT vtkm
+      LIBRARY_RELEASE "${VTKM_LIB_CONT}"
+      LIBRARY_DEBUG "${VTKM_LIB_DEBUG_CONT}")
+
+    add_external_library(vtkm_renderer STATIC
+      PROJECT vtkm
+      LIBRARY_RELEASE "${VTKM_LIB_RENDERER}"
+      LIBRARY_DEBUG "${VTKM_LIB_DEBUG_RENDERER}")
+
+    add_external_library(vtkm_worklet STATIC
+      PROJECT vtkm
+      LIBRARY_RELEASE "${VTKM_LIB_WORKLET}"
+      LIBRARY_DEBUG "${VTKM_LIB_DEBUG_WORKLET}")
 
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")

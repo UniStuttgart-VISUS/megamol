@@ -295,16 +295,23 @@ void ParallelCoordinatesRenderer2D::pickIndicator(float x, float y, int& axis, i
     axis = mouseXtoAxis(x);
     index = -1;
     if (axis != -1) {
-        float val = (y - this->marginY) / this->axisHeight *
-                        (maximums[this->pickedIndicatorAxis] - minimums[this->pickedIndicatorAxis]) +
-                    minimums[this->pickedIndicatorAxis];
+        // calculate position of click and filters in [0, 1] range of axis height
+        float pickPos = (y - this->marginY) / this->axisHeight;
+        float upperPos = (this->filters[axis].upper - minimums[axis]) / (maximums[axis] - minimums[axis]);
+        float lowerPos = (this->filters[axis].lower - minimums[axis]) / (maximums[axis] - minimums[axis]);
+
+        // Add small epsilon for better UI feeling because indicator is drawn only to one side.
+        // This also handles intuitive selection if upper and lower filter are set to the same value.
+        upperPos += 0.01;
+        lowerPos -= 0.01;
+
+        float distUpper = fabs(upperPos - pickPos);
+        float distLower = fabs(lowerPos - pickPos);
+
         float thresh = 0.1f;
-
-        float middle = (this->filters[axis].upper + this->filters[axis].lower) * 0.5f;
-
-        if (fabs(this->filters[axis].upper - val) < thresh) {
+        if (distUpper < thresh && distUpper < distLower) {
             index = 1;
-        } else if (fabs(this->filters[axis].lower - val) < thresh) {
+        } else if (distLower < thresh) {
             index = 0;
         }
     }
