@@ -55,6 +55,7 @@ bool HistogramRenderer2D::create() {
     glGenBuffers(1, &this->maxBuffer);
     glGenBuffers(1, &this->histogramBuffer);
     glGenBuffers(1, &this->selectedHistogramBuffer);
+    glGenBuffers(1, &this->maxBinValueBuffer);
 
     return true;
 }
@@ -71,6 +72,7 @@ void HistogramRenderer2D::release() {
     glDeleteBuffers(1, &this->maxBuffer);
     glDeleteBuffers(1, &this->histogramBuffer);
     glDeleteBuffers(1, &this->selectedHistogramBuffer);
+    glDeleteBuffers(1, &this->maxBinValueBuffer);
 }
 
 bool HistogramRenderer2D::GetExtents(core::view::CallRender2D& call) {
@@ -109,12 +111,12 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D& call) {
 
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->histogramBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->selectedHistogramBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, this->maxBinValueBuffer);
 
     glUniform1i(this->histogramProgram.ParameterLocation("binCount"), this->bins);
     glUniform1i(this->histogramProgram.ParameterLocation("colCount"), this->colCount);
     glUniform1i(this->histogramProgram.ParameterLocation("logPlot"),
         static_cast<int>(this->logPlotParam.Param<core::param::BoolParam>()->Value()));
-    glUniform1f(this->histogramProgram.ParameterLocation("maxBinValue"), static_cast<float>(this->maxBinValue));
 
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, this->bins * this->colCount);
 
@@ -218,13 +220,16 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
 
         this->bins = binsParam;
 
-        float zero = 0.0;
+        GLint zero = 0.0;
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->histogramBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, this->colCount * this->bins * sizeof(float), nullptr, GL_STATIC_COPY);
-        glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32F, GL_RED, GL_FLOAT, &zero);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, this->colCount * this->bins * sizeof(GLint), nullptr, GL_STATIC_COPY);
+        glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32I, GL_RED, GL_INT, &zero);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->selectedHistogramBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, this->colCount * this->bins * sizeof(float), nullptr, GL_STATIC_COPY);
-        glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32F, GL_RED, GL_FLOAT, &zero);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, this->colCount * this->bins * sizeof(GLint), nullptr, GL_STATIC_COPY);
+        glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32I, GL_RED, GL_INT, &zero);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->maxBinValueBuffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLint), nullptr, GL_STATIC_COPY);
+        glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32I, GL_RED, GL_INT, &zero);
 
         readFlagsCall->getData()->validateFlagCount(floatTableCall->GetRowsCount());
 
@@ -236,6 +241,7 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
         readFlagsCall->getData()->flags->bind(3);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, this->histogramBuffer);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, this->selectedHistogramBuffer);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, this->maxBinValueBuffer);
 
         glUniform1ui(this->calcHistogramProgram.ParameterLocation("binCount"), this->bins);
         glUniform1ui(this->calcHistogramProgram.ParameterLocation("colCount"), this->colCount);
@@ -247,17 +253,9 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
 
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-        // TODO use histogram buffer directly in draw, for now download histograms to use old draw code
-        this->histogram.resize(this->colCount * this->bins);
-        this->selectedHistogram.resize(this->colCount * this->bins);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->histogramBuffer);
-        glGetBufferSubData(
-            GL_SHADER_STORAGE_BUFFER, 0, this->colCount * this->bins * sizeof(float), this->histogram.data());
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->selectedHistogramBuffer);
-        glGetBufferSubData(
-            GL_SHADER_STORAGE_BUFFER, 0, this->colCount * this->bins * sizeof(float), this->selectedHistogram.data());
-
-        this->maxBinValue = *std::max_element(this->histogram.begin(), this->histogram.end());
+        // Download max bin value for text label.
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->maxBinValueBuffer);
+        glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLint), &this->maxBinValue);
 
         this->currentTableDataHash = hash;
         this->currentTableFrameId = frameId;

@@ -102,9 +102,7 @@ private:
     std::vector<float> colMinimums;
     std::vector<float> colMaximums;
     std::vector<std::string> colNames;
-    std::vector<float> histogram;
-    std::vector<float> selectedHistogram;
-    size_t maxBinValue;
+    GLint maxBinValue;
 
     vislib::graphics::gl::GLSLComputeShader calcHistogramProgram;
     vislib::graphics::gl::GLSLShader histogramProgram;
@@ -115,6 +113,7 @@ private:
     GLuint maxBuffer = 0;
     GLuint histogramBuffer = 0;
     GLuint selectedHistogramBuffer = 0;
+    GLuint maxBinValueBuffer = 0;
 
     megamol::core::utility::SDFFont font;
 };

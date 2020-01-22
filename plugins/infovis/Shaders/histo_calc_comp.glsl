@@ -20,12 +20,17 @@ layout(std430, binding = 3) buffer Flags
 
 layout(std430, binding = 4) buffer Histogram
 {
-    float histogram[];
+    int histogram[];
 };
 
 layout(std430, binding = 5) buffer SelectedHistogram
 {
-    float selectedHistogram[];
+    int selectedHistogram[];
+};
+
+layout(std430, binding = 6) buffer MaxBinValue
+{
+    int maxBinValue[];
 };
 
 uniform uint binCount = 0;
@@ -44,10 +49,19 @@ void main() {
         if (bitflag_isVisible(flags[r])) {
             float val = (floatData[r * colCount + col] - minimums[col]) / (maximums[col] - minimums[col]);
             int bin_idx = clamp(int(val * binCount), 0, int(binCount) - 1);
-            histogram[bin_idx * colCount + col] += 1.0;
+            histogram[bin_idx * colCount + col] += 1;
             if (bitflag_isVisibleSelected(flags[r])) {
-                selectedHistogram[bin_idx * colCount + col] += 1.0;
+                selectedHistogram[bin_idx * colCount + col] += 1;
             }
         }
     }
+
+    int maxVal = 0;
+    for (uint b = 0; b < binCount; b++) {
+        if (histogram[b * colCount + col] > maxVal) {
+            maxVal = histogram[b * colCount + col];
+        }
+    }
+
+    atomicMax(maxBinValue[0], maxVal);
 }
