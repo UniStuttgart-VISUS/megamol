@@ -107,37 +107,16 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D& call) {
 
     tfCall->BindConvenience(this->histogramProgram, GL_TEXTURE0, 0);
 
-    // TODO use something better like instanced rendering
-    for (size_t c = 0; c < this->colCount; ++c) {
-        for (size_t b = 0; b < this->bins; ++b) {
-            float histoVal = this->histogram[b * this->colCount + c];
-            float selectedHistoVal = this->selectedHistogram[b * this->colCount + c];
-            float maxHistoVal = this->maxBinValue;
-            if (this->logPlotParam.Param<core::param::BoolParam>()->Value()) {
-                histoVal = std::max(0.0f, std::log(histoVal));
-                selectedHistoVal = std::max(0.0f, std::log(selectedHistoVal));
-                maxHistoVal = std::max(1.0f, std::log(maxHistoVal));
-            }
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->histogramBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->selectedHistogramBuffer);
 
-            float width = 10.0f / this->bins;
-            float height = 10.0f * histoVal / maxHistoVal;
-            float posX = 12.0f * c + 1.0f + b * width;
-            float posY = 2.0f;
-            glUniform1f(this->histogramProgram.ParameterLocation("binColor"),
-                static_cast<float>(b) / static_cast<float>((this->bins - 1)));
-            glUniform1f(this->histogramProgram.ParameterLocation("posX"), posX);
-            glUniform1f(this->histogramProgram.ParameterLocation("posY"), posY);
-            glUniform1f(this->histogramProgram.ParameterLocation("width"), width);
-            glUniform1f(this->histogramProgram.ParameterLocation("height"), height);
-            glUniform1i(this->histogramProgram.ParameterLocation("selected"), 0);
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glUniform1i(this->histogramProgram.ParameterLocation("binCount"), this->bins);
+    glUniform1i(this->histogramProgram.ParameterLocation("colCount"), this->colCount);
+    glUniform1i(this->histogramProgram.ParameterLocation("logPlot"),
+        static_cast<int>(this->logPlotParam.Param<core::param::BoolParam>()->Value()));
+    glUniform1f(this->histogramProgram.ParameterLocation("maxBinValue"), static_cast<float>(this->maxBinValue));
 
-            height = 10.0f * selectedHistoVal / maxHistoVal;
-            glUniform1f(this->histogramProgram.ParameterLocation("height"), height);
-            glUniform1i(this->histogramProgram.ParameterLocation("selected"), 1);
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        }
-    }
+    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, this->bins * this->colCount);
 
     tfCall->UnbindConvenience();
     glBindVertexArray(0);
