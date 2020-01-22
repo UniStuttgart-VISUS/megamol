@@ -71,6 +71,8 @@ namespace MegaMolConf {
         internal static GraphicalModule eyedropperTarget { get; private set; }
         internal static GraphicalConnection selectedConnection { get; private set; }
         internal static bool drawConnection { get; private set; }
+        internal static bool drawCallNames { get; private set; } = true;
+        internal static bool callBoundsCalculated { get; set; }
         internal static bool showSlotTips { get; private set; }
 
         internal TabPage SelectedTab {
@@ -1301,6 +1303,7 @@ namespace MegaMolConf {
             //    tabViews.GetTabRect(tabViews.SelectedIndex).Height);
             np.Paint += PaintTabpage;
             np.MouseDoubleClick += tabViews_MouseDoubleClick;
+            np.MouseClick += tabViews_MouseClick;
             np.MouseDown += tabViews_MouseDown;
             np.MouseMove += tabViews_MouseMove;
             np.MouseUp += tabViews_MouseUp;
@@ -2593,6 +2596,12 @@ in PowerShell:
                     Clipboard.SetText(s);
                 }
             }
+        }
+
+        private void btnHideCallNames_Click(object sender, EventArgs e)
+        {
+            drawCallNames = btnHideCallNames.Checked;
+            callBoundsCalculated = !btnHideCallNames.Checked;
         }
     }
 }
