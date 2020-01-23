@@ -32,37 +32,6 @@
  core/src/view/View2D.cpp                           |   23 +-
  core/src/view/View3D.cpp                           |   23 +-
  core/src/view/special/ScreenShooter.cpp            |   12 +-
- plugins/astro/CMakeLists.txt (new)                 |   51 +
- .../astro/Shaders/SurfaceLIC-Compute.glsl (new)    |  165 +++
- .../astro/Shaders/SurfaceLIC-Functions.glsl (new)  |   15 +
- .../astro/Shaders/SurfaceLIC-Precompute.glsl (new) |   52 +
- plugins/astro/Shaders/SurfaceLICRenderer.btf (new) |   15 +
- plugins/astro/include/astro/AstroDataCall.h (new)  |  575 ++++++++++
- plugins/astro/include/astro/astro.h (new)          |   97 ++
- plugins/astro/src/AstroDataCall.cpp (new)          |   35 +
- plugins/astro/src/AstroParticleConverter.cpp (new) |  599 ++++++++++
- plugins/astro/src/AstroParticleConverter.h (new)   |  115 ++
- plugins/astro/src/AstroSchulz.cpp (new)            |  923 +++++++++++++++
- plugins/astro/src/AstroSchulz.h (new)              |  130 +++
- plugins/astro/src/Contest2019DataLoader.cpp (new)  |  719 ++++++++++++
- plugins/astro/src/Contest2019DataLoader.h (new)    |  363 ++++++
- plugins/astro/src/DirectionToColour.cpp (new)      |  497 ++++++++
- plugins/astro/src/DirectionToColour.h (new)        |  132 +++
- plugins/astro/src/FilamentFilter.cpp (new)         |  407 +++++++
- plugins/astro/src/FilamentFilter.h (new)           |  159 +++
- plugins/astro/src/SimpleAstroFilter.cpp (new)      |  667 +++++++++++
- plugins/astro/src/SimpleAstroFilter.h (new)        |  164 +++
- .../astro/src/SpectralIntensityVolume.cpp (new)    | 1184 ++++++++++++++++++++
- plugins/astro/src/SpectralIntensityVolume.h (new)  |  131 +++
- plugins/astro/src/SurfaceLICRenderer.cpp (new)     |  503 +++++++++
- plugins/astro/src/SurfaceLICRenderer.h (new)       |  135 +++
- plugins/astro/src/VolumetricGlobalMinMax.cpp (new) |  157 +++
- plugins/astro/src/VolumetricGlobalMinMax.h (new)   |   79 ++
- plugins/astro/src/astro.cpp (new)                  |  165 +++
- plugins/astro/src/dllmain.cpp (new)                |   30 +
- plugins/astro/src/stdafx.cpp (new)                 |   15 +
- plugins/astro/src/stdafx.h (new)                   |   36 +
- plugins/astro/src/targetver.h (new)                |   37 +
  .../infovis/src/ScatterplotMatrixRenderer2D.cpp    |   14 +-
  plugins/infovis/src/ScatterplotMatrixRenderer2D.h  |    5 +-
  plugins/mmstd_datatools/CMakeLists.txt             |    5 +-
