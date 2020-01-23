@@ -48,43 +48,8 @@ namespace gui {
 
 class GraphManager {
 public:
-
-    struct StockParamSlot {
-        std::string class_name;
-        std::string description;
-        Graph::ParamType type;
-    };
-
-    struct StockCallSlot {
-        std::string name;
-        std::string description;
-        std::vector<size_t> compatible_call_idxs;
-        Graph::CallSlotType type;
-    };
-
-    struct StockCall {
-        std::string class_name;
-        std::string description;
-        std::string plugin_name;
-        std::vector<std::string> functions;
-    };
-
-    struct StockModule {
-        std::string class_name;
-        std::string description;
-        std::string plugin_name;
-        bool is_view;
-        std::vector<GraphManager::StockParamSlot> param_slots;
-        std::map<Graph::CallSlotType, std::vector<GraphManager::StockCallSlot>> call_slots;
-    };
-
-    typedef std::vector<GraphManager::StockModule> ModuleStockType;
-    typedef std::vector<GraphManager::StockCall> CallStockType;
-
-    struct GraphData {
-        Graph::ModuleGraphType modules;
-        Graph::CallGraphType calls;
-    };
+    typedef std::shared_ptr<Graph> GraphPtrType;
+    typedef std::vector<GraphPtrType> GraphsType;
 
     // GraphManager ------------------------------------------------------------------
 
@@ -92,41 +57,42 @@ public:
 
     virtual ~GraphManager(void);
 
-    int AddGraph(void);
-    bool DeleteGraph(int GraphManager_index);
+    bool AddGraph(std::string name);
+    bool DeleteGraph(int graph_uid);
+    const GraphManager::GraphsType& GetGraphs(void);
 
     bool UpdateModulesCallsStock(const megamol::core::CoreInstance* core_instance);
-    inline const GraphManager::ModuleStockType& GetModulesStock(void) const { return this->modules_stock; }
-    inline const GraphManager::CallStockType& GetCallsStock(void) const { return this->calls_stock; }
+    inline Graph::ModuleStockType& GetModulesStock(void) { return this->modules_stock; }
+    inline Graph::CallStockType& GetCallsStock(void) { return this->calls_stock; }
 
-    int GetCompatibleCallIndex(Graph::CallSlotPtr call_slot_1, Graph::CallSlotPtr call_slot_2);
-    int GetCompatibleCallIndex(Graph::CallSlotPtr call_slot, GraphManager::StockCallSlot stock_call_slot);
+    int GetCompatibleCallIndex(Graph::CallSlotPtrType call_slot_1, Graph::CallSlotPtrType call_slot_2);
+    int GetCompatibleCallIndex(Graph::CallSlotPtrType call_slot, Graph::StockCallSlot stock_call_slot);
 
     /**
-     * Only used for prototype to be able to store current GraphManager to lua project file.
+     * Only used for prototype to be able to store current graphs to lua project file.
      * Later use FileUtils->SaveProjectFile provided in GUI menu.
      */
-    bool PROTOTYPE_SaveGraphManager(int GraphManager_index, std::string project_filename, megamol::core::CoreInstance* cor_iInstance);
+    bool PROTOTYPE_SaveGraph(int graph_id, std::string project_filename, megamol::core::CoreInstance* cor_iInstance);
 
 private:
     // VARIABLES --------------------------------------------------------------
 
-    int uid;
+    GraphManager::GraphsType graphs;
 
-    std::vector<GraphData> graphs;
+    Graph::ModuleStockType modules_stock;
+    Graph::CallStockType calls_stock;
 
-    GraphManager::ModuleStockType modules_stock;
-    GraphManager::CallStockType calls_stock;
+    int generated_uid;
 
     // FUNCTIONS --------------------------------------------------------------
 
     bool get_call_stock_data(
-        GraphManager::StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);
+        Graph::StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);
 
     bool get_module_stock_data(
-        GraphManager::StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
+        Graph::StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
 
-    int get_unique_id(void) { return (++this->uid); }
+    int get_unique_id(void) { return (++this->generated_uid); }
 
     // ------------------------------------------------------------------------
 };

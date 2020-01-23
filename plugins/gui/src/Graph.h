@@ -45,6 +45,40 @@ public:
 
     enum CallSlotType { CALLEE, CALLER };
 
+    // GRAPH STOCK DATA STRUCTURE ---------------------------------------------
+
+    struct StockParamSlot {
+        std::string class_name;
+        std::string description;
+        Graph::ParamType type;
+    };
+
+    struct StockCallSlot {
+        std::string name;
+        std::string description;
+        std::vector<size_t> compatible_call_idxs;
+        Graph::CallSlotType type;
+    };
+
+    struct StockCall {
+        std::string class_name;
+        std::string description;
+        std::string plugin_name;
+        std::vector<std::string> functions;
+    };
+
+    struct StockModule {
+        std::string class_name;
+        std::string description;
+        std::string plugin_name;
+        bool is_view;
+        std::vector<Graph::StockParamSlot> param_slots;
+        std::map<Graph::CallSlotType, std::vector<Graph::StockCallSlot>> call_slots;
+    };
+
+    typedef std::vector<Graph::StockModule> ModuleStockType;
+    typedef std::vector<Graph::StockCall> CallStockType;
+
     // GRAPH DATA STRUCTURE ---------------------------------------------------
 
     // Forward declaration
@@ -53,19 +87,19 @@ public:
     class CallSlot;
     class ParamSlot;
 
-    typedef std::shared_ptr<Graph::CallSlot> CallSlotPtr;
-    typedef std::shared_ptr<Graph::Call> CallPtr;
-    typedef std::shared_ptr<Graph::Module> ModulePtr;
+    typedef std::shared_ptr<Graph::CallSlot> CallSlotPtrType;
+    typedef std::shared_ptr<Graph::Call> CallPtrType;
+    typedef std::shared_ptr<Graph::Module> ModulePtrType;
 
-    typedef std::vector<Graph::ModulePtr> ModuleGraphType;
-    typedef std::vector<Graph::CallPtr> CallGraphType;
+    typedef std::vector<Graph::ModulePtrType> ModuleGraphType;
+    typedef std::vector<Graph::CallPtrType> CallGraphType;
 
     class ParamSlot {
     public:
-        ParamSlot(int gui_id) : gui_uid(gui_id) {}
-        ~ParamSlot() {}
+        ParamSlot(int gui_id);
+        ~ParamSlot();
 
-        const int gui_uid;
+        const int uid;
 
         std::string class_name;
         std::string description;
@@ -81,7 +115,7 @@ public:
         CallSlot(int gui_id);
         ~CallSlot();
 
-        const int gui_uid;
+        const int uid;
 
         std::string name;
         std::string description;
@@ -91,19 +125,19 @@ public:
         ImVec2 GetGuiPos(void);
 
         bool CallsConnected(void) const;
-        bool ConnectCall(Graph::CallPtr call);
-        bool DisConnectCall(Graph::CallPtr call);
+        bool ConnectCall(Graph::CallPtrType call);
+        bool DisConnectCall(int call_uid, bool called_by_call);
         bool DisConnectCalls(void);
-        const std::vector<Graph::CallPtr> GetConnectedCalls(void);
+        const std::vector<Graph::CallPtrType> GetConnectedCalls(void);
 
         bool ParentModuleConnected(void) const;
-        bool AddParentModule(Graph::ModulePtr parent_module);
-        bool RemoveParentModule(void);
-        const Graph::ModulePtr GetParentModule(void);
+        bool ConnectParentModule(Graph::ModulePtrType parent_module);
+        bool DisConnectParentModule(void);
+        const Graph::ModulePtrType GetParentModule(void);
 
     private:
-        Graph::ModulePtr parent_module;
-        std::vector<Graph::CallPtr> connected_calls;
+        Graph::ModulePtrType parent_module;
+        std::vector<Graph::CallPtrType> connected_calls;
     };
 
     class Call {
@@ -111,7 +145,7 @@ public:
         Call(int gui_id);
         ~Call();
 
-        const int gui_uid;
+        const int uid;
 
         std::string class_name;
         std::string description;
@@ -119,13 +153,12 @@ public:
         std::vector<std::string> functions;
 
         bool IsConnected(void);
-        bool ConnectCallSlot(Graph::CallSlotPtr call_slot);
-        bool DisConnectCallSlot(Graph::CallSlotType type);
+        bool ConnectCallSlots(Graph::CallSlotPtrType call_slot_1, Graph::CallSlotPtrType call_slot_2);
         bool DisConnectCallSlots(void);
-        const Graph::CallSlotPtr GetCallSlot(Graph::CallSlotType type);
+        const Graph::CallSlotPtrType GetCallSlot(Graph::CallSlotType type);
 
     private:
-        std::map<Graph::CallSlotType, Graph::CallSlotPtr> connected_call_slots;
+        std::map<Graph::CallSlotType, Graph::CallSlotPtrType> connected_call_slots;
     };
 
     class Module {
@@ -133,7 +166,7 @@ public:
         Module(int gui_id);
         ~Module();
 
-        const int gui_uid;
+        const int uid;
 
         std::string class_name;
         std::string description;
@@ -152,38 +185,52 @@ public:
             bool initialized;
         } gui;
 
-        bool AddCallSlot(Graph::CallSlotPtr call_slot);
-        bool RemoveCallSlot(Graph::CallSlotPtr call_slot);
-        bool RemoveAllCallSlots(Graph::CallSlotType type);
+        bool AddCallSlot(Graph::CallSlotPtrType call_slot);
         bool RemoveAllCallSlots(void);
-        const std::vector<Graph::CallSlotPtr> GetCallSlots(Graph::CallSlotType type);
-        const std::map<Graph::CallSlotType, std::vector<Graph::CallSlotPtr>> GetCallSlots(void);
+        const std::vector<Graph::CallSlotPtrType> GetCallSlots(Graph::CallSlotType type);
+        const std::map<Graph::CallSlotType, std::vector<Graph::CallSlotPtrType>> GetCallSlots(void);
 
     private:
-        std::map<Graph::CallSlotType, std::vector<Graph::CallSlotPtr>> call_slots;
+        std::map<Graph::CallSlotType, std::vector<Graph::CallSlotPtrType>> call_slots;
     };
 
 
     // GRAPH ------------------------------------------------------------------
 
-    Graph(void);
+    Graph(int graph_uid, const std::string& graph_name);
 
     virtual ~Graph(void);
 
-    bool AddModule(const std::string& module_class_name);
+    bool AddModule(Graph::ModuleStockType& stock_modules, const std::string& module_class_name);
     bool DeleteModule(int module_uid);
 
-    bool AddCall(int call_idx, CallSlotPtr call_slot_1, CallSlotPtr call_slot_2);
+    bool AddCall(Graph::CallStockType& stock_calls, int call_idx, Graph::CallSlotPtrType call_slot_1,
+        Graph::CallSlotPtrType call_slot_2);
+    bool DeleteDisconnectedCalls(void);
     bool DeleteCall(int call_uid);
 
-    const ModuleGraphType& GetGraphModules(void);
-    const CallGraphType& GetGraphCalls(void);
+    const Graph::ModuleGraphType& GetGraphModules(void) { return this->modules; }
+    const Graph::CallGraphType& GetGraphCalls(void) { return this->calls; }
+
+    inline bool SetName(const std::string& graph_name) { this->name = graph_name; }
+    inline std::string& GetName(void) { return this->name; }
+
+    inline int GetUID(void) const { return this->uid; }
 
 private:
     // VARIABLES --------------------------------------------------------------
 
-    ModuleGraphType modules;
-    CallGraphType calls;
+    Graph::ModuleGraphType modules;
+    Graph::CallGraphType calls;
+
+    const int uid;
+    std::string name;
+
+    int generated_uid;
+
+    // FUNCTIONS --------------------------------------------------------------
+
+    int get_unique_id(void) { return (++this->generated_uid); }
 
     // ------------------------------------------------------------------------
 };

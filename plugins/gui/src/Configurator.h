@@ -29,7 +29,7 @@
 
 #include "FileUtils.h"
 #include "GUIUtils.h"
-#include "Graph.h"
+#include "GraphManager.h"
 #include "WindowManager.h"
 
 #include "vislib/sys/Log.h"
@@ -72,38 +72,44 @@ private:
 
     std::array<HotkeyData, HotkeyIndex::INDEX_COUNT> hotkeys;
 
-    Graph graph;
+    GraphManager graph_manager;
     GUIUtils utils;
 
     int window_rendering_state;
     std::string project_filename;
 
     struct State {
-        int selected_module_list;
-        int selected_module_graph;
+        int active_graph_uid;
+
+        int selected_module_list_uid;
+        int selected_module_graph_uid;
+
+        int hovered_call_slot_uid;
+        Graph::CallSlotPtrType selected_call_slot;
+        int process_selected_slot;
+
+        ImVec2 canvas_position;
         ImVec2 scrolling;
         float zooming;
         bool show_grid;
-        bool any_hovered_slot;
-        Graph::CallSlotPtr selected_slot;
-        bool process_selected_slot;
-        bool canvas_hovered;
+        bool show_call_names;
     } state;
 
     // FUNCTIONS --------------------------------------------------------------
 
     bool draw_window_menu(megamol::core::CoreInstance* core_instance);
     bool draw_window_module_list(void);
-    bool draw_window_graph_canvas(void);
+
+    bool draw_window_graph_canvas(GraphManager::GraphPtrType graph);
 
     bool draw_canvas_grid(ImVec2 scrolling, float zooming);
-    bool draw_canvas_calls(ImVec2 position_offset);
-    bool draw_canvas_modules(ImVec2 position_offset);
-    bool draw_canvas_module_call_slots(Graph::ModulePtr mod, ImVec2 position_offset);
-
+    bool draw_canvas_calls(GraphManager::GraphPtrType graph, ImVec2 position_offset);
+    bool draw_canvas_modules(GraphManager::GraphPtrType graph, ImVec2 position_offset);
+    bool draw_canvas_module_call_slots(
+        GraphManager::GraphPtrType graph, Graph::ModulePtrType mod, ImVec2 position_offset);
     bool draw_canvas_selected_dnd_call(ImVec2 position_offset);
 
-    bool init_module_gui_params(Graph::ModulePtr mod);
+    bool init_module_gui_params(Graph::ModulePtrType mod);
 
     // ------------------------------------------------------------------------
 };

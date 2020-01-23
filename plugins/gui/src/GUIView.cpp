@@ -531,15 +531,15 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
     // ------------------------------------------------------------------------
 
     auto* crv = this->render_view_slot.template CallAs<core::view::CallRenderView>();
-    if (crv == nullptr) return false;
-
-    core::view::InputEvent evt;
-    evt.tag = core::view::InputEvent::Tag::Key;
-    evt.keyData.key = key;
-    evt.keyData.action = action;
-    evt.keyData.mods = mods;
-    crv->SetInputEvent(evt);
-    if (!(*crv)(core::view::InputCall::FnOnKey)) return false;
+    if (crv) {
+        core::view::InputEvent evt;
+        evt.tag = core::view::InputEvent::Tag::Key;
+        evt.keyData.key = key;
+        evt.keyData.action = action;
+        evt.keyData.mods = mods;
+        crv->SetInputEvent(evt);
+        return (*crv)(core::view::InputCall::FnOnKey);
+    }
 
     return false;
 }
@@ -550,7 +550,9 @@ bool GUIView::OnChar(unsigned int codePoint) {
 
     ImGuiIO& io = ImGui::GetIO();
     io.ClearInputCharacters();
-    if (codePoint > 0 && codePoint < 0x10000) io.AddInputCharacter((unsigned short)codePoint);
+    if (codePoint > 0 && codePoint < 0x10000) {
+        io.AddInputCharacter((unsigned short)codePoint);
+    }
 
     auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
     if (crv) {
@@ -558,10 +560,10 @@ bool GUIView::OnChar(unsigned int codePoint) {
         evt.tag = core::view::InputEvent::Tag::Char;
         evt.charData.codePoint = codePoint;
         crv->SetInputEvent(evt);
-        if ((*crv)(core::view::InputCall::FnOnChar)) return true;
+        return (*crv)(core::view::InputCall::FnOnChar);
     }
 
-    return true;
+    return false;
 }
 
 
@@ -583,9 +585,10 @@ bool GUIView::OnMouseMove(double x, double y) {
         evt.mouseMoveData.x = x;
         evt.mouseMoveData.y = y;
         crv->SetInputEvent(evt);
-        if (!(*crv)(core::view::InputCall::FnOnMouseMove)) return false;
+        return (*crv)(core::view::InputCall::FnOnMouseMove);
     }
 
+    // Always consumed if any imgui windows is hovered.
     return true;
 }
 
@@ -620,9 +623,10 @@ bool GUIView::OnMouseButton(
         evt.mouseButtonData.action = action;
         evt.mouseButtonData.mods = mods;
         crv->SetInputEvent(evt);
-        if (!(*crv)(core::view::InputCall::FnOnMouseButton)) return false;
+        return (*crv)(core::view::InputCall::FnOnMouseButton);
     }
 
+    // Always consumed if any imgui windows is hovered.
     return true;
 }
 
@@ -646,9 +650,10 @@ bool GUIView::OnMouseScroll(double dx, double dy) {
         evt.mouseScrollData.dx = dx;
         evt.mouseScrollData.dy = dy;
         crv->SetInputEvent(evt);
-        if (!(*crv)(core::view::InputCall::FnOnMouseScroll)) return false;
+        return (*crv)(core::view::InputCall::FnOnMouseScroll);
     }
 
+    // Always consumed if any imgui windows is hovered.
     return true;
 }
 
