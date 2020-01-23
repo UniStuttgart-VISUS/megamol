@@ -7,7 +7,7 @@ string(TOUPPER mmvtkm EXPORT_NAME)
 option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build mmvtkm" OFF)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
-  project(mmvtkm LANGUAGES CXX CUDA)
+  project(mmvtkm)# LANGUAGES CXX CUDA)
   
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
@@ -38,7 +38,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src" "lib"
     "${SOURCE_DIR}"
-    "${BUILD_DIR}/Release/include"
+    "${BUILD_DIR}/include"
     "${SOURCE_DIR}/vtkm/thirdparty/taotuple"
     "${SOURCE_DIR}/vtkm/thirdparty/diy"
     )

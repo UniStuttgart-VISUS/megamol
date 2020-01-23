@@ -574,50 +574,55 @@ function(require_external NAME)
     set(VTKM_VER 1.4)
 
     if(WIN32)
-      set(VTKM_LIB_CONT "lib/vtkm_cont-${VTKM_VER}.lib")
-      set(VTKM_LIB_DEBUG_CONT "lib/vtkm_cont-${VTKM_VER}.lib")
-      set(VTKM_LIB_RENDERER "lib/vtkm_rendering-${VTKM_VER}.lib")
-      set(VTKM_LIB_DEBUG_RENDERER "lib/vtkm_rendering-${VTKM_VER}.lib")
-      set(VTKM_LIB_WORKLET "lib/vtkm_worklet-${VTKM_VER}.lib")
-      set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-${VTKM_VER}.lib")
+      set(VTKM_CONT_IMPORT_LIB "lib/vtkm_cont-${VTKM_VER}.lib")
+      set(VTKM_RENDERER_IMPORT_LIB "lib/vtkm_rendering-${VTKM_VER}.lib")
+      set(VTKM_WORKLET_IMPORT_LIB "lib/vtkm_worklet-${VTKM_VER}.lib")
+      set(VTKM_CONT_LIB "bin/vtkm_cont-${VTKM_VER}.dll")
+      set(VTKM_RENDERER_LIB "bin/vtkm_rendering-${VTKM_VER}.dll")
+      set(VTKM_WORKLET_LIB "bin/vtkm_worklet-${VTKM_VER}.dll")
     else()
-      include(GNUInstallDirs)
-      set(VTKM_LIB_CONT "lib/vtkm_cont-${VTKM_VER}.a")
-      set(VTKM_LIB_DEBUG_CONT "lib/vtkm_cont-${VTKM_VER}.a")
-      set(VTKM_LIB_RENDERER "lib/vtkm_rendering-${VTKM_VER}.a")
-      set(VTKM_LIB_DEBUG_RENDERER "lib/vtkm_rendering-${VTKM_VER}.a")
-      set(VTKM_LIB_WORKLET "lib/vtkm_worklet-${VTKM_VER}.a")
-      set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-${VTKM_VER}.a")
+      set(VTKM_CONT_LIB "lib/libvtkm_cont-${VTKM_VER}.so")
+      set(VTKM_RENDERER_LIB "lib/libvtkm_rendering-${VTKM_VER}.so")
+      set(VTKM_WORKLET_LIB "lib/libvtkm_worklet-${VTKM_VER}.so")
+      
     endif()
 
     option(vtkm_ENABLE_CUDA "Option to build vtkm with cuda enabled" OFF)
-    
-    add_external_project(vtkm
+
+    add_external_project(vtkm SHARED
       GIT_REPOSITORY https://gitlab.kitware.com/vtk/vtk-m.git
       GIT_TAG "v1.4.0"
+      BUILD_BYPRODUCTS 
+	      "<INSTALL_DIR>/${VTKM_CONT_IMPORT_LIB}"
+	      "<INSTALL_DIR>/${VTKM_RENDERER_IMPORT_LIB}"
+	      "<INSTALL_DIR>/${VTKM_WORKLET_IMPORT_LIB}"
+        "<INSTALL_DIR>/${VTKM_CONT_LIB}"
+	      "<INSTALL_DIR>/${VTKM_RENDERER_LIB}"
+	      "<INSTALL_DIR>/${VTKM_WORKLET_LIB}"
       CMAKE_ARGS
-        -DBUILD_SHARED_LIBS:BOOL=OFF
+        -DBUILD_SHARED_LIBS:BOOL=ON
         -DVTKm_ENABLE_TESTING:BOOL=OFF
         -DVTKm_ENABLE_CUDA:BOOL=${vtkm_ENABLE_CUDA}
         -DBUILD_TESTING:BOOL=OFF
-        -VTKm_ENABLE_DEVELOPER_FLAGS:BOOL=OFF
+        -DVTKm_ENABLE_DEVELOPER_FLAGS:BOOL=OFF
+        -DVTKm_INSTALL_ONLY_LIBRARIES:BOOL=ON
         -DCMAKE_BUILD_TYPE=Release
         )
 
-    add_external_library(vtkm_cont STATIC
+    add_external_library(vtkm_cont
       PROJECT vtkm
-      LIBRARY_RELEASE "${VTKM_LIB_CONT}"
-      LIBRARY_DEBUG "${VTKM_LIB_DEBUG_CONT}")
+      IMPORT_LIBRARY ${VTKM_CONT_IMPORT_LIB}
+      LIBRARY ${VTKM_CONT_LIB})
 
-    add_external_library(vtkm_renderer STATIC
+    add_external_library(vtkm_renderer
       PROJECT vtkm
-      LIBRARY_RELEASE "${VTKM_LIB_RENDERER}"
-      LIBRARY_DEBUG "${VTKM_LIB_DEBUG_RENDERER}")
+      IMPORT_LIBRARY ${VTKM_RENDERER_IMPORT_LIB}
+      LIBRARY ${VTKM_RENDERER_LIB})
 
-    add_external_library(vtkm_worklet STATIC
+    add_external_library(vtkm_worklet
       PROJECT vtkm
-      LIBRARY_RELEASE "${VTKM_LIB_WORKLET}"
-      LIBRARY_DEBUG "${VTKM_LIB_DEBUG_WORKLET}")
+      IMPORT_LIBRARY ${VTKM_WORKLET_IMPORT_LIB}
+      LIBRARY ${VTKM_WORKLET_LIB})
 
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")
