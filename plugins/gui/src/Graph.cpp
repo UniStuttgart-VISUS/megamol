@@ -125,7 +125,10 @@ bool megamol::gui::Graph::CallSlot::DisConnectCall(int call_uid, bool called_by_
 bool megamol::gui::Graph::CallSlot::DisConnectCalls(void) {
 
     try {
-        for (auto& call_ptr : this->connected_calls) {
+        // Since connected calls operate on this list for disconnecting slots
+        // a local copy of the connected calls is required.
+        auto connected_calls_copy = this->connected_calls;
+        for (auto& call_ptr : connected_calls_copy) {
             if (call_ptr == nullptr) {
                 vislib::sys::Log::DefaultLog.WriteWarn(
                     "Call is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -134,6 +137,7 @@ bool megamol::gui::Graph::CallSlot::DisConnectCalls(void) {
             }
         }
         this->connected_calls.clear();
+        connected_calls_copy.clear();
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -434,8 +438,8 @@ bool megamol::gui::Graph::AddModule(Graph::ModuleStockType& stock_modules, const
                 }
                 this->modules.emplace_back(mod_ptr);
 
-                vislib::sys::Log::DefaultLog.WriteWarn(
-                    "CREATED MODULE: %s [%s, %s, line %d]\n", mod_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                vislib::sys::Log::DefaultLog.WriteWarn("CREATED MODULE: %s [%s, %s, line %d]\n",
+                    mod_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
 
                 found = true;
                 break;
@@ -470,8 +474,8 @@ bool megamol::gui::Graph::DeleteModule(int module_uid) {
                     (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 assert((*iter).use_count() == 1);
 
-                vislib::sys::Log::DefaultLog.WriteWarn(
-                    "DELETED MODULE: %s [%s, %s, line %d]\n", (*iter)->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                vislib::sys::Log::DefaultLog.WriteWarn("DELETED MODULE: %s [%s, %s, line %d]\n",
+                    (*iter)->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
 
                 (*iter).reset();
                 this->modules.erase(iter);
@@ -516,8 +520,8 @@ bool megamol::gui::Graph::AddCall(Graph::CallStockType& stock_calls, int call_id
 
             this->calls.emplace_back(call_ptr);
 
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "CREATED and connected CALL: %s [%s, %s, line %d]\n", call_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteWarn("CREATED and connected CALL: %s [%s, %s, line %d]\n",
+                call_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
 
             return true;
         } else {
@@ -573,8 +577,8 @@ bool megamol::gui::Graph::DeleteCall(int call_uid) {
                     (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 assert((*iter).use_count() == 1);
 
-                vislib::sys::Log::DefaultLog.WriteWarn(
-                    "DELETED CALL: %s [%s, %s, line %d]\n", (*iter)->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                vislib::sys::Log::DefaultLog.WriteWarn("DELETED CALL: %s [%s, %s, line %d]\n",
+                    (*iter)->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
 
                 (*iter).reset();
                 this->calls.erase(iter);

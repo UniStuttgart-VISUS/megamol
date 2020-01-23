@@ -23,8 +23,7 @@ using namespace megamol::gui;
 using vislib::sys::Log;
 
 
-Configurator::Configurator()
-    : hotkeys(), graph_manager(), utils(), window_rendering_state(0), project_filename(), state() {
+Configurator::Configurator() : hotkeys(), graph_manager(), utils(), state() {
 
     // Init HotKeys
     this->hotkeys[HotkeyIndex::MODULE_SEARCH] =
@@ -35,23 +34,22 @@ Configurator::Configurator()
         HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_DELETE), false);
 
     // Init state
+    this->state.window_rendering_state = 0;
+    this->state.project_filename == "";
     this->state.active_graph_uid = -1;
-
     this->state.selected_module_list_uid = -1;
     this->state.selected_module_graph_uid = -1;
-
     this->state.hovered_call_slot_uid = -1;
     this->state.selected_call_slot = nullptr;
     this->state.process_selected_slot = 0;
-
     this->state.canvas_position = ImVec2(0.0f, 0.0f);
     this->state.scrolling = ImVec2(0.0f, 0.0f);
     this->state.zooming = 1.0f;
     this->state.show_grid = true;
     this->state.show_call_names = true;
 
-    /// TEMP Creating initial graph
-    this->graph_manager.AddGraph("Project_1");
+    // Add initial empty graph
+    this->add_new_graph();
 }
 
 
@@ -97,12 +95,12 @@ bool megamol::gui::Configurator::Draw(
         return false;
     }
 
-    if (this->window_rendering_state < 2) {
+    if (this->state.window_rendering_state < 2) {
         // 1] Show pop-up before before calling UpdateAvailableModulesCallsOnce of graph.
         /// Rendering of pop-up requires two complete Draw calls!
         bool open = true;
         std::string popup_label = "Loading";
-        if (this->window_rendering_state == 0) {
+        if (this->state.window_rendering_state == 0) {
             ImGui::OpenPopup(popup_label.c_str());
         }
         ImGuiWindowFlags popup_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove;
@@ -110,29 +108,50 @@ bool megamol::gui::Configurator::Draw(
             ImGui::Text("Please wait...\nLoading available modules and calls for configurator.");
             ImGui::EndPopup();
         }
-        this->window_rendering_state++;
-    } else if (this->window_rendering_state == 2) {
+        this->state.window_rendering_state++;
+    } else if (this->state.window_rendering_state == 2) {
         // 2] Load available modules and calls once(!)
         this->graph_manager.UpdateModulesCallsStock(core_instance);
-        this->window_rendering_state++;
+        this->state.window_rendering_state++;
     } else {
         // 3] Render configurator gui content
         this->draw_window_menu(core_instance);
         this->draw_window_module_list();
-        ImGui::SameLine(); // Draws module list and graph canvas tabs next to each other
+
+        // Draws module list and graph canvas tabs next to each other
+        ImGui::SameLine();
+
         ImGui::BeginGroup();
 
+        // Info text for PROTOTYPE
+        ImGui::BeginChild("info", ImVec2(0.0f, (2.0f * ImGui::GetItemsLineHeightWithSpacing())), true,
+            ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
+        std::string label =
+            "This is a PROTOTYPE. Any changes will NOT EFFECT the currently loaded project.\n"
+            "You can SAVE the modified graph to a separate PROJECT FILE (parameters are not considered yet).";
+        ImGui::TextColored(ImVec4(0.9f, 0.2f, 0.2f, 1.0f), label.c_str());
+        ImGui::EndChild();
+
+        // Project (graph) tabs
         ImGuiTabBarFlags flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
+        int delete_graph_uid = -1; // (Assuming only one closed tab per frame)
         ImGui::BeginTabBar("Graphs", flags);
         for (auto& graph : this->graph_manager.GetGraphs()) {
             bool open = true;
-            if (ImGui::BeginTabItem(graph->GetName().c_str())) { //, &open, ImGuiTabItemFlags_None)) {
+            if (ImGui::BeginTabItem(graph->GetName().c_str(), &open, ImGuiTabItemFlags_None)) {
                 this->state.active_graph_uid = graph->GetUID();
                 this->draw_window_graph_canvas(graph);
                 ImGui::EndTabItem();
             }
+            if (!open) {
+                // (Do not delete graph while looping through graphs list)
+                delete_graph_uid = graph->GetUID();
+            }
         }
         ImGui::EndTabBar();
+        if (delete_graph_uid > 0) {
+            this->graph_manager.DeleteGraph(delete_graph_uid);
+        }
 
         ImGui::EndGroup();
     }
@@ -150,17 +169,17 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
     }
 
     bool open_popup_project = false;
-    std::string save_project_label = "Save Project";
     if (ImGui::BeginMenuBar()) {
 
         if (ImGui::BeginMenu("File")) {
             // Load/save parameter values to LUA file
             if (ImGui::MenuItem("New Project", "no hotkey set")) {
-                open_popup_project = true;
+                // Create new graph
+                this->add_new_graph();
             }
 #ifdef GUI_USE_FILEUTILS
             // Load/save parameter values to LUA file
-            if (ImGui::MenuItem(save_project_label.c_str(), "no hotkey set")) {
+            if (ImGui::MenuItem("Save Project", "no hotkey set")) {
                 open_popup_project = true;
             }
 
@@ -195,54 +214,11 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
         ImGui::Separator();
         ImGui::Checkbox("Show Call Names", &this->state.show_call_names);
 
-
         ImGui::EndMenuBar();
     }
 
     // Pop-Up(s)
-#ifdef GUI_USE_FILEUTILS
-    if (open_popup_project) {
-        ImGui::OpenPopup(save_project_label.c_str());
-    }
-    if (ImGui::BeginPopupModal(save_project_label.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-
-        std::string label = "File Name###Save Project";
-        if (open_popup_project) {
-            ImGuiID id = ImGui::GetID(label.c_str());
-            ImGui::ActivateItem(id);
-        }
-        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-        this->utils.Utf8Encode(project_filename);
-        ImGui::InputText(label.c_str(), &project_filename, ImGuiInputTextFlags_None);
-        this->utils.Utf8Decode(project_filename);
-
-        bool valid = true;
-        if (!HasFileExtension(project_filename, std::string(".lua"))) {
-            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "File name needs to have the ending '.lua'");
-            valid = false;
-        }
-        // Warn when file already exists
-        if (PathExists(project_filename)) {
-            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "File name already exists and will be overwritten.");
-        }
-        if (ImGui::Button("Save")) {
-            if (valid) {
-                if (!this->graph_manager.GetGraphs().empty()) {
-                    /// TEMP Assuming one created graph
-                    int graph_uid = this->graph_manager.GetGraphs()[0]->GetUID();
-                    if (this->graph_manager.PROTOTYPE_SaveGraph(graph_uid, project_filename, core_instance)) {
-                        ImGui::CloseCurrentPopup();
-                    }
-                }
-            }
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel")) {
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-#endif // GUI_USE_FILEUTILS
+    this->save_project_popup(open_popup_project, core_instance);
 
     return true;
 }
@@ -311,50 +287,23 @@ bool megamol::gui::Configurator::draw_window_module_list(void) {
                 ImGui::PushStyleColor(ImGuiCol_Text, COLOR_MODULE_VIEW);
             }
 
-            bool add_module = false;
-
             std::string label = std::to_string(id) + " " + mod.class_name + " (" + mod.plugin_name + ")";
             if (ImGui::Selectable(label.c_str(), (id == this->state.selected_module_list_uid))) {
                 this->state.selected_module_list_uid = id;
             }
             // Left mouse button double click action
             if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
-                add_module = true;
+                this->add_new_module(mod, compat_call_index, compat_call_slot_name);
             }
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Add Module", "Double-Click")) {
-                    add_module = true;
+                    this->add_new_module(mod, compat_call_index, compat_call_slot_name);
                 }
                 ImGui::EndPopup();
             }
             // Hover tool tip
             this->utils.HoverToolTip(mod.description, id, 0.5f, 5.0f);
-
-            if (add_module) {
-                for (auto& graph : this->graph_manager.GetGraphs()) {
-                    // Look up currently active graph
-                    if (graph->GetUID() == this->state.active_graph_uid) {
-                        // Add new module
-                        graph->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
-                        // If there is a call slot selected, create a call connection to compatible call slot of new
-                        // module
-                        if (this->state.selected_call_slot != nullptr) {
-                            // Get call slots of last added module
-                            for (auto& call_slot_map : graph->GetGraphModules().back()->GetCallSlots()) {
-                                for (auto& call_slot : call_slot_map.second) {
-                                    if (call_slot->name == compat_call_slot_name) {
-                                        if (graph->AddCall(this->graph_manager.GetCallsStock(), compat_call_index,
-                                                this->state.selected_call_slot, call_slot)) {
-                                            this->state.selected_call_slot = nullptr;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
 
             if (mod.is_view) {
                 ImGui::PopStyleColor();
@@ -389,16 +338,6 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(GraphManager::GraphPtr
     if ((this->state.selected_call_slot != nullptr) && (io.MouseReleased[0])) {
         this->state.process_selected_slot = 2;
     }
-
-    // Info text --------------------------------------------------------------
-    /// (PROTOYPE specific?)
-    ImGui::BeginChild("info", ImVec2(0.0f, (2.0f * ImGui::GetItemsLineHeightWithSpacing())), true,
-        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
-    std::string label =
-        "This is a PROTOTYPE. Any changes will NOT EFFECT the currently loaded project.\n"
-        "You can SAVE the modified graph to a separate PROJECT FILE (parameters are not considered yet).";
-    ImGui::TextColored(ImVec4(0.9f, 0.2f, 0.2f, 1.0f), label.c_str());
-    ImGui::EndChild();
 
     // Draw child canvas ------------------------------------------------------
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
@@ -809,4 +748,95 @@ bool megamol::gui::Configurator::init_module_gui_params(Graph::ModulePtrType mod
     mod->gui.initialized = true;
 
     return true;
+}
+
+
+bool megamol::gui::Configurator::save_project_popup(bool open, megamol::core::CoreInstance* core_instance) {
+
+#ifdef GUI_USE_FILEUTILS
+    std::string save_project_label = "Save Project";
+
+    if (open) {
+        ImGui::OpenPopup(save_project_label.c_str());
+    }
+    if (ImGui::BeginPopupModal(save_project_label.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+        std::string label = "File Name###Save Project";
+        if (open) {
+            ImGuiID id = ImGui::GetID(label.c_str());
+            ImGui::ActivateItem(id);
+        }
+        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+        this->utils.Utf8Encode(this->state.project_filename);
+        ImGui::InputText(label.c_str(), &this->state.project_filename, ImGuiInputTextFlags_None);
+        this->utils.Utf8Decode(this->state.project_filename);
+
+        bool valid = true;
+        if (!HasFileExtension(this->state.project_filename, std::string(".lua"))) {
+            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "File name needs to have the ending '.lua'");
+            valid = false;
+        }
+        // Warn when file already exists
+        if (PathExists(this->state.project_filename)) {
+            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "File name already exists and will be overwritten.");
+        }
+        if (ImGui::Button("Save")) {
+            if (valid) {
+                if (!this->graph_manager.GetGraphs().empty()) {
+                    if (this->graph_manager.PROTOTYPE_SaveGraph(
+                            this->state.active_graph_uid, this->state.project_filename, core_instance)) {
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel")) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+#endif // GUI_USE_FILEUTILS
+
+    return true;
+}
+
+
+bool megamol::gui::Configurator::add_new_graph(void) {
+
+    int graph_count = this->graph_manager.GetGraphs().size();
+    std::string graph_name = "Project_" + std::to_string(graph_count + 1);
+    this->graph_manager.AddGraph(graph_name);
+    return true;
+}
+
+
+bool megamol::gui::Configurator::add_new_module(
+    Graph::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name) {
+
+    bool retval = false;
+    // Process module adding
+    for (auto& graph : this->graph_manager.GetGraphs()) {
+        // Look up currently active graph
+        if (graph->GetUID() == this->state.active_graph_uid) {
+            // Add new module
+            retval = graph->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
+            // If there is a call slot selected, create a call connection to compatible call slot of new
+            // module
+            if (this->state.selected_call_slot != nullptr) {
+                // Get call slots of last added module
+                for (auto& call_slot_map : graph->GetGraphModules().back()->GetCallSlots()) {
+                    for (auto& call_slot : call_slot_map.second) {
+                        if (call_slot->name == compat_call_slot_name) {
+                            if (graph->AddCall(this->graph_manager.GetCallsStock(), compat_call_idx,
+                                    this->state.selected_call_slot, call_slot)) {
+                                this->state.selected_call_slot = nullptr;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return retval;
 }

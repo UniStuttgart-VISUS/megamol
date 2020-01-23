@@ -75,19 +75,15 @@ private:
     GraphManager graph_manager;
     GUIUtils utils;
 
-    int window_rendering_state;
-    std::string project_filename;
-
     struct State {
+        int window_rendering_state;
+        std::string project_filename;
         int active_graph_uid;
-
         int selected_module_list_uid;
         int selected_module_graph_uid;
-
         int hovered_call_slot_uid;
         Graph::CallSlotPtrType selected_call_slot;
         int process_selected_slot;
-
         ImVec2 canvas_position;
         ImVec2 scrolling;
         float zooming;
@@ -110,6 +106,11 @@ private:
     bool draw_canvas_selected_dnd_call(ImVec2 position_offset);
 
     bool init_module_gui_params(Graph::ModulePtrType mod);
+
+    bool save_project_popup(bool open, megamol::core::CoreInstance* core_instance);
+
+    bool add_new_graph(void);
+    bool add_new_module(Graph::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name);
 
     // ------------------------------------------------------------------------
 };
