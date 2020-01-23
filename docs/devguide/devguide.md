@@ -164,7 +164,7 @@ Additionally, information about the header-only libraries can be queried with th
 | Variable       | Description |
 | -------------- | ----------- |
 | GIT_REPOSITORY | The URL of the git repository. |
-| GIT_TAG        | The git tag or commit hash downloaded. |
+| GIT_TAG        | The git tag or commit hash of the downloaded library. |
 | SOURCE_DIR     | Source directory, where the downloaded files reside. |
 
 ##### Built libraries
@@ -188,7 +188,7 @@ add_external_project(<NAME> SHARED|STATIC
 | Parameter                     | Description |
 | ----------------------------- | ----------- |
 | ```<NAME>```                  | Project name, usually the official name of the library or its abbreviation. |
-| ```SHARED|STATIC```           | Indicate to build a shared (```.so```/```.dll```) or static (```.a```/```.lib```) library. Shared libraries are always built as Release, static libraries according to user selection. |
+| ```SHARED \| STATIC```        | Indicate to build a shared (```.so```/```.dll```) or static (```.a```/```.lib```) library. Shared libraries are always built as Release, static libraries according to user selection. |
 | ```<GIT_REPOSITORY>```        | URL of the git repository. |
 | ```<GIT_TAG>```               | Tag or commit hash for getting a specific version, ensuring compatibility. Default behavior is to get the latest version. |
 | ```<PATCH_COMMAND>```         | Command that is run before the configuration step and is mostly used to apply patches or providing a modified ```CMakeLists.txt``` file. |
@@ -214,10 +214,10 @@ add_external_library(<NAME> [PROJECT <PROJECT>]
 | ```<PROJECT>```               | If the target name does not match the name provided in the ```add_external_project``` command, the project has to be set accordingly. |
 | ```<LIBRARY>```               | The created library file, in case of a shared library a ```.so``` or ```.dll``` file, or ```.a``` or ```.lib``` for a static library. |
 | ```<IMPORT_LIBRARY>```        | If the library is a shared library, this defines the import library (```.lib```) on Windows systems. This has to be set for shared libraries. |
-| ```<INTERFACE_LIBRARIES>```   | Additional libraries the external dependency depends on. |
-| ```<DEBUG_SUFFIX>```          | Specify a suffix for the debug version of the library. The position of this suffix has to be specified by providing ```<SUFFIX>``` in the library name. |
+| ```<INTERFACE_LIBRARIES>```   | Additional libraries the external library depends on. |
+| ```<DEBUG_SUFFIX>```          | Specify a suffix for the debug version of the library. The position of this suffix has to be specified by providing ```<SUFFIX>``` in the library name and has to match the debug suffix provided to the ```add_external_project``` command. |
 
-An example for a dynamic library is as follows, where the ```tracking``` library ```v2.0``` is defined as a dynamic library and downloaded from the VISUS github repository at ```https://github.com/UniStuttgart-VISUS/mm-tracking```. It builds two libraries, ```tracking``` and ```NatNetLib```, and uses the CMake flag ```-DCREATE_TRACKING_TEST_PROGRAM=OFF``` to prevent the building of a test program. Both libraries are created providing the paths to the respective dynamic and import libraries.
+An example for a dynamic library is as follows, where the ```tracking``` library ```v2.0``` is defined as a dynamic library and downloaded from the VISUS github repository at ```https://github.com/UniStuttgart-VISUS/mm-tracking```. It builds two libraries, ```tracking``` and ```NatNetLib```, and uses the CMake flag ```-DCREATE_TRACKING_TEST_PROGRAM=OFF``` to prevent the building of a test program. Both libraries are created providing the paths to the respective dynamic and import libraries. Note that only the ```NatNetLib``` has to specify the project as its name does not match the external library.
 
 ```
 add_external_project(tracking SHARED
@@ -245,14 +245,14 @@ add_external_library(natnet
   IMPORT_LIBRARY "lib/NatNetLib.lib")
 ```
 
-Further examples on how to include dynamic and static libraries, can be found in the ```CMakeExternals.cmake``` file in the MegaMol main directory.
+Further examples on how to include dynamic and static libraries can be found in the ```CMakeExternals.cmake``` file in the MegaMol main directory.
 
 Additionally, information about the libraries can be queried with the command ```external_get_property(<NAME> <VARIABLE>)```, where variable has to be one of the provided variables in the following table, and at the same time is used as local variable name for storing the queried results.
 
 | Variable       | Description |
 | -------------- | ----------- |
 | GIT_REPOSITORY | The URL of the git repository. |
-| GIT_TAG        | The git tag or commit hash downloaded. |
+| GIT_TAG        | The git tag or commit hash of the downloaded library. |
 | SOURCE_DIR     | Source directory, where the downloaded files reside. |
 | BINARY_DIR     | Directory of the CMake configuration files. |
 | INSTALL_DIR    | Target directory for the local installation. Note that for multi-configuration systems, the built static libraries are in a subdirectory corresponding to their build type. |
