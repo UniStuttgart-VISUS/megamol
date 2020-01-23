@@ -288,12 +288,17 @@ bool megamol::gui::Configurator::draw_window_module_list(void) {
         }
 
         bool compat_filter = true;
+        int compat_call_index = -1;
+        std::string compat_call_slot_name;
         if (this->state.selected_call_slot != nullptr) {
             // Filter slot by compatible call slots
             compat_filter = false;
             for (auto& cst : mod.call_slots) {
                 for (auto& cs : cst.second) {
-                    if (this->graph_manager.GetCompatibleCallIndex(this->state.selected_call_slot, cs) > 0) {
+                    int cpidx = this->graph_manager.GetCompatibleCallIndex(this->state.selected_call_slot, cs);
+                    if (cpidx > 0) {
+                        compat_call_index = cpidx;
+                        compat_call_slot_name = cs.name;
                         compat_filter = true;
                     }
                 }
@@ -302,46 +307,58 @@ bool megamol::gui::Configurator::draw_window_module_list(void) {
 
         if (search_filter && compat_filter) {
             ImGui::PushID(id);
-
             if (mod.is_view) {
                 ImGui::PushStyleColor(ImGuiCol_Text, COLOR_MODULE_VIEW);
             }
+
+            bool add_module = false;
+
             std::string label = std::to_string(id) + " " + mod.class_name + " (" + mod.plugin_name + ")";
             if (ImGui::Selectable(label.c_str(), (id == this->state.selected_module_list_uid))) {
                 this->state.selected_module_list_uid = id;
             }
             // Left mouse button double click action
             if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
-                for (auto& graph : this->graph_manager.GetGraphs()) {
-                    if (graph->GetUID() == this->state.active_graph_uid) {
-                        graph->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
-                        if (this->state.selected_call_slot != nullptr) {
-                            this->state.process_selected_slot = 2;
-                        }
-                    }
-                }
+                add_module = true;
             }
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Add Module", "Double-Click")) {
-                    for (auto& graph : this->graph_manager.GetGraphs()) {
-                        if (graph->GetUID() == this->state.active_graph_uid) {
-                            graph->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
-                            if (this->state.selected_call_slot != nullptr) {
-                                this->state.process_selected_slot = 2;
-                            }
-                        }
-                    }
+                    add_module = true;
                 }
                 ImGui::EndPopup();
             }
             // Hover tool tip
             this->utils.HoverToolTip(mod.description, id, 0.5f, 5.0f);
 
+            if (add_module) {
+                for (auto& graph : this->graph_manager.GetGraphs()) {
+                    // Look up currently active graph
+                    if (graph->GetUID() == this->state.active_graph_uid) {
+                        // Add new module
+                        graph->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
+                        // If there is a call slot selected, create a call connection to compatible call slot of new
+                        // module
+                        if (this->state.selected_call_slot != nullptr) {
+                            // Get call slots of last added module
+                            for (auto& call_slot_map : graph->GetGraphModules().back()->GetCallSlots()) {
+                                for (auto& call_slot : call_slot_map.second) {
+                                    if (call_slot->name == compat_call_slot_name) {
+                                        if (graph->AddCall(this->graph_manager.GetCallsStock(), compat_call_index,
+                                                this->state.selected_call_slot, call_slot)) {
+                                            this->state.selected_call_slot = nullptr;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             if (mod.is_view) {
                 ImGui::PopStyleColor();
             }
-
             ImGui::PopID();
             id++;
         }

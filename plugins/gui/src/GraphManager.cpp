@@ -395,6 +395,13 @@ int megamol::gui::GraphManager::GetCompatibleCallIndex(
             for (auto& selected_comp_call_slots : call_slot_1->compatible_call_idxs) {
                 for (auto& current_comp_call_slots : call_slot_2->compatible_call_idxs) {
                     if (selected_comp_call_slots == current_comp_call_slots) {
+                        // Show only comaptible calls for unconnected caller slots
+                        if ((call_slot_1->type == Graph::CallSlotType::CALLER) && (call_slot_1->CallsConnected())) {
+                            return -1;
+                        } else if ((call_slot_2->type == Graph::CallSlotType::CALLER) &&
+                                   (call_slot_2->CallsConnected())) {
+                            return -1;
+                        }
                         return current_comp_call_slots;
                     }
                 }
