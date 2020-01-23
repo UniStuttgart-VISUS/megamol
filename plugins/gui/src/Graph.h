@@ -51,6 +51,7 @@ public:
         std::string class_name;
         std::string description;
         Graph::ParamType type;
+        std::string value_string;
     };
 
     struct StockCallSlot {
@@ -106,6 +107,7 @@ public:
         Graph::ParamType type;
 
         std::string full_name;
+        std::string value_string;
 
     private:
     };
@@ -177,7 +179,7 @@ public:
 
         std::string name;
         std::string full_name;
-        std::string instance;
+        bool is_view_instance;
 
         struct Gui {
             ImVec2 position;
@@ -212,7 +214,7 @@ public:
     const Graph::ModuleGraphType& GetGraphModules(void) { return this->modules; }
     const Graph::CallGraphType& GetGraphCalls(void) { return this->calls; }
 
-    inline bool SetName(const std::string& graph_name) { this->name = graph_name; }
+    inline void SetName(const std::string& graph_name) { this->name = graph_name; }
     inline std::string& GetName(void) { return this->name; }
 
     inline int GetUID(void) const { return this->uid; }

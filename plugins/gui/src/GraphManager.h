@@ -24,6 +24,8 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "utility/plugins/PluginManager.h"
 
+#include "vislib/UTF8Encoder.h"
+
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -64,6 +66,8 @@ public:
     bool UpdateModulesCallsStock(const megamol::core::CoreInstance* core_instance);
     inline Graph::ModuleStockType& GetModulesStock(void) { return this->modules_stock; }
     inline Graph::CallStockType& GetCallsStock(void) { return this->calls_stock; }
+
+    bool LoadCurrentCoreProjectToGraph(megamol::core::CoreInstance* core_instance);
 
     int GetCompatibleCallIndex(Graph::CallSlotPtrType call_slot_1, Graph::CallSlotPtrType call_slot_2);
     int GetCompatibleCallIndex(Graph::CallSlotPtrType call_slot, Graph::StockCallSlot stock_call_slot);

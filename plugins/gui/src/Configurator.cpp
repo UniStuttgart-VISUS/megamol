@@ -47,9 +47,7 @@ Configurator::Configurator() : hotkeys(), graph_manager(), utils(), state() {
     this->state.zooming = 1.0f;
     this->state.show_grid = true;
     this->state.show_call_names = true;
-
-    // Add initial empty graph
-    this->add_new_graph();
+    this->state.popup_project_name = nullptr;
 }
 
 
@@ -112,6 +110,8 @@ bool megamol::gui::Configurator::Draw(
     } else if (this->state.window_rendering_state == 2) {
         // 2] Load available modules and calls once(!)
         this->graph_manager.UpdateModulesCallsStock(core_instance);
+        // Load graph from currently loaded project
+        this->graph_manager.LoadCurrentCoreProjectToGraph(core_instance);
         this->state.window_rendering_state++;
     } else {
         // 3] Render configurator gui content
@@ -120,7 +120,6 @@ bool megamol::gui::Configurator::Draw(
 
         // Draws module list and graph canvas tabs next to each other
         ImGui::SameLine();
-
         ImGui::BeginGroup();
 
         // Info text for PROTOTYPE
@@ -133,24 +132,52 @@ bool megamol::gui::Configurator::Draw(
         ImGui::EndChild();
 
         // Project (graph) tabs
-        ImGuiTabBarFlags flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
         int delete_graph_uid = -1; // (Assuming only one closed tab per frame)
+        bool open_rename_popup = false;
+
+        ImGuiTabBarFlags flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
         ImGui::BeginTabBar("Graphs", flags);
         for (auto& graph : this->graph_manager.GetGraphs()) {
             bool open = true;
+
+            // Tab showing one graph
             if (ImGui::BeginTabItem(graph->GetName().c_str(), &open, ImGuiTabItemFlags_None)) {
+                // Tab context menu
+                if (ImGui::BeginPopupContextItem()) {
+                    if (ImGui::MenuItem("Rename Project")) {
+                        open_rename_popup = true;
+                        this->state.popup_project_name = &graph->GetName();
+                    }
+                    ImGui::EndPopup();
+                }
+
                 this->state.active_graph_uid = graph->GetUID();
                 this->draw_window_graph_canvas(graph);
                 ImGui::EndTabItem();
             }
+            // (Do not delete graph while looping through graphs list)
             if (!open) {
-                // (Do not delete graph while looping through graphs list)
                 delete_graph_uid = graph->GetUID();
             }
         }
         ImGui::EndTabBar();
+
+        // Delete closed tab
         if (delete_graph_uid > 0) {
             this->graph_manager.DeleteGraph(delete_graph_uid);
+        }
+
+        // Rename project tab pop-up
+        if (open_rename_popup) {
+            ImGui::OpenPopup("Rename Project");
+        }
+        if (ImGui::BeginPopupModal("Rename Project", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
+
+            if (ImGui::InputText("Enter new  project name", this->state.popup_project_name, flags)) {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
         }
 
         ImGui::EndGroup();
@@ -173,33 +200,32 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
 
         if (ImGui::BeginMenu("File")) {
             // Load/save parameter values to LUA file
-            if (ImGui::MenuItem("New Project", "no hotkey set")) {
+            if (ImGui::MenuItem("New Project")) {
                 // Create new graph
                 this->add_new_graph();
             }
 #ifdef GUI_USE_FILEUTILS
             // Load/save parameter values to LUA file
-            if (ImGui::MenuItem("Save Project", "no hotkey set")) {
+            if (ImGui::MenuItem("Save Project")) {
                 open_popup_project = true;
             }
 
-            if (ImGui::MenuItem("Load Project", "no hotkey set")) {
-                /// TODO: Load parameter file
-                // std::string projectFilename;
-                // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
-                // Load to new graph ...
-            }
+            // if (ImGui::MenuItem("Load Project")) {
+            /// TODO: Load parameter file
+            // std::string projectFilename;
+            // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
+            // Load to new graph ...
+            //}
 #endif // GUI_USE_FILEUTILS
             ImGui::EndMenu();
         }
+        // if (ImGui::BeginMenu("Graph")) {
+        //
+        //    ImGui::EndMenu();
+        //}
+        // ImGui::Separator();
+        ImGui::SameLine(260.0f);
 
-        ImGui::Separator();
-        if (ImGui::BeginMenu("Graph")) {
-
-            ImGui::EndMenu();
-        }
-
-        ImGui::Separator();
         if (ImGui::Button("Reset###scrolling")) {
             this->state.scrolling = ImVec2(0.0f, 0.0f);
         }
@@ -293,12 +319,12 @@ bool megamol::gui::Configurator::draw_window_module_list(void) {
             }
             // Left mouse button double click action
             if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
-                this->add_new_module(mod, compat_call_index, compat_call_slot_name);
+                this->add_new_module_to_graph(mod, compat_call_index, compat_call_slot_name);
             }
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Add Module", "Double-Click")) {
-                    this->add_new_module(mod, compat_call_index, compat_call_slot_name);
+                    this->add_new_module_to_graph(mod, compat_call_index, compat_call_slot_name);
                 }
                 ImGui::EndPopup();
             }
@@ -520,10 +546,15 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
             ImGui::Text(mod->name.c_str());
 
             if (mod->is_view) {
-                std::string view_label = "[view]";
+                // std::string view_label = "[view]";
+                // name_width = this->utils.TextWidgetWidth(view_label);
+                // ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), -line_offset));
+                // ImGui::TextColored(COLOR_VIEW_LABEL, view_label.c_str());
+
+                std::string view_label = "Main View";
                 name_width = this->utils.TextWidgetWidth(view_label);
                 ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), -line_offset));
-                ImGui::TextColored(COLOR_VIEW_LABEL, view_label.c_str());
+                ImGui::Checkbox(view_label.c_str(), &mod->is_view_instance);
             }
 
             ImGui::EndGroup();
@@ -532,7 +563,7 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
             draw_list->ChannelsSetCurrent(0); // Background
 
             ImGui::SetCursorScreenPos(module_rect_min);
-            std::string label = "module###" + mod->full_name;
+            std::string label = "module_" + mod->full_name;
             ImGui::InvisibleButton(label.c_str(), mod->gui.size);
             // Gives slots which overlap modules priority for ToolTip and Context Menu.
             if (this->state.hovered_call_slot_uid < 0) {
@@ -617,7 +648,7 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slots(
                 slot_color = COLOR_SLOT;
 
                 ImGui::SetCursorScreenPos(slot_position - ImVec2(CONFIGURATOR_SLOT_RADIUS, CONFIGURATOR_SLOT_RADIUS));
-                std::string label = "slot###" + mod->full_name + slot_name + std::to_string(slot->uid);
+                std::string label = "slot_" + mod->full_name + slot_name + std::to_string(slot->uid);
                 ImGui::InvisibleButton(
                     label.c_str(), ImVec2(CONFIGURATOR_SLOT_RADIUS * 2.0f, CONFIGURATOR_SLOT_RADIUS * 2.0f));
                 this->utils.HoverToolTip(slot->description, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
@@ -724,7 +755,11 @@ bool megamol::gui::Configurator::init_module_gui_params(Graph::ModulePtrType mod
 
     // Init SIZE of module (prior to position) --------------------------------
     /// Assuming mod->name is longest used string for module label
-    float max_label_length = this->utils.TextWidgetWidth(mod->class_name); /// TODO change to full_name
+    float max_class_name_length = this->utils.TextWidgetWidth(mod->class_name);
+    float max_full_name_length = 0.0f; // this->utils.TextWidgetWidth(mod->full_name);
+    float max_name_length = this->utils.TextWidgetWidth(mod->name);
+    float max_label_length = std::max(std::max(max_class_name_length, max_full_name_length), max_name_length);
+
     float max_slot_name_length = 0.0f;
     for (auto& call_slot_type_list : mod->GetCallSlots()) {
         for (auto& call_slot : call_slot_type_list.second) {
@@ -811,7 +846,7 @@ bool megamol::gui::Configurator::add_new_graph(void) {
 }
 
 
-bool megamol::gui::Configurator::add_new_module(
+bool megamol::gui::Configurator::add_new_module_to_graph(
     Graph::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name) {
 
     bool retval = false;

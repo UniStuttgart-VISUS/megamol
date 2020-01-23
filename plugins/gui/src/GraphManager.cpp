@@ -385,6 +385,145 @@ bool megamol::gui::GraphManager::get_call_stock_data(
 }
 
 
+bool megamol::gui::GraphManager::LoadCurrentCoreProjectToGraph(megamol::core::CoreInstance* core_instance) {
+
+    try {
+        // Temporary data structure holding call connection data
+        struct CallData {
+            int compat_call_idx;
+            std::string caller_module_full_name;
+            std::string caller_module_call_slot_name;
+            std::string callee_module_full_name;
+            std::string callee_module_call_slot_name;
+        };
+        std::vector<CallData> call_data;
+
+        // Create new graph
+        this->AddGraph("temp");
+        auto graph = this->graphs.back();
+
+        // Search for view instance
+        std::map<std::string, std::string> view_instances;
+        vislib::sys::AutoLock lock(core_instance->ModuleGraphRoot()->ModuleGraphLock());
+        megamol::core::AbstractNamedObjectContainer::const_ptr_type anoc =
+            megamol::core::AbstractNamedObjectContainer::dynamic_pointer_cast(core_instance->ModuleGraphRoot());
+        for (auto ano = anoc->ChildList_Begin(); ano != anoc->ChildList_End(); ++ano) {
+            auto vi = dynamic_cast<megamol::core::ViewInstance*>(ano->get());
+            if ((vi != nullptr) && (vi->View() != nullptr)) {
+                std::string vin = std::string(vi->Name().PeekBuffer());
+                view_instances[std::string(vi->View()->FullName().PeekBuffer())] = vin;
+            }
+        }
+
+        // Create modules and get additional module information.
+        // Load call connections to temporary data structure since not all call slots are yet available for being
+        // connected.
+        const auto module_func = [&, this](megamol::core::Module* mod) {
+            // Creating new module
+            graph->AddModule(this->modules_stock, std::string(mod->ClassName()));
+            auto graph_module = graph->GetGraphModules().back();
+            graph_module->name = std::string(mod->Name().PeekBuffer());
+            graph_module->full_name = std::string(mod->FullName().PeekBuffer());
+
+            if (view_instances.find(std::string(mod->FullName().PeekBuffer())) != view_instances.end()) {
+                // Instance Name
+                graph->SetName(view_instances[std::string(mod->FullName().PeekBuffer())]);
+                graph_module->is_view_instance = true;
+            }
+
+            megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator se = mod->ChildList_End();
+            for (megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator si =
+                     mod->ChildList_Begin();
+                 si != se; ++si) {
+
+                // Parameter
+                const auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
+                if (param_slot != nullptr) {
+                    const auto button_param = param_slot->Param<megamol::core::param::ButtonParam>();
+                    if (button_param == nullptr) {
+                        std::string value_string = param_slot->Parameter()->ValueString().PeekBuffer();
+                        // Encode to UTF-8 string
+                        vislib::StringA valueString;
+                        vislib::UTF8Encoder::Encode(valueString, vislib::StringA(value_string.c_str()));
+                        value_string = valueString.PeekBuffer();
+
+                        std::string param_class_name = std::string(param_slot->Name().PeekBuffer());
+                        std::string param_full_name = std::string(param_slot->FullName().PeekBuffer());
+                        for (auto& param : graph_module->param_slots) {
+                            if (param.class_name == param_class_name) {
+                                param.full_name = param_full_name;
+                                param.value_string = value_string;
+                            }
+                        }
+                    }
+                }
+
+                // Collect call connection data
+                const auto caller_slot = dynamic_cast<megamol::core::CallerSlot*>((*si).get());
+                if (caller_slot) {
+                    const megamol::core::Call* call =
+                        const_cast<megamol::core::CallerSlot*>(caller_slot)->CallAs<megamol::core::Call>();
+                    if (call != nullptr) {
+                        CallData cd;
+
+                        cd.compat_call_idx = -1;
+                        int calls_count = this->calls_stock.size();
+                        for (int i = 0; i < calls_count; i++) {
+                            if (this->calls_stock[i].class_name == std::string(call->ClassName())) {
+                                cd.compat_call_idx = i;
+                            }
+                        }
+                        cd.caller_module_full_name =
+                            std::string(call->PeekCallerSlot()->Parent()->FullName().PeekBuffer());
+                        cd.caller_module_call_slot_name = std::string(call->PeekCallerSlot()->Name().PeekBuffer());
+                        cd.callee_module_full_name =
+                            std::string(call->PeekCalleeSlot()->Parent()->FullName().PeekBuffer());
+                        cd.callee_module_call_slot_name = std::string(call->PeekCalleeSlot()->Name().PeekBuffer());
+
+                        call_data.emplace_back(cd);
+                    }
+                }
+            }
+        };
+        core_instance->EnumModulesNoLock(nullptr, module_func);
+
+        // Create calls
+        for (auto& cd : call_data) {
+            Graph::CallSlotPtrType call_slot_1 = nullptr;
+            for (auto& mod : graph->GetGraphModules()) {
+                if (mod->full_name == cd.caller_module_full_name) {
+                    for (auto call_slot : mod->GetCallSlots(Graph::CallSlotType::CALLER)) {
+                        if (call_slot->name == cd.caller_module_call_slot_name) {
+                            call_slot_1 = call_slot;
+                        }
+                    }
+                }
+            }
+            Graph::CallSlotPtrType call_slot_2 = nullptr;
+            for (auto& mod : graph->GetGraphModules()) {
+                if (mod->full_name == cd.callee_module_full_name) {
+                    for (auto call_slot : mod->GetCallSlots(Graph::CallSlotType::CALLEE)) {
+                        if (call_slot->name == cd.callee_module_call_slot_name) {
+                            call_slot_2 = call_slot;
+                        }
+                    }
+                }
+            }
+            graph->AddCall(this->GetCallsStock(), cd.compat_call_idx, call_slot_1, call_slot_2);
+        }
+
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    return true;
+}
+
+
 int megamol::gui::GraphManager::GetCompatibleCallIndex(
     Graph::CallSlotPtrType call_slot_1, Graph::CallSlotPtrType call_slot_2) {
 
@@ -442,7 +581,6 @@ bool megamol::gui::GraphManager::PROTOTYPE_SaveGraph(
 
     std::string confstr;
     std::stringstream confInstances, confModules, confCalls, confParams;
-    bool already_found_main_view = false;
     bool found_graph = false;
 
     try {
@@ -450,47 +588,26 @@ bool megamol::gui::GraphManager::PROTOTYPE_SaveGraph(
         for (auto& graph : this->graphs) {
             if (graph->GetUID() == graph_id) {
                 for (auto& mod : graph->GetGraphModules()) {
-                    // Check for not connected calle_slots
-                    bool is_main_view = false;
-                    if (mod->is_view) {
-                        bool callee_not_connected = false;
-                        for (auto& call_slots : mod->GetCallSlots(Graph::CallSlotType::CALLEE)) {
-                            if (!call_slots->CallsConnected()) {
-                                callee_not_connected = true;
-                            }
-                        }
-                        if (!callee_not_connected) {
-                            if (!already_found_main_view) {
-                                confInstances << "mmCreateView(\"" << mod->instance << "\",\"" << mod->class_name
-                                              << "\",\"" << mod->full_name << "\")\n";
-                                already_found_main_view = true;
-                                is_main_view = true;
-                            } else {
-                                vislib::sys::Log::DefaultLog.WriteError(
-                                    "Only one main view is allowed. Found another one. [%s, %s, line %d]\n", __FILE__,
-                                    __FUNCTION__, __LINE__);
-                            }
-                        }
-                    }
-                    if (!is_main_view) {
+
+                    if (mod->is_view_instance) {
+                        confInstances << "mmCreateView(\"" << graph->GetName() << "\",\"" << mod->class_name << "\",\""
+                                      << mod->full_name << "\")\n";
+                    } else {
                         confModules << "mmCreateModule(\"" << mod->class_name << "\",\"" << mod->full_name << "\")\n";
                     }
 
-                    /*
-                    for (auto& p : m.param_slots) {
-                        if (p.type != GraphManager::ParamType::BUTTON) {
-                            std::string val = slot->Parameter()->ValueString().PeekBuffer();
+                    for (auto& param_slot : mod->param_slots) {
+                        if (param_slot.type != Graph::ParamType::BUTTON) {
                             // Encode to UTF-8 string
                             vislib::StringA valueString;
-                            vislib::UTF8Encoder::Encode(valueString, vislib::StringA(val.c_str()));
-                            val = valueString.PeekBuffer();
-                            confParams << "mmSetParamValue(\"" << p.full_name << "\",[=[" << val << "]=])\n";
+                            vislib::UTF8Encoder::Encode(valueString, vislib::StringA(param_slot.value_string.c_str()));
+                            confParams << "mmSetParamValue(\"" << param_slot.full_name << "\",[=["
+                                       << std::string(valueString.PeekBuffer()) << "]=])\n";
                         }
                     }
-                    */
 
-                    for (auto& cr : mod->GetCallSlots(Graph::CallSlotType::CALLER)) {
-                        for (auto& call : cr->GetConnectedCalls()) {
+                    for (auto& caller_slot : mod->GetCallSlots(Graph::CallSlotType::CALLER)) {
+                        for (auto& call : caller_slot->GetConnectedCalls()) {
                             if (call->IsConnected()) {
                                 confCalls
                                     << "mmCreateCall(\"" << call->class_name << "\",\""

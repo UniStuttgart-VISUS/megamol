@@ -403,12 +403,9 @@ bool megamol::gui::Graph::AddModule(Graph::ModuleStockType& stock_modules, const
                 mod_ptr->description = mod.description;
                 mod_ptr->plugin_name = mod.plugin_name;
                 mod_ptr->is_view = mod.is_view;
-                /// TODO Set from core:
-                mod_ptr->name = "module_name";
-                /// TODO Set from core:
-                mod_ptr->full_name = "full_name";
-                /// TODO Set from core:
-                mod_ptr->instance = "instance";
+                mod_ptr->name = "module_name";     /// TODO get from core
+                mod_ptr->full_name = "full_name";  /// TODO get from core
+                mod_ptr->is_view_instance = false; /// TODO get from core
                 mod_ptr->gui.initialized = false;
                 // mod_ptr->gui.position = ImVec2(-1.0f, -1.0f); // Initialized in configurator
                 // mod_ptr->gui.size = ImVec2(-1.0f, -1.0f); // Initialized in configurator
@@ -417,8 +414,8 @@ bool megamol::gui::Graph::AddModule(Graph::ModuleStockType& stock_modules, const
                     param_slot.class_name = p.class_name;
                     param_slot.description = p.description;
                     param_slot.type = p.type;
-                    /// TODO Set from core:
-                    param_slot.full_name = "full_name";
+                    param_slot.full_name = "full_name";      /// TODO get from core
+                    param_slot.value_string = "param_value"; /// TODO get from core
                     mod_ptr->param_slots.emplace_back(param_slot);
                 }
                 for (auto& call_slots_type : mod.call_slots) {

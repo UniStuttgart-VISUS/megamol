@@ -89,6 +89,7 @@ private:
         float zooming;
         bool show_grid;
         bool show_call_names;
+        std::string* popup_project_name;
     } state;
 
     // FUNCTIONS --------------------------------------------------------------
@@ -110,7 +111,8 @@ private:
     bool save_project_popup(bool open, megamol::core::CoreInstance* core_instance);
 
     bool add_new_graph(void);
-    bool add_new_module(Graph::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name);
+    bool add_new_module_to_graph(
+        Graph::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name);
 
     // ------------------------------------------------------------------------
 };
