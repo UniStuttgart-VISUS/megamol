@@ -228,6 +228,21 @@ public:
 
     inline int GetUID(void) const { return this->uid; }
 
+    struct Gui {
+        float slot_radius;
+        ImVec2 canvas_position;
+        ImVec2 canvas_size;
+        ImVec2 canvas_scrolling;
+        bool show_grid;
+        bool show_call_names;
+        bool show_modules_small;
+        int selected_module_uid;
+        int selected_call_uid;
+        int hovered_slot_uid;
+        Graph::CallSlotPtrType selected_slot_ptr;
+        int process_selected_slot;
+    } gui;
+
 private:
     // VARIABLES --------------------------------------------------------------
 

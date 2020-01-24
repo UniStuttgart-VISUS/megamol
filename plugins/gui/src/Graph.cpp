@@ -384,7 +384,21 @@ const std::map<Graph::CallSlotType, std::vector<Graph::CallSlotPtrType>> megamol
 // GRAPH ######################################################################
 
 megamol::gui::Graph::Graph(int graph_uid, const std::string& graph_name)
-    : modules(), calls(), uid(graph_uid), name(graph_name), dirty_flag(true), generated_uid(0) {}
+    : gui(), modules(), calls(), uid(graph_uid), name(graph_name), dirty_flag(true), generated_uid(0) {
+
+    this->gui.slot_radius = 8.0f;
+    this->gui.canvas_position = ImVec2(0.0f, 0.0f);
+    this->gui.canvas_size = ImVec2(0.0f, 0.0f);
+    this->gui.canvas_scrolling = ImVec2(0.0f, 0.0f);
+    this->gui.show_grid = true;
+    this->gui.show_call_names = true;
+    this->gui.show_modules_small = false;
+    this->gui.selected_module_uid = -1;
+    this->gui.selected_call_uid = -1;
+    this->gui.hovered_slot_uid = -1;
+    this->gui.selected_slot_ptr = nullptr;
+    this->gui.process_selected_slot = 0;
+}
 
 
 megamol::gui::Graph::~Graph(void) {}

@@ -75,26 +75,14 @@ private:
     GraphManager graph_manager;
     GUIUtils utils;
 
-    struct GuiState {
-        int window_rendering_state;
+    struct Gui {
+        int window_state;
         std::string project_filename;
-        float slot_radius;
-        int active_graph_uid;
-        int selected_list_module;
-        int selected_module_uid;
-        int selected_call_uid;
-        int hovered_call_slot_uid;
-        Graph::CallSlotPtrType selected_call_slot_ptr;
-        int process_selected_slot;
-        ImVec2 canvas_position;
-        ImVec2 canvas_size;
-        bool open_rename_popup;
-        std::string* rename;
-        ImVec2 scrolling;
-        bool show_grid;
-        bool show_call_names;
-        bool small_modules;
-    } state;
+        GraphManager::GraphPtrType graph_ptr;
+        int selected_list_module_id;
+        bool rename_popup_open;
+        std::string* rename_popup_string;
+    } gui;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -102,13 +90,13 @@ private:
     bool draw_window_module_list(void);
 
     bool draw_canvas_graph(GraphManager::GraphPtrType graph);
-    bool draw_canvas_grid();
+    bool draw_canvas_grid(GraphManager::GraphPtrType graph);
     bool draw_canvas_calls(GraphManager::GraphPtrType graph);
     bool draw_canvas_modules(GraphManager::GraphPtrType graph);
     bool draw_canvas_module_call_slots(GraphManager::GraphPtrType graph, Graph::ModulePtrType mod);
-    bool draw_canvas_dragged_call();
+    bool draw_canvas_dragged_call(GraphManager::GraphPtrType graph);
 
-    bool update_module_size(Graph::ModulePtrType mod);
+    bool update_module_size(GraphManager::GraphPtrType graph, Graph::ModulePtrType mod);
     bool layout_graph(GraphManager::GraphPtrType graph);
 
     bool popup_save_project(bool open, megamol::core::CoreInstance* core_instance);

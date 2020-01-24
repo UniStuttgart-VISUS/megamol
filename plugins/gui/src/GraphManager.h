@@ -62,6 +62,7 @@ public:
     bool AddGraph(std::string name);
     bool DeleteGraph(int graph_uid);
     const GraphManager::GraphsType& GetGraphs(void);
+    const GraphPtrType GetGraph(int graph_uid);
 
     bool UpdateModulesCallsStock(const megamol::core::CoreInstance* core_instance);
     inline Graph::ModuleStockType& GetModulesStock(void) { return this->modules_stock; }
@@ -72,10 +73,7 @@ public:
     int GetCompatibleCallIndex(Graph::CallSlotPtrType call_slot_1, Graph::CallSlotPtrType call_slot_2);
     int GetCompatibleCallIndex(Graph::CallSlotPtrType call_slot, Graph::StockCallSlot stock_call_slot);
 
-    /**
-     * Only used for prototype to be able to store current graphs to lua project file.
-     * Later use FileUtils->SaveProjectFile provided in GUI menu.
-     */
+    // Only used for prototype to be able to store current graphs to lua project file.
     bool PROTOTYPE_SaveGraph(int graph_id, std::string project_filename, megamol::core::CoreInstance* cor_iInstance);
 
 private:

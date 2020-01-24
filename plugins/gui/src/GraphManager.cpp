@@ -22,7 +22,22 @@ megamol::gui::GraphManager::~GraphManager(void) {}
 
 bool megamol::gui::GraphManager::AddGraph(std::string name) {
 
-    this->graphs.emplace_back(std::make_shared<Graph>(this->get_unique_id(), name));
+    Graph graph(this->get_unique_id(), name);
+
+    graph.gui.slot_radius = 8.0f;
+    graph.gui.canvas_position = ImVec2(0.0f, 0.0f);
+    graph.gui.canvas_size = ImVec2(0.0f, 0.0f);
+    graph.gui.canvas_scrolling = ImVec2(0.0f, 0.0f);
+    graph.gui.show_grid = true;
+    graph.gui.show_call_names = true;
+    graph.gui.show_modules_small = false;
+    graph.gui.selected_module_uid = -1;
+    graph.gui.selected_call_uid = -1;
+    graph.gui.hovered_slot_uid = -1;
+    graph.gui.selected_slot_ptr = nullptr;
+    graph.gui.process_selected_slot = 0;
+
+    this->graphs.emplace_back(std::make_shared<Graph>(graph));
 
     return true;
 }
@@ -48,6 +63,19 @@ bool megamol::gui::GraphManager::DeleteGraph(int graph_uid) {
 
 
 const GraphManager::GraphsType& megamol::gui::GraphManager::GetGraphs(void) { return this->graphs; }
+
+
+const GraphManager::GraphPtrType megamol::gui::GraphManager::GetGraph(int graph_uid) {
+
+    for (auto iter = this->graphs.begin(); iter != this->graphs.end(); iter++) {
+        if ((*iter)->GetUID() == graph_uid) {
+            return (*iter);
+        }
+    }
+    vislib::sys::Log::DefaultLog.WriteWarn(
+        "Invalif graph uid. Returning nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    return nullptr;
+}
 
 
 bool megamol::gui::GraphManager::UpdateModulesCallsStock(const megamol::core::CoreInstance* core_instance) {
