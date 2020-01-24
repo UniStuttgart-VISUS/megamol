@@ -85,12 +85,48 @@ private:
         Graph::CallSlotPtrType selected_call_slot;
         int process_selected_slot;
         ImVec2 canvas_position;
+        std::string* popup_project_name;
+
+
         ImVec2 scrolling;
         float zooming;
         bool show_grid;
         bool show_call_names;
-        std::string* popup_project_name;
+        bool minimize_modules;
+        bool relayout_graph;
+
     } state;
+
+    /*
+
+    struct Event_AddGraph {
+
+    };
+    struct Event_DeleteGraph {
+
+    };
+    struct Event_AddModule {
+
+    };
+    struct Event_DelteModule {
+
+    };
+    struct Event_AddCall {
+
+    };
+    struct Event_DeleteCall {
+
+    };
+
+std::array<
+        std::vector<Event_AddModule> add_module;
+        std::vector<Event_AddModule> delete_module;
+        std::vector<Event_AddModule> add_module;
+        std::vector<Event_AddModule> add_module;
+        std::vector<Event_AddModule> add_module;
+        std::vector<Event_AddModule> add_module;
+    } graph_event_queue;
+    */
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -104,7 +140,7 @@ private:
     bool draw_canvas_modules(GraphManager::GraphPtrType graph, ImVec2 position_offset);
     bool draw_canvas_module_call_slots(
         GraphManager::GraphPtrType graph, Graph::ModulePtrType mod, ImVec2 position_offset);
-    bool draw_canvas_selected_dnd_call(ImVec2 position_offset);
+    bool draw_canvas_dragged_call(ImVec2 position_offset);
 
     bool init_module_gui_params(Graph::ModulePtrType mod);
 

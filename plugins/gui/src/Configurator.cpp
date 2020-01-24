@@ -8,7 +8,8 @@
 /**
  * USED HOTKEYS:
  *
- * - Search module:   Shift + Ctrl  + m
+ * - Search module:        Shift + Ctrl  + m
+ * - Delete module/call:   Delete
  */
 
 #include "stdafx.h"
@@ -43,11 +44,14 @@ Configurator::Configurator() : hotkeys(), graph_manager(), utils(), state() {
     this->state.selected_call_slot = nullptr;
     this->state.process_selected_slot = 0;
     this->state.canvas_position = ImVec2(0.0f, 0.0f);
+    this->state.popup_project_name = nullptr;
+    // Menu
     this->state.scrolling = ImVec2(0.0f, 0.0f);
     this->state.zooming = 1.0f;
     this->state.show_grid = true;
     this->state.show_call_names = true;
-    this->state.popup_project_name = nullptr;
+    this->state.minimize_modules = false;
+    this->state.relayout_graph = false;
 }
 
 
@@ -95,6 +99,7 @@ bool megamol::gui::Configurator::Draw(
 
     if (this->state.window_rendering_state < 2) {
         // 1] Show pop-up before before calling UpdateAvailableModulesCallsOnce of graph.
+
         /// Rendering of pop-up requires two complete Draw calls!
         bool open = true;
         std::string popup_label = "Loading";
@@ -109,12 +114,14 @@ bool megamol::gui::Configurator::Draw(
         this->state.window_rendering_state++;
     } else if (this->state.window_rendering_state == 2) {
         // 2] Load available modules and calls once(!)
+
         this->graph_manager.UpdateModulesCallsStock(core_instance);
-        // Load graph from currently loaded project
+        // Load graph of currently loaded project from core
         this->graph_manager.LoadCurrentCoreProjectToGraph(core_instance);
         this->state.window_rendering_state++;
     } else {
         // 3] Render configurator gui content
+
         this->draw_window_menu(core_instance);
         this->draw_window_module_list();
 
@@ -122,7 +129,7 @@ bool megamol::gui::Configurator::Draw(
         ImGui::SameLine();
         ImGui::BeginGroup();
 
-        // Info text for PROTOTYPE
+        // Info text for PROTOTYPE --------------------------------------------
         ImGui::BeginChild("info", ImVec2(0.0f, (2.0f * ImGui::GetItemsLineHeightWithSpacing())), true,
             ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
         std::string label =
@@ -130,6 +137,7 @@ bool megamol::gui::Configurator::Draw(
             "You can SAVE the modified graph to a separate PROJECT FILE (parameters are not considered yet).";
         ImGui::TextColored(ImVec4(0.9f, 0.2f, 0.2f, 1.0f), label.c_str());
         ImGui::EndChild();
+        // --------------------------------------------------------------------
 
         // Project (graph) tabs
         int delete_graph_uid = -1; // (Assuming only one closed tab per frame)
@@ -143,6 +151,7 @@ bool megamol::gui::Configurator::Draw(
             // Tab showing one graph
             if (ImGui::BeginTabItem(graph->GetName().c_str(), &open, ImGuiTabItemFlags_None)) {
                 // Tab context menu
+                /* DISBALED since changing instance name is not serialized properly yet.
                 if (ImGui::BeginPopupContextItem()) {
                     if (ImGui::MenuItem("Rename Project")) {
                         open_rename_popup = true;
@@ -150,6 +159,7 @@ bool megamol::gui::Configurator::Draw(
                     }
                     ImGui::EndPopup();
                 }
+                */
 
                 this->state.active_graph_uid = graph->GetUID();
                 this->draw_window_graph_canvas(graph);
@@ -199,46 +209,67 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
     if (ImGui::BeginMenuBar()) {
 
         if (ImGui::BeginMenu("File")) {
-            // Load/save parameter values to LUA file
-            if (ImGui::MenuItem("New Project")) {
-                // Create new graph
+            if (ImGui::MenuItem("New Project (Graph)", "(no hotkey)")) {
                 this->add_new_graph();
             }
 #ifdef GUI_USE_FILEUTILS
             // Load/save parameter values to LUA file
-            if (ImGui::MenuItem("Save Project")) {
+            if (ImGui::MenuItem("Save Project (Graph)", "(no hotkey)")) {
                 open_popup_project = true;
             }
-
-            // if (ImGui::MenuItem("Load Project")) {
             /// TODO: Load parameter file
+            // if (ImGui::MenuItem("Load Project")) {
             // std::string projectFilename;
             // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
             // Load to new graph ...
             //}
-#endif // GUI_USE_FILEUTILS
             ImGui::EndMenu();
         }
-        // if (ImGui::BeginMenu("Graph")) {
-        //
-        //    ImGui::EndMenu();
-        //}
-        // ImGui::Separator();
+#endif // GUI_USE_FILEUTILS
+
+        if (ImGui::BeginMenu("Graph")) {
+            if (ImGui::MenuItem("Reset Scrolling", "(no hotkey)")) {
+                this->state.scrolling = ImVec2(0.0f, 0.0f);
+            }
+            if (ImGui::MenuItem("Reset Zooming", "(no hotkey)")) {
+                this->state.zooming = 1.0f;
+            }
+            if (ImGui::MenuItem("Show Grid", "(no hotkey)", this->state.show_grid)) {
+                this->state.show_grid = !this->state.show_grid;
+            }
+            if (ImGui::MenuItem("Show Call Names", "(no hotkey)", this->state.show_call_names)) {
+                this->state.show_call_names = !this->state.show_call_names;
+            }
+            if (ImGui::MenuItem("Minimize Modules", "(no hotkey)", this->state.minimize_modules)) {
+                this->state.minimize_modules = !this->state.minimize_modules;
+            }
+            if (ImGui::MenuItem("Layout Graph", "(no hotkey)")) {
+                this->state.relayout_graph = true;
+            }
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Info")) {
+            std::string info_text = "Additonal supported actions:\n"
+                                    "- Add selected module from stock list\n"
+                                    "     [Double Click] with left mouse button"
+                                    " | [Richt Click] on selected module / Context Menu: Add \n"
+                                    "- Delete selected module/call from graph\n"
+                                    "     Select item an press [Delete]"
+                                    " | [Richt Click] on selected item / Context Menu: Delete \n";
+            ImGui::Text(info_text.c_str());
+            ImGui::EndMenu();
+        }
+
         ImGui::SameLine(260.0f);
 
-        if (ImGui::Button("Reset###scrolling")) {
-            this->state.scrolling = ImVec2(0.0f, 0.0f);
-        }
+        ImGui::Separator();
         ImGui::Text("Scrolling: %.2f,%.2f (Middle Mouse Button)", this->state.scrolling.x, this->state.scrolling.y);
         ImGui::Separator();
-        if (ImGui::Button("Reset###zooming")) {
-            this->state.zooming = 1.0f;
-        }
+        /* DISABLED since not implemented yet
         ImGui::Text("Zooming: %.2f (Mouse Wheel)", this->state.zooming);
         ImGui::Separator();
-        ImGui::Checkbox("Show Grid", &this->state.show_grid);
-        ImGui::Separator();
-        ImGui::Checkbox("Show Call Names", &this->state.show_call_names);
+        */
 
         ImGui::EndMenuBar();
     }
@@ -283,17 +314,18 @@ bool megamol::gui::Configurator::draw_window_module_list(void) {
     int id = 1;
     for (auto& mod : this->graph_manager.GetModulesStock()) {
 
+        // Filter module by given search string
         bool search_filter = true;
         if (!search_string.empty()) {
-            // Filter module by search
+
             search_filter = this->utils.FindCaseInsensitiveSubstring(mod.class_name, search_string);
         }
 
+        // Filter module by compatible call slots
         bool compat_filter = true;
         int compat_call_index = -1;
         std::string compat_call_slot_name;
         if (this->state.selected_call_slot != nullptr) {
-            // Filter slot by compatible call slots
             compat_filter = false;
             for (auto& cst : mod.call_slots) {
                 for (auto& cs : cst.second) {
@@ -309,6 +341,7 @@ bool megamol::gui::Configurator::draw_window_module_list(void) {
 
         if (search_filter && compat_filter) {
             ImGui::PushID(id);
+            // Changing color for views
             if (mod.is_view) {
                 ImGui::PushStyleColor(ImGuiCol_Text, COLOR_MODULE_VIEW);
             }
@@ -323,7 +356,7 @@ bool megamol::gui::Configurator::draw_window_module_list(void) {
             }
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
-                if (ImGui::MenuItem("Add Module", "Double-Click")) {
+                if (ImGui::MenuItem("Add", "Double-Click")) {
                     this->add_new_module_to_graph(mod, compat_call_index, compat_call_slot_name);
                 }
                 ImGui::EndPopup();
@@ -350,7 +383,7 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(GraphManager::GraphPtr
 
     ImGuiIO& io = ImGui::GetIO();
     /// Font scaling with zooming factor is not possible locally within window (only prior to ImGui::Begin()).
-    /// (io.FontDefault->Scale = this->state.zooming;)
+    /// Add separate font for graph?!
 
     const ImU32 COLOR_MODULE_BACKGROUND = IM_COL32(60, 60, 70, 255);
 
@@ -361,6 +394,7 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(GraphManager::GraphPtr
         graph->DeleteModule(this->state.selected_module_graph_uid);
     }
 
+    // Register trigger for connecting call
     if ((this->state.selected_call_slot != nullptr) && (io.MouseReleased[0])) {
         this->state.process_selected_slot = 2;
     }
@@ -394,8 +428,8 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(GraphManager::GraphPtr
     // Draw call --------------------------------------------------------
     this->draw_canvas_calls(graph, position_offset);
 
-    // Draw dnd call --------------------------------------------------------
-    this->draw_canvas_selected_dnd_call(position_offset);
+    // Draw dragged call --------------------------------------------------------
+    this->draw_canvas_dragged_call(position_offset);
 
     // Zoomin and Scaling  ----------------------------------------------------
     if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) {
@@ -403,13 +437,15 @@ bool megamol::gui::Configurator::draw_window_graph_canvas(GraphManager::GraphPtr
         if (ImGui::IsMouseDragging(2, 0.0f)) {
             this->state.scrolling = this->state.scrolling + ImGui::GetIO().MouseDelta;
         }
+        /* DISABLED since not implemented yet
         // Zooming (Mouse Wheel)
         float last_zooming = this->state.zooming;
         this->state.zooming = this->state.zooming + io.MouseWheel / 10.0f;
         this->state.zooming = (this->state.zooming < 0.1f) ? (0.1f) : (this->state.zooming);
         if (last_zooming != this->state.zooming) {
-            /// TODO process changed zooming ...
+           /// TODO process changed zooming ...
         }
+        */
     }
 
     draw_list->ChannelsMerge();
@@ -472,11 +508,43 @@ bool megamol::gui::Configurator::draw_canvas_calls(GraphManager::GraphPtrType gr
 
             if (call->IsConnected()) {
 
-                if (this->state.show_call_names) {
-                }
-
                 ImVec2 p1 = position_offset + call->GetCallSlot(Graph::CallSlotType::CALLER)->GetGuiPos();
                 ImVec2 p2 = position_offset + call->GetCallSlot(Graph::CallSlotType::CALLEE)->GetGuiPos();
+
+
+                if (this->state.show_call_names) {
+                    /// TODO
+                    /*
+                    ImVec2 button_cursour_pos;
+                    ImVec2 button_size;
+
+                    ImVec2 module_rect_min = position_offset + mod->gui.position;
+                    ImVec2 module_rect_max = module_rect_min + mod->gui.size;
+                    ImVec2 module_center = module_rect_min + ImVec2(mod->gui.size.x / 2.0f, mod->gui.size.y / 2.0f);
+
+                    ImGui::BeginGroup();
+
+                    float line_offset = 0.0f;
+                    if (mod->is_view) {
+                        line_offset = -(ImGui::GetItemsLineHeightWithSpacing() / 2.0f);
+                    }
+
+                    auto class_name_width = this->utils.TextWidgetWidth(mod->class_name);
+                    ImGui::SetCursorScreenPos(module_center + ImVec2(-(class_name_width / 2.0f),
+                        line_offset - ImGui::GetItemsLineHeightWithSpacing()));
+                    ImGui::Text(mod->class_name.c_str());
+
+
+                    ImGui::SetCursorScreenPos(button_cursour_pos);
+                    std::string label = "call_" + call->class_name + std::to_string(call->uid);
+                    ImGui::InvisibleButton(label.c_str(), button_size);
+
+                    draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 4.0f);
+                    draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 4.0f);
+                    */
+                }
+
+
                 draw_list->AddBezierCurve(
                     p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2, COLOR_CALL_CURVE, 3.0f);
             }
@@ -510,11 +578,11 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
         this->state.hovered_call_slot_uid = -1;
         for (auto& mod : graph->GetGraphModules()) {
 
-            // Draw CALL SLOTS ----------------------------------------------------
-            /// Draw call slots before modules to catch mouse clicks for slot area lying over module box.
+            // Draw call slots ------------------------------------------------
+            // Draw call slots prior to modules to catch mouse clicks on slot area lying over module box!
             this->draw_canvas_module_call_slots(graph, mod, position_offset);
 
-            // Draw MODULE --------------------------------------------------------
+            // Draw module ----------------------------------------------------
             const int id = mod->uid;
             ImGui::PushID(id);
 
@@ -522,7 +590,7 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
                 this->init_module_gui_params(mod);
             }
 
-            // Draw text ------------------------------------------------------
+            // Draw text
             draw_list->ChannelsSetCurrent(1); // Foreground
 
             ImVec2 module_rect_min = position_offset + mod->gui.position;
@@ -559,19 +627,19 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
 
             ImGui::EndGroup();
 
-            // Draw box -------------------------------------------------------
+            // Draw box
             draw_list->ChannelsSetCurrent(0); // Background
 
             ImGui::SetCursorScreenPos(module_rect_min);
-            std::string label = "module_" + mod->full_name;
+            std::string label = "module_" + mod->full_name + std::to_string(mod->uid);
             ImGui::InvisibleButton(label.c_str(), mod->gui.size);
             // Gives slots which overlap modules priority for ToolTip and Context Menu.
             if (this->state.hovered_call_slot_uid < 0) {
                 this->utils.HoverToolTip(mod->description, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
                 // Context menu
                 if (ImGui::BeginPopupContextItem()) {
-                    if (ImGui::MenuItem("Delete Module",
-                            std::get<0>(this->hotkeys[HotkeyIndex::DELETE_MODULE]).ToString().c_str())) {
+                    if (ImGui::MenuItem(
+                            "Delete", std::get<0>(this->hotkeys[HotkeyIndex::DELETE_MODULE]).ToString().c_str())) {
                         std::get<1>(this->hotkeys[HotkeyIndex::DELETE_MODULE]) = true;
                     }
                     ImGui::EndPopup();
@@ -593,9 +661,9 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
             draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 4.0f);
             draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 4.0f);
 
-            // --------------------------------------------------------------------
 
             ImGui::PopID();
+            // --------------------------------------------------------------------
         }
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -629,7 +697,7 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slots(
         ImU32 slot_highl_color;
         ImU32 slot_label_color;
 
-        // Draw module call slots.
+        // Draw call slots for given module
         for (auto& slot_pair : mod->GetCallSlots()) {
 
             if (slot_pair.first == Graph::CallSlotType::CALLER) {
@@ -710,7 +778,7 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slots(
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_selected_dnd_call(ImVec2 position_offset) {
+bool megamol::gui::Configurator::draw_canvas_dragged_call(ImVec2 position_offset) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -753,10 +821,10 @@ bool megamol::gui::Configurator::draw_canvas_selected_dnd_call(ImVec2 position_o
 
 bool megamol::gui::Configurator::init_module_gui_params(Graph::ModulePtrType mod) {
 
-    // Init SIZE of module (prior to position) --------------------------------
-    /// Assuming mod->name is longest used string for module label
+    // Init size of module (prior to position) --------------------------------
+
     float max_class_name_length = this->utils.TextWidgetWidth(mod->class_name);
-    float max_full_name_length = 0.0f; // this->utils.TextWidgetWidth(mod->full_name);
+    float max_full_name_length = 0.0f; // this->utils.TextWidgetWidth(mod->full_name); // Not displayed
     float max_name_length = this->utils.TextWidgetWidth(mod->name);
     float max_label_length = std::max(std::max(max_class_name_length, max_full_name_length), max_name_length);
 
@@ -776,7 +844,8 @@ bool megamol::gui::Configurator::init_module_gui_params(Graph::ModulePtrType mod
         std::max(module_slot_height, ImGui::GetItemsLineHeightWithSpacing() * ((mod->is_view) ? (4.0f) : (3.0f)));
     mod->gui.size = ImVec2(module_width, module_height);
 
-    // Init POSIITON ----------------------------------------------------------
+    // Init position ----------------------------------------------------------
+
     ImVec2 canvas_size = ImGui::GetWindowSize();
     mod->gui.position = ImVec2((canvas_size.x - mod->gui.size.x) / 2.0f, (canvas_size.y - mod->gui.size.y) / 2.0f);
 
