@@ -25,12 +25,8 @@
  plugins/mmstd_volume/Shaders/raycast_volume/raycast_volume_c.glsl (gone)        |  183 ---
  plugins/mmstd_volume/Shaders/raycast_volume/render_to_framebuffer_f.glsl (gone) |   10 -
  plugins/mmstd_volume/Shaders/raycast_volume/render_to_framebuffer_v.glsl (gone) |   16 -
- plugins/mmstd_volume/src/DifferenceVolume.cpp (new)                             |  514 +++++++++
- plugins/mmstd_volume/src/DifferenceVolume.h (new)                               |  182 +++
- plugins/mmstd_volume/src/DifferenceVolume.inl (new)                             |   36 +
  plugins/mmstd_volume/src/RaycastVolumeRenderer.cpp                              |  570 ++++++++--
  plugins/mmstd_volume/src/RaycastVolumeRenderer.h                                |  402 +------
- plugins/mmstd_volume/src/mmstd_volume.cpp                                       |    6 +-
  plugins/pbs/src/HeadnodeServer.cpp                                              |   98 +-
  plugins/pbs/src/HeadnodeServer.h                                                |    4 +-
  plugins/pbs/src/RendernodeView.cpp                                              |   24 +-
