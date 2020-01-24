@@ -145,13 +145,18 @@ bool megamol::gui::Configurator::Draw(
         int delete_graph_uid = -1; // (Assuming only one closed tab per frame)
         bool open_rename_popup = false;
 
-        ImGuiTabBarFlags flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
-        ImGui::BeginTabBar("Graphs", flags);
+        ImGuiTabBarFlags tabbar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
+        ImGui::BeginTabBar("Graphs", tabbar_flags);
         for (auto& graph : this->graph_manager.GetGraphs()) {
             bool open = true;
 
             // Tab showing one graph
-            if (ImGui::BeginTabItem(graph->GetName().c_str(), &open, ImGuiTabItemFlags_None)) {
+            ImGuiTabItemFlags tab_flags = ImGuiTabItemFlags_None;
+            if (graph->IsDirty()) {
+                tab_flags |= ImGuiTabItemFlags_UnsavedDocument;
+            }
+            std::string graph_label = "    " + graph->GetName() + "  ";
+            if (ImGui::BeginTabItem(graph_label.c_str(), &open, tab_flags)) {
                 if (ImGui::BeginPopupContextItem()) {
                     if (ImGui::MenuItem("Rename")) {
                         open_rename_popup = true;
@@ -363,7 +368,7 @@ bool megamol::gui::Configurator::draw_window_module_list(void) {
             }
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
-                if (ImGui::MenuItem("Add", "Double-Click")) {
+                if (ImGui::MenuItem("Add", "'Double-Click'")) {
                     this->add_new_module_to_graph(mod, compat_call_index, compat_call_slot_name);
                 }
                 ImGui::EndPopup();

@@ -386,7 +386,7 @@ const std::map<Graph::CallSlotType, std::vector<Graph::CallSlotPtrType>> megamol
 // GRAPH ######################################################################
 
 megamol::gui::Graph::Graph(int graph_uid, const std::string& graph_name)
-    : modules(), calls(), uid(graph_uid), name(graph_name), generated_uid(0) {}
+    : modules(), calls(), uid(graph_uid), name(graph_name), dirty_flag(true), generated_uid(0) {}
 
 
 megamol::gui::Graph::~Graph(void) {}
@@ -438,15 +438,11 @@ bool megamol::gui::Graph::AddModule(Graph::ModuleStockType& stock_modules, const
                 vislib::sys::Log::DefaultLog.WriteWarn("CREATED MODULE: %s [%s, %s, line %d]\n",
                     mod_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
 
-                found = true;
-                break;
+                this->dirty_flag = true;
+                return true;
             }
         }
-        if (!found) {
-            vislib::sys::Log::DefaultLog.WriteError("Unable to find module: %s [%s, %s, line %d]\n",
-                module_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
+
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -456,7 +452,9 @@ bool megamol::gui::Graph::AddModule(Graph::ModuleStockType& stock_modules, const
         return false;
     }
 
-    return true;
+    vislib::sys::Log::DefaultLog.WriteError(
+        "Unable to find module: %s [%s, %s, line %d]\n", module_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+    return false;
 }
 
 
@@ -477,6 +475,8 @@ bool megamol::gui::Graph::DeleteModule(int module_uid) {
                 (*iter).reset();
                 this->modules.erase(iter);
                 this->DeleteDisconnectedCalls();
+
+                this->dirty_flag = true;
                 return true;
             }
         }
@@ -490,8 +490,7 @@ bool megamol::gui::Graph::DeleteModule(int module_uid) {
         return false;
     }
 
-    vislib::sys::Log::DefaultLog.WriteWarn(
-        "Module gui index not found. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    vislib::sys::Log::DefaultLog.WriteWarn("Invalid module uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
 
@@ -520,9 +519,11 @@ bool megamol::gui::Graph::AddCall(Graph::CallStockType& stock_calls, int call_id
             vislib::sys::Log::DefaultLog.WriteWarn("CREATED and connected CALL: %s [%s, %s, line %d]\n",
                 call_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
 
-            return true;
+            this->dirty_flag = true;
         } else {
+            // Clean up
             this->DeleteCall(call_ptr->uid);
+            return false;
         }
 
     } catch (std::exception e) {
@@ -534,7 +535,7 @@ bool megamol::gui::Graph::AddCall(Graph::CallStockType& stock_calls, int call_id
         return false;
     }
 
-    return false;
+    return true;
 }
 
 bool megamol::gui::Graph::DeleteDisconnectedCalls(void) {
@@ -549,6 +550,7 @@ bool megamol::gui::Graph::DeleteDisconnectedCalls(void) {
         }
         for (auto& id : call_uids) {
             this->DeleteCall(id);
+            this->dirty_flag = true;
         }
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -579,6 +581,8 @@ bool megamol::gui::Graph::DeleteCall(int call_uid) {
 
                 (*iter).reset();
                 this->calls.erase(iter);
+
+                this->dirty_flag = true;
                 return true;
             }
         }
@@ -591,7 +595,6 @@ bool megamol::gui::Graph::DeleteCall(int call_uid) {
         return false;
     }
 
-    vislib::sys::Log::DefaultLog.WriteWarn(
-        "Call gui index not found. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    vislib::sys::Log::DefaultLog.WriteWarn("Invalid call uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return false;
 }

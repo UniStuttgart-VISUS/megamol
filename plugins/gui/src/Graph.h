@@ -217,6 +217,9 @@ public:
     inline void SetName(const std::string& graph_name) { this->name = graph_name; }
     inline std::string& GetName(void) { return this->name; }
 
+    inline bool IsDirty(void) const { return this->dirty_flag; }
+    inline void ResetDirty(void) { this->dirty_flag = false; }
+
     inline int GetUID(void) const { return this->uid; }
 
 private:
@@ -227,6 +230,7 @@ private:
 
     const int uid;
     std::string name;
+    bool dirty_flag;
 
     int generated_uid;
 
