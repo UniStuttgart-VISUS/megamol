@@ -1,5 +1,4 @@
  core/Shaders/arrow.btf                                                          |   10 +-
- core/Shaders/phong.glsl (new)                                                   |   21 +
  core/Shaders/sphere/simple_frag_mainstart.glsl                                  |   17 +-
  core/Shaders/sphere/simple_frag_out-nolighting.glsl (new)                       |    3 +
  core/Shaders/sphere/simple_frag_outline-cutout.glsl (new)                       |   24 +
