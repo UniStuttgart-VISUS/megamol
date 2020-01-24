@@ -6,9 +6,6 @@
  core/Shaders/sphere/simple_frag_out-nolighting.glsl (new)                       |    3 +
  core/Shaders/sphere/simple_frag_outline-cutout.glsl (new)                       |   24 +
  core/Shaders/sphere_outline.btf (new)                                           |   29 +
- core/include/mmcore/misc/VolumetricDataCall.h                                   |   13 +
- core/include/mmcore/misc/VolumetricDataCallTypes.h                              |  219 ++--
- core/include/mmcore/misc/VolumetricMetadataStore.h (new)                        |   56 +
  core/include/mmcore/moldyn/ArrowRenderer.h                                      |    3 +
  core/include/mmcore/moldyn/SphereOutlineRenderer.h                              |    5 +-
  core/include/mmcore/moldyn/SphereRenderer.h                                     |    6 +-
@@ -18,8 +15,6 @@
  core/include/mmcore/view/SplitView.h                                            |   17 +-
  core/include/mmcore/view/View2D.h                                               |    2 +
  core/include/mmcore/view/View3D.h                                               |    2 +
- core/src/misc/VolumetricDataCall.cpp                                            |   41 +
- core/src/misc/VolumetricMetadataStore.cpp (new)                                 |  147 +++
  core/src/moldyn/ArrowRenderer.cpp                                               |  287 ++---
  core/src/moldyn/SphereOutlineRenderer.cpp                                       |   20 +
  core/src/moldyn/SphereRenderer.cpp                                              |  114 +-
