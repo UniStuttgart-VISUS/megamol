@@ -13,7 +13,6 @@
  core/include/mmcore/moldyn/SphereOutlineRenderer.h                              |    5 +-
  core/include/mmcore/moldyn/SphereRenderer.h                                     |    6 +-
  core/include/mmcore/thecam/utility/types.h                                      |    5 +-
- core/include/mmcore/utility/ScaledBoundingBoxes.h (new)                         |   84 ++
  core/include/mmcore/view/AbstractView.h                                         |   12 +-
  core/include/mmcore/view/CallRenderView.h                                       |    3 +
  core/include/mmcore/view/SplitView.h                                            |   17 +-
@@ -24,8 +23,6 @@
  core/src/moldyn/ArrowRenderer.cpp                                               |  287 ++---
  core/src/moldyn/SphereOutlineRenderer.cpp                                       |   20 +
  core/src/moldyn/SphereRenderer.cpp                                              |  114 +-
- core/src/utility/ScaledBoundingBoxes.cpp (new)                                  |  104 ++
- core/src/utility/plugins/PluginManager.cpp                                      |   22 +-
  core/src/view/AbstractView.cpp                                                  |  138 ++-
  core/src/view/SplitView.cpp                                                     |  231 +++-
  core/src/view/View2D.cpp                                                        |   23 +-
