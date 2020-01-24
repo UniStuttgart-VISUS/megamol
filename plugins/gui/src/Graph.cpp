@@ -38,11 +38,8 @@ megamol::gui::Graph::CallSlot::~CallSlot() {
 }
 
 
-ImVec2 megamol::gui::Graph::CallSlot::GetGuiPos(void) {
+bool megamol::gui::Graph::CallSlot::UpdateGuiPos(void) {
 
-    /// TODO Calculate once and store permanently?
-
-    ImVec2 retpos = ImVec2(-1.0f, -1.0f);
     if (this->ParentModuleConnected()) {
         auto slot_count = this->GetParentModule()->GetCallSlots(this->type).size();
         size_t slot_idx = 0;
@@ -53,10 +50,11 @@ ImVec2 megamol::gui::Graph::CallSlot::GetGuiPos(void) {
         }
         auto pos = this->GetParentModule()->gui.position;
         auto size = this->GetParentModule()->gui.size;
-        retpos = ImVec2(pos.x + ((this->type == Graph::CallSlotType::CALLER) ? (size.x) : (0.0f)),
+        this->gui.position = ImVec2(pos.x + ((this->type == Graph::CallSlotType::CALLER) ? (size.x) : (0.0f)),
             pos.y + size.y * ((float)slot_idx + 1) / ((float)slot_count + 1));
+        return true;
     }
-    return retpos;
+    return false;
 }
 
 
@@ -406,9 +404,11 @@ bool megamol::gui::Graph::AddModule(Graph::ModuleStockType& stock_modules, const
                 mod_ptr->name = "module_name";     /// TODO get from core
                 mod_ptr->full_name = "full_name";  /// TODO get from core
                 mod_ptr->is_view_instance = false; /// TODO get from core
-                mod_ptr->gui.initialized = false;
+                mod_ptr->gui.update = true;
                 // mod_ptr->gui.position = ImVec2(-1.0f, -1.0f); // Initialized in configurator
                 // mod_ptr->gui.size = ImVec2(-1.0f, -1.0f); // Initialized in configurator
+                // mod_ptr->gui.class_label = ""; // Initialized in configurator
+                // mod_ptr->gui.name_label = ""; // Initialized in configurator
                 for (auto& p : mod.param_slots) {
                     Graph::ParamSlot param_slot(this->get_unique_id());
                     param_slot.class_name = p.class_name;
@@ -425,6 +425,7 @@ bool megamol::gui::Graph::AddModule(Graph::ModuleStockType& stock_modules, const
                         call_slot.description = c.description;
                         call_slot.compatible_call_idxs = c.compatible_call_idxs;
                         call_slot.type = c.type;
+                        // call_slot.gui.position = ImVec2(-1.0f, -1.0f); // Initialized in configurator
                         mod_ptr->AddCallSlot(std::make_shared<Graph::CallSlot>(call_slot));
                     }
                 }

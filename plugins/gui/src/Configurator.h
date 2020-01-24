@@ -87,13 +87,14 @@ private:
         Graph::CallSlotPtrType selected_call_slot;
         int process_selected_slot;
         ImVec2 canvas_position;
-        std::string* graph_name;
+        bool open_rename_popup;
+        std::string* rename;
         // Menu
         ImVec2 scrolling;
         float zooming;
         bool show_grid;
         bool show_call_names;
-        bool minimize_modules;
+        bool small_gui_modules;
         bool relayout_graph;
 
     } state;

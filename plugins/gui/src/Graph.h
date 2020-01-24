@@ -124,7 +124,11 @@ public:
         std::vector<size_t> compatible_call_idxs; // (Storing only indices of compatible calls for faster comparison.)
         Graph::CallSlotType type;
 
-        ImVec2 GetGuiPos(void);
+        struct Gui {
+            ImVec2 position;
+        } gui;
+
+        bool UpdateGuiPos(void);
 
         bool CallsConnected(void) const;
         bool ConnectCall(Graph::CallPtrType call);
@@ -182,9 +186,11 @@ public:
         bool is_view_instance;
 
         struct Gui {
+            std::string class_label;
+            std::string name_label;
             ImVec2 position;
             ImVec2 size;
-            bool initialized;
+            bool update;
         } gui;
 
         bool AddCallSlot(Graph::CallSlotPtrType call_slot);
