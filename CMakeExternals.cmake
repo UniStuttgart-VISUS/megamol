@@ -97,6 +97,15 @@ function(require_external NAME)
       GIT_TAG "v1.3.0"
       INCLUDE_DIR "include")
 
+  elseif(NAME STREQUAL "sim_sort")
+    if(TARGET sim_sort)
+      return()
+    endif()
+
+    add_external_headeronly_project(sim_sort
+      GIT_REPOSITORY https://github.com/alexstraub1990/simultaneous-sort.git
+      INCLUDE_DIR "include")
+
   # Built libraries #####################################################
 
   # adios2
@@ -478,7 +487,7 @@ function(require_external NAME)
     set(TRACKING_NATNET_IMPORT_LIB "lib/NatNetLib.lib")
 
     add_external_project(tracking SHARED
-      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking
+      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking.git
       GIT_TAG "v2.0"
       BUILD_BYPRODUCTS
         "<INSTALL_DIR>/${TRACKING_LIB}"
