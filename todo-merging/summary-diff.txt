@@ -33,18 +33,10 @@
  core/src/view/special/ScreenShooter.cpp                                         |   12 +-
  plugins/infovis/src/ScatterplotMatrixRenderer2D.cpp                             |   14 +-
  plugins/infovis/src/ScatterplotMatrixRenderer2D.h                               |    5 +-
- plugins/mmstd_datatools/CMakeLists.txt                                          |    5 +-
  plugins/mmstd_datatools/src/ParticlesToDensity.cpp                              |  461 ++++++--
  plugins/mmstd_datatools/src/ParticlesToDensity.h                                |   17 +-
- plugins/mmstd_datatools/src/mmstd_datatools.cpp                                 |    4 +
- plugins/mmstd_datatools/src/table/TableProcessorBase.cpp (new)                  |  122 ++
- plugins/mmstd_datatools/src/table/TableProcessorBase.h (new)                    |  102 ++
- plugins/mmstd_datatools/src/table/TableSort.cpp (new)                           |  164 +++
- plugins/mmstd_datatools/src/table/TableSort.h (new)                             |   82 ++
  plugins/mmstd_datatools/src/table/TableToParticles.cpp                          |   33 +-
  plugins/mmstd_datatools/src/table/TableToParticles.h                            |    5 +-
- plugins/mmstd_datatools/src/table/TableWhere.cpp (new)                          |  373 ++++++
- plugins/mmstd_datatools/src/table/TableWhere.h (new)                            |   84 ++
  plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Compute-Aggr.glsl (new)      |   59 +
  plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Compute-DVR.glsl (new)       |   68 ++
  plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Compute-Functions.glsl (new) |   89 ++
