@@ -68,6 +68,4 @@
  plugins/pbs/src/HeadnodeServer.cpp                                              |   98 +-
  plugins/pbs/src/HeadnodeServer.h                                                |    4 +-
  plugins/pbs/src/RendernodeView.cpp                                              |   24 +-
- plugins/template/include/MegaMolPlugin/MegaMolPlugin.h                          |    4 +-
- plugins/template/instawiz.ps1                                                   |   15 +-
 104 files changed, 12849 insertions(+), 1276 deletions(-)
