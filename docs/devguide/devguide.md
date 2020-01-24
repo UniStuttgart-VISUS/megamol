@@ -112,7 +112,7 @@ It causes the graph updater to stop at the indicated event and delay further gra
 
 ## License
 
-MegaMol is freely and publicly available as open source following the therms of the BSD License.
+MegaMol is freely and publicly available as open source following the terms of the BSD License.
 Copyright (c) 2015, MegaMol Team TU Dresden, Germany Visualization Research Center, University of Stuttgart (VISUS), Germany
 Alle Rechte vorbehalten.
 All rights reserved.
