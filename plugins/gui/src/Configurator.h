@@ -89,6 +89,7 @@ private:
     bool draw_window_menu(megamol::core::CoreInstance* core_instance);
     bool draw_window_module_list(void);
 
+    bool draw_canvas_menu(GraphManager::GraphPtrType graph);
     bool draw_canvas_graph(GraphManager::GraphPtrType graph);
     bool draw_canvas_grid(GraphManager::GraphPtrType graph);
     bool draw_canvas_calls(GraphManager::GraphPtrType graph);

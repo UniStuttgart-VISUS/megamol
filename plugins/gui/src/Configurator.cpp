@@ -116,14 +116,6 @@ bool megamol::gui::Configurator::Draw(
         // Draws module list and graph canvas tabs next to each other
         ImGui::SameLine();
         ImGui::BeginGroup();
-
-        // Info text for PROTOTYPE --------------------------------------------
-        ImGui::BeginChild("info", ImVec2(0.0f, 1.5f * ImGui::GetItemsLineHeightWithSpacing()), true,
-            ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
-        std::string label = "This is a PROTOTYPE. Changes will NOT effect the currently loaded MegaMol project.";
-        ImGui::TextColored(ImVec4(0.9f, 0.2f, 0.2f, 1.0f), label.c_str());
-        ImGui::EndChild();
-
         // Graph (= project) tabs ---------------------------------------------
 
         // (Assuming only one closed tab per frame)
@@ -154,6 +146,7 @@ bool megamol::gui::Configurator::Draw(
                     this->gui.graph_ptr = graph;
                 }
 
+                this->draw_canvas_menu(graph);
                 this->draw_canvas_graph(graph);
 
                 ImGui::EndTabItem();
@@ -192,6 +185,7 @@ bool megamol::gui::Configurator::Draw(
         this->gui.rename_popup_open = false;
 
         ImGui::EndGroup();
+        // --------------------------------------------------------------------
     }
 
     return true;
@@ -245,38 +239,10 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
 
         ImGui::SameLine(260.0f);
 
-        if (this->gui.graph_ptr != nullptr) {
-            ImGui::Separator();
-            if (ImGui::Button("Reset")) {
-                this->gui.graph_ptr->gui.canvas_scrolling = ImVec2(0.0f, 0.0f);
-            }
-            ImGui::Text("Scrolling: %.2f,%.2f (Middle Mouse Button)", this->gui.graph_ptr->gui.canvas_scrolling.x,
-                this->gui.graph_ptr->gui.canvas_scrolling.y);
+        // Info text for PROTOTYPE --------------------------------------------
+        std::string label = "This is a PROTOTYPE. Changes will NOT effect the currently loaded MegaMol project.";
+        ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), label.c_str());
 
-            ImGui::Separator();
-            ImGui::Checkbox("Show Grid", &this->gui.graph_ptr->gui.show_grid);
-
-            ImGui::Separator();
-            ImGui::Checkbox("Call Names", &this->gui.graph_ptr->gui.show_call_names);
-
-            ImGui::Separator();
-            bool last_state = this->gui.graph_ptr->gui.show_modules_small;
-            ImGui::Checkbox("Small Modules", &this->gui.graph_ptr->gui.show_modules_small);
-            if (last_state != this->gui.graph_ptr->gui.show_modules_small) {
-                // Update all module gui parameters when rendered next time
-                for (auto& mod : this->gui.graph_ptr->GetGraphModules()) {
-                    mod->gui.update = true;
-                }
-                // Change slot radius depending on module size
-                this->gui.graph_ptr->gui.slot_radius = (this->gui.graph_ptr->gui.show_modules_small) ? (5.0f) : (8.0f);
-            }
-
-            ImGui::Separator();
-            if (ImGui::Button("Layout Graph")) {
-                this->layout_graph(this->gui.graph_ptr);
-            }
-            ImGui::Separator();
-        }
         ImGui::EndMenuBar();
     }
 
@@ -379,6 +345,52 @@ bool megamol::gui::Configurator::draw_window_module_list(void) {
     ImGui::EndGroup();
 
     return true;
+}
+
+
+bool megamol::gui::Configurator::draw_canvas_menu(GraphManager::GraphPtrType graph) {
+
+    const float child_height = ImGui::GetItemsLineHeightWithSpacing() * 1.5f;
+    ImGui::BeginChild(
+        "canvas_options", ImVec2(0.0f, child_height), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
+
+    if (ImGui::Button("Reset")) {
+        graph->gui.canvas_scrolling = ImVec2(0.0f, 0.0f);
+    }
+    ImGui::SameLine();
+    ImGui::Text(
+        "Scrolling: %.2f,%.2f (Middle Mouse Button)", graph->gui.canvas_scrolling.x, graph->gui.canvas_scrolling.y);
+
+    ImGui::SameLine();
+    // ImGui::Separator();
+    ImGui::Checkbox("Show Grid", &graph->gui.show_grid);
+
+    ImGui::SameLine();
+    // ImGui::Separator();
+    ImGui::Checkbox("Call Names", &graph->gui.show_call_names);
+
+    ImGui::SameLine();
+    // ImGui::Separator();
+    bool last_state = graph->gui.show_modules_small;
+    ImGui::Checkbox("Small Modules", &graph->gui.show_modules_small);
+    if (last_state != graph->gui.show_modules_small) {
+        // Update all module gui parameters when rendered next time
+        for (auto& mod : graph->GetGraphModules()) {
+            mod->gui.update = true;
+        }
+        // Change slot radius depending on module size
+        graph->gui.slot_radius = (graph->gui.show_modules_small) ? (5.0f) : (8.0f);
+    }
+
+    ImGui::SameLine();
+    // ImGui::Separator();
+    if (ImGui::Button("Layout Graph")) {
+        this->layout_graph(graph);
+    }
+
+    ImGui::EndChild();
+
+    return false;
 }
 
 
