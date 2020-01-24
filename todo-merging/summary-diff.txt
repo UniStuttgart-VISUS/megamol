@@ -1,5 +1,3 @@
- .gitignore                                                                      |    7 +-
- .travis.yml                                                                     |   13 +-
  core/Shaders/arrow.btf                                                          |   10 +-
  core/Shaders/phong.glsl (new)                                                   |   21 +
  core/Shaders/sphere/simple_frag_mainstart.glsl                                  |   17 +-
