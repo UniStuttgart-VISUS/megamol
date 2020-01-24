@@ -12,10 +12,11 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderView.h"
-
+#include "mmcore/view/TimeControl.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 
 namespace megamol {
@@ -166,6 +167,9 @@ protected:
      */
     void unpackMouseCoordinates(float& x, float& y) override;
 
+    /** Override of GetExtents */
+    virtual bool GetExtents(core::Call& call) override;
+
 private:
     /**
      * Answer the renderer 1 call
@@ -232,6 +236,15 @@ private:
 
     /** The splitter colour slot */
     param::ParamSlot splitColourSlot;
+
+    /** Slot enabling time synchronization */
+    param::ParamSlot enableTimeSyncSlot;
+
+    /** Option for forwarding mouse and keyboard events to both child views */
+    param::ParamSlot inputToBothSlot;
+
+    /** The parameter storage for time control */
+    TimeControl timeCtrl;
 
     /** The override call */
     CallRenderView* overrideCall;

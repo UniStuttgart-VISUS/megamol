@@ -40,7 +40,7 @@ view::View2D::View2D(void) : view::AbstractRenderingView(),
     this->rendererSlot.SetCompatibleCall<CallRender2DDescription>();
     this->MakeSlotAvailable(&this->rendererSlot);
 
-    this->resetViewSlot << new param::ButtonParam(core::view::Key::KEY_HOME);
+    this->resetViewSlot << new param::ButtonParam();
     this->resetViewSlot.SetUpdateCallback(&View2D::onResetView);
     this->MakeSlotAvailable(&this->resetViewSlot);
 
@@ -375,6 +375,10 @@ bool view::View2D::OnKey(Key key, KeyAction action, Modifiers mods) {
     auto* cr = this->rendererSlot.CallAs<view::CallRender2D>();
     if (cr == NULL) return false;
 
+    if (key == Key::KEY_HOME) {
+        onResetView(this->resetViewSlot);
+    }
+
     InputEvent evt;
     evt.tag = InputEvent::Tag::Key;
     evt.keyData.key = key;
@@ -530,5 +534,22 @@ void view::View2D::release(void) {
  */
 bool view::View2D::onResetView(param::ParamSlot& p) {
     this->ResetView();
+    return true;
+}
+
+/*
+ * view::View2D::GetExtents
+ */
+bool view::View2D::GetExtents(Call& call) {
+    view::CallRenderView* crv = dynamic_cast<view::CallRenderView*>(&call);
+    if (crv == nullptr) return false;
+
+    CallRender2D* cr2d = this->rendererSlot.CallAs<CallRender2D>();
+    if (cr2d == nullptr) return false;
+
+    if (!(*cr2d)(CallRender2D::FnGetExtents)) return false;
+
+    crv->SetTimeFramesCount(cr2d->TimeFramesCount());
+    crv->SetIsInSituTime(cr2d->IsInSituTime());
     return true;
 }

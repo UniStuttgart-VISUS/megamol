@@ -10,19 +10,9 @@
  core/include/mmcore/moldyn/SphereOutlineRenderer.h                              |    5 +-
  core/include/mmcore/moldyn/SphereRenderer.h                                     |    6 +-
  core/include/mmcore/thecam/utility/types.h                                      |    5 +-
- core/include/mmcore/view/AbstractView.h                                         |   12 +-
- core/include/mmcore/view/CallRenderView.h                                       |    3 +
- core/include/mmcore/view/SplitView.h                                            |   17 +-
- core/include/mmcore/view/View2D.h                                               |    2 +
- core/include/mmcore/view/View3D.h                                               |    2 +
  core/src/moldyn/ArrowRenderer.cpp                                               |  287 ++---
  core/src/moldyn/SphereOutlineRenderer.cpp                                       |   20 +
  core/src/moldyn/SphereRenderer.cpp                                              |  114 +-
- core/src/view/AbstractView.cpp                                                  |  138 ++-
- core/src/view/SplitView.cpp                                                     |  231 +++-
- core/src/view/View2D.cpp                                                        |   23 +-
- core/src/view/View3D.cpp                                                        |   23 +-
- core/src/view/special/ScreenShooter.cpp                                         |   12 +-
  plugins/infovis/src/ScatterplotMatrixRenderer2D.cpp                             |   14 +-
  plugins/infovis/src/ScatterplotMatrixRenderer2D.h                               |    5 +-
  plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Compute-Aggr.glsl (new)      |   59 +
