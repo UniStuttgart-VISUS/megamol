@@ -33,8 +33,6 @@
  core/src/view/special/ScreenShooter.cpp                                         |   12 +-
  plugins/infovis/src/ScatterplotMatrixRenderer2D.cpp                             |   14 +-
  plugins/infovis/src/ScatterplotMatrixRenderer2D.h                               |    5 +-
- plugins/mmstd_datatools/src/ParticlesToDensity.cpp                              |  461 ++++++--
- plugins/mmstd_datatools/src/ParticlesToDensity.h                                |   17 +-
  plugins/mmstd_datatools/src/table/TableToParticles.cpp                          |   33 +-
  plugins/mmstd_datatools/src/table/TableToParticles.h                            |    5 +-
  plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Compute-Aggr.glsl (new)      |   59 +
