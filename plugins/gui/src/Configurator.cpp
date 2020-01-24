@@ -527,16 +527,9 @@ bool megamol::gui::Configurator::draw_canvas_calls(GraphManager::GraphPtrType gr
                     draw_list->ChannelsSetCurrent(1); // Foreground
 
                     ImVec2 call_center = ImVec2(p1.x + (p2.x - p1.x) / 2.0f, p1.y + (p2.y - p1.y) / 2.0f);
-
-                    // Draw text
                     auto call_name_width = this->utils.TextWidgetWidth(call->class_name);
-                    ImGui::SetCursorScreenPos(
-                        call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
-                    ImGui::Text(call->class_name.c_str());
 
                     // Draw box
-                    draw_list->ChannelsSetCurrent(0); // Background
-
                     ImVec2 rect_size = ImVec2(call_name_width + (2.0f * style.ItemSpacing.x),
                         ImGui::GetFontSize() + (2.0f * style.ItemSpacing.y));
                     ImVec2 call_rect_min =
@@ -558,6 +551,11 @@ bool megamol::gui::Configurator::draw_canvas_calls(GraphManager::GraphPtrType gr
                                               : COLOR_CALL_BACKGROUND;
                     draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, 4.0f);
                     draw_list->AddRect(call_rect_min, call_rect_max, COLOR_CALL_BORDER, 4.0f);
+
+                    // Draw text
+                    ImGui::SetCursorScreenPos(
+                        call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
+                    ImGui::Text(call->class_name.c_str());
                 }
             }
 
@@ -901,11 +899,11 @@ bool megamol::gui::Configurator::update_module_size(Graph::ModulePtrType mod) {
 bool megamol::gui::Configurator::layout_graph(GraphManager::GraphPtrType graph) {
 
     // Really simple layouting sorting modules into differnet layers
-
     std::vector<std::vector<Graph::ModulePtrType>> layers;
     layers.clear();
 
     // Fill first layer with modules having no connected callee
+    // (Cycles are ignored)
     layers.emplace_back();
     for (auto& mod : graph->GetGraphModules()) {
         bool any_connected_callee = false;
@@ -919,12 +917,14 @@ bool megamol::gui::Configurator::layout_graph(GraphManager::GraphPtrType graph) 
         }
     }
 
-    size_t layer_idx = 0;
+    // Loop while modules are added to new layer.
     bool added_module = true;
     while (added_module) {
         added_module = false;
+        // Add new layer
         layers.emplace_back();
-        for (auto& mod : layers[layer_idx]) {
+        // Loop through last filled layer
+        for (auto& mod : layers[layers.size() - 2]) {
             for (auto& caller_slot : mod->GetCallSlots(Graph::CallSlotType::CALLER)) {
                 if (caller_slot->CallsConnected()) {
                     for (auto& call : caller_slot->GetConnectedCalls()) {
@@ -946,28 +946,42 @@ bool megamol::gui::Configurator::layout_graph(GraphManager::GraphPtrType graph) 
                 }
             }
         }
-        layer_idx++;
     }
 
     // Calculate new positions of modules
-    const float border_offset = this->state.slot_radius * 2.0f;
-    const float call_offset = 50.0f;
-    ImVec2 position_offset = this->state.scrolling;
-    ImVec2 pos = position_offset;
+    const float border_offset = this->state.slot_radius * 4.0f;
+    ImVec2 init_position = ImVec2(-1.0f * this->state.scrolling.x, -1.0f * this->state.scrolling.y);
+    ImVec2 pos = init_position;
+    float max_call_width = 25.0f;
+    float max_module_width = 0.0f;
+    size_t layer_mod_cnt = 0;
     for (auto& layer : layers) {
-        float max_module_width = 0.0f;
-        size_t layer_mod_cnt = layer.size();
+        if (this->state.show_call_names) {
+            max_call_width = 0.0f;
+        }
+        max_module_width = 0.0f;
+        layer_mod_cnt = layer.size();
         pos.x += border_offset;
-        pos.y = border_offset;
+        pos.y = init_position.y + border_offset;
         for (int i = 0; i < layer_mod_cnt; i++) {
             auto mod = layer[i];
+            if (this->state.show_call_names) {
+                for (auto& caller_slot : mod->GetCallSlots(Graph::CallSlotType::CALLER)) {
+                    if (caller_slot->CallsConnected()) {
+                        for (auto& call : caller_slot->GetConnectedCalls()) {
+                            auto call_name_length = this->utils.TextWidgetWidth(call->class_name);
+                            max_call_width =
+                                (call_name_length > max_call_width) ? (call_name_length) : (max_call_width);
+                        }
+                    }
+                }
+            }
             mod->gui.position = pos;
             pos.y += mod->gui.size.y + border_offset;
-            max_module_width = (max_module_width < mod->gui.size.x) ? (mod->gui.size.x) : (max_module_width);
+            max_module_width = (mod->gui.size.x > max_module_width) ? (mod->gui.size.x) : (max_module_width);
         }
-        pos.x += (max_module_width + call_offset);
+        pos.x += (max_module_width + max_call_width + border_offset);
     }
-
 
     return true;
 }
