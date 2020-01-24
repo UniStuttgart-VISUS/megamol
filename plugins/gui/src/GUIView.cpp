@@ -1484,15 +1484,22 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
     }
     if (ImGui::BeginPopupModal("Save Project", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 
-        std::string label = "File Name###Save Project";
+        bool save_project = false;
+
+        std::string label = "File Name";
+        auto flags =
+            ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll; // ImGuiInputTextFlags_None
+        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+        this->utils.Utf8Encode(wc.main_project_file);
+        if (ImGui::InputText(label.c_str(), &wc.main_project_file, flags)) {
+            save_project = true;
+        }
+        this->utils.Utf8Decode(wc.main_project_file);
+        // Set focus on input text in next frame once
         if (open_popup_project) {
             ImGuiID id = ImGui::GetID(label.c_str());
             ImGui::ActivateItem(id);
         }
-        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-        this->utils.Utf8Encode(wc.main_project_file);
-        ImGui::InputText(label.c_str(), &wc.main_project_file, ImGuiInputTextFlags_None);
-        this->utils.Utf8Decode(wc.main_project_file);
 
         bool valid = true;
         if (!HasFileExtension(wc.main_project_file, std::string(".lua"))) {
@@ -1503,18 +1510,21 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
         if (PathExists(wc.main_project_file)) {
             ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "File name already exists and will be overwritten.");
         }
-        if (ImGui::Button("Save")) {
-            if (valid) {
-                // Serialize current state to parameter.
-                std::string state;
-                this->window_manager.StateToJSON(state);
-                this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
-                // Save project to file
-                if (SaveProjectFile(wc.main_project_file, this->GetCoreInstance())) {
-                    ImGui::CloseCurrentPopup();
-                }
+        if (ImGui::Button("Save (Enter)")) {
+            save_project = true;
+        }
+
+        if (save_project && valid) {
+            // Serialize current state to parameter.
+            std::string state;
+            this->window_manager.StateToJSON(state);
+            this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
+            // Save project to file
+            if (SaveProjectFile(wc.main_project_file, this->GetCoreInstance())) {
+                ImGui::CloseCurrentPopup();
             }
         }
+
         ImGui::SameLine();
         if (ImGui::Button("Cancel")) {
             ImGui::CloseCurrentPopup();

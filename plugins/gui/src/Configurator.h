@@ -76,8 +76,10 @@ private:
     GUIUtils utils;
 
     struct State {
+        // Window
         int window_rendering_state;
         std::string project_filename;
+        // Graph
         int active_graph_uid;
         int selected_module_list_uid;
         int selected_module_graph_uid;
@@ -85,9 +87,8 @@ private:
         Graph::CallSlotPtrType selected_call_slot;
         int process_selected_slot;
         ImVec2 canvas_position;
-        std::string* popup_project_name;
-
-
+        std::string* graph_name;
+        // Menu
         ImVec2 scrolling;
         float zooming;
         bool show_grid;
@@ -97,44 +98,12 @@ private:
 
     } state;
 
-    /*
-
-    struct Event_AddGraph {
-
-    };
-    struct Event_DeleteGraph {
-
-    };
-    struct Event_AddModule {
-
-    };
-    struct Event_DelteModule {
-
-    };
-    struct Event_AddCall {
-
-    };
-    struct Event_DeleteCall {
-
-    };
-
-std::array<
-        std::vector<Event_AddModule> add_module;
-        std::vector<Event_AddModule> delete_module;
-        std::vector<Event_AddModule> add_module;
-        std::vector<Event_AddModule> add_module;
-        std::vector<Event_AddModule> add_module;
-        std::vector<Event_AddModule> add_module;
-    } graph_event_queue;
-    */
-
     // FUNCTIONS --------------------------------------------------------------
 
     bool draw_window_menu(megamol::core::CoreInstance* core_instance);
     bool draw_window_module_list(void);
 
-    bool draw_window_graph_canvas(GraphManager::GraphPtrType graph);
-
+    bool draw_canvas_graph(GraphManager::GraphPtrType graph);
     bool draw_canvas_grid(ImVec2 scrolling, float zooming);
     bool draw_canvas_calls(GraphManager::GraphPtrType graph, ImVec2 position_offset);
     bool draw_canvas_modules(GraphManager::GraphPtrType graph, ImVec2 position_offset);
@@ -144,7 +113,7 @@ std::array<
 
     bool init_module_gui_params(Graph::ModulePtrType mod);
 
-    bool save_project_popup(bool open, megamol::core::CoreInstance* core_instance);
+    bool popup_save_project(bool open, megamol::core::CoreInstance* core_instance);
 
     bool add_new_graph(void);
     bool add_new_module_to_graph(

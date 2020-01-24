@@ -589,11 +589,14 @@ bool megamol::gui::GraphManager::PROTOTYPE_SaveGraph(
             if (graph->GetUID() == graph_id) {
                 for (auto& mod : graph->GetGraphModules()) {
 
+                    std::string instance_name = graph->GetName();
+                    std::string instance = "::" + instance_name + "::";
                     if (mod->is_view_instance) {
-                        confInstances << "mmCreateView(\"" << graph->GetName() << "\",\"" << mod->class_name << "\",\""
-                                      << mod->full_name << "\")\n";
+                        confInstances << "mmCreateView(\"" << instance_name << "\",\"" << mod->class_name << "\",\""
+                                      << instance << mod->name << "\")\n";
                     } else {
-                        confModules << "mmCreateModule(\"" << mod->class_name << "\",\"" << mod->full_name << "\")\n";
+                        confModules << "mmCreateModule(\"" << mod->class_name << "\",\"" << instance << mod->name
+                                    << "\")\n";
                     }
 
                     for (auto& param_slot : mod->param_slots) {
@@ -601,20 +604,20 @@ bool megamol::gui::GraphManager::PROTOTYPE_SaveGraph(
                             // Encode to UTF-8 string
                             vislib::StringA valueString;
                             vislib::UTF8Encoder::Encode(valueString, vislib::StringA(param_slot.value_string.c_str()));
-                            confParams << "mmSetParamValue(\"" << param_slot.full_name << "\",[=["
-                                       << std::string(valueString.PeekBuffer()) << "]=])\n";
+                            confParams << "mmSetParamValue(\"" << instance << mod->name << "::" << param_slot.class_name
+                                       << "\",[=[" << std::string(valueString.PeekBuffer()) << "]=])\n";
                         }
                     }
 
                     for (auto& caller_slot : mod->GetCallSlots(Graph::CallSlotType::CALLER)) {
                         for (auto& call : caller_slot->GetConnectedCalls()) {
                             if (call->IsConnected()) {
-                                confCalls
-                                    << "mmCreateCall(\"" << call->class_name << "\",\""
-                                    << call->GetCallSlot(Graph::CallSlotType::CALLER)->GetParentModule()->full_name
-                                    << "::" << call->GetCallSlot(Graph::CallSlotType::CALLER)->name << "\",\""
-                                    << call->GetCallSlot(Graph::CallSlotType::CALLEE)->GetParentModule()->full_name
-                                    << "::" << call->GetCallSlot(Graph::CallSlotType::CALLEE)->name << "\")\n";
+                                confCalls << "mmCreateCall(\"" << call->class_name << "\",\"" << instance
+                                          << call->GetCallSlot(Graph::CallSlotType::CALLER)->GetParentModule()->name
+                                          << "::" << call->GetCallSlot(Graph::CallSlotType::CALLER)->name << "\",\""
+                                          << instance
+                                          << call->GetCallSlot(Graph::CallSlotType::CALLEE)->GetParentModule()->name
+                                          << "::" << call->GetCallSlot(Graph::CallSlotType::CALLEE)->name << "\")\n";
                             }
                         }
                     }

@@ -35,8 +35,10 @@ Configurator::Configurator() : hotkeys(), graph_manager(), utils(), state() {
         HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_DELETE), false);
 
     // Init state
+    /// Window
     this->state.window_rendering_state = 0;
     this->state.project_filename == "";
+    /// Graph
     this->state.active_graph_uid = -1;
     this->state.selected_module_list_uid = -1;
     this->state.selected_module_graph_uid = -1;
@@ -44,8 +46,8 @@ Configurator::Configurator() : hotkeys(), graph_manager(), utils(), state() {
     this->state.selected_call_slot = nullptr;
     this->state.process_selected_slot = 0;
     this->state.canvas_position = ImVec2(0.0f, 0.0f);
-    this->state.popup_project_name = nullptr;
-    // Menu
+    this->state.graph_name = nullptr;
+    /// Menu
     this->state.scrolling = ImVec2(0.0f, 0.0f);
     this->state.zooming = 1.0f;
     this->state.show_grid = true;
@@ -150,19 +152,16 @@ bool megamol::gui::Configurator::Draw(
 
             // Tab showing one graph
             if (ImGui::BeginTabItem(graph->GetName().c_str(), &open, ImGuiTabItemFlags_None)) {
-                // Tab context menu
-                /* DISBALED since changing instance name is not serialized properly yet.
                 if (ImGui::BeginPopupContextItem()) {
-                    if (ImGui::MenuItem("Rename Project")) {
+                    if (ImGui::MenuItem("Rename")) {
                         open_rename_popup = true;
-                        this->state.popup_project_name = &graph->GetName();
+                        this->state.graph_name = &graph->GetName();
                     }
                     ImGui::EndPopup();
                 }
-                */
 
                 this->state.active_graph_uid = graph->GetUID();
-                this->draw_window_graph_canvas(graph);
+                this->draw_canvas_graph(graph);
                 ImGui::EndTabItem();
             }
             // (Do not delete graph while looping through graphs list)
@@ -172,21 +171,26 @@ bool megamol::gui::Configurator::Draw(
         }
         ImGui::EndTabBar();
 
-        // Delete closed tab
-        if (delete_graph_uid > 0) {
-            this->graph_manager.DeleteGraph(delete_graph_uid);
-        }
+        // Delete graph when tab closed
+        this->graph_manager.DeleteGraph(delete_graph_uid);
 
         // Rename project tab pop-up
         if (open_rename_popup) {
-            ImGui::OpenPopup("Rename Project");
+            ImGui::OpenPopup("Rename");
         }
-        if (ImGui::BeginPopupModal("Rename Project", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
+        if (ImGui::BeginPopupModal("Rename", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 
-            if (ImGui::InputText("Enter new  project name", this->state.popup_project_name, flags)) {
+            std::string label = "Enter new  project name";
+            auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
+            if (ImGui::InputText("Enter new  project name", this->state.graph_name, flags)) {
                 ImGui::CloseCurrentPopup();
             }
+            // Set focus on input text in next frame once
+            if (open_rename_popup) {
+                ImGuiID id = ImGui::GetID(label.c_str());
+                ImGui::ActivateItem(id);
+            }
+
             ImGui::EndPopup();
         }
 
@@ -207,14 +211,15 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
 
     bool open_popup_project = false;
     if (ImGui::BeginMenuBar()) {
+        /// , "(no hotkey)")) {
 
         if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("New Project (Graph)", "(no hotkey)")) {
+            if (ImGui::MenuItem("New Project (Graph)", nullptr)) {
                 this->add_new_graph();
             }
 #ifdef GUI_USE_FILEUTILS
             // Load/save parameter values to LUA file
-            if (ImGui::MenuItem("Save Project (Graph)", "(no hotkey)")) {
+            if (ImGui::MenuItem("Save Project (Graph)", nullptr)) {
                 open_popup_project = true;
             }
             /// TODO: Load parameter file
@@ -228,22 +233,22 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
 #endif // GUI_USE_FILEUTILS
 
         if (ImGui::BeginMenu("Graph")) {
-            if (ImGui::MenuItem("Reset Scrolling", "(no hotkey)")) {
+            if (ImGui::MenuItem("Reset Scrolling", nullptr)) {
                 this->state.scrolling = ImVec2(0.0f, 0.0f);
             }
-            if (ImGui::MenuItem("Reset Zooming", "(no hotkey)")) {
-                this->state.zooming = 1.0f;
-            }
-            if (ImGui::MenuItem("Show Grid", "(no hotkey)", this->state.show_grid)) {
+            // if (ImGui::MenuItem("Reset Zooming")) {
+            //    this->state.zooming = 1.0f;
+            //}
+            if (ImGui::MenuItem("Show Grid", nullptr, this->state.show_grid)) {
                 this->state.show_grid = !this->state.show_grid;
             }
-            if (ImGui::MenuItem("Show Call Names", "(no hotkey)", this->state.show_call_names)) {
+            if (ImGui::MenuItem("Show Call Names", nullptr, this->state.show_call_names)) {
                 this->state.show_call_names = !this->state.show_call_names;
             }
-            if (ImGui::MenuItem("Minimize Modules", "(no hotkey)", this->state.minimize_modules)) {
+            if (ImGui::MenuItem("Show Small Modules", nullptr, this->state.minimize_modules)) {
                 this->state.minimize_modules = !this->state.minimize_modules;
             }
-            if (ImGui::MenuItem("Layout Graph", "(no hotkey)")) {
+            if (ImGui::MenuItem("Layout Graph", nullptr)) {
                 this->state.relayout_graph = true;
             }
             ImGui::EndMenu();
@@ -253,10 +258,12 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
             std::string info_text = "Additonal supported actions:\n"
                                     "- Add selected module from stock list\n"
                                     "     [Double Click] with left mouse button"
-                                    " | [Richt Click] on selected module / Context Menu: Add \n"
+                                    " | [Richt Click] on selected module / Context Menu: Add  \n"
                                     "- Delete selected module/call from graph\n"
                                     "     Select item an press [Delete]"
-                                    " | [Richt Click] on selected item / Context Menu: Delete \n";
+                                    " | [Richt Click] on selected item / Context Menu: Delete  \n"
+                                    "- Change instance (=graph) name\n"
+                                    "     [Richt Click] on graph tab / Context Menu: Rename  \n";
             ImGui::Text(info_text.c_str());
             ImGui::EndMenu();
         }
@@ -275,7 +282,7 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
     }
 
     // Pop-Up(s)
-    this->save_project_popup(open_popup_project, core_instance);
+    this->popup_save_project(open_popup_project, core_instance);
 
     return true;
 }
@@ -379,7 +386,7 @@ bool megamol::gui::Configurator::draw_window_module_list(void) {
 }
 
 
-bool megamol::gui::Configurator::draw_window_graph_canvas(GraphManager::GraphPtrType graph) {
+bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType graph) {
 
     ImGuiIO& io = ImGui::GetIO();
     /// Font scaling with zooming factor is not possible locally within window (only prior to ImGui::Begin()).
@@ -823,8 +830,8 @@ bool megamol::gui::Configurator::init_module_gui_params(Graph::ModulePtrType mod
 
     // Init size of module (prior to position) --------------------------------
 
-    float max_class_name_length = this->utils.TextWidgetWidth(mod->class_name);
     float max_full_name_length = 0.0f; // this->utils.TextWidgetWidth(mod->full_name); // Not displayed
+    float max_class_name_length = this->utils.TextWidgetWidth(mod->class_name);
     float max_name_length = this->utils.TextWidgetWidth(mod->name);
     float max_label_length = std::max(std::max(max_class_name_length, max_full_name_length), max_name_length);
 
@@ -855,7 +862,7 @@ bool megamol::gui::Configurator::init_module_gui_params(Graph::ModulePtrType mod
 }
 
 
-bool megamol::gui::Configurator::save_project_popup(bool open, megamol::core::CoreInstance* core_instance) {
+bool megamol::gui::Configurator::popup_save_project(bool open, megamol::core::CoreInstance* core_instance) {
 
 #ifdef GUI_USE_FILEUTILS
     std::string save_project_label = "Save Project";
@@ -865,15 +872,21 @@ bool megamol::gui::Configurator::save_project_popup(bool open, megamol::core::Co
     }
     if (ImGui::BeginPopupModal(save_project_label.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 
-        std::string label = "File Name###Save Project";
+        bool save_project = false;
+
+        std::string label = "File Name";
+        auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
+        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+        this->utils.Utf8Encode(this->state.project_filename);
+        if (ImGui::InputText(label.c_str(), &this->state.project_filename, flags)) {
+            save_project = true;
+        }
+        this->utils.Utf8Decode(this->state.project_filename);
+        // Set focus on input text in next frame once
         if (open) {
             ImGuiID id = ImGui::GetID(label.c_str());
             ImGui::ActivateItem(id);
         }
-        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-        this->utils.Utf8Encode(this->state.project_filename);
-        ImGui::InputText(label.c_str(), &this->state.project_filename, ImGuiInputTextFlags_None);
-        this->utils.Utf8Decode(this->state.project_filename);
 
         bool valid = true;
         if (!HasFileExtension(this->state.project_filename, std::string(".lua"))) {
@@ -884,16 +897,19 @@ bool megamol::gui::Configurator::save_project_popup(bool open, megamol::core::Co
         if (PathExists(this->state.project_filename)) {
             ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "File name already exists and will be overwritten.");
         }
-        if (ImGui::Button("Save")) {
-            if (valid) {
-                if (!this->graph_manager.GetGraphs().empty()) {
-                    if (this->graph_manager.PROTOTYPE_SaveGraph(
-                            this->state.active_graph_uid, this->state.project_filename, core_instance)) {
-                        ImGui::CloseCurrentPopup();
-                    }
+        if (ImGui::Button("Save (Enter)")) {
+            save_project = true;
+        }
+
+        if (save_project && valid) {
+            if (!this->graph_manager.GetGraphs().empty()) {
+                if (this->graph_manager.PROTOTYPE_SaveGraph(
+                        this->state.active_graph_uid, this->state.project_filename, core_instance)) {
+                    ImGui::CloseCurrentPopup();
                 }
             }
         }
+
         ImGui::SameLine();
         if (ImGui::Button("Cancel")) {
             ImGui::CloseCurrentPopup();
