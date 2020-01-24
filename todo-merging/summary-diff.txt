@@ -6,7 +6,6 @@
  core/include/mmcore/moldyn/ArrowRenderer.h                                      |    3 +
  core/include/mmcore/moldyn/SphereOutlineRenderer.h                              |    5 +-
  core/include/mmcore/moldyn/SphereRenderer.h                                     |    6 +-
- core/include/mmcore/thecam/utility/types.h                                      |    5 +-
  core/src/moldyn/ArrowRenderer.cpp                                               |   45 +-
  core/src/moldyn/SphereOutlineRenderer.cpp                                       |   20 +
  core/src/moldyn/SphereRenderer.cpp                                              |  114 +-

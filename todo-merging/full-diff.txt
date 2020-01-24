@@ -218,34 +218,6 @@ index 4aba3db56..f1a584f7a 100644
  
          /**
           * Set pointers to vertex and color buffers and corresponding shader variables.
-diff --git a/core/include/mmcore/thecam/utility/types.h b/core/include/mmcore/thecam/utility/types.h
-index 20dc49ccd..12479cd81 100644
---- a/core/include/mmcore/thecam/utility/types.h
-+++ b/core/include/mmcore/thecam/utility/types.h
-@@ -42,6 +42,7 @@
- #    pragma managed(push, off)
- #endif /* defined(_WIN32) && defined(_MANAGED) */
- 
-+#include "mmcore/api/MegaMolCore.std.h"
- #include "mmcore/thecam/utility/config.h"
- 
- #if defined(THE_WINDOWS)
-@@ -79,13 +80,13 @@ typedef int do_not_initialise_t;
-  * A constant that can be passed to some methods (eg megamol::core::thecam::ring_buffer::pop)
-  * for omitting return values.
-  */
--extern const discard_return_t discard_return;
-+extern const discard_return_t MEGAMOLCORE_API discard_return;
- 
- /**
-  * A constant that can be passed to some constructors (eg of
-  * megamol::core::thecam::math::vector) for omitting initialisation.
-  */
--extern const do_not_initialise_t do_not_initialise;
-+extern const do_not_initialise_t MEGAMOLCORE_API do_not_initialise;
- 
- } /* end namespace utility */
- } /* end namespace thecam */
 diff --git a/core/src/moldyn/ArrowRenderer.cpp b/core/src/moldyn/ArrowRenderer.cpp
 index 7dcbda4fd..5a4597eb3 100644
 --- a/core/src/moldyn/ArrowRenderer.cpp
