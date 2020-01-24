@@ -1,74 +1,74 @@
- .gitignore                                         |    7 +-
- .travis.yml                                        |   13 +-
- CMakeExternals.cmake                               |   68 +-
- core/Shaders/arrow.btf                             |   10 +-
- core/Shaders/phong.glsl (new)                      |   21 +
- core/Shaders/sphere/simple_frag_mainstart.glsl     |   17 +-
- .../sphere/simple_frag_out-nolighting.glsl (new)   |    3 +
- .../sphere/simple_frag_outline-cutout.glsl (new)   |   24 +
- core/Shaders/sphere_outline.btf (new)              |   29 +
- core/include/mmcore/misc/VolumetricDataCall.h      |   13 +
- core/include/mmcore/misc/VolumetricDataCallTypes.h |  219 ++--
- .../mmcore/misc/VolumetricMetadataStore.h (new)    |   56 +
- core/include/mmcore/moldyn/ArrowRenderer.h         |    3 +
- core/include/mmcore/moldyn/SphereOutlineRenderer.h |    5 +-
- core/include/mmcore/moldyn/SphereRenderer.h        |    6 +-
- core/include/mmcore/thecam/utility/types.h         |    5 +-
- .../mmcore/utility/ScaledBoundingBoxes.h (new)     |   84 ++
- core/include/mmcore/view/AbstractView.h            |   12 +-
- core/include/mmcore/view/CallRenderView.h          |    3 +
- core/include/mmcore/view/SplitView.h               |   17 +-
- core/include/mmcore/view/View2D.h                  |    2 +
- core/include/mmcore/view/View3D.h                  |    2 +
- core/src/misc/VolumetricDataCall.cpp               |   41 +
- core/src/misc/VolumetricMetadataStore.cpp (new)    |  147 +++
- core/src/moldyn/ArrowRenderer.cpp                  |  287 ++---
- core/src/moldyn/SphereOutlineRenderer.cpp          |   20 +
- core/src/moldyn/SphereRenderer.cpp                 |  114 +-
- core/src/utility/ScaledBoundingBoxes.cpp (new)     |  104 ++
- core/src/utility/plugins/PluginManager.cpp         |   22 +-
- core/src/view/AbstractView.cpp                     |  138 ++-
- core/src/view/SplitView.cpp                        |  231 +++-
- core/src/view/View2D.cpp                           |   23 +-
- core/src/view/View3D.cpp                           |   23 +-
- core/src/view/special/ScreenShooter.cpp            |   12 +-
- .../infovis/src/ScatterplotMatrixRenderer2D.cpp    |   14 +-
- plugins/infovis/src/ScatterplotMatrixRenderer2D.h  |    5 +-
- plugins/mmstd_datatools/CMakeLists.txt             |    5 +-
- plugins/mmstd_datatools/src/ParticlesToDensity.cpp |  461 ++++++--
- plugins/mmstd_datatools/src/ParticlesToDensity.h   |   17 +-
- plugins/mmstd_datatools/src/mmstd_datatools.cpp    |    4 +
- .../src/table/TableProcessorBase.cpp (new)         |  122 ++
- .../src/table/TableProcessorBase.h (new)           |  102 ++
- .../mmstd_datatools/src/table/TableSort.cpp (new)  |  164 +++
- .../mmstd_datatools/src/table/TableSort.h (new)    |   82 ++
- .../mmstd_datatools/src/table/TableToParticles.cpp |   33 +-
- .../mmstd_datatools/src/table/TableToParticles.h   |    5 +-
- .../mmstd_datatools/src/table/TableWhere.cpp (new) |  373 ++++++
- .../mmstd_datatools/src/table/TableWhere.h (new)   |   84 ++
- .../RaycastVolumeRenderer-Compute-Aggr.glsl (new)  |   59 +
- .../RaycastVolumeRenderer-Compute-DVR.glsl (new)   |   68 ++
- ...castVolumeRenderer-Compute-Functions.glsl (new) |   89 ++
- .../RaycastVolumeRenderer-Compute-Input.glsl (new) |   35 +
- .../RaycastVolumeRenderer-Compute-Iso.glsl (new)   |   82 ++
- ...RaycastVolumeRenderer-Compute-Output.glsl (new) |    2 +
- .../RaycastVolumeRenderer-Compute.glsl (new)       |   31 +
- .../RaycastVolumeRenderer-Fragment-Aggr.glsl (new) |   22 +
- .../RaycastVolumeRenderer-Fragment.glsl (new)      |   16 +
- .../RaycastVolumeRenderer-Vertex.glsl (new)        |   17 +
- .../mmstd_volume/Shaders/RaycastVolumeRenderer.btf |   36 +-
- .../raycast_volume/raycast_volume_c.glsl (gone)    |  183 ---
- .../render_to_framebuffer_f.glsl (gone)            |   10 -
- .../render_to_framebuffer_v.glsl (gone)            |   16 -
- .../mmstd_volume/src/DifferenceVolume.cpp (new)    |  514 +++++++++
- plugins/mmstd_volume/src/DifferenceVolume.h (new)  |  182 +++
- .../mmstd_volume/src/DifferenceVolume.inl (new)    |   36 +
- plugins/mmstd_volume/src/RaycastVolumeRenderer.cpp |  570 ++++++++--
- plugins/mmstd_volume/src/RaycastVolumeRenderer.h   |  402 +------
- plugins/mmstd_volume/src/mmstd_volume.cpp          |    6 +-
- plugins/pbs/src/HeadnodeServer.cpp                 |   98 +-
- plugins/pbs/src/HeadnodeServer.h                   |    4 +-
- plugins/pbs/src/RendernodeView.cpp                 |   24 +-
- .../template/include/MegaMolPlugin/MegaMolPlugin.h |    4 +-
- plugins/template/instawiz.ps1                      |   15 +-
- 104 files changed, 12849 insertions(+), 1276 deletions(-)
+ .gitignore                                                                      |    7 +-
+ .travis.yml                                                                     |   13 +-
+ CMakeExternals.cmake                                                            |   68 +-
+ core/Shaders/arrow.btf                                                          |   10 +-
+ core/Shaders/phong.glsl (new)                                                   |   21 +
+ core/Shaders/sphere/simple_frag_mainstart.glsl                                  |   17 +-
+ core/Shaders/sphere/simple_frag_out-nolighting.glsl (new)                       |    3 +
+ core/Shaders/sphere/simple_frag_outline-cutout.glsl (new)                       |   24 +
+ core/Shaders/sphere_outline.btf (new)                                           |   29 +
+ core/include/mmcore/misc/VolumetricDataCall.h                                   |   13 +
+ core/include/mmcore/misc/VolumetricDataCallTypes.h                              |  219 ++--
+ core/include/mmcore/misc/VolumetricMetadataStore.h (new)                        |   56 +
+ core/include/mmcore/moldyn/ArrowRenderer.h                                      |    3 +
+ core/include/mmcore/moldyn/SphereOutlineRenderer.h                              |    5 +-
+ core/include/mmcore/moldyn/SphereRenderer.h                                     |    6 +-
+ core/include/mmcore/thecam/utility/types.h                                      |    5 +-
+ core/include/mmcore/utility/ScaledBoundingBoxes.h (new)                         |   84 ++
+ core/include/mmcore/view/AbstractView.h                                         |   12 +-
+ core/include/mmcore/view/CallRenderView.h                                       |    3 +
+ core/include/mmcore/view/SplitView.h                                            |   17 +-
+ core/include/mmcore/view/View2D.h                                               |    2 +
+ core/include/mmcore/view/View3D.h                                               |    2 +
+ core/src/misc/VolumetricDataCall.cpp                                            |   41 +
+ core/src/misc/VolumetricMetadataStore.cpp (new)                                 |  147 +++
+ core/src/moldyn/ArrowRenderer.cpp                                               |  287 ++---
+ core/src/moldyn/SphereOutlineRenderer.cpp                                       |   20 +
+ core/src/moldyn/SphereRenderer.cpp                                              |  114 +-
+ core/src/utility/ScaledBoundingBoxes.cpp (new)                                  |  104 ++
+ core/src/utility/plugins/PluginManager.cpp                                      |   22 +-
+ core/src/view/AbstractView.cpp                                                  |  138 ++-
+ core/src/view/SplitView.cpp                                                     |  231 +++-
+ core/src/view/View2D.cpp                                                        |   23 +-
+ core/src/view/View3D.cpp                                                        |   23 +-
+ core/src/view/special/ScreenShooter.cpp                                         |   12 +-
+ plugins/infovis/src/ScatterplotMatrixRenderer2D.cpp                             |   14 +-
+ plugins/infovis/src/ScatterplotMatrixRenderer2D.h                               |    5 +-
+ plugins/mmstd_datatools/CMakeLists.txt                                          |    5 +-
+ plugins/mmstd_datatools/src/ParticlesToDensity.cpp                              |  461 ++++++--
+ plugins/mmstd_datatools/src/ParticlesToDensity.h                                |   17 +-
+ plugins/mmstd_datatools/src/mmstd_datatools.cpp                                 |    4 +
+ plugins/mmstd_datatools/src/table/TableProcessorBase.cpp (new)                  |  122 ++
+ plugins/mmstd_datatools/src/table/TableProcessorBase.h (new)                    |  102 ++
+ plugins/mmstd_datatools/src/table/TableSort.cpp (new)                           |  164 +++
+ plugins/mmstd_datatools/src/table/TableSort.h (new)                             |   82 ++
+ plugins/mmstd_datatools/src/table/TableToParticles.cpp                          |   33 +-
+ plugins/mmstd_datatools/src/table/TableToParticles.h                            |    5 +-
+ plugins/mmstd_datatools/src/table/TableWhere.cpp (new)                          |  373 ++++++
+ plugins/mmstd_datatools/src/table/TableWhere.h (new)                            |   84 ++
+ plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Compute-Aggr.glsl (new)      |   59 +
+ plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Compute-DVR.glsl (new)       |   68 ++
+ plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Compute-Functions.glsl (new) |   89 ++
+ plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Compute-Input.glsl (new)     |   35 +
+ plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Compute-Iso.glsl (new)       |   82 ++
+ plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Compute-Output.glsl (new)    |    2 +
+ plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Compute.glsl (new)           |   31 +
+ plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Fragment-Aggr.glsl (new)     |   22 +
+ plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Fragment.glsl (new)          |   16 +
+ plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Vertex.glsl (new)            |   17 +
+ plugins/mmstd_volume/Shaders/RaycastVolumeRenderer.btf                          |   36 +-
+ plugins/mmstd_volume/Shaders/raycast_volume/raycast_volume_c.glsl (gone)        |  183 ---
+ plugins/mmstd_volume/Shaders/raycast_volume/render_to_framebuffer_f.glsl (gone) |   10 -
+ plugins/mmstd_volume/Shaders/raycast_volume/render_to_framebuffer_v.glsl (gone) |   16 -
+ plugins/mmstd_volume/src/DifferenceVolume.cpp (new)                             |  514 +++++++++
+ plugins/mmstd_volume/src/DifferenceVolume.h (new)                               |  182 +++
+ plugins/mmstd_volume/src/DifferenceVolume.inl (new)                             |   36 +
+ plugins/mmstd_volume/src/RaycastVolumeRenderer.cpp                              |  570 ++++++++--
+ plugins/mmstd_volume/src/RaycastVolumeRenderer.h                                |  402 +------
+ plugins/mmstd_volume/src/mmstd_volume.cpp                                       |    6 +-
+ plugins/pbs/src/HeadnodeServer.cpp                                              |   98 +-
+ plugins/pbs/src/HeadnodeServer.h                                                |    4 +-
+ plugins/pbs/src/RendernodeView.cpp                                              |   24 +-
+ plugins/template/include/MegaMolPlugin/MegaMolPlugin.h                          |    4 +-
+ plugins/template/instawiz.ps1                                                   |   15 +-
+104 files changed, 12849 insertions(+), 1276 deletions(-)
