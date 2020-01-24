@@ -15,8 +15,6 @@
 #include "stdafx.h"
 #include "Configurator.h"
 
-#define CONFIGURATOR_SLOT_RADIUS (8.0f)
-
 using namespace megamol;
 using namespace megamol::gui;
 using vislib::sys::Log;
@@ -29,31 +27,28 @@ Configurator::Configurator() : hotkeys(), graph_manager(), utils(), state() {
         HotkeyData(megamol::core::view::KeyCode(
                        megamol::core::view::Key::KEY_M, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
             false);
-    this->hotkeys[HotkeyIndex::DELETE_MODULE] =
+    this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM] =
         HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_DELETE), false);
 
     // Init state
-    /// Window
     this->state.window_rendering_state = 0;
     this->state.project_filename == "";
-    /// Graph
+    this->state.slot_radius = 8.0f;
     this->state.active_graph_uid = -1;
-    this->state.selected_module_list_uid = -1;
-    this->state.selected_module_graph_uid = -1;
+    this->state.selected_list_module = -1;
+    this->state.selected_module_uid = -1;
+    this->state.selected_call_uid = -1;
     this->state.hovered_call_slot_uid = -1;
-    this->state.selected_call_slot = nullptr;
+    this->state.selected_call_slot_ptr = nullptr;
     this->state.process_selected_slot = 0;
     this->state.canvas_position = ImVec2(0.0f, 0.0f);
-    /// Rename pop-up
+    this->state.canvas_size = ImVec2(0.0f, 0.0f);
     this->state.open_rename_popup = false;
     this->state.rename = nullptr;
-    /// Menu
     this->state.scrolling = ImVec2(0.0f, 0.0f);
-    this->state.zooming = 1.0f;
     this->state.show_grid = true;
     this->state.show_call_names = true;
-    this->state.small_gui_modules = false;
-    this->state.relayout_graph = false;
+    this->state.small_modules = false;
 }
 
 
@@ -98,6 +93,8 @@ bool megamol::gui::Configurator::Draw(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+
+    ImGuiStyle& style = ImGui::GetStyle();
 
     if (this->state.window_rendering_state < 2) {
         // 1] Show pop-up before before calling UpdateAvailableModulesCallsOnce of graph.
@@ -188,7 +185,7 @@ bool megamol::gui::Configurator::Draw(
                 this->state.rename = nullptr;
                 ImGui::CloseCurrentPopup();
             }
-            // Set focus on input text in next frame once
+            // Set focus on input text once (applied next frame)
             if (this->state.open_rename_popup) {
                 ImGuiID id = ImGui::GetID(label.c_str());
                 ImGui::ActivateItem(id);
@@ -240,32 +237,35 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
             if (ImGui::MenuItem("Reset Scrolling", nullptr)) {
                 this->state.scrolling = ImVec2(0.0f, 0.0f);
             }
-            // if (ImGui::MenuItem("Reset Zooming")) {
-            //    this->state.zooming = 1.0f;
-            //}
             if (ImGui::MenuItem("Show Grid", nullptr, this->state.show_grid)) {
                 this->state.show_grid = !this->state.show_grid;
             }
             if (ImGui::MenuItem("Show Call Names", nullptr, this->state.show_call_names)) {
                 this->state.show_call_names = !this->state.show_call_names;
             }
-            if (ImGui::MenuItem("Show Small Modules", nullptr, this->state.small_gui_modules)) {
-                this->state.small_gui_modules = !this->state.small_gui_modules;
-                // Trigger gui parameter update for modules of all graphs
+            if (ImGui::MenuItem("Show Small Modules", nullptr, this->state.small_modules)) {
+                this->state.small_modules = !this->state.small_modules;
+                // Update all module gui parameters when rendered next time
                 for (auto& graph : this->graph_manager.GetGraphs()) {
                     for (auto& mod : graph->GetGraphModules()) {
                         mod->gui.update = true;
                     }
                 }
+                // Change slot radius depending on module size
+                this->state.slot_radius = (this->state.small_modules) ? (5.0f) : (8.0f);
             }
             if (ImGui::MenuItem("Layout Graph", nullptr)) {
-                this->state.relayout_graph = true;
+                for (auto& graph : this->graph_manager.GetGraphs()) {
+                    if (graph->GetUID() == this->state.active_graph_uid) {
+                        this->layout_graph(graph);
+                    }
+                }
             }
             ImGui::EndMenu();
         }
 
         if (ImGui::BeginMenu("Info")) {
-            std::string info_text = "Additonal supported actions:\n"
+            std::string info_text = "Additonal Options:\n"
                                     "- Add selected module from stock list\n"
                                     "     [Double Click] with left mouse button"
                                     " | [Richt Click] on selected module -> Context Menu: Add  \n"
@@ -283,10 +283,6 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
         ImGui::Separator();
         ImGui::Text("Scrolling: %.2f,%.2f (Middle Mouse Button)", this->state.scrolling.x, this->state.scrolling.y);
         ImGui::Separator();
-        /* DISABLED since not implemented yet
-        ImGui::Text("Zooming: %.2f (Mouse Wheel)", this->state.zooming);
-        ImGui::Separator();
-        */
 
         ImGui::EndMenuBar();
     }
@@ -303,10 +299,8 @@ bool megamol::gui::Configurator::draw_window_module_list(void) {
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
-    const ImU32 COLOR_MODULE_VIEW = IM_COL32(0, 225, 225, 255);
-
     const float child_width = 250.0f;
-    const float child_height = 2.5f * ImGui::GetItemsLineHeightWithSpacing();
+    const float child_height = ImGui::GetItemsLineHeightWithSpacing() * 2.5f;
 
     ImGui::BeginGroup();
     ImGui::BeginChild("module_search", ImVec2(child_width, child_height), true, ImGuiWindowFlags_None);
@@ -342,11 +336,11 @@ bool megamol::gui::Configurator::draw_window_module_list(void) {
         bool compat_filter = true;
         int compat_call_index = -1;
         std::string compat_call_slot_name;
-        if (this->state.selected_call_slot != nullptr) {
+        if (this->state.selected_call_slot_ptr != nullptr) {
             compat_filter = false;
             for (auto& cst : mod.call_slots) {
                 for (auto& cs : cst.second) {
-                    int cpidx = this->graph_manager.GetCompatibleCallIndex(this->state.selected_call_slot, cs);
+                    int cpidx = this->graph_manager.GetCompatibleCallIndex(this->state.selected_call_slot_ptr, cs);
                     if (cpidx > 0) {
                         compat_call_index = cpidx;
                         compat_call_slot_name = cs.name;
@@ -361,10 +355,10 @@ bool megamol::gui::Configurator::draw_window_module_list(void) {
 
             std::string label = mod.class_name + " (" + mod.plugin_name + ")"; /// std::to_string(id) + " " +
             if (mod.is_view) {
-                label += " [VIEW]";
+                label += " [View]";
             }
-            if (ImGui::Selectable(label.c_str(), (id == this->state.selected_module_list_uid))) {
-                this->state.selected_module_list_uid = id;
+            if (ImGui::Selectable(label.c_str(), (id == this->state.selected_list_module))) {
+                this->state.selected_list_module = id;
             }
             // Left mouse button double click action
             if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
@@ -395,54 +389,58 @@ bool megamol::gui::Configurator::draw_window_module_list(void) {
 bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType graph) {
 
     ImGuiIO& io = ImGui::GetIO();
-    /// Font scaling with zooming factor is not possible locally within window (only prior to ImGui::Begin()).
-    /// Add separate font for graph?!
 
-    const ImU32 COLOR_MODULE_BACKGROUND = IM_COL32(60, 60, 70, 255);
+    const ImU32 COLOR_CANVAS_BACKGROUND = IM_COL32(75, 75, 75, 255);
 
     // Process module deletion
-    if (std::get<1>(this->hotkeys[HotkeyIndex::DELETE_MODULE])) {
-        std::get<1>(this->hotkeys[HotkeyIndex::DELETE_MODULE]) = false;
-        this->state.selected_call_slot = nullptr;
-        graph->DeleteModule(this->state.selected_module_graph_uid);
+    if (std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM])) {
+        std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = false;
+        this->state.selected_call_slot_ptr = nullptr;
+        if (this->state.selected_module_uid > 0) {
+            graph->DeleteModule(this->state.selected_module_uid);
+        }
+        if (this->state.selected_call_uid > 0) {
+            graph->DeleteCall(this->state.selected_call_uid);
+        }
     }
 
     // Register trigger for connecting call
-    if ((this->state.selected_call_slot != nullptr) && (io.MouseReleased[0])) {
+    if ((this->state.selected_call_slot_ptr != nullptr) && (io.MouseReleased[0])) {
         this->state.process_selected_slot = 2;
     }
 
     // Draw child canvas ------------------------------------------------------
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, COLOR_MODULE_BACKGROUND);
+    ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, COLOR_CANVAS_BACKGROUND);
     ImGui::BeginChild("region", ImVec2(0.0f, 0.0f), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
-    ImGui::PushItemWidth(120.0f);
+    // ImGui::PushItemWidth(120.0f);
     this->state.canvas_position = ImGui::GetCursorScreenPos();
-    ImVec2 position_offset = ImGui::GetCursorScreenPos() + this->state.scrolling;
+    this->state.canvas_size = ImGui::GetWindowSize();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
     draw_list->ChannelsSplit(2);
 
     if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered()) {
-        this->state.selected_module_graph_uid = -1;
-        this->state.selected_call_slot = nullptr;
+        this->state.selected_module_uid = -1;
+        this->state.selected_call_uid = -1;
+        this->state.selected_call_slot_ptr = nullptr;
     }
 
     // Display grid -------------------------------------------------------
     if (this->state.show_grid) {
-        this->draw_canvas_grid(this->state.scrolling, this->state.zooming);
+        this->draw_canvas_grid();
     }
     ImGui::PopStyleVar(2);
 
     // Draw modules -----------------------------------------------------
-    this->draw_canvas_modules(graph, position_offset);
+    this->draw_canvas_modules(graph);
 
     // Draw call --------------------------------------------------------
-    this->draw_canvas_calls(graph, position_offset);
+    this->draw_canvas_calls(graph);
 
     // Draw dragged call --------------------------------------------------------
-    this->draw_canvas_dragged_call(position_offset);
+    this->draw_canvas_dragged_call();
 
     // Zoomin and Scaling  ----------------------------------------------------
     if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) {
@@ -450,21 +448,13 @@ bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType gr
         if (ImGui::IsMouseDragging(2, 0.0f)) {
             this->state.scrolling = this->state.scrolling + ImGui::GetIO().MouseDelta;
         }
-        /* DISABLED since not implemented yet
-        // Zooming (Mouse Wheel)
-        float last_zooming = this->state.zooming;
-        this->state.zooming = this->state.zooming + io.MouseWheel / 10.0f;
-        this->state.zooming = (this->state.zooming < 0.1f) ? (0.1f) : (this->state.zooming);
-        if (last_zooming != this->state.zooming) {
-           /// TODO process changed zooming ...
-        }
-        */
     }
 
     draw_list->ChannelsMerge();
-    ImGui::PopItemWidth();
+    // ImGui::PopItemWidth();
     ImGui::EndChild();
     ImGui::PopStyleColor();
+
 
     if (this->state.process_selected_slot > 0) {
         this->state.process_selected_slot--;
@@ -474,26 +464,24 @@ bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType gr
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_grid(ImVec2 scrolling, float zooming) {
+bool megamol::gui::Configurator::draw_canvas_grid(void) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         assert(draw_list != nullptr);
         draw_list->ChannelsSetCurrent(0); // Background
 
-        const ImU32 COLOR_GRID = IM_COL32(200, 200, 200, 40);
+        const ImU32 COLOR_GRID = IM_COL32(192, 192, 192, 40);
         const float GRID_SIZE = 64.0f;
 
-        ImVec2 canvas_size = ImGui::GetWindowSize();
-        ImVec2 win_pos = ImGui::GetCursorScreenPos();
-        float grid_size = GRID_SIZE * zooming;
-
-        for (float x = std::fmodf(scrolling.x, grid_size); x < canvas_size.x; x += grid_size) {
-            draw_list->AddLine(ImVec2(x, 0.0f) + win_pos, ImVec2(x, canvas_size.y) + win_pos, COLOR_GRID);
+        for (float x = std::fmodf(this->state.scrolling.x, GRID_SIZE); x < this->state.canvas_size.x; x += GRID_SIZE) {
+            draw_list->AddLine(ImVec2(x, 0.0f) + this->state.canvas_position,
+                ImVec2(x, this->state.canvas_size.y) + this->state.canvas_position, COLOR_GRID);
         }
 
-        for (float y = std::fmodf(scrolling.y, grid_size); y < canvas_size.y; y += grid_size) {
-            draw_list->AddLine(ImVec2(0.0f, y) + win_pos, ImVec2(canvas_size.x, y) + win_pos, COLOR_GRID);
+        for (float y = std::fmodf(this->state.scrolling.y, GRID_SIZE); y < this->state.canvas_size.y; y += GRID_SIZE) {
+            draw_list->AddLine(ImVec2(0.0f, y) + this->state.canvas_position,
+                ImVec2(this->state.canvas_size.x, y) + this->state.canvas_position, COLOR_GRID);
         }
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -507,59 +495,70 @@ bool megamol::gui::Configurator::draw_canvas_grid(ImVec2 scrolling, float zoomin
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_calls(GraphManager::GraphPtrType graph, ImVec2 position_offset) {
+bool megamol::gui::Configurator::draw_canvas_calls(GraphManager::GraphPtrType graph) {
 
     try {
+        ImGuiStyle& style = ImGui::GetStyle();
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         assert(draw_list != nullptr);
-        draw_list->ChannelsSetCurrent(1); // Foreground
 
-        const ImU32 COLOR_CALL_CURVE = IM_COL32(200, 200, 100, 255);
+        const ImU32 COLOR_CALL_CURVE = IM_COL32(225, 225, 0, 255);
+        const ImU32 COLOR_CALL_BACKGROUND = IM_COL32(64, 61, 64, 255);
+        const ImU32 COLOR_CALL_HIGHTLIGHT = IM_COL32(92, 92, 92, 255);
+        const ImU32 COLOR_CALL_BORDER = IM_COL32(128, 128, 128, 255);
+
+        int hovered_call = -1;
 
         for (auto& call : graph->GetGraphCalls()) {
-            ImGui::PushID(call->uid);
+            const int id = call->uid;
+            ImGui::PushID(id);
 
             if (call->IsConnected()) {
 
+                ImVec2 position_offset = this->state.canvas_position + this->state.scrolling;
                 ImVec2 p1 = position_offset + call->GetCallSlot(Graph::CallSlotType::CALLER)->gui.position;
                 ImVec2 p2 = position_offset + call->GetCallSlot(Graph::CallSlotType::CALLEE)->gui.position;
 
-
-                if (this->state.show_call_names) {
-                    /// TODO
-                    /*
-                    ImVec2 button_cursour_pos;
-                    ImVec2 button_size;
-
-                    ImVec2 module_rect_min = position_offset + mod->gui.position;
-                    ImVec2 module_rect_max = module_rect_min + mod->gui.size;
-                    ImVec2 module_center = module_rect_min + ImVec2(mod->gui.size.x / 2.0f, mod->gui.size.y / 2.0f);
-
-                    ImGui::BeginGroup();
-
-                    float line_offset = 0.0f;
-                    if (mod->is_view) {
-                        line_offset = -(ImGui::GetItemsLineHeightWithSpacing() / 2.0f);
-                    }
-
-                    auto class_name_width = this->utils.TextWidgetWidth(mod->class_name);
-                    ImGui::SetCursorScreenPos(module_center + ImVec2(-(class_name_width / 2.0f),
-                        line_offset - ImGui::GetItemsLineHeightWithSpacing()));
-                    ImGui::Text(mod->class_name.c_str());
-
-
-                    ImGui::SetCursorScreenPos(button_cursour_pos);
-                    std::string label = "call_" + call->class_name + std::to_string(call->uid);
-                    ImGui::InvisibleButton(label.c_str(), button_size);
-
-                    draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 4.0f);
-                    draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 4.0f);
-                    */
-                }
-
-
+                draw_list->ChannelsSetCurrent(0); // Background
                 draw_list->AddBezierCurve(
                     p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2, COLOR_CALL_CURVE, 3.0f);
+
+                if (this->state.show_call_names) {
+                    draw_list->ChannelsSetCurrent(1); // Foreground
+
+                    ImVec2 call_center = ImVec2(p1.x + (p2.x - p1.x) / 2.0f, p1.y + (p2.y - p1.y) / 2.0f);
+
+                    // Draw text
+                    auto call_name_width = this->utils.TextWidgetWidth(call->class_name);
+                    ImGui::SetCursorScreenPos(
+                        call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
+                    ImGui::Text(call->class_name.c_str());
+
+                    // Draw box
+                    draw_list->ChannelsSetCurrent(0); // Background
+
+                    ImVec2 rect_size = ImVec2(call_name_width + (2.0f * style.ItemSpacing.x),
+                        ImGui::GetFontSize() + (2.0f * style.ItemSpacing.y));
+                    ImVec2 call_rect_min =
+                        ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
+                    ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
+                    ImGui::SetCursorScreenPos(call_rect_min);
+                    std::string label = "call_" + call->class_name + std::to_string(id);
+                    ImGui::InvisibleButton(label.c_str(), rect_size);
+                    bool call_active = ImGui::IsItemActive();
+                    if (call_active) {
+                        this->state.selected_call_uid = id;
+                        this->state.selected_module_uid = -1;
+                    }
+                    if (ImGui::IsItemHovered() && (hovered_call < 0)) {
+                        hovered_call = id;
+                    }
+                    ImU32 call_bg_color = (hovered_call == id || this->state.selected_call_uid == id)
+                                              ? COLOR_CALL_HIGHTLIGHT
+                                              : COLOR_CALL_BACKGROUND;
+                    draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, 4.0f);
+                    draw_list->AddRect(call_rect_min, call_rect_max, COLOR_CALL_BORDER, 4.0f);
+                }
             }
 
             ImGui::PopID();
@@ -576,31 +575,32 @@ bool megamol::gui::Configurator::draw_canvas_calls(GraphManager::GraphPtrType gr
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType graph, ImVec2 position_offset) {
+bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType graph) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         assert(draw_list != nullptr);
 
-        const ImU32 COLOR_MODULE = IM_COL32(60, 60, 60, 255);
-        const ImU32 COLOR_MODULE_HIGHTL = IM_COL32(75, 75, 75, 255);
-        const ImU32 COLOR_MODULE_BORDER = IM_COL32(100, 100, 100, 255);
-        const ImVec4 COLOR_VIEW_LABEL = ImVec4(0.75f, 0.75f, 0.0f, 1.0f);
+        const ImU32 COLOR_MODULE_BACKGROUND = IM_COL32(64, 61, 64, 255);
+        const ImU32 COLOR_MODULE_HIGHTLIGHT = IM_COL32(92, 92, 92, 255);
+        const ImU32 COLOR_MODULE_BORDER = IM_COL32(128, 128, 128, 255);
 
         int hovered_module = -1;
         this->state.hovered_call_slot_uid = -1;
+        ImVec2 position_offset = this->state.canvas_position + this->state.scrolling;
+
         for (auto& mod : graph->GetGraphModules()) {
 
             // Draw call slots ------------------------------------------------
             // Draw call slots prior to modules to catch mouse clicks on slot area lying over module box!
-            this->draw_canvas_module_call_slots(graph, mod, position_offset);
+            this->draw_canvas_module_call_slots(graph, mod);
 
             // Draw module ----------------------------------------------------
             const int id = mod->uid;
             ImGui::PushID(id);
 
             if (mod->gui.update) {
-                this->init_module_gui_params(mod);
+                this->update_module_size(mod);
             }
 
             // Draw text
@@ -613,7 +613,7 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
 
             float line_offset = 0.0f;
             if (mod->is_view) {
-                line_offset = -(ImGui::GetItemsLineHeightWithSpacing() / 2.0f);
+                line_offset = -0.5f * ImGui::GetItemsLineHeightWithSpacing();
             }
 
             std::string label = mod->gui.class_label + mod->class_name;
@@ -628,14 +628,14 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
             ImGui::Text(label.c_str());
 
             if (mod->is_view) {
-                if (this->state.small_gui_modules) {
-                    std::string view_label = "View";
+                if (this->state.small_modules) {
+                    std::string view_label = "[View]";
                     if (mod->is_view_instance) {
-                        std::string view_label = "Main View";
+                        view_label = "[Main View]";
                     }
                     name_width = this->utils.TextWidgetWidth(view_label);
                     ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), -line_offset));
-                    ImGui::TextColored(COLOR_VIEW_LABEL, view_label.c_str());
+                    ImGui::Text(view_label.c_str());
                 } else {
                     std::string view_label = "Main View";
                     name_width = this->utils.TextWidgetWidth(view_label);
@@ -644,7 +644,7 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
                     ImGui::SameLine();
                     this->utils.HelpMarkerToolTip(
                         "There should be only one main view.\nOtherwise first one found is used.");
-                    /// TODO ensure that there is always just one main view
+                    /// TODO ensure that there is always just one main view ...
                 }
             }
 
@@ -662,8 +662,8 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
                 // Context menu
                 if (ImGui::BeginPopupContextItem()) {
                     if (ImGui::MenuItem(
-                            "Delete", std::get<0>(this->hotkeys[HotkeyIndex::DELETE_MODULE]).ToString().c_str())) {
-                        std::get<1>(this->hotkeys[HotkeyIndex::DELETE_MODULE]) = true;
+                            "Delete", std::get<0>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
+                        std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
                     }
                     if (ImGui::MenuItem("Rename")) {
                         this->state.open_rename_popup = true;
@@ -675,7 +675,8 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
             }
             bool module_active = ImGui::IsItemActive();
             if (module_active) {
-                this->state.selected_module_graph_uid = id;
+                this->state.selected_module_uid = id;
+                this->state.selected_call_uid = -1;
             }
             if (module_active && ImGui::IsMouseDragging(0)) {
                 mod->gui.position = mod->gui.position + ImGui::GetIO().MouseDelta;
@@ -683,9 +684,9 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
             if (ImGui::IsItemHovered() && (hovered_module < 0)) {
                 hovered_module = id;
             }
-            ImU32 module_bg_color = (hovered_module == id || this->state.selected_module_graph_uid == id)
-                                        ? COLOR_MODULE_HIGHTL
-                                        : COLOR_MODULE;
+            ImU32 module_bg_color = (hovered_module == id || this->state.selected_module_uid == id)
+                                        ? COLOR_MODULE_HIGHTLIGHT
+                                        : COLOR_MODULE_BACKGROUND;
             draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 4.0f);
             draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 4.0f);
 
@@ -706,7 +707,7 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
 
 
 bool megamol::gui::Configurator::draw_canvas_module_call_slots(
-    GraphManager::GraphPtrType graph, Graph::ModulePtrType mod, ImVec2 position_offset) {
+    GraphManager::GraphPtrType graph, Graph::ModulePtrType mod) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -715,24 +716,26 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slots(
 
         const ImU32 COLOR_SLOT = IM_COL32(175, 175, 175, 255);
         const ImU32 COLOR_SLOT_BORDER = IM_COL32(225, 225, 225, 255);
-        const ImU32 COLOR_SLOT_CALLER_LABEL = IM_COL32(0, 192, 192, 255);
-        const ImU32 COLOR_SLOT_CALLER_HIGHTL = IM_COL32(0, 192, 192, 255);
-        const ImU32 COLOR_SLOT_CALLEE_LABEL = IM_COL32(192, 192, 0, 255);
-        const ImU32 COLOR_SLOT_CALLEE_HIGHTL = IM_COL32(192, 192, 0, 255);
-        const ImU32 COLOR_SLOT_COMPATIBLE = IM_COL32(25, 225, 25, 255);
+        const ImU32 COLOR_SLOT_CALLER_LABEL = IM_COL32(0, 255, 255, 255);
+        const ImU32 COLOR_SLOT_CALLER_HIGHTLIGHT = IM_COL32(0, 255, 255, 255);
+        const ImU32 COLOR_SLOT_CALLEE_LABEL = IM_COL32(255, 92, 255, 255);
+        const ImU32 COLOR_SLOT_CALLEE_HIGHTLIGHT = IM_COL32(255, 92, 255, 255);
+        const ImU32 COLOR_SLOT_COMPATIBLE = IM_COL32(0, 255, 0, 255);
 
         ImU32 slot_color = COLOR_SLOT;
         ImU32 slot_highl_color;
         ImU32 slot_label_color;
 
+        ImVec2 position_offset = this->state.canvas_position + this->state.scrolling;
+
         // Draw call slots for given module
         for (auto& slot_pair : mod->GetCallSlots()) {
 
             if (slot_pair.first == Graph::CallSlotType::CALLER) {
-                slot_highl_color = COLOR_SLOT_CALLER_HIGHTL;
+                slot_highl_color = COLOR_SLOT_CALLER_HIGHTLIGHT;
                 slot_label_color = COLOR_SLOT_CALLER_LABEL;
             } else if (slot_pair.first == Graph::CallSlotType::CALLEE) {
-                slot_highl_color = COLOR_SLOT_CALLEE_HIGHTL;
+                slot_highl_color = COLOR_SLOT_CALLEE_HIGHTLIGHT;
                 slot_label_color = COLOR_SLOT_CALLEE_LABEL;
             }
 
@@ -745,33 +748,38 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slots(
                 std::string slot_name = slot->name;
                 slot_color = COLOR_SLOT;
 
-                ImGui::SetCursorScreenPos(slot_position - ImVec2(CONFIGURATOR_SLOT_RADIUS, CONFIGURATOR_SLOT_RADIUS));
+                ImGui::SetCursorScreenPos(slot_position - ImVec2(this->state.slot_radius, this->state.slot_radius));
                 std::string label = "slot_" + mod->full_name + slot_name + std::to_string(slot->uid);
                 ImGui::InvisibleButton(
-                    label.c_str(), ImVec2(CONFIGURATOR_SLOT_RADIUS * 2.0f, CONFIGURATOR_SLOT_RADIUS * 2.0f));
-                this->utils.HoverToolTip(slot->description, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
+                    label.c_str(), ImVec2(this->state.slot_radius * 2.0f, this->state.slot_radius * 2.0f));
+                std::string tooltip = slot->description;
+                if (this->state.small_modules) {
+                    tooltip = slot->name + " | " + tooltip;
+                }
+                this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
                 auto hovered = ImGui::IsItemHovered();
                 auto clicked = ImGui::IsItemClicked();
-                int compat_call_idx = this->graph_manager.GetCompatibleCallIndex(this->state.selected_call_slot, slot);
+                int compat_call_idx =
+                    this->graph_manager.GetCompatibleCallIndex(this->state.selected_call_slot_ptr, slot);
                 if (hovered) {
                     this->state.hovered_call_slot_uid = slot->uid;
                     // Check if selected call slot should be connected with current slot
                     if (this->state.process_selected_slot > 0) {
                         if (graph->AddCall(this->graph_manager.GetCallsStock(), compat_call_idx,
-                                this->state.selected_call_slot, slot)) {
-                            this->state.selected_call_slot = nullptr;
+                                this->state.selected_call_slot_ptr, slot)) {
+                            this->state.selected_call_slot_ptr = nullptr;
                         }
                     }
                 }
                 if (clicked) {
                     // Select / Unselect call slot
-                    if (this->state.selected_call_slot != slot) {
-                        this->state.selected_call_slot = slot;
+                    if (this->state.selected_call_slot_ptr != slot) {
+                        this->state.selected_call_slot_ptr = slot;
                     } else {
-                        this->state.selected_call_slot = nullptr;
+                        this->state.selected_call_slot_ptr = nullptr;
                     }
                 }
-                if (hovered || (this->state.selected_call_slot == slot)) {
+                if (hovered || (this->state.selected_call_slot_ptr == slot)) {
                     slot_color = slot_highl_color;
                 }
                 // Highlight if compatible to selected slot
@@ -780,18 +788,20 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slots(
                 }
 
                 ImGui::SetCursorScreenPos(slot_position);
-                draw_list->AddCircleFilled(slot_position, CONFIGURATOR_SLOT_RADIUS, slot_color);
-                draw_list->AddCircle(slot_position, CONFIGURATOR_SLOT_RADIUS, COLOR_SLOT_BORDER);
+                draw_list->AddCircleFilled(slot_position, this->state.slot_radius, slot_color);
+                draw_list->AddCircle(slot_position, this->state.slot_radius, COLOR_SLOT_BORDER);
 
-                ImVec2 text_pos;
-                text_pos.y = slot_position.y - ImGui::GetFontSize() / 2.0f;
-                if (slot_pair.first == Graph::CallSlotType::CALLER) {
-                    text_pos.x =
-                        slot_position.x - this->utils.TextWidgetWidth(slot_name) - (2.0f * CONFIGURATOR_SLOT_RADIUS);
-                } else if (slot_pair.first == Graph::CallSlotType::CALLEE) {
-                    text_pos.x = slot_position.x + (2.0f * CONFIGURATOR_SLOT_RADIUS);
+                if (!this->state.small_modules) {
+                    ImVec2 text_pos;
+                    text_pos.y = slot_position.y - ImGui::GetFontSize() / 2.0f;
+                    if (slot_pair.first == Graph::CallSlotType::CALLER) {
+                        text_pos.x =
+                            slot_position.x - this->utils.TextWidgetWidth(slot_name) - (2.0f * this->state.slot_radius);
+                    } else if (slot_pair.first == Graph::CallSlotType::CALLEE) {
+                        text_pos.x = slot_position.x + (2.0f * this->state.slot_radius);
+                    }
+                    draw_list->AddText(text_pos, slot_label_color, slot_name.c_str());
                 }
-                draw_list->AddText(text_pos, slot_label_color, slot_name.c_str());
 
                 ImGui::PopID();
             }
@@ -808,28 +818,30 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slots(
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_dragged_call(ImVec2 position_offset) {
+bool megamol::gui::Configurator::draw_canvas_dragged_call(void) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         assert(draw_list != nullptr);
         draw_list->ChannelsSetCurrent(0); // Background
 
-        const auto COLOR_CALL_CURVE = IM_COL32(200, 200, 100, 255);
+        const auto COLOR_CALL_CURVE = IM_COL32(128, 128, 0, 255);
 
-        if ((this->state.selected_call_slot != nullptr) && (this->state.hovered_call_slot_uid < 0)) {
-            ImVec2 canvas_size = ImGui::GetWindowSize();
-            ImVec2 canvas_pos = this->state.canvas_position;
+        ImVec2 position_offset = this->state.canvas_position + this->state.scrolling;
+
+        if ((this->state.selected_call_slot_ptr != nullptr) && (this->state.hovered_call_slot_uid < 0)) {
             ImVec2 current_pos = ImGui::GetMousePos();
             bool mouse_inside_canvas = false;
-            if ((current_pos.x >= canvas_pos.x) && (current_pos.x <= (canvas_pos.x + canvas_size.x)) &&
-                (current_pos.y >= canvas_pos.y) && (current_pos.y <= (canvas_pos.y + canvas_size.y))) {
+            if ((current_pos.x >= this->state.canvas_position.x) &&
+                (current_pos.x <= (this->state.canvas_position.x + this->state.canvas_size.x)) &&
+                (current_pos.y >= this->state.canvas_position.y) &&
+                (current_pos.y <= (this->state.canvas_position.y + this->state.canvas_size.y))) {
                 mouse_inside_canvas = true;
             }
             if (ImGui::IsMouseDown(0) && mouse_inside_canvas) {
-                ImVec2 p1 = position_offset + this->state.selected_call_slot->gui.position;
+                ImVec2 p1 = position_offset + this->state.selected_call_slot_ptr->gui.position;
                 ImVec2 p2 = ImGui::GetMousePos();
-                if (this->state.selected_call_slot->type == Graph::CallSlotType::CALLEE) {
+                if (this->state.selected_call_slot_ptr->type == Graph::CallSlotType::CALLEE) {
                     ImVec2 tmp = p1;
                     p1 = p2;
                     p2 = tmp;
@@ -849,49 +861,114 @@ bool megamol::gui::Configurator::draw_canvas_dragged_call(ImVec2 position_offset
 }
 
 
-bool megamol::gui::Configurator::init_module_gui_params(Graph::ModulePtrType mod) {
-
-    // Calulate module size (prior to position) --------------------------------
+bool megamol::gui::Configurator::update_module_size(Graph::ModulePtrType mod) {
 
     mod->gui.class_label = "Class: ";
-    if (this->state.small_gui_modules) mod->gui.class_label.clear();
+    if (this->state.small_modules) mod->gui.class_label.clear();
     float class_name_length = this->utils.TextWidgetWidth(mod->gui.class_label + mod->class_name);
 
     mod->gui.name_label = "Name: ";
-    if (this->state.small_gui_modules) mod->gui.name_label.clear();
+    if (this->state.small_modules) mod->gui.name_label.clear();
     float name_length = this->utils.TextWidgetWidth(mod->gui.name_label + mod->name);
 
     float max_label_length = std::max(class_name_length, name_length);
 
     float max_slot_name_length = 0.0f;
-    for (auto& call_slot_type_list : mod->GetCallSlots()) {
-        for (auto& call_slot : call_slot_type_list.second) {
-            float slot_name_length = this->utils.TextWidgetWidth(call_slot->name);
-            max_slot_name_length = std::max(slot_name_length, max_slot_name_length);
+    if (!this->state.small_modules) {
+        for (auto& call_slot_type_list : mod->GetCallSlots()) {
+            for (auto& call_slot : call_slot_type_list.second) {
+                float slot_name_length = this->utils.TextWidgetWidth(call_slot->name);
+                max_slot_name_length = std::max(slot_name_length, max_slot_name_length);
+            }
         }
+        max_slot_name_length = (2.0f * max_slot_name_length) + (2.0f * this->state.slot_radius);
     }
-    float module_width = (max_label_length + 2.0f * max_slot_name_length) + (6.0f * CONFIGURATOR_SLOT_RADIUS);
+
+    float module_width = (max_label_length + max_slot_name_length) + (4.0f * this->state.slot_radius);
     auto max_slot_count = std::max(
         mod->GetCallSlots(Graph::CallSlotType::CALLEE).size(), mod->GetCallSlots(Graph::CallSlotType::CALLER).size());
-    float module_slot_height = (static_cast<float>(max_slot_count) * (CONFIGURATOR_SLOT_RADIUS * 2.0f) * 1.5f) +
-                               ((CONFIGURATOR_SLOT_RADIUS * 2.0f) * 0.5f);
+    float module_slot_height = (static_cast<float>(max_slot_count) * (this->state.slot_radius * 2.0f) * 1.5f) +
+                               ((this->state.slot_radius * 2.0f) * 0.5f);
     float module_height =
         std::max(module_slot_height, ImGui::GetItemsLineHeightWithSpacing() * ((mod->is_view) ? (4.0f) : (3.0f)));
     mod->gui.size = ImVec2(module_width, module_height);
 
-    // Calulate module position -----------------------------------------------
-
-    ImVec2 canvas_size = ImGui::GetWindowSize();
-    mod->gui.position = ImVec2((canvas_size.x - mod->gui.size.x) / 2.0f, (canvas_size.y - mod->gui.size.y) / 2.0f);
-
-    // Calulate call slots position -------------------------------------------
-    // for (auto& call_slots_map : mod->GetCallSlots()) {
-    //    for (auto& call_slot : call_slots_map.second) {
-    //        call_slot->UpdateGuiPos();
-    //    }
-    //}
-
     mod->gui.update = false;
+    return true;
+}
+
+
+bool megamol::gui::Configurator::layout_graph(GraphManager::GraphPtrType graph) {
+
+    // Really simple layouting sorting modules into differnet layers
+
+    std::vector<std::vector<Graph::ModulePtrType>> layers;
+    layers.clear();
+
+    // Fill first layer with modules having no connected callee
+    layers.emplace_back();
+    for (auto& mod : graph->GetGraphModules()) {
+        bool any_connected_callee = false;
+        for (auto& callee_slot : mod->GetCallSlots(Graph::CallSlotType::CALLEE)) {
+            if (callee_slot->CallsConnected()) {
+                any_connected_callee = true;
+            }
+        }
+        if (!any_connected_callee) {
+            layers.back().emplace_back(mod);
+        }
+    }
+
+    size_t layer_idx = 0;
+    bool added_module = true;
+    while (added_module) {
+        added_module = false;
+        layers.emplace_back();
+        for (auto& mod : layers[layer_idx]) {
+            for (auto& caller_slot : mod->GetCallSlots(Graph::CallSlotType::CALLER)) {
+                if (caller_slot->CallsConnected()) {
+                    for (auto& call : caller_slot->GetConnectedCalls()) {
+                        auto add_mod = call->GetCallSlot(Graph::CallSlotType::CALLEE)->GetParentModule();
+                        // Check if module was already added
+                        bool found_module = false;
+                        for (auto& layer : layers) {
+                            for (auto& m : layer) {
+                                if (m == add_mod) {
+                                    found_module = true;
+                                }
+                            }
+                        }
+                        if (!found_module) {
+                            layers.back().emplace_back(add_mod);
+                            added_module = true;
+                        }
+                    }
+                }
+            }
+        }
+        layer_idx++;
+    }
+
+    // Calculate new positions of modules
+    const float border_offset = this->state.slot_radius * 2.0f;
+    const float call_offset = 50.0f;
+    ImVec2 position_offset = this->state.scrolling;
+    ImVec2 pos = position_offset;
+    for (auto& layer : layers) {
+        float max_module_width = 0.0f;
+        size_t layer_mod_cnt = layer.size();
+        pos.x += border_offset;
+        pos.y = border_offset;
+        for (int i = 0; i < layer_mod_cnt; i++) {
+            auto mod = layer[i];
+            mod->gui.position = pos;
+            pos.y += mod->gui.size.y + border_offset;
+            max_module_width = (max_module_width < mod->gui.size.x) ? (mod->gui.size.x) : (max_module_width);
+        }
+        pos.x += (max_module_width + call_offset);
+    }
+
+
     return true;
 }
 
@@ -916,7 +993,7 @@ bool megamol::gui::Configurator::popup_save_project(bool open, megamol::core::Co
             save_project = true;
         }
         this->utils.Utf8Decode(this->state.project_filename);
-        // Set focus on input text in next frame once
+        // Set focus on input text once (applied next frame)
         if (open) {
             ImGuiID id = ImGui::GetID(label.c_str());
             ImGui::ActivateItem(id);
@@ -960,8 +1037,7 @@ bool megamol::gui::Configurator::add_new_graph(void) {
 
     int graph_count = this->graph_manager.GetGraphs().size();
     std::string graph_name = "Project_" + std::to_string(graph_count + 1);
-    this->graph_manager.AddGraph(graph_name);
-    return true;
+    return this->graph_manager.AddGraph(graph_name);
 }
 
 
@@ -975,16 +1051,16 @@ bool megamol::gui::Configurator::add_new_module_to_graph(
         if (graph->GetUID() == this->state.active_graph_uid) {
             // Add new module
             retval = graph->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
-            // If there is a call slot selected, create a call connection to compatible call slot of new
-            // module
-            if (this->state.selected_call_slot != nullptr) {
+            // If there is a call slot selected, create call to compatible call slot of new module
+            if (this->state.selected_call_slot_ptr != nullptr) {
                 // Get call slots of last added module
                 for (auto& call_slot_map : graph->GetGraphModules().back()->GetCallSlots()) {
                     for (auto& call_slot : call_slot_map.second) {
                         if (call_slot->name == compat_call_slot_name) {
                             if (graph->AddCall(this->graph_manager.GetCallsStock(), compat_call_idx,
-                                    this->state.selected_call_slot, call_slot)) {
-                                this->state.selected_call_slot = nullptr;
+                                    this->state.selected_call_slot_ptr, call_slot)) {
+                                this->state.selected_call_slot_ptr = nullptr;
+                                retval = true;
                             }
                         }
                     }

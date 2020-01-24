@@ -68,35 +68,32 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyData;
-    enum HotkeyIndex : size_t { MODULE_SEARCH = 0, DELETE_MODULE = 1, INDEX_COUNT = 2 };
+    enum HotkeyIndex : size_t { MODULE_SEARCH = 0, DELETE_GRAPH_ITEM = 1, INDEX_COUNT = 2 };
 
     std::array<HotkeyData, HotkeyIndex::INDEX_COUNT> hotkeys;
 
     GraphManager graph_manager;
     GUIUtils utils;
 
-    struct State {
-        // Window
+    struct GuiState {
         int window_rendering_state;
         std::string project_filename;
-        // Graph
+        float slot_radius;
         int active_graph_uid;
-        int selected_module_list_uid;
-        int selected_module_graph_uid;
+        int selected_list_module;
+        int selected_module_uid;
+        int selected_call_uid;
         int hovered_call_slot_uid;
-        Graph::CallSlotPtrType selected_call_slot;
+        Graph::CallSlotPtrType selected_call_slot_ptr;
         int process_selected_slot;
         ImVec2 canvas_position;
+        ImVec2 canvas_size;
         bool open_rename_popup;
         std::string* rename;
-        // Menu
         ImVec2 scrolling;
-        float zooming;
         bool show_grid;
         bool show_call_names;
-        bool small_gui_modules;
-        bool relayout_graph;
-
+        bool small_modules;
     } state;
 
     // FUNCTIONS --------------------------------------------------------------
@@ -105,14 +102,14 @@ private:
     bool draw_window_module_list(void);
 
     bool draw_canvas_graph(GraphManager::GraphPtrType graph);
-    bool draw_canvas_grid(ImVec2 scrolling, float zooming);
-    bool draw_canvas_calls(GraphManager::GraphPtrType graph, ImVec2 position_offset);
-    bool draw_canvas_modules(GraphManager::GraphPtrType graph, ImVec2 position_offset);
-    bool draw_canvas_module_call_slots(
-        GraphManager::GraphPtrType graph, Graph::ModulePtrType mod, ImVec2 position_offset);
-    bool draw_canvas_dragged_call(ImVec2 position_offset);
+    bool draw_canvas_grid();
+    bool draw_canvas_calls(GraphManager::GraphPtrType graph);
+    bool draw_canvas_modules(GraphManager::GraphPtrType graph);
+    bool draw_canvas_module_call_slots(GraphManager::GraphPtrType graph, Graph::ModulePtrType mod);
+    bool draw_canvas_dragged_call();
 
-    bool init_module_gui_params(Graph::ModulePtrType mod);
+    bool update_module_size(Graph::ModulePtrType mod);
+    bool layout_graph(GraphManager::GraphPtrType graph);
 
     bool popup_save_project(bool open, megamol::core::CoreInstance* core_instance);
 

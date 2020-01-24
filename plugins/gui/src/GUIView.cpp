@@ -1495,7 +1495,7 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
             save_project = true;
         }
         this->utils.Utf8Decode(wc.main_project_file);
-        // Set focus on input text in next frame once
+        // Set focus on input text once (applied next frame)
         if (open_popup_project) {
             ImGuiID id = ImGui::GetID(label.c_str());
             ImGui::ActivateItem(id);
