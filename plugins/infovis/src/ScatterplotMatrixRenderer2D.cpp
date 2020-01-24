@@ -114,7 +114,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , axisFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
     , textFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
     , textValid(false)
-    , dataTime(0)
+    , dataTime((std::numeric_limits<unsigned int>::max)())
     , flagsBufferVersion(0) {
     this->floatTableInSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->floatTableInSlot);
@@ -376,9 +376,11 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
     this->floatTable = this->floatTableInSlot.CallAs<table::TableDataCall>();
 
     if (this->floatTable == nullptr || !(*this->floatTable)(1)) return false;
-    auto ts = this->floatTable->GetFrameCount();
-    call.SetTimeFramesCount(ts);
-    this->floatTable->SetFrameID(static_cast<unsigned int>(call.Time()));
+    const auto cntFrames = this->floatTable->GetFrameCount();
+    call.SetTimeFramesCount(cntFrames);    // Tell view about the data set size.
+
+    const auto now = static_cast<unsigned int>(call.Time());
+    this->floatTable->SetFrameID(now);
 
     if (this->floatTable == nullptr || !(*(this->floatTable))(0)) return false;
     if (this->floatTable->GetColumnsCount() == 0) return false;
@@ -400,7 +402,7 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
         this->transferFunction->ResetDirty();
     }
 
-    if (this->dataHash == this->floatTable->DataHash() && ts == this->dataTime && !hasDirtyData()) return true;
+    if (this->dataHash == this->floatTable->DataHash() && now == this->dataTime && !hasDirtyData()) return true;
 
     auto columnInfos = this->floatTable->GetColumnsInfos();
     const size_t colCount = this->floatTable->GetColumnsCount();
@@ -425,7 +427,7 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
     this->updateColumns();
 
     this->dataHash = this->floatTable->DataHash();
-    this->dataTime = ts;
+    this->dataTime = now;
     this->resetDirtyData();
 
     return true;

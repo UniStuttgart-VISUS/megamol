@@ -13,8 +13,6 @@
  core/src/moldyn/ArrowRenderer.cpp                                               |  287 ++---
  core/src/moldyn/SphereOutlineRenderer.cpp                                       |   20 +
  core/src/moldyn/SphereRenderer.cpp                                              |  114 +-
- plugins/infovis/src/ScatterplotMatrixRenderer2D.cpp                             |   14 +-
- plugins/infovis/src/ScatterplotMatrixRenderer2D.h                               |    5 +-
  plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Compute-Aggr.glsl (new)      |   59 +
  plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Compute-DVR.glsl (new)       |   68 ++
  plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Compute-Functions.glsl (new) |   89 ++

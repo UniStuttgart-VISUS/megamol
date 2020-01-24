@@ -1028,69 +1028,6 @@ index 8ec3e658c..eb566c87f 100644
      glEnd();
  
      glBindTexture(GL_TEXTURE_2D, 0);
-diff --git a/plugins/infovis/src/ScatterplotMatrixRenderer2D.cpp b/plugins/infovis/src/ScatterplotMatrixRenderer2D.cpp
-index f52ba2747..4fbb167db 100644
---- a/plugins/infovis/src/ScatterplotMatrixRenderer2D.cpp
-+++ b/plugins/infovis/src/ScatterplotMatrixRenderer2D.cpp
-@@ -114,7 +114,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
-     , axisFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
-     , textFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
-     , textValid(false)
--    , dataTime(0)
-+    , dataTime((std::numeric_limits<unsigned int>::max)())
-     , flagsBufferVersion(0) {
-     this->floatTableInSlot.SetCompatibleCall<table::TableDataCallDescription>();
-     this->MakeSlotAvailable(&this->floatTableInSlot);
-@@ -361,9 +361,11 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool
-     this->floatTable = this->floatTableInSlot.CallAs<table::TableDataCall>();
- 
-     if (this->floatTable == nullptr || !(*this->floatTable)(1)) return false;
--    auto ts = this->floatTable->GetFrameCount();
--    call.SetTimeFramesCount(ts);
--    this->floatTable->SetFrameID(static_cast<unsigned int>(call.Time()));
-+    const auto cntFrames = this->floatTable->GetFrameCount();
-+    call.SetTimeFramesCount(cntFrames);    // Tell view about the data set size.
-+
-+    const auto now = static_cast<unsigned int>(call.Time());    // 
-+    this->floatTable->SetFrameID(now);
- 
-     if (this->floatTable == nullptr || !(*(this->floatTable))(0)) return false;
-     if (this->floatTable->GetColumnsCount() == 0) return false;
-@@ -389,7 +391,7 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool
-         this->transferFunction->ResetDirty();
-     }
- 
--    if (this->dataHash == this->floatTable->DataHash() && ts == this->dataTime && !hasDirtyData()) return true;
-+    if (this->dataHash == this->floatTable->DataHash() && now == this->dataTime && !hasDirtyData()) return true;
- 
-     auto columnInfos = this->floatTable->GetColumnsInfos();
-     const size_t colCount = this->floatTable->GetColumnsCount();
-@@ -416,7 +418,7 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool
-     this->updateColumns();
- 
-     this->dataHash = this->floatTable->DataHash();
--    this->dataTime = ts;
-+    this->dataTime = now;
-     this->resetDirtyData();
- 
-     return true;
-diff --git a/plugins/infovis/src/ScatterplotMatrixRenderer2D.h b/plugins/infovis/src/ScatterplotMatrixRenderer2D.h
-index 569193665..c74368022 100644
---- a/plugins/infovis/src/ScatterplotMatrixRenderer2D.h
-+++ b/plugins/infovis/src/ScatterplotMatrixRenderer2D.h
-@@ -117,10 +117,9 @@ private:
- 
-     struct SPLOMPoints {
-         SPLOMPoints(const std::vector<PlotInfo>& plots, const stdplugin::datatools::table::TableDataCall* floatTable)
--            : plots(plots)
--            , floatTable(floatTable){}
-+            : plots(plots), floatTable(floatTable) {}
- 
--                  [[nodiscard]] inline size_t idx_to_row(size_t idx) const {
-+        [[nodiscard]] inline size_t idx_to_row(size_t idx) const {
-             const size_t rowCount = floatTable->GetRowsCount();
-             return idx % rowCount;
-         }
 diff --git a/plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Compute-Aggr.glsl b/plugins/mmstd_volume/Shaders/RaycastVolumeRenderer-Compute-Aggr.glsl
 new file mode 100644
 index 000000000..6544616b3
