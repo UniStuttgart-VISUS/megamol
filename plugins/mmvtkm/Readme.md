@@ -22,7 +22,7 @@ TODO to run MegaMol with VTKm:
 * duel CUDA
 
 ## Changelog
-#### 23.01.2019
+#### 23.01.2020
 * adapted plugin to also work under linux
 
 #### 01.10.2019
