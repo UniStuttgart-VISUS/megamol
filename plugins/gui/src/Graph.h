@@ -190,7 +190,7 @@ public:
             std::string name_label;
             ImVec2 position;
             ImVec2 size;
-            bool update;
+            bool update_size;
         } gui;
 
         bool AddCallSlot(Graph::CallSlotPtrType call_slot);
@@ -241,6 +241,7 @@ public:
         int hovered_slot_uid;
         Graph::CallSlotPtrType selected_slot_ptr;
         int process_selected_slot;
+        bool update_layout;
     } gui;
 
 private:

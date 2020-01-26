@@ -398,6 +398,7 @@ megamol::gui::Graph::Graph(int graph_uid, const std::string& graph_name)
     this->gui.hovered_slot_uid = -1;
     this->gui.selected_slot_ptr = nullptr;
     this->gui.process_selected_slot = 0;
+    this->gui.update_layout = true;
 }
 
 
@@ -418,7 +419,7 @@ bool megamol::gui::Graph::AddModule(Graph::ModuleStockType& stock_modules, const
                 mod_ptr->name = "module_name";     /// TODO get from core
                 mod_ptr->full_name = "full_name";  /// TODO get from core
                 mod_ptr->is_view_instance = false; /// TODO get from core
-                mod_ptr->gui.update = true;
+                mod_ptr->gui.update_size = true;
                 mod_ptr->gui.position = ImVec2(0.0f, 0.0f); // Initialized in configurator
                 mod_ptr->gui.size = ImVec2(0.0f, 0.0f);     // Initialized in configurator
                 mod_ptr->gui.class_label = "";              // Initialized in configurator

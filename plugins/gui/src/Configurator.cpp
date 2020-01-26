@@ -104,8 +104,6 @@ bool megamol::gui::Configurator::Draw(
         // 2] Load available modules and calls and currently loaded project from core once(!)
 
         this->graph_manager.UpdateModulesCallsStock(core_instance);
-        this->graph_manager.LoadCurrentCoreProjectToGraph(core_instance);
-
         this->gui.window_state++;
     } else {
         // 3] Render configurator gui content
@@ -148,7 +146,11 @@ bool megamol::gui::Configurator::Draw(
 
                 this->draw_canvas_menu(graph);
                 this->draw_canvas_graph(graph);
-
+                // Update layouting of graph
+                if (graph->gui.update_layout) {
+                    this->update_graph_layout(graph);
+                    graph->gui.update_layout = false;
+                }
                 ImGui::EndTabItem();
             }
 
@@ -213,12 +215,11 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
             if (ImGui::MenuItem("Save Project (Graph)", nullptr)) {
                 open_popup_project = true;
             }
-            /// TODO: Load parameter file
-            // if (ImGui::MenuItem("Load Project")) {
-            // std::string projectFilename;
-            // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
-            // Load to new graph ...
-            //}
+            if (ImGui::MenuItem("Load running Project")) {
+                /// TODO
+                this->graph_manager.LoadCurrentCoreProjectToGraph(core_instance);
+                // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
+            }
             ImGui::EndMenu();
         }
 #endif // GUI_USE_FILEUTILS
@@ -374,9 +375,9 @@ bool megamol::gui::Configurator::draw_canvas_menu(GraphManager::GraphPtrType gra
     bool last_state = graph->gui.show_modules_small;
     ImGui::Checkbox("Small Modules", &graph->gui.show_modules_small);
     if (last_state != graph->gui.show_modules_small) {
-        // Update all module gui parameters when rendered next time
+        // Update module gui size
         for (auto& mod : graph->GetGraphModules()) {
-            mod->gui.update = true;
+            mod->gui.update_size = true;
         }
         // Change slot radius depending on module size
         graph->gui.slot_radius = (graph->gui.show_modules_small) ? (5.0f) : (8.0f);
@@ -385,7 +386,7 @@ bool megamol::gui::Configurator::draw_canvas_menu(GraphManager::GraphPtrType gra
     ImGui::SameLine();
     // ImGui::Separator();
     if (ImGui::Button("Layout Graph")) {
-        this->layout_graph(graph);
+        graph->gui.update_layout = true;
     }
 
     ImGui::EndChild();
@@ -606,8 +607,9 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
             const int id = mod->uid;
             ImGui::PushID(id);
 
-            if (mod->gui.update) {
+            if (mod->gui.update_size) {
                 this->update_module_size(graph, mod);
+                mod->gui.update_size = false;
             }
 
             // Draw text
@@ -899,12 +901,11 @@ bool megamol::gui::Configurator::update_module_size(GraphManager::GraphPtrType g
         std::max(module_slot_height, ImGui::GetItemsLineHeightWithSpacing() * ((mod->is_view) ? (4.0f) : (3.0f)));
     mod->gui.size = ImVec2(module_width, module_height);
 
-    mod->gui.update = false;
     return true;
 }
 
 
-bool megamol::gui::Configurator::layout_graph(GraphManager::GraphPtrType graph) {
+bool megamol::gui::Configurator::update_graph_layout(GraphManager::GraphPtrType graph) {
 
     // Really simple layouting sorting modules into differnet layers
     std::vector<std::vector<Graph::ModulePtrType>> layers;

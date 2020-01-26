@@ -36,6 +36,7 @@ bool megamol::gui::GraphManager::AddGraph(std::string name) {
     graph.gui.hovered_slot_uid = -1;
     graph.gui.selected_slot_ptr = nullptr;
     graph.gui.process_selected_slot = 0;
+    graph.gui.update_layout = true;
 
     this->graphs.emplace_back(std::make_shared<Graph>(graph));
 
