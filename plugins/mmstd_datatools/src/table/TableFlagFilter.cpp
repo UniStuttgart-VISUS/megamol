@@ -68,9 +68,10 @@ bool TableFlagFilter::getData(core::Call &call) {
     }
 
     tableInCall->SetFrameID(tableOutCall->GetFrameID());
-    (*tableInCall)(1);
+    (*tableInCall)(0);
     tableOutCall->SetFrameCount(tableInCall->GetFrameCount());
     tableOutCall->SetDataHash(tableInCall->DataHash());
+    tableOutCall->Set(tableInCall->GetColumnsCount(), tableInCall->GetRowsCount(), tableInCall->GetColumnsInfos(), tableInCall->GetData());
 
     return true;
 }
@@ -97,10 +98,9 @@ bool TableFlagFilter::getHash(core::Call &call) {
     }
 
     tableInCall->SetFrameID(tableOutCall->GetFrameID());
-    (*tableInCall)(0);
+    (*tableInCall)(1);
     tableOutCall->SetFrameCount(tableInCall->GetFrameCount());
     tableOutCall->SetDataHash(tableInCall->DataHash());
-    tableOutCall->Set(tableInCall->GetColumnsCount(), tableInCall->GetRowsCount(), tableInCall->GetColumnsInfos(), tableInCall->GetData());
 
     return true;
 }
