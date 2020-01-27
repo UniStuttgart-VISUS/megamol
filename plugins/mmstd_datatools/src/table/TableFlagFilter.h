@@ -48,10 +48,19 @@ protected:
 
     bool getHash(core::Call &call);
 
+    bool handleCall(core::Call &call);
+
 private:
     core::CallerSlot tableInSlot;
     core::CallerSlot flagStorageInSlot;
     core::CalleeSlot tableOutSlot;
+
+    unsigned int frameCount;
+    size_t dataHash;
+    size_t colCount;
+    size_t rowCount;
+    std::vector<TableDataCall::ColumnInfo> colInfos;
+    std::vector<float> data;
 };
 
 } /* end namespace table */
