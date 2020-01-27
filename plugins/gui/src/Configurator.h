@@ -102,7 +102,10 @@ private:
 
     bool popup_save_project(bool open, megamol::core::CoreInstance* core_instance);
 
-    bool add_new_graph(void);
+    inline std::string get_unique_project_name(void) {
+        return ("Project_" + std::to_string(this->graph_manager.GetGraphs().size() + 1));
+    }
+
     bool add_new_module_to_graph(
         Graph::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name);
 

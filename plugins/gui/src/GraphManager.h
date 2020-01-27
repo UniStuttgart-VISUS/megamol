@@ -68,7 +68,7 @@ public:
     inline Graph::ModuleStockType& GetModulesStock(void) { return this->modules_stock; }
     inline Graph::CallStockType& GetCallsStock(void) { return this->calls_stock; }
 
-    bool LoadCurrentCoreProjectToGraph(megamol::core::CoreInstance* core_instance);
+    bool LoadCurrentCoreProject(std::string name, megamol::core::CoreInstance* core_instance);
 
     int GetCompatibleCallIndex(Graph::CallSlotPtrType call_slot_1, Graph::CallSlotPtrType call_slot_2);
     int GetCompatibleCallIndex(Graph::CallSlotPtrType call_slot, Graph::StockCallSlot stock_call_slot);

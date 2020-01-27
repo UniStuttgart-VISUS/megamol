@@ -95,11 +95,11 @@ public:
     typedef std::vector<Graph::ModulePtrType> ModuleGraphType;
     typedef std::vector<Graph::CallPtrType> CallGraphType;
 
-    /// template<typename T>
+    // template <typename T>
     class ParamSlot {
     public:
-        ParamSlot(int gui_id);
-        ~ParamSlot();
+        ParamSlot(int uid) : uid(uid) {}
+        ~ParamSlot() {}
 
         const int uid;
 
@@ -109,14 +109,14 @@ public:
 
         std::string full_name;
         std::string value_string;
-        /// T value;
+        // T value;
 
     private:
     };
 
     class CallSlot {
     public:
-        CallSlot(int gui_id);
+        CallSlot(int uid);
         ~CallSlot();
 
         const int uid;
@@ -150,7 +150,7 @@ public:
 
     class Call {
     public:
-        Call(int gui_id);
+        Call(int uid);
         ~Call();
 
         const int uid;
@@ -171,7 +171,7 @@ public:
 
     class Module {
     public:
-        Module(int gui_id);
+        Module(int uid);
         ~Module();
 
         const int uid;
@@ -235,6 +235,7 @@ public:
         ImVec2 canvas_position;
         ImVec2 canvas_size;
         ImVec2 canvas_scrolling;
+        float canvas_zooming;
         bool show_grid;
         bool show_call_names;
         bool show_modules_small;

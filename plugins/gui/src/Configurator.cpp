@@ -119,8 +119,8 @@ bool megamol::gui::Configurator::Draw(
         // (Assuming only one closed tab per frame)
         int delete_graph_uid = -1;
 
-        ImGuiTabBarFlags tabbar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
-        ImGui::BeginTabBar("Graphs", tabbar_flags);
+        ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
+        ImGui::BeginTabBar("Graphs", tab_bar_flags);
         for (auto& graph : this->graph_manager.GetGraphs()) {
 
             // Tab showing one graph
@@ -129,7 +129,7 @@ bool megamol::gui::Configurator::Draw(
                 tab_flags |= ImGuiTabItemFlags_UnsavedDocument;
             }
             bool open = true;
-            std::string graph_label = "    " + graph->GetName() + "  ";
+            std::string graph_label = "    " + graph->GetName() + "  ###graph" + std::to_string(graph->GetUID());
             if (ImGui::BeginTabItem(graph_label.c_str(), &open, tab_flags)) {
                 // Context menu
                 if (ImGui::BeginPopupContextItem()) {
@@ -208,11 +208,13 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
         if (ImGui::BeginMenu("File")) {
 
             if (ImGui::MenuItem("New Project", nullptr)) {
-                this->add_new_graph();
+                this->graph_manager.AddGraph(this->get_unique_project_name());
             }
 
             if (ImGui::MenuItem("Load Running Project")) {
-                this->graph_manager.LoadCurrentCoreProjectToGraph(core_instance);
+                int graph_count = this->graph_manager.GetGraphs().size();
+                std::string graph_name = "Project_" + std::to_string(graph_count + 1);
+                this->graph_manager.LoadCurrentCoreProject(this->get_unique_project_name(), core_instance);
                 // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
             }
 
@@ -356,25 +358,29 @@ bool megamol::gui::Configurator::draw_canvas_menu(GraphManager::GraphPtrType gra
     ImGui::BeginChild(
         "canvas_options", ImVec2(0.0f, child_height), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
 
-    if (ImGui::Button("Reset")) {
+    if (ImGui::Button("Reset###reset_scrolling")) {
         graph->gui.canvas_scrolling = ImVec2(0.0f, 0.0f);
     }
     ImGui::SameLine();
-    ImGui::Text(
-        "Scrolling: %.2f,%.2f (Middle Mouse Button)", graph->gui.canvas_scrolling.x, graph->gui.canvas_scrolling.y);
+    ImGui::Text("Scrolling: %.2f,%.2f", graph->gui.canvas_scrolling.x, graph->gui.canvas_scrolling.y);
+    this->utils.HelpMarkerToolTip("Middle Mouse Button");
+
+    ImGui::SameLine();
+    if (ImGui::Button("Reset###reset_zooming")) {
+        graph->gui.canvas_zooming = 1.0f;
+    }
+    ImGui::SameLine();
+    ImGui::Text("Zooming: %.2f", graph->gui.canvas_zooming);
+    this->utils.HelpMarkerToolTip("Mouse Wheel");
 
     ImGui::SameLine();
     // ImGui::Separator();
-    ImGui::Checkbox("Show Grid", &graph->gui.show_grid);
-
-    ImGui::SameLine();
-    // ImGui::Separator();
-    ImGui::Checkbox("Call Names", &graph->gui.show_call_names);
+    ImGui::Checkbox("Show Call Names", &graph->gui.show_call_names);
 
     ImGui::SameLine();
     // ImGui::Separator();
     bool last_state = graph->gui.show_modules_small;
-    ImGui::Checkbox("Small Modules", &graph->gui.show_modules_small);
+    ImGui::Checkbox("Show Small Modules", &graph->gui.show_modules_small);
     if (last_state != graph->gui.show_modules_small) {
         // Update module gui size
         for (auto& mod : graph->GetGraphModules()) {
@@ -458,6 +464,15 @@ bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType gr
         if (ImGui::IsMouseDragging(2, 0.0f)) {
             graph->gui.canvas_scrolling = graph->gui.canvas_scrolling + ImGui::GetIO().MouseDelta;
         }
+        // Zooming (Mouse Wheel)
+        const float factor = (10.0f / graph->gui.canvas_zooming);
+        float last_zooming = graph->gui.canvas_zooming;
+        graph->gui.canvas_zooming = graph->gui.canvas_zooming + io.MouseWheel / factor;
+        graph->gui.canvas_zooming =
+            (graph->gui.canvas_zooming < (1.0f / factor)) ? (1.0f / factor) : (graph->gui.canvas_zooming);
+        if (last_zooming != graph->gui.canvas_zooming) {
+            /// TODO process changed zooming ...
+        }
     }
 
     draw_list->ChannelsMerge();
@@ -481,7 +496,7 @@ bool megamol::gui::Configurator::draw_canvas_grid(GraphManager::GraphPtrType gra
         draw_list->ChannelsSetCurrent(0); // Background
 
         const ImU32 COLOR_GRID = IM_COL32(192, 192, 192, 40);
-        const float GRID_SIZE = 64.0f;
+        const float GRID_SIZE = 64.0f * graph->gui.canvas_zooming;
 
         for (float x = std::fmodf(graph->gui.canvas_scrolling.x, GRID_SIZE); x < graph->gui.canvas_size.x;
              x += GRID_SIZE) {
@@ -1054,14 +1069,6 @@ bool megamol::gui::Configurator::popup_save_project(bool open, megamol::core::Co
 #endif // GUI_USE_FILEUTILS
 
     return true;
-}
-
-
-bool megamol::gui::Configurator::add_new_graph(void) {
-
-    int graph_count = this->graph_manager.GetGraphs().size();
-    std::string graph_name = "Project_" + std::to_string(graph_count + 1);
-    return this->graph_manager.AddGraph(graph_name);
 }
 
 

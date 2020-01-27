@@ -28,6 +28,7 @@ bool megamol::gui::GraphManager::AddGraph(std::string name) {
     graph.gui.canvas_position = ImVec2(0.0f, 0.0f);
     graph.gui.canvas_size = ImVec2(0.0f, 0.0f);
     graph.gui.canvas_scrolling = ImVec2(0.0f, 0.0f);
+    graph.gui.canvas_zooming = 1.0f;
     graph.gui.show_grid = true;
     graph.gui.show_call_names = true;
     graph.gui.show_modules_small = false;
@@ -194,7 +195,7 @@ bool megamol::gui::GraphManager::UpdateModulesCallsStock(const megamol::core::Co
 }
 
 
-bool megamol::gui::GraphManager::LoadCurrentCoreProjectToGraph(megamol::core::CoreInstance* core_instance) {
+bool megamol::gui::GraphManager::LoadCurrentCoreProject(std::string name, megamol::core::CoreInstance* core_instance) {
 
     try {
         // Temporary data structure holding call connection data
@@ -208,7 +209,7 @@ bool megamol::gui::GraphManager::LoadCurrentCoreProjectToGraph(megamol::core::Co
         std::vector<CallData> call_data;
 
         // Create new graph
-        this->AddGraph("temp");
+        this->AddGraph(name);
         auto graph = this->graphs.back();
 
         // Search for view instance
@@ -261,6 +262,8 @@ bool megamol::gui::GraphManager::LoadCurrentCoreProjectToGraph(megamol::core::Co
                         for (auto& param : graph_module->param_slots) {
                             if (param.class_name == param_class_name) {
                                 param.full_name = param_full_name;
+
+
                                 param.value_string = value_string;
                             }
                         }
@@ -534,6 +537,7 @@ bool megamol::gui::GraphManager::get_module_stock_data(
 
         // Param Slots
         for (std::shared_ptr<core::param::ParamSlot> param_slot : paramSlots) {
+
             Graph::StockParamSlot psd;
             psd.class_name = std::string(param_slot->Name().PeekBuffer());
             psd.description = std::string(param_slot->Description().PeekBuffer());
@@ -567,6 +571,9 @@ bool megamol::gui::GraphManager::get_module_stock_data(
             } else if (auto* p_ptr = param_slot->Param<core::param::Vector4fParam>()) {
                 psd.type = Graph::ParamType::VECTOR4F;
             } else {
+                vislib::sys::Log::DefaultLog.WriteError("Found unknown parameter type. Please extend parameter types "
+                                                        "in the configurator. [%s, %s, line %d]\n",
+                    __FILE__, __FUNCTION__, __LINE__);
                 psd.type = Graph::ParamType::UNKNOWN;
             }
 

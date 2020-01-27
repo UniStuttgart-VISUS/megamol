@@ -16,15 +16,10 @@ using vislib::sys::Log;
 
 // PARAM SLOT #################################################################
 
-megamol::gui::Graph::ParamSlot::ParamSlot(int gui_id) : uid(gui_id) {}
-
-
-megamol::gui::Graph::ParamSlot::~ParamSlot() {}
-
 
 // CALL SLOT ##################################################################
 
-megamol::gui::Graph::CallSlot::CallSlot(int gui_id) : uid(gui_id) {
+megamol::gui::Graph::CallSlot::CallSlot(int uid) : uid(uid) {
     this->parent_module.reset();
     connected_calls.clear();
 }
@@ -204,7 +199,7 @@ const Graph::ModulePtrType megamol::gui::Graph::CallSlot::GetParentModule(void) 
 
 // CALL #######################################################################
 
-megamol::gui::Graph::Call::Call(int gui_id) : uid(gui_id) {
+megamol::gui::Graph::Call::Call(int uid) : uid(uid) {
 
     this->connected_call_slots.clear();
     this->connected_call_slots.emplace(Graph::CallSlotType::CALLER, nullptr);
@@ -300,8 +295,7 @@ const Graph::CallSlotPtrType megamol::gui::Graph::Call::GetCallSlot(Graph::CallS
 
 // MODULE #####################################################################
 
-
-megamol::gui::Graph::Module::Module(int gui_id) : uid(gui_id) {
+megamol::gui::Graph::Module::Module(int uid) : uid(uid) {
 
     this->call_slots.clear();
     this->call_slots.emplace(Graph::CallSlotType::CALLER, std::vector<Graph::CallSlotPtrType>());
@@ -390,6 +384,7 @@ megamol::gui::Graph::Graph(int graph_uid, const std::string& graph_name)
     this->gui.canvas_position = ImVec2(0.0f, 0.0f);
     this->gui.canvas_size = ImVec2(0.0f, 0.0f);
     this->gui.canvas_scrolling = ImVec2(0.0f, 0.0f);
+    this->gui.canvas_zooming = 1.0f;
     this->gui.show_grid = true;
     this->gui.show_call_names = true;
     this->gui.show_modules_small = false;
@@ -398,6 +393,7 @@ megamol::gui::Graph::Graph(int graph_uid, const std::string& graph_name)
     this->gui.hovered_slot_uid = -1;
     this->gui.selected_slot_ptr = nullptr;
     this->gui.process_selected_slot = 0;
+    // Layout not empty loaded graphs initially.
     this->gui.update_layout = true;
 }
 
