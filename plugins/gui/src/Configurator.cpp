@@ -204,36 +204,37 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
 
     bool open_popup_project = false;
     if (ImGui::BeginMenuBar()) {
-        /// , "(no hotkey)")) {
 
         if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("New Project (Graph)", nullptr)) {
+
+            if (ImGui::MenuItem("New Project", nullptr)) {
                 this->add_new_graph();
             }
-#ifdef GUI_USE_FILEUTILS
-            // Load/save parameter values to LUA file
-            if (ImGui::MenuItem("Save Project (Graph)", nullptr)) {
-                open_popup_project = true;
-            }
-            if (ImGui::MenuItem("Load running Project")) {
-                /// TODO
+
+            if (ImGui::MenuItem("Load Running Project")) {
                 this->graph_manager.LoadCurrentCoreProjectToGraph(core_instance);
                 // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
             }
-            ImGui::EndMenu();
-        }
+
+#ifdef GUI_USE_FILEUTILS
+            // Load/save parameter values to LUA file
+            if (ImGui::MenuItem("Save Project", nullptr)) {
+                open_popup_project = true;
+            }
 #endif // GUI_USE_FILEUTILS
 
+            ImGui::EndMenu();
+        }
         if (ImGui::BeginMenu("Info")) {
-            std::string info_text = "Additonal Options:\n"
+            std::string info_text = "Additonal Options:\n\n"
                                     "- Add selected module from stock list\n"
                                     "     [Double Click] with left mouse button"
-                                    " | [Richt Click] on selected module -> Context Menu: Add  \n"
+                                    " | [Richt Click] on selected module -> Context Menu: Add\n\n"
                                     "- Delete selected module/call from graph\n"
                                     "     Select item an press [Delete]"
-                                    " | [Richt Click] on selected item -> Context Menu: Delete  \n"
+                                    " | [Richt Click] on selected item -> Context Menu: Delete\n\n"
                                     "- Rename graph or module\n"
-                                    "     [Richt Click] on graph tab or module -> Context Menu: Rename  \n";
+                                    "     [Richt Click] on graph tab or module -> Context Menu: Rename\n\n";
             ImGui::Text(info_text.c_str());
             ImGui::EndMenu();
         }

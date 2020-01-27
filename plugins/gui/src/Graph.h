@@ -95,6 +95,7 @@ public:
     typedef std::vector<Graph::ModulePtrType> ModuleGraphType;
     typedef std::vector<Graph::CallPtrType> CallGraphType;
 
+    /// template<typename T>
     class ParamSlot {
     public:
         ParamSlot(int gui_id);
@@ -108,6 +109,7 @@ public:
 
         std::string full_name;
         std::string value_string;
+        /// T value;
 
     private:
     };
