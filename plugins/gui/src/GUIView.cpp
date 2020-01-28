@@ -1682,11 +1682,22 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 it->second = p->Value();
             }
         } else if (auto* p = slot.template Param<core::param::TernaryParam>()) {
-
-            // ImGui::RadioButton
-
-            /// TODO Widget Representation ?
-
+            auto value = p->Value();
+            if (ImGui::RadioButton("True", value.IsTrue())) {
+                p->SetValue(vislib::math::Ternary::TRI_TRUE);
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("False", value.IsFalse())) {
+                p->SetValue(vislib::math::Ternary::TRI_FALSE);
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Unknown", value.IsUnknown())) {
+                p->SetValue(vislib::math::Ternary::TRI_UNKNOWN);
+            }
+            ImGui::SameLine();
+            ImGui::TextDisabled("|");
+            ImGui::SameLine();
+            ImGui::Text(param_name.c_str());
         } else if (auto* p = slot.Param<core::param::StringParam>()) {
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             auto it = this->widgtmap_text.find(param_id);

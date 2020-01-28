@@ -111,6 +111,7 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
     , aoStrengthSlot("ambient occlusion::strength", "Ambient Occlusion: Strength")
     , aoConeLengthSlot("ambient occlusion::coneLength", "Ambient Occlusion: Cone length")
     , useHPTexturesSlot("ambient occlusion::highPrecisionTexture", "Ambient Occlusion: Use high precision textures")
+    , temp("temp", "temp")
     , outlineSizeSlot("outline::width", "Width of the outline") {
 
     this->getDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
@@ -144,6 +145,9 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
 
     this->forceTimeSlot << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->forceTimeSlot);
+
+    this->temp << new param::TernaryParam(vislib::math::Ternary::TRI_UNKNOWN);
+    this->MakeSlotAvailable(&this->temp);
 
     this->useLocalBBoxParam << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->useLocalBBoxParam);
