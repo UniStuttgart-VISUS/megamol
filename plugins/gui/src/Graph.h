@@ -236,9 +236,9 @@ public:
         ImVec2 canvas_size;
         ImVec2 canvas_scrolling;
         float canvas_zooming;
+        ImVec2 canvas_offset;
         bool show_grid;
         bool show_call_names;
-        bool show_modules_small;
         int selected_module_uid;
         int selected_call_uid;
         int hovered_slot_uid;

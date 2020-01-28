@@ -118,7 +118,8 @@ bool GUIView::create() {
     IMGUI_CHECKVERSION();
     this->context = ImGui::CreateContext(current_fonts);
     if (this->context == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("[GUIView] Could not create ImGui context");
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Could not create ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     ImGui::SetCurrentContext(this->context);
@@ -317,18 +318,18 @@ float GUIView::DefaultTime(double instTime) const {
 
 
 unsigned int GUIView::GetCameraSyncNumber(void) const {
-    Log::DefaultLog.WriteWarn("GUIView::GetCameraSyncNumber unsupported");
+    Log::DefaultLog.WriteWarn("Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return 0u;
 }
 
 
 void GUIView::SerialiseCamera(vislib::Serialiser& serialiser) const {
-    Log::DefaultLog.WriteWarn("GUIView::SerialiseCamera unsupported");
+    Log::DefaultLog.WriteWarn("Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 }
 
 
 void GUIView::DeserialiseCamera(vislib::Serialiser& serialiser) {
-    Log::DefaultLog.WriteWarn("GUIView::DeserialiseCamera unsupported");
+    Log::DefaultLog.WriteWarn("Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 }
 
 
@@ -734,7 +735,9 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
 
     if ((instanceTime - this->state.last_instance_time) < 0.0) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[GUIView] Current instance time results in negative time delta.");
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
     }
     io.DeltaTime = ((instanceTime - this->state.last_instance_time) > 0.0)
                        ? (static_cast<float>(instanceTime - this->state.last_instance_time))
@@ -792,7 +795,8 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
                 }
                 if (this->state.font_index < 0) {
                     vislib::sys::Log::DefaultLog.WriteWarn(
-                        "[GUIView] Could not find font '%s' for loaded state.", wc.font_name.c_str());
+                        "Could not find font '%s' for loaded state. [%s, %s, line %d]\n", wc.font_name.c_str(),
+                        __FILE__, __FUNCTION__, __LINE__);
                 }
             }
             wc.buf_font_reset = false;
@@ -824,7 +828,8 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
                 cb(wn, wc);
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
-                    "[GUIView] Missing valid callback for WindowDrawCallback: '%d'", (int)wc.win_callback);
+                    "Missing valid callback for WindowDrawCallback: '%d'.[%s, %s, line %d]\n", (int)wc.win_callback,
+                    __FILE__, __FUNCTION__, __LINE__);
             }
 
             // Saving current window position and size for all window configurations for possible state saving.
@@ -981,8 +986,10 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
                                 this->GetCoreInstance()->EnumModulesNoLock(viewname, add_func);
                             }
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteWarn("[GUIView] Could not find abstract view "
-                                                                   "module this gui is connected to.");
+                            vislib::sys::Log::DefaultLog.WriteWarn(
+                                "Could not find abstract view "
+                                "module this gui is connected to. [%s, %s, line %d]\n",
+                                __FILE__, __FUNCTION__, __LINE__);
                         }
                     }
                 }
@@ -1175,124 +1182,101 @@ void GUIView::drawFpsWindowCallback(const std::string& wn, WindowManager::Window
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
+    // Leave some space in histogram for text of current value
+    const float plot_scale_factor = 1.5f;
     wc.buf_current_delay += io.DeltaTime;
-    if (wc.fpsms_refresh_rate <= 0.0f) {
-        return;
-    }
-    if (wc.buf_max_history_count == 0) {
-        wc.buf_fps_values.clear();
-        wc.buf_ms_values.clear();
-        return;
-    }
+    int buffer_size = static_cast<int>(wc.buf_values.size());
+    if (wc.ms_refresh_rate > 0.0f) {
+        if (wc.buf_current_delay >= (1.0f / wc.ms_refresh_rate)) {
+            if (buffer_size != wc.ms_max_history_count) {
+                if (buffer_size > wc.ms_max_history_count) {
+                    wc.buf_values.erase(
+                        wc.buf_values.begin(), wc.buf_values.begin() + (buffer_size - wc.ms_max_history_count));
 
-    if (wc.buf_current_delay > (1.0f / wc.fpsms_refresh_rate)) {
-        // Leave some space in histogram for text of current value
-        const float scale_fac = 1.5f;
-
-        if (wc.buf_fps_values.size() != wc.buf_ms_values.size()) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "[GUIView] Arrays for FPS and frame times do not have equal length.");
-            return;
-        }
-
-        int size = (int)wc.buf_fps_values.size();
-        if (size != wc.fpsms_max_history_count) {
-            if (size > wc.fpsms_max_history_count) {
-                wc.buf_fps_values.erase(
-                    wc.buf_fps_values.begin(), wc.buf_fps_values.begin() + (size - wc.fpsms_max_history_count));
-                wc.buf_ms_values.erase(
-                    wc.buf_ms_values.begin(), wc.buf_ms_values.begin() + (size - wc.fpsms_max_history_count));
-
-            } else if (size < wc.fpsms_max_history_count) {
-                wc.buf_fps_values.insert(wc.buf_fps_values.begin(), (wc.fpsms_max_history_count - size), 0.0f);
-                wc.buf_ms_values.insert(wc.buf_ms_values.begin(), (wc.fpsms_max_history_count - size), 0.0f);
+                } else if (buffer_size < wc.ms_max_history_count) {
+                    wc.buf_values.insert(wc.buf_values.begin(), (wc.ms_max_history_count - buffer_size), 0.0f);
+                }
             }
-        }
-        if (size > 0) {
-            wc.buf_fps_values.erase(wc.buf_fps_values.begin());
-            wc.buf_ms_values.erase(wc.buf_ms_values.begin());
+            if (buffer_size > 0) {
+                wc.buf_values.erase(wc.buf_values.begin());
+                wc.buf_values.emplace_back(io.DeltaTime * 1000.0f); // scale to milliseconds
 
-            wc.buf_fps_values.emplace_back(io.Framerate);
-            wc.buf_ms_values.emplace_back(io.DeltaTime * 1000.0f); // scale to milliseconds
+                float max_fps = 0.0f;
+                float max_ms = 0.0f;
+                for (auto& v : wc.buf_values) {
+                    if (v > 0.0f) {
+                        max_fps = ((1.0f / v * 1000.f) > max_fps) ? (1.0f / v * 1000.f) : (max_fps);
+                    }
+                    max_ms = (v > max_ms) ? (v) : (max_ms);
+                }
 
-            float value_max = 0.0f;
-            for (auto& v : wc.buf_fps_values) {
-                value_max = (v > value_max) ? (v) : (value_max);
+                wc.buf_plot_scaling = max_ms * plot_scale_factor;
+                if (wc.ms_mode == WindowManager::TimingModes::FPS) {
+                    wc.buf_plot_scaling = max_fps * plot_scale_factor;
+                }
             }
-            wc.buf_fps_scale = value_max * scale_fac;
-
-            value_max = 0.0f;
-            for (auto& v : wc.buf_ms_values) {
-                value_max = (v > value_max) ? (v) : (value_max);
-            }
-            wc.buf_ms_scale = value_max * scale_fac;
+            wc.buf_current_delay = 0.0f;
         }
-
-        wc.buf_current_delay = 0.0f;
     }
 
     // Draw window content
-    if (ImGui::RadioButton("fps", (wc.fpsms_mode == WindowManager::TimingModes::FPS))) {
-        wc.fpsms_mode = WindowManager::TimingModes::FPS;
+    if (ImGui::RadioButton("fps", (wc.ms_mode == WindowManager::TimingModes::FPS))) {
+        wc.ms_mode = WindowManager::TimingModes::FPS;
     }
     ImGui::SameLine();
-    if (ImGui::RadioButton("ms", (wc.fpsms_mode == WindowManager::TimingModes::MS))) {
-        wc.fpsms_mode = WindowManager::TimingModes::MS;
+    if (ImGui::RadioButton("ms", (wc.ms_mode == WindowManager::TimingModes::MS))) {
+        wc.ms_mode = WindowManager::TimingModes::MS;
     }
 
     ImGui::SameLine(0.0f, 50.0f);
-    ImGui::Checkbox("Options", &wc.fpsms_show_options);
+    ImGui::Checkbox("Options", &wc.ms_show_options);
 
-    // Default for wc.fpsms_mode == WindowManager::TimingModes::FPS
-    std::vector<float>* arr = &wc.buf_fps_values;
-    float val_scale = wc.buf_fps_scale;
-    if (wc.fpsms_mode == WindowManager::TimingModes::MS) {
-        arr = &wc.buf_ms_values;
-        val_scale = wc.buf_ms_scale;
+    std::vector<float> value_array = wc.buf_values;
+    if (wc.ms_mode == WindowManager::TimingModes::FPS) {
+        for (auto& v : value_array) {
+            v = (v > 0.0f) ? (1.0f / v * 1000.f) : (0.0f);
+        }
     }
-    float* data = arr->data();
-    int count = (int)arr->size();
+    float* value_ptr = (&value_array)->data();
 
-    std::string val;
-    if (!arr->empty()) {
+    // Current value as string
+    std::string overlay;
+    if (buffer_size > 0) {
         std::stringstream stream;
-        stream << std::fixed << std::setprecision(3) << arr->back();
-        val = stream.str();
+        stream << std::fixed << std::setprecision(3) << value_array.back();
+        overlay = stream.str();
     }
-    ImGui::PlotLines(
-        "###fpsmsplot", data, count, 0, val.c_str(), 0.0f, val_scale, ImVec2(0.0f, 50.0f)); /// use hidden label
+
+    ImGui::PlotLines("###msplot", value_ptr, buffer_size, 0, overlay.c_str(), 0.0f, wc.buf_plot_scaling,
+        ImVec2(0.0f, 50.0f)); /// use hidden label
     float item_width = ImGui::GetItemRectSize().x;
 
-    if (wc.fpsms_show_options) {
-
-        // Refresh rate
+    if (wc.ms_show_options) {
         ImGui::InputFloat("Refresh Rate", &wc.buf_refresh_rate, 1.0f, 10.0f, "%.3f", ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            wc.fpsms_refresh_rate = std::max(0.0f, wc.buf_refresh_rate);
-            wc.buf_fps_values.clear();
-            wc.buf_ms_values.clear();
-            wc.buf_refresh_rate = wc.fpsms_refresh_rate;
+            wc.ms_refresh_rate = std::max(0.0f, wc.buf_refresh_rate);
+            wc.buf_values.clear();
+            wc.buf_refresh_rate = wc.ms_refresh_rate;
         }
         std::string help = "Changes clear all values";
         this->utils.HelpMarkerToolTip(help);
 
-        // History
         ImGui::InputInt("History Size", &wc.buf_max_history_count, 1, 10, ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            wc.fpsms_max_history_count = std::max(1, wc.buf_max_history_count);
-            wc.buf_max_history_count = wc.fpsms_max_history_count;
+            wc.ms_max_history_count = std::max(1, wc.buf_max_history_count);
+            wc.buf_max_history_count = wc.ms_max_history_count;
         }
 
         if (ImGui::Button("Current Value")) {
-            ImGui::SetClipboardText(val.c_str());
+            ImGui::SetClipboardText(overlay.c_str());
         }
         ImGui::SameLine();
 
         if (ImGui::Button("All Values")) {
             std::stringstream stream;
             stream << std::fixed << std::setprecision(3);
-            auto end = (*arr).rend();
-            for (std::vector<float>::reverse_iterator i = (*arr).rbegin(); i != end; ++i) {
+            auto reverse_end = value_array.rend();
+            for (std::vector<float>::reverse_iterator i = value_array.rbegin(); i != reverse_end; ++i) {
                 stream << (*i) << "\n";
             }
             ImGui::SetClipboardText(stream.str().c_str());
@@ -1697,6 +1681,12 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 it->second = p->Value();
             }
+        } else if (auto* p = slot.template Param<core::param::TernaryParam>()) {
+
+            // ImGui::RadioButton
+
+            /// TODO Widget Representation ?
+
         } else if (auto* p = slot.Param<core::param::StringParam>()) {
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             auto it = this->widgtmap_text.find(param_id);
@@ -1744,7 +1734,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 it->second = utf8Str;
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteWarn("[GUIView] Unknown Parameter Type.");
+            vislib::sys::Log::DefaultLog.WriteWarn(
+                "Unknown Parameter Type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return;
         }
 
@@ -1908,7 +1899,7 @@ void GUIView::checkMultipleHotkeyAssignement(void) {
                         hotkeylist.emplace_back(hotkey);
                     } else {
                         vislib::sys::Log::DefaultLog.WriteWarn(
-                            "[GUIView] The hotkey [%s] of the parameter \"%s::%s\" has already been assigned. "
+                            "The hotkey [%s] of the parameter \"%s::%s\" has already been assigned. "
                             ">>> If this hotkey is pressed, there will be no effect on this parameter!",
                             hotkey.ToString().c_str(), mod.FullName().PeekBuffer(), slot.Name().PeekBuffer());
                     }
@@ -1922,6 +1913,6 @@ void GUIView::checkMultipleHotkeyAssignement(void) {
 
 
 void GUIView::shutdown(void) {
-    vislib::sys::Log::DefaultLog.WriteInfo("[GUIView] Triggering MegaMol instance shutdown...");
+    vislib::sys::Log::DefaultLog.WriteInfo("GUIView: Triggering MegaMol instance shutdown.");
     this->GetCoreInstance()->Shutdown();
 }

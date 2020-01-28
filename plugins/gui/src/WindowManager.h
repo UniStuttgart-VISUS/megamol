@@ -57,17 +57,15 @@ public:
         std::vector<std::string> param_modules_list; // modules to show in a parameter window (show all if empty)
         FilterModes param_module_filter;             // module filter
         // ---------- FPS/MS specific configuration ----------
-        bool fpsms_show_options;           // show/hide fps/ms options.
-        int fpsms_max_history_count;       // maximum count of values in value array
-        float fpsms_refresh_rate;          // maximum delay when fps/ms value should be renewed.
-        TimingModes fpsms_mode;            // mode for displaying either FPS or MS
-        int buf_max_history_count;         // temporary buffer for maximum count input widget (not saved in state)
-        float buf_refresh_rate;            // temporary buffer for maximum delay input widget (not saved in state)
-        float buf_current_delay;           // current delay between frames (not saved in state)
-        std::vector<float> buf_fps_values; // current fps values (not saved in state)
-        std::vector<float> buf_ms_values;  // current ms values (not saved in state)
-        float buf_fps_scale;               // current scaling factor for fps values (not saved in state)
-        float buf_ms_scale;                // current scaling factor for ms values (not saved in state)
+        bool ms_show_options;          // show/hide fps/ms options.
+        int ms_max_history_count;      // maximum count of values in value array
+        float ms_refresh_rate;         // maximum delay when fps/ms value should be renewed.
+        TimingModes ms_mode;           // mode for displaying either FPS or MS
+        int buf_max_history_count;     // temporary buffer for maximum count input widget (not saved in state)
+        float buf_refresh_rate;        // temporary buffer for maximum delay input widget (not saved in state)
+        float buf_current_delay;       // current delay between frames (not saved in state)
+        std::vector<float> buf_values; // current ms values (not saved in state)
+        float buf_plot_scaling;        // current ms values (not saved in state)
         // ---------- Font specific configuration ---------
         std::string font_name;     // font name (only already loaded font names will be restored)
         bool buf_font_reset;       // flag for reset of font on state loading  (not saved in state)
@@ -90,17 +88,15 @@ public:
             , param_show_hotkeys(false)
             , param_modules_list()
             , param_module_filter(FilterModes::ALL)
-            , fpsms_show_options(false)
-            , fpsms_max_history_count(20)
-            , fpsms_refresh_rate(2.0f)
-            , fpsms_mode(TimingModes::FPS)
+            , ms_show_options(false)
+            , ms_max_history_count(20)
+            , ms_refresh_rate(2.0f)
+            , ms_mode(TimingModes::FPS)
             , buf_max_history_count(20)
             , buf_current_delay(0.0f)
             , buf_refresh_rate(2.0f)
-            , buf_fps_values()
-            , buf_ms_values()
-            , buf_fps_scale(1.0f)
-            , buf_ms_scale(1.0f)
+            , buf_values()
+            , buf_plot_scaling(1.0f)
             , font_name()
             , buf_font_reset(false)
             , buf_font_file()

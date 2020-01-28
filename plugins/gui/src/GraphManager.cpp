@@ -29,9 +29,9 @@ bool megamol::gui::GraphManager::AddGraph(std::string name) {
     graph.gui.canvas_size = ImVec2(0.0f, 0.0f);
     graph.gui.canvas_scrolling = ImVec2(0.0f, 0.0f);
     graph.gui.canvas_zooming = 1.0f;
+    graph.gui.canvas_offset = ImVec2(0.0f, 0.0f);
     graph.gui.show_grid = true;
     graph.gui.show_call_names = true;
-    graph.gui.show_modules_small = false;
     graph.gui.selected_module_uid = -1;
     graph.gui.selected_call_uid = -1;
     graph.gui.hovered_slot_uid = -1;

@@ -279,35 +279,35 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
             }
             // FpsMsConfig --------------------------------------------
             // show_options
-            if (config_values.at("fpsms_show_options").is_boolean()) {
-                config_values.at("fpsms_show_options").get_to(tmp_config.fpsms_show_options);
+            if (config_values.at("ms_show_options").is_boolean()) {
+                config_values.at("ms_show_options").get_to(tmp_config.ms_show_options);
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
-                    "[WindowManager] JSON state: Failed to read 'fpsms_show_options' as boolean.");
+                    "[WindowManager] JSON state: Failed to read 'ms_show_options' as boolean.");
                 valid = false;
             }
             // max_value_count
-            if (config_values.at("fpsms_max_history_count").is_number_integer()) {
-                config_values.at("fpsms_max_history_count").get_to(tmp_config.fpsms_max_history_count);
+            if (config_values.at("ms_max_history_count").is_number_integer()) {
+                config_values.at("ms_max_history_count").get_to(tmp_config.ms_max_history_count);
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
-                    "[WindowManager] JSON state: Failed to read 'fpsms_max_history_count' as integer.");
+                    "[WindowManager] JSON state: Failed to read 'ms_max_history_count' as integer.");
                 valid = false;
             }
             // max_delay
-            if (config_values.at("fpsms_refresh_rate").is_number_float()) {
-                config_values.at("fpsms_refresh_rate").get_to(tmp_config.fpsms_refresh_rate);
+            if (config_values.at("ms_refresh_rate").is_number_float()) {
+                config_values.at("ms_refresh_rate").get_to(tmp_config.ms_refresh_rate);
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
-                    "[WindowManager] JSON state: Failed to read 'fpsms_refresh_rate' as float.");
+                    "[WindowManager] JSON state: Failed to read 'ms_refresh_rate' as float.");
                 valid = false;
             }
             // mode
-            if (config_values.at("fpsms_mode").is_number_integer()) {
-                tmp_config.fpsms_mode = static_cast<TimingModes>(config_values.at("fpsms_mode").get<int>());
+            if (config_values.at("ms_mode").is_number_integer()) {
+                tmp_config.ms_mode = static_cast<TimingModes>(config_values.at("ms_mode").get<int>());
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
-                    "[WindowManager] JSON state: Failed to read 'fpsms_mode' as integer.");
+                    "[WindowManager] JSON state: Failed to read 'ms_mode' as integer.");
                 valid = false;
             }
             // FontConfig ---------------------------------------------
@@ -329,8 +329,8 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
                 tmp_config.buf_font_reset = true;
             }
             // Apply current values to corresponding tmp values
-            tmp_config.buf_max_history_count = tmp_config.fpsms_max_history_count;
-            tmp_config.buf_refresh_rate = tmp_config.fpsms_refresh_rate;
+            tmp_config.buf_max_history_count = tmp_config.ms_max_history_count;
+            tmp_config.buf_refresh_rate = tmp_config.ms_refresh_rate;
 
             tmp_windows.emplace(window_name, tmp_config);
         }
@@ -402,10 +402,10 @@ bool WindowManager::StateToJSON(std::string& json_string) {
             json[window_name]["param_modules_list"] = window_config.param_modules_list;
             json[window_name]["param_module_filter"] = static_cast<int>(window_config.param_module_filter);
 
-            json[window_name]["fpsms_show_options"] = window_config.fpsms_show_options;
-            json[window_name]["fpsms_max_history_count"] = window_config.fpsms_max_history_count;
-            json[window_name]["fpsms_refresh_rate"] = window_config.fpsms_refresh_rate;
-            json[window_name]["fpsms_mode"] = static_cast<int>(window_config.fpsms_mode);
+            json[window_name]["ms_show_options"] = window_config.ms_show_options;
+            json[window_name]["ms_max_history_count"] = window_config.ms_max_history_count;
+            json[window_name]["ms_refresh_rate"] = window_config.ms_refresh_rate;
+            json[window_name]["ms_mode"] = static_cast<int>(window_config.ms_mode);
 
             this->utils.Utf8Encode(window_config.font_name);
             json[window_name]["font_name"] = window_config.font_name;

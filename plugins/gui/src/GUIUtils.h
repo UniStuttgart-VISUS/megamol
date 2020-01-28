@@ -21,7 +21,6 @@ namespace gui {
 
 // Utility functions ----------------------------------------------------------
 
-
 /**
  * Utility class for GUIUtils-style widgets.
  */
