@@ -1,7 +1,14 @@
-include(git_clone)
-GIT_DOWNLOAD("https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git" "" "cmake/external")
+# Clone external script
+if(NOT EXISTS "${CMAKE_BINARY_DIR}/script-externals")
+  message(STATUS "Downloading external scripts")
+  execute_process(COMMAND
+    ${GIT_EXECUTABLE} clone https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
 
-include(external/cmake/External)
+# Include external script
+include("${CMAKE_BINARY_DIR}/script-externals/cmake/External.cmake")
 
 #
 # Centralized function to require externals to add them once by invoking
