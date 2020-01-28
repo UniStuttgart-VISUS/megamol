@@ -61,11 +61,10 @@ public:
         int ms_max_history_count;      // maximum count of values in value array
         float ms_refresh_rate;         // maximum delay when fps/ms value should be renewed.
         TimingModes ms_mode;           // mode for displaying either FPS or MS
-        int buf_max_history_count;     // temporary buffer for maximum count input widget (not saved in state)
-        float buf_refresh_rate;        // temporary buffer for maximum delay input widget (not saved in state)
         float buf_current_delay;       // current delay between frames (not saved in state)
         std::vector<float> buf_values; // current ms values (not saved in state)
-        float buf_plot_scaling;        // current ms values (not saved in state)
+        float buf_plot_ms_scaling;     // current ms plot scaling factor (not saved in state)
+        float buf_plot_fps_scaling;    // current fps plot scaling factor (not saved in state)
         // ---------- Font specific configuration ---------
         std::string font_name;     // font name (only already loaded font names will be restored)
         bool buf_font_reset;       // flag for reset of font on state loading  (not saved in state)
@@ -92,11 +91,10 @@ public:
             , ms_max_history_count(20)
             , ms_refresh_rate(2.0f)
             , ms_mode(TimingModes::FPS)
-            , buf_max_history_count(20)
             , buf_current_delay(0.0f)
-            , buf_refresh_rate(2.0f)
             , buf_values()
-            , buf_plot_scaling(1.0f)
+            , buf_plot_ms_scaling(1.0f)
+            , buf_plot_fps_scaling(1.0f)
             , font_name()
             , buf_font_reset(false)
             , buf_font_file()

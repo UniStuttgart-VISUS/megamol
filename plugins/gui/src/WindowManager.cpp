@@ -328,10 +328,6 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
             if (!tmp_config.font_name.empty()) {
                 tmp_config.buf_font_reset = true;
             }
-            // Apply current values to corresponding tmp values
-            tmp_config.buf_max_history_count = tmp_config.ms_max_history_count;
-            tmp_config.buf_refresh_rate = tmp_config.ms_refresh_rate;
-
             tmp_windows.emplace(window_name, tmp_config);
         }
 

@@ -1183,7 +1183,6 @@ void GUIView::drawFpsWindowCallback(const std::string& wn, WindowManager::Window
     ImGuiStyle& style = ImGui::GetStyle();
 
     // Leave some space in histogram for text of current value
-    const float plot_scale_factor = 1.5f;
     wc.buf_current_delay += io.DeltaTime;
     int buffer_size = static_cast<int>(wc.buf_values.size());
     if (wc.ms_refresh_rate > 0.0f) {
@@ -1210,10 +1209,8 @@ void GUIView::drawFpsWindowCallback(const std::string& wn, WindowManager::Window
                     max_ms = (v > max_ms) ? (v) : (max_ms);
                 }
 
-                wc.buf_plot_scaling = max_ms * plot_scale_factor;
-                if (wc.ms_mode == WindowManager::TimingModes::FPS) {
-                    wc.buf_plot_scaling = max_fps * plot_scale_factor;
-                }
+                wc.buf_plot_fps_scaling = max_fps;
+                wc.buf_plot_ms_scaling = max_ms;
             }
             wc.buf_current_delay = 0.0f;
         }
@@ -1239,7 +1236,6 @@ void GUIView::drawFpsWindowCallback(const std::string& wn, WindowManager::Window
     }
     float* value_ptr = (&value_array)->data();
 
-    // Current value as string
     std::string overlay;
     if (buffer_size > 0) {
         std::stringstream stream;
@@ -1247,24 +1243,25 @@ void GUIView::drawFpsWindowCallback(const std::string& wn, WindowManager::Window
         overlay = stream.str();
     }
 
-    ImGui::PlotLines("###msplot", value_ptr, buffer_size, 0, overlay.c_str(), 0.0f, wc.buf_plot_scaling,
+    float plot_scale_factor = 1.5f;
+    if (wc.ms_mode == WindowManager::TimingModes::FPS) {
+        plot_scale_factor *= wc.buf_plot_fps_scaling;
+    } else if (wc.ms_mode == WindowManager::TimingModes::MS) {
+        plot_scale_factor *= wc.buf_plot_ms_scaling;
+    }
+
+    ImGui::PlotLines("###msplot", value_ptr, buffer_size, 0, overlay.c_str(), 0.0f, plot_scale_factor,
         ImVec2(0.0f, 50.0f)); /// use hidden label
     float item_width = ImGui::GetItemRectSize().x;
 
     if (wc.ms_show_options) {
-        ImGui::InputFloat("Refresh Rate", &wc.buf_refresh_rate, 1.0f, 10.0f, "%.3f", ImGuiInputTextFlags_None);
-        if (ImGui::IsItemDeactivatedAfterEdit()) {
-            wc.ms_refresh_rate = std::max(0.0f, wc.buf_refresh_rate);
-            wc.buf_values.clear();
-            wc.buf_refresh_rate = wc.ms_refresh_rate;
+        if (ImGui::InputFloat(
+                "Refresh Rate", &wc.ms_refresh_rate, 1.0f, 10.0f, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue)) {
+            wc.ms_refresh_rate = std::max(1.0f, wc.ms_refresh_rate);
         }
-        std::string help = "Changes clear all values";
-        this->utils.HelpMarkerToolTip(help);
 
-        ImGui::InputInt("History Size", &wc.buf_max_history_count, 1, 10, ImGuiInputTextFlags_None);
-        if (ImGui::IsItemDeactivatedAfterEdit()) {
-            wc.ms_max_history_count = std::max(1, wc.buf_max_history_count);
-            wc.buf_max_history_count = wc.ms_max_history_count;
+        if (ImGui::InputInt("History Size", &wc.ms_max_history_count, 1, 10, ImGuiInputTextFlags_EnterReturnsTrue)) {
+            wc.ms_max_history_count = std::max(1, wc.ms_max_history_count);
         }
 
         if (ImGui::Button("Current Value")) {
@@ -1282,9 +1279,8 @@ void GUIView::drawFpsWindowCallback(const std::string& wn, WindowManager::Window
             ImGui::SetClipboardText(stream.str().c_str());
         }
         ImGui::SameLine();
-        ImGui::SetCursorPosX(item_width + style.ItemSpacing.x + style.ItemInnerSpacing.x);
         ImGui::Text("Copy to Clipborad");
-        help = "Values are copied in chronological order (newest first)";
+        std::string help = "Values are copied in chronological order (newest first)";
         this->utils.HelpMarkerToolTip(help);
     }
 }
