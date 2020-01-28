@@ -12,6 +12,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/FlagCall_GL.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 
 namespace megamol {
@@ -51,9 +52,16 @@ protected:
     bool handleCall(core::Call &call);
 
 private:
+    enum FilterMode {
+        FILTERED = 0,
+        SELECTED = 1
+    };
+
     core::CallerSlot tableInSlot;
     core::CallerSlot flagStorageInSlot;
     core::CalleeSlot tableOutSlot;
+
+    core::param::ParamSlot filterModeParam;
 
     // input table properties
     unsigned int tableInFrameCount;
