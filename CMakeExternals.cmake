@@ -1,4 +1,7 @@
-include(External)
+include(git_clone)
+GIT_DOWNLOAD("https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git" "" "cmake/external")
+
+include(external/cmake/External)
 
 #
 # Centralized function to require externals to add them once by invoking
