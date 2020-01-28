@@ -21,7 +21,6 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/param/TernaryParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/IntParam.h"
@@ -382,7 +381,6 @@ namespace rendering {
         megamol::core::param::ParamSlot aoStrengthSlot;
         megamol::core::param::ParamSlot aoConeLengthSlot;
         megamol::core::param::ParamSlot useHPTexturesSlot;
-        megamol::core::param::ParamSlot temp;
 
 		// Affects only Outline rendering: --------------------------
 
