@@ -55,9 +55,13 @@ private:
     core::CallerSlot flagStorageInSlot;
     core::CalleeSlot tableOutSlot;
 
-    unsigned int frameCount;
+    // input table properties
+    unsigned int tableInFrameCount;
+    size_t tableInDataHash;
+    size_t tableInColCount;
+
+    // filtered table
     size_t dataHash;
-    size_t colCount;
     size_t rowCount;
     std::vector<TableDataCall::ColumnInfo> colInfos;
     std::vector<float> data;

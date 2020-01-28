@@ -19,9 +19,10 @@ TableFlagFilter::TableFlagFilter()
     , tableInSlot("getDataIn", "Float table input")
     , flagStorageInSlot("readFlagStorage", "Flag storage read input")
     , tableOutSlot("getDataOut", "Float table output")
-    , frameCount(0)
+    , tableInFrameCount(0)
+    , tableInDataHash(0)
+    , tableInColCount(0)
     , dataHash(0)
-    , colCount(0)
     , rowCount(0) {
 
     this->tableInSlot.SetCompatibleCall<TableDataCallDescription>();
@@ -56,9 +57,9 @@ bool TableFlagFilter::getData(core::Call &call) {
     }
 
     auto *tableOutCall = dynamic_cast<TableDataCall *>(&call);
-    tableOutCall->SetFrameCount(this->frameCount);
+    tableOutCall->SetFrameCount(this->tableInFrameCount);
     tableOutCall->SetDataHash(this->dataHash);
-    tableOutCall->Set(this->colCount, this->rowCount, this->colInfos.data(), this->data.data());
+    tableOutCall->Set(this->tableInColCount, this->rowCount, this->colInfos.data(), this->data.data());
 
     return true;
 }
@@ -69,7 +70,7 @@ bool TableFlagFilter::getHash(core::Call &call) {
     }
 
     auto *tableOutCall = dynamic_cast<TableDataCall *>(&call);
-    tableOutCall->SetFrameCount(this->frameCount);
+    tableOutCall->SetFrameCount(this->tableInFrameCount);
     tableOutCall->SetDataHash(this->dataHash);
 
     return true;
@@ -99,20 +100,61 @@ bool TableFlagFilter::handleCall(core::Call &call) {
     tableInCall->SetFrameID(tableOutCall->GetFrameID());
     (*tableInCall)(1);
     (*tableInCall)(0);
+    (*flagsInCall)(core::FlagCallRead_GL::CallGetData);
 
-    if (this->frameCount != tableInCall->GetFrameCount() || this->dataHash != tableInCall->DataHash()) {
+    if (this->tableInFrameCount != tableInCall->GetFrameCount() || this->tableInDataHash != tableInCall->DataHash() || flagsInCall->hasUpdate()) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "TableFlagFilter: Filter table.");
-        this->frameCount = tableInCall->GetFrameCount();
-        this->dataHash = tableInCall->DataHash();
-        this->colCount = tableInCall->GetColumnsCount();
-        this->rowCount = tableInCall->GetRowsCount();
-        this->colInfos.resize(this->colCount);
-        for (size_t i = 0; i < this->colCount; ++i) {
+
+        this->dataHash++;
+
+        this->tableInFrameCount = tableInCall->GetFrameCount();
+        this->tableInDataHash = tableInCall->DataHash();
+        this->tableInColCount = tableInCall->GetColumnsCount();
+        size_t tableInRowCount = tableInCall->GetRowsCount();
+
+        // download flags
+        flagsInCall->getData()->validateFlagCount(tableInRowCount);
+        auto flags = flagsInCall->getData()->flags;
+        uint32_t *flagsData = new uint32_t[flags->getByteSize() / sizeof(uint32_t)];
+        flags->bind();
+        glGetBufferSubData(flags->getTarget(), 0, flags->getByteSize(), flagsData);
+
+        // copy column infos
+        this->colInfos.resize(this->tableInColCount);
+        for (size_t i = 0; i < this->tableInColCount; ++i) {
             this->colInfos[i] = tableInCall->GetColumnsInfos()[i];
+            this->colInfos[i].SetMinimumValue(std::numeric_limits<float>::max());
+            this->colInfos[i].SetMaximumValue(std::numeric_limits<float>::lowest());
         }
-        tableInCall->GetColumnsInfos();
-        this->data.resize(this->colCount * this->rowCount);
-        std::memcpy(this->data.data(), tableInCall->GetData(), this->colCount * this->rowCount * sizeof(float));
+
+        static const core::FlagStorage::FlagItemType filteredTestMask = core::FlagStorage::ENABLED | core::FlagStorage::FILTERED;
+        static const core::FlagStorage::FlagItemType filteredPassMask = core::FlagStorage::ENABLED;
+
+        // Resize data to size of input table. With this we only need to allocate memory once.
+        this->data.resize(this->tableInColCount * tableInRowCount);
+        this->rowCount = 0;
+
+        const float *tableInData = tableInCall->GetData();
+        for (size_t r = 0; r < tableInRowCount; ++r) {
+            if ((flagsData[r] & filteredTestMask) == filteredPassMask) {
+                for (size_t c = 0; c < this->tableInColCount; ++c) {
+                    float val = tableInData[this->tableInColCount * r + c];
+                    this->data[this->tableInColCount * this->rowCount + c] = val;
+                    if (val < this->colInfos[c].MinimumValue()) {
+                        this->colInfos[c].SetMinimumValue(val);
+                    }
+                    if (val > this->colInfos[c].MaximumValue()) {
+                        this->colInfos[c].SetMaximumValue(val);
+                    }
+                }
+                this->rowCount++;
+            }
+        }
+
+        // delete memory of filtered rows
+        this->data.resize(this->tableInColCount * this->rowCount);
+
+        delete[] flagsData;
     }
 
     return true;
