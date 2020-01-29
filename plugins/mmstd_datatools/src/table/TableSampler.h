@@ -14,6 +14,10 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 
+// Fix annoying wingdi.h defines
+#undef ABSOLUTE
+#undef RELATIVE
+
 namespace megamol {
 namespace stdplugin {
 namespace datatools {
