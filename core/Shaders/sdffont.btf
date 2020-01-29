@@ -90,7 +90,6 @@ void main(void) {
     float alpha = distance;
         
     // Supersample, 4 extra points --------------------------------------------
-    /*
     float dscale = 0.354; // half of 1/sqrt2; you can play with this
     vec2 duv = dscale * (dFdx(texCoord) + dFdy(texCoord));
     vec4 box = vec4(texCoord-duv, texCoord+duv);
@@ -100,7 +99,6 @@ void main(void) {
             + supersample( box.zy, smootingEdge );
     // weighted average, with 4 extra points having 0.5 weight each, so 1 + 0.5*4 = 3 is the divisor
     alpha = (alpha + 0.5 * asum) / 3.0;
-    */
    // -------------------------------------------------------------------------
    
     alpha  = clamp(alpha, 0.0, 1.0);

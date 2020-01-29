@@ -17,7 +17,11 @@
 #include "imgui_stdlib.h"
 
 #include <map>
+#include <variant>
 #include <vector>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 
 namespace megamol {
@@ -26,8 +30,8 @@ namespace gui {
 class Graph {
 public:
     enum ParamType {
-        BUTTON,
         BOOL,
+        BUTTON,
         COLOR,
         ENUM,
         FILEPATH,
@@ -95,7 +99,6 @@ public:
     typedef std::vector<Graph::ModulePtrType> ModuleGraphType;
     typedef std::vector<Graph::CallPtrType> CallGraphType;
 
-    // template <typename T>
     class ParamSlot {
     public:
         ParamSlot(int uid) : uid(uid) {}
@@ -109,9 +112,21 @@ public:
 
         std::string full_name;
         std::string value_string;
-        // T value;
 
     private:
+        // std::variant<bool,                                  // BOOL
+        //    megamol::core::param::ColorParam::ColorType,    // COLOR
+        //    vislib::Map<int, vislib::TString>,              // ENUM
+        //    vislib::TString,                                // FILEPATH
+        //    megamol::core::param::FlexEnumParam::Storage_t, // FLEXENUM
+        //    float,                                          // FLOAT
+        //    int,                                            // INT
+        //    std::string,                                    // STRING || TRANSFERFUNCTION
+        //    vislib::math::Ternary,                          // TERNARY
+        //    glm::vec2,                                      // VECTOR2F
+        //    glm::vec3,                                      // VECTOR3F
+        //    glm::vec4                                       // VECTOR4F
+        //> value;
     };
 
     class CallSlot {
