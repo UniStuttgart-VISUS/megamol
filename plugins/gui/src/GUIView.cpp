@@ -45,6 +45,11 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
 
+// Used for platform independent clipboard (ImGui so far only provides windows implementation)
+#ifdef GUI_USE_GLFW
+#    include "GLFW/glfw3.h"
+#endif
+
 #include <algorithm>
 #include <iomanip>
 #include <sstream>
@@ -236,7 +241,7 @@ bool GUIView::create() {
         config.GlyphRanges = this->state.font_utf8_ranges.data();
         // Add default font
         io.Fonts->AddFontDefault(&config);
-#ifdef GUI_USE_FILEUTILS
+#ifdef GUI_USE_FILESYSTEM
         // Add other known fonts
         std::string font_file, font_path;
         const vislib::Array<vislib::StringW>& searchPaths =
@@ -256,7 +261,7 @@ bool GUIView::create() {
                 io.Fonts->AddFontFromFileTTF(font_path.c_str(), 13.0f, &config);
             }
         }
-#endif // GUI_USE_FILEUTILS
+#endif // GUI_USE_FILESYSTEM
     }
 
     // ImGui Key Map
@@ -1264,9 +1269,17 @@ void GUIView::drawFpsWindowCallback(const std::string& wn, WindowManager::Window
             wc.ms_max_history_count = std::max(1, wc.ms_max_history_count);
         }
 
-#ifdef _WIN32 // There is currently no linux implementation for clipboard use provided by imgui
         if (ImGui::Button("Current Value")) {
+#ifdef GUI_USE_GLFW
+            auto glfw_win = ::glfwGetCurrentContext();
+            ::glfwSetClipboardString(glfw_win, overlay.c_str());
+#elif _WIN32
             ImGui::SetClipboardText(overlay.c_str());
+#else // LINUX
+            vislib::sys::Log::DefaultLog.WriteWarn(
+                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteInfo("Current Performance Monitor Value:\n%s", overlay.c_str());
+#endif
         }
         ImGui::SameLine();
 
@@ -1277,33 +1290,21 @@ void GUIView::drawFpsWindowCallback(const std::string& wn, WindowManager::Window
             for (std::vector<float>::reverse_iterator i = value_array.rbegin(); i != reverse_end; ++i) {
                 stream << (*i) << "\n";
             }
+#ifdef GUI_USE_GLFW
+            auto glfw_win = ::glfwGetCurrentContext();
+            ::glfwSetClipboardString(glfw_win, stream.str().c_str());
+#elif _WIN32
             ImGui::SetClipboardText(stream.str().c_str());
+#else // LINUX
+            vislib::sys::Log::DefaultLog.WriteWarn(
+                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteInfo("All Performance Monitor Values:\n%s", stream.str().c_str());
+#endif
         }
         ImGui::SameLine();
         ImGui::Text("Copy to Clipborad");
         std::string help = "Values are copied in chronological order (newest first)";
         this->utils.HelpMarkerToolTip(help);
-#else // LINUX
-        if (ImGui::Button("Current Value")) {
-            vislib::sys::Log::DefaultLog.WriteInfo("Current Performance Monitor Value:\n%s", overlay.c_str());
-        }
-        ImGui::SameLine();
-
-        if (ImGui::Button("All Values")) {
-            std::stringstream stream;
-            stream << std::fixed << std::setprecision(3);
-            auto reverse_end = value_array.rend();
-            for (std::vector<float>::reverse_iterator i = value_array.rbegin(); i != reverse_end; ++i) {
-                stream << (*i) << "\n";
-            }
-            ImGui::SetClipboardText(stream.str().c_str());
-            vislib::sys::Log::DefaultLog.WriteInfo("All Performance Monitor Values:\n%s", stream.str().c_str());
-        }
-        ImGui::SameLine();
-        ImGui::Text("Print to Console");
-        std::string help = "There is currently no linux implementation for clipboard use provided by ImGui.";
-        this->utils.HelpMarkerToolTip(help);
-#endif
     }
 }
 
@@ -1325,7 +1326,7 @@ void GUIView::drawFontWindowCallback(const std::string& wn, WindowManager::Windo
     wc.font_name = std::string(font_current->GetDebugName());
     this->utils.Utf8Decode(wc.font_name);
 
-#ifdef GUI_USE_FILEUTILS
+#ifdef GUI_USE_FILESYSTEM
     ImGui::Separator();
     ImGui::Text("Load Font from File");
     std::string help = "Same font can be loaded multiple times with different font size.";
@@ -1352,7 +1353,7 @@ void GUIView::drawFontWindowCallback(const std::string& wn, WindowManager::Windo
     } else {
         ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Please enter valid font file name.");
     }
-#endif // GUI_USE_FILEUTILS
+#endif // GUI_USE_FILESYSTEM
 }
 
 
@@ -1361,7 +1362,7 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
 
     bool open_popup_project = false;
     if (ImGui::BeginMenu("File")) {
-#ifdef GUI_USE_FILEUTILS
+#ifdef GUI_USE_FILESYSTEM
         // Load/save parameter values to LUA file
         if (ImGui::MenuItem("Save Project", std::get<0>(this->hotkeys[HotkeyIndex::SAVE_PROJECT]).ToString().c_str())) {
             open_popup_project = true;
@@ -1372,7 +1373,7 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
         //    std::string projectFilename;
         //    this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
         //}
-#endif // GUI_USE_FILEUTILS
+#endif // GUI_USE_FILESYSTEM
 
         if (ImGui::MenuItem("Exit", "ALT + 'F4'")) {
             // Exit program
@@ -1446,28 +1447,50 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
         ImGui::Text(about.c_str());
 
         ImGui::Separator();
-#ifdef _WIN32 // There is currently no linux implementation for clipboard use provided by imgui
         if (ImGui::Button("Copy E-Mail")) {
+#ifdef GUI_USE_GLFW
+            auto glfw_win = ::glfwGetCurrentContext();
+            ::glfwSetClipboardString(glfw_win, eMail.c_str());
+#elif _WIN32
             ImGui::SetClipboardText(eMail.c_str());
+#else // LINUX
+            vislib::sys::Log::DefaultLog.WriteWarn(
+                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteInfo("E-Mail address:\n%s", eMail.c_str());
+#endif
         }
         ImGui::SameLine();
-#endif
         ImGui::Text(mailstr.c_str());
 
-#ifdef _WIN32 // There is currently no linux implementation for clipboard use provided by imgui
+
         if (ImGui::Button("Copy Website")) {
+#ifdef GUI_USE_GLFW
+            auto glfw_win = ::glfwGetCurrentContext();
+            ::glfwSetClipboardString(glfw_win, webLink.c_str());
+#elif _WIN32
             ImGui::SetClipboardText(webLink.c_str());
+#else // LINUX
+            vislib::sys::Log::DefaultLog.WriteWarn(
+                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteInfo("Website link:\n%s", webLink.c_str());
+#endif
         }
         ImGui::SameLine();
-#endif
         ImGui::Text(webstr.c_str());
 
-#ifdef _WIN32 // There is currently no linux implementation for clipboard use provided by imgui
         if (ImGui::Button("Copy GitHub")) {
+#ifdef GUI_USE_GLFW
+            auto glfw_win = ::glfwGetCurrentContext();
+            ::glfwSetClipboardString(glfw_win, gitLink.c_str());
+#elif _WIN32
             ImGui::SetClipboardText(gitLink.c_str());
+#else // LINUX
+            vislib::sys::Log::DefaultLog.WriteWarn(
+                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteInfo("GitHub link:\n%s", gitLink.c_str());
+#endif
         }
         ImGui::SameLine();
-#endif
         ImGui::Text(gitstr.c_str());
 
         ImGui::Separator();
@@ -1484,7 +1507,7 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
     }
 
     // SAVE PROJECT
-#ifdef GUI_USE_FILEUTILS
+#ifdef GUI_USE_FILESYSTEM
     open_popup_project = (open_popup_project || std::get<1>(this->hotkeys[HotkeyIndex::SAVE_PROJECT]));
     if (open_popup_project) {
         ImGui::OpenPopup("Save Project");
@@ -1539,7 +1562,7 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
         }
         ImGui::EndPopup();
     }
-#endif // GUI_USE_FILEUTILS
+#endif // GUI_USE_FILESYSTEM
 }
 
 
@@ -1803,25 +1826,34 @@ void GUIView::drawTransferFunctionEdit(
     bool isActive = (&p == this->tf_editor.GetActiveParameter());
     bool updateEditor = false;
 
-#ifdef _WIN32 // There is currently no linux implementation for clipboard use provided by imgui
     // Copy transfer function.
     if (ImGui::Button("Copy")) {
+#ifdef GUI_USE_GLFW
+        auto glfw_win = ::glfwGetCurrentContext();
+        ::glfwSetClipboardString(glfw_win, p.Value().c_str());
+#elif _WIN32
         ImGui::SetClipboardText(p.Value().c_str());
+#else // LINUX
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        vislib::sys::Log::DefaultLog.WriteInfo("Transfer Function JSON String:\n%s", p.Value().c_str());
+#endif
     }
+    ImGui::SameLine();
 
     //  Paste transfer function.
-    ImGui::SameLine();
     if (ImGui::Button("Paste")) {
+#ifdef GUI_USE_GLFW
+        auto glfw_win = ::glfwGetCurrentContext();
+        p.SetValue(::glfwGetClipboardString(glfw_win));
+#elif _WIN32
         p.SetValue(ImGui::GetClipboardText());
+#else // LINUX
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+#endif
         updateEditor = true;
     }
-#else // LINUX
-    if (ImGui::Button("Print to Console")) {
-        vislib::sys::Log::DefaultLog.WriteInfo("Transfer Function JSON String:\n%s", p.Value().c_str());
-    }
-    std::string help = "There is currently no linux implementation for clipboard use provided by ImGui.";
-    this->utils.HelpMarkerToolTip(help);
-#endif
 
     // Edit transfer function.
     ImGui::SameLine();

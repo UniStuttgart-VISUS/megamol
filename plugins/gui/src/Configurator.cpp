@@ -218,12 +218,12 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
                 // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
             }
 
-#ifdef GUI_USE_FILEUTILS
+#ifdef GUI_USE_FILESYSTEM
             // Load/save parameter values to LUA file
             if (ImGui::MenuItem("Save Project", nullptr)) {
                 open_popup_project = true;
             }
-#endif // GUI_USE_FILEUTILS
+#endif // GUI_USE_FILESYSTEM
 
             ImGui::EndMenu();
         }
@@ -461,7 +461,6 @@ bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType gr
             ImVec2 scrolling_diff = (graph->gui.canvas_scrolling * last_zooming) -
                                     (graph->gui.canvas_scrolling * graph->gui.canvas_zooming);
             graph->gui.canvas_scrolling += (scrolling_diff / graph->gui.canvas_zooming);
-
             // Move origin away from mouse position
             ImVec2 origin_screenspace =
                 graph->gui.canvas_position + (graph->gui.canvas_scrolling * graph->gui.canvas_zooming);
@@ -472,7 +471,9 @@ bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType gr
     }
     graph->gui.canvas_offset = graph->gui.canvas_position + (graph->gui.canvas_scrolling * graph->gui.canvas_zooming);
 
-    draw_list->AddCircleFilled(graph->gui.canvas_offset, 10.0f * graph->gui.canvas_zooming, IM_COL32(192, 0, 0, 255));
+    /// DEBUG Draw point at origin
+    // draw_list->AddCircleFilled(graph->gui.canvas_offset, 10.0f * graph->gui.canvas_zooming, IM_COL32(192, 0, 0,
+    // 255));
 
     draw_list->ChannelsMerge();
     ImGui::EndChild();
@@ -1015,7 +1016,7 @@ bool megamol::gui::Configurator::update_graph_layout(GraphManager::GraphPtrType 
 
 bool megamol::gui::Configurator::popup_save_project(bool open, megamol::core::CoreInstance* core_instance) {
 
-#ifdef GUI_USE_FILEUTILS
+#ifdef GUI_USE_FILESYSTEM
     std::string save_project_label = "Save Project";
 
     if (open) {
@@ -1067,7 +1068,7 @@ bool megamol::gui::Configurator::popup_save_project(bool open, megamol::core::Co
         }
         ImGui::EndPopup();
     }
-#endif // GUI_USE_FILEUTILS
+#endif // GUI_USE_FILESYSTEM
 
     return true;
 }

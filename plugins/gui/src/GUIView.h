@@ -20,9 +20,9 @@
 #include "WindowManager.h"
 
 /// CMake exeption for the cluster "stampede2" running CentOS. (C++ filesystem support is not working?)
-#ifdef GUI_USE_FILEUTILS
+#ifdef GUI_USE_FILESYSTEM
 #    include "FileUtils.h"
-#endif // GUI_USE_FILEUTILS
+#endif // GUI_USE_FILESYSTEM
 
 #include <imgui.h>
 
