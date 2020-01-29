@@ -66,12 +66,26 @@ bool megamol::compositing::SimpleRenderTarget::GetExtents(core::view::CallRender
     return true; 
 }
 
-bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3D_2& call) { 
+bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3D_2& call) {
+    glClearColor(this->clear_color[0], this->clear_color[1], this->clear_color[2], this->clear_color[3]);
 
+    glBindFramebuffer(GL_FRAMEBUFFER_EXT, this->old_fb);
+    glDrawBuffer(this->old_db);
+    glReadBuffer(this->old_rb);
+
+    return false; 
+}
+
+void megamol::compositing::SimpleRenderTarget::PreRender(core::view::CallRender3D_2& call)
+{
     m_last_used_camera = call.GetCamera();
 
-    GLfloat viewport[4];
-    glGetFloatv(GL_VIEWPORT, viewport);
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &this->old_fb);
+    glGetIntegerv(GL_DRAW_BUFFER, &this->old_db);
+    glGetIntegerv(GL_READ_BUFFER, &this->old_rb);
 
     if (m_GBuffer->getWidth() != viewport[2] || m_GBuffer->getHeight() != viewport[3]) {
         m_GBuffer->resize(viewport[2], viewport[3]);
@@ -79,17 +93,10 @@ bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3D_2
 
     m_GBuffer->bind();
 
-    // get clear color
-    glClearColor(0, 0, 0, 0);
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, this->clear_color.data());
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // TODO: query old clear color, set 0 clear color, reset old clear color? -> wtf, profit!
-
-    return true; 
-}
-
-void megamol::compositing::SimpleRenderTarget::PreRender(core::view::CallRender3D_2& call)
-{
 }
 
 bool megamol::compositing::SimpleRenderTarget::getColorRenderTarget(core::Call& caller) {

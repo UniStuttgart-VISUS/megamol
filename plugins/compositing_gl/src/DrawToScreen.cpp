@@ -88,16 +88,17 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call
     auto input_texture = ct->getData();
     if (input_texture == nullptr) return false;
 
-    if (call.FrameBufferObject() != nullptr) {
-        glBindFramebuffer(GL_FRAMEBUFFER, call.FrameBufferObject()->GetID());
-    } else {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
     if (m_drawToScreen_prgm != nullptr) {
+        const auto blend_enabled = glIsEnabled(GL_BLEND);
+        if (!blend_enabled) glEnable(GL_BLEND);
+
+        GLint blend_src_rgb, blend_src_alpha, blend_dst_rgb, blend_dst_alpha;
+        glGetIntegerv(GL_BLEND_SRC_RGB, &blend_src_rgb);
+        glGetIntegerv(GL_BLEND_SRC_ALPHA, &blend_src_alpha);
+        glGetIntegerv(GL_BLEND_DST_RGB, &blend_dst_rgb);
+        glGetIntegerv(GL_BLEND_DST_ALPHA, &blend_dst_alpha);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
         m_drawToScreen_prgm->Enable();
 
         glActiveTexture(GL_TEXTURE0);
@@ -107,6 +108,9 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         m_drawToScreen_prgm->Disable();
+
+        glBlendFuncSeparate(blend_src_rgb, blend_dst_rgb, blend_src_alpha, blend_dst_alpha);
+        if (!blend_enabled) glDisable(GL_BLEND);
     }
 
     return true; 

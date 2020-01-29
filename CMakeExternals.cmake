@@ -70,6 +70,8 @@ function(require_external NAME)
       return()
     endif()
 
+    require_external(libzmq)
+
     add_external_headeronly_project(libcxxopts
       DEPENDS libzmq
       GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
@@ -96,6 +98,31 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/jlblancoc/nanoflann.git
       GIT_TAG "v1.3.0"
       INCLUDE_DIR "include")
+
+  # tpf
+  elseif(NAME STREQUAL "tpf")
+    if(TARGET tpf)
+      return()
+    endif()
+
+    require_external(Eigen)
+
+    find_package(CGAL REQUIRED)
+    mark_as_advanced(BUILD_TESTING CGAL_CTEST_DISPLAY_MEM_AND_TIME CGAL_DEV_MODE CGAL_WITH_GMPXX
+      GMP_INCLUDE_DIR GMP_LIBRARIES GMP_LIBRARIES_DIR MPFR_INCLUDE_DIR MPFR_LIBRARIES MPFR_LIBRARIES_DIR)
+
+    add_external_headeronly_project(tpf
+      DEPENDS Eigen CGAL::CGAL
+      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/tpf.git)
+
+    set(optional_compile_definitions)
+    if(ENABLE_MPI)
+      set(optional_compile_definitions __tpf_use_mpi)
+    endif()
+
+    target_include_directories(tpf INTERFACE ${CGAL_INCLUDE_DIRS} ${CGAL_3RD_PARTY_INCLUDE_DIRS})
+    target_compile_definitions(tpf INTERFACE __tpf_sanity_checks __tpf_use_openmp ${optional_compile_definitions} ${CGAL_3RD_PARTY_DEFINITIONS})
+    target_link_libraries(tpf INTERFACE Eigen CGAL::CGAL ${CGAL_3RD_PARTY_LIBRARIES})
 
   # Built libraries #####################################################
 
