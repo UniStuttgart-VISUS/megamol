@@ -417,7 +417,6 @@ bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType gr
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, COLOR_CANVAS_BACKGROUND);
     ImGui::BeginChild("region", ImVec2(0.0f, 0.0f), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
-    // ImGui::PushItemWidth(120.0f);
     graph->gui.canvas_position = ImGui::GetCursorScreenPos();
     graph->gui.canvas_size = ImGui::GetWindowSize();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -458,17 +457,24 @@ bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType gr
         graph->gui.canvas_zooming =
             (graph->gui.canvas_zooming < (1.0f / factor)) ? (1.0f / factor) : (graph->gui.canvas_zooming);
         if (last_zooming != graph->gui.canvas_zooming) {
-            float zoom_delta = graph->gui.canvas_zooming - last_zooming;
-            ImVec2 delta = graph->gui.canvas_position - ImGui::GetMousePos();
-            float length = std::sqrtf((delta.x * delta.x) + (delta.y * delta.y));
-            delta = ImVec2(delta.x / length, delta.y / length) * zoom_delta;
-            graph->gui.canvas_scrolling += delta;
+            // Compensate zooming shift of origin
+            ImVec2 scrolling_diff = (graph->gui.canvas_scrolling * last_zooming) -
+                                    (graph->gui.canvas_scrolling * graph->gui.canvas_zooming);
+            graph->gui.canvas_scrolling += (scrolling_diff / graph->gui.canvas_zooming);
+
+            // Move origin away from mouse position
+            ImVec2 origin_screenspace =
+                graph->gui.canvas_position + (graph->gui.canvas_scrolling * graph->gui.canvas_zooming);
+            ImVec2 current_mouse_pos = origin_screenspace - ImGui::GetMousePos();
+            ImVec2 new_mouse_position = (current_mouse_pos / last_zooming) * graph->gui.canvas_zooming;
+            graph->gui.canvas_scrolling += ((new_mouse_position - current_mouse_pos) / graph->gui.canvas_zooming);
         }
     }
-    graph->gui.canvas_offset = graph->gui.canvas_position + graph->gui.canvas_scrolling;
+    graph->gui.canvas_offset = graph->gui.canvas_position + (graph->gui.canvas_scrolling * graph->gui.canvas_zooming);
+
+    draw_list->AddCircleFilled(graph->gui.canvas_offset, 10.0f * graph->gui.canvas_zooming, IM_COL32(192, 0, 0, 255));
 
     draw_list->ChannelsMerge();
-    // ImGui::PopItemWidth();
     ImGui::EndChild();
     ImGui::PopStyleColor();
 
@@ -490,14 +496,14 @@ bool megamol::gui::Configurator::draw_canvas_grid(GraphManager::GraphPtrType gra
         const ImU32 COLOR_GRID = IM_COL32(192, 192, 192, 40);
         const float GRID_SIZE = 64.0f * graph->gui.canvas_zooming;
 
-        for (float x = std::fmodf(graph->gui.canvas_offset.x, GRID_SIZE); x < graph->gui.canvas_size.x;
-             x += GRID_SIZE) {
+        ImVec2 offset = graph->gui.canvas_offset - graph->gui.canvas_position;
+
+        for (float x = std::fmodf(offset.x, GRID_SIZE); x < graph->gui.canvas_size.x; x += GRID_SIZE) {
             draw_list->AddLine(ImVec2(x, 0.0f) + graph->gui.canvas_position,
                 ImVec2(x, graph->gui.canvas_size.y) + graph->gui.canvas_position, COLOR_GRID);
         }
 
-        for (float y = std::fmodf(graph->gui.canvas_offset.y, GRID_SIZE); y < graph->gui.canvas_size.y;
-             y += GRID_SIZE) {
+        for (float y = std::fmodf(offset.y, GRID_SIZE); y < graph->gui.canvas_size.y; y += GRID_SIZE) {
             draw_list->AddLine(ImVec2(0.0f, y) + graph->gui.canvas_position,
                 ImVec2(graph->gui.canvas_size.x, y) + graph->gui.canvas_position, COLOR_GRID);
         }

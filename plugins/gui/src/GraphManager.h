@@ -21,11 +21,6 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "utility/plugins/PluginManager.h"
-
-#include "vislib/UTF8Encoder.h"
-
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -41,6 +36,10 @@
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
+#include "utility/plugins/PluginManager.h"
+
+#include "vislib/UTF8Encoder.h"
 
 #include "Graph.h"
 

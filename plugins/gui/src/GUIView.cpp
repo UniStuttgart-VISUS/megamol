@@ -572,7 +572,7 @@ bool GUIView::OnMouseMove(double x, double y) {
     ImGui::SetCurrentContext(this->context);
 
     ImGuiIO& io = ImGui::GetIO();
-    io.MousePos = ImVec2((float)x, (float)y);
+    io.MousePos = ImVec2(static_cast<float>(x), static_cast<float>(y));
 
     auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
@@ -1264,6 +1264,7 @@ void GUIView::drawFpsWindowCallback(const std::string& wn, WindowManager::Window
             wc.ms_max_history_count = std::max(1, wc.ms_max_history_count);
         }
 
+#ifdef _WIN32 // There is currently no linux implementation for clipboard use provided by imgui
         if (ImGui::Button("Current Value")) {
             ImGui::SetClipboardText(overlay.c_str());
         }
@@ -1282,6 +1283,27 @@ void GUIView::drawFpsWindowCallback(const std::string& wn, WindowManager::Window
         ImGui::Text("Copy to Clipborad");
         std::string help = "Values are copied in chronological order (newest first)";
         this->utils.HelpMarkerToolTip(help);
+#else // LINUX
+        if (ImGui::Button("Current Value")) {
+            vislib::sys::Log::DefaultLog.WriteInfo("Current Performance Monitor Value:\n%s", overlay.c_str());
+        }
+        ImGui::SameLine();
+
+        if (ImGui::Button("All Values")) {
+            std::stringstream stream;
+            stream << std::fixed << std::setprecision(3);
+            auto reverse_end = value_array.rend();
+            for (std::vector<float>::reverse_iterator i = value_array.rbegin(); i != reverse_end; ++i) {
+                stream << (*i) << "\n";
+            }
+            ImGui::SetClipboardText(stream.str().c_str());
+            vislib::sys::Log::DefaultLog.WriteInfo("All Performance Monitor Values:\n%s", stream.str().c_str());
+        }
+        ImGui::SameLine();
+        ImGui::Text("Print to Console");
+        std::string help = "There is currently no linux implementation for clipboard use provided by ImGui.";
+        this->utils.HelpMarkerToolTip(help);
+#endif
     }
 }
 
@@ -1408,7 +1430,7 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
         ImGui::OpenPopup("About");
     }
     bool open = true;
-    if (ImGui::BeginPopupModal("About", &open, ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (ImGui::BeginPopupModal("About", &open, (ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))) {
 
         const std::string eMail = "megamol@visus.uni-stuttgart.de";
         const std::string webLink = "https://megamol.org/";
@@ -1422,24 +1444,30 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
         std::string gitstr = std::string("Git-Hub: ") + gitLink;
 
         ImGui::Text(about.c_str());
-        ImGui::Separator();
 
+        ImGui::Separator();
+#ifdef _WIN32 // There is currently no linux implementation for clipboard use provided by imgui
         if (ImGui::Button("Copy E-Mail")) {
             ImGui::SetClipboardText(eMail.c_str());
         }
         ImGui::SameLine();
+#endif
         ImGui::Text(mailstr.c_str());
 
+#ifdef _WIN32 // There is currently no linux implementation for clipboard use provided by imgui
         if (ImGui::Button("Copy Website")) {
             ImGui::SetClipboardText(webLink.c_str());
         }
         ImGui::SameLine();
+#endif
         ImGui::Text(webstr.c_str());
 
+#ifdef _WIN32 // There is currently no linux implementation for clipboard use provided by imgui
         if (ImGui::Button("Copy GitHub")) {
             ImGui::SetClipboardText(gitLink.c_str());
         }
         ImGui::SameLine();
+#endif
         ImGui::Text(gitstr.c_str());
 
         ImGui::Separator();
@@ -1775,6 +1803,7 @@ void GUIView::drawTransferFunctionEdit(
     bool isActive = (&p == this->tf_editor.GetActiveParameter());
     bool updateEditor = false;
 
+#ifdef _WIN32 // There is currently no linux implementation for clipboard use provided by imgui
     // Copy transfer function.
     if (ImGui::Button("Copy")) {
         ImGui::SetClipboardText(p.Value().c_str());
@@ -1786,6 +1815,13 @@ void GUIView::drawTransferFunctionEdit(
         p.SetValue(ImGui::GetClipboardText());
         updateEditor = true;
     }
+#else // LINUX
+    if (ImGui::Button("Print to Console")) {
+        vislib::sys::Log::DefaultLog.WriteInfo("Transfer Function JSON String:\n%s", p.Value().c_str());
+    }
+    std::string help = "There is currently no linux implementation for clipboard use provided by ImGui.";
+    this->utils.HelpMarkerToolTip(help);
+#endif
 
     // Edit transfer function.
     ImGui::SameLine();
