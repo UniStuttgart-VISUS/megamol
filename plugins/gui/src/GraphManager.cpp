@@ -23,22 +23,6 @@ megamol::gui::GraphManager::~GraphManager(void) {}
 bool megamol::gui::GraphManager::AddGraph(std::string name) {
 
     Graph graph(this->get_unique_id(), name);
-
-    graph.gui.slot_radius = 8.0f;
-    graph.gui.canvas_position = ImVec2(0.0f, 0.0f);
-    graph.gui.canvas_size = ImVec2(0.0f, 0.0f);
-    graph.gui.canvas_scrolling = ImVec2(0.0f, 0.0f);
-    graph.gui.canvas_zooming = 1.0f;
-    graph.gui.canvas_offset = ImVec2(0.0f, 0.0f);
-    graph.gui.show_grid = true;
-    graph.gui.show_call_names = true;
-    graph.gui.selected_module_uid = -1;
-    graph.gui.selected_call_uid = -1;
-    graph.gui.hovered_slot_uid = -1;
-    graph.gui.selected_slot_ptr = nullptr;
-    graph.gui.process_selected_slot = 0;
-    graph.gui.update_layout = true;
-
     this->graphs.emplace_back(std::make_shared<Graph>(graph));
 
     return true;

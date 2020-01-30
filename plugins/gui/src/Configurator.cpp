@@ -37,6 +37,7 @@ Configurator::Configurator() : hotkeys(), graph_manager(), utils(), gui() {
     this->gui.selected_list_module_id = -1;
     this->gui.rename_popup_open = false;
     this->gui.rename_popup_string = nullptr;
+    this->gui.mouse_wheel = 0.0f;
 }
 
 
@@ -362,7 +363,7 @@ bool megamol::gui::Configurator::draw_canvas_menu(GraphManager::GraphPtrType gra
         graph->gui.canvas_scrolling = ImVec2(0.0f, 0.0f);
     }
     ImGui::SameLine();
-    ImGui::Text("Scrolling: %.2f,%.2f", graph->gui.canvas_scrolling.x, graph->gui.canvas_scrolling.y);
+    ImGui::Text("Scrolling: %.4f,%.4f", graph->gui.canvas_scrolling.x, graph->gui.canvas_scrolling.y);
     this->utils.HelpMarkerToolTip("Middle Mouse Button");
 
     ImGui::SameLine();
@@ -370,7 +371,7 @@ bool megamol::gui::Configurator::draw_canvas_menu(GraphManager::GraphPtrType gra
         graph->gui.canvas_zooming = 1.0f;
     }
     ImGui::SameLine();
-    ImGui::Text("Zooming: %.2f", graph->gui.canvas_zooming);
+    ImGui::Text("Zooming: %.4f", graph->gui.canvas_zooming);
     this->utils.HelpMarkerToolTip("Mouse Wheel");
 
     ImGui::SameLine();
@@ -393,6 +394,17 @@ bool megamol::gui::Configurator::draw_canvas_menu(GraphManager::GraphPtrType gra
 bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType graph) {
 
     ImGuiIO& io = ImGui::GetIO();
+
+    // The graph font
+    int font_count = io.Fonts->Fonts.Size;
+    int font_index = 0; // Default font is always present.
+    if (font_count > 1) {
+        font_index = 2;
+    }
+    ImGui::PushFont(io.Fonts->Fonts[font_index]);
+    // Font scaling is only applied after next ImGui::Begin()
+    // Font for graph should not be the currently used font of the gui.
+    ImGui::GetFont()->Scale = graph->gui.canvas_zooming;
 
     const ImU32 COLOR_CANVAS_BACKGROUND = IM_COL32(75, 75, 75, 255);
 
@@ -454,23 +466,24 @@ bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType gr
                 graph->gui.canvas_zooming;
         }
         // Zooming (Mouse Wheel)
-        const float factor = (10.0f / graph->gui.canvas_zooming);
-        float last_zooming = graph->gui.canvas_zooming;
-        graph->gui.canvas_zooming = graph->gui.canvas_zooming + io.MouseWheel / factor;
-        graph->gui.canvas_zooming =
-            (graph->gui.canvas_zooming < (1.0f / factor)) ? (1.0f / factor) : (graph->gui.canvas_zooming);
-        if (last_zooming != graph->gui.canvas_zooming) {
-            // Compensate zooming shift of origin
-            ImVec2 scrolling_diff = (graph->gui.canvas_scrolling * last_zooming) -
-                                    (graph->gui.canvas_scrolling * graph->gui.canvas_zooming);
-            graph->gui.canvas_scrolling += (scrolling_diff / graph->gui.canvas_zooming);
-            // Move origin away from mouse position
-            ImVec2 origin_screenspace =
-                graph->gui.canvas_position + (graph->gui.canvas_scrolling * graph->gui.canvas_zooming);
-            ImVec2 current_mouse_pos = origin_screenspace - ImGui::GetMousePos();
-            ImVec2 new_mouse_position = (current_mouse_pos / last_zooming) * graph->gui.canvas_zooming;
-            graph->gui.canvas_scrolling += ((new_mouse_position - current_mouse_pos) / graph->gui.canvas_zooming);
+        if (this->gui.mouse_wheel != io.MouseWheel) {
+            const float factor = (30.0f / graph->gui.canvas_zooming);
+            float last_zooming = graph->gui.canvas_zooming;
+            graph->gui.canvas_zooming = graph->gui.canvas_zooming + io.MouseWheel / factor;
+            // Limit zooming
+            graph->gui.canvas_zooming = (graph->gui.canvas_zooming < 0.0f) ? 0.0f : (graph->gui.canvas_zooming);
+            if (graph->gui.canvas_zooming > 0.0f) {
+                // Compensate zooming shift of origin
+                ImVec2 scrolling_diff = (graph->gui.canvas_scrolling * last_zooming) -
+                                        (graph->gui.canvas_scrolling * graph->gui.canvas_zooming);
+                graph->gui.canvas_scrolling += (scrolling_diff / graph->gui.canvas_zooming);
+                // Move origin away from mouse position
+                ImVec2 current_mouse_pos = graph->gui.canvas_offset - ImGui::GetMousePos();
+                ImVec2 new_mouse_position = (current_mouse_pos / last_zooming) * graph->gui.canvas_zooming;
+                graph->gui.canvas_scrolling += ((new_mouse_position - current_mouse_pos) / graph->gui.canvas_zooming);
+            }
         }
+        this->gui.mouse_wheel = io.MouseWheel;
     }
     graph->gui.canvas_offset = graph->gui.canvas_position + (graph->gui.canvas_scrolling * graph->gui.canvas_zooming);
 
@@ -484,6 +497,9 @@ bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType gr
     if (graph->gui.process_selected_slot > 0) {
         graph->gui.process_selected_slot--;
     }
+
+    // Reset font
+    ImGui::PopFont();
 
     return true;
 }
@@ -550,8 +566,14 @@ bool megamol::gui::Configurator::draw_canvas_calls(GraphManager::GraphPtrType gr
                             call->GetCallSlot(Graph::CallSlotType::CALLEE)->gui.position * graph->gui.canvas_zooming;
 
                 draw_list->ChannelsSetCurrent(0); // Background
-                draw_list->AddBezierCurve(p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2, COLOR_CALL_CURVE,
-                    CURVE_THICKNESS * graph->gui.canvas_zooming);
+
+                // Draw simple line if zooming is too small for nice bezier curves
+                if (graph->gui.canvas_zooming < 0.4f) {
+                    draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * graph->gui.canvas_zooming);
+                } else {
+                    draw_list->AddBezierCurve(p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2,
+                        COLOR_CALL_CURVE, CURVE_THICKNESS * graph->gui.canvas_zooming);
+                }
 
                 if (graph->gui.show_call_names) {
                     draw_list->ChannelsSetCurrent(1); // Foreground
@@ -583,9 +605,9 @@ bool megamol::gui::Configurator::draw_canvas_calls(GraphManager::GraphPtrType gr
                     draw_list->AddRect(call_rect_min, call_rect_max, COLOR_CALL_BORDER, 4.0f);
 
                     // Draw text
-                    // ImGui::SetCursorScreenPos(
-                    //    call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
-                    // ImGui::Text(call->class_name.c_str());
+                    ImGui::SetCursorScreenPos(
+                        call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
+                    ImGui::Text(call->class_name.c_str());
                 }
             }
 

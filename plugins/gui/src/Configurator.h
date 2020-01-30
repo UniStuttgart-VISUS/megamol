@@ -82,6 +82,7 @@ private:
         int selected_list_module_id;
         bool rename_popup_open;
         std::string* rename_popup_string;
+        float mouse_wheel;
     } gui;
 
     // FUNCTIONS --------------------------------------------------------------
