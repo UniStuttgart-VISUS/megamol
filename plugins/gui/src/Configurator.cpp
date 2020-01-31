@@ -38,6 +38,7 @@ Configurator::Configurator() : hotkeys(), graph_manager(), utils(), gui() {
     this->gui.rename_popup_open = false;
     this->gui.rename_popup_string = nullptr;
     this->gui.mouse_wheel = 0.0f;
+    this->gui.graph_font = nullptr;
 }
 
 
@@ -396,12 +397,13 @@ bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType gr
     ImGuiIO& io = ImGui::GetIO();
 
     // The graph font
-    int font_count = io.Fonts->Fonts.Size;
-    int font_index = 0; // Default font is always present.
-    if (font_count > 1) {
-        font_index = 2;
+    if (this->gui.graph_font == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Found no font for configurator. Call SetGraphFont() in GuiView for setting a font. [%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
+        return false;
     }
-    ImGui::PushFont(io.Fonts->Fonts[font_index]);
+    ImGui::PushFont(this->gui.graph_font);
     // Font scaling is only applied after next ImGui::Begin()
     // Font for graph should not be the currently used font of the gui.
     ImGui::GetFont()->Scale = graph->gui.canvas_zooming;

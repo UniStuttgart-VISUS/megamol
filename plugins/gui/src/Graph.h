@@ -113,8 +113,29 @@ public:
         std::string full_name;
         std::string value_string;
 
+        /*
+        Value();
+        SetValue();
+        ValueString();
+        ...+ some more parameter specific
+        */
+
     private:
-        // std::variant<bool,                                  // BOOL
+        // std::variant<bool,                                 // BOOL, BUTTON
+        //    megamol::core::param::ColorParam::ColorType,    // COLOR
+        //    vislib::Map<int, vislib::TString>,              // ENUM
+        //    vislib::TString,                                // FILEPATH
+        //    megamol::core::param::FlexEnumParam::Storage_t, // FLEXENUM
+        //    float,                                          // FLOAT
+        //    int,                                            // INT
+        //    std::string,                                    // STRING || TRANSFERFUNCTION
+        //    vislib::math::Ternary,                          // TERNARY
+        //    glm::vec2,                                      // VECTOR2F
+        //    glm::vec3,                                      // VECTOR3F
+        //    glm::vec4                                       // VECTOR4F
+        //> storage;
+
+        // std::variant<bool,                                 // BOOL, BUTTON
         //    megamol::core::param::ColorParam::ColorType,    // COLOR
         //    vislib::Map<int, vislib::TString>,              // ENUM
         //    vislib::TString,                                // FILEPATH

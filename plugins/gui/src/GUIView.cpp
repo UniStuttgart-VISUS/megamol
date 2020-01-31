@@ -239,8 +239,9 @@ bool GUIView::create() {
         ImFontConfig config;
         config.OversampleH = 6;
         config.GlyphRanges = this->state.font_utf8_ranges.data();
-        // Add default font
+        // Add default font for gui.
         io.Fonts->AddFontDefault(&config);
+        std::string configurator_font = "";
 #ifdef GUI_USE_FILESYSTEM
         // Add other known fonts
         std::string font_file, font_path;
@@ -252,17 +253,27 @@ bool GUIView::create() {
             font_path = SearchFileRecursive(font_file, searchPath);
             if (!font_path.empty()) {
                 io.Fonts->AddFontFromFileTTF(font_path.c_str(), 12.0f, &config);
-                // Set as default.
+                /// Set as default.
                 io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
             }
             font_file = "SourceCodePro-Regular.ttf";
             font_path = SearchFileRecursive(font_file, searchPath);
             if (!font_path.empty()) {
                 io.Fonts->AddFontFromFileTTF(font_path.c_str(), 13.0f, &config);
+                configurator_font = font_path;
             }
         }
 #endif // GUI_USE_FILESYSTEM
+
+        // Add default font at index 0 for exclusive use in configurator graph.
+        if (configurator_font.empty()) {
+            io.Fonts->AddFontDefault(&config);
+        } else {
+            io.Fonts->AddFontFromFileTTF(configurator_font.c_str(), 18.0f, &config);
+        }
     }
+    // Use las tadded font for graph text in configurator
+    this->configurator.SetGraphFont(io.Fonts->Fonts[io.Fonts->Fonts.Size - 1]);
 
     // ImGui Key Map
     io.KeyMap[ImGuiKey_Tab] = static_cast<int>(core::view::Key::KEY_TAB);
@@ -1315,7 +1326,8 @@ void GUIView::drawFontWindowCallback(const std::string& wn, WindowManager::Windo
 
     ImFont* font_current = ImGui::GetFont();
     if (ImGui::BeginCombo("Select available Font", font_current->GetDebugName())) {
-        for (int n = 0; n < io.Fonts->Fonts.Size; n++) {
+        for (int n = 0; n < (io.Fonts->Fonts.Size - 1); n++) { // ! n < size-1 for skipping last added font which is
+                                                               // exclusively used by configurator for the graph.
             if (ImGui::Selectable(io.Fonts->Fonts[n]->GetDebugName(), (io.Fonts->Fonts[n] == font_current)))
                 io.FontDefault = io.Fonts->Fonts[n];
         }

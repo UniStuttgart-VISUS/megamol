@@ -64,6 +64,11 @@ public:
      */
     bool CheckHotkeys(void);
 
+    /*
+     * Provide additional ImGui font for independent scaling of font for graph text.
+     */
+    inline void SetGraphFont(ImFont* graph_font) { this->gui.graph_font = graph_font; }
+
 private:
     // VARIABLES --------------------------------------------------------------
 
@@ -83,6 +88,7 @@ private:
         bool rename_popup_open;
         std::string* rename_popup_string;
         float mouse_wheel;
+        ImFont* graph_font;
     } gui;
 
     // FUNCTIONS --------------------------------------------------------------
