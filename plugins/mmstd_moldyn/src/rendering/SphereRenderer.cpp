@@ -1287,7 +1287,7 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2& call, MultiParticleDataCal
                 auto& bufA = this->bufArray[i];
                 if (this->stateInvalid || (bufA.GetNumChunks() == 0)) {
                     bufA.SetDataWithSize(parts.GetVertexData(), vertStride, vertStride, parts.GetCount(),
-                        (GLuint)(2 * 1024 * 1024 * 1024));
+                        (GLuint)(2 * 1024 * 1024 * 1024 - 1));
                     // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
                 }
                 const GLuint numChunks = bufA.GetNumChunks();

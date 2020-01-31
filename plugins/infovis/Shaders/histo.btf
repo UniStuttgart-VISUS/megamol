@@ -2,6 +2,13 @@
 <btf namespace="histo" type="MegaMolGLSLShader" version="1.0">
   <include file="core_utils"/>
   <include file="bitflags"/>
+  <namespace name="calc">
+    <shader name="comp">
+      <snippet type="version">430</snippet>
+      <snippet name="::bitflags::main" />
+      <snippet type="file">histo_calc_comp.glsl</snippet>
+    </shader>
+  </namespace>
   <namespace name="draw">
     <shader name="vert">
       <snippet type="version">430</snippet>
