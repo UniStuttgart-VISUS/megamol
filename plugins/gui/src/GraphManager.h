@@ -21,22 +21,9 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/ColorParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/FlexEnumParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/IntParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/param/StringParam.h"
-#include "mmcore/param/TernaryParam.h"
-#include "mmcore/param/TransferFunctionParam.h"
-#include "mmcore/param/Vector2fParam.h"
-#include "mmcore/param/Vector3fParam.h"
-#include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
+
 #include "utility/plugins/PluginManager.h"
 
 #include "vislib/UTF8Encoder.h"

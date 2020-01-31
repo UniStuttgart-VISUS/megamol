@@ -16,6 +16,32 @@ using vislib::sys::Log;
 
 // PARAM SLOT #################################################################
 
+std::string megamol::gui::Graph::ParamSlot::ValueString(void) {
+    std::string value_string;
+    auto visitor = [&value_string](auto&& arg) {
+        using T = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<T, int>) {
+            auto param = megamol::core::param::IntParam(arg);
+            value_string = std::string(param.ValueString().PeekBuffer());
+        }
+        else if constexpr (std::is_same_v<T, long>) {
+
+        }
+        else if constexpr (std::is_same_v<T, double>) {
+
+        }
+        else if constexpr (std::is_same_v<T, std::string>) {
+
+        }
+        else {
+            value_string = "UNKNOWN";
+        }
+    };
+    std::visit(visitor, this->value);
+    return value_string;
+}
+
+
 
 // CALL SLOT ##################################################################
 
@@ -422,12 +448,14 @@ bool megamol::gui::Graph::AddModule(Graph::ModuleStockType& stock_modules, const
                 mod_ptr->gui.class_label = "";              // Initialized in configurator
                 mod_ptr->gui.name_label = "";               // Initialized in configurator
                 for (auto& p : mod.param_slots) {
-                    Graph::ParamSlot param_slot(this->get_unique_id());
+                    Graph::ParamSlot param_slot(this->get_unique_id(), p.type);
                     param_slot.class_name = p.class_name;
                     param_slot.description = p.description;
-                    param_slot.type = p.type;
-                    param_slot.full_name = "full_name";      /// TODO get from core
-                    param_slot.value_string = "param_value"; /// TODO get from core
+
+                    param_slot.full_name = "full_name"; /// TODO get from core
+
+                    /// Set value type ? ...
+
                     mod_ptr->param_slots.emplace_back(param_slot);
                 }
                 for (auto& call_slots_type : mod.call_slots) {

@@ -656,10 +656,7 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
             const int id = mod->uid;
             ImGui::PushID(id);
 
-            if (mod->gui.update_size) {
-                this->update_module_size(graph, mod);
-                mod->gui.update_size = false;
-            }
+            this->update_module_size(graph, mod);
 
             ImVec2 module_position = mod->gui.position * graph->gui.canvas_zooming;
             ImVec2 module_size = mod->gui.size * graph->gui.canvas_zooming;
@@ -924,35 +921,37 @@ bool megamol::gui::Configurator::draw_canvas_dragged_call(GraphManager::GraphPtr
 
 bool megamol::gui::Configurator::update_module_size(GraphManager::GraphPtrType graph, Graph::ModulePtrType mod) {
 
-    // Calculate default size without font scaling!
+    if (true) { //(mod->gui.update_size) {
+        mod->gui.class_label = "Class: " + mod->class_name;
+        float class_name_length = this->utils.TextWidgetWidth(mod->gui.class_label);
+        mod->gui.name_label = "Name: " + mod->name;
+        float name_length = this->utils.TextWidgetWidth(mod->gui.name_label);
+        float max_label_length = std::max(class_name_length, name_length);
 
-    mod->gui.class_label = "Class: " + mod->class_name;
-    float class_name_length = this->utils.TextWidgetWidth(mod->gui.class_label);
-    mod->gui.name_label = "Name: " + mod->name;
-    float name_length = this->utils.TextWidgetWidth(mod->gui.name_label);
-    float max_label_length = std::max(class_name_length, name_length);
-
-    float max_slot_name_length = 0.0f;
-    if (graph->gui.show_slot_names) {
-        for (auto& call_slot_type_list : mod->GetCallSlots()) {
-            for (auto& call_slot : call_slot_type_list.second) {
-                max_slot_name_length = std::max(this->utils.TextWidgetWidth(call_slot->name), max_slot_name_length);
+        float max_slot_name_length = 0.0f;
+        if (graph->gui.show_slot_names) {
+            for (auto& call_slot_type_list : mod->GetCallSlots()) {
+                for (auto& call_slot : call_slot_type_list.second) {
+                    max_slot_name_length = std::max(this->utils.TextWidgetWidth(call_slot->name), max_slot_name_length);
+                }
             }
+            max_slot_name_length = (2.0f * max_slot_name_length) + (2.0f * graph->gui.slot_radius);
         }
-        max_slot_name_length = (2.0f * max_slot_name_length) + (2.0f * graph->gui.slot_radius);
+
+        float module_width = (max_label_length + max_slot_name_length) + (4.0f * graph->gui.slot_radius);
+
+        auto max_slot_count = std::max(mod->GetCallSlots(Graph::CallSlotType::CALLEE).size(),
+            mod->GetCallSlots(Graph::CallSlotType::CALLER).size());
+        float module_slot_height = (static_cast<float>(max_slot_count) * (graph->gui.slot_radius * 2.0f) * 1.5f) +
+                                   ((graph->gui.slot_radius * 2.0f) * 0.5f);
+
+        float module_height =
+            std::max(module_slot_height, ImGui::GetItemsLineHeightWithSpacing() * ((mod->is_view) ? (4.0f) : (3.0f)));
+
+        mod->gui.size = ImVec2(module_width, module_height);
+
+        mod->gui.update_size = false;
     }
-
-    float module_width = (max_label_length + max_slot_name_length) + (4.0f * graph->gui.slot_radius);
-
-    auto max_slot_count = std::max(
-        mod->GetCallSlots(Graph::CallSlotType::CALLEE).size(), mod->GetCallSlots(Graph::CallSlotType::CALLER).size());
-    float module_slot_height = (static_cast<float>(max_slot_count) * (graph->gui.slot_radius * 2.0f) * 1.5f) +
-                               ((graph->gui.slot_radius * 2.0f) * 0.5f);
-
-    float module_height =
-        std::max(module_slot_height, ImGui::GetItemsLineHeightWithSpacing() * ((mod->is_view) ? (4.0f) : (3.0f)));
-
-    mod->gui.size = ImVec2(module_width, module_height);
 
     return true;
 }

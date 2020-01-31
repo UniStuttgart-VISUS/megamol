@@ -235,12 +235,6 @@ bool megamol::gui::GraphManager::LoadCurrentCoreProject(std::string name, megamo
                 if (param_slot != nullptr) {
                     const auto button_param = param_slot->Param<megamol::core::param::ButtonParam>();
                     if (button_param == nullptr) {
-                        std::string value_string = param_slot->Parameter()->ValueString().PeekBuffer();
-                        // Encode to UTF-8 string
-                        vislib::StringA valueString;
-                        vislib::UTF8Encoder::Encode(valueString, vislib::StringA(value_string.c_str()));
-                        value_string = valueString.PeekBuffer();
-
                         std::string param_class_name = std::string(param_slot->Name().PeekBuffer());
                         std::string param_full_name = std::string(param_slot->FullName().PeekBuffer());
                         for (auto& param : graph_module->param_slots) {
@@ -248,7 +242,7 @@ bool megamol::gui::GraphManager::LoadCurrentCoreProject(std::string name, megamo
                                 param.full_name = param_full_name;
 
 
-                                param.value_string = value_string;
+                                /// get: value, min, max + additional stuff
                             }
                         }
                     }
@@ -400,7 +394,7 @@ bool megamol::gui::GraphManager::PROTOTYPE_SaveGraph(
                         if (param_slot.type != Graph::ParamType::BUTTON) {
                             // Encode to UTF-8 string
                             vislib::StringA valueString;
-                            vislib::UTF8Encoder::Encode(valueString, vislib::StringA(param_slot.value_string.c_str()));
+                            vislib::UTF8Encoder::Encode(valueString, vislib::StringA(param_slot.ValueString().c_str()));
                             confParams << "mmSetParamValue(\"" << instance << mod->name << "::" << param_slot.class_name
                                        << "\",[=[" << std::string(valueString.PeekBuffer()) << "]=])\n";
                         }

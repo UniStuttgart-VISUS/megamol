@@ -8,6 +8,21 @@
 #ifndef MEGAMOL_GUI_GRAPH_H_INCLUDED
 #define MEGAMOL_GUI_GRAPH_H_INCLUDED
 
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/ColorParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FlexEnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/TernaryParam.h"
+#include "mmcore/param/TransferFunctionParam.h"
+#include "mmcore/param/Vector2fParam.h"
+#include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/Vector4fParam.h"
+
 #include "vislib/sys/Log.h"
 
 #include <imgui.h>
@@ -101,53 +116,82 @@ public:
 
     class ParamSlot {
     public:
-        ParamSlot(int uid) : uid(uid) {}
+        ParamSlot(int uid, ParamType type) : uid(uid), type(type) {}
         ~ParamSlot() {}
 
         const int uid;
+        const Graph::ParamType type;
 
         std::string class_name;
         std::string description;
-        Graph::ParamType type;
 
         std::string full_name;
-        std::string value_string;
 
-        /*
-        Value();
-        SetValue();
-        ValueString();
-        ...+ some more parameter specific
-        */
+        template <typename T> bool SetValue(T val) {
+            assert(std::holds_alternative<T>(this->value));
+            if (std::holds_alternative<T>(this->value)) {
+                this->value = val;
+                return true;
+            }
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Wrong parameter type. 'bad_variant_access' [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+
+        template <typename T> T Value(void) {
+            assert(std::holds_alternative<T>(this->value));
+            if (std::holds_alternative<T>(this->value)) {
+                return std::get<T>(this->value);
+            }
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Wrong requested return type. 'bad_variant_access' [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
+            return T();
+        }
+
+        std::string ValueString(void);
+
+        // + more parameter specific functions:
+        // -> MinValue
+        // -> MaxValue
+        // ButtonParam -> GetKeyCode
+        // EnumParam -> getMap
+        // FlexEnumParam -> getStorage
 
     private:
-        // std::variant<bool,                                 // BOOL, BUTTON
-        //    megamol::core::param::ColorParam::ColorType,    // COLOR
-        //    vislib::Map<int, vislib::TString>,              // ENUM
-        //    vislib::TString,                                // FILEPATH
-        //    megamol::core::param::FlexEnumParam::Storage_t, // FLEXENUM
-        //    float,                                          // FLOAT
-        //    int,                                            // INT
-        //    std::string,                                    // STRING || TRANSFERFUNCTION
-        //    vislib::math::Ternary,                          // TERNARY
-        //    glm::vec2,                                      // VECTOR2F
-        //    glm::vec3,                                      // VECTOR3F
-        //    glm::vec4                                       // VECTOR4F
-        //> storage;
+        std::variant<float, // FLOAT
+            int,            // INT
+            glm::vec2,      // VECTOR2F
+            glm::vec3,      // VECTOR3F
+            glm::vec4       // VECTOR4F
+            >
+            minval;
 
-        // std::variant<bool,                                 // BOOL, BUTTON
-        //    megamol::core::param::ColorParam::ColorType,    // COLOR
-        //    vislib::Map<int, vislib::TString>,              // ENUM
-        //    vislib::TString,                                // FILEPATH
-        //    megamol::core::param::FlexEnumParam::Storage_t, // FLEXENUM
-        //    float,                                          // FLOAT
-        //    int,                                            // INT
-        //    std::string,                                    // STRING || TRANSFERFUNCTION
-        //    vislib::math::Ternary,                          // TERNARY
-        //    glm::vec2,                                      // VECTOR2F
-        //    glm::vec3,                                      // VECTOR3F
-        //    glm::vec4                                       // VECTOR4F
-        //> value;
+        std::variant<float, // FLOAT
+            int,            // INT
+            glm::vec2,      // VECTOR2F
+            glm::vec3,      // VECTOR3F
+            glm::vec4       // VECTOR4F
+            >
+            maxval;
+
+        std::variant<megamol::core::view::KeyCode,         // BUTTON
+            vislib::Map<int, vislib::TString>,             // ENUM
+            megamol::core::param::FlexEnumParam::Storage_t // FLEXENUM
+            >
+            storage;
+
+        std::variant<bool,                               // BOOL     BUTTON
+            megamol::core::param::ColorParam::ColorType, // COLOR
+            float,                                       // FLOAT
+            int,                                         // INT      ENUM
+            std::string,                                 // STRING   TRANSFERFUNCTION    FILEPATH    FLEXENUM
+            vislib::math::Ternary,                       // TERNARY
+            glm::vec2,                                   // VECTOR2F
+            glm::vec3,                                   // VECTOR3F
+            glm::vec4                                    // VECTOR4F
+            >
+            value;
     };
 
     class CallSlot {
