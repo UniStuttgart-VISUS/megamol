@@ -23,24 +23,19 @@ std::string megamol::gui::Graph::ParamSlot::ValueString(void) {
         if constexpr (std::is_same_v<T, int>) {
             auto param = megamol::core::param::IntParam(arg);
             value_string = std::string(param.ValueString().PeekBuffer());
-        }
-        else if constexpr (std::is_same_v<T, long>) {
+        } else if constexpr (std::is_same_v<T, long>) {
 
-        }
-        else if constexpr (std::is_same_v<T, double>) {
+        } else if constexpr (std::is_same_v<T, double>) {
 
-        }
-        else if constexpr (std::is_same_v<T, std::string>) {
+        } else if constexpr (std::is_same_v<T, std::string>) {
 
-        }
-        else {
+        } else {
             value_string = "UNKNOWN";
         }
     };
     std::visit(visitor, this->value);
     return value_string;
 }
-
 
 
 // CALL SLOT ##################################################################

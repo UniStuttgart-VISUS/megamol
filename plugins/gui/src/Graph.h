@@ -127,26 +127,14 @@ public:
 
         std::string full_name;
 
-        template <typename T> bool SetValue(T val) {
+        template <typename T> void SetValue(T val) {
             assert(std::holds_alternative<T>(this->value));
-            if (std::holds_alternative<T>(this->value)) {
-                this->value = val;
-                return true;
-            }
-            vislib::sys::Log::DefaultLog.WriteError(
-                "Wrong parameter type. 'bad_variant_access' [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
+            this->value = val;
         }
 
-        template <typename T> T Value(void) {
+        template <typename T> T Value(void) const {
             assert(std::holds_alternative<T>(this->value));
-            if (std::holds_alternative<T>(this->value)) {
-                return std::get<T>(this->value);
-            }
-            vislib::sys::Log::DefaultLog.WriteError(
-                "Wrong requested return type. 'bad_variant_access' [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                __LINE__);
-            return T();
+            return std::get<T>(this->value);
         }
 
         std::string ValueString(void);
@@ -159,21 +147,9 @@ public:
         // FlexEnumParam -> getStorage
 
     private:
-        std::variant<float, // FLOAT
-            int,            // INT
-            glm::vec2,      // VECTOR2F
-            glm::vec3,      // VECTOR3F
-            glm::vec4       // VECTOR4F
-            >
-            minval;
+        std::variant<float, int, glm::vec2, glm::vec3, glm::vec4> minval;
 
-        std::variant<float, // FLOAT
-            int,            // INT
-            glm::vec2,      // VECTOR2F
-            glm::vec3,      // VECTOR3F
-            glm::vec4       // VECTOR4F
-            >
-            maxval;
+        std::variant<float, int, glm::vec2, glm::vec3, glm::vec4> maxval;
 
         std::variant<megamol::core::view::KeyCode,         // BUTTON
             vislib::Map<int, vislib::TString>,             // ENUM
