@@ -275,6 +275,7 @@ public:
         ImVec2 canvas_offset;
         bool show_grid;
         bool show_call_names;
+        bool show_slot_names;
         int selected_module_uid;
         int selected_call_uid;
         int hovered_slot_uid;

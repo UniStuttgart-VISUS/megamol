@@ -382,6 +382,13 @@ bool megamol::gui::Configurator::draw_canvas_menu(GraphManager::GraphPtrType gra
     ImGui::Checkbox("Show Call Names", &graph->gui.show_call_names);
 
     ImGui::SameLine();
+    if (ImGui::Checkbox("Show Slot Names", &graph->gui.show_slot_names)) {
+        for (auto& mods : graph->GetGraphModules()) {
+            mods->gui.update_size = true;
+        }
+    }
+
+    ImGui::SameLine();
     if (ImGui::Button("Layout Graph")) {
         graph->gui.update_layout = true;
     }
@@ -396,7 +403,8 @@ bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType gr
 
     ImGuiIO& io = ImGui::GetIO();
 
-    // The graph font
+    // Font scaling is applied next frame after ImGui::Begin()
+    // Font for graph should not be the currently used font of the gui.
     if (this->gui.graph_font == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Found no font for configurator. Call SetGraphFont() in GuiView for setting a font. [%s, %s, line %d]\n",
@@ -404,8 +412,6 @@ bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType gr
         return false;
     }
     ImGui::PushFont(this->gui.graph_font);
-    // Font scaling is only applied after next ImGui::Begin()
-    // Font for graph should not be the currently used font of the gui.
     ImGui::GetFont()->Scale = graph->gui.canvas_zooming;
 
     const ImU32 COLOR_CANVAS_BACKGROUND = IM_COL32(75, 75, 75, 255);
@@ -464,8 +470,7 @@ bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType gr
         // Scrolling (2 = Middle Mouse Button)
         if (ImGui::IsMouseDragging(2, 0.0f)) {
             graph->gui.canvas_scrolling =
-                (graph->gui.canvas_scrolling * graph->gui.canvas_zooming + ImGui::GetIO().MouseDelta) /
-                graph->gui.canvas_zooming;
+                graph->gui.canvas_scrolling + ImGui::GetIO().MouseDelta / graph->gui.canvas_zooming;
         }
         // Zooming (Mouse Wheel)
         if (this->gui.mouse_wheel != io.MouseWheel) {
@@ -490,7 +495,8 @@ bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType gr
     graph->gui.canvas_offset = graph->gui.canvas_position + (graph->gui.canvas_scrolling * graph->gui.canvas_zooming);
 
     /// DEBUG Draw point at origin
-    draw_list->AddCircleFilled(graph->gui.canvas_offset, 10.0f * graph->gui.canvas_zooming, IM_COL32(192, 0, 0, 255));
+    /// draw_list->AddCircleFilled(graph->gui.canvas_offset, 10.0f * graph->gui.canvas_zooming, IM_COL32(192, 0, 0,
+    /// 255));
 
     draw_list->ChannelsMerge();
     ImGui::EndChild();
@@ -661,50 +667,49 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
             ImVec2 module_rect_min = graph->gui.canvas_offset + module_position;
             ImVec2 module_rect_max = module_rect_min + module_size;
             ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
-            std::string label = mod->gui.class_label + mod->class_name;
+            std::string label = mod->gui.class_label;
 
             // Draw text
             draw_list->ChannelsSetCurrent(1); // Foreground
-            // ImGui::BeginGroup();
+            ImGui::BeginGroup();
 
-            // float line_offset = 0.0f;
-            // if (mod->is_view) {
-            //    line_offset = -0.5f * ImGui::GetItemsLineHeightWithSpacing();
-            //}
+            float line_offset = 0.0f;
+            if (mod->is_view) {
+                line_offset = -0.5f * ImGui::GetItemsLineHeightWithSpacing();
+            }
 
+            auto class_name_width = this->utils.TextWidgetWidth(label);
+            ImGui::SetCursorScreenPos(module_center + ImVec2(-(class_name_width / 2.0f),
+                                                          line_offset - ImGui::GetItemsLineHeightWithSpacing()));
+            ImGui::Text(label.c_str());
 
-            // auto class_name_width = this->utils.TextWidgetWidth(label);
-            // ImGui::SetCursorScreenPos(module_center + ImVec2(-(class_name_width / 2.0f),
-            //                                              line_offset - ImGui::GetItemsLineHeightWithSpacing()));
-            // ImGui::Text(label.c_str());
+            label = mod->gui.name_label;
+            auto name_width = this->utils.TextWidgetWidth(label);
+            ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), line_offset));
+            ImGui::Text(label.c_str());
 
-            // label = mod->gui.name_label + mod->name;
-            // auto name_width = this->utils.TextWidgetWidth(label);
-            // ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), line_offset));
-            // ImGui::Text(label.c_str());
+            if (mod->is_view) {
+                if (false) {
+                    std::string view_label = "[View]";
+                    if (mod->is_view_instance) {
+                        view_label = "[Main View]";
+                    }
+                    name_width = this->utils.TextWidgetWidth(view_label);
+                    ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), -line_offset));
+                    ImGui::Text(view_label.c_str());
+                } else {
+                    std::string view_label = "Main View";
+                    name_width = this->utils.TextWidgetWidth(view_label);
+                    ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f) - 20.0f, -line_offset));
+                    ImGui::Checkbox(view_label.c_str(), &mod->is_view_instance);
+                    ImGui::SameLine();
+                    this->utils.HelpMarkerToolTip(
+                        "There should be only one main view.\nOtherwise first one found is used.");
+                    /// TODO ensure that there is always just one main view ...
+                }
+            }
 
-            // if (mod->is_view) {
-            //    if (false) {
-            //        std::string view_label = "[View]";
-            //        if (mod->is_view_instance) {
-            //            view_label = "[Main View]";
-            //        }
-            //        name_width = this->utils.TextWidgetWidth(view_label);
-            //        ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), -line_offset));
-            //        ImGui::Text(view_label.c_str());
-            //    } else {
-            //        std::string view_label = "Main View";
-            //        name_width = this->utils.TextWidgetWidth(view_label);
-            //        ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f) - 20.0f, -line_offset));
-            //        ImGui::Checkbox(view_label.c_str(), &mod->is_view_instance);
-            //        ImGui::SameLine();
-            //        this->utils.HelpMarkerToolTip(
-            //            "There should be only one main view.\nOtherwise first one found is used.");
-            //        /// TODO ensure that there is always just one main view ...
-            //    }
-            //}
-
-            // ImGui::EndGroup();
+            ImGui::EndGroup();
 
             // Draw box
             draw_list->ChannelsSetCurrent(0); // Background
@@ -805,13 +810,11 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slots(
                 ImGui::SetCursorScreenPos(slot_position - ImVec2(radius, radius));
                 std::string label = "slot_" + mod->full_name + slot_name + std::to_string(slot->uid);
                 ImGui::InvisibleButton(label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
-                std::string tooltip = slot->description;
 
-                /// TODO apply zoooming
-                if (false) {
+                std::string tooltip = slot->description;
+                if (!graph->gui.show_slot_names) {
                     tooltip = slot->name + " | " + tooltip;
                 }
-
                 this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
                 auto hovered = ImGui::IsItemHovered();
                 auto clicked = ImGui::IsItemClicked();
@@ -846,18 +849,17 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slots(
                 draw_list->AddCircleFilled(slot_position, radius, slot_color);
                 draw_list->AddCircle(slot_position, radius, COLOR_SLOT_BORDER);
 
-                /// TODO apply zoooming
                 // Draw text
-                // if (true) {
-                //    ImVec2 text_pos;
-                //    text_pos.y = slot_position.y - ImGui::GetFontSize() / 2.0f;
-                //    if (slot_pair.first == Graph::CallSlotType::CALLER) {
-                //        text_pos.x = slot_position.x - this->utils.TextWidgetWidth(slot_name) - (2.0f * radius);
-                //    } else if (slot_pair.first == Graph::CallSlotType::CALLEE) {
-                //        text_pos.x = slot_position.x + (2.0f * radius);
-                //    }
-                //    draw_list->AddText(text_pos, slot_label_color, slot_name.c_str());
-                //}
+                if (graph->gui.show_slot_names) {
+                    ImVec2 text_pos;
+                    text_pos.y = slot_position.y - ImGui::GetFontSize() / 2.0f;
+                    if (slot_pair.first == Graph::CallSlotType::CALLER) {
+                        text_pos.x = slot_position.x - this->utils.TextWidgetWidth(slot_name) - (2.0f * radius);
+                    } else if (slot_pair.first == Graph::CallSlotType::CALLEE) {
+                        text_pos.x = slot_position.x + (2.0f * radius);
+                    }
+                    draw_list->AddText(text_pos, slot_label_color, slot_name.c_str());
+                }
 
                 ImGui::PopID();
             }
@@ -922,37 +924,34 @@ bool megamol::gui::Configurator::draw_canvas_dragged_call(GraphManager::GraphPtr
 
 bool megamol::gui::Configurator::update_module_size(GraphManager::GraphPtrType graph, Graph::ModulePtrType mod) {
 
-    /// TODO apply zoooming
-    mod->gui.class_label = "Class: ";
-    if (false) mod->gui.class_label.clear();
-    float class_name_length = this->utils.TextWidgetWidth(mod->gui.class_label + mod->class_name);
+    // Calculate default size without font scaling!
 
-    /// TODO apply zoooming
-    mod->gui.name_label = "Name: ";
-    if (false) mod->gui.name_label.clear();
-    float name_length = this->utils.TextWidgetWidth(mod->gui.name_label + mod->name);
-
+    mod->gui.class_label = "Class: " + mod->class_name;
+    float class_name_length = this->utils.TextWidgetWidth(mod->gui.class_label);
+    mod->gui.name_label = "Name: " + mod->name;
+    float name_length = this->utils.TextWidgetWidth(mod->gui.name_label);
     float max_label_length = std::max(class_name_length, name_length);
 
     float max_slot_name_length = 0.0f;
-    /// TODO apply zoooming
-    if (true) {
+    if (graph->gui.show_slot_names) {
         for (auto& call_slot_type_list : mod->GetCallSlots()) {
             for (auto& call_slot : call_slot_type_list.second) {
-                float slot_name_length = this->utils.TextWidgetWidth(call_slot->name);
-                max_slot_name_length = std::max(slot_name_length, max_slot_name_length);
+                max_slot_name_length = std::max(this->utils.TextWidgetWidth(call_slot->name), max_slot_name_length);
             }
         }
         max_slot_name_length = (2.0f * max_slot_name_length) + (2.0f * graph->gui.slot_radius);
     }
 
     float module_width = (max_label_length + max_slot_name_length) + (4.0f * graph->gui.slot_radius);
+
     auto max_slot_count = std::max(
         mod->GetCallSlots(Graph::CallSlotType::CALLEE).size(), mod->GetCallSlots(Graph::CallSlotType::CALLER).size());
     float module_slot_height = (static_cast<float>(max_slot_count) * (graph->gui.slot_radius * 2.0f) * 1.5f) +
                                ((graph->gui.slot_radius * 2.0f) * 0.5f);
+
     float module_height =
         std::max(module_slot_height, ImGui::GetItemsLineHeightWithSpacing() * ((mod->is_view) ? (4.0f) : (3.0f)));
+
     mod->gui.size = ImVec2(module_width, module_height);
 
     return true;

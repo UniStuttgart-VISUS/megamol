@@ -388,6 +388,7 @@ megamol::gui::Graph::Graph(int graph_uid, const std::string& graph_name)
     this->gui.canvas_offset = ImVec2(0.0f, 0.0f);
     this->gui.show_grid = false;
     this->gui.show_call_names = true;
+    this->gui.show_slot_names = true;
     this->gui.selected_module_uid = -1;
     this->gui.selected_call_uid = -1;
     this->gui.hovered_slot_uid = -1;
