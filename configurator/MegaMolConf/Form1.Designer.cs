@@ -77,6 +77,7 @@
             this.websiteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.btnHideCallNames = new System.Windows.Forms.ToolStripButton();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.cmdResetFilter = new System.Windows.Forms.Button();
@@ -162,7 +163,8 @@
             this.toolStripDropDownButton1,
             this.btnCloseProject,
             this.toolStripSeparator4,
-            this.toolStripDropDownButton2});
+            this.toolStripDropDownButton2,
+            this.btnHideCallNames});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(1063, 25);
@@ -281,14 +283,12 @@
             // 
             // hostToolStripTextBox
             // 
-            this.hostToolStripTextBox.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.hostToolStripTextBox.Name = "hostToolStripTextBox";
             this.hostToolStripTextBox.Size = new System.Drawing.Size(200, 23);
             this.hostToolStripTextBox.Text = "localhost";
             // 
             // portToolStripTextBox
             // 
-            this.portToolStripTextBox.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.portToolStripTextBox.Name = "portToolStripTextBox";
             this.portToolStripTextBox.Size = new System.Drawing.Size(100, 23);
             this.portToolStripTextBox.Text = "33333";
@@ -522,6 +522,19 @@
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
             this.aboutToolStripMenuItem.Text = "About ...";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            // 
+            // btnHideCallNames
+            // 
+            this.btnHideCallNames.Checked = true;
+            this.btnHideCallNames.CheckOnClick = true;
+            this.btnHideCallNames.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.btnHideCallNames.Image = ((System.Drawing.Image)(resources.GetObject("btnHideCallNames.Image")));
+            this.btnHideCallNames.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnHideCallNames.Name = "btnHideCallNames";
+            this.btnHideCallNames.Size = new System.Drawing.Size(89, 22);
+            this.btnHideCallNames.Text = "HideNames";
+            this.btnHideCallNames.ToolTipText = "Hides the names and rectangles of the calls";
+            this.btnHideCallNames.Click += new System.EventHandler(this.btnHideCallNames_Click);
             // 
             // splitContainer1
             // 
@@ -907,6 +920,7 @@
         private System.Windows.Forms.ToolStripTextBox hostToolStripTextBox;
         private System.Windows.Forms.ToolStripTextBox portToolStripTextBox;
         private System.Windows.Forms.ToolStripButton btnLua;
+        private System.Windows.Forms.ToolStripButton btnHideCallNames;
     }
 }
 

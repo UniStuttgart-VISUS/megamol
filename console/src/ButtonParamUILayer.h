@@ -35,7 +35,7 @@ namespace console {
         void *hCore; // handle memory is owned by application
         void *hView; // handle memory is owned by Window
 
-        std::chrono::system_clock::time_point last_update;
+        size_t last_param_hash;
         std::map<std::string, vislib::TString> hotkeys;
         AbstractUILayer *maskingLayer;
     };
