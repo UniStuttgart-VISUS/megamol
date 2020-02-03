@@ -41,25 +41,10 @@ GenerateGlyphs::~GenerateGlyphs() {
 }
 
 
-bool GenerateGlyphs::doGlyphGeneration() {
-
-    this->_mesh_data = std::make_shared<mesh::MeshDataAccessCollection>();
-    this->_tex_data = std::make_shared<mesh::ImageDataAccessCollection>();
-
-    _dtu.resize(this->_probe_data->getProbeCount());
-    _generated_mesh.resize(this->_probe_data->getProbeCount() * 4);
-
-    this->_generated_mesh_indices = {0, 1, 3, 0, 3, 2};
-    this->_generated_texture_coordinates[0] = {0.0f, 0.0f};
-    this->_generated_texture_coordinates[1] = {0.0f, 1.0f};
-    this->_generated_texture_coordinates[2] = {1.0f, 0.0f};
-    this->_generated_texture_coordinates[3] = {1.0f, 1.0f};
-
-//#pragma omp parallel for
-    for (int i = 0; i < this->_probe_data->getProbeCount(); i++) {
+bool GenerateGlyphs::doScalarGlyphGeneration(FloatProbe&  probe) {
 
         // get probe
-        auto probe = this->_probe_data->getProbe<FloatProbe>(i);
+        //auto probe = this->_probe_data->getProbe<FloatProbe>(i);
         // read samples of probe
         auto samples = probe.getSamplingResult();
 
@@ -126,14 +111,15 @@ bool GenerateGlyphs::doGlyphGeneration() {
         vertex4[1] = middle[1] - scale / 2 * plane_vec_1[1] - scale / 2 * plane_vec_2[1];
         vertex4[2] = middle[2] - scale / 2 * plane_vec_1[2] - scale / 2 * plane_vec_2[2];
 
-        this->_generated_mesh[i * 4 + 0] = vertex1; 
-        this->_generated_mesh[i * 4 + 1] = vertex2;    
-        this->_generated_mesh[i * 4 + 2] = vertex3;
-        this->_generated_mesh[i * 4 + 3] = vertex4;
+        size_t offset = _generated_mesh.size();
+        this->_generated_mesh.push_back(vertex1); 
+        this->_generated_mesh.push_back(vertex2);    
+        this->_generated_mesh.push_back(vertex3);
+        this->_generated_mesh.push_back(vertex4);
 
         std::vector<mesh::MeshDataAccessCollection::VertexAttribute> vertex_attributes(2);
         mesh::MeshDataAccessCollection::VertexAttribute pos_attrib;
-        pos_attrib.data = reinterpret_cast<uint8_t*>(&this->_generated_mesh[i * 4 + 0]);
+        pos_attrib.data = reinterpret_cast<uint8_t*>(&this->_generated_mesh[offset]);
         pos_attrib.stride = sizeof(std::array<float, 3>);
         pos_attrib.byte_size = pos_attrib.stride * 4;
         pos_attrib.component_cnt = 3;
@@ -159,17 +145,25 @@ bool GenerateGlyphs::doGlyphGeneration() {
 
         this->_mesh_data->addMesh(vertex_attributes, index_data);
 
-        _dtu[i].setResolution(300, 300); // should be changeable
-        _dtu[i].setGraphType(DrawTextureUtility::GLYPH); // should be changeable
+        _dtu.push_back(DrawTextureUtility());
+        _dtu.back().setResolution(300, 300); // should be changeable
+        _dtu.back().setGraphType(DrawTextureUtility::GLYPH); // should be changeable
 
-        auto tex_ptr = _dtu[i].draw(samples->samples, samples->min_value, samples->max_value);
-        this->_tex_data->addImage(mesh::ImageDataAccessCollection::RGBA8, _dtu[i].getPixelWidth(),
-            _dtu[i].getPixelHeight(), tex_ptr, 4 * _dtu[i].getPixelWidth() *
-            _dtu[i].getPixelHeight());
-
-    } // end for probe count
+        auto tex_ptr = _dtu.back().draw(samples->samples, samples->min_value, samples->max_value);
+        this->_tex_data->addImage(mesh::ImageDataAccessCollection::RGBA8, _dtu.back().getPixelWidth(),
+            _dtu.back().getPixelHeight(), tex_ptr, 4 * _dtu.back().getPixelWidth() *
+            _dtu.back().getPixelHeight());
 
     return true;
+}
+
+bool GenerateGlyphs::doVectorRibbonGlyphGeneration() { 
+
+
+
+
+
+    return false; 
 }
 
 
@@ -192,9 +186,31 @@ bool GenerateGlyphs::getMesh(core::Call& call) {
 
     if (cprobes->hasUpdate()){
         ++_version;
-        this->_probe_data = cprobes->getData();
+        
         if (this->scale <= 0.0) this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 8e-3;
-        doGlyphGeneration();
+
+        this->_probe_data = cprobes->getData();
+
+        //TODO visitor pattern
+
+        this->_mesh_data = std::make_shared<mesh::MeshDataAccessCollection>();
+        this->_tex_data = std::make_shared<mesh::ImageDataAccessCollection>();
+
+        _dtu.reserve(this->_probe_data->getProbeCount());
+        _generated_mesh.reserve(this->_probe_data->getProbeCount() * 4);
+
+        this->_generated_mesh_indices = {0, 1, 3, 0, 3, 2};
+        this->_generated_texture_coordinates[0] = {0.0f, 0.0f};
+        this->_generated_texture_coordinates[1] = {0.0f, 1.0f};
+        this->_generated_texture_coordinates[2] = {1.0f, 0.0f};
+        this->_generated_texture_coordinates[3] = {1.0f, 1.0f};
+
+        //#pragma omp parallel for
+        for (int i = 0; i < this->_probe_data->getProbeCount(); i++) {
+            auto probe = this->_probe_data->getProbe<FloatProbe>(i);
+            doScalarGlyphGeneration(probe);
+        } // end for probe count
+
     }
 
     cm->setData(this->_mesh_data,_version);
@@ -242,9 +258,30 @@ bool GenerateGlyphs::getTexture(core::Call& call) {
 
     if (cprobes->hasUpdate()) {
         ++_version;
+
+        if (this->scale <= 0.0) this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 8e-3;
+
         this->_probe_data = cprobes->getData();
-        if (this->scale < 0) this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 2e-2;
-        if(!doGlyphGeneration()) return false;
+
+        // TODO visitor pattern
+
+        this->_mesh_data = std::make_shared<mesh::MeshDataAccessCollection>();
+        this->_tex_data = std::make_shared<mesh::ImageDataAccessCollection>();
+
+        _dtu.reserve(this->_probe_data->getProbeCount());
+        _generated_mesh.reserve(this->_probe_data->getProbeCount() * 4);
+
+        this->_generated_mesh_indices = {0, 1, 3, 0, 3, 2};
+        this->_generated_texture_coordinates[0] = {0.0f, 0.0f};
+        this->_generated_texture_coordinates[1] = {0.0f, 1.0f};
+        this->_generated_texture_coordinates[2] = {1.0f, 0.0f};
+        this->_generated_texture_coordinates[3] = {1.0f, 1.0f};
+
+        //#pragma omp parallel for
+        for (int i = 0; i < this->_probe_data->getProbeCount(); i++) {
+            auto probe = this->_probe_data->getProbe<FloatProbe>(i);
+            doScalarGlyphGeneration(probe);
+        } // end for probe count
     }
 
     ctex->setData(this->_tex_data,_version);
