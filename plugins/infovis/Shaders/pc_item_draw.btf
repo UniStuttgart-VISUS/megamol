@@ -552,8 +552,8 @@ layout(location = 0) patch out InterfaceTCO out_;
       <snippet type="string">
 void main(void) {
   if (gl_InvocationID == 0) {
-    unsigned int baseItemID = gl_PrimitiveID * isoLinesPerInvocation;
-    unsigned int remaining = max(itemCount - baseItemID, 0);
+    uint baseItemID = gl_PrimitiveID * isoLinesPerInvocation;
+    uint remaining = max(itemCount - baseItemID, 0);
     out_.baseItemID = baseItemID;
     out_.generatedLines = remaining;
     gl_TessLevelOuter[0] = remaining;
