@@ -117,7 +117,7 @@ private:
     /** Queue containing the paths of the images to load */
     std::queue<std::string> imageLoadingQueue;
 
-    /**  */
+    /** Thread responsible for image loading */
     std::thread loadingThread;
 
     /** Mutex to protect the queue from race conditions */

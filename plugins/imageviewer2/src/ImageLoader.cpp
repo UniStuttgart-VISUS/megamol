@@ -13,6 +13,7 @@
 
 #include <filesystem>
 #include <functional>
+#include <iostream>
 #include "image_calls/Image2DCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -70,7 +71,7 @@ ImageLoader::~ImageLoader(void) { this->Release(); }
 bool ImageLoader::create(void) {
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::PngBitmapCodec());
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::JpegBitmapCodec());
-    this->loadingThread = std::thread(std::bind(&ImageLoader::loadingLoop), std::ref(*this)); // start loading thread
+    this->loadingThread = std::thread(&ImageLoader::loadingLoop, std::ref(*this)); // start loading thread
     return true;
 }
 
@@ -193,4 +194,14 @@ bool ImageLoader::loadImage(const std::filesystem::path& path) {
     }
 
     return true;
+}
+
+/*
+ * ImageLoader::loadingLoop
+ */
+void ImageLoader::loadingLoop(void) {
+    while (this->keepRunning) {
+        // TODO
+        
+    }
 }
