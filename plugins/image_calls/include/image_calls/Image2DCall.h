@@ -87,12 +87,33 @@ public:
      */
     const std::shared_ptr<ImageMap> GetImagePtr(void) const;
 
+    /**
+     * Set the pointer to the field containing all paths to the available files.
+     *
+     * @param ptr Pointer to the data vector
+     */
     void SetAvailablePathsPtr(const std::shared_ptr<std::vector<std::string>> ptr);
 
+    /**
+     * Returns the pointer to the vector containing all available image file paths.
+     *
+     * @return All available image file paths.
+     */
     const std::shared_ptr<std::vector<std::string>> GetAvailablePathsPtr(void) const;
 
+    /**
+     * Sets the pointer to the wishlist, containing all indices of the desired images
+     * When this is set to nullptr, all images are set as wished for.
+     * 
+     * @param ptr Pointer to the vector containing all desired image indices
+     */
     void SetWishlistPtr(const std::shared_ptr<std::vector<uint64_t>> ptr);
 
+    /**
+     * Returns the pointer to the wishlist
+     *
+     * @return Pointer to the wishlist
+     */
     const std::shared_ptr<std::vector<uint64_t>> GetWishlistPtr(void) const;
 
     /** Ctor. */

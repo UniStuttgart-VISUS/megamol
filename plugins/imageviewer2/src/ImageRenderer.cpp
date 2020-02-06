@@ -263,6 +263,7 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
         if (!imgcConnected) {
             filenameSlot->ResetDirty();
         } else {
+            if (!(*imgc)(image_calls::Image2DCall::CallForGetMetaData)) return false;
             if (!(*imgc)(image_calls::Image2DCall::CallForGetData)) return false;
             if (imgc->GetImageCount() > 0) {
                 filename = vislib::TString((*imgc->GetImagePtr()->begin()).first.c_str());

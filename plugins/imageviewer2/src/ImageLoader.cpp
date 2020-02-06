@@ -38,6 +38,7 @@ ImageLoader::ImageLoader(void)
           "The maximum memory in Gigabyte that will be occupied by the loaded data. This value can be "
           "ignored by selecting the loadEverything option.")
     , imageData(std::make_shared<image_calls::Image2DCall::ImageMap>())
+    , availableFiles(std::make_shared<std::vector<std::string>>())
     , datahash(0) {
 
     this->callRequestImage.SetCallback(image_calls::Image2DCall::ClassName(),
@@ -53,7 +54,7 @@ ImageLoader::ImageLoader(void)
     this->filenameSlot.SetParameter(new param::FilePathParam(""));
     this->MakeSlotAvailable(&this->filenameSlot);
 
-    this->loadEverythingSlot.SetParameter(new param::BoolParam(false));
+    this->loadEverythingSlot.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->loadEverythingSlot);
 
     this->maximumMemoryOccupationSlot.SetParameter(new param::FloatParam(4.0f, 0.1f));
@@ -92,26 +93,12 @@ bool ImageLoader::GetData(core::Call& call) {
     image_calls::Image2DCall* ic = dynamic_cast<image_calls::Image2DCall*>(&call);
     if (ic == nullptr) return false;
 
-    if (this->filenameSlot.IsDirty()) {
-        this->filenameSlot.ResetDirty();
-        this->imageData->clear();
-        auto tpath = this->filenameSlot.Param<param::FilePathParam>()->Value();
-        std::filesystem::path path(tpath.PeekBuffer());
-
-        // check path extension
-        if (path.has_extension() && path.extension().string().compare(".txt") != 0) { // normal file
-            if (!this->loadImage(path.string())) return false;
-        } else { // list of files
-            std::ifstream file(path);
-            if (file.is_open()) {
-                std::string line;
-                while (std::getline(file, line)) {
-                    std::filesystem::path curPath(line);
-                    this->loadImage(curPath);
-                }
-            }
-        }
-        ++this->datahash;
+    if (this->newImageAvailable) {
+        this->imageMutex.lock();
+        this->imageData->insert(this->newImageData.begin(), this->newImageData.end());
+        this->newImageData.clear();
+        this->imageMutex.unlock();
+        this->newImageAvailable = false;
     }
 
     ic->SetImagePtr(this->imageData);
@@ -145,6 +132,14 @@ bool ImageLoader::GetMetaData(core::Call& call) {
                 while (std::getline(file, line)) {
                     this->availableFiles->push_back(line);
                 }
+                if (this->loadEverythingSlot.Param<param::BoolParam>()->Value()) {
+                    this->queueMutex.lock();
+                    this->queueElements.insert(this->availableFiles->begin(), this->availableFiles->end());
+                    for (const auto& e : this->queueElements) {
+                        this->imageLoadingQueue.push(e);
+                    }
+                    this->queueMutex.unlock();
+                }
             } else {
                 vislib::sys::Log::DefaultLog.WriteError("ImageLoader: The file \"%s\" could not be opened", path);
                 return false;
@@ -159,9 +154,37 @@ bool ImageLoader::GetMetaData(core::Call& call) {
 /*
  * ImageLoader::SetWishlist
  */
-bool ImageLoader::SetWishlist(core::Call& call) {
-    // TODO implement
-    return true;
+bool ImageLoader::SetWishlist(core::Call& call) { 
+    image_calls::Image2DCall* ic = dynamic_cast<image_calls::Image2DCall*>(&call);
+    if (ic == nullptr) return false;
+    const auto wishlist = ic->GetWishlistPtr();
+
+    if (wishlist == nullptr) {
+        for (const auto& e : *this->availableFiles) {
+            this->queueMutex.lock();
+            if (imageData->count(e) == 0 && this->queueElements.count(e) == 0) {
+                this->imageLoadingQueue.push(e);
+                this->queueElements.insert(e);
+            }
+            this->queueMutex.unlock();
+        }
+    } else {
+        for (const auto& id : *wishlist) {
+            if (id >= wishlist->size()) {
+                vislib::sys::Log::DefaultLog.WriteError("There is no image with the id %u", static_cast<unsigned int>(id));
+                continue;
+            }
+            const auto& e = this->availableFiles->at(id);
+            this->queueMutex.lock();
+            if (imageData->count(e) == 0 && this->queueElements.count(e) == 0) {
+                this->imageLoadingQueue.push(e);
+                this->queueElements.insert(e);
+            }
+            this->queueMutex.unlock();
+        }
+    }
+
+    return true; 
 }
 
 /*
@@ -187,7 +210,9 @@ bool ImageLoader::loadImage(const std::filesystem::path& path) {
     if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
             image, loadedFile.data(), fileSize)) {
         image.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
-        this->imageData->insert(std::pair(path.string(), image));
+        this->imageMutex.lock();
+        this->newImageData.insert(std::pair(path.string(), image));
+        this->imageMutex.unlock();
     } else {
         vislib::sys::Log::DefaultLog.WriteError("ImageLoader: failed decoding file \"%s\"", path.c_str());
         return false;
@@ -201,7 +226,13 @@ bool ImageLoader::loadImage(const std::filesystem::path& path) {
  */
 void ImageLoader::loadingLoop(void) {
     while (this->keepRunning) {
-        // TODO
-        
+        if (!this->imageLoadingQueue.empty()) {
+            this->queueMutex.lock();
+            auto elem = this->imageLoadingQueue.front();
+            this->imageLoadingQueue.pop();
+            this->queueMutex.unlock();
+            this->loadImage(elem);
+            this->newImageAvailable = true;
+        }
     }
 }

@@ -13,12 +13,12 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
+#include <atomic>
 #include <fstream>
 #include <mutex>
 #include <queue>
 #include <set>
 #include <thread>
-#include <atomic>
 
 namespace megamol {
 namespace imageviewer2 {
@@ -108,6 +108,9 @@ private:
     /** Pointer to the vector containing the images */
     std::shared_ptr<image_calls::Image2DCall::ImageMap> imageData;
 
+    /**  */
+    image_calls::Image2DCall::ImageMap newImageData;
+
     /** List of all available image files */
     std::shared_ptr<std::vector<std::string>> availableFiles;
 
@@ -123,11 +126,16 @@ private:
     /** Mutex to protect the queue from race conditions */
     std::mutex queueMutex;
 
+    /**  */
+    std::mutex imageMutex;
+
     /** Flag telling the seperate loader thread when to stop */
     std::atomic_bool keepRunning = true;
 
     /** hash value for the data */
     SIZE_T datahash;
+
+    std::atomic_bool newImageAvailable = true;
 
     /**
      * Loads an image from the harddrive using the given path
