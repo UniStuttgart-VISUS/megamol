@@ -81,6 +81,7 @@
 #include "table/MMFTDataWriter.h"
 #include "table/TableColumnFilter.h"
 #include "table/TableColumnScaler.h"
+#include "table/TableFlagFilter.h"
 #include "table/TableJoin.h"
 #include "table/TableObserverPlane.h"
 #include "table/TableSampler.h"
@@ -215,6 +216,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableJoin>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableColumnFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSampler>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableFlagFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocities>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleNeighborhood>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermodyn>();
