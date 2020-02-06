@@ -26,7 +26,7 @@ Visit the project [website](https://github.com/UniStuttgart-VISUS/megamol.git "M
 
 ### License
 
-MegaMol is freely and publicly available as open source following the therms of the BSD License.
+MegaMol is freely and publicly available as open source following the terms of the BSD License.
 Copyright (c) 2015, MegaMol Team TU Dresden, Germany Visualization Research Center, University of Stuttgart (VISUS), Germany
 Alle Rechte vorbehalten.
 All rights reserved.
@@ -197,7 +197,7 @@ Test your installation following the description in the following section.
 
 ### Tests
 
-The test MegaMol simple start the front end executable. Open a console and change your working directory to the MegaMol install directory. Start
+To test MegaMol simply start the front end executable. Open a console and change your working directory to the MegaMol install directory. Start
 the MegaMol start script:
 
 Linux:
