@@ -23,7 +23,7 @@
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 
-#include "data/tpf_grid.h"
+#include "tpf/data/tpf_grid.h"
 
 #include <array>
 #include <functional>

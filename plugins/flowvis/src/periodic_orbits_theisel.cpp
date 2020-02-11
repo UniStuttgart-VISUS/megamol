@@ -23,9 +23,9 @@
 
 #include <CGAL/intersections.h>
 
-#include "data/tpf_data_information.h"
-#include "data/tpf_grid.h"
-#include "data/tpf_grid_information.h"
+#include "tpf/data/tpf_data_information.h"
+#include "tpf/data/tpf_grid.h"
+#include "tpf/data/tpf_grid_information.h"
 
 #include <algorithm>
 #include <iostream>

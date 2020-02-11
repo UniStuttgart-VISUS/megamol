@@ -14,9 +14,9 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "data/tpf_grid.h"
-#include "stdext/tpf_comparator.h"
-#include "utility/tpf_optional.h"
+#include "tpf/data/tpf_grid.h"
+#include "tpf/stdext/tpf_comparator.h"
+#include "tpf/utility/tpf_optional.h"
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 

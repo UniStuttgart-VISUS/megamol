@@ -14,9 +14,9 @@
 
 #include "vislib/sys/Log.h"
 
-#include "data/tpf_data_information.h"
-#include "data/tpf_grid.h"
-#include "data/tpf_grid_information.h"
+#include "tpf/data/tpf_data_information.h"
+#include "tpf/data/tpf_grid.h"
+#include "tpf/data/tpf_grid_information.h"
 
 namespace megamol {
 namespace flowvis {

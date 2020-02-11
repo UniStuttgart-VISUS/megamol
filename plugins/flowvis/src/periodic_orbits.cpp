@@ -18,10 +18,10 @@
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/Log.h"
 
-#include "data/tpf_grid.h"
-#include "math/tpf_vector.h"
-#include "stdext/tpf_hash.h"
-#include "utility/tpf_optional.h"
+#include "tpf/data/tpf_grid.h"
+#include "tpf/math/tpf_vector.h"
+#include "tpf/stdext/tpf_hash.h"
+#include "tpf/utility/tpf_optional.h"
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/intersection_2.h>

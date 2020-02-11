@@ -8,7 +8,7 @@
 
 #include "Eigen/Dense"
 
-#include "data/tpf_grid.h"
+#include "tpf/data/tpf_grid.h"
 
 namespace megamol {
 namespace flowvis {
