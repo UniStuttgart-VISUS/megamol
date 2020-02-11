@@ -113,7 +113,8 @@ function(require_external NAME)
 
     add_external_headeronly_project(tpf
       DEPENDS Eigen CGAL::CGAL
-      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/tpf.git)
+      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/tpf.git
+      GIT_TAG 87f8aab9e55478e5234cbe8d325ac586266445a2)
 
     set(optional_compile_definitions)
     if(ENABLE_MPI)
