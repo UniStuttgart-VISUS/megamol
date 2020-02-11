@@ -9,5 +9,5 @@
     camPos.xyz -= objPos.xyz; // cam pos to glyph space 
  
     // calculate light direction in glyph space 
-    outlightDir = MVtransp * lightDir;
+    outlightDir = lightDir;
 

@@ -28,13 +28,19 @@ void main()
 		for (uint f = 0; f < dimensionCount; ++f)
 		{
     	uint dataID = pc_item_dataID(itemID, f);
-		  float value = pc_item_dataValue(dataID, f);
+		  float value = pc_item_dataValue_unscaled(dataID);
 
-      if (value < filters[f].lower || value > filters[f].upper) {
-        bitflag_set(flags[itemID], FLAG_FILTERED, true);
-        //bitflag_set(flags[itemID], FLAG_ENABLED, false);
-  		  break;
-		  }
+      if (filters[f].lower <= filters[f].upper) {
+        if (value < filters[f].lower || value > filters[f].upper) {
+          bitflag_set(flags[itemID], FLAG_FILTERED, true);
+          break;
+        }
+      } else {
+        if (value < filters[f].lower && value > filters[f].upper) {
+          bitflag_set(flags[itemID], FLAG_FILTERED, true);
+          break;
+        }
+      }
 	  }
   }
 }

@@ -114,13 +114,12 @@ private:
     std::vector<core::utility::SSBOBufferArray> radius_buffers;
     std::vector<core::utility::SSBOBufferArray> direction_buffers;
     std::vector<core::utility::SSBOBufferArray> color_buffers;
-    core::utility::SSBOBufferArray flags_buffer;
     
     /** The slot to fetch the data */
     megamol::core::CallerSlot getDataSlot;
     megamol::core::CallerSlot getTFSlot;
     megamol::core::CallerSlot getClipPlaneSlot;
-    megamol::core::CallerSlot getFlagsSlot;
+    megamol::core::CallerSlot readFlagsSlot;
 
     megamol::core::param::ParamSlot glyphParam;
     megamol::core::param::ParamSlot scaleParam;

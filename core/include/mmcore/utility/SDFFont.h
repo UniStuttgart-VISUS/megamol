@@ -472,7 +472,7 @@ namespace utility {
         * (Facing in direction of positive z-Axis)
         */
         inline void ResetRotation(void) {
-            this->rotation.Set(0.0f, vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
+            this->rotation.Set(0.0f, vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f));
         }
 
         /**
