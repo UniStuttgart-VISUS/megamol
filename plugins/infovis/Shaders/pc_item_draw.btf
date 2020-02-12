@@ -492,7 +492,7 @@ void main()
 
   <namespace name="discTess">
     <shader name="vert">
-      <snippet type="version">430</snippet>
+      <snippet type="version">450</snippet>
       <snippet name="::pc::extensions" />
       <snippet name="::pc::buffers" />
       <snippet name="::pc::uniforms" />
@@ -519,7 +519,7 @@ void main(void) {
     </shader>
     
     <shader name="control">
-      <snippet type="version">430</snippet>
+      <snippet type="version">450</snippet>
       <snippet name="::pc::extensions" />
       <snippet name="::pc::buffers" />
       <snippet name="::pc::uniforms" />
@@ -534,19 +534,26 @@ layout (vertices = 1) out;
 //{
 //	flat uint baseItemID;
 //} in_[];
-patch out InterfaceO
+//patch out InterfaceTCO
+//{
+//  uint baseItemID;
+//  uint generatedLines;
+//} out_;
+struct InterfaceTCO
 {
-  flat uint baseItemID;
-  flat uint generatedLines;
-} out_;
+  uint baseItemID;
+  uint generatedLines;
+};
+layout(location = 0) patch out InterfaceTCO out_;
+
         ]]>
       </snippet>
       <!-- END Output data -->
       <snippet type="string">
 void main(void) {
   if (gl_InvocationID == 0) {
-    unsigned int baseItemID = gl_PrimitiveID * isoLinesPerInvocation;
-    unsigned int remaining = max(itemCount - baseItemID, 0);
+    uint baseItemID = gl_PrimitiveID * isoLinesPerInvocation;
+    uint remaining = max(itemCount - baseItemID, 0);
     out_.baseItemID = baseItemID;
     out_.generatedLines = remaining;
     gl_TessLevelOuter[0] = remaining;
@@ -558,7 +565,7 @@ void main(void) {
     </shader>
     
     <shader name="eval">
-      <snippet type="version">430</snippet>
+      <snippet type="version">450</snippet>
       <snippet name="::core_utils::tflookup" />
       <snippet name="::core_utils::tfconvenience" />
       <snippet name="::pc::extensions" />
@@ -571,16 +578,24 @@ void main(void) {
       <snippet type="string">
         <![CDATA[
 layout(isolines, equal_spacing) in;
-patch in InterfaceI
+//patch in InterfaceTEI
+//{
+//  flat uint baseItemID;
+//  flat uint generatedLines;
+//} in_;
+struct InterfaceTEI
 {
-  flat uint baseItemID;
-  flat uint generatedLines;
-} in_;
-out InterfaceO
+  uint baseItemID;
+  uint generatedLines;
+};
+layout(location = 0) patch in InterfaceTEI in_;
+
+struct InterfaceTEO
 {
-  flat uint itemID;
-  flat vec4 color;
-} out_;
+  uint itemID;
+  vec4 color;
+};
+layout(location = 0) flat out InterfaceTEO out_;
         ]]>
       </snippet>
       <!-- END Output data -->
@@ -611,7 +626,7 @@ void main(void) {
     </shader>
 
     <shader name="frag">
-      <snippet type="version">430</snippet>
+      <snippet type="version">450</snippet>
       <snippet name="::pc::extensions" />
       <snippet name="::pc::useLineStrip" />
       <snippet name="::pc::earlyFragmentTests" />
@@ -623,11 +638,12 @@ void main(void) {
       <!-- Input data -->
       <snippet type="string">
         <![CDATA[
-in Interface
+struct Interface
 {
-  flat uint itemID;
-  flat vec4 color;
-} in_;
+  uint itemID;
+  vec4 color;
+};
+layout(location = 0) flat in Interface in_;
         ]]>
       </snippet>
       <snippet type="string">
