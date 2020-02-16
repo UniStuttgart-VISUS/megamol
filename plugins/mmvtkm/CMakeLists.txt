@@ -11,7 +11,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_ADIOS_PLUGIN_PLUGIN" CACHE INTERNAL "")
   
   # Add externals.
   require_external(vtkm)
@@ -24,9 +24,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   set_source_files_properties(source_files PROPERTIES LANGUAGE CUDA)
 
-  # external_get_property(vtkm INSTALL_MAIN_DIR)
   external_get_property(vtkm SOURCE_DIR)
-  # message(${SOURCE_DIR})
   string(REPLACE "-src" "-build" BUILD_DIR "${SOURCE_DIR}")
 
   # Target definition
@@ -42,7 +40,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     "${SOURCE_DIR}/vtkm/thirdparty/taotuple"
     "${SOURCE_DIR}/vtkm/thirdparty/diy"
     )
-  target_link_libraries(${PROJECT_NAME} PRIVATE core vtkm_cont vtkm_renderer vtkm_worklet)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core vtkm_cont vtkm_renderer vtkm_worklet adios_plugin)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
