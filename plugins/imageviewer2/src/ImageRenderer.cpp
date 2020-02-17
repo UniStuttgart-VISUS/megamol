@@ -278,7 +278,7 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
                 int fileSize = 0;
                 BYTE* allFile = nullptr;
                 BYTE* imgc_data_ptr = nullptr;
-                if (!remoteness) {
+                if (!remoteness && !imgcConnected) {
                     vislib::sys::Log::DefaultLog.WriteInfo(
                         "ImageRenderer: Loading file '%s' from disk\n", filename.PeekBuffer());
                     vislib::sys::FastFile in;
@@ -299,25 +299,29 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
                     allFile = reinterpret_cast<uint8_t*>((*imgc->GetImagePtr()->begin()).second.PeekDataAs<uint8_t>());
                 }
                 uint8_t* image_ptr = nullptr;
-                if (!remoteness) {
-                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Decoding Image\n");
-                } else {
-                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Decoding IMGC at rank %d\n", roleRank);
-                }
 
-                // TODO If images are loaded via call, do not decode them again
-                if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
-                        img, allFile, fileSize)) {
-                    img.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
-                    this->width = img.Width();
-                    this->height = img.Height();
-                    image_ptr = img.PeekDataAs<BYTE>();
-                } else {
-                    printf("ImageRenderer: failed decoding file\n");
-                    fileSize = 0;
-                    this->width = this->height = 0;
-                }
+                if (!imgcConnected) {
+                    if (!remoteness) {
+                        vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Decoding Image\n");
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Decoding IMGC at rank %d\n", roleRank);
+                    }
 
+                    // TODO If images are loaded via call, do not decode them again
+                    if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
+                            img, allFile, fileSize)) {
+                        img.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
+                        this->width = img.Width();
+                        this->height = img.Height();
+                        image_ptr = img.PeekDataAs<BYTE>();
+                    } else {
+                        printf("ImageRenderer: failed decoding file\n");
+                        fileSize = 0;
+                        this->width = this->height = 0;
+                    }
+                } else {
+                    image_ptr = allFile;
+                }
                 // now everyone should have a copy of the loaded image
 
                 this->tiles.Clear();
