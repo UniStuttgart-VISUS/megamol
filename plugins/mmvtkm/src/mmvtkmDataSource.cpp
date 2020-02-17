@@ -17,8 +17,10 @@
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/SystemInformation.h"
+//#include "vtkm/io/reader/VTKPolyDataReader.h"
 #include "vtkm/io/reader/VTKDataSetReader.h"
-#include "vtkm/io/reader/VTKPolyDataReader.h"
+#include "vtkm/io/writer/VTKDataSetWriter.h"
+#include "vtkm/cont/DataSetBuilderExplicit.h"
 
 
 using namespace megamol;
@@ -30,8 +32,8 @@ using namespace megamol::mmvtkm;
 mmvtkmDataSource::mmvtkmDataSource(void)
     : core::view::AnimDataModule()
     , getData("getdata", "Slot to request data from this data source.")
-    , nodesAdiosCallerSlot("adiosSlot", "Slot to request data from adios.")
-    , labelAdiosCallerSlot("adiosSlot", "Slot to request data from adios.")
+    , nodesAdiosCallerSlot("adiosNodeSlot", "Slot to request node data from adios.")
+    , labelAdiosCallerSlot("adiosLabelSlot", "Slot to request label data from adios.")
     , filename("filename", "The path to the vtkm file to load.")
     , topology("topology", "The path to the tetrahedron file to load.")
     , labels("labels", "The path to the node labels file to load.")
@@ -206,24 +208,48 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
     std::vector<float> z_coord = nodesCad->getData("z")->GetAsFloat();
 
     std::vector<float> element_label = labelCad->getData("element-label")->GetAsFloat();
-    std::vector<float> nodeA = labelCad->getData("NodeA")->GetAsFloat();
-    std::vector<float> nodeB = labelCad->getData("NodeB")->GetAsFloat();
-    std::vector<float> nodeC = labelCad->getData("NodeC")->GetAsFloat();
-    std::vector<float> nodeD = labelCad->getData("NodeD")->GetAsFloat();
+    std::vector<float> nodeA = labelCad->getData("nodea")->GetAsFloat();
+    std::vector<float> nodeB = labelCad->getData("nodeb")->GetAsFloat();
+    std::vector<float> nodeC = labelCad->getData("nodec")->GetAsFloat();
+    std::vector<float> nodeD = labelCad->getData("noded")->GetAsFloat();
 
-    for (int i = 0; i < element_label.size(); ++i) {
-        std::vector<int> labels = {(int)nodeA[i], (int)nodeB[i], (int)nodeC[i], (int)nodeD[i]};
-        std::vector < vtkm::Vec32F_32 > vertices(4);
+	int num_elements = 100;
+    //element_label.size();
+    std::vector<vtkm::Vec<float, 3>> vertices(num_elements * 4);
+    std::vector<vtkm::UInt8> shapes(num_elements);
+    std::vector<vtkm::IdComponent> numIndices(num_elements);
+    std::vector<vtkm::Id> connectivity(num_elements * 4);
+
+
+    for (int i = 0; i < num_elements; ++i) {
+		std::vector<int> labels = {(int)nodeA[i], (int)nodeB[i], (int)nodeC[i], (int)nodeD[i]};
+
+        // BUILD TETRAHEDRON HERE
+
+		// get vertex cooridnates for current tetrahedron vertices
         for (int j = 0; j < 4; ++j) {
             auto it = std::find(node_labels.begin(), node_labels.end(), labels[j]);
             int node_index = std::distance(node_labels.begin(), it);
-            vertices[j] = {x_coord[node_index], y_coord[node_index], z_coord[node_index]};
+            vislib::sys::Log::DefaultLog.WriteInfo("(%i, %i) with %i", i, j, labels[j]);
+            vertices[i * 4 + j] = {x_coord[node_index], y_coord[node_index], z_coord[node_index]};
         }
 
-        // BUILD TETRAHEDRON HERE
+
+        shapes[i] = vtkm::CELL_SHAPE_TETRA;
+        numIndices[i] = 4;
+        connectivity[4 * i + 0] = 4 * i + 0;
+        connectivity[4 * i + 1] = 4 * i + 1;
+        connectivity[4 * i + 2] = 4 * i + 2;
+        connectivity[4 * i + 3] = 4 * i + 3;
     }
 
+	vtkm::cont::DataSetBuilderExplicit dataSetBuilder;
+    vtkmData = dataSetBuilder.Create(vertices, shapes, numIndices, connectivity);
 
+	vtkm::io::writer::VTKDataSetWriter writer("tetrahedron.vtk");
+    writer.WriteDataSet(vtkmData);
+
+	this->filename.ForceSetDirty();
     // update data only when we have a new file
     if (this->filename.IsDirty()) {
         c2->SetDataHash(this->data_hash);
