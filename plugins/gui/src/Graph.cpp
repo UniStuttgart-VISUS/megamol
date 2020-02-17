@@ -54,26 +54,6 @@ megamol::gui::Graph::CallSlot::~CallSlot() {
 }
 
 
-bool megamol::gui::Graph::CallSlot::UpdateGuiPos(void) {
-
-    if (this->ParentModuleConnected()) {
-        auto slot_count = this->GetParentModule()->GetCallSlots(this->type).size();
-        size_t slot_idx = 0;
-        for (size_t idx = 0; idx < slot_count; idx++) {
-            if (this->name == this->GetParentModule()->GetCallSlots(this->type)[idx]->name) {
-                slot_idx = idx;
-            }
-        }
-        auto pos = this->GetParentModule()->gui.position;
-        auto size = this->GetParentModule()->gui.size;
-        this->gui.position = ImVec2(pos.x + ((this->type == Graph::CallSlotType::CALLER) ? (size.x) : (0.0f)),
-            pos.y + size.y * ((float)slot_idx + 1) / ((float)slot_count + 1));
-        return true;
-    }
-    return false;
-}
-
-
 bool megamol::gui::Graph::CallSlot::CallsConnected(void) const {
 
     /// TEMP Check for unclean references
@@ -403,7 +383,7 @@ megamol::gui::Graph::Graph(int graph_uid, const std::string& graph_name)
 
     this->gui.slot_radius = 8.0f;
     this->gui.canvas_position = ImVec2(0.0f, 0.0f);
-    this->gui.canvas_size = ImVec2(0.0f, 0.0f);
+    this->gui.canvas_size = ImVec2(1.0f, 1.0f);
     this->gui.canvas_scrolling = ImVec2(0.0f, 0.0f);
     this->gui.canvas_zooming = 1.0f;
     this->gui.canvas_offset = ImVec2(0.0f, 0.0f);
@@ -415,8 +395,6 @@ megamol::gui::Graph::Graph(int graph_uid, const std::string& graph_name)
     this->gui.hovered_slot_uid = -1;
     this->gui.selected_slot_ptr = nullptr;
     this->gui.process_selected_slot = 0;
-    // Layout not empty loaded graphs initially.
-    this->gui.update_layout = true;
 }
 
 
@@ -434,12 +412,11 @@ bool megamol::gui::Graph::AddModule(Graph::ModuleStockType& stock_modules, const
                 mod_ptr->description = mod.description;
                 mod_ptr->plugin_name = mod.plugin_name;
                 mod_ptr->is_view = mod.is_view;
-                mod_ptr->name = "module_name";     /// TODO get from core
-                mod_ptr->full_name = "full_name";  /// TODO get from core
-                mod_ptr->is_view_instance = false; /// TODO get from core
-                mod_ptr->gui.update_size = true;
+                mod_ptr->name = "module_name";              /// TODO get from core
+                mod_ptr->full_name = "full_name";           /// TODO get from core
+                mod_ptr->is_view_instance = false;          /// TODO get from core
                 mod_ptr->gui.position = ImVec2(0.0f, 0.0f); // Initialized in configurator
-                mod_ptr->gui.size = ImVec2(0.0f, 0.0f);     // Initialized in configurator
+                mod_ptr->gui.size = ImVec2(1.0f, 1.0f);     // Initialized in configurator
                 mod_ptr->gui.class_label = "";              // Initialized in configurator
                 mod_ptr->gui.name_label = "";               // Initialized in configurator
                 for (auto& p : mod.param_slots) {

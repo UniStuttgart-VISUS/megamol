@@ -196,7 +196,7 @@ bool GUIView::create() {
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8, core::view::Modifier::CTRL);
     buf_win.win_flags = ImGuiWindowFlags_MenuBar;
     buf_win.win_callback = WindowManager::DrawCallbacks::CONFIGURATOR;
-    buf_win.win_size = ImVec2(1000, 600);
+    buf_win.win_size = ImVec2(1100, 650);
     this->window_manager.AddWindowConfiguration("Configurator", buf_win);
 
     // Style settings ---------------------------------------------------------

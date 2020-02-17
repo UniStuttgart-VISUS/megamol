@@ -89,6 +89,7 @@ private:
         std::string* rename_popup_string;
         float mouse_wheel;
         ImFont* graph_font;
+        bool update_current_graph;
     } gui;
 
     // FUNCTIONS --------------------------------------------------------------
@@ -105,6 +106,7 @@ private:
     bool draw_canvas_dragged_call(GraphManager::GraphPtrType graph);
 
     bool update_module_size(GraphManager::GraphPtrType graph, Graph::ModulePtrType mod);
+    bool update_slot_position(GraphManager::GraphPtrType graph, Graph::CallSlotPtrType slot);
     bool update_graph_layout(GraphManager::GraphPtrType graph);
 
     bool popup_save_project(bool open, megamol::core::CoreInstance* core_instance);
