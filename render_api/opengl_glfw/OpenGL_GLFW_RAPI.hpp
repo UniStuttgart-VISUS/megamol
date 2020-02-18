@@ -65,21 +65,36 @@ public:
 
     // expose the resources and input events this RAPI provides: Keyboard inputs, Mouse inputs, GLFW Window events, Framebuffer resize events
     const std::vector<RenderResource>& getRenderResources() const override;
+
     const void* getAPISharedDataPtr() const override; // ptr non-owning, share data should be only borrowed
-
-    // TODO: register passing user inputs? via existing callbacks?
-    void glfw_onKey_func(int k, int s, int a, int m);
-    void glfw_onChar_func(unsigned int charcode);
-    void glfw_onMouseMove_func(double x, double y);
-    void glfw_onMouseButton_func(int b, int a, int m);
-    void glfw_onMouseWheel_func(double x, double y);
-
 
     // from AbstractRenderAPI:
     // int setPriority(const int p) // priority initially 0
     // int getPriority() const;
     // bool shouldShutdown() const; // shutdown initially false
     // void setShutdown(const bool s = true);
+
+    // GLFW event callbacks need to be public for technical reasons.
+    // keyboard events
+    void glfw_onKey_func(const int key, const int scancode, const int action, const int mods);
+    void glfw_onChar_func(const unsigned int codepoint);
+
+    // mouse events
+    void glfw_onMouseButton_func(const int button, const int action, const int mods);
+    void glfw_onMouseCursorPosition_func(const double xpos, const double ypos);
+    void glfw_onMouseCursorEnter_func(const bool entered);
+    void glfw_onMouseScroll_func(const double xoffset, const double yoffset);
+
+    // window events
+    void glfw_onWindowSize_func(const int width /* in screen coordinates, of the window */, const int height);
+    void glfw_onWindowFocus_func(const bool focused);
+    void glfw_onWindowShouldClose_func(const bool shouldclose);
+    void glfw_onWindowIconified_func(const bool iconified);
+    void glfw_onWindowContentScale_func(const float xscale, const float yscale);
+    void glfw_onPathDrop_func(const int path_count, const char* paths[]);
+
+    // framebuffer events
+    void glfw_onFramebufferSize_func(const int widthpx, const int heightpx);
 
 private:
     struct PimplData;

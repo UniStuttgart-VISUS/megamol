@@ -48,7 +48,7 @@ endif()
     endif()
     add_external_project(glfw_ext
       GIT_REPOSITORY https://github.com/glfw/glfw.git
-      GIT_TAG "3.2.1"
+      GIT_TAG "3.3.1"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_IMPORT_LIBRARY}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON

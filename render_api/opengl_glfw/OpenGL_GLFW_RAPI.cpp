@@ -13,19 +13,19 @@
 
 #include "glad.h"
 #ifdef _WIN32
-#include <Windows.h>
-#undef min
-#undef max
-#include "glad_wgl.h"
+#    include <Windows.h>
+#    undef min
+#    undef max
+#    include "glad_wgl.h"
 #else
-#include "glad_glx.h"
+#    include "glad_glx.h"
 #endif
 
-#include "GLFW/glfw3.h"
+#include <GLFW/glfw3.h>
 #ifdef _WIN32
 #    ifndef USE_EGL
 #        define GLFW_EXPOSE_NATIVE_WIN32
-#        include "GLFW/glfw3native.h"
+#        include <GLFW/glfw3native.h>
 #    endif
 #endif
 
@@ -52,11 +52,47 @@ void initSharedContext(SharedData& context) {
 
 // indirection to not spam header file with GLFW inclucde
 #define that static_cast<OpenGL_GLFW_RAPI*>(::glfwGetWindowUserPointer(wnd))
-void outer_glfw_onKey_func(GLFWwindow* wnd, int k, int s, int a, int m) { that->glfw_onKey_func(k, s, a, m); }
-void outer_glfw_onChar_func(GLFWwindow* wnd, unsigned int charcode) { that->glfw_onChar_func(charcode); }
-void outer_glfw_onMouseMove_func(GLFWwindow* wnd, double x, double y) { that->glfw_onMouseMove_func(x, y); }
-void outer_glfw_onMouseButton_func(GLFWwindow* wnd, int b, int a, int m) { that->glfw_onMouseButton_func(b, a, m); }
-void outer_glfw_onMouseWheel_func(GLFWwindow* wnd, double x, double y) { that->glfw_onMouseWheel_func(x, y); }
+
+// keyboard events
+void outer_glfw_onKey_func(GLFWwindow* wnd, int key, int scancode, int action, int mods) {
+    that->glfw_onKey_func(key, scancode, action, mods);
+}
+void outer_glfw_onChar_func(GLFWwindow* wnd, unsigned int codepoint) { that->glfw_onChar_func(codepoint); }
+
+// mouse events
+void outer_glfw_onMouseButton_func(GLFWwindow* wnd, int button, int action, int mods) {
+    that->glfw_onMouseButton_func(button, action, mods);
+}
+void outer_glfw_onMouseCursorPosition_func(GLFWwindow* wnd, double xpos, double ypos) {
+	// cursor (x,y) position in screen coordinates relative to upper-left corner
+    that->glfw_onMouseCursorPosition_func(xpos, ypos);
+}
+void outer_glfw_onMouseCursorEnter_func(GLFWwindow* wnd, int entered) {
+    that->glfw_onMouseCursorEnter_func(entered == GLFW_TRUE);
+}
+void outer_glfw_onMouseScroll_func(GLFWwindow* wnd, double xoffset, double yoffset) {
+    that->glfw_onMouseScroll_func(xoffset, yoffset);
+}
+
+// window events
+void outer_glfw_onWindowSize_func(GLFWwindow* wnd, int width /* in screen coordinates of the window */, int height) {
+    that->glfw_onWindowSize_func(width, height);
+}
+void outer_glfw_onWindowFocus_func(GLFWwindow* wnd, int focused) { that->glfw_onWindowFocus_func(focused == GLFW_TRUE); }
+void outer_glfw_onWindowShouldClose_func(GLFWwindow* wnd) { that->glfw_onWindowShouldClose_func(true); }
+void outer_glfw_onWindowIconified_func(GLFWwindow* wnd, int iconified) { that->glfw_onWindowIconified_func(iconified == GLFW_TRUE); }
+void outer_glfw_onWindowContentScale_func(GLFWwindow* wnd, float xscale, float yscale) {
+    that->glfw_onWindowContentScale_func(xscale, yscale);
+}
+// void outer_glfw_WindowPosition_func(GLFWwindow* wnd, int xpos, int ypos) { that->glfw_WindowPosition_func(xpos, ypos); }
+void outer_glfw_onPathDrop_func(GLFWwindow* wnd, int path_count, const char* paths[]) {
+    that->glfw_onPathDrop_func(path_count, paths);
+}
+
+// framebuffer events
+void outer_glfw_onFramebufferSize_func(GLFWwindow* wnd, int widthpx, int heightpx) {
+    that->glfw_onFramebufferSize_func(widthpx, heightpx);
+}
 
 } // namespace
 
@@ -235,21 +271,65 @@ bool OpenGL_GLFW_RAPI::initAPI(const Config& config) {
 #endif
 
     ::glfwSetWindowUserPointer(m_glfwWindowPtr, this); // this is ok, as long as no one derives from this RAPI
+
+    // set callbacks
     ::glfwSetKeyCallback(m_glfwWindowPtr, &outer_glfw_onKey_func);
-    ::glfwSetMouseButtonCallback(m_glfwWindowPtr, &outer_glfw_onMouseButton_func);
-    ::glfwSetCursorPosCallback(m_glfwWindowPtr, &outer_glfw_onMouseMove_func);
-    ::glfwSetScrollCallback(m_glfwWindowPtr, &outer_glfw_onMouseWheel_func);
     ::glfwSetCharCallback(m_glfwWindowPtr, &outer_glfw_onChar_func);
+    // this->m_keyboardEvents; // ignore because no interaction happened yet
 
-	// TODO: implement OpenGL Debug
-    //if (config.enableKHRDebug)
-	//    megamol::core::utility::KHR::startDebug();
+    // set callbacks
+    ::glfwSetMouseButtonCallback(m_glfwWindowPtr, &outer_glfw_onMouseButton_func);
+    ::glfwSetCursorPosCallback(m_glfwWindowPtr, &outer_glfw_onMouseCursorPosition_func);
+    ::glfwSetCursorEnterCallback(m_glfwWindowPtr, &outer_glfw_onMouseCursorEnter_func);
+    ::glfwSetScrollCallback(m_glfwWindowPtr, &outer_glfw_onMouseScroll_func);
+    // set current state for mouse events
+    // this->m_mouseEvents.previous_state.buttons; // ignore because no interaction yet
+    this->m_mouseEvents.previous_state.entered = glfwGetWindowAttrib(m_glfwWindowPtr, GLFW_HOVERED);
+    ::glfwGetCursorPos(m_glfwWindowPtr, &this->m_mouseEvents.previous_state.x_cursor_position,
+        &this->m_mouseEvents.previous_state.y_cursor_position);
+    this->m_mouseEvents.previous_state.x_scroll = 0.0;
+    this->m_mouseEvents.previous_state.y_scroll = 0.0;
 
-	if (config.enableVsync)
-		::glfwSwapInterval(0);
+    // set callbacks
+    ::glfwSetWindowSizeCallback(m_glfwWindowPtr, &outer_glfw_onWindowSize_func);
+    ::glfwSetWindowFocusCallback(m_glfwWindowPtr, &outer_glfw_onWindowFocus_func);
+    ::glfwSetWindowCloseCallback(m_glfwWindowPtr, &outer_glfw_onWindowShouldClose_func);
+    ::glfwSetWindowIconifyCallback(m_glfwWindowPtr, &outer_glfw_onWindowIconified_func);
+    ::glfwSetWindowContentScaleCallback(m_glfwWindowPtr, &outer_glfw_onWindowContentScale_func);
+    ::glfwSetDropCallback(m_glfwWindowPtr, &outer_glfw_onPathDrop_func);
+    // set current window state
+    glfwGetWindowSize(
+        m_glfwWindowPtr, &this->m_windowEvents.previous_state.width, &this->m_windowEvents.previous_state.height);
+    this->m_windowEvents.previous_state.is_focused = (GLFW_TRUE == glfwGetWindowAttrib(m_glfwWindowPtr, GLFW_FOCUSED));
+    this->m_windowEvents.previous_state.is_iconified =
+        (GLFW_TRUE == glfwGetWindowAttrib(m_glfwWindowPtr, GLFW_ICONIFIED));
+    this->m_windowEvents.previous_state.should_close = (GLFW_TRUE == glfwWindowShouldClose(m_glfwWindowPtr));
+    glfwGetWindowContentScale(m_glfwWindowPtr, &this->m_windowEvents.previous_state.x_contentscale,
+        &this->m_windowEvents.previous_state.y_contentscale);
+
+    // set callbacks
+    ::glfwSetFramebufferSizeCallback(m_glfwWindowPtr, &outer_glfw_onFramebufferSize_func);
+    // set current framebuffer state
+    glfwGetFramebufferSize(m_glfwWindowPtr, &this->m_framebufferEvents.previous_state.width,
+        &this->m_framebufferEvents.previous_state.height);
+
+    // TODO: implement OpenGL Debug
+    // if (config.enableKHRDebug)
+    //    megamol::core::utility::KHR::startDebug();
+
+    if (config.enableVsync) ::glfwSwapInterval(0);
 
     ::glfwShowWindow(m_glfwWindowPtr);
     ::glfwMakeContextCurrent(nullptr);
+
+	// make the events and resources managed/provided by this RAPI available to the outside world
+	m_renderResourceReferences = {
+		{"KeyboardEvents", m_keyboardEvents},
+		{"MouseEvents", m_mouseEvents},
+		{"WindowEvents", m_windowEvents},
+		{"FramebufferEvents", m_framebufferEvents}
+	};
+
     return true;
 }
 
@@ -287,8 +367,7 @@ void OpenGL_GLFW_RAPI::preViewRender() {
     // some window systems will send some events directly to the application,
     // which in turn causes callbacks to be called outside of regular event processing.
 
-	// TODO: use GLFW callback
-    if (::glfwWindowShouldClose(m_glfwWindowPtr))
+    if (this->m_windowEvents.should_close_events.size() && this->m_windowEvents.should_close_events.back())
         this->setShutdown(true); // cleanup of this RAPI and dependent GL stuff is triggered via this shutdown hint
 
     ::glfwMakeContextCurrent(m_glfwWindowPtr);
@@ -319,8 +398,17 @@ void OpenGL_GLFW_RAPI::postViewRender() {
         SetWindowPos(glfwGetWin32Window(m_glfwWindowPtr), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
     }
 #endif
-
+	
     ::glfwMakeContextCurrent(nullptr);
+
+	m_keyboardEvents.clear();
+	m_mouseEvents.clear();
+	m_windowEvents.clear();
+	m_framebufferEvents.clear();
+}
+
+const std::vector<RenderResource>& OpenGL_GLFW_RAPI::getRenderResources() const {
+	return m_renderResourceReferences;
 }
 
 const void* OpenGL_GLFW_RAPI::getAPISharedDataPtr() const { return &m_sharedData; }
@@ -335,62 +423,67 @@ void OpenGL_GLFW_RAPI::updateWindowTitle() {}
 // 
 // OpenGL_GLFW_RAPI::UIEvents& OpenGL_GLFW_RAPI::getUIEvents() { return this->ui_events; }
 
-void OpenGL_GLFW_RAPI::glfw_onKey_func(int k, int s, int a, int m) {
+void OpenGL_GLFW_RAPI::glfw_onKey_func(const int key, const int scancode, const int action, const int mods) {
     //::glfwMakeContextCurrent(m_glfwWindowPtr);
 
-    render_api::Key key = static_cast<render_api::Key>(k);
-    render_api::KeyAction action(render_api::KeyAction::RELEASE);
-    switch (a) {
+    input_events::Key key_ = static_cast<input_events::Key>(key);
+    input_events::KeyAction action_(input_events::KeyAction::RELEASE);
+    switch (action) {
     case GLFW_PRESS:
-        action = render_api::KeyAction::PRESS;
+        action_ = input_events::KeyAction::PRESS;
         break;
     case GLFW_REPEAT:
-        action = render_api::KeyAction::REPEAT;
+        action_ = input_events::KeyAction::REPEAT;
         break;
     case GLFW_RELEASE:
-        action = render_api::KeyAction::RELEASE;
+        action_ = input_events::KeyAction::RELEASE;
         break;
     }
 
-    render_api::Modifiers mods;
-    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods |= render_api::Modifier::SHIFT;
-    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= render_api::Modifier::CTRL;
-    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= render_api::Modifier::ALT;
+    input_events::Modifiers mods_;
+    if ((mods & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods_ |= input_events::Modifier::SHIFT;
+    if ((mods & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods_ |= input_events::Modifier::CTRL;
+    if ((mods & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods_ |= input_events::Modifier::ALT;
 
-    //m_data.uiLayers.OnKey(key, action, mods);
-    this->ui_events.onKey_list.emplace_back(std::make_tuple(key, action, mods));
+    this->m_keyboardEvents.key_events.emplace_back(std::make_tuple(key_, action_, mods_));
+    // m_data.uiLayers.OnKey(key, action, mods);
+    //this->ui_events.onKey_list.emplace_back(std::make_tuple(key_, action_, mods_));
 }
 
-void OpenGL_GLFW_RAPI::glfw_onChar_func(unsigned int charcode) {
+void OpenGL_GLFW_RAPI::glfw_onChar_func(const unsigned int codepoint) {
     //::glfwMakeContextCurrent(m_glfwWindowPtr);
-    //m_data.uiLayers.OnChar(charcode);
-    this->ui_events.onChar_list.emplace_back(charcode);
+    // m_data.uiLayers.OnChar(charcode);
+    //this->ui_events.onChar_list.emplace_back(charcode);
+    this->m_keyboardEvents.codepoint_events.emplace_back(codepoint);
 }
 
-void OpenGL_GLFW_RAPI::glfw_onMouseMove_func(double x, double y) {
+void OpenGL_GLFW_RAPI::glfw_onMouseCursorPosition_func(const double xpos, const double ypos) {
+
+    this->m_mouseEvents.position_events.emplace_back(std::make_tuple(xpos, ypos));
     //::glfwMakeContextCurrent(m_glfwWindowPtr);
-    //if (m_data.mouseCapture) {
+    // if (m_data.mouseCapture) {
     //    m_data.mouseCapture->OnMouseMove(x, y);
     //} else {
     //    m_data.uiLayers.OnMouseMove(x, y);
     //}
-    this->ui_events.onMouseMove_list.emplace_back(std::make_tuple(x, y));
+    //this->ui_events.onMouseMove_list.emplace_back(std::make_tuple(xpos, ypos));
 }
 
-void OpenGL_GLFW_RAPI::glfw_onMouseButton_func(int b, int a, int m) {
-    //::glfwMakeContextCurrent(m_glfwWindowPtr);
-    render_api::MouseButton btn = static_cast<render_api::MouseButton>(b);
-    render_api::MouseButtonAction action =
-        (a == GLFW_PRESS) ? render_api::MouseButtonAction::PRESS : render_api::MouseButtonAction::RELEASE;
+void OpenGL_GLFW_RAPI::glfw_onMouseButton_func(const int button, const int action, const int mods) {
+    input_events::MouseButton btn = static_cast<input_events::MouseButton>(button);
+    input_events::MouseButtonAction btnaction =
+        (action == GLFW_PRESS) ? input_events::MouseButtonAction::PRESS : input_events::MouseButtonAction::RELEASE;
 
-    render_api::Modifiers mods;
-    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods |= render_api::Modifier::SHIFT;
-    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= render_api::Modifier::CTRL;
-    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= render_api::Modifier::ALT;
+    input_events::Modifiers btnmods;
+    if ((mods & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) btnmods |= input_events::Modifier::SHIFT;
+    if ((mods & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) btnmods |= input_events::Modifier::CTRL;
+    if ((mods & GLFW_MOD_ALT) == GLFW_MOD_ALT) btnmods |= input_events::Modifier::ALT;
 
-	this->ui_events.onMouseButton_list.emplace_back(std::make_tuple(btn, action, mods));
+    this->m_mouseEvents.buttons_events.emplace_back(std::make_tuple(btn, btnaction, btnmods));
 
-    //if (m_data.mouseCapture) {
+    //this->ui_events.onMouseButton_list.emplace_back(std::make_tuple(btn, btnaction, mods));
+
+    // if (m_data.mouseCapture) {
     //    m_data.mouseCapture->OnMouseButton(btn, action, mods);
     //} else {
     //    if (m_data.uiLayers.OnMouseButton(btn, action, mods))
@@ -398,7 +491,7 @@ void OpenGL_GLFW_RAPI::glfw_onMouseButton_func(int b, int a, int m) {
     //            m_data.mouseCapture = m_data.uiLayers.lastEventCaptureUILayer();
     //}
 
-    //if (m_data.mouseCapture) {
+    // if (m_data.mouseCapture) {
     //    bool anyPressed = false;
     //    for (int mbi = GLFW_MOUSE_BUTTON_1; mbi <= GLFW_MOUSE_BUTTON_LAST; ++mbi) {
     //        if (::glfwGetMouseButton(m_glfwWindowPtr, mbi) == GLFW_PRESS) {
@@ -415,20 +508,55 @@ void OpenGL_GLFW_RAPI::glfw_onMouseButton_func(int b, int a, int m) {
     //}
 }
 
-void OpenGL_GLFW_RAPI::glfw_onMouseWheel_func(double x, double y) {
-    //::glfwMakeContextCurrent(m_glfwWindowPtr);
+void OpenGL_GLFW_RAPI::glfw_onMouseScroll_func(const double xoffset, const double yoffset) {
 
-    //if (m_data.mouseCapture) {
-    //    m_data.mouseCapture->OnMouseScroll(x, y);
+	this->m_mouseEvents.scroll_events.emplace_back(std::make_tuple(xoffset, yoffset));
+
+    //this->ui_events.onMouseWheel_list.emplace_back(std::make_tuple(xoffset, yoffset));
+    // if (m_data.mouseCapture) {
+    //    m_data.mouseCapture->OnMouseScroll(xoffset, yoffset);
     //} else {
-    //    m_data.uiLayers.OnMouseScroll(x, y);
+    //    m_data.uiLayers.OnMouseScroll(xoffset, yoffset);
     //}
 }
 
+void OpenGL_GLFW_RAPI::glfw_onMouseCursorEnter_func(const bool entered) {
+	this->m_mouseEvents.enter_events.emplace_back(entered);
+}
 
+void OpenGL_GLFW_RAPI::glfw_onFramebufferSize_func(const int widthpx, const int heightpx) {
+    this->m_framebufferEvents.size_events.emplace_back(input_events::FramebufferState{widthpx, heightpx});
+}
 
+void OpenGL_GLFW_RAPI::glfw_onWindowSize_func(const int width, const int height) { // in screen coordinates, of the window
+    this->m_windowEvents.size_events.emplace_back(std::tuple(width, height));
+}
 
+void OpenGL_GLFW_RAPI::glfw_onWindowFocus_func(const bool focused) {
+	this->m_windowEvents.is_focused_events.emplace_back(focused);
+}
 
+void OpenGL_GLFW_RAPI::glfw_onWindowShouldClose_func(const bool shouldclose) {
+    this->m_windowEvents.should_close_events.emplace_back(shouldclose);
+}
+
+void OpenGL_GLFW_RAPI::glfw_onWindowIconified_func(const bool iconified) {
+    this->m_windowEvents.is_iconified_events.emplace_back(iconified);
+}
+
+void OpenGL_GLFW_RAPI::glfw_onWindowContentScale_func(const float xscale, const float yscale) {
+    this->m_windowEvents.content_scale_events.emplace_back(std::tuple(xscale, yscale));
+}
+
+void OpenGL_GLFW_RAPI::glfw_onPathDrop_func(const int path_count, const char* paths[]) {
+    std::vector<std::string> paths_;
+    paths_.reserve(path_count);
+
+    for (int i = 0; i < path_count; i++)
+		paths_.emplace_back(std::string(paths[i]));
+
+    this->m_windowEvents.dropped_path_events.push_back(paths_);
+}
 
 } // namespace render_api
 } // namespace megamol
