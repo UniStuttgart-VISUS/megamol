@@ -52,6 +52,7 @@ imageviewer2::ImageRenderer::ImageRenderer(void)
           "shownImage", "Index of the shown image. This slot is only used when a ImageLoader module is connected.")
     , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
     , callRequestImage{"requestImage", "Requests an image to display"}
+    , newImageNeeded(false)
     , width(1)
     , height(1)
     , tiles()
@@ -274,30 +275,98 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
         // codec.Image() = &img;
         ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         try {
+            static bool handIsShaken = false;
+#ifdef WITH_MPI
+            if (useMpi && !handIsShaken) {
+                handIsShaken = true;
+                vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: IMGC Handshake\n");
+                // handshake who has imgc
+                int* imgcRes = nullptr;
+                if (roleRank == 0) {
+                    imgcRes = new int[roleSize];
+                }
+
+                int imgcCon = imgcConnected ? 1 : 0;
+                MPI_Gather(&imgcCon, 1, MPI_INT, imgcRes, 1, MPI_INT, 0, roleComm);
+
+                if (roleRank == 0) {
+                    for (int i = 0; i < roleSize; ++i) {
+                        if (imgcRes[i] == 1) {
+                            roleImgcRank = i;
+                            break;
+                        }
+                    }
+                    delete[] imgcRes;
+                }
+
+                MPI_Bcast(&roleImgcRank, 1, MPI_INT, 0, roleComm);
+                if (roleImgcRank != -1) {
+                    remoteness = true;
+                } else {
+                    roleImgcRank = 0;
+                }
+                vislib::sys::Log::DefaultLog.WriteInfo(
+                    "ImageRenderer: IMGC Handshake result remoteness = %d imgcRank = %d\n", remoteness, roleImgcRank);
+            }
+#endif /* WITH_MPI */
+
             if (!beBlank && ((loadedFile != filename) || remoteness)) {
                 int fileSize = 0;
                 BYTE* allFile = nullptr;
                 BYTE* imgc_data_ptr = nullptr;
-                if (!remoteness && !imgcConnected) {
-                    vislib::sys::Log::DefaultLog.WriteInfo(
-                        "ImageRenderer: Loading file '%s' from disk\n", filename.PeekBuffer());
-                    vislib::sys::FastFile in;
-                    if (in.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ,
-                            vislib::sys::File::OPEN_ONLY)) {
-                        fileSize = in.GetSize();
-                        allFile = new BYTE[fileSize];
-                        in.Read(allFile, fileSize);
-                        in.Close();
-                    } else {
-                        printf("ImageRenderer: failed opening file\n");
-                        fileSize = 0;
+#ifdef WITH_MPI
+                // single node or role boss loads the image
+                if (!useMpi || roleRank == roleImgcRank) {
+                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: role %s (rank %i of %i) loads an image",
+                        myRole == IMG_BLANK ? "blank" : (myRole == IMG_RIGHT ? "right" : "left"), roleRank, roleSize);
+#endif /* WITH_MPI */
+
+                    if (!remoteness && !imgcConnected) {
+                        vislib::sys::Log::DefaultLog.WriteInfo(
+                            "ImageRenderer: Loading file '%s' from disk\n", filename.PeekBuffer());
+                        vislib::sys::FastFile in;
+                        if (in.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ,
+                                vislib::sys::File::OPEN_ONLY)) {
+                            fileSize = in.GetSize();
+                            allFile = new BYTE[fileSize];
+                            in.Read(allFile, fileSize);
+                            in.Close();
+                        } else {
+                            printf("ImageRenderer: failed opening file\n");
+                            fileSize = 0;
+                        }
+                    } else if (roleRank == roleImgcRank) {
+                        // vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Retrieving image from call\n");
+                        this->width = (*imgc->GetImagePtr()->begin()).second.Width();
+                        this->height = (*imgc->GetImagePtr()->begin()).second.Height();
+                        allFile =
+                            reinterpret_cast<uint8_t*>((*imgc->GetImagePtr()->begin()).second.PeekDataAs<uint8_t>());
                     }
-                } else if (roleRank == roleImgcRank) {
-                    // vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Retrieving image from call\n");
-                    this->width = (*imgc->GetImagePtr()->begin()).second.Width();
-                    this->height = (*imgc->GetImagePtr()->begin()).second.Height();
-                    allFile = reinterpret_cast<uint8_t*>((*imgc->GetImagePtr()->begin()).second.PeekDataAs<uint8_t>());
+#ifdef WITH_MPI
                 }
+                // cluster nodes broadcast file size
+                if (useMpi) {
+                    int bcastRoot = roleImgcRank;
+                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Broadcast root = %d\n", bcastRoot);
+                    MPI_Bcast(&fileSize, 1, MPI_INT, bcastRoot, roleComm);
+                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: rank %i of %i (role %s) knows fileSize = %i",
+                        roleRank, roleSize, myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"),
+                        fileSize);
+                    if (roleRank != 0) {
+                        allFile = new BYTE[fileSize];
+                        vislib::sys::Log::DefaultLog.WriteInfo(
+                            "ImageRenderer: rank %i of %i (role %s) late allocated file storage", roleRank, roleSize,
+                            myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
+                    }
+                    // everyone gets the compressed file now
+                    MPI_Bcast(allFile, fileSize, MPI_BYTE, bcastRoot, roleComm);
+                    if (remoteness) {
+                        MPI_Bcast(&this->width, 1, MPI_UNSIGNED, roleImgcRank, roleComm);
+                        MPI_Bcast(&this->height, 1, MPI_UNSIGNED, roleImgcRank, roleComm);
+                        MPI_Bcast(&imgc_enc, 1, MPI_UNSIGNED_CHAR, roleImgcRank, roleComm);
+                    }
+                }
+#endif /* WITH_MPI */
                 uint8_t* image_ptr = nullptr;
 
                 if (!imgcConnected) {
@@ -307,7 +376,6 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
                         vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Decoding IMGC at rank %d\n", roleRank);
                     }
 
-                    // TODO If images are loaded via call, do not decode them again
                     if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
                             img, allFile, fileSize)) {
                         img.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
@@ -612,7 +680,13 @@ bool imageviewer2::ImageRenderer::onNextPressed(param::ParamSlot& slot) {
  * imageviewer2::ImageRenderer::onLastPressed
  */
 bool imageviewer2::ImageRenderer::onLastPressed(param::ParamSlot& slot) {
-    this->currentSlot.Param<param::IntParam>()->SetValue(this->leftFiles.Count() - 1);
+    bool imgcConnected = false;
+    auto imgc = this->callRequestImage.CallAs<image_calls::Image2DCall>();
+    if (imgc != nullptr) {
+        this->currentSlot.Param<param::IntParam>()->SetValue(imgc->GetImageCount() - 1);
+    } else {
+        this->currentSlot.Param<param::IntParam>()->SetValue(this->leftFiles.Count() - 1);
+    }
     return true;
 }
 
@@ -622,11 +696,18 @@ bool imageviewer2::ImageRenderer::onLastPressed(param::ParamSlot& slot) {
  */
 bool imageviewer2::ImageRenderer::onCurrentSet(param::ParamSlot& slot) {
     int s = slot.Param<param::IntParam>()->Value();
-    if (s > -1 && s < this->leftFiles.Count()) {
-        this->leftFilenameSlot.Param<param::FilePathParam>()->SetValue(leftFiles[s]);
-        this->rightFilenameSlot.Param<param::FilePathParam>()->SetValue(rightFiles[s]);
-
-        // use ResetViewOnBBoxChange of your View!
+    bool imgcConnected = false;
+    auto imgc = this->callRequestImage.CallAs<image_calls::Image2DCall>();
+    if (imgc != nullptr) {
+        if (s > -1 && s < imgc->GetImageCount()) {
+            this->newImageNeeded = true;
+        }
+    } else {
+        if (s > -1 && s < this->leftFiles.Count()) {
+            this->leftFilenameSlot.Param<param::FilePathParam>()->SetValue(leftFiles[s]);
+            this->rightFilenameSlot.Param<param::FilePathParam>()->SetValue(rightFiles[s]);
+            // use ResetViewOnBBoxChange of your View!
+        }
     }
     return true;
 }

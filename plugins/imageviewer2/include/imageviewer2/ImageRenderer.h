@@ -222,6 +222,8 @@ private:
     /** The height of the image */
     unsigned int height;
 
+    bool newImageNeeded;
+
     vislib::graphics::gl::GLSLShader theShader;
     GLuint theVertBuffer;
     GLuint theTexCoordBuffer;
