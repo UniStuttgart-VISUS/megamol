@@ -25,6 +25,7 @@
 #include "mmcore/view/CallRender3D_2.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/SystemInformation.h"
+#include <iterator>
 //#include <cmath>
 
 using namespace megamol::core;
@@ -258,6 +259,7 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
     if (imgc != nullptr) imgcConnected = true;
 
     param::ParamSlot* filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
+    auto selected = this->currentSlot.Param<param::IntParam>()->Value();
     if (filenameSlot->IsDirty() || (imgcConnected /* && imgc->DataHash() != datahash*/) ||
         useMpi) { //< imgc has precedence
         vislib::TString filename = filenameSlot->Param<param::FilePathParam>()->Value();
@@ -267,7 +269,10 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
             if (!(*imgc)(image_calls::Image2DCall::CallForGetMetaData)) return false;
             if (!(*imgc)(image_calls::Image2DCall::CallForGetData)) return false;
             if (imgc->GetImageCount() > 0) {
-                filename = vislib::TString((*imgc->GetImagePtr()->begin()).first.c_str());
+                selected = ((selected % imgc->GetImageCount()) + imgc->GetImageCount()) % imgc->GetImageCount();
+                auto it = imgc->GetImagePtr()->begin();
+                std::advance(it, selected);
+                filename = vislib::TString((*it).first.c_str());
             }
         }
         static vislib::graphics::BitmapImage img;
@@ -337,10 +342,12 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
                         }
                     } else if (roleRank == roleImgcRank) {
                         // vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Retrieving image from call\n");
-                        this->width = (*imgc->GetImagePtr()->begin()).second.Width();
-                        this->height = (*imgc->GetImagePtr()->begin()).second.Height();
+                        auto it = imgc->GetImagePtr()->begin();
+                        std::advance(it, selected);
+                        this->width = (*it).second.Width();
+                        this->height = (*it).second.Height();
                         allFile =
-                            reinterpret_cast<uint8_t*>((*imgc->GetImagePtr()->begin()).second.PeekDataAs<uint8_t>());
+                            reinterpret_cast<uint8_t*>((*it).second.PeekDataAs<uint8_t>());
                     }
 #ifdef WITH_MPI
                 }
