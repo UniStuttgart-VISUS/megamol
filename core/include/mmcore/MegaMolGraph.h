@@ -142,8 +142,8 @@ public:
 
     //////////////////////////// Modules and Calls loaded from DLLs ///////////////////////////////
 
-private :
-	const factories::ModuleDescriptionManager& ModuleProvider();
+private:
+    const factories::ModuleDescriptionManager& ModuleProvider();
     const factories::CallDescriptionManager& CallProvider();
     const factories::ModuleDescriptionManager const* moduleProvider_ptr;
     const factories::CallDescriptionManager const* callProvider_ptr;
@@ -238,7 +238,8 @@ private:
     /** List of modules that this graph owns */
     ModuleList_t module_list_;
 
-	// the dummy_namespace must be above the call_list_ because it needs to be destroyed AFTER all calls during ~MegaMolGraph()
+    // the dummy_namespace must be above the call_list_ because it needs to be destroyed AFTER all calls during
+    // ~MegaMolGraph()
     std::shared_ptr<RootModuleNamespace> dummy_namespace; // serves as parent object for stupid fat modules
 
     /** List of call that this graph owns */
@@ -247,6 +248,13 @@ private:
     /** Reader/Writer mutex for the graph */
     mutable std::shared_mutex graph_lock_;
 
+    // Render APIs (RAPIs) provide rendering or other resources (e.g. OpenGL context, user inputs)
+    // that are used by MegaMol for rendering. We may use many RAPIs simultaneously that provide data to MegaMol,
+    // but we need at least one RAPI that provides data like rendering context and rendering configuration (i.e. framebuffer memory and size).
+    // Views (e.g. View3D) are the entry point from where the MegaMol graph is evaluated. 
+    // Views are fed with resources and events that are provided by RAPIs.
+    // things get compilcated when we try to model having many different Views that depend on many different resources coming from different RAPIs.
+    // because of this, for now we only have one RAPI object in the feeding events to Views and we expect only one View object to be present in the graph.
     std::unique_ptr<render_api::AbstractRenderAPI> rapi_;
     std::string rapi_root_name;
     std::list<std::function<bool()>> rapi_commands;

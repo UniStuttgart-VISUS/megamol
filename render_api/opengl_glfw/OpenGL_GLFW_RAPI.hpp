@@ -39,7 +39,7 @@ public:
     std::string getAPIName() const override { return std::string{"OpenGL GLFW"}; };
     RenderAPIVersion getAPIVersion() const override { return RenderAPIVersion{0, 0}; };
 
-    // how to force RAPI subclasses to implement a Config struct which should be passed to constructor??
+    // TODO: how to force RAPI subclasses to implement a Config struct which should be passed to constructor??
     // set sane defaults for all options here, so usage is as simple as possible
     struct Config {
         std::string windowTitlePrefix = "MegaMol";
@@ -97,9 +97,10 @@ public:
     void glfw_onFramebufferSize_func(const int widthpx, const int heightpx);
 
 private:
+
+    // abstract away GLFW library details behind pointer-to-implementation. only use GLFW header in .cpp
     struct PimplData;
-    std::unique_ptr<PimplData, std::function<void(PimplData*)>>
-        m_pimpl; // abstract away GLFW library details behind pointer-to-implementation
+    std::unique_ptr<PimplData, std::function<void(PimplData*)>> m_pimpl;
     void updateWindowTitle();
 
     // GLFW fills those events and we propagate them to the View3D/the MegaMol graph

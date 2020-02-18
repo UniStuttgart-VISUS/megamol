@@ -159,7 +159,7 @@ bool OpenGL_GLFW_RAPI::initAPI(const Config& config) {
     // from here on, use m_sharedData to access reference to SharedData for RAPI objects; the owner will clean it up
     // correctly
     if (m_data.sharedDataPtr) {
-		// glfw already initialized by other render api
+        // glfw already initialized by other render api
     } else {
         const bool success_glfw = glfwInit();
         if (!success_glfw)
@@ -255,18 +255,18 @@ bool OpenGL_GLFW_RAPI::initAPI(const Config& config) {
         ::glfwSetWindowPos(
             m_glfwWindowPtr, m_data.initialConfig.windowPlacement.x, m_data.initialConfig.windowPlacement.y);
 
-	// TODO: when do we need this?
+    // TODO: when do we need this?
     // if (config.windowPlacement.fullScreen ||
     //     config.windowPlacement.noDec) {
     //     ::glfwSetInputMode(m_glfwWindowPtr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     // }
 
-	gladLoadGL();
+    gladLoadGL();
 #ifdef _WIN32
-	gladLoadWGL(wglGetCurrentDC());
+    gladLoadWGL(wglGetCurrentDC());
 #else
-    Display *display = XOpenDisplay(NULL);
-	gladLoadGLX(display, DefaultScreen(display));
+    Display* display = XOpenDisplay(NULL);
+    gladLoadGLX(display, DefaultScreen(display));
     XCloseDisplay(display);
 #endif
 
@@ -337,30 +337,30 @@ void OpenGL_GLFW_RAPI::closeAPI() {
     if (!m_pimpl) // this API object is not initialized
         return;
 
-	const bool close_glfw = (m_data.sharedDataPtr == nullptr);
+    const bool close_glfw = (m_data.sharedDataPtr == nullptr);
 
-	::glfwMakeContextCurrent(m_glfwWindowPtr);
+    ::glfwMakeContextCurrent(m_glfwWindowPtr);
 
-	// GL context and destruction of all other things happens in destructors of pimpl data members
-	if (m_data.glfwContextWindowPtr)
-		::glfwDestroyWindow(m_data.glfwContextWindowPtr);
-	m_data.sharedDataPtr = nullptr;
+    // GL context and destruction of all other things happens in destructors of pimpl data members
+    if (m_data.glfwContextWindowPtr) ::glfwDestroyWindow(m_data.glfwContextWindowPtr);
+    m_data.sharedDataPtr = nullptr;
     m_data.glfwContextWindowPtr = nullptr;
     this->m_pimpl.release();
 
-	::glfwMakeContextCurrent(nullptr);
+    ::glfwMakeContextCurrent(nullptr);
 
-	if (close_glfw) {
+    if (close_glfw) {
         glfwTerminate();
-	}
+    }
 }
 
 void OpenGL_GLFW_RAPI::preViewRender() {
     if (m_glfwWindowPtr == nullptr) return;
 
-    // poll events for all GLFW windows. this also issues the callbacks. note at this point there is no GL context
-    // active.
-    ::glfwPollEvents();
+    // poll events for all GLFW windows shared by this context. this also issues the callbacks.
+    // note at this point there is no GL context active.
+    if (m_data.sharedDataPtr == nullptr) // nobody shared context with us, so we must be primary context provider
+		::glfwPollEvents(); // may only be called from main thread
     // from GLFW Docs:
     // Do not assume that callbacks will only be called through glfwPollEvents().
     // While it is necessary to process events in the event queue,
@@ -370,13 +370,14 @@ void OpenGL_GLFW_RAPI::preViewRender() {
     if (this->m_windowEvents.should_close_events.size() && this->m_windowEvents.should_close_events.back())
         this->setShutdown(true); // cleanup of this RAPI and dependent GL stuff is triggered via this shutdown hint
 
+    // set OpenGL context for renderering
     ::glfwMakeContextCurrent(m_glfwWindowPtr);
 
     // start frame timer
 
     // rendering via MegaMol View is called after this function finishes
-    // in the end this calls something like
-    //::mmcRenderView(hView, &renderContext);
+    // in the end this calls the equivalent of ::mmcRenderView(hView, &renderContext)
+    // which leads to view.Render()
 }
 
 void OpenGL_GLFW_RAPI::postViewRender() {

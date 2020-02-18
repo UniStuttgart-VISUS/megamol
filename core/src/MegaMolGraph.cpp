@@ -10,6 +10,8 @@ megamol::core::MegaMolGraph::MegaMolGraph(
 		std::string rapi_name)
     : moduleProvider_ptr{&moduleProvider}, callProvider_ptr{&callProvider}, rapi_{std::move(rapi)}, rapi_root_name{rapi_name}, dummy_namespace{std::make_shared<RootModuleNamespace>()}
 {
+	// the Core Instance is a parasite that needs to be passed to all modules
+	// TODO: make it so there is no more core instance
 	dummy_namespace->SetCoreInstance(core);
 }
 
@@ -39,7 +41,7 @@ megamol::core::MegaMolGraph::~MegaMolGraph() {
 }
 
 const megamol::core::factories::ModuleDescriptionManager& megamol::core::MegaMolGraph::ModuleProvider() {
-    return *moduleProvider_ptr;
+    return *moduleProvider_ptr; // not null because we took it by reference in constructor
 }
 
 const megamol::core::factories::CallDescriptionManager& megamol::core::MegaMolGraph::CallProvider() {
@@ -97,7 +99,7 @@ bool megamol::core::MegaMolGraph::QueueCallInstantiationNoLock(
 
 
 bool megamol::core::MegaMolGraph::HasPendingRequests() {
-    auto lock = AcquireQueueLocks();
+    auto lock = AcquireQueueLocks(); // TODO: lock necessary?
     return !module_deletion_queue_.Empty() || !module_instantiation_queue_.Empty() || !call_deletion_queue_.Empty() ||
            !call_instantiation_queue_.Empty();
 }
@@ -190,7 +192,7 @@ static std::vector<std::string> splitPathName(std::string const& path) {
 
     // execute IsAvailable() and Create() in GL context
     this->rapi_commands.emplace_front(
-        [module_description, module_ptr]() { return module_description->IsAvailable() && module_ptr->Create(); });
+        [module_description, module_ptr]() { return !(module_description->IsAvailable() && module_ptr->Create()); }); // returns false if something went wrong
 
 	// if the new module is a view module register if with a View Resource Feeder and set it up to get the default resources of the GLFW context plus an empty handler for rendering
 	megamol::core::view::AbstractView* view_ptr = nullptr;
@@ -288,7 +290,7 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
     auto module_it = find_module(request);
     if (module_it == this->module_list_.end()) return false;
 
-    auto module_ptr = module_it->first; // is std::shared_ptr, a copy stays alive until rapi_commands are executed
+    auto module_ptr = module_it->first; // is std::shared_ptr, a copy stays alive until rapi_commands got executed and the vector gets cleared
     if (!module_ptr) return false;
 
     // delete all outgoing/incoming calls
@@ -304,6 +306,7 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
         module_ptr->Release();
         return true;
 		// end of lambda scope deletes last shared_ptr to module
+		// thus the module gets deleted after execution and deletion of this command callback
      });
 
     this->module_list_.erase(module_it);
@@ -336,6 +339,7 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
 
 void megamol::core::MegaMolGraph::ExecuteGraphUpdates() {
 	// TODO: lock is broken?
+	// TODO: is lock necessary?
     //auto lock = this->AcquireQueueLocks();
 
     while (!call_deletion_queue_.Empty()) {
@@ -364,15 +368,15 @@ void megamol::core::MegaMolGraph::RenderNextFrame() {
     if (this->rapi_)
 		this->rapi_->preViewRender();
 
-	// OpenGL context for module Create() provided here
-	bool some_failed = false;
+	// OpenGL context for module Create() provided here by preViewRender() of RAPI with GL context
+	bool some_command_failed = false;
 	for (auto& command : this->rapi_commands)
-		some_failed |= command(); // module Create() or Release() called here
+		some_command_failed |= command(); // module Create() or Release() called here
 
     this->rapi_commands.clear();
 
-	if (some_failed) {
-		// we need to remove the the module that failed IsAvailable() or Create()
+	if (some_command_failed) {
+		// fail and stop execution of MegaMol because without the requested graph modules further execution makes no sense
     }
 
 	// process ui events and other resources
