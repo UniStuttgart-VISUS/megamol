@@ -19,6 +19,8 @@ int main() {
     openglConfig.windowTitlePrefix = openglConfig.windowTitlePrefix + " ~ Main3000";
     gl_api->initAPI(&openglConfig);
 
+	auto* apiRawPtr = gl_api.get(); // TODO: this is dangerous and we need a graceful shutdown mechanism for the new graph
+
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider, std::move(gl_api), gl_api_name);
 
 	// TODO: verify valid input IDs/names in graph instantiation methods - dont defer validation until executing the changes
@@ -30,7 +32,7 @@ int main() {
 
 	graph.ExecuteGraphUpdates();
 
-	while (true) {
+	while (!apiRawPtr->shouldShutdown()) {
         graph.RenderNextFrame();
 	}
 
