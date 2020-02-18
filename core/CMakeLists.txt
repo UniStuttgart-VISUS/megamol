@@ -98,7 +98,7 @@ if(BUILD_CORE)
     PUBLIC ${EXPAT_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} 
     PUBLIC vislib glad glm glowl zlib libpng json lua ${EXPAT_LIBRARIES}
-    PRIVATE libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} abstract_render_api)
+    PRIVATE libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} abstract_render_api input_events)
   if(WIN32)
     if(USE_TRACKING)
       target_link_libraries(${PROJECT_NAME} PUBLIC tracking natnet)
