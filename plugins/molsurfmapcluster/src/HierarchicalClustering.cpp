@@ -80,16 +80,15 @@ HierarchicalClustering::HierarchicalClustering(
     this->cluster->insert(this->cluster->end(), this->leaves->begin(), this->leaves->end());
 
     // Getting Features of Pictures
-    using namespace std;
-    vector<thread> threads;
+    std::vector<std::thread> threads;
     for (CLUSTERNODE* node : *this->cluster) {
         if (this->momentsmethode == 1)
-            threads.push_back(thread(bind(&HierarchicalClustering::calculateImageMoments, this, node)));
+            threads.push_back(std::thread(std::bind(&HierarchicalClustering::calculateImageMoments, this, node)));
         if (this->momentsmethode == 2)
-            threads.push_back(thread(bind(&HierarchicalClustering::calculateColorMoments, this, node)));
+            threads.push_back(std::thread(std::bind(&HierarchicalClustering::calculateColorMoments, this, node)));
     }
 
-    for (thread& th : threads) {
+    for (std::thread& th : threads) {
         th.join();
     }
 
@@ -456,14 +455,13 @@ std::string HierarchicalClustering::getFeaturesString(std::vector<double>* featu
 }
 
 void HierarchicalClustering::dump_dot(const vislib::TString& filename) {
-    using namespace std;
-    ofstream file;
-    string path(filename);
+    std::ofstream file;
+    std::string path(filename);
     file.open(path);
 
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Creating .dot File at %s", path);
 
-    file << "graph g {" << endl;
+    file << "graph g {" << std::endl;
 
     for (CLUSTERNODE* node : *this->cluster) {
         if (node->left == nullptr && node->right == nullptr) {
@@ -477,7 +475,7 @@ void HierarchicalClustering::dump_dot(const vislib::TString& filename) {
                  << "[label=\"" << node->similiaritychildren << "\", image=\"" << node->pic->name << "\", features=\""
                  << getFeaturesString(node->features) << "\", shape=\"circle\", level=" << node->level << "]";
         }
-        file << ";" << endl;
+        file << ";" << std::endl;
     }
 
     // Ranking of the nodes
@@ -487,7 +485,7 @@ void HierarchicalClustering::dump_dot(const vislib::TString& filename) {
         // Level wechsel
         if (node->level > oldlevel) {
             oldlevel = node->level;
-            file << "}" << endl << "{rank=same;" << node->id;
+            file << "}" << std::endl << "{rank=same;" << node->id;
             // Erster Knoten
         } else if (node == (*this->cluster)[0]) {
             file << node->id;
@@ -505,14 +503,13 @@ void HierarchicalClustering::dump_dot(const vislib::TString& filename) {
     file.close();
 
     // make svg
-    string command = "dot -Tsvg " + path + " -o " + path + ".svg";
+    std::string command = "dot -Tsvg " + path + " -o " + path + ".svg";
     system(command.c_str());
 }
 
 void HierarchicalClustering::dump_pca(const vislib::TString& filename) {
-    using namespace std;
-    ofstream file;
-    string path(filename);
+    std::ofstream file;
+    std::string path(filename);
     file.open(path);
 
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Creating PCA-CSV-File at %s", path);
@@ -521,7 +518,7 @@ void HierarchicalClustering::dump_pca(const vislib::TString& filename) {
         for (double comp : *node->pca2d) {
             file << comp << ";";
         }
-        file << endl;
+        file << std::endl;
     }
 
     file.close();
@@ -538,16 +535,15 @@ void HierarchicalClustering::reanalyse() {
     this->cluster->insert(this->cluster->end(), this->leaves->begin(), this->leaves->end());
 
     // Getting Features of Pictures
-    using namespace std;
-    vector<thread> threads;
+    std::vector<std::thread> threads;
     for (CLUSTERNODE* node : *this->cluster) {
         if (this->momentsmethode == 1)
-            threads.push_back(thread(bind(&HierarchicalClustering::calculateImageMoments, this, node)));
+            threads.push_back(std::thread(std::bind(&HierarchicalClustering::calculateImageMoments, this, node)));
         if (this->momentsmethode == 2)
-            threads.push_back(thread(bind(&HierarchicalClustering::calculateColorMoments, this, node)));
+            threads.push_back(std::thread(std::bind(&HierarchicalClustering::calculateColorMoments, this, node)));
     }
 
-    for (thread& th : threads) {
+    for (std::thread& th : threads) {
         th.join();
     }
 
