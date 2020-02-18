@@ -23,7 +23,6 @@
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
 
-
 namespace megamol {
 namespace core {
 namespace view {
@@ -287,7 +286,7 @@ private:
      */
     bool onResetView(Call& call);
 
-	bool GetExtentsCallback(Call& call);
+    bool GetExtentsCallback(Call& call);
 
     bool OnKeyCallback(Call& call);
 

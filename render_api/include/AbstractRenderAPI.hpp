@@ -59,7 +59,7 @@ public:
     // looked up via this function and given to the Views that request them. the matching of correct resource to the
     // Views that request them is done by the identifier of the resource (i.e. by a std::string) followed by a cast to
     // the expected type
-    virtual const std::vector<RenderResource>& getRenderResources() = 0;
+    virtual const std::vector<RenderResource>& getRenderResources() const = 0;
 
 	// TODO: how to force/allow subclasses to interop with other APIs?
 

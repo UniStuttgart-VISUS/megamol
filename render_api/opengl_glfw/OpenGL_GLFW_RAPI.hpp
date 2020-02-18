@@ -11,6 +11,9 @@
 
 #include "AbstractRenderAPI.hpp"
 
+#include "KeyboardMouse_Events.h"
+#include "Framebuffer_Events.h"
+#include "Window_Events.h"
 
 namespace megamol {
 namespace render_api {
@@ -24,7 +27,11 @@ struct WindowPlacement {
     bool topMost = false;
 };
 
-class OpenGL_GLFW_RAPI : public AbstractRenderAPI {
+class OpenGL_GLFW_RAPI final : public AbstractRenderAPI {
+    using KeyboardEvents = megamol::input_events::KeyboardEvents;
+    using MouseEvents = megamol::input_events::MouseEvents;
+    using WindowEvents = megamol::input_events::WindowEvents;
+    using FramebufferEvents = megamol::input_events::FramebufferEvents;
 
 public:
     // make capabilities of OpenGL/GLFW RAPI statically query-able (we would like to force this from the abstract
@@ -80,6 +87,15 @@ private:
         m_pimpl; // abstract away GLFW library details behind pointer-to-implementation
     void updateWindowTitle();
 
+    // GLFW fills those events and we propagate them to the View3D/the MegaMol graph
+    KeyboardEvents m_keyboardEvents;
+    MouseEvents m_mouseEvents;
+    WindowEvents m_windowEvents;
+    FramebufferEvents m_framebufferEvents;
+
+    // this holds references to the event structs we fill. the events are passed to the renderers/views using
+    // const std::vector<RenderResource>& getRenderResources() override
+    std::vector<RenderResource> m_renderResourceReferences;
 };
 
 } // namespace render_api

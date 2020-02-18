@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "mmcore/MegaMolGraph.h"
 
+#include "mmcore/view/AbstractView_EventConsumption.h"
 
 megamol::core::MegaMolGraph::MegaMolGraph(
 	megamol::core::CoreInstance& core, 
@@ -191,10 +192,21 @@ static std::vector<std::string> splitPathName(std::string const& path) {
     this->rapi_commands.emplace_front(
         [module_description, module_ptr]() { return module_description->IsAvailable() && module_ptr->Create(); });
 
+	// if the new module is a view module register if with a View Resource Feeder and set it up to get the default resources of the GLFW context plus an empty handler for rendering
 	megamol::core::view::AbstractView* view_ptr = nullptr;
     if (view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get())) {
-        this->views_.push_back(view_ptr);
+        this->view_feeders.push_back(ViewResourceFeeder{view_ptr, 
+			{
+				// rendering resource handlers are executed in the order defined here
+				std::make_pair("KeyboardEvents", megamol::core::view::view_consume_keyboard_events),
+				std::make_pair("MouseEvents", megamol::core::view::view_consume_mouse_events),
+				std::make_pair("WindowEvents", megamol::core::view::view_consume_window_events),
+				std::make_pair("FramebufferEvents", megamol::core::view::view_consume_framebuffer_events),
+				std::make_pair("", megamol::core::view::view_poke_rendering),
+			}});
     }
+	
+	// TODO: make sure that requested rendering resources or inputs for the view are provided by some RAPI
 
     return true;
 }

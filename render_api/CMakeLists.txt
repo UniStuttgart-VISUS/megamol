@@ -67,7 +67,7 @@ endif()
   
 add_subdirectory(glad)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} glad_ vislib)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} glad_ vislib PUBLIC input_events)
 
 # Grouping in Visual Studio
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
