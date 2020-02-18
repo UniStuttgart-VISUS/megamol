@@ -363,14 +363,13 @@ void megamol::core::MegaMolGraph::RenderNextFrame() {
 		// we need to remove the the module that failed IsAvailable() or Create()
     }
 
-	// process ui events
+	// process ui events and other resources
+	// this also contains a handler that tells the view to render itself
+    auto& resources = this->rapi_->getRenderResources();
+    for (auto& view_feeder : view_feeders)
+		view_feeder.consume(resources);
 
-	_mmcRenderViewContext dummyRenderViewContext; // doesn't do anything, really
-	//void* apiContextDataPtr = this->rapi->getContextDataPtr();
-    for (auto& view: this->views_)
-        if (view) {
-			view->Render(/* want: 'apiContextDataPtr' instead of: */ dummyRenderViewContext );
-        }
+	// TODO: handle 'stop rendering' requests
 
     if (this->rapi_)
 		this->rapi_->postViewRender();

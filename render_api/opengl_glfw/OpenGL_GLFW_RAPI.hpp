@@ -10,12 +10,7 @@
 #pragma once
 
 #include "AbstractRenderAPI.hpp"
-#include "AbstractUILayer.h"
 
-#include <string>
-#include <tuple>
-#include <vector>
-#include <functional>
 
 namespace megamol {
 namespace render_api {
@@ -30,26 +25,6 @@ struct WindowPlacement {
 };
 
 class OpenGL_GLFW_RAPI : public AbstractRenderAPI {
-public:
-    struct UIEvents {
-        std::vector<std::tuple<render_api::Key, render_api::KeyAction, render_api::Modifiers>> onKey_list;
-        std::vector<unsigned int> onChar_list;
-        std::vector<std::tuple<double, double>> onMouseMove_list;
-        std::vector<std::tuple<render_api::MouseButton, render_api::MouseButtonAction, render_api::Modifiers>> onMouseButton_list;
-        std::vector<std::tuple<double, double>> onMouseWheel_list;
-        std::vector<std::tuple<int, int>> resize_list;
-        bool is_window_resized = false;
-
-        void clear() {
-            this->onKey_list.clear();
-            this->onChar_list.clear();
-            this->onMouseMove_list.clear();
-            this->onMouseButton_list.clear();
-            this->onMouseWheel_list.clear();
-            this->resize_list.clear();
-            this->is_window_resized = false;
-        }
-    };
 
 public:
     // make capabilities of OpenGL/GLFW RAPI statically query-able (we would like to force this from the abstract
@@ -81,11 +56,9 @@ public:
     void preViewRender() override;  // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
     void postViewRender() override; // clean up after rendering, e.g. stop and show frame-timers in GLFW window
 
+    // expose the resources and input events this RAPI provides: Keyboard inputs, Mouse inputs, GLFW Window events, Framebuffer resize events
+    const std::vector<RenderResource>& getRenderResources() const override;
     const void* getAPISharedDataPtr() const override; // ptr non-owning, share data should be only borrowed
-
-    void AddUILayer(std::shared_ptr<AbstractUILayer> uiLayer);
-    void RemoveUILayer(std::shared_ptr<AbstractUILayer> uiLayer);
-    UIEvents& getUIEvents();
 
     // TODO: register passing user inputs? via existing callbacks?
     void glfw_onKey_func(int k, int s, int a, int m);
@@ -94,8 +67,6 @@ public:
     void glfw_onMouseButton_func(int b, int a, int m);
     void glfw_onMouseWheel_func(double x, double y);
 
-    void on_resize(int w, int h);
-    bool checkWindowResize();
 
     // from AbstractRenderAPI:
     // int setPriority(const int p) // priority initially 0
@@ -109,7 +80,6 @@ private:
         m_pimpl; // abstract away GLFW library details behind pointer-to-implementation
     void updateWindowTitle();
 
-    UIEvents ui_events;
 };
 
 } // namespace render_api

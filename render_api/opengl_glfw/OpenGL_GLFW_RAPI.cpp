@@ -29,7 +29,6 @@
 #    endif
 #endif
 
-#include "UILayersCollection.hpp"
 #include "vislib/graphics/FpsCounter.h"
 #include "vislib/sys/Log.h"
 
@@ -77,9 +76,6 @@ struct OpenGL_GLFW_RAPI::PimplData {
     std::string fullWindowTitle;
 
     int currentWidth = 0, currentHeight = 0;
-
-    UILayersCollection uiLayers;
-    std::shared_ptr<AbstractUILayer> mouseCapture{nullptr};
 
     // TODO: move into 'FrameStatisticsCalculator'
     vislib::graphics::FpsCounter fpsCntr;
@@ -270,7 +266,6 @@ void OpenGL_GLFW_RAPI::closeAPI() {
 		::glfwDestroyWindow(m_data.glfwContextWindowPtr);
 	m_data.sharedDataPtr = nullptr;
     m_data.glfwContextWindowPtr = nullptr;
-    m_data.mouseCapture = nullptr;
     this->m_pimpl.release();
 
 	::glfwMakeContextCurrent(nullptr);
@@ -298,10 +293,6 @@ void OpenGL_GLFW_RAPI::preViewRender() {
 
     ::glfwMakeContextCurrent(m_glfwWindowPtr);
 
-	// TODO: use GLFW callback
-    if (checkWindowResize())
-		on_resize(m_data.currentWidth, m_data.currentHeight);
-
     // start frame timer
 
     // rendering via MegaMol View is called after this function finishes
@@ -315,7 +306,8 @@ void OpenGL_GLFW_RAPI::postViewRender() {
     // end frame timer
     // update window name
 
-    m_data.uiLayers.OnDraw();
+	// TODO: kill UI layers or make sure they make sense
+    // m_data.uiLayers.OnDraw();
 
     ::glfwSwapBuffers(m_glfwWindowPtr);
 
@@ -335,13 +327,13 @@ const void* OpenGL_GLFW_RAPI::getAPISharedDataPtr() const { return &m_sharedData
 
 void OpenGL_GLFW_RAPI::updateWindowTitle() {}
 
-void OpenGL_GLFW_RAPI::AddUILayer(std::shared_ptr<AbstractUILayer> uiLayer) {
-	m_data.uiLayers.AddUILayer(uiLayer);
-}
-
-void OpenGL_GLFW_RAPI::RemoveUILayer(std::shared_ptr<AbstractUILayer> uiLayer) {
-    m_data.uiLayers.RemoveUILayer(uiLayer);
-}
+// void OpenGL_GLFW_RAPI::AddUILayer(std::shared_ptr<AbstractUILayer> uiLayer) { m_data.uiLayers.AddUILayer(uiLayer); }
+// 
+// void OpenGL_GLFW_RAPI::RemoveUILayer(std::shared_ptr<AbstractUILayer> uiLayer) {
+//     m_data.uiLayers.RemoveUILayer(uiLayer);
+// }
+// 
+// OpenGL_GLFW_RAPI::UIEvents& OpenGL_GLFW_RAPI::getUIEvents() { return this->ui_events; }
 
 void OpenGL_GLFW_RAPI::glfw_onKey_func(int k, int s, int a, int m) {
     //::glfwMakeContextCurrent(m_glfwWindowPtr);
@@ -426,7 +418,6 @@ void OpenGL_GLFW_RAPI::glfw_onMouseButton_func(int b, int a, int m) {
 void OpenGL_GLFW_RAPI::glfw_onMouseWheel_func(double x, double y) {
     //::glfwMakeContextCurrent(m_glfwWindowPtr);
 
-	this->ui_events.onMouseWheel_list.emplace_back(std::make_tuple(x, y));
     //if (m_data.mouseCapture) {
     //    m_data.mouseCapture->OnMouseScroll(x, y);
     //} else {
@@ -434,39 +425,10 @@ void OpenGL_GLFW_RAPI::glfw_onMouseWheel_func(double x, double y) {
     //}
 }
 
-bool OpenGL_GLFW_RAPI::checkWindowResize() {
-    int frame_width, frame_height;
-    ::glfwGetFramebufferSize(m_glfwWindowPtr, &frame_width, &frame_height);
 
-    if ((frame_width != m_data.currentWidth) || (frame_height != m_data.currentHeight)) {
-        m_data.currentWidth = frame_width;
-        m_data.currentHeight = frame_height;
-        this->ui_events.is_window_resized = true;
-    }
-    this->ui_events.is_window_resized = false;
 
-	return this->ui_events.is_window_resized;
-}
-void OpenGL_GLFW_RAPI::on_resize(int w, int h) {
-    //::glfwMakeContextCurrent(m_glfwWindowPtr);
-    if ((w > 0) && (h > 0)) {
-        // TODO: whose responsibility? put into callback!
-		// TODO: talk to karsten about this, View3D should not use GL calls. this means the RenderAPI needs to provide glViewport / FBO / resize info
-        //::glViewport(0, 0, w, h);
-        //::mmcResizeView(hView, w, h);
-        vislib::sys::Log::DefaultLog.WriteInfo("OpenGL_GLFW_RAPI: Resize window (w: %d, h: %d)\n", w, h);
 
-        this->ui_events.resize_list.emplace_back(w, h);
-        //m_data.uiLayers.OnResize(w, h);
-    }
-}
 
-OpenGL_GLFW_RAPI::UIEvents& OpenGL_GLFW_RAPI::getUIEvents() {
-	return this->ui_events;
-}
-
-// TODO: how to force/allow subclasses to interop with other APIs?
-// TODO: API-specific options in subclasses?
 
 } // namespace render_api
 } // namespace megamol

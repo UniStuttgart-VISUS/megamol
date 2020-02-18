@@ -27,8 +27,10 @@
 #include "AbstractUpdateQueue.h" // TODO: why can't we use std::list? why is this class called abstract when, in fact, its implementation is very concrete?
 
 #include "AbstractRenderAPI.hpp"
-#include "mmcore/view/AbstractView.h"
 #include "mmcore/RootModuleNamespace.h"
+
+#include "mmcore/view/AbstractView.h"
+#include "RenderResource.h"
 
 namespace megamol {
 namespace core {
@@ -248,7 +250,46 @@ private:
     std::unique_ptr<render_api::AbstractRenderAPI> rapi_;
     std::string rapi_root_name;
     std::list<std::function<bool()>> rapi_commands;
-    std::list<view::AbstractView*> views_;
+
+	// this struct feeds a view instance with requested render resources like keyboard events or framebuffer resizes
+	// resources are identified by name (a string). when a requested resource name is found 
+	// the resource is passed to a handler function that is registered with the ViewResourceFeeder
+	// the handler function is supposed to pass the resource to the AbstractView object in some way (e.g. pass keyboard inputs to OnKey callbacks of the View)
+	// one may register 'empty' handlers that dont expect any resource but should be executed anyway. those ResourceHandlers use the empty string "" as resource identification.
+	// currently empty handlers are used to tell a View to render itself after all input events have been processed.
+    struct ViewResourceFeeder {
+        view::AbstractView* view;
+
+		using ResourceHandler =
+            std::pair<std::string, std::function<void(view::AbstractView&, const megamol::render_api::RenderResource&)>>;
+
+        std::vector<ResourceHandler> resourceConsumption;
+
+        void consume(const std::vector<megamol::render_api::RenderResource>& resources) {
+            if (!view)
+				return; // TODO: big fail
+
+            std::for_each(resourceConsumption.begin(), resourceConsumption.end(), 
+				[&](const ResourceHandler& resource_handler) {
+					auto resource_it = std::find_if(resources.begin(), resources.end(), 
+						[&](const megamol::render_api::RenderResource& resource) { return resource_handler.first == resource.getIdentifier() || resource_handler.first == "" || resource_handler.first.empty(); });
+
+					if (resource_it != resources.end() && resource_it->getIdentifier() == resource_handler.first) {
+                        resource_handler.second(*view, *resource_it);
+                    } 
+					if(resource_handler.first == "" || resource_handler.first.empty()) {
+                        resource_handler.second(*view, megamol::render_api::RenderResource{"", std::nullopt});
+                    }
+				});
+		}
+    };
+
+	// for each View in the MegaMol graph we create a ViewResourceFeeder with corresponding ResourceHandlers for resource/input consumption
+	// currently the setup of the ResourceHandlers happens when the graph recognizes that a newly created module is a view.
+	// right now this happens in MegaMolGraph::add_module(), but it may be automated or configured from outside, 
+	// for example by passing resource handler names that should be passed to the View when requesting a View module in the config file
+    std::list<ViewResourceFeeder> view_feeders;
+
 
     ////////////////////////// old interface stuff //////////////////////////////////////////////
 public:

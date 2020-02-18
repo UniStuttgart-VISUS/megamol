@@ -8,6 +8,9 @@
 
 #include <string>
 
+#include <vector>
+#include "RenderResource.h"
+
 namespace megamol {
 namespace render_api {
 
@@ -50,7 +53,13 @@ public:
 	virtual void preViewRender() = 0; // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
 	virtual void postViewRender() = 0; // clean up after rendering, e.g. stop and show frame-timers in GLFW window
 
-	// TODO: how to register passing user inputs? via existing callbacks?
+    // we assume that render apis have different kinds of resources they need/want to share with the MegaMol View or Renderers.
+    // different kinds of resources are: Keyboard Input Events, Mouse Input Events, Window Resize/Input
+    // Events, Framebuffer Resize Events (or more, e.g. incoming configuration requests via network). the resources are
+    // looked up via this function and given to the Views that request them. the matching of correct resource to the
+    // Views that request them is done by the identifier of the resource (i.e. by a std::string) followed by a cast to
+    // the expected type
+    virtual const std::vector<RenderResource>& getRenderResources() = 0;
 
 	// TODO: how to force/allow subclasses to interop with other APIs?
 
