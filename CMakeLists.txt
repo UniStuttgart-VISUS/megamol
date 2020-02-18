@@ -64,6 +64,11 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.Config
   ${CMAKE_CURRENT_BINARY_DIR}/NuGet.Config COPYONLY)
 
 ###############################
+# Input and Event interfaces 
+###############################
+add_subdirectory(${MEGAMOL_DIR}/input_events)
+
+###############################
 # Render API modules
 ###############################
 add_subdirectory(${MEGAMOL_DIR}/render_api)
