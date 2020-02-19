@@ -17,7 +17,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 #include <vector>
-#include "png.h";
+//#include "png.h";
 
 #include "vislib/String.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"

@@ -8,11 +8,13 @@
 
 #include "stdafx.h"
 #include "ClusteringLoader.h"
+#include <filesystem>
 #include <fstream>
 #include <string>
 #include "CallClusteringLoader.h"
 #include "mmcore/param/FilePathParam.h"
 #include "vislib/StringTokeniser.h"
+#include "vislib/graphics/BitmapCodecCollection.h"
 #include "vislib/sys/Log.h"
 
 using namespace megamol;
@@ -165,7 +167,7 @@ bool ClusteringLoader::load(const vislib::TString& filename) {
                     if (lineA.Contains("[")) {
                         int pos = lineA.Find("[");
                         node->id = std::stoi(std::string(lineA.Substring(0, pos)));
-                        node->pic = new PNGPicLoader::PNGPIC();
+                        node->pic = new PictureData();
                         lineA = lineA.Substring(pos + 1);
                     } else if (!lineA.StartsWith("]") && lineA.Contains(",")) {
                         int poskomma = lineA.Find(",");
@@ -175,12 +177,14 @@ bool ClusteringLoader::load(const vislib::TString& filename) {
                         tmpidentifier.TrimSpaces();
 
                         if (tmpidentifier.Equals("image")) {
-                            node->pic->name = tmp.Substring(pos + 1);
-                            node->pic->name.Trim("\"");
+                            auto s = tmp.Substring(pos + 1);
+                            s.Trim("\"");
+                            node->pic->path = s;
                             // Load pic...
                             vislib::sys::Log::DefaultLog.WriteMsg(
-                                vislib::sys::Log::LEVEL_INFO, "Load Picture: %s", node->pic->name);
+                                vislib::sys::Log::LEVEL_INFO, "Load Picture: %s", node->pic->path);
                             // OPen File and check for PNG-Picture
+                            /*
                             FILE* fp = fopen(node->pic->name, "rb");
 
                             png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
@@ -195,14 +199,25 @@ bool ClusteringLoader::load(const vislib::TString& filename) {
                             png_set_palette_to_rgb(png);
                             png_init_io(png, fp);
                             png_read_png(png, info, PNG_TRANSFORM_IDENTITY, NULL);
+                            */
+                            auto fileSize = std::filesystem::file_size(node->pic->path);
+                            std::vector<uint8_t> loadedFile;
+                            loadedFile.resize(fileSize);
+                            std::ifstream fp(node->pic->path, std::ios::binary);
+                            if (!fp.is_open()) abort();
+                            file.read(reinterpret_cast<char*>(loadedFile.data()), fileSize);
+                            node->pic->image = new vislib::graphics::BitmapImage(); // ugly shit, but is not removable
+                                                                                    // without major refactoring
+                            if (!vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
+                                    *node->pic->image, loadedFile.data(), fileSize))
+                                abort();
+                            node->pic->image->Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
+
 
                             // Set PNG Infos
-                            node->pic->fp = fp;
-                            node->pic->png = png;
-                            node->pic->info = info;
-                            node->pic->rows = png_get_rows(png, info);
-                            node->pic->width = png_get_image_width(png, info);
-                            node->pic->height = png_get_image_height(png, info);
+                            node->pic->pdbid = std::filesystem::path(node->pic->path).stem().string();
+                            node->pic->width = node->pic->image->Width();
+                            node->pic->height = node->pic->image->Height();
                             node->pic->render = false;
                             node->pic->popup = false;
                             node->pic->texture = nullptr;

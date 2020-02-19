@@ -10,6 +10,7 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <filesystem>
 
 #include "vislib/sys/Log.h"
 
@@ -21,6 +22,7 @@
 #include <Eigen/SVD>
 #include <sstream>
 
+#include "PictureData.h"
 #include "HierarchicalClustering.h"
 
 #define IMAGEORDER 3
@@ -38,7 +40,7 @@ HierarchicalClustering::HierarchicalClustering() {}
 HierarchicalClustering::~HierarchicalClustering() {}
 
 HierarchicalClustering::HierarchicalClustering(
-    PNGPicLoader::PNGPIC* pic, SIZE_T picturecount, int method, int mode, int linkage, int moments) {
+    PictureData* pic, SIZE_T picturecount, int method, int mode, int linkage, int moments) {
 
     // Initalize Variables
     this->cluster = new std::vector<CLUSTERNODE*>();
@@ -68,7 +70,7 @@ HierarchicalClustering::HierarchicalClustering(
         node->similiaritychildren = 1.0;
 
         // Set Picture
-        PNGPicLoader::PNGPIC* tmppicture = &(pic[index]);
+        PictureData* tmppicture = &(pic[index]);
         node->pic = tmppicture;
 
         // Init dtsiance Matrix
@@ -128,9 +130,9 @@ HierarchicalClustering::HierarchicalClustering(
 }
 
 void HierarchicalClustering::calculateImageMoments(CLUSTERNODE* node) {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "\tAnalyzing %s", node->pic->name);
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "\tAnalyzing %s", node->pic->path);
 
-    PNGPicLoader::PNGPIC* pic = node->pic;
+    PictureData* pic = node->pic;
 
     std::vector<double>* graypicintensity = gray_scale_image(pic);
 
@@ -173,23 +175,27 @@ void HierarchicalClustering::calculateImageMoments(CLUSTERNODE* node) {
 }
 
 void HierarchicalClustering::calculateColorMoments(CLUSTERNODE* node) {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "\tAnalyzing %s", node->pic->name);
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "\tAnalyzing %s", node->pic->path);
 
-    PNGPicLoader::PNGPIC* pic = node->pic;
+    PictureData* pic = node->pic;
 
     double mean[3] = {0};
     double deviation[3] = {0};
     double skewness[3] = {0};
 
     double factor = (pic->width * pic->height);
+    auto picptr = pic->image->PeekDataAs<BYTE>();
 
     // Calculate Mean
     double summean[3] = {0};
     for (int i = 0; i < pic->height; i++) {
         for (int j = 0; j < pic->width * 3; j += 3) {
-            summean[0] += pic->rows[i][j];
-            summean[1] += pic->rows[i][j + 1];
-            summean[2] += pic->rows[i][j + 2];
+            //summean[0] += pic->rows[i][j];
+            summean[0] += picptr[pic->height * i + j];
+            //summean[1] += pic->rows[i][j + 1];
+            summean[1] += picptr[pic->height * i + j + 1];
+            //summean[2] += pic->rows[i][j + 2];
+            summean[2] += picptr[pic->height * i + j + 2];
         }
     }
 
@@ -202,13 +208,13 @@ void HierarchicalClustering::calculateColorMoments(CLUSTERNODE* node) {
     double skewnesssum[3] = {0};
     for (int i = 0; i < pic->height; i++) {
         for (int j = 0; j < pic->width * 3; j += 3) {
-            deviationsum[0] += pow(pic->rows[i][j] - mean[0], 2);
-            deviationsum[1] += pow(pic->rows[i][j + 1] - mean[1], 2);
-            deviationsum[2] += pow(pic->rows[i][j + 2] - mean[2], 2);
+            deviationsum[0] += pow(picptr[pic->height * i + j] - mean[0], 2);
+            deviationsum[1] += pow(picptr[pic->height * i + j + 1] - mean[1], 2);
+            deviationsum[2] += pow(picptr[pic->height * i + j + 2] - mean[2], 2);
 
-            skewnesssum[0] += pow(pic->rows[i][j] - mean[0], 3);
-            skewnesssum[1] += pow(pic->rows[i][j + 1] - mean[1], 3);
-            skewnesssum[2] += pow(pic->rows[i][j + 2] - mean[2], 3);
+            skewnesssum[0] += pow(picptr[pic->height * i + j] - mean[0], 3);
+            skewnesssum[1] += pow(picptr[pic->height * i + j + 1] - mean[1], 3);
+            skewnesssum[2] += pow(picptr[pic->height * i + j + 2] - mean[2], 3);
         }
     }
 
@@ -234,15 +240,16 @@ void HierarchicalClustering::calculateColorMoments(CLUSTERNODE* node) {
     node->features->push_back(skewness[2]);
 }
 
-std::vector<double>* HierarchicalClustering::gray_scale_image(PNGPicLoader::PNGPIC* pic) {
+std::vector<double>* HierarchicalClustering::gray_scale_image(PictureData* pic) {
 
     std::vector<double>* result = new std::vector<double>();
+    auto picptr = pic->image->PeekDataAs<BYTE>();
 
     for (int y = 0; y < pic->height; y++) {
         for (int x = 0; x < pic->width * 3; x += 3) {
-            int red = pic->rows[y][x];
-            int green = pic->rows[y][x + 1];
-            int blue = pic->rows[y][x + 2];
+            int red = picptr[y * pic->height + x];
+            int green = picptr[y * pic->height + x + 1];
+            int blue = picptr[y * pic->height + x + 2];
 
             result->push_back((0.21 * red) + (0.72 * green) + (0.07 * blue));
         }
@@ -431,8 +438,8 @@ HierarchicalClustering::CLUSTERNODE* HierarchicalClustering::mergeCluster(
     return newnode;
 }
 
-PNGPicLoader::PNGPIC* HierarchicalClustering::findNearestPicture(std::vector<double>* position) {
-    PNGPicLoader::PNGPIC* pic = nullptr;
+PictureData* HierarchicalClustering::findNearestPicture(std::vector<double>* position) {
+    PictureData* pic = nullptr;
     double mindistance = DBL_MAX;
     for (CLUSTERNODE* node : *this->leaves) {
         if (distance(position, node->features) < mindistance) {
@@ -465,14 +472,15 @@ void HierarchicalClustering::dump_dot(const vislib::TString& filename) {
 
     for (CLUSTERNODE* node : *this->cluster) {
         if (node->left == nullptr && node->right == nullptr) {
-            file << node->id << "[label=\"" << node->pic->name.Substring(node->pic->name.FindLast("\\") + 1)
-                 << "\", image=\"" << node->pic->name << "\", features=\"" << getFeaturesString(node->features)
+
+            file << node->id << "[label=\"" << std::filesystem::path(node->pic->path).filename()
+                 << "\", image=\"" << node->pic->path << "\", features=\"" << getFeaturesString(node->features)
                  << "\", pca=\"" << getFeaturesString(node->pca2d)
                  << "\", shape=\"box\", scaleimage=true, fixedsize=true, width=6, height=3, level=" << node->level
                  << "]";
         } else {
             file << node->id << " -- {" << node->left->id << " " << node->right->id << "} "
-                 << "[label=\"" << node->similiaritychildren << "\", image=\"" << node->pic->name << "\", features=\""
+                 << "[label=\"" << node->similiaritychildren << "\", image=\"" << node->pic->path << "\", features=\""
                  << getFeaturesString(node->features) << "\", shape=\"circle\", level=" << node->level << "]";
         }
         file << ";" << std::endl;

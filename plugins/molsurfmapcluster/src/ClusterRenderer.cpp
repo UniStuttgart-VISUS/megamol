@@ -12,6 +12,8 @@
 #include "vislib/sys/Log.h"
 #include "vislib\math\ForceDirected.h"
 
+#include <filesystem>
+
 #include "CallClusterPosition.h"
 #include "ClusterHierarchieRenderer.h"
 #include "ClusterRenderer.h"
@@ -161,7 +163,8 @@ void ClusterRenderer::renderClusterText(HierarchicalClustering::CLUSTERNODE* nod
 
     // Text to Render
     if (node->left == nullptr && node->right == nullptr) {
-        id.Format(node->pic->name.Substring(node->pic->name.FindLast("\\") + 1, 4));
+        //id.Format(node->pic->name.Substring(node->pic->name.FindLast("\\") + 1, 4));
+        id.Format(std::filesystem::path(node->pic->path).stem().string().c_str());
     } else {
         id.Format(std::to_string(node->id).c_str());
     }
@@ -193,7 +196,7 @@ void ClusterRenderer::renderLeaveNode(HierarchicalClustering::CLUSTERNODE* node)
     float size = this->fontSize + 15;
     vislib::StringA id;
     id.Format("PDB-ID: ");
-    id.Append(node->pic->name.Substring(node->pic->name.FindLast("\\") + 1, 4));
+    id.Append(std::filesystem::path(node->pic->path).stem().string().c_str());
 
     float strHeight = this->theFont.LineHeight(size);
     float strWidth = this->theFont.LineWidth(size, id);

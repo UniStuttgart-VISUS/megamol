@@ -15,7 +15,7 @@
 #include <tuple>
 #include <vector>
 
-#include "PNGPicLoader.h"
+#include "PictureData.h"
 
 namespace megamol {
 namespace MolSurfMapCluster {
@@ -37,7 +37,7 @@ public:
         double similiaritychildren;
 
         // Picture Data
-        PNGPicLoader::PNGPIC* pic;
+        PictureData* pic;
 
         // Featrues vector
         std::vector<double>* features;
@@ -51,7 +51,7 @@ public:
 
     /** Constructor */
     HierarchicalClustering(void);
-    HierarchicalClustering(PNGPicLoader::PNGPIC*, SIZE_T, int = 2, int = 1, int = 1,
+    HierarchicalClustering(PictureData*, SIZE_T, int = 2, int = 1, int = 1,
         int = 1); // Standard Euclidian Distance, Avarage Linkage, Imge-Moments
     HierarchicalClustering(HierarchicalClustering::CLUSTERNODE*, SIZE_T, int = 2, int = 1, int = 1, int = 1);
 
@@ -62,7 +62,7 @@ public:
 
     void calculateImageMoments(CLUSTERNODE*);
     void calculateColorMoments(CLUSTERNODE*);
-    std::vector<double>* gray_scale_image(PNGPicLoader::PNGPIC*);
+    std::vector<double>* gray_scale_image(PictureData*);
 
     void dump_dot();
     void dump_dot(const vislib::TString&);
@@ -111,7 +111,7 @@ private:
 
     CLUSTERNODE* mergeCluster(CLUSTERNODE* cluster1, CLUSTERNODE* cluster2);
 
-    PNGPicLoader::PNGPIC* findNearestPicture(std::vector<double>*);
+    PictureData* findNearestPicture(std::vector<double>*);
 
     HierarchicalClustering::CLUSTERNODE* getRootOfNode(HierarchicalClustering::CLUSTERNODE*);
 

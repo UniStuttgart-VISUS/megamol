@@ -73,7 +73,7 @@ private:
     /**
      * Ensures that the data is loaded
      */
-    void clusterData(CallPNGPics*);
+    void clusterData(image_calls::Image2DCall&);
     void clusterData(CallClusteringLoader*);
 
     /**
@@ -113,11 +113,13 @@ private:
      */
     virtual void release(void);
 
+    void fillPictureDataVector(image_calls::Image2DCall& imc);
+
     /** The slot for requesting data. */
     core::CalleeSlot outSlot;
 
     /** The slot for getting data. */
-    core::CallerSlot inSlotPNGPICLoader;
+    core::CallerSlot inSlotImageLoader;
     core::CallerSlot inSlotCLUSTERINGLoader;
 
     /** The data update hash */
@@ -135,6 +137,8 @@ private:
 
     /** The bounding box */
     vislib::math::Cuboid<float> bbox;
+
+    std::vector<PictureData> picdata;
 
     /** Param Slots */
     core::param::ParamSlot dumpdot;

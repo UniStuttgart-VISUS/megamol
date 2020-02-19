@@ -5,26 +5,28 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "HierarchicalClustering.h"
-#include "PNGPicLoader.h"
-#include "vislib\sys\Log.h"
+#include "PictureData.h"
+#include "vislib/graphics/gl/OpenGLTexture2D.h"
+#include "vislib/sys/Log.h"
+
+#include <glad/glad.h>
 
 namespace megamol {
 namespace MolSurfMapCluster {
 namespace TextureLoader {
 
-bool static loadPNGtoTexture(PNGPicLoader::PNGPIC* picture, GLubyte** texture) {
+bool static loadPNGtoTexture(PictureData* picture, GLubyte** texture) {
 
-    unsigned int row_bytes = png_get_rowbytes(picture->png, picture->info);
+    unsigned int row_bytes = 3 * picture->width;
     *texture = (unsigned char*)malloc(row_bytes * picture->height);
 
-    png_bytepp row_pointers = picture->rows;
-
-    for (int i = 0; i < picture->height; i++) {
+    //for (int i = 0; i < picture->height; i++) {
         // note that png is ordered top to
         // bottom, but OpenGL expect it bottom to top
         // so the order or swapped
-        memcpy(*texture + (row_bytes * (picture->height - 1 - i)), row_pointers[i], row_bytes);
-    }
+    //    memcpy(*texture + (row_bytes * (picture->height - 1 - i)), row_pointers[i], row_bytes);
+    //}
+    memcpy(*texture, picture->image->PeekData(), row_bytes * picture->height);
 
     return true;
 }
@@ -39,7 +41,7 @@ bool static loadTexture(HierarchicalClustering::CLUSTERNODE* node) {
 
         node->pic->texture = new vislib::graphics::gl::OpenGLTexture2D();
         if (node->pic->texture->Create(node->pic->width, node->pic->height, false, png, GL_RGB) != GL_NO_ERROR) {
-            vislib::sys::Log::DefaultLog.WriteError("Could not load \"%s\" texture.", node->pic->name);
+            vislib::sys::Log::DefaultLog.WriteError("Could not load \"%s\" texture.", node->pic->path);
             return false;
         }
         node->pic->texture->SetFilter(GL_LINEAR, GL_LINEAR);

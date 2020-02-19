@@ -12,8 +12,10 @@
 #include "CallCluster.h"
 #include "CallClusteringLoader.h"
 #include "CallPNGPics.h"
+#include "image_calls/Image2DCall.h"
 
 #include <fstream>
+#include <filesystem>
 #include <string>
 
 #include "mmcore/param//ButtonParam.h"
@@ -32,7 +34,7 @@ using namespace megamol::MolSurfMapCluster;
  */
 Clustering::Clustering(void)
     : core::Module()
-    , inSlotPNGPICLoader("inPNGPics", "Input Slot for PNG-Picture Data")
+    , inSlotImageLoader("inImages", "Input slot for image data")
     , inSlotCLUSTERINGLoader("inClustering", "Input Slot for Clustering Data")
     , outSlot("outClusteringSlot", "OUtput slot for the Clustering")
     , dumpdot("Dump Dot-File", "")
@@ -48,8 +50,8 @@ Clustering::Clustering(void)
     this->MakeSlotAvailable(&this->outSlot);
 
     // Caller-Slot
-    this->inSlotPNGPICLoader.SetCompatibleCall<CallPNGPicsDescription>();
-    this->MakeSlotAvailable(&this->inSlotPNGPICLoader);
+    this->inSlotImageLoader.SetCompatibleCall<image_calls::Image2DCallDescription>();
+    this->MakeSlotAvailable(&this->inSlotImageLoader);
 
     this->inSlotCLUSTERINGLoader.SetCompatibleCall<CallClusteringLoaderDescription>();
     this->MakeSlotAvailable(&this->inSlotCLUSTERINGLoader);
@@ -127,14 +129,15 @@ Clustering::~Clustering(void) { this->Release(); }
 /*
  * Clustering::clusterData
  */
-void Clustering::clusterData(CallPNGPics* cpp) {
+void Clustering::clusterData(image_calls::Image2DCall& cpp) {
 
-    this->picturecount = cpp->Count();
+    this->picturecount = cpp.GetImageCount();
+    this->fillPictureDataVector(cpp);
 
     // Clustering
     vislib::sys::Log::DefaultLog.WriteMsg(
         vislib::sys::Log::LEVEL_INFO, "Clustering %I64u Pictures", this->picturecount);
-    this->clustering = new HierarchicalClustering(cpp->getPNGPictures(), cpp->Count());
+    this->clustering = new HierarchicalClustering(this->picdata.data(), this->picturecount);
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Clustering finished", this->picturecount);
 }
 
@@ -171,8 +174,8 @@ bool Clustering::getDataCallback(core::Call& caller) {
     if (ccOut == nullptr) return false;
 
     // Incoming Call
-    CallPNGPics* cppIn = this->inSlotPNGPICLoader.CallAs<CallPNGPics>();
-    bool pngpicloader = (cppIn == nullptr);
+    image_calls::Image2DCall* imin = this->inSlotImageLoader.CallAs<image_calls::Image2DCall>();
+    bool imageloader = (imin == nullptr);
 
     CallClusteringLoader* cclIn = this->inSlotCLUSTERINGLoader.CallAs<CallClusteringLoader>();
     bool clusterloader = (cclIn == nullptr);
@@ -182,12 +185,12 @@ bool Clustering::getDataCallback(core::Call& caller) {
         // reset new data flag
         this->datatocluster = false;
 
-        if (pngpicloader && clusterloader) {
+        if (imageloader && clusterloader) {
             return false;
         } else {
-            if (!pngpicloader) {
-                if (!(*cppIn)(CallPNGPics::CallForGetData)) return false;
-                this->clusterData(cppIn);
+            if (!imageloader) {
+                if (!(*imin)(image_calls::Image2DCall::CallForGetData)) return false;
+                this->clusterData(*imin);
             }
 
             if (!clusterloader) {
@@ -344,7 +347,7 @@ bool Clustering::getExtentCallback(core::Call& caller) {
     if (ccOut == nullptr) return false;
 
     // Incoming Call
-    CallPNGPics* cppIn = this->inSlotPNGPICLoader.CallAs<CallPNGPics>();
+    image_calls::Image2DCall* cppIn = this->inSlotImageLoader.CallAs<image_calls::Image2DCall>();
     bool pngpicloader = (cppIn == nullptr);
 
     CallClusteringLoader* cclIn = this->inSlotCLUSTERINGLoader.CallAs<CallClusteringLoader>();
@@ -354,7 +357,7 @@ bool Clustering::getExtentCallback(core::Call& caller) {
         return false;
     } else {
         if (!pngpicloader) {
-            if (!(*cppIn)(CallPNGPics::CallForGetExtent)) return false;
+            if (!(*cppIn)(image_calls::Image2DCall::CallForGetMetaData)) return false;
         }
 
         if (!clusterloader) {
@@ -407,3 +410,20 @@ bool Clustering::getExtentCallback(core::Call& caller) {
  * Clustering::release
  */
 void Clustering::release(void) {}
+
+void Clustering::fillPictureDataVector(image_calls::Image2DCall& imc) {
+    auto imcount = imc.GetImagePtr()->size();
+    this->picdata.clear();
+    this->picdata.resize(imcount);
+    uint32_t id = 0;
+    for (auto p : *imc.GetImagePtr()) {
+        this->picdata[id].width = p.second.Width();
+        this->picdata[id].height = p.second.Height();
+        this->picdata[id].path = p.first;
+        this->picdata[id].pdbid = std::filesystem::path(p.first).stem().string();
+        this->picdata[id].render = false;
+        this->picdata[id].popup = false;
+        this->picdata[id].texture = nullptr;
+        this->picdata[id].image = &p.second;
+    }
+}
