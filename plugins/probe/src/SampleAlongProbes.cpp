@@ -97,8 +97,24 @@ bool SampleAlongPobes::getData(core::Call& call) {
     std::vector<std::string> toInq;
     std::string var_str =
         std::string(this->_parameter_to_sample_slot.Param<core::param::FlexEnumParam>()->ValueString());
+
+    std::string x_var_str =
+        std::string(this->_vec_param_to_samplex_x.Param<core::param::FlexEnumParam>()->ValueString());
+    std::string y_var_str =
+        std::string(this->_vec_param_to_samplex_y.Param<core::param::FlexEnumParam>()->ValueString());
+    std::string z_var_str =
+        std::string(this->_vec_param_to_samplex_z.Param<core::param::FlexEnumParam>()->ValueString());
+    std::string w_var_str =
+        std::string(this->_vec_param_to_samplex_w.Param<core::param::FlexEnumParam>()->ValueString());
+
     toInq.clear();
     toInq.emplace_back(std::string(this->_parameter_to_sample_slot.Param<core::param::FlexEnumParam>()->ValueString()));
+
+    toInq.emplace_back(std::string(this->_vec_param_to_samplex_x.Param<core::param::FlexEnumParam>()->ValueString()));
+    toInq.emplace_back(std::string(this->_vec_param_to_samplex_y.Param<core::param::FlexEnumParam>()->ValueString()));
+    toInq.emplace_back(std::string(this->_vec_param_to_samplex_z.Param<core::param::FlexEnumParam>()->ValueString()));
+    toInq.emplace_back(std::string(this->_vec_param_to_samplex_w.Param<core::param::FlexEnumParam>()->ValueString()));
+
 
     // get data from adios
     for (auto var : toInq) {
@@ -149,15 +165,6 @@ bool SampleAlongPobes::getData(core::Call& call) {
 			//vector sampling
             _probes = cprobes->getData();
             auto tree = ct->getData();
-
-			std::string x_var_str = 
-				std::string(this->_vec_param_to_samplex_x.Param<core::param::FlexEnumParam>()->ValueString());
-            std::string y_var_str =
-                std::string(this->_vec_param_to_samplex_y.Param<core::param::FlexEnumParam>()->ValueString());
-            std::string z_var_str =
-                std::string(this->_vec_param_to_samplex_z.Param<core::param::FlexEnumParam>()->ValueString());
-            std::string w_var_str =
-                std::string(this->_vec_param_to_samplex_w.Param<core::param::FlexEnumParam>()->ValueString());
 
 			if (cd->getData(x_var_str)->getType() == "double" && cd->getData(y_var_str)->getType() == "double" &&
                 cd->getData(z_var_str)->getType() == "double" && cd->getData(w_var_str)->getType() == "double")

@@ -65,17 +65,22 @@ private:
 
     bool doScalarGlyphGeneration(FloatProbe& probe);
 
-    bool doVectorRibbonGlyphGeneration();
+    bool doVectorRibbonGlyphGeneration(Vec4Probe& probe);
 
-        uint32_t _version = 0;
+    bool doVectorRadarGlyphGeneration(Vec4Probe& probe);
+
+    uint32_t _version = 0;
 
     std::shared_ptr<ProbeCollection> _probe_data;
     std::shared_ptr<mesh::MeshDataAccessCollection> _mesh_data;
     std::shared_ptr<mesh::ImageDataAccessCollection> _tex_data;
 
-    std::vector<std::array<float, 3>> _generated_mesh;
-    std::array<uint32_t, 6> _generated_mesh_indices;
-    std::array<std::array<float, 2>, 4> _generated_texture_coordinates;
+    std::vector<std::array<float, 3>> _generated_mesh_vertices;
+    std::vector<std::array<float, 3>> _generated_mesh_normals;
+    std::vector<uint32_t> _generated_mesh_indices;
+
+    std::array<uint32_t, 6> _generated_billboard_mesh_indices;
+    std::array<std::array<float, 2>, 4> _generated_billboard_texture_coordinates;
 
     std::vector<DrawTextureUtility> _dtu;
 

@@ -102,8 +102,20 @@ void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::Po
 //#pragma omp parallel for
     for (int32_t i = 0; i < static_cast<int32_t>(_probes->getProbeCount()); i++) {
 
-        auto probe = _probes->getProbe<FloatProbe>(i);
+        auto base_probe = _probes->getProbe<BaseProbe>(i);
+        FloatProbe probe;
+        probe.m_timestamp = base_probe.m_timestamp;
+        probe.m_value_name = base_probe.m_value_name;
+        probe.m_position = base_probe.m_position;
+        probe.m_direction = base_probe.m_direction;
+        probe.m_begin = base_probe.m_begin;
+        probe.m_end = base_probe.m_end;
         auto samples = probe.getSamplingResult();
+
+        _probes->setProbe(i, probe);
+
+        //auto probe = _probes->getProbe<FloatProbe>(i);
+        //auto samples = probe.getSamplingResult();
         // samples = std::make_shared<FloatProbe::SamplingResult>();
 
         auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
@@ -161,8 +173,19 @@ inline void SampleAlongPobes::doVectorSamling(
     //#pragma omp parallel for
     for (int32_t i = 0; i < static_cast<int32_t>(_probes->getProbeCount()); i++) {
 
-        auto probe = _probes->getProbe<Vec4Probe>(i);
+        auto base_probe = _probes->getProbe<BaseProbe>(i);
+        Vec4Probe probe;
+        probe.m_timestamp = base_probe.m_timestamp;
+        probe.m_value_name = base_probe.m_value_name;
+        probe.m_position = base_probe.m_position;
+        probe.m_direction = base_probe.m_direction;
+        probe.m_begin = base_probe.m_begin;
+        probe.m_end = base_probe.m_end;
         auto samples = probe.getSamplingResult();
+
+        _probes->setProbe(i, probe);
+
+        //auto probe = _probes->getProbe<Vec4Probe>(i);
         // samples = std::make_shared<FloatProbe::SamplingResult>();
 
         auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
@@ -190,7 +213,7 @@ inline void SampleAlongPobes::doVectorSamling(
 
 
             // accumulate values
-            float value_x, value_y, value_z, value_w = 0;
+            float value_x = 0, value_y = 0, value_z = 0, value_w = 0;
             for (int n = 0; n < num_neighbors; n++) {
                 value_x += data_x[k_indices[n]];
                 value_y += data_y[k_indices[n]];
@@ -205,7 +228,7 @@ inline void SampleAlongPobes::doVectorSamling(
             //max_value = std::max(max_value, value);
             //avg_value += value;
         } // end num samples per probe
-        avg_value /= samples_per_probe;
+        //avg_value /= samples_per_probe;
         //samples->average_value = avg_value;
         //samples->max_value = max_value;
         //samples->min_value = min_value;
