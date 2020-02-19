@@ -207,7 +207,7 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
     std::vector<float> y_coord = nodesCad->getData("y")->GetAsFloat();
     std::vector<float> z_coord = nodesCad->getData("z")->GetAsFloat();
 
-    std::vector<float> element_label = labelCad->getData("element-label")->GetAsFloat();
+    std::vector<float> element_label = labelCad->getData("element")->GetAsFloat();
     std::vector<float> nodeA = labelCad->getData("nodea")->GetAsFloat();
     std::vector<float> nodeB = labelCad->getData("nodeb")->GetAsFloat();
     std::vector<float> nodeC = labelCad->getData("nodec")->GetAsFloat();
@@ -215,39 +215,56 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
 
 	int num_elements = 100;
     //element_label.size();
-    std::vector<vtkm::Vec<float, 3>> vertices(num_elements * 4);
-    std::vector<vtkm::UInt8> shapes(num_elements);
-    std::vector<vtkm::IdComponent> numIndices(num_elements);
-    std::vector<vtkm::Id> connectivity(num_elements * 4);
+	vtkm::cont::DataSetBuilderExplicitIterative dataSetBuilder;
 
+	int cell_idx = 0;
+    int num_skipped = 0;
 
     for (int i = 0; i < num_elements; ++i) {
 		std::vector<int> labels = {(int)nodeA[i], (int)nodeB[i], (int)nodeC[i], (int)nodeD[i]};
+		std::vector<vtkm::Vec<float, 3>> vertex_buffer(4);
+        bool not_found = false;
 
         // BUILD TETRAHEDRON HERE
-
 		// get vertex cooridnates for current tetrahedron vertices
         for (int j = 0; j < 4; ++j) {
             auto it = std::find(node_labels.begin(), node_labels.end(), labels[j]);
-            int node_index = std::distance(node_labels.begin(), it);
-            vislib::sys::Log::DefaultLog.WriteInfo("(%i, %i) with %i", i, j, labels[j]);
-            vertices[i * 4 + j] = {x_coord[node_index], y_coord[node_index], z_coord[node_index]};
+			int node_index = std::distance(node_labels.begin(), it);
+            if (node_index == node_labels.size()) {
+				//vislib::sys::Log::DefaultLog.WriteInfo("(%i, %i) with %i", i, j, labels[j]);
+                ++num_skipped;
+                not_found = true;
+                break;
+			}
+            vertex_buffer[j] = {x_coord[node_index], y_coord[node_index], z_coord[node_index]};
         }
 
+		if (not_found) continue;
 
-        shapes[i] = vtkm::CELL_SHAPE_TETRA;
-        numIndices[i] = 4;
-        connectivity[4 * i + 0] = 4 * i + 0;
-        connectivity[4 * i + 1] = 4 * i + 1;
-        connectivity[4 * i + 2] = 4 * i + 2;
-        connectivity[4 * i + 3] = 4 * i + 3;
+		for (int j = 0; j < 4; ++j) {
+			// TODO better vertex handling: could use vertex multiple times by just adding correct index
+			// add vertices of all "correct" vertices and get indices
+            dataSetBuilder.AddPoint(vertex_buffer[j][0], vertex_buffer[j][1], vertex_buffer[j][2]);
+        }
+
+        dataSetBuilder.AddCell(vtkm::CELL_SHAPE_TETRA);
+        for (int j = 0; j < 4; ++j) {
+			// TODO better index connection --> could use index multiple times
+            dataSetBuilder.AddCellPoint(4 * cell_idx + j);
+		}
+
+		++cell_idx;
     }
 
-	vtkm::cont::DataSetBuilderExplicit dataSetBuilder;
-    vtkmData = dataSetBuilder.Create(vertices, shapes, numIndices, connectivity);
+	vislib::sys::Log::DefaultLog.WriteInfo("Number of skipped tetrahedrons: %i", num_skipped);
+
+    //vtkmData = dataSetBuilder.Create(vertices, shapes, numIndices, connectivity);
+    vtkmData = dataSetBuilder.Create();
 
 	vtkm::io::writer::VTKDataSetWriter writer("tetrahedron.vtk");
     writer.WriteDataSet(vtkmData);
+
+    this->data_hash++;
 
 	this->filename.ForceSetDirty();
     // update data only when we have a new file
