@@ -174,11 +174,13 @@ function(require_external NAME)
       return()
     endif()
 
+    include(GNUInstallDirs)
+
     if(WIN32)
-      set(GLFW_IMPORT_LIB "lib/glfw3dll.lib")
+      set(GLFW_IMPORT_LIB "${CMAKE_INSTALL_LIBDIR}/glfw3dll.lib")
       set(GLFW_LIB "bin/glfw3.dll")
     else()
-      set(GLFW_LIB "lib/libglfw.so")
+      set(GLFW_LIB "${CMAKE_INSTALL_LIBDIR}/libglfw.so")
     endif()
 
     add_external_project(glfw SHARED
