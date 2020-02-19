@@ -105,6 +105,8 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call
         m_drawToScreen_prgm->Disable();
     }
 
+    glDisable(GL_BLEND);
+
     return true; 
 }
 

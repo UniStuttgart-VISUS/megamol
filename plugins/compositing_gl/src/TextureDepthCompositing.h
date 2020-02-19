@@ -14,8 +14,8 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib/graphics/gl/GLSLComputeShader.h"
 
+#include "glowl/GLSLProgram.hpp"
 #include "glowl/Texture2D.hpp"
 
 namespace megamol {
@@ -82,10 +82,8 @@ private:
 
     uint32_t m_version;
 
-    typedef vislib::graphics::gl::GLSLComputeShader GLSLComputeShader;
-
     /** Shader program for texture add */
-    std::unique_ptr<GLSLComputeShader> m_depthComp_prgm;
+    std::unique_ptr<glowl::GLSLProgram> m_depthComp_prgm;
 
     /** Texture that the combination result will be written to */
     std::shared_ptr<glowl::Texture2D> m_output_texture;
@@ -110,9 +108,10 @@ private:
 
     /** Slot for querying secondary depth texture, i.e. a rhs connection */
     megamol::core::CallerSlot m_depth_tex_1_slot;
+
 };
 
-} // namespace compositing
-} // namespace megamol
+}
+}
 
 #endif // !TEXTURE_DEPTH_COMPOSITING_H_INCLUDED
