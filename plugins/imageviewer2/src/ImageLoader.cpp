@@ -49,6 +49,9 @@ ImageLoader::ImageLoader(void)
     this->callRequestImage.SetCallback(image_calls::Image2DCall::ClassName(),
         image_calls::Image2DCall::FunctionName(image_calls::Image2DCall::CallForSetWishlist),
         &ImageLoader::SetWishlist);
+    this->callRequestImage.SetCallback(image_calls::Image2DCall::ClassName(),
+        image_calls::Image2DCall::FunctionName(image_calls::Image2DCall::CallForWaitForData),
+        &ImageLoader::WaitForData);
     this->MakeSlotAvailable(&this->callRequestImage);
 
     this->filenameSlot.SetParameter(new param::FilePathParam(""));
@@ -148,6 +151,7 @@ bool ImageLoader::GetMetaData(core::Call& call) {
         ++this->datahash;
     }
     ic->SetAvailablePathsPtr(this->availableFiles);
+    ic->SetDataHash(this->datahash);
     return true;
 }
 
@@ -185,6 +189,17 @@ bool ImageLoader::SetWishlist(core::Call& call) {
     }
 
     return true; 
+}
+
+/*
+ * ImageLoader::WaitForData
+ */
+bool ImageLoader::WaitForData(core::Call& call) {
+    std::mutex waitmutex; // this has to be different from the queueMutex to avoid deadlocks
+    std::unique_lock<std::mutex> lock(this->queueMutex);
+    std::condition_variable condvar;
+    condvar.wait(lock, [this] { return queueElements.empty(); });
+    return true;
 }
 
 /*
@@ -230,8 +245,9 @@ void ImageLoader::loadingLoop(void) {
             this->queueMutex.lock();
             auto elem = this->imageLoadingQueue.front();
             this->imageLoadingQueue.pop();
-            this->queueMutex.unlock();
             this->loadImage(elem);
+            this->queueElements.erase(elem);
+            this->queueMutex.unlock();
             this->newImageAvailable = true;
         }
     }

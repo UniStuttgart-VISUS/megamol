@@ -51,7 +51,7 @@ public:
 
     /** Constructor */
     HierarchicalClustering(void);
-    HierarchicalClustering(PictureData*, SIZE_T, int = 2, int = 1, int = 1,
+    HierarchicalClustering(std::vector<PictureData>&, SIZE_T, int = 2, int = 1, int = 1,
         int = 1); // Standard Euclidian Distance, Avarage Linkage, Imge-Moments
     HierarchicalClustering(HierarchicalClustering::CLUSTERNODE*, SIZE_T, int = 2, int = 1, int = 1, int = 1);
 

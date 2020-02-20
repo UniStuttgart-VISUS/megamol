@@ -92,6 +92,15 @@ protected:
      */
     virtual bool SetWishlist(core::Call& call);
 
+    /**
+     * The wait for data callback.
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function
+     */
+    virtual bool WaitForData(core::Call& call);
+
 private:
     /** Callee slot requesting images from this module */
     core::CalleeSlot callRequestImage;

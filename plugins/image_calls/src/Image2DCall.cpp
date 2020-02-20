@@ -5,19 +5,24 @@ using namespace megamol;
 using namespace megamol::image_calls;
 
 /*
- * Image2DCall::Image2DCall
+ * Image2DCall::CallForGetData
  */
 const uint32_t Image2DCall::CallForGetData = 0;
 
 /*
- * Image2DCall::Image2DCall
+ * Image2DCall::CallForGetMetaData
  */
 const uint32_t Image2DCall::CallForGetMetaData = 1;
 
 /*
- * Image2DCall::Image2DCall
+ * Image2DCall::CallForSetWishlist
  */
 const uint32_t Image2DCall::CallForSetWishlist = 2;
+
+/*
+ * Image2DCall::CallForWaitForData
+ */
+const uint32_t Image2DCall::CallForWaitForData = 3;
 
 /*
  * Image2DCall::Image2DCall

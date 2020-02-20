@@ -40,7 +40,7 @@ HierarchicalClustering::HierarchicalClustering() {}
 HierarchicalClustering::~HierarchicalClustering() {}
 
 HierarchicalClustering::HierarchicalClustering(
-    PictureData* pic, SIZE_T picturecount, int method, int mode, int linkage, int moments) {
+    std::vector<PictureData>& pics, SIZE_T picturecount, int method, int mode, int linkage, int moments) {
 
     // Initalize Variables
     this->cluster = new std::vector<CLUSTERNODE*>();
@@ -70,7 +70,7 @@ HierarchicalClustering::HierarchicalClustering(
         node->similiaritychildren = 1.0;
 
         // Set Picture
-        PictureData* tmppicture = &(pic[index]);
+        PictureData* tmppicture = &(pics[index]);
         node->pic = tmppicture;
 
         // Init dtsiance Matrix
@@ -130,7 +130,7 @@ HierarchicalClustering::HierarchicalClustering(
 }
 
 void HierarchicalClustering::calculateImageMoments(CLUSTERNODE* node) {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "\tAnalyzing %s", node->pic->path);
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "\tAnalyzing %s", node->pic->path.c_str());
 
     PictureData* pic = node->pic;
 
@@ -142,9 +142,9 @@ void HierarchicalClustering::calculateImageMoments(CLUSTERNODE* node) {
 
     for (int y = 0; y < pic->height; y++) {
         for (int x = 0; x < pic->width; x++) {
-            m00 += (*graypicintensity)[(y * pic->height) + x];
-            m10 += pow(x, 1) * (*graypicintensity)[(y * pic->height) + x];
-            m01 += pow(y, 1) * (*graypicintensity)[(y * pic->height) + x];
+            m00 += (*graypicintensity)[(y * pic->width) + x];
+            m10 += pow(x, 1) * (*graypicintensity)[(y * pic->width) + x];
+            m01 += pow(y, 1) * (*graypicintensity)[(y * pic->width) + x];
         }
     }
 
@@ -191,11 +191,11 @@ void HierarchicalClustering::calculateColorMoments(CLUSTERNODE* node) {
     for (int i = 0; i < pic->height; i++) {
         for (int j = 0; j < pic->width * 3; j += 3) {
             //summean[0] += pic->rows[i][j];
-            summean[0] += picptr[pic->height * i + j];
+            summean[0] += picptr[pic->width * i + j];
             //summean[1] += pic->rows[i][j + 1];
-            summean[1] += picptr[pic->height * i + j + 1];
+            summean[1] += picptr[pic->width * i + j + 1];
             //summean[2] += pic->rows[i][j + 2];
-            summean[2] += picptr[pic->height * i + j + 2];
+            summean[2] += picptr[pic->width * i + j + 2];
         }
     }
 
@@ -208,13 +208,13 @@ void HierarchicalClustering::calculateColorMoments(CLUSTERNODE* node) {
     double skewnesssum[3] = {0};
     for (int i = 0; i < pic->height; i++) {
         for (int j = 0; j < pic->width * 3; j += 3) {
-            deviationsum[0] += pow(picptr[pic->height * i + j] - mean[0], 2);
-            deviationsum[1] += pow(picptr[pic->height * i + j + 1] - mean[1], 2);
-            deviationsum[2] += pow(picptr[pic->height * i + j + 2] - mean[2], 2);
+            deviationsum[0] += pow(picptr[pic->width * i + j] - mean[0], 2);
+            deviationsum[1] += pow(picptr[pic->width * i + j + 1] - mean[1], 2);
+            deviationsum[2] += pow(picptr[pic->width * i + j + 2] - mean[2], 2);
 
-            skewnesssum[0] += pow(picptr[pic->height * i + j] - mean[0], 3);
-            skewnesssum[1] += pow(picptr[pic->height * i + j + 1] - mean[1], 3);
-            skewnesssum[2] += pow(picptr[pic->height * i + j + 2] - mean[2], 3);
+            skewnesssum[0] += pow(picptr[pic->width * i + j] - mean[0], 3);
+            skewnesssum[1] += pow(picptr[pic->width * i + j + 1] - mean[1], 3);
+            skewnesssum[2] += pow(picptr[pic->width * i + j + 2] - mean[2], 3);
         }
     }
 
@@ -244,12 +244,13 @@ std::vector<double>* HierarchicalClustering::gray_scale_image(PictureData* pic) 
 
     std::vector<double>* result = new std::vector<double>();
     auto picptr = pic->image->PeekDataAs<BYTE>();
+    auto val = pic->image->BytesPerPixel();
 
     for (int y = 0; y < pic->height; y++) {
         for (int x = 0; x < pic->width * 3; x += 3) {
-            int red = picptr[y * pic->height + x];
-            int green = picptr[y * pic->height + x + 1];
-            int blue = picptr[y * pic->height + x + 2];
+            int red = picptr[y * pic->width + x];
+            int green = picptr[y * pic->width + x + 1];
+            int blue = picptr[y * pic->width + x + 2];
 
             result->push_back((0.21 * red) + (0.72 * green) + (0.07 * blue));
         }

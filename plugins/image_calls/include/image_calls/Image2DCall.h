@@ -26,6 +26,9 @@ public:
     /** Index of the SetWishlist function */
     static const uint32_t CallForSetWishlist;
 
+    /** Index of the WaitForData function */
+    static const uint32_t CallForWaitForData;
+
     /**
      * Answer the name of this call.
      *
@@ -45,7 +48,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return 3; }
+    static unsigned int FunctionCount(void) { return 4; }
 
     /**
      * Answer the name of the function used for this call.
@@ -62,6 +65,8 @@ public:
             return "GetMetaData";
         case 2:
             return "SetWishlist";
+        case 3:
+            return "WaitForData";
         }
         return nullptr;
     }

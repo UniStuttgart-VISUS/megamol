@@ -14,8 +14,9 @@
 #include "CallPNGPics.h"
 #include "image_calls/Image2DCall.h"
 
-#include <fstream>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
 #include <string>
 
 #include "mmcore/param//ButtonParam.h"
@@ -137,7 +138,7 @@ void Clustering::clusterData(image_calls::Image2DCall& cpp) {
     // Clustering
     vislib::sys::Log::DefaultLog.WriteMsg(
         vislib::sys::Log::LEVEL_INFO, "Clustering %I64u Pictures", this->picturecount);
-    this->clustering = new HierarchicalClustering(this->picdata.data(), this->picturecount);
+    this->clustering = new HierarchicalClustering(this->picdata, this->picturecount);
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Clustering finished", this->picturecount);
 }
 
@@ -189,7 +190,10 @@ bool Clustering::getDataCallback(core::Call& caller) {
             return false;
         } else {
             if (!imageloader) {
+                if (!(*imin)(image_calls::Image2DCall::CallForWaitForData)) return false;
                 if (!(*imin)(image_calls::Image2DCall::CallForGetData)) return false;
+                if (!(*imin)(image_calls::Image2DCall::CallForWaitForData)) return false;
+                auto ptr = imin->GetImagePtr();
                 this->clusterData(*imin);
             }
 
@@ -416,7 +420,7 @@ void Clustering::fillPictureDataVector(image_calls::Image2DCall& imc) {
     this->picdata.clear();
     this->picdata.resize(imcount);
     uint32_t id = 0;
-    for (auto p : *imc.GetImagePtr()) {
+    for (auto& p : *imc.GetImagePtr()) {
         this->picdata[id].width = p.second.Width();
         this->picdata[id].height = p.second.Height();
         this->picdata[id].path = p.first;
@@ -425,5 +429,6 @@ void Clustering::fillPictureDataVector(image_calls::Image2DCall& imc) {
         this->picdata[id].popup = false;
         this->picdata[id].texture = nullptr;
         this->picdata[id].image = &p.second;
+        ++id;
     }
 }
