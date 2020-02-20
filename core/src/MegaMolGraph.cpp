@@ -1,4 +1,6 @@
-﻿#include "stdafx.h"
+﻿#include <iostream>
+
+#include "stdafx.h"
 #include "mmcore/MegaMolGraph.h"
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
@@ -354,12 +356,18 @@ void megamol::core::MegaMolGraph::ExecuteGraphUpdates() {
 
 	while (!module_instantiation_queue_.Empty()) {
         auto module_request = module_instantiation_queue_.Get();
-        add_module(module_request);
+        bool creation_success = add_module(module_request);
+
+		if (!creation_success)
+			std::cout << "MegaMolGraph: module failed construction: " << module_request.id << ", " << module_request.className << std::endl;
 	}
 
 	while (!call_instantiation_queue_.Empty()) {
         auto call_request = call_instantiation_queue_.Get();
-        add_call(call_request);
+        bool creation_success = add_call(call_request);
+
+		if (!creation_success)
+			std::cout << "MegaMolGraph: call failed construction: " << call_request.className << " from " << call_request.from << " to " << call_request.to << std::endl;
 	}
 }
 
@@ -377,6 +385,10 @@ void megamol::core::MegaMolGraph::RenderNextFrame() {
 
 	if (some_command_failed) {
 		// fail and stop execution of MegaMol because without the requested graph modules further execution makes no sense
+        for (auto& m : module_list_) {
+            if (!m.first->isCreated())
+                std::cout << "MegaMolGraph: module not created: " << m.second.id << ", " << m.second.className << std::endl;
+        }
     }
 
 	// process ui events and other resources
