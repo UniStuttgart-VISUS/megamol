@@ -4,7 +4,7 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
@@ -22,26 +22,12 @@ endif()
 # This will replace "\" by "/"
 set(CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX} CACHE PATH "default install path" FORCE)
 
-# Enable CUDA
-option(ENABLE_CUDA "Enable CUDA, which is needed for certain plugins" OFF)
-
-if(ENABLE_CUDA)
-  enable_language(CUDA)
-endif()
-
 # Directories
 set(MEGAMOL_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(MEGAMOL_VISLIB_DIR ${MEGAMOL_DIR}/vislib)
 set(MEGAMOL_CORE_DIR ${MEGAMOL_DIR}/core)
 set(MEGAMOL_CONSOLE_DIR ${MEGAMOL_DIR}/console)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
-
-option(USE_GLFW "Use GLFW" ON)
-
-# Global definitions
-#if(WIN32)
-#  add_definitions(-DGL_LOAD_DLL)
-#endif()
 
 # Versions
 include(global_versioninfo)
@@ -56,42 +42,25 @@ include(check_mmdep)
 include(ClangFormat)
 
 # External
-include(External)
 include("CMakeExternals.cmake")
 
-# NuGet
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.Config
-  ${CMAKE_CURRENT_BINARY_DIR}/NuGet.Config COPYONLY)
-
-###############################
 # Input and Event interfaces 
-###############################
 add_subdirectory(${MEGAMOL_DIR}/input_events)
 
-###############################
 # Render API modules
-###############################
 add_subdirectory(${MEGAMOL_DIR}/render_api)
 
-###############################
 # Vislib
-###############################
 add_subdirectory(${MEGAMOL_VISLIB_DIR})
 
-###############################
 # Core
-###############################
 add_subdirectory(${MEGAMOL_CORE_DIR})
 
-###############################
 # Console
-###############################
 set(CONSOLE_NAME mmconsole)
 add_subdirectory(${MEGAMOL_CONSOLE_DIR})
 
-###############################
 # Main3000
-###############################
 add_subdirectory(${MEGAMOL_DIR}/main3000)
 
 # Add directory structure for visual studio
@@ -100,44 +69,38 @@ if(WIN32)
   set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD TRUE)
 endif()
 
-###############################
 # Configurator
-###############################
 if(WIN32)
+  # NuGet
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.Config
+    ${CMAKE_CURRENT_BINARY_DIR}/NuGet.Config COPYONLY)
   add_subdirectory(configurator)
 endif()
 
-###############################
 # Plugins
-###############################
 add_subdirectory(plugins)
 
-###############################
 # Utils
-###############################
 add_subdirectory(utils)
 
-###############################
 # Examples
-###############################
 option(EXAMPLES "Get the MegaMol example repository" ON)
 if(EXAMPLES)
-  if(NOT EXISTS "${CMAKE_SOURCE_DIR}/examples")
+  if(NOT EXISTS "${CMAKE_BINARY_DIR}/examples")
     message(STATUS "Downloading examples")
     execute_process(COMMAND
-      ${GIT_EXECUTABLE} clone https://github.com/UniStuttgart-VISUS/megamol-examples.git examples
-      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-      ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
-      )
+      ${GIT_EXECUTABLE} clone https://github.com/UniStuttgart-VISUS/megamol-examples.git examples --depth 1
+      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+      ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
   endif()
+  install(DIRECTORY "${CMAKE_BINARY_DIR}/examples" DESTINATION "${CMAKE_INSTALL_PREFIX}" PATTERN ".git" EXCLUDE)
 endif()
 
-# Check dependencies and throw error
+# Validate dependencies
 foreach(d ${DEP_LIST})
   string(REGEX REPLACE " +" ";" SINGLE_LIST "${d}")
   list(GET SINGLE_LIST 0 plugin)
   list(REMOVE_AT SINGLE_LIST 0)
   check_mmdep(${plugin} "${SINGLE_LIST}")
 endforeach()
-
 unset(DEP_LIST CACHE)

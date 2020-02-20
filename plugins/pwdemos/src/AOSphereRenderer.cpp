@@ -30,6 +30,7 @@
 #include <omp.h>
 #include "vislib/math/ShallowVector.h"
 #include "protein_calls/CallMouseInput.h"
+#include <vector>
 
 
 #define CHECK_FOR_OGL_ERROR() do { GLenum err; err = glGetError();if (err != GL_NO_ERROR) { fprintf(stderr, "%s(%d) glError: %s\n", __FILE__, __LINE__, gluErrorString(err)); } } while(0)
@@ -39,7 +40,7 @@ namespace demos {
 /*
  * AOSphereRenderer::AOSphereRenderer
  */
-AOSphereRenderer::AOSphereRenderer(void) : megamol::core::view::Renderer3DModuleDS(),
+AOSphereRenderer::AOSphereRenderer(void) : megamol::core::view::Renderer3DModule_2(),
         sphereShaderAOMainAxes(), sphereShaderAONormals(),
         getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
@@ -250,39 +251,20 @@ bool AOSphereRenderer::create(void) {
 /*
  * AOSphereRenderer::GetExtents
  */
-bool AOSphereRenderer::GetExtents(megamol::core::Call& call) {
-    megamol::core::view::AbstractCallRender3D *cr = dynamic_cast<megamol::core::view::AbstractCallRender3D*>(&call);
-    if (cr == NULL) return false;
-
+bool AOSphereRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) {
     megamol::core::moldyn::MultiParticleDataCall *c2 = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
     protein_calls::MolecularDataCall *mol = this->getDataSlot.CallAs<protein_calls::MolecularDataCall>();
     if ((c2 != NULL) && ((*c2)(1))) {
-        cr->SetTimeFramesCount(c2->FrameCount());
-        cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
-
-        float scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        if (scaling > 0.0000001) {
-            scaling = 10.0f / scaling;
-        } else {
-            scaling = 1.0f;
-        }
-        cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
+        call.SetTimeFramesCount(c2->FrameCount());
+        call.AccessBoundingBoxes() = c2->AccessBoundingBoxes();
 
     } else if ((mol != NULL) && ((*mol)(protein_calls::MolecularDataCall::CallForGetExtent))) {
-        cr->SetTimeFramesCount(mol->FrameCount());
-        cr->AccessBoundingBoxes() = mol->AccessBoundingBoxes();
-
-        float scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        if (scaling > 0.0000001) {
-            scaling = 10.0f / scaling;
-        } else {
-            scaling = 1.0f;
-        }
-        cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
+        call.SetTimeFramesCount(mol->FrameCount());
+        call.AccessBoundingBoxes() = mol->AccessBoundingBoxes();
 
     } else {
-        cr->SetTimeFramesCount(1);
-        cr->AccessBoundingBoxes().Clear();
+        call.SetTimeFramesCount(1);
+        call.AccessBoundingBoxes().Clear();
     }
 
     return true;
@@ -297,7 +279,8 @@ void AOSphereRenderer::release(void) {
         this->sphereShaderAOMainAxes[i].Release();
         this->sphereShaderAONormals[i].Release();
     }
-    ::glDeleteTextures(1, &this->greyTF);
+	::glDeleteTextures(1, &this->greyTF); this->greyTF = 0;
+	::glDeleteTextures(1, &this->volTex); this->volTex = 0;
 
     if( glIsBuffer( this->particleVBO) ) {
         glDeleteBuffers( 1, &this->particleVBO);
@@ -308,28 +291,19 @@ void AOSphereRenderer::release(void) {
 /*
  * AOSphereRenderer::Render
  */
-bool AOSphereRenderer::Render(megamol::core::Call& call) {
-    megamol::core::view::AbstractCallRender3D *cr = dynamic_cast<megamol::core::view::AbstractCallRender3D*>(&call);
-    if (cr == NULL) return false;
+bool AOSphereRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
     megamol::core::moldyn::MultiParticleDataCall *c2 = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
     protein_calls::MolecularDataCall *mol = this->getDataSlot.CallAs<protein_calls::MolecularDataCall>();
 
-    float scaling = 1.0f;
     if (c2 != NULL) {
-        c2->SetFrameID(static_cast<unsigned int>(cr->Time()));
+        c2->SetFrameID(static_cast<unsigned int>(call.Time()));
         if (!(*c2)(1)) return false;
 
         // calculate scaling
         megamol::core::BoundingBoxes bboxs = c2->AccessBoundingBoxes();
-        scaling = c2->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        if (scaling > 0.0000001) {
-            scaling = 10.0f / scaling;
-        } else {
-            scaling = 1.0f;
-        }
 
-        c2->SetFrameID(static_cast<unsigned int>(cr->Time()));
+        c2->SetFrameID(static_cast<unsigned int>(call.Time()));
         if (!(*c2)(0)) return false;
         c2->AccessBoundingBoxes() = bboxs;
 
@@ -368,26 +342,20 @@ bool AOSphereRenderer::Render(megamol::core::Call& call) {
         //std::cout << "time for volume generation: " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
 
 		if(this->renderFlagSlot.Param<core::param::BoolParam>()->Value()) {
-			this->renderParticles(cr, c2, scaling);
+			this->renderParticles(call, c2);
 		}
 
         if (c2 != NULL) {
             c2->Unlock();
         }
     } else if (mol != NULL) {
-        mol->SetFrameID(static_cast<unsigned int>(cr->Time()));
+        mol->SetFrameID(static_cast<unsigned int>(call.Time()));
         if (!(*mol)(protein_calls::MolecularDataCall::CallForGetExtent)) return false;
 
         // calculate scaling
         megamol::core::BoundingBoxes bboxs = mol->AccessBoundingBoxes();
-        scaling = mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        if (scaling > 0.0000001) {
-            scaling = 10.0f / scaling;
-        } else {
-            scaling = 1.0f;
-        }
 
-        mol->SetFrameID(static_cast<unsigned int>(cr->Time()));
+        mol->SetFrameID(static_cast<unsigned int>(call.Time()));
         if (!(*mol)(protein_calls::MolecularDataCall::CallForGetData)) return false;
         mol->AccessBoundingBoxes() = bboxs;
 
@@ -410,7 +378,7 @@ bool AOSphereRenderer::Render(megamol::core::Call& call) {
         //std::cout << "time for volume generation: " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
 
 		if(this->renderFlagSlot.Param<core::param::BoolParam>()->Value()) {
-			this->renderParticles(cr, mol, scaling);
+			this->renderParticles(call, mol);
 		}
 
         if (mol != NULL) {
@@ -419,6 +387,12 @@ bool AOSphereRenderer::Render(megamol::core::Call& call) {
     } else {
         return false;
     }
+
+	// pop matrices set by uploadCameraUniforms() during renderParticles() calls
+	glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
 
     // DEBUG ...
     /*
@@ -463,29 +437,12 @@ void AOSphereRenderer::resizeVolume() {
         int sy = this->volSizeYSlot.Param<megamol::core::param::IntParam>()->Value();
         int sz = this->volSizeZSlot.Param<megamol::core::param::IntParam>()->Value();
 
-        float *dat = new float[sx * sy * sz];
-        ::memset(dat, 0, sizeof(float) * sx * sy * sz); // empty volume to ensure initialization of border
-
-        //for (int z = 0; z < sz; z++) {
-        //    for (int y = 0; y < sy; y++) {
-        //        for (int x = 0; x < sx; x++) {
-        //            dat[x + (y + z * sy) * sx] = 1.0f;
-        //                //static_cast<float>((x + y + z) % 2);
-        //                //static_cast<float>(((x + 1) / 2 + (y + 1) / 2 + (z + 1) / 2) % 2);
-        //                //static_cast<float>(x + y + z)
-        //                /// static_cast<float>(sx + sy + sz - 3);
-        //            if ((x == 0) || (y == 0) || (z == 0)
-        //                    || (x == sx - 1) || (y == sy - 1) || (z == sz - 1)) {
-        //                dat[x + (y + z * sy) * sx] = 0.0f;
-        //            }
-        //        }
-        //    }
-        //}
+        std::vector<float> dat(sx * sy * sz, 0.0f);
 
         ::glEnable(GL_TEXTURE_3D);
         ::glBindTexture(GL_TEXTURE_3D, this->volTex);
         ::glTexImage3D(GL_TEXTURE_3D, 0, GL_LUMINANCE32F_ARB, sx, sy, sz,
-            0, GL_LUMINANCE, GL_FLOAT, dat);
+            0, GL_LUMINANCE, GL_FLOAT, dat.data());
         ::glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         ::glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         //::glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -497,17 +454,56 @@ void AOSphereRenderer::resizeVolume() {
         //::glTexParameterfv(GL_TEXTURE_3D, GL_TEXTURE_BORDER_COLOR, borCol);
         ::glBindTexture(GL_TEXTURE_3D, 0);
         ::glDisable(GL_TEXTURE_3D);
-
-        delete[] dat;
     }
+}
 
+void AOSphereRenderer::uploadCameraUniforms(megamol::core::view::CallRender3D_2& call, vislib::graphics::gl::GLSLShader *sphereShader) {
+
+    float viewportStuff[4];
+    ::glGetFloatv(GL_VIEWPORT, viewportStuff);
+    glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
+    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
+    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+    viewportStuff[2] = 2.0f / viewportStuff[2];
+    viewportStuff[3] = 2.0f / viewportStuff[3];
+
+	core::view::Camera_2 cam;
+    call.GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
+
+    const glm::vec4 camPos = snapshot.position;
+    const glm::vec4 camView = snapshot.view_vector;
+    const glm::vec4 camRight = snapshot.right_vector;
+    const glm::vec4 camUp = snapshot.up_vector;
+
+    glUniform4fvARB(sphereShader->ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fvARB(sphereShader->ParameterLocation("camIn"), 1, glm::value_ptr(camView));
+    glUniform4fvARB(sphereShader->ParameterLocation("camPosIn"), 1, glm::value_ptr(camPos));
+    glUniform3fvARB(sphereShader->ParameterLocation("camRight"), 1, glm::value_ptr(camRight));
+    glUniform3fvARB(sphereShader->ParameterLocation("camUp"), 1, glm::value_ptr(camUp));
+    glUniform2f(sphereShader->ParameterLocation("frustumPlanes"), snapshot.frustum_near, snapshot.frustum_far);
+
+    glUniform4fvARB(sphereShader->ParameterLocation("clipDat"), 1, clipDat);
+    glUniform3fvARB(sphereShader->ParameterLocation("clipCol"), 1, clipCol);
+
+	glm::mat4 proj = projTemp;
+    glm::mat4 view = viewTemp;
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadMatrixf(glm::value_ptr(proj));
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadMatrixf(glm::value_ptr(view));
 }
 
 /*
  * AOSphereRenderer::renderParticles
  */
-void AOSphereRenderer::renderParticles(megamol::core::view::AbstractCallRender3D *cr,
-        megamol::core::moldyn::MultiParticleDataCall *c2, float scaling) {
+void AOSphereRenderer::renderParticles(megamol::core::view::CallRender3D_2& call, megamol::core::moldyn::MultiParticleDataCall *c2) {
 
     vislib::graphics::gl::GLSLShader *sphereShader = NULL;
 
@@ -522,14 +518,6 @@ void AOSphereRenderer::renderParticles(megamol::core::view::AbstractCallRender3D
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    float viewportStuff[4];
-    ::glGetFloatv(GL_VIEWPORT, viewportStuff);
-    glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
-    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
-    viewportStuff[2] = 2.0f / viewportStuff[2];
-    viewportStuff[3] = 2.0f / viewportStuff[3];
-
     sphereShader->Enable();
 
     ::glActiveTexture(GL_TEXTURE0);
@@ -537,31 +525,17 @@ void AOSphereRenderer::renderParticles(megamol::core::view::AbstractCallRender3D
     ::glBindTexture(GL_TEXTURE_3D, this->volTex);
     sphereShader->SetParameter("aoVol", 0);
 
-    glUniform4fvARB(sphereShader->ParameterLocation("viewAttr"),
-        1, viewportStuff);
-    glUniform3fvARB(sphereShader->ParameterLocation("camIn"),
-        1, cr->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fvARB(sphereShader->ParameterLocation("camRight"),
-        1, cr->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fvARB(sphereShader->ParameterLocation("camUp"),
-        1, cr->GetCameraParameters()->Up().PeekComponents());
-    glUniform2f(sphereShader->ParameterLocation("frustumPlanes"),
-        cr->GetCameraParameters()->NearClip(),
-        cr->GetCameraParameters()->FarClip());
-
-    glUniform4fvARB(sphereShader->ParameterLocation("clipDat"), 1, clipDat);
-    glUniform3fvARB(sphereShader->ParameterLocation("clipCol"), 1, clipCol);
-
+	uploadCameraUniforms(call, sphereShader);
 
     int sx = this->volSizeXSlot.Param<megamol::core::param::IntParam>()->Value();
     int sy = this->volSizeYSlot.Param<megamol::core::param::IntParam>()->Value();
     int sz = this->volSizeZSlot.Param<megamol::core::param::IntParam>()->Value();
-    float minOSx = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Left(); // * scaling;
-    float minOSy = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Bottom(); // * scaling;
-    float minOSz = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Back(); // * scaling;
-    float rangeOSx = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Width(); // * scaling;
-    float rangeOSy = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Height(); // * scaling;
-    float rangeOSz = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Depth(); // * scaling;
+    float minOSx = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Left();
+    float minOSy = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Bottom();
+    float minOSz = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Back();
+    float rangeOSx = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Width();
+    float rangeOSy = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Height();
+    float rangeOSz = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Depth();
 
     rangeOSx /= (1.0f - 2.0f / static_cast<float>(sx));
     rangeOSy /= (1.0f - 2.0f / static_cast<float>(sy));
@@ -583,8 +557,6 @@ void AOSphereRenderer::renderParticles(megamol::core::view::AbstractCallRender3D
             / this->volSizeZSlot.Param<megamol::core::param::IntParam>()->Value()));
     sphereShader->SetParameter("aoSampFact",
         this->aoEvalFacSlot.Param<megamol::core::param::FloatParam>()->Value());
-
-    glScalef(scaling, scaling, scaling);
 
     ::glActiveTexture(GL_TEXTURE1);
 
@@ -692,8 +664,7 @@ void AOSphereRenderer::renderParticles(megamol::core::view::AbstractCallRender3D
 /*
  * AOSphereRenderer::renderParticles
  */
-void AOSphereRenderer::renderParticles(megamol::core::view::AbstractCallRender3D *cr,
-    protein_calls::MolecularDataCall *mol, float scaling) {
+void AOSphereRenderer::renderParticles(megamol::core::view::CallRender3D_2& call, protein_calls::MolecularDataCall *mol) {
 
     vislib::graphics::gl::GLSLShader *sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
@@ -707,14 +678,6 @@ void AOSphereRenderer::renderParticles(megamol::core::view::AbstractCallRender3D
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    float viewportStuff[4];
-    ::glGetFloatv(GL_VIEWPORT, viewportStuff);
-    glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
-    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
-    viewportStuff[2] = 2.0f / viewportStuff[2];
-    viewportStuff[3] = 2.0f / viewportStuff[3];
-
     sphereShader->Enable();
 
     ::glActiveTexture(GL_TEXTURE0);
@@ -722,30 +685,17 @@ void AOSphereRenderer::renderParticles(megamol::core::view::AbstractCallRender3D
     ::glBindTexture(GL_TEXTURE_3D, this->volTex);
     sphereShader->SetParameter("aoVol", 0);
 
-    glUniform4fvARB(sphereShader->ParameterLocation("viewAttr"),
-        1, viewportStuff);
-    glUniform3fvARB(sphereShader->ParameterLocation("camIn"),
-        1, cr->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fvARB(sphereShader->ParameterLocation("camRight"),
-        1, cr->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fvARB(sphereShader->ParameterLocation("camUp"),
-        1, cr->GetCameraParameters()->Up().PeekComponents());
-    glUniform2f(sphereShader->ParameterLocation("frustumPlanes"),
-        cr->GetCameraParameters()->NearClip(),
-        cr->GetCameraParameters()->FarClip());
-
-    glUniform4fvARB(sphereShader->ParameterLocation("clipDat"), 1, clipDat);
-    glUniform3fvARB(sphereShader->ParameterLocation("clipCol"), 1, clipCol);
+	uploadCameraUniforms(call, sphereShader);
 
     int sx = this->volSizeXSlot.Param<megamol::core::param::IntParam>()->Value();
     int sy = this->volSizeYSlot.Param<megamol::core::param::IntParam>()->Value();
     int sz = this->volSizeZSlot.Param<megamol::core::param::IntParam>()->Value();
-    float minOSx = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Left(); // * scaling;
-    float minOSy = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Bottom(); // * scaling;
-    float minOSz = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Back(); // * scaling;
-    float rangeOSx = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Width(); // * scaling;
-    float rangeOSy = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Height(); // * scaling;
-    float rangeOSz = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Depth(); // * scaling;
+    float minOSx = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Left();
+    float minOSy = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Bottom();
+    float minOSz = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Back();
+    float rangeOSx = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Width();
+    float rangeOSy = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Height();
+    float rangeOSz = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Depth();
 
     rangeOSx /= (1.0f - 2.0f / static_cast<float>(sx));
     rangeOSy /= (1.0f - 2.0f / static_cast<float>(sy));
@@ -767,8 +717,6 @@ void AOSphereRenderer::renderParticles(megamol::core::view::AbstractCallRender3D
             / this->volSizeZSlot.Param<megamol::core::param::IntParam>()->Value()));
     sphereShader->SetParameter("aoSampFact",
         this->aoEvalFacSlot.Param<megamol::core::param::FloatParam>()->Value());
-
-    glScalef(scaling, scaling, scaling);
 
     ::glActiveTexture(GL_TEXTURE1);
 
@@ -826,8 +774,7 @@ void AOSphereRenderer::renderParticles(megamol::core::view::AbstractCallRender3D
 /*
  * AOSphereRenderer::renderParticlesVBO
  */
-void AOSphereRenderer::renderParticlesVBO(megamol::core::view::AbstractCallRender3D *cr,
-        megamol::core::moldyn::MultiParticleDataCall *c2, float scaling) {
+void AOSphereRenderer::renderParticlesVBO(megamol::core::view::CallRender3D_2& call, megamol::core::moldyn::MultiParticleDataCall *c2) {
 
     vislib::graphics::gl::GLSLShader *sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
@@ -841,14 +788,6 @@ void AOSphereRenderer::renderParticlesVBO(megamol::core::view::AbstractCallRende
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    float viewportStuff[4];
-    ::glGetFloatv(GL_VIEWPORT, viewportStuff);
-    glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
-    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
-    viewportStuff[2] = 2.0f / viewportStuff[2];
-    viewportStuff[3] = 2.0f / viewportStuff[3];
-
     sphereShader->Enable();
 
     ::glActiveTexture(GL_TEXTURE0);
@@ -856,27 +795,17 @@ void AOSphereRenderer::renderParticlesVBO(megamol::core::view::AbstractCallRende
     ::glBindTexture(GL_TEXTURE_3D, this->volTex);
     sphereShader->SetParameter("aoVol", 0);
 
-    glUniform4fvARB(sphereShader->ParameterLocation("viewAttr"),
-        1, viewportStuff);
-    glUniform3fvARB(sphereShader->ParameterLocation("camIn"),
-        1, cr->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fvARB(sphereShader->ParameterLocation("camRight"),
-        1, cr->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fvARB(sphereShader->ParameterLocation("camUp"),
-        1, cr->GetCameraParameters()->Up().PeekComponents());
-
-    glUniform4fvARB(sphereShader->ParameterLocation("clipDat"), 1, clipDat);
-    glUniform3fvARB(sphereShader->ParameterLocation("clipCol"), 1, clipCol);
+	uploadCameraUniforms(call, sphereShader);
 
     int sx = this->volSizeXSlot.Param<megamol::core::param::IntParam>()->Value();
     int sy = this->volSizeYSlot.Param<megamol::core::param::IntParam>()->Value();
     int sz = this->volSizeZSlot.Param<megamol::core::param::IntParam>()->Value();
-    float minOSx = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Left(); // * scaling;
-    float minOSy = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Bottom(); // * scaling;
-    float minOSz = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Back(); // * scaling;
-    float rangeOSx = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Width(); // * scaling;
-    float rangeOSy = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Height(); // * scaling;
-    float rangeOSz = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Depth(); // * scaling;
+    float minOSx = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Left();
+    float minOSy = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Bottom();
+    float minOSz = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Back();
+    float rangeOSx = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Width();
+    float rangeOSy = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Height();
+    float rangeOSz = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Depth();
 
     rangeOSx /= (1.0f - 2.0f / static_cast<float>(sx));
     rangeOSy /= (1.0f - 2.0f / static_cast<float>(sy));
@@ -898,8 +827,6 @@ void AOSphereRenderer::renderParticlesVBO(megamol::core::view::AbstractCallRende
             / this->volSizeZSlot.Param<megamol::core::param::IntParam>()->Value()));
     sphereShader->SetParameter("aoSampFact",
         this->aoEvalFacSlot.Param<megamol::core::param::FloatParam>()->Value());
-
-    glScalef(scaling, scaling, scaling);
 
     ::glActiveTexture(GL_TEXTURE1);
 
@@ -936,8 +863,7 @@ void AOSphereRenderer::renderParticlesVBO(megamol::core::view::AbstractCallRende
 /*
  * AOSphereRenderer::renderParticlesVBO
  */
-void AOSphereRenderer::renderParticlesVBO(megamol::core::view::AbstractCallRender3D *cr,
-    protein_calls::MolecularDataCall *mol, float scaling) {
+void AOSphereRenderer::renderParticlesVBO(megamol::core::view::CallRender3D_2& call, protein_calls::MolecularDataCall *mol) {
 
     vislib::graphics::gl::GLSLShader *sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
@@ -951,14 +877,6 @@ void AOSphereRenderer::renderParticlesVBO(megamol::core::view::AbstractCallRende
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    float viewportStuff[4];
-    ::glGetFloatv(GL_VIEWPORT, viewportStuff);
-    glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
-    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
-    viewportStuff[2] = 2.0f / viewportStuff[2];
-    viewportStuff[3] = 2.0f / viewportStuff[3];
-
     sphereShader->Enable();
 
     ::glActiveTexture(GL_TEXTURE0);
@@ -966,27 +884,17 @@ void AOSphereRenderer::renderParticlesVBO(megamol::core::view::AbstractCallRende
     ::glBindTexture(GL_TEXTURE_3D, this->volTex);
     sphereShader->SetParameter("aoVol", 0);
 
-    glUniform4fvARB(sphereShader->ParameterLocation("viewAttr"),
-        1, viewportStuff);
-    glUniform3fvARB(sphereShader->ParameterLocation("camIn"),
-        1, cr->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fvARB(sphereShader->ParameterLocation("camRight"),
-        1, cr->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fvARB(sphereShader->ParameterLocation("camUp"),
-        1, cr->GetCameraParameters()->Up().PeekComponents());
-
-    glUniform4fvARB(sphereShader->ParameterLocation("clipDat"), 1, clipDat);
-    glUniform3fvARB(sphereShader->ParameterLocation("clipCol"), 1, clipCol);
+	uploadCameraUniforms(call, sphereShader);
 
     int sx = this->volSizeXSlot.Param<megamol::core::param::IntParam>()->Value();
     int sy = this->volSizeYSlot.Param<megamol::core::param::IntParam>()->Value();
     int sz = this->volSizeZSlot.Param<megamol::core::param::IntParam>()->Value();
-    float minOSx = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Left(); // * scaling;
-    float minOSy = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Bottom(); // * scaling;
-    float minOSz = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Back(); // * scaling;
-    float rangeOSx = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Width(); // * scaling;
-    float rangeOSy = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Height(); // * scaling;
-    float rangeOSz = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Depth(); // * scaling;
+    float minOSx = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Left();
+    float minOSy = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Bottom();
+    float minOSz = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Back();
+    float rangeOSx = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Width();
+    float rangeOSy = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Height();
+    float rangeOSz = mol->AccessBoundingBoxes().ObjectSpaceClipBox().Depth();
 
     rangeOSx /= (1.0f - 2.0f / static_cast<float>(sx));
     rangeOSy /= (1.0f - 2.0f / static_cast<float>(sy));
@@ -1008,8 +916,6 @@ void AOSphereRenderer::renderParticlesVBO(megamol::core::view::AbstractCallRende
             / this->volSizeZSlot.Param<megamol::core::param::IntParam>()->Value()));
     sphereShader->SetParameter("aoSampFact",
         this->aoEvalFacSlot.Param<megamol::core::param::FloatParam>()->Value());
-
-    glScalef(scaling, scaling, scaling);
 
     ::glActiveTexture(GL_TEXTURE1);
 
@@ -1051,14 +957,13 @@ void AOSphereRenderer::createEmptyVolume() {
     int sx = this->volSizeXSlot.Param<megamol::core::param::IntParam>()->Value();
     int sy = this->volSizeYSlot.Param<megamol::core::param::IntParam>()->Value();
     int sz = this->volSizeZSlot.Param<megamol::core::param::IntParam>()->Value();
-    float *vol = new float[sx * sy * sz];
-    ::memset(vol, 0, sizeof(float) * sx * sy * sz);
+
+    std::vector<float> vol(sx * sy * sz, 0.0f);
     ::glEnable(GL_TEXTURE_3D);
     ::glBindTexture(GL_TEXTURE_3D, this->volTex);
-    ::glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, sx, sy, sz, GL_LUMINANCE, GL_FLOAT, vol);
+    ::glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, sx, sy, sz, GL_LUMINANCE, GL_FLOAT, vol.data());
     ::glBindTexture(GL_TEXTURE_3D, 0);
     ::glDisable(GL_TEXTURE_3D);
-    delete[] vol;
 }
 
 
@@ -1069,16 +974,13 @@ void AOSphereRenderer::createFullVolume() {
     int sx = this->volSizeXSlot.Param<megamol::core::param::IntParam>()->Value() - 2;
     int sy = this->volSizeYSlot.Param<megamol::core::param::IntParam>()->Value() - 2;
     int sz = this->volSizeZSlot.Param<megamol::core::param::IntParam>()->Value() - 2;
-    float *vol = new float[sx * sy * sz];
-    for (int i = (sx * sy * sz) - 1; i >= 0; i--) {
-        vol[i] = 1.0f;
-    }
+
+    std::vector<float> vol(sx * sy * sz, 1.0f);
     ::glEnable(GL_TEXTURE_3D);
     ::glBindTexture(GL_TEXTURE_3D, this->volTex);
-    ::glTexSubImage3D(GL_TEXTURE_3D, 0, 1, 1, 1, sx, sy, sz, GL_LUMINANCE, GL_FLOAT, vol);
+    ::glTexSubImage3D(GL_TEXTURE_3D, 0, 1, 1, 1, sx, sy, sz, GL_LUMINANCE, GL_FLOAT, vol.data());
     ::glBindTexture(GL_TEXTURE_3D, 0);
     ::glDisable(GL_TEXTURE_3D);
-    delete[] vol;
 }
 
 

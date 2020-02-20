@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -36,7 +36,6 @@ namespace MegaMolConf {
         private Point lastMousePos;
         private Point mouseDownPos;
         private Point connectingTip;
-        private bool drawConnection;
         private Rectangle drawArea;
         private bool saveShortcut;
 
@@ -71,6 +70,11 @@ namespace MegaMolConf {
         internal static GraphicalModule copiedModule { get; private set; }
         internal static GraphicalModule eyedropperTarget { get; private set; }
         internal static GraphicalConnection selectedConnection { get; private set; }
+        internal static bool drawConnection { get; private set; }
+        internal static bool drawCallNames { get; private set; } = true;
+        internal static bool callBoundsCalculated { get; set; }
+        internal static bool showSlotTips { get; private set; }
+
         internal TabPage SelectedTab {
             get {
                 if (!this.IsDisposed && InvokeRequired) {
@@ -217,19 +221,21 @@ namespace MegaMolConf {
             if (tabViews.SelectedTab != null) {
                 MegaMolInstanceInfo mmii = tabViews.SelectedTab.Tag as MegaMolInstanceInfo;
                 if (mmii != null && mmii.Connection != null && mmii.Connection.Valid) {
-                    if (addedList != null) {
-                        foreach (object o in addedList) {
-                            GraphicalConnection gc = o as GraphicalConnection;
-                            if (gc != null) {
-                                mmii.QueueConnectionCreation(gc);
-                            }
-                        }
-                    }
+                    
                     if (deletedList != null) {
                         foreach (object o in deletedList) {
                             GraphicalConnection gc = o as GraphicalConnection;
                             if (gc != null) {
                                 mmii.QueueConnectionDeletion(gc);
+                            }
+                        }
+                    }
+
+                    if (addedList != null) {
+                        foreach (object o in addedList) {
+                            GraphicalConnection gc = o as GraphicalConnection;
+                            if (gc != null) {
+                                mmii.QueueConnectionCreation(gc);
                             }
                         }
                     }
@@ -412,6 +418,9 @@ namespace MegaMolConf {
                 case (Keys.Control | Keys.C):
                     btnCopy.PerformClick();
                     break;
+                case (Keys.Control | Keys.Shift | Keys.C):
+                    btnLua.PerformClick();
+                    break;
                 case (Keys.Control | Keys.V):
                     btnPaste.PerformClick();
                     break;
@@ -423,6 +432,27 @@ namespace MegaMolConf {
                         isEyedropping = false;
                         tabViews.Cursor = Cursors.Default;
                     }
+                    break;
+                case (Keys.Control | Keys.E):   // shortcut to get into module search
+                    moduleFilterBox.Select();
+                    moduleFilterBox.SelectAll();
+                    break;
+                case (Keys.Control | Keys.N):
+                    btnNewProject.PerformClick();
+                    break;
+                case (Keys.Control | Keys.W):
+                    CloseProjectTab(tabViews.SelectedTab);
+                    break;
+                case (Keys.Control | Keys.Down):    // skip next 4 items downwards
+                    try {
+                        lbModules.SelectedIndex += 4;
+                    } catch {}
+                    break;
+                case (Keys.Control | Keys.Up):    // skip next 4 items upwards
+                    try {
+                        lbModules.SelectedIndex -= 4;
+                    }
+                    catch { }
                     break;
             } 
             return base.ProcessCmdKey(ref msg, keyData);
@@ -798,6 +828,99 @@ namespace MegaMolConf {
             RefreshCurrent();
         }
 
+        private void lbModules_EnterKeyPress(object sender, KeyPressEventArgs e)
+        {
+            bool enterIsPressed = e.KeyChar == ConsoleKey.Enter.GetHashCode();
+            if (lbModules.SelectedItem != null && enterIsPressed)
+            {
+                TabPage tp = tabViews.SelectedTab;
+                if (tp != null)
+                {
+                    var mod = AddModule(tp, (Data.Module)lbModules.SelectedItem);
+
+                    if (selectedCaller != null)
+                    {
+                        mod.Position = new Point(
+                            selectedModule.Position.X + selectedModule.Bounds.Width * 2,
+                            selectedModule.Position.Y
+                        );
+                        foreach (Data.CalleeSlot ce in mod.Module.CalleeSlots)
+                        {
+                            string[] compatibles = selectedCaller.CompatibleCalls.Intersect(ce.CompatibleCalls).ToArray();
+                            if (compatibles.Count() == 0) continue;
+                            string theName = compatibles[0];
+                            if (compatibles.Count() > 1)
+                            {
+                                using (StringSelector cs = new StringSelector("Select the Call you want to use", compatibles))
+                                {
+                                    cs.StartPosition = FormStartPosition.Manual;
+                                    Point p = PointToScreen(mod.Position);
+                                    cs.Location = p;
+                                    if (cs.ShowDialog(this) == DialogResult.Cancel)
+                                    {
+                                        SelectItem((GraphicalConnection)null);
+                                        RefreshCurrent();
+                                        return;
+                                    }
+                                    theName = cs.SelectedItem;
+                                }
+                            }
+                            GraphicalConnection gc = new GraphicalConnection(selectedModule, mod, selectedCaller, ce, FindCallByName(theName));
+                            // does the callerslot already have a connection? erase it
+                            foreach (GraphicalConnection gtemp in tabConnections[tp])
+                            {
+                                if (gtemp.src.Equals(selectedModule) && selectedCaller.Equals(gtemp.srcSlot))
+                                {
+                                    tabConnections[tp].Remove(gtemp);
+                                    break;
+                                }
+                            }
+                            tabConnections[tp].Add(gc);
+                            break;
+                        }
+                    }
+                    if (selectedCallee != null)
+                    {
+                        mod.Position = new Point(
+                            selectedModule.Position.X - selectedModule.Bounds.Width * 2,
+                            selectedModule.Position.Y
+                        );
+                        foreach (Data.CallerSlot cr in mod.Module.CallerSlots)
+                        {
+                            string[] compatibles = selectedCallee.CompatibleCalls.Intersect(cr.CompatibleCalls).ToArray();
+                            if (compatibles.Count() == 0) continue;
+                            string theName = compatibles[0];
+                            if (compatibles.Count() > 1)
+                            {
+                                using (StringSelector cs = new StringSelector("Select the Call you want to use", compatibles))
+                                {
+                                    cs.StartPosition = FormStartPosition.Manual;
+                                    Point p = PointToScreen(mod.Position);
+                                    cs.Location = p;
+                                    if (cs.ShowDialog(this) == DialogResult.Cancel)
+                                    {
+                                        SelectItem((GraphicalConnection)null);
+                                        RefreshCurrent();
+                                        return;
+                                    }
+                                    theName = cs.SelectedItem;
+                                }
+                            }
+                            GraphicalConnection gc = new GraphicalConnection(mod, selectedModule, cr, selectedCallee, FindCallByName(theName));
+                            tabConnections[tp].Add(gc);
+                            break;
+                        }
+                    }
+
+                    SelectItem(mod);
+                    propertyGrid1.SelectedObject = new GraphicalModuleDescriptor(selectedModule);
+                }
+            }
+            resizePanel();
+            //updateFiltered();
+            RefreshCurrent();
+        }
+
         internal GraphicalModule AddModule(TabPage tp, Data.Module mod) {
             GraphicalModule ret = null;
             lock (tabModules[tp]) {
@@ -826,11 +949,11 @@ namespace MegaMolConf {
                     e.Graphics.ResetTransform();
                     //e.Graphics.TranslateTransform(-drawArea.Left + tp.HorizontalScroll.Value, -drawArea.Top + tp.VerticalScroll.Value);
                     e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-                    foreach (GraphicalModule gm in tabModules[tp]) {
-                        gm.Draw(e.Graphics);
-                    }
                     foreach (GraphicalConnection gc in tabConnections[tp]) {
                         gc.Draw(e.Graphics);
+                    }
+                    foreach (GraphicalModule gm in tabModules[tp]) {
+                        gm.Draw(e.Graphics);
                     }
                     if (drawConnection && (selectedCallee != null || selectedCaller != null)) {
                         Point p = tp.Controls[0].Controls[0].PointToClient(Cursor.Position);
@@ -919,6 +1042,11 @@ namespace MegaMolConf {
                         }
                         if (gm.IsHit(e.Location)) {
                             SelectItem(gm);
+                            if(e.Button == MouseButtons.Middle)
+                            {
+                                btnDelete.PerformClick();
+                                break;
+                            }
                             movedModule = gm;
                             toolStripStatusLabel1.Text = gm.Module.Name + ": " + gm.Module.Description;
                             lastMousePos = e.Location;
@@ -1007,8 +1135,9 @@ namespace MegaMolConf {
                 x *= x;
                 int y = Math.Abs(tmp.Y);
                 y *= y;
-                if (Math.Sqrt(x + y) > 4 && e.Button == MouseButtons.Left) {
+                if (Math.Sqrt(x + y) > 4 && (e.Button == MouseButtons.Left || e.Button == MouseButtons.Right)) {
                     drawConnection = true;
+                    showSlotTips = (e.Button == MouseButtons.Right);
                     if (tabViews.SelectedTab != null) {
                         doTheScrollingShit(e.Location);
                     }
@@ -1089,6 +1218,7 @@ namespace MegaMolConf {
                                     tabConnections[tp].Add(gc);
                                     somethingSelected = true;
                                     drawConnection = false;
+                                    showSlotTips = false;
                                     break;
                                 }
                             }
@@ -1098,6 +1228,7 @@ namespace MegaMolConf {
                 }
                 if (!somethingSelected) {
                     drawConnection = false;
+                    showSlotTips = false;
                 }
                 resizePanel(true);
                 RefreshCurrent();
@@ -1174,6 +1305,7 @@ namespace MegaMolConf {
             //    tabViews.GetTabRect(tabViews.SelectedIndex).Height);
             np.Paint += PaintTabpage;
             np.MouseDoubleClick += tabViews_MouseDoubleClick;
+            np.MouseClick += tabViews_MouseClick;
             np.MouseDown += tabViews_MouseDown;
             np.MouseMove += tabViews_MouseMove;
             np.MouseUp += tabViews_MouseUp;
@@ -2434,5 +2566,44 @@ in PowerShell:
             }
         }
 
+        private void ToolStripButton1_Click_1(object sender, EventArgs e) {
+            if (selectedModule != null) {
+                if (SelectedTab != null) {
+                    string instName = "::inst";
+                    string modFullName = instName + "::" + selectedModule.Name;
+                    string s = "";
+                    if (tabMainViews[SelectedTab] != null && tabMainViews[SelectedTab].Name == selectedModule.Name) {
+                        s = "mmCreateView(\"" + safeName(SelectedTab.Text) + "\", \"" + selectedModule.Module.Name + "\", \"" + modFullName + "\")\n";
+                    } else {
+                        s = "mmCreateModule(\"" + selectedModule.Module.Name + "\", \"" + modFullName + "\")\n";
+                    }
+                    foreach (var p in selectedModule.Module.ParamSlots) {
+                        if (selectedModule.ParameterValues.ContainsKey(p)) {
+                            s += "mmSetParamValue(\"" + modFullName + "::" + p.Name + "\", \"" +
+                                 Io.ProjectFileLua.SafeString(selectedModule.ParameterValues[p]) + "\")\n";
+                        }
+                    }
+                    Clipboard.SetText(s);
+                }
+            } else if (selectedConnection != null) {
+                if (SelectedTab != null) {
+                    string instName = "::inst";
+                    string src = instName + "::" + selectedConnection.src.Name + "::" +
+                                 selectedConnection.srcSlot.Name;
+                    string dst = instName + "::" + selectedConnection.dest.Name + "::" +
+                                 selectedConnection.destSlot.Name;
+                    string s = "mmCreateCall(\"" + selectedConnection.Call.Name + "\", \"" +
+                                   src + "\", \"" + dst +
+                                   "\")";
+                    Clipboard.SetText(s);
+                }
+            }
+        }
+
+        private void btnHideCallNames_Click(object sender, EventArgs e)
+        {
+            drawCallNames = btnHideCallNames.Checked;
+            callBoundsCalculated = !btnHideCallNames.Checked;
+        }
     }
 }

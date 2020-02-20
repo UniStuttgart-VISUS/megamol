@@ -66,6 +66,10 @@ bool TableJoin::processData(core::Call &c) {
         TableDataCall *secondInCall = this->secondTableInSlot.CallAs<TableDataCall>();
         if (secondInCall == NULL) return false;
 
+        // call getHash before check of frame count
+        if (!(*firstInCall)(1)) return false;
+        if (!(*secondInCall)(1)) return false;
+
         // check time compatibility
         if (firstInCall->GetFrameCount() != secondInCall->GetFrameCount()) {
             vislib::sys::Log::DefaultLog.WriteError(_T("%hs: Cannot join tables. ")

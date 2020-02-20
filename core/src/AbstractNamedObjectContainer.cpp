@@ -71,7 +71,7 @@ void AbstractNamedObjectContainer::addChild(AbstractNamedObject::ptr_type child)
  */
 void AbstractNamedObjectContainer::removeChild(AbstractNamedObject::ptr_type child) {
     if (!child) return;
-    ASSERT(child->Parent().get() == this);
+    //ASSERT(child->Parent().get() == this);
     this->children.remove(child);
     child->setParent(AbstractNamedObject::ptr_type(nullptr));
 }

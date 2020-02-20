@@ -10,6 +10,8 @@
 #include "mmcore/param/IntParam.h"
 #include "vislib/sys/Log.h"
 #include <string>
+#include <iomanip>
+#include <sstream>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -91,9 +93,11 @@ bool DatRawWriter::run(void) {
         return false;
     }
 
-    std::string datpath = filepath + ".dat";
-    std::string rawpath = filepath + ".raw";
-    return writeFrame(datpath, rawpath, *vdc);
+    std::stringstream datpath;
+    datpath << filepath << std::setw(4) << std::setfill('0') <<  std::to_string(frame) << ".dat";
+    std::stringstream rawpath;
+    rawpath << filepath << std::setw(4) << std::setfill('0') << std::to_string(frame) << ".raw";
+    return writeFrame(datpath.str(), rawpath.str(), *vdc);
 }
 
 /*

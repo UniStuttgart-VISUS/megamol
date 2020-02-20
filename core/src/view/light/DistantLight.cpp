@@ -9,6 +9,9 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/ColorParam.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 using namespace megamol::core::view::light;
 
@@ -42,12 +45,13 @@ DistantLight::~DistantLight(void) { this->Release(); }
  */
 void DistantLight::readParams() {
     lightContainer.lightType = lightenum::DISTANTLIGHT;
-    auto lcolor = this->lightColor.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    lightContainer.lightColor.assign(lcolor, lcolor + 3);
+	lightContainer.lightColor = this->lightColor.Param<core::param::ColorParam>()->Value();
     lightContainer.lightIntensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
     lightContainer.dl_eye_direction = this->dl_eye_direction.Param<core::param::BoolParam>()->Value();
-    auto dl_dir = this->dl_direction.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    lightContainer.dl_direction.assign(dl_dir, dl_dir + 3);
+    auto& dl_dir = this->dl_direction.Param<core::param::Vector3fParam>()->Value();
+    glm::vec3 dl_dir_normalized(dl_dir.X(), dl_dir.Y(), dl_dir.Z());
+    dl_dir_normalized = glm::normalize(dl_dir_normalized);
+    std::copy(glm::value_ptr(dl_dir_normalized), glm::value_ptr(dl_dir_normalized) + 3, lightContainer.dl_direction.begin());
     lightContainer.dl_angularDiameter = this->dl_angularDiameter.Param<core::param::FloatParam>()->Value();
 }
 

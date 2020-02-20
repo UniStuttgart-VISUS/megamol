@@ -290,23 +290,6 @@ namespace MegaMolConf {
 
                     // TODO: connections. beware that connections will probably be cleaned if the modules go away, so failure is okayish? :/
 
-                    lock (connectionCreations) {
-                        foreach (GraphicalConnection gcc in connectionCreations) {
-                            string command =
-                                $@"mmCreateCall(""{gcc.Call.Name}"",""{ParentForm.TabInstantiation(TabPage)}::{gcc.src.Name}::{
-                                    gcc.srcSlot.Name
-                                }"", ""{ParentForm.TabInstantiation(TabPage)}::{gcc.dest.Name}::{gcc.destSlot.Name}"")";
-                            Request("return " + command);
-                            res = GetAnswer(ref ans);
-                            if (String.IsNullOrWhiteSpace(res) && !stopQueued) {
-                                // huh.
-                            } else {
-                                ParentForm.listBoxLog.Log(Util.Level.Error, $@"Error on {command}: {res}");
-                            }
-                        }
-                        connectionCreations.Clear();
-                    }
-
                     lock (connectionDeletions) {
                         foreach (GraphicalConnection gcc in connectionDeletions) {
                             string command =
@@ -322,6 +305,23 @@ namespace MegaMolConf {
                             }
                         }
                         connectionDeletions.Clear();
+                    }
+
+                    lock (connectionCreations) {
+                        foreach (GraphicalConnection gcc in connectionCreations) {
+                            string command =
+                                $@"mmCreateCall(""{gcc.Call.Name}"",""{ParentForm.TabInstantiation(TabPage)}::{gcc.src.Name}::{
+                                    gcc.srcSlot.Name
+                                }"", ""{ParentForm.TabInstantiation(TabPage)}::{gcc.dest.Name}::{gcc.destSlot.Name}"")";
+                            Request("return " + command);
+                            res = GetAnswer(ref ans);
+                            if (String.IsNullOrWhiteSpace(res) && !stopQueued) {
+                                // huh.
+                            } else {
+                                ParentForm.listBoxLog.Log(Util.Level.Error, $@"Error on {command}: {res}");
+                            }
+                        }
+                        connectionCreations.Clear();
                     }
 
                     // what the hell?

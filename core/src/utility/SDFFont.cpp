@@ -634,6 +634,8 @@ float SDFFont::LineWidth(float size, const wchar_t *txt) const {
  */
 void SDFFont::BatchDrawString(const float col[4]) const {
 
+    if (this->posBatchCache.empty()) return;
+
     // Bind glyph data in batch cache
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
         glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
@@ -656,6 +658,8 @@ void SDFFont::BatchDrawString(const float col[4]) const {
  * SDFFont::BatchDrawString
  */
 void SDFFont::BatchDrawString() const {
+
+    if (this->posBatchCache.empty()) return;
 
     // Bind glyph data in batch cache
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
@@ -1062,37 +1066,49 @@ void SDFFont::drawGlyphs(const float col[4], int* run, float x, float y, float z
         float tmpP03y = sy * (glyph->yoffset) + gy;
         float tmpP12y = tmpP03y + (sy * glyph->height);
 
+        vislib::math::Vector<float, 3> p0(tmpP01x, tmpP03y, gz);
+        vislib::math::Vector<float, 3> p1(tmpP01x, tmpP12y, gz);
+        vislib::math::Vector<float, 3> p2(tmpP23x, tmpP12y, gz);
+        vislib::math::Vector<float, 3> p3(tmpP23x, tmpP03y, gz);
+
+        /// Apply rotation
+        auto rotMat = static_cast<vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR>>(this->rotation);
+        p0 = rotMat * p0;
+        p1 = rotMat * p1;
+        p2 = rotMat * p2;
+        p3 = rotMat * p3;
+
         // Set position data:
-        posData[glyphIter * 18 + 0]  = tmpP01x;   // p0-x
-        posData[glyphIter * 18 + 1]  = tmpP03y;   // p0-y
-        posData[glyphIter * 18 + 2]  = gz;        // p0-z
+        posData[glyphIter * 18 + 0]  = p0.X(); 
+        posData[glyphIter * 18 + 1]  = p0.Y();  
+        posData[glyphIter * 18 + 2]  = p0.Z();
 
-        posData[glyphIter * 18 + 3] = tmpP01x;    // p1-x
-        posData[glyphIter * 18 + 4] = tmpP12y;    // p1-y
-        posData[glyphIter * 18 + 5] = gz;         // p1-z
+        posData[glyphIter * 18 + 3] = p1.X(); 
+        posData[glyphIter * 18 + 4] = p1.Y(); 
+        posData[glyphIter * 18 + 5] = p1.Z();  
 
-        posData[glyphIter * 18 + 6] = tmpP23x;    // p2-x
-        posData[glyphIter * 18 + 7] = tmpP12y;    // p2-y
-        posData[glyphIter * 18 + 8] = gz;         // p2-z
+        posData[glyphIter * 18 + 6] = p2.X();
+        posData[glyphIter * 18 + 7] = p2.Y();  
+        posData[glyphIter * 18 + 8] = p2.Z();  
 
-        posData[glyphIter * 18 + 9]  = tmpP01x;   // p0-x
-        posData[glyphIter * 18 + 10] = tmpP03y;   // p0-y
-        posData[glyphIter * 18 + 11] = gz;        // p0-z
+        posData[glyphIter * 18 + 9]  = p0.X(); 
+        posData[glyphIter * 18 + 10] = p0.Y();  
+        posData[glyphIter * 18 + 11] = p0.Z(); 
 
-        posData[glyphIter * 18 + 12] = tmpP23x;   // p2-x
-        posData[glyphIter * 18 + 13] = tmpP12y;   // p2-y
-        posData[glyphIter * 18 + 14] = gz;        // p2-z
+        posData[glyphIter * 18 + 12] = p2.X(); 
+        posData[glyphIter * 18 + 13] = p2.Y(); 
+        posData[glyphIter * 18 + 14] = p2.Z();
 
-        posData[glyphIter * 18 + 15] = tmpP23x;   // p3-x
-        posData[glyphIter * 18 + 16] = tmpP03y;   // p3-y
-        posData[glyphIter * 18 + 17] = gz;        // p3-z
+        posData[glyphIter * 18 + 15] = p3.X(); 
+        posData[glyphIter * 18 + 16] = p3.Y(); 
+        posData[glyphIter * 18 + 17] = p3.Z(); 
 
         // Change rotation of quad positions for flipped y axis from CCW to CW.
         if (flipY) {
-            posData[glyphIter * 18 + 3] = tmpP23x;   // p2-x
-            posData[glyphIter * 18 + 6] = tmpP01x;   // p1-x
-            posData[glyphIter * 18 + 13] = tmpP03y;  // p3-y
-            posData[glyphIter * 18 + 16] = tmpP12y;  // p2-y
+            posData[glyphIter * 18 + 3] = p2.X();   // p2-x
+            posData[glyphIter * 18 + 6] = p1.X();   // p1-x
+            posData[glyphIter * 18 + 13] = p3.Y();  // p3-y
+            posData[glyphIter * 18 + 16] = p2.Y();  // p2-y
         }
         
         // Set texture data
@@ -1205,8 +1221,8 @@ void SDFFont::render(unsigned int gc, const float *col[4]) const {
         glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
         vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
 
-        // Calculate model view projection matrix and apply rotation
-        modelViewProjMatrix = projMatrix * modelViewMatrix * static_cast<vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR>>(this->rotation);
+        // Calculate model view projection matrix 
+        modelViewProjMatrix = projMatrix * modelViewMatrix; 
     }
 
     // Store/Set blending
@@ -1579,8 +1595,9 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
             ARY_SAFE_DELETE(buf);
             return false;
         }
-
         this->texture.Bind();
+        //glGenerateMipmap(GL_TEXTURE_2D);
+        //this->texture.SetFilter(GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR);
         this->texture.SetFilter(GL_LINEAR, GL_LINEAR);
         this->texture.SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
         glBindTexture(GL_TEXTURE_2D, 0);

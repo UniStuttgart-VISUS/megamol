@@ -13,7 +13,6 @@
 
 #include "mmcore/DataWriterCtrlCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/moldyn/ParticleGridDataCall.h"
 #include "mmcore/cluster/CallRegisterAtController.h"
 #include "mmcore/cluster/simple/ClientViewRegistration.h"
 #include "mmcore/view/CallClipPlane.h"
@@ -45,6 +44,7 @@
 #include "mmcore/cluster/SyncDataSourcesCall.h"
 #include "mmcore/view/special/CallbackScreenShooter.h"
 #include "mmcore/FlagCall.h"
+#include "mmcore/FlagCall_GL.h"
 
 using namespace megamol::core;
 
@@ -59,7 +59,6 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<cluster::CallRegisterAtController>();
     instance.RegisterAutoDescription<cluster::simple::ClientViewRegistration>();
     instance.RegisterAutoDescription<moldyn::MultiParticleDataCall>();
-    instance.RegisterAutoDescription<moldyn::ParticleGridDataCall>();
     instance.RegisterAutoDescription<view::CallClipPlane>();
     instance.RegisterAutoDescription<view::CallGetTransferFunction>();
     instance.RegisterAutoDescription<view::CallRender2D>();
@@ -90,4 +89,6 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<cluster::SyncDataSourcesCall>();
     instance.RegisterAutoDescription<view::special::CallbackScreenShooterCall>();
     instance.RegisterAutoDescription<FlagCall>();
+    instance.RegisterAutoDescription<FlagCallRead_GL>();
+    instance.RegisterAutoDescription<FlagCallWrite_GL>();
 }

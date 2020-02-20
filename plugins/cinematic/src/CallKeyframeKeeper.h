@@ -12,18 +12,9 @@
 
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
-
-#include "vislib/Array.h"
-#include "vislib/sys/Log.h"
-#include "vislib/math/Point.h"
+#include "mmcore/view/Camera_2.h"
 
 #include "Keyframe.h"
-
-
-// GLOBAL CC DEFINES
-#ifndef CC_MENU_HEIGHT
-    #define CC_MENU_HEIGHT (25.0f)
-#endif
 
 
 namespace megamol {
@@ -35,16 +26,16 @@ namespace cinematic {
 	class CallKeyframeKeeper : public core::AbstractGetDataCall {
 	public:
 
-		/** function name for getting all Keyframes */
-		static const unsigned int CallForGetUpdatedKeyframeData     = 0;
-        static const unsigned int CallForGetSelectedKeyframeAtTime  = 1;
-		static const unsigned int CallForGetInterpolCamPositions    = 2;
-        static const unsigned int CallForSetSelectedKeyframe        = 3;
-        static const unsigned int CallForSetSimulationData          = 4;
-		static const unsigned int CallForSetCameraForKeyframe       = 5;
-        static const unsigned int CallForSetDragKeyframe            = 6;
-        static const unsigned int CallForSetDropKeyframe            = 7;
-        static const unsigned int CallForSetCtrlPoints              = 8;
+		/** function name for Getting all Keyframes */
+		static const unsigned int CallForGetUpdatedKeyframeData     = 0; // Loads updated data from KeyframeKeeper into call.
+        static const unsigned int CallForGetSelectedKeyframeAtTime  = 1; // Set animation time of selected keyframe by previously calling SetSelectedKeyframeTime() -> Keyframekeeper returns modified selected keyframe immediately to call.
+		static const unsigned int CallForGetInterpolCamPositions    = 2; // Call SetInterpolationSteps() before.
+        static const unsigned int CallForSetSelectedKeyframe        = 3; // Call SetSelectedKeyframe() befrore. Replaces currently selected keyframe.
+        static const unsigned int CallForSetSimulationData          = 4; // Call SetBboxCenter(), SetTotalSimTime() and SetFps() before;
+		static const unsigned int CallForSetCameraForKeyframe       = 5; // Call SetCameraState() before. Replaces camera of currently selected keyframe
+        static const unsigned int CallForSetDragKeyframe            = 6; // Set animation time of selected keyframe by previously calling SetSelectedKeyframeTime() -> KeyframeKeeper takes selected keyframe as dragged keyframe.
+        static const unsigned int CallForSetDropKeyframe            = 7; // Set animation and simulation time of selected keyframe by previously calling SetDropTimes() -> KeyframeKeeper moves keyframe with to drop times.
+        static const unsigned int CallForSetCtrlPoints              = 8; // Call SetControlPointPosition() before.
 
 		/**
 		* Answer the name of the objects of this description.
@@ -107,109 +98,101 @@ namespace cinematic {
         **********************************************************************/
 
         // KEYFRAME ARRAY
-		inline vislib::Array<Keyframe>* getKeyframes(){
+		inline std::shared_ptr<std::vector<Keyframe>> GetKeyframes(){
 			return this->keyframes;
 		}
-        inline void setKeyframes(vislib::Array<Keyframe>* kfs) {
+        inline void SetKeyframes(std::shared_ptr<std::vector<Keyframe>> kfs) {
             this->keyframes = kfs;
         }
 
         // SELECTED KEYFRAME 
-        inline void setSelectedKeyframeTime(float t) { 
+        inline void SetSelectedKeyframeTime(float t) { 
             this->selectedKeyframe.SetAnimTime(t);
         }
-        inline void setSelectedKeyframe(Keyframe k) {
+        inline void SetSelectedKeyframe(Keyframe k) {
             this->selectedKeyframe = k;
         }
 
-        inline Keyframe getSelectedKeyframe() {
+        inline Keyframe GetSelectedKeyframe() {
             return this->selectedKeyframe;
         }
 
-        // BOUNDINGBOX
-        inline void setBoundingBox(vislib::math::Cuboid<float>* bbx) {
-            this->boundingbox = bbx;
-        }
-        inline vislib::math::Cuboid<float> *getBoundingBox() {
-            return this->boundingbox;
-        }
-
         // INTERPOLATED KEYFRAME
-        inline void setInterpolationSteps(unsigned int s) {
+        inline void SetInterpolationSteps(unsigned int s) {
             this->interpolSteps = s;
         }
-        inline unsigned int getInterpolationSteps() {
+        inline unsigned int GetInterpolationSteps() {
             return this->interpolSteps;
         }
 
-		inline vislib::Array<vislib::math::Point<float, 3> >* getInterpolCamPositions(){
+		inline std::shared_ptr<std::vector<glm::vec3 >> GetInterpolCamPositions(){
 			return this->interpolCamPos;
 		}
-        inline void setInterpolCamPositions(vislib::Array<vislib::math::Point<float, 3> >* k){
+        inline void SetInterpolCamPositions(std::shared_ptr<std::vector<glm::vec3 >> k){
             this->interpolCamPos = k;
         }
 
         // TOTAL ANIMATION TIME
-        inline void setTotalAnimTime(float f) {
+        inline void SetTotalAnimTime(float f) {
             this->totalAnimTime = f;
         }
-		inline float getTotalAnimTime(){
+		inline float GetTotalAnimTime(){
 			return this->totalAnimTime;
 		}
 
         // TOTAL SIMULATION TIME
-        inline void setTotalSimTime(float f) {
+        inline void SetTotalSimTime(float f) {
             this->totalSimTime = f;
         }
-        inline float getTotalSimTime() {
+        inline float GetTotalSimTime() {
             return this->totalSimTime;
         }
 
-        // CAMERA PARAMETERS
-        inline void setCameraParameters(vislib::SmartPtr<vislib::graphics::CameraParameters> c) {
-            this->cameraParam = c;
+        // CAMERA STATE
+        inline void SetCameraState(std::shared_ptr<camera_state_type> cs) {
+            this->cameraState = cs;
         }
-        inline vislib::SmartPtr<vislib::graphics::CameraParameters> getCameraParameters() {
-            return this->cameraParam;
+        inline std::shared_ptr<camera_state_type> GetCameraState() {
+            return this->cameraState;
         }
 
         // DROP OF DRAGGED KEYFRAME
-        inline void setDropTimes(float at, float st) {
+        inline void SetDropTimes(float at, float st) {
             this->dropAnimTime = at;
             this->dropSimTime  = st;
         }
-        inline float getDropAnimTime() {
+        inline float GetDropAnimTime() {
             return this->dropAnimTime;
         }
-        inline float getDropSimTime() {
+        inline float GetDropSimTime() {
             return this->dropSimTime;
         }
 
         // BOUNDING-BOX CENTER
-        inline void setBboxCenter(vislib::math::Point<float, 3>  c) {
+        inline void SetBboxCenter(glm::vec3  c) {
             this->bboxCenter = c;
         }
-        inline vislib::math::Point<float, 3> getBboxCenter() {
+        inline glm::vec3 GetBboxCenter() {
             return this->bboxCenter;
         }
 
         // FRAMES PER SECOND
-        inline void setFps(unsigned int f) {
+        inline void SetFps(unsigned int f) {
             this->fps = f;
         }
-        inline unsigned int getFps() {
+        inline unsigned int GetFps() {
             return this->fps;
         }
 
         // CONTROL POINT POSITIONS
-        inline void setControlPointPosition(vislib::math::Vector<float, 3> firstcp, vislib::math::Vector<float, 3> lastcp) {
+        inline void SetControlPointPosition(glm::vec3 firstcp, glm::vec3 lastcp) {
             this->startCtrllPos = firstcp;
             this->endCtrllPos  = lastcp;
         }
-        inline vislib::math::Vector<float, 3> getStartControlPointPosition() {
+        inline glm::vec3 GetStartControlPointPosition() {
             return this->startCtrllPos;
         }
-        inline vislib::math::Vector<float, 3> getEndControlPointPosition() {
+        inline glm::vec3 GetEndControlPointPosition() {
             return this->endCtrllPos;
         }
 
@@ -219,22 +202,23 @@ namespace cinematic {
         * variables
         **********************************************************************/
 
-		// Pointer to array of keyframes
-        vislib::SmartPtr<vislib::graphics::CameraParameters> cameraParam;
-        vislib::Array<vislib::math::Point<float, 3> > *interpolCamPos;
-		vislib::Array<Keyframe>				          *keyframes;
-        vislib::math::Cuboid<float>		              *boundingbox;
-        unsigned int                                   interpolSteps;
+        // Out Data (set by called KeyframeKeeper) ---------------------------
+		std::shared_ptr<camera_state_type>             cameraState;
+		std::shared_ptr<std::vector<glm::vec3>>        interpolCamPos;
+		std::shared_ptr<std::vector<Keyframe>>	       keyframes;
         Keyframe						               selectedKeyframe;
+        glm::vec3                                      startCtrllPos;
+        glm::vec3                                      endCtrllPos;
+        float								           totalAnimTime;
+        float                                          totalSimTime;
+        unsigned int                                   fps;
+
+        // In Data (set by calling modules) -----------------------------------
+        ///Keyframe						               selectedKeyframe;
+        unsigned int                                   interpolSteps;
         float                                          dropAnimTime;
         float                                          dropSimTime;
-		float								           totalAnimTime;
-        float                                          totalSimTime;
-        vislib::math::Point<float, 3>                  bboxCenter;
-        unsigned int                                   fps;
-        vislib::math::Vector<float, 3>                 startCtrllPos;
-        vislib::math::Vector<float, 3>                 endCtrllPos;
-
+        glm::vec3                                      bboxCenter;
 	};
 
 

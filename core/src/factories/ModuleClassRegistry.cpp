@@ -22,20 +22,12 @@
 #include "mmcore/cluster/simple/Server.h"
 #include "mmcore/cluster/simple/View.h"
 #include "mmcore/misc/SiffCSplineFitter.h"
-#include "mmcore/misc/WatermarkRenderer.h"
 #include "mmcore/misc/TestSpheresDataSource.h"
 #include "mmcore/moldyn/AddParticleColours.h"
-#include "mmcore/moldyn/ArrowRenderer.h"
-#include "mmcore/moldyn/DataGridder.h"
-#include "mmcore/moldyn/GrimRenderer.h"
 #include "mmcore/moldyn/MipDepthSphereRenderer.h"
-#include "mmcore/moldyn/MMPGDDataSource.h"
-#include "mmcore/moldyn/MMPGDWriter.h"
 #include "mmcore/moldyn/MMPLDDataSource.h"
 #include "mmcore/moldyn/MMPLDWriter.h"
 #include "mmcore/moldyn/OracleSphereRenderer.h"
-#include "mmcore/moldyn/SphereRenderer.h"
-#include "mmcore/moldyn/SphereOutlineRenderer.h"
 #include "mmcore/moldyn/DirPartColModulate.h"
 #include "mmcore/moldyn/DirPartFilter.h"
 #include "mmcore/moldyn/ParticleListFilter.h"
@@ -43,7 +35,6 @@
 #include "mmcore/special/StubModule.h"
 #include "mmcore/view/ClipPlane.h"
 #include "mmcore/view/TransferFunction.h"
-#include "mmcore/view/TransferFunctionRenderer.h"
 #include "mmcore/view/MuxRenderer3D.h"
 #include "mmcore/view/special/AnaglyphStereoView.h"
 #include "mmcore/view/special/ChronoGraph.h"
@@ -83,6 +74,8 @@
 #include "mmcore/FileStreamProvider.h"
 #include "mmcore/view/special/CallbackScreenShooter.h"
 #include "mmcore/FlagStorage.h"
+#include "mmcore/FlagStorage_GL.h"
+#include "mmcore/DeferredShading.h"
 
 using namespace megamol::core;
 
@@ -106,19 +99,11 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<cluster::mpi::MpiProvider>();
     instance.RegisterAutoDescription<cluster::mpi::View>();
     instance.RegisterAutoDescription<misc::SiffCSplineFitter>();
-    instance.RegisterAutoDescription<misc::WatermarkRenderer>();
     instance.RegisterAutoDescription<misc::TestSpheresDataSource>();
     instance.RegisterAutoDescription<moldyn::AddParticleColours>();
-    instance.RegisterAutoDescription<moldyn::ArrowRenderer>();
-    instance.RegisterAutoDescription<moldyn::DataGridder>();
-    instance.RegisterAutoDescription<moldyn::GrimRenderer>();
     instance.RegisterAutoDescription<moldyn::MipDepthSphereRenderer>();
-    instance.RegisterAutoDescription<moldyn::MMPGDDataSource>();
-    instance.RegisterAutoDescription<moldyn::MMPGDWriter>();
     instance.RegisterAutoDescription<moldyn::MMPLDDataSource>();
     instance.RegisterAutoDescription<moldyn::MMPLDWriter>();
-    instance.RegisterAutoDescription<moldyn::SphereRenderer>();
-    instance.RegisterAutoDescription<moldyn::SphereOutlineRenderer>();
     instance.RegisterAutoDescription<moldyn::OracleSphereRenderer>();
     instance.RegisterAutoDescription<moldyn::DirPartColModulate>();
     instance.RegisterAutoDescription<moldyn::ParticleListFilter>();
@@ -127,7 +112,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<special::StubModule>();
     instance.RegisterAutoDescription<view::ClipPlane>();
     instance.RegisterAutoDescription<view::TransferFunction>();
-    instance.RegisterAutoDescription<view::TransferFunctionRenderer>();
     instance.RegisterAutoDescription<view::MuxRenderer3D<2> >();
     instance.RegisterAutoDescription<view::MuxRenderer3D<3> >();
     instance.RegisterAutoDescription<view::MuxRenderer3D<4> >();
@@ -170,4 +154,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::light::QuadLight>();
     instance.RegisterAutoDescription<view::light::SpotLight>();
     instance.RegisterAutoDescription<FlagStorage>();
+    instance.RegisterAutoDescription<FlagStorage_GL>();
+    instance.RegisterAutoDescription<DeferredShading>();
 }

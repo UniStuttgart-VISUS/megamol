@@ -3,10 +3,10 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/FlagCall.h"
+#include "mmcore/FlagCall_GL.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
-#include "mmcore/utility/SSBOStreamer.h"
+#include "mmcore/utility/SSBOBufferArray.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/MouseFlags.h"
@@ -15,8 +15,9 @@
 
 #include <glowl/FramebufferObject.hpp>
 #include <memory>
-#include <nanoflann.hpp>
+#include <optional>
 #include "Renderer2D.h"
+#include "mmcore/FlagStorage.h"
 
 namespace megamol::infovis {
 
@@ -83,7 +84,7 @@ private:
     enum AxisMode { AXIS_MODE_NONE = 0, AXIS_MODE_MINIMALISTIC, AXIS_MODE_SCIENTIFIC };
 
     struct ParamState {
-        size_t valueIdx;
+        std::optional<size_t> valueIdx;
         size_t labelIdx;
     };
 
@@ -114,43 +115,6 @@ private:
         GLfloat smallTickY;
     };
 
-
-    struct SPLOMPoints {
-        SPLOMPoints(const std::vector<PlotInfo>& plots, const stdplugin::datatools::table::TableDataCall* floatTable)
-            : plots(plots)
-            , floatTable(floatTable){}
-
-                  [[nodiscard]] inline size_t idx_to_row(size_t idx) const {
-            const size_t rowCount = floatTable->GetRowsCount();
-            return idx % rowCount;
-        }
-
-        [[nodiscard]] inline size_t kdtree_get_point_count() const { return floatTable->GetRowsCount() * plots.size(); }
-
-        [[nodiscard]] inline float kdtree_get_pt(const size_t idx, const size_t dim) const {
-            const size_t rowCount = floatTable->GetRowsCount();
-            const size_t rowIdx = idx % rowCount;
-            const size_t plotIdx = idx / rowCount;
-            const PlotInfo& plot = this->plots[plotIdx];
-            if (dim == 0) {
-                const float xValue = this->floatTable->GetData(plot.indexX, rowIdx);
-                const float xPos = (xValue - plot.minX) / (plot.maxX - plot.minX);
-                return xPos * plot.sizeX + plot.offsetX;
-            } else if (dim == 1) {
-                const float yValue = this->floatTable->GetData(plot.indexY, rowIdx);
-                const float yPos = (yValue - plot.minY) / (plot.maxY - plot.minY);
-                return yPos * plot.sizeY + plot.offsetY;
-            } else {
-                assert(false && "Invalid dimension");
-            }
-        }
-
-        template <class BBOX> bool kdtree_get_bbox(BBOX&) const { return false; }
-
-    private:
-        const std::vector<PlotInfo>& plots;
-        const stdplugin::datatools::table::TableDataCall* floatTable;
-    };
 
     /**
      * The OpenGL Render callback.
@@ -215,7 +179,9 @@ private:
 
     core::CallerSlot transferFunctionInSlot;
 
-    core::CallerSlot flagStorageInSlot;
+    core::CallerSlot readFlagStorageSlot;
+
+    core::CallerSlot writeFlagStorageSlot;
 
     core::param::ParamSlot valueMappingParam;
 
@@ -264,7 +230,7 @@ private:
 
     core::view::CallGetTransferFunction* transferFunction;
 
-    core::FlagCall* flagStorage;
+    core::FlagCallRead_GL* readFlags;
 
     ParamState map;
 
@@ -286,14 +252,20 @@ private:
 
     vislib::graphics::gl::GLSLShader screenShader;
 
-    core::utility::SSBOStreamer plotSSBO;
-    GLsizeiptr plotDstOffset;
-    GLsizeiptr plotDstLength;
+    vislib::graphics::gl::GLSLComputeShader pickProgram;
 
-    core::utility::SSBOStreamer valueSSBO;
+    GLint pickWorkgroupSize[3];
+    GLint maxWorkgroupCount[3];
 
-    GLuint flagsBuffer;
+    core::utility::SSBOBufferArray plotSSBO;
+    // GLsizeiptr plotDstOffset;
+    // GLsizeiptr plotDstLength;
+
+    core::utility::SSBOBufferArray valueSSBO;
+
     core::FlagStorage::FlagVersionType flagsBufferVersion;
+
+    bool selectionNeedsUpdate = false;
 
     GLuint triangleVBO;
     GLuint triangleIBO;
@@ -311,12 +283,6 @@ private:
 
     std::vector<::megamol::core::param::ParamSlot*> dataParams;
     std::vector<::megamol::core::param::ParamSlot*> screenParams;
-
-    typedef nanoflann::L2_Simple_Adaptor<float, SPLOMPoints> SPLOMDistance;
-    typedef nanoflann::KDTreeSingleIndexAdaptor<SPLOMDistance, SPLOMPoints, 2> TreeIndex;
-
-    std::unique_ptr<SPLOMPoints> indexPoints;
-    std::unique_ptr<TreeIndex> index;
 };
 
 } // namespace megamol::infovis

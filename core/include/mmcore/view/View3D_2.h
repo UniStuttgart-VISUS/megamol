@@ -183,8 +183,9 @@ protected:
      * Adapts camera values set by the user if necessary
      *
      * @param cam The camera the newly set parameters will be stored in
+     * @return True if a camera value had to be adapted, false otherwise
      */
-    void adaptCameraValues(core::view::Camera_2& cam);
+    bool adaptCameraValues(core::view::Camera_2& cam);
 
     /**
      * Implementation of 'Create'.
@@ -264,7 +265,7 @@ protected:
     /** The camera */
     Camera_2 cam;
 
-    /** The arcball manipulator for the camera */
+    /** The orbital arcball manipulator for the camera */
     arcball_type arcballManipulator;
 
     /** The translation manipulator for the camera */
@@ -272,6 +273,12 @@ protected:
 
     /** The rotation manipulator for the camera */
     rotate_type rotateManipulator;
+
+    /** The orbital manipulator turntable for the camera */
+    turntable_type turntableManipulator;
+
+    /** The manipulator for changing the orbital altitude */
+    orbit_altitude_type orbitAltitudeManipulator;
 
     /** the 2d cursor of this view */
     vislib::graphics::Cursor2D cursor2d;
@@ -390,8 +397,11 @@ protected:
     /** Flag determining whether the arcball is the default steering method of the camera */
     bool arcballDefault;
 
-    /** Distance from the camera to the arcball center */
-    float arcballCenterDistance;
+    /** Center of rotation for orbital manipulators */
+    glm::vec3 rotCenter;
+
+    /** Value storing whether there have been read parameter values that came from outside */
+    bool valuesFromOutside;
 
     /**  */
     std::chrono::time_point<std::chrono::high_resolution_clock> lastFrameTime;

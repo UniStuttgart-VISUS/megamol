@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="comp_drawToScreen">
+    <include file="common"/>
+
+    <shader name="vertex">
+        <snippet type="version">430</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Main"             type="file">comp/drawToScreen_v.glsl</snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">430</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Main"             type="file">comp/drawToScreen_f.glsl</snippet>
+    </shader>
+
+</btf>

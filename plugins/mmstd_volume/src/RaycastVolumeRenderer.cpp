@@ -1,38 +1,51 @@
 /*
- * RaycastVolumeRenderer.h
+ * RaycastVolumeRenderer.cpp
  *
- * Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
+ * Copyright (C) 2018-2019 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
 
 #include "RaycastVolumeRenderer.h"
 
+#include <algorithm>
 #include <array>
+#include <cmath>
+#include <memory>
 
+#include "vislib/Exception.h"
+#include "vislib/graphics/gl/GLSLComputeShader.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib/sys/Log.h"
 
+#include "mmcore/Call.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/Camera_2.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 
-#include "linmath.h"
+#include "glowl/Texture.hpp"
+#include "glowl/Texture2D.hpp"
+#include "glowl/Texture3D.hpp"
 
 using namespace megamol::stdplugin::volume;
 
 RaycastVolumeRenderer::RaycastVolumeRenderer()
-    : Renderer3DModule()
+    : Renderer3DModule_2()
     , m_volumetricData_callerSlot("getData", "Connects the volume renderer with a voluemtric data source")
     , m_transferFunction_callerSlot("getTranfserFunction", "Connects the volume renderer with a transfer function")
-    , m_ray_step_ratio_param("ray step ratio", "") {
-    this->m_volumetricData_callerSlot.SetCompatibleCall<megamol::core::misc::VolumetricDataCallDescription>();
+    , m_ray_step_ratio_param("ray step ratio", "Adjust sampling rate") {
+
+    this->m_volumetricData_callerSlot.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->m_volumetricData_callerSlot);
 
-    this->m_transferFunction_callerSlot.SetCompatibleCall<megamol::core::view::CallGetTransferFunctionDescription>();
+    this->m_transferFunction_callerSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->m_transferFunction_callerSlot);
 
-    auto* ep = new megamol::core::param::FloatParam(1.0);
-    this->m_ray_step_ratio_param << ep;
+    this->m_ray_step_ratio_param << new core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->m_ray_step_ratio_param);
 }
 
@@ -77,29 +90,20 @@ bool RaycastVolumeRenderer::create() {
         return false;
     }
 
-
     // create render target texture
-    TextureLayout render_tgt_layout(GL_RGBA8, 1920, 1080, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
+    glowl::TextureLayout render_tgt_layout(GL_RGBA8, 1920, 1080, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
             {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
-    m_render_target = std::make_unique<Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
-
+    m_render_target = std::make_unique<glowl::Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
 
     // create empty volume texture
-    TextureLayout volume_layout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1,
+    glowl::TextureLayout volume_layout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_MIN_FILTER, GL_LINEAR}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
-    m_volume_texture = std::make_unique<Texture3D>("raycast_volume_texture", volume_layout, nullptr);
-
-    // create empty transfer function texture
-    TextureLayout tf(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
-        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
-            {GL_TEXTURE_MIN_FILTER, GL_LINEAR}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
-        {});
-    m_transfer_function = std::make_unique<Texture2D>("raycast_volume_texture", tf, nullptr);
+    m_volume_texture = std::make_unique<glowl::Texture3D>("raycast_volume_texture", volume_layout, nullptr);
 
     return true;
 }
@@ -109,76 +113,72 @@ void RaycastVolumeRenderer::release() {
     m_render_target.reset(nullptr);
 }
 
-bool RaycastVolumeRenderer::GetExtents(megamol::core::Call& call) {
-    auto cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    auto cd = m_volumetricData_callerSlot.CallAs<megamol::core::misc::VolumetricDataCall>();
+bool RaycastVolumeRenderer::GetExtents(megamol::core::view::CallRender3D_2& cr) {
+    auto cd = m_volumetricData_callerSlot.CallAs<core::misc::VolumetricDataCall>();
 
-    if (cr == nullptr) return false;
     if (cd == nullptr) return false;
 
     // TODO Do something about time/framecount ?
 
-    int const req_frame = static_cast<int>(cr->Time());
+    int const req_frame = static_cast<int>(cr.Time());
 
     cd->SetFrameID(req_frame);
 
     if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
     if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
 
-    cr->SetTimeFramesCount(cd->FrameCount());
-    cr->AccessBoundingBoxes() = cd->GetBoundingBoxes();
-    cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
+    cr.SetTimeFramesCount(cd->FrameCount());
+    cr.AccessBoundingBoxes() = cd->GetBoundingBoxes();
 
     return true;
 }
 
-bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
-    megamol::core::view::CallRender3D* cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-
-    // this is the apex of suck and must die
-    GLfloat modelViewMatrix_column[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    GLfloat projMatrix_column[16];
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    // end suck
-
+bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     if (!updateVolumeData()) return false;
-    if (!updateTransferFunction()) return false;
+
+    auto ct = this->m_transferFunction_callerSlot.CallAs<core::view::CallGetTransferFunction>();
+    if (ct == nullptr || !(*ct)()) return false;
+
+    // get camera
+    core::view::Camera_2 cam;
+    cr.GetCamera(cam);
+
+    cam_type::matrix_type view, proj;
+    cam.calc_matrices(view, proj);
 
     // enable raycast volume rendering program
     m_raycast_volume_compute_shdr->Enable();
 
-    glUniformMatrix4fv(
-        m_raycast_volume_compute_shdr->ParameterLocation("view_mx"), 1, GL_FALSE, modelViewMatrix_column);
-    glUniformMatrix4fv(m_raycast_volume_compute_shdr->ParameterLocation("proj_mx"), 1, GL_FALSE, projMatrix_column);
+    glUniformMatrix4fv(m_raycast_volume_compute_shdr->ParameterLocation("view_mx"), 1, GL_FALSE,
+        glm::value_ptr(static_cast<glm::mat4>(view)));
+    glUniformMatrix4fv(m_raycast_volume_compute_shdr->ParameterLocation("proj_mx"), 1, GL_FALSE,
+        glm::value_ptr(static_cast<glm::mat4>(proj)));
 
-    vec2 rt_resolution;
+    std::array<float, 2> rt_resolution;
     rt_resolution[0] = static_cast<float>(m_render_target->getWidth());
     rt_resolution[1] = static_cast<float>(m_render_target->getHeight());
-    glUniform2fv(m_raycast_volume_compute_shdr->ParameterLocation("rt_resolution"), 1, rt_resolution);
+    glUniform2fv(m_raycast_volume_compute_shdr->ParameterLocation("rt_resolution"), 1, rt_resolution.data());
 
     // bbox sizes
-    vec3 box_min;
+    glm::vec3 box_min;
     box_min[0] = m_volume_origin[0];
     box_min[1] = m_volume_origin[1];
     box_min[2] = m_volume_origin[2];
-    vec3 box_max;
+    glm::vec3 box_max;
     box_max[0] = m_volume_origin[0] + m_volume_extents[0];
     box_max[1] = m_volume_origin[1] + m_volume_extents[1];
     box_max[2] = m_volume_origin[2] + m_volume_extents[2];
-    glUniform3fv(m_raycast_volume_compute_shdr->ParameterLocation("boxMin"), 1, box_min);
-    glUniform3fv(m_raycast_volume_compute_shdr->ParameterLocation("boxMax"), 1, box_max);
+    glUniform3fv(m_raycast_volume_compute_shdr->ParameterLocation("boxMin"), 1, glm::value_ptr(box_min));
+    glUniform3fv(m_raycast_volume_compute_shdr->ParameterLocation("boxMax"), 1, glm::value_ptr(box_max));
 
     glUniform3f(m_raycast_volume_compute_shdr->ParameterLocation("halfVoxelSize"),
         1.0f / (2.0f * (m_volume_resolution[0] - 1)), 1.0f / (2.0f * (m_volume_resolution[1] - 1)),
         1.0f / (2.0f * (m_volume_resolution[2] - 1)));
     auto const maxResolution =
-        std::fmax(m_volume_resolution[0], std::fmax(m_volume_resolution[1], m_volume_resolution[2]));
-    auto const maxExtents = std::fmax(m_volume_extents[0], std::fmax(m_volume_extents[1], m_volume_extents[2]));
+        std::max(m_volume_resolution[0], std::max(m_volume_resolution[1], m_volume_resolution[2]));
+    auto const maxExtents = std::max(m_volume_extents[0], std::max(m_volume_extents[1], m_volume_extents[2]));
     glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("voxelSize"), maxExtents / (maxResolution - 1.0f));
-    glUniform2fv(m_raycast_volume_compute_shdr->ParameterLocation("valRange"), 1, valRange.data());
+    glUniform2fv(m_raycast_volume_compute_shdr->ParameterLocation("valRange"), 1, this->valRange.data());
     glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("rayStepRatio"),
         this->m_ray_step_ratio_param.Param<core::param::FloatParam>()->Value());
     glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("opacityThreshold"), 1.0);
@@ -188,11 +188,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     m_volume_texture->bindTexture();
     glUniform1i(m_raycast_volume_compute_shdr->ParameterLocation("volume_tx3D"), 0);
     // bind the transfer function
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_1D, tf_texture);
-    glUniform1i(m_raycast_volume_compute_shdr->ParameterLocation("tf_tx1D"), 1);
-    /*m_transfer_function->bindTexture();
-    glUniform1i(m_raycast_volume_compute_shdr->ParameterLocation("transfer_function_tx2D"), 1);*/
+    ct->BindConvenience(*m_raycast_volume_compute_shdr, GL_TEXTURE1, 1);
 
     // bind image texture
     m_render_target->bindImage(0, GL_WRITE_ONLY);
@@ -201,49 +197,62 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     m_raycast_volume_compute_shdr->Dispatch(
         static_cast<int>(std::ceil(rt_resolution[0] / 8.0f)), static_cast<int>(std::ceil(rt_resolution[1] / 8.0f)), 1);
 
+    // unbind image texture
+    glBindImageTexture(0, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R);
+
+    // unbind the transfer function
+    ct->UnbindConvenience();
+    // unbind volume texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, 0);
+
     m_raycast_volume_compute_shdr->Disable();
 
     glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
-    ////////
-    // copy image to framebuffer
-    ///////
-    // TODO query gl state and reset to previous state?
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
+    // store state
+    bool state_depth_test = glIsEnabled(GL_DEPTH_TEST);
+    bool state_blend = glIsEnabled(GL_BLEND);
+
+    GLint state_blend_src_rgb, state_blend_src_alpha, state_blend_dst_rgb, state_blend_dst_alpha;
+    glGetIntegerv(GL_BLEND_SRC_RGB, &state_blend_src_rgb);
+    glGetIntegerv(GL_BLEND_SRC_ALPHA, &state_blend_src_alpha);
+    glGetIntegerv(GL_BLEND_DST_RGB, &state_blend_dst_rgb);
+    glGetIntegerv(GL_BLEND_DST_ALPHA, &state_blend_dst_alpha);
+
+    if (state_depth_test) glDisable(GL_DEPTH_TEST);
+    if (!state_blend) glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     m_render_to_framebuffer_shdr->Enable();
 
-    glActiveTexture(GL_TEXTURE1);
+    // bind texture
+    glActiveTexture(GL_TEXTURE0);
     m_render_target->bindTexture();
-    glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2D"), 1);
+    glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2D"), 0);
 
+    // render
     glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    // unbind texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     m_render_to_framebuffer_shdr->Disable();
 
-
-    glUseProgram(0);
-    // glBindVertexArray(0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_3D, 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
+    // restore state
+    glBlendFuncSeparate(state_blend_src_rgb, state_blend_dst_rgb, state_blend_src_alpha, state_blend_dst_alpha);
+    if (!state_blend) glDisable(GL_BLEND);
+    if (state_depth_test)
+        glEnable(GL_DEPTH_TEST);
+    else
+        glDisable(GL_DEPTH_TEST);
 
     return true;
 }
 
 bool RaycastVolumeRenderer::updateVolumeData() {
-    auto* cd = this->m_volumetricData_callerSlot.CallAs<megamol::core::misc::VolumetricDataCall>();
+    auto* cd = this->m_volumetricData_callerSlot.CallAs<core::misc::VolumetricDataCall>();
 
     if (cd == nullptr) return false;
 
@@ -330,13 +339,13 @@ bool RaycastVolumeRenderer::updateVolumeData() {
 
     // debug using dummy-data
     std::array<uint8_t, 8> debug_volume_data = {255, 0, 255, 0, 255, 255, 0, 0};
-    TextureLayout debug_volume_layout(GL_R8, 2, 2, 2, GL_RED, GL_UNSIGNED_BYTE, 1,
+    glowl::TextureLayout debug_volume_layout(GL_R8, 2, 2, 2, GL_RED, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_NEAREST},
             {GL_TEXTURE_MAG_FILTER, GL_NEAREST}},
         {});
 
-    TextureLayout volume_layout(internal_format, metadata->Resolution[0], metadata->Resolution[1],
+    glowl::TextureLayout volume_layout(internal_format, metadata->Resolution[0], metadata->Resolution[1],
         metadata->Resolution[2], format, type, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
@@ -344,32 +353,6 @@ bool RaycastVolumeRenderer::updateVolumeData() {
         {});
 
     m_volume_texture->reload(volume_layout, volumedata);
-}
-
-bool RaycastVolumeRenderer::updateTransferFunction() {
-    core::view::CallGetTransferFunction* ct =
-        this->m_transferFunction_callerSlot.CallAs<core::view::CallGetTransferFunction>();
-    //ct->SetRange(valRange);
-    if (ct != NULL && ((*ct)())) {
-        tf_texture = ct->OpenGLTexture();
-        /*float const* tf_tex = ct->GetTextureData();
-        unsigned int tf_size = ct->TextureSize();
-        auto tf_format = ct->OpenGLTextureFormat();
-
-        GLenum internal_format = tf_format == GL_RGB ? GL_RGB32F : GL_RGBA32F;
-        GLenum format = tf_format;
-        GLenum type = GL_FLOAT;
-
-        TextureLayout tf_layout(internal_format, tf_size, 1, 1, format, type, 1,
-            {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
-                {GL_TEXTURE_MIN_FILTER, GL_LINEAR}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
-            {});
-
-        m_transfer_function->reload(tf_layout, tf_tex);*/
-        // this->colorTransferGray(allColor, tf_tex, tex_size, processedColor, 3);
-    } else {
-        // this->colorTransferGray(allColor, NULL, 0, processedColor, 3);
-    }
 
     return true;
 }

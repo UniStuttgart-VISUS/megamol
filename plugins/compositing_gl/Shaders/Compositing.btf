@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="Compositing">
+    <include file="common"/>
+
+    <shader name="textureAdd">
+        <snippet type="version">430</snippet>
+        <snippet name="Main"             type="file">comp/textureAdd_c.glsl</snippet>
+    </shader>
+
+    <shader name="textureMultiply">
+        <snippet type="version">430</snippet>
+        <snippet name="Main"             type="file">comp/textureMultiply_c.glsl</snippet>
+    </shader>
+
+    <shader name="textureDepthCompositing">
+        <snippet type="version">430</snippet>
+        <snippet name="Main"             type="file">comp/textureDepthCompositing_c.glsl</snippet>
+    </shader>
+
+    <shader name="ssao">
+        <snippet type="version">430</snippet>
+        <snippet name="Main"             type="file">comp/ssao_c.glsl</snippet>
+    </shader>
+
+    <shader name="blur">
+        <snippet type="version">430</snippet>
+        <snippet name="Main"             type="file">comp/simple_blur_c.glsl</snippet>
+    </shader>
+
+    <shader name="fxaa">
+        <snippet type="version">430</snippet>
+        <snippet name="Main"             type="file">comp/fxaa_c.glsl</snippet>
+    </shader>
+
+    <shader name="lambert">
+        <snippet type="version">430</snippet>
+        <snippet name="Main"             type="file">comp/lambert_c.glsl</snippet>
+    </shader>
+
+</btf>

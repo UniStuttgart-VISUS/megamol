@@ -20,6 +20,9 @@ public:
     virtual ~Renderer2D(){};
 
 protected:
+    void computeDispatchSizes(
+        uint64_t numItems, GLint const localSizes[3], GLint const maxCounts[3], GLuint dispatchCounts[3]) const;
+
     bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLShader& program) const;
     bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLGeometryShader& program) const;
     bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLTesselationShader& program) const;

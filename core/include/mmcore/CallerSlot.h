@@ -38,7 +38,7 @@ namespace core {
         /**
          * Ctor.
          *
-         * @param name The name of this slot.
+         * @param name The name of this slot (needs to be unqiue per module).
          * @param desc A human readable description of this slot.
          */
         CallerSlot(const vislib::StringA& name,

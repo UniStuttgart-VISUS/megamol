@@ -127,17 +127,71 @@ protected:
 
     virtual bool GetExtentsChain(C& call) { return this->GetExtents(call); }
 
-    virtual bool OnKeyChain(Key key, KeyAction action, Modifiers mods) { return this->OnKey(key, action, mods); }
+    virtual bool OnKeyChain(Key key, KeyAction action, Modifiers mods) { 
+        auto* cr = this->chainRenderSlot.template CallAs<C>();
+        if (cr != nullptr) {
+            view::InputEvent evt;
+            evt.tag = view::InputEvent::Tag::Key;
+            evt.keyData.key = key;
+            evt.keyData.action = action;
+            evt.keyData.mods = mods;
+            cr->SetInputEvent(evt);
+            if ((*cr)(C::FnOnKey)) return true;
+        }
+        return this->OnKey(key, action, mods); 
+    }
 
-    virtual bool OnCharChain(unsigned int codePoint) { return this->OnChar(codePoint); }
+    virtual bool OnCharChain(unsigned int codePoint) { 
+        auto* cr = this->chainRenderSlot.template CallAs<C>();
+        if (cr != nullptr) {
+            view::InputEvent evt;
+            evt.tag = view::InputEvent::Tag::Char;
+            evt.charData.codePoint = codePoint;
+            cr->SetInputEvent(evt);
+            if ((*cr)(C::FnOnChar)) return true;
+        }
+        return this->OnChar(codePoint); 
+    }
 
     virtual bool OnMouseButtonChain(MouseButton button, MouseButtonAction action, Modifiers mods) {
+        auto* cr = this->chainRenderSlot.template CallAs<C>();
+        if (cr != nullptr) {
+            view::InputEvent evt;
+            evt.tag = view::InputEvent::Tag::MouseButton;
+            evt.mouseButtonData.button = button;
+            evt.mouseButtonData.action = action;
+            evt.mouseButtonData.mods = mods;
+            cr->SetInputEvent(evt);
+            if ((*cr)(C::FnOnMouseButton)) return true;
+        }
         return this->OnMouseButton(button, action, mods);
     }
 
-    virtual bool OnMouseMoveChain(double x, double y) { return this->OnMouseMove(x, y); }
+    virtual bool OnMouseMoveChain(double x, double y) { 
+        auto* cr = this->chainRenderSlot.template CallAs<C>();
+        if (cr != nullptr) {
+            view::InputEvent evt;
+            evt.tag = view::InputEvent::Tag::MouseMove;
+            evt.mouseMoveData.x = x;
+            evt.mouseMoveData.y = y;
+            cr->SetInputEvent(evt);
+            if ((*cr)(C::FnOnMouseMove)) return true;
+        }
+        return this->OnMouseMove(x, y); 
+    }
 
-    virtual bool OnMouseScrollChain(double dx, double dy) { return this->OnMouseScroll(dx, dy); }
+    virtual bool OnMouseScrollChain(double dx, double dy) { 
+        auto* cr = this->chainRenderSlot.template CallAs<C>();
+        if (cr != nullptr) {
+            view::InputEvent evt;
+            evt.tag = view::InputEvent::Tag::MouseScroll;
+            evt.mouseScrollData.dx = dx;
+            evt.mouseScrollData.dy = dy;
+            cr->SetInputEvent(evt);
+            if ((*cr)(C::FnOnMouseScroll)) return true;
+        }
+        return this->OnMouseScroll(dx, dy); 
+    }
 
     bool GetExtentsChainCallback(Call& call) {
         try {

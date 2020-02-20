@@ -430,7 +430,7 @@ void megamol::core::utility::Configuration::LoadConfig(
     this->cfgFileLocations.Clear();
 
     vislib::StringW sName = searchName.IsEmpty() 
-        ? vislib::StringW("") : vislib::sys::Path::Resolve(searchName);
+        ? vislib::StringW() : vislib::sys::Path::Resolve(searchName);
 
     if (!sName.IsEmpty()) {
         if (vislib::sys::File::Exists(sName)) {

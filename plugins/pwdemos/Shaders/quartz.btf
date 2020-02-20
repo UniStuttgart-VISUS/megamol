@@ -13,10 +13,12 @@ vec4 DirectLight(vec3 normal, vec4 col) {
   float nDotHV;
   float pf;
 
-  normal = (gl_ModelViewMatrixInverseTranspose * vec4(normal, 1.0)).xyz;
+  // OLD normal = (gl_ModelViewMatrixInverseTranspose * vec4(normal, 1.0)).xyz;
+  normal = (ModelViewMatrixInverseTranspose * vec4(normal, 1.0)).xyz;
   normal = normalize(normal);
 
-  nDotVP = max(0.0, dot(normal, normalize(gl_LightSource[0].position.xyz)));
+  // OLD nDotVP = max(0.0, dot(normal, normalize(gl_LightSource[0].position.xyz)));
+  nDotVP = max(0.0, dot(normal, normalize(lightPos.xyz)));
   //nDotHV = max(0.0, dot(normal, gl_LightSource[0].halfVector.xyz));
 
   //if (nDotVP == 0.0) {
@@ -25,9 +27,12 @@ vec4 DirectLight(vec3 normal, vec4 col) {
   //  pf = pow(nDotHV, gl_FrontMaterial.shininess);
   //}
 
-  vec4 ambient = gl_LightSource[0].ambient;
-  vec4 diffuse = gl_LightSource[0].diffuse * nDotVP;
-  //vec4 specular = gl_LightSource[0].specular * pf;
+  // OLD vec4 ambient = gl_LightSource[0].ambient;
+  // OLD vec4 diffuse = gl_LightSource[0].diffuse * nDotVP;
+  // OLD //vec4 specular = gl_LightSource[0].specular * pf;
+  vec4 ambient = lightIntensity * ambientCol;
+  vec4 diffuse = lightIntensity * diffuseCol * nDotVP;
+  //vec4 specular = specularCol * pf;
 
   return vec4(col.rgb * ambient.rgb + col.rgb * diffuse.rgb /*+ specular.rgb*/, 1.0);
 }
@@ -35,8 +40,10 @@ vec4 DirectLight(vec3 normal, vec4 col) {
     </snippet>
     <snippet name="simpleFragment" type="string">
       <![CDATA[
+uniform vec4 color;
 void main() {
-  gl_FragColor = vec4(gl_Color.xyz, 1.0); // whoho fancy
+  // OLD gl_FragColor = vec4(gl_Color.xyz, 1.0); // whoho fancy
+  gl_FragColor = vec4(color.xyz, 1.0); // whoho fancy
 }
 ]]>
     </snippet>
@@ -267,6 +274,7 @@ void main() {
     <![CDATA[
 
 uniform vec4 clipplane; // a,b,c,d
+uniform mat4 ModelViewProjectionMatrix;
 
 void main() {
   vec4 pos = vec4(gl_Vertex.xyz, 1.0);
@@ -278,7 +286,7 @@ void main() {
       pos.w = 0.0;
     }
   }
-  pos = gl_ModelViewProjectionMatrix * pos;
+  pos = ModelViewProjectionMatrix * pos;
   gl_Position = pos / pos.w;
   gl_PointSize = 4.0;
 }
@@ -505,17 +513,20 @@ uniform vec4 viewAttr;
 uniform vec3 camIn;
 uniform vec3 camUp;
 uniform vec3 camRight;
+uniform vec4 camPosInit;
 uniform vec3 posoffset;
 uniform vec3 bboxmin;
 uniform vec3 bboxmax;
+uniform mat4 ModelViewProjectionMatrix;
 
 uniform vec4 clipplane;
 uniform vec3 clipcol;
 
+uniform vec4 color;
+
 varying vec4 quat;
 varying vec4 camPos;
 varying vec4 objPos;
-varying vec4 lightPos;
 varying float rad;
 
 varying vec4 clipping;
@@ -532,12 +543,13 @@ void main() {
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
 
     // calculate cam position
-    camPos = gl_ModelViewMatrixInverse[3]; // (C) by Christoph
+    // OLD camPos = gl_ModelViewMatrixInverse[3]; // (C) by Christoph
+    camPos = camPosInit;
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
     // rotate camera AFTER silhouette approximation
 
     // calculate light position in glyph space
-    lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position;
+    // OLD lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position;
     // Don't rotate! Otherwise we would need to rotate the half-way-vector too
 
     // Sphere-Touch-Plane-Approach™
@@ -582,25 +594,26 @@ void main() {
     cpm2 *= h.y;
 
     testPos = objPos.xyz + cpj1 + cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    // OLD projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = ModelViewProjectionMatrix * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = projPos.xy;
     maxs = projPos.xy;
 
     testPos -= 2.0 * cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = ModelViewProjectionMatrix * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     testPos = objPos.xyz + cpj2 + cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = ModelViewProjectionMatrix * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     testPos -= 2.0 * cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = ModelViewProjectionMatrix * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
@@ -608,7 +621,8 @@ void main() {
     gl_Position = vec4((mins + maxs) * 0.5, 0.0, 1.0);
     maxs = (maxs - mins) * 0.5 * winHalf;
     gl_PointSize = max(maxs.x, maxs.y) + 0.5;
-    gl_FrontColor = gl_Color;
+    // OLD gl_FrontColor = gl_Color;
+    gl_FrontColor = color;
     clipping = vec4(0.0);
 
     if (clipplane != vec4(0.0)) {
@@ -639,11 +653,22 @@ uniform vec3 bboxmin;
 uniform vec3 bboxmax;
 uniform vec3 clipcol;
 
+uniform vec4 color;
+uniform vec4 ambientCol;
+uniform vec4 diffuseCol;
+uniform vec4 specularCol;
+uniform float lightIntensity;
+
 varying vec4 quat;
+uniform vec4 camPosInit;
 varying vec4 camPos;
 varying vec4 objPos;
-varying vec4 lightPos;
+uniform vec4 lightPos;
 varying float rad;
+
+uniform mat4 ModelViewMatrixInverseTranspose;
+uniform mat4 ModelViewProjectionMatrixInverse;
+uniform mat4 ModelViewProjectionMatrixTranspose;
 
 varying vec4 clipping;
 ]]>
@@ -676,11 +701,13 @@ void main() {
         + vec4(-1.0, -1.0, -1.0, 1.0);
 
     // transform fragment coordinates from view coordinates to object coordinates.
-    coord = gl_ModelViewProjectionMatrixInverse * coord;
+    // OLD coord = gl_ModelViewProjectionMatrixInverse * coord;
+    coord = ModelViewProjectionMatrixInverse * coord;
     coord /= coord.w;
 
     vec3 fragCoordWS = coord.xyz; // fragment coordinates in world-space
-    vec3 camPosWS = gl_ModelViewMatrixInverse[3].xyz; // (C) by Christoph
+    // OLD vec3 camPosWS = gl_ModelViewMatrixInverse[3].xyz; // (C) by Christoph
+    vec3 camPosWS = camPosInit.xyz;
 
     coord -= objPos; // ... and to glyph space
     coord.xyz = ((2.0 * ((dot(quat.xyz, coord.xyz) * quat.xyz) + (quat.w * cross(quat.xyz, coord.xyz)))) + (((quat.w * quat.w) - dot(quat.xyz, quat.xyz)) * coord.xyz));
@@ -688,7 +715,8 @@ void main() {
     // calc the viewing ray
     ray = normalize(coord.xyz - camPos.xyz);
 
-    vec4 col = gl_Color;
+    // OLD vec4 col = gl_Color;
+    vec4 col = color;
 
     float lambda = 1000000.0;
     vec3 normal;
@@ -808,7 +836,8 @@ void main() {
     if (any(greaterThan(faceposWS, bboxmax + vec3(EPSILON))) || any(lessThan(faceposWS, bboxmin - vec3(EPSILON)))) discard;
     if (blams.y < lambda) discard;
     if (blams.x > lambda) {
-      col = gl_Color; // avoid error close to the clipping plane
+      // OLD col = gl_Color; // avoid error close to the clipping plane
+      col = color; // avoid error close to the clipping plane
       normal = bn;
       wsNormalSet = true;
       lambda = blams.x;
@@ -839,8 +868,10 @@ void main() {
     // ... image-space
     coord.w = 1.0;
     vec2 depth;
-    depth.x = dot(gl_ModelViewProjectionMatrixTranspose[2], coord);
-    depth.y = dot(gl_ModelViewProjectionMatrixTranspose[3], coord);
+    // OLD depth.x = dot(gl_ModelViewProjectionMatrixTranspose[2], coord);
+    depth.x = dot(ModelViewProjectionMatrixTranspose[2], coord);
+    // OLD depth.y = dot(gl_ModelViewProjectionMatrixTranspose[3], coord);
+    depth.y = dot(ModelViewProjectionMatrixTranspose[3], coord);
     gl_FragDepth = ((depth.x / depth.y) + 1.0) * 0.5;
 }
 ]]>
@@ -1180,19 +1211,22 @@ uniform vec4 viewAttr;
 uniform vec3 camIn;
 uniform vec3 camUp;
 uniform vec3 camRight;
+uniform vec4 camPosInit;
 uniform vec3 posoffset;
 uniform vec3 bboxmin;
 uniform vec3 bboxmax;
 uniform vec4 clipplane;
 uniform vec3 clipcol;
+uniform vec4 color;
 uniform sampler2D typeData;
 uniform ivec2 typeInfo; // type-row, num-faces
 uniform float outerRad;
 
+uniform mat4 ModelViewProjectionMatrix;
+
 varying vec4 quat;
 varying vec4 camPos;
 varying vec4 objPos;
-varying vec4 lightPos;
 varying float rad;
 
 varying vec4 clipping;
@@ -1209,12 +1243,13 @@ void main() {
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
 
     // calculate cam position
-    camPos = gl_ModelViewMatrixInverse[3]; // (C) by Christoph
+    // OLD camPos = gl_ModelViewMatrixInverse[3]; // (C) by Christoph
+    camPos = camPosInit;
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
     // rotate camera AFTER silhouette approximation
 
     // calculate light position in glyph space
-    lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position;
+    // OLD lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position;
     // Don't rotate! Otherwise we would need to rotate the half-way-vector too
 
     // Sphere-Touch-Plane-Approach™
@@ -1259,25 +1294,26 @@ void main() {
     cpm2 *= h.y;
 
     testPos = objPos.xyz + cpj1 + cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    // OLD projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = ModelViewProjectionMatrix * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = projPos.xy;
     maxs = projPos.xy;
 
     testPos -= 2.0 * cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = ModelViewProjectionMatrix * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     testPos = objPos.xyz + cpj2 + cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = ModelViewProjectionMatrix * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     testPos -= 2.0 * cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = ModelViewProjectionMatrix * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
@@ -1285,7 +1321,7 @@ void main() {
     gl_Position = vec4((mins + maxs) * 0.5, 0.0, 1.0);
     maxs = (maxs - mins) * 0.5 * winHalf;
     gl_PointSize = max(maxs.x, maxs.y) + 0.5;
-    gl_FrontColor = gl_Color;
+    gl_FrontColor = color;
     clipping = vec4(0.0);
 
     if (clipplane != vec4(0.0)) {
@@ -1322,11 +1358,22 @@ uniform vec3 clipcol;
 uniform sampler2D typeData;
 uniform ivec2 typeInfo; // type-row, num-faces
 
+uniform vec4 color;
+uniform vec4 ambientCol;
+uniform vec4 diffuseCol;
+uniform vec4 specularCol;
+uniform float lightIntensity;
+
 varying vec4 quat;
+uniform vec4 camPosInit;
 varying vec4 camPos;
 varying vec4 objPos;
-varying vec4 lightPos;
+uniform vec4 lightPos;
 varying float rad;
+
+uniform mat4 ModelViewMatrixInverseTranspose;
+uniform mat4 ModelViewProjectionMatrixInverse;
+uniform mat4 ModelViewProjectionMatrixTranspose;
 
 varying vec4 clipping;
 ]]>
@@ -1359,11 +1406,13 @@ void main() {
         + vec4(-1.0, -1.0, -1.0, 1.0);
 
     // transform fragment coordinates from view coordinates to object coordinates.
-    coord = gl_ModelViewProjectionMatrixInverse * coord;
+    // OLD coord = gl_ModelViewProjectionMatrixInverse * coord;
+    coord = ModelViewProjectionMatrixInverse * coord;
     coord /= coord.w;
 
     vec3 fragCoordWS = coord.xyz; // fragment coordinates in world-space
-    vec3 camPosWS = gl_ModelViewMatrixInverse[3].xyz; // (C) by Christoph
+    // OLD vec3 camPosWS = gl_ModelViewMatrixInverse[3].xyz; // (C) by Christoph
+    vec3 camPosWS = camPosInit.xyz;
 
     coord -= objPos; // ... and to glyph space
     coord.xyz = ((2.0 * ((dot(quat.xyz, coord.xyz) * quat.xyz) + (quat.w * cross(quat.xyz, coord.xyz)))) + (((quat.w * quat.w) - dot(quat.xyz, quat.xyz)) * coord.xyz));
@@ -1371,7 +1420,8 @@ void main() {
     // calc the viewing ray
     ray = normalize(coord.xyz - camPos.xyz);
 
-    vec4 col = gl_Color;
+    // OLD vec4 col = gl_Color;
+    vec4 col = color;
 
     float lambda = 1000000.0;
     vec3 normal;
@@ -1513,7 +1563,7 @@ void main() {
     if (any(greaterThan(faceposWS, bboxmax + vec3(EPSILON))) || any(lessThan(faceposWS, bboxmin - vec3(EPSILON)))) discard;
     if (blams.y < lambda) discard;
     if (blams.x > lambda) {
-      col = gl_Color; // avoid error close to the clipping plane
+      col = color; // avoid error close to the clipping plane
       normal = bn;
       normal.xyz = ((2.0 * ((dot(quat.xyz, normal.xyz) * quat.xyz) + (quat.w * cross(quat.xyz, normal.xyz)))) + (((quat.w * quat.w) - dot(quat.xyz, quat.xyz)) * normal.xyz));
       lambda = blams.x;
@@ -1542,8 +1592,10 @@ void main() {
     // ... image-space
     coord.w = 1.0;
     vec2 depth;
-    depth.x = dot(gl_ModelViewProjectionMatrixTranspose[2], coord);
-    depth.y = dot(gl_ModelViewProjectionMatrixTranspose[3], coord);
+    // OLD depth.x = dot(gl_ModelViewProjectionMatrixTranspose[2], coord);
+    depth.x = dot(ModelViewProjectionMatrixTranspose[2], coord);
+    // OLD depth.y = dot(gl_ModelViewProjectionMatrixTranspose[3], coord);
+    depth.y = dot(ModelViewProjectionMatrixTranspose[3], coord);
     gl_FragDepth = ((depth.x / depth.y) + 1.0) * 0.5;
 }
 ]]>

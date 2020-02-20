@@ -1,9 +1,9 @@
 #include "FEMRenderTaskDataSource.h"
 
-#include "mesh/CallGPUMaterialData.h"
+#include <variant>
+
 #include "mesh/GPUMeshCollection.h"
-#include "mesh/CallGPUMeshData.h"
-#include "mesh/CallGPURenderTaskData.h"
+#include "mesh/MeshCalls.h"
 
 #include "FEMDataCall.h"
 
@@ -19,18 +19,18 @@ bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call& call
     mesh::CallGPURenderTaskData* rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
     if (rtc == NULL) return false;
 
-    mesh::CallGPUMaterialData* mtlc = this->m_material_callerSlot.CallAs<mesh::CallGPUMaterialData>();
+    mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
     if (mtlc == NULL) return false;
 
     if (!(*mtlc)(0)) return false;
 
-    mesh::CallGPUMeshData* mc = this->m_mesh_callerSlot.CallAs<mesh::CallGPUMeshData>();
+    mesh::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
     if (mc == NULL) return false;
 
     if (!(*mc)(0)) return false;
 
-    auto gpu_mtl_storage = mtlc->getMaterialStorage();
-    auto gpu_mesh_storage = mc->getGPUMeshes();
+    auto gpu_mtl_storage = mtlc->getData();
+    auto gpu_mesh_storage = mc->getData();
 
     if (gpu_mtl_storage == nullptr) return false;
     if (gpu_mesh_storage == nullptr) return false;
@@ -42,14 +42,15 @@ bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call& call
 
     // TODO get transfer function texture and add as per frame data
     std::vector<GLuint64> texture_handles;
-    auto textures = gpu_mtl_storage->getMaterials().front().textures_names;
+    auto textures = gpu_mtl_storage->getMaterials().front().textures;
     for (auto texture : textures) {
-        texture_handles.push_back(glGetTextureHandleARB(texture));
-        glMakeTextureHandleResidentARB(texture_handles.back());
+
+        texture_handles.push_back(texture->getTextureHandle());
+        //base_texture->makeResident();
     }
     m_gpu_render_tasks->updatePerFrameDataBuffer(texture_handles, 2);
 
-    rtc->setRenderTaskData(m_gpu_render_tasks);
+    rtc->setData(m_gpu_render_tasks);
 
     if (this->m_FEM_model_hash == fem_call->DataHash()) {
         return true;
@@ -87,15 +88,16 @@ bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call& call
     { 
         // TODO get transfer function texture and add as per frame data
         std::vector<GLuint64> texture_handles;
-        auto textures = gpu_mtl_storage->getMaterials().front().textures_names;
+        auto textures = gpu_mtl_storage->getMaterials().front().textures;
         for (auto texture : textures) {
-            texture_handles.push_back(glGetTextureHandleARB(texture));
-            glMakeTextureHandleResidentARB(texture_handles.back());
+
+            texture_handles.push_back(glGetTextureHandleARB(texture->getTextureHandle()));
+            //base_texture->makeResident();
         }
-        m_gpu_render_tasks->addPerFrameDataBuffer(texture_handles, 2);
+        m_gpu_render_tasks->updatePerFrameDataBuffer(texture_handles, 2);
     }
 
-    rtc->setRenderTaskData(m_gpu_render_tasks);
+    rtc->setData(m_gpu_render_tasks);
 
     this->m_FEM_model_hash = fem_call->DataHash();
 

@@ -106,7 +106,7 @@ bool XmlParser::CheckBaseTag(const XmlReader& reader) {
 void XmlParser::Error(const char *msg) const {
     this->errorMsgsPresent = true;
     vislib::StringA fullMsg;
-    vislib::StringA pos = (this->reader) ? this->reader->xmlPosition() : vislib::StringA("");
+    vislib::StringA pos = (this->reader) ? this->reader->xmlPosition() : vislib::StringA();
 
     if (pos.IsEmpty()) {
         fullMsg = "Error: ";
@@ -170,7 +170,7 @@ bool XmlParser::EndTag(unsigned int num, unsigned int level,
  */
 void XmlParser::Warning(const char *msg) const {
     vislib::StringA fullMsg;
-    vislib::StringA pos = (this->reader) ? this->reader->xmlPosition() : vislib::StringA("");
+    vislib::StringA pos = (this->reader) ? this->reader->xmlPosition() : vislib::StringA();
 
     if (pos.IsEmpty()) {
         fullMsg = "Warning: ";

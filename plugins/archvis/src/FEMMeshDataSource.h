@@ -47,9 +47,10 @@ public:
     ~FEMMeshDataSource();
 
 protected:
-    virtual bool create();
 
     virtual bool getDataCallback(core::Call& caller);
+
+    virtual bool getMetaDataCallback(core::Call& caller);
 
 private:
     megamol::core::CallerSlot m_fem_callerSlot;

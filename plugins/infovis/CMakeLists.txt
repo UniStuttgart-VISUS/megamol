@@ -13,38 +13,24 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
 
-  # Add Barnes-Hut t-SNE.
-  set(BHTSNE_LIB_DEBUG "lib/${CMAKE_STATIC_LIBRARY_PREFIX}bhtsned${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  set(BHTSNE_LIB_RELEASE "lib/${CMAKE_STATIC_LIBRARY_PREFIX}bhtsne${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  add_external_project(bhtsne_ext
-    GIT_REPOSITORY  https://github.com/lvdmaaten/bhtsne.git
-    GIT_TAG "36b169c88250d0afe51828448dfdeeaa508f13bc"
-    BUILD_BYPRODUCTS "<INSTALL_DIR>/${BHTSNE_LIB_DEBUG}" "<INSTALL_DIR>/${BHTSNE_LIB_RELEASE}"
-    PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-      "${CMAKE_CURRENT_SOURCE_DIR}/cmake/bhtsne/CMakeLists.txt"
-      "<SOURCE_DIR>/CMakeLists.txt")
-  add_external_library(bhtsne STATIC
-    DEPENDS bhtsne_ext
-    INCLUDE_DIR "src/bhtsne_ext"
-    LIBRARY_DEBUG ${BHTSNE_LIB_DEBUG}
-    LIBRARY_RELEASE ${BHTSNE_LIB_RELEASE})
-
   # Add externals.
+  require_external(bhtsne)
   require_external(Eigen)
   require_external(nanoflann)
   require_external(Delaunator)
   
+  # Collect source files
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
-  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
-  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
+  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp" "3rd/*.cpp")
+  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h" "3rd/*.h")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  # Set target naming conventions for different build types
-  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg" CXX_STANDARD 17)
+  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME}
+    PRIVATE "3rd"
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PUBLIC "include" "src")
   target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools Eigen nanoflann Delaunator bhtsne)

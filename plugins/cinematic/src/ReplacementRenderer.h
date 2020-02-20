@@ -9,11 +9,22 @@
 #define MEGAMOL_CINEMATIC_REPLACEMENTRENDERER_H_INCLUDED
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/Renderer3DModule.h"
-#include "mmcore/view/AbstractCallRender3D.h"
+#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/RendererModule.h"
+#include "mmcore/view/AbstractCallRender3D_2.h"
 #include "mmcore/view/Input.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/ButtonParam.h"
+
+#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib/sys/Log.h"
+
+#include "CinematicUtils.h"
+
 
 namespace megamol {
 namespace cinematic {
@@ -21,7 +32,7 @@ namespace cinematic {
     /*
      * Replacement rendering.
      */
-    class ReplacementRenderer : public megamol::core::view::Renderer3DModule
+    class ReplacementRenderer : public megamol::core::view::RendererModule<megamol::core::view::CallRender3D_2>
     {
     public:
 
@@ -85,7 +96,7 @@ namespace cinematic {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(megamol::core::view::CallRender3D& call);
+        virtual bool GetExtents(megamol::core::view::CallRender3D_2& call);
 
         /**
          * The Open GL Render callback.
@@ -93,7 +104,7 @@ namespace cinematic {
          * @param call The calling call.
          * @return The return value of the function.
          */
-        virtual bool Render(megamol::core::view::CallRender3D& call);
+        virtual bool Render(megamol::core::view::CallRender3D_2& call);
 
     private:
 
@@ -101,38 +112,30 @@ namespace cinematic {
          * variables
          **********************************************************************/
         
-        // Enum of available key assignments
-        enum keyAssignment {
-            KEY_ASSIGN_NONE = 0,
-            KEY_ASSIGN_O = 1,
-            KEY_ASSIGN_I = 2,
-            KEY_ASSIGN_J = 3,
-            KEY_ASSIGN_K = 4
+        enum KeyAssignment {
+            KEY_ASSIGN_NONE,
+            KEY_ASSIGN_1,
+            KEY_ASSIGN_2,
+            KEY_ASSIGN_3,
+            KEY_ASSIGN_4,
+            KEY_ASSIGN_5,
+            KEY_ASSIGN_6,
+            KEY_ASSIGN_7,
+            KEY_ASSIGN_8,
+            KEY_ASSIGN_9,
+            KEY_ASSIGN_0
         };
 
+        bool toggle;
+        CinematicUtils utils;
         vislib::math::Cuboid<float> bbox;
-
-        bool toggleReplacementRendering;
-
-         /**********************************************************************
-         * functions
-         **********************************************************************/
-
-        void drawBoundingBox(void);
-
-        /**********************************************************************
-        * callback stuff
-        **********************************************************************/
-
-        /** The renderer caller slot */
-        core::CallerSlot rendererCallerSlot;
 
         /**********************************************************************
         * parameters
         **********************************************************************/
 
         core::param::ParamSlot replacementRenderingParam;
-        core::param::ParamSlot toggleReplacementRenderingParam;
+        core::param::ParamSlot toggleReplacementParam;
         core::param::ParamSlot replacementKeyParam;
         core::param::ParamSlot alphaParam;
 

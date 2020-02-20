@@ -3,7 +3,7 @@
 
 #include <algorithm>
 #include "mmcore/CoreInstance.h"
-#include "mmcore/FlagCall.h"
+#include "mmcore/FlagCall_GL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -31,9 +31,10 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     : Renderer2D()
     , getDataSlot("getdata", "Float table input")
     , getTFSlot("getTF", "connects to the transfer function")
-    , getFlagsSlot("getFlags", "connects to the flag storage")
+    , readFlagsSlot("readFlags", "reads the flag storage")
+    , writeFlagsSlot("writeFlags", "writes the flag storage")
     , currentHash(0xFFFFFFFF)
-    , currentFlagsVersion(0xFFFFFFFF)
+    , currentFlagsVersion(0)
     , densityFBO()
     , drawModeSlot("drawMode", "Draw mode")
     , drawSelectedItemsSlot("drawSelectedItems", "Draw selected items")
@@ -61,11 +62,11 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , sqrtDensitySlot("sqrtDensity", "map root of density to transfer function (instead of linear mapping)")
     //, resetFlagsSlot("resetFlags", "Reset item flags to initial state")
     , resetFiltersSlot("resetFilters", "Reset dimension filters to initial state")
+    , filterStateSlot("filterState", "stores filter state for serialization")
     , numTicks(5)
     , columnCount(0)
     , itemCount(0)
     , dataBuffer(0)
-    , flagsBuffer(0)
     , minimumsBuffer(0)
     , maximumsBuffer(0)
     , axisIndirectionBuffer(0)
@@ -90,8 +91,10 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 
-    this->getFlagsSlot.SetCompatibleCall<core::FlagCallDescription>();
-    this->MakeSlotAvailable(&this->getFlagsSlot);
+    this->readFlagsSlot.SetCompatibleCall<core::FlagCallRead_GLDescription>();
+    this->MakeSlotAvailable(&this->readFlagsSlot);
+    this->writeFlagsSlot.SetCompatibleCall<core::FlagCallWrite_GLDescription>();
+    this->MakeSlotAvailable(&this->writeFlagsSlot);
 
     auto drawModes = new core::param::EnumParam(DRAW_DISCRETE);
     drawModes->SetTypePair(DRAW_DISCRETE, "Discrete");
@@ -176,6 +179,11 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     resetFiltersSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::resetFiltersSlotCallback);
     this->MakeSlotAvailable(&resetFiltersSlot);
 
+    filterStateSlot << new ::core::param::StringParam("");
+    // filterStateSlot.Param<core::param::StringParam>()->SetGUIVisible(false);
+    this->MakeSlotAvailable(&filterStateSlot);
+
+
     fragmentMinMax.resize(2);
 }
 
@@ -185,7 +193,8 @@ bool ParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl::G
     program.Enable();
     // bindbuffer?
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, dataBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, flagsBuffer);
+    auto flags = this->readFlagsSlot.CallAs<core::FlagCallRead_GL>();
+    flags->getData()->flags->bind(1);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, minimumsBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, maximumsBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, axisIndirectionBuffer);
@@ -207,7 +216,6 @@ bool ParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl::G
 
 bool ParallelCoordinatesRenderer2D::create(void) {
     glGenBuffers(1, &dataBuffer);
-    glGenBuffers(1, &flagsBuffer);
     glGenBuffers(1, &minimumsBuffer);
     glGenBuffers(1, &maximumsBuffer);
     glGenBuffers(1, &axisIndirectionBuffer);
@@ -217,6 +225,7 @@ bool ParallelCoordinatesRenderer2D::create(void) {
 
 #ifndef REMOVE_TEXT
     if (!font.Initialise(this->GetCoreInstance())) return false;
+    font.SetBatchDrawMode(true);
 #endif
 
     if (!makeProgram("::pc_axes_draw::axes", this->drawAxesProgram)) return false;
@@ -251,12 +260,13 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount[1]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkgroupCount[2]);
 
+    // this->filterStateSlot.ForceSetDirty();
+
     return true;
 }
 
 void ParallelCoordinatesRenderer2D::release(void) {
     glDeleteBuffers(1, &dataBuffer);
-    glDeleteBuffers(1, &flagsBuffer);
     glDeleteBuffers(1, &minimumsBuffer);
     glDeleteBuffers(1, &maximumsBuffer);
     glDeleteBuffers(1, &axisIndirectionBuffer);
@@ -285,14 +295,23 @@ void ParallelCoordinatesRenderer2D::pickIndicator(float x, float y, int& axis, i
     axis = mouseXtoAxis(x);
     index = -1;
     if (axis != -1) {
-        float val = (y - this->marginY) / this->axisHeight;
+        // calculate position of click and filters in [0, 1] range of axis height
+        float pickPos = (y - this->marginY) / this->axisHeight;
+        float upperPos = (this->filters[axis].upper - minimums[axis]) / (maximums[axis] - minimums[axis]);
+        float lowerPos = (this->filters[axis].lower - minimums[axis]) / (maximums[axis] - minimums[axis]);
+
+        // Add small epsilon for better UI feeling because indicator is drawn only to one side.
+        // This also handles intuitive selection if upper and lower filter are set to the same value.
+        upperPos += 0.01;
+        lowerPos -= 0.01;
+
+        float distUpper = fabs(upperPos - pickPos);
+        float distLower = fabs(lowerPos - pickPos);
+
         float thresh = 0.1f;
-
-        float middle = (this->filters[axis].upper + this->filters[axis].lower) * 0.5f;
-
-        if (fabs(this->filters[axis].upper - val) < thresh && val > middle) {
+        if (distUpper < thresh && distUpper < distLower) {
             index = 1;
-        } else if (fabs(this->filters[axis].lower - val) < thresh) {
+        } else if (distLower < thresh) {
             index = 0;
         }
     }
@@ -339,8 +358,8 @@ bool ParallelCoordinatesRenderer2D::scalingChangedCallback(core::param::ParamSlo
 
 bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(core::param::ParamSlot& caller) {
     for (GLuint i = 0; i < this->columnCount; i++) {
-        this->filters[i].lower = 0.0f;
-        this->filters[i].upper = 1.0f;
+        this->filters[i].lower = minimums[i];
+        this->filters[i].upper = maximums[i];
     }
     this->needFlagsUpdate = true;
     return true;
@@ -355,7 +374,7 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
             vislib::sys::Log::LEVEL_ERROR, "ParallelCoordinatesRenderer2D requires a transfer function!");
         return;
     }
-    auto flagsc = getFlagsSlot.CallAs<core::FlagCall>();
+    auto flagsc = readFlagsSlot.CallAs<core::FlagCallRead_GL>();
     if (flagsc == nullptr) {
         vislib::sys::Log::DefaultLog.WriteMsg(
             vislib::sys::Log::LEVEL_ERROR, "ParallelCoordinatesRenderer2D requires a flag storage!");
@@ -368,8 +387,11 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
     call.SetTimeFramesCount(floats->GetFrameCount());
     auto hash = floats->DataHash();
     (*tc)(0);
-    (*flagsc)(core::FlagCall::CallMapFlags);
-    auto version = flagsc->GetVersion();
+    (*flagsc)(core::FlagCallRead_GL::CallGetData);
+    if (flagsc->hasUpdate()) {
+        this->currentFlagsVersion = flagsc->version();
+        flagsc->getData()->validateFlagCount(floats->GetRowsCount());
+    }
 
     if (hash != this->currentHash || this->lastTimeStep != static_cast<unsigned int>(call.Time())) {
 
@@ -389,10 +411,8 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
             minimums[x] = floats->GetColumnsInfos()[x].MinimumValue();
             maximums[x] = floats->GetColumnsInfos()[x].MaximumValue();
             names[x] = floats->GetColumnsInfos()[x].Name();
-            // TODO this is shit the user needs his real values DAMMIT!
-            // hopefully fixed through proper axis labels.
-            filters[x].lower = 0.0f; // minimums[x];
-            filters[x].upper = 1.0f; // maximums[x];
+            filters[x].lower = minimums[x];
+            filters[x].upper = maximums[x];
         }
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, dataBuffer);
         glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * this->itemCount * sizeof(float), floats->GetData(),
@@ -416,22 +436,7 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
         this->lastTimeStep = static_cast<unsigned int>(call.Time());
     }
 
-    if (version != this->currentFlagsVersion || version == 0) {
-        flagsc->validateFlagsCount(itemCount);
-        auto flagsvector = flagsc->GetFlags();
-
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, flagsBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, this->itemCount * sizeof(core::FlagStorage::FlagItemType),
-            flagsvector.get()->data(), GL_STATIC_DRAW);
-
-        // give the data back
-        flagsc->SetFlags(flagsvector);
-        this->currentFlagsVersion = flagsc->GetVersion();
-    }
-    (*flagsc)(core::FlagCall::CallUnmapFlags);
-
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(dataBuffer));
-    makeDebugLabel(GL_BUFFER, DEBUG_NAME(flagsBuffer));
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(minimumsBuffer));
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(maximumsBuffer));
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(axisIndirectionBuffer));
@@ -446,6 +451,7 @@ void ParallelCoordinatesRenderer2D::computeScaling(void) {
     this->marginX = 20.f;
     this->marginY = 20.f;
     this->axisDistance = 40.0f;
+    this->fontSize = this->axisDistance / 10.0f;
     this->bounds.SetLeft(0.0f);
     this->bounds.SetRight(2.0f * marginX + this->axisDistance * (fc->GetColumnsCount() - 1));
 
@@ -503,6 +509,19 @@ bool ParallelCoordinatesRenderer2D::OnMouseButton(
         }
 
         if (this->shiftDown) {
+
+            auto axis = mouseXtoAxis(mousePressedX);
+            if (axis != -1) {
+                float base = this->marginY * 0.5f - fontSize * 0.5f;
+                if ((mousePressedY > base && mousePressedY < base + fontSize) ||
+                    (mousePressedY > base + this->marginY + this->axisHeight &&
+                        mousePressedY < base + this->marginY + this->axisHeight + fontSize)) {
+                    std::swap(this->filters[axis].lower, this->filters[axis].upper);
+                    this->needFlagsUpdate = true;
+                    return true;
+                }
+            }
+
             pickIndicator(mousePressedX, mousePressedY, this->pickedIndicatorAxis, this->pickedIndicatorIndex);
             if (this->pickedIndicatorAxis != -1) {
                 this->interactionState = InteractionState::INTERACTION_FILTER;
@@ -552,12 +571,14 @@ bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
     }
 
     if (this->interactionState == InteractionState::INTERACTION_FILTER) {
-        float val = (this->mouseY - this->marginY) / this->axisHeight;
+        float val = ((this->mouseY - this->marginY) / this->axisHeight) *
+                        (maximums[this->pickedIndicatorAxis] - minimums[this->pickedIndicatorAxis]) +
+                    minimums[this->pickedIndicatorAxis];
         if (this->pickedIndicatorIndex == 0) {
-            val = std::clamp(val, 0.0f, this->filters[pickedIndicatorAxis].upper);
+            val = std::clamp(val, minimums[this->pickedIndicatorAxis], maximums[this->pickedIndicatorAxis]);
             this->filters[this->pickedIndicatorAxis].lower = val;
         } else {
-            val = std::clamp(val, this->filters[pickedIndicatorAxis].lower, 1.0f);
+            val = std::clamp(val, minimums[this->pickedIndicatorAxis], maximums[this->pickedIndicatorAxis]);
             this->filters[this->pickedIndicatorAxis].upper = val;
         }
         this->needFlagsUpdate = true;
@@ -614,6 +635,7 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
         float* color;
 #ifndef REMOVE_TEXT
         glActiveTexture(GL_TEXTURE0);
+        font.ClearBatchDrawCache();
         for (unsigned int c = 0; c < this->columnCount; c++) {
             unsigned int realCol = this->axisIndirection[c];
             if (this->pickedAxis == realCol) {
@@ -622,25 +644,26 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
                 color = this->axesColor;
             }
             float x = this->marginX + this->axisDistance * c;
-            float fontsize = this->axisDistance / 10.0f;
 #    if 0
-            this->font.DrawString(color, x, this->marginY * 0.5f                   , fontsize, false, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontsize, false, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 0.5f                   , fontSize, false, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
 #    else
             float bottom = filters[realCol].lower;
-            bottom *= (maximums[realCol] - minimums[realCol]);
-            bottom += minimums[realCol];
+            // bottom *= (maximums[realCol] - minimums[realCol]);
+            // bottom += minimums[realCol];
             float top = filters[realCol].upper;
-            top *= (maximums[realCol] - minimums[realCol]);
-            top += minimums[realCol];
-            this->font.DrawString(color, x, this->marginY * 0.5f, fontsize, false, std::to_string(bottom).c_str(),
+            // top *= (maximums[realCol] - minimums[realCol]);
+            // top += minimums[realCol];
+            this->font.DrawString(color, x, this->marginY * 0.5f, fontSize, false, std::to_string(bottom).c_str(),
                 core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontsize, false,
+            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false,
                 std::to_string(top).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
 #    endif
-            this->font.DrawString(color, x, this->marginY * 2.5f + this->axisHeight, fontsize * 2.0f, false,
+            this->font.DrawString(color, x,
+                this->marginY * (2.0f + static_cast<float>(c % 2) * 0.5f) + this->axisHeight, fontSize * 2.0f, false,
                 names[realCol].c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
         }
+        this->font.BatchDrawString();
 #endif
     }
     debugPop();
@@ -683,6 +706,7 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     glUniform1ui(prog.ParameterLocation("fragmentTestMask"), testMask);
     glUniform1ui(prog.ParameterLocation("fragmentPassMask"), passMask);
 
+    glEnable(GL_CLIP_DISTANCE0);
 #ifdef FUCK_THE_PIPELINE
     glDrawArrays(GL_TRIANGLES, 0, 6 * ((this->itemCount / 128) + 1));
 #else
@@ -698,6 +722,7 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #    endif
 #endif
     prog.Disable();
+    glDisable(GL_CLIP_DISTANCE0);
     debugPop();
 }
 
@@ -729,19 +754,6 @@ void ParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, floa
     glDrawArrays(GL_LINES, 0, 2);
     glEnable(GL_DEPTH_TEST);
     prog.Disable();
-}
-
-void computeDispatchSizes(
-    uint64_t numItems, GLint const localSizes[3], GLint const maxCounts[3], GLuint dispatchCounts[3]) {
-    const auto localSize = localSizes[0] * localSizes[1] * localSizes[2];
-    const uint64_t needed_groups = (numItems + localSize - 1) / localSize; // round up int div
-    dispatchCounts[0] = std::clamp<GLint>(needed_groups, 1, maxCounts[0]);
-    dispatchCounts[1] = std::clamp<GLint>((needed_groups + dispatchCounts[0] - 1) / dispatchCounts[0], 1, maxCounts[1]);
-    const auto tmp = dispatchCounts[0] * dispatchCounts[1];
-    dispatchCounts[2] = std::clamp<GLint>((needed_groups + tmp - 1) / tmp, 1, maxCounts[2]);
-    const uint64_t totalCounts = dispatchCounts[0] * dispatchCounts[1] * dispatchCounts[2];
-    ASSERT(totalCounts * localSize >= numItems);
-    ASSERT(totalCounts * localSize - numItems < localSize);
 }
 
 void ParallelCoordinatesRenderer2D::doPicking(float x, float y, float pickRadius) {
@@ -831,8 +843,10 @@ void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
     glUniform4fv(this->drawItemContinuousProgram.ParameterLocation("clearColor"), 1, backgroundColor);
     glUniform1i(this->drawItemContinuousProgram.ParameterLocation("sqrtDensity"),
         this->sqrtDensitySlot.Param<core::param::BoolParam>()->Value() ? 1 : 0);
+    glEnable(GL_CLIP_DISTANCE0);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     drawItemContinuousProgram.Disable();
+    glDisable(GL_CLIP_DISTANCE0);
     debugPop();
 }
 
@@ -843,8 +857,10 @@ void ParallelCoordinatesRenderer2D::drawItemsHistogram(void) {
     glActiveTexture(GL_TEXTURE1);
     densityFBO.BindColourTexture();
     glUniform4fv(this->drawItemContinuousProgram.ParameterLocation("clearColor"), 1, backgroundColor);
+    glEnable(GL_CLIP_DISTANCE0);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     drawItemContinuousProgram.Disable();
+    glDisable(GL_CLIP_DISTANCE0);
     debugPop();
 }
 
@@ -901,6 +917,36 @@ void ParallelCoordinatesRenderer2D::drawParcos(void) {
     }
 }
 
+void ParallelCoordinatesRenderer2D::store_filters() {
+    nlohmann::json jf, jf_array;
+    for (auto& f : this->filters) {
+        DimensionFilter::to_json(jf, f);
+        jf_array.push_back(jf);
+    }
+    auto js = jf_array.dump();
+    this->filterStateSlot.Param<core::param::StringParam>()->SetValue(js.c_str());
+}
+
+void ParallelCoordinatesRenderer2D::load_filters() {
+    try {
+        auto j = nlohmann::json::parse(this->filterStateSlot.Param<core::param::StringParam>()->Value().PeekBuffer());
+        int i = 0;
+        for (auto& f : j) {
+            if (i < this->filters.size()) {
+                DimensionFilter::from_json(f, this->filters[i]);
+            } else {
+                break;
+            }
+            i++;
+        }
+    } catch (nlohmann::json::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "ParallelCoordinatesRenderer2D: could not parse serialized filters (exception %i)!", e.id);
+        return;
+    }
+}
+
+
 bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     windowAspect = static_cast<float>(call.GetViewport().AspectRatio());
 
@@ -929,6 +975,12 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
+
+    if (this->filterStateSlot.IsDirty()) {
+        load_filters();
+        this->filterStateSlot.ResetDirty();
+        this->needFlagsUpdate = true;
+    }
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, axisIndirectionBuffer);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(GLuint), axisIndirection.data());
@@ -972,21 +1024,25 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     if (needFlagsUpdate) {
         needFlagsUpdate = false;
+        this->store_filters();
+
+        this->currentFlagsVersion++;
         // HAZARD: downloading everything over and over is slowish
-        auto flagsc = getFlagsSlot.CallAs<core::FlagCall>();
-        if (flagsc != nullptr) {
-            (*flagsc)(core::FlagCall::CallMapFlags);
-            auto version = flagsc->GetVersion();
-            auto flags = flagsc->GetFlags();
-            auto f = flags.get();
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, flagsBuffer);
-            glGetBufferSubData(
-                GL_SHADER_STORAGE_BUFFER, 0, f->size() * sizeof(core::FlagStorage::FlagItemType), f->data());
+        auto readFlags = readFlagsSlot.CallAs<core::FlagCallRead_GL>();
+        auto writeFlags = writeFlagsSlot.CallAs<core::FlagCallWrite_GL>();
+        if (readFlags != nullptr && writeFlags != nullptr) {
+            writeFlags->setData(readFlags->getData(), this->currentFlagsVersion);
+            (*writeFlags)(core::FlagCallWrite_GL::CallGetData);
 #if 0
+            auto flags = readFlags->getData()->flags;
+            std::vector<core::FlagStorage::FlagItemType> f(flags->getByteSize()/sizeof(core::FlagStorage::FlagItemType));
+            flags->bind();
+            glGetBufferSubData(
+                GL_SHADER_STORAGE_BUFFER, 0, flags->getByteSize(), f.data());
 
             core::FlagStorage::FlagVectorType::size_type numFiltered = 0, numEnabled = 0, numSelected = 0,
                                                          numSoftSelected = 0;
-            for (unsigned int& i : *f) {
+            for (unsigned int& i : f) {
                 if ((i & core::FlagStorage::FILTERED) > 0) numFiltered++;
                 if ((i & core::FlagStorage::ENABLED) > 0) numEnabled++;
                 if ((i & core::FlagStorage::SELECTED) > 0) numSelected++;
@@ -995,11 +1051,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             vislib::sys::Log::DefaultLog.WriteInfo(
                 "ParallelCoordinateRenderer2D: %lu items: %lu enabled, %lu filtered, %lu selected, %lu "
                 "soft-selected.",
-                f->size(), numEnabled, numFiltered, numSelected, numSoftSelected);
+                f.size(), numEnabled, numFiltered, numSelected, numSoftSelected);
 #endif
-            this->currentFlagsVersion = version + 1;
-            flagsc->SetFlags(flags, this->currentFlagsVersion);
-            (*flagsc)(core::FlagCall::CallUnmapFlags);
         }
     }
 

@@ -50,7 +50,7 @@ protected:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    virtual bool getExtentCallback(core::Call& caller);
+    virtual bool getMetaDataCallback(core::Call& caller) = 0;
 
     /**
      * Implementation of 'Release'.
@@ -58,19 +58,25 @@ protected:
     virtual void release();
 
     /**
-     * The bounding box stored as left,bottom,back,right,top,front
+     * This module's storage class for GPU meshes.
+     * If connected within a chain of mesh datasource (but not the first module in the chain),
+     * this storage should remain unused and instead the collection provided by the left-hand-side module is used.
      */
-    std::array<float, 6> m_bbox;
-
-
     std::shared_ptr<GPUMeshCollection> m_gpu_meshes;
 
-    /** The slot for querying additional mesh data, i.e. a rhs chaining connection */
-    megamol::core::CallerSlot m_mesh_callerSlot;
+    /**
+     * List of indices of all GPU submeshes that this module added to the used mesh collection.
+     * Needed to delete/update submeshes if the collection is shared across a chain of data sources modules.
+     */
+    std::vector<size_t> m_mesh_collection_indices;
 
-private:
+    /** The slot for querying additional mesh data, i.e. a rhs chaining connection */
+    megamol::core::CallerSlot m_mesh_rhs_slot;
+    size_t m_mesh_rhs_cached_hash;
+
     /** The slot for requesting data */
-    megamol::core::CalleeSlot m_getData_slot;
+    megamol::core::CalleeSlot m_mesh_lhs_slot;
+    size_t m_mesh_lhs_cached_hash;
 };
 
 } // namespace mesh
