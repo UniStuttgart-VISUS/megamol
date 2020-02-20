@@ -1,95 +1,52 @@
 #
 # MegaMol™ Render API modules
-# Copyright 2017, by MegaMol TEAM
+# Copyright 2019, by MegaMol TEAM
 # Alle Rechte vorbehalten. All rights reserved.
 #
 option(BUILD_RAPI "build render APIs" ON)
 
+if(BUILD_RAPI)
+  project(render_api)
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-project(render_api)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-#  # Check option dependencies: First list item is always the current build option,
-#  # afterwards list the dependencies.
-#  set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+  # Check option dependencies: First list item is always the current build option,
+  # afterwards list the dependencies.
+  #set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
-file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.hpp" "opengl_glfw/*.h"  "opengl_glfw/*.hpp")
-file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "opengl_glfw/*.cpp")
+  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.hpp" "opengl_glfw/*.h"  "opengl_glfw/*.hpp")
+  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "opengl_glfw/*.cpp")
 
-# Add target
-add_library(${PROJECT_NAME} STATIC ${header_files} ${source_files})
-set_target_properties(${PROJECT_NAME}
-  PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-  OUTPUT_NAME ${PROJECT_NAME})
+  # Add target
+  add_library(${PROJECT_NAME} STATIC ${header_files} ${source_files})
+  set_target_properties(${PROJECT_NAME}
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+    OUTPUT_NAME ${PROJECT_NAME})
+  target_include_directories(${PROJECT_NAME} PUBLIC "opengl_glfw" "include")
+
+  add_library(abstract_render_api INTERFACE)
+  target_include_directories(abstract_render_api INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
+    $<INSTALL_INTERFACE:include/>
+  )
   
-set(INCLUDE_DIRS "opengl_glfw" "include")
-target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIRS})
-
-#target_link_libraries(${PROJECT_NAME} PRIVATE core)
-
-add_library(abstract_render_api INTERFACE)
-target_include_directories(abstract_render_api INTERFACE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
-  $<INSTALL_INTERFACE:include/>
-)
-
-if(WIN32)
-  set(VERSION_LIBRARY "Version.lib")
-endif()
-
-# GLFW
-  if(USE_GLFW)
-    if (MSVC)
-        set(GLFW_IMPORT_LIBRARY "lib/glfw3dll.lib")
-        set(GLFW_LIBRARY "lib/glfw3.dll")
-    else()
-        set(GLFW_IMPORT_LIBRARY "")
-        set(GLFW_LIBRARY "lib/libglfw.so")
-    endif()
-    add_external_project(glfw_ext
-      GIT_REPOSITORY https://github.com/glfw/glfw.git
-      GIT_TAG "3.3.1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_IMPORT_LIBRARY}"
-      CMAKE_ARGS
-        -DBUILD_SHARED_LIBS=ON
-        -DGLFW_BUILD_EXAMPLES=OFF
-        -DGLFW_BUILD_TESTS=OFF
-        -DGLFW_BUILD_DOCS=OFF)
-    add_external_library(glfw3 SHARED
-      DEPENDS glfw_ext
-      INCLUDE_DIR "include"
-      IMPORT_LIBRARY ${GLFW_IMPORT_LIBRARY}
-      LIBRARY ${GLFW_LIBRARY})
-    target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
-    ExternalProject_Get_property(glfw_ext SOURCE_DIR)
-    target_include_directories(${PROJECT_NAME} PRIVATE "${SOURCE_DIR}/include")
+  if(WIN32)
+    set(VERSION_LIBRARY "Version.lib")
   endif()
-  
-add_subdirectory(glad)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} glad_ vislib PUBLIC input_events)
+  # GLFW
+  if(USE_GLFW)
+    require_external(glfw3)
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
+  endif()
 
-# Grouping in Visual Studio
-set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
-source_group("Header Files" FILES ${header_files})
-source_group("Source Files" FILES ${source_files})
+  add_subdirectory(glad)
 
-#  # install executable
-#  install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin" ARCHIVE DESTINATION "lib")
-#  if(USE_GLFW)
-#    install_external(TARGETS glfw3)
-#  endif()
-#  if (WIN32)
-#    if(MSVC)
-#      install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
-#    endif()
-#  endif ()
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} glad_ vislib PUBLIC input_events)
 
-
-#  # Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
-#  set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")
-
-#  set(cfg_MEGAMOLCON "${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}")
+  # Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
+  set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")
+  set(cfg_MEGAMOLCON "${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}")
 
   if(UNIX)
     include(GNUInstallDirs)
@@ -103,9 +60,10 @@ source_group("Source Files" FILES ${source_files})
   if(WIN32)
     set(MMPLG_DIR "bin")
   endif()
+  
+  # Grouping in Visual Studio
+  set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
+  source_group("Header Files" FILES ${header_files})
+  source_group("Source Files" FILES ${source_files})
 
-#  configure_file(extra/megamolconfig.lua.in ${CMAKE_BINARY_DIR}/megamolconfig.lua)
-#  configure_file(extra/install_megamolconfig_lua.cmake.in ${CMAKE_BINARY_DIR}/install_megamolconfig_lua.cmake @ONLY)
-
-#  install(SCRIPT ${CMAKE_BINARY_DIR}/install_megamolconfig_lua.cmake)
-
+endif()
