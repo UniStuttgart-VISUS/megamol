@@ -46,6 +46,7 @@ ClusterRenderer::ClusterRenderer(void)
     , lastMouseX(0.0f)
     , lastMouseY(0.0f)
     , fontSize(22.0f)
+    , texVa(0)
     , mouseButton(MouseButton::BUTTON_LEFT)
     , mouseAction(MouseButtonAction::RELEASE) {
 
@@ -104,6 +105,52 @@ bool ClusterRenderer::create(void) {
         return false;
     }
 
+    vislib::graphics::gl::ShaderSource texVertShader;
+    vislib::graphics::gl::ShaderSource texFragShader;
+
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("molsurfTexture::vertex", texVertShader)) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to load vertex shader source for texture Vertex Shader");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("molsurfTexture::fragment", texFragShader)) {
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "Unable to load fragment shader source for texture Fragment Shader");
+        return false;
+    }
+
+    try {
+        if (!this->textureShader.Create(
+                texVertShader.Code(), texVertShader.Count(), texFragShader.Code(), texFragShader.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+        }
+    } catch (vislib::Exception e) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to create shader: %s\n", e.GetMsgA());
+        return false;
+    }
+
+    std::vector<float> texVerts = {
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+        1.0f, 1.0f, 0.0f, 1.0f, 1.0f
+    };
+
+    this->texBuffer = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, texVerts, GL_STATIC_DRAW);
+
+    glGenVertexArrays(1, &this->texVa);
+    glBindVertexArray(this->texVa);
+
+    this->texBuffer->bind();
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+
     return true;
 }
 
@@ -112,8 +159,10 @@ bool ClusterRenderer::create(void) {
  * ClusterRenderer::release
  */
 void ClusterRenderer::release(void) {
-
-    // nothing to do here ...
+    if (this->texVa != 0) {
+        glDeleteVertexArrays(1, &this->texVa);
+        this->texVa = 0;
+    }
 }
 
 
@@ -163,7 +212,7 @@ void ClusterRenderer::renderClusterText(HierarchicalClustering::CLUSTERNODE* nod
 
     // Text to Render
     if (node->left == nullptr && node->right == nullptr) {
-        //id.Format(node->pic->name.Substring(node->pic->name.FindLast("\\") + 1, 4));
+        // id.Format(node->pic->name.Substring(node->pic->name.FindLast("\\") + 1, 4));
         id.Format(std::filesystem::path(node->pic->path).stem().string().c_str());
     } else {
         id.Format(std::to_string(node->id).c_str());
@@ -240,8 +289,9 @@ void ClusterRenderer::renderLeaveNode(HierarchicalClustering::CLUSTERNODE* node)
 void ClusterRenderer::renderNode(
     HierarchicalClustering::CLUSTERNODE* node, double minX, double maxX, double minY, double maxY) {
 
-    glEnable(GL_TEXTURE_2D);
+    glActiveTexture(GL_TEXTURE0);
     node->pic->texture->Bind();
+    glEnable(GL_TEXTURE_2D);
 
     auto pos = node->pca2d;
 
@@ -462,6 +512,28 @@ bool ClusterRenderer::Render(view::CallRender2D& call) {
                 // Render Cluster
                 for (HierarchicalClustering::CLUSTERNODE* node : *this->cluster) {
                     this->renderNode(node, this->minX, this->maxX, this->minY, this->maxY);
+
+                    std::vector<BYTE> loctex = {0,   255, 0,
+                                                255, 0,   0,
+                                                0,   0,   255,
+                                                255, 255, 255};
+                    vislib::graphics::gl::OpenGLTexture2D mytex;
+                    mytex.Create(2, 2, loctex.data(), GL_RGB, GL_UNSIGNED_BYTE, GL_RGB);
+                    mytex.SetFilter(GL_LINEAR, GL_LINEAR);
+                    mytex.SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+                    glBindVertexArray(this->texVa);
+                    this->textureShader.Enable();
+
+                    glEnable(GL_TEXTURE_2D);
+                    glActiveTexture(GL_TEXTURE0);
+                    mytex.Bind();
+
+                    glUniform1i(this->textureShader.ParameterLocation("tex"), 0);
+                    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+                    this->textureShader.Disable();
+                    glBindVertexArray(0);
                 }
 
                 // Render Clusterchildren

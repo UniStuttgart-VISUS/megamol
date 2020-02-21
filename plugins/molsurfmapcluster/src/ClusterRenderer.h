@@ -17,6 +17,8 @@
 #include "mmcore/view/Renderer2DModule.h"
 
 #include "vislib/Array.h"
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "glowl/glowl.h"
 
 #include "CallCluster.h"
 
@@ -178,6 +180,10 @@ private:
     /** The input data slot. */
     core::CallerSlot clusterDataSlot;
     core::CallerSlot setPosition;
+
+    vislib::graphics::gl::GLSLShader textureShader;
+    std::unique_ptr<glowl::BufferObject> texBuffer;
+    GLuint texVa;
 
     /** The slot for requesting data. */
     core::CalleeSlot getPosition;
