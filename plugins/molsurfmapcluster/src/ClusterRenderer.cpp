@@ -254,7 +254,7 @@ void ClusterRenderer::renderNode(
     double picheight = PICSCALING * this->viewport.GetY();
 
     // Render Picture
-    glColor3f(1, 1, 1); // Reset Color for Textures
+    glColor3f(1, 0, 1); // Reset Color for Textures
 
     glBegin(GL_QUADS);
 

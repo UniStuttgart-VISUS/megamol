@@ -6,11 +6,11 @@
  * Alle Rechte vorbehalten.
  */
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <thread>
-#include <filesystem>
 
 #include "vislib/sys/Log.h"
 
@@ -22,8 +22,8 @@
 #include <Eigen/SVD>
 #include <sstream>
 
-#include "PictureData.h"
 #include "HierarchicalClustering.h"
+#include "PictureData.h"
 
 #define IMAGEORDER 3
 
@@ -190,11 +190,11 @@ void HierarchicalClustering::calculateColorMoments(CLUSTERNODE* node) {
     double summean[3] = {0};
     for (int i = 0; i < pic->height; i++) {
         for (int j = 0; j < pic->width * 3; j += 3) {
-            //summean[0] += pic->rows[i][j];
+            // summean[0] += pic->rows[i][j];
             summean[0] += picptr[pic->width * i + j];
-            //summean[1] += pic->rows[i][j + 1];
+            // summean[1] += pic->rows[i][j + 1];
             summean[1] += picptr[pic->width * i + j + 1];
-            //summean[2] += pic->rows[i][j + 2];
+            // summean[2] += pic->rows[i][j + 2];
             summean[2] += picptr[pic->width * i + j + 2];
         }
     }
@@ -259,7 +259,6 @@ std::vector<double>* HierarchicalClustering::gray_scale_image(PictureData* pic) 
 }
 
 double HierarchicalClustering::distance(std::vector<double>* X, std::vector<double>* Y, int r) {
-
     if (X == nullptr || Y == nullptr) return 1.0;
 
     double distance = 0.0;
@@ -474,9 +473,9 @@ void HierarchicalClustering::dump_dot(const vislib::TString& filename) {
     for (CLUSTERNODE* node : *this->cluster) {
         if (node->left == nullptr && node->right == nullptr) {
 
-            file << node->id << "[label=\"" << std::filesystem::path(node->pic->path).filename()
-                 << "\", image=\"" << node->pic->path << "\", features=\"" << getFeaturesString(node->features)
-                 << "\", pca=\"" << getFeaturesString(node->pca2d)
+            file << node->id << "[label=\"" << std::filesystem::path(node->pic->path).filename() << "\", image=\""
+                 << node->pic->path << "\", features=\"" << getFeaturesString(node->features) << "\", pca=\""
+                 << getFeaturesString(node->pca2d)
                  << "\", shape=\"box\", scaleimage=true, fixedsize=true, width=6, height=3, level=" << node->level
                  << "]";
         } else {
