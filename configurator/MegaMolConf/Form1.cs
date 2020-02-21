@@ -221,19 +221,21 @@ namespace MegaMolConf {
             if (tabViews.SelectedTab != null) {
                 MegaMolInstanceInfo mmii = tabViews.SelectedTab.Tag as MegaMolInstanceInfo;
                 if (mmii != null && mmii.Connection != null && mmii.Connection.Valid) {
-                    if (addedList != null) {
-                        foreach (object o in addedList) {
-                            GraphicalConnection gc = o as GraphicalConnection;
-                            if (gc != null) {
-                                mmii.QueueConnectionCreation(gc);
-                            }
-                        }
-                    }
+                    
                     if (deletedList != null) {
                         foreach (object o in deletedList) {
                             GraphicalConnection gc = o as GraphicalConnection;
                             if (gc != null) {
                                 mmii.QueueConnectionDeletion(gc);
+                            }
+                        }
+                    }
+
+                    if (addedList != null) {
+                        foreach (object o in addedList) {
+                            GraphicalConnection gc = o as GraphicalConnection;
+                            if (gc != null) {
+                                mmii.QueueConnectionCreation(gc);
                             }
                         }
                     }

@@ -14,8 +14,8 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib/graphics/gl/GLSLComputeShader.h"
 
+#include "glowl/GLSLProgram.hpp"
 #include "glowl/Texture2D.hpp"
 
 namespace megamol {
@@ -77,28 +77,27 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
 private:
-    typedef vislib::graphics::gl::GLSLComputeShader GLSLComputeShader;
-
+    
     /** Shader program for texture add */
-    std::unique_ptr<GLSLComputeShader> m_depthComp_prgm;
+    std::unique_ptr<glowl::GLSLProgram> m_depthComp_prgm;
 
     /** Texture that the combination result will be written to */
-    std::shared_ptr<glowl::Texture2D>  m_output_texture;
+    std::shared_ptr<glowl::Texture2D>   m_output_texture;
 
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
-    megamol::core::CalleeSlot          m_output_tex_slot;
+    megamol::core::CalleeSlot           m_output_tex_slot;
 
     /** Slot for querying primary input texture, i.e. a rhs connection */
-    megamol::core::CallerSlot          m_input_tex_0_slot;
+    megamol::core::CallerSlot           m_input_tex_0_slot;
 
     /** Slot for querying secondary input texture, i.e. a rhs connection */
-    megamol::core::CallerSlot          m_input_tex_1_slot;
+    megamol::core::CallerSlot           m_input_tex_1_slot;
 
     /** Slot for querying primary depth texture, i.e. a rhs connection */
-    megamol::core::CallerSlot          m_depth_tex_0_slot;
+    megamol::core::CallerSlot           m_depth_tex_0_slot;
 
     /** Slot for querying secondary depth texture, i.e. a rhs connection */
-    megamol::core::CallerSlot          m_depth_tex_1_slot;
+    megamol::core::CallerSlot           m_depth_tex_1_slot;
 };
 
 } // namespace compositing
