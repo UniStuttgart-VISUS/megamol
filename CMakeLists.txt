@@ -77,13 +77,14 @@ add_subdirectory(utils)
 # Examples
 option(EXAMPLES "Get the MegaMol example repository" ON)
 if(EXAMPLES)
-  if(NOT EXISTS "${CMAKE_SOURCE_DIR}/examples")
+  if(NOT EXISTS "${CMAKE_BINARY_DIR}/examples")
     message(STATUS "Downloading examples")
     execute_process(COMMAND
-      ${GIT_EXECUTABLE} clone https://github.com/UniStuttgart-VISUS/megamol-examples.git examples
-      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+      ${GIT_EXECUTABLE} clone https://github.com/UniStuttgart-VISUS/megamol-examples.git examples --depth 1
+      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
       ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
   endif()
+  install(DIRECTORY "${CMAKE_BINARY_DIR}/examples" DESTINATION "${CMAKE_INSTALL_PREFIX}" PATTERN ".git" EXCLUDE)
 endif()
 
 # Validate dependencies
