@@ -28,7 +28,6 @@ namespace protein {
  */
 class MSMSGenus0Generator : public core::Module {
 public:
-
     /**
      * Answer the name of this module.
      *
@@ -41,7 +40,9 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Data source for MSMS mesh data files that always generates a genus 0 mesh"; }
+    static const char* Description(void) {
+        return "Data source for MSMS mesh data files that always generates a genus 0 mesh";
+    }
 
     /**
      * Answers whether this module is available on the current system.
@@ -79,11 +80,12 @@ protected:
      * Loads the specified file
      *
      * @param filename The file to load
+     * @param probe_radius The probe radius
      * @param frameID  The frame ID
      *
      * @return True on success
      */
-    virtual bool load(const vislib::TString& filename, unsigned int frameID = 0);
+    virtual bool load(const vislib::TString& filename, float probe_radius, unsigned int frameID = 0);
 
 private:
     /**
@@ -103,6 +105,14 @@ private:
      * @return 'true' on success, 'false' on failure.
      */
     bool getExtentCallback(core::Call& caller);
+
+    /**
+     * Computes the genus of the stored mesh and returns true if it is 0
+     *
+     * @param frame The id of the requested frame
+     * @return True if the genus is 0, false otherwise
+     */
+    bool isGenus0(uint32_t frameID, uint32_t* outGenus = nullptr);
 
     /** The slot for requesting data */
     core::CalleeSlot getDataSlot;
