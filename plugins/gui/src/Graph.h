@@ -8,6 +8,7 @@
 #ifndef MEGAMOL_GUI_GRAPH_H_INCLUDED
 #define MEGAMOL_GUI_GRAPH_H_INCLUDED
 
+
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"

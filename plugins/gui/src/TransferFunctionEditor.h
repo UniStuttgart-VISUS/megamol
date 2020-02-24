@@ -8,6 +8,7 @@
 #ifndef MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED
 #define MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED
 
+
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/view/TransferFunction.h"
 
@@ -20,6 +21,7 @@
 #include <vector>
 
 #include <imgui.h>
+
 #include "GUIUtils.h"
 
 

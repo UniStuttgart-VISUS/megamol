@@ -15,9 +15,8 @@
 #include "stdafx.h"
 #include "Configurator.h"
 
-using namespace megamol;
+
 using namespace megamol::gui;
-using vislib::sys::Log;
 
 
 Configurator::Configurator() : hotkeys(), graph_manager(), utils(), gui() {

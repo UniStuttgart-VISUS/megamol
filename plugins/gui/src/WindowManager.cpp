@@ -9,6 +9,7 @@
 #include "WindowManager.h"
 
 
+using namespace megamol;
 using namespace megamol::gui;
 
 

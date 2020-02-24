@@ -24,16 +24,15 @@ namespace fsns = std::experimental::filesystem;
 #    endif
 #endif
 
-
-#include <fstream>
-#include <iostream>
-#include <string>
-
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
 
 #include "vislib/sys/AbstractReaderWriterLock.h"
+
+#include <fstream>
+#include <iostream>
+#include <string>
 
 
 namespace megamol {

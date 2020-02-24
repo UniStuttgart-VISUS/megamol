@@ -11,7 +11,6 @@
 
 using namespace megamol;
 using namespace megamol::gui;
-using vislib::sys::Log;
 
 
 megamol::gui::GraphManager::GraphManager(void) : graphs(), modules_stock(), calls_stock(), generated_uid(0) {}

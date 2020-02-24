@@ -8,6 +8,15 @@
 #ifndef MEGAMOL_GUI_GraphManager_H_INCLUDED
 #define MEGAMOL_GUI_GraphManager_H_INCLUDED
 
+
+#include "mmcore/CoreInstance.h"
+#include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
+
+#include "utility/plugins/PluginManager.h"
+
+#include "vislib/UTF8Encoder.h"
 #include "vislib/sys/Log.h"
 
 #include <imgui.h>
@@ -18,15 +27,6 @@
 
 #include <map>
 #include <vector>
-
-#include "mmcore/CoreInstance.h"
-#include "mmcore/Module.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-
-#include "utility/plugins/PluginManager.h"
-
-#include "vislib/UTF8Encoder.h"
 
 #include "Graph.h"
 

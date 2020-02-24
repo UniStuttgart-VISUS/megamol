@@ -14,15 +14,6 @@
 #ifndef MEGAMOL_GUI_CONFIGURATOR_H_INCLUDED
 #define MEGAMOL_GUI_CONFIGURATOR_H_INCLUDED
 
-#include <imgui.h>
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include <imgui_internal.h>
-#include "imgui_impl_opengl3.h"
-#include "imgui_stdlib.h"
-
-#include <map>
-#include <math.h> // fmodf
-#include <tuple>
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view//Input.h"
@@ -33,6 +24,16 @@
 #include "WindowManager.h"
 
 #include "vislib/sys/Log.h"
+
+#include <imgui.h>
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include <imgui_internal.h>
+#include "imgui_impl_opengl3.h"
+#include "imgui_stdlib.h"
+
+#include <map>
+#include <math.h> // fmodf
+#include <tuple>
 
 
 namespace megamol {

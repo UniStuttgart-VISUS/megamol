@@ -11,7 +11,6 @@
 
 using namespace megamol;
 using namespace megamol::gui;
-using vislib::sys::Log;
 
 
 // PARAM SLOT #################################################################

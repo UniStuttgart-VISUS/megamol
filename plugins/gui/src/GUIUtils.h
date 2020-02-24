@@ -8,6 +8,7 @@
 #ifndef MEGAMOL_GUI_GUIUTILS_INCLUDED
 #define MEGAMOL_GUI_GUIUTILS_INCLUDED
 
+
 #include <algorithm> // search
 #include <cctype>    // toupper
 #include <string>
