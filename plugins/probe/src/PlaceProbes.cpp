@@ -32,6 +32,7 @@ megamol::probe::PlaceProbes::PlaceProbes()
     ep->SetTypePair(1, "dart_throwing");
     ep->SetTypePair(2, "force_directed");
     ep->SetTypePair(3, "simple_wruschd_sampling");
+    ep->SetTypePair(4, "vertices+normals");
     this->m_method_slot << ep;
     this->MakeSlotAvailable(&this->m_method_slot);
 
@@ -229,6 +230,39 @@ void megamol::probe::PlaceProbes::vertexSampling(
     }
 }
 
+void megamol::probe::PlaceProbes::vertexNormalSampling(
+    mesh::MeshDataAccessCollection::VertexAttribute& vertices,
+    mesh::MeshDataAccessCollection::VertexAttribute& normals)
+{
+
+    uint32_t probe_count = vertices.byte_size / vertices.stride;
+
+    auto vertex_accessor = reinterpret_cast<float*>(vertices.data);
+    auto vertex_step = vertices.stride / sizeof(float);
+
+    auto normal_accessor = reinterpret_cast<float*>(normals.data);
+    auto normal_step = normals.stride / sizeof(float);
+
+//#pragma omp parallel for
+    for (int i = 0; i < probe_count; i++) {
+
+        BaseProbe probe;
+
+        probe.m_position = {
+            vertex_accessor[vertex_step * i + 0],
+            vertex_accessor[vertex_step * i + 1],
+            vertex_accessor[vertex_step * i + 2]};
+        probe.m_direction = {
+            normal_accessor[normal_step * i + 0],
+            normal_accessor[normal_step * i + 1],
+            normal_accessor[normal_step * i + 2]};
+        probe.m_begin = -2.0;
+        probe.m_end = 50.0;
+
+        this->m_probes->addProbe(std::move(probe));
+    }
+}
+
 bool megamol::probe::PlaceProbes::placeProbes(uint32_t lei) {
 
 
@@ -268,8 +302,21 @@ bool megamol::probe::PlaceProbes::placeProbes(uint32_t lei) {
         this->forceDirectedSampling(vertices, probePositions);
     }
 
+    if (this->m_method_slot.Param<core::param::EnumParam>()->Value() == 4) {
 
-    this->placeByCenterline(lei, probePositions, centerline);
+        mesh::MeshDataAccessCollection::VertexAttribute normals;
+        for (auto& attribute : m_mesh->accessMesh()[0].attributes) {
+            if (attribute.semantic == mesh::MeshDataAccessCollection::NORMAL) {
+                normals = attribute;
+            }
+        }
+
+        this->vertexNormalSampling(vertices, normals);
+    }
+    else
+    {
+        this->placeByCenterline(lei, probePositions, centerline);
+    }
 
     return true;
 }

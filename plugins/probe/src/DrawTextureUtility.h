@@ -326,8 +326,14 @@ inline void DrawTextureUtility::drawRadarGlyph(std::vector<T>& data, std::array<
     //_ctx.setFillStyle(BLRgba32(0x66F3DF92));
     //_ctx.setFillStyle(BLRgba32(0xCC2C0D0E));
     //_ctx.setFillStyle(BLRgba32(0xBBDABABE));
-    _ctx.setFillStyle(BLRgba32(0xAA222222));
+    _ctx.setFillStyle(BLRgba32(0x00FFFFFF));
     _ctx.fillCircle(background); 
+
+    BLArc border(center[0], center[1], max_radius, max_radius, 0.0, 2.0 * 3.14159);
+    //_ctx.setStrokeStyle(BLRgba32(0xFFFF00FF));
+    _ctx.setStrokeStyle(BLRgba32(0xFFFFFFFF));
+    _ctx.setStrokeWidth(2);
+    //_ctx.strokeArc(border);
 
     auto radius = 0.0f;
     for (uint32_t i = 0; i < num_data; i++) {
@@ -353,15 +359,14 @@ inline void DrawTextureUtility::drawRadarGlyph(std::vector<T>& data, std::array<
 
         float angle = proj_dir[1] > 0.0f ? acos(proj_dir[0]) : -acos(proj_dir[0]);
 
-        float arc_length = std::max(direction[2] * 2.0f * 3.14159f, 5.0f * (2.0f * 3.14159f / 360.0f) );
+        double arc_length = std::max(direction[2] * 2.0f * 3.14159f, (5.0f / 360.0f) * (2.0f * 3.14159f) );
 
-        float width = 50.0 * arc_length / (2.0f * 3.14159f * radius);
-        width = arc_length;
-        BLArc arc(center[0], center[1], radius, radius, angle - width / 2.0f, width);
+        //arc_length = 50.0 * arc_length / (2.0f * 3.14159f * radius);
+        BLArc arc(center[0], center[1], radius, radius, angle - arc_length / 2.0f, arc_length);
 
         //_ctx.setStrokeStyle(BLRgba32(0xFFFF00FF));
         _ctx.setStrokeStyle(BLRgba32(length*255,0,0));
-        _ctx.setStrokeWidth(radius_steps * 1.25f);
+        _ctx.setStrokeWidth( std::max(2.0 , radius_steps * (1.0 - (arc_length / (2.0 * 3.14159) ) ) ) );
         _ctx.strokeArc(arc);
     }
 

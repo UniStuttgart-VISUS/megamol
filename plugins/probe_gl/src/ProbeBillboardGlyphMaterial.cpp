@@ -19,7 +19,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
     vislib::graphics::gl::ShaderSource vert_shader_src;
     vislib::graphics::gl::ShaderSource frag_shader_src;
 
-    vislib::StringA shader_base_name("ProbeGlyph");
+    vislib::StringA shader_base_name("TexturedProbeGlyph");
     vislib::StringA vertShaderName = shader_base_name + "::vertex";
     vislib::StringA fragShaderName = shader_base_name + "::fragment";
 

@@ -74,29 +74,61 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
         auto probe_cnt = probes->getProbeCount();
 
-        std::vector<glowl::DrawElementsCommand> draw_commands;
+        std::vector<glowl::DrawElementsCommand> textured_gylph_draw_commands;
+        std::vector<glowl::DrawElementsCommand> vector_probe_gylph_draw_commands;
+        std::vector<glowl::DrawElementsCommand> scalar_probe_gylph_draw_commands;
 
-        struct PerGlyphData {
+        struct PerTexturedGlyphData {
             glm::vec4 position;
             GLuint64 texture_handle;
             float slice_idx;
             float scale;
         };
 
-        std::vector<PerGlyphData> glyph_data;
+        struct PerGlyphVectorProbeData {
+            glm::vec4 position;
+            float scale;
 
-        draw_commands.reserve(probe_cnt);
-        glyph_data.reserve(probe_cnt);
+            float padding0;
+            float padding1;
+
+            float sample_cnt;
+            std::array<float,4> samples[32];
+        };
+
+        struct PerGlyphScalarProbeData {
+            glm::vec4 position;
+            GLuint64 texture_handle;
+            float slice_idx;
+            float scale;
+
+            float sample_cnt;
+            float samples[51];
+        };
+
+        std::vector<PerTexturedGlyphData>    textured_glyph_data;
+        std::vector<PerGlyphVectorProbeData> vector_probe_glyph_data;
+        std::vector<PerGlyphScalarProbeData> scalar_probe_glyph_data;
+
+        textured_gylph_draw_commands.reserve(probe_cnt);
+        textured_glyph_data.reserve(probe_cnt);
+
+        vector_probe_gylph_draw_commands.reserve(probe_cnt);
+        vector_probe_glyph_data.reserve(probe_cnt);
+
+        scalar_probe_gylph_draw_commands.reserve(probe_cnt);
+        scalar_probe_glyph_data.reserve(probe_cnt);
 
         for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
 
             auto generic_probe = probes->getGenericProbe(probe_idx);
 
-            auto visitor = [&draw_commands, &glyph_data, &gpu_mtl_storage, probe_idx, this](auto&& arg) {
+            auto visitor = [&textured_gylph_draw_commands, &textured_glyph_data, &gpu_mtl_storage, probe_idx, this](
+                               auto&& arg) {
                 using T = std::decay_t<decltype(arg)>;
                 if constexpr (std::is_same_v<T, probe::FloatProbe>) {
                     
-                    PerGlyphData glyph;
+                    PerTexturedGlyphData glyph;
                     glyph.position = glm::vec4(arg.m_position[0] + arg.m_direction[0] * (arg.m_begin * 1.1f),
                         arg.m_position[1] + arg.m_direction[1] * (arg.m_begin * 1.1f),
                         arg.m_position[2] + arg.m_direction[2] * (arg.m_begin * 1.1f), 1.0f);
@@ -114,14 +146,14 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                     draw_command.first_idx = 0;
                     draw_command.instance_cnt = 1;
 
-                    draw_commands.push_back(draw_command);
-                    glyph_data.push_back(glyph);
+                    textured_gylph_draw_commands.push_back(draw_command);
+                    textured_glyph_data.push_back(glyph);
 
                 } else if constexpr (std::is_same_v<T, probe::IntProbe>) {
                     // TODO
                 } else if constexpr (std::is_same_v<T, probe::Vec4Probe>) {
 
-                    PerGlyphData glyph;
+                    PerTexturedGlyphData glyph;
                     glyph.position = glm::vec4(arg.m_position[0] + arg.m_direction[0] * (arg.m_begin * 1.1f),
                             arg.m_position[1] + arg.m_direction[1] * (arg.m_begin * 1.1f),
                             arg.m_position[2] + arg.m_direction[2] * (arg.m_begin * 1.1f), 1.0f);
@@ -138,8 +170,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                     draw_command.first_idx = 0;
                     draw_command.instance_cnt = 1;
 
-                    draw_commands.push_back(draw_command);
-                    glyph_data.push_back(glyph);
+                    textured_gylph_draw_commands.push_back(draw_command);
+                    textured_glyph_data.push_back(glyph);
 
                 } else {
                     // unknown probe type, throw error? do nothing?
@@ -150,7 +182,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         }
 
         auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
-        rt_collection->addRenderTasks(shader, m_billboard_dummy_mesh, draw_commands, glyph_data);
+        rt_collection->addRenderTasks(
+            shader, m_billboard_dummy_mesh, textured_gylph_draw_commands, textured_glyph_data);
     }
 
     if (lhs_rtc->version() < m_version) {
