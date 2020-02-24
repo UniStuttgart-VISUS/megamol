@@ -82,13 +82,13 @@ MSMSGenus0Generator::MSMSGenus0Generator(void)
     this->MakeSlotAvailable(&this->msmsDetailParam);
 
     // MSMS probe radius parameter
-    this->msmsStartingRadiusParam.SetParameter(new param::FloatParam(1.5f, 0.5f, 10.0f));
+    this->msmsStartingRadiusParam.SetParameter(new param::FloatParam(2.3f, 0.5f, 10.0f));
     this->MakeSlotAvailable(&this->msmsStartingRadiusParam);
 
     this->msmsStepSizeParam.SetParameter(new param::FloatParam(0.2f, 0.05f, 10.0f));
     this->MakeSlotAvailable(&this->msmsStepSizeParam);
 
-    this->msmsMaxTryNumParam.SetParameter(new param::IntParam(10, 1, 100));
+    this->msmsMaxTryNumParam.SetParameter(new param::IntParam(20, 1, 100));
     this->MakeSlotAvailable(&this->msmsMaxTryNumParam);
 
     // make the rainbow color table
@@ -163,15 +163,42 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
     CallTriMeshData* ctmd = dynamic_cast<CallTriMeshData*>(&caller);
     if (ctmd == NULL) return false;
 
+    float probeRadius = this->msmsStartingRadiusParam.Param<param::FloatParam>()->Value();
+    float stepSize = this->msmsStepSizeParam.Param<param::FloatParam>()->Value();
+    uint32_t maxSteps = static_cast<uint32_t>(this->msmsMaxTryNumParam.Param<param::IntParam>()->Value());
+
     // load data on demand
     if (this->filenameSlot.IsDirty()) {
         this->filenameSlot.ResetDirty();
-        this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
+
+        uint32_t genus = 1;
+        uint32_t step = 1;
+        while (genus != 0 && step <= maxSteps) {
+            this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value(), probeRadius);
+            this->isGenus0(0, &genus);
+            vislib::sys::Log::DefaultLog.WriteInfo(
+                "Step %u: Mesh with radius %f has genus %u", step, probeRadius, genus);
+            probeRadius += stepSize;
+            step++;
+        }
+        if (genus != 0) return false;
     }
     if (this->filenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty() &&
         // this->prevTime != int(ctmd->FrameID())) {
         this->obj.Count() == ctmd->FrameCount() && this->obj[ctmd->FrameID()]->GetVertexCount() == 0) {
-        this->load(vislib::StringA(""), ctmd->FrameID());
+
+        uint32_t genus = 1;
+        uint32_t step = 1;
+
+        while (genus != 0 && step <= maxSteps) {
+            this->load(vislib::StringA(""), probeRadius, ctmd->FrameID());
+            this->isGenus0(ctmd->FrameID(), &genus);
+            vislib::sys::Log::DefaultLog.WriteInfo(
+                "Step %u: Mesh with radius %f has genus %u", step, probeRadius, genus);
+            probeRadius += stepSize;
+            step++;
+        }
+        if (genus != 0) return false;
     }
 
     PerAtomFloatCall* pa = this->perAtomDataSlot.CallAs<PerAtomFloatCall>();
@@ -467,7 +494,20 @@ bool MSMSGenus0Generator::getExtentCallback(core::Call& caller) {
     // load data on demand
     if (this->filenameSlot.IsDirty()) {
         this->filenameSlot.ResetDirty();
-        this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
+        float probeRadius = this->msmsStartingRadiusParam.Param<param::FloatParam>()->Value();
+        float stepSize = this->msmsStepSizeParam.Param<param::FloatParam>()->Value();
+        uint32_t maxSteps = static_cast<uint32_t>(this->msmsMaxTryNumParam.Param<param::IntParam>()->Value());
+        uint32_t genus = 1;
+        uint32_t step = 1;
+        while (genus != 0 && step <= maxSteps) {
+            this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value(), probeRadius);
+            this->isGenus0(0, &genus);
+            vislib::sys::Log::DefaultLog.WriteInfo(
+                "Step %u: Mesh with radius %f has genus %u", step, probeRadius, genus);
+            probeRadius += stepSize;
+            step++;
+        }
+        if (genus > 0) return false;
     }
 
     ctmd->SetDataHash(this->datahash);
@@ -499,7 +539,7 @@ bool MSMSGenus0Generator::getExtentCallback(core::Call& caller) {
 /*
  * MSMSGenus0Generator::load
  */
-bool MSMSGenus0Generator::load(const vislib::TString& filename, unsigned int frameID) {
+bool MSMSGenus0Generator::load(const vislib::TString& filename, float probe_radius, unsigned int frameID) {
     using vislib::sys::Log;
 
     vislib::StringA vertFilename(filename);
@@ -533,13 +573,11 @@ bool MSMSGenus0Generator::load(const vislib::TString& filename, unsigned int fra
                 }
                 vislib::StringA msmsCmd;
 #ifdef WIN32
-                msmsCmd.Format("msms.exe -probe_radius %f -density %.1f -if msmstest.xyz -of msmstest",
-                    this->msmsStartingRadiusParam.Param<param::FloatParam>()->Value(),
+                msmsCmd.Format("msms.exe -probe_radius %f -density %.1f -if msmstest.xyz -of msmstest", probe_radius,
                     this->msmsDetailParam.Param<param::FloatParam>()->Value());
 #else
                 msmsCmd.Format("./msms.x86_64Linux2.2.6.1 -probe_radius %f -density %.1f -if msmstest.xyz -of msmstest",
-                    this->msmsProbeParam.Param<param::FloatParam>()->Value(),
-                    this->msmsDetailParam.Param<param::FloatParam>()->Value());
+                    probe_radius, this->msmsDetailParam.Param<param::FloatParam>()->Value());
 #endif
                 system(msmsCmd.PeekBuffer());
                 vertFilename = "msmstest.vert";
@@ -709,11 +747,30 @@ bool MSMSGenus0Generator::load(const vislib::TString& filename, unsigned int fra
         } else {
             this->obj[frameID]->SetVertexAttribData(atomIndex, attIdx);
         }
-
-
         return true;
     }
     Log::DefaultLog.WriteError(
         "Could not load MSMS files %s and %s.", vertFilename.PeekBuffer(), faceFilename.PeekBuffer());
     return false;
+}
+
+/*
+ * MSMSGenus0Generator::computeGenus
+ */
+bool MSMSGenus0Generator::isGenus0(uint32_t frameID, uint32_t* out_genus) {
+    if (this->obj.Count() < frameID) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Requested non-existing frame %u out of %u frames", frameID, static_cast<uint32_t>(this->obj.Count()));
+        return false;
+    }
+    auto ptr = this->obj[frameID];
+    auto vertCnt = ptr->GetVertexCount();
+    auto faceCnt = ptr->GetTriCount();
+    uint32_t numEdges = (3 * faceCnt) - ((3 * faceCnt) / 2);
+    int euler = vertCnt + faceCnt - numEdges;
+    int genus = 1 - (euler / 2);
+    if (out_genus != nullptr) {
+        *out_genus = static_cast<uint32_t>(genus);
+    }
+    return genus == 0;
 }
