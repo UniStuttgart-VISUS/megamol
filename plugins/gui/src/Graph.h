@@ -117,7 +117,7 @@ public:
 
     class ParamSlot {
     public:
-        ParamSlot(int uid, ParamType type) : uid(uid), type(type) {}
+        ParamSlot(int uid, ParamType type);
         ~ParamSlot() {}
 
         const int uid;
@@ -128,37 +128,80 @@ public:
 
         std::string full_name;
 
+        std::string ValueString(void);
+
         template <typename T> void SetValue(T val) {
             assert(std::holds_alternative<T>(this->value));
-            this->value = val;
+            if (std::holds_alternative<T>(this->value)) {
+                this->value = val;
+            } else {
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "Wrong parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            }
         }
 
         template <typename T> T Value(void) const {
             assert(std::holds_alternative<T>(this->value));
-            return std::get<T>(this->value);
+            if (std::holds_alternative<T>(this->value)) {
+                return std::get<T>(this->value);
+            } else {
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "Wrong parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                return T();
+            }
         }
 
-        std::string ValueString(void);
+        template <typename T> T MinValue(void) const {
+            try {
+                return std::get<T>(this->minval);
+            } catch (std::bad_variant_access&) {
+            }
+        }
 
-        // + more parameter specific functions:
-        // -> MinValue
-        // -> MaxValue
-        // ButtonParam -> GetKeyCode
-        // EnumParam -> getMap
-        // FlexEnumParam -> getStorage
+        template <typename T> T MaxValue(void) const {
+            try {
+                return std::get<T>(this->maxval);
+            } catch (std::bad_variant_access&) {
+            }
+        }
+
+        // BUTTON
+        const core::view::KeyCode GetKeyCode(void) const;
+
+        // ENUM
+        const vislib::Map<int, vislib::TString> GetMap(void) const;
+
+        // FLEXENUM
+        const megamol::core::param::FlexEnumParam::Storage_t GetStorage(void) const;
 
     private:
-        std::variant<float, int, glm::vec2, glm::vec3, glm::vec4> minval;
+        std::variant<std::monostate, // default (unused/unavailable)
+            float,                   // FLOAT
+            int,                     // INT
+            glm::vec2,               // VECTOR_2f
+            glm::vec3,               // VECTOR_3f
+            glm::vec4                // VECTOR_4f
+            >
+            minval;
 
-        std::variant<float, int, glm::vec2, glm::vec3, glm::vec4> maxval;
+        std::variant<std::monostate, // default (unused/unavailable)
+            float,                   // FLOAT
+            int,                     // INT
+            glm::vec2,               // VECTOR_2f
+            glm::vec3,               // VECTOR_3f
+            glm::vec4                // VECTOR_4f
+            >
+            maxval;
 
-        std::variant<megamol::core::view::KeyCode,         // BUTTON
+        std::variant<std::monostate,                       // default (unused/unavailable)
+            megamol::core::view::KeyCode,                  // BUTTON
             vislib::Map<int, vislib::TString>,             // ENUM
             megamol::core::param::FlexEnumParam::Storage_t // FLEXENUM
             >
             storage;
 
-        std::variant<bool,                               // BOOL     BUTTON
+        std::variant<std::monostate,                     // default (unused/unavailable) BUTTON
+            bool,                                        // BOOL
             megamol::core::param::ColorParam::ColorType, // COLOR
             float,                                       // FLOAT
             int,                                         // INT      ENUM

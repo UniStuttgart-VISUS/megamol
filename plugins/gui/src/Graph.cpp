@@ -15,25 +15,113 @@ using namespace megamol::gui;
 
 // PARAM SLOT #################################################################
 
+
+megamol::gui::Graph::ParamSlot::ParamSlot(int uid, ParamType type)
+    : uid(uid), type(type), minval(), maxval(), storage(), value() {}
+
+
 std::string megamol::gui::Graph::ParamSlot::ValueString(void) {
-    std::string value_string;
-    auto visitor = [&value_string](auto&& arg) {
+    std::string value_string = "UNKNOWN PARAMETER TYPE";
+    auto visitor = [this, &value_string](auto&& arg) {
         using T = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_same_v<T, int>) {
-            auto param = megamol::core::param::IntParam(arg);
+        if constexpr (std::is_same_v<T, bool>) {
+            auto param = megamol::core::param::BoolParam(arg);
             value_string = std::string(param.ValueString().PeekBuffer());
-        } else if constexpr (std::is_same_v<T, long>) {
-
-        } else if constexpr (std::is_same_v<T, double>) {
-
+        } else if constexpr (std::is_same_v<T, megamol::core::param::ColorParam::ColorType>) {
+            auto param = megamol::core::param::ColorParam(arg);
+            value_string = std::string(param.ValueString().PeekBuffer());
+        } else if constexpr (std::is_same_v<T, float>) {
+            auto param = megamol::core::param::FloatParam(arg);
+            value_string = std::string(param.ValueString().PeekBuffer());
+        } else if constexpr (std::is_same_v<T, int>) {
+            switch (this->type) {
+            case (Graph::ParamType::INT): {
+                auto param = megamol::core::param::IntParam(arg);
+                value_string = std::string(param.ValueString().PeekBuffer());
+            }
+            case (Graph::ParamType::ENUM): {
+                auto param = megamol::core::param::EnumParam(arg);
+                value_string = std::string(param.ValueString().PeekBuffer());
+            }
+            default:
+                break;
+            }
         } else if constexpr (std::is_same_v<T, std::string>) {
-
-        } else {
-            value_string = "UNKNOWN";
+            switch (this->type) {
+            case (Graph::ParamType::STRING): {
+                auto param = megamol::core::param::StringParam(arg.c_str());
+                value_string = std::string(param.ValueString().PeekBuffer());
+                break;
+            }
+            case (Graph::ParamType::TRANSFERFUNCTION): {
+                auto param = megamol::core::param::TransferFunctionParam(arg);
+                value_string = std::string(param.ValueString().PeekBuffer());
+                break;
+            }
+            case (Graph::ParamType::FILEPATH): {
+                auto param = megamol::core::param::FilePathParam(arg.c_str());
+                value_string = std::string(param.ValueString().PeekBuffer());
+                break;
+            }
+            case (Graph::ParamType::FLEXENUM): {
+                auto param = megamol::core::param::FlexEnumParam(arg.c_str());
+                value_string = std::string(param.ValueString().PeekBuffer());
+                break;
+            }
+            default:
+                break;
+            }
+        } else if constexpr (std::is_same_v<T, vislib::math::Ternary>) {
+            auto param = megamol::core::param::TernaryParam(arg);
+            value_string = std::string(param.ValueString().PeekBuffer());
+        } else if constexpr (std::is_same_v<T, glm::vec2>) {
+            auto param = megamol::core::param::Vector2fParam(vislib::math::Vector<float, 2>(arg.x, arg.y));
+            value_string = std::string(param.ValueString().PeekBuffer());
+        } else if constexpr (std::is_same_v<T, glm::vec3>) {
+            auto param = megamol::core::param::Vector3fParam(vislib::math::Vector<float, 3>(arg.x, arg.y, arg.z));
+            value_string = std::string(param.ValueString().PeekBuffer());
+        } else if constexpr (std::is_same_v<T, glm::vec4>) {
+            auto param =
+                megamol::core::param::Vector4fParam(vislib::math::Vector<float, 4>(arg.x, arg.y, arg.z, arg.w));
+            value_string = std::string(param.ValueString().PeekBuffer());
+        } else if constexpr (std::is_same_v<T, std::monostate>) {
+            switch (this->type) {
+            case (Graph::ParamType::BUTTON): {
+                auto param = megamol::core::param::ButtonParam();
+                value_string = std::string(param.ValueString().PeekBuffer());
+                break;
+            }
+            default:
+                break;
+            }
         }
     };
     std::visit(visitor, this->value);
     return value_string;
+}
+
+
+const megamol::core::view::KeyCode megamol::gui::Graph::ParamSlot::GetKeyCode(void) const {
+    try {
+        return std::get<megamol::core::view::KeyCode>(this->storage);
+    } catch (std::bad_variant_access&) {
+    }
+}
+
+
+const vislib::Map<int, vislib::TString> megamol::gui::Graph::ParamSlot::GetMap(void) const {
+    try {
+        return std::get<vislib::Map<int, vislib::TString>>(this->storage);
+    } catch (std::bad_variant_access&) {
+    }
+}
+
+
+const megamol::core::param::FlexEnumParam::Storage_t megamol::gui::Graph::ParamSlot::GetStorage(void) const {
+    try {
+        return std::get<megamol::core::param::FlexEnumParam::Storage_t>(this->storage);
+    } catch (std::bad_variant_access&) {
+    }
 }
 
 

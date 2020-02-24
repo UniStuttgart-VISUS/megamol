@@ -89,17 +89,35 @@ public:
      */
     bool Draw(vislib::math::Rectangle<int> viewport, double instanceTime);
 
+    /**
+     * Process key events.
+     */
     bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods);
 
+    /**
+     * Process character events.
+     */
     bool OnChar(unsigned int codePoint);
 
+    /**
+     * Process mouse button events.
+     */
     bool OnMouseButton(
         core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods);
 
+    /**
+     * Process mouse move events.
+     */
     bool OnMouseMove(double x, double y);
 
+    /**
+     * Process mouse scroll events.
+     */
     bool OnMouseScroll(double dx, double dy);
 
+    /**
+     * Return list of parameter slots provided by this class. Make available in module which uses this class.
+     */
     inline const std::vector<megamol::core::param::ParamSlot*> GetParams(void) const { return this->param_slots; }
 
 private:

@@ -145,7 +145,7 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
         return (*crv)(core::view::InputCall::FnOnKey);
     }
 
-    return false;
+    return true;
 }
 
 
@@ -162,7 +162,7 @@ bool GUIView::OnChar(unsigned int codePoint) {
         return (*crv)(core::view::InputCall::FnOnChar);
     }
 
-    return false;
+    return true;
 }
 
 
@@ -182,7 +182,6 @@ bool GUIView::OnMouseMove(double x, double y) {
         return (*crv)(core::view::InputCall::FnOnMouseMove);
     }
 
-    // Always consumed if any imgui windows is hovered.
     return true;
 }
 
@@ -205,7 +204,6 @@ bool GUIView::OnMouseButton(
         return (*crv)(core::view::InputCall::FnOnMouseButton);
     }
 
-    // Always consumed if any imgui windows is hovered.
     return true;
 }
 
@@ -226,7 +224,6 @@ bool GUIView::OnMouseScroll(double dx, double dy) {
         return (*crv)(core::view::InputCall::FnOnMouseScroll);
     }
 
-    // Always consumed if any imgui windows is hovered.
     return true;
 }
 

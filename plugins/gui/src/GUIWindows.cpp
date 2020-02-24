@@ -342,6 +342,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     }
 
     // Check for parameter hotkeys
+    hotkeyPressed = false;
     std::vector<std::string> modules_list;
     const auto modfunc = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
         for (auto& m : wc.param_modules_list) {
@@ -349,7 +350,6 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
         }
     };
     this->window_manager.EnumWindows(modfunc);
-    hotkeyPressed = false;
     const core::Module* current_mod = nullptr;
     bool consider_module = false;
     if (this->core_instance != nullptr) {
@@ -383,7 +383,6 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
         vislib::sys::Log::DefaultLog.WriteError(
             "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
-
     return hotkeyPressed;
 }
 

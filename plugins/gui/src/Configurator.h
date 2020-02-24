@@ -4,12 +4,6 @@
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
-// Creating a node graph editor for ImGui
-// Quick demo, not production code! This is more of a demo of how to use ImGui to create custom stuff.
-// Better version by @daniel_collin here https://gist.github.com/emoon/b8ff4b4ce4f1b43e79f2
-// See https://github.com/ocornut/imgui/issues/306
-// v0.03: fixed grid offset issue, inverted sign of 'scrolling'
-// Animated gif: https://cloud.githubusercontent.com/assets/8225057/9472357/c0263c04-4b4c-11e5-9fdf-2cd4f33f6582.gif
 
 #ifndef MEGAMOL_GUI_CONFIGURATOR_H_INCLUDED
 #define MEGAMOL_GUI_CONFIGURATOR_H_INCLUDED
@@ -42,31 +36,29 @@ namespace gui {
 class Configurator {
 public:
     /**
-     * Initialises a new instance.
+     * CTOR.
      */
     Configurator();
 
     /**
-     * Finalises an instance.
+     * DTOR.
      */
     virtual ~Configurator();
 
     /**
-     * Draw configurator ImGui window.
-     * (Call in GUIView::drawConfiguratorCallback())
+     * Draw configurator window.
      */
     bool Draw(WindowManager::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance);
 
     /**
      * Checks if any hotkeys are pressed.
-     * (Call in GUIView::OnKey())
      *
      * @return true when any hotkey is pressed.
      */
     bool CheckHotkeys(void);
 
     /*
-     * Provide additional ImGui font for independent scaling of font for graph text.
+     * Provide additional font for independent scaling of font used in graph.
      */
     inline void SetGraphFont(ImFont* graph_font) { this->gui.graph_font = graph_font; }
 
@@ -110,15 +102,14 @@ private:
     bool update_slot_position(GraphManager::GraphPtrType graph, Graph::CallSlotPtrType slot);
     bool update_graph_layout(GraphManager::GraphPtrType graph);
 
-    bool popup_save_project(bool open, megamol::core::CoreInstance* core_instance);
-
-    inline std::string get_unique_project_name(void) {
-        return ("Project_" + std::to_string(this->graph_manager.GetGraphs().size() + 1));
-    }
-
     bool add_new_module_to_graph(
         Graph::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name);
 
+    bool popup_save_project(bool open, megamol::core::CoreInstance* core_instance);
+
+    inline const std::string get_unique_project_name(void) {
+        return ("Project_" + std::to_string(this->graph_manager.GetGraphs().size() + 1));
+    }
     // ------------------------------------------------------------------------
 };
 
