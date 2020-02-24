@@ -82,13 +82,6 @@ public:
     bool CreateContext_GL(megamol::core::CoreInstance* core_instance);
 
     /**
-     * Destroy ImGui context using OpenGL.
-     *
-     * @param core_instance     The currently available core instance.
-     */
-    bool DestroyContext_GL(void);
-
-    /**
      * Draws the GUI.
      *
      * @param viewport      The currently available viewport.
@@ -107,7 +100,12 @@ public:
 
     bool OnMouseScroll(double dx, double dy);
 
+    inline const std::vector<megamol::core::param::ParamSlot*> GetParams(void) const { return this->param_slots; }
+
 private:
+    /** Available ImGui implementations */
+    enum Implementation { NONE, OpenGL };
+
     /** Available GUI styles. */
     enum Styles {
         CorporateGray,
@@ -137,19 +135,25 @@ private:
     /** Pointer to core isntance. */
     megamol::core::CoreInstance* core_instance;
 
+    /** List of pointers to all paramters. */
+    std::vector<megamol::core::param::ParamSlot*> param_slots;
+
+    /** A parameter to select the style */
+    megamol::core::param::ParamSlot style_param;
+
+    /** A parameter to store the profile */
+    megamol::core::param::ParamSlot state_param;
+
     /** Hotkeys */
     typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyData;
     enum HotkeyIndex : size_t { EXIT_PROGRAM = 0, PARAMETER_SEARCH = 1, SAVE_PROJECT = 2, INDEX_COUNT = 3 };
     std::array<HotkeyData, HotkeyIndex::INDEX_COUNT> hotkeys;
 
-    /** A parameter to select the style */
-    core::param::ParamSlot style_param;
-
-    /** A parameter to store the profile */
-    core::param::ParamSlot state_param;
-
     /** The ImGui context created and used by this GUIWindows */
     ImGuiContext* context;
+
+    /** The currently initialized ImGui implementation */
+    Implementation impl;
 
     /** The window manager. */
     WindowManager window_manager;

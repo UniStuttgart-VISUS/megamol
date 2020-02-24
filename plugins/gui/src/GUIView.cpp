@@ -20,6 +20,10 @@ GUIView::GUIView()
 
     this->render_view_slot.SetCompatibleCall<core::view::CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->render_view_slot);
+
+    for (auto slot : this->gui.GetParams()) {
+        this->MakeSlotAvailable(slot);
+    }
 }
 
 GUIView::~GUIView() { this->Release(); }
@@ -27,7 +31,7 @@ GUIView::~GUIView() { this->Release(); }
 bool GUIView::create() { return gui.CreateContext_GL(this->GetCoreInstance()); }
 
 
-void GUIView::release() { gui.DestroyContext_GL(); }
+void GUIView::release() {}
 
 
 void GUIView::unpackMouseCoordinates(float& x, float& y) {
@@ -126,10 +130,9 @@ void GUIView::UpdateFreeze(bool freeze) {
 
 bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
 
-    bool input_consumed = false;
-    /// GUIWindows
+    bool input_consumed = this->gui.OnKey(key, action, mods);
 
-    if (input_consumed) {
+    if (!input_consumed) {
         auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
         if (crv == nullptr) return false;
 
@@ -148,7 +151,7 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
 
 bool GUIView::OnChar(unsigned int codePoint) {
 
-    /// GUIWindows
+    bool input_consumed = this->gui.OnChar(codePoint);
 
     auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
     if (crv) {
@@ -165,10 +168,9 @@ bool GUIView::OnChar(unsigned int codePoint) {
 
 bool GUIView::OnMouseMove(double x, double y) {
 
-    bool input_consumed = false;
-    /// GUIWindows
+    bool input_consumed = this->gui.OnMouseMove(x, y);
 
-    if (input_consumed) {
+    if (!input_consumed) {
         auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
         if (crv == nullptr) return false;
 
@@ -188,10 +190,9 @@ bool GUIView::OnMouseMove(double x, double y) {
 bool GUIView::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
 
-    bool input_consumed = false;
-    /// GUIWindows
+    bool input_consumed = this->gui.OnMouseButton(button, action, mods);
 
-    if (input_consumed) {
+    if (!input_consumed) {
         auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
         if (crv == nullptr) return false;
 
@@ -211,10 +212,9 @@ bool GUIView::OnMouseButton(
 
 bool GUIView::OnMouseScroll(double dx, double dy) {
 
-    bool input_consumed = false;
-    /// GUIWindows
+    bool input_consumed = this->gui.OnMouseScroll(dx, dy);
 
-    if (input_consumed) {
+    if (!input_consumed) {
         auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
         if (crv == nullptr) return false;
 

@@ -28,9 +28,11 @@ using namespace megamol::gui;
 
 GUIWindows::GUIWindows()
     : core_instance(nullptr)
+    , param_slots()
     , style_param("gui::style", "Color style, theme")
     , state_param("gui::state", "Current state of all windows. Automatically updated.")
     , context(nullptr)
+    , impl(Implementation::NONE)
     , window_manager()
     , tf_editor()
     , configurator()
@@ -54,6 +56,10 @@ GUIWindows::GUIWindows()
 
     this->state_param << new core::param::StringParam("");
 
+    this->param_slots.clear();
+    this->param_slots.push_back(&this->state_param);
+    this->param_slots.push_back(&this->style_param);
+
     this->hotkeys[HotkeyIndex::EXIT_PROGRAM] =
         HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
     this->hotkeys[HotkeyIndex::PARAMETER_SEARCH] =
@@ -63,15 +69,10 @@ GUIWindows::GUIWindows()
     this->hotkeys[HotkeyIndex::SAVE_PROJECT] = HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S,
                                                               core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
         false);
-
-
-    /// GUIVIEW:
-    // this->MakeSlotAvailable(&this->state_param);
-    // this->MakeSlotAvailable(&this->style_param);
 }
 
 
-GUIWindows::~GUIWindows() { this->DestroyContext_GL(); }
+GUIWindows::~GUIWindows() { this->destroyContext(); }
 
 
 bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
@@ -86,19 +87,10 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
     if (this->createContext()) {
         // Init OpenGL for ImGui
         const char* glsl_version = "#version 130"; /// "#version 150"
-        return ImGui_ImplOpenGL3_Init(glsl_version);
-    }
-    return false;
-}
-
-
-bool GUIWindows::DestroyContext_GL() {
-
-    this->core_instance = nullptr;
-
-    if (this->context != nullptr) {
-        ImGui_ImplOpenGL3_Shutdown();
-        return this->destroyContext();
+        if (ImGui_ImplOpenGL3_Init(glsl_version)) {
+            this->impl = Implementation::OpenGL;
+            return true;
+        }
     }
     return false;
 }
@@ -419,7 +411,8 @@ bool GUIWindows::OnMouseMove(double x, double y) {
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
 
     // Always consumed if any imgui windows is hovered.
-    return ImGui::IsWindowHovered(hoverFlags);
+    bool consumed = ImGui::IsWindowHovered(hoverFlags);
+    return consumed;
 }
 
 
@@ -444,7 +437,8 @@ bool GUIWindows::OnMouseButton(
     io.MouseDown[buttonIndex] = down;
 
     // Always consumed if any imgui windows is hovered.
-    return ImGui::IsWindowHovered(hoverFlags);
+    bool consumed = ImGui::IsWindowHovered(hoverFlags);
+    return consumed;
 }
 
 
@@ -459,7 +453,8 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
 
     // Always consumed if any imgui windows is hovered.
-    return ImGui::IsWindowHovered(hoverFlags);
+    bool consumed = ImGui::IsWindowHovered(hoverFlags);
+    return consumed;
 }
 
 
@@ -658,8 +653,19 @@ bool GUIWindows::createContext(void) {
 
 bool GUIWindows::destroyContext(void) {
 
-    if (this->context != nullptr) {
-        ImGui::DestroyContext(this->context);
+    this->core_instance = nullptr;
+
+    if (this->impl != Implementation::NONE) {
+        if (this->context != nullptr) {
+            switch (this->impl) {
+            case (Implementation::OpenGL):
+                ImGui_ImplOpenGL3_Shutdown();
+                break;
+            default:
+                break;
+            }
+            ImGui::DestroyContext(this->context);
+        }
     }
     return true;
 }
@@ -702,6 +708,7 @@ void GUIWindows::validateParameter() {
 
 
 void GUIWindows::drawMainWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
+
     // Menu -------------------------------------------------------------------
     /// Requires window flag ImGuiWindowFlags_MenuBar
     if (ImGui::BeginMenuBar()) {
@@ -723,6 +730,7 @@ void GUIWindows::drawMainWindowCallback(const std::string& wn, WindowManager::Wi
 
 
 void GUIWindows::drawTFWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
+
     this->tf_editor.DrawTransferFunctionEditor();
 }
 
@@ -1391,25 +1399,28 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
             ImGui::ActivateItem(id);
         }
 
-        bool valid = true;
+        bool valid_ending = true;
         if (!HasFileExtension(wc.main_project_file, std::string(".lua"))) {
-            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "File name needs to have the ending '.lua'");
-            valid = false;
+            ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.0f, 1.0f), "Appending required file ending '.lua'");
+            valid_ending = false;
         }
         // Warn when file already exists
-        if (PathExists(wc.main_project_file)) {
-            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "File name already exists and will be overwritten.");
+        if (PathExists(wc.main_project_file) || PathExists(wc.main_project_file + ".lua")) {
+            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Overwriting existing file.");
         }
         if (ImGui::Button("Save (Enter)")) {
             save_project = true;
         }
 
-        if (save_project && valid) {
+        if (save_project) {
             // Serialize current state to parameter.
             std::string state;
             this->window_manager.StateToJSON(state);
             this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
             // Save project to file
+            if (!valid_ending) {
+                wc.main_project_file.append(".lua");
+            }
             if (SaveProjectFile(wc.main_project_file, this->core_instance)) {
                 ImGui::CloseCurrentPopup();
             }

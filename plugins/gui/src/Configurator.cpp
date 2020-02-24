@@ -266,7 +266,7 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
         }
         if (ImGui::BeginMenu("Info")) {
             std::string info_text = "Additonal Options:\n\n"
-                                    "- Add selected module from stock list\n"
+                                    "- Add module from stock list to graph\n"
                                     "     [Double Click] with left mouse button"
                                     " | [Richt Click] on selected module -> Context Menu: Add\n\n"
                                     "- Delete selected module/call from graph\n"
@@ -1102,21 +1102,24 @@ bool megamol::gui::Configurator::popup_save_project(bool open, megamol::core::Co
             ImGui::ActivateItem(id);
         }
 
-        bool valid = true;
+        bool valid_ending = true;
         if (!HasFileExtension(this->gui.project_filename, std::string(".lua"))) {
-            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "File name needs to have the ending '.lua'");
-            valid = false;
+            ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.0f, 1.0f), "Appending required file ending '.lua'");
+            valid_ending = false;
         }
         // Warn when file already exists
-        if (PathExists(this->gui.project_filename)) {
-            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "File name already exists and will be overwritten.");
+        if (PathExists(this->gui.project_filename) || PathExists(this->gui.project_filename + ".lua")) {
+            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Overwriting existing file.");
         }
         if (ImGui::Button("Save (Enter)")) {
             save_project = true;
         }
 
-        if (save_project && valid) {
+        if (save_project) {
             if (this->gui.graph_ptr != nullptr) {
+                if (!valid_ending) {
+                    this->gui.project_filename.append(".lua");
+                }
                 if (this->graph_manager.PROTOTYPE_SaveGraph(
                         this->gui.graph_ptr->GetUID(), this->gui.project_filename, core_instance)) {
                     ImGui::CloseCurrentPopup();
