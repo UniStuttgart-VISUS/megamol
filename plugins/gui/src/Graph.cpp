@@ -17,10 +17,72 @@ using namespace megamol::gui;
 
 
 megamol::gui::Graph::ParamSlot::ParamSlot(int uid, ParamType type)
-    : uid(uid), type(type), minval(), maxval(), storage(), value() {}
+    : uid(uid), type(type), minval(), maxval(), storage(), value() {
+
+    // Initialize variant types which should/can not be changed afterwards.
+    // Default ctor of variants initializes std::monostate.
+    switch (this->type) {
+    case (Graph::ParamType::BOOL): {
+        this->value = bool(false);
+    } break;
+    case (Graph::ParamType::BUTTON): {
+        this->storage = megamol::core::view::KeyCode();
+    } break;
+    case (Graph::ParamType::COLOR): {
+        this->value = megamol::core::param::ColorParam::ColorType();
+    } break;
+    case (Graph::ParamType::ENUM): {
+        this->value = int(0);
+        this->storage = vislib::Map<int, vislib::TString>();
+    } break;
+    case (Graph::ParamType::FILEPATH): {
+        this->value = std::string();
+    } break;
+    case (Graph::ParamType::FLEXENUM): {
+        this->value = std::string();
+        this->storage = megamol::core::param::FlexEnumParam::Storage_t();
+    } break;
+    case (Graph::ParamType::FLOAT): {
+        this->value = float(0.0f);
+        this->minval = -FLT_MAX;
+        this->maxval = FLT_MAX;
+    } break;
+    case (Graph::ParamType::INT): {
+        this->value = int();
+        this->minval = INT_MIN;
+        this->maxval = INT_MAX;
+    } break;
+    case (Graph::ParamType::STRING): {
+        this->value = std::string();
+    } break;
+    case (Graph::ParamType::TERNARY): {
+        this->value = vislib::math::Ternary();
+    } break;
+    case (Graph::ParamType::TRANSFERFUNCTION): {
+        this->value = std::string();
+    } break;
+    case (Graph::ParamType::VECTOR2F): {
+        this->value = glm::vec2();
+        this->minval = glm::vec2(-FLT_MAX, -FLT_MAX);
+        this->maxval = glm::vec2(FLT_MAX, FLT_MAX);
+    } break;
+    case (Graph::ParamType::VECTOR3F): {
+        this->value = glm::vec3();
+        this->minval = glm::vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+        this->maxval = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
+    } break;
+    case (Graph::ParamType::VECTOR4F): {
+        this->value = glm::vec4();
+        this->minval = glm::vec4(-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX);
+        this->maxval = glm::vec4(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX);
+    } break;
+    default:
+        break;
+    }
+}
 
 
-std::string megamol::gui::Graph::ParamSlot::ValueString(void) {
+std::string megamol::gui::Graph::ParamSlot::GetValueString(void) {
     std::string value_string = "UNKNOWN PARAMETER TYPE";
     auto visitor = [this, &value_string](auto&& arg) {
         using T = std::decay_t<decltype(arg)>;
@@ -98,30 +160,6 @@ std::string megamol::gui::Graph::ParamSlot::ValueString(void) {
     };
     std::visit(visitor, this->value);
     return value_string;
-}
-
-
-const megamol::core::view::KeyCode megamol::gui::Graph::ParamSlot::GetKeyCode(void) const {
-    try {
-        return std::get<megamol::core::view::KeyCode>(this->storage);
-    } catch (std::bad_variant_access&) {
-    }
-}
-
-
-const vislib::Map<int, vislib::TString> megamol::gui::Graph::ParamSlot::GetMap(void) const {
-    try {
-        return std::get<vislib::Map<int, vislib::TString>>(this->storage);
-    } catch (std::bad_variant_access&) {
-    }
-}
-
-
-const megamol::core::param::FlexEnumParam::Storage_t megamol::gui::Graph::ParamSlot::GetStorage(void) const {
-    try {
-        return std::get<megamol::core::param::FlexEnumParam::Storage_t>(this->storage);
-    } catch (std::bad_variant_access&) {
-    }
 }
 
 
@@ -448,10 +486,10 @@ bool megamol::gui::Graph::Module::RemoveAllCallSlots(void) {
 
 const std::vector<Graph::CallSlotPtrType> megamol::gui::Graph::Module::GetCallSlots(Graph::CallSlotType type) {
 
-    if (this->call_slots[type].empty()) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "Returned call slot list is empty. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
+    // if (this->call_slots[type].empty()) {
+    //    vislib::sys::Log::DefaultLog.WriteWarn(
+    //        "Returned call slot list is empty. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //}
     return this->call_slots[type];
 }
 
@@ -499,9 +537,9 @@ bool megamol::gui::Graph::AddModule(Graph::ModuleStockType& stock_modules, const
                 mod_ptr->description = mod.description;
                 mod_ptr->plugin_name = mod.plugin_name;
                 mod_ptr->is_view = mod.is_view;
-                mod_ptr->name = "module_name";              /// TODO get from core
-                mod_ptr->full_name = "full_name";           /// TODO get from core
-                mod_ptr->is_view_instance = false;          /// TODO get from core
+                // mod_ptr->name = "module_name";              /// get from core
+                // mod_ptr->full_name = "full_name";           /// get from core
+                // mod_ptr->is_view_instance = false;          /// get from core
                 mod_ptr->gui.position = ImVec2(0.0f, 0.0f); // Initialized in configurator
                 mod_ptr->gui.size = ImVec2(1.0f, 1.0f);     // Initialized in configurator
                 mod_ptr->gui.class_label = "";              // Initialized in configurator
@@ -510,11 +548,7 @@ bool megamol::gui::Graph::AddModule(Graph::ModuleStockType& stock_modules, const
                     Graph::ParamSlot param_slot(this->get_unique_id(), p.type);
                     param_slot.class_name = p.class_name;
                     param_slot.description = p.description;
-
-                    param_slot.full_name = "full_name"; /// TODO get from core
-
-                    /// Set value type ? ...
-
+                    // param_slot.full_name = "full_name"; /// get from core
                     mod_ptr->param_slots.emplace_back(param_slot);
                 }
                 for (auto& call_slots_type : mod.call_slots) {

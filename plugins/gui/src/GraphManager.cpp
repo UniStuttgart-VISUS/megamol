@@ -162,9 +162,10 @@ bool megamol::gui::GraphManager::UpdateModulesCallsStock(const megamol::core::Co
 
         auto delta_time =
             static_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - start_time).count();
+
         vislib::sys::Log::DefaultLog.WriteInfo(
-            "Reading available modules and calls ... DONE (duration: %.3f seconds)\n",
-            delta_time); // [%s, %s, line %d]\n", delta_time, __FILE__, __FUNCTION__, __LINE__);
+            "Reading available modules and calls ... DONE (duration: %.3f seconds)\n", delta_time);
+
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -232,16 +233,64 @@ bool megamol::gui::GraphManager::LoadCurrentCoreProject(std::string name, megamo
                 // Parameter
                 const auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
                 if (param_slot != nullptr) {
-                    const auto button_param = param_slot->Param<megamol::core::param::ButtonParam>();
-                    if (button_param == nullptr) {
-                        std::string param_class_name = std::string(param_slot->Name().PeekBuffer());
-                        std::string param_full_name = std::string(param_slot->FullName().PeekBuffer());
-                        for (auto& param : graph_module->param_slots) {
-                            if (param.class_name == param_class_name) {
-                                param.full_name = param_full_name;
-
-
-                                /// get: value, min, max + additional stuff
+                    std::string param_class_name = std::string(param_slot->Name().PeekBuffer());
+                    for (auto& param : graph_module->param_slots) {
+                        if (param.class_name == param_class_name) {
+                            param.full_name = std::string(param_slot->FullName().PeekBuffer());
+                            if (auto* p_ptr = param_slot->Param<core::param::ButtonParam>()) {
+                                param.SetStorage(p_ptr->GetKeyCode());
+                            } else if (auto* p_ptr = param_slot->Param<core::param::BoolParam>()) {
+                                param.SetValue(p_ptr->Value());
+                            } else if (auto* p_ptr = param_slot->Param<core::param::ColorParam>()) {
+                                param.SetValue(p_ptr->Value());
+                            } else if (auto* p_ptr = param_slot->Param<core::param::EnumParam>()) {
+                                param.SetValue(p_ptr->Value());
+                                param.SetStorage(p_ptr->getMap());
+                            } else if (auto* p_ptr = param_slot->Param<core::param::FilePathParam>()) {
+                                param.SetValue(std::string(p_ptr->Value().PeekBuffer()));
+                            } else if (auto* p_ptr = param_slot->Param<core::param::FlexEnumParam>()) {
+                                param.SetValue(p_ptr->Value());
+                                param.SetStorage(p_ptr->getStorage());
+                            } else if (auto* p_ptr = param_slot->Param<core::param::FloatParam>()) {
+                                param.SetValue(p_ptr->Value());
+                                param.SetMinValue(p_ptr->MinValue());
+                                param.SetMaxValue(p_ptr->MaxValue());
+                            } else if (auto* p_ptr = param_slot->Param<core::param::IntParam>()) {
+                                param.SetValue(p_ptr->Value());
+                                param.SetMinValue(p_ptr->MinValue());
+                                param.SetMaxValue(p_ptr->MaxValue());
+                            } else if (auto* p_ptr = param_slot->Param<core::param::StringParam>()) {
+                                param.SetValue(std::string(p_ptr->Value().PeekBuffer()));
+                            } else if (auto* p_ptr = param_slot->Param<core::param::TernaryParam>()) {
+                                param.SetValue(p_ptr->Value());
+                            } else if (auto* p_ptr = param_slot->Param<core::param::TransferFunctionParam>()) {
+                                param.SetValue(p_ptr->Value());
+                            } else if (auto* p_ptr = param_slot->Param<core::param::Vector2fParam>()) {
+                                auto val = p_ptr->Value();
+                                param.SetValue(glm::vec2(val.X(), val.Y()));
+                                auto min = p_ptr->MinValue();
+                                param.SetMinValue(glm::vec2(min.X(), min.Y()));
+                                auto max = p_ptr->MaxValue();
+                                param.SetMaxValue(glm::vec2(max.X(), max.Y()));
+                            } else if (auto* p_ptr = param_slot->Param<core::param::Vector3fParam>()) {
+                                auto val = p_ptr->Value();
+                                param.SetValue(glm::vec3(val.X(), val.Y(), val.Z()));
+                                auto min = p_ptr->MinValue();
+                                param.SetMinValue(glm::vec3(min.X(), min.Y(), min.Z()));
+                                auto max = p_ptr->MaxValue();
+                                param.SetMaxValue(glm::vec3(max.X(), max.Y(), max.Z()));
+                            } else if (auto* p_ptr = param_slot->Param<core::param::Vector4fParam>()) {
+                                auto val = p_ptr->Value();
+                                param.SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()));
+                                auto min = p_ptr->MinValue();
+                                param.SetMinValue(glm::vec4(min.X(), min.Y(), min.Z(), min.W()));
+                                auto max = p_ptr->MaxValue();
+                                param.SetMaxValue(glm::vec4(max.X(), max.Y(), max.Z(), max.W()));
+                            } else {
+                                vislib::sys::Log::DefaultLog.WriteError(
+                                    "Found unknown parameter type. Please extend parameter types in the configurator. "
+                                    "[%s, %s, line %d]\n",
+                                    __FILE__, __FUNCTION__, __LINE__);
                             }
                         }
                     }
@@ -393,7 +442,8 @@ bool megamol::gui::GraphManager::PROTOTYPE_SaveGraph(
                         if (param_slot.type != Graph::ParamType::BUTTON) {
                             // Encode to UTF-8 string
                             vislib::StringA valueString;
-                            vislib::UTF8Encoder::Encode(valueString, vislib::StringA(param_slot.ValueString().c_str()));
+                            vislib::UTF8Encoder::Encode(
+                                valueString, vislib::StringA(param_slot.GetValueString().c_str()));
                             confParams << "mmSetParamValue(\"" << instance << mod->name << "::" << param_slot.class_name
                                        << "\",[=[" << std::string(valueString.PeekBuffer()) << "]=])\n";
                         }
@@ -519,6 +569,7 @@ bool megamol::gui::GraphManager::get_module_stock_data(
             psd.class_name = std::string(param_slot->Name().PeekBuffer());
             psd.description = std::string(param_slot->Description().PeekBuffer());
 
+            // Set parameter type
             if (auto* p_ptr = param_slot->Param<core::param::ButtonParam>()) {
                 psd.type = Graph::ParamType::BUTTON;
             } else if (auto* p_ptr = param_slot->Param<core::param::BoolParam>()) {

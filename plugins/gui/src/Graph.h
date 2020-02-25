@@ -39,6 +39,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Presentations.h"
+
 
 namespace megamol {
 namespace gui {
@@ -115,6 +117,7 @@ public:
     typedef std::vector<Graph::ModulePtrType> ModuleGraphType;
     typedef std::vector<Graph::CallPtrType> CallGraphType;
 
+    // ParamSlot --------------------------------
     class ParamSlot {
     public:
         ParamSlot(int uid, ParamType type);
@@ -128,51 +131,73 @@ public:
 
         std::string full_name;
 
-        std::string ValueString(void);
+        // Get ----------------------------------
+        std::string GetValueString(void);
 
-        template <typename T> void SetValue(T val) {
-            assert(std::holds_alternative<T>(this->value));
-            if (std::holds_alternative<T>(this->value)) {
-                this->value = val;
-            } else {
-                vislib::sys::Log::DefaultLog.WriteWarn(
-                    "Wrong parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            }
-        }
-
-        template <typename T> T Value(void) const {
-            assert(std::holds_alternative<T>(this->value));
-            if (std::holds_alternative<T>(this->value)) {
+        template <typename T> const T& GetValue(void) const {
+            try {
                 return std::get<T>(this->value);
-            } else {
-                vislib::sys::Log::DefaultLog.WriteWarn(
-                    "Wrong parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                return T();
+            } catch (std::bad_variant_access&) {
             }
         }
 
-        template <typename T> T MinValue(void) const {
+        template <typename T> const T& GetMinValue(void) const {
             try {
                 return std::get<T>(this->minval);
             } catch (std::bad_variant_access&) {
             }
         }
 
-        template <typename T> T MaxValue(void) const {
+        template <typename T> const T& GetMaxValue(void) const {
             try {
                 return std::get<T>(this->maxval);
             } catch (std::bad_variant_access&) {
             }
         }
 
-        // BUTTON
-        const core::view::KeyCode GetKeyCode(void) const;
+        template <typename T> const T& GetStorage(void) const {
+            try {
+                return std::get<T>(this->storage);
+            } catch (std::bad_variant_access&) {
+            }
+        }
 
-        // ENUM
-        const vislib::Map<int, vislib::TString> GetMap(void) const;
+        // SET ----------------------------------
+        template <typename T> void SetValue(T val) {
+            if (std::holds_alternative<T>(this->value)) {
+                this->value = val;
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            }
+        }
 
-        // FLEXENUM
-        const megamol::core::param::FlexEnumParam::Storage_t GetStorage(void) const;
+        template <typename T> void SetMinValue(T min) {
+            if (std::holds_alternative<T>(this->minval)) {
+                this->minval = min;
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            }
+        }
+
+        template <typename T> void SetMaxValue(T max) {
+            if (std::holds_alternative<T>(this->maxval)) {
+                this->maxval = max;
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            }
+        }
+
+        template <typename T> void SetStorage(T store) {
+            if (std::holds_alternative<T>(this->storage)) {
+                this->storage = store;
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            }
+        }
 
     private:
         std::variant<std::monostate, // default (unused/unavailable)
@@ -200,7 +225,7 @@ public:
             >
             storage;
 
-        std::variant<std::monostate,                     // default (unused/unavailable) BUTTON
+        std::variant<std::monostate,                     // default  BUTTON
             bool,                                        // BOOL
             megamol::core::param::ColorParam::ColorType, // COLOR
             float,                                       // FLOAT
@@ -214,6 +239,7 @@ public:
             value;
     };
 
+    // CallSlot ---------------------------------
     class CallSlot {
     public:
         CallSlot(int uid);
@@ -246,6 +272,7 @@ public:
         std::vector<Graph::CallPtrType> connected_calls;
     };
 
+    // Call -------------------------------------
     class Call {
     public:
         Call(int uid);
@@ -267,6 +294,7 @@ public:
         std::map<Graph::CallSlotType, Graph::CallSlotPtrType> connected_call_slots;
     };
 
+    // Module -----------------------------------
     class Module {
     public:
         Module(int uid);

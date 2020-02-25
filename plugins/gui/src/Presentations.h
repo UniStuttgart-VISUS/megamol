@@ -1,5 +1,5 @@
 /*
- * ParamPresentation.h
+ * Presentations.h
  *
  * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -27,11 +27,37 @@ namespace gui {
 /**
  * Manages GUI parameter presentations.
  */
-class ParamPresentation {
+class ParamPresentations {
 public:
-    ParamPresentation(void);
+    ParamPresentations(void);
 
-    ~ParamPresentation(void);
+    ~ParamPresentations(void);
+
+private:
+};
+
+
+/**
+ * Manages GUI call presentations.
+ */
+class CallPresentations {
+public:
+    CallPresentations(void);
+
+    ~CallPresentations(void);
+
+private:
+};
+
+
+/**
+ * Manages GUI module presentations.
+ */
+class ModulePresentations {
+public:
+    ModulePresentations(void);
+
+    ~ModulePresentations(void);
 
 private:
 };
