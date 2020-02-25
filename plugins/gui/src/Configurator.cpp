@@ -39,8 +39,9 @@ Configurator::Configurator() : hotkeys(), graph_manager(), utils(), gui() {
     this->gui.mouse_wheel = 0.0f;
     this->gui.graph_font = nullptr;
     this->gui.update_current_graph = false;
-    this->gui.splitter_width = 5.f;
-    this->gui.left_split_width = 250.0f;
+    this->gui.split_thickness = 8.0f;
+    this->gui.split_width_left = 250.0f;
+    this->gui.split_width_right = 500.0f;
 }
 
 
@@ -86,9 +87,6 @@ bool megamol::gui::Configurator::Draw(
         return false;
     }
 
-    ImGuiStyle& style = ImGui::GetStyle();
-    ImGuiIO& io = ImGui::GetIO();
-
     if (this->gui.window_state < 2) {
         // 1] Show pop-up before calling UpdateAvailableModulesCallsOnce of graph.
 
@@ -115,118 +113,21 @@ bool megamol::gui::Configurator::Draw(
 
         this->draw_window_menu(core_instance);
 
-        this->draw_window_module_list();
+        float auto_child = 0.0f;
+        this->utils.VerticalSplitter(this->gui.split_thickness, &this->gui.split_width_left, &auto_child);
 
-        ImGui::SameLine(0.0f, ImGui::GetCursorPosX() + (2.0f * this->gui.splitter_width));
+        this->draw_window_module_list(this->gui.split_width_left);
+        ImGui::SameLine(0.0f, ImGui::GetCursorPosX() + this->gui.split_thickness);
 
-        // Draws module list and graph canvas tabs next to each other
-        ImGui::BeginGroup();
+        auto_child = 0.0f;
+        ImGui::BeginChild("splitter_window", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_None);
+        this->utils.VerticalSplitter(this->gui.split_thickness, &this->gui.split_width_right, &auto_child);
 
-        // Graph (= project) tabs ---------------------------------------------
-        /// (Assuming only one closed tab per frame)
-        int delete_graph_uid = -1;
+        this->draw_window_graph(this->gui.split_width_right);
+        ImGui::SameLine(0.0f, ImGui::GetCursorPosX() + this->gui.split_thickness);
+        this->draw_window_parameter_list(auto_child);
 
-        ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
-        ImGui::BeginTabBar("Graphs", tab_bar_flags);
-        for (auto& graph : this->graph_manager.GetGraphs()) {
-
-            // Tab showing one graph
-            ImGuiTabItemFlags tab_flags = ImGuiTabItemFlags_None;
-            if (graph->IsDirty()) {
-                tab_flags |= ImGuiTabItemFlags_UnsavedDocument;
-            }
-            bool open = true;
-            std::string graph_label = "    " + graph->GetName() + "  ###graph" + std::to_string(graph->GetUID());
-            if (ImGui::BeginTabItem(graph_label.c_str(), &open, tab_flags)) {
-
-                // Context menu
-                if (ImGui::BeginPopupContextItem()) {
-                    if (ImGui::MenuItem("Rename")) {
-                        this->gui.rename_popup_open = true;
-                        /// XXX this->gui.rename_popup_string = &graph->GetName();
-                    }
-                    ImGui::EndPopup();
-                }
-                // Set selected graph ptr
-                if (ImGui::IsItemVisible()) {
-                    this->gui.graph_ptr = graph;
-                }
-
-                // Process module deletion
-                if (std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM])) {
-                    std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = false;
-                    graph->gui.selected_slot_ptr = nullptr;
-                    if (graph->gui.selected_module_uid > 0) {
-                        graph->DeleteModule(graph->gui.selected_module_uid);
-                    }
-                    if (graph->gui.selected_call_uid > 0) {
-                        graph->DeleteCall(graph->gui.selected_call_uid);
-                    }
-                }
-
-                // Register trigger for connecting call
-                if ((graph->gui.selected_slot_ptr != nullptr) && (io.MouseReleased[0])) {
-                    graph->gui.process_selected_slot = 2;
-                }
-
-                for (auto& mod : graph->GetGraphModules()) {
-                    this->update_module_size(graph, mod);
-                    for (auto& slot_pair : mod->GetCallSlots()) {
-                        for (auto& slot : slot_pair.second) {
-                            this->update_slot_position(graph, slot);
-                        }
-                    }
-                }
-
-                // Update positions and sizes
-                if (this->gui.update_current_graph) {
-
-                    this->update_graph_layout(graph);
-                    this->gui.update_current_graph = false;
-                }
-
-                // Draw graph
-                this->draw_canvas_menu(graph);
-                this->draw_canvas_graph(graph);
-
-
-                ImGui::EndTabItem();
-            }
-
-            // (Do not delete graph while looping through graphs list!)
-            if (!open) {
-                delete_graph_uid = graph->GetUID();
-            }
-        }
-        ImGui::EndTabBar();
-
-        // Delete marked graph when tab closed
-        this->graph_manager.DeleteGraph(delete_graph_uid);
-
-        // Rename pop-up (grpah or module name)
-        if (this->gui.rename_popup_open) {
-            ImGui::OpenPopup("Rename");
-        }
-        if (ImGui::BeginPopupModal("Rename", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-
-            std::string label = "Enter new  project name";
-            auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
-            if (ImGui::InputText("Enter new  project name", this->gui.rename_popup_string, flags)) {
-                this->gui.rename_popup_string = nullptr;
-                ImGui::CloseCurrentPopup();
-            }
-            // Set focus on input text once (applied next frame)
-            if (this->gui.rename_popup_open) {
-                ImGuiID id = ImGui::GetID(label.c_str());
-                ImGui::ActivateItem(id);
-            }
-
-            ImGui::EndPopup();
-        }
-        this->gui.rename_popup_open = false;
-
-        ImGui::EndGroup();
-        // --------------------------------------------------------------------
+        ImGui::EndChild();
     }
 
     return true;
@@ -296,21 +197,13 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
 }
 
 
-void megamol::gui::Configurator::draw_window_module_list(void) {
-
-    ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
-
-    const float child_height = ImGui::GetWindowSize().y;
-    static float child_width_tmp = ImGui::GetWindowSize().x - this->gui.left_split_width;
-    this->utils.Splitter(
-        true, this->gui.splitter_width, &this->gui.left_split_width, &child_width_tmp, 8, 8, child_height);
-    const float child_width = this->gui.left_split_width - this->gui.splitter_width;
+void megamol::gui::Configurator::draw_window_module_list(float width) {
 
     ImGui::BeginGroup();
 
-    const float search_height = ImGui::GetItemsLineHeightWithSpacing() * 2.5f;
-    ImGui::BeginChild("module_search", ImVec2(child_width, search_height), true, ImGuiWindowFlags_None);
+    const float search_child_height = ImGui::GetItemsLineHeightWithSpacing() * 2.5f;
+    ImGui::BeginChild("module_search_child_window", ImVec2(width, search_child_height), false,
+        ImGuiWindowFlags_AlwaysUseWindowPadding);
 
     ImGui::Text("Available Modules");
     ImGui::Separator();
@@ -327,7 +220,7 @@ void megamol::gui::Configurator::draw_window_module_list(void) {
 
     ImGui::EndChild();
 
-    ImGui::BeginChild("module_list", ImVec2(child_width, 0.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
+    ImGui::BeginChild("module_list_child_window", ImVec2(width, 0.0f), true, ImGuiWindowFlags_None);
 
     int id = 1;
     for (auto& mod : this->graph_manager.GetModulesStock()) {
@@ -390,18 +283,144 @@ void megamol::gui::Configurator::draw_window_module_list(void) {
     };
 
     ImGui::EndChild();
+
     ImGui::EndGroup();
 }
 
 
-void megamol::gui::Configurator::draw_window_parameter_list(void) {}
+void megamol::gui::Configurator::draw_window_graph(float width) {
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    ImGui::BeginChild("graph_child_window", ImVec2(width, 0.0f), false, ImGuiWindowFlags_None);
+
+    /// (Assuming only one closed tab per frame)
+    int delete_graph_uid = -1;
+
+    ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
+    ImGui::BeginTabBar("Graphs", tab_bar_flags);
+    for (auto& graph : this->graph_manager.GetGraphs()) {
+
+        // Tab showing one graph
+        ImGuiTabItemFlags tab_flags = ImGuiTabItemFlags_None;
+        if (graph->IsDirty()) {
+            tab_flags |= ImGuiTabItemFlags_UnsavedDocument;
+        }
+        bool open = true;
+        std::string graph_label = "    " + graph->GetName() + "  ###graph" + std::to_string(graph->GetUID());
+        if (ImGui::BeginTabItem(graph_label.c_str(), &open, tab_flags)) {
+
+            // Context menu
+            if (ImGui::BeginPopupContextItem()) {
+                if (ImGui::MenuItem("Rename")) {
+                    this->gui.rename_popup_open = true;
+                    /// XXX this->gui.rename_popup_string = &graph->GetName();
+                }
+                ImGui::EndPopup();
+            }
+            // Set selected graph ptr
+            if (ImGui::IsItemVisible()) {
+                this->gui.graph_ptr = graph;
+            }
+
+            // Process module deletion
+            if (std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM])) {
+                std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = false;
+                graph->gui.selected_slot_ptr = nullptr;
+                if (graph->gui.selected_module_uid > 0) {
+                    graph->DeleteModule(graph->gui.selected_module_uid);
+                }
+                if (graph->gui.selected_call_uid > 0) {
+                    graph->DeleteCall(graph->gui.selected_call_uid);
+                }
+            }
+
+            // Register trigger for connecting call
+            if ((graph->gui.selected_slot_ptr != nullptr) && (io.MouseReleased[0])) {
+                graph->gui.process_selected_slot = 2;
+            }
+
+            for (auto& mod : graph->GetGraphModules()) {
+                this->update_module_size(graph, mod);
+                for (auto& slot_pair : mod->GetCallSlots()) {
+                    for (auto& slot : slot_pair.second) {
+                        this->update_slot_position(graph, slot);
+                    }
+                }
+            }
+
+            // Update positions and sizes
+            if (this->gui.update_current_graph) {
+
+                this->update_graph_layout(graph);
+                this->gui.update_current_graph = false;
+            }
+
+            // Draw graph
+            this->draw_graph_menu(graph);
+            this->draw_graph_canvas(graph);
+
+            ImGui::EndTabItem();
+        }
+
+        // (Do not delete graph while looping through graphs list!)
+        if (!open) {
+            delete_graph_uid = graph->GetUID();
+        }
+    }
+    ImGui::EndTabBar();
+
+    // Delete marked graph when tab closed
+    this->graph_manager.DeleteGraph(delete_graph_uid);
+
+    // Rename pop-up (grpah or module name)
+    if (this->gui.rename_popup_open) {
+        ImGui::OpenPopup("Rename");
+    }
+    if (ImGui::BeginPopupModal("Rename", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+        std::string label = "Enter new  project name";
+        auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
+        if (ImGui::InputText("Enter new  project name", this->gui.rename_popup_string, flags)) {
+            this->gui.rename_popup_string = nullptr;
+            ImGui::CloseCurrentPopup();
+        }
+        // Set focus on input text once (applied next frame)
+        if (this->gui.rename_popup_open) {
+            ImGuiID id = ImGui::GetID(label.c_str());
+            ImGui::ActivateItem(id);
+        }
+
+        ImGui::EndPopup();
+    }
+    this->gui.rename_popup_open = false;
+
+    ImGui::EndChild();
+}
 
 
-bool megamol::gui::Configurator::draw_canvas_menu(GraphManager::GraphPtrType graph) {
+void megamol::gui::Configurator::draw_window_parameter_list(float width) {
+
+    ImGui::BeginGroup();
+
+    const float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 2.5f;
+    ImGui::BeginChild("parameter_list_child_window", ImVec2(width, param_child_height), false,
+        ImGuiWindowFlags_AlwaysUseWindowPadding);
+
+    ImGui::Text("Parameters");
+    ImGui::Separator();
+
+    ImGui::EndChild();
+
+    ImGui::EndGroup();
+}
+
+
+bool megamol::gui::Configurator::draw_graph_menu(GraphManager::GraphPtrType graph) {
 
     const float child_height = ImGui::GetItemsLineHeightWithSpacing() * 1.5f;
     ImGui::BeginChild(
-        "canvas_options", ImVec2(0.0f, child_height), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
+        "canvas_options", ImVec2(0.0f, child_height), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
 
     if (ImGui::Button("Reset###reset_scrolling")) {
         graph->gui.canvas_scrolling = ImVec2(0.0f, 0.0f);
@@ -442,7 +461,7 @@ bool megamol::gui::Configurator::draw_canvas_menu(GraphManager::GraphPtrType gra
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType graph) {
+bool megamol::gui::Configurator::draw_graph_canvas(GraphManager::GraphPtrType graph) {
 
     ImGuiIO& io = ImGui::GetIO();
 
@@ -478,18 +497,18 @@ bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType gr
 
     // Display grid -------------------
     if (graph->gui.show_grid) {
-        this->draw_canvas_grid(graph);
+        this->draw_graph_grid(graph);
     }
     ImGui::PopStyleVar(2);
 
     // Draw modules -------------------
-    this->draw_canvas_modules(graph);
+    this->draw_graph_modules(graph);
 
     // Draw calls ---------------------
-    this->draw_canvas_calls(graph);
+    this->draw_graph_calls(graph);
 
     // Draw dragged call --------------
-    this->draw_canvas_dragged_call(graph);
+    this->draw_graph_dragged_call(graph);
 
     // Zoomin and Scaling  ------------
     /// Must be checked inside canvas child window.
@@ -542,7 +561,7 @@ bool megamol::gui::Configurator::draw_canvas_graph(GraphManager::GraphPtrType gr
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_grid(GraphManager::GraphPtrType graph) {
+bool megamol::gui::Configurator::draw_graph_grid(GraphManager::GraphPtrType graph) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -575,7 +594,7 @@ bool megamol::gui::Configurator::draw_canvas_grid(GraphManager::GraphPtrType gra
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_calls(GraphManager::GraphPtrType graph) {
+bool megamol::gui::Configurator::draw_graph_calls(GraphManager::GraphPtrType graph) {
 
     try {
         ImGuiStyle& style = ImGui::GetStyle();
@@ -660,7 +679,7 @@ bool megamol::gui::Configurator::draw_canvas_calls(GraphManager::GraphPtrType gr
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType graph) {
+bool megamol::gui::Configurator::draw_graph_modules(GraphManager::GraphPtrType graph) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -677,7 +696,7 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
 
             // Draw call slots --------
             /// Draw call slots prior to modules to catch mouse clicks on slot area lying over module box.
-            this->draw_canvas_module_call_slots(graph, mod);
+            this->draw_graph_module_call_slots(graph, mod);
 
             // Draw module ------------
             const int id = mod->uid;
@@ -786,7 +805,7 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_module_call_slots(
+bool megamol::gui::Configurator::draw_graph_module_call_slots(
     GraphManager::GraphPtrType graph, Graph::ModulePtrType mod) {
 
     try {
@@ -894,7 +913,7 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slots(
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_dragged_call(GraphManager::GraphPtrType graph) {
+bool megamol::gui::Configurator::draw_graph_dragged_call(GraphManager::GraphPtrType graph) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();

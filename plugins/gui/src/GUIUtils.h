@@ -99,10 +99,10 @@ public:
     float TextWidgetWidth(const std::string& text) const;
 
     /**
-     * Draw draggable splitter between child windows.
+     * Draw draggable splitter between two child windows.
+     * https://github.com/ocornut/imgui/issues/319
      */
-    bool Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2,
-        float splitter_long_axis_size = -1.0f);
+    bool VerticalSplitter(float thickness, float* size_left, float* size_right);
 
 private:
     /** Current tooltip hover time. */

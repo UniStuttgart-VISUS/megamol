@@ -26,7 +26,6 @@
 
 #include "vislib/sys/Log.h"
 
-#include <iostream>
 #include <map>
 #include <variant>
 #include <vector>
@@ -347,11 +346,7 @@ public:
 
     inline int GetUID(void) const { return this->uid; }
 
-    int generate_unique_id(void) {
-        ++this->generated_uid;
-        std::cout << "UID: " << this->generated_uid << std::endl;
-        return this->generated_uid;
-    }
+    int generate_unique_id(void) { return (++this->generated_uid); }
 
     struct Gui {
         float slot_radius;
@@ -379,7 +374,7 @@ private:
     // UIDs are unique within a graph
     const int uid;
     std::string name;
-    bool dirty_flag;S
+    bool dirty_flag;
 
     // Global variable for unique id shared/accessible by all graphs.
     static int generated_uid;

@@ -77,23 +77,25 @@ private:
         float mouse_wheel;
         ImFont* graph_font;
         bool update_current_graph;
-        float splitter_width;
-        float left_split_width;
+        float split_thickness;
+        float split_width_left;
+        float split_width_right;
     } gui;
 
     // FUNCTIONS --------------------------------------------------------------
 
     void draw_window_menu(megamol::core::CoreInstance* core_instance);
-    void draw_window_module_list(void);
-    void draw_window_parameter_list(void);
+    void draw_window_module_list(float width);
+    void draw_window_graph(float width);
+    void draw_window_parameter_list(float width);
 
-    bool draw_canvas_menu(GraphManager::GraphPtrType graph);
-    bool draw_canvas_graph(GraphManager::GraphPtrType graph);
-    bool draw_canvas_grid(GraphManager::GraphPtrType graph);
-    bool draw_canvas_calls(GraphManager::GraphPtrType graph);
-    bool draw_canvas_modules(GraphManager::GraphPtrType graph);
-    bool draw_canvas_module_call_slots(GraphManager::GraphPtrType graph, Graph::ModulePtrType mod);
-    bool draw_canvas_dragged_call(GraphManager::GraphPtrType graph);
+    bool draw_graph_menu(GraphManager::GraphPtrType graph);
+    bool draw_graph_canvas(GraphManager::GraphPtrType graph);
+    bool draw_graph_grid(GraphManager::GraphPtrType graph);
+    bool draw_graph_calls(GraphManager::GraphPtrType graph);
+    bool draw_graph_modules(GraphManager::GraphPtrType graph);
+    bool draw_graph_module_call_slots(GraphManager::GraphPtrType graph, Graph::ModulePtrType mod);
+    bool draw_graph_dragged_call(GraphManager::GraphPtrType graph);
 
     bool update_module_size(GraphManager::GraphPtrType graph, Graph::ModulePtrType mod);
     bool update_slot_position(GraphManager::GraphPtrType graph, Graph::CallSlotPtrType slot);

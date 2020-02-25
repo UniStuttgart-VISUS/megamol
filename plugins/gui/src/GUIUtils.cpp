@@ -135,18 +135,26 @@ void megamol::gui::GUIUtils::StringSearch(const std::string& label, const std::s
 }
 
 
-/// https://github.com/ocornut/imgui/issues/319
-bool megamol::gui::GUIUtils::Splitter(bool split_vertically, float thickness, float* size1, float* size2,
-    float min_size1, float min_size2, float splitter_long_axis_size) {
+bool megamol::gui::GUIUtils::VerticalSplitter(float thickness, float* size_left, float* size_right) {
+
+    bool split_vertically = true;
+    float min_size_left = 1.0f;
+    float min_size_right = 1.0f;
+    float splitter_long_axis_size = ImGui::GetWindowSize().y;
+
+    float width_avail = ImGui::GetWindowSize().x - (3.0f * thickness); //-ImGui::GetCursorPosX();
+
+    (*size_left) = std::min((*size_left), width_avail);
+    (*size_right) = width_avail - (*size_left);
 
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
     ImGuiID id = window->GetID("##Splitter");
     ImRect bb;
-    bb.Min = window->DC.CursorPos + (split_vertically ? ImVec2(*size1, 0.0f) : ImVec2(0.0f, *size1));
+    bb.Min = window->DC.CursorPos + (split_vertically ? ImVec2((*size_left), 0.0f) : ImVec2(0.0f, (*size_left)));
     bb.Max = bb.Min + ImGui::CalcItemSize(split_vertically ? ImVec2(thickness, splitter_long_axis_size)
                                                            : ImVec2(splitter_long_axis_size, thickness),
                           0.0f, 0.0f);
-    return ImGui::SplitterBehavior(
-        bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1, min_size2, 0.0f);
+    return ImGui::SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size_left, size_right,
+        min_size_left, min_size_right, 0.0f);
 }
