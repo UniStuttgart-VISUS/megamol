@@ -83,8 +83,9 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    bool draw_window_menu(megamol::core::CoreInstance* core_instance);
-    bool draw_window_module_list(void);
+    void draw_window_menu(megamol::core::CoreInstance* core_instance);
+    void draw_window_module_list(void);
+    void draw_window_parameter_list(void);
 
     bool draw_canvas_menu(GraphManager::GraphPtrType graph);
     bool draw_canvas_graph(GraphManager::GraphPtrType graph);

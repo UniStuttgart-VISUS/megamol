@@ -123,8 +123,7 @@ bool megamol::gui::Configurator::Draw(
         ImGui::BeginGroup();
 
         // Graph (= project) tabs ---------------------------------------------
-
-        // (Assuming only one closed tab per frame)
+        /// (Assuming only one closed tab per frame)
         int delete_graph_uid = -1;
 
         ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
@@ -234,12 +233,12 @@ bool megamol::gui::Configurator::Draw(
 }
 
 
-bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* core_instance) {
+void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        return;
     }
 
     bool open_popup_project = false;
@@ -294,12 +293,10 @@ bool megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
 
     // Pop-Up(s)
     this->popup_save_project(open_popup_project, core_instance);
-
-    return true;
 }
 
 
-bool megamol::gui::Configurator::draw_window_module_list(void) {
+void megamol::gui::Configurator::draw_window_module_list(void) {
 
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
@@ -394,9 +391,10 @@ bool megamol::gui::Configurator::draw_window_module_list(void) {
 
     ImGui::EndChild();
     ImGui::EndGroup();
-
-    return true;
 }
+
+
+void megamol::gui::Configurator::draw_window_parameter_list(void) {}
 
 
 bool megamol::gui::Configurator::draw_canvas_menu(GraphManager::GraphPtrType graph) {
@@ -1154,7 +1152,9 @@ bool megamol::gui::Configurator::add_new_module_to_graph(
 
     bool retval = false;
     if (this->gui.graph_ptr == nullptr) {
-        // No graph selected ...
+        vislib::sys::Log::DefaultLog.WriteError(
+            "No project available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        // Alternatively create new graph ... but not here :-/
         return false;
     }
 

@@ -13,7 +13,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::GraphManager::GraphManager(void) : graphs(), modules_stock(), calls_stock(), generated_uid(0) {}
+megamol::gui::GraphManager::GraphManager(void) : graphs(), modules_stock(), calls_stock() {}
 
 
 megamol::gui::GraphManager::~GraphManager(void) {}
@@ -21,7 +21,7 @@ megamol::gui::GraphManager::~GraphManager(void) {}
 
 bool megamol::gui::GraphManager::AddGraph(std::string name) {
 
-    Graph graph(this->get_unique_id(), name);
+    Graph graph(name);
     this->graphs.emplace_back(std::make_shared<Graph>(graph));
 
     return true;

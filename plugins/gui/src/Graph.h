@@ -26,6 +26,7 @@
 
 #include "vislib/sys/Log.h"
 
+#include <iostream>
 #include <map>
 #include <variant>
 #include <vector>
@@ -323,7 +324,7 @@ public:
 
     // GRAPH ------------------------------------------------------------------
 
-    Graph(int graph_uid, const std::string& graph_name);
+    Graph(const std::string& graph_name);
 
     virtual ~Graph(void);
 
@@ -345,6 +346,12 @@ public:
     inline void ResetDirty(void) { this->dirty_flag = false; }
 
     inline int GetUID(void) const { return this->uid; }
+
+    int generate_unique_id(void) {
+        ++this->generated_uid;
+        std::cout << "UID: " << this->generated_uid << std::endl;
+        return this->generated_uid;
+    }
 
     struct Gui {
         float slot_radius;
@@ -369,15 +376,13 @@ private:
     Graph::ModuleGraphType modules;
     Graph::CallGraphType calls;
 
+    // UIDs are unique within a graph
     const int uid;
     std::string name;
-    bool dirty_flag;
+    bool dirty_flag;S
 
-    int generated_uid;
-
-    // FUNCTIONS --------------------------------------------------------------
-
-    int get_unique_id(void) { return (++this->generated_uid); }
+    // Global variable for unique id shared/accessible by all graphs.
+    static int generated_uid;
 
     // ------------------------------------------------------------------------
 };

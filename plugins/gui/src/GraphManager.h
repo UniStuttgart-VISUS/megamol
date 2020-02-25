@@ -64,8 +64,6 @@ private:
     Graph::ModuleStockType modules_stock;
     Graph::CallStockType calls_stock;
 
-    int generated_uid;
-
     // FUNCTIONS --------------------------------------------------------------
 
     bool get_call_stock_data(
@@ -73,8 +71,6 @@ private:
 
     bool get_module_stock_data(
         Graph::StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
-
-    int get_unique_id(void) { return (++this->generated_uid); }
 
     // ------------------------------------------------------------------------
 };

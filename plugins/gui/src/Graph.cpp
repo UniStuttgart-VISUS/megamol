@@ -13,6 +13,9 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
+int megamol::gui::Graph::generated_uid = 0;
+
+
 // PARAM SLOT #################################################################
 
 
@@ -503,8 +506,8 @@ const std::map<Graph::CallSlotType, std::vector<Graph::CallSlotPtrType>> megamol
 
 // GRAPH ######################################################################
 
-megamol::gui::Graph::Graph(int graph_uid, const std::string& graph_name)
-    : gui(), modules(), calls(), uid(graph_uid), name(graph_name), dirty_flag(true), generated_uid(0) {
+megamol::gui::Graph::Graph(const std::string& graph_name)
+    : gui(), modules(), calls(), uid(this->generate_unique_id()), name(graph_name), dirty_flag(true) {
 
     this->gui.slot_radius = 8.0f;
     this->gui.canvas_position = ImVec2(0.0f, 0.0f);
@@ -532,7 +535,7 @@ bool megamol::gui::Graph::AddModule(const Graph::ModuleStockType& stock_modules,
         bool found = false;
         for (auto& mod : stock_modules) {
             if (module_class_name == mod.class_name) {
-                auto mod_ptr = std::make_shared<Graph::Module>(this->get_unique_id());
+                auto mod_ptr = std::make_shared<Graph::Module>(this->generate_unique_id());
                 mod_ptr->class_name = mod.class_name;
                 mod_ptr->description = mod.description;
                 mod_ptr->plugin_name = mod.plugin_name;
@@ -545,7 +548,7 @@ bool megamol::gui::Graph::AddModule(const Graph::ModuleStockType& stock_modules,
                 mod_ptr->gui.class_label = "";              // Initialized in configurator
                 mod_ptr->gui.name_label = "";               // Initialized in configurator
                 for (auto& p : mod.param_slots) {
-                    Graph::ParamSlot param_slot(this->get_unique_id(), p.type);
+                    Graph::ParamSlot param_slot(this->generate_unique_id(), p.type);
                     param_slot.class_name = p.class_name;
                     param_slot.description = p.description;
                     // param_slot.full_name = "full_name"; /// get from core
@@ -553,7 +556,7 @@ bool megamol::gui::Graph::AddModule(const Graph::ModuleStockType& stock_modules,
                 }
                 for (auto& call_slots_type : mod.call_slots) {
                     for (auto& c : call_slots_type.second) {
-                        Graph::CallSlot call_slot(this->get_unique_id());
+                        Graph::CallSlot call_slot(this->generate_unique_id());
                         call_slot.name = c.name;
                         call_slot.description = c.description;
                         call_slot.compatible_call_idxs = c.compatible_call_idxs;
@@ -639,7 +642,7 @@ bool megamol::gui::Graph::AddCall(const Graph::CallStockType& stock_calls, int c
             return false;
         }
         auto call = stock_calls[call_idx];
-        auto call_ptr = std::make_shared<Graph::Call>(this->get_unique_id());
+        auto call_ptr = std::make_shared<Graph::Call>(this->generate_unique_id());
         call_ptr->class_name = call.class_name;
         call_ptr->description = call.description;
         call_ptr->plugin_name = call.plugin_name;
