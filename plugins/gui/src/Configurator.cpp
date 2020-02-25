@@ -41,7 +41,7 @@ Configurator::Configurator() : hotkeys(), graph_manager(), utils(), gui() {
     this->gui.update_current_graph = false;
     this->gui.split_thickness = 8.0f;
     this->gui.split_width_left = 250.0f;
-    this->gui.split_width_right = 500.0f;
+    this->gui.split_width_right = 550.0f;
 }
 
 
@@ -117,14 +117,14 @@ bool megamol::gui::Configurator::Draw(
         this->utils.VerticalSplitter(this->gui.split_thickness, &this->gui.split_width_left, &auto_child);
 
         this->draw_window_module_list(this->gui.split_width_left);
-        ImGui::SameLine(0.0f, ImGui::GetCursorPosX() + this->gui.split_thickness);
+        ImGui::SameLine();
 
         auto_child = 0.0f;
-        ImGui::BeginChild("splitter_window", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_None);
+        ImGui::BeginChild("splitter_window_2", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_None);
         this->utils.VerticalSplitter(this->gui.split_thickness, &this->gui.split_width_right, &auto_child);
 
         this->draw_window_graph(this->gui.split_width_right);
-        ImGui::SameLine(0.0f, ImGui::GetCursorPosX() + this->gui.split_thickness);
+        ImGui::SameLine();
         this->draw_window_parameter_list(auto_child);
 
         ImGui::EndChild();

@@ -138,11 +138,12 @@ void megamol::gui::GUIUtils::StringSearch(const std::string& label, const std::s
 bool megamol::gui::GUIUtils::VerticalSplitter(float thickness, float* size_left, float* size_right) {
 
     bool split_vertically = true;
-    float min_size_left = 1.0f;
-    float min_size_right = 1.0f;
-    float splitter_long_axis_size = ImGui::GetWindowSize().y;
+    float min_size = 1.0f; // >=1.0!
+    float splitter_long_axis_size = ImGui::GetContentRegionAvail().y;
 
-    float width_avail = ImGui::GetWindowSize().x - (3.0f * thickness); //-ImGui::GetCursorPosX();
+    float width_avail = ImGui::GetWindowSize().x - (3.0f * thickness);
+
+    if (width_avail < thickness) return false;
 
     (*size_left) = std::min((*size_left), width_avail);
     (*size_right) = width_avail - (*size_left);
@@ -155,6 +156,6 @@ bool megamol::gui::GUIUtils::VerticalSplitter(float thickness, float* size_left,
     bb.Max = bb.Min + ImGui::CalcItemSize(split_vertically ? ImVec2(thickness, splitter_long_axis_size)
                                                            : ImVec2(splitter_long_axis_size, thickness),
                           0.0f, 0.0f);
-    return ImGui::SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size_left, size_right,
-        min_size_left, min_size_right, 0.0f);
+    return ImGui::SplitterBehavior(
+        bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size_left, size_right, min_size, min_size, 0.0f);
 }
