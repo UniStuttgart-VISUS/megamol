@@ -103,6 +103,8 @@ bool GUIUtils::Utf8Encode(std::string& str) const {
 void megamol::gui::GUIUtils::StringSearch(const std::string& label, const std::string& help) {
     ImGuiStyle& style = ImGui::GetStyle();
 
+    ImGui::PushID(label.c_str());
+
     std::string help_label = "(?)";
 
     if (ImGui::Button("Clear")) {
@@ -132,6 +134,8 @@ void megamol::gui::GUIUtils::StringSearch(const std::string& label, const std::s
     ImGui::SameLine();
     ImGui::Text(label.c_str());
     this->HelpMarkerToolTip(help, help_label);
+
+    ImGui::PopID();
 }
 
 
@@ -152,9 +156,10 @@ bool megamol::gui::GUIUtils::VerticalSplitter(float thickness, float* size_left,
     ImGuiWindow* window = g.CurrentWindow;
     ImGuiID id = window->GetID("##Splitter");
     ImRect bb;
-    bb.Min = window->DC.CursorPos + (split_vertically ? ImVec2((*size_left), 0.0f) : ImVec2(0.0f, (*size_left)));
-    bb.Max = bb.Min + ImGui::CalcItemSize(split_vertically ? ImVec2(thickness, splitter_long_axis_size)
-                                                           : ImVec2(splitter_long_axis_size, thickness),
+    bb.Min = window->DC.CursorPos +
+             (split_vertically ? ImVec2((*size_left) + 1.0f, 0.0f) : ImVec2(0.0f, (*size_left) + 1.0f));
+    bb.Max = bb.Min + ImGui::CalcItemSize(split_vertically ? ImVec2(thickness - 4.0f, splitter_long_axis_size)
+                                                           : ImVec2(splitter_long_axis_size, thickness - 4.0f),
                           0.0f, 0.0f);
     return ImGui::SplitterBehavior(
         bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size_left, size_right, min_size, min_size, 0.0f);

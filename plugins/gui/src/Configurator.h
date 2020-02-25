@@ -60,7 +60,7 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyData;
-    enum HotkeyIndex : size_t { MODULE_SEARCH = 0, DELETE_GRAPH_ITEM = 1, INDEX_COUNT = 2 };
+    enum HotkeyIndex : size_t { MODULE_SEARCH = 0, PARAMETER_SEARCH = 1, DELETE_GRAPH_ITEM = 2, INDEX_COUNT = 3 };
 
     std::array<HotkeyData, HotkeyIndex::INDEX_COUNT> hotkeys;
 
@@ -77,7 +77,6 @@ private:
         float mouse_wheel;
         ImFont* graph_font;
         bool update_current_graph;
-        float split_thickness;
         float split_width_left;
         float split_width_right;
     } gui;
@@ -91,11 +90,11 @@ private:
 
     bool draw_graph_menu(GraphManager::GraphPtrType graph);
     bool draw_graph_canvas(GraphManager::GraphPtrType graph);
-    bool draw_graph_grid(GraphManager::GraphPtrType graph);
-    bool draw_graph_calls(GraphManager::GraphPtrType graph);
-    bool draw_graph_modules(GraphManager::GraphPtrType graph);
-    bool draw_graph_module_call_slots(GraphManager::GraphPtrType graph, Graph::ModulePtrType mod);
-    bool draw_graph_dragged_call(GraphManager::GraphPtrType graph);
+    bool draw_canvas_grid(GraphManager::GraphPtrType graph);
+    bool draw_canvas_calls(GraphManager::GraphPtrType graph);
+    bool draw_canvas_modules(GraphManager::GraphPtrType graph);
+    bool draw_canvas_module_call_slots(GraphManager::GraphPtrType graph, Graph::ModulePtrType mod);
+    bool draw_canvas_dragged_call(GraphManager::GraphPtrType graph);
 
     bool update_module_size(GraphManager::GraphPtrType graph, Graph::ModulePtrType mod);
     bool update_slot_position(GraphManager::GraphPtrType graph, Graph::CallSlotPtrType slot);

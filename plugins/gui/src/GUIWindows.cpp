@@ -64,10 +64,10 @@ GUIWindows::GUIWindows()
         HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
     this->hotkeys[HotkeyIndex::PARAMETER_SEARCH] =
         HotkeyData(megamol::core::view::KeyCode(
-                       megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
+                       megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL | core::view::Modifier::ALT),
             false);
     this->hotkeys[HotkeyIndex::SAVE_PROJECT] = HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S,
-                                                              core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
+                                                              core::view::Modifier::CTRL | core::view::Modifier::ALT),
         false);
 }
 

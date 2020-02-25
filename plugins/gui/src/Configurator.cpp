@@ -26,6 +26,10 @@ Configurator::Configurator() : hotkeys(), graph_manager(), utils(), gui() {
         HotkeyData(megamol::core::view::KeyCode(
                        megamol::core::view::Key::KEY_M, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
             false);
+    this->hotkeys[HotkeyIndex::PARAMETER_SEARCH] =
+        HotkeyData(megamol::core::view::KeyCode(
+                       megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
+            false);
     this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM] =
         HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_DELETE), false);
 
@@ -39,9 +43,8 @@ Configurator::Configurator() : hotkeys(), graph_manager(), utils(), gui() {
     this->gui.mouse_wheel = 0.0f;
     this->gui.graph_font = nullptr;
     this->gui.update_current_graph = false;
-    this->gui.split_thickness = 8.0f;
     this->gui.split_width_left = 250.0f;
-    this->gui.split_width_right = 550.0f;
+    this->gui.split_width_right = 600.0f;
 }
 
 
@@ -113,15 +116,16 @@ bool megamol::gui::Configurator::Draw(
 
         this->draw_window_menu(core_instance);
 
+        const float split_thickness = 10.0f;
         float auto_child = 0.0f;
-        this->utils.VerticalSplitter(this->gui.split_thickness, &this->gui.split_width_left, &auto_child);
+        this->utils.VerticalSplitter(split_thickness, &this->gui.split_width_left, &auto_child);
 
         this->draw_window_module_list(this->gui.split_width_left);
         ImGui::SameLine();
 
         auto_child = 0.0f;
         ImGui::BeginChild("splitter_window_2", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_None);
-        this->utils.VerticalSplitter(this->gui.split_thickness, &this->gui.split_width_right, &auto_child);
+        this->utils.VerticalSplitter(split_thickness, &this->gui.split_width_right, &auto_child);
 
         this->draw_window_graph(this->gui.split_width_right);
         ImGui::SameLine();
@@ -201,9 +205,9 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
 
     ImGui::BeginGroup();
 
-    const float search_child_height = ImGui::GetItemsLineHeightWithSpacing() * 2.5f;
+    const float search_child_height = ImGui::GetItemsLineHeightWithSpacing() * 2.25f;
     ImGui::BeginChild("module_search_child_window", ImVec2(width, search_child_height), false,
-        ImGuiWindowFlags_AlwaysUseWindowPadding);
+        ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar);
 
     ImGui::Text("Available Modules");
     ImGui::Separator();
@@ -215,7 +219,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
     std::string help_text = "[" + std::get<0>(this->hotkeys[HotkeyIndex::MODULE_SEARCH]).ToString() +
                             "] Set keyboard focus to search input field.\n"
                             "Case insensitive substring search in module names.";
-    this->utils.StringSearch("Search Modules", help_text);
+    this->utils.StringSearch("Search", help_text);
     auto search_string = this->utils.GetSearchString();
 
     ImGui::EndChild();
@@ -288,11 +292,51 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
 }
 
 
+void megamol::gui::Configurator::draw_window_parameter_list(float width) {
+
+    ImGui::BeginGroup();
+
+    const float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 2.25f;
+    ImGui::BeginChild("parameter_search_child_window", ImVec2(width, param_child_height), false,
+        ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar);
+
+    ImGui::Text("Parameters");
+    ImGui::Separator();
+
+    if (std::get<1>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH])) {
+        std::get<1>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH]) = false;
+        this->utils.SetSearchFocus(true);
+    }
+    std::string help_text = "[" + std::get<0>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH]).ToString() +
+                            "] Set keyboard focus to search input field.\n"
+                            "Case insensitive substring search in parameter names.";
+    this->utils.StringSearch("Search", help_text);
+    auto search_string = this->utils.GetSearchString();
+
+    ImGui::EndChild();
+
+    ImGui::BeginChild("parameter_list_child_window", ImVec2(width, 0.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
+
+    if (this->gui.graph_ptr != nullptr) {
+        for (auto& mod : this->gui.graph_ptr->GetGraphModules()) {
+            if (mod->uid == this->gui.graph_ptr->gui.selected_module_uid) {
+                std::string label = "Selected Module: " + mod->class_name;
+                ImGui::Text(label.c_str());
+            }
+        }
+    }
+
+    ImGui::EndChild();
+
+    ImGui::EndGroup();
+}
+
+
 void megamol::gui::Configurator::draw_window_graph(float width) {
 
     ImGuiIO& io = ImGui::GetIO();
 
-    ImGui::BeginChild("graph_child_window", ImVec2(width, 0.0f), false, ImGuiWindowFlags_None);
+    ImGui::BeginChild("graph_child_window", ImVec2(width, 0.0f), true, ImGuiWindowFlags_None);
 
     /// (Assuming only one closed tab per frame)
     int delete_graph_uid = -1;
@@ -399,26 +443,9 @@ void megamol::gui::Configurator::draw_window_graph(float width) {
 }
 
 
-void megamol::gui::Configurator::draw_window_parameter_list(float width) {
-
-    ImGui::BeginGroup();
-
-    const float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 2.5f;
-    ImGui::BeginChild("parameter_list_child_window", ImVec2(width, param_child_height), false,
-        ImGuiWindowFlags_AlwaysUseWindowPadding);
-
-    ImGui::Text("Parameters");
-    ImGui::Separator();
-
-    ImGui::EndChild();
-
-    ImGui::EndGroup();
-}
-
-
 bool megamol::gui::Configurator::draw_graph_menu(GraphManager::GraphPtrType graph) {
 
-    const float child_height = ImGui::GetItemsLineHeightWithSpacing() * 1.5f;
+    const float child_height = ImGui::GetItemsLineHeightWithSpacing() * 1.0f;
     ImGui::BeginChild(
         "canvas_options", ImVec2(0.0f, child_height), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
 
@@ -497,18 +524,18 @@ bool megamol::gui::Configurator::draw_graph_canvas(GraphManager::GraphPtrType gr
 
     // Display grid -------------------
     if (graph->gui.show_grid) {
-        this->draw_graph_grid(graph);
+        this->draw_canvas_grid(graph);
     }
     ImGui::PopStyleVar(2);
 
     // Draw modules -------------------
-    this->draw_graph_modules(graph);
+    this->draw_canvas_modules(graph);
 
     // Draw calls ---------------------
-    this->draw_graph_calls(graph);
+    this->draw_canvas_calls(graph);
 
     // Draw dragged call --------------
-    this->draw_graph_dragged_call(graph);
+    this->draw_canvas_dragged_call(graph);
 
     // Zoomin and Scaling  ------------
     /// Must be checked inside canvas child window.
@@ -561,7 +588,7 @@ bool megamol::gui::Configurator::draw_graph_canvas(GraphManager::GraphPtrType gr
 }
 
 
-bool megamol::gui::Configurator::draw_graph_grid(GraphManager::GraphPtrType graph) {
+bool megamol::gui::Configurator::draw_canvas_grid(GraphManager::GraphPtrType graph) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -594,7 +621,7 @@ bool megamol::gui::Configurator::draw_graph_grid(GraphManager::GraphPtrType grap
 }
 
 
-bool megamol::gui::Configurator::draw_graph_calls(GraphManager::GraphPtrType graph) {
+bool megamol::gui::Configurator::draw_canvas_calls(GraphManager::GraphPtrType graph) {
 
     try {
         ImGuiStyle& style = ImGui::GetStyle();
@@ -679,7 +706,7 @@ bool megamol::gui::Configurator::draw_graph_calls(GraphManager::GraphPtrType gra
 }
 
 
-bool megamol::gui::Configurator::draw_graph_modules(GraphManager::GraphPtrType graph) {
+bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType graph) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -696,7 +723,7 @@ bool megamol::gui::Configurator::draw_graph_modules(GraphManager::GraphPtrType g
 
             // Draw call slots --------
             /// Draw call slots prior to modules to catch mouse clicks on slot area lying over module box.
-            this->draw_graph_module_call_slots(graph, mod);
+            this->draw_canvas_module_call_slots(graph, mod);
 
             // Draw module ------------
             const int id = mod->uid;
@@ -805,7 +832,7 @@ bool megamol::gui::Configurator::draw_graph_modules(GraphManager::GraphPtrType g
 }
 
 
-bool megamol::gui::Configurator::draw_graph_module_call_slots(
+bool megamol::gui::Configurator::draw_canvas_module_call_slots(
     GraphManager::GraphPtrType graph, Graph::ModulePtrType mod) {
 
     try {
@@ -913,7 +940,7 @@ bool megamol::gui::Configurator::draw_graph_module_call_slots(
 }
 
 
-bool megamol::gui::Configurator::draw_graph_dragged_call(GraphManager::GraphPtrType graph) {
+bool megamol::gui::Configurator::draw_canvas_dragged_call(GraphManager::GraphPtrType graph) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
