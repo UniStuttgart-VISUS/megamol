@@ -51,14 +51,22 @@ private:
 
     uint32_t m_version;
 
-    /** Shader program for deferred shading pass */
-    std::shared_ptr<ShaderProgram> m_billboard_glyph_prgm;
+    /** Shader program for textured billboards */
+    std::shared_ptr<ShaderProgram> m_textured_glyph_prgm;
+
+    /** Shader program for realtime GPU rendered glyph for vector probes */
+    std::shared_ptr<ShaderProgram> m_vector_probe_glyph_prgm;
+
+    /** Shader program for realtime GPU rendered glyph for scalar probes */
+    std::shared_ptr<ShaderProgram> m_scalar_probe_glyph_prgm;
+
+
 
     core::CallerSlot m_glyph_images_slot;
 };
 
 
-} // probe_gl
+} // namespace probe_gl
 } // namespace megamol
 
 

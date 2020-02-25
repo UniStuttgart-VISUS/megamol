@@ -1,3 +1,4 @@
+
 struct MeshShaderParams
 {
     vec4 glpyh_position;
