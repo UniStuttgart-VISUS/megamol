@@ -517,17 +517,17 @@ bool ClusterRenderer::Render(view::CallRender2D& call) {
                                                 255, 0,   0,
                                                 0,   0,   255,
                                                 255, 255, 255};
-                    vislib::graphics::gl::OpenGLTexture2D mytex;
-                    mytex.Create(2, 2, loctex.data(), GL_RGB, GL_UNSIGNED_BYTE, GL_RGB);
-                    mytex.SetFilter(GL_LINEAR, GL_LINEAR);
-                    mytex.SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+                    glowl::TextureLayout layout(GL_RGB8, 2, 2, 1, GL_RGB, GL_UNSIGNED_BYTE, 1);
+
+                    std::unique_ptr<glowl::Texture2D> mytex =
+                        std::make_unique<glowl::Texture2D>("test", layout, loctex.data());
 
                     glBindVertexArray(this->texVa);
                     this->textureShader.Enable();
 
                     glEnable(GL_TEXTURE_2D);
                     glActiveTexture(GL_TEXTURE0);
-                    mytex.Bind();
+                    mytex->bindTexture();
 
                     glUniform1i(this->textureShader.ParameterLocation("tex"), 0);
                     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
