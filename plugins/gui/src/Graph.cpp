@@ -526,7 +526,7 @@ megamol::gui::Graph::Graph(int graph_uid, const std::string& graph_name)
 megamol::gui::Graph::~Graph(void) {}
 
 
-bool megamol::gui::Graph::AddModule(Graph::ModuleStockType& stock_modules, const std::string& module_class_name) {
+bool megamol::gui::Graph::AddModule(const Graph::ModuleStockType& stock_modules, const std::string& module_class_name) {
 
     try {
         bool found = false;
@@ -629,8 +629,8 @@ bool megamol::gui::Graph::DeleteModule(int module_uid) {
 }
 
 
-bool megamol::gui::Graph::AddCall(Graph::CallStockType& stock_calls, int call_idx, Graph::CallSlotPtrType call_slot_1,
-    Graph::CallSlotPtrType call_slot_2) {
+bool megamol::gui::Graph::AddCall(const Graph::CallStockType& stock_calls, int call_idx,
+    Graph::CallSlotPtrType call_slot_1, Graph::CallSlotPtrType call_slot_2) {
 
     try {
         if ((call_idx > stock_calls.size()) || (call_idx < 0)) {

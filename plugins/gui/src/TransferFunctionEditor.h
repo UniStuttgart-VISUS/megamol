@@ -20,8 +20,6 @@
 #include <string>
 #include <vector>
 
-#include <imgui.h>
-
 #include "GUIUtils.h"
 
 

@@ -39,6 +39,8 @@ Configurator::Configurator() : hotkeys(), graph_manager(), utils(), gui() {
     this->gui.mouse_wheel = 0.0f;
     this->gui.graph_font = nullptr;
     this->gui.update_current_graph = false;
+    this->gui.splitter_width = 5.f;
+    this->gui.left_split_width = 250.0f;
 }
 
 
@@ -112,11 +114,14 @@ bool megamol::gui::Configurator::Draw(
         // 3] Render configurator gui content
 
         this->draw_window_menu(core_instance);
+
         this->draw_window_module_list();
 
+        ImGui::SameLine(0.0f, ImGui::GetCursorPosX() + (2.0f * this->gui.splitter_width));
+
         // Draws module list and graph canvas tabs next to each other
-        ImGui::SameLine();
         ImGui::BeginGroup();
+
         // Graph (= project) tabs ---------------------------------------------
 
         // (Assuming only one closed tab per frame)
@@ -139,7 +144,7 @@ bool megamol::gui::Configurator::Draw(
                 if (ImGui::BeginPopupContextItem()) {
                     if (ImGui::MenuItem("Rename")) {
                         this->gui.rename_popup_open = true;
-                        this->gui.rename_popup_string = &graph->GetName();
+                        /// XXX this->gui.rename_popup_string = &graph->GetName();
                     }
                     ImGui::EndPopup();
                 }
@@ -299,11 +304,16 @@ bool megamol::gui::Configurator::draw_window_module_list(void) {
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
-    const float child_width = 250.0f;
-    const float child_height = ImGui::GetItemsLineHeightWithSpacing() * 2.5f;
+    const float child_height = ImGui::GetWindowSize().y;
+    static float child_width_tmp = ImGui::GetWindowSize().x - this->gui.left_split_width;
+    this->utils.Splitter(
+        true, this->gui.splitter_width, &this->gui.left_split_width, &child_width_tmp, 8, 8, child_height);
+    const float child_width = this->gui.left_split_width - this->gui.splitter_width;
 
     ImGui::BeginGroup();
-    ImGui::BeginChild("module_search", ImVec2(child_width, child_height), true, ImGuiWindowFlags_None);
+
+    const float search_height = ImGui::GetItemsLineHeightWithSpacing() * 2.5f;
+    ImGui::BeginChild("module_search", ImVec2(child_width, search_height), true, ImGuiWindowFlags_None);
 
     ImGui::Text("Available Modules");
     ImGui::Separator();
@@ -1140,7 +1150,7 @@ bool megamol::gui::Configurator::popup_save_project(bool open, megamol::core::Co
 
 
 bool megamol::gui::Configurator::add_new_module_to_graph(
-    Graph::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name) {
+    const Graph::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name) {
 
     bool retval = false;
     if (this->gui.graph_ptr == nullptr) {

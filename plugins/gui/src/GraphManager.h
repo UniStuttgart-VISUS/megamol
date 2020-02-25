@@ -19,12 +19,6 @@
 #include "vislib/UTF8Encoder.h"
 #include "vislib/sys/Log.h"
 
-#include <imgui.h>
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include <imgui_internal.h>
-#include "imgui_impl_opengl3.h"
-#include "imgui_stdlib.h"
-
 #include <map>
 #include <vector>
 
@@ -51,8 +45,8 @@ public:
     const GraphPtrType GetGraph(int graph_uid);
 
     bool UpdateModulesCallsStock(const megamol::core::CoreInstance* core_instance);
-    inline Graph::ModuleStockType& GetModulesStock(void) { return this->modules_stock; }
-    inline Graph::CallStockType& GetCallsStock(void) { return this->calls_stock; }
+    inline const Graph::ModuleStockType& GetModulesStock(void) { return this->modules_stock; }
+    inline const Graph::CallStockType& GetCallsStock(void) { return this->calls_stock; }
 
     bool LoadCurrentCoreProject(std::string name, megamol::core::CoreInstance* core_instance);
 

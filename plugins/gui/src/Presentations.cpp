@@ -14,10 +14,16 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-// PARAM PRESENTATIONS --------------------------------------------------------
+// PARAMETER PRESENTATIONS --------------------------------------------------------
 ParamPresentations::ParamPresentations(void) {}
 
 ParamPresentations::~ParamPresentations(void) {}
+
+
+// CALL SLOT PRESENTATIONS --------------------------------------------------------
+CallSlotPresentations::CallSlotPresentations(void) {}
+
+CallSlotPresentations::~CallSlotPresentations(void) {}
 
 
 // CALL PRESENTATIONS --------------------------------------------------------

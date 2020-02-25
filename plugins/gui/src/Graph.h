@@ -26,20 +26,11 @@
 
 #include "vislib/sys/Log.h"
 
-#include <imgui.h>
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include <imgui_internal.h>
-#include "imgui_impl_opengl3.h"
-#include "imgui_stdlib.h"
-
 #include <map>
 #include <variant>
 #include <vector>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-#include "Presentations.h"
+#include "GUIUtils.h"
 
 
 namespace megamol {
@@ -336,19 +327,19 @@ public:
 
     virtual ~Graph(void);
 
-    bool AddModule(Graph::ModuleStockType& stock_modules, const std::string& module_class_name);
+    bool AddModule(const Graph::ModuleStockType& stock_modules, const std::string& module_class_name);
     bool DeleteModule(int module_uid);
 
-    bool AddCall(Graph::CallStockType& stock_calls, int call_idx, Graph::CallSlotPtrType call_slot_1,
+    bool AddCall(const Graph::CallStockType& stock_calls, int call_idx, Graph::CallSlotPtrType call_slot_1,
         Graph::CallSlotPtrType call_slot_2);
     bool DeleteDisconnectedCalls(void);
     bool DeleteCall(int call_uid);
 
-    const Graph::ModuleGraphType& GetGraphModules(void) { return this->modules; }
-    const Graph::CallGraphType& GetGraphCalls(void) { return this->calls; }
+    const const Graph::ModuleGraphType& GetGraphModules(void) { return this->modules; }
+    const const Graph::CallGraphType& GetGraphCalls(void) { return this->calls; }
 
     inline void SetName(const std::string& graph_name) { this->name = graph_name; }
-    inline std::string& GetName(void) { return this->name; }
+    inline const std::string& GetName(void) { return this->name; }
 
     inline bool IsDirty(void) const { return this->dirty_flag; }
     inline void ResetDirty(void) { this->dirty_flag = false; }

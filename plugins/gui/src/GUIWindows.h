@@ -26,37 +26,30 @@
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
-
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/versioninfo.h"
 
 #include "vislib/math/Rectangle.h"
 
+#include <algorithm>
+#include <iomanip>
+#include <sstream>
+
 #include "Configurator.h"
+#include "CorporateGreyStyle.h"
+#include "CorporateWhiteStyle.h"
 #include "GUIUtils.h"
 #include "TransferFunctionEditor.h"
 #include "WindowManager.h"
-
-#include <imgui.h>
-#include <imgui_internal.h>
-#include "CorporateGreyStyle.h"
-#include "CorporateWhiteStyle.h"
-#include "imgui_impl_opengl3.h"
-#include "imgui_stdlib.h"
-
-// Used for platform independent clipboard (ImGui so far only provides windows implementation)
-#ifdef GUI_USE_GLFW
-#    include "GLFW/glfw3.h"
-#endif
-
 /// CMake exeption for the cluster "stampede2" running CentOS. (C++ filesystem support is not working?)
 #ifdef GUI_USE_FILESYSTEM
 #    include "FileUtils.h"
 #endif // GUI_USE_FILESYSTEM
 
-#include <algorithm>
-#include <iomanip>
-#include <sstream>
+// Used for platform independent clipboard (ImGui so far only provides windows implementation)
+#ifdef GUI_USE_GLFW
+#    include "GLFW/glfw3.h"
+#endif
 
 
 namespace megamol {

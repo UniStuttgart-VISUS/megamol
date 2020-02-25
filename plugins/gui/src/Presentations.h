@@ -11,21 +11,15 @@
 
 #include "vislib/sys/Log.h"
 
-#include <imgui.h>
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include <imgui_internal.h>
-#include "imgui_impl_opengl3.h"
-#include "imgui_stdlib.h"
-
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "GUIUtils.h"
+#include "Graph.h"
 
 
 namespace megamol {
 namespace gui {
 
 /**
- * Manages GUI parameter presentations.
+ * Defines GUI parameter presentations.
  */
 class ParamPresentations {
 public:
@@ -33,12 +27,39 @@ public:
 
     ~ParamPresentations(void);
 
+    void Present();
+
 private:
+    enum Presentation { DEFAULT } presentation;
+    bool read_only;
+    bool visible;
 };
 
 
 /**
- * Manages GUI call presentations.
+ * Defines GUI call slot presentations.
+ */
+class CallSlotPresentations {
+public:
+    CallSlotPresentations(void);
+
+    ~CallSlotPresentations(void);
+
+    void Present();
+
+    void UpdatePosition();
+
+
+private:
+    enum Presentation { DEFAULT } presentation;
+    bool label_visible;
+
+    ImVec2 position;
+};
+
+
+/**
+ * Defines GUI call presentations.
  */
 class CallPresentations {
 public:
@@ -46,12 +67,16 @@ public:
 
     ~CallPresentations(void);
 
+    void Present();
+
 private:
+    enum Presentation { DEFAULT } presentation;
+    bool label_visible;
 };
 
 
 /**
- * Manages GUI module presentations.
+ * Defines GUI module presentations.
  */
 class ModulePresentations {
 public:
@@ -59,7 +84,14 @@ public:
 
     ~ModulePresentations(void);
 
+    void Present();
+
 private:
+    enum Presentation { DEFAULT } presentation;
+    bool label_visible;
+
+    ImVec2 position;
+    ImVec2 size;
 };
 
 

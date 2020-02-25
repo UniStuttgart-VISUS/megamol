@@ -12,22 +12,16 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view//Input.h"
 
-#include "FileUtils.h"
-#include "GUIUtils.h"
-#include "GraphManager.h"
-#include "WindowManager.h"
-
 #include "vislib/sys/Log.h"
-
-#include <imgui.h>
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include <imgui_internal.h>
-#include "imgui_impl_opengl3.h"
-#include "imgui_stdlib.h"
 
 #include <map>
 #include <math.h> // fmodf
 #include <tuple>
+
+#include "FileUtils.h"
+#include "GUIUtils.h"
+#include "GraphManager.h"
+#include "WindowManager.h"
 
 
 namespace megamol {
@@ -83,6 +77,8 @@ private:
         float mouse_wheel;
         ImFont* graph_font;
         bool update_current_graph;
+        float splitter_width;
+        float left_split_width;
     } gui;
 
     // FUNCTIONS --------------------------------------------------------------
@@ -103,7 +99,7 @@ private:
     bool update_graph_layout(GraphManager::GraphPtrType graph);
 
     bool add_new_module_to_graph(
-        Graph::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name);
+        const Graph::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name);
 
     bool popup_save_project(bool open, megamol::core::CoreInstance* core_instance);
 

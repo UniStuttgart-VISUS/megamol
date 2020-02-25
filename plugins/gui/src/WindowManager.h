@@ -11,15 +11,15 @@
 
 #include "mmcore/view/Input.h"
 
-#include "json.hpp"
 #include "vislib/sys/Log.h"
-
-#include <imgui.h>
-#include "GUIUtils.h"
 
 #include <list>
 #include <map>
 #include <string>
+
+#include "json.hpp"
+
+#include "GUIUtils.h"
 
 
 namespace megamol {

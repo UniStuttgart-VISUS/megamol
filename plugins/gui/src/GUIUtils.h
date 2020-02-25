@@ -9,11 +9,19 @@
 #define MEGAMOL_GUI_GUIUTILS_INCLUDED
 
 
+#include <imgui.h>
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include <imgui_internal.h>
+#include "imgui_impl_opengl3.h"
+#include "imgui_stdlib.h"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <algorithm> // search
 #include <cctype>    // toupper
 #include <string>
-
-#include <imgui.h>
 
 
 namespace megamol {
@@ -89,6 +97,12 @@ public:
      * Returns width of text drawn as widget.
      */
     float TextWidgetWidth(const std::string& text) const;
+
+    /**
+     * Draw draggable splitter between child windows.
+     */
+    bool Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2,
+        float splitter_long_axis_size = -1.0f);
 
 private:
     /** Current tooltip hover time. */
