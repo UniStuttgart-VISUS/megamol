@@ -12,13 +12,18 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
+#include "DepthFunction.h"
 #include "DiagramSeries.h"
 #include "DiagramSeriesCall.h"
 #include "MDSProjection.h"
 #include "PCAProjection.h"
+#include "TSNEProjection.h"
+
+// Use extra block for renderer, so clang format does not change include order. Eigen3 (used in MDSProjection)
+// does not compile when X11 header (used in SDFFont, which is used in renderers) is included before.
+#include "HistogramRenderer2D.h"
 #include "ParallelCoordinatesRenderer2D.h"
 #include "ScatterplotMatrixRenderer2D.h"
-#include "TSNEProjection.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -45,9 +50,11 @@ public:
         // register modules here:
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::ParallelCoordinatesRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::ScatterplotMatrixRenderer2D>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis::HistogramRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::PCAProjection>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::TSNEProjection>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::MDSProjection>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis::DepthFunction>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeries>();
 
         // register calls here:

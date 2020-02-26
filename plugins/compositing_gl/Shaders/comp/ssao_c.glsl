@@ -99,5 +99,5 @@ void main()
     
     occlusion = 1.0 - (occlusion / sample_cnt);
 
-    imageStore(tgt_tx2D, pixel_coords , vec4(occlusion) );
+    imageStore(tgt_tx2D, pixel_coords, vec4(occlusion, occlusion, occlusion, 1.0));
 }

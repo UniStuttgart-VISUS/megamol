@@ -32,6 +32,7 @@
       <snippet name="::bitflags::main" />
       <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_plots.glsl</snippet>
+      <snippet type="file">splom_data.glsl</snippet>
       <snippet type="file">splom.vert</snippet>
     </shader>
     <shader name="frag">
@@ -51,6 +52,7 @@
       <snippet name="::bitflags::main" />
       <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_plots.glsl</snippet>
+      <snippet type="file">splom_data.glsl</snippet>
       <snippet type="file">splom.vert</snippet>
     </shader>
     <shader name="geom">
@@ -96,6 +98,15 @@
       <snippet name="::bitflags::main" />
       <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_screen.frag</snippet>
+    </shader>
+  </namespace>
+  <namespace name="pick">
+    <shader name="comp">
+      <snippet type="version">430</snippet>
+      <snippet name="::bitflags::main" />
+      <snippet type="file">splom_plots.glsl</snippet>
+      <snippet type="file">splom_data.glsl</snippet>
+      <snippet type="file">splom_pick.comp</snippet>
     </shader>
   </namespace>
 </btf>

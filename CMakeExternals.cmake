@@ -1,3 +1,15 @@
+# Clone external script
+if(NOT EXISTS "${CMAKE_BINARY_DIR}/script-externals")
+  message(STATUS "Downloading external scripts")
+  execute_process(COMMAND
+    ${GIT_EXECUTABLE} clone https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
+
+# Include external script
+include("${CMAKE_BINARY_DIR}/script-externals/cmake/External.cmake")
+
 #
 # Centralized function to require externals to add them once by invoking
 # require_external(<EXTERNAL_TARGET>).
@@ -7,7 +19,6 @@
 #
 function(require_external NAME)
   set(FETCHCONTENT_QUIET ON CACHE BOOL "")
-  set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE BOOL "")
 
   # Header-only libraries #####################################################
 
@@ -105,28 +116,33 @@ function(require_external NAME)
     endif()
 
     if(WIN32)
-      set(ADIOS2_IMPORT_LIB "lib/adios2.lib")
-      set(ADIOS2_LIB "bin/adios2.dll")
+      set(ADIOS2_LIB "lib/adios2.lib")
     else()
       include(GNUInstallDirs)
-      set(ADIOS2_IMPORT_LIB "${CMAKE_INSTALL_LIBDIR}/libadios2.so")
-      set(ADIOS2_LIB "${CMAKE_INSTALL_LIBDIR}/libadios2.so")
+      set(ADIOS2_LIB "${CMAKE_INSTALL_LIBDIR}/libadios2.a")
     endif()
 
-    add_external_project(adios2
+    add_external_project(adios2 STATIC
       GIT_REPOSITORY https://github.com/ornladios/ADIOS2.git
-      GIT_TAG "v2.3.1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_IMPORT_LIB}"
+      GIT_TAG "v2.4.0"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_LIB}"
       CMAKE_ARGS 
-        -DBUILD_TESTING=OFF -DADIOS2_USE_BZip2=OFF 
-        -DADIOS2_USE_Fortran=OFF -DADIOS2_USE_HDF5=OFF 
-        -DADIOS2_USE_Python=OFF -DADIOS2_USE_SST=OFF 
-        -DADIOS2_USE_SZ=OFF -DADIOS2_USE_SysVShMem=OFF 
-        -DADIOS2_USE_ZFP=OFF -DADIOS2_USE_ZeroMQ=OFF 
+        -DBUILD_SHARED_LIBS=OFF
+        -DBUILD_TESTING=OFF
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+        -DADIOS2_USE_BZip2=OFF
+        -DADIOS2_USE_Fortran=OFF
+        -DADIOS2_USE_HDF5=OFF
+        -DADIOS2_USE_Python=OFF
+        -DADIOS2_USE_SST=OFF
+        -DADIOS2_USE_SZ=OFF
+        -DADIOS2_USE_SysVShMem=OFF
+        -DADIOS2_USE_ZFP=OFF
+        -DADIOS2_USE_ZeroMQ=OFF
+        -DADIOS2_USE_Profiling=OFF
         -DMPI_GUESS_LIBRARY_NAME=${MPI_GUESS_LIBRARY_NAME})
 
-    add_external_library(adios2 SHARED
-      IMPORT_LIBRARY ${ADIOS2_IMPORT_LIB}
+    add_external_library(adios2
       LIBRARY ${ADIOS2_LIB})
 
   # bhtsne
@@ -135,21 +151,22 @@ function(require_external NAME)
       return()
     endif()
 
-    set(BHTSNE_LIB_DEBUG "lib/${CMAKE_STATIC_LIBRARY_PREFIX}bhtsned${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    set(BHTSNE_LIB_RELEASE "lib/${CMAKE_STATIC_LIBRARY_PREFIX}bhtsne${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    if(WIN32)
+      set(BHTSNE_LIB "lib/bhtsne.lib")
+    else()
+      set(BHTSNE_LIB "lib/libbhtsne.a")
+    endif()
 
-    add_external_project(bhtsne
+    add_external_project(bhtsne STATIC
       GIT_REPOSITORY https://github.com/lvdmaaten/bhtsne.git
       GIT_TAG "36b169c88250d0afe51828448dfdeeaa508f13bc"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/lib/${CMAKE_STATIC_LIBRARY_PREFIX}bhtsne<SUFFIX>${CMAKE_STATIC_LIBRARY_SUFFIX}"
-      DEBUG_SUFFIX d
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${BHTSNE_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/cmake/bhtsne/CMakeLists.txt"
         "<SOURCE_DIR>/CMakeLists.txt")
 
-    add_external_library(bhtsne STATIC
-      LIBRARY_DEBUG ${BHTSNE_LIB_DEBUG}
-      LIBRARY_RELEASE ${BHTSNE_LIB_RELEASE})
+    add_external_library(bhtsne
+      LIBRARY ${BHTSNE_LIB})
 
   # glfw3
   elseif(NAME STREQUAL "glfw3")
@@ -157,30 +174,29 @@ function(require_external NAME)
       return()
     endif()
 
-    if (MSVC)
-      set(GLFW_PRODUCT "lib/glfw3dll.lib")
-      set(GLFW_IMPORT_LIBRARY "lib/glfw3dll.lib")
-      set(GLFW_LIBRARY "lib/glfw3.dll")
+    include(GNUInstallDirs)
+
+    if(WIN32)
+      set(GLFW_IMPORT_LIB "${CMAKE_INSTALL_LIBDIR}/glfw3dll.lib")
+      set(GLFW_LIB "bin/glfw3.dll")
     else()
-      set(GLFW_PRODUCT "lib/libglfw.so")
-      set(GLFW_IMPORT_LIBRARY "")
-      set(GLFW_LIBRARY "lib/libglfw.so")
+      set(GLFW_LIB "${CMAKE_INSTALL_LIBDIR}/libglfw.so")
     endif()
 
-    add_external_project(glfw
+    add_external_project(glfw SHARED
       GIT_REPOSITORY https://github.com/glfw/glfw.git
-      GIT_TAG "3.2.1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_PRODUCT}"
+      GIT_TAG "3.3.2"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_LIB}" "<INSTALL_DIR>/${GLFW_IMPORT_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DGLFW_BUILD_EXAMPLES=OFF
         -DGLFW_BUILD_TESTS=OFF
         -DGLFW_BUILD_DOCS=OFF)
 
-    add_external_library(glfw3 SHARED
+    add_external_library(glfw3
       PROJECT glfw
-      IMPORT_LIBRARY ${GLFW_IMPORT_LIBRARY}
-      LIBRARY ${GLFW_LIBRARY})
+      IMPORT_LIBRARY ${GLFW_IMPORT_LIB}
+      LIBRARY ${GLFW_LIB})
 
   # IceT
   elseif(NAME STREQUAL "IceT")
@@ -189,53 +205,42 @@ function(require_external NAME)
     endif()
 
     if(WIN32)
-      set(ICET_CORE_PRODUCT "lib/IceTCore.lib")
       set(ICET_CORE_IMPORT_LIB "lib/IceTCore.lib")
-      set(ICET_CORE_LIB "bin/IceTCore.dll")
-      set(ICET_GL_PRODUCT "lib/IceTGL.lib")
       set(ICET_GL_IMPORT_LIB "lib/IceTGL.lib")
-      set(ICET_GL_LIB "bin/IceTGL.dll")
-      set(ICET_MPI_PRODUCT "lib/IceTMPI.lib")
       set(ICET_MPI_IMPORT_LIB "lib/IceTMPI.lib")
+      set(ICET_CORE_LIB "bin/IceTCore.dll")
+      set(ICET_GL_LIB "bin/IceTGL.dll")
       set(ICET_MPI_LIB "bin/IceTMPI.dll")
     else()
       include(GNUInstallDirs)
-      set(ICET_CORE_PRODUCT "lib/libIceTCore.so")
       set(ICET_CORE_LIB "lib/libIceTCore.so")
-      set(ICET_GL_PRODUCT "lib/libIceTGL.so")
       set(ICET_GL_LIB "lib/libIceTGL.so")
-      set(ICET_MPI_PRODUCT "lib/libIceTMPI.so")
       set(ICET_MPI_LIB "lib/libIceTMPI.so")
     endif()
     
-    add_external_project(IceT
+    add_external_project(IceT SHARED
       GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ICET_CORE_PRODUCT}" "<INSTALL_DIR>/${ICET_GL_PRODUCT}" "<INSTALL_DIR>/${ICET_MPI_PRODUCT}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ICET_CORE_LIB}" "<INSTALL_DIR>/${ICET_GL_LIB}" "<INSTALL_DIR>/${ICET_MPI_LIB}"
+                       "<INSTALL_DIR>/${ICET_CORE_IMPORT_LIB}" "<INSTALL_DIR>/${ICET_GL_IMPORT_LIB}" "<INSTALL_DIR>/${ICET_MPI_IMPORT_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DICET_BUILD_TESTING=OFF
         -DMPI_GUESS_LIBRARY_NAME=${MPI_GUESS_LIBRARY_NAME})
 
-    add_external_library(IceTCore SHARED
+    add_external_library(IceTCore
       PROJECT IceT
-      IMPORT_LIBRARY_DEBUG ${ICET_CORE_IMPORT_LIB}
-      IMPORT_LIBRARY_RELEASE ${ICET_CORE_IMPORT_LIB}
-      LIBRARY_DEBUG ${ICET_CORE_LIB}
-      LIBRARY_RELEASE ${ICET_CORE_LIB})
+      IMPORT_LIBRARY ${ICET_CORE_IMPORT_LIB}
+      LIBRARY ${ICET_CORE_LIB})
 
-    add_external_library(IceTGL SHARED
+    add_external_library(IceTGL
       PROJECT IceT
-      IMPORT_LIBRARY_DEBUG ${ICET_GL_IMPORT_LIB}
-      IMPORT_LIBRARY_RELEASE ${ICET_GL_IMPORT_LIB}
-      LIBRARY_DEBUG ${ICET_GL_LIB}
-      LIBRARY_RELEASE ${ICET_GL_LIB})
+      IMPORT_LIBRARY ${ICET_GL_IMPORT_LIB}
+      LIBRARY ${ICET_GL_LIB})
 
-    add_external_library(IceTMPI SHARED
+    add_external_library(IceTMPI
       PROJECT IceT
-      IMPORT_LIBRARY_DEBUG ${ICET_MPI_IMPORT_LIB}
-      IMPORT_LIBRARY_RELEASE ${ICET_MPI_IMPORT_LIB}
-      LIBRARY_DEBUG ${ICET_MPI_LIB}
-      LIBRARY_RELEASE ${ICET_MPI_LIB})
+      IMPORT_LIBRARY ${ICET_MPI_IMPORT_LIB}
+      LIBRARY ${ICET_MPI_LIB})
 
   # imgui
   elseif(NAME STREQUAL "imgui")
@@ -243,9 +248,13 @@ function(require_external NAME)
       return()
     endif()
 
-    set(IMGUI_LIB "lib/${CMAKE_STATIC_LIBRARY_PREFIX}imgui${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    if(WIN32)
+      set(IMGUI_LIB "lib/imgui.lib")
+    else()
+      set(IMGUI_LIB "lib/libimgui.a")
+    endif()
 
-    add_external_project(imgui
+    add_external_project(imgui STATIC
       GIT_REPOSITORY https://github.com/ocornut/imgui.git
       GIT_TAG "v1.70"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
@@ -255,7 +264,7 @@ function(require_external NAME)
 
     external_get_property(imgui SOURCE_DIR)
 
-    add_external_library(imgui STATIC
+    add_external_library(imgui
       LIBRARY ${IMGUI_LIB})
 
     target_include_directories(imgui INTERFACE "${SOURCE_DIR}/examples" "${SOURCE_DIR}/misc/cpp")
@@ -276,37 +285,33 @@ function(require_external NAME)
     require_external(zlib)
 
     if(MSVC)
-      set(LIBPNG_PRODUCT "lib/libpng16_static<SUFFIX>${CMAKE_STATIC_LIBRARY_SUFFIX}")
-      set(LIBPNG_DEBUG "lib/libpng16_staticd${CMAKE_STATIC_LIBRARY_SUFFIX}")
-      set(LIBPNG_RELEASE "lib/libpng16_static${CMAKE_STATIC_LIBRARY_SUFFIX}")
+      set(LIBPNG_LIB "lib/libpng16_static<SUFFIX>.lib")
     else()
       include(GNUInstallDirs)
-      set(LIBPNG_PRODUCT "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}png16<SUFFIX>${CMAKE_STATIC_LIBRARY_SUFFIX}")
-      set(LIBPNG_DEBUG "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}png16d${CMAKE_STATIC_LIBRARY_SUFFIX}")
-      set(LIBPNG_RELEASE "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}png16${CMAKE_STATIC_LIBRARY_SUFFIX}")
+      set(LIBPNG_LIB "${CMAKE_INSTALL_LIBDIR}/libpng16<SUFFIX>.a")
     endif()
 
     if(MSVC)
-      set(ZLIB_LIBRARY "lib/zlibstatic<SUFFIX>${CMAKE_STATIC_LIBRARY_SUFFIX}")
+      set(ZLIB_LIB "lib/zlibstatic$<$<CONFIG:Debug>:d>.lib")
     else()
       include(GNUInstallDirs)
-      set(ZLIB_LIBRARY "lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
+      set(ZLIB_LIB "lib/libz.a")
     endif()
 
     external_get_property(zlib INSTALL_DIR)
 
-    add_external_project(libpng
+    add_external_project(libpng STATIC
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/libpng.git
       GIT_TAG "v1.6.34"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${LIBPNG_PRODUCT}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${LIBPNG_LIB}"
       DEBUG_SUFFIX d
-      DEPENDS zlib_ext
+      DEPENDS zlib
       CMAKE_ARGS
         -DPNG_BUILD_ZLIB=ON
         -DPNG_SHARED=OFF
         -DPNG_TESTS=OFF
         -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
-        -DZLIB_LIBRARY:PATH=${INSTALL_DIR}/${ZLIB_LIBRARY}
+        -DZLIB_LIBRARY:PATH=${INSTALL_DIR}/${ZLIB_LIB}
         -DZLIB_INCLUDE_DIR:PATH=${INSTALL_DIR}/include
         -DZLIB_VERSION_STRING:STRING=${ZLIB_VERSION_STRING}
         -DZLIB_VERSION_MAJOR:STRING=${ZLIB_VERSION_MAJOR}
@@ -317,10 +322,10 @@ function(require_external NAME)
         -DZLIB_MINOR_VERSION:STRING=${ZLIB_VERSION_MINOR}
         -DZLIB_PATCH_VERSION:STRING=${ZLIB_VERSION_PATCH})
 
-    add_external_library(libpng STATIC
-      LIBRARY_DEBUG ${LIBPNG_DEBUG}
-      LIBRARY_RELEASE ${LIBPNG_RELEASE}
-      INTERFACE_LIBRARIES zlib)
+    add_external_library(libpng
+      LIBRARY ${LIBPNG_LIB}
+      INTERFACE_LIBRARIES zlib
+      DEBUG_SUFFIX d)
 
   # libzmq / libcppzmq
   elseif(NAME STREQUAL "libzmq" OR NAME STREQUAL "libcppzmq")
@@ -338,34 +343,24 @@ function(require_external NAME)
     endif()
 
     if(WIN32)
-      set(ZMQ_PRODUCT "lib/libzmq${MSVC_TOOLSET}-mt<SUFFIX>-${ZMQ_VER}.lib")
-      set(ZMQ_IMPORT_DEBUG "lib/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.lib")
-      set(ZMQ_IMPORT_RELEASE "lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib")
-      set(ZMQ_DEBUG "bin/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.dll")
-      set(ZMQ_RELEASE "bin/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.dll")
+      set(ZMQ_IMPORT_LIB "lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib")
+      set(ZMQ_LIB "bin/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.dll")
     else()
       include(GNUInstallDirs)
-      set(ZMQ_PRODUCT "${CMAKE_INSTALL_LIBDIR}/libzmq.so")
-      set(ZMQ_IMPORT_DEBUG "")
-      set(ZMQ_IMPORT_RELEASE "")
-      set(ZMQ_DEBUG "${CMAKE_INSTALL_LIBDIR}/libzmq.so")
-      set(ZMQ_RELEASE ${ZMQ_DEBUG})
+      set(ZMQ_LIB "${CMAKE_INSTALL_LIBDIR}/libzmq.so")
     endif()
 
-    add_external_project(libzmq
+    add_external_project(libzmq SHARED
       GIT_REPOSITORY https://github.com/zeromq/libzmq.git
       GIT_TAG 56ace6d03f521b9abb5a50176ec7763c1b77afa9
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZMQ_PRODUCT}"
-      DEBUG_SUFFIX -gd
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZMQ_LIB}" "<INSTALL_DIR>/${ZMQ_IMPORT_LIB}"
       CMAKE_ARGS
         -DZMQ_BUILD_TESTS=OFF
         -DENABLE_PRECOMPILED=OFF)
 
-    add_external_library(libzmq SHARED
-      IMPORT_LIBRARY_DEBUG ${ZMQ_IMPORT_DEBUG}
-      IMPORT_LIBRARY_RELEASE ${ZMQ_IMPORT_RELEASE}
-      LIBRARY_DEBUG ${ZMQ_DEBUG}
-      LIBRARY_RELEASE ${ZMQ_RELEASE})
+    add_external_library(libzmq
+      IMPORT_LIBRARY ${ZMQ_IMPORT_LIB}
+      LIBRARY ${ZMQ_LIB})
 
     add_external_headeronly_project(libcppzmq
       DEPENDS libzmq
@@ -381,23 +376,21 @@ function(require_external NAME)
     if(WIN32)
       set(QUICKHULL_IMPORT_LIB "lib/quickhull.lib")
       set(QUICKHULL_LIB "bin/quickhull.dll")
-      set(QUICKHULL_CMAKE_ARGS "")
     else()
-      set(QUICKHULL_IMPORT_LIB "lib/libquickhull.so")
       set(QUICKHULL_LIB "lib/libquickhull.so")
-      set(QUICKHULL_CMAKE_ARGS -DCMAKE_C_FLAGS="-fPIC" -DCMAKE_CXX_FLAGS="-fPIC")
     endif()
 
-    add_external_project(quickhull
+    add_external_project(quickhull SHARED
       GIT_REPOSITORY https://github.com/akuukka/quickhull.git
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_IMPORT_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_LIB}" "<INSTALL_DIR>/${QUICKHULL_IMPORT_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/cmake/quickhull/CMakeLists.txt"
         "<SOURCE_DIR>/CMakeLists.txt"
       CMAKE_ARGS
-        ${QUICKHULL_CMAKE_ARGS})
+        -DCMAKE_C_FLAGS=-fPIC
+        -DCMAKE_CXX_FLAGS=-fPIC)
 
-    add_external_library(quickhull SHARED
+    add_external_library(quickhull
       IMPORT_LIBRARY ${QUICKHULL_IMPORT_LIB}
       LIBRARY ${QUICKHULL_LIB})
 
@@ -408,29 +401,25 @@ function(require_external NAME)
     endif()
 
     if(WIN32)
-      set(SNAPPY_PRODUCT "lib/snappy.lib")
       set(SNAPPY_IMPORT_LIB "lib/snappy.lib")
       set(SNAPPY_LIB "bin/snappy.dll")
     else()
       include(GNUInstallDirs)
-      set(SNAPPY_PRODUCT "lib/libsnappy.so")
       set(SNAPPY_LIB "${CMAKE_INSTALL_LIBDIR}/libsnappy.so")
     endif()
 
-    add_external_project(snappy
+    add_external_project(snappy SHARED
       GIT_REPOSITORY https://github.com/google/snappy.git
       GIT_TAG "1.1.7"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${SNAPPY_PRODUCT}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${SNAPPY_LIB}" "<INSTALL_DIR>/${SNAPPY_IMPORT_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DSNAPPY_BUILD_TESTS=OFF
         -DCMAKE_BUILD_TYPE=Release)
 
-    add_external_library(snappy SHARED
-      IMPORT_LIBRARY_DEBUG ${SNAPPY_IMPORT_LIB}
-      IMPORT_LIBRARY_RELEASE ${SNAPPY_IMPORT_LIB}
-      LIBRARY_DEBUG ${SNAPPY_LIB}
-      LIBRARY_RELEASE ${SNAPPY_LIB})
+    add_external_library(snappy
+      IMPORT_LIBRARY ${SNAPPY_IMPORT_LIB}
+      LIBRARY ${SNAPPY_LIB})
 
   # tinyobjloader
   elseif(NAME STREQUAL "tinyobjloader")
@@ -445,7 +434,7 @@ function(require_external NAME)
       set(TINYOBJLOADER_LIB "${CMAKE_INSTALL_LIBDIR}/libtinyobjloader.a")
     endif()
 
-    add_external_project(tinyobjloader
+    add_external_project(tinyobjloader STATIC
       GIT_REPOSITORY https://github.com/syoyo/tinyobjloader.git
       GIT_TAG "v2.0.0-rc1"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${TINYOBJLOADER_LIB}"
@@ -453,7 +442,7 @@ function(require_external NAME)
         -DCMAKE_C_FLAGS=-fPIC
         -DCMAKE_CXX_FLAGS=-fPIC)
 
-    add_external_library(tinyobjloader STATIC
+    add_external_library(tinyobjloader
       LIBRARY ${TINYOBJLOADER_LIB})
 
   # tinyply
@@ -463,33 +452,23 @@ function(require_external NAME)
     endif()
 
     if(WIN32)
-      set(TNY_PRODUCT "lib/tinyply<SUFFIX>.lib")
       set(TNY_IMPORT_LIB "lib/tinyply.lib")
-      set(TNY_IMPORT_LIB_DEBUG "lib/tinyplyd.lib")
       set(TNY_LIB "bin/tinyply.dll")
-      set(TNY_LIB_DEBUG "bin/tinyplyd.dll")
     else()
       include(GNUInstallDirs)
-      set(TNY_PRODUCT "lib/libtinyply<SUFFIX>.so")
-      set(TNY_IMPORT_LIB_DEBUG "lib/libtinyplyd.so")
-      set(TNY_IMPORT_LIB "lib/libtinyply.so")
-      set(TNY_LIB_DEBUG "lib/libtinyplyd.so")
       set(TNY_LIB "lib/libtinyply.so")
     endif()
 
-    add_external_project(tinyply
+    add_external_project(tinyply SHARED
       GIT_REPOSITORY https://github.com/ddiakopoulos/tinyply.git
       GIT_TAG "2.1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TNY_PRODUCT}"
-      DEBUG_SUFFIX d
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TNY_LIB}" "<INSTALL_DIR>/${TNY_IMPORT_LIB}"
       CMAKE_ARGS
-        -DSHARED_LIB=true)
+        -DSHARED_LIB=ON)
 
-    add_external_library(tinyply SHARED
-      IMPORT_LIBRARY_DEBUG ${TNY_IMPORT_LIB_DEBUG}
-      IMPORT_LIBRARY_RELEASE ${TNY_IMPORT_LIB}
-      LIBRARY_DEBUG ${TNY_LIB_DEBUG}
-      LIBRARY_RELEASE ${TNY_LIB})
+    add_external_library(tinyply
+      IMPORT_LIBRARY ${TNY_IMPORT_LIB}
+      LIBRARY ${TNY_LIB})
 
   # tracking
   elseif(NAME STREQUAL "tracking")
@@ -497,33 +476,37 @@ function(require_external NAME)
       return()
     endif()
 
+    if(NOT WIN32)
+      message(WARNING "External 'tracking' requested, but not available on non-Windows systems")
+    endif()
+
     set(TRACKING_LIB "bin/tracking.dll")
     set(TRACKING_IMPORT_LIB "lib/tracking.lib")
-    set(TRACKING_NATNET_LIB "src/tracking_ext/tracking/natnet/lib/x64/NatNetLib.dll")
-    set(TRACKING_NATNET_IMPORT_LIB "src/tracking_ext/tracking/natnet/lib/x64/NatNetLib.lib")
+    set(TRACKING_NATNET_LIB "bin/NatNetLib.dll")
+    set(TRACKING_NATNET_IMPORT_LIB "lib/NatNetLib.lib")
 
-    add_external_project(tracking
+    add_external_project(tracking SHARED
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TRACKING_IMPORT_LIB}" "<INSTALL_DIR>/${TRACKING_NATNET_IMPORT_LIB}"
+      GIT_TAG "v2.0"
+      BUILD_BYPRODUCTS
+        "<INSTALL_DIR>/${TRACKING_LIB}"
+        "<INSTALL_DIR>/${TRACKING_IMPORT_LIB}"
+        "<INSTALL_DIR>/${TRACKING_NATNET_LIB}"
+        "<INSTALL_DIR>/${TRACKING_NATNET_IMPORT_LIB}"
       CMAKE_ARGS
         -DCREATE_TRACKING_TEST_PROGRAM=OFF)
 
-    add_external_library(tracking SHARED 
-      IMPORT_LIBRARY_DEBUG ${TRACKING_IMPORT_LIB}
-      IMPORT_LIBRARY_RELEASE ${TRACKING_IMPORT_LIB}
-      LIBRARY_DEBUG ${TRACKING_LIB}
-      LIBRARY_RELEASE ${TRACKING_LIB})
+    add_external_library(tracking
+      IMPORT_LIBRARY ${TRACKING_IMPORT_LIB}
+      LIBRARY ${TRACKING_LIB})
 
-    add_external_library(natnet SHARED 
+    add_external_library(natnet
       PROJECT tracking
-      IMPORT_LIBRARY_DEBUG ${TRACKING_NATNET_IMPORT_LIB}
-      IMPORT_LIBRARY_RELEASE ${TRACKING_NATNET_IMPORT_LIB}
-      LIBRARY_DEBUG ${TRACKING_NATNET_LIB}
-      LIBRARY_RELEASE ${TRACKING_NATNET_LIB})
+      IMPORT_LIBRARY ${TRACKING_NATNET_IMPORT_LIB}
+      LIBRARY ${TRACKING_NATNET_LIB})
 
-    add_external_library(tracking_int INTERFACE
-      PROJECT tracking
-      INCLUDE_DIR "src/tracking_ext/tracking/include")
+    external_get_property(tracking SOURCE_DIR)
+    set(tracking_files "${SOURCE_DIR}/tracking/conf/tracking.conf" PARENT_SCOPE)
 
   # zfp
   elseif(NAME STREQUAL "zfp")
@@ -538,19 +521,19 @@ function(require_external NAME)
       set(ZFP_LIB "${CMAKE_INSTALL_LIBDIR}/libzfp.a")
     endif()
 
-    add_external_project(zfp
+    add_external_project(zfp STATIC
       GIT_REPOSITORY https://github.com/LLNL/zfp.git
       GIT_TAG "0.5.2"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZFP_LIB}"
       CMAKE_ARGS
-        -DBUILD_SHARED_LIBS=OFF
+        -DBUILD_SHARED_LIBS=ON
         -DBUILD_UTILITIES=OFF
         -DBUILD_TESTING=OFF
         -DZFP_WITH_ALIGNED_ALLOC=ON
         -DZFP_WITH_CACHE_FAST_HASH=ON
         -DCMAKE_BUILD_TYPE=Release)
 
-    add_external_library(zfp STATIC
+    add_external_library(zfp
       LIBRARY ${ZFP_LIB})
 
   # zlib
@@ -560,27 +543,23 @@ function(require_external NAME)
     endif()
 
     if(MSVC)
-      set(ZLIB_PRODUCT "lib/zlibstatic<SUFFIX>${CMAKE_STATIC_LIBRARY_SUFFIX}")
-      set(ZLIB_DEBUG "lib/zlibstaticd${CMAKE_STATIC_LIBRARY_SUFFIX}")
-      set(ZLIB_RELEASE "lib/zlibstatic${CMAKE_STATIC_LIBRARY_SUFFIX}")
+      set(ZLIB_LIB "lib/zlibstatic<SUFFIX>.lib")
     else()
       include(GNUInstallDirs)
-      set(ZLIB_PRODUCT "lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
-      set(ZLIB_DEBUG "lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
-      set(ZLIB_RELEASE "lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
+      set(ZLIB_LIB "lib/libz.a")
     endif()
 
-    add_external_project(zlib
+    add_external_project(zlib STATIC
       GIT_REPOSITORY https://github.com/madler/zlib.git
       GIT_TAG "v1.2.11"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZLIB_PRODUCT}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZLIB_LIB}"
       DEBUG_SUFFIX d
       CMAKE_ARGS
         -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON)
 
-    add_external_library(zlib STATIC
-      LIBRARY_DEBUG ${ZLIB_DEBUG}
-      LIBRARY_RELEASE ${ZLIB_RELEASE})
+    add_external_library(zlib
+      LIBRARY ${ZLIB_LIB}
+      DEBUG_SUFFIX d)
 
     set(ZLIB_VERSION_STRING "1.2.11" CACHE STRING "" FORCE)
     set(ZLIB_VERSION_MAJOR 1 CACHE STRING "" FORCE)
@@ -593,6 +572,60 @@ function(require_external NAME)
     mark_as_advanced(FORCE ZLIB_VERSION_MINOR)
     mark_as_advanced(FORCE ZLIB_VERSION_PATCH)
     mark_as_advanced(FORCE ZLIB_VERSION_TWEAK)
+
+  # vtkm
+  elseif(NAME STREQUAL "vtkm")
+    if(TARGET vtkm)
+      return()
+    endif()
+
+    set(VTKM_VER 1.4)
+
+    if(WIN32)
+      set(VTKM_LIB_CONT "lib/vtkm_cont-${VTKM_VER}.lib")
+      set(VTKM_LIB_DEBUG_CONT "lib/vtkm_cont-${VTKM_VER}.lib")
+      set(VTKM_LIB_RENDERER "lib/vtkm_rendering-${VTKM_VER}.lib")
+      set(VTKM_LIB_DEBUG_RENDERER "lib/vtkm_rendering-${VTKM_VER}.lib")
+      set(VTKM_LIB_WORKLET "lib/vtkm_worklet-${VTKM_VER}.lib")
+      set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-${VTKM_VER}.lib")
+    else()
+      include(GNUInstallDirs)
+      set(VTKM_LIB_CONT "lib/vtkm_cont-${VTKM_VER}.a")
+      set(VTKM_LIB_DEBUG_CONT "lib/vtkm_cont-${VTKM_VER}.a")
+      set(VTKM_LIB_RENDERER "lib/vtkm_rendering-${VTKM_VER}.a")
+      set(VTKM_LIB_DEBUG_RENDERER "lib/vtkm_rendering-${VTKM_VER}.a")
+      set(VTKM_LIB_WORKLET "lib/vtkm_worklet-${VTKM_VER}.a")
+      set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-${VTKM_VER}.a")
+    endif()
+
+    option(vtkm_ENABLE_CUDA "Option to build vtkm with cuda enabled" OFF)
+    
+    add_external_project(vtkm
+      GIT_REPOSITORY https://gitlab.kitware.com/vtk/vtk-m.git
+      GIT_TAG "v1.4.0"
+      CMAKE_ARGS
+        -DBUILD_SHARED_LIBS:BOOL=OFF
+        -DVTKm_ENABLE_TESTING:BOOL=OFF
+        -DVTKm_ENABLE_CUDA:BOOL=${vtkm_ENABLE_CUDA}
+        -DBUILD_TESTING:BOOL=OFF
+        -VTKm_ENABLE_DEVELOPER_FLAGS:BOOL=OFF
+        -DCMAKE_BUILD_TYPE=Release
+        )
+
+    add_external_library(vtkm_cont STATIC
+      PROJECT vtkm
+      LIBRARY_RELEASE "${VTKM_LIB_CONT}"
+      LIBRARY_DEBUG "${VTKM_LIB_DEBUG_CONT}")
+
+    add_external_library(vtkm_renderer STATIC
+      PROJECT vtkm
+      LIBRARY_RELEASE "${VTKM_LIB_RENDERER}"
+      LIBRARY_DEBUG "${VTKM_LIB_DEBUG_RENDERER}")
+
+    add_external_library(vtkm_worklet STATIC
+      PROJECT vtkm
+      LIBRARY_RELEASE "${VTKM_LIB_WORKLET}"
+      LIBRARY_DEBUG "${VTKM_LIB_DEBUG_WORKLET}")
 
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")

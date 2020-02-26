@@ -12,12 +12,9 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/View3D_2.h"
-
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/CallRenderView.h"
-
 #include "mmcore/utility/SDFFont.h"
-
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -28,17 +25,19 @@
 
 #include "vislib/Serialisable.h"
 #include "vislib/Trace.h"
-#include "vislib/graphics/Camera.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/Path.h"
 
-#include "CallKeyframeKeeper.h"
-#include "Keyframe.h"
 #include "png.h"
+#include "Keyframe.h"
+#include "CinematicUtils.h"
+#include "CallKeyframeKeeper.h"
+
+#include <glm/gtx/quaternion.hpp>
+
 
 namespace megamol {
 namespace cinematic {
@@ -103,77 +102,62 @@ namespace cinematic {
          * variables
          **********************************************************************/
 
-        megamol::core::utility::SDFFont theFont;
-
         enum SkyboxSides {
-            SKYBOX_NONE = 0,
+            SKYBOX_NONE  = 0,
             SKYBOX_FRONT = 1,
-            SKYBOX_BACK = 2,
-            SKYBOX_LEFT = 4,
+            SKYBOX_BACK  = 2,
+            SKYBOX_LEFT  = 4,
             SKYBOX_RIGHT = 8,
-            SKYBOX_UP = 16,
-            SKYBOX_DOWN = 32
+            SKYBOX_UP    = 16,
+            SKYBOX_DOWN  = 32
         };
 
-        clock_t deltaAnimTime;
-
-        Keyframe shownKeyframe;
-        bool playAnim;
-
-        int cineWidth;
-        int cineHeight;
-        int vpHLast;
-        int vpWLast;
-
-        CinematicView::SkyboxSides sbSide;
+        struct PngData {
+            BYTE*                 buffer = nullptr;
+            vislib::sys::FastFile file;
+            unsigned int          width;
+            unsigned int          height;
+            unsigned int          bpp;
+            vislib::StringA       path;
+            vislib::StringA       filename;
+            unsigned int          cnt;
+            png_structp           structptr = nullptr;
+            png_infop             infoptr = nullptr;
+            float                 animTime;
+            unsigned int          write_lock;
+            time_point            start_time;
+            unsigned int          exp_frame_cnt;
+        };
 
         vislib::graphics::gl::FramebufferObject fbo;
-        bool rendering;
-        unsigned int fps;
-
-        struct pngData {
-            BYTE* buffer = nullptr;
-            vislib::sys::FastFile file;
-            unsigned int width;
-            unsigned int height;
-            unsigned int bpp;
-            vislib::TString path;
-            vislib::TString filename;
-            unsigned int cnt;
-            png_structp ptr = nullptr;
-            png_infop infoptr = nullptr;
-            float animTime;
-            unsigned int write_lock;
-            time_point start_time;
-            unsigned int exp_frame_cnt;
-        } pngdata;
+        PngData                                 png_data;
+        CinematicUtils                          utils;
+        clock_t                                 deltaAnimTime;
+        Keyframe                                shownKeyframe;
+        bool                                    playAnim;
+        int                                     cineWidth;
+        int                                     cineHeight;
+        float                                   vp_lastw;
+        float                                   vp_lasth;
+        SkyboxSides                             sbSide;
+        bool                                    rendering;
+        unsigned int                            fps;
+        bool                                    skyboxCubeMode;
 
         /**********************************************************************
          * functions
          **********************************************************************/
 
-        /** 
-        * Render to file functions 
-        */
-        bool render2file_setup();
+        // PNG ----------------------------------------------------------------
+
+        bool render_to_file_setup();
+
+        bool render_to_file_write();
+
+        bool render_to_file_cleanup();
 
         /**
-        *
-        */
-        bool render2file_write_png();
-
-        /**
-        *
-        */
-        bool render2file_finish();
-
-        /**
-        *
-        */
-        bool setSimTime(float st);
-
-        /**
-         * My error handling function for png export
+         * Error handling function for png export
          *
          * @param pngPtr The png structure pointer
          * @param msg The error message
@@ -183,7 +167,7 @@ namespace cinematic {
         }
 
         /**
-         * My error handling function for png export
+         * Warning handling function for png export
          *
          * @param pngPtr The png structure pointer
          * @param msg The error message
@@ -193,7 +177,7 @@ namespace cinematic {
         }
 
         /**
-         * My write function for png export
+         * Write function for png export
          *
          * @param pngPtr The png structure pointer
          * @param buf The pointer to the buffer to be written
@@ -205,7 +189,7 @@ namespace cinematic {
         }
 
         /**
-         * My flush function for png export
+         * Flush function for png export
          *
          * @param pngPtr The png structure pointer
          */
@@ -215,10 +199,9 @@ namespace cinematic {
         }
 
         /**********************************************************************
-         * callback
+         * callbacks
          **********************************************************************/
 
-        /** The keyframe keeper caller slot */
         core::CallerSlot keyframeKeeperSlot;
 
         /**********************************************************************
@@ -227,10 +210,11 @@ namespace cinematic {
 
         core::param::ParamSlot renderParam;
         core::param::ParamSlot delayFirstRenderFrameParam;
-        core::param::ParamSlot startRenderFrameParam;
+        core::param::ParamSlot firstRenderFrameParam;
+        core::param::ParamSlot lastRenderFrameParam;
         core::param::ParamSlot toggleAnimPlayParam;
         core::param::ParamSlot selectedSkyboxSideParam;
-        core::param::ParamSlot cubeModeRenderParam;
+        core::param::ParamSlot skyboxCubeModeParam;
         core::param::ParamSlot resWidthParam;
         core::param::ParamSlot resHeightParam;
         core::param::ParamSlot fpsParam;

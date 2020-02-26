@@ -8,32 +8,11 @@ uniform int rowStride;
 uniform float kernelWidth;
 uniform bool attenuateSubpixel;
 
-layout(std430, binding = 3) buffer ValueSSBO {
-    float values[];
-};
-
-layout(std430, binding = 4) buffer FlagBuffer {
-    uint flags[];
-};
-
 out float vsKernelSize;
 out float vsPixelKernelSize;
 out float vsValue;
 out vec4 vsValueColor;
 out vec4 vsPosition;
-
-// Maps a pair of values to the position.
-vec4 valuesToPosition(Plot plot, vec2 values) {
-    vec2 unitValues = vec2((values.x - plot.minX) / (plot.maxX - plot.minX),
-        (values.y - plot.minY) / (plot.maxY - plot.minY));
-#if DEBUG_MINMAX
-    // To debug column min/max and thus normalization, we clamp the result.
-    unitValues = clamp(unitValues, vec2(0.0), vec2(1.0));
-#endif
-    return vec4(unitValues.x * plot.sizeX + plot.offsetX,
-        unitValues.y * plot.sizeY + plot.offsetY,
-        0.0, 1.0);
-}
 
 void main() {
     const Plot plot = plots[gl_InstanceID];
@@ -52,15 +31,21 @@ void main() {
     }
     gl_PointSize = vsPixelKernelSize;
 
-    vsValue = normalizeValue(values[rowOffset + valueColumn]);
+    if (valueColumn == -1) {
+        vsValue = 1.0;
+    } else {
+        vsValue = normalizeValue(values[rowOffset + valueColumn]);
+    }
     vsValueColor = flagifyColor(tflookup(vsValue), flags[gl_VertexID]);
 
     vsPosition = valuesToPosition(plot, 
         vec2(values[rowOffset + plot.indexX],
         values[rowOffset + plot.indexY]));
     if (bitflag_test(flags[gl_VertexID], FLAG_ENABLED | FLAG_FILTERED, FLAG_ENABLED)) {
+    //if (true) {
         gl_Position = modelViewProjection * vsPosition;
+		gl_ClipDistance[0] = 1.0;
     } else {
-        gl_Position = vec4(0.0); // clipping cheat
+        gl_ClipDistance[0] = -1.0; // clipping cheat
     }
 }
