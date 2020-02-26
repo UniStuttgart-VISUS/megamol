@@ -488,30 +488,30 @@ bool SurfaceNets::getData(core::Call& call) {
     _data = reinterpret_cast<float*>(cd->GetData());
 
     if (something_changed || _recalc) {
-            this->calculateSurfaceNets2();
-  
-            _mesh_attribs.resize(2);
-            _mesh_attribs[0].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
-            _mesh_attribs[0].byte_size = _vertices.size() * sizeof(std::array<float,3>);
-            _mesh_attribs[0].component_cnt = 3;
-            _mesh_attribs[0].stride = sizeof(std::array<float, 3>);
-            _mesh_attribs[0].offset = 0;
-            _mesh_attribs[0].data = reinterpret_cast<uint8_t*>(_vertices.data());
-            _mesh_attribs[0].semantic = mesh::MeshDataAccessCollection::POSITION;
+        this->calculateSurfaceNets2();
 
-            _mesh_attribs[1].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
-            _mesh_attribs[1].byte_size = _normals.size() * sizeof(std::array<float, 3>);
-            _mesh_attribs[1].component_cnt = 3;
-            _mesh_attribs[1].stride = sizeof(std::array<float, 3>);
-            _mesh_attribs[1].offset = 0;
-            _mesh_attribs[1].data = reinterpret_cast<uint8_t*>(_normals.data());
-            _mesh_attribs[1].semantic = mesh::MeshDataAccessCollection::NORMAL;
+        _mesh_attribs.resize(2);
+        _mesh_attribs[0].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
+        _mesh_attribs[0].byte_size = _vertices.size() * sizeof(std::array<float, 3>);
+        _mesh_attribs[0].component_cnt = 3;
+        _mesh_attribs[0].stride = sizeof(std::array<float, 3>);
+        _mesh_attribs[0].offset = 0;
+        _mesh_attribs[0].data = reinterpret_cast<uint8_t*>(_vertices.data());
+        _mesh_attribs[0].semantic = mesh::MeshDataAccessCollection::POSITION;
 
-            _mesh_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
-            _mesh_indices.byte_size = _faces.size() * sizeof(std::array<uint32_t,4>);
-            _mesh_indices.data = reinterpret_cast<uint8_t*>(_faces.data());
+        _mesh_attribs[1].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
+        _mesh_attribs[1].byte_size = _normals.size() * sizeof(std::array<float, 3>);
+        _mesh_attribs[1].component_cnt = 3;
+        _mesh_attribs[1].stride = sizeof(std::array<float, 3>);
+        _mesh_attribs[1].offset = 0;
+        _mesh_attribs[1].data = reinterpret_cast<uint8_t*>(_normals.data());
+        _mesh_attribs[1].semantic = mesh::MeshDataAccessCollection::NORMAL;
 
-            ++_version;
+        _mesh_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
+        _mesh_indices.byte_size = _faces.size() * sizeof(std::array<uint32_t, 4>);
+        _mesh_indices.data = reinterpret_cast<uint8_t*>(_faces.data());
+
+        ++_version;
     }
 
     // put data in mesh
