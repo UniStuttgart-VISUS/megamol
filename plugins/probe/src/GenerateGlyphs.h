@@ -66,7 +66,7 @@ private:
     bool doScalarGlyphGeneration(FloatProbe& probe);
 
     bool doVectorRibbonGlyphGeneration(Vec4Probe& probe);
-
+ 
     bool doVectorRadarGlyphGeneration(Vec4Probe& probe);
 
     uint32_t _version = 0;

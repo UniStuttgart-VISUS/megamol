@@ -108,13 +108,19 @@ bool SampleAlongPobes::getData(core::Call& call) {
         std::string(this->_vec_param_to_samplex_w.Param<core::param::FlexEnumParam>()->ValueString());
 
     toInq.clear();
-    toInq.emplace_back(std::string(this->_parameter_to_sample_slot.Param<core::param::FlexEnumParam>()->ValueString()));
-
-    toInq.emplace_back(std::string(this->_vec_param_to_samplex_x.Param<core::param::FlexEnumParam>()->ValueString()));
-    toInq.emplace_back(std::string(this->_vec_param_to_samplex_y.Param<core::param::FlexEnumParam>()->ValueString()));
-    toInq.emplace_back(std::string(this->_vec_param_to_samplex_z.Param<core::param::FlexEnumParam>()->ValueString()));
-    toInq.emplace_back(std::string(this->_vec_param_to_samplex_w.Param<core::param::FlexEnumParam>()->ValueString()));
-
+    if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 0) {
+        toInq.emplace_back(
+            std::string(this->_parameter_to_sample_slot.Param<core::param::FlexEnumParam>()->ValueString()));
+    } else {
+        toInq.emplace_back(
+            std::string(this->_vec_param_to_samplex_x.Param<core::param::FlexEnumParam>()->ValueString()));
+        toInq.emplace_back(
+            std::string(this->_vec_param_to_samplex_y.Param<core::param::FlexEnumParam>()->ValueString()));
+        toInq.emplace_back(
+            std::string(this->_vec_param_to_samplex_z.Param<core::param::FlexEnumParam>()->ValueString()));
+        toInq.emplace_back(
+            std::string(this->_vec_param_to_samplex_w.Param<core::param::FlexEnumParam>()->ValueString()));
+    }
 
     // get data from adios
     for (auto var : toInq) {

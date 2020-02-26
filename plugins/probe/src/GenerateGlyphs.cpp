@@ -38,130 +38,129 @@ GenerateGlyphs::GenerateGlyphs()
 GenerateGlyphs::~GenerateGlyphs() { this->Release(); }
 
 
-bool GenerateGlyphs::doScalarGlyphGeneration(FloatProbe&  probe) {
+bool GenerateGlyphs::doScalarGlyphGeneration(FloatProbe& probe) {
 
-        // get probe
-        //auto probe = this->_probe_data->getProbe<FloatProbe>(i);
-        // read samples of probe
-        auto samples = probe.getSamplingResult();
+    // get probe
+    // auto probe = this->_probe_data->getProbe<FloatProbe>(i);
+    // read samples of probe
+    auto samples = probe.getSamplingResult();
 
-        if (samples->samples.empty()) {
-            vislib::sys::Log::DefaultLog.WriteError("[GenerateGlyphs] Probes have not been sampled.");
-            return false;
-        }
+    if (samples->samples.empty()) {
+        vislib::sys::Log::DefaultLog.WriteError("[GenerateGlyphs] Probes have not been sampled.");
+        return false;
+    }
 
-        bool skip = false;
-        if (approxEq(samples->min_value, samples->max_value)) {
-        //if ( i <= 0.5* this->_probe_data->getProbeCount()) {
-            skip = true;
-        }
+    bool skip = false;
+    if (approxEq(samples->min_value, samples->max_value)) {
+        // if ( i <= 0.5* this->_probe_data->getProbeCount()) {
+        skip = true;
+    }
 
-        // calc vertices
-        auto dir = probe.m_direction;
-        auto smallest_normal_index = std::distance(dir.begin(), std::min_element(dir.begin(), dir.end()));
-        dir[smallest_normal_index] = 1.0f;
-        // auto second_smallest_normal_index = std::distance(dir.begin(), std::min_element(dir.begin(), dir.end()));
-        // auto largest_normal_index = std::distance(
-        //    probe.m_direction.begin(), std::max_element(probe.m_direction.begin(), probe.m_direction.end()));
+    // calc vertices
+    auto dir = probe.m_direction;
+    auto smallest_normal_index = std::distance(dir.begin(), std::min_element(dir.begin(), dir.end()));
+    dir[smallest_normal_index] = 1.0f;
+    // auto second_smallest_normal_index = std::distance(dir.begin(), std::min_element(dir.begin(), dir.end()));
+    // auto largest_normal_index = std::distance(
+    //    probe.m_direction.begin(), std::max_element(probe.m_direction.begin(), probe.m_direction.end()));
 
-        std::array<float, 3> axis0 = {0.0f, 0.0f, 0.0f};
-        // if (smallest_normal_index == 1) smallest_normal_index = second_smallest_normal_index;
-        axis0[smallest_normal_index] = 1.0f;
-        std::array<float, 3> plane_vec_1;
-        plane_vec_1[0] = probe.m_direction[1] * axis0[2] - probe.m_direction[2] * axis0[1];
-        plane_vec_1[1] = probe.m_direction[2] * axis0[0] - probe.m_direction[0] * axis0[2];
-        plane_vec_1[2] = probe.m_direction[0] * axis0[1] - probe.m_direction[1] * axis0[0];
+    std::array<float, 3> axis0 = {0.0f, 0.0f, 0.0f};
+    // if (smallest_normal_index == 1) smallest_normal_index = second_smallest_normal_index;
+    axis0[smallest_normal_index] = 1.0f;
+    std::array<float, 3> plane_vec_1;
+    plane_vec_1[0] = probe.m_direction[1] * axis0[2] - probe.m_direction[2] * axis0[1];
+    plane_vec_1[1] = probe.m_direction[2] * axis0[0] - probe.m_direction[0] * axis0[2];
+    plane_vec_1[2] = probe.m_direction[0] * axis0[1] - probe.m_direction[1] * axis0[0];
 
-        std::array<float, 3> plane_vec_2;
-        plane_vec_2[0] = probe.m_direction[1] * plane_vec_1[2] - probe.m_direction[2] * plane_vec_1[1];
-        plane_vec_2[1] = probe.m_direction[2] * plane_vec_1[0] - probe.m_direction[0] * plane_vec_1[2];
-        plane_vec_2[2] = probe.m_direction[0] * plane_vec_1[1] - probe.m_direction[1] * plane_vec_1[0];
+    std::array<float, 3> plane_vec_2;
+    plane_vec_2[0] = probe.m_direction[1] * plane_vec_1[2] - probe.m_direction[2] * plane_vec_1[1];
+    plane_vec_2[1] = probe.m_direction[2] * plane_vec_1[0] - probe.m_direction[0] * plane_vec_1[2];
+    plane_vec_2[2] = probe.m_direction[0] * plane_vec_1[1] - probe.m_direction[1] * plane_vec_1[0];
 
-        float plane_vec_1_length = std::sqrt(
-            plane_vec_1[0] * plane_vec_1[0] + plane_vec_1[1] * plane_vec_1[1] + plane_vec_1[2] * plane_vec_1[2]);
-        plane_vec_1[0] /= plane_vec_1_length;
-        plane_vec_1[1] /= plane_vec_1_length;
-        plane_vec_1[2] /= plane_vec_1_length;
+    float plane_vec_1_length =
+        std::sqrt(plane_vec_1[0] * plane_vec_1[0] + plane_vec_1[1] * plane_vec_1[1] + plane_vec_1[2] * plane_vec_1[2]);
+    plane_vec_1[0] /= plane_vec_1_length;
+    plane_vec_1[1] /= plane_vec_1_length;
+    plane_vec_1[2] /= plane_vec_1_length;
 
-        float plane_vec_2_length = std::sqrt(
-            plane_vec_2[0] * plane_vec_2[0] + plane_vec_2[1] * plane_vec_2[1] + plane_vec_2[2] * plane_vec_2[2]);
-        plane_vec_2[0] /= plane_vec_2_length;
-        plane_vec_2[1] /= plane_vec_2_length;
-        plane_vec_2[2] /= plane_vec_2_length;
+    float plane_vec_2_length =
+        std::sqrt(plane_vec_2[0] * plane_vec_2[0] + plane_vec_2[1] * plane_vec_2[1] + plane_vec_2[2] * plane_vec_2[2]);
+    plane_vec_2[0] /= plane_vec_2_length;
+    plane_vec_2[1] /= plane_vec_2_length;
+    plane_vec_2[2] /= plane_vec_2_length;
 
-        std::array<float, 3> middle;
-        middle[0] = probe.m_position[0] + probe.m_direction[0] * probe.m_begin;
-        middle[1] = probe.m_position[1] + probe.m_direction[1] * probe.m_begin;
-        middle[2] = probe.m_position[2] + probe.m_direction[2] * probe.m_begin;
+    std::array<float, 3> middle;
+    middle[0] = probe.m_position[0] + probe.m_direction[0] * probe.m_begin;
+    middle[1] = probe.m_position[1] + probe.m_direction[1] * probe.m_begin;
+    middle[2] = probe.m_position[2] + probe.m_direction[2] * probe.m_begin;
 
-        std::array<float, 3> vertex1;
-        vertex1[0] = middle[0] + scale / 2 * plane_vec_1[0] + scale / 2 * plane_vec_2[0];
-        vertex1[1] = middle[1] + scale / 2 * plane_vec_1[1] + scale / 2 * plane_vec_2[1];
-        vertex1[2] = middle[2] + scale / 2 * plane_vec_1[2] + scale / 2 * plane_vec_2[2];
+    std::array<float, 3> vertex1;
+    vertex1[0] = middle[0] + scale / 2 * plane_vec_1[0] + scale / 2 * plane_vec_2[0];
+    vertex1[1] = middle[1] + scale / 2 * plane_vec_1[1] + scale / 2 * plane_vec_2[1];
+    vertex1[2] = middle[2] + scale / 2 * plane_vec_1[2] + scale / 2 * plane_vec_2[2];
 
-        std::array<float, 3> vertex2;
-        vertex2[0] = middle[0] - scale / 2 * plane_vec_1[0] + scale / 2 * plane_vec_2[0];
-        vertex2[1] = middle[1] - scale / 2 * plane_vec_1[1] + scale / 2 * plane_vec_2[1];
-        vertex2[2] = middle[2] - scale / 2 * plane_vec_1[2] + scale / 2 * plane_vec_2[2];
+    std::array<float, 3> vertex2;
+    vertex2[0] = middle[0] - scale / 2 * plane_vec_1[0] + scale / 2 * plane_vec_2[0];
+    vertex2[1] = middle[1] - scale / 2 * plane_vec_1[1] + scale / 2 * plane_vec_2[1];
+    vertex2[2] = middle[2] - scale / 2 * plane_vec_1[2] + scale / 2 * plane_vec_2[2];
 
-        std::array<float, 3> vertex3;
-        vertex3[0] = middle[0] + scale / 2 * plane_vec_1[0] - scale / 2 * plane_vec_2[0];
-        vertex3[1] = middle[1] + scale / 2 * plane_vec_1[1] - scale / 2 * plane_vec_2[1];
-        vertex3[2] = middle[2] + scale / 2 * plane_vec_1[2] - scale / 2 * plane_vec_2[2];
+    std::array<float, 3> vertex3;
+    vertex3[0] = middle[0] + scale / 2 * plane_vec_1[0] - scale / 2 * plane_vec_2[0];
+    vertex3[1] = middle[1] + scale / 2 * plane_vec_1[1] - scale / 2 * plane_vec_2[1];
+    vertex3[2] = middle[2] + scale / 2 * plane_vec_1[2] - scale / 2 * plane_vec_2[2];
 
-        std::array<float, 3> vertex4;
-        vertex4[0] = middle[0] - scale / 2 * plane_vec_1[0] - scale / 2 * plane_vec_2[0];
-        vertex4[1] = middle[1] - scale / 2 * plane_vec_1[1] - scale / 2 * plane_vec_2[1];
-        vertex4[2] = middle[2] - scale / 2 * plane_vec_1[2] - scale / 2 * plane_vec_2[2];
+    std::array<float, 3> vertex4;
+    vertex4[0] = middle[0] - scale / 2 * plane_vec_1[0] - scale / 2 * plane_vec_2[0];
+    vertex4[1] = middle[1] - scale / 2 * plane_vec_1[1] - scale / 2 * plane_vec_2[1];
+    vertex4[2] = middle[2] - scale / 2 * plane_vec_1[2] - scale / 2 * plane_vec_2[2];
 
-        size_t offset = _generated_mesh_vertices.size();
-        this->_generated_mesh_vertices.push_back(vertex1); 
-        this->_generated_mesh_vertices.push_back(vertex2);    
-        this->_generated_mesh_vertices.push_back(vertex3);
-        this->_generated_mesh_vertices.push_back(vertex4);
+    size_t offset = _generated_mesh_vertices.size();
+    this->_generated_mesh_vertices.push_back(vertex1);
+    this->_generated_mesh_vertices.push_back(vertex2);
+    this->_generated_mesh_vertices.push_back(vertex3);
+    this->_generated_mesh_vertices.push_back(vertex4);
 
-        std::vector<mesh::MeshDataAccessCollection::VertexAttribute> vertex_attributes(2);
-        mesh::MeshDataAccessCollection::VertexAttribute pos_attrib;
-        pos_attrib.data = reinterpret_cast<uint8_t*>(&this->_generated_mesh_vertices[offset]);
-        pos_attrib.stride = sizeof(std::array<float, 3>);
-        pos_attrib.byte_size = pos_attrib.stride * 4;
-        pos_attrib.component_cnt = 3;
-        pos_attrib.component_type = mesh::MeshDataAccessCollection::FLOAT;
-        pos_attrib.offset = 0;
-        pos_attrib.semantic = mesh::MeshDataAccessCollection::POSITION;
-        vertex_attributes[0] = pos_attrib;
+    std::vector<mesh::MeshDataAccessCollection::VertexAttribute> vertex_attributes(2);
+    mesh::MeshDataAccessCollection::VertexAttribute pos_attrib;
+    pos_attrib.data = reinterpret_cast<uint8_t*>(&this->_generated_mesh_vertices[offset]);
+    pos_attrib.stride = sizeof(std::array<float, 3>);
+    pos_attrib.byte_size = pos_attrib.stride * 4;
+    pos_attrib.component_cnt = 3;
+    pos_attrib.component_type = mesh::MeshDataAccessCollection::FLOAT;
+    pos_attrib.offset = 0;
+    pos_attrib.semantic = mesh::MeshDataAccessCollection::POSITION;
+    vertex_attributes[0] = pos_attrib;
 
-        mesh::MeshDataAccessCollection::VertexAttribute texco_attrib;
-        texco_attrib.data = reinterpret_cast<uint8_t*>(this->_generated_billboard_texture_coordinates.data());
-        texco_attrib.stride = sizeof(float) * 2;
-        texco_attrib.byte_size = texco_attrib.stride * 4;
-        texco_attrib.component_cnt = 2;
-        texco_attrib.component_type = mesh::MeshDataAccessCollection::FLOAT;
-        texco_attrib.offset = 0;
-        texco_attrib.semantic = mesh::MeshDataAccessCollection::TEXCOORD;
-        vertex_attributes[1] = texco_attrib;
+    mesh::MeshDataAccessCollection::VertexAttribute texco_attrib;
+    texco_attrib.data = reinterpret_cast<uint8_t*>(this->_generated_billboard_texture_coordinates.data());
+    texco_attrib.stride = sizeof(float) * 2;
+    texco_attrib.byte_size = texco_attrib.stride * 4;
+    texco_attrib.component_cnt = 2;
+    texco_attrib.component_type = mesh::MeshDataAccessCollection::FLOAT;
+    texco_attrib.offset = 0;
+    texco_attrib.semantic = mesh::MeshDataAccessCollection::TEXCOORD;
+    vertex_attributes[1] = texco_attrib;
 
-        mesh::MeshDataAccessCollection::IndexData index_data;
-        index_data.data = reinterpret_cast<uint8_t*>(this->_generated_billboard_mesh_indices.data());
-        index_data.byte_size = sizeof(this->_generated_billboard_mesh_indices);
-        index_data.type = mesh::MeshDataAccessCollection::UNSIGNED_INT;
+    mesh::MeshDataAccessCollection::IndexData index_data;
+    index_data.data = reinterpret_cast<uint8_t*>(this->_generated_billboard_mesh_indices.data());
+    index_data.byte_size = sizeof(this->_generated_billboard_mesh_indices);
+    index_data.type = mesh::MeshDataAccessCollection::UNSIGNED_INT;
 
-        if (!skip) {
-            this->_mesh_data->addMesh(vertex_attributes, index_data);
+    if (!skip) {
+        this->_mesh_data->addMesh(vertex_attributes, index_data);
 
         _dtu.push_back(DrawTextureUtility());
-        _dtu.back().setResolution(300, 300); // should be changeable
+        _dtu.back().setResolution(300, 300);                 // should be changeable
         _dtu.back().setGraphType(DrawTextureUtility::GLYPH); // should be changeable
 
         auto tex_ptr = _dtu.back().draw(samples->samples, samples->min_value, samples->max_value);
         this->_tex_data->addImage(mesh::ImageDataAccessCollection::RGBA8, _dtu.back().getPixelWidth(),
-            _dtu.back().getPixelHeight(), tex_ptr, 4 * _dtu.back().getPixelWidth() *
-            _dtu.back().getPixelHeight());
-
+            _dtu.back().getPixelHeight(), tex_ptr, 4 * _dtu.back().getPixelWidth() * _dtu.back().getPixelHeight());
+    }
     return true;
 }
 
-bool GenerateGlyphs::doVectorRibbonGlyphGeneration(Vec4Probe& probe) { 
+bool GenerateGlyphs::doVectorRibbonGlyphGeneration(Vec4Probe& probe) {
 
     // get probe
     // auto probe = this->_probe_data->getProbe<FloatProbe>(i);
