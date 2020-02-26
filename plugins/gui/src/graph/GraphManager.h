@@ -50,8 +50,8 @@ public:
 
     bool LoadCurrentCoreProject(std::string name, megamol::core::CoreInstance* core_instance);
 
-    int GetCompatibleCallIndex(Graph::CallSlotGraphPtrType call_slot_1, Graph::CallSlotGraphPtrType call_slot_2);
-    int GetCompatibleCallIndex(Graph::CallSlotGraphPtrType call_slot, Graph::StockCallSlot stock_call_slot);
+    int GetCompatibleCallIndex(CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
+    int GetCompatibleCallIndex(CallSlotPtrType call_slot, Graph::StockCallSlot stock_call_slot);
 
     // Only used for prototype to be able to store current graphs to lua project file.
     bool PROTOTYPE_SaveGraph(int graph_id, std::string project_filename, megamol::core::CoreInstance* cor_iInstance);

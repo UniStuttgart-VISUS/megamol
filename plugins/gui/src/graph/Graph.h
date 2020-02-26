@@ -30,7 +30,10 @@
 #include <variant>
 #include <vector>
 
-#include "Elements.h"
+#include "Call.h"
+#include "CallSlot.h"
+#include "Module.h"
+#include "Parameter.h"
 
 
 namespace megamol {
@@ -39,12 +42,8 @@ namespace graph {
 
 class Graph {
 public:
-    typedef std::shared_ptr<CallSlot> CallSlotGraphPtrType;
-    typedef std::shared_ptr<Call> CallGraphPtrType;
-    typedef std::shared_ptr<Module> ModuleGraphPtrType;
-
-    typedef std::vector<ModuleGraphPtrType> ModuleGraphVectorType;
-    typedef std::vector<CallGraphPtrType> CallGraphVectorType;
+    typedef std::vector<ModulePtrType> ModuleGraphVectorType;
+    typedef std::vector<CallPtrType> CallGraphVectorType;
 
 
     // GRAPH STOCK DATA STRUCTURE ---------------------------------------------
@@ -75,7 +74,7 @@ public:
         std::string description;
         std::string plugin_name;
         bool is_view;
-        std::vector<Graph::StockParameter> param_slots;
+        std::vector<Graph::StockParameter> parameters;
         std::map<CallSlot::CallSlotType, std::vector<Graph::StockCallSlot>> call_slots;
     };
 
@@ -122,7 +121,7 @@ public:
         int selected_module_uid;
         int selected_call_uid;
         int hovered_slot_uid;
-        CallSlotGraphPtrType selected_slot_ptr;
+        CallSlotPtrType selected_slot_ptr;
         int process_selected_slot;
     } gui;
 

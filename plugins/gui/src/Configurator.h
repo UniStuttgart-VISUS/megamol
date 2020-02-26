@@ -93,11 +93,11 @@ private:
     bool draw_canvas_grid(graph::GraphManager::GraphPtrType graph);
     bool draw_canvas_calls(graph::GraphManager::GraphPtrType graph);
     bool draw_canvas_modules(graph::GraphManager::GraphPtrType graph);
-    bool draw_canvas_module_call_slots(graph::GraphManager::GraphPtrType graph, graph::Graph::ModuleGraphPtrType mod);
+    bool draw_canvas_module_call_slots(graph::GraphManager::GraphPtrType graph, megamol::gui::graph::ModulePtrType mod);
     bool draw_canvas_dragged_call(graph::GraphManager::GraphPtrType graph);
 
-    bool update_module_size(graph::GraphManager::GraphPtrType graph, graph::Graph::ModuleGraphPtrType mod);
-    bool update_slot_position(graph::GraphManager::GraphPtrType graph, graph::Graph::CallSlotGraphPtrType slot);
+    bool update_module_size(graph::GraphManager::GraphPtrType graph, megamol::gui::graph::ModulePtrType mod);
+    bool update_slot_position(graph::GraphManager::GraphPtrType graph, megamol::gui::graph::CallSlotPtrType slot);
     bool update_graph_layout(graph::GraphManager::GraphPtrType graph);
 
     bool add_new_module_to_graph(

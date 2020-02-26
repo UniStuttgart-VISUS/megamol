@@ -55,13 +55,13 @@ bool megamol::gui::graph::Graph::AddModule(
                 // mod_ptr->full_name = "full_name";           /// get from core
                 // mod_ptr->is_view_instance = false;          /// get from core
 
-                for (auto& p : mod.param_slots) {
+                for (auto& p : mod.parameters) {
                     Parameter param_slot(this->generate_unique_id(), p.type);
                     param_slot.class_name = p.class_name;
                     param_slot.description = p.description;
                     // param_slot.full_name = "full_name"; /// get from core
 
-                    mod_ptr->param_slots.emplace_back(param_slot);
+                    mod_ptr->parameters.emplace_back(param_slot);
                 }
                 for (auto& call_slots_type : mod.call_slots) {
                     for (auto& c : call_slots_type.second) {
