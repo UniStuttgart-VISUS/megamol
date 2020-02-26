@@ -11,17 +11,18 @@
 
 
 using namespace megamol;
-using namespace megamol::gui;
+using namespace megamol::gui::graph;
 
 
-// PARAMETER PRESENTATIONS --------------------------------------------------------
-ParamPresentations::ParamPresentations(void) {}
+// PARAMETER PRESENTATIONS ####################################################
+
+megamol::gui::graph::ParamPresentations::ParamPresentations(int uid, megamol::gui::graph::Parameter::ParamType type) : megamol::gui::graph::Parameter(uid, type) {}
 
 
-ParamPresentations::~ParamPresentations(void) {}
+megamol::gui::graph::ParamPresentations::~ParamPresentations(void) {}
 
 
-void megamol::gui::ParamPresentations::Present() {
+void megamol::gui::graph::ParamPresentations::Present() {
 
     /*
     auto visitor = [](auto&& arg) {
@@ -160,34 +161,37 @@ void megamol::gui::ParamPresentations::Present() {
 }
 
 
-// CALL SLOT PRESENTATIONS --------------------------------------------------------
-CallSlotPresentations::CallSlotPresentations(void) {}
+// CALL SLOT PRESENTATIONS ####################################################
+
+megamol::gui::graph::CallSlotPresentations::CallSlotPresentations(int uid) : megamol::gui::graph::CallSlot(uid) {}
 
 
-CallSlotPresentations::~CallSlotPresentations(void) {}
+megamol::gui::graph::CallSlotPresentations::~CallSlotPresentations(void) {}
 
 
-void megamol::gui::CallSlotPresentations::Present() {}
+void megamol::gui::graph::CallSlotPresentations::Present() {}
 
 
-void megamol::gui::CallSlotPresentations::UpdatePosition() {}
+void megamol::gui::graph::CallSlotPresentations::UpdatePosition() {}
 
 
-// CALL PRESENTATIONS --------------------------------------------------------
-CallPresentations::CallPresentations(void) {}
+// CALL PRESENTATIONS #########################################################
+
+megamol::gui::graph::CallPresentations::CallPresentations(int uid) : megamol::gui::graph::Call(uid) {}
 
 
-CallPresentations::~CallPresentations(void) {}
+megamol::gui::graph::CallPresentations::~CallPresentations(void) {}
 
 
-void megamol::gui::CallPresentations::Present() {}
+void megamol::gui::graph::CallPresentations::Present() {}
 
 
-// MODULE PRESENTATIONS --------------------------------------------------------
-ModulePresentations::ModulePresentations(void) {}
+// MODULE PRESENTATIONS #######################################################
+
+megamol::gui::graph::ModulePresentations::ModulePresentations(int uid) : megamol::gui::graph::Module(uid) {}
 
 
-ModulePresentations::~ModulePresentations(void) {}
+megamol::gui::graph::ModulePresentations::~ModulePresentations(void) {}
 
 
-void megamol::gui::ModulePresentations::Present() {}
+void megamol::gui::graph::ModulePresentations::Present() {}

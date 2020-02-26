@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_GraphManager_H_INCLUDED
-#define MEGAMOL_GUI_GraphManager_H_INCLUDED
+#ifndef MEGAMOL_GUI_GRAPH_GRAPHMANAGER_H_INCLUDED
+#define MEGAMOL_GUI_GRAPH_GRAPHMANAGER_H_INCLUDED
 
 
 #include "mmcore/CoreInstance.h"
@@ -27,13 +27,13 @@
 
 namespace megamol {
 namespace gui {
+namespace graph {
+
 
 class GraphManager {
 public:
     typedef std::shared_ptr<Graph> GraphPtrType;
     typedef std::vector<GraphPtrType> GraphsType;
-
-    // GraphManager ------------------------------------------------------------------
 
     GraphManager(void);
 
@@ -50,8 +50,8 @@ public:
 
     bool LoadCurrentCoreProject(std::string name, megamol::core::CoreInstance* core_instance);
 
-    int GetCompatibleCallIndex(Graph::CallSlotPtrType call_slot_1, Graph::CallSlotPtrType call_slot_2);
-    int GetCompatibleCallIndex(Graph::CallSlotPtrType call_slot, Graph::StockCallSlot stock_call_slot);
+    int GetCompatibleCallIndex(Graph::CallSlotGraphPtrType call_slot_1, Graph::CallSlotGraphPtrType call_slot_2);
+    int GetCompatibleCallIndex(Graph::CallSlotGraphPtrType call_slot, Graph::StockCallSlot stock_call_slot);
 
     // Only used for prototype to be able to store current graphs to lua project file.
     bool PROTOTYPE_SaveGraph(int graph_id, std::string project_filename, megamol::core::CoreInstance* cor_iInstance);
@@ -75,7 +75,8 @@ private:
     // ------------------------------------------------------------------------
 };
 
+} // namespace graph
 } // namespace gui
 } // namespace megamol
 
-#endif // MEGAMOL_GUI_GraphManager_H_INCLUDED
+#endif // MEGAMOL_GUI_GRAPH_GRAPHMANAGER_H_INCLUDED

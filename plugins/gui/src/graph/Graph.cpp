@@ -10,503 +10,13 @@
 
 
 using namespace megamol;
-using namespace megamol::gui;
+using namespace megamol::gui::graph;
 
 
-int megamol::gui::Graph::generated_uid = 0;
+int megamol::gui::graph::Graph::generated_uid = 0;
 
 
-// PARAM SLOT #################################################################
-
-
-megamol::gui::Graph::ParamSlot::ParamSlot(int uid, ParamType type)
-    : uid(uid), type(type), minval(), maxval(), storage(), value() {
-
-    // Initialize variant types which should/can not be changed afterwards.
-    // Default ctor of variants initializes std::monostate.
-    switch (this->type) {
-    case (Graph::ParamType::BOOL): {
-        this->value = bool(false);
-    } break;
-    case (Graph::ParamType::BUTTON): {
-        this->storage = megamol::core::view::KeyCode();
-    } break;
-    case (Graph::ParamType::COLOR): {
-        this->value = megamol::core::param::ColorParam::ColorType();
-    } break;
-    case (Graph::ParamType::ENUM): {
-        this->value = int(0);
-        this->storage = vislib::Map<int, vislib::TString>();
-    } break;
-    case (Graph::ParamType::FILEPATH): {
-        this->value = std::string();
-    } break;
-    case (Graph::ParamType::FLEXENUM): {
-        this->value = std::string();
-        this->storage = megamol::core::param::FlexEnumParam::Storage_t();
-    } break;
-    case (Graph::ParamType::FLOAT): {
-        this->value = float(0.0f);
-        this->minval = -FLT_MAX;
-        this->maxval = FLT_MAX;
-    } break;
-    case (Graph::ParamType::INT): {
-        this->value = int();
-        this->minval = INT_MIN;
-        this->maxval = INT_MAX;
-    } break;
-    case (Graph::ParamType::STRING): {
-        this->value = std::string();
-    } break;
-    case (Graph::ParamType::TERNARY): {
-        this->value = vislib::math::Ternary();
-    } break;
-    case (Graph::ParamType::TRANSFERFUNCTION): {
-        this->value = std::string();
-    } break;
-    case (Graph::ParamType::VECTOR2F): {
-        this->value = glm::vec2();
-        this->minval = glm::vec2(-FLT_MAX, -FLT_MAX);
-        this->maxval = glm::vec2(FLT_MAX, FLT_MAX);
-    } break;
-    case (Graph::ParamType::VECTOR3F): {
-        this->value = glm::vec3();
-        this->minval = glm::vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-        this->maxval = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
-    } break;
-    case (Graph::ParamType::VECTOR4F): {
-        this->value = glm::vec4();
-        this->minval = glm::vec4(-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX);
-        this->maxval = glm::vec4(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX);
-    } break;
-    default:
-        break;
-    }
-}
-
-
-std::string megamol::gui::Graph::ParamSlot::GetValueString(void) {
-    std::string value_string = "UNKNOWN PARAMETER TYPE";
-    auto visitor = [this, &value_string](auto&& arg) {
-        using T = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_same_v<T, bool>) {
-            auto param = megamol::core::param::BoolParam(arg);
-            value_string = std::string(param.ValueString().PeekBuffer());
-        } else if constexpr (std::is_same_v<T, megamol::core::param::ColorParam::ColorType>) {
-            auto param = megamol::core::param::ColorParam(arg);
-            value_string = std::string(param.ValueString().PeekBuffer());
-        } else if constexpr (std::is_same_v<T, float>) {
-            auto param = megamol::core::param::FloatParam(arg);
-            value_string = std::string(param.ValueString().PeekBuffer());
-        } else if constexpr (std::is_same_v<T, int>) {
-            switch (this->type) {
-            case (Graph::ParamType::INT): {
-                auto param = megamol::core::param::IntParam(arg);
-                value_string = std::string(param.ValueString().PeekBuffer());
-            }
-            case (Graph::ParamType::ENUM): {
-                auto param = megamol::core::param::EnumParam(arg);
-                value_string = std::string(param.ValueString().PeekBuffer());
-            }
-            default:
-                break;
-            }
-        } else if constexpr (std::is_same_v<T, std::string>) {
-            switch (this->type) {
-            case (Graph::ParamType::STRING): {
-                auto param = megamol::core::param::StringParam(arg.c_str());
-                value_string = std::string(param.ValueString().PeekBuffer());
-                break;
-            }
-            case (Graph::ParamType::TRANSFERFUNCTION): {
-                auto param = megamol::core::param::TransferFunctionParam(arg);
-                value_string = std::string(param.ValueString().PeekBuffer());
-                break;
-            }
-            case (Graph::ParamType::FILEPATH): {
-                auto param = megamol::core::param::FilePathParam(arg.c_str());
-                value_string = std::string(param.ValueString().PeekBuffer());
-                break;
-            }
-            case (Graph::ParamType::FLEXENUM): {
-                auto param = megamol::core::param::FlexEnumParam(arg.c_str());
-                value_string = std::string(param.ValueString().PeekBuffer());
-                break;
-            }
-            default:
-                break;
-            }
-        } else if constexpr (std::is_same_v<T, vislib::math::Ternary>) {
-            auto param = megamol::core::param::TernaryParam(arg);
-            value_string = std::string(param.ValueString().PeekBuffer());
-        } else if constexpr (std::is_same_v<T, glm::vec2>) {
-            auto param = megamol::core::param::Vector2fParam(vislib::math::Vector<float, 2>(arg.x, arg.y));
-            value_string = std::string(param.ValueString().PeekBuffer());
-        } else if constexpr (std::is_same_v<T, glm::vec3>) {
-            auto param = megamol::core::param::Vector3fParam(vislib::math::Vector<float, 3>(arg.x, arg.y, arg.z));
-            value_string = std::string(param.ValueString().PeekBuffer());
-        } else if constexpr (std::is_same_v<T, glm::vec4>) {
-            auto param =
-                megamol::core::param::Vector4fParam(vislib::math::Vector<float, 4>(arg.x, arg.y, arg.z, arg.w));
-            value_string = std::string(param.ValueString().PeekBuffer());
-        } else if constexpr (std::is_same_v<T, std::monostate>) {
-            switch (this->type) {
-            case (Graph::ParamType::BUTTON): {
-                auto param = megamol::core::param::ButtonParam();
-                value_string = std::string(param.ValueString().PeekBuffer());
-                break;
-            }
-            default:
-                break;
-            }
-        }
-    };
-    std::visit(visitor, this->value);
-    return value_string;
-}
-
-
-// CALL SLOT ##################################################################
-
-megamol::gui::Graph::CallSlot::CallSlot(int uid) : uid(uid) {
-    this->parent_module.reset();
-    connected_calls.clear();
-}
-
-
-megamol::gui::Graph::CallSlot::~CallSlot() {
-
-    // Call separately and check for reference count
-    this->DisConnectCalls();
-    this->DisConnectParentModule();
-}
-
-
-bool megamol::gui::Graph::CallSlot::CallsConnected(void) const {
-
-    /// TEMP Check for unclean references
-    for (auto& call_ptr : this->connected_calls) {
-        if (call_ptr == nullptr) {
-            throw std::invalid_argument("Pointer to connected call is nullptr.");
-        }
-    }
-    return (!this->connected_calls.empty());
-}
-
-
-bool megamol::gui::Graph::CallSlot::ConnectCall(Graph::CallPtrType call) {
-
-    if (call == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "Pointer to given call is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    if (this->type == Graph::CallSlotType::CALLER) {
-        if (this->connected_calls.size() > 0) {
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "Caller slots can only be connected to one call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                __LINE__);
-            return false;
-        }
-    }
-    this->connected_calls.emplace_back(call);
-    return true;
-}
-
-
-bool megamol::gui::Graph::CallSlot::DisConnectCall(int call_uid, bool called_by_call) {
-
-    try {
-        for (auto call_iter = this->connected_calls.begin(); call_iter != this->connected_calls.end(); call_iter++) {
-            if ((*call_iter) == nullptr) {
-                vislib::sys::Log::DefaultLog.WriteWarn(
-                    "Call is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            } else {
-                if ((*call_iter)->uid == call_uid) {
-                    if (!called_by_call) {
-                        (*call_iter)->DisConnectCallSlots();
-                    }
-                    (*call_iter).reset();
-                    this->connected_calls.erase(call_iter);
-                    return true;
-                }
-            }
-        }
-    } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    return false;
-}
-
-
-bool megamol::gui::Graph::CallSlot::DisConnectCalls(void) {
-
-    try {
-        // Since connected calls operate on this list for disconnecting slots
-        // a local copy of the connected calls is required.
-        auto connected_calls_copy = this->connected_calls;
-        for (auto& call_ptr : connected_calls_copy) {
-            if (call_ptr == nullptr) {
-                vislib::sys::Log::DefaultLog.WriteWarn(
-                    "Call is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            } else {
-                call_ptr->DisConnectCallSlots();
-            }
-        }
-        this->connected_calls.clear();
-        connected_calls_copy.clear();
-    } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    return true;
-}
-
-
-const std::vector<Graph::CallPtrType> megamol::gui::Graph::CallSlot::GetConnectedCalls(void) {
-
-    /// TEMP Check for unclean references
-    for (auto& call_ptr : this->connected_calls) {
-        if (call_ptr == nullptr) {
-            throw std::invalid_argument("Pointer to connected call is nullptr.");
-        }
-    }
-
-    return this->connected_calls;
-}
-
-
-bool megamol::gui::Graph::CallSlot::ParentModuleConnected(void) const { return (this->parent_module != nullptr); }
-
-
-bool megamol::gui::Graph::CallSlot::ConnectParentModule(Graph::ModulePtrType parent_module) {
-
-    if (parent_module == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "Pointer to given parent module is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
-    if (this->parent_module != nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "Pointer to parent module is already set. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    this->parent_module = parent_module;
-    return true;
-}
-
-
-bool megamol::gui::Graph::CallSlot::DisConnectParentModule(void) {
-
-    if (parent_module == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "Pointer to parent module is already nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    this->parent_module.reset();
-    return true;
-}
-
-
-const Graph::ModulePtrType megamol::gui::Graph::CallSlot::GetParentModule(void) {
-
-    if (this->parent_module == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "Returned pointer to parent module is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
-    return this->parent_module;
-}
-
-
-// CALL #######################################################################
-
-megamol::gui::Graph::Call::Call(int uid) : uid(uid) {
-
-    this->connected_call_slots.clear();
-    this->connected_call_slots.emplace(Graph::CallSlotType::CALLER, nullptr);
-    this->connected_call_slots.emplace(Graph::CallSlotType::CALLEE, nullptr);
-}
-
-
-megamol::gui::Graph::Call::~Call() { this->DisConnectCallSlots(); }
-
-
-bool megamol::gui::Graph::Call::IsConnected(void) {
-
-    unsigned int not_connected = 0;
-    for (auto& call_slot_map : this->connected_call_slots) {
-        if (call_slot_map.second != nullptr) {
-            not_connected++;
-        }
-    }
-    if (not_connected == 1) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "Only one call slot is connected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    return (not_connected == 2);
-}
-
-
-bool megamol::gui::Graph::Call::ConnectCallSlots(
-    Graph::CallSlotPtrType call_slot_1, Graph::CallSlotPtrType call_slot_2) {
-
-    if ((call_slot_1 == nullptr) || (call_slot_2 == nullptr)) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "Pointer to given call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    if (call_slot_1->type == call_slot_2->type) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Call slots must have different type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    if (call_slot_1->GetParentModule() == call_slot_2->GetParentModule()) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Call slots must have different parent module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    if ((this->connected_call_slots[call_slot_1->type] != nullptr) ||
-        (this->connected_call_slots[call_slot_2->type] != nullptr)) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "Call is already connected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    this->connected_call_slots[call_slot_1->type] = call_slot_1;
-    this->connected_call_slots[call_slot_2->type] = call_slot_2;
-
-    return true;
-}
-
-
-bool megamol::gui::Graph::Call::DisConnectCallSlots(void) {
-
-    try {
-        for (auto& call_slot_map : this->connected_call_slots) {
-            if (call_slot_map.second == nullptr) {
-                vislib::sys::Log::DefaultLog.WriteWarn(
-                    "Call slot is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            } else {
-                call_slot_map.second->DisConnectCall(this->uid, true);
-                call_slot_map.second.reset();
-            }
-        }
-    } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    return true;
-}
-
-
-const Graph::CallSlotPtrType megamol::gui::Graph::Call::GetCallSlot(Graph::CallSlotType type) {
-
-    if (this->connected_call_slots[type] == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "Returned pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
-    return this->connected_call_slots[type];
-}
-
-
-// MODULE #####################################################################
-
-megamol::gui::Graph::Module::Module(int uid) : uid(uid) {
-
-    this->call_slots.clear();
-    this->call_slots.emplace(Graph::CallSlotType::CALLER, std::vector<Graph::CallSlotPtrType>());
-    this->call_slots.emplace(Graph::CallSlotType::CALLEE, std::vector<Graph::CallSlotPtrType>());
-}
-
-
-megamol::gui::Graph::Module::~Module() { this->RemoveAllCallSlots(); }
-
-
-bool megamol::gui::Graph::Module::AddCallSlot(Graph::CallSlotPtrType call_slot) {
-
-    if (call_slot == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "Pointer to given call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    auto type = call_slot->type;
-    for (auto& call_slot_ptr : this->call_slots[type]) {
-        if (call_slot_ptr == call_slot) {
-            throw std::invalid_argument("Pointer to call slot already registered in modules call slot list.");
-        }
-    }
-    this->call_slots[type].emplace_back(call_slot);
-    return true;
-}
-
-
-bool megamol::gui::Graph::Module::RemoveAllCallSlots(void) {
-
-    try {
-        for (auto& call_slots_map : this->call_slots) {
-            for (auto& call_slot_ptr : call_slots_map.second) {
-                if (call_slot_ptr == nullptr) {
-                    vislib::sys::Log::DefaultLog.WriteWarn(
-                        "Call slot is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                } else {
-                    call_slot_ptr->DisConnectCalls();
-                    call_slot_ptr->DisConnectParentModule();
-
-                    vislib::sys::Log::DefaultLog.WriteWarn(
-                        "Found %i references pointing to call slot. [%s, %s, line %d]\n", call_slot_ptr.use_count(),
-                        __FILE__, __FUNCTION__, __LINE__);
-                    assert(call_slot_ptr.use_count() == 1);
-
-                    call_slot_ptr.reset();
-                }
-            }
-            call_slots_map.second.clear();
-        }
-    } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    return true;
-}
-
-
-const std::vector<Graph::CallSlotPtrType> megamol::gui::Graph::Module::GetCallSlots(Graph::CallSlotType type) {
-
-    // if (this->call_slots[type].empty()) {
-    //    vislib::sys::Log::DefaultLog.WriteWarn(
-    //        "Returned call slot list is empty. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    //}
-    return this->call_slots[type];
-}
-
-
-const std::map<Graph::CallSlotType, std::vector<Graph::CallSlotPtrType>> megamol::gui::Graph::Module::GetCallSlots(
-    void) {
-
-    return this->call_slots;
-}
-
-
-// GRAPH ######################################################################
-
-megamol::gui::Graph::Graph(const std::string& graph_name)
+megamol::gui::graph::Graph::Graph(const std::string& graph_name)
     : gui(), modules(), calls(), uid(this->generate_unique_id()), name(graph_name), dirty_flag(true) {
 
     this->gui.slot_radius = 8.0f;
@@ -526,16 +36,16 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
 }
 
 
-megamol::gui::Graph::~Graph(void) {}
+megamol::gui::graph::Graph::~Graph(void) {}
 
 
-bool megamol::gui::Graph::AddModule(const Graph::ModuleStockType& stock_modules, const std::string& module_class_name) {
+bool megamol::gui::graph::Graph::AddModule(const Graph::ModuleStockType& stock_modules, const std::string& module_class_name) {
 
     try {
         bool found = false;
         for (auto& mod : stock_modules) {
             if (module_class_name == mod.class_name) {
-                auto mod_ptr = std::make_shared<Graph::Module>(this->generate_unique_id());
+                auto mod_ptr = std::make_shared<ModuleGraphType>(this->generate_unique_id());
                 mod_ptr->class_name = mod.class_name;
                 mod_ptr->description = mod.description;
                 mod_ptr->plugin_name = mod.plugin_name;
@@ -548,7 +58,7 @@ bool megamol::gui::Graph::AddModule(const Graph::ModuleStockType& stock_modules,
                 mod_ptr->gui.class_label = "";              // Initialized in configurator
                 mod_ptr->gui.name_label = "";               // Initialized in configurator
                 for (auto& p : mod.param_slots) {
-                    Graph::ParamSlot param_slot(this->generate_unique_id(), p.type);
+                    ParamGraphType param_slot(this->generate_unique_id(), p.type);
                     param_slot.class_name = p.class_name;
                     param_slot.description = p.description;
                     // param_slot.full_name = "full_name"; /// get from core
@@ -556,13 +66,13 @@ bool megamol::gui::Graph::AddModule(const Graph::ModuleStockType& stock_modules,
                 }
                 for (auto& call_slots_type : mod.call_slots) {
                     for (auto& c : call_slots_type.second) {
-                        Graph::CallSlot call_slot(this->generate_unique_id());
+                        CallSlotGraphType call_slot(this->generate_unique_id());
                         call_slot.name = c.name;
                         call_slot.description = c.description;
                         call_slot.compatible_call_idxs = c.compatible_call_idxs;
                         call_slot.type = c.type;
                         call_slot.gui.position = ImVec2(0.0f, 0.0f); // Initialized in configurator
-                        mod_ptr->AddCallSlot(std::make_shared<Graph::CallSlot>(call_slot));
+                        mod_ptr->AddCallSlot(std::make_shared<CallSlotGraphType>(call_slot));
                     }
                 }
                 for (auto& call_slot_type_list : mod_ptr->GetCallSlots()) {
@@ -595,7 +105,7 @@ bool megamol::gui::Graph::AddModule(const Graph::ModuleStockType& stock_modules,
 }
 
 
-bool megamol::gui::Graph::DeleteModule(int module_uid) {
+bool megamol::gui::graph::Graph::DeleteModule(int module_uid) {
 
     try {
         for (auto iter = this->modules.begin(); iter != this->modules.end(); iter++) {
@@ -632,8 +142,8 @@ bool megamol::gui::Graph::DeleteModule(int module_uid) {
 }
 
 
-bool megamol::gui::Graph::AddCall(const Graph::CallStockType& stock_calls, int call_idx,
-    Graph::CallSlotPtrType call_slot_1, Graph::CallSlotPtrType call_slot_2) {
+bool megamol::gui::graph::Graph::AddCall(const Graph::CallStockType& stock_calls, int call_idx, CallSlotGraphPtrType call_slot_1,
+    CallSlotGraphPtrType call_slot_2) {
 
     try {
         if ((call_idx > stock_calls.size()) || (call_idx < 0)) {
@@ -642,7 +152,7 @@ bool megamol::gui::Graph::AddCall(const Graph::CallStockType& stock_calls, int c
             return false;
         }
         auto call = stock_calls[call_idx];
-        auto call_ptr = std::make_shared<Graph::Call>(this->generate_unique_id());
+        auto call_ptr = std::make_shared<CallGraphType>(this->generate_unique_id());
         call_ptr->class_name = call.class_name;
         call_ptr->description = call.description;
         call_ptr->plugin_name = call.plugin_name;
@@ -675,7 +185,7 @@ bool megamol::gui::Graph::AddCall(const Graph::CallStockType& stock_calls, int c
     return true;
 }
 
-bool megamol::gui::Graph::DeleteDisconnectedCalls(void) {
+bool megamol::gui::graph::Graph::DeleteDisconnectedCalls(void) {
 
     try {
         // Create separate uid list to avoid iterator conflict when operating on calls list while deleting.
@@ -702,7 +212,7 @@ bool megamol::gui::Graph::DeleteDisconnectedCalls(void) {
 }
 
 
-bool megamol::gui::Graph::DeleteCall(int call_uid) {
+bool megamol::gui::graph::Graph::DeleteCall(int call_uid) {
 
     try {
         for (auto iter = this->calls.begin(); iter != this->calls.end(); iter++) {

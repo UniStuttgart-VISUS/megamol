@@ -5,25 +5,28 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_PARAMETER_PRESENTATION_INCLUDED
-#define MEGAMOL_GUI_PARAMETER_PRESENTATION_INCLUDED
+#ifndef MEGAMOL_GUI_GRAPH_PARAMETER_PRESENTATION_INCLUDED
+#define MEGAMOL_GUI_GRAPH_PARAMETER_PRESENTATION_INCLUDED
 
 
 #include "vislib/sys/Log.h"
 
 #include "GUIUtils.h"
-#include "Graph.h"
+#include "Elements.h"
 
 
 namespace megamol {
 namespace gui {
+namespace graph {
+
+// GRAPH DATA STRUCTURE PRESENTATIONS -------------------------------------
 
 /**
  * Defines GUI parameter presentations.
  */
-class ParamPresentations {
+class ParamPresentations : public megamol::gui::graph::Parameter {
 public:
-    ParamPresentations(void);
+    ParamPresentations(int uid, megamol::gui::graph::Parameter::ParamType type);
 
     ~ParamPresentations(void);
 
@@ -39,9 +42,9 @@ private:
 /**
  * Defines GUI call slot presentations.
  */
-class CallSlotPresentations {
+class CallSlotPresentations : public megamol::gui::graph::CallSlot {
 public:
-    CallSlotPresentations(void);
+    CallSlotPresentations(int uid);
 
     ~CallSlotPresentations(void);
 
@@ -49,21 +52,21 @@ public:
 
     void UpdatePosition();
 
+    ImVec2 position;
 
 private:
     enum Presentation { DEFAULT } presentation;
     bool label_visible;
 
-    ImVec2 position;
 };
 
 
 /**
  * Defines GUI call presentations.
  */
-class CallPresentations {
+class CallPresentations : public megamol::gui::graph::Call {
 public:
-    CallPresentations(void);
+    CallPresentations(int uid);
 
     ~CallPresentations(void);
 
@@ -78,24 +81,25 @@ private:
 /**
  * Defines GUI module presentations.
  */
-class ModulePresentations {
+class ModulePresentations : public megamol::gui::graph::Module {
 public:
-    ModulePresentations(void);
+    ModulePresentations(int uid);
 
     ~ModulePresentations(void);
 
     void Present();
 
+    ImVec2 position;
+    ImVec2 size;
+
 private:
     enum Presentation { DEFAULT } presentation;
     bool label_visible;
-
-    ImVec2 position;
-    ImVec2 size;
 };
 
 
+} // namespace graph
 } // namespace gui
 } // namespace megamol
 
-#endif // MEGAMOL_GUI_PARAMETER_PRESENTATION_INCLUDED
+#endif // MEGAMOL_GUI_GRAPH_PARAMETER_PRESENTATION_INCLUDED

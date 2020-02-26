@@ -447,7 +447,7 @@ void megamol::gui::Configurator::draw_window_graph(float width) {
 }
 
 
-bool megamol::gui::Configurator::draw_graph_menu(GraphManager::GraphPtrType graph) {
+bool megamol::gui::Configurator::draw_graph_menu(megamol::gui::graph::GraphManager::GraphPtrType graph) {
 
     const float child_height = ImGui::GetItemsLineHeightWithSpacing() * 1.0f;
     ImGui::BeginChild(
@@ -492,7 +492,7 @@ bool megamol::gui::Configurator::draw_graph_menu(GraphManager::GraphPtrType grap
 }
 
 
-bool megamol::gui::Configurator::draw_graph_canvas(GraphManager::GraphPtrType graph) {
+bool megamol::gui::Configurator::draw_graph_canvas(megamol::gui::graph::GraphManager::GraphPtrType graph) {
 
     ImGuiIO& io = ImGui::GetIO();
 
@@ -593,7 +593,7 @@ bool megamol::gui::Configurator::draw_graph_canvas(GraphManager::GraphPtrType gr
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_grid(GraphManager::GraphPtrType graph) {
+bool megamol::gui::Configurator::draw_canvas_grid(megamol::gui::graph::GraphManager::GraphPtrType graph) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -626,7 +626,7 @@ bool megamol::gui::Configurator::draw_canvas_grid(GraphManager::GraphPtrType gra
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_calls(GraphManager::GraphPtrType graph) {
+bool megamol::gui::Configurator::draw_canvas_calls(megamol::gui::graph::GraphManager::GraphPtrType graph) {
 
     try {
         ImGuiStyle& style = ImGui::GetStyle();
@@ -648,8 +648,8 @@ bool megamol::gui::Configurator::draw_canvas_calls(GraphManager::GraphPtrType gr
 
             if (call->IsConnected()) {
 
-                ImVec2 p1 = call->GetCallSlot(Graph::CallSlotType::CALLER)->gui.position;
-                ImVec2 p2 = call->GetCallSlot(Graph::CallSlotType::CALLEE)->gui.position;
+                ImVec2 p1 = call->GetCallSlot(graph::CallSlot::CallSlotType::CALLER)->position;
+                ImVec2 p2 = call->GetCallSlot(graph::CallSlot::CallSlotType::CALLEE)->position;
 
                 draw_list->ChannelsSetCurrent(0); // Background
 
@@ -711,7 +711,7 @@ bool megamol::gui::Configurator::draw_canvas_calls(GraphManager::GraphPtrType gr
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType graph) {
+bool megamol::gui::Configurator::draw_canvas_modules(megamol::gui::graph::GraphManager::GraphPtrType graph) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -734,11 +734,11 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
             const int id = mod->uid;
             ImGui::PushID(id);
 
-            ImVec2 module_size = mod->gui.size;
-            ImVec2 module_rect_min = graph->gui.canvas_offset + mod->gui.position * graph->gui.canvas_zooming;
+            ImVec2 module_size = mod->size;
+            ImVec2 module_rect_min = graph->gui.canvas_offset + mod->position * graph->gui.canvas_zooming;
             ImVec2 module_rect_max = module_rect_min + module_size;
             ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
-            std::string label = mod->gui.class_label;
+            std::string label = mod->class_label;
 
             // Draw text
             draw_list->ChannelsSetCurrent(1); // Foreground
@@ -813,7 +813,7 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
                 graph->gui.selected_call_uid = -1;
             }
             if (module_active && ImGui::IsMouseDragging(0)) {
-                mod->gui.position = (module_rect_min + ImGui::GetIO().MouseDelta) / graph->gui.canvas_zooming;
+                mod->position = (module_rect_min + ImGui::GetIO().MouseDelta) / graph->gui.canvas_zooming;
             }
             if (ImGui::IsItemHovered() && (hovered_module < 0)) {
                 hovered_module = id;
@@ -840,7 +840,7 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
 
 
 bool megamol::gui::Configurator::draw_canvas_module_call_slots(
-    GraphManager::GraphPtrType graph, Graph::ModulePtrType mod) {
+    megamol::gui::graph::GraphManager::GraphPtrType graph, megamol::gui::graph::Graph::ModuleGraphPtrType mod) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -862,10 +862,10 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slots(
         // Draw call slots for given module
         for (auto& slot_pair : mod->GetCallSlots()) {
 
-            if (slot_pair.first == Graph::CallSlotType::CALLER) {
+            if (slot_pair.first == graph::CallSlot::CallSlotType::CALLER) {
                 slot_highl_color = COLOR_SLOT_CALLER_HIGHTLIGHT;
                 slot_label_color = COLOR_SLOT_CALLER_LABEL;
-            } else if (slot_pair.first == Graph::CallSlotType::CALLEE) {
+            } else if (slot_pair.first == graph::CallSlot::CallSlotType::CALLEE) {
                 slot_highl_color = COLOR_SLOT_CALLEE_HIGHTLIGHT;
                 slot_label_color = COLOR_SLOT_CALLEE_LABEL;
             }
@@ -873,7 +873,7 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slots(
             for (auto& slot : slot_pair.second) {
                 ImGui::PushID(slot->uid);
 
-                ImVec2 slot_position = slot->gui.position;
+                ImVec2 slot_position = slot->position;
                 float radius = graph->gui.slot_radius * graph->gui.canvas_zooming;
                 std::string slot_name = slot->name;
                 slot_color = COLOR_SLOT;
@@ -924,9 +924,9 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slots(
                 if (graph->gui.show_slot_names) {
                     ImVec2 text_pos;
                     text_pos.y = slot_position.y - ImGui::GetFontSize() / 2.0f;
-                    if (slot_pair.first == Graph::CallSlotType::CALLER) {
+                    if (slot_pair.first == graph::CallSlot::CallSlotType::CALLER) {
                         text_pos.x = slot_position.x - this->utils.TextWidgetWidth(slot_name) - (2.0f * radius);
-                    } else if (slot_pair.first == Graph::CallSlotType::CALLEE) {
+                    } else if (slot_pair.first == graph::CallSlot::CallSlotType::CALLEE) {
                         text_pos.x = slot_position.x + (2.0f * radius);
                     }
                     draw_list->AddText(text_pos, slot_label_color, slot_name.c_str());
@@ -947,7 +947,7 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slots(
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_dragged_call(GraphManager::GraphPtrType graph) {
+bool megamol::gui::Configurator::draw_canvas_dragged_call(megamol::gui::graph::GraphManager::GraphPtrType graph) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -969,9 +969,9 @@ bool megamol::gui::Configurator::draw_canvas_dragged_call(GraphManager::GraphPtr
                 mouse_inside_canvas = true;
             }
             if (ImGui::IsMouseDown(0) && mouse_inside_canvas) {
-                ImVec2 p1 = graph->gui.selected_slot_ptr->gui.position;
+                ImVec2 p1 = graph->gui.selected_slot_ptr->position;
                 ImVec2 p2 = ImGui::GetMousePos();
-                if (graph->gui.selected_slot_ptr->type == Graph::CallSlotType::CALLEE) {
+                if (graph->gui.selected_slot_ptr->type == graph::CallSlot::CallSlotType::CALLEE) {
                     ImVec2 tmp = p1;
                     p1 = p2;
                     p2 = tmp;
@@ -992,12 +992,12 @@ bool megamol::gui::Configurator::draw_canvas_dragged_call(GraphManager::GraphPtr
 }
 
 
-bool megamol::gui::Configurator::update_module_size(GraphManager::GraphPtrType graph, Graph::ModulePtrType mod) {
+bool megamol::gui::Configurator::update_module_size(megamol::gui::graph::GraphManager::GraphPtrType graph, megamol::gui::graph::Graph::ModuleGraphPtrType mod) {
 
-    mod->gui.class_label = "Class: " + mod->class_name;
-    float class_name_length = this->utils.TextWidgetWidth(mod->gui.class_label);
-    mod->gui.name_label = "Name: " + mod->name;
-    float name_length = this->utils.TextWidgetWidth(mod->gui.name_label);
+    mod->class_label = "Class: " + mod->class_name;
+    float class_name_length = this->utils.TextWidgetWidth(mod->class_label);
+    mod->name_label = "Name: " + mod->name;
+    float name_length = this->utils.TextWidgetWidth(mod->name_label);
     float max_label_length = std::max(class_name_length, name_length);
 
     float max_slot_name_length = 0.0f;
@@ -1013,20 +1013,20 @@ bool megamol::gui::Configurator::update_module_size(GraphManager::GraphPtrType g
     float module_width = (max_label_length + max_slot_name_length) + (4.0f * graph->gui.slot_radius);
 
     auto max_slot_count = std::max(
-        mod->GetCallSlots(Graph::CallSlotType::CALLEE).size(), mod->GetCallSlots(Graph::CallSlotType::CALLER).size());
+        mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLEE).size(), mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLER).size());
     float module_slot_height = (static_cast<float>(max_slot_count) * (graph->gui.slot_radius * 2.0f) * 1.5f) +
                                ((graph->gui.slot_radius * 2.0f) * 0.5f);
 
     float module_height =
         std::max(module_slot_height, ImGui::GetItemsLineHeightWithSpacing() * ((mod->is_view) ? (4.0f) : (3.0f)));
 
-    mod->gui.size = ImVec2(module_width, module_height);
+    mod->size = ImVec2(module_width, module_height);
 
     return true;
 }
 
 
-bool megamol::gui::Configurator::update_slot_position(GraphManager::GraphPtrType graph, Graph::CallSlotPtrType slot) {
+bool megamol::gui::Configurator::update_slot_position(megamol::gui::graph::GraphManager::GraphPtrType graph, megamol::gui::graph::Graph::CallSlotGraphPtrType slot) {
 
     if (slot->ParentModuleConnected()) {
         auto slot_count = slot->GetParentModule()->GetCallSlots(slot->type).size();
@@ -1038,7 +1038,7 @@ bool megamol::gui::Configurator::update_slot_position(GraphManager::GraphPtrType
         }
         auto pos = graph->gui.canvas_offset + slot->GetParentModule()->gui.position * graph->gui.canvas_zooming;
         auto size = slot->GetParentModule()->gui.size;
-        slot->gui.position = ImVec2(pos.x + ((slot->type == Graph::CallSlotType::CALLER) ? (size.x) : (0.0f)),
+        slot->gui.position = ImVec2(pos.x + ((slot->type == graph::CallSlot::CallSlotType::CALLER) ? (size.x) : (0.0f)),
             pos.y + size.y * ((float)slot_idx + 1) / ((float)slot_count + 1));
         return true;
     }
@@ -1046,10 +1046,10 @@ bool megamol::gui::Configurator::update_slot_position(GraphManager::GraphPtrType
 }
 
 
-bool megamol::gui::Configurator::update_graph_layout(GraphManager::GraphPtrType graph) {
+bool megamol::gui::Configurator::update_graph_layout(megamol::gui::graph::GraphManager::GraphPtrType graph) {
 
     // Really simple layouting sorting modules into differnet layers
-    std::vector<std::vector<Graph::ModulePtrType>> layers;
+    std::vector<std::vector<graph::Graph::ModuleGraphPtrType>> layers;
     layers.clear();
 
     // Fill first layer with modules having no connected callee
@@ -1057,7 +1057,7 @@ bool megamol::gui::Configurator::update_graph_layout(GraphManager::GraphPtrType 
     layers.emplace_back();
     for (auto& mod : graph->GetGraphModules()) {
         bool any_connected_callee = false;
-        for (auto& callee_slot : mod->GetCallSlots(Graph::CallSlotType::CALLEE)) {
+        for (auto& callee_slot : mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLEE)) {
             if (callee_slot->CallsConnected()) {
                 any_connected_callee = true;
             }
@@ -1075,10 +1075,10 @@ bool megamol::gui::Configurator::update_graph_layout(GraphManager::GraphPtrType 
         layers.emplace_back();
         // Loop through last filled layer
         for (auto& mod : layers[layers.size() - 2]) {
-            for (auto& caller_slot : mod->GetCallSlots(Graph::CallSlotType::CALLER)) {
+            for (auto& caller_slot : mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLER)) {
                 if (caller_slot->CallsConnected()) {
                     for (auto& call : caller_slot->GetConnectedCalls()) {
-                        auto add_mod = call->GetCallSlot(Graph::CallSlotType::CALLEE)->GetParentModule();
+                        auto add_mod = call->GetCallSlot(graph::CallSlot::CallSlotType::CALLEE)->GetParentModule();
                         // Check if module was already added
                         bool found_module = false;
                         for (auto& layer : layers) {
@@ -1116,7 +1116,7 @@ bool megamol::gui::Configurator::update_graph_layout(GraphManager::GraphPtrType 
         for (int i = 0; i < layer_mod_cnt; i++) {
             auto mod = layer[i];
             if (graph->gui.show_call_names) {
-                for (auto& caller_slot : mod->GetCallSlots(Graph::CallSlotType::CALLER)) {
+                for (auto& caller_slot : mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLER)) {
                     if (caller_slot->CallsConnected()) {
                         for (auto& call : caller_slot->GetConnectedCalls()) {
                             auto call_name_length = this->utils.TextWidgetWidth(call->class_name);
@@ -1126,9 +1126,9 @@ bool megamol::gui::Configurator::update_graph_layout(GraphManager::GraphPtrType 
                     }
                 }
             }
-            mod->gui.position = pos;
-            pos.y += mod->gui.size.y + border_offset;
-            max_module_width = (mod->gui.size.x > max_module_width) ? (mod->gui.size.x) : (max_module_width);
+            mod->position = pos;
+            pos.y += mod->size.y + border_offset;
+            max_module_width = (mod->size.x > max_module_width) ? (mod->size.x) : (max_module_width);
         }
         pos.x += (max_module_width + max_call_width + border_offset);
     }
@@ -1201,7 +1201,7 @@ bool megamol::gui::Configurator::popup_save_project(bool open, megamol::core::Co
 
 
 bool megamol::gui::Configurator::add_new_module_to_graph(
-    const Graph::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name) {
+    const megamol::gui::graph::Graph::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name) {
 
     bool retval = false;
     if (this->gui.graph_ptr == nullptr) {
