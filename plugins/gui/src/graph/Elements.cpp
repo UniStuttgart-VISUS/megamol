@@ -16,13 +16,7 @@ using namespace megamol::gui::graph;
 // PARAM SLOT #################################################################
 
 megamol::gui::graph::Parameter::Parameter(int uid, megamol::gui::graph::Parameter::ParamType type)
-    : uid(uid)
-    , type(type)
-    , minval()
-    , maxval()
-    , storage()
-    , value()
-    , present(std::make_shared<megamol::gui::graph::Parameter>(*this)) {
+    : uid(uid), type(type), minval(), maxval(), storage(), value(), present() {
 
     // Initialize variant types which should/can not be changed afterwards.
     // Default ctor of variants initializes std::monostate.
@@ -170,8 +164,7 @@ std::string megamol::gui::graph::Parameter::GetValueString(void) {
 
 // CALL SLOT ##################################################################
 
-megamol::gui::graph::CallSlot::CallSlot(int uid)
-    : uid(uid), present(std::make_shared<megamol::gui::graph::CallSlot>(*this)) {
+megamol::gui::graph::CallSlot::CallSlot(int uid) : uid(uid), present() {
     this->parent_module.reset();
     connected_calls.clear();
 }
@@ -331,7 +324,7 @@ const megamol::gui::graph::ModulePtrType megamol::gui::graph::CallSlot::GetParen
 
 // CALL #######################################################################
 
-megamol::gui::graph::Call::Call(int uid) : uid(uid), present(std::make_shared<megamol::gui::graph::Call>(*this)) {
+megamol::gui::graph::Call::Call(int uid) : uid(uid), present() {
 
     this->connected_call_slots.clear();
     this->connected_call_slots.emplace(CallSlot::CallSlotType::CALLER, nullptr);
@@ -428,7 +421,7 @@ const megamol::gui::graph::CallSlotPtrType megamol::gui::graph::Call::GetCallSlo
 
 // MODULE #####################################################################
 
-megamol::gui::graph::Module::Module(int uid) : uid(uid), present(std::make_shared<megamol::gui::graph::Module>(*this)) {
+megamol::gui::graph::Module::Module(int uid) : uid(uid), present() {
 
     this->call_slots.clear();
     this->call_slots.emplace(megamol::gui::graph::CallSlot::CallSlotType::CALLER, std::vector<CallSlotPtrType>());

@@ -20,17 +20,17 @@ namespace graph {
 
 // GRAPH DATA STRUCTURE PRESENTATIONS -------------------------------------
 
-// Forward declaration
-class Parameter;
-class CallSlot;
-class Call;
-class Module;
-
-// Pointer types to classes
-typedef std::shared_ptr<Parameter> ParamPtrType;
-typedef std::shared_ptr<CallSlot> CallSlotPtrType;
-typedef std::shared_ptr<Call> CallPtrType;
-typedef std::shared_ptr<Module> ModulePtrType;
+//// Forward declaration
+// class Parameter;
+// class CallSlot;
+// class Call;
+// class Module;
+//
+//// Pointer types to classes
+// typedef std::shared_ptr<Parameter> ParamPtrType;
+// typedef std::shared_ptr<CallSlot> CallSlotPtrType;
+// typedef std::shared_ptr<Call> CallPtrType;
+// typedef std::shared_ptr<Module> ModulePtrType;
 
 
 /**
@@ -38,7 +38,7 @@ typedef std::shared_ptr<Module> ModulePtrType;
  */
 class ParamPresentations {
 public:
-    ParamPresentations(ParamPtrType p);
+    ParamPresentations(void);
 
     ~ParamPresentations(void);
 
@@ -48,8 +48,6 @@ private:
     enum Presentation { DEFAULT } presentation;
     bool read_only;
     bool visible;
-
-    ParamPtrType parent;
 };
 
 
@@ -58,7 +56,7 @@ private:
  */
 class CallSlotPresentations {
 public:
-    CallSlotPresentations(CallSlotPtrType p);
+    CallSlotPresentations(void);
 
     ~CallSlotPresentations(void);
 
@@ -71,8 +69,6 @@ public:
 private:
     enum Presentation { DEFAULT } presentation;
     bool label_visible;
-
-    CallSlotPtrType parent;
 };
 
 
@@ -81,7 +77,7 @@ private:
  */
 class CallPresentations {
 public:
-    CallPresentations(CallPtrType p);
+    CallPresentations(void);
 
     ~CallPresentations(void);
 
@@ -90,8 +86,6 @@ public:
 private:
     enum Presentation { DEFAULT } presentation;
     bool label_visible;
-
-    CallPtrType parent;
 };
 
 
@@ -100,7 +94,7 @@ private:
  */
 class ModulePresentations {
 public:
-    ModulePresentations(ModulePtrType p);
+    ModulePresentations(void);
 
     ~ModulePresentations(void);
 
@@ -115,8 +109,6 @@ public:
 private:
     enum Presentation { DEFAULT } presentation;
     bool label_visible;
-
-    ModulePtrType parent;
 };
 
 

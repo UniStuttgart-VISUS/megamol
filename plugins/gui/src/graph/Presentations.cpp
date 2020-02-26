@@ -16,7 +16,7 @@ using namespace megamol::gui::graph;
 
 // PARAMETER PRESENTATIONS ####################################################
 
-megamol::gui::graph::ParamPresentations::ParamPresentations(ParamPtrType p) : parent(p) {}
+megamol::gui::graph::ParamPresentations::ParamPresentations(void) {}
 
 
 megamol::gui::graph::ParamPresentations::~ParamPresentations(void) {}
@@ -163,7 +163,7 @@ void megamol::gui::graph::ParamPresentations::Present() {
 
 // CALL SLOT PRESENTATIONS ####################################################
 
-megamol::gui::graph::CallSlotPresentations::CallSlotPresentations(CallSlotPtrType p) : parent(p) {}
+megamol::gui::graph::CallSlotPresentations::CallSlotPresentations(void) {}
 
 
 megamol::gui::graph::CallSlotPresentations::~CallSlotPresentations(void) {}
@@ -177,7 +177,7 @@ void megamol::gui::graph::CallSlotPresentations::UpdatePosition() {}
 
 // CALL PRESENTATIONS #########################################################
 
-megamol::gui::graph::CallPresentations::CallPresentations(CallPtrType p) : parent(p) {}
+megamol::gui::graph::CallPresentations::CallPresentations(void) {}
 
 
 megamol::gui::graph::CallPresentations::~CallPresentations(void) {}
@@ -188,7 +188,7 @@ void megamol::gui::graph::CallPresentations::Present() {}
 
 // MODULE PRESENTATIONS #######################################################
 
-megamol::gui::graph::ModulePresentations::ModulePresentations(ModulePtrType p) : parent(p) {}
+megamol::gui::graph::ModulePresentations::ModulePresentations(void) {}
 
 
 megamol::gui::graph::ModulePresentations::~ModulePresentations(void) {}
