@@ -90,7 +90,7 @@ bool ClusterHierarchieRenderer::create(void) {
         vislib::sys::Log::DefaultLog.WriteError("Couldn't initialize the font.");
         return false;
     }
-    
+
     vislib::graphics::gl::ShaderSource texVertShader;
     vislib::graphics::gl::ShaderSource texFragShader;
 
@@ -115,11 +115,41 @@ bool ClusterHierarchieRenderer::create(void) {
         return false;
     }
 
+    texVertShader.Clear();
+    texFragShader.Clear();
+
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("molsurfPassthrough::vertex", texVertShader)) {
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "Unable to load vertex shader source for passthrough Vertex Shader");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
+            "molsurfPassthrough::fragment", texFragShader)) {
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "Unable to load fragment shader source for passthrough Fragment Shader");
+        return false;
+    }
+
+    try {
+        if (!this->passthroughShader.Create(
+                texVertShader.Code(), texVertShader.Count(), texFragShader.Code(), texFragShader.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+        }
+    } catch (vislib::Exception e) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to create shader: %s\n", e.GetMsgA());
+        return false;
+    }
+
     const float size = 1.0f;
     std::vector<float> texVerts = {0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, size, 0.0f, 0.0f, 0.0f, size, 0.0f, 0.0f, 1.0f,
         1.0f, size, size, 0.0f, 1.0f, 0.0f};
 
     this->texBuffer = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, texVerts, GL_STATIC_DRAW);
+    this->geometrySSBO = std::make_unique<glowl::BufferObject>(
+        GL_SHADER_STORAGE_BUFFER, std::vector<glm::vec3>(), GL_DYNAMIC_DRAW); // this is filled later
+
+    glGenVertexArrays(1, &this->dummyVa);
+    // it is only a dummy, so we do not fill it
 
     glGenVertexArrays(1, &this->texVa);
     glBindVertexArray(this->texVa);
@@ -184,8 +214,8 @@ bool ClusterHierarchieRenderer::GetExtents(view::CallRender2D& call) {
     return true;
 }
 
-double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* node, glm::mat4 mvp, double minheight, double minwidth,
-    double spacey, double spacex,
+double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* node, glm::mat4 mvp, double minheight,
+    double minwidth, double spacey, double spacex,
     std::vector<std::tuple<HierarchicalClustering::CLUSTERNODE*, ClusterRenderer::RGBCOLOR*>*>* colors) {
 
     double posx = 0;
@@ -224,20 +254,31 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
         }
     }
 
+    // Draw Point
+    glPointSize(10);
+    this->passthroughShader.Enable();
+
     if (!clusternode) {
         if (this->clustering->parentIs(node, this->position)) {
             glColor3f(0.5, 0.5, 0.5);
+            glUniform4f(this->passthroughShader.ParameterLocation("color"), 0.5, 0.5, 0.5, 1.0f);
         } else {
             glColor3f(0, 0, 0);
+            glUniform4f(this->passthroughShader.ParameterLocation("color"), 0.0, 0.0, 0.0, 1.0f);
         }
     }
+    glUniform3f(this->passthroughShader.ParameterLocation("color"), 1.0, 1.0, 1.0);
+    glUniformMatrix4fv(this->passthroughShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
 
+    this->geometrySSBO->rebuffer(std::vector<glm::vec3>{glm::vec3(posx, posy, 0.0f)});
+    this->geometrySSBO->bind(11);
+    glDrawArrays(GL_POINTS, 0, 1);
+    this->passthroughShader.Disable();
 
-    // Draw Point
-    glPointSize(10);
     glBegin(GL_POINTS);
     glVertex2f(posx, posy);
     glEnd();
+    
 
     if (node->level != 0) {
         // Connect the Nodes
@@ -256,6 +297,7 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
         glVertex2f(posLeft, posLeftY);
         glEnd();
     }
+    
     return posx;
 }
 
@@ -449,12 +491,13 @@ void ClusterHierarchieRenderer::renderPopup(glm::mat4 mvp) {
         }
 
         this->popup->pic->texture->bindTexture();
-        
+
         glBindVertexArray(this->texVa);
         this->textureShader.Enable();
 
         glUniform2f(this->textureShader.ParameterLocation("lowerleft"), this->x + shiftx, this->y + shifty);
-        glUniform2f(this->textureShader.ParameterLocation("upperright"), this->x + shiftx + width, this->y + shifty + height);
+        glUniform2f(
+            this->textureShader.ParameterLocation("upperright"), this->x + shiftx + width, this->y + shifty + height);
         glUniformMatrix4fv(this->textureShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
         glUniform1i(this->textureShader.ParameterLocation("tex"), 0);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

@@ -128,10 +128,13 @@ private:
     SIZE_T hashoffset;
     SIZE_T colorhash;
 
+    vislib::graphics::gl::GLSLShader passthroughShader;
     vislib::graphics::gl::GLSLShader textureShader;
     std::unique_ptr<glowl::BufferObject> texBuffer;
+    std::unique_ptr<glowl::BufferObject> geometrySSBO;
 
     GLuint texVa;
+    GLuint dummyVa;
 
     // Popup
     HierarchicalClustering::CLUSTERNODE* popup;
