@@ -421,19 +421,19 @@ void ClusterHierarchieRenderer::renderPopup() {
             shifty = this->viewport.GetY() - (this->y + height);
         }
 
-        this->popup->pic->texture->Bind();
+        this->popup->pic->texture->bindTexture();
         glColor3f(1, 1, 1);
         glBegin(GL_QUADS);
-        glTexCoord2f(0, 0);
+        glTexCoord2f(0, 1);
         glVertex2f((this->x + shiftx), (this->y + shifty));
 
-        glTexCoord2f(1, 0);
+        glTexCoord2f(1, 1);
         glVertex2f((this->x + shiftx) + width, (this->y + shifty));
 
-        glTexCoord2f(1, 1);
+        glTexCoord2f(1, 0);
         glVertex2f((this->x + shiftx) + width, (this->y + shifty) + height);
 
-        glTexCoord2f(0, 1);
+        glTexCoord2f(0, 0);
         glVertex2f((this->x + shiftx), (this->y + shifty) + height);
         glEnd();
         glDisable(GL_TEXTURE_2D);

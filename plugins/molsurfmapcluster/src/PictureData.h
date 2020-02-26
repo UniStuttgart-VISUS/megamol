@@ -4,6 +4,7 @@
 #include "image_calls/Image2DCall.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/graphics/BitmapImage.h"
+#include "glowl/glowl.h"
 #include <string>
 
 namespace megamol {
@@ -16,7 +17,8 @@ namespace MolSurfMapCluster {
         uint32_t height;
         bool render;
         bool popup;
-        vislib::graphics::gl::OpenGLTexture2D* texture;
+        //vislib::graphics::gl::OpenGLTexture2D* texture;
+        std::unique_ptr<glowl::Texture2D> texture;
         vislib::graphics::BitmapImage* image;
     };
 

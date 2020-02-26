@@ -21,12 +21,8 @@ bool static loadTexture(HierarchicalClustering::CLUSTERNODE* node) {
     glEnable(GL_TEXTURE_2D); // OpenGL Texturen aktivieren
 
     if (node->pic->texture == nullptr) {
-        node->pic->texture = new vislib::graphics::gl::OpenGLTexture2D();
-        if (node->pic->texture->Create(node->pic->width, node->pic->height, false, node->pic->image->PeekDataAs<BYTE>(), GL_RGB) != GL_NO_ERROR) {
-            vislib::sys::Log::DefaultLog.WriteError("Could not load \"%s\" texture.", node->pic->path);
-            return false;
-        }
-        node->pic->texture->SetFilter(GL_LINEAR, GL_LINEAR);
+        glowl::TextureLayout layout(GL_RGB8, node->pic->width, node->pic->height, 1, GL_RGB, GL_UNSIGNED_BYTE, 1);
+        node->pic->texture = std::make_unique<glowl::Texture2D>("", layout, node->pic->image->PeekDataAs<BYTE>());
     }
     return true;
 }
@@ -40,8 +36,7 @@ void static loadTexturesToRender(HierarchicalClustering* clustering) {
         } else {
             if (leaf->pic->texture != nullptr) {
                 // Destroy texture
-                delete leaf->pic->texture;
-                leaf->pic->texture = nullptr;
+                leaf->pic->texture.reset();
             }
         }
     }

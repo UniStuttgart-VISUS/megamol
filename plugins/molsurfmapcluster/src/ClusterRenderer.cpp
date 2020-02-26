@@ -255,7 +255,7 @@ void ClusterRenderer::renderLeaveNode(HierarchicalClustering::CLUSTERNODE* node)
 
     // Render Bild
     glEnable(GL_TEXTURE_2D);
-    node->pic->texture->Bind();
+    node->pic->texture->bindTexture();
 
     auto pos = node->pca2d;
 
@@ -269,16 +269,16 @@ void ClusterRenderer::renderLeaveNode(HierarchicalClustering::CLUSTERNODE* node)
 
     glBegin(GL_QUADS);
 
-    glTexCoord2f(0, 0);
+    glTexCoord2f(0, 1);
     glVertex2f(posx - 0.5 * picwidth, posy - 0.5 * picheight);
 
-    glTexCoord2f(1, 0);
+    glTexCoord2f(1, 1);
     glVertex2f(posx + 0.5 * picwidth, posy - 0.5 * picheight);
 
-    glTexCoord2f(1, 1);
+    glTexCoord2f(1, 0);
     glVertex2f(posx + 0.5 * picwidth, this->viewport.GetY() - strHeight);
 
-    glTexCoord2f(0, 1);
+    glTexCoord2f(0, 0);
     glVertex2f(posx - 0.5 * picwidth, this->viewport.GetY() - strHeight);
 
     glEnd();
@@ -290,7 +290,7 @@ void ClusterRenderer::renderNode(
     HierarchicalClustering::CLUSTERNODE* node, double minX, double maxX, double minY, double maxY) {
 
     glActiveTexture(GL_TEXTURE0);
-    node->pic->texture->Bind();
+    node->pic->texture->bindTexture();
     glEnable(GL_TEXTURE_2D);
 
     auto pos = node->pca2d;
@@ -304,20 +304,20 @@ void ClusterRenderer::renderNode(
     double picheight = PICSCALING * this->viewport.GetY();
 
     // Render Picture
-    glColor3f(1, 0, 1); // Reset Color for Textures
+    glColor3f(1, 1, 1); // Reset Color for Textures
 
     glBegin(GL_QUADS);
 
-    glTexCoord2f(0, 0);
+    glTexCoord2f(0, 1);
     glVertex2f(posx - 0.5 * picwidth, posy - 0.5 * picheight);
 
-    glTexCoord2f(1, 0);
+    glTexCoord2f(1, 1);
     glVertex2f(posx + 0.5 * picwidth, posy - 0.5 * picheight);
 
-    glTexCoord2f(1, 1);
+    glTexCoord2f(1, 0);
     glVertex2f(posx + 0.5 * picwidth, posy + 0.5 * picheight);
 
-    glTexCoord2f(0, 1);
+    glTexCoord2f(0, 0);
     glVertex2f(posx - 0.5 * picwidth, posy + 0.5 * picheight);
 
     glEnd();
