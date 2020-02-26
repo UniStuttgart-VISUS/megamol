@@ -20,8 +20,8 @@
 
 #include "FileUtils.h"
 #include "GUIUtils.h"
-#include "graph/GraphManager.h"
 #include "WindowManager.h"
+#include "graph/GraphManager.h"
 
 
 namespace megamol {
@@ -97,7 +97,7 @@ private:
     bool draw_canvas_dragged_call(graph::GraphManager::GraphPtrType graph);
 
     bool update_module_size(graph::GraphManager::GraphPtrType graph, graph::Graph::ModuleGraphPtrType mod);
-    bool update_slot_position(graph::GraphManager::GraphPtrType graph, graph::CallSlotPtrType slot);
+    bool update_slot_position(graph::GraphManager::GraphPtrType graph, graph::Graph::CallSlotGraphPtrType slot);
     bool update_graph_layout(graph::GraphManager::GraphPtrType graph);
 
     bool add_new_module_to_graph(

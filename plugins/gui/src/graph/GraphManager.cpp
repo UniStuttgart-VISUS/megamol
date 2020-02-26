@@ -179,7 +179,8 @@ bool megamol::gui::graph::GraphManager::UpdateModulesCallsStock(const megamol::c
 }
 
 
-bool megamol::gui::graph::GraphManager::LoadCurrentCoreProject(std::string name, megamol::core::CoreInstance* core_instance) {
+bool megamol::gui::graph::GraphManager::LoadCurrentCoreProject(
+    std::string name, megamol::core::CoreInstance* core_instance) {
 
     try {
         // Temporary data structure holding call connection data
@@ -330,7 +331,7 @@ bool megamol::gui::graph::GraphManager::LoadCurrentCoreProject(std::string name,
             Graph::CallSlotGraphPtrType call_slot_1 = nullptr;
             for (auto& mod : graph->GetGraphModules()) {
                 if (mod->full_name == cd.caller_module_full_name) {
-                    for (auto call_slot : mod->GetCallSlots(Graph::CallSlotGraphType::CALLER)) {
+                    for (auto call_slot : mod->GetCallSlots(CallSlot::CallSlotType::CALLER)) {
                         if (call_slot->name == cd.caller_module_call_slot_name) {
                             call_slot_1 = call_slot;
                         }
@@ -340,7 +341,7 @@ bool megamol::gui::graph::GraphManager::LoadCurrentCoreProject(std::string name,
             Graph::CallSlotGraphPtrType call_slot_2 = nullptr;
             for (auto& mod : graph->GetGraphModules()) {
                 if (mod->full_name == cd.callee_module_full_name) {
-                    for (auto call_slot : mod->GetCallSlots(Graph::CallSlotGraphType::CALLEE)) {
+                    for (auto call_slot : mod->GetCallSlots(CallSlot::CallSlotType::CALLEE)) {
                         if (call_slot->name == cd.callee_module_call_slot_name) {
                             call_slot_2 = call_slot;
                         }
@@ -374,9 +375,9 @@ int megamol::gui::graph::GraphManager::GetCompatibleCallIndex(
                 for (auto& current_comp_call_slots : call_slot_2->compatible_call_idxs) {
                     if (selected_comp_call_slots == current_comp_call_slots) {
                         // Show only comaptible calls for unconnected caller slots
-                        if ((call_slot_1->type == Graph::CallSlotGraphType::CALLER) && (call_slot_1->CallsConnected())) {
+                        if ((call_slot_1->type == CallSlot::CallSlotType::CALLER) && (call_slot_1->CallsConnected())) {
                             return -1;
-                        } else if ((call_slot_2->type == Graph::CallSlotGraphType::CALLER) &&
+                        } else if ((call_slot_2->type == CallSlot::CallSlotType::CALLER) &&
                                    (call_slot_2->CallsConnected())) {
                             return -1;
                         }
@@ -439,7 +440,7 @@ bool megamol::gui::graph::GraphManager::PROTOTYPE_SaveGraph(
                     }
 
                     for (auto& param_slot : mod->param_slots) {
-                        if (param_slot.type != Graph::ParamGraphType::BUTTON) {
+                        if (param_slot.type != Parameter::ParamType::BUTTON) {
                             // Encode to UTF-8 string
                             vislib::StringA valueString;
                             vislib::UTF8Encoder::Encode(
@@ -449,15 +450,15 @@ bool megamol::gui::graph::GraphManager::PROTOTYPE_SaveGraph(
                         }
                     }
 
-                    for (auto& caller_slot : mod->GetCallSlots(Graph::CallSlotGraphType::CALLER)) {
+                    for (auto& caller_slot : mod->GetCallSlots(CallSlot::CallSlotType::CALLER)) {
                         for (auto& call : caller_slot->GetConnectedCalls()) {
                             if (call->IsConnected()) {
                                 confCalls << "mmCreateCall(\"" << call->class_name << "\",\"" << instance
-                                          << call->GetCallSlot(Graph::CallSlotGraphType::CALLER)->GetParentModule()->name
-                                          << "::" << call->GetCallSlot(Graph::CallSlotGraphType::CALLER)->name << "\",\""
+                                          << call->GetCallSlot(CallSlot::CallSlotType::CALLER)->GetParentModule()->name
+                                          << "::" << call->GetCallSlot(CallSlot::CallSlotType::CALLER)->name << "\",\""
                                           << instance
-                                          << call->GetCallSlot(Graph::CallSlotGraphType::CALLEE)->GetParentModule()->name
-                                          << "::" << call->GetCallSlot(Graph::CallSlotGraphType::CALLEE)->name << "\")\n";
+                                          << call->GetCallSlot(CallSlot::CallSlotType::CALLEE)->GetParentModule()->name
+                                          << "::" << call->GetCallSlot(CallSlot::CallSlotType::CALLEE)->name << "\")\n";
                             }
                         }
                     }
@@ -520,8 +521,8 @@ bool megamol::gui::graph::GraphManager::get_module_stock_data(
     mod.is_view = false;
     mod.param_slots.clear();
     mod.call_slots.clear();
-    mod.call_slots.emplace(Graph::CallSlotGraphType::CALLER, std::vector<Graph::StockCallSlot>());
-    mod.call_slots.emplace(Graph::CallSlotGraphType::CALLEE, std::vector<Graph::StockCallSlot>());
+    mod.call_slots.emplace(CallSlot::CallSlotType::CALLER, std::vector<Graph::StockCallSlot>());
+    mod.call_slots.emplace(CallSlot::CallSlotType::CALLEE, std::vector<Graph::StockCallSlot>());
 
     if (this->calls_stock.empty()) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -571,38 +572,38 @@ bool megamol::gui::graph::GraphManager::get_module_stock_data(
 
             // Set parameter type
             if (auto* p_ptr = param_slot->Param<core::param::ButtonParam>()) {
-                psd.type = Graph::ParamGraphType::BUTTON;
+                psd.type = Parameter::ParamType::BUTTON;
             } else if (auto* p_ptr = param_slot->Param<core::param::BoolParam>()) {
-                psd.type = Graph::ParamGraphType::BOOL;
+                psd.type = Parameter::ParamType::BOOL;
             } else if (auto* p_ptr = param_slot->Param<core::param::ColorParam>()) {
-                psd.type = Graph::ParamGraphType::COLOR;
+                psd.type = Parameter::ParamType::COLOR;
             } else if (auto* p_ptr = param_slot->Param<core::param::EnumParam>()) {
-                psd.type = Graph::ParamGraphType::ENUM;
+                psd.type = Parameter::ParamType::ENUM;
             } else if (auto* p_ptr = param_slot->Param<core::param::FilePathParam>()) {
-                psd.type = Graph::ParamGraphType::FILEPATH;
+                psd.type = Parameter::ParamType::FILEPATH;
             } else if (auto* p_ptr = param_slot->Param<core::param::FlexEnumParam>()) {
-                psd.type = Graph::ParamGraphType::FLEXENUM;
+                psd.type = Parameter::ParamType::FLEXENUM;
             } else if (auto* p_ptr = param_slot->Param<core::param::FloatParam>()) {
-                psd.type = Graph::ParamGraphType::FLOAT;
+                psd.type = Parameter::ParamType::FLOAT;
             } else if (auto* p_ptr = param_slot->Param<core::param::IntParam>()) {
-                psd.type = Graph::ParamGraphType::INT;
+                psd.type = Parameter::ParamType::INT;
             } else if (auto* p_ptr = param_slot->Param<core::param::StringParam>()) {
-                psd.type = Graph::ParamGraphType::STRING;
+                psd.type = Parameter::ParamType::STRING;
             } else if (auto* p_ptr = param_slot->Param<core::param::TernaryParam>()) {
-                psd.type = Graph::ParamGraphType::TERNARY;
+                psd.type = Parameter::ParamType::TERNARY;
             } else if (auto* p_ptr = param_slot->Param<core::param::TransferFunctionParam>()) {
-                psd.type = Graph::ParamGraphType::TRANSFERFUNCTION;
+                psd.type = Parameter::ParamType::TRANSFERFUNCTION;
             } else if (auto* p_ptr = param_slot->Param<core::param::Vector2fParam>()) {
-                psd.type = Graph::ParamGraphType::VECTOR2F;
+                psd.type = Parameter::ParamType::VECTOR2F;
             } else if (auto* p_ptr = param_slot->Param<core::param::Vector3fParam>()) {
-                psd.type = Graph::ParamGraphType::VECTOR3F;
+                psd.type = Parameter::ParamType::VECTOR3F;
             } else if (auto* p_ptr = param_slot->Param<core::param::Vector4fParam>()) {
-                psd.type = Graph::ParamGraphType::VECTOR4F;
+                psd.type = Parameter::ParamType::VECTOR4F;
             } else {
                 vislib::sys::Log::DefaultLog.WriteError("Found unknown parameter type. Please extend parameter types "
                                                         "in the configurator. [%s, %s, line %d]\n",
                     __FILE__, __FUNCTION__, __LINE__);
-                psd.type = Graph::ParamGraphType::UNKNOWN;
+                psd.type = Parameter::ParamType::UNKNOWN;
             }
 
             mod.param_slots.emplace_back(psd);
@@ -614,7 +615,7 @@ bool megamol::gui::graph::GraphManager::get_module_stock_data(
             csd.name = std::string(caller_slot->Name().PeekBuffer());
             csd.description = std::string(caller_slot->Description().PeekBuffer());
             csd.compatible_call_idxs.clear();
-            csd.type = Graph::CallSlotGraphType::CALLER;
+            csd.type = CallSlot::CallSlotType::CALLER;
 
             SIZE_T callCount = caller_slot->GetCompCallCount();
             for (SIZE_T i = 0; i < callCount; ++i) {
@@ -636,7 +637,7 @@ bool megamol::gui::graph::GraphManager::get_module_stock_data(
             csd.name = std::string(callee_slot->Name().PeekBuffer());
             csd.description = std::string(callee_slot->Description().PeekBuffer());
             csd.compatible_call_idxs.clear();
-            csd.type = Graph::CallSlotGraphType::CALLEE;
+            csd.type = CallSlot::CallSlotType::CALLEE;
 
             SIZE_T callbackCount = callee_slot->GetCallbackCount();
             std::vector<std::string> callNames, funcNames;

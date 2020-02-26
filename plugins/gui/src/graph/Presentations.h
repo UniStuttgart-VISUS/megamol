@@ -12,7 +12,6 @@
 #include "vislib/sys/Log.h"
 
 #include "GUIUtils.h"
-#include "Elements.h"
 
 
 namespace megamol {
@@ -21,12 +20,25 @@ namespace graph {
 
 // GRAPH DATA STRUCTURE PRESENTATIONS -------------------------------------
 
+// Forward declaration
+class Parameter;
+class CallSlot;
+class Call;
+class Module;
+
+// Pointer types to classes
+typedef std::shared_ptr<Parameter> ParamPtrType;
+typedef std::shared_ptr<CallSlot> CallSlotPtrType;
+typedef std::shared_ptr<Call> CallPtrType;
+typedef std::shared_ptr<Module> ModulePtrType;
+
+
 /**
  * Defines GUI parameter presentations.
  */
-class ParamPresentations : public megamol::gui::graph::Parameter {
+class ParamPresentations {
 public:
-    ParamPresentations(int uid, megamol::gui::graph::Parameter::ParamType type);
+    ParamPresentations(ParamPtrType p);
 
     ~ParamPresentations(void);
 
@@ -36,15 +48,17 @@ private:
     enum Presentation { DEFAULT } presentation;
     bool read_only;
     bool visible;
+
+    ParamPtrType parent;
 };
 
 
 /**
  * Defines GUI call slot presentations.
  */
-class CallSlotPresentations : public megamol::gui::graph::CallSlot {
+class CallSlotPresentations {
 public:
-    CallSlotPresentations(int uid);
+    CallSlotPresentations(CallSlotPtrType p);
 
     ~CallSlotPresentations(void);
 
@@ -58,15 +72,16 @@ private:
     enum Presentation { DEFAULT } presentation;
     bool label_visible;
 
+    CallSlotPtrType parent;
 };
 
 
 /**
  * Defines GUI call presentations.
  */
-class CallPresentations : public megamol::gui::graph::Call {
+class CallPresentations {
 public:
-    CallPresentations(int uid);
+    CallPresentations(CallPtrType p);
 
     ~CallPresentations(void);
 
@@ -75,15 +90,17 @@ public:
 private:
     enum Presentation { DEFAULT } presentation;
     bool label_visible;
+
+    CallPtrType parent;
 };
 
 
 /**
  * Defines GUI module presentations.
  */
-class ModulePresentations : public megamol::gui::graph::Module {
+class ModulePresentations {
 public:
-    ModulePresentations(int uid);
+    ModulePresentations(ModulePtrType p);
 
     ~ModulePresentations(void);
 
@@ -91,10 +108,15 @@ public:
 
     ImVec2 position;
     ImVec2 size;
+    std::string class_label;
+    std::string name_label;
+
 
 private:
     enum Presentation { DEFAULT } presentation;
     bool label_visible;
+
+    ModulePtrType parent;
 };
 
 

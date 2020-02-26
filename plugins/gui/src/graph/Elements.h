@@ -30,7 +30,7 @@
 #include <variant>
 #include <vector>
 
-#include "GUIUtils.h"
+#include "Presentations.h"
 
 
 namespace megamol {
@@ -40,20 +40,23 @@ namespace graph {
 // GRAPH DATA STRUCTURE ---------------------------------------------------
 
 // Forward declaration
-class Module;
-class Call;
+class Parameter;
 class CallSlot;
+class Call;
+class Module;
 
+// Pointer types to classes
+typedef std::shared_ptr<Parameter> ParamPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
+
 
 /**
  * Defines parameter data structure.
  */
 class Parameter {
 public:
-
     enum ParamType {
         BOOL,
         BUTTON,
@@ -152,6 +155,8 @@ public:
     }
 
 private:
+    ParamPresentations present;
+
     std::variant<std::monostate, // default (unused/unavailable)
         float,                   // FLOAT
         int,                     // INT
@@ -192,13 +197,11 @@ private:
 };
 
 
-
 /**
  * Defines call slot data structure.
  */
 class CallSlot {
 public:
-
     enum CallSlotType { CALLEE, CALLER };
 
     CallSlot(int uid);
@@ -222,11 +225,12 @@ public:
     bool DisConnectParentModule(void);
     const ModulePtrType GetParentModule(void);
 
+    CallSlotPresentations present;
+
 private:
     ModulePtrType parent_module;
     std::vector<CallPtrType> connected_calls;
 };
-
 
 
 /**
@@ -249,10 +253,11 @@ public:
     bool DisConnectCallSlots(void);
     const CallSlotPtrType GetCallSlot(CallSlot::CallSlotType type);
 
+    CallPresentations present;
+
 private:
     std::map<CallSlot::CallSlotType, CallSlotPtrType> connected_call_slots;
 };
-
 
 
 /**
@@ -280,6 +285,8 @@ public:
     bool RemoveAllCallSlots(void);
     const std::vector<CallSlotPtrType> GetCallSlots(CallSlot::CallSlotType type);
     const std::map<CallSlot::CallSlotType, std::vector<CallSlotPtrType>> GetCallSlots(void);
+
+    ModulePresentations present;
 
 private:
     std::map<CallSlot::CallSlotType, std::vector<CallSlotPtrType>> call_slots;

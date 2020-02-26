@@ -648,8 +648,8 @@ bool megamol::gui::Configurator::draw_canvas_calls(megamol::gui::graph::GraphMan
 
             if (call->IsConnected()) {
 
-                ImVec2 p1 = call->GetCallSlot(graph::CallSlot::CallSlotType::CALLER)->position;
-                ImVec2 p2 = call->GetCallSlot(graph::CallSlot::CallSlotType::CALLEE)->position;
+                ImVec2 p1 = call->GetCallSlot(graph::CallSlot::CallSlotType::CALLER)->present.position;
+                ImVec2 p2 = call->GetCallSlot(graph::CallSlot::CallSlotType::CALLEE)->present.position;
 
                 draw_list->ChannelsSetCurrent(0); // Background
 
@@ -734,11 +734,11 @@ bool megamol::gui::Configurator::draw_canvas_modules(megamol::gui::graph::GraphM
             const int id = mod->uid;
             ImGui::PushID(id);
 
-            ImVec2 module_size = mod->size;
-            ImVec2 module_rect_min = graph->gui.canvas_offset + mod->position * graph->gui.canvas_zooming;
+            ImVec2 module_size = mod->present.size;
+            ImVec2 module_rect_min = graph->gui.canvas_offset + mod->present.position * graph->gui.canvas_zooming;
             ImVec2 module_rect_max = module_rect_min + module_size;
             ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
-            std::string label = mod->class_label;
+            std::string label = mod->present.class_label;
 
             // Draw text
             draw_list->ChannelsSetCurrent(1); // Foreground
@@ -754,7 +754,7 @@ bool megamol::gui::Configurator::draw_canvas_modules(megamol::gui::graph::GraphM
                                                           line_offset - ImGui::GetItemsLineHeightWithSpacing()));
             ImGui::Text(label.c_str());
 
-            label = mod->gui.name_label;
+            label = mod->present.name_label;
             auto name_width = this->utils.TextWidgetWidth(label);
             ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), line_offset));
             ImGui::Text(label.c_str());
@@ -791,7 +791,7 @@ bool megamol::gui::Configurator::draw_canvas_modules(megamol::gui::graph::GraphM
             // Gives slots which overlap modules priority for ToolTip and Context Menu.
             if (graph->gui.hovered_slot_uid < 0) {
                 this->utils.HoverToolTip(mod->description, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
-                ///XXX
+                /// XXX
                 // Context menu
                 // if (ImGui::BeginPopupContextItem()) {
                 //    if (ImGui::MenuItem(
@@ -813,7 +813,7 @@ bool megamol::gui::Configurator::draw_canvas_modules(megamol::gui::graph::GraphM
                 graph->gui.selected_call_uid = -1;
             }
             if (module_active && ImGui::IsMouseDragging(0)) {
-                mod->position = (module_rect_min + ImGui::GetIO().MouseDelta) / graph->gui.canvas_zooming;
+                mod->present.position = (module_rect_min + ImGui::GetIO().MouseDelta) / graph->gui.canvas_zooming;
             }
             if (ImGui::IsItemHovered() && (hovered_module < 0)) {
                 hovered_module = id;
@@ -873,7 +873,7 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slots(
             for (auto& slot : slot_pair.second) {
                 ImGui::PushID(slot->uid);
 
-                ImVec2 slot_position = slot->position;
+                ImVec2 slot_position = slot->present.position;
                 float radius = graph->gui.slot_radius * graph->gui.canvas_zooming;
                 std::string slot_name = slot->name;
                 slot_color = COLOR_SLOT;
@@ -969,7 +969,7 @@ bool megamol::gui::Configurator::draw_canvas_dragged_call(megamol::gui::graph::G
                 mouse_inside_canvas = true;
             }
             if (ImGui::IsMouseDown(0) && mouse_inside_canvas) {
-                ImVec2 p1 = graph->gui.selected_slot_ptr->position;
+                ImVec2 p1 = graph->gui.selected_slot_ptr->present.position;
                 ImVec2 p2 = ImGui::GetMousePos();
                 if (graph->gui.selected_slot_ptr->type == graph::CallSlot::CallSlotType::CALLEE) {
                     ImVec2 tmp = p1;
@@ -992,12 +992,13 @@ bool megamol::gui::Configurator::draw_canvas_dragged_call(megamol::gui::graph::G
 }
 
 
-bool megamol::gui::Configurator::update_module_size(megamol::gui::graph::GraphManager::GraphPtrType graph, megamol::gui::graph::Graph::ModuleGraphPtrType mod) {
+bool megamol::gui::Configurator::update_module_size(
+    megamol::gui::graph::GraphManager::GraphPtrType graph, megamol::gui::graph::Graph::ModuleGraphPtrType mod) {
 
-    mod->class_label = "Class: " + mod->class_name;
-    float class_name_length = this->utils.TextWidgetWidth(mod->class_label);
-    mod->name_label = "Name: " + mod->name;
-    float name_length = this->utils.TextWidgetWidth(mod->name_label);
+    mod->present.class_label = "Class: " + mod->class_name;
+    float class_name_length = this->utils.TextWidgetWidth(mod->present.class_label);
+    mod->present.name_label = "Name: " + mod->name;
+    float name_length = this->utils.TextWidgetWidth(mod->present.name_label);
     float max_label_length = std::max(class_name_length, name_length);
 
     float max_slot_name_length = 0.0f;
@@ -1012,21 +1013,22 @@ bool megamol::gui::Configurator::update_module_size(megamol::gui::graph::GraphMa
 
     float module_width = (max_label_length + max_slot_name_length) + (4.0f * graph->gui.slot_radius);
 
-    auto max_slot_count = std::max(
-        mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLEE).size(), mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLER).size());
+    auto max_slot_count = std::max(mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLEE).size(),
+        mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLER).size());
     float module_slot_height = (static_cast<float>(max_slot_count) * (graph->gui.slot_radius * 2.0f) * 1.5f) +
                                ((graph->gui.slot_radius * 2.0f) * 0.5f);
 
     float module_height =
         std::max(module_slot_height, ImGui::GetItemsLineHeightWithSpacing() * ((mod->is_view) ? (4.0f) : (3.0f)));
 
-    mod->size = ImVec2(module_width, module_height);
+    mod->present.size = ImVec2(module_width, module_height);
 
     return true;
 }
 
 
-bool megamol::gui::Configurator::update_slot_position(megamol::gui::graph::GraphManager::GraphPtrType graph, megamol::gui::graph::Graph::CallSlotGraphPtrType slot) {
+bool megamol::gui::Configurator::update_slot_position(
+    megamol::gui::graph::GraphManager::GraphPtrType graph, megamol::gui::graph::Graph::CallSlotGraphPtrType slot) {
 
     if (slot->ParentModuleConnected()) {
         auto slot_count = slot->GetParentModule()->GetCallSlots(slot->type).size();
@@ -1036,10 +1038,11 @@ bool megamol::gui::Configurator::update_slot_position(megamol::gui::graph::Graph
                 slot_idx = idx;
             }
         }
-        auto pos = graph->gui.canvas_offset + slot->GetParentModule()->gui.position * graph->gui.canvas_zooming;
-        auto size = slot->GetParentModule()->gui.size;
-        slot->gui.position = ImVec2(pos.x + ((slot->type == graph::CallSlot::CallSlotType::CALLER) ? (size.x) : (0.0f)),
-            pos.y + size.y * ((float)slot_idx + 1) / ((float)slot_count + 1));
+        auto pos = graph->gui.canvas_offset + slot->GetParentModule()->present.position * graph->gui.canvas_zooming;
+        auto size = slot->GetParentModule()->present.size;
+        slot->present.position =
+            ImVec2(pos.x + ((slot->type == graph::CallSlot::CallSlotType::CALLER) ? (size.x) : (0.0f)),
+                pos.y + size.y * ((float)slot_idx + 1) / ((float)slot_count + 1));
         return true;
     }
     return false;
@@ -1126,9 +1129,9 @@ bool megamol::gui::Configurator::update_graph_layout(megamol::gui::graph::GraphM
                     }
                 }
             }
-            mod->position = pos;
-            pos.y += mod->size.y + border_offset;
-            max_module_width = (mod->size.x > max_module_width) ? (mod->size.x) : (max_module_width);
+            mod->present.position = pos;
+            pos.y += mod->present.size.y + border_offset;
+            max_module_width = (mod->present.size.x > max_module_width) ? (mod->present.size.x) : (max_module_width);
         }
         pos.x += (max_module_width + max_call_width + border_offset);
     }

@@ -16,7 +16,13 @@ using namespace megamol::gui::graph;
 // PARAM SLOT #################################################################
 
 megamol::gui::graph::Parameter::Parameter(int uid, megamol::gui::graph::Parameter::ParamType type)
-    : uid(uid), type(type), minval(), maxval(), storage(), value() {
+    : uid(uid)
+    , type(type)
+    , minval()
+    , maxval()
+    , storage()
+    , value()
+    , present(std::make_shared<megamol::gui::graph::Parameter>(*this)) {
 
     // Initialize variant types which should/can not be changed afterwards.
     // Default ctor of variants initializes std::monostate.
@@ -164,7 +170,8 @@ std::string megamol::gui::graph::Parameter::GetValueString(void) {
 
 // CALL SLOT ##################################################################
 
-megamol::gui::graph::CallSlot::CallSlot(int uid) : uid(uid) {
+megamol::gui::graph::CallSlot::CallSlot(int uid)
+    : uid(uid), present(std::make_shared<megamol::gui::graph::CallSlot>(*this)) {
     this->parent_module.reset();
     connected_calls.clear();
 }
@@ -324,7 +331,7 @@ const megamol::gui::graph::ModulePtrType megamol::gui::graph::CallSlot::GetParen
 
 // CALL #######################################################################
 
-megamol::gui::graph::Call::Call(int uid) : uid(uid) {
+megamol::gui::graph::Call::Call(int uid) : uid(uid), present(std::make_shared<megamol::gui::graph::Call>(*this)) {
 
     this->connected_call_slots.clear();
     this->connected_call_slots.emplace(CallSlot::CallSlotType::CALLER, nullptr);
@@ -408,7 +415,8 @@ bool megamol::gui::graph::Call::DisConnectCallSlots(void) {
 }
 
 
-const megamol::gui::graph::CallSlotPtrType megamol::gui::graph::Call::GetCallSlot(megamol::gui::graph::CallSlot::CallSlotType type) {
+const megamol::gui::graph::CallSlotPtrType megamol::gui::graph::Call::GetCallSlot(
+    megamol::gui::graph::CallSlot::CallSlotType type) {
 
     if (this->connected_call_slots[type] == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn(
@@ -420,7 +428,7 @@ const megamol::gui::graph::CallSlotPtrType megamol::gui::graph::Call::GetCallSlo
 
 // MODULE #####################################################################
 
-megamol::gui::graph::Module::Module(int uid) : uid(uid) {
+megamol::gui::graph::Module::Module(int uid) : uid(uid), present(std::make_shared<megamol::gui::graph::Module>(*this)) {
 
     this->call_slots.clear();
     this->call_slots.emplace(megamol::gui::graph::CallSlot::CallSlotType::CALLER, std::vector<CallSlotPtrType>());
@@ -483,7 +491,8 @@ bool megamol::gui::graph::Module::RemoveAllCallSlots(void) {
 }
 
 
-const std::vector<megamol::gui::graph::CallSlotPtrType> megamol::gui::graph::Module::GetCallSlots(megamol::gui::graph::CallSlot::CallSlotType type) {
+const std::vector<megamol::gui::graph::CallSlotPtrType> megamol::gui::graph::Module::GetCallSlots(
+    megamol::gui::graph::CallSlot::CallSlotType type) {
 
     // if (this->call_slots[type].empty()) {
     //    vislib::sys::Log::DefaultLog.WriteWarn(
@@ -493,8 +502,8 @@ const std::vector<megamol::gui::graph::CallSlotPtrType> megamol::gui::graph::Mod
 }
 
 
-const std::map<megamol::gui::graph::CallSlot::CallSlotType, std::vector<megamol::gui::graph::CallSlotPtrType>> megamol::gui::graph::Module::GetCallSlots(
-    void) {
+const std::map<megamol::gui::graph::CallSlot::CallSlotType, std::vector<megamol::gui::graph::CallSlotPtrType>>
+megamol::gui::graph::Module::GetCallSlots(void) {
 
     return this->call_slots;
 }

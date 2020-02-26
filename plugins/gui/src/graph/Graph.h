@@ -30,7 +30,7 @@
 #include <variant>
 #include <vector>
 
-#include "Presentations.h"
+#include "Elements.h"
 
 
 namespace megamol {
@@ -39,18 +39,13 @@ namespace graph {
 
 class Graph {
 public:
-
-    typedef ParamPresentations ParamGraphType;
-    typedef CallSlotPresentations CallSlotGraphType;
-    typedef CallPresentations CallGraphType;
-    typedef ModulePresentations ModuleGraphType;
-    
-    typedef std::shared_ptr<CallSlotGraphType> CallSlotGraphPtrType;
-    typedef std::shared_ptr<CallGraphType> CallGraphPtrType;
-    typedef std::shared_ptr<ModuleGraphType> ModuleGraphPtrType;
+    typedef std::shared_ptr<CallSlot> CallSlotGraphPtrType;
+    typedef std::shared_ptr<Call> CallGraphPtrType;
+    typedef std::shared_ptr<Module> ModuleGraphPtrType;
 
     typedef std::vector<ModuleGraphPtrType> ModuleGraphVectorType;
     typedef std::vector<CallGraphPtrType> CallGraphVectorType;
+
 
     // GRAPH STOCK DATA STRUCTURE ---------------------------------------------
 
@@ -96,8 +91,8 @@ public:
     bool AddModule(const Graph::ModuleStockType& stock_modules, const std::string& module_class_name);
     bool DeleteModule(int module_uid);
 
-    bool AddCall(const Graph::CallStockType& stock_calls, int call_idx, CallSlotGraphPtrType call_slot_1,
-        CallSlotGraphPtrType call_slot_2);
+    bool AddCall(const Graph::CallStockType& stock_calls, int call_idx, CallSlotPtrType call_slot_1,
+        CallSlotPtrType call_slot_2);
     bool DeleteDisconnectedCalls(void);
     bool DeleteCall(int call_uid);
 
