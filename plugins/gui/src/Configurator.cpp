@@ -123,15 +123,19 @@ bool megamol::gui::Configurator::Draw(
         this->draw_window_module_list(this->gui.split_width_left);
         ImGui::SameLine();
 
-        auto_child = 0.0f;
-        ImGui::BeginChild("splitter_window_2", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_None);
-        this->utils.VerticalSplitter(split_thickness, &this->gui.split_width_right, &auto_child);
+        if ((this->gui.graph_ptr != nullptr) && (this->gui.graph_ptr->gui.selected_module_uid > 0)) {
 
-        this->draw_window_graph(this->gui.split_width_right);
-        ImGui::SameLine();
-        this->draw_window_parameter_list(auto_child);
+            ImGui::BeginChild("splitter_subwindow", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_None);
+            this->utils.VerticalSplitter(split_thickness, &this->gui.split_width_right, &auto_child);
 
-        ImGui::EndChild();
+            this->draw_window_graph(this->gui.split_width_right);
+            ImGui::SameLine();
+            this->draw_window_parameter_list(auto_child);
+
+            ImGui::EndChild();
+        } else {
+            this->draw_window_graph(auto_child);
+        }
     }
 
     return true;
@@ -512,6 +516,7 @@ bool megamol::gui::Configurator::draw_graph_canvas(GraphManager::GraphPtrType gr
     ImGui::BeginChild("region", ImVec2(0.0f, 0.0f), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
     graph->gui.canvas_position = ImGui::GetCursorScreenPos();
     graph->gui.canvas_size = ImGui::GetWindowSize();
+
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
     draw_list->ChannelsSplit(2);
@@ -786,19 +791,21 @@ bool megamol::gui::Configurator::draw_canvas_modules(GraphManager::GraphPtrType 
             // Gives slots which overlap modules priority for ToolTip and Context Menu.
             if (graph->gui.hovered_slot_uid < 0) {
                 this->utils.HoverToolTip(mod->description, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
+                ///XXX
                 // Context menu
-                if (ImGui::BeginPopupContextItem()) {
-                    if (ImGui::MenuItem(
-                            "Delete", std::get<0>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
-                        std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-                    }
-                    if (ImGui::MenuItem("Rename")) {
-                        this->gui.rename_popup_open = true;
-                        this->gui.rename_popup_string = &mod->name;
-                    }
+                // if (ImGui::BeginPopupContextItem()) {
+                //    if (ImGui::MenuItem(
+                //            "Delete", std::get<0>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str()))
+                //            {
+                //        std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+                //    }
+                //    if (ImGui::MenuItem("Rename")) {
+                //        this->gui.rename_popup_open = true;
+                //        this->gui.rename_popup_string = &mod->name;
+                //    }
 
-                    ImGui::EndPopup();
-                }
+                //    ImGui::EndPopup();
+                //}
             }
             bool module_active = ImGui::IsItemActive();
             if (module_active) {
