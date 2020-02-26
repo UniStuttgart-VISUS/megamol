@@ -109,7 +109,8 @@ bool ClusterRenderer::create(void) {
     vislib::graphics::gl::ShaderSource texFragShader;
 
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("molsurfTexture::vertex", texVertShader)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to load vertex shader source for texture Vertex Shader");
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "Unable to load vertex shader source for texture Vertex Shader");
         return false;
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("molsurfTexture::fragment", texFragShader)) {
@@ -128,12 +129,12 @@ bool ClusterRenderer::create(void) {
         return false;
     }
 
+    const float size = 1.0f;
     std::vector<float> texVerts = {
-        0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-        1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-        1.0f, 1.0f, 0.0f, 1.0f, 1.0f
-    };
+        0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 
+        0.0f, size, 0.0f, 0.0f, 0.0f, 
+        size, 0.0f, 0.0f, 1.0f, 1.0f, 
+        size, size, 0.0f, 1.0f, 0.0f};
 
     this->texBuffer = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, texVerts, GL_STATIC_DRAW);
 
@@ -205,7 +206,8 @@ double scale(double unscaled, double min, double max, double minAllowed, double 
     return minAllowed + (((unscaled - min) * (maxAllowed - minAllowed)) / (max - min));
 }
 
-void ClusterRenderer::renderClusterText(HierarchicalClustering::CLUSTERNODE* node, double posx, double posy) {
+void ClusterRenderer::renderClusterText(
+    HierarchicalClustering::CLUSTERNODE* node, glm::mat4 mvp, double posx, double posy) {
     // Render cluster name
     float fgColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
     vislib::StringA id;
@@ -238,7 +240,7 @@ void ClusterRenderer::renderClusterText(HierarchicalClustering::CLUSTERNODE* nod
         fgColor, posx, posy, this->fontSize, false, id, megamol::core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
 }
 
-void ClusterRenderer::renderLeaveNode(HierarchicalClustering::CLUSTERNODE* node) {
+void ClusterRenderer::renderLeaveNode(HierarchicalClustering::CLUSTERNODE* node, glm::mat4 mvp) {
 
     // Render cluster name
     float fgColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -265,29 +267,24 @@ void ClusterRenderer::renderLeaveNode(HierarchicalClustering::CLUSTERNODE* node)
     double picwidth = 0.9 * this->viewport.GetX();
     double picheight = 0.9 * this->viewport.GetY();
 
-    glColor3f(1, 1, 1); // Reset Color for Textures
+    glBindVertexArray(this->texVa);
+    this->textureShader.Enable();
 
-    glBegin(GL_QUADS);
+    glUniform2f(this->textureShader.ParameterLocation("lowerleft"), posx - 0.5 * picwidth, posy - 0.5 * picheight);
+    glUniform2f(
+        this->textureShader.ParameterLocation("upperright"), posx + 0.5 * picwidth, this->viewport.GetY() - strHeight);
+    glUniformMatrix4fv(this->textureShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
+    glUniform1i(this->textureShader.ParameterLocation("tex"), 0);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    glTexCoord2f(0, 1);
-    glVertex2f(posx - 0.5 * picwidth, posy - 0.5 * picheight);
-
-    glTexCoord2f(1, 1);
-    glVertex2f(posx + 0.5 * picwidth, posy - 0.5 * picheight);
-
-    glTexCoord2f(1, 0);
-    glVertex2f(posx + 0.5 * picwidth, this->viewport.GetY() - strHeight);
-
-    glTexCoord2f(0, 0);
-    glVertex2f(posx - 0.5 * picwidth, this->viewport.GetY() - strHeight);
-
-    glEnd();
+    this->textureShader.Disable();
+    glBindVertexArray(0);
 
     glDisable(GL_TEXTURE_2D);
 }
 
 void ClusterRenderer::renderNode(
-    HierarchicalClustering::CLUSTERNODE* node, double minX, double maxX, double minY, double maxY) {
+    HierarchicalClustering::CLUSTERNODE* node, glm::mat4 mvp, double minX, double maxX, double minY, double maxY) {
 
     glActiveTexture(GL_TEXTURE0);
     node->pic->texture->bindTexture();
@@ -303,32 +300,25 @@ void ClusterRenderer::renderNode(
     double picwidth = PICSCALING * this->viewport.GetX();
     double picheight = PICSCALING * this->viewport.GetY();
 
-    // Render Picture
-    glColor3f(1, 1, 1); // Reset Color for Textures
+    glBindVertexArray(this->texVa);
+    this->textureShader.Enable();
 
-    glBegin(GL_QUADS);
+    glUniform2f(this->textureShader.ParameterLocation("lowerleft"), posx - 0.5 * picwidth, posy - 0.5 * picheight);
+    glUniform2f(
+        this->textureShader.ParameterLocation("upperright"), posx + 0.5 * picwidth, posy + 0.5 * picheight);
+    glUniformMatrix4fv(this->textureShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
+    glUniform1i(this->textureShader.ParameterLocation("tex"), 0);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    glTexCoord2f(0, 1);
-    glVertex2f(posx - 0.5 * picwidth, posy - 0.5 * picheight);
-
-    glTexCoord2f(1, 1);
-    glVertex2f(posx + 0.5 * picwidth, posy - 0.5 * picheight);
-
-    glTexCoord2f(1, 0);
-    glVertex2f(posx + 0.5 * picwidth, posy + 0.5 * picheight);
-
-    glTexCoord2f(0, 0);
-    glVertex2f(posx - 0.5 * picwidth, posy + 0.5 * picheight);
-
-    glEnd();
-    glDisable(GL_TEXTURE_2D);
+    this->textureShader.Disable();
+    glBindVertexArray(0);
 
     // Cluster beschriftung
-    this->renderClusterText(node, posx, posy);
+    this->renderClusterText(node, mvp, posx, posy);
 }
 
 void ClusterRenderer::renderAllLeaves(
-    HierarchicalClustering::CLUSTERNODE* node, double minX, double maxX, double minY, double maxY) {
+    HierarchicalClustering::CLUSTERNODE* node, glm::mat4 mvp, double minX, double maxX, double minY, double maxY) {
 
     if (node->left != nullptr && node->right != nullptr) {
         auto leaves = this->clustering->getLeavesOfNode(node);
@@ -377,7 +367,7 @@ void DrawCircle(float cx, float cy, float r, int num_segments) {
 }
 
 void ClusterRenderer::renderRootNode(
-    HierarchicalClustering::CLUSTERNODE* node, double minX, double maxX, double minY, double maxY) {
+    HierarchicalClustering::CLUSTERNODE* node, glm::mat4 mvp, double minX, double maxX, double minY, double maxY) {
     auto pos = node->pca2d;
 
     double posx = scale((*pos)[0], minX, maxX, (PICSCALING * 0.5) * this->viewport.GetX(),
@@ -392,12 +382,12 @@ void ClusterRenderer::renderRootNode(
 
     // Render Cluster Mittelpunklt
     DrawCircle(posx, posy, this->viewport.GetY() * 0.02, 100000);
-    this->renderClusterText(node, posx, posy);
+    this->renderClusterText(node, mvp, posx, posy);
 }
 
 
 void ClusterRenderer::connectNodes(
-    HierarchicalClustering::CLUSTERNODE* node1, HierarchicalClustering::CLUSTERNODE* node2) {
+    HierarchicalClustering::CLUSTERNODE* node1, HierarchicalClustering::CLUSTERNODE* node2, glm::mat4 mvp) {
 
     // Calculate Start and End Position
     auto pos1 = node1->pca2d;
@@ -461,6 +451,15 @@ bool ClusterRenderer::Render(view::CallRender2D& call) {
     if (!ccc) return false;
     if (!(*ccc)(CallClustering::CallForGetData)) return false;
 
+    // read matrices (old bullshit)
+    GLfloat viewMatrixColumn[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, viewMatrixColumn);
+    glm::mat4 view = glm::make_mat4(viewMatrixColumn);
+    GLfloat projMatrixColumn[16];
+    glGetFloatv(GL_PROJECTION_MATRIX, projMatrixColumn);
+    glm::mat4 proj = glm::make_mat4(projMatrixColumn);
+    glm::mat4 mvp = proj * view;
+
     if (ccc->DataHash() != this->lastHash) {
         // update Clustering to work with
         this->clustering = ccc->getClustering();
@@ -506,45 +505,23 @@ bool ClusterRenderer::Render(view::CallRender2D& call) {
             if (root->left != nullptr && root->right != nullptr) {
                 // Render Distance
                 for (HierarchicalClustering::CLUSTERNODE* node : *this->cluster) {
-                    this->connectNodes(root, node);
+                    this->connectNodes(root, node, mvp);
                 }
 
                 // Render Cluster
                 for (HierarchicalClustering::CLUSTERNODE* node : *this->cluster) {
-                    this->renderNode(node, this->minX, this->maxX, this->minY, this->maxY);
-
-                    std::vector<BYTE> loctex = {0,   255, 0,
-                                                255, 0,   0,
-                                                0,   0,   255,
-                                                255, 255, 255};
-                    glowl::TextureLayout layout(GL_RGB8, 2, 2, 1, GL_RGB, GL_UNSIGNED_BYTE, 1);
-
-                    std::unique_ptr<glowl::Texture2D> mytex =
-                        std::make_unique<glowl::Texture2D>("test", layout, loctex.data());
-
-                    glBindVertexArray(this->texVa);
-                    this->textureShader.Enable();
-
-                    glEnable(GL_TEXTURE_2D);
-                    glActiveTexture(GL_TEXTURE0);
-                    mytex->bindTexture();
-
-                    glUniform1i(this->textureShader.ParameterLocation("tex"), 0);
-                    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-                    this->textureShader.Disable();
-                    glBindVertexArray(0);
+                    this->renderNode(node, mvp, this->minX, this->maxX, this->minY, this->maxY);
                 }
 
                 // Render Clusterchildren
                 for (HierarchicalClustering::CLUSTERNODE* node : *this->cluster) {
-                    this->renderAllLeaves(node, this->minX, this->maxX, this->minY, this->maxY);
+                    this->renderAllLeaves(node, mvp, this->minX, this->maxX, this->minY, this->maxY);
                 }
 
                 // Render Distance indikator
-                this->renderDistanceIndikator();
+                this->renderDistanceIndikator(mvp);
             } else {
-                this->renderLeaveNode(root);
+                this->renderLeaveNode(root, mvp);
             }
         }
     }
@@ -649,7 +626,7 @@ bool ClusterRenderer::GetPositionData(Call& call) {
     return true;
 }
 
-void ClusterRenderer::renderDistanceIndikator() {
+void ClusterRenderer::renderDistanceIndikator(glm::mat4 mvp) {
     double height = this->viewport.GetY();
     double width = this->viewport.GetX();
 
@@ -679,12 +656,12 @@ void ClusterRenderer::renderDistanceIndikator() {
 
     // Render Text
     this->renderText(
-        "min", width - indikatorwidth, indikatorheight, megamol::core::utility::AbstractFont::ALIGN_LEFT_BOTTOM);
-    this->renderText("max", width, indikatorheight, megamol::core::utility::AbstractFont::ALIGN_RIGHT_BOTTOM);
+        "min", mvp, width - indikatorwidth, indikatorheight, megamol::core::utility::AbstractFont::ALIGN_LEFT_BOTTOM);
+    this->renderText("max", mvp, width, indikatorheight, megamol::core::utility::AbstractFont::ALIGN_RIGHT_BOTTOM);
 }
 
-void ClusterRenderer::renderText(
-    vislib::StringA text, double x, double y, megamol::core::utility::AbstractFont::Alignment alignment) {
+void ClusterRenderer::renderText(vislib::StringA text, glm::mat4 mvp, double x, double y,
+    megamol::core::utility::AbstractFont::Alignment alignment) {
     // Render cluster name
     float fgColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
 

@@ -128,8 +128,10 @@ private:
     SIZE_T hashoffset;
     SIZE_T colorhash;
 
-    // Shader
-    vislib::graphics::gl::GLSLShader shader;
+    vislib::graphics::gl::GLSLShader textureShader;
+    std::unique_ptr<glowl::BufferObject> texBuffer;
+
+    GLuint texVa;
 
     // Popup
     HierarchicalClustering::CLUSTERNODE* popup;
@@ -158,9 +160,9 @@ private:
     /**********************************************************************
      * functions
      **********************************************************************/
-    double drawTree(HierarchicalClustering::CLUSTERNODE*, double, double, double, double,
+    double drawTree(HierarchicalClustering::CLUSTERNODE*, glm::mat4, double, double, double, double,
         std::vector<std::tuple<HierarchicalClustering::CLUSTERNODE*, ClusterRenderer::RGBCOLOR*>*>*);
-    void renderPopup(void);
+    void renderPopup(glm::mat4);
     double checkposition(HierarchicalClustering::CLUSTERNODE*, float, float, double, double, double, double);
 
 

@@ -159,14 +159,17 @@ private:
     /**********************************************************************
      * functions
      **********************************************************************/
-    void renderNode(HierarchicalClustering::CLUSTERNODE*, double = 0, double = 0, double = 0, double = 0);
-    void renderAllLeaves(HierarchicalClustering::CLUSTERNODE*, double = 0, double = 0, double = 0, double = 0);
-    void renderRootNode(HierarchicalClustering::CLUSTERNODE*, double = 0, double = 0, double = 0, double = 0);
-    void renderLeaveNode(HierarchicalClustering::CLUSTERNODE*);
-    void renderClusterText(HierarchicalClustering::CLUSTERNODE*, double, double);
-    void renderDistanceIndikator();
-    void renderText(vislib::StringA, double, double, megamol::core::utility::AbstractFont::Alignment);
-    void connectNodes(HierarchicalClustering::CLUSTERNODE* node1, HierarchicalClustering::CLUSTERNODE* node2);
+    void renderNode(HierarchicalClustering::CLUSTERNODE*, glm::mat4, double = 0, double = 0, double = 0, double = 0);
+    void renderAllLeaves(
+        HierarchicalClustering::CLUSTERNODE*, glm::mat4, double = 0, double = 0, double = 0, double = 0);
+    void renderRootNode(
+        HierarchicalClustering::CLUSTERNODE*, glm::mat4, double = 0, double = 0, double = 0, double = 0);
+    void renderLeaveNode(HierarchicalClustering::CLUSTERNODE*, glm::mat4);
+    void renderClusterText(HierarchicalClustering::CLUSTERNODE*, glm::mat4, double, double);
+    void renderDistanceIndikator(glm::mat4);
+    void renderText(vislib::StringA, glm::mat4, double, double, megamol::core::utility::AbstractFont::Alignment);
+    void connectNodes(
+        HierarchicalClustering::CLUSTERNODE* node1, HierarchicalClustering::CLUSTERNODE* node2, glm::mat4);
     void setMinMax(std::vector<HierarchicalClustering::CLUSTERNODE*>*);
 
     std::vector<std::tuple<HierarchicalClustering::CLUSTERNODE*, RGBCOLOR*>*>* getNdiffrentColors(
