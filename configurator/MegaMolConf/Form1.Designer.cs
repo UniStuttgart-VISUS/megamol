@@ -625,6 +625,7 @@
             this.lbModules.TabIndex = 2;
             this.lbModules.SelectedIndexChanged += new System.EventHandler(this.lbModules_SelectedIndexChanged);
             this.lbModules.DoubleClick += new System.EventHandler(this.lbModules_DoubleClick);
+            this.lbModules.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.lbModules_EnterKeyPress);
             // 
             // moduleText
             // 
