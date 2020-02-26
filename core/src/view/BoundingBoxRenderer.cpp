@@ -336,7 +336,7 @@ bool BoundingBoxRenderer::RenderViewCube(CallRender3D_2& call) {
     call.GetCamera(cam);
 
     const auto orientation = cam.orientation();
-    const auto rotation = glm::mat4_cast(static_cast<glm::quat>(orientation));
+    const auto rotation = glm::inverse( glm::mat4_cast(static_cast<glm::quat>(orientation)) );
 
     // Create view/model and projection matrices
     const float dist = 2.0f / std::tan(thecam::math::angle_deg2rad(30.0f) / 2.0f);
