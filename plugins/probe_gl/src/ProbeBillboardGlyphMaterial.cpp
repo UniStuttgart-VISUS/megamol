@@ -15,37 +15,54 @@ megamol::probe_gl::ProbeBillboardGlyphMaterial::ProbeBillboardGlyphMaterial()
 megamol::probe_gl::ProbeBillboardGlyphMaterial::~ProbeBillboardGlyphMaterial() {}
 
 bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
-    // create shader program
-    vislib::graphics::gl::ShaderSource vert_shader_src;
-    vislib::graphics::gl::ShaderSource frag_shader_src;
 
-    vislib::StringA shader_base_name("ProbeGlyph");
-    vislib::StringA vertShaderName = shader_base_name + "::vertex";
-    vislib::StringA fragShaderName = shader_base_name + "::fragment";
 
-    this->instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src);
-    this->instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src);
+    auto create_progam = [this](vislib::StringA shader_base_name, std::shared_ptr<ShaderProgram> shader_prgm)
+    {
+        vislib::graphics::gl::ShaderSource vert_shader_src;
+        vislib::graphics::gl::ShaderSource frag_shader_src;
 
-    std::string vertex_src(vert_shader_src.WholeCode(), (vert_shader_src.WholeCode()).Length());
-    std::string fragment_src(frag_shader_src.WholeCode(), (frag_shader_src.WholeCode()).Length());
+        vislib::StringA vertShaderName = shader_base_name + "::vertex";
+        vislib::StringA fragShaderName = shader_base_name + "::fragment";
 
-    this->m_billboard_glyph_prgm = std::make_shared<ShaderProgram>();
+        this->instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src);
+        this->instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src);
 
-    bool prgm_error = false;
+        std::string vertex_src(vert_shader_src.WholeCode(), (vert_shader_src.WholeCode()).Length());
+        std::string fragment_src(frag_shader_src.WholeCode(), (frag_shader_src.WholeCode()).Length());
 
-    if (!vertex_src.empty()) 
-        prgm_error |= !this->m_billboard_glyph_prgm->compileShaderFromString(&vertex_src, ShaderProgram::VertexShader);
-    if (!fragment_src.empty())
-        prgm_error |= !this->m_billboard_glyph_prgm->compileShaderFromString(&fragment_src, ShaderProgram::FragmentShader);
+        bool prgm_error = false;
 
-    prgm_error |= !this->m_billboard_glyph_prgm->link();
+        if (!vertex_src.empty()) 
+            prgm_error |= !shader_prgm->compileShaderFromString(&vertex_src, ShaderProgram::VertexShader);
+        if (!fragment_src.empty())
+            prgm_error |=
+                !shader_prgm->compileShaderFromString(&fragment_src, ShaderProgram::FragmentShader);
 
-    if (prgm_error) {
-        std::cout << "Error during shader program creation of \"" << this->m_billboard_glyph_prgm->getDebugLabel()
-                  << "\"" << std::endl;
-        std::cout << this->m_billboard_glyph_prgm->getLog();
-    }
+        prgm_error |= !shader_prgm->link();
 
+        if (prgm_error) {
+            std::cerr << "Error during shader program creation of \"" << shader_prgm->getDebugLabel()
+                      << "\"" << std::endl;
+            std::cerr << shader_prgm->getLog();
+        }
+    };
+
+
+    this->m_textured_glyph_prgm = std::make_shared<ShaderProgram>();
+    create_progam("TexturedProbeGlyph", m_textured_glyph_prgm);
+
+    this->m_scalar_probe_glyph_prgm = std::make_shared<ShaderProgram>();
+    create_progam("ScalarProbeGlyph", m_scalar_probe_glyph_prgm);
+
+    this->m_vector_probe_glyph_prgm = std::make_shared<ShaderProgram>();
+    create_progam("VectorProbeGlyph", m_vector_probe_glyph_prgm);
+
+    // Set intial state of module
+    ++m_version;
+    m_gpu_materials->addMaterial(m_textured_glyph_prgm);
+    m_gpu_materials->addMaterial(m_scalar_probe_glyph_prgm);
+    m_gpu_materials->addMaterial(m_vector_probe_glyph_prgm);
 
     return true;
 }
@@ -127,7 +144,10 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::getDataCallback(core::Call&
         //ToDo Clear only existing entry in collection?
         mtl_collection->clearMaterials();
 
-        mtl_collection->addMaterial(this->m_billboard_glyph_prgm,textures);
+        mtl_collection->addMaterial(this->m_textured_glyph_prgm, textures);
+
+        m_gpu_materials->addMaterial(this->m_scalar_probe_glyph_prgm);
+        m_gpu_materials->addMaterial(this->m_vector_probe_glyph_prgm);
     }
 
     if (lhs_mtl_call->version() < m_version){

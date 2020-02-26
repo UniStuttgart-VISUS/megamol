@@ -6,15 +6,15 @@
 
 #pragma once
 
+#include "DrawTextureUtility.h"
 #include "ProbeCollection.h"
+#include "mesh/ImageDataAccessCollection.h"
 #include "mesh/MeshDataAccessCollection.h"
 #include "mmcore/Call.h"
+#include "mmcore/CallGeneric.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mesh/ImageDataAccessCollection.h"
-#include "DrawTextureUtility.h"
-#include "mmcore/CallGeneric.h"
 
 namespace megamol {
 namespace probe {
@@ -53,9 +53,8 @@ public:
     core::CallerSlot _get_probes;
 
 protected:
-
-    bool create() override {return true;};
-    void release() override {};
+    bool create() override { return true; };
+    void release() override{};
 
 private:
     bool getMesh(core::Call& call);
@@ -64,7 +63,11 @@ private:
     bool getTexture(core::Call& call);
     bool getTextureMetaData(core::Call& call);
 
-    bool doGlyphGeneration();
+    bool doScalarGlyphGeneration(FloatProbe& probe);
+
+    bool doVectorRibbonGlyphGeneration(Vec4Probe& probe);
+
+    bool doVectorRadarGlyphGeneration(Vec4Probe& probe);
 
     uint32_t _version = 0;
 
@@ -72,9 +75,12 @@ private:
     std::shared_ptr<mesh::MeshDataAccessCollection> _mesh_data;
     std::shared_ptr<mesh::ImageDataAccessCollection> _tex_data;
 
-    std::vector<std::array<float,3>> _generated_mesh;
-    std::array<uint32_t,6> _generated_mesh_indices;
-    std::array<std::array<float,2>,4> _generated_texture_coordinates;
+    std::vector<std::array<float, 3>> _generated_mesh_vertices;
+    std::vector<std::array<float, 3>> _generated_mesh_normals;
+    std::vector<uint32_t> _generated_mesh_indices;
+
+    std::array<uint32_t, 6> _generated_billboard_mesh_indices;
+    std::array<std::array<float, 2>, 4> _generated_billboard_texture_coordinates;
 
     std::vector<DrawTextureUtility> _dtu;
 

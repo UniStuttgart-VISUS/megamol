@@ -67,9 +67,21 @@ protected:
     core::param::ParamSlot _parameter_to_sample_slot;
     core::param::ParamSlot _num_samples_per_probe_slot;
 
+	core::param::ParamSlot _sampling_mode;
+    core::param::ParamSlot _vec_param_to_samplex_x;
+    core::param::ParamSlot _vec_param_to_samplex_y;
+    core::param::ParamSlot _vec_param_to_samplex_z;
+    core::param::ParamSlot _vec_param_to_samplex_w;
+
 private:
+	//TODO rename to "doScalarSampling" ?
     template <typename T>
     void doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data);
+
+	template <typename T>
+    void doVectorSamling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, const std::vector<T>& data_x,
+        const std::vector<T>& data_y, const std::vector<T>& data_z, const std::vector<T>& data_w);
+
     bool getData(core::Call& call);
 
     bool getMetaData(core::Call& call);
@@ -90,8 +102,20 @@ void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::Po
 //#pragma omp parallel for
     for (int32_t i = 0; i < static_cast<int32_t>(_probes->getProbeCount()); i++) {
 
-        auto probe = _probes->getProbe<FloatProbe>(i);
+        auto base_probe = _probes->getProbe<BaseProbe>(i);
+        FloatProbe probe;
+        probe.m_timestamp = base_probe.m_timestamp;
+        probe.m_value_name = base_probe.m_value_name;
+        probe.m_position = base_probe.m_position;
+        probe.m_direction = base_probe.m_direction;
+        probe.m_begin = base_probe.m_begin;
+        probe.m_end = base_probe.m_end;
         auto samples = probe.getSamplingResult();
+
+        _probes->setProbe(i, probe);
+
+        //auto probe = _probes->getProbe<FloatProbe>(i);
+        //auto samples = probe.getSamplingResult();
         // samples = std::make_shared<FloatProbe::SamplingResult>();
 
         auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
@@ -134,6 +158,82 @@ void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::Po
         samples->max_value = max_value;
         samples->min_value = min_value;
     } // end for probes
+}
+
+template <typename T>
+inline void SampleAlongPobes::doVectorSamling(
+	const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree,
+    const std::vector<T>& data_x,
+	const std::vector<T>& data_y,
+	const std::vector<T>& data_z,
+    const std::vector<T>& data_w) {
+	
+    const int samples_per_probe = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
+
+    //#pragma omp parallel for
+    for (int32_t i = 0; i < static_cast<int32_t>(_probes->getProbeCount()); i++) {
+
+        auto base_probe = _probes->getProbe<BaseProbe>(i);
+        Vec4Probe probe;
+        probe.m_timestamp = base_probe.m_timestamp;
+        probe.m_value_name = base_probe.m_value_name;
+        probe.m_position = base_probe.m_position;
+        probe.m_direction = base_probe.m_direction;
+        probe.m_begin = base_probe.m_begin;
+        probe.m_end = base_probe.m_end;
+        auto samples = probe.getSamplingResult();
+
+        _probes->setProbe(i, probe);
+
+        //auto probe = _probes->getProbe<Vec4Probe>(i);
+        // samples = std::make_shared<FloatProbe::SamplingResult>();
+
+        auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
+        auto radius = sample_step / 2.0f;
+
+        float min_value = std::numeric_limits<float>::max();
+        float max_value = -std::numeric_limits<float>::max();
+        float avg_value = 0.0f;
+        samples->samples.resize(samples_per_probe);
+
+        for (int j = 0; j < samples_per_probe; j++) {
+
+            pcl::PointXYZ sample_point;
+            sample_point.x = probe.m_position[0] + j * sample_step * probe.m_direction[0];
+            sample_point.y = probe.m_position[1] + j * sample_step * probe.m_direction[1];
+            sample_point.z = probe.m_position[2] + j * sample_step * probe.m_direction[2];
+
+            std::vector<uint32_t> k_indices;
+            std::vector<float> k_distances;
+
+            auto num_neighbors = tree->radiusSearch(sample_point, radius, k_indices, k_distances);
+            if (num_neighbors == 0) {
+                num_neighbors = tree->nearestKSearch(sample_point, 1, k_indices, k_distances);
+            }
+
+
+            // accumulate values
+            float value_x = 0, value_y = 0, value_z = 0, value_w = 0;
+            for (int n = 0; n < num_neighbors; n++) {
+                value_x += data_x[k_indices[n]];
+                value_y += data_y[k_indices[n]];
+                value_z += data_z[k_indices[n]];
+                value_w += data_w[k_indices[n]];
+            } // end num_neighbors
+            samples->samples[j][0] = value_x / num_neighbors;;
+            samples->samples[j][1] = value_y / num_neighbors;;
+            samples->samples[j][2] = value_z / num_neighbors;;
+            samples->samples[j][3] = value_w / num_neighbors;;
+            //min_value = std::min(min_value, value);
+            //max_value = std::max(max_value, value);
+            //avg_value += value;
+        } // end num samples per probe
+        //avg_value /= samples_per_probe;
+        //samples->average_value = avg_value;
+        //samples->max_value = max_value;
+        //samples->min_value = min_value;
+    } // end for probes
+
 }
 
 

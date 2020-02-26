@@ -47,6 +47,7 @@ protected:
     core::param::ParamSlot m_billboard_size_slot;
 
 private:
+
     uint32_t m_version;
 
     core::CallerSlot m_probes_slot;

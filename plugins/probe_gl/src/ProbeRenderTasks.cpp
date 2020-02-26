@@ -77,7 +77,38 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
         for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
             try {
-                auto probe = probes->getProbe<probe::FloatProbe>(probe_idx);
+                //auto probe = probes->getProbe<probe::FloatProbe>(probe_idx);
+
+                auto generic_probe = probes->getGenericProbe(probe_idx);
+
+                std::array<float, 3> direction;
+                std::array<float, 3> position;
+                float begin;
+                float end;
+
+                auto visitor = [&direction, &position, &begin, &end](auto&& arg) {
+                    using T = std::decay_t<decltype(arg)>;
+                    if constexpr (std::is_same_v<T, probe::FloatProbe>) {
+                        direction = arg.m_direction;
+                        position = arg.m_position;
+                        begin = arg.m_begin;
+                        end = arg.m_end;
+                    } else if constexpr (std::is_same_v<T, probe::IntProbe>) {
+                        direction = arg.m_direction;
+                        position = arg.m_position;
+                        begin = arg.m_begin;
+                        end = arg.m_end;
+                    } else if constexpr (std::is_same_v<T, probe::Vec4Probe>) {
+                        direction = arg.m_direction;
+                        position = arg.m_position;
+                        begin = arg.m_begin;
+                        end = arg.m_end;
+                    } else {
+                        // unknown probe type, throw error? do nothing?
+                    }
+                };
+
+                std::visit(visitor, generic_probe);
 
                 // TODO create and add new render task for probe
 
@@ -89,16 +120,17 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                 draw_commands[probe_idx] = gpu_sub_mesh.sub_mesh_draw_command;
 
                 const glm::vec3 from(0.0f, 0.0f, 1.0f);
-                const glm::vec3 to(probe.m_direction[0], probe.m_direction[1], probe.m_direction[2]);
+                const glm::vec3 to(direction[0], direction[1], direction[2]);
                 glm::vec3 v = glm::cross(to, from);
                 float angle = -acos(glm::dot(to, from) / (glm::length(to) * glm::length(from)));
                 m_probe_draw_data[probe_idx].object_transform = glm::rotate(angle, v);
 
-                auto scaling = glm::scale(glm::vec3(0.5f, 0.5f, probe.m_end - probe.m_begin));
+                auto scaling = glm::scale(glm::vec3(0.5f, 0.5f, end - begin));
 
-                auto probe_start_point = glm::vec3(probe.m_position[0] + probe.m_direction[0] * probe.m_begin,
-                    probe.m_position[1] + probe.m_direction[1] * probe.m_begin,
-                    probe.m_position[2] + probe.m_direction[2] * probe.m_begin);
+                auto probe_start_point = glm::vec3(
+                    position[0] + direction[0] * begin,
+                    position[1] + direction[1] * begin,
+                    position[2] + direction[2] * begin);
                 auto translation = glm::translate(glm::mat4(), probe_start_point);
                 m_probe_draw_data[probe_idx].object_transform =
                     translation * m_probe_draw_data[probe_idx].object_transform * scaling;

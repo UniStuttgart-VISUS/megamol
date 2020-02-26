@@ -402,9 +402,9 @@ void SurfaceNets::calculateSurfaceNets2() {
                                     _data[offset_now(x, y, z < 2 ? z : z - 2)];
                     }
                     auto const normal_length = std::sqrt(normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2]);
-                    normal[0] /= normal_length;
-                    normal[1] /= normal_length;
-                    normal[2] /= normal_length;
+                    normal[0] /= (normal_length < 0.00000001) ? 1.0 : normal_length;
+                    normal[1] /= (normal_length < 0.00000001) ? 1.0 : normal_length;
+                    normal[2] /= (normal_length < 0.00000001) ? 1.0 : normal_length;
                     _normals.push_back(normal);
                 }
             } // for x

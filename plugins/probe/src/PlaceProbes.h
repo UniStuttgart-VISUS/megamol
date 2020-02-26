@@ -72,6 +72,9 @@ private:
         std::vector<std::array<float, 4>>& output);
     void vertexSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
         std::vector<std::array<float, 4>>& output);
+    void vertexNormalSampling(
+        mesh::MeshDataAccessCollection::VertexAttribute& vertices,
+        mesh::MeshDataAccessCollection::VertexAttribute& normals);
     bool placeProbes(uint32_t lei);
     bool placeByCenterline(uint32_t lei, std::vector<std::array<float, 4>>& probePositions,
                            mesh::MeshDataAccessCollection::VertexAttribute& centerline);

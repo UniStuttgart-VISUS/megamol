@@ -143,8 +143,8 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
                     {light.pl_position[0], light.pl_position[1], light.pl_position[2], light.lightIntensity});
             } else if (light.lightType == core::view::light::DISTANTLIGHT) {
                 if (light.dl_eye_direction) {
-                    glm::vec3 camPos(snapshot.position.x(), snapshot.position.y(), snapshot.position.z());
-                    camPos = glm::normalize(camPos);
+                    glm::vec3 camPos(snapshot.view_vector.x(), snapshot.view_vector.y(), snapshot.view_vector.z());
+                    camPos = glm::normalize(-camPos);
                     m_distant_lights.push_back(
                         {camPos.x, camPos.y, camPos.z, light.lightIntensity});
                 } else {

@@ -13,6 +13,7 @@
 megamol::compositing::TextureDepthCompositing::TextureDepthCompositing()
     : core::Module()
     , m_version(0)
+    , m_depthComp_prgm(nullptr)
     , m_output_texture(nullptr)
     , m_output_depth_texture(nullptr)
     , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
@@ -53,21 +54,30 @@ bool megamol::compositing::TextureDepthCompositing::create() {
 
     try {
         // create shader program
-        m_depthComp_prgm = std::make_unique<GLSLComputeShader>();
+        m_depthComp_prgm = std::make_unique<glowl::GLSLProgram>();
+        m_depthComp_prgm->setDebugLabel("Compositing::textureDepthCompositing");
 
         vislib::graphics::gl::ShaderSource compute_src;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::textureDepthCompositing", compute_src))
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::textureDepthCompositing", compute_src)) {
             return false;
-        if (!m_depthComp_prgm->Compile(compute_src.Code(), compute_src.Count())) return false;
-        if (!m_depthComp_prgm->Link()) return false;
+        }
 
+		std::string compute_shader_src(compute_src.WholeCode(), (compute_src.WholeCode()).Length());
 
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
+		auto prgm_err = !m_depthComp_prgm->compileShaderFromString(&compute_shader_src, glowl::GLSLProgram::ComputeShader);
+        prgm_err |= !m_depthComp_prgm->link();
+
+		if (prgm_err) {
+            vislib::sys::Log::DefaultLog.WriteMsg(
+				vislib::sys::Log::LEVEL_ERROR,
+                "Error during shader program creation of %s\n %s\n", 
+				m_depthComp_prgm->getDebugLabel().c_str(),
+                m_depthComp_prgm->getLog().c_str()
+			);
+            return false;
+        }
+
     } catch (vislib::Exception e) {
         vislib::sys::Log::DefaultLog.WriteMsg(
             vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
@@ -166,28 +176,30 @@ bool megamol::compositing::TextureDepthCompositing::computeDepthCompositing() {
 
         }
 
-        m_depthComp_prgm->Enable();
+        m_depthComp_prgm->use();
 
         glActiveTexture(GL_TEXTURE0);
         src0_tx2D->bindTexture();
-        glUniform1i(m_depthComp_prgm->ParameterLocation("src0_tx2D"), 0);
+        m_depthComp_prgm->setUniform("src0_tx2D", 0);
         glActiveTexture(GL_TEXTURE1);
         src1_tx2D->bindTexture();
-        glUniform1i(m_depthComp_prgm->ParameterLocation("src1_tx2D"), 1);
+        m_depthComp_prgm->setUniform("src1_tx2D", 1);
         glActiveTexture(GL_TEXTURE2);
         depth0_tx2D->bindTexture();
-        glUniform1i(m_depthComp_prgm->ParameterLocation("depth0_tx2D"), 2);
+        m_depthComp_prgm->setUniform("depth0_tx2D", 2);
         glActiveTexture(GL_TEXTURE3);
         depth1_tx2D->bindTexture();
-        glUniform1i(m_depthComp_prgm->ParameterLocation("depth1_tx2D"), 3);
+        m_depthComp_prgm->setUniform("depth1_tx2D", 3);
 
         m_output_texture->bindImage(0, GL_WRITE_ONLY);
         m_output_depth_texture->bindImage(1, GL_WRITE_ONLY);
 
-        m_depthComp_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
-            static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
+        glDispatchCompute(
+		    static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
+            static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 
+		    1);
 
-        m_depthComp_prgm->Disable();
+        glUseProgram(0);
 
         glBindImageTexture(0, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
         glBindImageTexture(1, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R32F);

@@ -1,13 +1,3 @@
-#extension GL_ARB_shader_draw_parameters : require
-#extension GL_ARB_bindless_texture : require
-
-struct MeshShaderParams
-{
-    vec4 glpyh_position;
-    uvec2 texture_handle;
-    float slice_idx;
-    float scale;
-};
 
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };
 

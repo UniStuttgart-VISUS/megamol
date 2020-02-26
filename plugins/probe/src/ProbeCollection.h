@@ -60,7 +60,23 @@ struct IntProbe : public BaseProbe {
     }
 };
 
-using GenericProbe = std::variant<FloatProbe, IntProbe, BaseProbe>;
+struct Vec4Probe : public BaseProbe {
+public:
+    struct SamplingResult {
+        std::vector<std::array<float,4>> samples;
+    };
+
+    Vec4Probe() : m_result(std::make_shared<SamplingResult>()) {}
+
+    template <typename DatafieldType> void probe(DatafieldType const& datafield) { /* ToDo*/ }
+
+    std::shared_ptr<SamplingResult> getSamplingResult() { return m_result; }
+
+private:
+    std::shared_ptr<SamplingResult> m_result;
+};
+
+using GenericProbe = std::variant<FloatProbe, IntProbe, Vec4Probe, BaseProbe>;
 
 
 class ProbeCollection {
@@ -70,9 +86,18 @@ public:
 
     template <typename ProbeType> void addProbe(ProbeType const& probe) { m_probes.push_back(probe); }
 
-    template <typename ProbeType> ProbeType getProbe(size_t idx) { return std::get<ProbeType>(m_probes[idx]); }
+    template <typename ProbeType> void setProbe(size_t idx, ProbeType const& probe) { m_probes[idx] = probe; }
+
+    template <typename ProbeType> ProbeType getProbe(size_t idx) const { return std::get<ProbeType>(m_probes[idx]); }
+
+    GenericProbe getGenericProbe(size_t idx) const { return m_probes[idx]; }
 
     uint32_t getProbeCount() const { return m_probes.size(); }
+
+    template <typename ProbeType> bool checkProbeType(size_t idx) const {
+        using T = std::decay_t<decltype(m_probes[idx])>;
+        return constexpr(std::is_same_v<T, ProbeType>);
+    }
 
 private:
     std::vector<GenericProbe> m_probes;

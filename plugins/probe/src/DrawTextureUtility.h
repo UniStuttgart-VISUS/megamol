@@ -20,7 +20,7 @@ namespace probe {
 class DrawTextureUtility {
 
 public:
-    enum GraphType { PLOT, GLYPH, LINEAR };
+    enum GraphType { PLOT, GLYPH, LINEAR, RADARGLYPH };
 
     DrawTextureUtility() = default;
 
@@ -45,11 +45,13 @@ public:
 
     template <typename T> uint8_t* draw(std::vector<T>& data, T min, T max);
 
+    template <typename T> uint8_t* draw(std::vector<T>& data, std::array<float,3> probe_direction);
 
 private:
     template <typename T> void drawPlot(std::vector<T>& data, T min, T max);
     template <typename T> void drawStar(std::vector<T>& data, T min, T max);
     template <typename T> void drawLinear(std::vector<T>& data, T min, T max);
+    template <typename T> void drawRadarGlyph(std::vector<T>& data, std::array<float, 3> probe_direction);
 
     uint32_t _pixel_width = 0;
     uint32_t _pixel_height = 0;
@@ -93,6 +95,38 @@ template <typename T> uint8_t* DrawTextureUtility::draw(std::vector<T>& data, T 
     this->_pixel_data = reinterpret_cast<uint8_t*>(this->_img_data.pixelData);
 
     return this->_pixel_data;
+}
+
+template <typename T>
+inline uint8_t* DrawTextureUtility::draw(std::vector<T>& data, std::array<float, 3> probe_direction) {
+
+    _img = BLImage(this->_pixel_width, this->_pixel_height, BL_FORMAT_PRGB32);
+    _ctx = BLContext(_img);
+
+
+    // fill with BG color
+    _ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    _ctx.setFillStyle(BLRgba32(0x00000000));
+    _ctx.fillAll();
+
+    // Draw sample data
+    
+    if (this->_graph_type == RADARGLYPH) {
+        this->drawRadarGlyph(data, probe_direction);
+    }
+    
+    _ctx.end();
+
+    // extract image
+    if (_img.getData(&this->_img_data) != BL_SUCCESS) {
+        vislib::sys::Log::DefaultLog.WriteError("[DrawTextureUtility] Could not receive image data from blend2d.");
+    }
+
+    this->_pixel_data = reinterpret_cast<uint8_t*>(this->_img_data.pixelData);
+
+    return this->_pixel_data;
+
+    return NULL;
 }
 
 template <typename T> void DrawTextureUtility::drawPlot(std::vector<T>& data, T min, T max) {
@@ -272,6 +306,87 @@ template <typename T> void DrawTextureUtility::drawLinear(std::vector<T>& data, 
     _ctx.setFillStyle(BLRgba32(0x660000FF));
     _ctx.fillPath(data_polygon);
 
+}
+
+template <typename T>
+inline void DrawTextureUtility::drawRadarGlyph(std::vector<T>& data, std::array<float, 3> probe_direction) {
+
+    uint32_t width_halo = this->_pixel_width * 0.1f;
+    uint32_t height_halo = this->_pixel_height * 0.1f;
+    std::array<uint32_t, 2> center = {this->_pixel_width / 2, this->_pixel_height / 2};
+    // calc clamp on texture
+    auto num_data = data.size();
+
+    auto max_radius = std::min(this->_pixel_width, this->_pixel_height) / 2 - std::min(width_halo, height_halo);
+    auto radius_steps = max_radius / num_data;
+
+    BLCircle background(center[0], center[1], max_radius);
+    // Max Polygon Filling
+    _ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    //_ctx.setFillStyle(BLRgba32(0x66F3DF92));
+    //_ctx.setFillStyle(BLRgba32(0xCC2C0D0E));
+    //_ctx.setFillStyle(BLRgba32(0xBBDABABE));
+    _ctx.setFillStyle(BLRgba32(0x00FFFFFF));
+    _ctx.fillCircle(background); 
+
+    BLArc border(center[0], center[1], max_radius, max_radius, 0.0, 2.0 * 3.14159);
+    //_ctx.setStrokeStyle(BLRgba32(0xFFFF00FF));
+    _ctx.setStrokeStyle(BLRgba32(0xFFFFFFFF));
+    _ctx.setStrokeWidth(2);
+    //_ctx.strokeArc(border);
+
+    auto radius = 0.0f;
+    for (uint32_t i = 0; i < num_data; i++) {
+        radius += radius_steps;
+
+        std::array<float, 3> direction = {std::get<0>(data[i]), std::get<1>(data[i]), std::get<2>(data[i])};
+        float l = std::sqrt(direction[0] * direction[0] + direction[1] * direction[1] + direction[2] * direction[2]);
+        direction[0] /= l;
+        direction[1] /= l;
+        direction[2] /= l;
+        float length = std::get<3>(data[i]);
+
+
+        // project data direction onto plane given by probe direction?
+        //float dot_product =
+        //    probe_direction[0] * direction[0] + probe_direction[1] * direction[1] + probe_direction[2] * direction[2];
+
+        // for now, try projection onto z-plane for billboards
+        std::array<float, 2> proj_dir = {direction[0], direction[1]};
+        float proj_length = std::sqrt(proj_dir[0] * proj_dir[0] + proj_dir[1] * proj_dir[1]);
+        proj_dir[0] /= proj_length;
+        proj_dir[1] /= proj_length;
+
+        float angle = proj_dir[1] > 0.0f ? acos(proj_dir[0]) : -acos(proj_dir[0]);
+
+        double arc_length = std::max(direction[2] * 2.0f * 3.14159f, (5.0f / 360.0f) * (2.0f * 3.14159f) );
+
+        //arc_length = 50.0 * arc_length / (2.0f * 3.14159f * radius);
+        BLArc arc(center[0], center[1], radius, radius, angle - arc_length / 2.0f, arc_length);
+
+        //_ctx.setStrokeStyle(BLRgba32(0xFFFF00FF));
+        _ctx.setStrokeStyle(BLRgba32(length*255,0,0));
+        _ctx.setStrokeWidth( std::max(2.0 , radius_steps * (1.0 - (arc_length / (2.0 * 3.14159) ) ) ) );
+        _ctx.strokeArc(arc);
+    }
+
+    //BLCircle background(150, 150, 120);
+
+    //  // Data Stroke
+    //  _ctx.setStrokeStyle(BLRgba32(0xFF0000FF));
+    //  _ctx.setStrokeWidth(7);
+    //  //_ctx.strokePath(data_polygon);
+    //  
+    //  // Data Filling
+    //  //_ctx.setFillStyle(BLRgba32(0x660000FF));
+    //  _ctx.setFillStyle(BLRgba32(0xDD00B9FF));
+    //  //_ctx.setFillStyle(BLRgba32(0xBBd3b180));
+    //  _ctx.fillPath(data_polygon);
+    //  
+    //  // Solid Cut
+    //  //_ctx.setFillStyle(BLRgba32(0xFFF3DF92));
+    //  _ctx.setFillStyle(BLRgba32(0xFF2A5F3B));
+    //  _ctx.fillPath(cut);
 }
 
 
