@@ -5,22 +5,20 @@
  */
 
 #include "GenerateGlyphs.h"
-#include "mesh/MeshCalls.h"
-#include "ProbeCalls.h"
 #include "DrawTextureUtility.h"
+#include "ProbeCalls.h"
+#include "mesh/MeshCalls.h"
 
 namespace megamol {
 namespace probe {
 
+template <typename T> static bool approxEq(T a, T b) { return std::abs(a - b) < std::numeric_limits<T>::epsilon(); }
 
-GenerateGlyphs::GenerateGlyphs() : 
-    Module()
-    , _deploy_texture("deployTexture", "") 
-    , _deploy_mesh("deployMesh", "") 
-    , _get_probes("getProbes", "")
-{
+GenerateGlyphs::GenerateGlyphs()
+    : Module(), _deploy_texture("deployTexture", ""), _deploy_mesh("deployMesh", ""), _get_probes("getProbes", "") {
 
-    this->_deploy_mesh.SetCallback(mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &GenerateGlyphs::getMesh);
+    this->_deploy_mesh.SetCallback(
+        mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &GenerateGlyphs::getMesh);
     this->_deploy_mesh.SetCallback(
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(1), &GenerateGlyphs::getMetaData);
     this->MakeSlotAvailable(&this->_deploy_mesh);
@@ -33,12 +31,9 @@ GenerateGlyphs::GenerateGlyphs() :
 
     this->_get_probes.SetCompatibleCall<CallProbesDescription>();
     this->MakeSlotAvailable(&this->_get_probes);
-
 }
 
-GenerateGlyphs::~GenerateGlyphs() {
-    this->Release();
-}
+GenerateGlyphs::~GenerateGlyphs() { this->Release(); }
 
 
 bool GenerateGlyphs::doGlyphGeneration() {
@@ -55,7 +50,7 @@ bool GenerateGlyphs::doGlyphGeneration() {
     this->_generated_texture_coordinates[2] = {1.0f, 0.0f};
     this->_generated_texture_coordinates[3] = {1.0f, 1.0f};
 
-//#pragma omp parallel for
+    //#pragma omp parallel for
     for (int i = 0; i < this->_probe_data->getProbeCount(); i++) {
 
         // get probe
@@ -68,18 +63,24 @@ bool GenerateGlyphs::doGlyphGeneration() {
             return false;
         }
 
+        bool skip = false;
+        if (approxEq(samples->min_value, samples->max_value)) {
+        //if ( i <= 0.5* this->_probe_data->getProbeCount()) {
+            skip = true;
+        }
+
         // calc vertices
         auto dir = probe.m_direction;
         auto smallest_normal_index = std::distance(dir.begin(), std::min_element(dir.begin(), dir.end()));
         dir[smallest_normal_index] = 1.0f;
-        //auto second_smallest_normal_index = std::distance(dir.begin(), std::min_element(dir.begin(), dir.end()));
-        //auto largest_normal_index = std::distance(
+        // auto second_smallest_normal_index = std::distance(dir.begin(), std::min_element(dir.begin(), dir.end()));
+        // auto largest_normal_index = std::distance(
         //    probe.m_direction.begin(), std::max_element(probe.m_direction.begin(), probe.m_direction.end()));
 
-        std::array<float,3> axis0 = {0.0f, 0.0f, 0.0f};
-        //if (smallest_normal_index == 1) smallest_normal_index = second_smallest_normal_index;
+        std::array<float, 3> axis0 = {0.0f, 0.0f, 0.0f};
+        // if (smallest_normal_index == 1) smallest_normal_index = second_smallest_normal_index;
         axis0[smallest_normal_index] = 1.0f;
-        std::array<float,3> plane_vec_1;
+        std::array<float, 3> plane_vec_1;
         plane_vec_1[0] = probe.m_direction[1] * axis0[2] - probe.m_direction[2] * axis0[1];
         plane_vec_1[1] = probe.m_direction[2] * axis0[0] - probe.m_direction[0] * axis0[2];
         plane_vec_1[2] = probe.m_direction[0] * axis0[1] - probe.m_direction[1] * axis0[0];
@@ -90,18 +91,18 @@ bool GenerateGlyphs::doGlyphGeneration() {
         plane_vec_2[2] = probe.m_direction[0] * plane_vec_1[1] - probe.m_direction[1] * plane_vec_1[0];
 
         float plane_vec_1_length = std::sqrt(
-        plane_vec_1[0] * plane_vec_1[0] + plane_vec_1[1] * plane_vec_1[1] + plane_vec_1[2] * plane_vec_1[2]);
+            plane_vec_1[0] * plane_vec_1[0] + plane_vec_1[1] * plane_vec_1[1] + plane_vec_1[2] * plane_vec_1[2]);
         plane_vec_1[0] /= plane_vec_1_length;
         plane_vec_1[1] /= plane_vec_1_length;
         plane_vec_1[2] /= plane_vec_1_length;
 
         float plane_vec_2_length = std::sqrt(
-        plane_vec_2[0] * plane_vec_2[0] + plane_vec_2[1] * plane_vec_2[1] + plane_vec_2[2] * plane_vec_2[2]);
+            plane_vec_2[0] * plane_vec_2[0] + plane_vec_2[1] * plane_vec_2[1] + plane_vec_2[2] * plane_vec_2[2]);
         plane_vec_2[0] /= plane_vec_2_length;
         plane_vec_2[1] /= plane_vec_2_length;
         plane_vec_2[2] /= plane_vec_2_length;
 
-        std::array<float,3> middle;
+        std::array<float, 3> middle;
         middle[0] = probe.m_position[0] + probe.m_direction[0] * probe.m_begin;
         middle[1] = probe.m_position[1] + probe.m_direction[1] * probe.m_begin;
         middle[2] = probe.m_position[2] + probe.m_direction[2] * probe.m_begin;
@@ -126,8 +127,8 @@ bool GenerateGlyphs::doGlyphGeneration() {
         vertex4[1] = middle[1] - scale / 2 * plane_vec_1[1] - scale / 2 * plane_vec_2[1];
         vertex4[2] = middle[2] - scale / 2 * plane_vec_1[2] - scale / 2 * plane_vec_2[2];
 
-        this->_generated_mesh[i * 4 + 0] = vertex1; 
-        this->_generated_mesh[i * 4 + 1] = vertex2;    
+        this->_generated_mesh[i * 4 + 0] = vertex1;
+        this->_generated_mesh[i * 4 + 1] = vertex2;
         this->_generated_mesh[i * 4 + 2] = vertex3;
         this->_generated_mesh[i * 4 + 3] = vertex4;
 
@@ -157,16 +158,16 @@ bool GenerateGlyphs::doGlyphGeneration() {
         index_data.byte_size = sizeof(this->_generated_mesh_indices);
         index_data.type = mesh::MeshDataAccessCollection::UNSIGNED_INT;
 
-        this->_mesh_data->addMesh(vertex_attributes, index_data);
+        if (!skip) {
+            this->_mesh_data->addMesh(vertex_attributes, index_data);
 
-        _dtu[i].setResolution(300, 300); // should be changeable
-        _dtu[i].setGraphType(DrawTextureUtility::GLYPH); // should be changeable
+            _dtu[i].setResolution(300, 300);                 // should be changeable
+            _dtu[i].setGraphType(DrawTextureUtility::GLYPH); // should be changeable
 
-        auto tex_ptr = _dtu[i].draw(samples->samples, samples->min_value, samples->max_value);
-        this->_tex_data->addImage(mesh::ImageDataAccessCollection::RGBA8, _dtu[i].getPixelWidth(),
-            _dtu[i].getPixelHeight(), tex_ptr, 4 * _dtu[i].getPixelWidth() *
-            _dtu[i].getPixelHeight());
-
+            auto tex_ptr = _dtu[i].draw(samples->samples, samples->min_value, samples->max_value);
+            this->_tex_data->addImage(mesh::ImageDataAccessCollection::RGBA8, _dtu[i].getPixelWidth(),
+                _dtu[i].getPixelHeight(), tex_ptr, 4 * _dtu[i].getPixelWidth() * _dtu[i].getPixelHeight());
+        }
     } // end for probe count
 
     return true;
@@ -190,14 +191,14 @@ bool GenerateGlyphs::getMesh(core::Call& call) {
 
     cm->setMetaData(mesh_meta_data);
 
-    if (cprobes->hasUpdate()){
+    if (cprobes->hasUpdate()) {
         ++_version;
         this->_probe_data = cprobes->getData();
         if (this->scale <= 0.0) this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 8e-3;
         doGlyphGeneration();
     }
 
-    cm->setData(this->_mesh_data,_version);
+    cm->setData(this->_mesh_data, _version);
 
     return true;
 }
@@ -244,10 +245,10 @@ bool GenerateGlyphs::getTexture(core::Call& call) {
         ++_version;
         this->_probe_data = cprobes->getData();
         if (this->scale < 0) this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 2e-2;
-        if(!doGlyphGeneration()) return false;
+        if (!doGlyphGeneration()) return false;
     }
 
-    ctex->setData(this->_tex_data,_version);
+    ctex->setData(this->_tex_data, _version);
 
     return true;
 }
