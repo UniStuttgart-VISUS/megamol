@@ -8,8 +8,61 @@ layout(location = 0) out vec4 albedo_out;
 layout(location = 1) out vec3 normal_out;
 layout(location = 2) out float depth_out;
 
+vec3 fakeViridis(float lerp)
+{
+    vec3 c0 = vec3(0.2823645529290169,0.0,0.3310101940118055);
+    vec3 c1 = vec3(0.24090172204161298,0.7633448774061599,0.42216355577803744);
+    vec3 c2 = vec3(0.9529994532916154,0.9125452328290099,0.11085876909361342);
+
+    return lerp < 0.5 ? mix(c0,c1,lerp * 2.0) : mix(c1,c2,(lerp*2.0)-1.0);
+};
+
 void main() {
-    albedo_out = vec4(uv_coords,0.0,1.0);
+
+    float radar_sections_cnt = mesh_shader_params[draw_id].sample_cnt;
+    float r = length(uv_coords - vec2(0.5)) * 2.0;
+    vec2 pixel_vector = normalize(uv_coords - vec2(0.5));
+
+    if(r > 1.0) discard;
+
+    // identify section of radar glyph that the pixel belongs to
+    int radar_section_0 = int(floor(r * radar_sections_cnt));
+    int radar_section_1 = int(ceil(r * radar_sections_cnt));
+    float lerp = fract(r * radar_sections_cnt);
+
+    // based on section, calculate vector projection
+    vec3 sample_vector_0 = normalize(mesh_shader_params[draw_id].samples[radar_section_0].xyz);
+    float sample_magnitude_0 = mesh_shader_params[draw_id].samples[radar_section_0].w;
+
+    vec3 sample_vector_1 = normalize(mesh_shader_params[draw_id].samples[radar_section_1].xyz);
+    float sample_magnitude_1 = mesh_shader_params[draw_id].samples[radar_section_1].w;
+
+    vec3 out_colour = vec3(0.0,0.0,0.0);
+    bool interpolate = true;
+
+    if(interpolate){
+        vec3 sample_vector = mix(sample_vector_0,sample_vector_1,lerp);
+        float sample_magnitude = mix(sample_magnitude_0,sample_magnitude_1,lerp);
+
+        vec2 proj = normalize(sample_vector.xy);
+        float arc_dist = (dot(proj,pixel_vector) * - 0.5) + 0.5;
+        arc_dist -= 0.05;
+
+        if(arc_dist > abs(sample_vector.z) ) discard;
+
+        out_colour = fakeViridis(sample_magnitude / 2.0);
+    }
+    else{
+        // for now, try projection onto z-plane for billboards
+        vec2 proj = normalize(sample_vector_0.xy);
+        float arc_dist = (dot(proj,pixel_vector) * -0.5) + 0.5;
+
+        if(arc_dist > abs(sample_vector_0.z)) discard;
+
+        out_colour = fakeViridis(sample_magnitude_0 / 2.0);
+    }
+
+    albedo_out = vec4(out_colour,1.0);
     normal_out = vec3(0.0,0.0,1.0);
     depth_out = gl_FragCoord.z;
 }

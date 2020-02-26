@@ -70,7 +70,7 @@ public:
 
     template <typename DatafieldType> void probe(DatafieldType const& datafield) { /* ToDo*/ }
 
-    std::shared_ptr<SamplingResult> getSamplingResult() { return m_result; }
+    std::shared_ptr<SamplingResult> getSamplingResult() const { return m_result; }
 
 private:
     std::shared_ptr<SamplingResult> m_result;
