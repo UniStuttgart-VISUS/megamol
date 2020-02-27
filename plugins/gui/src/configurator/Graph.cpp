@@ -13,7 +13,7 @@ using namespace megamol;
 using namespace megamol::gui::configurator;
 
 
-int megamol::gui::configurator::Graph::generated_uid = 0;
+int megamol::gui::configurator::Graph::generated_uid = 0; /// must be greater than or equal to zero
 
 
 megamol::gui::configurator::Graph::Graph(const std::string& graph_name)
@@ -233,7 +233,6 @@ bool megamol::gui::configurator::Graph::DeleteCall(int call_uid) {
 
 megamol::gui::configurator::Graph::Presentation::Presentation(void)
     : utils()
-    , slot_radius(8.0f)
     , canvas_position(ImVec2(0.0f, 0.0f))
     , canvas_size(ImVec2(1.0f, 1.0f))
     , canvas_scrolling(ImVec2(0.0f, 0.0f))
@@ -242,9 +241,10 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , show_grid(false)
     , show_call_names(true)
     , show_slot_names(true)
-    , selected_module_uid(-1)
-    , selected_call_uid(-1)
-    , hovered_slot_uid(-1)
+    , show_module_names(true)
+    , selected_module_uid(GUI_INVALID_ID)
+    , selected_call_uid(GUI_INVALID_ID)
+    , hovered_slot_uid(GUI_INVALID_ID)
     , selected_slot_ptr(nullptr)
     , process_selected_slot(0)
     , update_current_graph(true)
@@ -258,7 +258,7 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
 megamol::gui::configurator::Graph::Presentation::~Presentation(void) {}
 
 
-bool megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::configurator::Graph& graph,
+bool megamol::gui::configurator::Graph::Presentation::GUI_Present(megamol::gui::configurator::Graph& graph,
     float child_width, ImFont* graph_font, HotkeyData paramter_search, HotkeyData delete_graph_element,
     bool& delete_graph) {
 
@@ -330,17 +330,14 @@ bool megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::conf
             // Draw
             this->menu(graph);
 
-            if (true) { // this->selected_module_uid > 0) {
+            if (this->selected_module_uid > 0) {
                 const float split_thickness = 10.0f;
                 float child_width_auto = 0.0f;
-                // ImGui::BeginChild("splitter_subwindow", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_None);
                 this->utils.VerticalSplitter(split_thickness, &this->split_width, &child_width_auto);
 
                 this->canvas(graph, this->split_width);
                 ImGui::SameLine();
                 this->parameters(graph, child_width_auto, paramter_search);
-
-                // ImGui::EndChild();
             } else {
                 this->canvas(graph, child_width);
             }
@@ -421,12 +418,27 @@ void megamol::gui::configurator::Graph::Presentation::menu(megamol::gui::configu
     ImGui::SameLine();
 
     if (ImGui::Checkbox("Show Call Names", &this->show_call_names)) {
-        this->update_current_graph = true;
+        for (auto& call : graph.GetGraphCalls()) {
+            call->GUI_SetLabelVisibility(this->show_call_names);
+        }
+    }
+    ImGui::SameLine();
+
+    if (ImGui::Checkbox("Show Module Names", &this->show_module_names)) {
+        for (auto& mod : graph.GetGraphModules()) {
+            mod->GUI_SetLabelVisibility(this->show_module_names);
+        }
     }
     ImGui::SameLine();
 
     if (ImGui::Checkbox("Show Slot Names", &this->show_slot_names)) {
-        this->update_current_graph = true;
+        for (auto& mod : graph.GetGraphModules()) {
+            for (auto& call_slot_types : mod->GetCallSlots()) {
+                for (auto& call_slots : call_slot_types.second) {
+                    call_slots->GUI_SetLabelVisibility(this->show_slot_names);
+                }
+            }
+        }
     }
     ImGui::SameLine();
 
@@ -482,8 +494,8 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
     draw_list->ChannelsSplit(2);
 
     if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered()) {
-        this->selected_module_uid = -1;
-        this->selected_call_uid = -1;
+        this->selected_module_uid = GUI_INVALID_ID;
+        this->selected_call_uid = GUI_INVALID_ID;
         this->selected_slot_ptr = nullptr;
     }
 
@@ -496,12 +508,18 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
 
     // Draw modules -------------------
     for (auto& mod : graph.GetGraphModules()) {
-        mod->Present();
+        auto id = mod->GUI_Present(this->canvas_offset, this->canvas_zooming);
+        if (id != GUI_INVALID_ID) {
+            this->selected_module_uid = id;
+        }
     }
 
     // Draw calls ---------------------
     for (auto& call : graph.GetGraphCalls()) {
-        call->Present();
+        auto id = call->GUI_Present(this->canvas_offset, this->canvas_zooming);
+        if (id != GUI_INVALID_ID) {
+            this->selected_call_uid = id;
+        }
     }
 
     // Draw dragged call --------------
@@ -516,6 +534,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
             this->canvas_scrolling = this->canvas_scrolling + ImGui::GetIO().MouseDelta / this->canvas_zooming;
         }
 
+        /*
         // Zooming (Mouse Wheel)
         if (this->mouse_wheel != io.MouseWheel) {
             const float factor = (30.0f / this->canvas_zooming);
@@ -536,6 +555,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
             /// XXX this->gui.update_current_graph = true;
         }
         this->mouse_wheel = io.MouseWheel;
+        */
     }
     this->canvas_offset = this->canvas_position + (this->canvas_scrolling * this->canvas_zooming);
 
@@ -559,7 +579,7 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
 
     ImGui::BeginGroup();
 
-    const float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 2.25f;
+    const float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 3.25f;
     const auto child_flags = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar;
 
     ImGui::BeginChild("parameter_search_child_window", ImVec2(child_width, param_child_height), false, child_flags);
@@ -577,6 +597,16 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
     this->utils.StringSearch("Search", help_text);
     auto search_string = this->utils.GetSearchString();
 
+    if (ImGui::Button("Reset Visibility")) {
+        for (auto& mod : graph.GetGraphModules()) {
+            if (mod->uid == this->selected_module_uid) {
+                for (auto& param : mod->parameters) {
+                    param.GUI_SetLabelVisibility(true);
+                }
+            }
+        }
+    }
+
     ImGui::EndChild();
 
     ImGui::BeginChild(
@@ -593,7 +623,7 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
                 }
 
                 if (search_filter) {
-                    param.Present();
+                    param.GUI_Present();
                 }
             }
         }
@@ -650,7 +680,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas_dragged_call(megamo
             mouse_inside_canvas = true;
         }
         if (ImGui::IsMouseDown(0) && mouse_inside_canvas) {
-            ImVec2 p1 = this->selected_slot_ptr->GetPosition();
+            ImVec2 p1 = this->selected_slot_ptr->GUI_GetPosition();
             ImVec2 p2 = ImGui::GetMousePos();
             if (this->selected_slot_ptr->type == CallSlot::CallSlotType::CALLEE) {
                 ImVec2 tmp = p1;
@@ -697,28 +727,6 @@ bool megamol::gui::configurator::Configurator::update_module_size(
     mod->present.size = ImVec2(module_width, module_height);
 
     return true;
-}
-
-
-bool megamol::gui::configurator::Configurator::update_slot_position(
-    megamol::gui::configurator::GraphManager::GraphPtrType graph, megamol::gui::configurator::CallSlotPtrType slot) {
-
-    if (slot->ParentModuleConnected()) {
-        auto slot_count = slot->GetParentModule()->GetCallSlots(slot->type).size();
-        size_t slot_idx = 0;
-        for (size_t idx = 0; idx < slot_count; idx++) {
-            if (slot->name == slot->GetParentModule()->GetCallSlots(slot->type)[idx]->name) {
-                slot_idx = idx;
-            }
-        }
-        auto pos = this->canvas_offset + slot->GetParentModule()->present.position * this->canvas_zooming;
-        auto size = slot->GetParentModule()->present.size;
-        slot->present.position =
-            ImVec2(pos.x + ((slot->type == graph::CallSlot::CallSlotType::CALLER) ? (size.x) : (0.0f)),
-                pos.y + size.y * ((float)slot_idx + 1) / ((float)slot_count + 1));
-        return true;
-    }
-    return false;
 }
 
 

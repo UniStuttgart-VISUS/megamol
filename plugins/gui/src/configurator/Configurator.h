@@ -70,6 +70,8 @@ private:
     ImFont* graph_font;
     float split_width;
 
+    unsigned int unique_project_id;
+
     // FUNCTIONS --------------------------------------------------------------
 
     void draw_window_menu(megamol::core::CoreInstance* core_instance);
@@ -78,7 +80,7 @@ private:
     bool popup_save_project(bool open, megamol::core::CoreInstance* core_instance);
 
     inline const std::string get_unique_project_name(void) {
-        return ("Project_" + std::to_string(this->graph_manager.GetGraphs().size() + 1));
+        return ("Project_" + std::to_string(++unique_project_id));
     }
     // ------------------------------------------------------------------------
 };

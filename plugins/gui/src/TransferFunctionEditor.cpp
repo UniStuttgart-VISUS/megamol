@@ -506,8 +506,8 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
         alpha_line_col,
     }};
 
-    int selected_node = -1;
-    int selected_chan = -1;
+    int selected_node = GUI_INVALID_ID;
+    int selected_chan = GUI_INVALID_ID;
     ImVec2 selected_delta = ImVec2(0.0f, 0.0f);
     // For each enabled color channel
     for (size_t c = 0; c < channelColors.size(); ++c) {

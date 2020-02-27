@@ -58,11 +58,12 @@ public:
     bool PROTOTYPE_SaveGraph(int graph_id, std::string project_filename, megamol::core::CoreInstance* cor_iInstance);
 
     // GUI Presentation -------------------------------------------------------
-    bool Present(float child_width, ImFont* graph_font, HotkeyData paramter_search, HotkeyData delete_graph_element) {
-        return this->present.Present(*this, child_width, graph_font, paramter_search, delete_graph_element);
+    bool GUI_Present(
+        float child_width, ImFont* graph_font, HotkeyData paramter_search, HotkeyData delete_graph_element) {
+        return this->present.GUI_Present(*this, child_width, graph_font, paramter_search, delete_graph_element);
     }
 
-    const GraphManager::GraphPtrType GetPresentedGraph(void) { return this->present.GetPresentedGraph(); }
+    const GraphManager::GraphPtrType GUI_GetPresentedGraph(void) { return this->present.GetPresentedGraph(); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -81,7 +82,7 @@ private:
 
         ~Presentation(void);
 
-        bool Present(GraphManager& graph_manager, float child_width, ImFont* graph_font, HotkeyData paramter_search,
+        bool GUI_Present(GraphManager& graph_manager, float child_width, ImFont* graph_font, HotkeyData paramter_search,
             HotkeyData delete_graph_element);
 
         const GraphManager::GraphPtrType GetPresentedGraph(void) { return this->presented_graph; }

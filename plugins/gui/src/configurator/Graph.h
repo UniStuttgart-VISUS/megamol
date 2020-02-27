@@ -55,13 +55,13 @@ public:
     int generate_unique_id(void) { return (++this->generated_uid); }
 
     // GUI Presentation -------------------------------------------------------
-    bool Present(float child_width, ImFont* graph_font, HotkeyData paramter_search, HotkeyData delete_graph_element,
+    bool GUI_Present(float child_width, ImFont* graph_font, HotkeyData paramter_search, HotkeyData delete_graph_element,
         bool& delete_graph) {
-        return this->present.Present(
+        return this->present.GUI_Present(
             *this, child_width, graph_font, paramter_search, delete_graph_element, delete_graph);
     }
 
-    inline const CallSlotPtrType GetSelectedSlot(void) const { return this->present.GetSelectedSlot(); }
+    inline const CallSlotPtrType GUI_GetSelectedSlot(void) const { return this->present.GetSelectedSlot(); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -86,13 +86,12 @@ private:
 
         ~Presentation(void);
 
-        bool Present(Graph& graph, float child_width, ImFont* graph_font, HotkeyData paramter_search,
+        bool GUI_Present(Graph& graph, float child_width, ImFont* graph_font, HotkeyData paramter_search,
             HotkeyData delete_graph_element, bool& delete_graph);
 
         inline const CallSlotPtrType GetSelectedSlot(void) const { return this->selected_slot_ptr; }
 
     private:
-        float slot_radius;
         ImVec2 canvas_position;
         ImVec2 canvas_size;
         ImVec2 canvas_scrolling;
@@ -101,6 +100,7 @@ private:
         bool show_grid;
         bool show_call_names;
         bool show_slot_names;
+        bool show_module_names;
         int selected_module_uid;
         int selected_call_uid;
         int hovered_slot_uid;

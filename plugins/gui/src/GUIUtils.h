@@ -29,6 +29,8 @@
 namespace megamol {
 namespace gui {
 
+#define GUI_INVALID_ID (-1)
+
 
 /** Type for holding data of hotkeys*/
 typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyData;

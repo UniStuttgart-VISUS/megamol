@@ -155,7 +155,7 @@ bool GUIWindows::Draw(vislib::math::Rectangle<int> viewport, double instanceTime
         if (this->state.font_index < io.Fonts->Fonts.Size) {
             io.FontDefault = io.Fonts->Fonts[this->state.font_index];
         }
-        this->state.font_index = -1;
+        this->state.font_index = GUI_INVALID_ID;
     }
 
     // Deleting window (set in menu of MAIN window)
@@ -172,7 +172,7 @@ bool GUIWindows::Draw(vislib::math::Rectangle<int> viewport, double instanceTime
         // Loading font (from FONT window configuration - even if FONT window is not shown)
         if (wc.buf_font_reset) {
             if (!wc.font_name.empty()) {
-                this->state.font_index = -1;
+                this->state.font_index = GUI_INVALID_ID;
                 for (int n = 0; n < io.Fonts->Fonts.Size; n++) {
 
                     std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
@@ -557,7 +557,7 @@ bool GUIWindows::createContext(void) {
     // Init global state -------------------------------------------------------
     this->state.font_file = "";
     this->state.font_size = 13.0f;
-    this->state.font_index = -1;
+    this->state.font_index = GUI_INVALID_ID;
     this->state.win_save_state = false;
     this->state.win_save_delay = 0.0f;
     this->state.win_delete = "";
@@ -746,7 +746,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.5f); // set general proportional item width
 
     // Options
-    int overrideState = -1; /// invalid
+    int overrideState = GUI_INVALID_ID; /// invalid
     if (ImGui::Button("Expand All")) {
         overrideState = 1; /// open
     }
@@ -906,7 +906,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                 // Determine header state and change color depending on active parameter search
                 auto headerId = ImGui::GetID(label.c_str());
                 auto headerState = overrideState;
-                if (headerState == -1) {
+                if (headerState == GUI_INVALID_ID) {
                     headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
                 }
                 if (!currentSearchString.empty()) {

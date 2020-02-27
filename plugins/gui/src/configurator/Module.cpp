@@ -106,15 +106,19 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
     : presentations(Presentation::DEFAULT)
     , label_visible(true)
     , position(ImVec2(0.0f, 0.0f))
-    , size(ImVec2(1.0f, 1.0f))
+    , size(ImVec2(250.0f, 50.0f))
     , class_label()
-    , name_label() {}
+    , name_label()
+    , utils() {}
 
 
 megamol::gui::configurator::Module::Presentation::~Presentation(void) {}
 
 
-bool megamol::gui::configurator::Module::Presentation::Present(megamol::gui::configurator::Module& mod) {
+ImGuiID megamol::gui::configurator::Module::Presentation::GUI_Present(
+    megamol::gui::configurator::Module& mod, ImVec2 canvas_offset, float canvas_zooming) {
+
+    int retval_id = GUI_INVALID_ID;
 
     try {
 
@@ -126,7 +130,25 @@ bool megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
 
         ImGui::PushID(mod.uid);
 
-        /*
+        // Draw call slots ----------------------------------------------------
+        /// Draw call slots prior to modules to catch mouse clicks on slot area lying over module box.
+
+        int hovered_slot_uid = GUI_INVALID_ID;
+        for (auto& slot_pair : mod.GetCallSlots()) {
+            for (auto& slot : slot_pair.second) {
+                auto id = slot->GUI_Present(canvas_offset, canvas_zooming);
+                if (id != GUI_INVALID_ID) {
+                    hovered_slot_uid = id;
+                }
+            }
+        }
+
+        // Draw module --------------------------------------------------------
+
+        if ((this->position.x == 0.0f) && (this->position.y == 0.0f)) {
+            this->position = canvas_offset;
+        }
+
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         assert(draw_list != nullptr);
 
@@ -134,124 +156,108 @@ bool megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
         const ImU32 COLOR_MODULE_HIGHTLIGHT = IM_COL32(92, 92, 92, 255);
         const ImU32 COLOR_MODULE_BORDER = IM_COL32(128, 128, 128, 255);
 
-        int hovered_module = -1;
-        graph->gui.hovered_slot_uid = -1;
+        int hovered_module = GUI_INVALID_ID;
 
-        for (auto& mod : graph->GetGraphModules()) {
+        ImVec2 module_size = this->size;
+        ImVec2 module_rect_min = canvas_offset + this->position * canvas_zooming;
+        ImVec2 module_rect_max = module_rect_min + module_size;
+        ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
+        std::string label = this->class_label;
 
-            // Draw call slots --------
-            /// Draw call slots prior to modules to catch mouse clicks on slot area lying over module box.
-            this->draw_canvas_module_call_slots(graph, mod);
+        // Draw text
+        draw_list->ChannelsSetCurrent(1); // Foreground
+        ImGui::BeginGroup();
 
-            // Draw module ------------
-            const int id = mod->uid;
-            ImGui::PushID(id);
-
-            ImVec2 module_size = mod->present.size;
-            ImVec2 module_rect_min = graph->gui.canvas_offset + mod->present.position * graph->gui.canvas_zooming;
-            ImVec2 module_rect_max = module_rect_min + module_size;
-            ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
-            std::string label = mod->present.class_label;
-
-            // Draw text
-            draw_list->ChannelsSetCurrent(1); // Foreground
-            ImGui::BeginGroup();
-
-            float line_offset = 0.0f;
-            if (mod->is_view) {
-                line_offset = -0.5f * ImGui::GetItemsLineHeightWithSpacing();
-            }
-
-            auto class_name_width = this->utils.TextWidgetWidth(label);
-            ImGui::SetCursorScreenPos(module_center + ImVec2(-(class_name_width / 2.0f),
-                                                            line_offset - ImGui::GetItemsLineHeightWithSpacing()));
-            ImGui::Text(label.c_str());
-
-            label = mod->present.name_label;
-            auto name_width = this->utils.TextWidgetWidth(label);
-            ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), line_offset));
-            ImGui::Text(label.c_str());
-
-            if (mod->is_view) {
-                if (false) {
-                    std::string view_label = "[View]";
-                    if (mod->is_view_instance) {
-                        view_label = "[Main View]";
-                    }
-                    name_width = this->utils.TextWidgetWidth(view_label);
-                    ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), -line_offset));
-                    ImGui::Text(view_label.c_str());
-                } else {
-                    std::string view_label = "Main View";
-                    name_width = this->utils.TextWidgetWidth(view_label);
-                    ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f) - 20.0f, -line_offset));
-                    ImGui::Checkbox(view_label.c_str(), &mod->is_view_instance);
-                    ImGui::SameLine();
-                    this->utils.HelpMarkerToolTip(
-                        "There should be only one main view.\nOtherwise first one found is used.");
-                    /// TODO ensure that there is always just one main view ...
-                }
-            }
-
-            ImGui::EndGroup();
-
-            // Draw box
-            draw_list->ChannelsSetCurrent(0); // Background
-
-            ImGui::SetCursorScreenPos(module_rect_min);
-            label = "module_" + mod->full_name + std::to_string(mod->uid);
-            ImGui::InvisibleButton(label.c_str(), module_size);
-            // Gives slots which overlap modules priority for ToolTip and Context Menu.
-            if (graph->gui.hovered_slot_uid < 0) {
-                this->utils.HoverToolTip(mod->description, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
-                /// XXX
-                // Context menu
-                // if (ImGui::BeginPopupContextItem()) {
-                //    if (ImGui::MenuItem(
-                //            "Delete", std::get<0>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str()))
-                //            {
-                //        std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-                //    }
-                //    if (ImGui::MenuItem("Rename")) {
-                //        this->gui.rename_popup_open = true;
-                //        this->gui.rename_popup_string = &mod->name;
-                //    }
-
-                //    ImGui::EndPopup();
-                //}
-            }
-            bool module_active = ImGui::IsItemActive();
-            if (module_active) {
-                graph->gui.selected_module_uid = id;
-                graph->gui.selected_call_uid = -1;
-            }
-            if (module_active && ImGui::IsMouseDragging(0)) {
-                mod->present.position = (module_rect_min + ImGui::GetIO().MouseDelta) / graph->gui.canvas_zooming;
-            }
-            if (ImGui::IsItemHovered() && (hovered_module < 0)) {
-                hovered_module = id;
-            }
-            ImU32 module_bg_color = (hovered_module == id || graph->gui.selected_module_uid == id)
-                                        ? COLOR_MODULE_HIGHTLIGHT
-                                        : COLOR_MODULE_BACKGROUND;
-            draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 4.0f);
-            draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 4.0f);
-
-
-            ImGui::PopID();
+        float line_offset = 0.0f;
+        if (mod.is_view) {
+            line_offset = -0.5f * ImGui::GetItemsLineHeightWithSpacing();
         }
-        */
+
+        auto class_name_width = this->utils.TextWidgetWidth(label);
+        ImGui::SetCursorScreenPos(
+            module_center + ImVec2(-(class_name_width / 2.0f), line_offset - ImGui::GetItemsLineHeightWithSpacing()));
+        ImGui::Text(label.c_str());
+
+        label = this->name_label;
+        auto name_width = this->utils.TextWidgetWidth(label);
+        ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), line_offset));
+        ImGui::Text(label.c_str());
+
+        if (mod.is_view) {
+            if (false) {
+                std::string view_label = "[View]";
+                if (mod.is_view_instance) {
+                    view_label = "[Main View]";
+                }
+                name_width = this->utils.TextWidgetWidth(view_label);
+                ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), -line_offset));
+                ImGui::Text(view_label.c_str());
+            } else {
+                std::string view_label = "Main View";
+                name_width = this->utils.TextWidgetWidth(view_label);
+                ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f) - 20.0f, -line_offset));
+                ImGui::Checkbox(view_label.c_str(), &mod.is_view_instance);
+                ImGui::SameLine();
+                this->utils.HelpMarkerToolTip(
+                    "There should be only one main view.\nOtherwise first one found is used.");
+                /// TODO ensure that there is always just one main view ...
+            }
+        }
+
+        ImGui::EndGroup();
+
+        // Draw box
+        draw_list->ChannelsSetCurrent(0); // Background
+
+        ImGui::SetCursorScreenPos(module_rect_min);
+        label = "module_" + mod.full_name + std::to_string(mod.uid);
+        ImGui::InvisibleButton(label.c_str(), module_size);
+        // Gives slots which overlap modules priority for ToolTip and Context Menu.
+        if (hovered_slot_uid == GUI_INVALID_ID) {
+            this->utils.HoverToolTip(mod.description, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
+            // Context menu
+            /// XXX
+            /*
+             if (ImGui::BeginPopupContextItem()) {
+                if (ImGui::MenuItem(
+                        "Delete", std::get<0>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str()))
+                        {
+                    std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+                }
+                if (ImGui::MenuItem("Rename")) {
+                    this->gui.rename_popup_open = true;
+                    this->gui.rename_popup_string = &mod->name;
+                }
+
+                ImGui::EndPopup();
+            }
+            */
+        }
+        bool module_active = ImGui::IsItemActive();
+        if (module_active) {
+            retval_id = mod.uid;
+        }
+        if (module_active && ImGui::IsMouseDragging(0)) {
+            this->position = ((module_rect_min - canvas_offset) + ImGui::GetIO().MouseDelta) / canvas_zooming;
+        }
+        if (ImGui::IsItemHovered() && (hovered_module < 0)) {
+            hovered_module = mod.uid;
+        }
+        ImU32 module_bg_color =
+            (hovered_module == mod.uid || retval_id == mod.uid) ? COLOR_MODULE_HIGHTLIGHT : COLOR_MODULE_BACKGROUND;
+        draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 4.0f);
+        draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 4.0f);
 
         ImGui::PopID();
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        return GUI_INVALID_ID;
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        return GUI_INVALID_ID;
     }
 
-    return true;
+    return retval_id;
 }

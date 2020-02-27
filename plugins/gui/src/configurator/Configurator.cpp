@@ -27,9 +27,10 @@ megamol::gui::configurator::Configurator::Configurator()
     , window_state(0)
     , project_filename("")
     , graph_ptr(nullptr)
-    , selected_list_module_id(-1)
+    , selected_list_module_id(GUI_INVALID_ID)
     , graph_font(nullptr)
-    , split_width(250.0f) {
+    , split_width(250.0f)
+    , unique_project_id(0) {
 
     // Define HotKeys
     this->hotkeys[HotkeyIndex::MODULE_SEARCH] =
@@ -107,6 +108,7 @@ bool megamol::gui::configurator::Configurator::Draw(
         // 2] Load available modules and calls and currently loaded project from core once(!)
 
         this->graph_manager.UpdateModulesCallsStock(core_instance);
+        this->graph_manager.AddGraph(this->get_unique_project_name());
         this->window_state++;
     } else {
         // 3] Render configurator gui content
@@ -121,10 +123,12 @@ bool megamol::gui::configurator::Configurator::Draw(
 
         ImGui::SameLine();
 
-        this->graph_manager.Present(child_width_auto, this->graph_font, this->hotkeys[HotkeyIndex::PARAMETER_SEARCH],
-            this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]);
+        this->graph_ptr = nullptr;
 
-        this->graph_ptr = this->graph_manager.GetPresentedGraph();
+        this->graph_manager.GUI_Present(child_width_auto, this->graph_font,
+            this->hotkeys[HotkeyIndex::PARAMETER_SEARCH], this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]);
+
+        this->graph_ptr = this->graph_manager.GUI_GetPresentedGraph();
     }
 
     return true;
@@ -216,14 +220,15 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
 
         // Filter module by compatible call slots
         bool compat_filter = true;
-        int compat_call_index = -1;
+        int compat_call_index = GUI_INVALID_ID;
         std::string compat_call_slot_name;
         if (this->graph_ptr != nullptr) {
-            if (this->graph_ptr->GetSelectedSlot() != nullptr) {
+            if (this->graph_ptr->GUI_GetSelectedSlot() != nullptr) {
                 compat_filter = false;
                 for (auto& cst : mod.call_slots) {
                     for (auto& cs : cst.second) {
-                        int cpidx = this->graph_manager.GetCompatibleCallIndex(this->graph_ptr->GetSelectedSlot(), cs);
+                        int cpidx =
+                            this->graph_manager.GetCompatibleCallIndex(this->graph_ptr->GUI_GetSelectedSlot(), cs);
                         if (cpidx > 0) {
                             compat_call_index = cpidx;
                             compat_call_slot_name = cs.name;
@@ -261,7 +266,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                 if (this->graph_ptr != nullptr) {
                     this->graph_ptr->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
 
-                    auto selected_slot = this->graph_ptr->GetSelectedSlot();
+                    auto selected_slot = this->graph_ptr->GUI_GetSelectedSlot();
                     // If there is a call slot selected, create call to compatible call slot of new module
                     if (selected_slot != nullptr) {
                         // Get call slots of last added module

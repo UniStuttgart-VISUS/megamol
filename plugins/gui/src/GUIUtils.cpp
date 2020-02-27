@@ -17,7 +17,7 @@
 using namespace megamol::gui;
 
 
-GUIUtils::GUIUtils(void) : tooltipTime(0.0f), tooltipId(-1), searchFocus(false), searchString() {}
+GUIUtils::GUIUtils(void) : tooltipTime(0.0f), tooltipId(GUI_INVALID_ID), searchFocus(false), searchString() {}
 
 
 void GUIUtils::HoverToolTip(const std::string& text, ImGuiID id, float time_start, float time_end) {

@@ -159,7 +159,9 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    bool Present(void) { return this->present.Present(*this); }
+    bool GUI_Present(void) { return this->present.GUI_Present(*this); }
+
+    void GUI_SetLabelVisibility(bool visible) { this->present.visible = visible; }
 
 private:
     typedef std::variant<std::monostate, // default (unused/unavailable)
@@ -201,12 +203,13 @@ private:
 
         ~Presentation(void);
 
-        bool Present(Parameter& param);
+        bool GUI_Present(Parameter& param);
+
+        bool visible;
 
     private:
         enum Presentations : size_t { DEFAULT = 0, SIMPLE = 1, _COUNT_ = 2 } presentations;
         bool read_only;
-        bool invisible;
         std::string help;
         GUIUtils utils;
 

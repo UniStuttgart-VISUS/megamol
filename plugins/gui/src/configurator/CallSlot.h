@@ -62,9 +62,13 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    bool Present(void) { return this->present.Present(*this); }
+    ImGuiID GUI_Present(ImVec2 canvas_offset, float canvas_zooming) {
+        return this->present.GUI_Present(*this, canvas_offset, canvas_zooming);
+    }
 
-    ImVec2 GetPosition(void) { return this->present.GetPosition(); }
+    ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
+
+    void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
 
 private:
     ModulePtrType parent_module;
@@ -79,16 +83,19 @@ private:
 
         ~Presentation(void);
 
-        bool Present(CallSlot& call_slot);
+        ImGuiID GUI_Present(CallSlot& call_slot, ImVec2 canvas_offset, float canvas_zooming);
 
         ImVec2 GetPosition(void) { return this->position; }
 
-        void UpdatePosition();
+        void UpdatePosition(CallSlot& call_slot, ImVec2 canvas_offset, float canvas_zooming);
+
+        bool label_visible;
 
     private:
         enum Presentations { DEFAULT } presentations;
-        bool label_visible;
         ImVec2 position;
+        float slot_radius;
+        GUIUtils utils;
 
     } present;
 };

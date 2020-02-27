@@ -305,7 +305,7 @@ bool megamol::gui::configurator::GraphManager::LoadCurrentCoreProject(
                     if (call != nullptr) {
                         CallData cd;
 
-                        cd.compat_call_idx = -1;
+                        cd.compat_call_idx = GUI_INVALID_ID;
                         size_t calls_count = this->calls_stock.size();
                         for (size_t i = 0; i < calls_count; i++) {
                             if (this->calls_stock[i].class_name == std::string(call->ClassName())) {
@@ -376,10 +376,10 @@ int megamol::gui::configurator::GraphManager::GetCompatibleCallIndex(
                     if (selected_comp_call_slots == current_comp_call_slots) {
                         // Show only comaptible calls for unconnected caller slots
                         if ((call_slot_1->type == CallSlot::CallSlotType::CALLER) && (call_slot_1->CallsConnected())) {
-                            return -1;
+                            return GUI_INVALID_ID;
                         } else if ((call_slot_2->type == CallSlot::CallSlotType::CALLER) &&
                                    (call_slot_2->CallsConnected())) {
-                            return -1;
+                            return GUI_INVALID_ID;
                         }
                         return static_cast<int>(current_comp_call_slots);
                     }
@@ -387,7 +387,7 @@ int megamol::gui::configurator::GraphManager::GetCompatibleCallIndex(
             }
         }
     }
-    return -1;
+    return GUI_INVALID_ID;
 }
 
 
@@ -406,7 +406,7 @@ int megamol::gui::configurator::GraphManager::GetCompatibleCallIndex(
             }
         }
     }
-    return -1;
+    return GUI_INVALID_ID;
 }
 
 
@@ -745,7 +745,7 @@ megamol::gui::configurator::GraphManager::Presentation::Presentation(void) : pre
 megamol::gui::configurator::GraphManager::Presentation::~Presentation(void) {}
 
 
-bool megamol::gui::configurator::GraphManager::Presentation::Present(GraphManager& graph_manager, float child_width,
+bool megamol::gui::configurator::GraphManager::Presentation::GUI_Present(GraphManager& graph_manager, float child_width,
     ImFont* graph_font, HotkeyData paramter_search, HotkeyData delete_graph_element) {
 
     try {
@@ -760,7 +760,7 @@ bool megamol::gui::configurator::GraphManager::Presentation::Present(GraphManage
         ImGui::BeginChild("graph_child_window", ImVec2(child_width, 0.0f), true, child_flags);
 
         // Assuming only one closed tab/graph per frame.
-        int delete_graph_uid = -1;
+        int delete_graph_uid = GUI_INVALID_ID;
 
         // Draw Graphs
         ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
@@ -768,7 +768,7 @@ bool megamol::gui::configurator::GraphManager::Presentation::Present(GraphManage
         for (auto& graph : graph_manager.GetGraphs()) {
 
             bool delete_graph = false;
-            if (graph->Present(child_width, graph_font, paramter_search, delete_graph_element, delete_graph)) {
+            if (graph->GUI_Present(child_width, graph_font, paramter_search, delete_graph_element, delete_graph)) {
                 presented_graph = graph;
             }
 

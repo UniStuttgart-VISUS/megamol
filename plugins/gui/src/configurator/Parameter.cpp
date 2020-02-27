@@ -168,7 +168,7 @@ std::string megamol::gui::configurator::Parameter::GetValueString(void) {
 megamol::gui::configurator::Parameter::Presentation::Presentation(void)
     : presentations(Presentations::DEFAULT)
     , read_only(false)
-    , invisible(false)
+    , visible(true)
     , help()
     , utils()
     , widgtmap_text()
@@ -182,7 +182,7 @@ megamol::gui::configurator::Parameter::Presentation::Presentation(void)
 megamol::gui::configurator::Parameter::Presentation::~Presentation(void) {}
 
 
-bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::configurator::Parameter& param) {
+bool megamol::gui::configurator::Parameter::Presentation::GUI_Present(megamol::gui::configurator::Parameter& param) {
 
     try {
 
@@ -192,7 +192,7 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
             return false;
         }
 
-        if (!this->invisible) {
+        if (this->visible) {
             ImGui::PushID(param.uid);
 
             ImGui::BeginGroup();
@@ -239,8 +239,8 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
 void megamol::gui::configurator::Parameter::Presentation::present_prefix(Parameter& param) {
 
     // Visibility
-    if (ImGui::RadioButton("###visible", this->invisible)) {
-        this->invisible = !this->invisible;
+    if (ImGui::RadioButton("###visible", !this->visible)) {
+        this->visible = !this->visible;
     }
     this->utils.HoverToolTip("Visibility", ImGui::GetItemID(), 0.5f);
 
@@ -302,7 +302,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(Paramete
 
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
-    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.5f); // set general proportional item width
+    // ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.75f); // set general proportional item width
 
     if (this->read_only) {
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
@@ -561,7 +561,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(Paramete
         ImGui::PopStyleVar();
     }
 
-    ImGui::PopItemWidth();
+    // ImGui::PopItemWidth();
 }
 
 

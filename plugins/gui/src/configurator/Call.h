@@ -55,7 +55,11 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    bool Present(void) { return this->present.Present(*this); }
+    ImGuiID GUI_Present(ImVec2 canvas_offset, float canvas_zooming) {
+        return this->present.GUI_Present(*this, canvas_offset, canvas_zooming);
+    }
+
+    void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
 
 private:
     std::map<CallSlot::CallSlotType, CallSlotPtrType> connected_call_slots;
@@ -69,11 +73,13 @@ private:
 
         ~Presentation(void);
 
-        bool Present(Call& call);
+        ImGuiID GUI_Present(Call& call, ImVec2 canvas_offset, float canvas_zooming);
+
+        bool label_visible;
 
     private:
         enum Presentations { DEFAULT } presentations;
-        bool label_visible;
+        GUIUtils utils;
 
     } present;
 };
