@@ -59,32 +59,34 @@ public:
     const std::vector<CallSlotPtrType>& GetCallSlots(CallSlot::CallSlotType type);
     const std::map<CallSlot::CallSlotType, std::vector<CallSlotPtrType>>& GetCallSlots(void);
 
-    void Present(void);
+    // GUI Presentation -------------------------------------------------------
+
+    bool Present(void) { this->present.Present(*this); }
+
+private:
+    std::map<CallSlot::CallSlotType, std::vector<CallSlotPtrType>> call_slots;
 
     /**
-     * Defines GUI module presentations.
+     * Defines GUI module present.
      */
-    class Presentations {
+    class Presentation {
     public:
-        Presentations(void);
+        Presentation(void);
 
-        ~Presentations(void);
+        ~Presentation(void);
 
-        void Present(Module& mod);
+        bool Present(Module& mod);
 
+        enum Presentations { DEFAULT } presentations;
+        bool label_visible;
         ImVec2 position;
         ImVec2 size;
         std::string class_label;
         std::string name_label;
 
-
     private:
-        enum Presentation { DEFAULT } presentation;
-        bool label_visible;
-    } presentations;
 
-private:
-    std::map<CallSlot::CallSlotType, std::vector<CallSlotPtrType>> call_slots;
+    } present;
 };
 
 

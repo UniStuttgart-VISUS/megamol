@@ -91,7 +91,7 @@ public:
 
     std::string full_name;
 
-    void Present(void);
+    bool Present(void) { this->present.Present(*this); }
 
     // Get ----------------------------------
     std::string GetValueString(void);
@@ -188,24 +188,24 @@ private:
     ValueType value;
 
     /**
-     * Defines GUI parameter presentations.
+     * Defines GUI parameter present.
      */
-    class Presentations {
+    class Presentation {
     public:
-        Presentations(void);
+        Presentation(void);
 
-        ~Presentations(void);
+        ~Presentation(void);
 
-        void Present(Parameter& param);
+        bool Present(Parameter& param);
 
-    private:
-        enum Presentation : size_t { DEFAULT = 0, SIMPLE = 1, _COUNT_ = 2 } presentation;
+        enum Presentations : size_t { DEFAULT = 0, SIMPLE = 1, _COUNT_ = 2 } presentations;
         bool read_only;
         bool invisible;
         std::string help;
         GUIUtils utils;
 
-        // Input Widget Buffers
+    private:
+
         std::map<std::string, std::string> widgtmap_text;
         std::map<std::string, int> widgtmap_int;
         std::map<std::string, float> widgtmap_float;
@@ -217,7 +217,7 @@ private:
         void present_value(Parameter& param);
         void present_postfix(Parameter& param);
 
-    } presentations;
+    } present;
 };
 
 

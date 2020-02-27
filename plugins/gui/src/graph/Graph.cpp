@@ -17,30 +17,15 @@ int megamol::gui::graph::Graph::generated_uid = 0;
 
 
 megamol::gui::graph::Graph::Graph(const std::string& graph_name)
-    : gui(), modules(), calls(), uid(this->generate_unique_id()), name(graph_name), dirty_flag(true) {
+    : modules(), calls(), uid(this->generate_unique_id()), name(graph_name), dirty_flag(true) {
 
-    this->gui.slot_radius = 8.0f;
-    this->gui.canvas_position = ImVec2(0.0f, 0.0f);
-    this->gui.canvas_size = ImVec2(1.0f, 1.0f);
-    this->gui.canvas_scrolling = ImVec2(0.0f, 0.0f);
-    this->gui.canvas_zooming = 1.0f;
-    this->gui.canvas_offset = ImVec2(0.0f, 0.0f);
-    this->gui.show_grid = false;
-    this->gui.show_call_names = true;
-    this->gui.show_slot_names = true;
-    this->gui.selected_module_uid = -1;
-    this->gui.selected_call_uid = -1;
-    this->gui.hovered_slot_uid = -1;
-    this->gui.selected_slot_ptr = nullptr;
-    this->gui.process_selected_slot = 0;
 }
 
 
 megamol::gui::graph::Graph::~Graph(void) {}
 
 
-bool megamol::gui::graph::Graph::AddModule(
-    const Graph::ModuleStockType& stock_modules, const std::string& module_class_name) {
+bool megamol::gui::graph::Graph::AddModule(const ModuleStockType& stock_modules, const std::string& module_class_name) {
 
     try {
         bool found = false;
@@ -142,7 +127,7 @@ bool megamol::gui::graph::Graph::DeleteModule(int module_uid) {
 
 
 bool megamol::gui::graph::Graph::AddCall(
-    const Graph::CallStockType& stock_calls, int call_idx, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2) {
+    const CallStockType& stock_calls, int call_idx, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2) {
 
     try {
         if ((call_idx > stock_calls.size()) || (call_idx < 0)) {
@@ -243,4 +228,112 @@ bool megamol::gui::graph::Graph::DeleteCall(int call_uid) {
 
     vislib::sys::Log::DefaultLog.WriteWarn("Invalid call uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return false;
+}
+
+
+// GRAPH PRESENTATIONS ####################################################
+
+megamol::gui::graph::Graph::Presentation::Presentation(void)
+    : slot_radius(8.0f)
+    , canvas_position(ImVec2(0.0f, 0.0f))
+    , canvas_size(ImVec2(1.0f, 1.0f))
+    , canvas_scrolling(ImVec2(0.0f, 0.0f))
+    , canvas_zooming(1.0f)
+    , canvas_offset(ImVec2(0.0f, 0.0f))
+    , show_grid(false)
+    , show_call_names(true)
+    , show_slot_names(true)
+    , selected_module_uid(-1)
+    , selected_call_uid(-1)
+    , hovered_slot_uid(-1)
+    , selected_slot_ptr(nullptr)
+    , process_selected_slot(0) {
+}
+
+
+megamol::gui::graph::Graph::Presentation::~Presentation(void) {}
+
+
+void megamol::gui::graph::Graph::Presentation::Present(Graph& graph) {
+
+    /*
+    // Tab showing one graph
+    ImGuiTabItemFlags tab_flags = ImGuiTabItemFlags_None;
+    if (graph->IsDirty()) {
+        tab_flags |= ImGuiTabItemFlags_UnsavedDocument;
+    }
+    bool open = true;
+    std::string graph_label = "    " + graph->GetName() + "  ###graph" + std::to_string(graph->GetUID());
+    if (ImGui::BeginTabItem(graph_label.c_str(), &open, tab_flags)) {
+
+        // Context menu
+        if (ImGui::BeginPopupContextItem()) {
+            if (ImGui::MenuItem("Rename")) {
+                this->gui.rename_popup_open = true;
+                /// XXX this->gui.rename_popup_string = &graph->GetName();
+            }
+            ImGui::EndPopup();
+        }
+        // Set selected graph ptr
+        if (ImGui::IsItemVisible()) {
+            this->gui.graph_ptr = graph;
+        }
+
+        // Process module deletion
+        if (std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM])) {
+            std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = false;
+            graph->gui.selected_slot_ptr = nullptr;
+            if (graph->gui.selected_module_uid > 0) {
+                graph->DeleteModule(graph->gui.selected_module_uid);
+            }
+            if (graph->gui.selected_call_uid > 0) {
+                graph->DeleteCall(graph->gui.selected_call_uid);
+            }
+        }
+
+        // Register trigger for connecting call
+        if ((graph->gui.selected_slot_ptr != nullptr) && (io.MouseReleased[0])) {
+            graph->gui.process_selected_slot = 2;
+        }
+
+        for (auto& mod : graph->GetGraphModules()) {
+            this->update_module_size(graph, mod);
+            for (auto& slot_pair : mod->GetCallSlots()) {
+                for (auto& slot : slot_pair.second) {
+                    this->update_slot_position(graph, slot);
+                }
+            }
+        }
+
+        // Update positions and sizes
+        if (this->gui.update_current_graph) {
+
+            this->update_graph_layout(graph);
+            this->gui.update_current_graph = false;
+        }
+
+        // Draw graph
+        this->draw_graph_menu(graph);
+        this->draw_graph_canvas(graph);
+
+        ImGui::EndTabItem();
+    }
+    */
+    /*
+    if ((this->gui.graph_ptr != nullptr) && (this->gui.graph_ptr->gui.selected_module_uid > 0)) {
+
+        ImGui::BeginChild("splitter_subwindow", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_None);
+        this->utils.VerticalSplitter(split_thickness, &this->gui.split_width_right, &auto_child);
+
+        this->draw_window_graph(this->gui.split_width_right);
+        ImGui::SameLine();
+        this->draw_window_parameter_list(auto_child);
+
+        ImGui::EndChild();
+    }
+    else {
+        this->draw_window_graph(auto_child);
+    }
+    */
+
 }

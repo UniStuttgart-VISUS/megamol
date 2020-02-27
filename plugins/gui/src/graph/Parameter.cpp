@@ -17,7 +17,7 @@ using namespace megamol::gui::graph;
 
 
 megamol::gui::graph::Parameter::Parameter(int uid, megamol::gui::graph::Parameter::ParamType type)
-    : uid(uid), type(type), minval(), maxval(), storage(), value(), presentations() {
+    : uid(uid), type(type), minval(), maxval(), storage(), value(), present() {
 
     // Initialize variant types which should/can not be changed afterwards.
     // Default ctor of variants initializes std::monostate.
@@ -80,9 +80,6 @@ megamol::gui::graph::Parameter::Parameter(int uid, megamol::gui::graph::Paramete
         break;
     }
 }
-
-
-void megamol::gui::graph::Parameter::Present(void) { this->presentations.Present(*this); }
 
 
 std::string megamol::gui::graph::Parameter::GetValueString(void) {
@@ -168,8 +165,8 @@ std::string megamol::gui::graph::Parameter::GetValueString(void) {
 
 // PARAMETER PRESENTATIONS ####################################################
 
-megamol::gui::graph::Parameter::Presentations::Presentations(void)
-    : presentation(Presentation::DEFAULT)
+megamol::gui::graph::Parameter::Presentation::Presentation(void)
+    : presentations(Presentations::DEFAULT)
     , read_only(false)
     , invisible(false)
     , help()
@@ -182,10 +179,10 @@ megamol::gui::graph::Parameter::Presentations::Presentations(void)
     , widgtmap_vec4() {}
 
 
-megamol::gui::graph::Parameter::Presentations::~Presentations(void) {}
+megamol::gui::graph::Parameter::Presentation::~Presentation(void) {}
 
 
-void megamol::gui::graph::Parameter::Presentations::Present(Parameter& param) {
+bool megamol::gui::graph::Parameter::Presentation::Present(Parameter& param) {
 
     try {
         if (ImGui::GetCurrentContext() == nullptr) {
@@ -198,8 +195,8 @@ void megamol::gui::graph::Parameter::Presentations::Present(Parameter& param) {
             ImGui::BeginGroup();
             ImGui::PushID(param.uid);
 
-            switch (this->presentation) {
-            case (Presentation::DEFAULT): {
+            switch (this->presentations) {
+            case (Presentations::DEFAULT): {
                 this->present_prefix(param);
                 ImGui::SameLine();
                 this->present_value(param);
@@ -207,7 +204,7 @@ void megamol::gui::graph::Parameter::Presentations::Present(Parameter& param) {
                 this->present_postfix(param);
                 break;
             }
-            case (Presentation::SIMPLE): {
+            case (Presentations::SIMPLE): {
                 this->present_prefix(param);
                 ImGui::SameLine();
                 this->present_value(param);
@@ -226,15 +223,17 @@ void megamol::gui::graph::Parameter::Presentations::Present(Parameter& param) {
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return;
+        return false;
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return;
+        return false;
     }
+
+    return true;
 }
 
 
-void megamol::gui::graph::Parameter::Presentations::present_prefix(Parameter& param) {
+void megamol::gui::graph::Parameter::Presentation::present_prefix(Parameter& param) {
 
     // Visibility
     if (ImGui::RadioButton("###visible", this->invisible)) {
@@ -250,7 +249,7 @@ void megamol::gui::graph::Parameter::Presentations::present_prefix(Parameter& pa
 
     ImGui::SameLine();
 
-    // Presentations
+    // Presentation
     float height = ImGui::GetFrameHeight();
     float half_height = height / 2.0f;
     ImVec2 position = ImGui::GetCursorScreenPos();
@@ -271,30 +270,30 @@ void megamol::gui::graph::Parameter::Presentations::present_prefix(Parameter& pa
     ImGui::InvisibleButton("###button", rect);
 
     if (ImGui::BeginPopupContextItem()) {
-        for (size_t i = 0; i < static_cast<size_t>(Presentation::_COUNT_); i++) {
+        for (size_t i = 0; i < static_cast<size_t>(Presentations::_COUNT_); i++) {
             std::string presentation_str;
-            switch (static_cast<Presentation>(i)) {
-            case (Presentation::DEFAULT):
+            switch (static_cast<Presentations>(i)) {
+            case (Presentations::DEFAULT):
                 presentation_str = "DEFAULT";
                 break;
-            case (Presentation::SIMPLE):
+            case (Presentations::SIMPLE):
                 presentation_str = "SIMPLE";
                 break;
             defalt:
                 break;
             }
             if (presentation_str.empty()) break;
-            if (ImGui::MenuItem(presentation_str.c_str(), nullptr, (i == this->presentation))) {
-                this->presentation = static_cast<Presentation>(i);
+            if (ImGui::MenuItem(presentation_str.c_str(), nullptr, (i == this->presentations))) {
+                this->presentations = static_cast<Presentations>(i);
             }
         }
         ImGui::EndPopup();
     }
-    this->utils.HoverToolTip("Presentations", ImGui::GetItemID(), 0.5f);
+    this->utils.HoverToolTip("Presentation", ImGui::GetItemID(), 0.5f);
 }
 
 
-void megamol::gui::graph::Parameter::Presentations::present_value(Parameter& param) {
+void megamol::gui::graph::Parameter::Presentation::present_value(Parameter& param) {
 
     this->help.clear();
 
@@ -361,7 +360,6 @@ void megamol::gui::graph::Parameter::Presentations::present_value(Parameter& par
                     it->second = arg;
                 }
             }
-
             case (Parameter::ParamType::ENUM): {
                 /// XXX: no UTF8 fanciness required here?
                 auto map = param.GetStorage<vislib::Map<int, vislib::TString>>();
@@ -564,7 +562,7 @@ void megamol::gui::graph::Parameter::Presentations::present_value(Parameter& par
 }
 
 
-void megamol::gui::graph::Parameter::Presentations::present_postfix(Parameter& param) {
+void megamol::gui::graph::Parameter::Presentation::present_postfix(Parameter& param) {
 
     this->utils.HoverToolTip(param.description, ImGui::GetItemID(), 0.5f);
     this->utils.HelpMarkerToolTip(this->help);

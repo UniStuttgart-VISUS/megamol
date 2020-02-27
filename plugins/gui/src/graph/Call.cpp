@@ -16,7 +16,7 @@ using namespace megamol;
 using namespace megamol::gui::graph;
 
 
-megamol::gui::graph::Call::Call(int uid) : uid(uid), presentations() {
+megamol::gui::graph::Call::Call(int uid) : uid(uid), present() {
 
     this->connected_call_slots.clear();
     this->connected_call_slots.emplace(CallSlot::CallSlotType::CALLER, nullptr);
@@ -111,15 +111,14 @@ const megamol::gui::graph::CallSlotPtrType megamol::gui::graph::Call::GetCallSlo
 }
 
 
-void megamol::gui::graph::Call::Present(void) { this->presentations.Present(*this); }
-
-
 // CALL PRESENTATIONS #########################################################
 
-megamol::gui::graph::Call::Presentations::Presentations(void) {}
+megamol::gui::graph::Call::Presentation::Presentation(void) : presentations(Presentation::DEFAULT) {}
 
 
-megamol::gui::graph::Call::Presentations::~Presentations(void) {}
+megamol::gui::graph::Call::Presentation::~Presentation(void) {}
 
 
-void megamol::gui::graph::Call::Presentations::Present(Call& call) {}
+bool megamol::gui::graph::Call::Presentation::Present(Call& call) {
+    return true;
+}

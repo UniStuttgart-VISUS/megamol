@@ -53,26 +53,28 @@ public:
     bool DisConnectCallSlots(void);
     const CallSlotPtrType GetCallSlot(CallSlot::CallSlotType type);
 
-    void Present(void);
+    // GUI Presentation -------------------------------------------------------
 
-    /**
-     * Defines GUI call presentations.
-     */
-    class Presentations {
-    public:
-        Presentations(void);
-
-        ~Presentations(void);
-
-        void Present(Call& call);
-
-    private:
-        enum Presentation { DEFAULT } presentation;
-        bool label_visible;
-    } presentations;
+    bool Present(void) { this->present.Present(*this); }
 
 private:
     std::map<CallSlot::CallSlotType, CallSlotPtrType> connected_call_slots;
+
+    /**
+     * Defines GUI call present.
+     */
+    class Presentation {
+    public:
+        Presentation(void);
+
+        ~Presentation(void);
+
+        bool Present(Call& call);
+
+        enum Presentations { DEFAULT } presentations;
+        bool label_visible;
+
+    } present;
 };
 
 

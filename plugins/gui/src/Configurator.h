@@ -26,6 +26,7 @@
 
 namespace megamol {
 namespace gui {
+namespace configurator {
 
 class Configurator {
 public:
@@ -86,6 +87,7 @@ private:
     void draw_window_menu(megamol::core::CoreInstance* core_instance);
     void draw_window_module_list(float width);
     void draw_window_graph(float width);
+
     void draw_window_parameter_list(float width);
 
     bool draw_graph_menu(graph::GraphManager::GraphPtrType graph);
@@ -101,7 +103,7 @@ private:
     bool update_graph_layout(graph::GraphManager::GraphPtrType graph);
 
     bool add_new_module_to_graph(
-        const graph::Graph::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name);
+        const graph::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name);
 
     bool popup_save_project(bool open, megamol::core::CoreInstance* core_instance);
 
@@ -111,6 +113,7 @@ private:
     // ------------------------------------------------------------------------
 };
 
+} // namespace configurator
 } // namespace gui
 } // namespace megamol
 

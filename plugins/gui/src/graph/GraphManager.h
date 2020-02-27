@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "Graph.h"
+#include "Stock.h"
 
 
 namespace megamol {
@@ -45,32 +46,52 @@ public:
     const GraphPtrType GetGraph(int graph_uid);
 
     bool UpdateModulesCallsStock(const megamol::core::CoreInstance* core_instance);
-    inline const Graph::ModuleStockType& GetModulesStock(void) { return this->modules_stock; }
-    inline const Graph::CallStockType& GetCallsStock(void) { return this->calls_stock; }
+    inline const ModuleStockType& GetModulesStock(void) { return this->modules_stock; }
+    inline const CallStockType& GetCallsStock(void) { return this->calls_stock; }
 
     bool LoadCurrentCoreProject(std::string name, megamol::core::CoreInstance* core_instance);
 
     int GetCompatibleCallIndex(CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
-    int GetCompatibleCallIndex(CallSlotPtrType call_slot, Graph::StockCallSlot stock_call_slot);
+    int GetCompatibleCallIndex(CallSlotPtrType call_slot, StockCallSlot stock_call_slot);
 
     // Only used for prototype to be able to store current graphs to lua project file.
     bool PROTOTYPE_SaveGraph(int graph_id, std::string project_filename, megamol::core::CoreInstance* cor_iInstance);
+
+    // GUI Presentation -------------------------------------------------------
+    bool Present(void) { this->present.Present(*this); }
 
 private:
     // VARIABLES --------------------------------------------------------------
 
     GraphManager::GraphsType graphs;
 
-    Graph::ModuleStockType modules_stock;
-    Graph::CallStockType calls_stock;
+    ModuleStockType modules_stock;
+    CallStockType calls_stock;
+
+    /**
+     * Defines GUI graph present.
+     */
+    class Presentation {
+    public:
+        Presentation(void);
+
+        ~Presentation(void);
+
+        bool Present(GraphManager& graph_manager);
+
+    private:
+
+        GUIUtils utils;
+
+    } present;
 
     // FUNCTIONS --------------------------------------------------------------
 
     bool get_call_stock_data(
-        Graph::StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);
+        StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);
 
     bool get_module_stock_data(
-        Graph::StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
+        StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
 
     // ------------------------------------------------------------------------
 };

@@ -95,7 +95,7 @@ bool megamol::gui::graph::GraphManager::UpdateModulesCallsStock(const megamol::c
             for (core::utility::plugins::AbstractPluginInstance::ptr_type plugin : plugins) {
                 plugin_name = plugin->GetAssemblyName();
                 for (auto& c_desc : plugin->GetCallDescriptionManager()) {
-                    Graph::StockCall call;
+                    StockCall call;
                     call.plugin_name = plugin_name;
                     this->get_call_stock_data(call, c_desc);
                     this->calls_stock.emplace_back(call);
@@ -107,9 +107,9 @@ bool megamol::gui::graph::GraphManager::UpdateModulesCallsStock(const megamol::c
             for (auto& c_desc : core_instance->GetCallDescriptionManager()) {
                 std::string class_name = std::string(c_desc->ClassName());
                 if (std::find_if(this->calls_stock.begin(), this->calls_stock.end(),
-                        [class_name](const Graph::StockCall& call) { return (call.class_name == class_name); }) ==
+                        [class_name](const StockCall& call) { return (call.class_name == class_name); }) ==
                     this->calls_stock.end()) {
-                    Graph::StockCall call;
+                    StockCall call;
                     call.plugin_name = plugin_name;
                     this->get_call_stock_data(call, c_desc);
                     this->calls_stock.emplace_back(call);
@@ -127,7 +127,7 @@ bool megamol::gui::graph::GraphManager::UpdateModulesCallsStock(const megamol::c
             for (core::utility::plugins::AbstractPluginInstance::ptr_type plugin : plugins) {
                 plugin_name = plugin->GetAssemblyName();
                 for (auto& m_desc : plugin->GetModuleDescriptionManager()) {
-                    Graph::StockModule mod;
+                    StockModule mod;
                     mod.plugin_name = plugin_name;
                     this->get_module_stock_data(mod, m_desc);
                     this->modules_stock.emplace_back(mod);
@@ -139,9 +139,9 @@ bool megamol::gui::graph::GraphManager::UpdateModulesCallsStock(const megamol::c
             for (auto& m_desc : core_instance->GetModuleDescriptionManager()) {
                 std::string class_name = std::string(m_desc->ClassName());
                 if (std::find_if(this->modules_stock.begin(), this->modules_stock.end(),
-                        [class_name](const Graph::StockModule& mod) { return (mod.class_name == class_name); }) ==
+                        [class_name](const StockModule& mod) { return (mod.class_name == class_name); }) ==
                     this->modules_stock.end()) {
-                    Graph::StockModule mod;
+                    StockModule mod;
                     mod.plugin_name = plugin_name;
                     this->get_module_stock_data(mod, m_desc);
                     this->modules_stock.emplace_back(mod);
@@ -149,15 +149,14 @@ bool megamol::gui::graph::GraphManager::UpdateModulesCallsStock(const megamol::c
             }
 
             // Sorting module by alphabetically ascending class names.
-            std::sort(this->modules_stock.begin(), this->modules_stock.end(),
-                [](Graph::StockModule mod1, Graph::StockModule mod2) {
-                    std::vector<std::string> v;
-                    v.clear();
-                    v.emplace_back(mod1.class_name);
-                    v.emplace_back(mod2.class_name);
-                    std::sort(v.begin(), v.end());
-                    return (v.front() != mod2.class_name);
-                });
+            std::sort(this->modules_stock.begin(), this->modules_stock.end(), [](StockModule mod1, StockModule mod2) {
+                std::vector<std::string> v;
+                v.clear();
+                v.emplace_back(mod1.class_name);
+                v.emplace_back(mod2.class_name);
+                std::sort(v.begin(), v.end());
+                return (v.front() != mod2.class_name);
+            });
         }
 
         auto delta_time =
@@ -392,7 +391,7 @@ int megamol::gui::graph::GraphManager::GetCompatibleCallIndex(
 
 
 int megamol::gui::graph::GraphManager::GetCompatibleCallIndex(
-    CallSlotPtrType call_slot, Graph::StockCallSlot stock_call_slot) {
+    CallSlotPtrType call_slot, StockCallSlot stock_call_slot) {
 
     if (call_slot != nullptr) {
         if (call_slot->type != stock_call_slot.type) {
@@ -513,7 +512,7 @@ bool megamol::gui::graph::GraphManager::PROTOTYPE_SaveGraph(
 
 
 bool megamol::gui::graph::GraphManager::get_module_stock_data(
-    Graph::StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc) {
+    StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc) {
 
     /// mod.plugin_name is not available in mod_desc (set from AbstractAssemblyInstance or AbstractPluginInstance).
     mod.class_name = std::string(mod_desc->ClassName());
@@ -521,8 +520,8 @@ bool megamol::gui::graph::GraphManager::get_module_stock_data(
     mod.is_view = false;
     mod.parameters.clear();
     mod.call_slots.clear();
-    mod.call_slots.emplace(CallSlot::CallSlotType::CALLER, std::vector<Graph::StockCallSlot>());
-    mod.call_slots.emplace(CallSlot::CallSlotType::CALLEE, std::vector<Graph::StockCallSlot>());
+    mod.call_slots.emplace(CallSlot::CallSlotType::CALLER, std::vector<StockCallSlot>());
+    mod.call_slots.emplace(CallSlot::CallSlotType::CALLEE, std::vector<StockCallSlot>());
 
     if (this->calls_stock.empty()) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -566,7 +565,7 @@ bool megamol::gui::graph::GraphManager::get_module_stock_data(
         // Param Slots
         for (std::shared_ptr<core::param::ParamSlot> param_slot : paramSlots) {
 
-            Graph::StockParameter psd;
+            StockParameter psd;
             psd.class_name = std::string(param_slot->Name().PeekBuffer());
             psd.description = std::string(param_slot->Description().PeekBuffer());
 
@@ -611,7 +610,7 @@ bool megamol::gui::graph::GraphManager::get_module_stock_data(
 
         // CallerSlots
         for (std::shared_ptr<core::CallerSlot> caller_slot : callerSlots) {
-            Graph::StockCallSlot csd;
+            StockCallSlot csd;
             csd.name = std::string(caller_slot->Name().PeekBuffer());
             csd.description = std::string(caller_slot->Description().PeekBuffer());
             csd.compatible_call_idxs.clear();
@@ -633,7 +632,7 @@ bool megamol::gui::graph::GraphManager::get_module_stock_data(
 
         // CalleeSlots
         for (std::shared_ptr<core::CalleeSlot> callee_slot : calleeSlots) {
-            Graph::StockCallSlot csd;
+            StockCallSlot csd;
             csd.name = std::string(callee_slot->Name().PeekBuffer());
             csd.description = std::string(callee_slot->Description().PeekBuffer());
             csd.compatible_call_idxs.clear();
@@ -651,7 +650,7 @@ bool megamol::gui::graph::GraphManager::get_module_stock_data(
             assert(ll == funcNames.size());
             for (std::string callName : uniqueCallNames) {
                 bool found_call = false;
-                Graph::StockCall call;
+                StockCall call;
                 for (auto& c : this->calls_stock) {
                     if (callName == c.class_name) {
                         call = c;
@@ -714,7 +713,7 @@ bool megamol::gui::graph::GraphManager::get_module_stock_data(
 
 
 bool megamol::gui::graph::GraphManager::get_call_stock_data(
-    Graph::StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc) {
+    StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc) {
 
     try {
         /// call.plugin_name is not available in call_desc (set from AbstractAssemblyInstance or
@@ -734,4 +733,22 @@ bool megamol::gui::graph::GraphManager::get_call_stock_data(
         return false;
     }
     return true;
+}
+
+
+
+// GRAPH PRESENTATIONS ####################################################
+
+megamol::gui::graph::GraphManager::Presentation::Presentation(void)
+{
+}
+
+
+megamol::gui::graph::GraphManager::Presentation::~Presentation(void) {}
+
+
+void megamol::gui::graph::GraphManager::Presentation::Present(GraphManager& graph_manager) {
+
+   
+
 }

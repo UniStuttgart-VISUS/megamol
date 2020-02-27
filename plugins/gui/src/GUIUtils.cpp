@@ -100,10 +100,10 @@ bool GUIUtils::Utf8Encode(std::string& str) const {
     return false;
 }
 
-void megamol::gui::GUIUtils::StringSearch(const std::string& label, const std::string& help) {
+void megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::string& help) {
     ImGuiStyle& style = ImGui::GetStyle();
 
-    ImGui::PushID(label.c_str());
+    ImGui::PushID(id.c_str());
 
     std::string help_label = "(?)";
 
@@ -118,6 +118,7 @@ void megamol::gui::GUIUtils::StringSearch(const std::string& label, const std::s
         this->searchFocus = false;
     }
 
+    std::string label = "Search";
     auto width = ImGui::GetContentRegionAvailWidth() - ImGui::GetCursorPosX() + 4.0f * style.ItemInnerSpacing.x -
                  this->TextWidgetWidth(label + help_label);
     const int min_width = 50.0f;

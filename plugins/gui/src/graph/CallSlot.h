@@ -60,31 +60,34 @@ public:
     bool DisConnectParentModule(void);
     const ModulePtrType GetParentModule(void);
 
-    void Present(void);
+    // GUI Presentation -------------------------------------------------------
 
-    /**
-     * Defines GUI call slot presentations.
-     */
-    class Presentations {
-    public:
-        Presentations(void);
-
-        ~Presentations(void);
-
-        void Present(CallSlot& call_slot);
-
-        void UpdatePosition();
-
-        ImVec2 position;
-
-    private:
-        enum Presentation { DEFAULT } presentation;
-        bool label_visible;
-    } presentations;
+    bool Present(void) { this->present.Present(*this); }
 
 private:
     ModulePtrType parent_module;
     std::vector<CallPtrType> connected_calls;
+
+    /**
+     * Defines GUI call slot present.
+     */
+    class Presentation {
+    public:
+        Presentation(void);
+
+        ~Presentation(void);
+
+        bool Present(CallSlot& call_slot);
+
+        void UpdatePosition();
+
+        enum Presentations { DEFAULT } presentations;
+        bool label_visible;
+
+    private:
+        ImVec2 position;
+
+    } present;
 };
 
 

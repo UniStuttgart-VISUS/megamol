@@ -16,7 +16,7 @@ using namespace megamol;
 using namespace megamol::gui::graph;
 
 
-megamol::gui::graph::CallSlot::CallSlot(int uid) : uid(uid), presentations() {
+megamol::gui::graph::CallSlot::CallSlot(int uid) : uid(uid), present() {
     this->parent_module.reset();
     connected_calls.clear();
 }
@@ -174,18 +174,17 @@ const megamol::gui::graph::ModulePtrType megamol::gui::graph::CallSlot::GetParen
 }
 
 
-void megamol::gui::graph::CallSlot::Present(void) { this->presentations.Present(*this); }
-
-
 // CALL SLOT PRESENTATIONS ####################################################
 
-megamol::gui::graph::CallSlot::Presentations::Presentations(void) {}
+megamol::gui::graph::CallSlot::Presentation::Presentation(void) : presentations(Presentation::DEFAULT) {}
 
 
-megamol::gui::graph::CallSlot::Presentations::~Presentations(void) {}
+megamol::gui::graph::CallSlot::Presentation::~Presentation(void) {}
 
 
-void megamol::gui::graph::CallSlot::Presentations::Present(CallSlot& call_slot) {}
+bool megamol::gui::graph::CallSlot::Presentation::Present(CallSlot& call_slot) {
+    return true;
+}
 
 
-void megamol::gui::graph::CallSlot::Presentations::UpdatePosition() {}
+void megamol::gui::graph::CallSlot::Presentation::UpdatePosition() {}

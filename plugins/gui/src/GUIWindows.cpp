@@ -769,7 +769,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
             "[" + std::get<0>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH]).ToString() +
             "] Set keyboard focus to search input field.\n"
             "Case insensitive substring search in\nparameter names.\nGlobally in all parameter views.\n";
-        this->utils.StringSearch("Search Parameters", help_test);
+        this->utils.StringSearch("Search", help_test);
     }
 
     // Module filtering (only for main parameter view)
