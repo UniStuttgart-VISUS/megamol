@@ -156,7 +156,6 @@ private:
     megamol::core::param::ParamSlot state_param;
 
     /** Hotkeys */
-    typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyData;
     enum HotkeyIndex : size_t { EXIT_PROGRAM = 0, PARAMETER_SEARCH = 1, SAVE_PROJECT = 2, INDEX_COUNT = 3 };
     std::array<HotkeyData, HotkeyIndex::INDEX_COUNT> hotkeys;
 

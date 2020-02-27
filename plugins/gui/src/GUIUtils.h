@@ -8,6 +8,7 @@
 #ifndef MEGAMOL_GUI_GUIUTILS_INCLUDED
 #define MEGAMOL_GUI_GUIUTILS_INCLUDED
 
+#include "mmcore/view/Input.h"
 
 #include <imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -22,13 +23,16 @@
 #include <algorithm> // search
 #include <cctype>    // toupper
 #include <string>
+#include <tuple>
 
 
 namespace megamol {
 namespace gui {
 
 
-// Utility functions ----------------------------------------------------------
+/** Type for holding data of hotkeys*/
+typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyData;
+
 
 /**
  * Utility class for GUIUtils-style widgets.

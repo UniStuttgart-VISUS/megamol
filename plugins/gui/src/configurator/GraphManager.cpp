@@ -745,8 +745,8 @@ megamol::gui::configurator::GraphManager::Presentation::Presentation(void) : act
 megamol::gui::configurator::GraphManager::Presentation::~Presentation(void) {}
 
 
-bool megamol::gui::configurator::GraphManager::Presentation::Present(
-    GraphManager& graph_manager, float child_width, ImFont* graph_font) {
+bool megamol::gui::configurator::GraphManager::Presentation::Present(GraphManager& graph_manager, float child_width,
+    ImFont* graph_font, HotkeyData paramter_search, HotkeyData delete_graph_element) {
 
     try {
         if (ImGui::GetCurrentContext() == nullptr) {
@@ -768,7 +768,7 @@ bool megamol::gui::configurator::GraphManager::Presentation::Present(
         for (auto& graph : graph_manager.GetGraphs()) {
 
             bool delete_graph = false;
-            if (graph->Present(child_width, graph_font, delete_graph)) {
+            if (graph->Present(child_width, graph_font, paramter_search, delete_graph_element, delete_graph)) {
                 active_graph = graph;
             }
 

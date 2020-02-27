@@ -73,6 +73,25 @@ bool megamol::gui::configurator::Graph::AddModule(
             }
         }
 
+        /// XXX
+        /*
+        // If there is a call slot selected, create call to compatible call slot of new module
+        if (graph->gui.selected_slot_ptr != nullptr) {
+            // Get call slots of last added module
+            for (auto& call_slot_map : graph->GetGraphModules().back()->GetCallSlots()) {
+                for (auto& call_slot : call_slot_map.second) {
+                    if (call_slot->name == compat_call_slot_name) {
+                        if (graph->AddCall(this->graph_manager.GetCallsStock(), compat_call_idx,
+                            graph->gui.selected_slot_ptr, call_slot)) {
+                            graph->gui.selected_slot_ptr = nullptr;
+                            retval = true;
+                        }
+                    }
+                }
+            }
+        }
+        */
+
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -251,7 +270,7 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , update_current_graph(true)
     , rename_popup_open(false)
     , rename_popup_string(nullptr)
-    , split_width(500.0f)
+    , split_width(200.0f)
     , font(nullptr)
     , mouse_wheel(0.0f) {}
 
@@ -259,8 +278,9 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
 megamol::gui::configurator::Graph::Presentation::~Presentation(void) {}
 
 
-bool megamol::gui::configurator::Graph::Presentation::Present(
-    megamol::gui::configurator::Graph& graph, float child_width, ImFont* graph_font, bool& delete_graph) {
+bool megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::configurator::Graph& graph,
+    float child_width, ImFont* graph_font, HotkeyData paramter_search, HotkeyData delete_graph_element,
+    bool& delete_graph) {
 
     bool retval = false;
     this->font = graph_font;
@@ -296,9 +316,8 @@ bool megamol::gui::configurator::Graph::Presentation::Present(
             }
 
             // Process module deletion
-            /*
-            if (std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM])) {
-                std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = false;
+            if (std::get<1>(delete_graph_element)) {
+                std::get<1>(delete_graph_element) = false;
                 this->selected_slot_ptr = nullptr;
                 if (this->selected_module_uid > 0) {
                     graph.DeleteModule(this->selected_module_uid);
@@ -307,7 +326,6 @@ bool megamol::gui::configurator::Graph::Presentation::Present(
                     graph.DeleteCall(this->selected_call_uid);
                 }
             }
-            */
 
             // Register trigger for connecting call
             if ((this->selected_slot_ptr != nullptr) && (io.MouseReleased[0])) {
@@ -331,17 +349,18 @@ bool megamol::gui::configurator::Graph::Presentation::Present(
 
             // Draw
             this->menu(graph);
-            if ((this->selected_module_uid > 0)) {
+
+            if (true) { // this->selected_module_uid > 0) {
                 const float split_thickness = 10.0f;
                 float child_width_auto = 0.0f;
-                ImGui::BeginChild("splitter_subwindow", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_None);
+                // ImGui::BeginChild("splitter_subwindow", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_None);
                 this->utils.VerticalSplitter(split_thickness, &this->split_width, &child_width_auto);
 
                 this->canvas(graph, this->split_width);
                 ImGui::SameLine();
-                this->parameters(graph, child_width_auto);
+                this->parameters(graph, child_width_auto, paramter_search);
 
-                ImGui::EndChild();
+                // ImGui::EndChild();
             } else {
                 this->canvas(graph, child_width);
             }
@@ -401,34 +420,51 @@ void megamol::gui::configurator::Graph::Presentation::menu(megamol::gui::configu
         this->canvas_scrolling = ImVec2(0.0f, 0.0f);
     }
     ImGui::SameLine();
+
     ImGui::Text("Scrolling: %.4f,%.4f", this->canvas_scrolling.x, this->canvas_scrolling.y);
     this->utils.HelpMarkerToolTip("Middle Mouse Button");
 
     ImGui::SameLine();
+
     if (ImGui::Button("Reset###reset_zooming")) {
         this->canvas_zooming = 1.0f;
     }
     ImGui::SameLine();
+
     ImGui::Text("Zooming: %.4f", this->canvas_zooming);
     this->utils.HelpMarkerToolTip("Mouse Wheel");
 
     ImGui::SameLine();
+
     ImGui::Checkbox("Show Grid", &this->show_grid);
 
     ImGui::SameLine();
+
     if (ImGui::Checkbox("Show Call Names", &this->show_call_names)) {
         this->update_current_graph = true;
     }
-
     ImGui::SameLine();
+
     if (ImGui::Checkbox("Show Slot Names", &this->show_slot_names)) {
         this->update_current_graph = true;
     }
-
     ImGui::SameLine();
+
     if (ImGui::Button("Layout Graph")) {
         this->update_current_graph = true;
     }
+    ImGui::SameLine();
+
+    std::string info_text = "Additonal Options:\n\n"
+                            "- Add module from stock list to graph\n"
+                            "     - [Double Click] with left mouse button\n"
+                            "     - [Richt Click] on selected module -> Context Menu: Add\n"
+                            "- Delete selected module/call from graph\n"
+                            "     - Select item an press [Delete]\n"
+                            "     - [Richt Click] on selected item -> Context Menu: Delete\n"
+                            "- Rename graph or module\n"
+                            "     - [Richt Click] on graph tab or module -> Context Menu: Rename";
+    this->utils.HelpMarkerToolTip(info_text.c_str());
 
     ImGui::EndChild();
 }
@@ -456,7 +492,8 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
-    ImGui::BeginChild("region", ImVec2(0.0f, 0.0f), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
+    ImGui::BeginChild(
+        "region", ImVec2(child_width, 0.0f), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
     this->canvas_position = ImGui::GetCursorScreenPos();
     this->canvas_size = ImGui::GetWindowSize();
 
@@ -535,7 +572,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
 }
 
 void megamol::gui::configurator::Graph::Presentation::parameters(
-    megamol::gui::configurator::Graph& graph, float child_width) {
+    megamol::gui::configurator::Graph& graph, float child_width, HotkeyData paramter_search) {
 
     ImGui::BeginGroup();
 
@@ -547,17 +584,15 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
     ImGui::Text("Parameters");
     ImGui::Separator();
 
-    /*
-    if (std::get<1>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH])) {
-        std::get<1>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH]) = false;
+    if (std::get<1>(paramter_search)) {
+        std::get<1>(paramter_search) = false;
         this->utils.SetSearchFocus(true);
     }
-    std::string help_text = "[" + std::get<0>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH]).ToString() +
+    std::string help_text = "[" + std::get<0>(paramter_search).ToString() +
                             "] Set keyboard focus to search input field.\n"
                             "Case insensitive substring search in parameter names.";
     this->utils.StringSearch("Search", help_text);
     auto search_string = this->utils.GetSearchString();
-    */
 
     ImGui::EndChild();
 
@@ -567,7 +602,17 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
     for (auto& mod : graph.GetGraphModules()) {
         if (mod->uid == this->selected_module_uid) {
             for (auto& param : mod->parameters) {
-                param.Present();
+
+                // Filter module by given search string
+                bool search_filter = true;
+                if (!search_string.empty()) {
+
+                    search_filter = this->utils.FindCaseInsensitiveSubstring(param.class_name, search_string);
+                }
+
+                if (search_filter) {
+                    param.Present();
+                }
             }
         }
     }

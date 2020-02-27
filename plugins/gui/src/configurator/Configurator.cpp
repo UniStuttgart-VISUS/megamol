@@ -9,6 +9,7 @@
  * USED HOTKEYS:
  *
  * - Search module:        Shift + Ctrl  + m
+ * - Search parameter:     Shift + Ctrl  + p
  * - Delete module/call:   Delete
  */
 
@@ -19,9 +20,18 @@
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::Configurator::Configurator() : hotkeys(), graph_manager(), utils(), gui() {
+megamol::gui::configurator::Configurator::Configurator()
+    : hotkeys()
+    , graph_manager()
+    , utils()
+    , window_state(0)
+    , project_filename("")
+    , graph_ptr(nullptr)
+    , selected_list_module_id(-1)
+    , graph_font(nullptr)
+    , split_width(250.0f) {
 
-    // Init HotKeys
+    // Define HotKeys
     this->hotkeys[HotkeyIndex::MODULE_SEARCH] =
         HotkeyData(megamol::core::view::KeyCode(
                        megamol::core::view::Key::KEY_M, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
@@ -32,14 +42,6 @@ megamol::gui::configurator::Configurator::Configurator() : hotkeys(), graph_mana
             false);
     this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM] =
         HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_DELETE), false);
-
-    // Init state
-    this->gui.window_state = 0;
-    this->gui.project_filename = "";
-    this->gui.graph_ptr = nullptr;
-    this->gui.selected_list_module_id = -1;
-    this->gui.graph_font = nullptr;
-    this->gui.split_width = 250.0f;
 }
 
 
@@ -85,13 +87,13 @@ bool megamol::gui::configurator::Configurator::Draw(
         return false;
     }
 
-    if (this->gui.window_state < 2) {
+    if (this->window_state < 2) {
         // 1] Show pop-up before calling UpdateAvailableModulesCallsOnce of graph.
 
         /// Rendering of pop-up requires two complete Draw calls!
         bool open = true;
         std::string popup_label = "Loading";
-        if (this->gui.window_state == 0) {
+        if (this->window_state == 0) {
             ImGui::OpenPopup(popup_label.c_str());
         }
         ImGuiWindowFlags popup_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove;
@@ -99,13 +101,13 @@ bool megamol::gui::configurator::Configurator::Draw(
             ImGui::Text("Please wait...\nLoading available modules and calls for configurator.");
             ImGui::EndPopup();
         }
-        this->gui.window_state++;
+        this->window_state++;
 
-    } else if (this->gui.window_state == 2) {
+    } else if (this->window_state == 2) {
         // 2] Load available modules and calls and currently loaded project from core once(!)
 
         this->graph_manager.UpdateModulesCallsStock(core_instance);
-        this->gui.window_state++;
+        this->window_state++;
     } else {
         // 3] Render configurator gui content
 
@@ -113,13 +115,16 @@ bool megamol::gui::configurator::Configurator::Draw(
 
         const float split_thickness = 10.0f;
         float child_width_auto = 0.0f;
-        this->utils.VerticalSplitter(split_thickness, &this->gui.split_width, &child_width_auto);
+        this->utils.VerticalSplitter(split_thickness, &this->split_width, &child_width_auto);
 
-        this->draw_window_module_list(this->gui.split_width);
+        this->draw_window_module_list(this->split_width);
+
         ImGui::SameLine();
-        this->graph_manager.Present(child_width_auto, this->gui.graph_font);
 
-        this->gui.graph_ptr = this->graph_manager.GetActiveGraph();
+        this->graph_manager.Present(child_width_auto, this->graph_font, this->hotkeys[HotkeyIndex::PARAMETER_SEARCH],
+            this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]);
+
+        this->graph_ptr = this->graph_manager.GetActiveGraph();
     }
 
     return true;
@@ -157,19 +162,6 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
             }
 #endif // GUI_USE_FILESYSTEM
 
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Info")) {
-            std::string info_text = "Additonal Options:\n\n"
-                                    "- Add module from stock list to graph\n"
-                                    "     [Double Click] with left mouse button"
-                                    " | [Richt Click] on selected module -> Context Menu: Add\n\n"
-                                    "- Delete selected module/call from graph\n"
-                                    "     Select item an press [Delete]"
-                                    " | [Richt Click] on selected item -> Context Menu: Delete\n\n"
-                                    "- Rename graph or module\n"
-                                    "     [Richt Click] on graph tab or module -> Context Menu: Rename\n\n";
-            ImGui::Text(info_text.c_str());
             ImGui::EndMenu();
         }
 
@@ -226,13 +218,12 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
         bool compat_filter = true;
         int compat_call_index = -1;
         std::string compat_call_slot_name;
-        if (this->gui.graph_ptr != nullptr) {
-            if (this->gui.graph_ptr->GetSelectedSlot() != nullptr) {
+        if (this->graph_ptr != nullptr) {
+            if (this->graph_ptr->GetSelectedSlot() != nullptr) {
                 compat_filter = false;
                 for (auto& cst : mod.call_slots) {
                     for (auto& cs : cst.second) {
-                        int cpidx =
-                            this->graph_manager.GetCompatibleCallIndex(this->gui.graph_ptr->GetSelectedSlot(), cs);
+                        int cpidx = this->graph_manager.GetCompatibleCallIndex(this->graph_ptr->GetSelectedSlot(), cs);
                         if (cpidx > 0) {
                             compat_call_index = cpidx;
                             compat_call_slot_name = cs.name;
@@ -250,20 +241,32 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
             if (mod.is_view) {
                 label += " [View]";
             }
-            if (ImGui::Selectable(label.c_str(), (id == this->gui.selected_list_module_id))) {
-                this->gui.selected_list_module_id = id;
+            if (ImGui::Selectable(label.c_str(), (id == this->selected_list_module_id))) {
+                this->selected_list_module_id = id;
             }
+            bool add_module = false;
             // Left mouse button double click action
             if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
-                /// XXX this->add_new_module_to_graph(mod, compat_call_index, compat_call_slot_name);
+                add_module = true;
             }
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Add", "'Double-Click'")) {
-                    /// XXX this->add_new_module_to_graph(mod, compat_call_index, compat_call_slot_name);
+                    add_module = true;
                 }
                 ImGui::EndPopup();
             }
+
+            if (add_module) {
+                if (this->graph_ptr != nullptr) {
+                    this->graph_ptr->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
+                    /// XXX this->add_new_module_to_graph(mod, compat_call_index, compat_call_slot_name);
+                } else {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "No project loaded. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                }
+            }
+
             // Hover tool tip
             this->utils.HoverToolTip(mod.description, id, 0.5f, 5.0f);
 
@@ -294,11 +297,11 @@ bool megamol::gui::configurator::Configurator::popup_save_project(
         std::string label = "File Name";
         auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
         /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-        this->utils.Utf8Encode(this->gui.project_filename);
-        if (ImGui::InputText(label.c_str(), &this->gui.project_filename, flags)) {
+        this->utils.Utf8Encode(this->project_filename);
+        if (ImGui::InputText(label.c_str(), &this->project_filename, flags)) {
             save_project = true;
         }
-        this->utils.Utf8Decode(this->gui.project_filename);
+        this->utils.Utf8Decode(this->project_filename);
         // Set focus on input text once (applied next frame)
         if (open) {
             ImGuiID id = ImGui::GetID(label.c_str());
@@ -306,12 +309,12 @@ bool megamol::gui::configurator::Configurator::popup_save_project(
         }
 
         bool valid_ending = true;
-        if (!HasFileExtension(this->gui.project_filename, std::string(".lua"))) {
+        if (!HasFileExtension(this->project_filename, std::string(".lua"))) {
             ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.0f, 1.0f), "Appending required file ending '.lua'");
             valid_ending = false;
         }
         // Warn when file already exists
-        if (PathExists(this->gui.project_filename) || PathExists(this->gui.project_filename + ".lua")) {
+        if (PathExists(this->project_filename) || PathExists(this->project_filename + ".lua")) {
             ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Overwriting existing file.");
         }
         if (ImGui::Button("Save (Enter)")) {
@@ -319,12 +322,12 @@ bool megamol::gui::configurator::Configurator::popup_save_project(
         }
 
         if (save_project) {
-            if (this->gui.graph_ptr != nullptr) {
+            if (this->graph_ptr != nullptr) {
                 if (!valid_ending) {
-                    this->gui.project_filename.append(".lua");
+                    this->project_filename.append(".lua");
                 }
                 if (this->graph_manager.PROTOTYPE_SaveGraph(
-                        this->gui.graph_ptr->GetUID(), this->gui.project_filename, core_instance)) {
+                        this->graph_ptr->GetUID(), this->project_filename, core_instance)) {
                     ImGui::CloseCurrentPopup();
                 }
             } else {
@@ -342,42 +345,3 @@ bool megamol::gui::configurator::Configurator::popup_save_project(
 
     return true;
 }
-
-/*
-bool megamol::gui::configurator::Configurator::add_new_module_to_graph(
-    const megamol::gui::configurator::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name) {
-
-    bool retval = false;
-    if (this->gui.graph_ptr == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "No project available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        // Alternatively create new graph ... but not here :-/
-        return false;
-    }
-
-    // Process module adding
-    for (auto& graph : this->graph_manager.GetGraphs()) {
-        // Look up currently active graph
-        if (graph->GetUID() == this->gui.graph_ptr->GetUID()) {
-            // Add new module
-            retval = graph->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
-            // If there is a call slot selected, create call to compatible call slot of new module
-            if (graph->gui.selected_slot_ptr != nullptr) {
-                // Get call slots of last added module
-                for (auto& call_slot_map : graph->GetGraphModules().back()->GetCallSlots()) {
-                    for (auto& call_slot : call_slot_map.second) {
-                        if (call_slot->name == compat_call_slot_name) {
-                            if (graph->AddCall(this->graph_manager.GetCallsStock(), compat_call_idx,
-                                    graph->gui.selected_slot_ptr, call_slot)) {
-                                graph->gui.selected_slot_ptr = nullptr;
-                                retval = true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return retval;
-}
-*/
