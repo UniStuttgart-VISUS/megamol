@@ -823,6 +823,9 @@ namespace molecularmaps {
 		/** The input protein data slot */
 		core::CallerSlot proteinDataSlot;
 
+		/** Parameter slot for enabling and disabling the rendering of the equator length */
+		core::param::ParamSlot render_equator_length;
+
 		/** The quaternion that represents the rotation of the protein. */
 		vislib::math::Quaternion<float> rotation_quat;
 
