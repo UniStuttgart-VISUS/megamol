@@ -21,7 +21,7 @@
 #include "FileUtils.h"
 #include "GUIUtils.h"
 #include "WindowManager.h"
-#include "graph/GraphManager.h"
+#include "GraphManager.h"
 
 
 namespace megamol {
@@ -65,45 +65,41 @@ private:
 
     std::array<HotkeyData, HotkeyIndex::INDEX_COUNT> hotkeys;
 
-    graph::GraphManager graph_manager;
+    GraphManager graph_manager;
     GUIUtils utils;
 
     struct Gui {
         int window_state;
         std::string project_filename;
-        graph::GraphManager::GraphPtrType graph_ptr;
+        GraphManager::GraphPtrType graph_ptr;
         int selected_list_module_id;
-        bool rename_popup_open;
-        std::string* rename_popup_string;
         float mouse_wheel;
         ImFont* graph_font;
-        bool update_current_graph;
-        float split_width_left;
-        float split_width_right;
+
+        float split_width;
     } gui;
 
     // FUNCTIONS --------------------------------------------------------------
 
     void draw_window_menu(megamol::core::CoreInstance* core_instance);
     void draw_window_module_list(float width);
-    void draw_window_graph(float width);
 
-    void draw_window_parameter_list(float width);
 
-    bool draw_graph_menu(graph::GraphManager::GraphPtrType graph);
-    bool draw_graph_canvas(graph::GraphManager::GraphPtrType graph);
-    bool draw_canvas_grid(graph::GraphManager::GraphPtrType graph);
-    bool draw_canvas_calls(graph::GraphManager::GraphPtrType graph);
-    bool draw_canvas_modules(graph::GraphManager::GraphPtrType graph);
-    bool draw_canvas_module_call_slots(graph::GraphManager::GraphPtrType graph, megamol::gui::graph::ModulePtrType mod);
-    bool draw_canvas_dragged_call(graph::GraphManager::GraphPtrType graph);
 
-    bool update_module_size(graph::GraphManager::GraphPtrType graph, megamol::gui::graph::ModulePtrType mod);
-    bool update_slot_position(graph::GraphManager::GraphPtrType graph, megamol::gui::graph::CallSlotPtrType slot);
-    bool update_graph_layout(graph::GraphManager::GraphPtrType graph);
+
+    bool draw_graph_canvas(GraphManager::GraphPtrType graph);
+    bool draw_canvas_grid(GraphManager::GraphPtrType graph);
+    bool draw_canvas_calls(GraphManager::GraphPtrType graph);
+    bool draw_canvas_modules(GraphManager::GraphPtrType graph);
+    bool draw_canvas_module_call_slots(GraphManager::GraphPtrType graph, megamol::gui::configurator::ModulePtrType mod);
+    bool draw_canvas_dragged_call(GraphManager::GraphPtrType graph);
+
+    bool update_module_size(GraphManager::GraphPtrType graph, megamol::gui::configurator::ModulePtrType mod);
+    bool update_slot_position(GraphManager::GraphPtrType graph, megamol::gui::configurator::CallSlotPtrType slot);
+    bool update_graph_layout(GraphManager::GraphPtrType graph);
 
     bool add_new_module_to_graph(
-        const graph::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name);
+        const StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name);
 
     bool popup_save_project(bool open, megamol::core::CoreInstance* core_instance);
 

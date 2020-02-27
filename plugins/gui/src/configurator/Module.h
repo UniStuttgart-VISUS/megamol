@@ -20,7 +20,7 @@
 
 namespace megamol {
 namespace gui {
-namespace graph {
+namespace configurator {
 
 
 // Forward declaration
@@ -90,7 +90,7 @@ private:
 };
 
 
-} // namespace graph
+} // namespace configurator
 } // namespace gui
 } // namespace megamol
 

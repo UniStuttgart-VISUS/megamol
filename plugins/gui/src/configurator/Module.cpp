@@ -13,21 +13,21 @@
 
 
 using namespace megamol;
-using namespace megamol::gui::graph;
+using namespace megamol::gui::configurator;
 
 
-megamol::gui::graph::Module::Module(int uid) : uid(uid), present() {
+megamol::gui::configurator::Module::Module(int uid) : uid(uid), present() {
 
     this->call_slots.clear();
-    this->call_slots.emplace(megamol::gui::graph::CallSlot::CallSlotType::CALLER, std::vector<CallSlotPtrType>());
-    this->call_slots.emplace(megamol::gui::graph::CallSlot::CallSlotType::CALLEE, std::vector<CallSlotPtrType>());
+    this->call_slots.emplace(megamol::gui::configurator::CallSlot::CallSlotType::CALLER, std::vector<CallSlotPtrType>());
+    this->call_slots.emplace(megamol::gui::configurator::CallSlot::CallSlotType::CALLEE, std::vector<CallSlotPtrType>());
 }
 
 
-megamol::gui::graph::Module::~Module() { this->RemoveAllCallSlots(); }
+megamol::gui::configurator::Module::~Module() { this->RemoveAllCallSlots(); }
 
 
-bool megamol::gui::graph::Module::AddCallSlot(megamol::gui::graph::CallSlotPtrType call_slot) {
+bool megamol::gui::configurator::Module::AddCallSlot(megamol::gui::configurator::CallSlotPtrType call_slot) {
 
     if (call_slot == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn(
@@ -45,7 +45,7 @@ bool megamol::gui::graph::Module::AddCallSlot(megamol::gui::graph::CallSlotPtrTy
 }
 
 
-bool megamol::gui::graph::Module::RemoveAllCallSlots(void) {
+bool megamol::gui::configurator::Module::RemoveAllCallSlots(void) {
 
     try {
         for (auto& call_slots_map : this->call_slots) {
@@ -79,8 +79,8 @@ bool megamol::gui::graph::Module::RemoveAllCallSlots(void) {
 }
 
 
-const std::vector<megamol::gui::graph::CallSlotPtrType>& megamol::gui::graph::Module::GetCallSlots(
-    megamol::gui::graph::CallSlot::CallSlotType type) {
+const std::vector<megamol::gui::configurator::CallSlotPtrType>& megamol::gui::configurator::Module::GetCallSlots(
+    megamol::gui::configurator::CallSlot::CallSlotType type) {
 
     // if (this->call_slots[type].empty()) {
     //    vislib::sys::Log::DefaultLog.WriteWarn(
@@ -90,22 +90,41 @@ const std::vector<megamol::gui::graph::CallSlotPtrType>& megamol::gui::graph::Mo
 }
 
 
-const std::map<megamol::gui::graph::CallSlot::CallSlotType, std::vector<megamol::gui::graph::CallSlotPtrType>>&
-megamol::gui::graph::Module::GetCallSlots(void) {
+const std::map<megamol::gui::configurator::CallSlot::CallSlotType, std::vector<megamol::gui::configurator::CallSlotPtrType>>&
+megamol::gui::configurator::Module::GetCallSlots(void) {
 
     return this->call_slots;
 }
 
 
-// MODULE PRESENTATIONS ####################################################
+// MODULE PRESENTATION ####################################################
 
-megamol::gui::graph::Module::Presentation::Presentation(void) : presentations(Presentation::DEFAULT) {}
+megamol::gui::configurator::Module::Presentation::Presentation(void) 
+    : presentations(Presentation::DEFAULT)
+    , label_visible(true)
+    , position(ImVec2(0.0f, 0.0f))
+    , size(ImVec2(1.0f, 1.0f))
+    , class_label()
+    , name_label() {
+}
 
 
-megamol::gui::graph::Module::Presentation::~Presentation(void) {}
+megamol::gui::configurator::Module::Presentation::~Presentation(void) {}
 
 
-bool megamol::gui::graph::Module::Presentation::Present(Module& mod) {
+bool megamol::gui::configurator::Module::Presentation::Present(megamol::gui::configurator::Module& mod) {
+
+    if (ImGui::GetCurrentContext() == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
+
+    ImGui::PushID(mod.uid);
+
+    /// Module
+
+    ImGui::PopID();
 
     return true;
 }

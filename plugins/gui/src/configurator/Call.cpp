@@ -13,10 +13,10 @@
 
 
 using namespace megamol;
-using namespace megamol::gui::graph;
+using namespace megamol::gui::configurator;
 
 
-megamol::gui::graph::Call::Call(int uid) : uid(uid), present() {
+megamol::gui::configurator::Call::Call(int uid) : uid(uid), present() {
 
     this->connected_call_slots.clear();
     this->connected_call_slots.emplace(CallSlot::CallSlotType::CALLER, nullptr);
@@ -24,10 +24,10 @@ megamol::gui::graph::Call::Call(int uid) : uid(uid), present() {
 }
 
 
-megamol::gui::graph::Call::~Call() { this->DisConnectCallSlots(); }
+megamol::gui::configurator::Call::~Call() { this->DisConnectCallSlots(); }
 
 
-bool megamol::gui::graph::Call::IsConnected(void) {
+bool megamol::gui::configurator::Call::IsConnected(void) {
 
     unsigned int not_connected = 0;
     for (auto& call_slot_map : this->connected_call_slots) {
@@ -44,8 +44,8 @@ bool megamol::gui::graph::Call::IsConnected(void) {
 }
 
 
-bool megamol::gui::graph::Call::ConnectCallSlots(
-    megamol::gui::graph::CallSlotPtrType call_slot_1, megamol::gui::graph::CallSlotPtrType call_slot_2) {
+bool megamol::gui::configurator::Call::ConnectCallSlots(
+    megamol::gui::configurator::CallSlotPtrType call_slot_1, megamol::gui::configurator::CallSlotPtrType call_slot_2) {
 
     if ((call_slot_1 == nullptr) || (call_slot_2 == nullptr)) {
         vislib::sys::Log::DefaultLog.WriteWarn(
@@ -76,7 +76,7 @@ bool megamol::gui::graph::Call::ConnectCallSlots(
 }
 
 
-bool megamol::gui::graph::Call::DisConnectCallSlots(void) {
+bool megamol::gui::configurator::Call::DisConnectCallSlots(void) {
 
     try {
         for (auto& call_slot_map : this->connected_call_slots) {
@@ -100,8 +100,8 @@ bool megamol::gui::graph::Call::DisConnectCallSlots(void) {
 }
 
 
-const megamol::gui::graph::CallSlotPtrType megamol::gui::graph::Call::GetCallSlot(
-    megamol::gui::graph::CallSlot::CallSlotType type) {
+const megamol::gui::configurator::CallSlotPtrType megamol::gui::configurator::Call::GetCallSlot(
+    megamol::gui::configurator::CallSlot::CallSlotType type) {
 
     if (this->connected_call_slots[type] == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn(
@@ -111,14 +111,30 @@ const megamol::gui::graph::CallSlotPtrType megamol::gui::graph::Call::GetCallSlo
 }
 
 
-// CALL PRESENTATIONS #########################################################
+// CALL PRESENTATION #########################################################
 
-megamol::gui::graph::Call::Presentation::Presentation(void) : presentations(Presentation::DEFAULT) {}
+megamol::gui::configurator::Call::Presentation::Presentation(void) 
+    : presentations(Presentation::DEFAULT) 
+    , label_visible(true) {
+}
 
 
-megamol::gui::graph::Call::Presentation::~Presentation(void) {}
+megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
 
 
-bool megamol::gui::graph::Call::Presentation::Present(Call& call) {
+bool megamol::gui::configurator::Call::Presentation::Present(megamol::gui::configurator::Call& call) {
+
+    if (ImGui::GetCurrentContext() == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
+
+    ImGui::PushID(call.uid);
+
+    /// Call
+
+    ImGui::PopID();
+
     return true;
 }

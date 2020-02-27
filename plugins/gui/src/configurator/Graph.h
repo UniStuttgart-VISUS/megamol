@@ -22,7 +22,7 @@
 
 namespace megamol {
 namespace gui {
-namespace graph {
+namespace configurator {
 
 class Graph {
 public:
@@ -55,7 +55,7 @@ public:
     int generate_unique_id(void) { return (++this->generated_uid); }
 
     // GUI Presentation -------------------------------------------------------
-    bool Present(void) { this->present.Present(*this); }
+    bool Present(float child_width) { this->present.Present(*this, child_width); }
 
     inline const CallSlotPtrType GetSelectedSlot(void) const {
         return this->present.selected_slot_ptr;
@@ -84,7 +84,7 @@ private:
 
         ~Presentation(void);
 
-        bool Present(Graph& graph);
+        bool Present(Graph& graph, float child_width);
 
         float slot_radius;
         ImVec2 canvas_position;
@@ -100,15 +100,21 @@ private:
         int hovered_slot_uid;
         CallSlotPtrType selected_slot_ptr;
         int process_selected_slot;
+        bool update_current_graph;
+        float split_width;
 
     private:
 
         GUIUtils utils;
 
+        void menu(megamol::gui::configurator::Graph& graph);
+        void canvas(megamol::gui::configurator::Graph& graph, float child_width);
+        void parameters(megamol::gui::configurator::Graph& graph, float child_width);
+
     } present;
 };
 
-} // namespace graph
+} // namespace configurator
 } // namespace gui
 } // namespace megamol
 

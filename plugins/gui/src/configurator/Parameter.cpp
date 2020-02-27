@@ -13,10 +13,10 @@
 
 
 using namespace megamol;
-using namespace megamol::gui::graph;
+using namespace megamol::gui::configurator;
 
 
-megamol::gui::graph::Parameter::Parameter(int uid, megamol::gui::graph::Parameter::ParamType type)
+megamol::gui::configurator::Parameter::Parameter(int uid, megamol::gui::configurator::Parameter::ParamType type)
     : uid(uid), type(type), minval(), maxval(), storage(), value(), present() {
 
     // Initialize variant types which should/can not be changed afterwards.
@@ -82,7 +82,7 @@ megamol::gui::graph::Parameter::Parameter(int uid, megamol::gui::graph::Paramete
 }
 
 
-std::string megamol::gui::graph::Parameter::GetValueString(void) {
+std::string megamol::gui::configurator::Parameter::GetValueString(void) {
     std::string value_string = "UNKNOWN PARAMETER TYPE";
     auto visitor = [this, &value_string](auto&& arg) {
         using T = std::decay_t<decltype(arg)>;
@@ -163,9 +163,9 @@ std::string megamol::gui::graph::Parameter::GetValueString(void) {
 }
 
 
-// PARAMETER PRESENTATIONS ####################################################
+// PARAMETER PRESENTATION ####################################################
 
-megamol::gui::graph::Parameter::Presentation::Presentation(void)
+megamol::gui::configurator::Parameter::Presentation::Presentation(void)
     : presentations(Presentations::DEFAULT)
     , read_only(false)
     , invisible(false)
@@ -179,10 +179,10 @@ megamol::gui::graph::Parameter::Presentation::Presentation(void)
     , widgtmap_vec4() {}
 
 
-megamol::gui::graph::Parameter::Presentation::~Presentation(void) {}
+megamol::gui::configurator::Parameter::Presentation::~Presentation(void) {}
 
 
-bool megamol::gui::graph::Parameter::Presentation::Present(Parameter& param) {
+bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::configurator::Parameter& param) {
 
     try {
         if (ImGui::GetCurrentContext() == nullptr) {
@@ -191,9 +191,9 @@ bool megamol::gui::graph::Parameter::Presentation::Present(Parameter& param) {
             return;
         }
         if (!this->invisible) {
+            ImGui::PushID(param.uid);
 
             ImGui::BeginGroup();
-            ImGui::PushID(param.uid);
 
             switch (this->presentations) {
             case (Presentations::DEFAULT): {
@@ -216,8 +216,9 @@ bool megamol::gui::graph::Parameter::Presentation::Present(Parameter& param) {
                 break;
             }
 
-            ImGui::PopID();
             ImGui::EndGroup();
+
+            ImGui::PopID();
         }
 
     } catch (std::exception e) {
@@ -233,7 +234,7 @@ bool megamol::gui::graph::Parameter::Presentation::Present(Parameter& param) {
 }
 
 
-void megamol::gui::graph::Parameter::Presentation::present_prefix(Parameter& param) {
+void megamol::gui::configurator::Parameter::Presentation::present_prefix(Parameter& param) {
 
     // Visibility
     if (ImGui::RadioButton("###visible", this->invisible)) {
@@ -293,7 +294,7 @@ void megamol::gui::graph::Parameter::Presentation::present_prefix(Parameter& par
 }
 
 
-void megamol::gui::graph::Parameter::Presentation::present_value(Parameter& param) {
+void megamol::gui::configurator::Parameter::Presentation::present_value(Parameter& param) {
 
     this->help.clear();
 
@@ -562,7 +563,7 @@ void megamol::gui::graph::Parameter::Presentation::present_value(Parameter& para
 }
 
 
-void megamol::gui::graph::Parameter::Presentation::present_postfix(Parameter& param) {
+void megamol::gui::configurator::Parameter::Presentation::present_postfix(Parameter& param) {
 
     this->utils.HoverToolTip(param.description, ImGui::GetItemID(), 0.5f);
     this->utils.HelpMarkerToolTip(this->help);

@@ -15,7 +15,7 @@
 
 namespace megamol {
 namespace gui {
-namespace graph {
+namespace configurator {
 
 
 // GRAPH STOCK DATA STRUCTURE ---------------------------------------------
@@ -54,7 +54,7 @@ typedef std::vector<StockModule> ModuleStockType;
 typedef std::vector<StockCall> CallStockType;
 
 
-} // namespace graph
+} // namespace configurator
 } // namespace gui
 } // namespace megamol
 

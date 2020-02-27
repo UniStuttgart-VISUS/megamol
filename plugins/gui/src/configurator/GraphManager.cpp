@@ -10,16 +10,16 @@
 
 
 using namespace megamol;
-using namespace megamol::gui::graph;
+using namespace megamol::gui::configurator;
 
 
-megamol::gui::graph::GraphManager::GraphManager(void) : graphs(), modules_stock(), calls_stock() {}
+megamol::gui::configurator::GraphManager::GraphManager(void) : graphs(), modules_stock(), calls_stock() {}
 
 
-megamol::gui::graph::GraphManager::~GraphManager(void) {}
+megamol::gui::configurator::GraphManager::~GraphManager(void) {}
 
 
-bool megamol::gui::graph::GraphManager::AddGraph(std::string name) {
+bool megamol::gui::configurator::GraphManager::AddGraph(std::string name) {
 
     Graph graph(name);
     this->graphs.emplace_back(std::make_shared<Graph>(graph));
@@ -28,7 +28,7 @@ bool megamol::gui::graph::GraphManager::AddGraph(std::string name) {
 }
 
 
-bool megamol::gui::graph::GraphManager::DeleteGraph(int graph_uid) {
+bool megamol::gui::configurator::GraphManager::DeleteGraph(int graph_uid) {
 
     for (auto iter = this->graphs.begin(); iter != this->graphs.end(); iter++) {
         if ((*iter)->GetUID() == graph_uid) {
@@ -47,10 +47,10 @@ bool megamol::gui::graph::GraphManager::DeleteGraph(int graph_uid) {
 }
 
 
-const GraphManager::GraphsType& megamol::gui::graph::GraphManager::GetGraphs(void) { return this->graphs; }
+const GraphManager::GraphsType& megamol::gui::configurator::GraphManager::GetGraphs(void) { return this->graphs; }
 
 
-const GraphManager::GraphPtrType megamol::gui::graph::GraphManager::GetGraph(int graph_uid) {
+const GraphManager::GraphPtrType megamol::gui::configurator::GraphManager::GetGraph(int graph_uid) {
 
     for (auto iter = this->graphs.begin(); iter != this->graphs.end(); iter++) {
         if ((*iter)->GetUID() == graph_uid) {
@@ -63,7 +63,7 @@ const GraphManager::GraphPtrType megamol::gui::graph::GraphManager::GetGraph(int
 }
 
 
-bool megamol::gui::graph::GraphManager::UpdateModulesCallsStock(const megamol::core::CoreInstance* core_instance) {
+bool megamol::gui::configurator::GraphManager::UpdateModulesCallsStock(const megamol::core::CoreInstance* core_instance) {
 
     bool retval = true;
     if (core_instance == nullptr) {
@@ -178,7 +178,7 @@ bool megamol::gui::graph::GraphManager::UpdateModulesCallsStock(const megamol::c
 }
 
 
-bool megamol::gui::graph::GraphManager::LoadCurrentCoreProject(
+bool megamol::gui::configurator::GraphManager::LoadCurrentCoreProject(
     std::string name, megamol::core::CoreInstance* core_instance) {
 
     try {
@@ -363,7 +363,7 @@ bool megamol::gui::graph::GraphManager::LoadCurrentCoreProject(
 }
 
 
-int megamol::gui::graph::GraphManager::GetCompatibleCallIndex(
+int megamol::gui::configurator::GraphManager::GetCompatibleCallIndex(
     CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2) {
 
     if ((call_slot_1 != nullptr) && (call_slot_2 != nullptr)) {
@@ -390,7 +390,7 @@ int megamol::gui::graph::GraphManager::GetCompatibleCallIndex(
 }
 
 
-int megamol::gui::graph::GraphManager::GetCompatibleCallIndex(
+int megamol::gui::configurator::GraphManager::GetCompatibleCallIndex(
     CallSlotPtrType call_slot, StockCallSlot stock_call_slot) {
 
     if (call_slot != nullptr) {
@@ -409,7 +409,7 @@ int megamol::gui::graph::GraphManager::GetCompatibleCallIndex(
 }
 
 
-bool megamol::gui::graph::GraphManager::PROTOTYPE_SaveGraph(
+bool megamol::gui::configurator::GraphManager::PROTOTYPE_SaveGraph(
     int graph_id, std::string project_filename, megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
@@ -511,7 +511,7 @@ bool megamol::gui::graph::GraphManager::PROTOTYPE_SaveGraph(
 }
 
 
-bool megamol::gui::graph::GraphManager::get_module_stock_data(
+bool megamol::gui::configurator::GraphManager::get_module_stock_data(
     StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc) {
 
     /// mod.plugin_name is not available in mod_desc (set from AbstractAssemblyInstance or AbstractPluginInstance).
@@ -712,7 +712,7 @@ bool megamol::gui::graph::GraphManager::get_module_stock_data(
 }
 
 
-bool megamol::gui::graph::GraphManager::get_call_stock_data(
+bool megamol::gui::configurator::GraphManager::get_call_stock_data(
     StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc) {
 
     try {
@@ -737,18 +737,72 @@ bool megamol::gui::graph::GraphManager::get_call_stock_data(
 
 
 
-// GRAPH PRESENTATIONS ####################################################
+// GRAPH MANAGET PRESENTATION ####################################################
 
-megamol::gui::graph::GraphManager::Presentation::Presentation(void)
-{
+megamol::gui::configurator::GraphManager::Presentation::Presentation(void)
+    : rename_popup_open(false)
+    , rename_popup_string(nullptr) {
 }
 
 
-megamol::gui::graph::GraphManager::Presentation::~Presentation(void) {}
+megamol::gui::configurator::GraphManager::Presentation::~Presentation(void) {}
 
 
-void megamol::gui::graph::GraphManager::Presentation::Present(GraphManager& graph_manager) {
+bool megamol::gui::configurator::GraphManager::Presentation::Present(GraphManager& graph_manager, float child_width) {
 
+    if (ImGui::GetCurrentContext() == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
+
+    const auto child_flags = ImGuiWindowFlags_None;
    
+    ImGui::BeginChild("graph_child_window", ImVec2(child_width, 0.0f), true, child_flags);
 
+    // Assuming only one closed tab/graph per frame.
+    int delete_graph_uid = -1;
+
+    // Draw Graphs
+    ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
+    ImGui::BeginTabBar("Graphs", tab_bar_flags);
+    for (auto& graph : graph_manager.GetGraphs()) {
+
+        bool open = graph->Present(child_width);
+
+        // Do not delete graph while looping through graphs list
+        if (!open) {
+            delete_graph_uid = graph->GetUID();
+        }
+    }
+    ImGui::EndTabBar();
+
+    // Delete marked graph when tab closed
+    graph_manager.DeleteGraph(delete_graph_uid);
+
+    // Rename pop-up (grpah or module name)
+    if (this->rename_popup_open) {
+        ImGui::OpenPopup("Rename");
+    }
+    if (ImGui::BeginPopupModal("Rename", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+        std::string label = "Enter new  project name";
+        auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
+        if (ImGui::InputText("Enter new  project name", this->rename_popup_string, flags)) {
+            this->rename_popup_string = nullptr;
+            ImGui::CloseCurrentPopup();
+        }
+        // Set focus on input text once (applied next frame)
+        if (this->rename_popup_open) {
+            ImGuiID id = ImGui::GetID(label.c_str());
+            ImGui::ActivateItem(id);
+        }
+
+        ImGui::EndPopup();
+    }
+    this->rename_popup_open = false;
+
+    ImGui::EndChild();
+
+    return true;
 }

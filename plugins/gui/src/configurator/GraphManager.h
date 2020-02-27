@@ -28,7 +28,7 @@
 
 namespace megamol {
 namespace gui {
-namespace graph {
+namespace configurator {
 
 
 class GraphManager {
@@ -58,7 +58,7 @@ public:
     bool PROTOTYPE_SaveGraph(int graph_id, std::string project_filename, megamol::core::CoreInstance* cor_iInstance);
 
     // GUI Presentation -------------------------------------------------------
-    bool Present(void) { this->present.Present(*this); }
+    bool Present(float child_width) { this->present.Present(*this, child_width); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -77,10 +77,12 @@ private:
 
         ~Presentation(void);
 
-        bool Present(GraphManager& graph_manager);
+        bool Present(GraphManager& graph_manager, float child_width);
 
     private:
 
+        bool rename_popup_open;
+        std::string* rename_popup_string;
         GUIUtils utils;
 
     } present;
@@ -96,7 +98,7 @@ private:
     // ------------------------------------------------------------------------
 };
 
-} // namespace graph
+} // namespace configurator
 } // namespace gui
 } // namespace megamol
 

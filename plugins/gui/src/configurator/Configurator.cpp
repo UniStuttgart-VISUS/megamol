@@ -16,10 +16,10 @@
 #include "Configurator.h"
 
 
-using namespace megamol::gui;
+using namespace megamol::gui::configurator;
 
 
-Configurator::Configurator() : hotkeys(), graph_manager(), utils(), gui() {
+megamol::gui::configurator::Configurator::Configurator() : hotkeys(), graph_manager(), utils(), gui() {
 
     // Init HotKeys
     this->hotkeys[HotkeyIndex::MODULE_SEARCH] =
@@ -38,20 +38,16 @@ Configurator::Configurator() : hotkeys(), graph_manager(), utils(), gui() {
     this->gui.project_filename = "";
     this->gui.graph_ptr = nullptr;
     this->gui.selected_list_module_id = -1;
-    this->gui.rename_popup_open = false;
-    this->gui.rename_popup_string = nullptr;
     this->gui.mouse_wheel = 0.0f;
     this->gui.graph_font = nullptr;
-    this->gui.update_current_graph = false;
-    this->gui.split_width_left = 250.0f;
-    this->gui.split_width_right = 500.0f;
+    this->gui.split_width = 250.0f;
 }
 
 
 Configurator::~Configurator() {}
 
 
-bool megamol::gui::Configurator::CheckHotkeys(void) {
+bool megamol::gui::configurator::Configurator::CheckHotkeys(void) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -76,7 +72,7 @@ bool megamol::gui::Configurator::CheckHotkeys(void) {
 }
 
 
-bool megamol::gui::Configurator::Draw(
+bool megamol::gui::configurator::Configurator::Draw(
     WindowManager::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
@@ -118,11 +114,11 @@ bool megamol::gui::Configurator::Draw(
 
         const float split_thickness = 10.0f;
         float child_width_auto = 0.0f;
-        this->utils.VerticalSplitter(split_thickness, &this->gui.split_width_left, &child_width_auto);
+        this->utils.VerticalSplitter(split_thickness, &this->gui.split_width, &child_width_auto);
 
-        this->draw_window_module_list(this->gui.split_width_left);
+        this->draw_window_module_list(this->gui.split_width);
         ImGui::SameLine();
-        this->draw_window_graph(child_width_auto);
+        this->graph_manager.Present(child_width_auto);
 
     }
 
@@ -130,7 +126,7 @@ bool megamol::gui::Configurator::Draw(
 }
 
 
-void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* core_instance) {
+void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -193,7 +189,7 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
 }
 
 
-void megamol::gui::Configurator::draw_window_module_list(float width) {
+void megamol::gui::configurator::Configurator::draw_window_module_list(float width) {
 
     ImGui::BeginGroup();
 
@@ -284,144 +280,9 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
 }
 
 
-void megamol::gui::Configurator::draw_window_parameter_list(float width) {
-
-    ImGui::BeginGroup();
-
-    const float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 2.25f;
-    ImGui::BeginChild("parameter_search_child_window", ImVec2(width, param_child_height), false,
-        ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar);
-
-    ImGui::Text("Parameters");
-    ImGui::Separator();
-
-    if (std::get<1>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH])) {
-        std::get<1>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH]) = false;
-        this->utils.SetSearchFocus(true);
-    }
-    std::string help_text = "[" + std::get<0>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH]).ToString() +
-                            "] Set keyboard focus to search input field.\n"
-                            "Case insensitive substring search in parameter names.";
-    this->utils.StringSearch("Search", help_text);
-    auto search_string = this->utils.GetSearchString();
-
-    ImGui::EndChild();
-
-    ImGui::BeginChild("parameter_list_child_window", ImVec2(width, 0.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
-
-    if (this->gui.graph_ptr != nullptr) {
-        for (auto& mod : this->gui.graph_ptr->GetGraphModules()) {
-            if (mod->uid == this->gui.graph_ptr->gui.selected_module_uid) {
-                for (auto& param : mod->parameters) {
-                    param.Present();
-                }
-            }
-        }
-    }
-
-    ImGui::EndChild();
-
-    ImGui::EndGroup();
-}
 
 
-void megamol::gui::Configurator::draw_window_graph(float width) {
-
-    ImGuiIO& io = ImGui::GetIO();
-
-    ImGui::BeginChild("graph_child_window", ImVec2(width, 0.0f), true, ImGuiWindowFlags_None);
-
-    /// (Assuming only one closed tab per frame)
-    int delete_graph_uid = -1;
-
-    ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
-    ImGui::BeginTabBar("Graphs", tab_bar_flags);
-    for (auto& graph : this->graph_manager.GetGraphs()) {
-
-        bool open = graph->Present();
-
-        // (Do not delete graph while looping through graphs list!)
-        if (!open) {
-            delete_graph_uid = graph->GetUID();
-        }
-    }
-    ImGui::EndTabBar();
-
-    // Delete marked graph when tab closed
-    this->graph_manager.DeleteGraph(delete_graph_uid);
-
-    // Rename pop-up (grpah or module name)
-    if (this->gui.rename_popup_open) {
-        ImGui::OpenPopup("Rename");
-    }
-    if (ImGui::BeginPopupModal("Rename", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-
-        std::string label = "Enter new  project name";
-        auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
-        if (ImGui::InputText("Enter new  project name", this->gui.rename_popup_string, flags)) {
-            this->gui.rename_popup_string = nullptr;
-            ImGui::CloseCurrentPopup();
-        }
-        // Set focus on input text once (applied next frame)
-        if (this->gui.rename_popup_open) {
-            ImGuiID id = ImGui::GetID(label.c_str());
-            ImGui::ActivateItem(id);
-        }
-
-        ImGui::EndPopup();
-    }
-    this->gui.rename_popup_open = false;
-
-    ImGui::EndChild();
-}
-
-
-bool megamol::gui::Configurator::draw_graph_menu(megamol::gui::graph::GraphManager::GraphPtrType graph) {
-
-    const float child_height = ImGui::GetItemsLineHeightWithSpacing() * 1.0f;
-    ImGui::BeginChild(
-        "canvas_options", ImVec2(0.0f, child_height), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
-
-    if (ImGui::Button("Reset###reset_scrolling")) {
-        graph->gui.canvas_scrolling = ImVec2(0.0f, 0.0f);
-    }
-    ImGui::SameLine();
-    ImGui::Text("Scrolling: %.4f,%.4f", graph->gui.canvas_scrolling.x, graph->gui.canvas_scrolling.y);
-    this->utils.HelpMarkerToolTip("Middle Mouse Button");
-
-    ImGui::SameLine();
-    if (ImGui::Button("Reset###reset_zooming")) {
-        graph->gui.canvas_zooming = 1.0f;
-    }
-    ImGui::SameLine();
-    ImGui::Text("Zooming: %.4f", graph->gui.canvas_zooming);
-    this->utils.HelpMarkerToolTip("Mouse Wheel");
-
-    ImGui::SameLine();
-    ImGui::Checkbox("Show Grid", &graph->gui.show_grid);
-
-    ImGui::SameLine();
-    if (ImGui::Checkbox("Show Call Names", &graph->gui.show_call_names)) {
-        this->gui.update_current_graph = true;
-    }
-
-    ImGui::SameLine();
-    if (ImGui::Checkbox("Show Slot Names", &graph->gui.show_slot_names)) {
-        this->gui.update_current_graph = true;
-    }
-
-    ImGui::SameLine();
-    if (ImGui::Button("Layout Graph")) {
-        this->gui.update_current_graph = true;
-    }
-
-    ImGui::EndChild();
-
-    return false;
-}
-
-
-bool megamol::gui::Configurator::draw_graph_canvas(megamol::gui::graph::GraphManager::GraphPtrType graph) {
+bool megamol::gui::configurator::Configurator::draw_graph_canvas(megamol::gui::configurator::GraphManager::GraphPtrType graph) {
 
     ImGuiIO& io = ImGui::GetIO();
 
@@ -522,7 +383,7 @@ bool megamol::gui::Configurator::draw_graph_canvas(megamol::gui::graph::GraphMan
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_grid(megamol::gui::graph::GraphManager::GraphPtrType graph) {
+bool megamol::gui::configurator::Configurator::draw_canvas_grid(megamol::gui::configurator::GraphManager::GraphPtrType graph) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -555,7 +416,7 @@ bool megamol::gui::Configurator::draw_canvas_grid(megamol::gui::graph::GraphMana
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_calls(megamol::gui::graph::GraphManager::GraphPtrType graph) {
+bool megamol::gui::configurator::Configurator::draw_canvas_calls(megamol::gui::configurator::GraphManager::GraphPtrType graph) {
 
     try {
         ImGuiStyle& style = ImGui::GetStyle();
@@ -640,7 +501,7 @@ bool megamol::gui::Configurator::draw_canvas_calls(megamol::gui::graph::GraphMan
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_modules(megamol::gui::graph::GraphManager::GraphPtrType graph) {
+bool megamol::gui::configurator::Configurator::draw_canvas_modules(megamol::gui::configurator::GraphManager::GraphPtrType graph) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -768,8 +629,8 @@ bool megamol::gui::Configurator::draw_canvas_modules(megamol::gui::graph::GraphM
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_module_call_slots(
-    megamol::gui::graph::GraphManager::GraphPtrType graph, megamol::gui::graph::ModulePtrType mod) {
+bool megamol::gui::configurator::Configurator::draw_canvas_module_call_slots(
+    megamol::gui::configurator::GraphManager::GraphPtrType graph, megamol::gui::configurator::ModulePtrType mod) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -876,7 +737,7 @@ bool megamol::gui::Configurator::draw_canvas_module_call_slots(
 }
 
 
-bool megamol::gui::Configurator::draw_canvas_dragged_call(megamol::gui::graph::GraphManager::GraphPtrType graph) {
+bool megamol::gui::configurator::Configurator::draw_canvas_dragged_call(megamol::gui::configurator::GraphManager::GraphPtrType graph) {
 
     try {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -921,8 +782,8 @@ bool megamol::gui::Configurator::draw_canvas_dragged_call(megamol::gui::graph::G
 }
 
 
-bool megamol::gui::Configurator::update_module_size(
-    megamol::gui::graph::GraphManager::GraphPtrType graph, megamol::gui::graph::ModulePtrType mod) {
+bool megamol::gui::configurator::Configurator::update_module_size(
+    megamol::gui::configurator::GraphManager::GraphPtrType graph, megamol::gui::configurator::ModulePtrType mod) {
 
     mod->present.class_label = "Class: " + mod->class_name;
     float class_name_length = this->utils.TextWidgetWidth(mod->present.class_label);
@@ -956,8 +817,8 @@ bool megamol::gui::Configurator::update_module_size(
 }
 
 
-bool megamol::gui::Configurator::update_slot_position(
-    megamol::gui::graph::GraphManager::GraphPtrType graph, megamol::gui::graph::CallSlotPtrType slot) {
+bool megamol::gui::configurator::Configurator::update_slot_position(
+    megamol::gui::configurator::GraphManager::GraphPtrType graph, megamol::gui::configurator::CallSlotPtrType slot) {
 
     if (slot->ParentModuleConnected()) {
         auto slot_count = slot->GetParentModule()->GetCallSlots(slot->type).size();
@@ -979,7 +840,7 @@ bool megamol::gui::Configurator::update_slot_position(
 }
 
 
-bool megamol::gui::Configurator::update_graph_layout(megamol::gui::graph::GraphManager::GraphPtrType graph) {
+bool megamol::gui::configurator::Configurator::update_graph_layout(megamol::gui::configurator::GraphManager::GraphPtrType graph) {
 
     // Really simple layouting sorting modules into differnet layers
     std::vector<std::vector<graph::ModulePtrType>> layers;
@@ -1071,7 +932,7 @@ bool megamol::gui::Configurator::update_graph_layout(megamol::gui::graph::GraphM
 }
 
 
-bool megamol::gui::Configurator::popup_save_project(bool open, megamol::core::CoreInstance* core_instance) {
+bool megamol::gui::configurator::Configurator::popup_save_project(bool open, megamol::core::CoreInstance* core_instance) {
 
 #ifdef GUI_USE_FILESYSTEM
     std::string save_project_label = "Save Project";
@@ -1134,8 +995,8 @@ bool megamol::gui::Configurator::popup_save_project(bool open, megamol::core::Co
 }
 
 
-bool megamol::gui::Configurator::add_new_module_to_graph(
-    const megamol::gui::graph::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name) {
+bool megamol::gui::configurator::Configurator::add_new_module_to_graph(
+    const megamol::gui::configurator::StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name) {
 
     bool retval = false;
     if (this->gui.graph_ptr == nullptr) {
