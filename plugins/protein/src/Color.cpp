@@ -16,10 +16,6 @@
 #include "mmcore/utility/ColourParser.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
-#include "vislib/math/ShallowVector.h"
-#include "mmcore/CoreInstance.h"
-#include <string>
-#include <iostream>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -323,11 +319,15 @@ float Color::GetHydrophibicityByResName(vislib::StringA resName) {
 /*
  * MakeColorTable routine for molecular data call
  */
-void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol, ColoringMode currentColoringMode,
-    vislib::Array<float>& atomColorTable, vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable,
+std::pair<float, float> Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
+    ColoringMode currentColoringMode, vislib::Array<float>& atomColorTable,
+    vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable,
     vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, vislib::TString minGradColor,
     vislib::TString midGradColor, vislib::TString maxGradColor, bool forceRecompute,
-    const protein_calls::BindingSiteCall* bs, bool useNeighbors, const protein_calls::PerAtomFloatCall* pa, bool enzymeMode, bool gxtype) {
+    const protein_calls::BindingSiteCall* bs, bool useNeighbors, const protein_calls::PerAtomFloatCall* pa,
+    bool enzymeMode, bool gxtype) {
+
+    std::pair<float, float> result = std::make_pair(0.0f, 0.0f);
 
     // temporary variables
     unsigned int cnt, idx, cntAtom, cntRes, cntChain, cntMol, cntSecS, atomIdx, atomCnt;
@@ -480,6 +480,7 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
             float mid(0.0f);
 #endif
             float val;
+            result = std::make_pair(min_val, max_val);
 
             unsigned int resTypeIdx;
             // loop over all residues
@@ -577,6 +578,7 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
             float max_val(mol->MaximumBFactor());
             float mid((max_val - min_val) / 2.0f + min_val);
             float val;
+            result = std::make_pair(min_val, max_val);
 
             for (cnt = 0; cnt < mol->AtomCount(); ++cnt) {
                 if (min_val == max_val) {
@@ -631,6 +633,8 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
             printf("%.1f ", mid);
             printf("%.1f ", max_val);
 
+            result = std::make_pair(min_val, max_val);
+
             for (cnt = 0; cnt < mol->AtomCount(); ++cnt) {
                 if (min_val == max_val) {
                     atomColorTable.Add(colMid.GetX());
@@ -681,6 +685,8 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
             float mid((max_val - min_val) / 2.0f + min_val);
             float val;
 
+            result = std::make_pair(min_val, max_val);
+
             for (cnt = 0; cnt < mol->AtomCount(); ++cnt) {
                 if (min_val == max_val) {
                     atomColorTable.Add(colMid.GetX());
@@ -730,6 +736,8 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
             float max_val(mol->MaximumOccupancy());
             float mid((max_val - min_val) / 2.0f + min_val);
             float val;
+
+            result = std::make_pair(min_val, max_val);
 
             for (cnt = 0; cnt < mol->AtomCount(); ++cnt) {
                 if (min_val == max_val) {
@@ -1004,6 +1012,8 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
             atomColorTable[i * 3 + 2] = accumVec[2];
         }
     }
+
+    return result;
 }
 
 
@@ -1011,12 +1021,15 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
  * MakeColorTable routine for molecular data call interpolating between two
  * colors
  */
-void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol, ColoringMode cm0, ColoringMode cm1,
-    float weight0, float weight1, vislib::Array<float>& atomColorTable,
+std::pair<float, float> Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol, ColoringMode cm0,
+    ColoringMode cm1, float weight0, float weight1, vislib::Array<float>& atomColorTable,
     vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable,
     vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, vislib::TString minGradColor,
     vislib::TString midGradColor, vislib::TString maxGradColor, bool forceRecompute,
-    const protein_calls::BindingSiteCall* bs, bool useNeighbors, const protein_calls::PerAtomFloatCall* pa, bool enzymeMode, bool gxtype) {
+    const protein_calls::BindingSiteCall* bs, bool useNeighbors, const protein_calls::PerAtomFloatCall* pa,
+    bool enzymeMode, bool gxtype) {
+
+    std::pair<float, float> result = std::make_pair(0.0f, 0.0f);
 
     // if recomputation is forced: clear current color table
     if (forceRecompute) {
@@ -1041,18 +1054,19 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
         atomColorTable.AssertCapacity(mol->AtomCount() * 3);
 
         // Compute first color table
-        Color::MakeColorTable(
+        auto left = Color::MakeColorTable(
             mol, cm0, color0, colorLookupTable, rainbowColors, minGradColor, midGradColor, maxGradColor, true, bs, pa);
 
         // Compute second color table
-        Color::MakeColorTable(
+        auto right = Color::MakeColorTable(
             mol, cm1, color1, colorLookupTable, rainbowColors, minGradColor, midGradColor, maxGradColor, true, bs, pa);
+
+        result = std::make_pair(std::min(left.first, right.first), std::max(left.second, right.second));
 
         // Interpolate
         for (unsigned int cnt = 0; cnt < mol->AtomCount() * 3; cnt++) {
             atomColorTable.Add(color0[cnt] * weight0 + color1[cnt] * weight1);
         }
-
     }
 
     // apply the neighborhood colors
@@ -1080,6 +1094,8 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
             atomColorTable[i * 3 + 2] = accumVec[2];
         }
     }
+
+    return result;
 }
 
 void Color::MakeComparisonColorTable(const megamol::protein_calls::MolecularDataCall* mol1,

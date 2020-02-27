@@ -18,6 +18,7 @@
 #include "vislib/String.h"
 #include "vislib/macro_utils.h"
 #include <climits>
+#include "glm/glm.hpp"
 
 #define MAX_PARAMETER_NUMBER 100
 
@@ -1445,10 +1446,50 @@ namespace geocalls {
             this->objs = objs;
         }
 
+        inline void SetColorBounds(float minVal, float maxVal, glm::vec3 minColor, glm::vec3 maxColor) {
+            this->minValue = minVal;
+            this->maxValue = maxVal;
+            this->minColor = minColor;
+            this->maxColor = maxColor;
+            this->hasMidColor = false;
+        }
+
+        inline void SetColorBounds(
+            float minVal, float maxVal, glm::vec3 minColor, glm::vec3 midColor, glm::vec3 maxColor) {
+            this->minValue = minVal;
+            this->maxValue = maxVal;
+            this->minColor = minColor;
+            this->midColor = midColor;
+            this->maxColor = maxColor;
+            this->hasMidColor = true;
+        }
+
+        inline bool GetColorBounds(
+            float& minVal, float& maxVal, glm::vec3& minColor, glm::vec3& midColor, glm::vec3& maxColor) {
+            minVal = this->minValue;
+            maxVal = this->maxValue;
+            minColor = this->minColor;
+            midColor = this->midColor;
+            maxColor = this->maxColor;
+            return this->hasMidColor;
+        }
+
     private:
 
         /** The number of objects */
         unsigned int objCnt;
+
+        float minValue;
+
+        float maxValue;
+
+        glm::vec3 minColor;
+
+        glm::vec3 midColor;
+
+        glm::vec3 maxColor;
+
+        bool hasMidColor;
 
         /** Pointer to the array of objects */
         const Mesh *objs;

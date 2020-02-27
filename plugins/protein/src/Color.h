@@ -156,7 +156,7 @@ namespace protein {
 	 * @param useNeighbors        Add colors of the neighbors to the current color
          * @param pa                  The per-atom float data call.
          */
-		static void MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
+		static std::pair<float, float> MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
             ColoringMode cm0,
             ColoringMode cm1,
             float weight0,
@@ -195,7 +195,7 @@ namespace protein {
          * @param pa                  The per-atom float data call.
          * @param enzymeMode          Enyzme coloring mode, coloring only relevant parts of the active site
          */
-		static void MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
+		static std::pair<float, float> MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
             ColoringMode currentColoringMode,
             vislib::Array<float> &atomColorTable,
             vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
