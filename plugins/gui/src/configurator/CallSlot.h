@@ -62,7 +62,7 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    bool Present(void) { this->present.Present(*this); }
+    bool Present(void) { return this->present.Present(*this); }
 
 private:
     ModulePtrType parent_module;

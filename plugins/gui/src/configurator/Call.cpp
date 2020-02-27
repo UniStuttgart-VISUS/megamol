@@ -113,10 +113,8 @@ const megamol::gui::configurator::CallSlotPtrType megamol::gui::configurator::Ca
 
 // CALL PRESENTATION #########################################################
 
-megamol::gui::configurator::Call::Presentation::Presentation(void) 
-    : presentations(Presentation::DEFAULT) 
-    , label_visible(true) {
-}
+megamol::gui::configurator::Call::Presentation::Presentation(void)
+    : presentations(Presentation::DEFAULT), label_visible(true) {}
 
 
 megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
@@ -124,17 +122,99 @@ megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
 
 bool megamol::gui::configurator::Call::Presentation::Present(megamol::gui::configurator::Call& call) {
 
-    if (ImGui::GetCurrentContext() == nullptr) {
+    try {
+
+        if (ImGui::GetCurrentContext() == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+
+        ImGui::PushID(call.uid);
+
+        /*
+        ImGuiStyle& style = ImGui::GetStyle();
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        assert(draw_list != nullptr);
+
+        const ImU32 COLOR_CALL_CURVE = IM_COL32(225, 225, 0, 255);
+        const ImU32 COLOR_CALL_BACKGROUND = IM_COL32(64, 61, 64, 255);
+        const ImU32 COLOR_CALL_HIGHTLIGHT = IM_COL32(92, 92, 92, 255);
+        const ImU32 COLOR_CALL_BORDER = IM_COL32(128, 128, 128, 255);
+
+        const float CURVE_THICKNESS = 3.0f;
+
+        int hovered_call = -1;
+
+        for (auto& call : graph->GetGraphCalls()) {
+            const int id = call->uid;
+            ImGui::PushID(id);
+
+            if (call->IsConnected()) {
+
+                ImVec2 p1 = call->GetCallSlot(graph::CallSlot::CallSlotType::CALLER)->present.position;
+                ImVec2 p2 = call->GetCallSlot(graph::CallSlot::CallSlotType::CALLEE)->present.position;
+
+                draw_list->ChannelsSetCurrent(0); // Background
+
+                // Draw simple line if zooming is too small for nice bezier curves
+                if (graph->gui.canvas_zooming < 0.4f) {
+                    draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * graph->gui.canvas_zooming);
+                } else {
+                    draw_list->AddBezierCurve(p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2,
+                        COLOR_CALL_CURVE, CURVE_THICKNESS * graph->gui.canvas_zooming);
+                }
+
+                if (graph->gui.show_call_names) {
+                    draw_list->ChannelsSetCurrent(1); // Foreground
+
+                    ImVec2 call_center = ImVec2(p1.x + (p2.x - p1.x) / 2.0f, p1.y + (p2.y - p1.y) / 2.0f);
+                    auto call_name_width = this->utils.TextWidgetWidth(call->class_name);
+
+                    // Draw box
+                    ImVec2 rect_size = ImVec2(call_name_width + (2.0f * style.ItemSpacing.x),
+                        ImGui::GetFontSize() + (2.0f * style.ItemSpacing.y));
+                    ImVec2 call_rect_min =
+                        ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
+                    ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
+                    ImGui::SetCursorScreenPos(call_rect_min);
+                    std::string label = "call_" + call->class_name + std::to_string(id);
+                    ImGui::InvisibleButton(label.c_str(), rect_size);
+                    bool call_active = ImGui::IsItemActive();
+                    if (call_active) {
+                        graph->gui.selected_call_uid = id;
+                        graph->gui.selected_module_uid = -1;
+                    }
+                    if (ImGui::IsItemHovered() && (hovered_call < 0)) {
+                        hovered_call = id;
+                    }
+                    ImU32 call_bg_color = (hovered_call == id || graph->gui.selected_call_uid == id)
+                                              ? COLOR_CALL_HIGHTLIGHT
+                                              : COLOR_CALL_BACKGROUND;
+                    draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, 4.0f);
+                    draw_list->AddRect(call_rect_min, call_rect_max, COLOR_CALL_BORDER, 4.0f);
+
+                    // Draw text
+                    ImGui::SetCursorScreenPos(
+                        call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
+                    ImGui::Text(call->class_name.c_str());
+                }
+            }
+
+            ImGui::PopID();
+        }
+        */
+
+        ImGui::PopID();
+
+    } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
-            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return;
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
     }
-
-    ImGui::PushID(call.uid);
-
-    /// Call
-
-    ImGui::PopID();
 
     return true;
 }

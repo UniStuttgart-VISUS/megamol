@@ -63,7 +63,8 @@ const GraphManager::GraphPtrType megamol::gui::configurator::GraphManager::GetGr
 }
 
 
-bool megamol::gui::configurator::GraphManager::UpdateModulesCallsStock(const megamol::core::CoreInstance* core_instance) {
+bool megamol::gui::configurator::GraphManager::UpdateModulesCallsStock(
+    const megamol::core::CoreInstance* core_instance) {
 
     bool retval = true;
     if (core_instance == nullptr) {
@@ -736,49 +737,57 @@ bool megamol::gui::configurator::GraphManager::get_call_stock_data(
 }
 
 
-
 // GRAPH MANAGET PRESENTATION ####################################################
 
-megamol::gui::configurator::GraphManager::Presentation::Presentation(void) {
-}
+megamol::gui::configurator::GraphManager::Presentation::Presentation(void) : active_graph(nullptr) {}
 
 
 megamol::gui::configurator::GraphManager::Presentation::~Presentation(void) {}
 
 
-bool megamol::gui::configurator::GraphManager::Presentation::Present(GraphManager& graph_manager, float child_width) {
+bool megamol::gui::configurator::GraphManager::Presentation::Present(
+    GraphManager& graph_manager, float child_width, ImFont* graph_font) {
 
-    if (ImGui::GetCurrentContext() == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return;
-    }
-
-    const auto child_flags = ImGuiWindowFlags_None;
-   
-    ImGui::BeginChild("graph_child_window", ImVec2(child_width, 0.0f), true, child_flags);
-
-    // Assuming only one closed tab/graph per frame.
-    int delete_graph_uid = -1;
-
-    // Draw Graphs
-    ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
-    ImGui::BeginTabBar("Graphs", tab_bar_flags);
-    for (auto& graph : graph_manager.GetGraphs()) {
-
-        bool open = graph->Present(child_width);
-
-        // Do not delete graph while looping through graphs list
-        if (!open) {
-            delete_graph_uid = graph->GetUID();
+    try {
+        if (ImGui::GetCurrentContext() == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
         }
+
+        const auto child_flags = ImGuiWindowFlags_None;
+
+        ImGui::BeginChild("graph_child_window", ImVec2(child_width, 0.0f), true, child_flags);
+
+        // Assuming only one closed tab/graph per frame.
+        int delete_graph_uid = -1;
+
+        // Draw Graphs
+        ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
+        ImGui::BeginTabBar("Graphs", tab_bar_flags);
+        for (auto& graph : graph_manager.GetGraphs()) {
+
+            bool open = graph->Present(child_width, graph_font);
+
+            // Do not delete graph while looping through graphs list
+            if (!open) {
+                delete_graph_uid = graph->GetUID();
+            }
+        }
+        ImGui::EndTabBar();
+
+        // Delete marked graph when tab closed
+        graph_manager.DeleteGraph(delete_graph_uid);
+
+        ImGui::EndChild();
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
     }
-    ImGui::EndTabBar();
-
-    // Delete marked graph when tab closed
-    graph_manager.DeleteGraph(delete_graph_uid);
-
-    ImGui::EndChild();
 
     return true;
 }

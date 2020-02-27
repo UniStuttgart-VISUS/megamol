@@ -35,12 +35,12 @@
 #include <iomanip>
 #include <sstream>
 
-#include "Configurator.h"
 #include "CorporateGreyStyle.h"
 #include "CorporateWhiteStyle.h"
 #include "GUIUtils.h"
 #include "TransferFunctionEditor.h"
 #include "WindowManager.h"
+#include "configurator/Configurator.h"
 /// CMake exeption for the cluster "stampede2" running CentOS. (C++ filesystem support is not working?)
 #ifdef GUI_USE_FILESYSTEM
 #    include "FileUtils.h"
@@ -173,7 +173,7 @@ private:
     TransferFunctionEditor tf_editor;
 
     /** The configurator. */
-    Configurator configurator;
+    configurator::Configurator configurator;
 
     /** Utils being used all over the place */
     GUIUtils utils;

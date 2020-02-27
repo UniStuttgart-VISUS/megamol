@@ -55,7 +55,7 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    bool Present(void) { this->present.Present(*this); }
+    bool Present(void) { return this->present.Present(*this); }
 
 private:
     std::map<CallSlot::CallSlotType, CallSlotPtrType> connected_call_slots;

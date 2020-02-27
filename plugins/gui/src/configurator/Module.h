@@ -85,7 +85,6 @@ private:
         std::string name_label;
 
     private:
-
     } present;
 };
 

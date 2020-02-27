@@ -17,15 +17,14 @@ int megamol::gui::configurator::Graph::generated_uid = 0;
 
 
 megamol::gui::configurator::Graph::Graph(const std::string& graph_name)
-    : modules(), calls(), uid(this->generate_unique_id()), name(graph_name), dirty_flag(true) {
-
-}
+    : modules(), calls(), uid(this->generate_unique_id()), name(graph_name), dirty_flag(true), present() {}
 
 
 megamol::gui::configurator::Graph::~Graph(void) {}
 
 
-bool megamol::gui::configurator::Graph::AddModule(const ModuleStockType& stock_modules, const std::string& module_class_name) {
+bool megamol::gui::configurator::Graph::AddModule(
+    const ModuleStockType& stock_modules, const std::string& module_class_name) {
 
     try {
         bool found = false;
@@ -249,128 +248,140 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , hovered_slot_uid(-1)
     , selected_slot_ptr(nullptr)
     , process_selected_slot(0)
-    , update_current_graph(false)
+    , update_current_graph(true)
     , rename_popup_open(false)
     , rename_popup_string(nullptr)
-    , split_width(500.0f) {
-}
+    , split_width(500.0f)
+    , font(nullptr) {}
 
 
 megamol::gui::configurator::Graph::Presentation::~Presentation(void) {}
 
 
-bool megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::configurator::Graph& graph, float child_width) {
+bool megamol::gui::configurator::Graph::Presentation::Present(
+    megamol::gui::configurator::Graph& graph, float child_width, ImFont* graph_font) {
 
-    if (ImGui::GetCurrentContext() == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return;
-    }
-
-    ImGuiIO& io = ImGui::GetIO();
-
-    ImGui::PushID(graph.GetUID());
-
-    // Tab showing one graph
-    ImGuiTabItemFlags tab_flags = ImGuiTabItemFlags_None;
-    if (graph.IsDirty()) {
-        tab_flags |= ImGuiTabItemFlags_UnsavedDocument;
-    }
     bool open = true;
-    std::string graph_label = "    " + graph.GetName() + "  ###graph" + std::to_string(graph.GetUID());
-    if (ImGui::BeginTabItem(graph_label.c_str(), &open, tab_flags)) {
+    this->font = graph_font;
 
-        // Context menu
-        if (ImGui::BeginPopupContextItem()) {
-            if (ImGui::MenuItem("Rename")) {
-                this->rename_popup_open = true;
-                this->rename_popup_string = &graph.GetName();
-            }
-            ImGui::EndPopup();
+    try {
+
+        if (ImGui::GetCurrentContext() == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
         }
 
-        // Process module deletion
-        if (std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM])) {
-            std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = false;
-            this->selected_slot_ptr = nullptr;
-            if (this->selected_module_uid > 0) {
-                graph.DeleteModule(this->selected_module_uid);
-            }
-            if (this->selected_call_uid > 0) {
-                graph.DeleteCall(this->selected_call_uid);
-            }
-        }
+        ImGuiIO& io = ImGui::GetIO();
 
-        // Register trigger for connecting call
-        if ((this->selected_slot_ptr != nullptr) && (io.MouseReleased[0])) {
-            this->process_selected_slot = 2;
-        }
+        ImGui::PushID(graph.GetUID());
 
-        for (auto& mod : graph.GetGraphModules()) {
-            ///XXX this->update_module_size(graph, mod);
-            for (auto& slot_pair : mod->GetCallSlots()) {
-                for (auto& slot : slot_pair.second) {
-                    ///XXX this->update_slot_position(graph, slot);
+        // Tab showing one graph
+        ImGuiTabItemFlags tab_flags = ImGuiTabItemFlags_None;
+        if (graph.IsDirty()) {
+            tab_flags |= ImGuiTabItemFlags_UnsavedDocument;
+        }
+        std::string graph_label = "    " + graph.GetName() + "  ###graph" + std::to_string(graph.GetUID());
+        if (ImGui::BeginTabItem(graph_label.c_str(), &open, tab_flags)) {
+
+            // Context menu
+            if (ImGui::BeginPopupContextItem()) {
+                if (ImGui::MenuItem("Rename")) {
+                    this->rename_popup_open = true;
+                    this->rename_popup_string = &graph.GetName();
+                }
+                ImGui::EndPopup();
+            }
+
+            // Process module deletion
+            /*
+            if (std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM])) {
+                std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = false;
+                this->selected_slot_ptr = nullptr;
+                if (this->selected_module_uid > 0) {
+                    graph.DeleteModule(this->selected_module_uid);
+                }
+                if (this->selected_call_uid > 0) {
+                    graph.DeleteCall(this->selected_call_uid);
                 }
             }
+            */
+
+            // Register trigger for connecting call
+            if ((this->selected_slot_ptr != nullptr) && (io.MouseReleased[0])) {
+                this->process_selected_slot = 2;
+            }
+
+            for (auto& mod : graph.GetGraphModules()) {
+                /// XXX this->update_module_size(graph, mod);
+                for (auto& slot_pair : mod->GetCallSlots()) {
+                    for (auto& slot : slot_pair.second) {
+                        /// XXX this->update_slot_position(graph, slot);
+                    }
+                }
+            }
+
+            // Update positions and sizes
+            if (this->update_current_graph) {
+                /// XXX this->update_graph_layout(graph);
+                this->update_current_graph = false;
+            }
+
+            // Draw
+            this->menu(graph);
+            if ((this->selected_module_uid > 0)) {
+                const float split_thickness = 10.0f;
+                float child_width_auto = 0.0f;
+                ImGui::BeginChild("splitter_subwindow", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_None);
+                this->utils.VerticalSplitter(split_thickness, &this->split_width, &child_width_auto);
+
+                this->canvas(graph, this->split_width);
+                ImGui::SameLine();
+                this->parameters(graph, child_width_auto);
+
+                ImGui::EndChild();
+            } else {
+                this->canvas(graph, child_width);
+            }
+
+            ImGui::EndTabItem();
         }
 
-        // Update positions and sizes
-        if (this->update_current_graph) {
-            ///XXX this->update_graph_layout(graph);
-            this->update_current_graph = false;
-        }
-
-        // Draw
-        this->menu(graph);
-        if ((this->selected_module_uid > 0)) {
-            const float split_thickness = 10.0f;
-            float child_width_auto = 0.0f;
-            ImGui::BeginChild("splitter_subwindow", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_None);
-            this->utils.VerticalSplitter(split_thickness, &this->split_width, &child_width_auto);
-
-            this->canvas(graph, this->split_width);
-            ImGui::SameLine();
-            this->parameters(graph, child_width_auto);
-
-            ImGui::EndChild();
-        }
-        else {
-            this->canvas(graph, child_width);
-        }
-
-        ImGui::EndTabItem();
-    }
-
-    // Rename pop-up (grpah or module name)
-    if (this->rename_popup_open) {
-        ImGui::OpenPopup("Rename");
-    }
-    if (ImGui::BeginPopupModal("Rename", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-
-        std::string label = "Enter new  project name";
-        auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
-        if (ImGui::InputText("Enter new  project name", this->rename_popup_string, flags)) {
-            this->rename_popup_string = nullptr;
-            ImGui::CloseCurrentPopup();
-        }
-        // Set focus on input text once (applied next frame)
+        // Rename pop-up (grpah or module name)
         if (this->rename_popup_open) {
-            ImGuiID id = ImGui::GetID(label.c_str());
-            ImGui::ActivateItem(id);
+            ImGui::OpenPopup("Rename");
         }
+        if (ImGui::BeginPopupModal("Rename", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 
-        ImGui::EndPopup();
+            std::string label = "Enter new  project name";
+            auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
+            if (ImGui::InputText("Enter new  project name", this->rename_popup_string, flags)) {
+                this->rename_popup_string = nullptr;
+                ImGui::CloseCurrentPopup();
+            }
+            // Set focus on input text once (applied next frame)
+            if (this->rename_popup_open) {
+                ImGuiID id = ImGui::GetID(label.c_str());
+                ImGui::ActivateItem(id);
+            }
+
+            ImGui::EndPopup();
+        }
+        this->rename_popup_open = false;
+
+
+        ImGui::PopID();
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
     }
-    this->rename_popup_open = false;
 
-
-    ImGui::PopID();
-
-    return true;
+    return open;
 }
-
-
 
 
 void megamol::gui::configurator::Graph::Presentation::menu(megamol::gui::configurator::Graph& graph) {
@@ -417,14 +428,110 @@ void megamol::gui::configurator::Graph::Presentation::menu(megamol::gui::configu
 }
 
 
-void megamol::gui::configurator::Graph::Presentation::canvas(megamol::gui::configurator::Graph& graph, float child_width) {
+void megamol::gui::configurator::Graph::Presentation::canvas(
+    megamol::gui::configurator::Graph& graph, float child_width) {
 
+    ImGuiIO& io = ImGui::GetIO();
 
+    // Font scaling is applied next frame after ImGui::Begin()
+    // Font for graph should not be the currently used font of the gui.
+    if (this->font == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError("Found no font for configurator. Call SetGraphFont() in GuiView "
+                                                "for setting a font. [%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
+    ImGui::PushFont(this->font);
+    ImGui::GetFont()->Scale = this->canvas_zooming;
 
+    const ImU32 COLOR_CANVAS_BACKGROUND = IM_COL32(75, 75, 75, 255);
+
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+    ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, COLOR_CANVAS_BACKGROUND);
+
+    ImGui::BeginChild("region", ImVec2(0.0f, 0.0f), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
+    this->canvas_position = ImGui::GetCursorScreenPos();
+    this->canvas_size = ImGui::GetWindowSize();
+
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
+    draw_list->ChannelsSplit(2);
+
+    /*
+
+    if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered()) {
+        this->selected_module_uid = -1;
+        this->selected_call_uid = -1;
+        this->selected_slot_ptr = nullptr;
+    }
+
+    // Display grid -------------------
+    if (this->show_grid) {
+        this->canvas_grid(graph);
+    }
+    ImGui::PopStyleVar(2);
+
+    // Draw modules -------------------
+    this->canvas_modules(graph);
+
+    // Draw calls ---------------------
+    this->canvas_calls(graph);
+
+    // Draw dragged call --------------
+    this->canvas_dragged_call(graph);
+
+    // Zooming and Scaling  -----------
+    /// Must be checked inside canvas child window.
+    if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) {
+
+        // Scrolling (2 = Middle Mouse Button)
+        if (ImGui::IsMouseDragging(2, 0.0f)) {
+            this->canvas_scrolling =
+                this->canvas_scrolling + ImGui::GetIO().MouseDelta / this->canvas_zooming;
+        }
+
+        // Zooming (Mouse Wheel)
+        if (this->gui.mouse_wheel != io.MouseWheel) {
+            const float factor = (30.0f / this->canvas_zooming);
+            float last_zooming = this->canvas_zooming;
+            this->canvas_zooming = this->canvas_zooming + io.MouseWheel / factor;
+            // Limit zooming
+            this->canvas_zooming = (this->canvas_zooming < 0.0f) ? 0.000001f : (this->canvas_zooming);
+            if (this->canvas_zooming > 0.0f) {
+                // Compensate zooming shift of origin
+                ImVec2 scrolling_diff = (this->canvas_scrolling * last_zooming) -
+                                        (this->canvas_scrolling * this->canvas_zooming);
+                this->canvas_scrolling += (scrolling_diff / this->canvas_zooming);
+                // Move origin away from mouse position
+                ImVec2 current_mouse_pos = this->canvas_offset - ImGui::GetMousePos();
+                ImVec2 new_mouse_position = (current_mouse_pos / last_zooming) * this->canvas_zooming;
+                this->canvas_scrolling += ((new_mouse_position - current_mouse_pos) / this->canvas_zooming);
+            }
+            /// XXX this->gui.update_current_graph = true;
+        }
+        this->gui.mouse_wheel = io.MouseWheel;
+    }
+    this->canvas_offset = this->canvas_position + (this->canvas_scrolling * this->canvas_zooming);
+
+    /// DEBUG Draw point at origin
+    draw_list->AddCircleFilled(this->canvas_offset, 10.0f * this->canvas_zooming, IM_COL32(192, 0, 0, 255));
+    */
+
+    draw_list->ChannelsMerge();
+    ImGui::EndChild();
+    ImGui::PopStyleColor();
+
+    if (this->process_selected_slot > 0) {
+        this->process_selected_slot--;
+    }
+
+    // Reset font
+    ImGui::PopFont();
 }
 
-
-void megamol::gui::configurator::Graph::Presentation::parameters(megamol::gui::configurator::Graph& graph, float child_width) {
+void megamol::gui::configurator::Graph::Presentation::parameters(
+    megamol::gui::configurator::Graph& graph, float child_width) {
 
     ImGui::BeginGroup();
 
@@ -436,19 +543,22 @@ void megamol::gui::configurator::Graph::Presentation::parameters(megamol::gui::c
     ImGui::Text("Parameters");
     ImGui::Separator();
 
+    /*
     if (std::get<1>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH])) {
         std::get<1>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH]) = false;
         this->utils.SetSearchFocus(true);
     }
     std::string help_text = "[" + std::get<0>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH]).ToString() +
-        "] Set keyboard focus to search input field.\n"
-        "Case insensitive substring search in parameter names.";
+                            "] Set keyboard focus to search input field.\n"
+                            "Case insensitive substring search in parameter names.";
     this->utils.StringSearch("Search", help_text);
     auto search_string = this->utils.GetSearchString();
+    */
 
     ImGui::EndChild();
 
-    ImGui::BeginChild("parameter_list_child_window", ImVec2(child_width, 0.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
+    ImGui::BeginChild(
+        "parameter_list_child_window", ImVec2(child_width, 0.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
 
     for (auto& mod : graph.GetGraphModules()) {
         if (mod->uid == this->selected_module_uid) {
@@ -457,8 +567,220 @@ void megamol::gui::configurator::Graph::Presentation::parameters(megamol::gui::c
             }
         }
     }
- 
+
     ImGui::EndChild();
 
     ImGui::EndGroup();
 }
+
+
+void megamol::gui::configurator::Graph::Presentation::canvas_grid(megamol::gui::configurator::Graph& graph) {
+
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
+
+    draw_list->ChannelsSetCurrent(0); // Background
+
+    const ImU32 COLOR_GRID = IM_COL32(192, 192, 192, 40);
+    const float GRID_SIZE = 64.0f * this->canvas_zooming;
+
+    ImVec2 relative_offset = this->canvas_offset - this->canvas_position;
+
+    for (float x = std::fmodf(relative_offset.x, GRID_SIZE); x < this->canvas_size.x; x += GRID_SIZE) {
+        draw_list->AddLine(ImVec2(x, 0.0f) + this->canvas_position,
+            ImVec2(x, this->canvas_size.y) + this->canvas_position, COLOR_GRID);
+    }
+
+    for (float y = std::fmodf(relative_offset.y, GRID_SIZE); y < this->canvas_size.y; y += GRID_SIZE) {
+        draw_list->AddLine(ImVec2(0.0f, y) + this->canvas_position,
+            ImVec2(this->canvas_size.x, y) + this->canvas_position, COLOR_GRID);
+    }
+}
+
+
+void megamol::gui::configurator::Graph::Presentation::canvas_dragged_call(megamol::gui::configurator::Graph& graph) {
+
+    /*
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
+    draw_list->ChannelsSetCurrent(0); // Background
+
+    const auto COLOR_CALL_CURVE = IM_COL32(128, 128, 0, 255);
+
+    const float CURVE_THICKNESS = 3.0f;
+
+    if ((graph->gui.selected_slot_ptr != nullptr) && (graph->gui.hovered_slot_uid < 0)) {
+        ImVec2 current_pos = ImGui::GetMousePos();
+        bool mouse_inside_canvas = false;
+
+        if ((current_pos.x >= graph->gui.canvas_position.x) &&
+            (current_pos.x <= (graph->gui.canvas_position.x + graph->gui.canvas_size.x)) &&
+            (current_pos.y >= graph->gui.canvas_position.y) &&
+            (current_pos.y <= (graph->gui.canvas_position.y + graph->gui.canvas_size.y))) {
+            mouse_inside_canvas = true;
+        }
+        if (ImGui::IsMouseDown(0) && mouse_inside_canvas) {
+            ImVec2 p1 = graph->gui.selected_slot_ptr->present.position;
+            ImVec2 p2 = ImGui::GetMousePos();
+            if (graph->gui.selected_slot_ptr->type == graph::CallSlot::CallSlotType::CALLEE) {
+                ImVec2 tmp = p1;
+                p1 = p2;
+                p2 = tmp;
+            }
+            draw_list->AddBezierCurve(p1, p1 + ImVec2(+50, 0), p2 + ImVec2(-50, 0), p2, COLOR_CALL_CURVE,
+                CURVE_THICKNESS * graph->gui.canvas_zooming);
+        }
+    }
+    */
+}
+
+
+/*
+bool megamol::gui::configurator::Configurator::update_module_size(
+    megamol::gui::configurator::GraphManager::GraphPtrType graph, megamol::gui::configurator::ModulePtrType mod) {
+
+    mod->present.class_label = "Class: " + mod->class_name;
+    float class_name_length = this->utils.TextWidgetWidth(mod->present.class_label);
+    mod->present.name_label = "Name: " + mod->name;
+    float name_length = this->utils.TextWidgetWidth(mod->present.name_label);
+    float max_label_length = std::max(class_name_length, name_length);
+
+    float max_slot_name_length = 0.0f;
+    if (graph->gui.show_slot_names) {
+        for (auto& call_slot_type_list : mod->GetCallSlots()) {
+            for (auto& call_slot : call_slot_type_list.second) {
+                max_slot_name_length = std::max(this->utils.TextWidgetWidth(call_slot->name), max_slot_name_length);
+            }
+        }
+        max_slot_name_length = (2.0f * max_slot_name_length) + (2.0f * graph->gui.slot_radius);
+    }
+
+    float module_width = (max_label_length + max_slot_name_length) + (4.0f * graph->gui.slot_radius);
+
+    auto max_slot_count = std::max(mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLEE).size(),
+        mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLER).size());
+    float module_slot_height = (static_cast<float>(max_slot_count) * (graph->gui.slot_radius * 2.0f) * 1.5f) +
+        ((graph->gui.slot_radius * 2.0f) * 0.5f);
+
+    float module_height =
+        std::max(module_slot_height, ImGui::GetItemsLineHeightWithSpacing() * ((mod->is_view) ? (4.0f) : (3.0f)));
+
+    mod->present.size = ImVec2(module_width, module_height);
+
+    return true;
+}
+
+
+bool megamol::gui::configurator::Configurator::update_slot_position(
+    megamol::gui::configurator::GraphManager::GraphPtrType graph, megamol::gui::configurator::CallSlotPtrType slot) {
+
+    if (slot->ParentModuleConnected()) {
+        auto slot_count = slot->GetParentModule()->GetCallSlots(slot->type).size();
+        size_t slot_idx = 0;
+        for (size_t idx = 0; idx < slot_count; idx++) {
+            if (slot->name == slot->GetParentModule()->GetCallSlots(slot->type)[idx]->name) {
+                slot_idx = idx;
+            }
+        }
+        auto pos = graph->gui.canvas_offset + slot->GetParentModule()->present.position * graph->gui.canvas_zooming;
+        auto size = slot->GetParentModule()->present.size;
+        slot->present.position =
+            ImVec2(pos.x + ((slot->type == graph::CallSlot::CallSlotType::CALLER) ? (size.x) : (0.0f)),
+                pos.y + size.y * ((float)slot_idx + 1) / ((float)slot_count + 1));
+        return true;
+    }
+    return false;
+}
+
+
+bool megamol::gui::configurator::Configurator::update_graph_layout(
+    megamol::gui::configurator::GraphManager::GraphPtrType graph) {
+
+    // Really simple layouting sorting modules into differnet layers
+    std::vector<std::vector<graph::ModulePtrType>> layers;
+    layers.clear();
+
+    // Fill first layer with modules having no connected callee
+    // (Cycles are ignored)
+    layers.emplace_back();
+    for (auto& mod : graph->GetGraphModules()) {
+        bool any_connected_callee = false;
+        for (auto& callee_slot : mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLEE)) {
+            if (callee_slot->CallsConnected()) {
+                any_connected_callee = true;
+            }
+        }
+        if (!any_connected_callee) {
+            layers.back().emplace_back(mod);
+        }
+    }
+
+    // Loop while modules are added to new layer.
+    bool added_module = true;
+    while (added_module) {
+        added_module = false;
+        // Add new layer
+        layers.emplace_back();
+        // Loop through last filled layer
+        for (auto& mod : layers[layers.size() - 2]) {
+            for (auto& caller_slot : mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLER)) {
+                if (caller_slot->CallsConnected()) {
+                    for (auto& call : caller_slot->GetConnectedCalls()) {
+                        auto add_mod = call->GetCallSlot(graph::CallSlot::CallSlotType::CALLEE)->GetParentModule();
+                        // Check if module was already added
+                        bool found_module = false;
+                        for (auto& layer : layers) {
+                            for (auto& m : layer) {
+                                if (m == add_mod) {
+                                    found_module = true;
+                                }
+                            }
+                        }
+                        if (!found_module) {
+                            layers.back().emplace_back(add_mod);
+                            added_module = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Calculate new positions of modules
+    const float border_offset = graph->gui.slot_radius * 4.0f;
+    ImVec2 init_position = ImVec2(-1.0f * graph->gui.canvas_scrolling.x, -1.0f * graph->gui.canvas_scrolling.y);
+    ImVec2 pos = init_position;
+    float max_call_width = 25.0f;
+    float max_module_width = 0.0f;
+    size_t layer_mod_cnt = 0;
+    for (auto& layer : layers) {
+        if (graph->gui.show_call_names) {
+            max_call_width = 0.0f;
+        }
+        max_module_width = 0.0f;
+        layer_mod_cnt = layer.size();
+        pos.x += border_offset;
+        pos.y = init_position.y + border_offset;
+        for (int i = 0; i < layer_mod_cnt; i++) {
+            auto mod = layer[i];
+            if (graph->gui.show_call_names) {
+                for (auto& caller_slot : mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLER)) {
+                    if (caller_slot->CallsConnected()) {
+                        for (auto& call : caller_slot->GetConnectedCalls()) {
+                            auto call_name_length = this->utils.TextWidgetWidth(call->class_name);
+                            max_call_width =
+                                (call_name_length > max_call_width) ? (call_name_length) : (max_call_width);
+                        }
+                    }
+                }
+            }
+            mod->present.position = pos;
+            pos.y += mod->present.size.y + border_offset;
+            max_module_width = (mod->present.size.x > max_module_width) ? (mod->present.size.x) : (max_module_width);
+        }
+        pos.x += (max_module_width + max_call_width + border_offset);
+    }
+
+    return true;
+}
+*/

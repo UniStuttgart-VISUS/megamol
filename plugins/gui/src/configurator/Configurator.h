@@ -20,8 +20,8 @@
 
 #include "FileUtils.h"
 #include "GUIUtils.h"
-#include "WindowManager.h"
 #include "GraphManager.h"
+#include "WindowManager.h"
 
 
 namespace megamol {
@@ -73,9 +73,7 @@ private:
         std::string project_filename;
         GraphManager::GraphPtrType graph_ptr;
         int selected_list_module_id;
-        float mouse_wheel;
         ImFont* graph_font;
-
         float split_width;
     } gui;
 
@@ -84,22 +82,8 @@ private:
     void draw_window_menu(megamol::core::CoreInstance* core_instance);
     void draw_window_module_list(float width);
 
-
-
-
-    bool draw_graph_canvas(GraphManager::GraphPtrType graph);
-    bool draw_canvas_grid(GraphManager::GraphPtrType graph);
-    bool draw_canvas_calls(GraphManager::GraphPtrType graph);
-    bool draw_canvas_modules(GraphManager::GraphPtrType graph);
-    bool draw_canvas_module_call_slots(GraphManager::GraphPtrType graph, megamol::gui::configurator::ModulePtrType mod);
-    bool draw_canvas_dragged_call(GraphManager::GraphPtrType graph);
-
-    bool update_module_size(GraphManager::GraphPtrType graph, megamol::gui::configurator::ModulePtrType mod);
-    bool update_slot_position(GraphManager::GraphPtrType graph, megamol::gui::configurator::CallSlotPtrType slot);
-    bool update_graph_layout(GraphManager::GraphPtrType graph);
-
-    bool add_new_module_to_graph(
-        const StockModule& mod, int compat_call_idx, const std::string& compat_call_slot_name);
+    // bool add_new_module_to_graph(const StockModule& mod, int compat_call_idx, const std::string&
+    // compat_call_slot_name);
 
     bool popup_save_project(bool open, megamol::core::CoreInstance* core_instance);
 

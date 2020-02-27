@@ -55,11 +55,11 @@ public:
     int generate_unique_id(void) { return (++this->generated_uid); }
 
     // GUI Presentation -------------------------------------------------------
-    bool Present(float child_width) { this->present.Present(*this, child_width); }
-
-    inline const CallSlotPtrType GetSelectedSlot(void) const {
-        return this->present.selected_slot_ptr;
+    bool Present(float child_width, ImFont* graph_font) {
+        return this->present.Present(*this, child_width, graph_font);
     }
+
+    inline const CallSlotPtrType GetSelectedSlot(void) const { return this->present.selected_slot_ptr; }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -84,7 +84,7 @@ private:
 
         ~Presentation(void);
 
-        bool Present(Graph& graph, float child_width);
+        bool Present(Graph& graph, float child_width, ImFont* graph_font);
 
         float slot_radius;
         ImVec2 canvas_position;
@@ -101,19 +101,20 @@ private:
         CallSlotPtrType selected_slot_ptr;
         int process_selected_slot;
         bool update_current_graph;
-
-
         bool rename_popup_open;
         std::string* rename_popup_string;
         float split_width;
+        ImFont* font;
 
     private:
-
         GUIUtils utils;
 
         void menu(megamol::gui::configurator::Graph& graph);
         void canvas(megamol::gui::configurator::Graph& graph, float child_width);
         void parameters(megamol::gui::configurator::Graph& graph, float child_width);
+
+        void canvas_grid(megamol::gui::configurator::Graph& graph);
+        void canvas_dragged_call(megamol::gui::configurator::Graph& graph);
 
     } present;
 };

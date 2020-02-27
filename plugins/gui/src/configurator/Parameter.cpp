@@ -185,11 +185,13 @@ megamol::gui::configurator::Parameter::Presentation::~Presentation(void) {}
 bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::configurator::Parameter& param) {
 
     try {
+
         if (ImGui::GetCurrentContext() == nullptr) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return;
+            return false;
         }
+
         if (!this->invisible) {
             ImGui::PushID(param.uid);
 

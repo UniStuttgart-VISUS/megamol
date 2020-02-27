@@ -91,7 +91,7 @@ public:
 
     std::string full_name;
 
-    bool Present(void) { this->present.Present(*this); }
+    bool Present(void) { return this->present.Present(*this); }
 
     // Get ----------------------------------
     std::string GetValueString(void);
@@ -205,7 +205,6 @@ private:
         GUIUtils utils;
 
     private:
-
         std::map<std::string, std::string> widgtmap_text;
         std::map<std::string, int> widgtmap_int;
         std::map<std::string, float> widgtmap_float;
