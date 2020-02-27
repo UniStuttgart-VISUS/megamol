@@ -54,14 +54,15 @@ public:
     int GetCompatibleCallIndex(CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
     int GetCompatibleCallIndex(CallSlotPtrType call_slot, StockCallSlot stock_call_slot);
 
-    // Only used for prototype to be able to store current graphs to lua project file.
+    // Only used for prototype to be able to serialize current projects to lua project file.
     bool PROTOTYPE_SaveGraph(int graph_id, std::string project_filename, megamol::core::CoreInstance* cor_iInstance);
 
     // GUI Presentation -------------------------------------------------------
     bool Present(float child_width, ImFont* graph_font, HotkeyData paramter_search, HotkeyData delete_graph_element) {
         return this->present.Present(*this, child_width, graph_font, paramter_search, delete_graph_element);
     }
-    const GraphManager::GraphPtrType GetActiveGraph(void) { return this->present.GetActiveGraph(); }
+
+    const GraphManager::GraphPtrType GetPresentedGraph(void) { return this->present.GetPresentedGraph(); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -83,10 +84,10 @@ private:
         bool Present(GraphManager& graph_manager, float child_width, ImFont* graph_font, HotkeyData paramter_search,
             HotkeyData delete_graph_element);
 
-        const GraphManager::GraphPtrType GetActiveGraph(void) { return this->active_graph; }
+        const GraphManager::GraphPtrType GetPresentedGraph(void) { return this->presented_graph; }
 
     private:
-        GraphManager::GraphPtrType active_graph;
+        GraphManager::GraphPtrType presented_graph;
 
     } present;
 

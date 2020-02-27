@@ -676,8 +676,8 @@ OverlayRenderer::Rectangle OverlayRenderer::getScreenSpaceRect(
     case (Anchor::ALIGN_CENTER_TOP): {
         rectangle.left = 0.5f + (rel_pos.x / 2.0f) - (rel_width / 2.0f);
         rectangle.right = rectangle.left + rel_width;
-        rectangle.top = 1.0 - rel_pos.y;
-        rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+        rectangle.top = 1.0f - rel_pos.y;
+        rectangle.bottom = 1.0f - rel_pos.y - rel_height;
     } break;
     case (Anchor::ALIGN_CENTER_MIDDLE): {
         rectangle.left = 0.5f + (rel_pos.x / 2.0f) - (rel_width / 2.0f);
@@ -694,8 +694,8 @@ OverlayRenderer::Rectangle OverlayRenderer::getScreenSpaceRect(
     case (Anchor::ALIGN_RIGHT_TOP): {
         rectangle.left = 1.0f - rel_pos.x - rel_width;
         rectangle.right = 1.0f - rel_pos.x;
-        rectangle.top = 1.0 - rel_pos.y;
-        rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+        rectangle.top = 1.0f - rel_pos.y;
+        rectangle.bottom = 1.0f - rel_pos.y - rel_height;
     } break;
     case (Anchor::ALIGN_RIGHT_MIDDLE): {
         rectangle.left = 1.0f - rel_pos.x - rel_width;

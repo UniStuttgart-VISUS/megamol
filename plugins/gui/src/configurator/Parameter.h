@@ -91,8 +91,6 @@ public:
 
     std::string full_name;
 
-    bool Present(void) { return this->present.Present(*this); }
-
     // Get ----------------------------------
     std::string GetValueString(void);
 
@@ -102,6 +100,7 @@ public:
         try {
             return std::get<T>(this->minval);
         } catch (std::bad_variant_access&) {
+            /// XXX
         }
     }
 
@@ -109,6 +108,7 @@ public:
         try {
             return std::get<T>(this->maxval);
         } catch (std::bad_variant_access&) {
+            /// XXX
         }
     }
 
@@ -116,6 +116,7 @@ public:
         try {
             return std::get<T>(this->storage);
         } catch (std::bad_variant_access&) {
+            /// XXX
         }
     }
 
@@ -155,6 +156,10 @@ public:
                 "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
+
+    // GUI Presentation -------------------------------------------------------
+
+    bool Present(void) { return this->present.Present(*this); }
 
 private:
     typedef std::variant<std::monostate, // default (unused/unavailable)
@@ -198,13 +203,13 @@ private:
 
         bool Present(Parameter& param);
 
+    private:
         enum Presentations : size_t { DEFAULT = 0, SIMPLE = 1, _COUNT_ = 2 } presentations;
         bool read_only;
         bool invisible;
         std::string help;
         GUIUtils utils;
 
-    private:
         std::map<std::string, std::string> widgtmap_text;
         std::map<std::string, int> widgtmap_int;
         std::map<std::string, float> widgtmap_float;

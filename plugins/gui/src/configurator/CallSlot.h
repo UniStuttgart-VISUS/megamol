@@ -64,6 +64,8 @@ public:
 
     bool Present(void) { return this->present.Present(*this); }
 
+    ImVec2 GetPosition(void) { return this->present.GetPosition(); }
+
 private:
     ModulePtrType parent_module;
     std::vector<CallPtrType> connected_calls;
@@ -79,12 +81,13 @@ private:
 
         bool Present(CallSlot& call_slot);
 
+        ImVec2 GetPosition(void) { return this->position; }
+
         void UpdatePosition();
 
+    private:
         enum Presentations { DEFAULT } presentations;
         bool label_visible;
-
-    private:
         ImVec2 position;
 
     } present;

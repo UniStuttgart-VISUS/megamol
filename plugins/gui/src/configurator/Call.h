@@ -71,6 +71,7 @@ private:
 
         bool Present(Call& call);
 
+    private:
         enum Presentations { DEFAULT } presentations;
         bool label_visible;
 

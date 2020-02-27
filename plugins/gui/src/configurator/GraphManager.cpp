@@ -306,10 +306,10 @@ bool megamol::gui::configurator::GraphManager::LoadCurrentCoreProject(
                         CallData cd;
 
                         cd.compat_call_idx = -1;
-                        int calls_count = this->calls_stock.size();
-                        for (int i = 0; i < calls_count; i++) {
+                        size_t calls_count = this->calls_stock.size();
+                        for (size_t i = 0; i < calls_count; i++) {
                             if (this->calls_stock[i].class_name == std::string(call->ClassName())) {
-                                cd.compat_call_idx = i;
+                                cd.compat_call_idx = static_cast<int>(i);
                             }
                         }
                         cd.caller_module_full_name =
@@ -381,7 +381,7 @@ int megamol::gui::configurator::GraphManager::GetCompatibleCallIndex(
                                    (call_slot_2->CallsConnected())) {
                             return -1;
                         }
-                        return current_comp_call_slots;
+                        return static_cast<int>(current_comp_call_slots);
                     }
                 }
             }
@@ -400,7 +400,7 @@ int megamol::gui::configurator::GraphManager::GetCompatibleCallIndex(
             for (auto& selected_comp_call_slots : call_slot->compatible_call_idxs) {
                 for (auto& current_comp_call_slots : stock_call_slot.compatible_call_idxs) {
                     if (selected_comp_call_slots == current_comp_call_slots) {
-                        return current_comp_call_slots;
+                        return static_cast<int>(current_comp_call_slots);
                     }
                 }
             }
@@ -739,7 +739,7 @@ bool megamol::gui::configurator::GraphManager::get_call_stock_data(
 
 // GRAPH MANAGET PRESENTATION ####################################################
 
-megamol::gui::configurator::GraphManager::Presentation::Presentation(void) : active_graph(nullptr) {}
+megamol::gui::configurator::GraphManager::Presentation::Presentation(void) : presented_graph(nullptr) {}
 
 
 megamol::gui::configurator::GraphManager::Presentation::~Presentation(void) {}
@@ -769,12 +769,12 @@ bool megamol::gui::configurator::GraphManager::Presentation::Present(GraphManage
 
             bool delete_graph = false;
             if (graph->Present(child_width, graph_font, paramter_search, delete_graph_element, delete_graph)) {
-                active_graph = graph;
+                presented_graph = graph;
             }
 
             // Do not delete graph while looping through graphs list
             if (delete_graph) {
-                active_graph = nullptr;
+                presented_graph = nullptr;
                 delete_graph_uid = graph->GetUID();
             }
         }

@@ -88,8 +88,8 @@ template <size_t PaletteSize> PresetGenerator ColormapAdapter(const float palett
             auto t = i / static_cast<double>(n - 1);
 
             // Linear interpolation from palette.
-            size_t i0 = std::floor(t * LastIndex);
-            size_t i1 = std::ceil(t * LastIndex);
+            size_t i0 = static_cast<size_t>(std::floor(t * LastIndex));
+            size_t i1 = static_cast<size_t>(std::ceil(t * LastIndex));
             double it = std::fmod(t * LastIndex, LastIndex);
             double r[2] = {static_cast<double>(palette[i0][0]), static_cast<double>(palette[i1][0])};
             double g[2] = {static_cast<double>(palette[i0][1]), static_cast<double>(palette[i1][1])};
@@ -248,7 +248,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     ImGui::Separator();
 
     // Interval range -----------------------------------------------------
-    ImGui::PushItemWidth(tfw_item_width * 0.5 - style.ItemInnerSpacing.x);
+    ImGui::PushItemWidth(tfw_item_width * 0.5f - style.ItemInnerSpacing.x);
 
     ImGui::InputFloat("###min", &this->widget_buffer.min_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -313,11 +313,11 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
 
     // Color channels -----------------------------------------------------
     ImGui::Checkbox("Red", &this->activeChannels[0]);
-    ImGui::SameLine(tfw_item_width * 0.26);
+    ImGui::SameLine(tfw_item_width * 0.26f);
     ImGui::Checkbox("Green", &this->activeChannels[1]);
-    ImGui::SameLine(tfw_item_width * 0.49);
+    ImGui::SameLine(tfw_item_width * 0.49f);
     ImGui::Checkbox("Blue", &this->activeChannels[2]);
-    ImGui::SameLine(tfw_item_width * 0.725);
+    ImGui::SameLine(tfw_item_width * 0.725f);
     ImGui::Checkbox("Alpha", &this->activeChannels[3]);
     ImGui::SameLine(tfw_item_width + style.ItemSpacing.x + style.ItemInnerSpacing.x);
     ImGui::Text("Color Channels");
@@ -344,9 +344,9 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     std::map<param::TransferFunctionParam::InterpolationMode, std::string> opts;
     opts[param::TransferFunctionParam::InterpolationMode::LINEAR] = "Linear";
     opts[param::TransferFunctionParam::InterpolationMode::GAUSS] = "Gauss";
-    int opts_cnt = opts.size();
+    size_t opts_cnt = opts.size();
     if (ImGui::BeginCombo("Interpolation", opts[this->mode].c_str())) {
-        for (int i = 0; i < opts_cnt; ++i) {
+        for (size_t i = 0; i < opts_cnt; ++i) {
             if (ImGui::Selectable(opts[(param::TransferFunctionParam::InterpolationMode)i].c_str(),
                     (this->mode == (param::TransferFunctionParam::InterpolationMode)i))) {
                 this->mode = (param::TransferFunctionParam::InterpolationMode)i;
@@ -543,8 +543,8 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
             // Test for intersection of mouse position with node.
             ImVec2 d = ImVec2(point.x - mouse_cur_pos.x, point.y - mouse_cur_pos.y);
             if (sqrtf((d.x * d.x) + (d.y * d.y)) <= pointAndBorderRadius) {
-                selected_node = i;
-                selected_chan = c;
+                selected_node = static_cast<int>(i);
+                selected_chan = static_cast<int>(c);
                 selected_delta = d;
             }
         }
@@ -666,8 +666,9 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
                 if ((selected_node > 0) &&
                     (selected_node < (this->nodes.size() - 1))) { // First and last node can't be deleted
                     this->nodes.erase(this->nodes.begin() + selected_node);
-                    if (this->currentNode >= selected_node) {
-                        this->currentNode = (unsigned int)std::max(0, (int)this->currentNode - 1);
+                    if (static_cast<int>(this->currentNode) >= selected_node) {
+                        this->currentNode =
+                            static_cast<unsigned int>(std::max(0, static_cast<int>(this->currentNode) - 1));
                     }
                     this->textureInvalid = true;
                 }

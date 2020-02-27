@@ -72,26 +72,6 @@ bool megamol::gui::configurator::Graph::AddModule(
                 return true;
             }
         }
-
-        /// XXX
-        /*
-        // If there is a call slot selected, create call to compatible call slot of new module
-        if (graph->gui.selected_slot_ptr != nullptr) {
-            // Get call slots of last added module
-            for (auto& call_slot_map : graph->GetGraphModules().back()->GetCallSlots()) {
-                for (auto& call_slot : call_slot_map.second) {
-                    if (call_slot->name == compat_call_slot_name) {
-                        if (graph->AddCall(this->graph_manager.GetCallsStock(), compat_call_idx,
-                            graph->gui.selected_slot_ptr, call_slot)) {
-                            graph->gui.selected_slot_ptr = nullptr;
-                            retval = true;
-                        }
-                    }
-                }
-            }
-        }
-        */
-
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -270,7 +250,7 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , update_current_graph(true)
     , rename_popup_open(false)
     , rename_popup_string(nullptr)
-    , split_width(200.0f)
+    , split_width(600.0f)
     , font(nullptr)
     , mouse_wheel(0.0f) {}
 
@@ -513,16 +493,19 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
     }
     ImGui::PopStyleVar(2);
 
-    /*
+
     // Draw modules -------------------
-    this->canvas_modules(graph);
+    for (auto& mod : graph.GetGraphModules()) {
+        mod->Present();
+    }
 
     // Draw calls ---------------------
-    this->canvas_calls(graph);
+    for (auto& call : graph.GetGraphCalls()) {
+        call->Present();
+    }
 
     // Draw dragged call --------------
     this->canvas_dragged_call(graph);
-    */
 
     // Zooming and Scaling  -----------
     /// Must be checked inside canvas child window.
@@ -602,7 +585,6 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
     for (auto& mod : graph.GetGraphModules()) {
         if (mod->uid == this->selected_module_uid) {
             for (auto& param : mod->parameters) {
-
                 // Filter module by given search string
                 bool search_filter = true;
                 if (!search_string.empty()) {
@@ -649,7 +631,6 @@ void megamol::gui::configurator::Graph::Presentation::canvas_grid(megamol::gui::
 
 void megamol::gui::configurator::Graph::Presentation::canvas_dragged_call(megamol::gui::configurator::Graph& graph) {
 
-    /*
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
     draw_list->ChannelsSetCurrent(0); // Background
@@ -658,29 +639,28 @@ void megamol::gui::configurator::Graph::Presentation::canvas_dragged_call(megamo
 
     const float CURVE_THICKNESS = 3.0f;
 
-    if ((graph->gui.selected_slot_ptr != nullptr) && (graph->gui.hovered_slot_uid < 0)) {
+    if ((this->selected_slot_ptr != nullptr) && (this->hovered_slot_uid < 0)) {
         ImVec2 current_pos = ImGui::GetMousePos();
         bool mouse_inside_canvas = false;
 
-        if ((current_pos.x >= graph->gui.canvas_position.x) &&
-            (current_pos.x <= (graph->gui.canvas_position.x + graph->gui.canvas_size.x)) &&
-            (current_pos.y >= graph->gui.canvas_position.y) &&
-            (current_pos.y <= (graph->gui.canvas_position.y + graph->gui.canvas_size.y))) {
+        if ((current_pos.x >= this->canvas_position.x) &&
+            (current_pos.x <= (this->canvas_position.x + this->canvas_size.x)) &&
+            (current_pos.y >= this->canvas_position.y) &&
+            (current_pos.y <= (this->canvas_position.y + this->canvas_size.y))) {
             mouse_inside_canvas = true;
         }
         if (ImGui::IsMouseDown(0) && mouse_inside_canvas) {
-            ImVec2 p1 = graph->gui.selected_slot_ptr->present.position;
+            ImVec2 p1 = this->selected_slot_ptr->GetPosition();
             ImVec2 p2 = ImGui::GetMousePos();
-            if (graph->gui.selected_slot_ptr->type == graph::CallSlot::CallSlotType::CALLEE) {
+            if (this->selected_slot_ptr->type == CallSlot::CallSlotType::CALLEE) {
                 ImVec2 tmp = p1;
                 p1 = p2;
                 p2 = tmp;
             }
             draw_list->AddBezierCurve(p1, p1 + ImVec2(+50, 0), p2 + ImVec2(-50, 0), p2, COLOR_CALL_CURVE,
-                CURVE_THICKNESS * graph->gui.canvas_zooming);
+                CURVE_THICKNESS * this->canvas_zooming);
         }
     }
-    */
 }
 
 
@@ -695,21 +675,21 @@ bool megamol::gui::configurator::Configurator::update_module_size(
     float max_label_length = std::max(class_name_length, name_length);
 
     float max_slot_name_length = 0.0f;
-    if (graph->gui.show_slot_names) {
+    if (this->show_slot_names) {
         for (auto& call_slot_type_list : mod->GetCallSlots()) {
             for (auto& call_slot : call_slot_type_list.second) {
                 max_slot_name_length = std::max(this->utils.TextWidgetWidth(call_slot->name), max_slot_name_length);
             }
         }
-        max_slot_name_length = (2.0f * max_slot_name_length) + (2.0f * graph->gui.slot_radius);
+        max_slot_name_length = (2.0f * max_slot_name_length) + (2.0f * this->slot_radius);
     }
 
-    float module_width = (max_label_length + max_slot_name_length) + (4.0f * graph->gui.slot_radius);
+    float module_width = (max_label_length + max_slot_name_length) + (4.0f * this->slot_radius);
 
     auto max_slot_count = std::max(mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLEE).size(),
         mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLER).size());
-    float module_slot_height = (static_cast<float>(max_slot_count) * (graph->gui.slot_radius * 2.0f) * 1.5f) +
-        ((graph->gui.slot_radius * 2.0f) * 0.5f);
+    float module_slot_height = (static_cast<float>(max_slot_count) * (this->slot_radius * 2.0f) * 1.5f) +
+        ((this->slot_radius * 2.0f) * 0.5f);
 
     float module_height =
         std::max(module_slot_height, ImGui::GetItemsLineHeightWithSpacing() * ((mod->is_view) ? (4.0f) : (3.0f)));
@@ -731,7 +711,7 @@ bool megamol::gui::configurator::Configurator::update_slot_position(
                 slot_idx = idx;
             }
         }
-        auto pos = graph->gui.canvas_offset + slot->GetParentModule()->present.position * graph->gui.canvas_zooming;
+        auto pos = this->canvas_offset + slot->GetParentModule()->present.position * this->canvas_zooming;
         auto size = slot->GetParentModule()->present.size;
         slot->present.position =
             ImVec2(pos.x + ((slot->type == graph::CallSlot::CallSlotType::CALLER) ? (size.x) : (0.0f)),
@@ -796,14 +776,14 @@ bool megamol::gui::configurator::Configurator::update_graph_layout(
     }
 
     // Calculate new positions of modules
-    const float border_offset = graph->gui.slot_radius * 4.0f;
-    ImVec2 init_position = ImVec2(-1.0f * graph->gui.canvas_scrolling.x, -1.0f * graph->gui.canvas_scrolling.y);
+    const float border_offset = this->slot_radius * 4.0f;
+    ImVec2 init_position = ImVec2(-1.0f * this->canvas_scrolling.x, -1.0f * this->canvas_scrolling.y);
     ImVec2 pos = init_position;
     float max_call_width = 25.0f;
     float max_module_width = 0.0f;
     size_t layer_mod_cnt = 0;
     for (auto& layer : layers) {
-        if (graph->gui.show_call_names) {
+        if (this->show_call_names) {
             max_call_width = 0.0f;
         }
         max_module_width = 0.0f;
@@ -812,7 +792,7 @@ bool megamol::gui::configurator::Configurator::update_graph_layout(
         pos.y = init_position.y + border_offset;
         for (int i = 0; i < layer_mod_cnt; i++) {
             auto mod = layer[i];
-            if (graph->gui.show_call_names) {
+            if (this->show_call_names) {
                 for (auto& caller_slot : mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLER)) {
                     if (caller_slot->CallsConnected()) {
                         for (auto& call : caller_slot->GetConnectedCalls()) {

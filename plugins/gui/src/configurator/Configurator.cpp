@@ -124,7 +124,7 @@ bool megamol::gui::configurator::Configurator::Draw(
         this->graph_manager.Present(child_width_auto, this->graph_font, this->hotkeys[HotkeyIndex::PARAMETER_SEARCH],
             this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]);
 
-        this->graph_ptr = this->graph_manager.GetActiveGraph();
+        this->graph_ptr = this->graph_manager.GetPresentedGraph();
     }
 
     return true;
@@ -149,7 +149,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
             }
 
             if (ImGui::MenuItem("Load Running Project")) {
-                int graph_count = this->graph_manager.GetGraphs().size();
+                size_t graph_count = this->graph_manager.GetGraphs().size();
                 std::string graph_name = "Project_" + std::to_string(graph_count + 1);
                 this->graph_manager.LoadCurrentCoreProject(this->get_unique_project_name(), core_instance);
                 // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
@@ -260,7 +260,22 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
             if (add_module) {
                 if (this->graph_ptr != nullptr) {
                     this->graph_ptr->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
-                    /// XXX this->add_new_module_to_graph(mod, compat_call_index, compat_call_slot_name);
+
+                    auto selected_slot = this->graph_ptr->GetSelectedSlot();
+                    // If there is a call slot selected, create call to compatible call slot of new module
+                    if (selected_slot != nullptr) {
+                        // Get call slots of last added module
+                        for (auto& call_slot_map : this->graph_ptr->GetGraphModules().back()->GetCallSlots()) {
+                            for (auto& call_slot : call_slot_map.second) {
+                                if (call_slot->name == compat_call_slot_name) {
+                                    if (this->graph_ptr->AddCall(this->graph_manager.GetCallsStock(), compat_call_index,
+                                            selected_slot, call_slot)) {
+                                        /// XXXthis->selected_slot_ptr = nullptr;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 } else {
                     vislib::sys::Log::DefaultLog.WriteError(
                         "No project loaded. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);

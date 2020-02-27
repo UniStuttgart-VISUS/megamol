@@ -61,7 +61,7 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    bool Present(void) { this->present.Present(*this); }
+    bool Present(void) { return this->present.Present(*this); }
 
 private:
     std::map<CallSlot::CallSlotType, std::vector<CallSlotPtrType>> call_slots;
@@ -77,6 +77,7 @@ private:
 
         bool Present(Module& mod);
 
+    private:
         enum Presentations { DEFAULT } presentations;
         bool label_visible;
         ImVec2 position;
@@ -84,7 +85,6 @@ private:
         std::string class_label;
         std::string name_label;
 
-    private:
     } present;
 };
 

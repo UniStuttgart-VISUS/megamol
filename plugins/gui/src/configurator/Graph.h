@@ -41,8 +41,8 @@ public:
     bool DeleteDisconnectedCalls(void);
     bool DeleteCall(int call_uid);
 
-    const const ModuleGraphVectorType& GetGraphModules(void) { return this->modules; }
-    const const CallGraphVectorType& GetGraphCalls(void) { return this->calls; }
+    const ModuleGraphVectorType& GetGraphModules(void) { return this->modules; }
+    const CallGraphVectorType& GetGraphCalls(void) { return this->calls; }
 
     inline void SetName(const std::string& graph_name) { this->name = graph_name; }
     inline std::string& GetName(void) { return this->name; }
@@ -61,7 +61,7 @@ public:
             *this, child_width, graph_font, paramter_search, delete_graph_element, delete_graph);
     }
 
-    inline const CallSlotPtrType GetSelectedSlot(void) const { return this->present.selected_slot_ptr; }
+    inline const CallSlotPtrType GetSelectedSlot(void) const { return this->present.GetSelectedSlot(); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -89,6 +89,9 @@ private:
         bool Present(Graph& graph, float child_width, ImFont* graph_font, HotkeyData paramter_search,
             HotkeyData delete_graph_element, bool& delete_graph);
 
+        inline const CallSlotPtrType GetSelectedSlot(void) const { return this->selected_slot_ptr; }
+
+    private:
         float slot_radius;
         ImVec2 canvas_position;
         ImVec2 canvas_size;
@@ -109,8 +112,6 @@ private:
         float split_width;
         ImFont* font;
         float mouse_wheel;
-
-    private:
         GUIUtils utils;
 
         void menu(megamol::gui::configurator::Graph& graph);
