@@ -33,7 +33,7 @@ megamol::gui::configurator::Parameter::Parameter(int uid, megamol::gui::configur
     } break;
     case (Parameter::ParamType::ENUM): {
         this->value = int(0);
-        this->storage = vislib::Map<int, vislib::TString>();
+        this->storage = EnumStorageType();
     } break;
     case (Parameter::ParamType::FILEPATH): {
         this->value = std::string();
@@ -302,7 +302,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(Paramete
 
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
-    // ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.75f); // set general proportional item width
+    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f); // set general proportional item width
 
     if (this->read_only) {
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
@@ -362,17 +362,15 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(Paramete
                 } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                     it->second = arg;
                 }
-            }
+            } break;
             case (Parameter::ParamType::ENUM): {
                 /// XXX: no UTF8 fanciness required here?
-                auto map = param.GetStorage<vislib::Map<int, vislib::TString>>();
-                if (ImGui::BeginCombo(param_label.c_str(), map[arg].PeekBuffer())) {
-                    auto iter = map.GetConstIterator();
-                    while (iter.HasNext()) {
-                        auto pair = iter.Next();
-                        bool isSelected = (pair.Key() == arg);
-                        if (ImGui::Selectable(pair.Value().PeekBuffer(), isSelected)) {
-                            param.SetValue(pair.Key());
+                auto map = param.GetStorage<EnumStorageType>();
+                if (ImGui::BeginCombo(param_label.c_str(), map[arg].c_str())) {
+                    for (auto& pair : map) {
+                        bool isSelected = (pair.first == arg);
+                        if (ImGui::Selectable(pair.second.c_str(), isSelected)) {
+                            param.SetValue(pair.first);
                         }
                         if (isSelected) {
                             ImGui::SetItemDefaultFocus();
@@ -380,7 +378,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(Paramete
                     }
                     ImGui::EndCombo();
                 }
-            }
+            } break;
             default:
                 break;
             }
@@ -414,12 +412,10 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(Paramete
                 ImGui::SameLine();
                 ImGui::Text(param_name.c_str());
                 this->help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
-                break;
-            }
+            } break;
             case (Parameter::ParamType::TRANSFERFUNCTION): {
                 // drawTransferFunctionEdit(param_id, param_label, *param);
-                break;
-            }
+            } break;
             case (Parameter::ParamType::FILEPATH): {
                 /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
                 auto it = this->widgtmap_text.find(param_id);
@@ -438,8 +434,8 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(Paramete
                     this->utils.Utf8Encode(utf8Str);
                     it->second = utf8Str;
                 }
-                break;
-            }
+
+            } break;
             case (Parameter::ParamType::FLEXENUM): {
                 /// XXX: no UTF8 fanciness required here?
                 if (ImGui::BeginCombo(param_label.c_str(), arg.c_str())) {
@@ -454,8 +450,8 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(Paramete
                     }
                     ImGui::EndCombo();
                 }
-                break;
-            }
+
+            } break;
             default:
                 break;
             }
@@ -546,8 +542,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(Paramete
                 if (ImGui::Button(param_label.c_str())) {
                     // param.setDirty();
                 }
-                break;
-            }
+            } break;
             default:
                 break;
             }
@@ -561,7 +556,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(Paramete
         ImGui::PopStyleVar();
     }
 
-    // ImGui::PopItemWidth();
+    ImGui::PopItemWidth();
 }
 
 

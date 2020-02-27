@@ -247,7 +247,14 @@ bool megamol::gui::configurator::GraphManager::LoadCurrentCoreProject(
                                 param.SetValue(p_ptr->Value());
                             } else if (auto* p_ptr = param_slot->Param<core::param::EnumParam>()) {
                                 param.SetValue(p_ptr->Value());
-                                param.SetStorage(p_ptr->getMap());
+                                Parameter::EnumStorageType map;
+                                auto param_map = p_ptr->getMap();
+                                auto iter = param_map.GetConstIterator();
+                                while (iter.HasNext()) {
+                                    auto pair = iter.Next();
+                                    map.emplace(pair.Key(), std::string(pair.Value().PeekBuffer()));
+                                }
+                                param.SetStorage(map);
                             } else if (auto* p_ptr = param_slot->Param<core::param::FilePathParam>()) {
                                 param.SetValue(std::string(p_ptr->Value().PeekBuffer()));
                             } else if (auto* p_ptr = param_slot->Param<core::param::FlexEnumParam>()) {

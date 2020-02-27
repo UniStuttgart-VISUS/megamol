@@ -87,6 +87,8 @@ public:
         >
         ValueType;
 
+    typedef std::map<int, std::string> EnumStorageType;
+
     Parameter(int uid, ParamType type);
     ~Parameter() {}
 
@@ -191,7 +193,7 @@ private:
 
     typedef std::variant<std::monostate,               // default (unused/unavailable)
         megamol::core::view::KeyCode,                  // BUTTON
-        vislib::Map<int, vislib::TString>,             // ENUM
+        EnumStorageType,                               // ENUM
         megamol::core::param::FlexEnumParam::Storage_t // FLEXENUM
         >
         StroageType;

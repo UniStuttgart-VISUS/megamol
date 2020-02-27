@@ -597,40 +597,47 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
     this->utils.StringSearch("Search", help_text);
     auto search_string = this->utils.GetSearchString();
 
-    if (ImGui::Button("Reset Visibility")) {
-        for (auto& mod : graph.GetGraphModules()) {
-            if (mod->uid == this->selected_module_uid) {
-                for (auto& param : mod->parameters) {
-                    param.GUI_SetLabelVisibility(true);
-                }
-            }
-        }
-    }
-
-    ImGui::EndChild();
-
-    ImGui::BeginChild(
-        "parameter_list_child_window", ImVec2(child_width, 0.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
-
+    // Get pointer to currently selected module
+    ModulePtrType modptr;
     for (auto& mod : graph.GetGraphModules()) {
         if (mod->uid == this->selected_module_uid) {
-            for (auto& param : mod->parameters) {
-                // Filter module by given search string
-                bool search_filter = true;
-                if (!search_string.empty()) {
-
-                    search_filter = this->utils.FindCaseInsensitiveSubstring(param.class_name, search_string);
-                }
-
-                if (search_filter) {
-                    param.GUI_Present();
-                }
-            }
+            modptr = mod;
         }
     }
+    if (modptr != nullptr) {
+        ImGui::Separator();
 
-    ImGui::EndChild();
+        std::string text = "Selected Module: " + modptr->full_name;
+        ImGui::Text(text.c_str());
+        ImGui::SameLine();
 
+        if (ImGui::Button("Reset Visibility")) {
+            for (auto& param : modptr->parameters) {
+                param.GUI_SetLabelVisibility(true);
+            }
+        }
+
+        ImGui::EndChild();
+
+        ImGui::BeginChild(
+            "parameter_list_child_window", ImVec2(child_width, 0.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
+
+        for (auto& param : modptr->parameters) {
+            // Filter module by given search string
+            bool search_filter = true;
+            if (!search_string.empty()) {
+
+                search_filter = this->utils.FindCaseInsensitiveSubstring(param.class_name, search_string);
+            }
+
+            if (search_filter) {
+                param.GUI_Present();
+            }
+        }
+
+
+        ImGui::EndChild();
+    }
     ImGui::EndGroup();
 }
 
