@@ -239,6 +239,7 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
 
     // Select Color
     bool clusternode = false;
+    glm::vec4 currentcolor;
     if (this->colors != nullptr) {
         for (std::tuple<HierarchicalClustering::CLUSTERNODE*, ClusterRenderer::RGBCOLOR*>* colortuple : *colors) {
             if (this->clustering->parentIs(node, std::get<0>(*colortuple))) {
@@ -246,9 +247,7 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
                 double r = (255 - color->r) / 255;
                 double g = (255 - color->g) / 255;
                 double b = (255 - color->b) / 255;
-
-                glColor3f(r, g, b);
-
+                currentcolor = glm::vec4(r, g, b, 1.0f);
                 clusternode = true;
             }
         }
@@ -256,48 +255,44 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
 
     // Draw Point
     glPointSize(10);
+    glBindVertexArray(this->dummyVa);
     this->passthroughShader.Enable();
 
     if (!clusternode) {
         if (this->clustering->parentIs(node, this->position)) {
-            glColor3f(0.5, 0.5, 0.5);
-            glUniform4f(this->passthroughShader.ParameterLocation("color"), 0.5, 0.5, 0.5, 1.0f);
+            currentcolor = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
         } else {
-            glColor3f(0, 0, 0);
-            glUniform4f(this->passthroughShader.ParameterLocation("color"), 0.0, 0.0, 0.0, 1.0f);
+            currentcolor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
         }
     }
-    glUniform3f(this->passthroughShader.ParameterLocation("color"), 1.0, 1.0, 1.0);
+    glUniform4f(this->passthroughShader.ParameterLocation("color"), currentcolor.x, currentcolor.y, currentcolor.z,
+        currentcolor.w);
     glUniformMatrix4fv(this->passthroughShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
 
-    this->geometrySSBO->rebuffer(std::vector<glm::vec3>{glm::vec3(posx, posy, 0.0f)});
+    this->geometrySSBO->rebuffer(std::vector<glm::vec4>{glm::vec4(posx, posy, 0.0f, 1.0f)});
     this->geometrySSBO->bind(11);
     glDrawArrays(GL_POINTS, 0, 1);
-    this->passthroughShader.Disable();
-
-    glBegin(GL_POINTS);
-    glVertex2f(posx, posy);
-    glEnd();
-    
 
     if (node->level != 0) {
         // Connect the Nodes
         double posLeftY = minheight + (node->left->level * spacey);
         double posRightY = minheight + (node->right->level * spacey);
-
         glLineWidth(2);
-        glBegin(GL_LINES);
-        glVertex2f(posRight, posy);
-        glVertex2f(posLeft, posy);
-
-        glVertex2f(posRight, posy);
-        glVertex2f(posRight, posRightY);
-
-        glVertex2f(posLeft, posy);
-        glVertex2f(posLeft, posLeftY);
-        glEnd();
+        std::vector<glm::vec4> data(6);
+        data[0] = glm::vec4(posRight, posy, 0.0f, 1.0f);
+        data[1] = glm::vec4(posLeft, posy, 0.0f, 1.0f);
+        data[2] = glm::vec4(posRight, posy, 0.0f, 1.0f);
+        data[3] = glm::vec4(posRight, posRightY, 0.0f, 1.0f);
+        data[4] = glm::vec4(posLeft, posy, 0.0f, 1.0f);
+        data[5] = glm::vec4(posLeft, posLeftY, 0.0f, 1.0f);
+        this->geometrySSBO->rebuffer(data);
+        glUniformMatrix4fv(this->passthroughShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
+        glDrawArrays(GL_LINES, 0, 6);
     }
-    
+
+    this->passthroughShader.Disable();
+    glBindVertexArray(0);
+
     return posx;
 }
 
