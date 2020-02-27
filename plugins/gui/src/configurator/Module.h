@@ -14,6 +14,7 @@
 #include <map>
 #include <vector>
 
+#include "CallSlot.h"
 #include "GUIUtils.h"
 #include "Parameter.h"
 
@@ -38,6 +39,15 @@ typedef std::shared_ptr<Module> ModulePtrType;
  */
 class Module {
 public:
+    struct StockModule {
+        std::string class_name;
+        std::string description;
+        std::string plugin_name;
+        bool is_view;
+        std::vector<Parameter::StockParameter> parameters;
+        std::map<CallSlot::CallSlotType, std::vector<CallSlot::StockCallSlot>> call_slots;
+    };
+
     Module(int uid);
     ~Module();
 

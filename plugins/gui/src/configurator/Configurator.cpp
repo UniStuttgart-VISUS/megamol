@@ -227,8 +227,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                 compat_filter = false;
                 for (auto& cst : mod.call_slots) {
                     for (auto& cs : cst.second) {
-                        int cpidx =
-                            this->graph_manager.GetCompatibleCallIndex(this->graph_ptr->GUI_GetSelectedSlot(), cs);
+                        int cpidx = CallSlot::GetCompatibleCallIndex(this->graph_ptr->GUI_GetSelectedSlot(), cs);
                         if (cpidx > 0) {
                             compat_call_index = cpidx;
                             compat_call_slot_name = cs.name;

@@ -178,10 +178,56 @@ const megamol::gui::configurator::ModulePtrType megamol::gui::configurator::Call
 }
 
 
+int megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(
+    megamol::gui::configurator::CallSlotPtrType call_slot_1, megamol::gui::configurator::CallSlotPtrType call_slot_2) {
+
+    if ((call_slot_1 != nullptr) && (call_slot_2 != nullptr)) {
+        if ((call_slot_1 != call_slot_2) && (call_slot_1->GetParentModule() != call_slot_2->GetParentModule()) &&
+            (call_slot_1->type != call_slot_2->type)) {
+            // Return first found compatible call index
+            for (auto& selected_comp_call_slots : call_slot_1->compatible_call_idxs) {
+                for (auto& current_comp_call_slots : call_slot_2->compatible_call_idxs) {
+                    if (selected_comp_call_slots == current_comp_call_slots) {
+                        // Show only comaptible calls for unconnected caller slots
+                        if ((call_slot_1->type == CallSlot::CallSlotType::CALLER) && (call_slot_1->CallsConnected())) {
+                            return GUI_INVALID_ID;
+                        } else if ((call_slot_2->type == CallSlot::CallSlotType::CALLER) &&
+                                   (call_slot_2->CallsConnected())) {
+                            return GUI_INVALID_ID;
+                        }
+                        return static_cast<int>(current_comp_call_slots);
+                    }
+                }
+            }
+        }
+    }
+    return GUI_INVALID_ID;
+}
+
+
+int megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(megamol::gui::configurator::CallSlotPtrType call_slot,
+    megamol::gui::configurator::CallSlot::StockCallSlot stock_call_slot) {
+
+    if (call_slot != nullptr) {
+        if (call_slot->type != stock_call_slot.type) {
+            // Return first found compatible call index
+            for (auto& selected_comp_call_slots : call_slot->compatible_call_idxs) {
+                for (auto& current_comp_call_slots : stock_call_slot.compatible_call_idxs) {
+                    if (selected_comp_call_slots == current_comp_call_slots) {
+                        return static_cast<int>(current_comp_call_slots);
+                    }
+                }
+            }
+        }
+    }
+    return GUI_INVALID_ID;
+}
+
+
 // CALL SLOT PRESENTATION ####################################################
 
 megamol::gui::configurator::CallSlot::Presentation::Presentation(void)
-    : presentations(Presentation::DEFAULT), label_visible(true), position(), slot_radius(5.0f), utils() {}
+    : presentations(Presentation::DEFAULT), label_visible(true), position(), slot_radius(8.0f), utils() {}
 
 megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
@@ -199,6 +245,7 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::GUI_Present(
             return false;
         }
 
+        /// XXX Trigger only when necessary
         this->UpdatePosition(call_slot, canvas_offset, canvas_zooming);
 
         ImGui::PushID(call_slot.uid);
@@ -244,33 +291,34 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::GUI_Present(
         auto hovered = ImGui::IsItemHovered();
         auto clicked = ImGui::IsItemClicked();
         /// XXX
-        // int compat_call_idx = this->graph_manager.GetCompatibleCallIndex(selected_slot_ptr, slot);
-        // if (hovered) {
-        //    retval_id = call_slot.uid;
-        //    // Check if selected call slot should be connected with current slot
-        //    if (process_selected_slot > 0) {
-        //        if (graph->AddCall(this->graph_manager.GetCallsStock(), compat_call_idx, selected_slot_ptr, slot)) {
-        //            selected_slot_ptr = nullptr;
-        //        }
-        //    }
-        //}
-        /// XXX
-        // if (clicked) {
-        //    // Select / Unselect call slot
-        //    if (selected_slot_ptr != slot) {
-        //        selected_slot_ptr = slot;
-        //    } else {
-        //        selected_slot_ptr = nullptr;
-        //    }
-        //}
-        // if (hovered || (selected_slot_ptr == slot)) {
-        //    slot_color = slot_highl_color;
-        //}
-        // Highlight if compatible to selected slot
-        /// XXX
-        // if (compat_call_idx > 0) {
-        //    slot_color = COLOR_SLOT_COMPATIBLE;
-        //}
+        /*
+         int compat_call_idx = CallSlot::GetCompatibleCallIndex(selected_slot_ptr, call_slot);
+         if (hovered) {
+            retval_id = call_slot.uid;
+            // Check if selected call slot should be connected with current slot
+            if (process_selected_slot > 0) {
+                if (graph->AddCall(this->graph_manager.GetCallsStock(), compat_call_idx, selected_slot_ptr, call_slot))
+        { selected_slot_ptr = nullptr;
+                }
+            }
+        }
+         if (clicked) {
+            // Select / Unselect call slot
+            if (selected_slot_ptr != call_slot) {
+                selected_slot_ptr = call_slot;
+            } else {
+                selected_slot_ptr = nullptr;
+            }
+        }
+         if (hovered || (selected_slot_ptr == call_slot)) {
+            slot_color = slot_highl_color;
+        }
+         //Highlight if compatible to selected slot
+
+         if (compat_call_idx > 0) {
+            slot_color = COLOR_SLOT_COMPATIBLE;
+        }
+        */
 
         ImGui::SetCursorScreenPos(slot_position);
         draw_list->AddCircleFilled(slot_position, radius, slot_color);

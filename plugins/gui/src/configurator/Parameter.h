@@ -67,6 +67,13 @@ public:
         UNKNOWN
     };
 
+    struct StockParameter {
+        std::string class_name;
+        std::string description;
+        Parameter::ParamType type;
+        std::string value_string;
+    };
+
     typedef std::variant<std::monostate,             // default  BUTTON
         bool,                                        // BOOL
         megamol::core::param::ColorParam::ColorType, // COLOR

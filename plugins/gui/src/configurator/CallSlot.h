@@ -39,6 +39,13 @@ class CallSlot {
 public:
     enum CallSlotType { CALLEE, CALLER };
 
+    struct StockCallSlot {
+        std::string name;
+        std::string description;
+        std::vector<size_t> compatible_call_idxs;
+        CallSlot::CallSlotType type;
+    };
+
     CallSlot(int uid);
     ~CallSlot();
 
@@ -59,6 +66,9 @@ public:
     bool ConnectParentModule(ModulePtrType parent_module);
     bool DisConnectParentModule(void);
     const ModulePtrType GetParentModule(void);
+
+    static int GetCompatibleCallIndex(CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
+    static int GetCompatibleCallIndex(CallSlotPtrType call_slot, CallSlot::StockCallSlot stock_call_slot);
 
     // GUI Presentation -------------------------------------------------------
 

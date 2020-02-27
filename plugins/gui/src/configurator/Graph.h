@@ -17,12 +17,14 @@
 #include "CallSlot.h"
 #include "Module.h"
 #include "Parameter.h"
-#include "Stock.h"
 
 
 namespace megamol {
 namespace gui {
 namespace configurator {
+
+typedef std::vector<Module::StockModule> ModuleStockVectorType;
+typedef std::vector<Call::StockCall> CallStockVectorType;
 
 class Graph {
 public:
@@ -33,11 +35,11 @@ public:
 
     virtual ~Graph(void);
 
-    bool AddModule(const ModuleStockType& stock_modules, const std::string& module_class_name);
+    bool AddModule(const ModuleStockVectorType& stock_modules, const std::string& module_class_name);
     bool DeleteModule(int module_uid);
 
     bool AddCall(
-        const CallStockType& stock_calls, int call_idx, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
+        const CallStockVectorType& stock_calls, int call_idx, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
     bool DeleteDisconnectedCalls(void);
     bool DeleteCall(int call_uid);
 
