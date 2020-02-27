@@ -250,6 +250,8 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , selected_slot_ptr(nullptr)
     , process_selected_slot(0)
     , update_current_graph(false)
+    , rename_popup_open(false)
+    , rename_popup_string(nullptr)
     , split_width(500.0f) {
 }
 
@@ -264,6 +266,8 @@ bool megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::conf
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
+
+    ImGuiIO& io = ImGui::GetIO();
 
     ImGui::PushID(graph.GetUID());
 
@@ -284,10 +288,6 @@ bool megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::conf
             }
             ImGui::EndPopup();
         }
-        // Set selected graph ptr
-        if (ImGui::IsItemVisible()) {
-            this->gui.graph_ptr = graph;
-        }
 
         // Process module deletion
         if (std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM])) {
@@ -302,15 +302,15 @@ bool megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::conf
         }
 
         // Register trigger for connecting call
-        if ((graph.gui.selected_slot_ptr != nullptr) && (io.MouseReleased[0])) {
-            graph.gui.process_selected_slot = 2;
+        if ((this->selected_slot_ptr != nullptr) && (io.MouseReleased[0])) {
+            this->process_selected_slot = 2;
         }
 
         for (auto& mod : graph.GetGraphModules()) {
-            this->update_module_size(graph, mod);
+            ///XXX this->update_module_size(graph, mod);
             for (auto& slot_pair : mod->GetCallSlots()) {
                 for (auto& slot : slot_pair.second) {
-                    this->update_slot_position(graph, slot);
+                    ///XXX this->update_slot_position(graph, slot);
                 }
             }
         }
@@ -341,6 +341,29 @@ bool megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::conf
 
         ImGui::EndTabItem();
     }
+
+    // Rename pop-up (grpah or module name)
+    if (this->rename_popup_open) {
+        ImGui::OpenPopup("Rename");
+    }
+    if (ImGui::BeginPopupModal("Rename", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+        std::string label = "Enter new  project name";
+        auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
+        if (ImGui::InputText("Enter new  project name", this->rename_popup_string, flags)) {
+            this->rename_popup_string = nullptr;
+            ImGui::CloseCurrentPopup();
+        }
+        // Set focus on input text once (applied next frame)
+        if (this->rename_popup_open) {
+            ImGuiID id = ImGui::GetID(label.c_str());
+            ImGui::ActivateItem(id);
+        }
+
+        ImGui::EndPopup();
+    }
+    this->rename_popup_open = false;
+
 
     ImGui::PopID();
 

@@ -80,9 +80,6 @@ private:
         bool Present(GraphManager& graph_manager, float child_width);
 
     private:
-
-        bool rename_popup_open;
-        std::string* rename_popup_string;
         GUIUtils utils;
 
     } present;

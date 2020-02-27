@@ -45,7 +45,7 @@ public:
     const const CallGraphVectorType& GetGraphCalls(void) { return this->calls; }
 
     inline void SetName(const std::string& graph_name) { this->name = graph_name; }
-    inline const std::string& GetName(void) { return this->name; }
+    inline std::string& GetName(void) { return this->name; }
 
     inline bool IsDirty(void) const { return this->dirty_flag; }
     inline void ResetDirty(void) { this->dirty_flag = false; }
@@ -101,6 +101,10 @@ private:
         CallSlotPtrType selected_slot_ptr;
         int process_selected_slot;
         bool update_current_graph;
+
+
+        bool rename_popup_open;
+        std::string* rename_popup_string;
         float split_width;
 
     private:

@@ -739,9 +739,7 @@ bool megamol::gui::configurator::GraphManager::get_call_stock_data(
 
 // GRAPH MANAGET PRESENTATION ####################################################
 
-megamol::gui::configurator::GraphManager::Presentation::Presentation(void)
-    : rename_popup_open(false)
-    , rename_popup_string(nullptr) {
+megamol::gui::configurator::GraphManager::Presentation::Presentation(void) {
 }
 
 
@@ -779,28 +777,6 @@ bool megamol::gui::configurator::GraphManager::Presentation::Present(GraphManage
 
     // Delete marked graph when tab closed
     graph_manager.DeleteGraph(delete_graph_uid);
-
-    // Rename pop-up (grpah or module name)
-    if (this->rename_popup_open) {
-        ImGui::OpenPopup("Rename");
-    }
-    if (ImGui::BeginPopupModal("Rename", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-
-        std::string label = "Enter new  project name";
-        auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
-        if (ImGui::InputText("Enter new  project name", this->rename_popup_string, flags)) {
-            this->rename_popup_string = nullptr;
-            ImGui::CloseCurrentPopup();
-        }
-        // Set focus on input text once (applied next frame)
-        if (this->rename_popup_open) {
-            ImGuiID id = ImGui::GetID(label.c_str());
-            ImGui::ActivateItem(id);
-        }
-
-        ImGui::EndPopup();
-    }
-    this->rename_popup_open = false;
 
     ImGui::EndChild();
 
