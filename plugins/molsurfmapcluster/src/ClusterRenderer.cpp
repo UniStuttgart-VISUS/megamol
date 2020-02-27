@@ -13,6 +13,8 @@
 #include "vislib\math\ForceDirected.h"
 
 #include <filesystem>
+#include <vector>
+#include "glm/glm.hpp"
 
 #include "CallClusterPosition.h"
 #include "ClusterHierarchieRenderer.h"
@@ -129,14 +131,37 @@ bool ClusterRenderer::create(void) {
         return false;
     }
 
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("molsurfPassthrough::vertex", texVertShader)) {
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "Unable to load vertex shader source for passthrough Vertex Shader");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
+            "molsurfPassthrough::fragment", texFragShader)) {
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "Unable to load fragment shader source for passthrough Fragment Shader");
+        return false;
+    }
+
+    try {
+        if (!this->passthroughShader.Create(
+                texVertShader.Code(), texVertShader.Count(), texFragShader.Code(), texFragShader.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+        }
+    } catch (vislib::Exception e) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to create shader: %s\n", e.GetMsgA());
+        return false;
+    }
+
     const float size = 1.0f;
-    std::vector<float> texVerts = {
-        0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 
-        0.0f, size, 0.0f, 0.0f, 0.0f, 
-        size, 0.0f, 0.0f, 1.0f, 1.0f, 
-        size, size, 0.0f, 1.0f, 0.0f};
+    std::vector<float> texVerts = {0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, size, 0.0f, 0.0f, 0.0f, size, 0.0f, 0.0f, 1.0f,
+        1.0f, size, size, 0.0f, 1.0f, 0.0f};
 
     this->texBuffer = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, texVerts, GL_STATIC_DRAW);
+    this->geometrySSBO =
+        std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, std::vector<glm::vec4>(), GL_DYNAMIC_DRAW);
+
+    glGenVertexArrays(1, &this->dummyVa);
 
     glGenVertexArrays(1, &this->texVa);
     glBindVertexArray(this->texVa);
@@ -223,17 +248,24 @@ void ClusterRenderer::renderClusterText(
     float strHeight = this->theFont.LineHeight(this->fontSize);
     float strWidth = this->theFont.LineWidth(this->fontSize, id);
 
-    // Render Background
-    glBegin(GL_TRIANGLES);
-    glColor3f(1, 1, 1);
-    glVertex2f(posx - 0.5 * strWidth, posy - 0.5 * strHeight);
-    glVertex2f(posx + 0.5 * strWidth, posy - 0.5 * strHeight);
-    glVertex2f(posx + 0.5 * strWidth, posy + 0.5 * strHeight);
+    std::vector<glm::vec4> data(6);
+    data[0] = glm::vec4(posx - 0.5f * strWidth, posy - 0.5f * strHeight, 0.0f, 1.0f);
+    data[1] = glm::vec4(posx + 0.5f * strWidth, posy - 0.5f * strHeight, 0.0f, 1.0f);
+    data[2] = glm::vec4(posx + 0.5f * strWidth, posy + 0.5f * strHeight, 0.0f, 1.0f);
+    data[3] = glm::vec4(posx - 0.5f * strWidth, posy - 0.5f * strHeight, 0.0f, 1.0f);
+    data[4] = glm::vec4(posx + 0.5f * strWidth, posy + 0.5f * strHeight, 0.0f, 1.0f);
+    data[5] = glm::vec4(posx - 0.5f * strWidth, posy + 0.5f * strHeight, 0.0f, 1.0f);
 
-    glVertex2f(posx - 0.5 * strWidth, posy - 0.5 * strHeight);
-    glVertex2f(posx + 0.5 * strWidth, posy + 0.5 * strHeight);
-    glVertex2f(posx - 0.5 * strWidth, posy + 0.5 * strHeight);
-    glEnd();
+    this->geometrySSBO->rebuffer(data);
+    this->geometrySSBO->bind(11);
+
+    glBindVertexArray(this->dummyVa);
+    this->passthroughShader.Enable();
+    glUniformMatrix4fv(this->passthroughShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
+    glUniform4f(this->passthroughShader.ParameterLocation("color"), 1.0f, 1.0f, 1.0f, 1.0f);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    this->passthroughShader.Disable();
+    glBindVertexArray(0);
 
     // Render Text
     this->theFont.DrawString(
@@ -304,8 +336,7 @@ void ClusterRenderer::renderNode(
     this->textureShader.Enable();
 
     glUniform2f(this->textureShader.ParameterLocation("lowerleft"), posx - 0.5 * picwidth, posy - 0.5 * picheight);
-    glUniform2f(
-        this->textureShader.ParameterLocation("upperright"), posx + 0.5 * picwidth, posy + 0.5 * picheight);
+    glUniform2f(this->textureShader.ParameterLocation("upperright"), posx + 0.5 * picwidth, posy + 0.5 * picheight);
     glUniformMatrix4fv(this->textureShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
     glUniform1i(this->textureShader.ParameterLocation("tex"), 0);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -325,15 +356,14 @@ void ClusterRenderer::renderAllLeaves(
 
         // Select Color
         bool clusternode = false;
+        glm::vec3 rescolor;
         for (std::tuple<HierarchicalClustering::CLUSTERNODE*, ClusterRenderer::RGBCOLOR*>* colortuple : *colors) {
             if (this->clustering->parentIs(node, std::get<0>(*colortuple))) {
                 ClusterRenderer::RGBCOLOR* color = std::get<1>(*colortuple);
                 double r = (255 - color->r) / 255;
                 double g = (255 - color->g) / 255;
                 double b = (255 - color->b) / 255;
-
-                glColor3f(r, g, b);
-
+                rescolor = glm::vec3(r, g, b);
                 clusternode = true;
             }
         }
@@ -346,24 +376,39 @@ void ClusterRenderer::renderAllLeaves(
                 (1.0 - (PICSCALING * 0.5)) * this->viewport.GetY());
 
             glPointSize(10);
-            glBegin(GL_POINTS);
-            glVertex2f(posx, posy);
-            glEnd();
+            this->geometrySSBO->rebuffer(std::vector<glm::vec4>{glm::vec4(posx, posy, 0.0f, 1.0f)});
+            this->geometrySSBO->bind(11);
+
+            glBindVertexArray(this->dummyVa);
+            this->passthroughShader.Enable();
+            glUniformMatrix4fv(this->passthroughShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
+            glUniform4f(this->passthroughShader.ParameterLocation("color"), rescolor.r, rescolor.g, rescolor.b, 1.0f);
+            glDrawArrays(GL_POINTS, 0, 1);
+            this->passthroughShader.Disable();
+            glBindVertexArray(0);
         }
     }
 }
 
-void DrawCircle(float cx, float cy, float r, int num_segments) {
-    glBegin(GL_LINE_LOOP);
+void ClusterRenderer::DrawCircle(glm::mat4 mvp, float cx, float cy, float r, int num_segments) {
+    std::vector<glm::vec4> data(num_segments);
     for (int ii = 0; ii < num_segments; ii++) {
         float theta = 2.0f * 3.1415926f * float(ii) / float(num_segments); // get the current angle
-
-        float x = r * cosf(theta); // calculate the x component
-        float y = r * sinf(theta); // calculate the y component
-
-        glVertex2f(x + cx, y + cy); // output vertex
+        float x = r * cosf(theta);                                         // calculate the x component
+        float y = r * sinf(theta);                                         // calculate the y component
+        data[ii] = glm::vec4(x + cx, y + cy, 0.0f, 1.0f);
     }
-    glEnd();
+
+    this->geometrySSBO->rebuffer(data);
+    this->geometrySSBO->bind(11);
+
+    glBindVertexArray(this->dummyVa);
+    this->passthroughShader.Enable();
+    glUniformMatrix4fv(this->passthroughShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
+    glUniform4f(this->passthroughShader.ParameterLocation("color"), 0.0f, 0.0f, 0.0f, 1.0f);
+    glDrawArrays(GL_LINE_LOOP, 0, num_segments);
+    this->passthroughShader.Disable();
+    glBindVertexArray(0);
 }
 
 void ClusterRenderer::renderRootNode(
@@ -378,10 +423,8 @@ void ClusterRenderer::renderRootNode(
     double picwidth = PICSCALING * this->viewport.GetX();
     double picheight = PICSCALING * this->viewport.GetY();
 
-    glColor3f(BLACK); // Reset Color for Textures
-
     // Render Cluster Mittelpunklt
-    DrawCircle(posx, posy, this->viewport.GetY() * 0.02, 100000);
+    this->DrawCircle(mvp, posx, posy, this->viewport.GetY() * 0.02, 100000);
     this->renderClusterText(node, mvp, posx, posy);
 }
 
@@ -412,11 +455,17 @@ void ClusterRenderer::connectNodes(
 
     // Draw Line
     glLineWidth(5);
-    glColor3f(1 - tmp, 1 - tmp, 1 - tmp);
-    glBegin(GL_LINES);
-    glVertex2f(posx1, posy1);
-    glVertex2f(posx2, posy2);
-    glEnd();
+    std::vector<glm::vec4> data = {glm::vec4(posx1, posy1, 0.0f, 1.0f), glm::vec4(posx2, posy2, 0.0f, 1.0f)};
+    this->geometrySSBO->rebuffer(data);
+    this->geometrySSBO->bind(11);
+
+    glBindVertexArray(this->dummyVa);
+    this->passthroughShader.Enable();
+    glUniformMatrix4fv(this->passthroughShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
+    glUniform4f(this->passthroughShader.ParameterLocation("color"), 1 - tmp, 1 - tmp, 1 - tmp, 1.0f);
+    glDrawArrays(GL_LINES, 0, 2);
+    this->passthroughShader.Disable();
+    glBindVertexArray(0);
 }
 
 void ClusterRenderer::setMinMax(std::vector<HierarchicalClustering::CLUSTERNODE*>* leaves) {
@@ -635,24 +684,37 @@ void ClusterRenderer::renderDistanceIndikator(glm::mat4 mvp) {
 
     double textheight = this->theFont.LineHeight(this->fontSize);
 
-    glBegin(GL_QUADS);
-    glColor3f(1, 1, 1);
-    glVertex2f(width - indikatorwidth, indikatorheight + textheight);
-    glVertex2f(width - indikatorwidth, 0);
-    glVertex2f(width, 0);
-    glVertex2f(width, indikatorheight + textheight);
-    glEnd();
+    glm::vec4 white = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    glm::vec4 black = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    std::vector<glm::vec4> data(16);
+    data[0] = glm::vec4(width - indikatorwidth, indikatorheight + textheight, 0.0f, 1.0f);
+    data[1] = white;
+    data[2] = glm::vec4(width - indikatorwidth, 0, 0.0f, 1.0f);
+    data[3] = white;
+    data[4] = glm::vec4(width, 0, 0.0f, 1.0f);
+    data[5] = white;
+    data[6] = glm::vec4(width, indikatorheight + textheight, 0.0f, 1.0f);
+    data[7] = white;
+    data[8] = glm::vec4(width - indikatorwidth, indikatorheight, 0.0f, 1.0f);
+    data[9] = white;
+    data[10] = glm::vec4(width - indikatorwidth, 0, 0.0f, 1.0f);
+    data[11] = white;
+    data[12] = glm::vec4(width, 0, 0.0f, 1.0f);
+    data[13] = black;
+    data[14] = glm::vec4(width, indikatorheight, 0.0f, 1.0f);
+    data[15] = black;
 
+    this->geometrySSBO->rebuffer(data);
+    this->geometrySSBO->bind(11);
 
-    // Render Rectangular
-    glBegin(GL_QUADS);
-    glColor3f(1, 1, 1);
-    glVertex2f(width - indikatorwidth, indikatorheight);
-    glVertex2f(width - indikatorwidth, 0);
-    glColor3f(0, 0, 0);
-    glVertex2f(width, 0);
-    glVertex2f(width, indikatorheight);
-    glEnd();
+    glBindVertexArray(this->dummyVa);
+    this->passthroughShader.Enable();
+    glUniformMatrix4fv(this->passthroughShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
+    glUniform1i(this->passthroughShader.ParameterLocation("coloredmode"), 1);
+    glDrawArrays(GL_QUADS, 0, 8);
+    glUniform1i(this->passthroughShader.ParameterLocation("coloredmode"), 0);
+    this->passthroughShader.Disable();
+    glBindVertexArray(0);
 
     // Render Text
     this->renderText(

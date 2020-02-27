@@ -171,6 +171,7 @@ private:
     void connectNodes(
         HierarchicalClustering::CLUSTERNODE* node1, HierarchicalClustering::CLUSTERNODE* node2, glm::mat4);
     void setMinMax(std::vector<HierarchicalClustering::CLUSTERNODE*>*);
+    void DrawCircle(glm::mat4 mvp, float cx, float cy, float r, int num_segments);
 
     std::vector<std::tuple<HierarchicalClustering::CLUSTERNODE*, RGBCOLOR*>*>* getNdiffrentColors(
         std::vector<HierarchicalClustering::CLUSTERNODE*>*);
@@ -184,9 +185,12 @@ private:
     core::CallerSlot clusterDataSlot;
     core::CallerSlot setPosition;
 
+    vislib::graphics::gl::GLSLShader passthroughShader;
     vislib::graphics::gl::GLSLShader textureShader;
     std::unique_ptr<glowl::BufferObject> texBuffer;
+    std::unique_ptr<glowl::BufferObject> geometrySSBO;
     GLuint texVa;
+    GLuint dummyVa;
 
     /** The slot for requesting data. */
     core::CalleeSlot getPosition;
