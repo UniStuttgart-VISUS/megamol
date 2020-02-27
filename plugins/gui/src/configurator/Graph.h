@@ -55,8 +55,8 @@ public:
     int generate_unique_id(void) { return (++this->generated_uid); }
 
     // GUI Presentation -------------------------------------------------------
-    bool Present(float child_width, ImFont* graph_font) {
-        return this->present.Present(*this, child_width, graph_font);
+    bool Present(float child_width, ImFont* graph_font, bool& delete_graph) {
+        return this->present.Present(*this, child_width, graph_font, delete_graph);
     }
 
     inline const CallSlotPtrType GetSelectedSlot(void) const { return this->present.selected_slot_ptr; }
@@ -84,7 +84,7 @@ private:
 
         ~Presentation(void);
 
-        bool Present(Graph& graph, float child_width, ImFont* graph_font);
+        bool Present(Graph& graph, float child_width, ImFont* graph_font, bool& delete_graph);
 
         float slot_radius;
         ImVec2 canvas_position;
@@ -105,6 +105,7 @@ private:
         std::string* rename_popup_string;
         float split_width;
         ImFont* font;
+        float mouse_wheel;
 
     private:
         GUIUtils utils;

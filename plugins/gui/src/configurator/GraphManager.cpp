@@ -767,10 +767,14 @@ bool megamol::gui::configurator::GraphManager::Presentation::Present(
         ImGui::BeginTabBar("Graphs", tab_bar_flags);
         for (auto& graph : graph_manager.GetGraphs()) {
 
-            bool open = graph->Present(child_width, graph_font);
+            bool delete_graph = false;
+            if (graph->Present(child_width, graph_font, delete_graph)) {
+                active_graph = graph;
+            }
 
             // Do not delete graph while looping through graphs list
-            if (!open) {
+            if (delete_graph) {
+                active_graph = nullptr;
                 delete_graph_uid = graph->GetUID();
             }
         }

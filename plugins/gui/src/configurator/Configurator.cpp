@@ -327,6 +327,8 @@ bool megamol::gui::configurator::Configurator::popup_save_project(
                         this->gui.graph_ptr->GetUID(), this->gui.project_filename, core_instance)) {
                     ImGui::CloseCurrentPopup();
                 }
+            } else {
+                vislib::sys::Log::DefaultLog.WriteWarn("No project available for saving.");
             }
         }
 
