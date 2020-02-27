@@ -446,8 +446,6 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
 
     const ImU32 COLOR_CANVAS_BACKGROUND = IM_COL32(75, 75, 75, 255);
 
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, COLOR_CANVAS_BACKGROUND);
 
     ImGui::BeginChild("region", ImVec2(0.0f, 0.0f), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
@@ -457,8 +455,6 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
     draw_list->ChannelsSplit(2);
-
-    /*
 
     if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered()) {
         this->selected_module_uid = -1;
@@ -470,8 +466,8 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
     if (this->show_grid) {
         this->canvas_grid(graph);
     }
-    ImGui::PopStyleVar(2);
 
+    /*
     // Draw modules -------------------
     this->canvas_modules(graph);
 
@@ -581,6 +577,9 @@ void megamol::gui::configurator::Graph::Presentation::canvas_grid(megamol::gui::
 
     draw_list->ChannelsSetCurrent(0); // Background
 
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+
     const ImU32 COLOR_GRID = IM_COL32(192, 192, 192, 40);
     const float GRID_SIZE = 64.0f * this->canvas_zooming;
 
@@ -595,6 +594,8 @@ void megamol::gui::configurator::Graph::Presentation::canvas_grid(megamol::gui::
         draw_list->AddLine(ImVec2(0.0f, y) + this->canvas_position,
             ImVec2(this->canvas_size.x, y) + this->canvas_position, COLOR_GRID);
     }
+
+    ImGui::PopStyleVar(2);
 }
 
 
