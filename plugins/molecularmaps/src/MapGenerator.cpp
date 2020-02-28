@@ -81,6 +81,9 @@ MapGenerator::MapGenerator(void)
     , store_png_font(vislib::graphics::gl::FontInfo_Verdana)
     , store_png_path(
           "screenshot::Filename for map(PNG)", "Filename of the PNG image file to which the map will be stored")
+    , store_png_values_path(
+          "screenshot::Filename for values(PNG)", "Filename of the PNG image file that stores the values")
+    , writeValueImageParam("writeValueImage", "When enabled, storing a PNG also stores a value image for later use")
     , zeBindingSiteSlot("bindingSite", "The input binding site data") {
     this->aoActive.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->aoActive);
@@ -283,6 +286,9 @@ MapGenerator::MapGenerator(void)
     this->store_png_path.SetParameter(new param::FilePathParam(""));
     this->MakeSlotAvailable(&this->store_png_path);
 
+    this->store_png_values_path.SetParameter(new param::FilePathParam(""));
+    this->MakeSlotAvailable(&this->store_png_values_path);
+
     this->tunnel_faces = std::vector<uint>(0);
 
     this->vertexColors = std::vector<float>(0);
@@ -300,6 +306,9 @@ MapGenerator::MapGenerator(void)
     this->vertices_sphere = std::vector<float>(0);
 
     this->voronoiNeeded = false;
+
+    this->writeValueImageParam.SetParameter(new core::param::BoolParam(false));
+    this->MakeSlotAvailable(&this->writeValueImageParam);
 
     this->zeBindingSiteSlot.SetCompatibleCall<protein_calls::BindingSiteCallDescription>();
     this->MakeSlotAvailable(&this->zeBindingSiteSlot);
@@ -3690,6 +3699,14 @@ bool MapGenerator::Render(Call& call) {
         prev_file_path.Append(_T(".png"));
         this->store_png_path.Param<param::FilePathParam>()->SetValue(prev_file_path, false);
 
+        if (this->store_png_values_path.IsDirty()) {
+            prev_file_path = this->store_png_values_path.Param<param::FilePathParam>()->Value();
+            this->store_png_values_path.ResetDirty();
+        }
+        prev_file_path.Append(A2T(pdb_name.c_str()));
+        prev_file_path.Append(_T("_values.dat"));
+        this->store_png_values_path.Param<param::FilePathParam>()->SetValue(prev_file_path, false);
+
         // Get the colour tables.
         Color::ReadColorTableFromFile(cut_colour_param.Param<param::FilePathParam>()->Value(), cut_colour_table);
         Color::ReadColorTableFromFile(group_colour_param.Param<param::FilePathParam>()->Value(), group_colour_table);
@@ -3939,6 +3956,8 @@ bool MapGenerator::Render(Call& call) {
     if (this->store_png_button.IsDirty() && this->computed_map) {
         this->store_png_button.ResetDirty();
 
+        bool writeValues = this->writeValueImageParam.Param<param::BoolParam>()->Value();
+
         // Reset the fbo size if necessary.
         if (!this->store_png_fbo.IsValid()) {
             this->store_png_fbo.Release();
@@ -3957,6 +3976,13 @@ bool MapGenerator::Render(Call& call) {
                 width = ((width / 100) * 100) + 100;
             uint height = width / 2;
             this->store_png_fbo.Create(width, height);
+        }
+
+        // resize the values fbo if needed
+        if (!this->store_png_values_fbo.IsValid() ||
+            this->store_png_values_fbo.GetWidth() != this->store_png_fbo.GetWidth() ||
+            this->store_png_values_fbo.GetHeight() != this->store_png_fbo.GetHeight()) {
+            this->store_png_values_fbo.Create(this->store_png_fbo.GetWidth(), this->store_png_fbo.GetHeight());
         }
 
         // Render the map to the fbo and write the content to a file.
@@ -4010,6 +4036,12 @@ bool MapGenerator::Render(Call& call) {
         this->store_png_fbo.DrawColourTexture(0, GL_LINEAR, GL_LINEAR, 0.9f);
         this->store_png_data.SetCount(this->store_png_fbo.GetWidth() * this->store_png_fbo.GetHeight() * 3);
         this->store_png_fbo.GetColourTexture(&this->store_png_data[0], 0, GL_RGB, GL_UNSIGNED_BYTE);
+
+        if (writeValues) {
+            this->writeValueImage(
+                this->store_png_values_path.Param<param::FilePathParam>()->Value(), *ctmd, this->store_png_data);
+        }
+
         this->store_png_image.Image() =
             new vislib::graphics::BitmapImage(this->store_png_fbo.GetWidth(), this->store_png_fbo.GetHeight(), 3U,
                 vislib::graphics::BitmapImage::CHANNELTYPE_BYTE, static_cast<const void*>(&this->store_png_data[0]));
@@ -4579,4 +4611,64 @@ std::vector<std::string> MapGenerator::splitString(
         p_elements.push_back(item);
     }
     return p_elements;
+}
+
+/*
+ * MapGenerator::writeValueImage
+ */
+void MapGenerator::writeValueImage(const vislib::TString& path_to_image, const geocalls::CallTriMeshData& ctmd,
+    vislib::Array<unsigned char>& input_image) {
+    float minVal, maxVal;
+    glm::vec3 minColor, midColor, maxColor;
+    bool hasMidColor = ctmd.GetColorBounds(minVal, maxVal, minColor, midColor, maxColor);
+    std::vector<float> valueVec(input_image.Count() / 3, minVal);
+    const float securityFactor = 0.1f;
+    float midVal = (maxVal + minVal) / 2.0f;
+    uint64_t noneCounter = 0;
+    for (uint64_t i = 0; i < valueVec.size(); ++i) {
+        glm::uvec3 color(input_image[i * 3 + 0], input_image[i * 3 + 1], input_image[i * 3 + 2]);
+        glm::vec3 colfloat = static_cast<glm::vec3>(color) / 255.0f;
+
+        if (hasMidColor) {
+            auto left = (colfloat - minColor) / (midColor - minColor);
+            auto right = (colfloat - midColor) / (maxColor - midColor);
+            bool none = true;
+
+            // left check
+            auto minl = std::min(std::min(left.r, left.g), left.b);
+            auto maxl = std::max(std::max(left.r, left.g), left.b);
+            if (maxl - minl < securityFactor) {
+                float avg = (left.r + left.g + left.b) / 3.0f;
+                valueVec[i] = glm::mix(minVal, midVal, avg);
+                none = false;
+            }
+
+            // right check
+            auto minr = std::min(std::min(right.r, right.g), right.b);
+            auto maxr = std::max(std::max(right.r, right.g), right.b);
+            if (maxr - minr < securityFactor) {
+                float avg = (left.r + left.g + left.b) / 3.0f;
+                valueVec[i] = glm::mix(midVal, maxVal, avg);
+                none = false;
+            }
+
+            if (none && color.r != 75) {
+                noneCounter++;
+                //std::cout << std::min(maxl - minl, maxr - minr) << std::endl;
+                input_image[i * 3 + 0] = 0;
+                input_image[i * 3 + 1] = 0;
+                input_image[i * 3 + 2] = 0;
+            }
+            // std::cout << left.r << " " << left.g << " " << left.b << std::endl;
+            // std::cout << right.r << " " << right.g << " " << right.b << std::endl << std::endl;
+        } else {
+            auto middle = (colfloat - minColor) / (maxColor - minColor);
+            float avg = (middle.r + middle.g + middle.b) / 3.0f;
+            valueVec[i] = glm::mix(minVal, maxVal, avg);
+        }
+        // std::cout << valueVec[i] << " for " << colfloat.r << " " << colfloat.g << " " << colfloat.b << std::endl;
+    }
+    //std::cout << "NoneCounter " << noneCounter << std::endl;
+
+    // TODO write valueVec
 }

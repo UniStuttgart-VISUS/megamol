@@ -1465,7 +1465,7 @@ namespace geocalls {
         }
 
         inline bool GetColorBounds(
-            float& minVal, float& maxVal, glm::vec3& minColor, glm::vec3& midColor, glm::vec3& maxColor) {
+            float& minVal, float& maxVal, glm::vec3& minColor, glm::vec3& midColor, glm::vec3& maxColor) const {
             minVal = this->minValue;
             maxVal = this->maxValue;
             minColor = this->minColor;

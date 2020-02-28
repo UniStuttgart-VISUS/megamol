@@ -149,6 +149,9 @@ private:
     /** the number of atoms */
     unsigned int atomCount;
 
+    float lowval;
+    float highval;
+
     /** the index of the vertex attribute */
     unsigned int attIdx;
 

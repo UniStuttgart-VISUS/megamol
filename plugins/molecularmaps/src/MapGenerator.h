@@ -29,6 +29,8 @@
 #include "TriangleMeshRenderer.h"
 #include "VoronoiChannelCalculator.h"
 
+#include <filesystem>
+
 namespace megamol {
 namespace molecularmaps {
 
@@ -590,6 +592,16 @@ private:
     std::vector<std::string> splitString(
         const std::string& p_string, const char p_delim, std::vector<std::string>& p_elements);
 
+    /**
+     * Writes the value image to disk.
+     *
+     * @param path_to_image The filepath for the image
+     * @param ctmd The call containing the relevant data to write.
+     * @param input_image The image that has to be rewritten.
+     */
+    void writeValueImage(const vislib::TString& path_to_image, const geocalls::CallTriMeshData& ctmd,
+        vislib::Array<unsigned char>& input_image);
+
     /** Turn the Ambient Occlusion on or off */
     core::param::ParamSlot aoActive;
 
@@ -833,6 +845,12 @@ private:
     /** The path to which the image is stored. */
     core::param::ParamSlot store_png_path;
 
+    /** The fbo that is used to render the values image */
+    vislib::graphics::gl::FramebufferObject store_png_values_fbo;
+
+    /** The path to which the values image is stored */
+    core::param::ParamSlot store_png_values_path;
+
     /** The param slot thar defines the offset for the bounding sphere radius */
     core::param::ParamSlot radius_offset_param;
 
@@ -892,6 +910,9 @@ private:
 
     /** A flag determining whether the voronoi diagram was needed or not */
     bool voronoiNeeded;
+
+    /** Parameter enabling the writing of the value image */
+    core::param::ParamSlot writeValueImageParam;
 
     /** The slot for the binding site information */
     core::CallerSlot zeBindingSiteSlot;

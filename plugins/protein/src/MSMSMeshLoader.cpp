@@ -51,7 +51,9 @@ MSMSMeshLoader::MSMSMeshLoader(void)
     , minGradColorParam("color::minGradColor", "Color for min value for gradient coloring")
     , midGradColorParam("color::midGradColor", "Color for mid value for gradient coloring")
     , maxGradColorParam("color::maxGradColor", "Color for max value for gradient coloring")
-    , prevTime(-1) {
+    , prevTime(-1)
+    , lowval(0.0f)
+    , highval(0.0f) {
     // the data out slot
     this->getDataSlot.SetCallback(CallTriMeshData::ClassName(), "GetData", &MSMSMeshLoader::getDataCallback);
     this->getDataSlot.SetCallback(CallTriMeshData::ClassName(), "GetExtent", &MSMSMeshLoader::getExtentCallback);
@@ -177,7 +179,6 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
     // try to call molecular data and compute colors
     MolecularDataCall* mol = this->molDataSlot.CallAs<MolecularDataCall>();
     glm::vec3 minCol, midCol, maxCol;
-    float lowval, highval;
     bool twoColors = false;
     if (mol) {
         // get pointer to BindingSiteCall
@@ -227,8 +228,8 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                     this->midGradColorParam.Param<param::StringParam>()->Value(),
                     this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs, false, pa);
 
-                lowval = std::min(leftres.first, rightres.first);
-                highval = std::max(leftres.second, rightres.second);
+                this->lowval = std::min(leftres.first, rightres.first);
+                this->highval = std::max(leftres.second, rightres.second);
 
                 // loop over atoms and compute color
                 float* vertex = new float[this->obj[ctmd->FrameID()]->GetVertexCount() * 3];
@@ -429,8 +430,8 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                             maxCol = glm::vec3(1.0f, 1.0f, 1.0f);
                             minCol = glm::vec3(0.0f, 0.0f, 0.0f);
                             twoColors = true;
-                            lowval = 0.0f; // TODO or min_dist?
-                            highval = max_dist;
+                            this->lowval = 0.0f; // TODO or min_dist?
+                            this->highval = max_dist;
                         }
                         color[i * 3 + 0] += static_cast<unsigned char>(weight1 * col[0]);
                         color[i * 3 + 1] += static_cast<unsigned char>(weight1 * col[1]);
@@ -465,9 +466,9 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
         ctmd->SetDataHash(this->datahash);
         ctmd->SetObjects(1, this->obj[ctmd->FrameID()]);
         if (!twoColors) {
-            ctmd->SetColorBounds(lowval, highval, minCol, midCol, maxCol);
+            ctmd->SetColorBounds(this->lowval, this->highval, minCol, midCol, maxCol);
         } else {
-            ctmd->SetColorBounds(lowval, highval, minCol, maxCol);
+            ctmd->SetColorBounds(this->lowval, this->highval, minCol, maxCol);
         }
         ctmd->SetUnlocker(NULL);
         this->prevTime = int(ctmd->FrameID());
