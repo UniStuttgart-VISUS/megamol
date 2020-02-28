@@ -35,18 +35,19 @@ bool megamol::gui::configurator::Graph::AddModule(
                 mod_ptr->description = mod.description;
                 mod_ptr->plugin_name = mod.plugin_name;
                 mod_ptr->is_view = mod.is_view;
-                // mod_ptr->name = "module_name";              /// get from core
-                // mod_ptr->full_name = "full_name";           /// get from core
-                // mod_ptr->is_view_instance = false;          /// get from core
+                mod_ptr->name = mod.class_name;      /// set from core
+                mod_ptr->full_name = mod.class_name; /// set from core
+                mod_ptr->is_view_instance = false;   /// set from core
 
                 for (auto& p : mod.parameters) {
                     Parameter param_slot(this->generate_unique_id(), p.type);
                     param_slot.class_name = p.class_name;
                     param_slot.description = p.description;
-                    // param_slot.full_name = "full_name"; /// get from core
+                    param_slot.full_name = p.class_name; /// set from core
 
                     mod_ptr->parameters.emplace_back(param_slot);
                 }
+
                 for (auto& call_slots_type : mod.call_slots) {
                     for (auto& c : call_slots_type.second) {
                         CallSlot call_slot(this->generate_unique_id());
@@ -58,11 +59,13 @@ bool megamol::gui::configurator::Graph::AddModule(
                         mod_ptr->AddCallSlot(std::make_shared<CallSlot>(call_slot));
                     }
                 }
+
                 for (auto& call_slot_type_list : mod_ptr->GetCallSlots()) {
                     for (auto& call_slot : call_slot_type_list.second) {
                         call_slot->ConnectParentModule(mod_ptr);
                     }
                 }
+
                 this->modules.emplace_back(mod_ptr);
 
                 vislib::sys::Log::DefaultLog.WriteWarn("CREATED MODULE: %s [%s, %s, line %d]\n",
@@ -250,9 +253,12 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , update_current_graph(true)
     , rename_popup_open(false)
     , rename_popup_string(nullptr)
-    , split_width(600.0f)
+    , split_width(500.0f)
     , font(nullptr)
-    , mouse_wheel(0.0f) {}
+    , mouse_wheel(0.0f)
+    , params_visible(true)
+    , params_readonly(false)
+    , param_present(Parameter::Presentations::DEFAULT) {}
 
 
 megamol::gui::configurator::Graph::Presentation::~Presentation(void) {}
@@ -480,7 +486,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
 
     const ImU32 COLOR_CANVAS_BACKGROUND = IM_COL32(75, 75, 75, 255);
 
-    ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, COLOR_CANVAS_BACKGROUND);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, COLOR_CANVAS_BACKGROUND);
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
@@ -579,7 +585,7 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
 
     ImGui::BeginGroup();
 
-    const float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 3.25f;
+    const float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 4.0f;
     const auto child_flags = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar;
 
     ImGui::BeginChild("parameter_search_child_window", ImVec2(child_width, param_child_height), false, child_flags);
@@ -607,13 +613,33 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
     if (modptr != nullptr) {
         ImGui::Separator();
 
-        std::string text = "Selected Module: " + modptr->full_name;
-        ImGui::Text(text.c_str());
+        ImGui::Text("Selected Module:");
+        ImGui::SameLine();
+        ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive), modptr->name.c_str());
+
+        ImGui::Text("Options:");
         ImGui::SameLine();
 
-        if (ImGui::Button("Reset Visibility")) {
+        // Visibility
+        if (ImGui::Checkbox("Visibility", &this->params_visible)) {
             for (auto& param : modptr->parameters) {
-                param.GUI_SetLabelVisibility(true);
+                param.GUI_SetLabelVisibility(this->params_visible);
+            }
+        }
+        ImGui::SameLine();
+
+        // Read-only option
+        if (ImGui::Checkbox("Read-Only", &this->params_readonly)) {
+            for (auto& param : modptr->parameters) {
+                param.GUI_SetReadOnly(this->params_readonly);
+            }
+        }
+        ImGui::SameLine();
+
+        // Presentations
+        if (Parameter::GUI_PresentationButton(this->param_present, "Presentation")) {
+            for (auto& param : modptr->parameters) {
+                param.GUI_SetPresentation(this->param_present);
             }
         }
 
@@ -820,7 +846,8 @@ bool megamol::gui::configurator::Configurator::update_graph_layout(
             }
             mod->present.position = pos;
             pos.y += mod->present.size.y + border_offset;
-            max_module_width = (mod->present.size.x > max_module_width) ? (mod->present.size.x) : (max_module_width);
+            max_module_width = (mod->present.size.x > max_module_width) ? (mod->present.size.x) :
+(max_module_width);
         }
         pos.x += (max_module_width + max_call_width + border_offset);
     }

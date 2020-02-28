@@ -103,7 +103,7 @@ megamol::gui::configurator::Module::GetCallSlots(void) {
 // MODULE PRESENTATION ####################################################
 
 megamol::gui::configurator::Module::Presentation::Presentation(void)
-    : presentations(Presentation::DEFAULT)
+    : presentations(Module::Presentations::DEFAULT)
     , label_visible(true)
     , position(ImVec2(0.0f, 0.0f))
     , size(ImVec2(250.0f, 50.0f))
@@ -115,7 +115,7 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
 megamol::gui::configurator::Module::Presentation::~Presentation(void) {}
 
 
-ImGuiID megamol::gui::configurator::Module::Presentation::GUI_Present(
+ImGuiID megamol::gui::configurator::Module::Presentation::Present(
     megamol::gui::configurator::Module& mod, ImVec2 canvas_offset, float canvas_zooming) {
 
     int retval_id = GUI_INVALID_ID;

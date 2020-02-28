@@ -89,6 +89,8 @@ public:
 
     typedef std::map<int, std::string> EnumStorageType;
 
+    enum Presentations : size_t { DEFAULT = 0, SIMPLE = 1, _COUNT_ = 2 };
+
     Parameter(int uid, ParamType type);
     ~Parameter() {}
 
@@ -168,9 +170,14 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    bool GUI_Present(void) { return this->present.GUI_Present(*this); }
-
+    bool GUI_Present(void) { return this->present.Present(*this); }
     void GUI_SetLabelVisibility(bool visible) { this->present.visible = visible; }
+    void GUI_SetPresentation(Parameter::Presentations present) { this->present.presentations = present; }
+    void GUI_SetReadOnly(bool readonly) { this->present.read_only = readonly; }
+
+    static bool GUI_PresentationButton(Parameter::Presentations& inout_present, std::string label = "") {
+        return Presentation::PresentationButton(inout_present, label);
+    }
 
 private:
     typedef std::variant<std::monostate, // default (unused/unavailable)
@@ -204,7 +211,7 @@ private:
     ValueType value;
 
     /**
-     * Defines GUI parameter present.
+     * Defines GUI parameter presentation.
      */
     class Presentation {
     public:
@@ -212,13 +219,15 @@ private:
 
         ~Presentation(void);
 
-        bool GUI_Present(Parameter& param);
+        bool Present(Parameter& param);
 
+        Parameter::Presentations presentations;
+        bool read_only;
         bool visible;
 
+        static bool PresentationButton(Parameter::Presentations& inout_present, std::string label = "");
+
     private:
-        enum Presentations : size_t { DEFAULT = 0, SIMPLE = 1, _COUNT_ = 2 } presentations;
-        bool read_only;
         std::string help;
         GUIUtils utils;
 

@@ -115,6 +115,9 @@ private:
         ImFont* font;
         float mouse_wheel;
         GUIUtils utils;
+        bool params_visible;
+        bool params_readonly;
+        Parameter::Presentations param_present;
 
         void menu(megamol::gui::configurator::Graph& graph);
         void canvas(megamol::gui::configurator::Graph& graph, float child_width);

@@ -114,13 +114,13 @@ const megamol::gui::configurator::CallSlotPtrType megamol::gui::configurator::Ca
 // CALL PRESENTATION #########################################################
 
 megamol::gui::configurator::Call::Presentation::Presentation(void)
-    : presentations(Presentation::DEFAULT), label_visible(true), utils() {}
+    : presentations(Call::Presentations::DEFAULT), label_visible(true), utils() {}
 
 
 megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
 
 
-ImGuiID megamol::gui::configurator::Call::Presentation::GUI_Present(
+ImGuiID megamol::gui::configurator::Call::Presentation::Present(
     megamol::gui::configurator::Call& call, ImVec2 canvas_offset, float canvas_zooming) {
 
     int retval_id = GUI_INVALID_ID;

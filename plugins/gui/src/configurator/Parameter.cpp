@@ -166,7 +166,7 @@ std::string megamol::gui::configurator::Parameter::GetValueString(void) {
 // PARAMETER PRESENTATION ####################################################
 
 megamol::gui::configurator::Parameter::Presentation::Presentation(void)
-    : presentations(Presentations::DEFAULT)
+    : presentations(Parameter::Presentations::SIMPLE)
     , read_only(false)
     , visible(true)
     , help()
@@ -182,7 +182,7 @@ megamol::gui::configurator::Parameter::Presentation::Presentation(void)
 megamol::gui::configurator::Parameter::Presentation::~Presentation(void) {}
 
 
-bool megamol::gui::configurator::Parameter::Presentation::GUI_Present(megamol::gui::configurator::Parameter& param) {
+bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::configurator::Parameter& param) {
 
     try {
 
@@ -198,7 +198,7 @@ bool megamol::gui::configurator::Parameter::Presentation::GUI_Present(megamol::g
             ImGui::BeginGroup();
 
             switch (this->presentations) {
-            case (Presentations::DEFAULT): {
+            case (Parameter::Presentations::DEFAULT): {
                 this->present_prefix(param);
                 ImGui::SameLine();
                 this->present_value(param);
@@ -206,9 +206,7 @@ bool megamol::gui::configurator::Parameter::Presentation::GUI_Present(megamol::g
                 this->present_postfix(param);
                 break;
             }
-            case (Presentations::SIMPLE): {
-                this->present_prefix(param);
-                ImGui::SameLine();
+            case (Parameter::Presentations::SIMPLE): {
                 this->present_value(param);
                 ImGui::SameLine();
                 this->present_postfix(param);
@@ -236,6 +234,69 @@ bool megamol::gui::configurator::Parameter::Presentation::GUI_Present(megamol::g
 }
 
 
+bool megamol::gui::configurator::Parameter::Presentation::PresentationButton(
+    Parameter::Presentations& inout_present, std::string label) {
+    assert(ImGui::GetCurrentContext() != nullptr);
+
+    bool retval = false;
+
+    float height = ImGui::GetFrameHeight();
+    float half_height = height / 2.0f;
+    ImVec2 position = ImGui::GetCursorScreenPos();
+
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertFloat4ToU32(ImGui::GetStyleColorVec4(ImGuiCol_FrameBg)));
+    ImGui::BeginChild("special_button_background", ImVec2(height, height), false,
+        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
+    float thickness = height / 5.0f;
+    ImVec2 center = position + ImVec2(half_height, half_height);
+
+    ImU32 color_front = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+
+    draw_list->AddCircleFilled(center, thickness, color_front, 12);
+    draw_list->AddCircle(center, 2.0f * thickness, color_front, 12, (thickness / 2.0f));
+    ImGui::EndChild();
+    ImGui::PopStyleColor();
+
+    ImGui::SetCursorScreenPos(position);
+    ImVec2 rect = ImVec2(height, height);
+    ImGui::InvisibleButton("special_button", rect);
+    if (ImGui::BeginPopupContextItem()) {
+        for (int i = 0; i < static_cast<int>(Parameter::Presentations::_COUNT_); i++) {
+            std::string presentation_str;
+            switch (static_cast<Parameter::Presentations>(i)) {
+            case (Parameter::Presentations::DEFAULT):
+                presentation_str = "DEFAULT";
+                break;
+            case (Parameter::Presentations::SIMPLE):
+                presentation_str = "SIMPLE";
+                break;
+            defalt:
+                break;
+            }
+            if (presentation_str.empty()) break;
+            auto presentation_i = static_cast<Parameter::Presentations>(i);
+            if (ImGui::MenuItem(presentation_str.c_str(), nullptr, (presentation_i == inout_present))) {
+                inout_present = presentation_i;
+                retval = true;
+            }
+        }
+        ImGui::EndPopup();
+    }
+
+    if (!label.empty()) {
+        ImGui::SameLine();
+        position = ImGui::GetCursorScreenPos();
+        position.y += (ImGui::GetFrameHeight() / 2.0f - ImGui::GetFontSize() / 2.0f);
+        ImGui::SetCursorScreenPos(position);
+        ImGui::Text(label.c_str());
+    }
+
+    return retval;
+}
+
+
 void megamol::gui::configurator::Parameter::Presentation::present_prefix(Parameter& param) {
 
     // Visibility
@@ -253,45 +314,8 @@ void megamol::gui::configurator::Parameter::Presentation::present_prefix(Paramet
     ImGui::SameLine();
 
     // Presentation
-    float height = ImGui::GetFrameHeight();
-    float half_height = height / 2.0f;
-    ImVec2 position = ImGui::GetCursorScreenPos();
+    this->PresentationButton(this->presentations);
 
-    ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, IM_COL32(75, 75, 75, 255));
-    ImGui::BeginChild("region", ImVec2(height, height), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    assert(draw_list != nullptr);
-    float thickness = height / 5.0f;
-    ImVec2 center = position + ImVec2(half_height, half_height);
-    draw_list->AddCircleFilled(center, thickness, IM_COL32(150, 150, 150, 255), 12);
-    draw_list->AddCircle(center, 2.0f * thickness, IM_COL32(150, 150, 150, 255), 12, (thickness / 2.0f));
-    ImGui::EndChild();
-    ImGui::PopStyleColor();
-
-    ImGui::SetCursorScreenPos(position);
-    ImVec2 rect = ImVec2(height, height);
-    ImGui::InvisibleButton("###button", rect);
-
-    if (ImGui::BeginPopupContextItem()) {
-        for (size_t i = 0; i < static_cast<size_t>(Presentations::_COUNT_); i++) {
-            std::string presentation_str;
-            switch (static_cast<Presentations>(i)) {
-            case (Presentations::DEFAULT):
-                presentation_str = "DEFAULT";
-                break;
-            case (Presentations::SIMPLE):
-                presentation_str = "SIMPLE";
-                break;
-            defalt:
-                break;
-            }
-            if (presentation_str.empty()) break;
-            if (ImGui::MenuItem(presentation_str.c_str(), nullptr, (i == this->presentations))) {
-                this->presentations = static_cast<Presentations>(i);
-            }
-        }
-        ImGui::EndPopup();
-    }
     this->utils.HoverToolTip("Presentation", ImGui::GetItemID(), 0.5f);
 }
 

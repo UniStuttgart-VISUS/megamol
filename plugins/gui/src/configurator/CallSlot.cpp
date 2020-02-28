@@ -227,12 +227,12 @@ int megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(megamol::gui::c
 // CALL SLOT PRESENTATION ####################################################
 
 megamol::gui::configurator::CallSlot::Presentation::Presentation(void)
-    : presentations(Presentation::DEFAULT), label_visible(true), position(), slot_radius(8.0f), utils() {}
+    : presentations(CallSlot::Presentations::DEFAULT), label_visible(true), position(), slot_radius(8.0f), utils() {}
 
 megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
 
-ImGuiID megamol::gui::configurator::CallSlot::Presentation::GUI_Present(
+ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
     megamol::gui::configurator::CallSlot& call_slot, ImVec2 canvas_offset, float canvas_zooming) {
 
     int retval_id = GUI_INVALID_ID;

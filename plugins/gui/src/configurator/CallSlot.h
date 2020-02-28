@@ -46,6 +46,8 @@ public:
         CallSlot::CallSlotType type;
     };
 
+    enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
+
     CallSlot(int uid);
     ~CallSlot();
 
@@ -73,11 +75,11 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     ImGuiID GUI_Present(ImVec2 canvas_offset, float canvas_zooming) {
-        return this->present.GUI_Present(*this, canvas_offset, canvas_zooming);
+        return this->present.Present(*this, canvas_offset, canvas_zooming);
     }
 
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
-
+    void GUI_SetPresentation(CallSlot::Presentations present) { this->present.presentations = present; }
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
 
 private:
@@ -85,7 +87,7 @@ private:
     std::vector<CallPtrType> connected_calls;
 
     /**
-     * Defines GUI call slot present.
+     * Defines GUI call slot presentation.
      */
     class Presentation {
     public:
@@ -93,18 +95,18 @@ private:
 
         ~Presentation(void);
 
-        ImGuiID GUI_Present(CallSlot& call_slot, ImVec2 canvas_offset, float canvas_zooming);
+        ImGuiID Present(CallSlot& call_slot, ImVec2 canvas_offset, float canvas_zooming);
 
         ImVec2 GetPosition(void) { return this->position; }
 
         void UpdatePosition(CallSlot& call_slot, ImVec2 canvas_offset, float canvas_zooming);
 
+        CallSlot::Presentations presentations;
         bool label_visible;
 
     private:
-        enum Presentations { DEFAULT } presentations;
         ImVec2 position;
-        float slot_radius;
+        const float slot_radius;
         GUIUtils utils;
 
     } present;

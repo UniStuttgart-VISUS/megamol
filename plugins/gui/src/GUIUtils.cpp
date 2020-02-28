@@ -101,6 +101,7 @@ bool GUIUtils::Utf8Encode(std::string& str) const {
 }
 
 void megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::string& help) {
+    assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
 
     ImGui::PushID(id.c_str());
@@ -141,6 +142,7 @@ void megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::stri
 
 
 bool megamol::gui::GUIUtils::VerticalSplitter(float thickness, float* size_left, float* size_right) {
+    assert(ImGui::GetCurrentContext() != nullptr);
 
     bool split_vertically = true;
     float min_size = 1.0f; // >=1.0!

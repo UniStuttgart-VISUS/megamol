@@ -48,6 +48,8 @@ public:
         std::map<CallSlot::CallSlotType, std::vector<CallSlot::StockCallSlot>> call_slots;
     };
 
+    enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
+
     Module(int uid);
     ~Module();
 
@@ -72,20 +74,19 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     ImGuiID GUI_Present(ImVec2 canvas_offset, float canvas_zooming) {
-        return this->present.GUI_Present(*this, canvas_offset, canvas_zooming);
+        return this->present.Present(*this, canvas_offset, canvas_zooming);
     }
 
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
-
-    ImVec2 GUI_GetPosition(void) { return this->present.position; }
-
-    ImVec2 GUI_GetSize(void) { return this->present.size; }
+    void GUI_SetPresentation(Module::Presentations present) { this->present.presentations = present; }
+    ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
+    ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
 
 private:
     std::map<CallSlot::CallSlotType, std::vector<CallSlotPtrType>> call_slots;
 
     /**
-     * Defines GUI module present.
+     * Defines GUI module presentation.
      */
     class Presentation {
     public:
@@ -93,14 +94,17 @@ private:
 
         ~Presentation(void);
 
-        ImGuiID GUI_Present(Module& mod, ImVec2 canvas_offset, float canvas_zooming);
+        ImGuiID Present(Module& mod, ImVec2 canvas_offset, float canvas_zooming);
 
+        ImVec2 GetPosition(void) { return this->position; }
+        ImVec2 GetSize(void) { return this->size; }
+
+        Module::Presentations presentations;
         bool label_visible;
-        ImVec2 position;
-        ImVec2 size;
 
     private:
-        enum Presentations { DEFAULT } presentations;
+        ImVec2 position;
+        ImVec2 size;
         std::string class_label;
         std::string name_label;
         GUIUtils utils;

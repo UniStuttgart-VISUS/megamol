@@ -45,6 +45,8 @@ public:
         std::vector<std::string> functions;
     };
 
+    enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
+
     Call(int uid);
     ~Call();
 
@@ -63,16 +65,17 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     ImGuiID GUI_Present(ImVec2 canvas_offset, float canvas_zooming) {
-        return this->present.GUI_Present(*this, canvas_offset, canvas_zooming);
+        return this->present.Present(*this, canvas_offset, canvas_zooming);
     }
 
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
+    void GUI_SetPresentation(Call::Presentations present) { this->present.presentations = present; }
 
 private:
     std::map<CallSlot::CallSlotType, CallSlotPtrType> connected_call_slots;
 
     /**
-     * Defines GUI call present.
+     * Defines GUI call presentation.
      */
     class Presentation {
     public:
@@ -80,12 +83,12 @@ private:
 
         ~Presentation(void);
 
-        ImGuiID GUI_Present(Call& call, ImVec2 canvas_offset, float canvas_zooming);
+        ImGuiID Present(Call& call, ImVec2 canvas_offset, float canvas_zooming);
 
+        Call::Presentations presentations;
         bool label_visible;
 
     private:
-        enum Presentations { DEFAULT } presentations;
         GUIUtils utils;
 
     } present;
