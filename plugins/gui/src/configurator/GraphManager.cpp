@@ -780,13 +780,14 @@ bool megamol::gui::configurator::GraphManager::Presentation::close_unsaved_popup
 
         ImGui::Text("Discard changes?");
 
-        if (ImGui::Button("YES")) {
+        if (ImGui::Button("Yes")) {
             ImGui::CloseCurrentPopup();
             retval = true;
         }
-        ImGui::SameLine(0.0f, 100.0f);
-        if (ImGui::Button("NO")) {
+        ImGui::SameLine(0.0f, 120.0f);
+        if (ImGui::Button("No")) {
             ImGui::CloseCurrentPopup();
+            this->delete_graph_uid = GUI_INVALID_ID;
         }
         ImGui::EndPopup();
     }

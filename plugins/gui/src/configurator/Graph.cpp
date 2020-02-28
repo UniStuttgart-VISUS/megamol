@@ -711,7 +711,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas_dragged_call(megamo
 
     const float CURVE_THICKNESS = 3.0f;
 
-    if ((this->selected_slot_ptr != nullptr) && (this->hovered_slot_uid < 0)) {
+    if ((this->selected_slot_ptr != nullptr) && (this->hovered_slot_uid == GUI_INVALID_ID)) {
         ImVec2 current_pos = ImGui::GetMousePos();
         bool mouse_inside_canvas = false;
 
