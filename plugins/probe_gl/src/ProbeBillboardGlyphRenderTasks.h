@@ -68,6 +68,7 @@ private:
 
     struct GlyphVectorProbeData {
         glm::vec4 position;
+        glm::vec4 probe_direction;
         float scale;
 
         float padding0;

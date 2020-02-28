@@ -233,6 +233,11 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::createVectorProbeGlyphData(
         probe.m_position[1] + probe.m_direction[1] * (probe.m_begin * 1.25f),
         probe.m_position[2] + probe.m_direction[2] * (probe.m_begin * 1.25f), 1.0f);
 
+    glyph_data.probe_direction = glm::vec4(
+        probe.m_direction[0],
+        probe.m_direction[1],
+        probe.m_direction[2], 1.0f);
+
     glyph_data.scale = scale;
 
     if (probe.getSamplingResult()->samples.size() > 32) {

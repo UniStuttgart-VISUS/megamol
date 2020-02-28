@@ -2,6 +2,7 @@
 struct MeshShaderParams
 {
     vec4 glpyh_position;
+    vec4 probe_direction;
     float scale;
 
     float padding0;
