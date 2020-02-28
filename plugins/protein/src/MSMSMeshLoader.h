@@ -153,7 +153,8 @@ private:
     float highval;
 
     /** the index of the vertex attribute */
-    unsigned int attIdx;
+    unsigned int idAttIdx;
+    unsigned int valueAttIdx;
 
     vislib::Array<geocalls::CallTriMeshData::Mesh*> obj;
 

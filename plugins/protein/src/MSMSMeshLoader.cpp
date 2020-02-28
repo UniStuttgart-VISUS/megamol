@@ -236,6 +236,7 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                 float* normal = new float[this->obj[ctmd->FrameID()]->GetVertexCount() * 3];
                 unsigned char* color = new unsigned char[this->obj[ctmd->FrameID()]->GetVertexCount() * 3];
                 unsigned int* atomIndex = new unsigned int[this->obj[ctmd->FrameID()]->GetVertexCount()];
+                float* values = new float[this->obj[ctmd->FrameID()]->GetVertexCount()];
 
                 // calculate centroid
                 float* centroid = new float[3];
@@ -328,8 +329,8 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                 auto atCnt = this->obj[ctmd->FrameID()]->GetVertexAttribCount();
                 bool found = false;
                 if (atCnt != 0) {
-                    for (attIdx = 0; attIdx < atCnt; attIdx++) {
-                        if (this->obj[ctmd->FrameID()]->GetVertexAttribDataType(attIdx) ==
+                    for (this->idAttIdx = 0; this->idAttIdx < atCnt; this->idAttIdx++) {
+                        if (this->obj[ctmd->FrameID()]->GetVertexAttribDataType(this->idAttIdx) ==
                             CallTriMeshData::Mesh::DataType::DT_UINT32) {
                             found = true;
                             break;
@@ -338,7 +339,25 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                 }
                 // add an attribute or set the existing one
                 if (atCnt == 0 || !found) {
-                    this->attIdx = this->obj[ctmd->FrameID()]->AddVertexAttribPointer(atomIndex);
+                    this->idAttIdx = this->obj[ctmd->FrameID()]->AddVertexAttribPointer(atomIndex);
+                }
+
+                // search for the correct attrib index for the value
+                found = false;
+                if (atCnt != 0) {
+                    for (this->valueAttIdx = 0; this->valueAttIdx < atCnt; this->valueAttIdx++) {
+                        if (this->obj[ctmd->FrameID()]->GetVertexAttribDataType(this->valueAttIdx) ==
+                            CallTriMeshData::Mesh::DataType::DT_FLOAT) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                // add an attribute or set the existing one
+                if (atCnt == 0 || !found) {
+                    this->valueAttIdx = this->obj[ctmd->FrameID()]->AddVertexAttribPointer(values);
+                } else {
+                    this->obj[ctmd->FrameID()]->SetVertexAttribData(values, this->valueAttIdx);
                 }
 
                 // weighting factors
@@ -363,7 +382,26 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                     color[i * 3 + 0] = 0;
                     color[i * 3 + 1] = 0;
                     color[i * 3 + 2] = 0;
-                    atomIndex[i] = this->obj[ctmd->FrameID()]->GetVertexAttribPointerUInt32(attIdx)[i];
+                    atomIndex[i] = this->obj[ctmd->FrameID()]->GetVertexAttribPointerUInt32(this->idAttIdx)[i];
+
+                    Color::ColoringMode colmode;
+                    if (weight1 > weight0) { // take weight1
+                        colmode = currentColoringMode1;
+                    } else { // take weight0
+                        colmode = currentColoringMode0;
+                    }
+
+                    if (colmode == Color::BFACTOR) {
+                        values[i] = mol->AtomBFactors()[atomIndex[i]];
+                    } else if (colmode == Color::CHARGE) {
+                        values[i] = mol->AtomCharges()[atomIndex[i]];
+                    } else if (colmode == Color::OCCUPANCY) {
+                        values[i] = mol->AtomOccupancies()[atomIndex[i]];
+                    } else if (colmode == Color::HYDROPHOBICITY) {
+                        auto resIdx = mol->AtomResidueIndices()[atomIndex[i]];
+                        auto typeIdx = mol->Residues()[resIdx]->Type();
+                        values[i] = Color::GetHydrophibicityByResName(mol->ResidueTypeNames()[typeIdx]);
+                    }
 
                     // create hightmap colours or read per atom colours
                     if (currentColoringMode0 == Color::HEIGHTMAP_COL || currentColoringMode0 == Color::HEIGHTMAP_VAL) {
@@ -376,6 +414,7 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                         lower_bound = float(bin) * steps;
                         upper_bound = float(bin + 1) * steps;
                         alpha = (dist - lower_bound) / (upper_bound - lower_bound);
+                        values[i] = dist;
                         dist /= max_dist;
 
                         if (currentColoringMode0 == Color::HEIGHTMAP_COL) {
@@ -413,6 +452,7 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                         lower_bound = float(bin) * steps;
                         upper_bound = float(bin + 1) * steps;
                         alpha = (dist - lower_bound) / (upper_bound - lower_bound);
+                        values[i] = dist;
                         dist /= max_dist;
 
                         if (currentColoringMode1 == Color::HEIGHTMAP_COL) {
@@ -450,6 +490,7 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                     this->obj[ctmd->FrameID()]->GetVertexCount(), vertex, normal, color, NULL, true);
                 // setVertexData clears all attributes, so we have to add a new one
                 this->obj[ctmd->FrameID()]->AddVertexAttribPointer(atomIndex);
+                this->obj[ctmd->FrameID()]->AddVertexAttribPointer(values);
                 this->datahash++;
 
                 this->coloringModeParam0.ResetDirty();
@@ -720,8 +761,9 @@ bool MSMSMeshLoader::load(const vislib::TString& filename, unsigned int frameID)
         auto atCnt = this->obj[frameID]->GetVertexAttribCount();
         bool found = false;
         if (atCnt != 0) {
-            for (attIdx = 0; attIdx < atCnt; attIdx++) {
-                if (this->obj[frameID]->GetVertexAttribDataType(attIdx) == CallTriMeshData::Mesh::DataType::DT_UINT32) {
+            for (this->idAttIdx = 0; this->idAttIdx < atCnt; this->idAttIdx++) {
+                if (this->obj[frameID]->GetVertexAttribDataType(this->idAttIdx) ==
+                    CallTriMeshData::Mesh::DataType::DT_UINT32) {
                     found = true;
                     break;
                 }
@@ -731,9 +773,10 @@ bool MSMSMeshLoader::load(const vislib::TString& filename, unsigned int frameID)
         if (atCnt == 0 || !found) {
             this->obj[frameID]->AddVertexAttribPointer(atomIndex);
         } else {
-            this->obj[frameID]->SetVertexAttribData(atomIndex, attIdx);
+            this->obj[frameID]->SetVertexAttribData(atomIndex, this->idAttIdx);
         }
 
+        // TODO reconstruct the values for the value attribute
 
         return true;
     }

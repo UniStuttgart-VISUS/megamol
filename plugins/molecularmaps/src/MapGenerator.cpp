@@ -4618,6 +4618,32 @@ std::vector<std::string> MapGenerator::splitString(
  */
 void MapGenerator::writeValueImage(const vislib::TString& path_to_image, const geocalls::CallTriMeshData& ctmd,
     vislib::Array<unsigned char>& input_image) {
+
+    auto attribcnt = ctmd.Objects()[0].GetVertexAttribCount();
+    // find float attribute
+    bool found = false;
+    unsigned int attribIdx;
+    if (attribcnt != 0) {
+        for (attribIdx = 0; attribIdx < attribcnt; ++attribIdx) {
+            if (ctmd.Objects()[0].GetVertexAttribDataType(attribIdx) ==
+                geocalls::CallTriMeshData::Mesh::DataType::DT_FLOAT) {
+                found = true;
+                break;
+            }
+        }
+    }
+
+    if (!found) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Impossible to write value image due to missing values in the mesh call");
+    } else {
+        auto valptr = ctmd.Objects()[0].GetVertexAttribPointerFloat(attribIdx);
+        auto vertCnt = ctmd.Objects()[0].GetVertexCount();
+        for (uint32_t i = 0; i < vertCnt; i++) {
+            std::cout << valptr[i] << std::endl;
+        }
+    }
+
     float minVal, maxVal;
     glm::vec3 minColor, midColor, maxColor;
     bool hasMidColor = ctmd.GetColorBounds(minVal, maxVal, minColor, midColor, maxColor);
@@ -4654,7 +4680,7 @@ void MapGenerator::writeValueImage(const vislib::TString& path_to_image, const g
 
             if (none && color.r != 75) {
                 noneCounter++;
-                //std::cout << std::min(maxl - minl, maxr - minr) << std::endl;
+                // std::cout << std::min(maxl - minl, maxr - minr) << std::endl;
                 input_image[i * 3 + 0] = 0;
                 input_image[i * 3 + 1] = 0;
                 input_image[i * 3 + 2] = 0;
@@ -4668,7 +4694,7 @@ void MapGenerator::writeValueImage(const vislib::TString& path_to_image, const g
         }
         // std::cout << valueVec[i] << " for " << colfloat.r << " " << colfloat.g << " " << colfloat.b << std::endl;
     }
-    //std::cout << "NoneCounter " << noneCounter << std::endl;
+    // std::cout << "NoneCounter " << noneCounter << std::endl;
 
     // TODO write valueVec
 }
