@@ -108,7 +108,7 @@ public:
      * Draw draggable splitter between two child windows, relative to parent window size.
      * https://github.com/ocornut/imgui/issues/319
      */
-    bool VerticalSplitter(float thickness, float* size_left, float* size_right);
+    bool VerticalSplitter(float* size_left, float* size_right);
 
 private:
     /** Current tooltip hover time. */

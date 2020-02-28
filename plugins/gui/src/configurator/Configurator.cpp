@@ -115,9 +115,8 @@ bool megamol::gui::configurator::Configurator::Draw(
 
         this->draw_window_menu(core_instance);
 
-        const float split_thickness = 10.0f;
         float child_width_auto = 0.0f;
-        this->utils.VerticalSplitter(split_thickness, &this->split_width, &child_width_auto);
+        this->utils.VerticalSplitter(&this->split_width, &child_width_auto);
 
         this->draw_window_module_list(this->split_width);
 

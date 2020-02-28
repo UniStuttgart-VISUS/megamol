@@ -85,6 +85,9 @@ private:
 
     private:
         GraphManager::GraphPtrType presented_graph;
+        int delete_graph_uid;
+
+        bool close_unsaved_popup(bool open_popup);
 
     } present;
 

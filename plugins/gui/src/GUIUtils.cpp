@@ -141,8 +141,10 @@ void megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::stri
 }
 
 
-bool megamol::gui::GUIUtils::VerticalSplitter(float thickness, float* size_left, float* size_right) {
+bool megamol::gui::GUIUtils::VerticalSplitter(float* size_left, float* size_right) {
     assert(ImGui::GetCurrentContext() != nullptr);
+
+    const float thickness = 12.0f;
 
     bool split_vertically = true;
     float min_size = 1.0f; // >=1.0!

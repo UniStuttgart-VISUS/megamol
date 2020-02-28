@@ -701,7 +701,8 @@ bool megamol::gui::configurator::GraphManager::get_call_stock_data(
 
 // GRAPH MANAGET PRESENTATION ####################################################
 
-megamol::gui::configurator::GraphManager::Presentation::Presentation(void) : presented_graph(nullptr) {}
+megamol::gui::configurator::GraphManager::Presentation::Presentation(void)
+    : presented_graph(nullptr), delete_graph_uid(GUI_INVALID_ID) {}
 
 
 megamol::gui::configurator::GraphManager::Presentation::~Presentation(void) {}
@@ -722,7 +723,7 @@ bool megamol::gui::configurator::GraphManager::Presentation::GUI_Present(GraphMa
         ImGui::BeginChild("graph_child_window", ImVec2(child_width, 0.0f), true, child_flags);
 
         // Assuming only one closed tab/graph per frame.
-        int delete_graph_uid = GUI_INVALID_ID;
+        bool open_close_unsaved_popup = false;
 
         // Draw Graphs
         ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
@@ -731,19 +732,25 @@ bool megamol::gui::configurator::GraphManager::Presentation::GUI_Present(GraphMa
 
             bool delete_graph = false;
             if (graph->GUI_Present(child_width, graph_font, paramter_search, delete_graph_element, delete_graph)) {
-                presented_graph = graph;
+                this->presented_graph = graph;
             }
 
             // Do not delete graph while looping through graphs list
             if (delete_graph) {
-                presented_graph = nullptr;
-                delete_graph_uid = graph->GetUID();
+                this->delete_graph_uid = graph->GetUID();
+                if (graph->IsDirty()) {
+                    open_close_unsaved_popup = true;
+                }
             }
         }
         ImGui::EndTabBar();
 
-        // Delete marked graph when tab closed
-        graph_manager.DeleteGraph(delete_graph_uid);
+        // Delete marked graph when tab closed and
+        if ((this->delete_graph_uid != GUI_INVALID_ID) && this->close_unsaved_popup(open_close_unsaved_popup)) {
+            this->presented_graph = nullptr;
+            graph_manager.DeleteGraph(delete_graph_uid);
+            this->delete_graph_uid = GUI_INVALID_ID;
+        }
 
         ImGui::EndChild();
     } catch (std::exception e) {
@@ -756,4 +763,32 @@ bool megamol::gui::configurator::GraphManager::Presentation::GUI_Present(GraphMa
     }
 
     return true;
+}
+
+
+bool megamol::gui::configurator::GraphManager::Presentation::close_unsaved_popup(bool open_popup) {
+
+    bool retval = true;
+    std::string save_project_label = "Warning: Closing Unsaved Project";
+
+    if (open_popup) {
+        ImGui::OpenPopup(save_project_label.c_str());
+    }
+    if (ImGui::BeginPopupModal(save_project_label.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        retval = false;
+
+        ImGui::Text("Discard changes?");
+
+        if (ImGui::Button("YES")) {
+            ImGui::CloseCurrentPopup();
+            retval = true;
+        }
+        ImGui::SameLine(0.0f, 100.0f);
+        if (ImGui::Button("NO")) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+    return retval;
 }

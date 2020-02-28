@@ -337,14 +337,12 @@ bool megamol::gui::configurator::Graph::Presentation::GUI_Present(megamol::gui::
             this->menu(graph);
 
             if (this->selected_module_uid > 0) {
-                const float split_thickness = 10.0f;
-                float child_width_auto = 0.0f;
                 // One time init depending on available window width
                 if (this->split_width < 0.0f) {
                     this->split_width = ImGui::GetWindowWidth() * 0.75f;
                 }
-
-                this->utils.VerticalSplitter(split_thickness, &this->split_width, &child_width_auto);
+                float child_width_auto = 0.0f;
+                this->utils.VerticalSplitter(&this->split_width, &child_width_auto);
 
                 this->canvas(graph, this->split_width);
                 ImGui::SameLine();
@@ -590,7 +588,7 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
 
     ImGui::BeginGroup();
 
-    float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 2.0f;
+    float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 2.25f;
     auto child_flags = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar;
 
     ImGui::BeginChild("parameter_search_child", ImVec2(child_width, param_child_height), false, child_flags);
