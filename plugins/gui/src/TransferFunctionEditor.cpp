@@ -46,7 +46,6 @@ std::array<double, 3> CubeHelixRGB(double t, double start, double rots, double h
     return {r, g, b};
 }
 
-
 /**
  * Transform from Hue to RGB.
  */
@@ -61,9 +60,7 @@ std::array<double, 3> HueToRGB(double hue) {
     return std::move(color);
 }
 
-
 using PresetGenerator = std::function<void(param::TransferFunctionParam::TFNodeType&, size_t)>;
-
 
 PresetGenerator CubeHelixAdapter(double start, double rots, double hue, double gamma) {
     return [=](auto& nodes, auto n) {
@@ -82,7 +79,6 @@ PresetGenerator CubeHelixAdapter(double start, double rots, double hue, double g
         }
     };
 }
-
 
 template <size_t PaletteSize> PresetGenerator ColormapAdapter(const float palette[PaletteSize][3]) {
     const double LastIndex = static_cast<double>(PaletteSize - 1);
@@ -111,7 +107,6 @@ template <size_t PaletteSize> PresetGenerator ColormapAdapter(const float palett
     };
 }
 
-
 void RampAdapter(param::TransferFunctionParam::TFNodeType& nodes, size_t n) {
     nodes.clear();
     std::array<float, TFP_VAL_CNT> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f};
@@ -119,7 +114,6 @@ void RampAdapter(param::TransferFunctionParam::TFNodeType& nodes, size_t n) {
     nodes.emplace_back(zero);
     nodes.emplace_back(one);
 }
-
 
 void RainbowAdapter(param::TransferFunctionParam::TFNodeType& nodes, size_t n) {
     nodes.clear();
@@ -136,7 +130,6 @@ void RainbowAdapter(param::TransferFunctionParam::TFNodeType& nodes, size_t n) {
         });
     }
 }
-
 
 std::array<std::tuple<std::string, PresetGenerator>, 12> PRESETS = {
     std::make_tuple("Select...", [](auto& nodes, auto n) {}), std::make_tuple("Ramp", RampAdapter),
@@ -159,7 +152,8 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , textureSize(256)
     , textureId(0)
-    , textureInvalid(false)
+    , textureInvalid(true)
+    , pendingChanges(true)
     , activeChannels{false, false, false, false}
     , currentNode(0)
     , currentChannel(0)
@@ -178,10 +172,7 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     this->widget_buffer.tex_size = textureSize;
     this->widget_buffer.gauss_sigma = zero[5];
     this->widget_buffer.range_value = zero[4];
-
-    this->textureInvalid = true;
 }
-
 
 void TransferFunctionEditor::SetTransferFunction(const std::string& tfs) {
     if (activeParameter == nullptr) {
@@ -214,25 +205,27 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs) {
     this->textureInvalid = true;
 }
 
-
 bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
     return param::TransferFunctionParam::DumpTransferFunction(
         tfs, this->nodes, this->mode, this->textureSize, this->range);
 }
 
+bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParamter) {
 
-bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
+    if (useActiveParamter) {
+        if (this->activeParameter == nullptr) {
+            const char* message = "Changes have no effect.\n"
+                                  "Please set a transfer function parameter.\n";
+            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), message);
+        }
+    }
+
     assert(ImGui::GetCurrentContext() != nullptr);
     assert(this->nodes.size() > 1);
 
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
-    if (this->activeParameter == nullptr) {
-        const char* message = "Changes have no effect.\n"
-                              "Please set a transfer function parameter.\n";
-        ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), message);
-    }
 
     // Test if selected node is still in range
     if (this->nodes.size() <= this->currentNode) {
@@ -255,7 +248,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         return false;
     }
 
-    // ImGui::Separator();
+    ImGui::Separator();
 
     // Interval range -----------------------------------------------------
     ImGui::PushItemWidth(tfw_item_width * 0.5f - style.ItemInnerSpacing.x);
@@ -284,7 +277,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     }
     ImGui::SameLine();
     ImGui::PopItemWidth();
-    ImGui::SetCursorPosX(tfw_item_width + style.ItemSpacing.x + style.ItemInnerSpacing.x);
+    ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x);
     ImGui::Text("Value Range");
 
     // Value slider -------------------------------------------------------
@@ -329,7 +322,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     ImGui::Checkbox("Blue", &this->activeChannels[2]);
     ImGui::SameLine(tfw_item_width * 0.725f);
     ImGui::Checkbox("Alpha", &this->activeChannels[3]);
-    ImGui::SameLine(tfw_item_width + style.ItemSpacing.x + style.ItemInnerSpacing.x);
+    ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x);
     ImGui::Text("Color Channels");
 
     // Color editor for selected node -------------------------------------
@@ -388,7 +381,9 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     // --------------------------------------------------------------------
 
     // Create current texture data
-    bool imm_apply_tex_modified = this->textureInvalid;
+    if (this->textureInvalid) {
+        this->pendingChanges = true;
+    }
     if (this->textureInvalid) {
         if (this->mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
             param::TransferFunctionParam::LinearInterpolation(this->texturePixels, this->textureSize, this->nodes);
@@ -418,31 +413,47 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         this->textureInvalid = false;
     }
 
-    bool shouldApply = false;
+    bool apply_changes = false;
 
     // Return true for current changes being applied
+    ImGui::PushID("Apply_");
+    ImGui::PushStyleColor(
+        ImGuiCol_Button, this->pendingChanges ? ImVec4(0.6f, 0.0f, 0.0f, 1.0f) : style.Colors[ImGuiCol_Button]);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+        this->pendingChanges ? ImVec4(0.9f, 0.0f, 0.0f, 1.0f) : style.Colors[ImGuiCol_ButtonHovered]);
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
     if (ImGui::Button("Apply")) {
-        shouldApply = true;
+        apply_changes = true;
     }
+    ImGui::PopStyleColor(3);
+    ImGui::PopID();
+
     ImGui::SameLine();
+
     if (ImGui::Checkbox("Auto-apply", &this->immediateMode)) {
-        shouldApply = this->immediateMode;
+        apply_changes = this->immediateMode;
     }
 
-    if (this->immediateMode && imm_apply_tex_modified) {
-        shouldApply = true;
+    if (this->immediateMode && this->pendingChanges) {
+        apply_changes = true;
     }
 
-    if (shouldApply) {
-        if (this->activeParameter != nullptr) {
-            std::string tf;
-            if (this->GetTransferFunction(tf)) {
-                this->activeParameter->SetValue(tf);
+    if (apply_changes) {
+        this->pendingChanges = false;
+    }
+
+    if (useActiveParamter) {
+        if (apply_changes) {
+            if (this->activeParameter != nullptr) {
+                std::string tf;
+                if (this->GetTransferFunction(tf)) {
+                    this->activeParameter->SetValue(tf);
+                }
             }
         }
     }
 
-    return shouldApply;
+    return apply_changes;
 }
 
 

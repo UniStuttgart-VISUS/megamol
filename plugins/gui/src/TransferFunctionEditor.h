@@ -64,7 +64,7 @@ public:
     /**
      * Draws the transfer function editor.
      */
-    bool DrawTransferFunctionEditor(void);
+    bool DrawTransferFunctionEditor(bool useActiveParamter = true);
 
 
 private:
@@ -103,6 +103,9 @@ private:
 
     /** Indicating modified transfer function. Recalculate texture data. */
     bool textureInvalid;
+
+    /** Indicates whether changes are already applied or not. */
+    bool pendingChanges;
 
     /** Current texture data. */
     std::vector<float> texturePixels;

@@ -253,7 +253,7 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , update_current_graph(true)
     , rename_popup_open(false)
     , rename_popup_string(nullptr)
-    , split_width(500.0f)
+    , split_width(-1.0f) // !
     , font(nullptr)
     , mouse_wheel(0.0f)
     , params_visible(true)
@@ -339,6 +339,11 @@ bool megamol::gui::configurator::Graph::Presentation::GUI_Present(megamol::gui::
             if (this->selected_module_uid > 0) {
                 const float split_thickness = 10.0f;
                 float child_width_auto = 0.0f;
+                // One time init depending on available window width
+                if (this->split_width < 0.0f) {
+                    this->split_width = ImGui::GetWindowWidth() * 0.75f;
+                }
+
                 this->utils.VerticalSplitter(split_thickness, &this->split_width, &child_width_auto);
 
                 this->canvas(graph, this->split_width);

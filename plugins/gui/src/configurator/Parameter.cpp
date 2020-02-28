@@ -237,6 +237,7 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
 bool megamol::gui::configurator::Parameter::Presentation::PresentationButton(
     megamol::gui::configurator::Parameter::Presentations& inout_present, std::string label) {
     assert(ImGui::GetCurrentContext() != nullptr);
+    ImGuiStyle& style = ImGui::GetStyle();
 
     bool retval = false;
 
@@ -244,7 +245,7 @@ bool megamol::gui::configurator::Parameter::Presentation::PresentationButton(
     float half_height = height / 2.0f;
     ImVec2 position = ImGui::GetCursorScreenPos();
 
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertFloat4ToU32(ImGui::GetStyleColorVec4(ImGuiCol_FrameBg)));
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]));
     ImGui::BeginChild("special_button_background", ImVec2(height, height), false,
         ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -252,7 +253,7 @@ bool megamol::gui::configurator::Parameter::Presentation::PresentationButton(
     float thickness = height / 5.0f;
     ImVec2 center = position + ImVec2(half_height, half_height);
 
-    ImU32 color_front = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+    ImU32 color_front = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
 
     draw_list->AddCircleFilled(center, thickness, color_front, 12);
     draw_list->AddCircle(center, 2.0f * thickness, color_front, 12, (thickness / 2.0f));
@@ -613,25 +614,16 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
     }
     ImGui::SameLine();
 
-    bool isActive = false; /// XXX (&param == this->tf_editor.GetActiveParameter());
     bool updateEditor = false;
 
     // Edit transfer function.
-    ImGui::SameLine();
-    ImGui::PushID("Edit_");
-    ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[isActive ? ImGuiCol_ButtonHovered : ImGuiCol_Button]);
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.Colors[isActive ? ImGuiCol_Button : ImGuiCol_ButtonHovered]);
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
     if (ImGui::Checkbox("Editor", &this->show_tf_editor)) {
         // Set once
         if (this->show_tf_editor) {
             updateEditor = true;
-            isActive = true;
-            /// XXX this->tf_editor.SetActiveParameter(&p);
+            /// XXX this->tf_editor.SetActiveParameter(&param);
         }
     }
-    ImGui::PopStyleColor(3);
-    ImGui::PopID();
     ImGui::SameLine();
 
     // Copy transfer function.
@@ -671,13 +663,18 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
     ImGui::EndGroup();
 
     // Propagate the transfer function to the editor.
-    if (isActive && updateEditor) {
+    if (updateEditor) {
         this->tf_editor.SetTransferFunction(value);
     }
 
     // Draw transfer function editor
     if (this->show_tf_editor) {
-        this->tf_editor.DrawTransferFunctionEditor();
+        if (this->tf_editor.DrawTransferFunctionEditor(false)) {
+            std::string value;
+            if (this->tf_editor.GetTransferFunction(value)) {
+                param.SetValue(value);
+            }
+        }
     }
 
     ImGui::Separator();

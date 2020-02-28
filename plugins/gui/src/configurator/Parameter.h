@@ -235,8 +235,8 @@ private:
 
     private:
         std::string help;
-        GUIUtils utils;
-        TransferFunctionEditor tf_editor;
+        megamol::gui::GUIUtils utils;
+        megamol::gui::TransferFunctionEditor tf_editor;
         bool show_tf_editor;
 
         std::map<std::string, std::string> widgtmap_text;
