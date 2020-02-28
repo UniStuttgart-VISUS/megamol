@@ -55,7 +55,7 @@ namespace MegaMolConf.Io {
                                 //if (!m.ConfPos.IsEmpty) w.Write(" confpos=\"" + m.ConfPos.ToString() + "\"");
                                 if (m.Params != null) {
                                     foreach (Param p in m.Params) {
-                                        w.WriteLine("mmSetParamValue(\"" + modFullName + "::" + p.Name + "\", \"" + SafeString(p.Value) + "\")");
+                                        w.WriteLine("mmSetParamValue(\"" + modFullName + "::" + p.Name + "\", [=[" + p.Value.ToString() + "]=])");
                                     }
                                 }
                             }
@@ -94,6 +94,7 @@ namespace MegaMolConf.Io {
             // TODO: exception checks needed, currently no checks such as "throw new Exception("Module without class encountered")" are made
             List<Module> modules = new List<Module>();
             List<Call> calls = new List<Call>();
+            string vName = "";
 
             // first, search and find all modules in the .lua
             // now SetParamValue and CreateCall can be called before CreateModule without causing problems
@@ -101,15 +102,19 @@ namespace MegaMolConf.Io {
             {
                 string line = lines[i];
 
-                if (line.Contains("mmCreateView"))
+                // trimstart removes all leading whitespaces
+                if (line.TrimStart().StartsWith("mmCreateView"))
                 {
                     Module m = new Module();
                     string[] elements = line.Split('"');
-                    string vName = elements[1]; view.Name = vName;
+                    vName = elements[1]; view.Name = vName;
                     string mModuleClass = elements[3]; m.Class = mModuleClass;
+                    //string[] mModuleFullName = elements[5].Split(':');
+                    //m.Name = mModuleFullName.Length == 3 ? mModuleFullName[2] : mModuleFullName[0];
                     string fullname = elements[5];
                     fullname = fullname.TrimStart(':');
-                    if (fullname.StartsWith(vName)) {
+                    if (fullname.StartsWith(vName))
+                    {
                         fullname = fullname.Substring(vName.Length);
                         fullname = fullname.TrimStart(':');
                     }
@@ -134,11 +139,13 @@ namespace MegaMolConf.Io {
                     continue;
                 }
 
-                if (line.Contains("mmCreateModule"))
+                if (line.TrimStart().StartsWith("mmCreateModule"))
                 {
                     Module m = new Module();
                     string[] elements = line.Split('"');
                     string mModuleClass = elements[1]; m.Class = mModuleClass;
+                    // possibly do same fix here as for mmCreateView
+                    // would need to search for mmCreateView first in while file, otherwise namecheck cannot be done
                     string[] mModuleFullName = elements[3].Split(':');
                     m.Name = mModuleFullName.Length == 3 ? mModuleFullName[2] : mModuleFullName[4];
 
@@ -168,20 +175,23 @@ namespace MegaMolConf.Io {
             {
                 string line = lines[i];
 
-                if (line.Contains("mmSetParamValue"))
+                if (line.TrimStart().StartsWith("mmSetParamValue"))
                 {
 
                     List<Param> prms = new List<Param>();
                         
                     Param p = new Param();
 
+
                     // check next lines if it contains mmSetParam, mmCreateCall, mmCreateModule or mmCreateView 
                     // if so, go on as usual
                     // if not, concatenate consecutive lines to get 1 big line
                     // this allows paramValues to be split accross multiple line and still get interpreted as one
-                    if (i < (lines.Length - 1)) {
+                    if (i < (lines.Length - 1))
+                    {
                         while (i < (lines.Length - 1) && !Regex.IsMatch(lines[i + 1],
-                            @"mmSetParamValue|mmCreateCall|mmCreateModule|mmCreateView")) {
+                            @"mmSetParamValue|mmCreateCall|mmCreateModule|mmCreateView"))
+                        {
                             line += lines[i + 1];
                             ++i;
                         }
@@ -224,9 +234,9 @@ namespace MegaMolConf.Io {
                     // replace every sequence of "\...\" with "\\" so the correct filepathes get saved
                     if (pName.Equals("filename", StringComparison.OrdinalIgnoreCase))
                     {
-                        pValue = Regex.Replace(pValue, @"\\+", @"\");
+                        pValue = Regex.Replace(pValue, @"\\+", @"\\");
                     }
-
+                    
                     p.Value = pValue;
 
 
@@ -256,7 +266,8 @@ namespace MegaMolConf.Io {
                     continue;
                 }
 
-                if (line.Contains("mmCreateCall"))
+
+                if (line.TrimStart().StartsWith("mmCreateCall"))
                 {
                     Call c = new Call();
                     string[] elements = line.Split('"');
@@ -290,86 +301,6 @@ namespace MegaMolConf.Io {
             view.Modules = (modules.Count == 0) ? null : modules.ToArray();
             view.Calls = (calls.Count == 0) ? null : calls.ToArray();
             view.Params = null; // HAZARD: currently not supported
-
-
-            //    if (!n.HasAttribute("name")) throw new Exception("View without name encountered");
-
-            //    view.Name = n.Attributes["name"].Value;
-            //    string viewmodinstname = n.HasAttribute("viewmod") ? n.Attributes["viewmod"].Value : null;
-
-            //    List<Module> modules = new List<Module>();
-            //    List<Call> calls = new List<Call>();
-
-            //    foreach (System.Xml.XmlNode c in n.ChildNodes) {
-            //        if (c.NodeType != System.Xml.XmlNodeType.Element) continue;
-            //        System.Xml.XmlElement oe = (System.Xml.XmlElement)c;
-            //        if (oe.Name == "module") {
-            //            Module m = new Module();
-            //            if (!oe.HasAttribute("class")) throw new Exception("Module without class encountered");
-            //            if (!oe.HasAttribute("name")) throw new Exception("Module without name encountered");
-            //            m.Class = oe.Attributes["class"].Value;
-            //            m.Name = oe.Attributes["name"].Value;
-            //            if (oe.HasAttribute("confpos")) {
-            //                try {
-            //                    Match pt = Regex.Match(oe.Attributes["confpos"].Value, @"\{\s*X\s*=\s*([-.0-9]+)\s*,\s*Y\s*=\s*([-.0-9]+)\s*\}");
-            //                    if (!pt.Success) throw new Exception();
-            //                    m.ConfPos = new Point(
-            //                        int.Parse(pt.Groups[1].Value),
-            //                        int.Parse(pt.Groups[2].Value));
-            //                } catch { }
-            //            }
-
-            //            List<Param> prms = new List<Param>();
-
-            //            foreach (System.Xml.XmlNode oc in oe.ChildNodes) {
-            //                if (oc.NodeType != System.Xml.XmlNodeType.Element) continue;
-            //                System.Xml.XmlElement oce = (System.Xml.XmlElement)oc;
-            //                if (oce.Name != "param") continue;
-            //                if (!oce.HasAttribute("name")) throw new Exception("Param without name encountered");
-
-            //                Param p = new Param();
-            //                p.Name = oce.Attributes["name"].Value;
-            //                p.Value = (oce.HasAttribute("value")) ? oce.Attributes["value"].Value : string.Empty;
-            //                prms.Add(p);
-            //            }
-
-            //            m.Params = (prms.Count == 0) ? null : prms.ToArray();
-
-            //            modules.Add(m);
-            //            if (m.Name == viewmodinstname) {
-            //                view.ViewModule = m;
-            //            }
-            //        }
-            //        if (oe.Name == "call") {
-            //            Call cl = new Call();
-            //            if (!oe.HasAttribute("class")) throw new Exception("Call without class encountered");
-            //            cl.Class = oe.Attributes["class"].Value;
-            //            if (!oe.HasAttribute("from")) throw new Exception("Call without source encountered");
-            //            string callfromname = oe.Attributes["from"].Value;
-            //            if (!oe.HasAttribute("to")) throw new Exception("Call without destination encountered");
-            //            string calltoname = oe.Attributes["to"].Value;
-
-            //            foreach (Module m in modules) {
-            //                if (callfromname.StartsWith(m.Name)) {
-            //                    cl.FromModule = m;
-            //                    Debug.Assert(callfromname[m.Name.Length] == ':');
-            //                    Debug.Assert(callfromname[m.Name.Length + 1] == ':');
-            //                    cl.FromSlot = callfromname.Substring(m.Name.Length + 2);
-            //                }
-            //                if (calltoname.StartsWith(m.Name)) {
-            //                    cl.ToModule = m;
-            //                    Debug.Assert(calltoname[m.Name.Length] == ':');
-            //                    Debug.Assert(calltoname[m.Name.Length + 1] == ':');
-            //                    cl.ToSlot = calltoname.Substring(m.Name.Length + 2);
-            //                }
-            //            }
-            //            calls.Add(cl);
-            //        }
-            //    }
-
-            //    view.Modules = (modules.Count == 0) ? null : modules.ToArray();
-            //    view.Calls = (calls.Count == 0) ? null : calls.ToArray();
-            //    view.Params = null; // HAZARD: currently not supported
         }
 
     }

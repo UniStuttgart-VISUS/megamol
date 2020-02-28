@@ -21,5 +21,5 @@
     //
     //if (throwaway) discard;
 
-    if (radicand > outlineSize) discard;
+    if (delta > outlineSize) discard;
     // TODO make this independent of the sphere radius

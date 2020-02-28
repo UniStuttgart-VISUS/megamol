@@ -138,6 +138,7 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
     rmp->SetTypePair(RenderMode::OUTLINE, "Outline");
     this->renderModeParam << rmp;
     this->MakeSlotAvailable(&this->renderModeParam);
+    rmp = nullptr;
 
     this->radiusScalingParam << new param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->radiusScalingParam);
@@ -1287,7 +1288,7 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2& call, MultiParticleDataCal
                 auto& bufA = this->bufArray[i];
                 if (this->stateInvalid || (bufA.GetNumChunks() == 0)) {
                     bufA.SetDataWithSize(parts.GetVertexData(), vertStride, vertStride, parts.GetCount(),
-                        (GLuint)(2 * 1024 * 1024 * 1024));
+                        (GLuint)(2 * 1024 * 1024 * 1024 - 1));
                     // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
                 }
                 const GLuint numChunks = bufA.GetNumChunks();
