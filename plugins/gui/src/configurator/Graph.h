@@ -57,8 +57,8 @@ public:
     int generate_unique_id(void) { return (++this->generated_uid); }
 
     // GUI Presentation -------------------------------------------------------
-    bool GUI_Present(float child_width, ImFont* graph_font, HotkeyData paramter_search, HotkeyData delete_graph_element,
-        bool& delete_graph) {
+    bool GUI_Present(float child_width, ImFont* graph_font, HotkeyData& paramter_search,
+        HotkeyData& delete_graph_element, bool& delete_graph) {
         return this->present.GUI_Present(
             *this, child_width, graph_font, paramter_search, delete_graph_element, delete_graph);
     }
@@ -88,8 +88,8 @@ private:
 
         ~Presentation(void);
 
-        bool GUI_Present(Graph& graph, float child_width, ImFont* graph_font, HotkeyData paramter_search,
-            HotkeyData delete_graph_element, bool& delete_graph);
+        bool GUI_Present(Graph& graph, float child_width, ImFont* graph_font, HotkeyData& paramter_search,
+            HotkeyData& delete_graph_element, bool& delete_graph);
 
         inline const CallSlotPtrType GetSelectedSlot(void) const { return this->selected_slot_ptr; }
 
@@ -121,7 +121,7 @@ private:
 
         void menu(megamol::gui::configurator::Graph& graph);
         void canvas(megamol::gui::configurator::Graph& graph, float child_width);
-        void parameters(megamol::gui::configurator::Graph& graph, float child_width, HotkeyData paramter_search);
+        void parameters(megamol::gui::configurator::Graph& graph, float child_width, HotkeyData& paramter_search);
 
         void canvas_grid(megamol::gui::configurator::Graph& graph);
         void canvas_dragged_call(megamol::gui::configurator::Graph& graph);

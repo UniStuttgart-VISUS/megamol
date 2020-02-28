@@ -708,8 +708,9 @@ megamol::gui::configurator::GraphManager::Presentation::Presentation(void)
 megamol::gui::configurator::GraphManager::Presentation::~Presentation(void) {}
 
 
-bool megamol::gui::configurator::GraphManager::Presentation::GUI_Present(GraphManager& graph_manager, float child_width,
-    ImFont* graph_font, HotkeyData paramter_search, HotkeyData delete_graph_element) {
+bool megamol::gui::configurator::GraphManager::Presentation::GUI_Present(
+    megamol::gui::configurator::GraphManager& graph_manager, float child_width, ImFont* graph_font,
+    megamol::gui::HotkeyData& paramter_search, megamol::gui::HotkeyData& delete_graph_element) {
 
     try {
         if (ImGui::GetCurrentContext() == nullptr) {

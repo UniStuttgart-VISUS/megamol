@@ -200,7 +200,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
     std::string help_text = "[" + std::get<0>(this->hotkeys[HotkeyIndex::MODULE_SEARCH]).ToString() +
                             "] Set keyboard focus to search input field.\n"
                             "Case insensitive substring search in module names.";
-    this->utils.StringSearch("Search", help_text);
+    this->utils.StringSearch("configurator_module_search", help_text);
     auto search_string = this->utils.GetSearchString();
 
     ImGui::EndChild();

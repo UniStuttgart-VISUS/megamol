@@ -104,9 +104,8 @@ void megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::stri
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
 
+    ImGui::BeginGroup();
     ImGui::PushID(id.c_str());
-
-    std::string help_label = "(?)";
 
     if (ImGui::Button("Clear")) {
         this->searchString = "";
@@ -119,25 +118,25 @@ void megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::stri
         this->searchFocus = false;
     }
 
-    std::string label = "Search";
+    std::string complete_label = "Search (?)";
     auto width = ImGui::GetContentRegionAvailWidth() - ImGui::GetCursorPosX() + 4.0f * style.ItemInnerSpacing.x -
-                 this->TextWidgetWidth(label + help_label);
+                 this->TextWidgetWidth(complete_label);
     const int min_width = 50.0f;
     width = (width < min_width) ? (min_width) : width;
     ImGui::PushItemWidth(width);
 
     /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
     this->Utf8Encode(this->searchString);
-    ImGui::InputText("###Search Parameters", &this->searchString, ImGuiInputTextFlags_AutoSelectAll);
+    ImGui::InputText("Search", &this->searchString, ImGuiInputTextFlags_AutoSelectAll);
     this->Utf8Decode(this->searchString);
 
     ImGui::PopItemWidth();
-
     ImGui::SameLine();
-    ImGui::Text(label.c_str());
-    this->HelpMarkerToolTip(help, help_label);
+
+    this->HelpMarkerToolTip(help);
 
     ImGui::PopID();
+    ImGui::EndGroup();
 }
 
 

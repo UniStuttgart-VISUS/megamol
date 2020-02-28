@@ -265,7 +265,7 @@ megamol::gui::configurator::Graph::Presentation::~Presentation(void) {}
 
 
 bool megamol::gui::configurator::Graph::Presentation::GUI_Present(megamol::gui::configurator::Graph& graph,
-    float child_width, ImFont* graph_font, HotkeyData paramter_search, HotkeyData delete_graph_element,
+    float child_width, ImFont* graph_font, HotkeyData& paramter_search, HotkeyData& delete_graph_element,
     bool& delete_graph) {
 
     bool retval = false;
@@ -584,7 +584,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
 }
 
 void megamol::gui::configurator::Graph::Presentation::parameters(
-    megamol::gui::configurator::Graph& graph, float child_width, HotkeyData paramter_search) {
+    megamol::gui::configurator::Graph& graph, float child_width, HotkeyData& paramter_search) {
 
     ImGui::BeginGroup();
 
@@ -603,7 +603,7 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
     std::string help_text = "[" + std::get<0>(paramter_search).ToString() +
                             "] Set keyboard focus to search input field.\n"
                             "Case insensitive substring search in parameter names.";
-    this->utils.StringSearch("Search", help_text);
+    this->utils.StringSearch("graph_parameter_search", help_text);
     auto search_string = this->utils.GetSearchString();
 
     ImGui::EndChild();

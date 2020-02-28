@@ -55,7 +55,7 @@ public:
 
     // GUI Presentation -------------------------------------------------------
     bool GUI_Present(
-        float child_width, ImFont* graph_font, HotkeyData paramter_search, HotkeyData delete_graph_element) {
+        float child_width, ImFont* graph_font, HotkeyData& paramter_search, HotkeyData& delete_graph_element) {
         return this->present.GUI_Present(*this, child_width, graph_font, paramter_search, delete_graph_element);
     }
 
@@ -78,8 +78,8 @@ private:
 
         ~Presentation(void);
 
-        bool GUI_Present(GraphManager& graph_manager, float child_width, ImFont* graph_font, HotkeyData paramter_search,
-            HotkeyData delete_graph_element);
+        bool GUI_Present(GraphManager& graph_manager, float child_width, ImFont* graph_font,
+            HotkeyData& paramter_search, HotkeyData& delete_graph_element);
 
         const GraphManager::GraphPtrType GetPresentedGraph(void) { return this->presented_graph; }
 
