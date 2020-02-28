@@ -171,6 +171,8 @@ megamol::gui::configurator::Parameter::Presentation::Presentation(void)
     , visible(true)
     , help()
     , utils()
+    , tf_editor()
+    , show_tf_editor(false)
     , widgtmap_text()
     , widgtmap_float()
     , widgtmap_int()
@@ -193,9 +195,8 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
         }
 
         if (this->visible) {
-            ImGui::PushID(param.uid);
-
             ImGui::BeginGroup();
+            ImGui::PushID(param.uid);
 
             switch (this->presentations) {
             case (Parameter::Presentations::DEFAULT): {
@@ -216,9 +217,8 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
                 break;
             }
 
-            ImGui::EndGroup();
-
             ImGui::PopID();
+            ImGui::EndGroup();
         }
 
     } catch (std::exception e) {
@@ -235,7 +235,7 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
 
 
 bool megamol::gui::configurator::Parameter::Presentation::PresentationButton(
-    Parameter::Presentations& inout_present, std::string label) {
+    megamol::gui::configurator::Parameter::Presentations& inout_present, std::string label) {
     assert(ImGui::GetCurrentContext() != nullptr);
 
     bool retval = false;
@@ -262,7 +262,7 @@ bool megamol::gui::configurator::Parameter::Presentation::PresentationButton(
     ImGui::SetCursorScreenPos(position);
     ImVec2 rect = ImVec2(height, height);
     ImGui::InvisibleButton("special_button", rect);
-    if (ImGui::BeginPopupContextItem()) {
+    if (ImGui::BeginPopupContextItem("special_button_context", 0)) { // 0 = left mouse button
         for (int i = 0; i < static_cast<int>(Parameter::Presentations::_COUNT_); i++) {
             std::string presentation_str;
             switch (static_cast<Parameter::Presentations>(i)) {
@@ -277,7 +277,7 @@ bool megamol::gui::configurator::Parameter::Presentation::PresentationButton(
             }
             if (presentation_str.empty()) break;
             auto presentation_i = static_cast<Parameter::Presentations>(i);
-            if (ImGui::MenuItem(presentation_str.c_str(), nullptr, (presentation_i == inout_present))) {
+            if (ImGui::MenuItem(presentation_str.c_str(), nullptr, false)) { //(presentation_i == inout_present))) {
                 inout_present = presentation_i;
                 retval = true;
             }
@@ -297,7 +297,7 @@ bool megamol::gui::configurator::Parameter::Presentation::PresentationButton(
 }
 
 
-void megamol::gui::configurator::Parameter::Presentation::present_prefix(Parameter& param) {
+void megamol::gui::configurator::Parameter::Presentation::present_prefix(megamol::gui::configurator::Parameter& param) {
 
     // Visibility
     if (ImGui::RadioButton("###visible", !this->visible)) {
@@ -320,7 +320,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_prefix(Paramet
 }
 
 
-void megamol::gui::configurator::Parameter::Presentation::present_value(Parameter& param) {
+void megamol::gui::configurator::Parameter::Presentation::present_value(megamol::gui::configurator::Parameter& param) {
 
     this->help.clear();
 
@@ -438,7 +438,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(Paramete
                 this->help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
             } break;
             case (Parameter::ParamType::TRANSFERFUNCTION): {
-                // drawTransferFunctionEdit(param_id, param_label, *param);
+                this->transfer_function_edit(param);
             } break;
             case (Parameter::ParamType::FILEPATH): {
                 /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
@@ -584,8 +584,101 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(Paramete
 }
 
 
-void megamol::gui::configurator::Parameter::Presentation::present_postfix(Parameter& param) {
+void megamol::gui::configurator::Parameter::Presentation::present_postfix(
+    megamol::gui::configurator::Parameter& param) {
 
     this->utils.HoverToolTip(param.description, ImGui::GetItemID(), 0.5f);
     this->utils.HelpMarkerToolTip(this->help);
+}
+
+
+void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit(
+    megamol::gui::configurator::Parameter& param) {
+
+    if (!std::holds_alternative<std::string>(param.GetValue())) {
+        return;
+    }
+    auto value = std::get<std::string>(param.GetValue());
+
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    ImGui::BeginGroup();
+
+    // Reduced display of value and editor state.
+    if (value.empty()) {
+        ImGui::TextDisabled("{    (empty)    }");
+    } else {
+        // XXX: A gradient texture would be nice here (sharing some editor code?)
+        ImGui::Text("{ ............. }");
+    }
+    ImGui::SameLine();
+
+    bool isActive = false; /// XXX (&param == this->tf_editor.GetActiveParameter());
+    bool updateEditor = false;
+
+    // Edit transfer function.
+    ImGui::SameLine();
+    ImGui::PushID("Edit_");
+    ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[isActive ? ImGuiCol_ButtonHovered : ImGuiCol_Button]);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.Colors[isActive ? ImGuiCol_Button : ImGuiCol_ButtonHovered]);
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
+    if (ImGui::Checkbox("Editor", &this->show_tf_editor)) {
+        // Set once
+        if (this->show_tf_editor) {
+            updateEditor = true;
+            isActive = true;
+            /// XXX this->tf_editor.SetActiveParameter(&p);
+        }
+    }
+    ImGui::PopStyleColor(3);
+    ImGui::PopID();
+    ImGui::SameLine();
+
+    // Copy transfer function.
+    if (ImGui::Button("Copy")) {
+#ifdef GUI_USE_GLFW
+        auto glfw_win = ::glfwGetCurrentContext();
+        ::glfwSetClipboardString(glfw_win, value.c_str());
+#elif _WIN32
+        ImGui::SetClipboardText(value.c_str());
+#else // LINUX
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        vislib::sys::Log::DefaultLog.WriteInfo("Transfer Function JSON String:\n%s", value.c_str());
+#endif
+    }
+    ImGui::SameLine();
+
+    //  Paste transfer function.
+    if (ImGui::Button("Paste")) {
+#ifdef GUI_USE_GLFW
+        auto glfw_win = ::glfwGetCurrentContext();
+        param.SetValue(std::string(::glfwGetClipboardString(glfw_win)));
+#elif _WIN32
+        param.SetValue(std::string(ImGui::GetClipboardText()));
+#else // LINUX
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+#endif
+        updateEditor = true;
+    }
+
+    ImGui::SameLine();
+
+    std::string label = param.class_name;
+    ImGui::Text(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
+
+    ImGui::EndGroup();
+
+    // Propagate the transfer function to the editor.
+    if (isActive && updateEditor) {
+        this->tf_editor.SetTransferFunction(value);
+    }
+
+    // Draw transfer function editor
+    if (this->show_tf_editor) {
+        this->tf_editor.DrawTransferFunctionEditor();
+    }
+
+    ImGui::Separator();
 }

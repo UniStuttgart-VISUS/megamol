@@ -31,6 +31,12 @@
 #include <vector>
 
 #include "GUIUtils.h"
+#include "TransferFunctionEditor.h"
+
+// Used for platform independent clipboard (ImGui so far only provides windows implementation)
+#ifdef GUI_USE_GLFW
+#    include "GLFW/glfw3.h"
+#endif
 
 
 namespace megamol {
@@ -105,7 +111,7 @@ public:
     // Get ----------------------------------
     std::string GetValueString(void);
 
-    ValueType GetValue(void) const { return this->value; }
+    ValueType& GetValue(void) { return this->value; }
 
     template <typename T> const T& GetMinValue(void) const {
         try {
@@ -230,6 +236,8 @@ private:
     private:
         std::string help;
         GUIUtils utils;
+        TransferFunctionEditor tf_editor;
+        bool show_tf_editor;
 
         std::map<std::string, std::string> widgtmap_text;
         std::map<std::string, int> widgtmap_int;
@@ -241,6 +249,8 @@ private:
         void present_prefix(Parameter& param);
         void present_value(Parameter& param);
         void present_postfix(Parameter& param);
+
+        void transfer_function_edit(Parameter& param);
 
     } present;
 };

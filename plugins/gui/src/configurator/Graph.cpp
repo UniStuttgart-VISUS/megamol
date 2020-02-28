@@ -419,25 +419,25 @@ void megamol::gui::configurator::Graph::Presentation::menu(megamol::gui::configu
 
     ImGui::SameLine();
 
-    ImGui::Checkbox("Show Grid", &this->show_grid);
+    ImGui::Checkbox("Grid", &this->show_grid);
 
     ImGui::SameLine();
 
-    if (ImGui::Checkbox("Show Call Names", &this->show_call_names)) {
+    if (ImGui::Checkbox("Call Names", &this->show_call_names)) {
         for (auto& call : graph.GetGraphCalls()) {
             call->GUI_SetLabelVisibility(this->show_call_names);
         }
     }
     ImGui::SameLine();
 
-    if (ImGui::Checkbox("Show Module Names", &this->show_module_names)) {
+    if (ImGui::Checkbox("Module Names", &this->show_module_names)) {
         for (auto& mod : graph.GetGraphModules()) {
             mod->GUI_SetLabelVisibility(this->show_module_names);
         }
     }
     ImGui::SameLine();
 
-    if (ImGui::Checkbox("Show Slot Names", &this->show_slot_names)) {
+    if (ImGui::Checkbox("Slot Names", &this->show_slot_names)) {
         for (auto& mod : graph.GetGraphModules()) {
             for (auto& call_slot_types : mod->GetCallSlots()) {
                 for (auto& call_slots : call_slot_types.second) {
@@ -585,10 +585,10 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
 
     ImGui::BeginGroup();
 
-    const float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 4.0f;
-    const auto child_flags = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar;
+    float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 2.0f;
+    auto child_flags = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar;
 
-    ImGui::BeginChild("parameter_search_child_window", ImVec2(child_width, param_child_height), false, child_flags);
+    ImGui::BeginChild("parameter_search_child", ImVec2(child_width, param_child_height), false, child_flags);
 
     ImGui::Text("Parameters");
     ImGui::Separator();
@@ -603,6 +603,8 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
     this->utils.StringSearch("Search", help_text);
     auto search_string = this->utils.GetSearchString();
 
+    ImGui::EndChild();
+
     // Get pointer to currently selected module
     ModulePtrType modptr;
     for (auto& mod : graph.GetGraphModules()) {
@@ -611,6 +613,10 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
         }
     }
     if (modptr != nullptr) {
+
+        float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 2.25f;
+        ImGui::BeginChild("parameter_info_child", ImVec2(child_width, param_child_height), false, child_flags);
+
         ImGui::Separator();
 
         ImGui::Text("Selected Module:");
@@ -642,11 +648,10 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
                 param.GUI_SetPresentation(this->param_present);
             }
         }
-
         ImGui::EndChild();
 
-        ImGui::BeginChild(
-            "parameter_list_child_window", ImVec2(child_width, 0.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
+        auto child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar;
+        ImGui::BeginChild("parameter_list_child", ImVec2(child_width, 0.0f), true, child_flags);
 
         for (auto& param : modptr->parameters) {
             // Filter module by given search string
@@ -664,6 +669,7 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
 
         ImGui::EndChild();
     }
+
     ImGui::EndGroup();
 }
 

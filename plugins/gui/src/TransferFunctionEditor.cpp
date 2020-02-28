@@ -46,6 +46,7 @@ std::array<double, 3> CubeHelixRGB(double t, double start, double rots, double h
     return {r, g, b};
 }
 
+
 /**
  * Transform from Hue to RGB.
  */
@@ -60,7 +61,9 @@ std::array<double, 3> HueToRGB(double hue) {
     return std::move(color);
 }
 
+
 using PresetGenerator = std::function<void(param::TransferFunctionParam::TFNodeType&, size_t)>;
+
 
 PresetGenerator CubeHelixAdapter(double start, double rots, double hue, double gamma) {
     return [=](auto& nodes, auto n) {
@@ -79,6 +82,7 @@ PresetGenerator CubeHelixAdapter(double start, double rots, double hue, double g
         }
     };
 }
+
 
 template <size_t PaletteSize> PresetGenerator ColormapAdapter(const float palette[PaletteSize][3]) {
     const double LastIndex = static_cast<double>(PaletteSize - 1);
@@ -107,6 +111,7 @@ template <size_t PaletteSize> PresetGenerator ColormapAdapter(const float palett
     };
 }
 
+
 void RampAdapter(param::TransferFunctionParam::TFNodeType& nodes, size_t n) {
     nodes.clear();
     std::array<float, TFP_VAL_CNT> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f};
@@ -114,6 +119,7 @@ void RampAdapter(param::TransferFunctionParam::TFNodeType& nodes, size_t n) {
     nodes.emplace_back(zero);
     nodes.emplace_back(one);
 }
+
 
 void RainbowAdapter(param::TransferFunctionParam::TFNodeType& nodes, size_t n) {
     nodes.clear();
@@ -130,6 +136,7 @@ void RainbowAdapter(param::TransferFunctionParam::TFNodeType& nodes, size_t n) {
         });
     }
 }
+
 
 std::array<std::tuple<std::string, PresetGenerator>, 12> PRESETS = {
     std::make_tuple("Select...", [](auto& nodes, auto n) {}), std::make_tuple("Ramp", RampAdapter),
@@ -175,6 +182,7 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     this->textureInvalid = true;
 }
 
+
 void TransferFunctionEditor::SetTransferFunction(const std::string& tfs) {
     if (activeParameter == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Missing active parameter to edit");
@@ -206,10 +214,12 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs) {
     this->textureInvalid = true;
 }
 
+
 bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
     return param::TransferFunctionParam::DumpTransferFunction(
         tfs, this->nodes, this->mode, this->textureSize, this->range);
 }
+
 
 bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     assert(ImGui::GetCurrentContext() != nullptr);
@@ -245,7 +255,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         return false;
     }
 
-    ImGui::Separator();
+    // ImGui::Separator();
 
     // Interval range -----------------------------------------------------
     ImGui::PushItemWidth(tfw_item_width * 0.5f - style.ItemInnerSpacing.x);
