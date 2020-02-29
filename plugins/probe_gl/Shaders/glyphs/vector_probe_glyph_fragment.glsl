@@ -6,6 +6,8 @@ uniform mat4 view_mx;
 layout(location = 0) flat in int draw_id;
 layout(location = 1) in vec2 uv_coords;
 layout(location = 2) in vec3 pixel_vector;
+layout(location = 3) in vec3 glyph_up;
+layout(location = 4) in vec3 pixel_right;
 
 layout(location = 0) out vec4 albedo_out;
 layout(location = 1) out vec3 normal_out;
@@ -26,6 +28,22 @@ vec3 projectOntoPlane(vec3 v, vec3 n)
 };
 
 void main() {
+
+    // For debugging purposes, hightlight glyph up and glyph right directions
+    if(uv_coords.x > 0.95 && uv_coords.x > uv_coords.y)
+    {
+        albedo_out = vec4(pixel_right,1.0);
+        normal_out = vec3(0.0,0.0,1.0);
+        depth_out = gl_FragCoord.z;
+        return;
+    }
+    else if(uv_coords.y > 0.95 && uv_coords.x < uv_coords.y)
+    {
+        albedo_out = vec4(glyph_up,1.0);
+        normal_out = vec3(0.0,0.0,1.0);
+        depth_out = gl_FragCoord.z;
+        return;
+    }
 
     float radar_sections_cnt = mesh_shader_params[draw_id].sample_cnt;
     float r = length(uv_coords - vec2(0.5)) * 2.0;
@@ -67,7 +85,7 @@ void main() {
         float diff0 = sample_dot_probe - pixel_dot_probe;
         float diff1 = sample_dot_probe - arc_dist;
 
-        if( (arc_dist) > abs( sample_dot_probe ) ) discard;
+        //if( (arc_dist) > abs( sample_dot_probe ) ) discard;
 
         out_colour = fakeViridis(sample_magnitude / 2.0);
     }
