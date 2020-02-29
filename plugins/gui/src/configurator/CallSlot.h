@@ -12,6 +12,7 @@
 #include "vislib/sys/Log.h"
 
 #include <map>
+#include <memory>
 #include <vector>
 
 #include "GUIUtils.h"

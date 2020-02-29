@@ -689,12 +689,12 @@ void megamol::gui::configurator::Graph::Presentation::canvas_grid(megamol::gui::
 
     ImVec2 relative_offset = this->canvas_offset - this->canvas_position;
 
-    for (float x = std::fmodf(relative_offset.x, GRID_SIZE); x < this->canvas_size.x; x += GRID_SIZE) {
+    for (float x = fmodf(relative_offset.x, GRID_SIZE); x < this->canvas_size.x; x += GRID_SIZE) {
         draw_list->AddLine(ImVec2(x, 0.0f) + this->canvas_position,
             ImVec2(x, this->canvas_size.y) + this->canvas_position, COLOR_GRID);
     }
 
-    for (float y = std::fmodf(relative_offset.y, GRID_SIZE); y < this->canvas_size.y; y += GRID_SIZE) {
+    for (float y = fmodf(relative_offset.y, GRID_SIZE); y < this->canvas_size.y; y += GRID_SIZE) {
         draw_list->AddLine(ImVec2(0.0f, y) + this->canvas_position,
             ImVec2(this->canvas_size.x, y) + this->canvas_position, COLOR_GRID);
     }
