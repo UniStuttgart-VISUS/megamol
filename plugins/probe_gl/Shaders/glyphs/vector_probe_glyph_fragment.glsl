@@ -30,16 +30,16 @@ vec3 projectOntoPlane(vec3 v, vec3 n)
 void main() {
 
     // For debugging purposes, hightlight glyph up and glyph right directions
-    if(uv_coords.x > 0.95 && uv_coords.x > uv_coords.y)
+    if(uv_coords.x > 0.99 && uv_coords.x > uv_coords.y && uv_coords.y > 0.9) 
     {
-        albedo_out = vec4(pixel_right,1.0);
+        albedo_out = vec4(1.0);
         normal_out = vec3(0.0,0.0,1.0);
         depth_out = gl_FragCoord.z;
         return;
     }
-    else if(uv_coords.y > 0.95 && uv_coords.x < uv_coords.y)
+    else if(uv_coords.y > 0.99 && uv_coords.x < uv_coords.y && uv_coords.x > 0.9)
     {
-        albedo_out = vec4(glyph_up,1.0);
+        albedo_out = vec4(1.0);
         normal_out = vec3(0.0,0.0,1.0);
         depth_out = gl_FragCoord.z;
         return;
@@ -85,7 +85,7 @@ void main() {
         float diff0 = sample_dot_probe - pixel_dot_probe;
         float diff1 = sample_dot_probe - arc_dist;
 
-        //if( (arc_dist) > abs( sample_dot_probe ) ) discard;
+        if( (arc_dist) > abs( sample_dot_probe ) ) discard;
 
         out_colour = fakeViridis(sample_magnitude / 2.0);
     }
@@ -99,7 +99,7 @@ void main() {
     //    out_colour = fakeViridis(sample_magnitude_0 / 2.0);
     //}
 
-    albedo_out = vec4(pixel_vector,1.0);
+    albedo_out = vec4(out_colour,1.0);
     normal_out = vec3(0.0,0.0,1.0);
     depth_out = gl_FragCoord.z;
 }
