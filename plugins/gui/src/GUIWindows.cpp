@@ -31,6 +31,7 @@ GUIWindows::GUIWindows()
     , param_slots()
     , style_param("gui::style", "Color style, theme")
     , state_param("gui::state", "Current state of all windows. Automatically updated.")
+    , load_configurator_param("gui::autostart_configurator", "Show configurator window at start up.")
     , context(nullptr)
     , impl(Implementation::NONE)
     , window_manager()
@@ -56,9 +57,12 @@ GUIWindows::GUIWindows()
 
     this->state_param << new core::param::StringParam("");
 
+    this->load_configurator_param << new core::param::BoolParam(false);
+
     this->param_slots.clear();
     this->param_slots.push_back(&this->state_param);
     this->param_slots.push_back(&this->style_param);
+    this->param_slots.push_back(&this->load_configurator_param);
 
     this->hotkeys[HotkeyIndex::EXIT_PROGRAM] =
         HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
@@ -191,20 +195,10 @@ bool GUIWindows::Draw(vislib::math::Rectangle<int> viewport, double instanceTime
         }
 
         // Draw window content
+        this->configuratorWindowSate(wc);
         if (wc.win_show) {
-
             ImGui::SetNextWindowBgAlpha(1.0f);
             if (!ImGui::Begin(wn.c_str(), &wc.win_show, wc.win_flags)) {
-                // if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
-                //     // Show main window when configurator is closed.
-                //     const auto configurator_func = [](const std::string& wn,
-                //                                         WindowManager::WindowConfiguration& wc) {
-                //         if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
-                //             wc.win_show = true;
-                //         }
-                //     };
-                //     this->window_manager.EnumWindows(configurator_func);
-                // }
                 ImGui::End(); // early ending
                 return;
             }
@@ -719,6 +713,24 @@ void GUIWindows::validateParameter() {
         this->window_manager.StateToJSON(state);
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
         this->state.win_save_state = false;
+    }
+
+    if (this->load_configurator_param.IsDirty()) {
+        bool autoload_configurator = this->load_configurator_param.Param<core::param::BoolParam>()->Value();
+        if (autoload_configurator) {
+            // Hide all other windows when configurator is opened.
+            const auto configurator_func = [](const std::string& wn,
+                                                WindowManager::WindowConfiguration& wc) {
+                if (wc.win_callback != WindowManager::DrawCallbacks::CONFIGURATOR) {
+                    wc.win_show = false;
+                }
+                else {
+                    wc.win_show = true;
+                }
+            };
+            this->window_manager.EnumWindows(configurator_func);
+        }
+        this->load_configurator_param.ResetDirty();
     }
 }
 

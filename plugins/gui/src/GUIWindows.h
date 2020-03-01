@@ -155,6 +155,9 @@ private:
     /** A parameter to store the profile */
     megamol::core::param::ParamSlot state_param;
 
+    /** A parameter for loading the configurator at start up */
+    megamol::core::param::ParamSlot load_configurator_param;
+
     /** Hotkeys */
     enum HotkeyIndex : size_t { EXIT_PROGRAM = 0, PARAMETER_SEARCH = 1, SAVE_PROJECT = 2, INDEX_COUNT = 3 };
     std::array<HotkeyData, HotkeyIndex::INDEX_COUNT> hotkeys;
