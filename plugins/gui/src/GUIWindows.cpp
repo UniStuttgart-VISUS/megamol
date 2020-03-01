@@ -199,15 +199,21 @@ bool GUIWindows::Draw(vislib::math::Rectangle<int> viewport, double instanceTime
                 return;
             }
 
+            // Always resize configurator window to viewport
+            if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
+                wc.win_size = ImVec2(viewportWidth, viewportHeight);
+                wc.win_reset = true;
+            }
+
             // Apply soft reset of window position and size (before calling window callback)
             if (wc.win_soft_reset) {
                 this->window_manager.SoftResetWindowSizePos(wn, wc);
                 wc.win_soft_reset = false;
             }
             // Apply reset after new state has been loaded (before calling window callback)
-            if (wc.buf_win_reset) {
+            if (wc.win_reset) {
                 this->window_manager.ResetWindowOnStateLoad(wn, wc);
-                wc.buf_win_reset = false;
+                wc.win_reset = false;
             }
 
             // Calling callback drawing window content
@@ -316,7 +322,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
 
     // Hotkeys for showing/hiding window(s)
     hotkeyPressed = false;
-    const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
+    const auto func = [&](const std::string& wn, WindowManager::WindowConfiguration& wc) {
         bool windowHotkeyPressed = (io.KeyCtrl && (ImGui::IsKeyDown(static_cast<int>(wc.win_hotkey.key))));
         if (windowHotkeyPressed) {
             if (io.KeyShift) {
@@ -344,7 +350,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     // Check for parameter hotkeys
     hotkeyPressed = false;
     std::vector<std::string> modules_list;
-    const auto modfunc = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
+    const auto modfunc = [&](const std::string& wn, WindowManager::WindowConfiguration& wc) {
         for (auto& m : wc.param_modules_list) {
             modules_list.emplace_back(m);
         }
@@ -503,14 +509,14 @@ bool GUIWindows::createContext(void) {
 
     // Create window configurations
     WindowManager::WindowConfiguration buf_win;
-    buf_win.buf_win_reset = true;
+    buf_win.win_reset = true;
     // MAIN Window ------------------------------------------------------------
     buf_win.win_show = true;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F12, core::view::Modifier::CTRL);
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoTitleBar;
     buf_win.win_callback = WindowManager::DrawCallbacks::MAIN;
-    buf_win.win_position = ImVec2(12, 12);
-    buf_win.win_size = ImVec2(250, 600);
+    buf_win.win_position = ImVec2(0.0f, 0.0f);
+    buf_win.win_size = ImVec2(250.0f, 600.0f);
     this->window_manager.AddWindowConfiguration("Main Window", buf_win);
 
     // FPS/MS Window ----------------------------------------------------------
@@ -537,9 +543,9 @@ bool GUIWindows::createContext(void) {
     // CONFIGURATOR Window -----------------------------------------------
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8, core::view::Modifier::CTRL);
-    buf_win.win_flags = ImGuiWindowFlags_MenuBar;
+    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize;
     buf_win.win_callback = WindowManager::DrawCallbacks::CONFIGURATOR;
-    buf_win.win_size = ImVec2(1100, 650);
+    buf_win.win_size = ImVec2(250.0f, 600.0f);
     this->window_manager.AddWindowConfiguration("Configurator", buf_win);
 
     // Style settings ---------------------------------------------------------
@@ -1258,6 +1264,27 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
             }
             if (ImGui::MenuItem(wn.c_str(), hotkey_label.c_str(), &win_open)) {
                 wc.win_show = !wc.win_show;
+                if (wc.win_show == WindowManager::DrawCallbacks::CONFIGURATOR) {
+                    if (wc.win_show) {
+                        // Hide all other windows when configurator is opened.
+                        const auto configurator_func = [](const std::string& wn,
+                                                           WindowManager::WindowConfiguration& wc) {
+                            if (wc.win_show != WindowManager::DrawCallbacks::CONFIGURATOR) {
+                                wc.win_show = false;
+                            }
+                        };
+                        this->window_manager.EnumWindows(configurator_func);
+                    } else {
+                        // Show main window when configurator is closed.
+                        const auto configurator_func = [](const std::string& wn,
+                                                           WindowManager::WindowConfiguration& wc) {
+                            if (wc.win_show == WindowManager::DrawCallbacks::CONFIGURATOR) {
+                                wc.win_show = true;
+                            }
+                        };
+                        this->window_manager.EnumWindows(configurator_func);
+                    }
+                }
             }
             // Add conext menu for deleting windows without hotkey (= custom parameter windows).
             if (wc.win_hotkey.GetKey() == core::view::Key::KEY_UNKNOWN) {
@@ -1735,7 +1762,7 @@ void GUIWindows::drawTransferFunctionEdit(
         isActive = true;
         this->tf_editor.SetActiveParameter(&p);
         // Open window calling the transfer function editor callback
-        const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
+        const auto func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
             if (wc.win_callback == WindowManager::DrawCallbacks::TF) {
                 wc.win_show = true;
             }

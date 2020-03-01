@@ -15,6 +15,7 @@ using namespace megamol::gui;
 
 GUIView::GUIView()
     : core::view::AbstractView()
+    , overrideCall(nullptr)
     , render_view_slot("renderview", "Connects to a preceding RenderView that will be decorated with a GUI")
     , gui() {
 
@@ -86,10 +87,15 @@ void GUIView::Render(const mmcRenderViewContext& context) {
         (*crv)(core::view::AbstractCallRender::FnRender);
         this->gui.Draw(crv->GetViewport(), crv->InstanceTime());
     } else {
-        ::glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        ::glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         if (this->overrideCall != nullptr) {
             this->gui.Draw(this->overrideCall->GetViewport(), context.InstanceTime);
+        } else {
+            GLint vp[4];
+            glGetIntegerv(GL_VIEWPORT, vp);
+            vislib::math::Rectangle<int> viewport(vp[0], vp[1], vp[2], vp[3]);
+            this->gui.Draw(viewport, context.InstanceTime);
         }
     }
     if (this->doHookCode()) {

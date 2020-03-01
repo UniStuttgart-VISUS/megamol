@@ -50,7 +50,7 @@ public:
         ImVec2 win_size;                // size for reset on state loading (current size)
         bool win_soft_reset;            // soft reset of window position and size
         ImVec2 win_reset_size;          // minimum window size for soft reset
-        bool buf_win_reset; // flag for reset window position and size on state loading  (not saved in state)
+        bool win_reset; // flag for reset window position and size on state loading  (not saved in state)
         // ---------- Main window configuration ----------
         std::string main_project_file; // project file name
         // ---------- Parameter specific configuration ----------
@@ -82,7 +82,7 @@ public:
             , win_size(ImVec2(0.0f, 0.0f))
             , win_soft_reset(true)
             , win_reset_size(ImVec2(500.0f, 300.0f))
-            , buf_win_reset(true)
+            , win_reset(true)
             // Window specific configurations
             , main_project_file("")
             , param_show_hotkeys(false)

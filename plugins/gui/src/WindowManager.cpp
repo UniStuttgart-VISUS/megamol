@@ -323,7 +323,7 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
             }
 
             // set reset flags
-            tmp_config.buf_win_reset = true;
+            tmp_config.win_reset = true;
 
             tmp_config.buf_font_reset = false;
             if (!tmp_config.font_name.empty()) {
