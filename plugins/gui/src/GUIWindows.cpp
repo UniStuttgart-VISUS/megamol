@@ -195,6 +195,15 @@ bool GUIWindows::Draw(vislib::math::Rectangle<int> viewport, double instanceTime
 
             ImGui::SetNextWindowBgAlpha(1.0f);
             if (!ImGui::Begin(wn.c_str(), &wc.win_show, wc.win_flags)) {
+                // if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
+                //     // Show main window when configurator is closed.
+                //     const auto configurator_func = [](const std::string& wn,
+                //                                         WindowManager::WindowConfiguration& wc) {
+                //         if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
+                //             wc.win_show = true;
+                //         }
+                //     };
+                // }
                 ImGui::End(); // early ending
                 return;
             }
@@ -329,6 +338,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
                 wc.win_soft_reset = true;
             } else {
                 wc.win_show = !wc.win_show;
+                this->configuratorWindowSate(wc);
             }
             hotkeyPressed = (hotkeyPressed || windowHotkeyPressed);
         }
@@ -543,9 +553,9 @@ bool GUIWindows::createContext(void) {
     // CONFIGURATOR Window -----------------------------------------------
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8, core::view::Modifier::CTRL);
-    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize;
+    buf_win.win_flags = ImGuiWindowFlags_MenuBar;
     buf_win.win_callback = WindowManager::DrawCallbacks::CONFIGURATOR;
-    buf_win.win_size = ImVec2(250.0f, 600.0f);
+    //buf_win.win_size = ImVec2(250.0f, 600.0f);
     this->window_manager.AddWindowConfiguration("Configurator", buf_win);
 
     // Style settings ---------------------------------------------------------
@@ -1264,27 +1274,7 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
             }
             if (ImGui::MenuItem(wn.c_str(), hotkey_label.c_str(), &win_open)) {
                 wc.win_show = !wc.win_show;
-                if (wc.win_show == WindowManager::DrawCallbacks::CONFIGURATOR) {
-                    if (wc.win_show) {
-                        // Hide all other windows when configurator is opened.
-                        const auto configurator_func = [](const std::string& wn,
-                                                           WindowManager::WindowConfiguration& wc) {
-                            if (wc.win_show != WindowManager::DrawCallbacks::CONFIGURATOR) {
-                                wc.win_show = false;
-                            }
-                        };
-                        this->window_manager.EnumWindows(configurator_func);
-                    } else {
-                        // Show main window when configurator is closed.
-                        const auto configurator_func = [](const std::string& wn,
-                                                           WindowManager::WindowConfiguration& wc) {
-                            if (wc.win_show == WindowManager::DrawCallbacks::CONFIGURATOR) {
-                                wc.win_show = true;
-                            }
-                        };
-                        this->window_manager.EnumWindows(configurator_func);
-                    }
-                }
+                this->configuratorWindowSate(wc);
             }
             // Add conext menu for deleting windows without hotkey (= custom parameter windows).
             if (wc.win_hotkey.GetKey() == core::view::Key::KEY_UNKNOWN) {
@@ -1821,6 +1811,31 @@ bool GUIWindows::considerModule(const std::string& modname, std::vector<std::str
         retval = (std::find(modules_list.begin(), modules_list.end(), modname) != modules_list.end());
     }
     return retval;
+}
+
+
+void GUIWindows::configuratorWindowSate(WindowManager::WindowConfiguration& wc) {
+    if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
+        if (wc.win_show) {
+            // Hide all other windows when configurator is opened.
+            const auto configurator_func = [](const std::string& wn,
+                                                WindowManager::WindowConfiguration& wc) {
+                if (wc.win_callback != WindowManager::DrawCallbacks::CONFIGURATOR) {
+                    wc.win_show = false;
+                }
+            };
+            this->window_manager.EnumWindows(configurator_func);
+        } else {
+            // Show main window when configurator is closed.
+            const auto configurator_func = [](const std::string& wn,
+                                                WindowManager::WindowConfiguration& wc) {
+                if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
+                    wc.win_show = true;
+                }
+            };
+            this->window_manager.EnumWindows(configurator_func);
+        }
+    }
 }
 
 
