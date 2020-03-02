@@ -25,6 +25,11 @@
 #include <string>
 #include <tuple>
 
+/// CMake exeption for the cluster "stampede2" running CentOS. (C++ filesystem support is not working?)
+#ifdef GUI_USE_FILESYSTEM
+#    include "FileUtils.h"
+#endif // GUI_USE_FILESYSTEM
+
 
 namespace megamol {
 namespace gui {
@@ -92,10 +97,10 @@ public:
     }
 
     /** Set keyboard focus to search text input. */
-    inline void SetSearchFocus(bool focus) { this->searchFocus = focus; }
+    inline void SetSearchFocus(bool focus) { this->search_focus = focus; }
 
     /** Set keyboard focus to search text input. */
-    inline std::string GetSearchString(void) const { return this->searchString; }
+    inline std::string GetSearchString(void) const { return this->search_string; }
 
     // Other utility functions ------------------------------------------------
 
@@ -110,18 +115,27 @@ public:
      */
     bool VerticalSplitter(float* size_left, float* size_right);
 
+#ifdef GUI_USE_FILESYSTEM
+
+    bool SaveProjectFileBrowserDialog(bool open_popup, std::string& filename);
+
+#endif // GUI_USE_FILESYSTEM
+
 private:
     /** Current tooltip hover time. */
-    float tooltipTime;
+    float tooltip_time;
 
     /** Current hovered tooltip item. */
-    ImGuiID tooltipId;
+    ImGuiID tooltip_id;
 
     /** Set focus to search text input. */
-    bool searchFocus;
+    bool search_focus;
 
     /** Current search string. */
-    std::string searchString;
+    std::string search_string;
+
+    /** Current file path. */
+    std::string file_path;
 };
 
 

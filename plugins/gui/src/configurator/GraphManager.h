@@ -50,8 +50,8 @@ public:
 
     bool LoadCurrentCoreProject(std::string name, megamol::core::CoreInstance* core_instance);
 
-    // Only used for prototype to be able to serialize current projects to lua project file.
-    bool PROTOTYPE_SaveGraph(int graph_id, std::string project_filename, megamol::core::CoreInstance* cor_iInstance);
+    // Only used for prototype to be able to serialize current projects of the confgurator to lua project file.
+    bool SaveProjectFile(int graph_id, std::string project_filename, megamol::core::CoreInstance* cor_iInstance);
 
     // GUI Presentation -------------------------------------------------------
     bool GUI_Present(

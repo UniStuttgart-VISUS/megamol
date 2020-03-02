@@ -17,7 +17,6 @@
 #include <map>
 #include <math.h> // fmodf
 
-#include "FileUtils.h"
 #include "GraphManager.h"
 #include "WindowManager.h"
 
@@ -75,9 +74,8 @@ private:
     // FUNCTIONS --------------------------------------------------------------
 
     void draw_window_menu(megamol::core::CoreInstance* core_instance);
-    void draw_window_module_list(float width);
 
-    bool popup_save_project(bool open, megamol::core::CoreInstance* core_instance);
+    void draw_window_module_list(float width);
 
     inline const std::string get_unique_project_name(void) {
         return ("Project_" + std::to_string(++unique_project_id));

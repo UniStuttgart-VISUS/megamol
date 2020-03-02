@@ -207,6 +207,7 @@ bool GUIWindows::Draw(vislib::math::Rectangle<int> viewport, double instanceTime
             if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
                 wc.win_size = ImVec2(viewportWidth, viewportHeight);
                 wc.win_reset = true;
+                // Change visibility of main window if configurator window is closed.
                 if (!wc.win_show) {
                     this->configuratorWindowSate(wc);
                 }
@@ -599,19 +600,19 @@ bool GUIWindows::createContext(void) {
         // Add other known fonts
         std::string font_file, font_path;
         if (this->core_instance != nullptr) {
-            const vislib::Array<vislib::StringW>& searchPaths =
+            const vislib::Array<vislib::StringW>& search_paths =
                 this->core_instance->Configuration().ResourceDirectories();
-            for (size_t i = 0; i < searchPaths.Count(); ++i) {
-                std::wstring searchPath(searchPaths[i].PeekBuffer());
+            for (size_t i = 0; i < search_paths.Count(); ++i) {
+                std::wstring search_path(search_paths[i].PeekBuffer());
                 font_file = "Roboto-Regular.ttf";
-                font_path = SearchFileRecursive(font_file, searchPath);
+                font_path = SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
                 if (!font_path.empty()) {
                     io.Fonts->AddFontFromFileTTF(font_path.c_str(), 12.0f, &config);
                     /// Set as default.
                     io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
                 }
                 font_file = "SourceCodePro-Regular.ttf";
-                font_path = SearchFileRecursive(font_file, searchPath);
+                font_path = SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
                 if (!font_path.empty()) {
                     io.Fonts->AddFontFromFileTTF(font_path.c_str(), 13.0f, &config);
                     configurator_font = font_path;
@@ -1236,7 +1237,7 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
     ImGui::InputText(label.c_str(), &wc.buf_font_file, ImGuiInputTextFlags_AutoSelectAll);
     this->utils.Utf8Decode(wc.buf_font_file);
     // Validate font file before offering load button
-    if (HasExistingFileExtension(wc.buf_font_file, std::string(".ttf"))) {
+    if (HasExistingFileExtension<std::string>(wc.buf_font_file, std::string(".ttf"))) {
         if (ImGui::Button("Add Font")) {
             this->state.font_file = wc.buf_font_file;
             this->state.font_size = wc.buf_font_size;
@@ -1402,60 +1403,15 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 #ifdef GUI_USE_FILESYSTEM
     open_popup_project = (open_popup_project || std::get<1>(this->hotkeys[HotkeyIndex::SAVE_PROJECT]));
     if (open_popup_project) {
-        ImGui::OpenPopup("Save Project");
         std::get<1>(this->hotkeys[HotkeyIndex::SAVE_PROJECT]) = false;
     }
-    if (ImGui::BeginPopupModal("Save Project", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-
-        bool save_project = false;
-
-        std::string label = "File Name";
-        auto flags =
-            ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll; // ImGuiInputTextFlags_None
-        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-        this->utils.Utf8Encode(wc.main_project_file);
-        if (ImGui::InputText(label.c_str(), &wc.main_project_file, flags)) {
-            save_project = true;
-        }
-        this->utils.Utf8Decode(wc.main_project_file);
-        // Set focus on input text once (applied next frame)
-        if (open_popup_project) {
-            ImGuiID id = ImGui::GetID(label.c_str());
-            ImGui::ActivateItem(id);
-        }
-
-        bool valid_ending = true;
-        if (!HasFileExtension(wc.main_project_file, std::string(".lua"))) {
-            ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.0f, 1.0f), "Appending required file ending '.lua'");
-            valid_ending = false;
-        }
-        // Warn when file already exists
-        if (PathExists(wc.main_project_file) || PathExists(wc.main_project_file + ".lua")) {
-            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Overwriting existing file.");
-        }
-        if (ImGui::Button("Save (Enter)")) {
-            save_project = true;
-        }
-
-        if (save_project) {
-            // Serialize current state to parameter.
-            std::string state;
-            this->window_manager.StateToJSON(state);
-            this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
-            // Save project to file
-            if (!valid_ending) {
-                wc.main_project_file.append(".lua");
-            }
-            if (SaveProjectFile(wc.main_project_file, this->core_instance)) {
-                ImGui::CloseCurrentPopup();
-            }
-        }
-
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel")) {
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
+    if (this->utils.SaveProjectFileBrowserDialog(open_popup_project, wc.main_project_file)) {
+        // Serialize current state to parameter.
+        std::string state;
+        this->window_manager.StateToJSON(state);
+        this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
+        // Serialize project to file
+        SaveProjectFile(wc.main_project_file, this->core_instance);
     }
 #endif // GUI_USE_FILESYSTEM
 }

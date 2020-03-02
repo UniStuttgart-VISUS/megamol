@@ -17,7 +17,8 @@
 using namespace megamol::gui;
 
 
-GUIUtils::GUIUtils(void) : tooltipTime(0.0f), tooltipId(GUI_INVALID_ID), searchFocus(false), searchString() {}
+GUIUtils::GUIUtils(void)
+    : tooltip_time(0.0f), tooltip_id(GUI_INVALID_ID), search_focus(false), search_string(), file_path() {}
 
 
 void GUIUtils::HoverToolTip(const std::string& text, ImGuiID id, float time_start, float time_end) {
@@ -27,14 +28,14 @@ void GUIUtils::HoverToolTip(const std::string& text, ImGuiID id, float time_star
     if (ImGui::IsItemHovered()) {
         bool show_tooltip = false;
         if (time_start > 0.0f) {
-            if (this->tooltipId != id) {
-                this->tooltipTime = 0.0f;
-                this->tooltipId = id;
+            if (this->tooltip_id != id) {
+                this->tooltip_time = 0.0f;
+                this->tooltip_id = id;
             } else {
-                if ((this->tooltipTime > time_start) && (this->tooltipTime < (time_start + time_end))) {
+                if ((this->tooltip_time > time_start) && (this->tooltip_time < (time_start + time_end))) {
                     show_tooltip = true;
                 }
-                this->tooltipTime += io.DeltaTime;
+                this->tooltip_time += io.DeltaTime;
             }
         } else {
             show_tooltip = true;
@@ -48,8 +49,8 @@ void GUIUtils::HoverToolTip(const std::string& text, ImGuiID id, float time_star
             ImGui::EndTooltip();
         }
     } else {
-        if ((time_start > 0.0f) && (this->tooltipId == id)) {
-            this->tooltipTime = 0.0f;
+        if ((time_start > 0.0f) && (this->tooltip_id == id)) {
+            this->tooltip_time = 0.0f;
         }
     }
 }
@@ -108,14 +109,14 @@ void megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::stri
     ImGui::PushID(id.c_str());
 
     if (ImGui::Button("Clear")) {
-        this->searchString = "";
+        this->search_string = "";
     }
     ImGui::SameLine();
 
     // Set keyboard focus when hotkey is pressed
-    if (this->searchFocus) {
+    if (this->search_focus) {
         ImGui::SetKeyboardFocusHere();
-        this->searchFocus = false;
+        this->search_focus = false;
     }
 
     std::string complete_label = "Search (?)";
@@ -126,9 +127,9 @@ void megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::stri
     ImGui::PushItemWidth(width);
 
     /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-    this->Utf8Encode(this->searchString);
-    ImGui::InputText("Search", &this->searchString, ImGuiInputTextFlags_AutoSelectAll);
-    this->Utf8Decode(this->searchString);
+    this->Utf8Encode(this->search_string);
+    ImGui::InputText("Search", &this->search_string, ImGuiInputTextFlags_AutoSelectAll);
+    this->Utf8Decode(this->search_string);
 
     ImGui::PopItemWidth();
     ImGui::SameLine();
@@ -167,4 +168,67 @@ bool megamol::gui::GUIUtils::VerticalSplitter(float* size_left, float* size_righ
                           0.0f, 0.0f);
     return ImGui::SplitterBehavior(
         bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size_left, size_right, min_size, min_size, 0.0f);
+}
+
+
+bool megamol::gui::GUIUtils::SaveProjectFileBrowserDialog(bool open_popup, std::string& filename) {
+
+    bool retval = false;
+
+    std::string popup_name = "Save Project";
+    if (open_popup) {
+        ImGui::OpenPopup(popup_name.c_str());
+        this->file_path = filename;
+    }
+    if (ImGui::BeginPopupModal(popup_name.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+        bool save_project = false;
+
+        std::string label = "File Name";
+        auto flags =
+            ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll; // ImGuiInputTextFlags_None
+        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+        this->Utf8Encode(this->file_path);
+        if (ImGui::InputText(label.c_str(), &this->file_path, flags)) {
+            save_project = true;
+        }
+        this->Utf8Decode(this->file_path);
+
+        // Set focus on input text once (applied next frame)
+        if (open_popup) {
+            ImGuiID id = ImGui::GetID(label.c_str());
+            ImGui::ActivateItem(id);
+        }
+
+        bool valid_ending = true;
+        if (!HasFileExtension<std::string>(this->file_path, std::string(".lua"))) {
+            ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.0f, 1.0f), "Appending required file ending '.lua'");
+            valid_ending = false;
+        }
+        // Warn when file already exists
+        if (PathExists<std::string>(this->file_path) || PathExists<std::string>(this->file_path + ".lua")) {
+            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Overwriting existing file.");
+        }
+        if (ImGui::Button("Save (Enter)")) {
+            save_project = true;
+        }
+
+        if (save_project) {
+            // Save project to file
+            if (!valid_ending) {
+                this->file_path.append(".lua");
+            }
+            filename = this->file_path;
+            ImGui::CloseCurrentPopup();
+            retval = true;
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel")) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+    return retval;
 }

@@ -177,8 +177,13 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
         ImGui::EndMenuBar();
     }
 
-    // Pop-Up(s)
-    this->popup_save_project(open_popup_project, core_instance);
+    // SAVE PROJECT
+#ifdef GUI_USE_FILESYSTEM
+    if (this->utils.SaveProjectFileBrowserDialog(open_popup_project, this->project_filename)) {
+        // Serialize project to file
+        this->graph_manager.SaveProjectFile(this->graph_ptr->GetUID(), this->project_filename, core_instance);
+    }
+#endif // GUI_USE_FILESYSTEM
 }
 
 
@@ -296,70 +301,4 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
     ImGui::EndChild();
 
     ImGui::EndGroup();
-}
-
-
-bool megamol::gui::configurator::Configurator::popup_save_project(
-    bool open, megamol::core::CoreInstance* core_instance) {
-
-#ifdef GUI_USE_FILESYSTEM
-    std::string save_project_label = "Save Project";
-
-    if (open) {
-        ImGui::OpenPopup(save_project_label.c_str());
-    }
-    if (ImGui::BeginPopupModal(save_project_label.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-
-        bool save_project = false;
-
-        std::string label = "File Name";
-        auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
-        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-        this->utils.Utf8Encode(this->project_filename);
-        if (ImGui::InputText(label.c_str(), &this->project_filename, flags)) {
-            save_project = true;
-        }
-        this->utils.Utf8Decode(this->project_filename);
-        // Set focus on input text once (applied next frame)
-        if (open) {
-            ImGuiID id = ImGui::GetID(label.c_str());
-            ImGui::ActivateItem(id);
-        }
-
-        bool valid_ending = true;
-        if (!HasFileExtension(this->project_filename, std::string(".lua"))) {
-            ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.0f, 1.0f), "Appending required file ending '.lua'");
-            valid_ending = false;
-        }
-        // Warn when file already exists
-        if (PathExists(this->project_filename) || PathExists(this->project_filename + ".lua")) {
-            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Overwriting existing file.");
-        }
-        if (ImGui::Button("Save (Enter)")) {
-            save_project = true;
-        }
-
-        if (save_project) {
-            if (this->graph_ptr != nullptr) {
-                if (!valid_ending) {
-                    this->project_filename.append(".lua");
-                }
-                if (this->graph_manager.PROTOTYPE_SaveGraph(
-                        this->graph_ptr->GetUID(), this->project_filename, core_instance)) {
-                    ImGui::CloseCurrentPopup();
-                }
-            } else {
-                vislib::sys::Log::DefaultLog.WriteWarn("No project available for saving.");
-            }
-        }
-
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel")) {
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-#endif // GUI_USE_FILESYSTEM
-
-    return true;
 }

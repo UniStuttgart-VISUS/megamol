@@ -372,7 +372,7 @@ bool megamol::gui::configurator::GraphManager::LoadCurrentCoreProject(
 }
 
 
-bool megamol::gui::configurator::GraphManager::PROTOTYPE_SaveGraph(
+bool megamol::gui::configurator::GraphManager::SaveProjectFile(
     int graph_id, std::string project_filename, megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {

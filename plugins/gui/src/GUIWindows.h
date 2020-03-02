@@ -41,10 +41,6 @@
 #include "TransferFunctionEditor.h"
 #include "WindowManager.h"
 #include "configurator/Configurator.h"
-/// CMake exeption for the cluster "stampede2" running CentOS. (C++ filesystem support is not working?)
-#ifdef GUI_USE_FILESYSTEM
-#    include "FileUtils.h"
-#endif // GUI_USE_FILESYSTEM
 
 // Used for platform independent clipboard (ImGui so far only provides windows implementation)
 #ifdef GUI_USE_GLFW
