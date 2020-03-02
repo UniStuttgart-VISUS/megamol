@@ -337,10 +337,6 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                         }
                     }
                 }
-                // add an attribute or set the existing one
-                if (atCnt == 0 || !found) {
-                    this->idAttIdx = this->obj[ctmd->FrameID()]->AddVertexAttribPointer(atomIndex);
-                }
 
                 // search for the correct attrib index for the value
                 found = false;
@@ -352,12 +348,6 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                             break;
                         }
                     }
-                }
-                // add an attribute or set the existing one
-                if (atCnt == 0 || !found) {
-                    this->valueAttIdx = this->obj[ctmd->FrameID()]->AddVertexAttribPointer(values);
-                } else {
-                    this->obj[ctmd->FrameID()]->SetVertexAttribData(values, this->valueAttIdx);
                 }
 
                 // weighting factors
