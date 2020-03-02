@@ -23,10 +23,10 @@ void WindowManager::SoftResetWindowSizePos(const std::string& window_name, Windo
     float height = window_config.win_reset_size.y;
 
     if (width > io.DisplaySize.x) {
-        width = io.DisplaySize.x - (2.0f * style.DisplayWindowPadding.x);
+        width = io.DisplaySize.x; // -(2.0f * style.DisplayWindowPadding.x);
     }
     if (height > io.DisplaySize.y) {
-        height = io.DisplaySize.y - (2.0f * style.DisplayWindowPadding.y);
+        height = io.DisplaySize.y; // - (2.0f * style.DisplayWindowPadding.y);
     }
 
     auto win_pos = ImGui::GetWindowPos();
@@ -44,13 +44,13 @@ void WindowManager::SoftResetWindowSizePos(const std::string& window_name, Windo
         win_size = ImVec2(width, height);
     }
 
-    float win_width = io.DisplaySize.x - (win_pos.x + style.DisplayWindowPadding.x);
+    float win_width = io.DisplaySize.x - (win_pos.x); // +style.DisplayWindowPadding.x);
     if (win_width < win_size.x) {
-        win_pos.x = io.DisplaySize.x - (win_size.x + style.DisplayWindowPadding.x);
+        win_pos.x = io.DisplaySize.x - (win_size.x); // + style.DisplayWindowPadding.x);
     }
-    float win_height = io.DisplaySize.y - (win_pos.y + style.DisplayWindowPadding.y);
+    float win_height = io.DisplaySize.y - (win_pos.y); // + style.DisplayWindowPadding.y);
     if (win_height < win_size.y) {
-        win_pos.y = io.DisplaySize.y - (win_size.y + style.DisplayWindowPadding.y);
+        win_pos.y = io.DisplaySize.y - (win_size.y); //+ style.DisplayWindowPadding.y);
     }
 
     ImGui::SetWindowSize(window_name.c_str(), ImVec2(width, height), ImGuiCond_Always);

@@ -31,6 +31,7 @@ GUIWindows::GUIWindows()
     , param_slots()
     , style_param("gui::style", "Color style, theme")
     , state_param("gui::state", "Current state of all windows. Automatically updated.")
+    , autostart_configurator("gui::autostart_configurator", "Start the configurator at start up automatically. ")
     , context(nullptr)
     , impl(Implementation::NONE)
     , window_manager()
@@ -56,9 +57,12 @@ GUIWindows::GUIWindows()
 
     this->state_param << new core::param::StringParam("");
 
+    this->autostart_configurator << new core::param::BoolParam(false);
+
     this->param_slots.clear();
     this->param_slots.push_back(&this->state_param);
     this->param_slots.push_back(&this->style_param);
+    this->param_slots.push_back(&this->autostart_configurator);
 
     this->hotkeys[HotkeyIndex::EXIT_PROGRAM] =
         HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
@@ -195,24 +199,17 @@ bool GUIWindows::Draw(vislib::math::Rectangle<int> viewport, double instanceTime
 
             ImGui::SetNextWindowBgAlpha(1.0f);
             if (!ImGui::Begin(wn.c_str(), &wc.win_show, wc.win_flags)) {
-                // if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
-                //     // Show main window when configurator is closed.
-                //     const auto configurator_func = [](const std::string& wn,
-                //                                         WindowManager::WindowConfiguration& wc) {
-                //         if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
-                //             wc.win_show = true;
-                //         }
-                //     };
-                //     this->window_manager.EnumWindows(configurator_func);
-                // }
                 ImGui::End(); // early ending
                 return;
             }
 
-            // Always resize configurator window to viewport
+            // Always set configurator window size to current viewport
             if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
                 wc.win_size = ImVec2(viewportWidth, viewportHeight);
                 wc.win_reset = true;
+                if (!wc.win_show) {
+                    this->configuratorWindowSate(wc);
+                }
             }
 
             // Apply soft reset of window position and size (before calling window callback)
@@ -333,7 +330,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     // Hotkeys for showing/hiding window(s)
     hotkeyPressed = false;
     const auto func = [&](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-        bool windowHotkeyPressed = (io.KeyCtrl && (ImGui::IsKeyDown(static_cast<int>(wc.win_hotkey.key))));
+        bool windowHotkeyPressed = this->hotkeyPressed(wc.win_hotkey);
         if (windowHotkeyPressed) {
             if (io.KeyShift) {
                 wc.win_soft_reset = true;
@@ -385,11 +382,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
                         // Break loop after first occurrence of parameter hotkey
                         if (hotkeyPressed) return;
 
-                        hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(keyCode.key))) &&
-                                        (keyCode.mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
-                                        (keyCode.mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
-                                        (keyCode.mods.test(core::view::Modifier::SHIFT) == io.KeyShift);
-                        if (hotkeyPressed) {
+                        if (this->hotkeyPressed(keyCode)) {
                             p->setDirty();
                         }
                     }
@@ -556,7 +549,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8, core::view::Modifier::CTRL);
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize;
     buf_win.win_callback = WindowManager::DrawCallbacks::CONFIGURATOR;
-    //buf_win.win_size = ImVec2(250.0f, 600.0f);
+    // buf_win.win_size = ImVec2(250.0f, 600.0f);
     this->window_manager.AddWindowConfiguration("Configurator", buf_win);
 
     // Style settings ---------------------------------------------------------
@@ -719,6 +712,21 @@ void GUIWindows::validateParameter() {
         this->window_manager.StateToJSON(state);
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
         this->state.win_save_state = false;
+    }
+
+    if (this->autostart_configurator.IsDirty()) {
+        bool autostart = this->autostart_configurator.Param<core::param::BoolParam>()->Value();
+        if (autostart) {
+            const auto configurator_func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
+                if (wc.win_callback != WindowManager::DrawCallbacks::CONFIGURATOR) {
+                    wc.win_show = false;
+                } else {
+                    wc.win_show = true;
+                }
+            };
+            this->window_manager.EnumWindows(configurator_func);
+        }
+        this->autostart_configurator.ResetDirty();
     }
 }
 
@@ -1819,8 +1827,7 @@ void GUIWindows::configuratorWindowSate(WindowManager::WindowConfiguration& wc) 
     if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
         if (wc.win_show) {
             // Hide all other windows when configurator is opened.
-            const auto configurator_func = [](const std::string& wn,
-                                                WindowManager::WindowConfiguration& wc) {
+            const auto configurator_func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
                 if (wc.win_callback != WindowManager::DrawCallbacks::CONFIGURATOR) {
                     wc.win_show = false;
                 }
@@ -1828,8 +1835,7 @@ void GUIWindows::configuratorWindowSate(WindowManager::WindowConfiguration& wc) 
             this->window_manager.EnumWindows(configurator_func);
         } else {
             // Show main window when configurator is closed.
-            const auto configurator_func = [](const std::string& wn,
-                                                WindowManager::WindowConfiguration& wc) {
+            const auto configurator_func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
                 if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
                     wc.win_show = true;
                 }
@@ -1901,6 +1907,16 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
 
         this->state.hotkeys_check_once = false;
     }
+}
+
+
+bool megamol::gui::GUIWindows::hotkeyPressed(megamol::core::view::KeyCode keycode) {
+    ImGuiIO& io = ImGui::GetIO();
+
+    return (ImGui::IsKeyDown(static_cast<int>(keycode.key))) &&
+           (keycode.mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
+           (keycode.mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
+           (keycode.mods.test(core::view::Modifier::SHIFT) == io.KeyShift);
 }
 
 
