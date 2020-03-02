@@ -8,8 +8,8 @@
 /**
  * USED HOTKEYS:
  *
- * - Search module:        Shift + Ctrl  + m
- * - Search parameter:     Shift + Ctrl  + p
+ * - Search module:        Shift + Ctrl + m
+ * - Search parameter:     Shift + Ctrl + p
  * - Delete module/call:   Delete
  */
 
@@ -60,8 +60,8 @@ bool megamol::gui::configurator::Configurator::CheckHotkeys(void) {
 
     bool hotkey_pressed = false;
     for (auto& h : this->hotkeys) {
-        auto key = std::get<0>(h).GetKey();
-        auto mods = std::get<0>(h).GetModifiers();
+        auto key = std::get<0>(h).key;
+        auto mods = std::get<0>(h).mods;
         if (ImGui::IsKeyDown(static_cast<int>(key)) && (mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
             (mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
             (mods.test(core::view::Modifier::SHIFT) == io.KeyShift)) {
@@ -142,7 +142,8 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
         return;
     }
 
-    bool open_popup_project = false;
+    bool open_save_popup = false;
+    bool open_load_popup = false;
     if (ImGui::BeginMenuBar()) {
 
         if (ImGui::BeginMenu("File")) {
@@ -159,26 +160,39 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
             }
 
 #ifdef GUI_USE_FILESYSTEM
-            // Load/save parameter values to LUA file
-            if (ImGui::MenuItem("Save Project", nullptr)) {
-                open_popup_project = true;
+            // Load project from LUA file
+            if (ImGui::MenuItem("Load Project", nullptr)) {
+                open_load_popup = true;
+            }
+
+            // Save currently active project to LUA file
+            if (ImGui::MenuItem("Save Project", nullptr, false, (this->graph_ptr != nullptr))) {
+                open_save_popup = true;
             }
 #endif // GUI_USE_FILESYSTEM
 
             ImGui::EndMenu();
         }
 
+        // Info text ----------------------------------------------------------
         ImGui::SameLine(260.0f);
-
-        // Info text for PROTOTYPE --------------------------------------------
         std::string label = "This is a PROTOTYPE. Changes will NOT effect the currently loaded MegaMol project.";
-        ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), label.c_str());
+        ImGui::TextColored(ImVec4(0.75f, 0.2f, 0.2f, 1.0f), label.c_str());
 
         ImGui::EndMenuBar();
     }
 
-    // Pop-Up(s)
-    this->popup_save_project(open_popup_project, core_instance);
+    // SAVE/LOAD PROJECT pop-up
+#ifdef GUI_USE_FILESYSTEM
+    if (this->utils.FileBrowserPopUp(
+            GUIUtils::FileBrowserFlag::LOAD, open_load_popup, "Load Project", this->project_filename)) {
+        this->graph_manager.LoadProjectFile(this->graph_ptr->GetUID(), this->project_filename, core_instance);
+    }
+    if (this->utils.FileBrowserPopUp(
+            GUIUtils::FileBrowserFlag::SAVE, open_save_popup, "Save Project", this->project_filename)) {
+        this->graph_manager.SaveProjectFile(this->graph_ptr->GetUID(), this->project_filename, core_instance);
+    }
+#endif // GUI_USE_FILESYSTEM
 }
 
 
@@ -296,70 +310,4 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
     ImGui::EndChild();
 
     ImGui::EndGroup();
-}
-
-
-bool megamol::gui::configurator::Configurator::popup_save_project(
-    bool open, megamol::core::CoreInstance* core_instance) {
-
-#ifdef GUI_USE_FILESYSTEM
-    std::string save_project_label = "Save Project";
-
-    if (open) {
-        ImGui::OpenPopup(save_project_label.c_str());
-    }
-    if (ImGui::BeginPopupModal(save_project_label.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-
-        bool save_project = false;
-
-        std::string label = "File Name";
-        auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
-        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-        this->utils.Utf8Encode(this->project_filename);
-        if (ImGui::InputText(label.c_str(), &this->project_filename, flags)) {
-            save_project = true;
-        }
-        this->utils.Utf8Decode(this->project_filename);
-        // Set focus on input text once (applied next frame)
-        if (open) {
-            ImGuiID id = ImGui::GetID(label.c_str());
-            ImGui::ActivateItem(id);
-        }
-
-        bool valid_ending = true;
-        if (!HasFileExtension(this->project_filename, std::string(".lua"))) {
-            ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.0f, 1.0f), "Appending required file ending '.lua'");
-            valid_ending = false;
-        }
-        // Warn when file already exists
-        if (PathExists(this->project_filename) || PathExists(this->project_filename + ".lua")) {
-            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Overwriting existing file.");
-        }
-        if (ImGui::Button("Save (Enter)")) {
-            save_project = true;
-        }
-
-        if (save_project) {
-            if (this->graph_ptr != nullptr) {
-                if (!valid_ending) {
-                    this->project_filename.append(".lua");
-                }
-                if (this->graph_manager.PROTOTYPE_SaveGraph(
-                        this->graph_ptr->GetUID(), this->project_filename, core_instance)) {
-                    ImGui::CloseCurrentPopup();
-                }
-            } else {
-                vislib::sys::Log::DefaultLog.WriteWarn("No project available for saving.");
-            }
-        }
-
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel")) {
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-#endif // GUI_USE_FILESYSTEM
-
-    return true;
 }

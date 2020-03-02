@@ -25,6 +25,11 @@
 #include <string>
 #include <tuple>
 
+/// CMake exeption for the cluster "stampede2" running CentOS. (C++ filesystem support is not working?)
+#ifdef GUI_USE_FILESYSTEM
+#    include "FileUtils.h"
+#endif // GUI_USE_FILESYSTEM
+
 
 namespace megamol {
 namespace gui {
@@ -92,10 +97,10 @@ public:
     }
 
     /** Set keyboard focus to search text input. */
-    inline void SetSearchFocus(bool focus) { this->searchFocus = focus; }
+    inline void SetSearchFocus(bool focus) { this->search_focus = focus; }
 
     /** Set keyboard focus to search text input. */
-    inline std::string GetSearchString(void) const { return this->searchString; }
+    inline std::string GetSearchString(void) const { return this->search_string; }
 
     // Other utility functions ------------------------------------------------
 
@@ -110,18 +115,34 @@ public:
      */
     bool VerticalSplitter(float* size_left, float* size_right);
 
+#ifdef GUI_USE_FILESYSTEM
+
+    enum FileBrowserFlag { SAVE, LOAD };
+    bool FileBrowserPopUp(FileBrowserFlag flag, bool open_popup, const std::string& label, std::string& inout_filename);
+
+#endif // GUI_USE_FILESYSTEM
+
 private:
     /** Current tooltip hover time. */
-    float tooltipTime;
+    float tooltip_time;
 
     /** Current hovered tooltip item. */
-    ImGuiID tooltipId;
+    ImGuiID tooltip_id;
 
     /** Set focus to search text input. */
-    bool searchFocus;
+    bool search_focus;
 
     /** Current search string. */
-    std::string searchString;
+    std::string search_string;
+
+    /** File Browser */
+    std::string file_name_str;
+    std::string file_path_str;
+    size_t additional_lines;
+
+#ifdef GUI_USE_FILESYSTEM
+    bool splitPath(const fsns::path& in_file_path, std::string& out_path, std::string& out_file);
+#endif // GUI_USE_FILESYSTEM
 };
 
 

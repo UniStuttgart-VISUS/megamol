@@ -181,7 +181,7 @@ bool megamol::gui::configurator::GraphManager::UpdateModulesCallsStock(
 
 
 bool megamol::gui::configurator::GraphManager::LoadCurrentCoreProject(
-    std::string name, megamol::core::CoreInstance* core_instance) {
+    const std::string& name, megamol::core::CoreInstance* core_instance) {
 
     try {
         // Temporary data structure holding call connection data
@@ -372,16 +372,69 @@ bool megamol::gui::configurator::GraphManager::LoadCurrentCoreProject(
 }
 
 
-bool megamol::gui::configurator::GraphManager::PROTOTYPE_SaveGraph(
-    int graph_id, std::string project_filename, megamol::core::CoreInstance* core_instance) {
+bool megamol::gui::configurator::GraphManager::LoadProjectFile(
+    int graph_id, const std::string& project_filename, megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
-            "Pointer to CoreInstance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
-    std::string confstr;
+    std::string projectstr;
+    if (!file::ReadFile(project_filename, projectstr)) return false;
+
+    const std::string lua_view = "mmCreateView";
+    const std::string lua_module = "mmCreateModule";
+    const std::string lua_param = "mmSetParamValue";
+    const std::string lua_call = "mmCreateCall";
+
+    try {
+
+        // Scan line by line
+        std::stringstream ss(projectstr);
+        std::string line;
+        while (std::getline(ss, line, '\n')) {
+            // Check for view creation
+            if (line.rfind(lua_view, 0) == 0) {
+
+            } else if (line.rfind(lua_module, 0) == 0) {
+
+
+            } else if (line.rfind(lua_param, 0) == 0) {
+
+
+            } else if (line.rfind(lua_call, 0) == 0) {
+            }
+        }
+
+
+        // if (!this->AddGraph()) return false;
+
+
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return true;
+}
+
+
+bool megamol::gui::configurator::GraphManager::SaveProjectFile(
+    int graph_id, const std::string& project_filename, megamol::core::CoreInstance* core_instance) {
+
+    if (core_instance == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    std::string projectstr;
     std::stringstream confInstances, confModules, confCalls, confParams;
     GraphPtrType found_graph = nullptr;
 
@@ -426,8 +479,8 @@ bool megamol::gui::configurator::GraphManager::PROTOTYPE_SaveGraph(
                     }
                 }
 
-                confstr = confInstances.str() + "\n" + confModules.str() + "\n" + confCalls.str() + "\n" +
-                          confParams.str() + "\n";
+                projectstr = confInstances.str() + "\n" + confModules.str() + "\n" + confCalls.str() + "\n" +
+                             confParams.str() + "\n";
                 found_graph = graph;
             }
         }
@@ -446,31 +499,11 @@ bool megamol::gui::configurator::GraphManager::PROTOTYPE_SaveGraph(
         return false;
     }
 
-    try {
-        std::ofstream file;
-        file.open(project_filename);
-        if (file.good()) {
-            file << confstr.c_str();
-            file.close();
-        } else {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "Unable to create project file. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            file.close();
-            return false;
-        }
-    } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
     if (found_graph != nullptr) {
         found_graph->ResetDirty();
     }
-    return true;
+
+    return file::WriteFile(project_filename, projectstr);
 }
 
 

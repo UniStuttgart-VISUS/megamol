@@ -81,7 +81,7 @@ public:
             , win_position(ImVec2(0.0f, 0.0f))
             , win_size(ImVec2(0.0f, 0.0f))
             , win_soft_reset(true)
-            , win_reset_size(ImVec2(500.0f, 300.0f))
+            , win_reset_size(ImVec2(0.0f, 0.0f))
             , win_reset(true)
             // Window specific configurations
             , main_project_file("")

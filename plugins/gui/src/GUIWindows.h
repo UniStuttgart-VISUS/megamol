@@ -41,10 +41,6 @@
 #include "TransferFunctionEditor.h"
 #include "WindowManager.h"
 #include "configurator/Configurator.h"
-/// CMake exeption for the cluster "stampede2" running CentOS. (C++ filesystem support is not working?)
-#ifdef GUI_USE_FILESYSTEM
-#    include "FileUtils.h"
-#endif // GUI_USE_FILESYSTEM
 
 // Used for platform independent clipboard (ImGui so far only provides windows implementation)
 #ifdef GUI_USE_GLFW
@@ -155,8 +151,13 @@ private:
     /** A parameter to store the profile */
     megamol::core::param::ParamSlot state_param;
 
+<<<<<<< HEAD
     /** A parameter for loading the configurator at start up */
     megamol::core::param::ParamSlot load_configurator_param;
+=======
+    /** A parameter for automatically start the configurator at start up */
+    megamol::core::param::ParamSlot autostart_configurator;
+>>>>>>> eac808ca32b77b94b2cbaee87833ae422dc566ae
 
     /** Hotkeys */
     enum HotkeyIndex : size_t { EXIT_PROGRAM = 0, PARAMETER_SEARCH = 1, SAVE_PROJECT = 2, INDEX_COUNT = 3 };
@@ -299,6 +300,11 @@ private:
      * Checks for multiple hotkey assignement.
      */
     void checkMultipleHotkeyAssignement(void);
+
+    /**
+     * Check if given hotkey is pressed.
+     */
+    bool hotkeyPressed(megamol::core::view::KeyCode keycode);
 
     /**
      * Shutdown megmol program.

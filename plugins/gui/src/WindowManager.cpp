@@ -23,18 +23,18 @@ void WindowManager::SoftResetWindowSizePos(const std::string& window_name, Windo
     float height = window_config.win_reset_size.y;
 
     if (width > io.DisplaySize.x) {
-        width = io.DisplaySize.x - (2.0f * style.DisplayWindowPadding.x);
+        width = io.DisplaySize.x; // -(2.0f * style.DisplayWindowPadding.x);
     }
     if (height > io.DisplaySize.y) {
-        height = io.DisplaySize.y - (2.0f * style.DisplayWindowPadding.y);
+        height = io.DisplaySize.y; // - (2.0f * style.DisplayWindowPadding.y);
     }
 
     auto win_pos = ImGui::GetWindowPos();
     if (win_pos.x < 0) {
-        win_pos.x = style.DisplayWindowPadding.x;
+        win_pos.x = 0.0f; // style.DisplayWindowPadding.x;
     }
     if (win_pos.y < 0) {
-        win_pos.y = style.DisplayWindowPadding.y;
+        win_pos.y = 0.0f; // style.DisplayWindowPadding.y;
     }
 
     ImVec2 win_size;
@@ -44,13 +44,13 @@ void WindowManager::SoftResetWindowSizePos(const std::string& window_name, Windo
         win_size = ImVec2(width, height);
     }
 
-    float win_width = io.DisplaySize.x - (win_pos.x + style.DisplayWindowPadding.x);
+    float win_width = io.DisplaySize.x - (win_pos.x); // +style.DisplayWindowPadding.x);
     if (win_width < win_size.x) {
-        win_pos.x = io.DisplaySize.x - (win_size.x + style.DisplayWindowPadding.x);
+        win_pos.x = io.DisplaySize.x - (win_size.x); // + style.DisplayWindowPadding.x);
     }
-    float win_height = io.DisplaySize.y - (win_pos.y + style.DisplayWindowPadding.y);
+    float win_height = io.DisplaySize.y - (win_pos.y); // + style.DisplayWindowPadding.y);
     if (win_height < win_size.y) {
-        win_pos.y = io.DisplaySize.y - (win_size.y + style.DisplayWindowPadding.y);
+        win_pos.y = io.DisplaySize.y - (win_size.y); //+ style.DisplayWindowPadding.y);
     }
 
     ImGui::SetWindowSize(window_name.c_str(), ImVec2(width, height), ImGuiCond_Always);
@@ -386,7 +386,7 @@ bool WindowManager::StateToJSON(std::string& json_string) {
             json[window_name]["win_flags"] = static_cast<int>(window_config.win_flags);
             json[window_name]["win_callback"] = static_cast<int>(window_config.win_callback);
             json[window_name]["win_hotkey"] = {
-                static_cast<int>(window_config.win_hotkey.GetKey()), window_config.win_hotkey.GetModifiers().toInt()};
+                static_cast<int>(window_config.win_hotkey.key), window_config.win_hotkey.mods.toInt()};
             json[window_name]["win_position"] = {window_config.win_position.x, window_config.win_position.y};
             json[window_name]["win_size"] = {window_config.win_size.x, window_config.win_size.y};
             json[window_name]["win_soft_reset"] = window_config.win_soft_reset;

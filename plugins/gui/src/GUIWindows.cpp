@@ -8,10 +8,10 @@
 /**
  * USED HOTKEYS:
  *
- * - Show/hide Windows: Ctrl  + F9-F12
- * - Reset windows:     Shift + Ctrl   + F9-F12
- * - Search Paramter:   Shift + Ctrl  + p
- * - Save Project:      Shift + Ctrl  + s
+ * - Show/hide Windows: F8-F12
+ * - Reset windows:     Shift + F8-F12
+ * - Search Paramter:   Shift + Alt + p
+ * - Save Project:      Shift + Alt + s
  * - Quit program:      Alt   + F4
  */
 
@@ -31,7 +31,7 @@ GUIWindows::GUIWindows()
     , param_slots()
     , style_param("gui::style", "Color style, theme")
     , state_param("gui::state", "Current state of all windows. Automatically updated.")
-    , load_configurator_param("gui::autostart_configurator", "Show configurator window at start up.")
+    , autostart_configurator("gui::autostart_configurator", "Start the configurator at start up automatically. ")
     , context(nullptr)
     , impl(Implementation::NONE)
     , window_manager()
@@ -57,12 +57,12 @@ GUIWindows::GUIWindows()
 
     this->state_param << new core::param::StringParam("");
 
-    this->load_configurator_param << new core::param::BoolParam(false);
+    this->autostart_configurator << new core::param::BoolParam(false);
 
     this->param_slots.clear();
     this->param_slots.push_back(&this->state_param);
     this->param_slots.push_back(&this->style_param);
-    this->param_slots.push_back(&this->load_configurator_param);
+    this->param_slots.push_back(&this->autostart_configurator);
 
     this->hotkeys[HotkeyIndex::EXIT_PROGRAM] =
         HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
@@ -203,10 +203,14 @@ bool GUIWindows::Draw(vislib::math::Rectangle<int> viewport, double instanceTime
                 return;
             }
 
-            // Always resize configurator window to viewport
+            // Always set configurator window size to current viewport
             if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
                 wc.win_size = ImVec2(viewportWidth, viewportHeight);
                 wc.win_reset = true;
+                // Change visibility of main window if configurator window is closed.
+                if (!wc.win_show) {
+                    this->configuratorWindowSate(wc);
+                }
             }
 
             // Apply soft reset of window position and size (before calling window callback)
@@ -283,8 +287,8 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
 
     // Check for GUIWindows specific hotkeys
     for (auto& h : this->hotkeys) {
-        auto key = std::get<0>(h).GetKey();
-        auto mods = std::get<0>(h).GetModifiers();
+        auto key = std::get<0>(h).key;
+        auto mods = std::get<0>(h).mods;
         if (ImGui::IsKeyDown(static_cast<int>(key)) && (mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
             (mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
             (mods.test(core::view::Modifier::SHIFT) == io.KeyShift)) {
@@ -327,16 +331,22 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     // Hotkeys for showing/hiding window(s)
     hotkeyPressed = false;
     const auto func = [&](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-        bool windowHotkeyPressed = (io.KeyCtrl && (ImGui::IsKeyDown(static_cast<int>(wc.win_hotkey.key))));
+        bool windowHotkeyPressed = this->hotkeyPressed(wc.win_hotkey);
         if (windowHotkeyPressed) {
-            if (io.KeyShift) {
-                wc.win_soft_reset = true;
-            } else {
-                wc.win_show = !wc.win_show;
-                this->configuratorWindowSate(wc);
-            }
-            hotkeyPressed = (hotkeyPressed || windowHotkeyPressed);
+            wc.win_show = !wc.win_show;
+            this->configuratorWindowSate(wc);
         }
+        hotkeyPressed = (hotkeyPressed || windowHotkeyPressed);
+
+        auto window_hotkey = wc.win_hotkey;
+        auto mods = window_hotkey.mods;
+        mods |= megamol::core::view::Modifier::SHIFT;
+        window_hotkey = megamol::core::view::KeyCode(window_hotkey.key, mods);
+        windowHotkeyPressed = this->hotkeyPressed(window_hotkey);
+        if (windowHotkeyPressed) {
+            wc.win_soft_reset = true;
+        }
+        hotkeyPressed = (hotkeyPressed || windowHotkeyPressed);
     };
     this->window_manager.EnumWindows(func);
     if (hotkeyPressed) return true;
@@ -379,11 +389,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
                         // Break loop after first occurrence of parameter hotkey
                         if (hotkeyPressed) return;
 
-                        hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(keyCode.key))) &&
-                                        (keyCode.mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
-                                        (keyCode.mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
-                                        (keyCode.mods.test(core::view::Modifier::SHIFT) == io.KeyShift);
-                        if (hotkeyPressed) {
+                        if (this->hotkeyPressed(keyCode)) {
                             p->setDirty();
                         }
                     }
@@ -517,40 +523,44 @@ bool GUIWindows::createContext(void) {
     buf_win.win_reset = true;
     // MAIN Window ------------------------------------------------------------
     buf_win.win_show = true;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F12, core::view::Modifier::CTRL);
+    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F12);
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoTitleBar;
     buf_win.win_callback = WindowManager::DrawCallbacks::MAIN;
     buf_win.win_position = ImVec2(0.0f, 0.0f);
     buf_win.win_size = ImVec2(250.0f, 600.0f);
+    buf_win.win_reset_size = buf_win.win_size;
     this->window_manager.AddWindowConfiguration("Main Window", buf_win);
 
     // FPS/MS Window ----------------------------------------------------------
     buf_win.win_show = false;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11, core::view::Modifier::CTRL);
+    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
     buf_win.win_callback = WindowManager::DrawCallbacks::FPSMS;
+    // buf_win.win_size = autoresize
     this->window_manager.AddWindowConfiguration("Performance Metrics", buf_win);
 
     // FONT Window ------------------------------------------------------------
     buf_win.win_show = false;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10, core::view::Modifier::CTRL);
+    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
     buf_win.win_callback = WindowManager::DrawCallbacks::FONT;
+    // buf_win.win_size = autoresize
     this->window_manager.AddWindowConfiguration("Font Settings", buf_win);
 
     // TRANSFER FUNCTION Window -----------------------------------------------
     buf_win.win_show = false;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9, core::view::Modifier::CTRL);
+    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
     buf_win.win_callback = WindowManager::DrawCallbacks::TF;
+    // buf_win.win_size = autoresize
     this->window_manager.AddWindowConfiguration("Transfer Function Editor", buf_win);
 
     // CONFIGURATOR Window -----------------------------------------------
     buf_win.win_show = false;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8, core::view::Modifier::CTRL);
+    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize;
     buf_win.win_callback = WindowManager::DrawCallbacks::CONFIGURATOR;
-    //buf_win.win_size = ImVec2(250.0f, 600.0f);
+    // buf_win.win_size is set to current viewport later
     this->window_manager.AddWindowConfiguration("Configurator", buf_win);
 
     // Style settings ---------------------------------------------------------
@@ -600,19 +610,19 @@ bool GUIWindows::createContext(void) {
         // Add other known fonts
         std::string font_file, font_path;
         if (this->core_instance != nullptr) {
-            const vislib::Array<vislib::StringW>& searchPaths =
+            const vislib::Array<vislib::StringW>& search_paths =
                 this->core_instance->Configuration().ResourceDirectories();
-            for (size_t i = 0; i < searchPaths.Count(); ++i) {
-                std::wstring searchPath(searchPaths[i].PeekBuffer());
+            for (size_t i = 0; i < search_paths.Count(); ++i) {
+                std::wstring search_path(search_paths[i].PeekBuffer());
                 font_file = "Roboto-Regular.ttf";
-                font_path = SearchFileRecursive(font_file, searchPath);
+                font_path = file::SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
                 if (!font_path.empty()) {
                     io.Fonts->AddFontFromFileTTF(font_path.c_str(), 12.0f, &config);
                     /// Set as default.
                     io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
                 }
                 font_file = "SourceCodePro-Regular.ttf";
-                font_path = SearchFileRecursive(font_file, searchPath);
+                font_path = file::SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
                 if (!font_path.empty()) {
                     io.Fonts->AddFontFromFileTTF(font_path.c_str(), 13.0f, &config);
                     configurator_font = font_path;
@@ -715,22 +725,20 @@ void GUIWindows::validateParameter() {
         this->state.win_save_state = false;
     }
 
-    if (this->load_configurator_param.IsDirty()) {
-        bool autoload_configurator = this->load_configurator_param.Param<core::param::BoolParam>()->Value();
-        if (autoload_configurator) {
-            // Hide all other windows when configurator is opened.
-            const auto configurator_func = [](const std::string& wn,
-                                                WindowManager::WindowConfiguration& wc) {
+
+    if (this->autostart_configurator.IsDirty()) {
+        bool autostart = this->autostart_configurator.Param<core::param::BoolParam>()->Value();
+        if (autostart) {
+            const auto configurator_func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
                 if (wc.win_callback != WindowManager::DrawCallbacks::CONFIGURATOR) {
                     wc.win_show = false;
-                }
-                else {
+                } else {
                     wc.win_show = true;
                 }
             };
             this->window_manager.EnumWindows(configurator_func);
         }
-        this->load_configurator_param.ResetDirty();
+        this->autostart_configurator.ResetDirty();
     }
 }
 
@@ -946,7 +954,8 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                 current_mod_open = ImGui::CollapsingHeader(label.c_str(), nullptr);
                 if (!currentSearchString.empty()) {
                     ImGui::PopStyleColor();
-                }
+                }>>>>>>> eac808ca32b77b94b2cbaee87833ae422dc566ae
+
 
                 // Module description as hover tooltip
                 auto mod_desc = this->core_instance->GetModuleDescriptionManager().Find(mod.ClassName());
@@ -1240,7 +1249,7 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
     ImGui::InputText(label.c_str(), &wc.buf_font_file, ImGuiInputTextFlags_AutoSelectAll);
     this->utils.Utf8Decode(wc.buf_font_file);
     // Validate font file before offering load button
-    if (HasExistingFileExtension(wc.buf_font_file, std::string(".ttf"))) {
+    if (file::FilesExistingExtension<std::string>(wc.buf_font_file, std::string(".ttf"))) {
         if (ImGui::Button("Add Font")) {
             this->state.font_file = wc.buf_font_file;
             this->state.font_size = wc.buf_font_size;
@@ -1290,7 +1299,7 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
                 this->configuratorWindowSate(wc);
             }
             // Add conext menu for deleting windows without hotkey (= custom parameter windows).
-            if (wc.win_hotkey.GetKey() == core::view::Key::KEY_UNKNOWN) {
+            if (wc.win_hotkey.key == core::view::Key::KEY_UNKNOWN) {
                 if (ImGui::BeginPopupContextItem()) {
                     if (ImGui::MenuItem("Delete Window")) {
                         this->state.win_delete = wn;
@@ -1402,64 +1411,20 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
         ImGui::EndPopup();
     }
 
-    // SAVE PROJECT
+    // SAVE PROJECT pop-up
 #ifdef GUI_USE_FILESYSTEM
     open_popup_project = (open_popup_project || std::get<1>(this->hotkeys[HotkeyIndex::SAVE_PROJECT]));
     if (open_popup_project) {
-        ImGui::OpenPopup("Save Project");
         std::get<1>(this->hotkeys[HotkeyIndex::SAVE_PROJECT]) = false;
     }
-    if (ImGui::BeginPopupModal("Save Project", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-
-        bool save_project = false;
-
-        std::string label = "File Name";
-        auto flags =
-            ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll; // ImGuiInputTextFlags_None
-        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-        this->utils.Utf8Encode(wc.main_project_file);
-        if (ImGui::InputText(label.c_str(), &wc.main_project_file, flags)) {
-            save_project = true;
-        }
-        this->utils.Utf8Decode(wc.main_project_file);
-        // Set focus on input text once (applied next frame)
-        if (open_popup_project) {
-            ImGuiID id = ImGui::GetID(label.c_str());
-            ImGui::ActivateItem(id);
-        }
-
-        bool valid_ending = true;
-        if (!HasFileExtension(wc.main_project_file, std::string(".lua"))) {
-            ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.0f, 1.0f), "Appending required file ending '.lua'");
-            valid_ending = false;
-        }
-        // Warn when file already exists
-        if (PathExists(wc.main_project_file) || PathExists(wc.main_project_file + ".lua")) {
-            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Overwriting existing file.");
-        }
-        if (ImGui::Button("Save (Enter)")) {
-            save_project = true;
-        }
-
-        if (save_project) {
-            // Serialize current state to parameter.
-            std::string state;
-            this->window_manager.StateToJSON(state);
-            this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
-            // Save project to file
-            if (!valid_ending) {
-                wc.main_project_file.append(".lua");
-            }
-            if (SaveProjectFile(wc.main_project_file, this->core_instance)) {
-                ImGui::CloseCurrentPopup();
-            }
-        }
-
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel")) {
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
+    if (this->utils.FileBrowserPopUp(
+            GUIUtils::FileBrowserFlag::SAVE, open_popup_project, "Save Project", wc.main_project_file)) {
+        // Serialize current state to parameter.
+        std::string state;
+        this->window_manager.StateToJSON(state);
+        this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
+        // Serialize project to file
+        file::SaveProjectFile(wc.main_project_file, this->core_instance);
     }
 #endif // GUI_USE_FILESYSTEM
 }
@@ -1831,8 +1796,7 @@ void GUIWindows::configuratorWindowSate(WindowManager::WindowConfiguration& wc) 
     if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
         if (wc.win_show) {
             // Hide all other windows when configurator is opened.
-            const auto configurator_func = [](const std::string& wn,
-                                                WindowManager::WindowConfiguration& wc) {
+            const auto configurator_func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
                 if (wc.win_callback != WindowManager::DrawCallbacks::CONFIGURATOR) {
                     wc.win_show = false;
                 }
@@ -1840,8 +1804,7 @@ void GUIWindows::configuratorWindowSate(WindowManager::WindowConfiguration& wc) 
             this->window_manager.EnumWindows(configurator_func);
         } else {
             // Show main window when configurator is closed.
-            const auto configurator_func = [](const std::string& wn,
-                                                WindowManager::WindowConfiguration& wc) {
+            const auto configurator_func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
                 if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
                     wc.win_show = true;
                 }
@@ -1884,14 +1847,14 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
                         auto hotkey = p->GetKeyCode();
 
                         // Ignore not set hotekey
-                        if (hotkey.GetKey() == core::view::Key::KEY_UNKNOWN) {
+                        if (hotkey.key == core::view::Key::KEY_UNKNOWN) {
                             return;
                         }
 
                         // check in hotkey map
                         bool found = false;
                         for (auto kc : hotkeylist) {
-                            if ((kc.GetKey() == hotkey.GetKey()) && (kc.GetModifiers().equals(hotkey.GetModifiers()))) {
+                            if ((kc.key == hotkey.key) && (kc.mods.equals(hotkey.mods))) {
                                 found = true;
                             }
                         }
@@ -1913,6 +1876,16 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
 
         this->state.hotkeys_check_once = false;
     }
+}
+
+
+bool megamol::gui::GUIWindows::hotkeyPressed(megamol::core::view::KeyCode keycode) {
+    ImGuiIO& io = ImGui::GetIO();
+
+    return (ImGui::IsKeyDown(static_cast<int>(keycode.key))) &&
+           (keycode.mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
+           (keycode.mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
+           (keycode.mods.test(core::view::Modifier::SHIFT) == io.KeyShift);
 }
 
 
