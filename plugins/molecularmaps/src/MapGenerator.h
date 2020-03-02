@@ -236,7 +236,7 @@ private:
     /**
      * Draw the map based on the vertices of the sphere.
      */
-    void drawMap();
+    void drawMap(void);
 
 
     /**
@@ -833,9 +833,6 @@ private:
     /** The image data in which the map is stored int. */
     vislib::Array<unsigned char> store_png_data;
 
-    /** The fbo in which the image data is rendered. */
-    vislib::graphics::gl::FramebufferObject store_png_fbo;
-
     /** Renders the radius onto bottom left corner of the map. */
     vislib::graphics::gl::OutlineFont store_png_font;
 
@@ -898,6 +895,9 @@ private:
 
     /** Rebuilt version of the vertex positions */
     std::vector<float> vertices_rebuild;
+
+    /** Old ids of the rebuild vertices */
+    std::vector<uint> vertices_rebuild_ids;
 
     /** Sphere vertices */
     std::vector<float> vertices_sphere;
