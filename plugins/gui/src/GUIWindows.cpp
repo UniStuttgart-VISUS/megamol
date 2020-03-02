@@ -8,10 +8,10 @@
 /**
  * USED HOTKEYS:
  *
- * - Show/hide Windows: Ctrl  + F9-F12
- * - Reset windows:     Shift + Ctrl   + F9-F12
- * - Search Paramter:   Shift + Ctrl  + p
- * - Save Project:      Shift + Ctrl  + s
+ * - Show/hide Windows: F8-F12
+ * - Reset windows:     Shift + F8-F12
+ * - Search Paramter:   Shift + Alt + p
+ * - Save Project:      Shift + Alt + s
  * - Quit program:      Alt   + F4
  */
 
@@ -287,8 +287,8 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
 
     // Check for GUIWindows specific hotkeys
     for (auto& h : this->hotkeys) {
-        auto key = std::get<0>(h).GetKey();
-        auto mods = std::get<0>(h).GetModifiers();
+        auto key = std::get<0>(h).key;
+        auto mods = std::get<0>(h).mods;
         if (ImGui::IsKeyDown(static_cast<int>(key)) && (mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
             (mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
             (mods.test(core::view::Modifier::SHIFT) == io.KeyShift)) {
@@ -333,14 +333,20 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     const auto func = [&](const std::string& wn, WindowManager::WindowConfiguration& wc) {
         bool windowHotkeyPressed = this->hotkeyPressed(wc.win_hotkey);
         if (windowHotkeyPressed) {
-            if (io.KeyShift) {
-                wc.win_soft_reset = true;
-            } else {
-                wc.win_show = !wc.win_show;
-                this->configuratorWindowSate(wc);
-            }
-            hotkeyPressed = (hotkeyPressed || windowHotkeyPressed);
+            wc.win_show = !wc.win_show;
+            this->configuratorWindowSate(wc);
         }
+        hotkeyPressed = (hotkeyPressed || windowHotkeyPressed);
+
+        auto window_hotkey = wc.win_hotkey;
+        auto mods = window_hotkey.mods;
+        mods |= megamol::core::view::Modifier::SHIFT;
+        window_hotkey = megamol::core::view::KeyCode(window_hotkey.key, mods);
+        windowHotkeyPressed = this->hotkeyPressed(window_hotkey);
+        if (windowHotkeyPressed) {
+            wc.win_soft_reset = true;
+        }
+        hotkeyPressed = (hotkeyPressed || windowHotkeyPressed);
     };
     this->window_manager.EnumWindows(func);
     if (hotkeyPressed) return true;
@@ -517,40 +523,44 @@ bool GUIWindows::createContext(void) {
     buf_win.win_reset = true;
     // MAIN Window ------------------------------------------------------------
     buf_win.win_show = true;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F12, core::view::Modifier::CTRL);
+    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F12);
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoTitleBar;
     buf_win.win_callback = WindowManager::DrawCallbacks::MAIN;
     buf_win.win_position = ImVec2(0.0f, 0.0f);
     buf_win.win_size = ImVec2(250.0f, 600.0f);
+    buf_win.win_reset_size = buf_win.win_size;
     this->window_manager.AddWindowConfiguration("Main Window", buf_win);
 
     // FPS/MS Window ----------------------------------------------------------
     buf_win.win_show = false;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11, core::view::Modifier::CTRL);
+    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
     buf_win.win_callback = WindowManager::DrawCallbacks::FPSMS;
+    // buf_win.win_size = autoresize
     this->window_manager.AddWindowConfiguration("Performance Metrics", buf_win);
 
     // FONT Window ------------------------------------------------------------
     buf_win.win_show = false;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10, core::view::Modifier::CTRL);
+    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
     buf_win.win_callback = WindowManager::DrawCallbacks::FONT;
+    // buf_win.win_size = autoresize
     this->window_manager.AddWindowConfiguration("Font Settings", buf_win);
 
     // TRANSFER FUNCTION Window -----------------------------------------------
     buf_win.win_show = false;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9, core::view::Modifier::CTRL);
+    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
     buf_win.win_callback = WindowManager::DrawCallbacks::TF;
+    // buf_win.win_size = autoresize
     this->window_manager.AddWindowConfiguration("Transfer Function Editor", buf_win);
 
     // CONFIGURATOR Window -----------------------------------------------
     buf_win.win_show = false;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8, core::view::Modifier::CTRL);
+    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize;
     buf_win.win_callback = WindowManager::DrawCallbacks::CONFIGURATOR;
-    // buf_win.win_size = ImVec2(250.0f, 600.0f);
+    // buf_win.win_size is set to current viewport later
     this->window_manager.AddWindowConfiguration("Configurator", buf_win);
 
     // Style settings ---------------------------------------------------------
@@ -1287,7 +1297,7 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
                 this->configuratorWindowSate(wc);
             }
             // Add conext menu for deleting windows without hotkey (= custom parameter windows).
-            if (wc.win_hotkey.GetKey() == core::view::Key::KEY_UNKNOWN) {
+            if (wc.win_hotkey.key == core::view::Key::KEY_UNKNOWN) {
                 if (ImGui::BeginPopupContextItem()) {
                     if (ImGui::MenuItem("Delete Window")) {
                         this->state.win_delete = wn;
@@ -1835,14 +1845,14 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
                         auto hotkey = p->GetKeyCode();
 
                         // Ignore not set hotekey
-                        if (hotkey.GetKey() == core::view::Key::KEY_UNKNOWN) {
+                        if (hotkey.key == core::view::Key::KEY_UNKNOWN) {
                             return;
                         }
 
                         // check in hotkey map
                         bool found = false;
                         for (auto kc : hotkeylist) {
-                            if ((kc.GetKey() == hotkey.GetKey()) && (kc.GetModifiers().equals(hotkey.GetModifiers()))) {
+                            if ((kc.key == hotkey.key) && (kc.mods.equals(hotkey.mods))) {
                                 found = true;
                             }
                         }

@@ -8,8 +8,8 @@
 /**
  * USED HOTKEYS:
  *
- * - Search module:        Shift + Ctrl  + m
- * - Search parameter:     Shift + Ctrl  + p
+ * - Search module:        Shift + Ctrl + m
+ * - Search parameter:     Shift + Ctrl + p
  * - Delete module/call:   Delete
  */
 
@@ -60,8 +60,8 @@ bool megamol::gui::configurator::Configurator::CheckHotkeys(void) {
 
     bool hotkey_pressed = false;
     for (auto& h : this->hotkeys) {
-        auto key = std::get<0>(h).GetKey();
-        auto mods = std::get<0>(h).GetModifiers();
+        auto key = std::get<0>(h).key;
+        auto mods = std::get<0>(h).mods;
         if (ImGui::IsKeyDown(static_cast<int>(key)) && (mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
             (mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
             (mods.test(core::view::Modifier::SHIFT) == io.KeyShift)) {
