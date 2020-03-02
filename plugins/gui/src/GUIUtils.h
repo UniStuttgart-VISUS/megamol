@@ -117,7 +117,8 @@ public:
 
 #ifdef GUI_USE_FILESYSTEM
 
-    bool SaveProjectFileBrowserDialog(bool open_popup, std::string& filename);
+    enum FileBrowserFlag { SAVE, LOAD };
+    bool FileBrowserPopUp(FileBrowserFlag flag, bool open_popup, const std::string& label, std::string& inout_filename);
 
 #endif // GUI_USE_FILESYSTEM
 
@@ -135,7 +136,7 @@ private:
     std::string search_string;
 
     /** Current file path. */
-    std::string file_path;
+    std::string file_name;
 };
 
 

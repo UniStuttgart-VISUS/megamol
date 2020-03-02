@@ -22,6 +22,7 @@
 #include <map>
 #include <vector>
 
+#include "GUIUtils.h"
 #include "Graph.h"
 
 
@@ -48,10 +49,10 @@ public:
     inline const ModuleStockVectorType& GetModulesStock(void) { return this->modules_stock; }
     inline const CallStockVectorType& GetCallsStock(void) { return this->calls_stock; }
 
-    bool LoadCurrentCoreProject(std::string name, megamol::core::CoreInstance* core_instance);
+    bool LoadCurrentCoreProject(const std::string& name, megamol::core::CoreInstance* core_instance);
 
-    // Only used for prototype to be able to serialize current projects of the confgurator to lua project file.
-    bool SaveProjectFile(int graph_id, std::string project_filename, megamol::core::CoreInstance* cor_iInstance);
+    bool LoadProjectFile(int graph_id, const std::string& project_filename, megamol::core::CoreInstance* core_instance);
+    bool SaveProjectFile(int graph_id, const std::string& project_filename, megamol::core::CoreInstance* core_instance);
 
     // GUI Presentation -------------------------------------------------------
     bool GUI_Present(

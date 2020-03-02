@@ -18,7 +18,7 @@ using namespace megamol::gui;
 
 
 GUIUtils::GUIUtils(void)
-    : tooltip_time(0.0f), tooltip_id(GUI_INVALID_ID), search_focus(false), search_string(), file_path() {}
+    : tooltip_time(0.0f), tooltip_id(GUI_INVALID_ID), search_focus(false), search_string(), file_name() {}
 
 
 void GUIUtils::HoverToolTip(const std::string& text, ImGuiID id, float time_start, float time_end) {
@@ -170,55 +170,73 @@ bool megamol::gui::GUIUtils::VerticalSplitter(float* size_left, float* size_righ
         bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size_left, size_right, min_size, min_size, 0.0f);
 }
 
-
-bool megamol::gui::GUIUtils::SaveProjectFileBrowserDialog(bool open_popup, std::string& filename) {
+#ifdef GUI_USE_FILESYSTEM
+bool megamol::gui::GUIUtils::FileBrowserPopUp(
+    FileBrowserFlag flag, bool open_popup, const std::string& label, std::string& inout_filename) {
 
     bool retval = false;
 
-    std::string popup_name = "Save Project";
+    ImGui::PushID(label.c_str());
+
+    std::string popup_name = label;
     if (open_popup) {
         ImGui::OpenPopup(popup_name.c_str());
-        this->file_path = filename;
+        this->file_name = inout_filename;
     }
-    if (ImGui::BeginPopupModal(popup_name.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+    auto flags = ImGuiWindowFlags_None;
+    bool open = true;
+    if (ImGui::BeginPopupModal(popup_name.c_str(), &open, flags)) {
+
+        // std::string label = "Path";
+        // bool goto_path = false;
+        // auto flags =
+        //    ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll; // ImGuiInputTextFlags_None
+        ///// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+        // this->Utf8Encode(this->file_name);
+        // if (ImGui::InputText(label.c_str(), &this->file_name, flags)) {
+        //    goto_path = true;
+        //}
+        // this->Utf8Decode(this->file_name);
+
+        // std::string tag_parent = "..";
+        // if (ImGui::Selectable(tag_parent.c_str(), ())) {
+        //}
+
 
         bool save_project = false;
-
         std::string label = "File Name";
         auto flags =
             ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll; // ImGuiInputTextFlags_None
         /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-        this->Utf8Encode(this->file_path);
-        if (ImGui::InputText(label.c_str(), &this->file_path, flags)) {
+        this->Utf8Encode(this->file_name);
+        if (ImGui::InputText(label.c_str(), &this->file_name, flags)) {
             save_project = true;
         }
-        this->Utf8Decode(this->file_path);
-
-        // Set focus on input text once (applied next frame)
-        if (open_popup) {
-            ImGuiID id = ImGui::GetID(label.c_str());
-            ImGui::ActivateItem(id);
-        }
+        this->Utf8Decode(this->file_name);
 
         bool valid_ending = true;
-        if (!HasFileExtension<std::string>(this->file_path, std::string(".lua"))) {
-            ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.0f, 1.0f), "Appending required file ending '.lua'");
-            valid_ending = false;
+        if (flag == GUIUtils::FileBrowserFlag::SAVE) {
+            if (!file::HasFileExtension<std::string>(this->file_name, std::string(".lua"))) {
+                ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.0f, 1.0f), "Appending required file ending '.lua'");
+                valid_ending = false;
+            }
+            // Warn when file already exists
+            if (file::PathExists<std::string>(this->file_name) ||
+                file::PathExists<std::string>(this->file_name + ".lua")) {
+                ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Overwriting existing file.");
+            }
         }
-        // Warn when file already exists
-        if (PathExists<std::string>(this->file_path) || PathExists<std::string>(this->file_path + ".lua")) {
-            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Overwriting existing file.");
-        }
-        if (ImGui::Button("Save (Enter)")) {
+
+        if (ImGui::Button("Save")) {
             save_project = true;
         }
 
         if (save_project) {
             // Save project to file
             if (!valid_ending) {
-                this->file_path.append(".lua");
+                this->file_name.append(".lua");
             }
-            filename = this->file_path;
+            inout_filename = this->file_name;
             ImGui::CloseCurrentPopup();
             retval = true;
         }
@@ -230,5 +248,8 @@ bool megamol::gui::GUIUtils::SaveProjectFileBrowserDialog(bool open_popup, std::
         ImGui::EndPopup();
     }
 
+    ImGui::PopID();
+
     return retval;
 }
+#endif // GUI_USE_FILESYSTEM

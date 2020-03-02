@@ -142,7 +142,8 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
         return;
     }
 
-    bool open_popup_project = false;
+    bool open_save_popup = false;
+    bool open_load_popup = false;
     if (ImGui::BeginMenuBar()) {
 
         if (ImGui::BeginMenu("File")) {
@@ -159,28 +160,36 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
             }
 
 #ifdef GUI_USE_FILESYSTEM
-            // Load/save parameter values to LUA file
-            if (ImGui::MenuItem("Save Project", nullptr)) {
-                open_popup_project = true;
+            // Load project from LUA file
+            if (ImGui::MenuItem("Load Project", nullptr)) {
+                open_load_popup = true;
+            }
+
+            // Save currently active project to LUA file
+            if (ImGui::MenuItem("Save Project", nullptr, false, (this->graph_ptr != nullptr))) {
+                open_save_popup = true;
             }
 #endif // GUI_USE_FILESYSTEM
 
             ImGui::EndMenu();
         }
 
+        // Info text ----------------------------------------------------------
         ImGui::SameLine(260.0f);
-
-        // Info text for PROTOTYPE --------------------------------------------
         std::string label = "This is a PROTOTYPE. Changes will NOT effect the currently loaded MegaMol project.";
-        ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), label.c_str());
+        ImGui::TextColored(ImVec4(0.75f, 0.2f, 0.2f, 1.0f), label.c_str());
 
         ImGui::EndMenuBar();
     }
 
-    // SAVE PROJECT
+    // SAVE PROJECT pop-up
 #ifdef GUI_USE_FILESYSTEM
-    if (this->utils.SaveProjectFileBrowserDialog(open_popup_project, this->project_filename)) {
-        // Serialize project to file
+    if (this->utils.FileBrowserPopUp(
+            GUIUtils::FileBrowserFlag::LOAD, open_load_popup, "Load Project", this->project_filename)) {
+        this->graph_manager.LoadProjectFile(this->graph_ptr->GetUID(), this->project_filename, core_instance);
+    }
+    if (this->utils.FileBrowserPopUp(
+            GUIUtils::FileBrowserFlag::SAVE, open_save_popup, "Save Project", this->project_filename)) {
         this->graph_manager.SaveProjectFile(this->graph_ptr->GetUID(), this->project_filename, core_instance);
     }
 #endif // GUI_USE_FILESYSTEM

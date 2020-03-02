@@ -605,14 +605,14 @@ bool GUIWindows::createContext(void) {
             for (size_t i = 0; i < search_paths.Count(); ++i) {
                 std::wstring search_path(search_paths[i].PeekBuffer());
                 font_file = "Roboto-Regular.ttf";
-                font_path = SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
+                font_path = file::SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
                 if (!font_path.empty()) {
                     io.Fonts->AddFontFromFileTTF(font_path.c_str(), 12.0f, &config);
                     /// Set as default.
                     io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
                 }
                 font_file = "SourceCodePro-Regular.ttf";
-                font_path = SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
+                font_path = file::SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
                 if (!font_path.empty()) {
                     io.Fonts->AddFontFromFileTTF(font_path.c_str(), 13.0f, &config);
                     configurator_font = font_path;
@@ -1237,7 +1237,7 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
     ImGui::InputText(label.c_str(), &wc.buf_font_file, ImGuiInputTextFlags_AutoSelectAll);
     this->utils.Utf8Decode(wc.buf_font_file);
     // Validate font file before offering load button
-    if (HasExistingFileExtension<std::string>(wc.buf_font_file, std::string(".ttf"))) {
+    if (file::HasExistingFileExtension<std::string>(wc.buf_font_file, std::string(".ttf"))) {
         if (ImGui::Button("Add Font")) {
             this->state.font_file = wc.buf_font_file;
             this->state.font_size = wc.buf_font_size;
@@ -1399,19 +1399,20 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
         ImGui::EndPopup();
     }
 
-    // SAVE PROJECT
+    // SAVE PROJECT pop-up
 #ifdef GUI_USE_FILESYSTEM
     open_popup_project = (open_popup_project || std::get<1>(this->hotkeys[HotkeyIndex::SAVE_PROJECT]));
     if (open_popup_project) {
         std::get<1>(this->hotkeys[HotkeyIndex::SAVE_PROJECT]) = false;
     }
-    if (this->utils.SaveProjectFileBrowserDialog(open_popup_project, wc.main_project_file)) {
+    if (this->utils.FileBrowserPopUp(
+            GUIUtils::FileBrowserFlag::SAVE, open_popup_project, "Save Project", wc.main_project_file)) {
         // Serialize current state to parameter.
         std::string state;
         this->window_manager.StateToJSON(state);
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
         // Serialize project to file
-        SaveProjectFile(wc.main_project_file, this->core_instance);
+        file::SaveProjectFile(wc.main_project_file, this->core_instance);
     }
 #endif // GUI_USE_FILESYSTEM
 }
