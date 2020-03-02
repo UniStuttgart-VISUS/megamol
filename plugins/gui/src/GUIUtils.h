@@ -135,8 +135,14 @@ private:
     /** Current search string. */
     std::string search_string;
 
-    /** Current file path. */
-    std::string file_name;
+    /** File Browser */
+    std::string file_name_str;
+    std::string file_path_str;
+    size_t additional_lines;
+
+#ifdef GUI_USE_FILESYSTEM
+    bool splitPath(const fsns::path& in_file_path, std::string& out_path, std::string& out_file);
+#endif // GUI_USE_FILESYSTEM
 };
 
 

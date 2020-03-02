@@ -37,25 +37,14 @@ namespace file {
 
 
 /**
- * Check if given file or directory exists.
- *
- * @param path  The file or directory path.
- */
-template <typename T> inline bool PathExists(const T& path_str) {
-    auto path = static_cast<fsns::path>(path_str);
-    return fsns::exists(path);
-}
-
-
-/**
  * Check if file exists and has specified file extension.
  *
  * @param path  The file or directory path.
  * @param ext   The extension the given file should have.
  */
-template <typename T> inline bool HasExistingFileExtension(const T& path_str, const std::string& ext) {
+template <typename T> inline bool FilesExistingExtension(const T& path_str, const std::string& ext) {
     auto path = static_cast<fsns::path>(path_str);
-    if (!fsns::exists(path)) {
+    if (!fsns::exists(path) || !fsns::is_regular_file(path)) {
         return false;
     }
     return (path.extension().string() == ext);
@@ -68,7 +57,7 @@ template <typename T> inline bool HasExistingFileExtension(const T& path_str, co
  * @param path  The file or directory path.
  * @param ext   The extension the given file should have.
  */
-template <typename T> inline bool HasFileExtension(const T& path_str, const std::string& ext) {
+template <typename T> inline bool FileExtension(const T& path_str, const std::string& ext) {
     auto path = static_cast<fsns::path>(path_str);
     return (path.extension().string() == ext);
 }

@@ -1237,7 +1237,7 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
     ImGui::InputText(label.c_str(), &wc.buf_font_file, ImGuiInputTextFlags_AutoSelectAll);
     this->utils.Utf8Decode(wc.buf_font_file);
     // Validate font file before offering load button
-    if (file::HasExistingFileExtension<std::string>(wc.buf_font_file, std::string(".ttf"))) {
+    if (file::FilesExistingExtension<std::string>(wc.buf_font_file, std::string(".ttf"))) {
         if (ImGui::Button("Add Font")) {
             this->state.font_file = wc.buf_font_file;
             this->state.font_size = wc.buf_font_size;

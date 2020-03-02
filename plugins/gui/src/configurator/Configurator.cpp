@@ -182,7 +182,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
         ImGui::EndMenuBar();
     }
 
-    // SAVE PROJECT pop-up
+    // SAVE/LOAD PROJECT pop-up
 #ifdef GUI_USE_FILESYSTEM
     if (this->utils.FileBrowserPopUp(
             GUIUtils::FileBrowserFlag::LOAD, open_load_popup, "Load Project", this->project_filename)) {
