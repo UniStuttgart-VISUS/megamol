@@ -203,8 +203,8 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
             fsns::path file_path;
 
             const std::string ext = ".lua";
-            const auto error_color = ImVec4(0.9f, 0.2f, 0.2f, 1.0f);
-            const auto warning_color = ImVec4(0.9f, 0.9f, 0.2f, 1.0f);
+            const auto error_color = ImVec4(0.9f, 0.0f, 0.0f, 1.0f);
+            const auto warning_color = ImVec4(0.75f, 0.75f, 0.f, 1.0f);
             std::string error;
             std::string warning;
 
@@ -223,11 +223,11 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
                     valid_directory = true;
                 }
             } catch (std::filesystem::filesystem_error e) {
-                vislib::sys::Log::DefaultLog.WriteError(
-                    "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+                // vislib::sys::Log::DefaultLog.WriteError(
+                //    "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             } catch (std::exception e) {
-                vislib::sys::Log::DefaultLog.WriteError(
-                    "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+                // vislib::sys::Log::DefaultLog.WriteError(
+                //    "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             }
             if (!valid_directory) {
                 // Error when path is no valid directory
@@ -351,7 +351,7 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
                 // Validating selected name
                 if (!file::FileExtension<std::string>(this->file_name_str, ext)) {
                     // Error when file has not required extension
-                    error = "Require file with extension '" + ext + "'";
+                    error = "File with extension '" + ext + "' required.";
                     ImGui::TextColored(error_color, error.c_str());
                     this->additional_lines++;
                     valid_ending = false;
@@ -407,11 +407,10 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
-            "3 Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "3 Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
