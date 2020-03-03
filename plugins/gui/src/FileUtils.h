@@ -47,7 +47,7 @@ template <typename T> inline bool FilesExistingExtension(const T& path_str, cons
     if (!fsns::exists(path) || !fsns::is_regular_file(path)) {
         return false;
     }
-    return (path.extension().string() == ext);
+    return (path.extension().generic_u8string() == ext);
 }
 
 
@@ -59,7 +59,7 @@ template <typename T> inline bool FilesExistingExtension(const T& path_str, cons
  */
 template <typename T> inline bool FileExtension(const T& path_str, const std::string& ext) {
     auto path = static_cast<fsns::path>(path_str);
-    return (path.extension().string() == ext);
+    return (path.extension().generic_u8string() == ext);
 }
 
 
@@ -78,7 +78,7 @@ inline std::string SearchFileRecursive(const T& search_path_str, const S& search
     std::string found_path;
     for (const auto& entry : fsns::recursive_directory_iterator(search_path)) {
         if (entry.path().filename() == file_path) {
-            found_path = entry.path().string();
+            found_path = entry.path().generic_u8string();
             break;
         }
     }

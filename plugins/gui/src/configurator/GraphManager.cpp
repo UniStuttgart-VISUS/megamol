@@ -19,12 +19,14 @@ megamol::gui::configurator::GraphManager::GraphManager(void) : graphs(), modules
 megamol::gui::configurator::GraphManager::~GraphManager(void) {}
 
 
-bool megamol::gui::configurator::GraphManager::AddGraph(std::string name) {
+int megamol::gui::configurator::GraphManager::AddGraph(std::string name) {
 
+    int graph_id = GUI_INVALID_ID;
     Graph graph(name);
+    graph_id = graph.GetUID();
     this->graphs.emplace_back(std::make_shared<Graph>(graph));
 
-    return true;
+    return graph_id;
 }
 
 
@@ -58,7 +60,7 @@ const GraphManager::GraphPtrType megamol::gui::configurator::GraphManager::GetGr
         }
     }
     vislib::sys::Log::DefaultLog.WriteWarn(
-        "Invalif graph uid. Returning nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        "Invalid graph uid. Returning nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return nullptr;
 }
 
@@ -152,12 +154,11 @@ bool megamol::gui::configurator::GraphManager::UpdateModulesCallsStock(
             // Sorting module by alphabetically ascending class names.
             std::sort(this->modules_stock.begin(), this->modules_stock.end(),
                 [](Module::StockModule mod1, Module::StockModule mod2) {
-                    std::vector<std::string> v;
-                    v.clear();
-                    v.emplace_back(mod1.class_name);
-                    v.emplace_back(mod2.class_name);
-                    std::sort(v.begin(), v.end());
-                    return (v.front() != mod2.class_name);
+                    std::string a_str = mod1.class_name;
+                    for (auto& c : a_str) c = std::toupper(c);
+                    std::string b_str = mod2.class_name;
+                    for (auto& c : b_str) c = std::toupper(c);
+                    return (a_str < b_str);
                 });
         }
 
@@ -390,28 +391,95 @@ bool megamol::gui::configurator::GraphManager::LoadProjectFile(
     const std::string lua_call = "mmCreateCall";
 
     try {
+        std::stringstream constent(projectstr);
+        std::vector<std::string> lines;
 
-        // Scan line by line
-        std::stringstream ss(projectstr);
-        std::string line;
-        while (std::getline(ss, line, '\n')) {
-            // Check for view creation
+        // Prepare and read lines
+        std::string tmpline;
+        while (std::getline(constent, tmpline, '\n')) {
+            // Remove spaces
+            tmpline.erase(std::remove(tmpline.begin(), tmpline.end(), ' '), tmpline.end());
+            if (!tmpline.empty()) {
+                lines.emplace_back(tmpline);
+            }
+        }
+
+        // First find main view for graph creation and view creation.
+        bool found_main_view = false;
+        for (auto& line : lines) {
             if (line.rfind(lua_view, 0) == 0) {
 
-            } else if (line.rfind(lua_module, 0) == 0) {
+                std::vector<std::string> args;
+                if (!this->getLuaProjectCommandArguments(line, 3, args)) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        " Error parsing lua command '%s' requiring 3 arguments. [%s, %s, line %d]\n", lua_view.c_str(),
+                        __FILE__, __FUNCTION__, __LINE__);
+                    return false;
+                }
 
+                std::string view_instance = args[0];
+                std::string view_class_name = args[1];
+                std::string view_full_name = args[2];
+                std::string view_name = view_full_name;
+                size_t delimiter_index = view_name.find_last_of(':');
+                if (delimiter_index != std::string::npos) {
+                    view_name = view_name.substr(delimiter_index + 1);
+                }
+                if (view_name.empty()) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "Invalid empty view name argument (3rd) in lua command '%s'. [%s, %s, line %d]\n",
+                        lua_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                    return false;
+                }
 
-            } else if (line.rfind(lua_param, 0) == 0) {
+                // DEBUG
+                // vislib::sys::Log::DefaultLog.WriteError(
+                //    "Instance: '%s' Class: '%s' Full Name: '%s' Name: '%s' [%s, %s, line %d]\n",
+                //    view_instance.c_str(), view_class_name.c_str(), view_full_name.c_str(), view_name.c_str(),
+                //    __FILE__, __FUNCTION__,
+                //    __LINE__);
 
+                // Create new graph
+                int graph_id = this->AddGraph(view_instance);
+                if (graph_id == GUI_INVALID_ID) return false;
+                auto graph_ptr = this->GetGraph(graph_id);
+                if (graph_ptr == nullptr) return false;
 
-            } else if (line.rfind(lua_call, 0) == 0) {
+                // Add module and set as view instance
+                graph_ptr->AddModule(this->modules_stock, view_class_name);
+                auto graph_module = graph_ptr->GetGraphModules().back();
+                graph_module->name = view_name;
+                graph_module->full_name = view_full_name;
+                graph_module->is_view_instance = true;
+
+                found_main_view = true;
+            }
+        }
+        if (!found_main_view) {
+            vislib::sys::Log::DefaultLog.WriteError("Missing main view lua command '%s'. [%s, %s, line %d]\n",
+                project_filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        }
+
+        // Find and create modules
+        for (auto& line : lines) {
+            if (line.rfind(lua_module, 0) == 0) {
             }
         }
 
 
-        // if (!this->AddGraph()) return false;
+        /*
+        // Find and create calls and parameters
+        for (auto& line : lines) {
+             if (line.rfind(lua_param, 0) == 0) {
 
 
+            }
+            else if (line.rfind(lua_call, 0) == 0) {
+
+
+            }
+        }
+        */
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -826,4 +894,47 @@ bool megamol::gui::configurator::GraphManager::Presentation::close_unsaved_popup
     }
 
     return retval;
+}
+
+
+bool megamol::gui::configurator::GraphManager::getLuaProjectCommandArguments(
+    const std::string& line, size_t arg_count, std::vector<std::string>& out_args) {
+
+    std::string args_str = line;
+    out_args.clear();
+
+    // Searching for command delimiter
+    auto start = args_str.find_first_of('(');
+    auto end = args_str.find_last_of(')');
+    if ((start == std::string::npos) || (end == std::string::npos)) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            " Missing opening and/or closing bracket. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    args_str = args_str.substr(start + 1, (end - start) - 1);
+
+    // Removing string delimiters
+    args_str.erase(std::remove(args_str.begin(), args_str.end(), '"'), args_str.end());
+
+    // Getting arguments
+    size_t delimiter_index = std::string::npos;
+    for (size_t i = 0; i < (arg_count - 1); i++) {
+        delimiter_index = args_str.find_first_of(',');
+        if (delimiter_index == std::string::npos) {
+            vislib::sys::Log::DefaultLog.WriteError("Missing argument delimiter ',' number %i. [%s, %s, line %d]\n",
+                (i + 1), __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        out_args.emplace_back(args_str.substr(0, delimiter_index));
+        args_str = args_str.substr(delimiter_index + 1);
+    }
+    out_args.emplace_back(args_str.substr(0, delimiter_index));
+
+    if (out_args.size() != arg_count) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Argument count error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return true;
 }

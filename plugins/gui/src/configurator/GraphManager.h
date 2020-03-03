@@ -40,7 +40,7 @@ public:
 
     virtual ~GraphManager(void);
 
-    bool AddGraph(std::string name);
+    int AddGraph(std::string name);
     bool DeleteGraph(int graph_uid);
     const GraphManager::GraphsType& GetGraphs(void);
     const GraphPtrType GetGraph(int graph_uid);
@@ -99,6 +99,8 @@ private:
 
     bool get_module_stock_data(
         Module::StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
+
+    bool getLuaProjectCommandArguments(const std::string& line, size_t arg_count, std::vector<std::string>& out_args);
 
     // ------------------------------------------------------------------------
 };
