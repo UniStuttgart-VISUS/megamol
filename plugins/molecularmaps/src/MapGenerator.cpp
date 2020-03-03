@@ -144,6 +144,9 @@ MapGenerator::MapGenerator(void)
     this->blending.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->blending);
 
+    this->bufferIDs = nullptr;
+    this->bufferValues = nullptr;
+
     this->computeButton.SetParameter(new param::ButtonParam(view::Key::KEY_C));
     this->MakeSlotAvailable(&this->computeButton);
 
@@ -305,7 +308,7 @@ MapGenerator::MapGenerator(void)
     this->vertices_added = std::vector<uint>(0);
     this->vertices_added_tunnel_id = std::vector<uint>(0);
     this->vertices_rebuild = std::vector<float>(0);
-    this->vertices_rebuild_ids = std::vector<uint>(0);
+    this->vertices_rebuild_ids = std::vector<int>(0);
     this->vertices_sphere = std::vector<float>(0);
 
     this->voronoiNeeded = false;
@@ -330,6 +333,12 @@ MapGenerator::~MapGenerator(void) { this->Release(); }
 bool MapGenerator::create(void) {
     this->triMeshRenderer.create();
     this->voronoiCalc.create();
+
+    this->bufferIDs =
+        std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, std::vector<unsigned int>(), GL_DYNAMIC_DRAW);
+    this->bufferValues =
+        std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, std::vector<float>(), GL_DYNAMIC_DRAW);
+
     return true;
 }
 
@@ -1266,7 +1275,7 @@ void MapGenerator::depthFirstSearch(const size_t p_cur, const std::vector<Vorono
 void MapGenerator::drawMap(void) {
 
     // Enable FBO
-    this->map_fbo.Enable();
+    this->map_fbo.EnableMultiple(2, GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1);
     GLfloat bk_colour[4];
     glGetFloatv(GL_COLOR_CLEAR_VALUE, bk_colour);
     glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -1299,6 +1308,8 @@ void MapGenerator::drawMap(void) {
 
     // Render
     this->map_shader.Enable();
+    this->bufferIDs->bind(12);
+    this->bufferValues->bind(13);
     this->map_shader.SetParameter("sphere", this->sphere_data.GetX(), this->sphere_data.GetY(),
         this->sphere_data.GetZ(), this->sphere_data.GetW());
     this->map_shader.SetParameter("frontVertex", this->vertices_sphere[this->look_at_id * 3],
@@ -1592,19 +1603,19 @@ bool MapGenerator::fillLocalMesh(const CallTriMeshData::Mesh& mesh) {
     this->vertices_rebuild_ids.shrink_to_fit();
     std::iota(this->vertices_rebuild_ids.begin(), this->vertices_rebuild_ids.end(), 0);
 
-        // copy the vertex data
-        if (mesh.GetVertexDataType() == CallTriMeshData::Mesh::DT_FLOAT) {
+    this->bufferIDs->rebuffer(this->vertices_rebuild_ids);
+
+    // copy the vertex data
+    if (mesh.GetVertexDataType() == CallTriMeshData::Mesh::DT_FLOAT) {
         // float vertex data
         if (mesh.GetVertexPointerFloat() == nullptr) return false;
         std::copy(mesh.GetVertexPointerFloat(), mesh.GetVertexPointerFloat() + vertexCnt * 3, this->vertices.begin());
-    }
-    else if (mesh.GetVertexDataType() == CallTriMeshData::Mesh::DT_DOUBLE) {
+    } else if (mesh.GetVertexDataType() == CallTriMeshData::Mesh::DT_DOUBLE) {
         // double vertex data
         if (mesh.GetVertexPointerDouble() == nullptr) return false;
         std::transform(mesh.GetVertexPointerDouble(), mesh.GetVertexPointerDouble() + vertexCnt * 3,
             this->vertices.begin(), [](double v) { return static_cast<float>(v); });
-    }
-    else {
+    } else {
         return false;
     }
 
@@ -1672,6 +1683,22 @@ bool MapGenerator::fillLocalMesh(const CallTriMeshData::Mesh& mesh) {
     }
 
     return true;
+}
+
+/*
+ * MapGenerator::findValueAttributeIndex
+ */
+int MapGenerator::findValueAttributeIndex(const geocalls::CallTriMeshData::Mesh& mesh) {
+    auto attribcnt = mesh.GetVertexAttribCount();
+    // find float attribute
+    if (attribcnt != 0) {
+        for (int attribIdx = 0; attribIdx < attribcnt; ++attribIdx) {
+            if (mesh.GetVertexAttribDataType(attribIdx) == geocalls::CallTriMeshData::Mesh::DataType::DT_FLOAT) {
+                return attribIdx;
+            }
+        }
+    }
+    return -1;
 }
 
 
@@ -3373,7 +3400,7 @@ void MapGenerator::rebuildSurface(
     // Create vectors for the new surface.
     std::vector<float> new_colours, new_normals, new_vertices;
     std::vector<uint> new_faces;
-    std::vector<uint> old_ids;
+    std::vector<int> old_ids;
 
     // Create vectors to the old surface parameters.
     float* old_colours_ptr;
@@ -3570,6 +3597,8 @@ void MapGenerator::rebuildSurface(
     this->vertices_rebuild_ids = old_ids;
     this->vertices_rebuild_ids.shrink_to_fit();
 
+    this->bufferIDs->rebuffer(this->vertices_rebuild_ids);
+
     // Delete temporary vectors.
     new_colours.erase(new_colours.begin(), new_colours.end());
     new_colours.clear();
@@ -3619,6 +3648,7 @@ void MapGenerator::rebuildSurface(
  * MapGenerator::Render
  */
 bool MapGenerator::Render(Call& call) {
+
     // Check if we need to reload the shaders.
     bool shaderReloaded = false;
     if (this->shaderReloadButtonParam.IsDirty()) {
@@ -3734,6 +3764,7 @@ bool MapGenerator::Render(Call& call) {
         prev_file_path.Append(_T(".png"));
         this->store_png_path.Param<param::FilePathParam>()->SetValue(prev_file_path, false);
 
+        prev_file_path.Clear();
         if (this->store_png_values_path.IsDirty()) {
             prev_file_path = this->store_png_values_path.Param<param::FilePathParam>()->Value();
             this->store_png_values_path.ResetDirty();
@@ -3979,6 +4010,20 @@ bool MapGenerator::Render(Call& call) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "The mesh input data is empty!");
             return false;
         }
+
+        auto attribIdx = this->findValueAttributeIndex(ctmd->Objects()[0]);
+        if (attribIdx >= 0) {
+            auto vertCnt = ctmd->Objects()[0].GetVertexCount();
+            this->bufferMinMax =
+                std::make_pair(std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest());
+            for (size_t i = 0; i < vertCnt; ++i) {
+                auto val = ctmd->Objects()[0].GetVertexAttribPointerFloat(attribIdx)[i];
+                if (val < this->bufferMinMax.first) this->bufferMinMax.first = val;
+                if (val > this->bufferMinMax.second) this->bufferMinMax.second = val;
+            }
+            this->bufferValues->rebuffer(
+                ctmd->Objects()[0].GetVertexAttribPointerFloat(attribIdx), vertCnt * sizeof(float));
+        }
     }
 
     // Update the voronoi diagram filtering when the probe radius changes
@@ -3994,8 +4039,8 @@ bool MapGenerator::Render(Call& call) {
         bool writeValues = this->writeValueImageParam.Param<param::BoolParam>()->Value();
 
         // resize the values fbo if needed
-        if (!this->store_png_values_fbo.IsValid()) {
-            this->store_png_values_fbo.Release();
+        if (!this->store_png_fbo.IsValid()) {
+            this->store_png_fbo.Release();
 
             uint width = 1500 + static_cast<uint>(this->sphere_data.GetW() * 10.0f);
             uint diff = width - ((width / 100) * 100);
@@ -4022,12 +4067,18 @@ bool MapGenerator::Render(Call& call) {
             sap.format = GL_STENCIL_INDEX;
             sap.state = vislib::graphics::gl::FramebufferObject::ATTACHMENT_DISABLED;
 
-            this->store_png_values_fbo.Create(width, height, 2, colorAttachments.data(), dap, sap);
+            this->store_png_fbo.Create(width, height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+        }
+
+        if (!this->store_values_fbo.IsValid() || this->store_values_fbo.GetWidth() != this->store_png_fbo.GetWidth() ||
+            this->store_values_fbo.GetHeight() != this->store_png_fbo.GetHeight()) {
+
+            this->store_values_fbo.Create(
+                this->store_png_fbo.GetWidth(), this->store_png_fbo.GetHeight(), GL_R32F, GL_RED, GL_FLOAT);
         }
 
         // Render the map to the fbo and write the content to a file.
-        this->store_png_values_fbo.EnableMultiple(2, GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1);
-        // this->store_png_values_fbo.Enable();
+        this->store_png_fbo.Enable();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         drawMap();
         if (this->lat_lon_lines_param.Param<param::BoolParam>()->Value()) {
@@ -4058,7 +4109,7 @@ bool MapGenerator::Render(Call& call) {
             // Set the 2D orthographic projection.
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();
-            glOrtho(0, this->store_png_values_fbo.GetWidth(), this->store_png_values_fbo.GetHeight(), 0, -1.0, 1.0);
+            glOrtho(0, this->store_png_fbo.GetWidth(), this->store_png_fbo.GetHeight(), 0, -1.0, 1.0);
 
             // Reset the modelview matrix
             glMatrixMode(GL_MODELVIEW);
@@ -4066,27 +4117,26 @@ bool MapGenerator::Render(Call& call) {
 
             // Render the text.
             glColor3f(1.0f, 0.0f, 0.0f);
-            float font_size = static_cast<float>(this->store_png_values_fbo.GetWidth() - 1200) / 100.0f * 3.0f;
+            float font_size = static_cast<float>(this->store_png_fbo.GetWidth() - 1200) / 100.0f * 3.0f;
             float text_len = this->store_png_font.LineWidth(font_size, text) + font_size;
-            float x = this->store_png_values_fbo.GetWidth() - text_len;
-            float y = this->store_png_values_fbo.GetHeight() - font_size;
+            float x = this->store_png_fbo.GetWidth() - text_len;
+            float y = this->store_png_fbo.GetHeight() - font_size;
             this->store_png_font.DrawString(
                 x, y, text_len, -1.0f, font_size, false, text, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
         }
-        this->store_png_values_fbo.Disable();
-        this->store_png_values_fbo.DrawColourTexture(0, GL_LINEAR, GL_LINEAR, 0.9f);
-        this->store_png_data.SetCount(
-            this->store_png_values_fbo.GetWidth() * this->store_png_values_fbo.GetHeight() * 3);
-        this->store_png_values_fbo.GetColourTexture(&this->store_png_data[0], 0, GL_RGB, GL_UNSIGNED_BYTE);
+        this->store_png_fbo.Disable();
+        this->store_png_fbo.DrawColourTexture(0, GL_LINEAR, GL_LINEAR, 0.9f);
+        this->store_png_data.SetCount(this->store_png_fbo.GetWidth() * this->store_png_fbo.GetHeight() * 3);
+        this->store_png_fbo.GetColourTexture(&this->store_png_data[0], 0, GL_RGB, GL_UNSIGNED_BYTE);
 
         if (writeValues) {
             this->writeValueImage(
                 this->store_png_values_path.Param<param::FilePathParam>()->Value(), *ctmd, this->store_png_data);
         }
 
-        this->store_png_image.Image() = new vislib::graphics::BitmapImage(this->store_png_values_fbo.GetWidth(),
-            this->store_png_values_fbo.GetHeight(), 3U, vislib::graphics::BitmapImage::CHANNELTYPE_BYTE,
-            static_cast<const void*>(&this->store_png_data[0]));
+        this->store_png_image.Image() =
+            new vislib::graphics::BitmapImage(this->store_png_fbo.GetWidth(), this->store_png_fbo.GetHeight(), 3U,
+                vislib::graphics::BitmapImage::CHANNELTYPE_BYTE, static_cast<const void*>(&this->store_png_data[0]));
         this->store_png_image.Image()->FlipVertical();
         if (this->store_png_image.Save(T2A(this->store_png_path.Param<param::FilePathParam>()->Value()))) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
@@ -4284,7 +4334,6 @@ bool MapGenerator::Render(Call& call) {
     glEnable(GL_CULL_FACE);
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_NORMAL_ARRAY);
-    glDisable(GL_POINT_SIZE);
     glEnable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
 
@@ -4663,29 +4712,66 @@ void MapGenerator::writeValueImage(const vislib::TString& path_to_image, const g
 
     auto attribcnt = ctmd.Objects()[0].GetVertexAttribCount();
     // find float attribute
-    bool found = false;
-    unsigned int attribIdx;
-    if (attribcnt != 0) {
-        for (attribIdx = 0; attribIdx < attribcnt; ++attribIdx) {
-            if (ctmd.Objects()[0].GetVertexAttribDataType(attribIdx) ==
-                geocalls::CallTriMeshData::Mesh::DataType::DT_FLOAT) {
-                found = true;
-                break;
-            }
-        }
-    }
+    int attribIdx = this->findValueAttributeIndex(ctmd.Objects()[0]);
+    bool found = attribIdx >= 0 ? true : false;
 
     if (!found) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Impossible to write value image due to missing values in the mesh call");
-    } else {
+        return;
+    }
+
+#if 0
+    else {
         auto valptr = ctmd.Objects()[0].GetVertexAttribPointerFloat(attribIdx);
         auto vertCnt = ctmd.Objects()[0].GetVertexCount();
         for (uint32_t i = 0; i < vertCnt; i++) {
             // std::cout << valptr[i] << std::endl;
         }
     }
+#endif
 
+    this->store_values_fbo.Enable();
+    this->map_fbo.DrawColourTexture(0, GL_LINEAR, GL_LINEAR, 0.9);
+    this->store_values_fbo.Disable();
+
+    std::vector<float> texture(this->store_values_fbo.GetWidth() * this->store_values_fbo.GetHeight());
+    std::vector<float> textureold(this->map_fbo.GetWidth() * this->map_fbo.GetHeight());
+    this->store_values_fbo.GetColourTexture(&texture[0], 0, GL_RED, GL_FLOAT);
+    this->map_fbo.GetColourTexture(&textureold[0], 1, GL_RED, GL_FLOAT);
+
+    auto minmax = std::minmax_element(textureold.begin(), textureold.end());
+    auto minmax2 = std::minmax_element(texture.begin(), texture.end());
+    float minalpha = (this->bufferMinMax.first - *minmax.first) / (*minmax.second - *minmax.first);
+    for (auto& v : texture) { // pull everything up
+        if (v < minalpha) {
+            v = minalpha;
+        }
+    }
+
+    this->store_values_image.Image() =
+        new vislib::graphics::BitmapImage(this->store_values_fbo.GetWidth(), this->store_values_fbo.GetHeight(), 1U,
+            vislib::graphics::BitmapImage::CHANNELTYPE_FLOAT, static_cast<const void*>(texture.data()));
+    this->store_values_image.Image()->FlipVertical();
+    auto data = this->store_values_image.Image()->PeekDataAs<float>();
+    std::vector<float> newvalues(texture.size());
+    std::copy(data, data + texture.size(), newvalues.begin());
+    delete this->store_png_image.Image();
+    for (auto& v : newvalues) {
+        v = glm::mix(*minmax.first, *minmax.second, v);
+    }
+
+    std::string path = T2A(path_to_image).PeekBuffer();
+    std::ofstream file(path, std::ios::binary);
+
+    if (file.is_open()) {
+        file.write(reinterpret_cast<const char*>(newvalues.data()), newvalues.size() * sizeof(float));
+        vislib::sys::Log::DefaultLog.WriteInfo("Successfully wrote values to file \"%s\"", path.c_str());
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError("Error while writing values to file \"%s\"", path.c_str());
+    }
+
+#if 0 // this is part of the code that is used for the infamous cel-shading effect. Do not remove
     float minVal, maxVal;
     glm::vec3 minColor, midColor, maxColor;
     bool hasMidColor = ctmd.GetColorBounds(minVal, maxVal, minColor, midColor, maxColor);
@@ -4736,7 +4822,5 @@ void MapGenerator::writeValueImage(const vislib::TString& path_to_image, const g
         }
         // std::cout << valueVec[i] << " for " << colfloat.r << " " << colfloat.g << " " << colfloat.b << std::endl;
     }
-    // std::cout << "NoneCounter " << noneCounter << std::endl;
-
-    // TODO write valueVec
+#endif
 }

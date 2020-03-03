@@ -29,6 +29,8 @@
 #include "TriangleMeshRenderer.h"
 #include "VoronoiChannelCalculator.h"
 
+#include "glowl/BufferObject.hpp"
+
 #include <filesystem>
 
 namespace megamol {
@@ -275,6 +277,14 @@ private:
      *	@return True on success. False otherwise.
      */
     bool fillLocalMesh(const geocalls::CallTriMeshData::Mesh& mesh);
+
+    /**
+     * Queries the index of the value attribute from a given mesh
+     *
+     * @param mesh The mesh to query the index from.
+     * @return The queried index or -1 if it does not exist.
+     */
+    int findValueAttributeIndex(const geocalls::CallTriMeshData::Mesh& mesh);
 
     /**
      * Determine the boundary meridian of the protein. And set the types
@@ -662,6 +672,15 @@ private:
     /** Flag whether or not use lighting for the surface */
     core::param::ParamSlot blending;
 
+    /** SSBO for the ids */
+    std::unique_ptr<glowl::BufferObject> bufferIDs;
+
+    /** SSBO for the buffers */
+    std::unique_ptr<glowl::BufferObject> bufferValues;
+
+    /** min and max values of the buffer */
+    std::pair<float, float> bufferMinMax;
+
     /** Button parameter that triggers the computation */
     core::param::ParamSlot computeButton;
 
@@ -839,11 +858,17 @@ private:
     /** The image itself that is stored. */
     sg::graphics::PngBitmapCodec store_png_image;
 
+    /** The values image that is stored */
+    sg::graphics::PngBitmapCodec store_values_image;
+
     /** The path to which the image is stored. */
     core::param::ParamSlot store_png_path;
 
-    /** The fbo that is used to render the values image */
-    vislib::graphics::gl::FramebufferObject store_png_values_fbo;
+    /** The fbo that is used to render the map image */
+    vislib::graphics::gl::FramebufferObject store_png_fbo;
+
+    /** The fbo that is used to render the value image */
+    vislib::graphics::gl::FramebufferObject store_values_fbo;
 
     /** The path to which the values image is stored */
     core::param::ParamSlot store_png_values_path;
@@ -897,7 +922,7 @@ private:
     std::vector<float> vertices_rebuild;
 
     /** Old ids of the rebuild vertices */
-    std::vector<uint> vertices_rebuild_ids;
+    std::vector<int> vertices_rebuild_ids;
 
     /** Sphere vertices */
     std::vector<float> vertices_sphere;
