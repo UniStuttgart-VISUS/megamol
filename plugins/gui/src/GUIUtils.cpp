@@ -191,13 +191,12 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
                 file_path = fsns::current_path();
             }
             this->splitPath(file_path, this->file_path_str, this->file_name_str);
-            vislib::sys::Log::DefaultLog.WriteError("PATH: %s NAME: %s [%s, %s, line %d]\n",
-                this->file_path_str.c_str(), this->file_name_str.c_str(), __FILE__, __FUNCTION__, __LINE__);
 
             ImGui::OpenPopup(popup_name.c_str());
             // Set initial window size of pop up
             ImGui::SetNextWindowSize(ImVec2(600.0f, 300.0f));
         }
+
         bool open = true;
         if (ImGui::BeginPopupModal(popup_name.c_str(), &open, ImGuiWindowFlags_None)) {
 
@@ -206,67 +205,86 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
             const std::string ext = ".lua";
             const auto error_color = ImVec4(0.9f, 0.2f, 0.2f, 1.0f);
             const auto warning_color = ImVec4(0.9f, 0.9f, 0.2f, 1.0f);
+            std::string error;
+            std::string warning;
 
             ImGuiStyle& style = ImGui::GetStyle();
 
             // Path ---------------------------------------------------
-            bool valid_directory = true;
+            bool valid_directory = false;
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             this->Utf8Encode(this->file_path_str);
             ImGui::InputText("Directory", &this->file_path_str, ImGuiInputTextFlags_AutoSelectAll);
             this->Utf8Decode(this->file_path_str);
             // Validating directory
-            if (!fsns::is_directory(static_cast<fsns::path>(this->file_path_str))) {
+            try {
+                file_path = static_cast<fsns::path>(this->file_path_str);
+                if (fsns::status_known(fsns::status(file_path)) && fsns::is_directory(file_path)) {
+                    valid_directory = true;
+                }
+            } catch (std::filesystem::filesystem_error e) {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            } catch (std::exception e) {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            }
+            if (!valid_directory) {
                 // Error when path is no valid directory
-                ImGui::TextColored(error_color, "Invalid Directory");
-                valid_directory = false;
+                error = "Invalid Directory";
+                ImGui::TextColored(error_color, error.c_str());
             }
 
             // File browser selectables ---------------------------------------
-            auto select_flags = ImGuiSelectableFlags_DontClosePopups;
 
+            auto select_flags = ImGuiSelectableFlags_DontClosePopups;
             float child_select_height =
                 (ImGui::GetContentRegionAvail().y - (ImGui::GetTextLineHeightWithSpacing() * this->additional_lines) -
                     ImGui::GetItemsLineHeightWithSpacing() * 2.0f);
             this->additional_lines = 0;
 
-            /*
-            // Drives -------------------------------
-            ImGui::BeginChild("drive_list_child_window", ImVec2(100.0f, child_select_height), true,
-            ImGuiWindowFlags_None);
-
-
-            for (const auto& entry : fsns::directory_iterator()) {
-                auto path = entry.path();
-                if (ImGui::Selectable(path.string().c_str(), false, select_flags)) {
-                    file_path = path;
-                }
-            }
-
-            ImGui::EndChild();
-            ImGui::SameLine();
-            */
-
             // Files and directories ----------------
             ImGui::BeginChild(
                 "files_list_child_window", ImVec2(0.0f, child_select_height), true, ImGuiWindowFlags_None);
 
-            file_path = static_cast<fsns::path>(this->file_path_str);
-            std::string tag_parent = "..";
-            if (ImGui::Selectable(tag_parent.c_str(), false, select_flags)) {
-                if (file_path.has_parent_path()) {
-                    this->file_path_str = file_path.parent_path().string();
-                }
-            }
-            file_path = static_cast<fsns::path>(this->file_path_str);
             if (valid_directory) {
-                for (const auto& entry : fsns::directory_iterator(file_path)) {
-                    auto label = entry.path().filename().string();
+
+                // Parent directory selectable
+                std::string tag_parent = "..";
+                if (ImGui::Selectable(tag_parent.c_str(), false, select_flags)) {
+                    if (file_path.has_parent_path()) {
+                        this->file_path_str = file_path.parent_path().generic_u8string();
+                    }
+                }
+
+                std::vector<fsns::path> paths;
+                std::copy(fsns::directory_iterator(file_path), fsns::directory_iterator(), std::back_inserter(paths));
+
+                // Sort path case insensitive alphabetically ascending
+                std::sort(paths.begin(), paths.end(), [](fsns::path const& a, fsns::path const& b) {
+                    std::string a_str = a.filename().generic_u8string();
+                    for (auto& c : a_str) c = std::toupper(c);
+                    std::string b_str = b.filename().generic_u8string();
+                    for (auto& c : b_str) c = std::toupper(c);
+                    return (a_str < b_str);
+                });
+
+                // Files and directories of current directory
+                for (const auto& path : paths) {
+                    // Different color for directories
+                    if (fsns::is_directory(path)) {
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+                    }
+                    auto label = path.filename().generic_u8string();
                     if (ImGui::Selectable(label.c_str(), (label == this->file_name_str), select_flags)) {
-                        this->splitPath(entry.path(), this->file_path_str, this->file_name_str);
+                        this->splitPath(path, this->file_path_str, this->file_name_str);
+                    }
+                    if (fsns::is_directory(path)) {
+                        ImGui::PopStyleColor();
                     }
                 }
             }
+
             ImGui::EndChild();
 
             /// Errors and warnings ...
@@ -288,15 +306,17 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
                     apply = true;
                 }
                 this->Utf8Decode(this->file_name_str);
+
                 // Validating file name
                 if (this->file_name_str.empty()) {
-                    ImGui::TextColored(error_color, "Enter file name.");
+                    error = "Enter file name.";
+                    ImGui::TextColored(error_color, error.c_str());
                     this->additional_lines++;
                     valid_file = false;
                 } else {
                     if (!file::FileExtension<std::string>(this->file_name_str, ext)) {
                         // Warn when file has not required extension
-                        std::string warning = "Appending required file extension '" + ext + "'";
+                        warning = "Appending required file extension '" + ext + "'";
                         ImGui::TextColored(warning_color, warning.c_str());
                         this->additional_lines++;
                         valid_ending = false;
@@ -308,16 +328,34 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
                     file_path = static_cast<fsns::path>(this->file_path_str) / static_cast<fsns::path>(actual_filename);
                     if (fsns::exists(file_path) && fsns::is_regular_file(file_path)) {
                         // Warn when file already exists
-                        std::string warning = "Overwriting existing file.";
+                        warning = "Overwriting existing file.";
                         ImGui::TextColored(warning_color, warning.c_str());
                         this->additional_lines++;
                     }
                     if (fsns::is_directory(file_path)) {
                         // Error when file is directory
-                        ImGui::TextColored(error_color, "File is directory.");
+                        error = "File is directory.";
+                        ImGui::TextColored(error_color, error.c_str());
                         this->additional_lines++;
                         valid_file = false;
                     }
+                }
+            } else if (flag == GUIUtils::FileBrowserFlag::LOAD) {
+                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+                /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+                this->Utf8Encode(this->file_name_str);
+                ImGui::InputText("File Name", &this->file_name_str);
+                this->Utf8Decode(this->file_name_str);
+                ImGui::PopItemFlag();
+
+                // Validating selected name
+                if (!file::FileExtension<std::string>(this->file_name_str, ext)) {
+                    // Error when file has not required extension
+                    error = "Require file with extension '" + ext + "'";
+                    ImGui::TextColored(error_color, error.c_str());
+                    this->additional_lines++;
+                    valid_ending = false;
+                    valid_file = false;
                 }
             }
 
@@ -329,9 +367,18 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
             } else if (flag == GUIUtils::FileBrowserFlag::LOAD) {
                 label = "Load";
             }
+            const auto err_btn_color = ImVec4(0.6f, 0.0f, 0.0f, 1.0f);
+            const auto er_btn_hov_color = ImVec4(0.9f, 0.0f, 0.0f, 1.0f);
+            ImGui::PushStyleColor(
+                ImGuiCol_Button, !(valid_directory && valid_file) ? err_btn_color : style.Colors[ImGuiCol_Button]);
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+                !(valid_directory && valid_file) ? er_btn_hov_color : style.Colors[ImGuiCol_ButtonHovered]);
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
             if (ImGui::Button(label.c_str())) {
                 apply = true;
             }
+            ImGui::PopStyleColor(3);
+
             ImGui::SameLine();
             // ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - cancel_button_width);
             if (ImGui::Button("Cancel")) {
@@ -344,13 +391,8 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
                 if (!valid_ending) {
                     this->file_name_str.append(ext);
                 }
-
-                /// DEBUG
                 file_path = static_cast<fsns::path>(this->file_path_str) / static_cast<fsns::path>(this->file_name_str);
-                vislib::sys::Log::DefaultLog.WriteError(
-                    "FILE: %s [%s, %s, line %d]\n", file_path.string().c_str(), __FILE__, __FUNCTION__, __LINE__);
-
-                inout_filename = file_path.string();
+                inout_filename = file_path.generic_u8string();
                 ImGui::CloseCurrentPopup();
                 retval = true;
             }
@@ -365,10 +407,11 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "3 Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        vislib::sys::Log::DefaultLog.WriteError(
+            "3 Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -380,13 +423,13 @@ bool megamol::gui::GUIUtils::splitPath(const fsns::path& in_file_path, std::stri
 
     if (fsns::is_regular_file(in_file_path)) {
         if (in_file_path.has_parent_path()) {
-            out_path = in_file_path.parent_path().string();
+            out_path = in_file_path.parent_path().generic_u8string();
         }
         if (in_file_path.has_filename()) {
-            out_file = in_file_path.filename().string();
+            out_file = in_file_path.filename().generic_u8string();
         }
     } else {
-        out_path = in_file_path.string();
+        out_path = in_file_path.generic_u8string();
         out_file.clear();
     }
     return true;

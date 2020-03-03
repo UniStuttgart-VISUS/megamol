@@ -152,12 +152,11 @@ bool megamol::gui::configurator::GraphManager::UpdateModulesCallsStock(
             // Sorting module by alphabetically ascending class names.
             std::sort(this->modules_stock.begin(), this->modules_stock.end(),
                 [](Module::StockModule mod1, Module::StockModule mod2) {
-                    std::vector<std::string> v;
-                    v.clear();
-                    v.emplace_back(mod1.class_name);
-                    v.emplace_back(mod2.class_name);
-                    std::sort(v.begin(), v.end());
-                    return (v.front() != mod2.class_name);
+                    std::string a_str = mod1.class_name;
+                    for (auto& c : a_str) c = std::toupper(c);
+                    std::string b_str = mod2.class_name;
+                    for (auto& c : b_str) c = std::toupper(c);
+                    return (a_str < b_str);
                 });
         }
 

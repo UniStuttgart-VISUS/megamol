@@ -416,17 +416,16 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParamter) 
     bool apply_changes = false;
 
     // Return true for current changes being applied
-    ImGui::PushID("Apply_");
+    const auto err_btn_color = ImVec4(0.6f, 0.0f, 0.0f, 1.0f);
+    const auto er_btn_hov_color = ImVec4(0.9f, 0.0f, 0.0f, 1.0f);
+    ImGui::PushStyleColor(ImGuiCol_Button, this->pendingChanges ? err_btn_color : style.Colors[ImGuiCol_Button]);
     ImGui::PushStyleColor(
-        ImGuiCol_Button, this->pendingChanges ? ImVec4(0.6f, 0.0f, 0.0f, 1.0f) : style.Colors[ImGuiCol_Button]);
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-        this->pendingChanges ? ImVec4(0.9f, 0.0f, 0.0f, 1.0f) : style.Colors[ImGuiCol_ButtonHovered]);
+        ImGuiCol_ButtonHovered, this->pendingChanges ? er_btn_hov_color : style.Colors[ImGuiCol_ButtonHovered]);
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
     if (ImGui::Button("Apply")) {
         apply_changes = true;
     }
     ImGui::PopStyleColor(3);
-    ImGui::PopID();
 
     ImGui::SameLine();
 
