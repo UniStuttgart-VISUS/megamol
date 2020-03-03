@@ -222,7 +222,7 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
                 if (fsns::status_known(fsns::status(file_path)) && fsns::is_directory(file_path)) {
                     valid_directory = true;
                 }
-            } catch (std::filesystem::filesystem_error e) {
+            } catch (fsns::filesystem_error e) {
                 // vislib::sys::Log::DefaultLog.WriteError(
                 //    "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             } catch (std::exception e) {
