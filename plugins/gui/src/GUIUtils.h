@@ -24,6 +24,7 @@
 #include <cctype>    // toupper
 #include <string>
 #include <tuple>
+#include <utility>
 
 /// CMake exeption for the cluster "stampede2" running CentOS. (C++ filesystem support is not working?)
 #ifdef GUI_USE_FILESYSTEM
@@ -135,13 +136,26 @@ private:
     /** Current search string. */
     std::string search_string;
 
-    /** File Browser */
+#ifdef GUI_USE_FILESYSTEM
+    /** File Browser Stuff */
+
     std::string file_name_str;
     std::string file_path_str;
+    bool path_changed;
+    bool valid_directory;
+    bool valid_file;
+    bool valid_ending;
+    std::string file_error;
+    std::string file_warning;
+    // Keeps child path and flag whether child is director or not
+    typedef std::pair<fsns::path, bool> ChildDataType;
+    std::vector<ChildDataType> child_paths;
     size_t additional_lines;
 
-#ifdef GUI_USE_FILESYSTEM
     bool splitPath(const fsns::path& in_file_path, std::string& out_path, std::string& out_file);
+    void validateDirectory(const std::string& path_str);
+    void validateFile(const std::string& file_str, GUIUtils::FileBrowserFlag flag);
+
 #endif // GUI_USE_FILESYSTEM
 };
 

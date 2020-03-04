@@ -40,7 +40,7 @@ public:
 
     virtual ~GraphManager(void);
 
-    int AddGraph(std::string name);
+    bool AddGraph(std::string name);
     bool DeleteGraph(int graph_uid);
     const GraphManager::GraphsType& GetGraphs(void);
     const GraphPtrType GetGraph(int graph_uid);

@@ -19,14 +19,21 @@ megamol::gui::configurator::GraphManager::GraphManager(void) : graphs(), modules
 megamol::gui::configurator::GraphManager::~GraphManager(void) {}
 
 
-int megamol::gui::configurator::GraphManager::AddGraph(std::string name) {
+bool megamol::gui::configurator::GraphManager::AddGraph(std::string name) {
 
-    int graph_id = GUI_INVALID_ID;
-    Graph graph(name);
-    graph_id = graph.GetUID();
-    this->graphs.emplace_back(std::make_shared<Graph>(graph));
+    try {
+        Graph graph(name);
+        this->graphs.emplace_back(std::make_shared<Graph>(graph));
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
 
-    return graph_id;
+    return true;
 }
 
 
@@ -35,12 +42,14 @@ bool megamol::gui::configurator::GraphManager::DeleteGraph(int graph_uid) {
     for (auto iter = this->graphs.begin(); iter != this->graphs.end(); iter++) {
         if ((*iter)->GetUID() == graph_uid) {
 
-            vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to graph. [%s, %s, line %d]\n",
-                (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+            // vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to graph. [%s, %s, line %d]\n",
+            //    (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
             assert((*iter).use_count() == 1);
-
             (*iter) = nullptr;
             this->graphs.erase(iter);
+            // vislib::sys::Log::DefaultLog.WriteInfo("Deleted graph: %s [%s, %s, line %d]\n",
+            //    (*iter)->GetName().c_str(), __FILE__, __FUNCTION__, __LINE__);
+
             return true;
         }
     }
@@ -59,8 +68,8 @@ const GraphManager::GraphPtrType megamol::gui::configurator::GraphManager::GetGr
             return (*iter);
         }
     }
-    vislib::sys::Log::DefaultLog.WriteWarn(
-        "Invalid graph uid. Returning nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    // vislib::sys::Log::DefaultLog.WriteWarn(
+    //    "Invalid graph uid. Returning nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return nullptr;
 }
 
@@ -298,7 +307,7 @@ bool megamol::gui::configurator::GraphManager::LoadCurrentCoreProject(
                                 param.SetMaxValue(glm::vec4(max.X(), max.Y(), max.Z(), max.W()));
                             } else {
                                 vislib::sys::Log::DefaultLog.WriteError(
-                                    "Found unknown parameter type. Please extend parameter types in the configurator. "
+                                    "Found unknown parameter type. Please extend parameter types for the configurator. "
                                     "[%s, %s, line %d]\n",
                                     __FILE__, __FUNCTION__, __LINE__);
                             }
@@ -409,11 +418,12 @@ bool megamol::gui::configurator::GraphManager::LoadProjectFile(
         for (auto& line : lines) {
             if (line.rfind(lua_view, 0) == 0) {
 
+                size_t arg_count = 3;
                 std::vector<std::string> args;
-                if (!this->getLuaProjectCommandArguments(line, 3, args)) {
+                if (!this->getLuaProjectCommandArguments(line, arg_count, args)) {
                     vislib::sys::Log::DefaultLog.WriteError(
-                        " Error parsing lua command '%s' requiring 3 arguments. [%s, %s, line %d]\n", lua_view.c_str(),
-                        __FILE__, __FUNCTION__, __LINE__);
+                        " Error parsing lua command '%s' requiring %i arguments. [%s, %s, line %d]\n", lua_view.c_str(),
+                        arg_count, __FILE__, __FUNCTION__, __LINE__);
                     return false;
                 }
 
@@ -427,26 +437,34 @@ bool megamol::gui::configurator::GraphManager::LoadProjectFile(
                 }
                 if (view_name.empty()) {
                     vislib::sys::Log::DefaultLog.WriteError(
-                        "Invalid empty view name argument (3rd) in lua command '%s'. [%s, %s, line %d]\n",
-                        lua_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        "Invalid view name argument (3rd) in lua command '%s'. [%s, %s, line %d]\n", lua_view.c_str(),
+                        __FILE__, __FUNCTION__, __LINE__);
                     return false;
                 }
 
-                // DEBUG
-                // vislib::sys::Log::DefaultLog.WriteError(
-                //    "Instance: '%s' Class: '%s' Full Name: '%s' Name: '%s' [%s, %s, line %d]\n",
+                // vislib::sys::Log::DefaultLog.WriteInfo(
+                //    ">>>> Instance: '%s' Class: '%s' Full Name: '%s' Name: '%s' [%s, %s, line %d]\n",
                 //    view_instance.c_str(), view_class_name.c_str(), view_full_name.c_str(), view_name.c_str(),
-                //    __FILE__, __FUNCTION__,
-                //    __LINE__);
+                //    __FILE__,
+                //    __FUNCTION__, __LINE__);
 
                 // Create new graph
-                int graph_id = this->AddGraph(view_instance);
-                if (graph_id == GUI_INVALID_ID) return false;
-                auto graph_ptr = this->GetGraph(graph_id);
+                if (!this->AddGraph(view_instance)) {
+                    vislib::sys::Log::DefaultLog.WriteError("Unable to create new graph '%s'. [%s, %s, line %d]\n",
+                        view_instance.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                    return false;
+                }
+
+                // Get last added graph
+                auto graph_ptr = this->GetGraphs().back();
                 if (graph_ptr == nullptr) return false;
 
                 // Add module and set as view instance
-                graph_ptr->AddModule(this->modules_stock, view_class_name);
+                if (!graph_ptr->AddModule(this->modules_stock, view_class_name)) {
+                    vislib::sys::Log::DefaultLog.WriteError("Unable to add new module '%s'. [%s, %s, line %d]\n",
+                        lua_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                    return false;
+                }
                 auto graph_module = graph_ptr->GetGraphModules().back();
                 graph_module->name = view_name;
                 graph_module->full_name = view_full_name;
@@ -463,23 +481,63 @@ bool megamol::gui::configurator::GraphManager::LoadProjectFile(
         // Find and create modules
         for (auto& line : lines) {
             if (line.rfind(lua_module, 0) == 0) {
+
+                size_t arg_count = 2;
+                std::vector<std::string> args;
+                if (!this->getLuaProjectCommandArguments(line, arg_count, args)) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        " Error parsing lua command '%s' requiring %i arguments. [%s, %s, line %d]\n",
+                        lua_module.c_str(), arg_count, __FILE__, __FUNCTION__, __LINE__);
+                    return false;
+                }
+
+                std::string module_class_name = args[0];
+                std::string module_full_name = args[1];
+                std::string module_name = module_full_name;
+                size_t delimiter_index = module_name.find_last_of(':');
+                if (delimiter_index != std::string::npos) {
+                    module_name = module_name.substr(delimiter_index + 1);
+                }
+                if (module_name.empty()) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "Invalid module name argument (2nd) in lua command '%s'. [%s, %s, line %d]\n", lua_view.c_str(),
+                        __FILE__, __FUNCTION__, __LINE__);
+                    return false;
+                }
+
+                // vislib::sys::Log::DefaultLog.WriteInfo(
+                //    ">>>> Class: '%s' Full Name: '%s' Name: '%s' [%s, %s, line %d]\n", module_class_name.c_str(),
+                //    module_full_name.c_str(), module_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+
+                // Get last added graph
+                auto graph_ptr = this->GetGraphs().back();
+                if (graph_ptr == nullptr) return false;
+
+                // Add module
+                if (!graph_ptr->AddModule(this->modules_stock, module_class_name)) {
+                    vislib::sys::Log::DefaultLog.WriteError("Unable to add new module '%s'. [%s, %s, line %d]\n",
+                        lua_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                    return false;
+                }
+                auto graph_module = graph_ptr->GetGraphModules().back();
+                graph_module->name = module_name;
+                graph_module->full_name = module_full_name;
+                graph_module->is_view_instance = false;
             }
         }
 
-
-        /*
-        // Find and create calls and parameters
+        // Find and create calls
         for (auto& line : lines) {
-             if (line.rfind(lua_param, 0) == 0) {
-
-
-            }
-            else if (line.rfind(lua_call, 0) == 0) {
-
-
+            if (line.rfind(lua_call, 0) == 0) {
             }
         }
-        */
+
+        // Find and create parameters
+        for (auto& line : lines) {
+            if (line.rfind(lua_param, 0) == 0) {
+            }
+        }
+
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -664,7 +722,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
                 psd.type = Parameter::ParamType::VECTOR4F;
             } else {
                 vislib::sys::Log::DefaultLog.WriteError("Found unknown parameter type. Please extend parameter types "
-                                                        "in the configurator. [%s, %s, line %d]\n",
+                                                        "for the configurator. [%s, %s, line %d]\n",
                     __FILE__, __FUNCTION__, __LINE__);
                 psd.type = Parameter::ParamType::UNKNOWN;
             }
@@ -900,6 +958,7 @@ bool megamol::gui::configurator::GraphManager::Presentation::close_unsaved_popup
 bool megamol::gui::configurator::GraphManager::getLuaProjectCommandArguments(
     const std::string& line, size_t arg_count, std::vector<std::string>& out_args) {
 
+    // (Leaving current line in original state)
     std::string args_str = line;
     out_args.clear();
 
@@ -928,7 +987,7 @@ bool megamol::gui::configurator::GraphManager::getLuaProjectCommandArguments(
         out_args.emplace_back(args_str.substr(0, delimiter_index));
         args_str = args_str.substr(delimiter_index + 1);
     }
-    out_args.emplace_back(args_str.substr(0, delimiter_index));
+    out_args.emplace_back(args_str);
 
     if (out_args.size() != arg_count) {
         vislib::sys::Log::DefaultLog.WriteError(

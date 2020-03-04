@@ -151,13 +151,8 @@ private:
     /** A parameter to store the profile */
     megamol::core::param::ParamSlot state_param;
 
-<<<<<<< HEAD
-    /** A parameter for loading the configurator at start up */
-    megamol::core::param::ParamSlot load_configurator_param;
-=======
     /** A parameter for automatically start the configurator at start up */
     megamol::core::param::ParamSlot autostart_configurator;
->>>>>>> eac808ca32b77b94b2cbaee87833ae422dc566ae
 
     /** Hotkeys */
     enum HotkeyIndex : size_t { EXIT_PROGRAM = 0, PARAMETER_SEARCH = 1, SAVE_PROJECT = 2, INDEX_COUNT = 3 };

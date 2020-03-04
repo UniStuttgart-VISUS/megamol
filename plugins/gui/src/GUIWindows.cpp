@@ -954,8 +954,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                 current_mod_open = ImGui::CollapsingHeader(label.c_str(), nullptr);
                 if (!currentSearchString.empty()) {
                     ImGui::PopStyleColor();
-                }>>>>>>> eac808ca32b77b94b2cbaee87833ae422dc566ae
-
+                }
 
                 // Module description as hover tooltip
                 auto mod_desc = this->core_instance->GetModuleDescriptionManager().Find(mod.ClassName());

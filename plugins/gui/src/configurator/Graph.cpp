@@ -67,9 +67,8 @@ bool megamol::gui::configurator::Graph::AddModule(
                 }
 
                 this->modules.emplace_back(mod_ptr);
-
-                vislib::sys::Log::DefaultLog.WriteWarn("CREATED MODULE: %s [%s, %s, line %d]\n",
-                    mod_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                // vislib::sys::Log::DefaultLog.WriteInfo("Added module: %s [%s, %s, line %d]\n",
+                //    mod_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
 
                 this->dirty_flag = true;
                 return true;
@@ -84,8 +83,8 @@ bool megamol::gui::configurator::Graph::AddModule(
         return false;
     }
 
-    vislib::sys::Log::DefaultLog.WriteError(
-        "Unable to find module: %s [%s, %s, line %d]\n", module_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+    vislib::sys::Log::DefaultLog.WriteError("Unable to find module in stock: %s [%s, %s, line %d]\n",
+        module_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
 
@@ -97,16 +96,14 @@ bool megamol::gui::configurator::Graph::DeleteModule(int module_uid) {
             if ((*iter)->uid == module_uid) {
                 (*iter)->RemoveAllCallSlots();
 
-                vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to module. [%s, %s, line %d]\n",
-                    (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+                // vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to module. [%s, %s, line %d]\n",
+                //    (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 assert((*iter).use_count() == 1);
-
-                vislib::sys::Log::DefaultLog.WriteWarn("DELETED MODULE: %s [%s, %s, line %d]\n",
-                    (*iter)->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-
                 (*iter).reset();
                 this->modules.erase(iter);
                 this->DeleteDisconnectedCalls();
+                // vislib::sys::Log::DefaultLog.WriteInfo("Deleted module: %s [%s, %s, line %d]\n",
+                //    (*iter)->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
 
                 this->dirty_flag = true;
                 return true;
@@ -147,14 +144,14 @@ bool megamol::gui::configurator::Graph::AddCall(
             call_slot_2->ConnectCall(call_ptr)) {
 
             this->calls.emplace_back(call_ptr);
-
-            vislib::sys::Log::DefaultLog.WriteWarn("CREATED and connected CALL: %s [%s, %s, line %d]\n",
-                call_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            // vislib::sys::Log::DefaultLog.WriteInfo("Added call: %s [%s, %s, line %d]\n",
+            //    call_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
 
             this->dirty_flag = true;
         } else {
-            // Clean up
             this->DeleteCall(call_ptr->uid);
+            vislib::sys::Log::DefaultLog.WriteWarn("Unable to connect call: %s [%s, %s, line %d]\n",
+                call_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -204,15 +201,13 @@ bool megamol::gui::configurator::Graph::DeleteCall(int call_uid) {
             if ((*iter)->uid == call_uid) {
                 (*iter)->DisConnectCallSlots();
 
-                vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to call. [%s, %s, line %d]\n",
-                    (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+                // vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to call. [%s, %s, line %d]\n",
+                //    (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 assert((*iter).use_count() == 1);
-
-                vislib::sys::Log::DefaultLog.WriteWarn("DELETED CALL: %s [%s, %s, line %d]\n",
-                    (*iter)->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-
                 (*iter).reset();
                 this->calls.erase(iter);
+                vislib::sys::Log::DefaultLog.WriteInfo("Deleted call: %s [%s, %s, line %d]\n",
+                    (*iter)->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
 
                 this->dirty_flag = true;
                 return true;
@@ -479,9 +474,9 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
     // Font scaling is applied next frame after ImGui::Begin()
     // Font for graph should not be the currently used font of the gui.
     if (this->font == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("Found no font for configurator. Call SetGraphFont() in GuiView "
-                                                "for setting a font. [%s, %s, line %d]\n",
-            __FILE__, __FUNCTION__, __LINE__);
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Found no font for configurator. Provide font via GuiView::SetGraphFont(). [%s, %s, line %d]\n", __FILE__,
+            __FUNCTION__, __LINE__);
         return;
     }
     ImGui::PushFont(this->font);
