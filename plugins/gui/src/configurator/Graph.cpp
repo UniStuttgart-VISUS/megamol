@@ -35,15 +35,15 @@ bool megamol::gui::configurator::Graph::AddModule(
                 mod_ptr->description = mod.description;
                 mod_ptr->plugin_name = mod.plugin_name;
                 mod_ptr->is_view = mod.is_view;
-                mod_ptr->name = mod.class_name;      /// set from core
-                mod_ptr->full_name = mod.class_name; /// set from core
-                mod_ptr->is_view_instance = false;   /// set from core
+                mod_ptr->name = mod.class_name;      /// XXX GENERATE or set from core
+                mod_ptr->full_name = mod.class_name; /// XXX GENERATE or set from core
+                mod_ptr->is_view_instance = false;   /// XXX GENERATE or set from core
 
                 for (auto& p : mod.parameters) {
                     Parameter param_slot(this->generate_unique_id(), p.type);
-                    param_slot.class_name = p.class_name;
+                    param_slot.name = p.name;
                     param_slot.description = p.description;
-                    param_slot.full_name = p.class_name; /// set from core
+                    param_slot.full_name = p.name; /// XXX GENERATE or set from core
 
                     mod_ptr->parameters.emplace_back(param_slot);
                 }
@@ -564,7 +564,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
                 ImVec2 new_mouse_position = (current_mouse_pos / last_zooming) * this->canvas_zooming;
                 this->canvas_scrolling += ((new_mouse_position - current_mouse_pos) / this->canvas_zooming);
             }
-            /// XXX this->gui.update_current_graph = true;
+            ///XXX this->gui.update_current_graph = true;
         }
         this->mouse_wheel = io.MouseWheel;
         */
@@ -664,7 +664,7 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
             bool search_filter = true;
             if (!search_string.empty()) {
 
-                search_filter = this->utils.FindCaseInsensitiveSubstring(param.class_name, search_string);
+                search_filter = this->utils.FindCaseInsensitiveSubstring(param.name, search_string);
             }
 
             if (search_filter) {

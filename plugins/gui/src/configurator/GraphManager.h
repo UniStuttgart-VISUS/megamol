@@ -22,7 +22,6 @@
 #include <map>
 #include <vector>
 
-#include "GUIUtils.h"
 #include "Graph.h"
 
 
@@ -100,11 +99,14 @@ private:
     bool get_module_stock_data(
         Module::StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
 
-    bool getLuaProjectCommandArguments(const std::string& line, size_t arg_count, std::vector<std::string>& out_args);
+    // Can be used for mmCreateView, mmCreateModule and mmCreateCall lua commands
+    bool readLuaProjectCommandArguments(const std::string& line, size_t arg_count, std::vector<std::string>& out_args);
 
     ImVec2 readLuaProjectConfPos(const std::string& line);
 
     std::string writeLuaProjectConfPos(const ImVec2& pos);
+
+    bool readModuleAndSlotName(const std::string& full_slot_name, std::string& module_name, std::string& slot_name);
 
     // ------------------------------------------------------------------------
 };

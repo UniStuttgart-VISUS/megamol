@@ -73,12 +73,9 @@ public:
         UNKNOWN
     };
 
-    struct StockParameter {
-        std::string class_name;
-        std::string description;
-        Parameter::ParamType type;
-        std::string value_string;
-    };
+    typedef std::map<int, std::string> EnumStorageType;
+
+    enum Presentations : size_t { DEFAULT = 0, SIMPLE = 1, _COUNT_ = 2 };
 
     typedef std::variant<std::monostate,             // default  BUTTON
         bool,                                        // BOOL
@@ -93,9 +90,40 @@ public:
         >
         ValueType;
 
-    typedef std::map<int, std::string> EnumStorageType;
+    typedef std::variant<std::monostate, // default (unused/unavailable)
+        float,                           // FLOAT
+        int,                             // INT
+        glm::vec2,                       // VECTOR_2f
+        glm::vec3,                       // VECTOR_3f
+        glm::vec4                        // VECTOR_4f
+    >
+        MinType;
 
-    enum Presentations : size_t { DEFAULT = 0, SIMPLE = 1, _COUNT_ = 2 };
+    typedef std::variant<std::monostate, // default (unused/unavailable)
+        float,                           // FLOAT
+        int,                             // INT
+        glm::vec2,                       // VECTOR_2f
+        glm::vec3,                       // VECTOR_3f
+        glm::vec4                        // VECTOR_4f
+    >
+        MaxType;
+
+    typedef std::variant<std::monostate,               // default (unused/unavailable)
+        megamol::core::view::KeyCode,                  // BUTTON
+        EnumStorageType,                               // ENUM
+        megamol::core::param::FlexEnumParam::Storage_t // FLEXENUM
+    >
+        StroageType;
+
+    struct StockParameter {
+        std::string name;
+        std::string description;
+        Parameter::ParamType type;
+        std::string value_string;
+        MinType minval;
+        MaxType maxval;
+        StroageType storage;
+    };
 
     Parameter(int uid, ParamType type);
     ~Parameter() {}
@@ -103,7 +131,7 @@ public:
     const int uid;
     const ParamType type;
 
-    std::string class_name;
+    std::string name;
     std::string description;
 
     std::string full_name;
@@ -117,7 +145,7 @@ public:
         try {
             return std::get<T>(this->minval);
         } catch (std::bad_variant_access&) {
-            /// XXX
+            ///XXX
         }
     }
 
@@ -125,7 +153,7 @@ public:
         try {
             return std::get<T>(this->maxval);
         } catch (std::bad_variant_access&) {
-            /// XXX
+            ///XXX
         }
     }
 
@@ -133,11 +161,13 @@ public:
         try {
             return std::get<T>(this->storage);
         } catch (std::bad_variant_access&) {
-            /// XXX
+            ///XXX
         }
     }
 
     // SET ----------------------------------
+    bool SetValueString(std::string val_str);
+
     template <typename T> void SetValue(T val) {
         if (std::holds_alternative<T>(this->value)) {
             this->value = val;
@@ -186,30 +216,6 @@ public:
     }
 
 private:
-    typedef std::variant<std::monostate, // default (unused/unavailable)
-        float,                           // FLOAT
-        int,                             // INT
-        glm::vec2,                       // VECTOR_2f
-        glm::vec3,                       // VECTOR_3f
-        glm::vec4                        // VECTOR_4f
-        >
-        MinType;
-
-    typedef std::variant<std::monostate, // default (unused/unavailable)
-        float,                           // FLOAT
-        int,                             // INT
-        glm::vec2,                       // VECTOR_2f
-        glm::vec3,                       // VECTOR_3f
-        glm::vec4                        // VECTOR_4f
-        >
-        MaxType;
-
-    typedef std::variant<std::monostate,               // default (unused/unavailable)
-        megamol::core::view::KeyCode,                  // BUTTON
-        EnumStorageType,                               // ENUM
-        megamol::core::param::FlexEnumParam::Storage_t // FLEXENUM
-        >
-        StroageType;
 
     MinType minval;
     MaxType maxval;

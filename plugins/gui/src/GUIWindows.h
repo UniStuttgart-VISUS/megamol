@@ -37,7 +37,6 @@
 
 #include "CorporateGreyStyle.h"
 #include "CorporateWhiteStyle.h"
-#include "GUIUtils.h"
 #include "TransferFunctionEditor.h"
 #include "WindowManager.h"
 #include "configurator/Configurator.h"
