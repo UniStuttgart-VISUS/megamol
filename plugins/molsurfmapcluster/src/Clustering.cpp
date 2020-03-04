@@ -22,6 +22,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/sys/Log.h"
@@ -42,7 +43,8 @@ Clustering::Clustering(void)
     , selectionmode("Mode for selection of similar nodes", "")
     , linkagemodeparam("Linkage Mode", "")
     , distancemultiplier("Distance Multiplier", "")
-    , momentsmethode("Moments Methode", "") {
+    , momentsmethode("Moments Methode", "")
+    , useActualValue("UseActualValue",""){
 
     // Callee-Slot
     this->outSlot.SetCallback(CallClustering::ClassName(), "GetData", &Clustering::getDataCallback);
@@ -106,6 +108,9 @@ Clustering::Clustering(void)
     this->distancemultiplier.SetParameter(new megamol::core::param::FloatParam(0.75, 0.0, 1.0));
     this->MakeSlotAvailable(&this->distancemultiplier);
 
+    this->useActualValue.SetParameter(new core::param::BoolParam(true));
+    this->MakeSlotAvailable(&this->useActualValue);
+
     // Other Default Varialbles
     this->lastHash = 0;
     this->outHash = 0;
@@ -137,7 +142,7 @@ void Clustering::clusterData(image_calls::Image2DCall& cpp) {
     // Clustering
     vislib::sys::Log::DefaultLog.WriteMsg(
         vislib::sys::Log::LEVEL_INFO, "Clustering %I64u Pictures", this->picturecount);
-    this->clustering = new HierarchicalClustering(this->picdata, this->picturecount);
+    this->clustering = new HierarchicalClustering(this->picdata, this->picturecount, this->useActualValue.Param<core::param::BoolParam>()->Value());
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Clustering finished", this->picturecount);
 }
 
@@ -151,7 +156,8 @@ void Clustering::clusterData(CallClusteringLoader* ccl) {
     // Clustering
     vislib::sys::Log::DefaultLog.WriteMsg(
         vislib::sys::Log::LEVEL_INFO, "Clustering %I64u Pictures", this->picturecount);
-    this->clustering = new HierarchicalClustering(ccl->getLeaves(), ccl->Count());
+    this->clustering = new HierarchicalClustering(
+        ccl->getLeaves(), ccl->Count(), this->useActualValue.Param<core::param::BoolParam>()->Value());
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Clustering finished", this->picturecount);
 }
 
@@ -327,7 +333,7 @@ bool Clustering::getDataCallback(core::Call& caller) {
         }
 
         // Reanalyse Pictures
-        clustering->reanalyse();
+        clustering->reanalyse(this->useActualValue.Param<core::param::BoolParam>()->Value());
     }
 
     if (this->clustering->finished()) {

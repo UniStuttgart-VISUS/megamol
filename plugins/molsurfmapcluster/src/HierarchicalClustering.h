@@ -51,9 +51,10 @@ public:
 
     /** Constructor */
     HierarchicalClustering(void);
-    HierarchicalClustering(std::vector<PictureData>&, SIZE_T, int = 2, int = 1, int = 1,
+    HierarchicalClustering(std::vector<PictureData>&, SIZE_T, bool = true, int = 2, int = 1, int = 1,
         int = 1); // Standard Euclidian Distance, Avarage Linkage, Imge-Moments
-    HierarchicalClustering(HierarchicalClustering::CLUSTERNODE*, SIZE_T, int = 2, int = 1, int = 1, int = 1);
+    HierarchicalClustering(
+        HierarchicalClustering::CLUSTERNODE*, SIZE_T, bool = true, int = 2, int = 1, int = 1, int = 1);
 
     /** Destructor */
     virtual ~HierarchicalClustering(void);
@@ -61,7 +62,9 @@ public:
     bool finished();
 
     void calculateImageMoments(CLUSTERNODE*);
+    void calculateImageMomentsValue(CLUSTERNODE*);
     void calculateColorMoments(CLUSTERNODE*);
+    void calculateColorMomentsValue(CLUSTERNODE*);
     std::vector<double>* gray_scale_image(PictureData*);
 
     void dump_dot();
@@ -69,7 +72,7 @@ public:
     void dump_pca(const vislib::TString&);
 
     void clusterthedata(void);
-    void reanalyse(void);
+    void reanalyse(bool actualValue = true);
     void setDistanceMethod(unsigned int);
     void setSimilarityMethod(unsigned int);
     void setLinkageMethod(unsigned int);

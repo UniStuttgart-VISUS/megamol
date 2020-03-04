@@ -151,6 +151,7 @@ private:
     core::param::ParamSlot linkagemodeparam;
     core::param::ParamSlot distancemultiplier;
     core::param::ParamSlot momentsmethode;
+    core::param::ParamSlot useActualValue;
     bool dumpdotfile;
     bool selectionmodechanged;
     bool linkagemodechanged;
