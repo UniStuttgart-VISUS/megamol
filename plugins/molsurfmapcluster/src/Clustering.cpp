@@ -14,7 +14,6 @@
 #include "CallPNGPics.h"
 #include "image_calls/Image2DCall.h"
 
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -429,6 +428,26 @@ void Clustering::fillPictureDataVector(image_calls::Image2DCall& imc) {
         this->picdata[id].popup = false;
         this->picdata[id].texture = nullptr;
         this->picdata[id].image = &p.second;
+        this->loadValueImageForGivenPicture(std::filesystem::path(p.first), this->picdata[id].valueImage);
         ++id;
+    }
+}
+
+void Clustering::loadValueImageForGivenPicture(
+    const std::filesystem::path& originalPicture, std::vector<float>& outValueImage) {
+    auto newpath = originalPicture;
+    newpath = newpath.parent_path();
+    newpath.append(originalPicture.stem().string() + "_values.dat");
+    newpath = newpath.make_preferred();
+    
+    auto filesize = std::filesystem::file_size(newpath);
+    std::ifstream file(newpath, std::ios::binary);
+    outValueImage.clear();
+    outValueImage.resize(filesize / sizeof(float));
+    if (file.is_open()) {
+        file.read(reinterpret_cast<char*>(&outValueImage[0]), filesize);
+        file.close();
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError("The file \"%s\" could not be opened for reading", newpath.c_str());
     }
 }

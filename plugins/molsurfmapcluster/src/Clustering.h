@@ -22,6 +22,8 @@
 #include "vislib/String.h"
 #include "vislib/math/Cuboid.h"
 
+#include <filesystem>
+
 #include "CallClusteringLoader.h"
 #include "CallPNGPics.h"
 #include "HierarchicalClustering.h"
@@ -114,6 +116,8 @@ private:
     virtual void release(void);
 
     void fillPictureDataVector(image_calls::Image2DCall& imc);
+
+    void loadValueImageForGivenPicture(const std::filesystem::path& originalPicture, std::vector<float>& outValueImage); 
 
     /** The slot for requesting data. */
     core::CalleeSlot outSlot;

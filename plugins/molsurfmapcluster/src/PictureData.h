@@ -20,6 +20,7 @@ namespace MolSurfMapCluster {
         //vislib::graphics::gl::OpenGLTexture2D* texture;
         std::unique_ptr<glowl::Texture2D> texture;
         vislib::graphics::BitmapImage* image;
+        std::vector<float> valueImage;
     };
 
 }
