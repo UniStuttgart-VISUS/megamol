@@ -4050,6 +4050,12 @@ bool MapGenerator::Render(Call& call) {
                 width = ((width / 100) * 100) + 100;
             uint height = width / 2;
 
+#define HARDCODED_SIZE
+#ifdef HARDCODED_SIZE
+            width = 2560;
+            height = 1440;
+#endif
+
             std::vector<vislib::graphics::gl::FramebufferObject::ColourAttachParams> colorAttachments(2);
             colorAttachments[0].internalFormat = GL_RGBA8;
             colorAttachments[0].format = GL_RGBA;
