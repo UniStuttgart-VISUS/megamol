@@ -79,6 +79,7 @@ public:
 
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
     void GUI_SetPresentation(Module::Presentations present) { this->present.presentations = present; }
+    void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
 
@@ -95,6 +96,8 @@ private:
         ~Presentation(void);
 
         ImGuiID Present(Module& mod, ImVec2 canvas_offset, float canvas_zooming);
+
+        void SetPosition(ImVec2 pos) { this->position = pos; }
 
         ImVec2 GetPosition(void) { return this->position; }
         ImVec2 GetSize(void) { return this->size; }

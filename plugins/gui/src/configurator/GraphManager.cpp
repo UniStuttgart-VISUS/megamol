@@ -400,12 +400,12 @@ bool megamol::gui::configurator::GraphManager::LoadProjectFile(
     const std::string lua_call = "mmCreateCall";
 
     try {
-        std::stringstream constent(projectstr);
+        std::stringstream content(projectstr);
         std::vector<std::string> lines;
 
         // Prepare and read lines
         std::string tmpline;
-        while (std::getline(constent, tmpline, '\n')) {
+        while (std::getline(content, tmpline, '\n')) {
             // Remove spaces
             tmpline.erase(std::remove(tmpline.begin(), tmpline.end(), ' '), tmpline.end());
             if (!tmpline.empty()) {
@@ -442,11 +442,13 @@ bool megamol::gui::configurator::GraphManager::LoadProjectFile(
                     return false;
                 }
 
-                // vislib::sys::Log::DefaultLog.WriteInfo(
-                //    ">>>> Instance: '%s' Class: '%s' Full Name: '%s' Name: '%s' [%s, %s, line %d]\n",
-                //    view_instance.c_str(), view_class_name.c_str(), view_full_name.c_str(), view_name.c_str(),
-                //    __FILE__,
-                //    __FUNCTION__, __LINE__);
+                ImVec2 module_pos = this->readLuaProjectConfPos(line);
+
+                /// DEBUG
+                vislib::sys::Log::DefaultLog.WriteInfo(
+                    ">>>> Instance: '%s' Class: '%s' Full Name: '%s' Name: '%s' ConfPos: %f, %f.\n",
+                    view_instance.c_str(), view_class_name.c_str(), view_full_name.c_str(), view_name.c_str(),
+                    module_pos.x, module_pos.y);
 
                 // Create new graph
                 if (!this->AddGraph(view_instance)) {
@@ -469,6 +471,7 @@ bool megamol::gui::configurator::GraphManager::LoadProjectFile(
                 graph_module->name = view_name;
                 graph_module->full_name = view_full_name;
                 graph_module->is_view_instance = true;
+                graph_module->GUI_SetPosition(module_pos);
 
                 found_main_view = true;
             }
@@ -505,9 +508,12 @@ bool megamol::gui::configurator::GraphManager::LoadProjectFile(
                     return false;
                 }
 
-                // vislib::sys::Log::DefaultLog.WriteInfo(
-                //    ">>>> Class: '%s' Full Name: '%s' Name: '%s' [%s, %s, line %d]\n", module_class_name.c_str(),
-                //    module_full_name.c_str(), module_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                ImVec2 module_pos = this->readLuaProjectConfPos(line);
+
+                /// DEBUG
+                vislib::sys::Log::DefaultLog.WriteInfo(">>>> Class: '%s' Full Name: '%s' Name: '%s' ConfPos: %f, %f.\n",
+                    module_class_name.c_str(), module_full_name.c_str(), module_name.c_str(), module_pos.x,
+                    module_pos.y);
 
                 // Get last added graph
                 auto graph_ptr = this->GetGraphs().back();
@@ -523,12 +529,60 @@ bool megamol::gui::configurator::GraphManager::LoadProjectFile(
                 graph_module->name = module_name;
                 graph_module->full_name = module_full_name;
                 graph_module->is_view_instance = false;
+                graph_module->GUI_SetPosition(module_pos);
             }
         }
 
         // Find and create calls
         for (auto& line : lines) {
             if (line.rfind(lua_call, 0) == 0) {
+
+                size_t arg_count = 3;
+                std::vector<std::string> args;
+                if (!this->getLuaProjectCommandArguments(line, arg_count, args)) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        " Error parsing lua command '%s' requiring %i arguments. [%s, %s, line %d]\n", lua_call.c_str(),
+                        arg_count, __FILE__, __FUNCTION__, __LINE__);
+                    return false;
+                }
+
+                std::string call_class_name = args[0];
+                std::string caller_slot_full_name = args[1];
+                std::string callee_slot_full_name = args[2];
+
+                std::string caller_slot_name;
+                std::string caller_module_full_name;
+                size_t delimiter_index = caller_slot_full_name.find_last_of(':');
+                if (delimiter_index != std::string::npos) {
+                    caller_slot_name = caller_slot_full_name.substr(delimiter_index + 1);
+                    caller_module_full_name = caller_slot_full_name.substr(0, delimiter_index - 1);
+                }
+                if (caller_slot_name.empty()) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "Invalid caller slot name argument (2nd) in lua command '%s'. [%s, %s, line %d]\n",
+                        lua_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                    return false;
+                }
+
+                std::string callee_slot_name;
+                std::string callee_module_full_name;
+                delimiter_index = callee_slot_full_name.find_last_of(':');
+                if (delimiter_index != std::string::npos) {
+                    callee_slot_name = callee_slot_full_name.substr(delimiter_index + 1);
+                    callee_module_full_name = callee_slot_full_name.substr(0, delimiter_index - 1);
+                }
+                if (callee_slot_name.empty()) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "Invalid callee slot name argument (3nd) in lua command '%s'. [%s, %s, line %d]\n",
+                        lua_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                    return false;
+                }
+
+                // vislib::sys::Log::DefaultLog.WriteInfo(">>>> Call Name: '%s' CALLER Module: '%s' Slot: '%s' - CALLEE
+                // "
+                //                                       "Module: '%s' Slot: '%s'.\n",
+                //    call_class_name.c_str(), caller_module_full_name.c_str(), caller_slot_name.c_str(),
+                //    callee_module_full_name.c_str(), callee_slot_name.c_str());
             }
         }
 
@@ -574,10 +628,11 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(
                     std::string instance = "::" + instance_name + "::";
                     if (mod->is_view_instance) {
                         confInstances << "mmCreateView(\"" << instance_name << "\",\"" << mod->class_name << "\",\""
-                                      << instance << mod->name << "\")\n";
+                                      << instance << mod->name << "\") "
+                                      << this->writeLuaProjectConfPos(mod->GUI_GetPosition()) << "\n";
                     } else {
                         confModules << "mmCreateModule(\"" << mod->class_name << "\",\"" << instance << mod->name
-                                    << "\")\n";
+                                    << "\") " << this->writeLuaProjectConfPos(mod->GUI_GetPosition()) << "\n";
                     }
 
                     for (auto& param_slot : mod->parameters) {
@@ -996,4 +1051,51 @@ bool megamol::gui::configurator::GraphManager::getLuaProjectCommandArguments(
     }
 
     return true;
+}
+
+
+ImVec2 megamol::gui::configurator::GraphManager::readLuaProjectConfPos(const std::string& line) {
+
+    ImVec2 conf_pos;
+
+    std::string x_start_tag = "--confPos={X=";
+    std::string y_start_tag = ",Y=";
+    std::string end_tag = "}";
+    size_t x_start_pos = line.find(x_start_tag);
+    size_t y_start_pos = line.find(y_start_tag);
+    size_t end_pos = line.find(end_tag);
+    if ((x_start_pos != std::string::npos) && (y_start_pos != std::string::npos) && (end_pos != std::string::npos)) {
+        size_t x_length = ((y_start_pos) - (x_start_pos + x_start_tag.length()));
+        size_t y_length = ((end_pos) - (y_start_pos + y_start_tag.length()));
+        float x = 0.0f;
+        float y = 0.0f;
+        try {
+            std::string val_str = line.substr(x_start_pos + x_start_tag.length(), x_length);
+            x = std::stof(val_str);
+        } catch (std::invalid_argument e) {
+            vislib::sys::Log::DefaultLog.WriteError(" Error while reading x value of confPos: %s [%s, %s, line %d]\n",
+                e.what(), __FILE__, __FUNCTION__, __LINE__);
+            return conf_pos;
+        }
+        try {
+            std::string val_str = line.substr(y_start_pos + y_start_tag.length(), y_length);
+            y = std::stof(val_str);
+        } catch (std::invalid_argument e) {
+            vislib::sys::Log::DefaultLog.WriteError(" Error while reading y value of confPos: %s [%s, %s, line %d]\n",
+                e.what(), __FILE__, __FUNCTION__, __LINE__);
+            return conf_pos;
+        }
+        conf_pos = ImVec2(x, y);
+    }
+
+    return conf_pos;
+}
+
+
+std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfPos(const ImVec2& pos) {
+
+    std::stringstream conf_pos;
+    /// XXX Should position values be int?
+    conf_pos << " --confPos{X=" << pos.x << ",Y=" << pos.y << "} ";
+    return conf_pos.str();
 }

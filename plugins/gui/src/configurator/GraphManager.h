@@ -102,6 +102,10 @@ private:
 
     bool getLuaProjectCommandArguments(const std::string& line, size_t arg_count, std::vector<std::string>& out_args);
 
+    ImVec2 readLuaProjectConfPos(const std::string& line);
+
+    std::string writeLuaProjectConfPos(const ImVec2& pos);
+
     // ------------------------------------------------------------------------
 };
 

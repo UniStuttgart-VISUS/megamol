@@ -185,7 +185,9 @@ bool megamol::gui::GUIUtils::VerticalSplitter(float* size_left, float* size_righ
         bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size_left, size_right, min_size, min_size, 0.0f);
 }
 
+
 #ifdef GUI_USE_FILESYSTEM
+
 bool megamol::gui::GUIUtils::FileBrowserPopUp(
     FileBrowserFlag flag, bool open_popup, const std::string& label, std::string& inout_filename) {
 
@@ -362,10 +364,10 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
                 ImGui::CloseCurrentPopup();
             }
 
-            // Return file path -----------------------------------------------
+            // Return complete file path --------------------------------------
             if (apply && this->valid_directory && this->valid_file) {
                 // Appending required extension
-                if (!valid_ending) {
+                if (!this->valid_ending) {
                     this->file_name_str.append(".lua");
                 }
                 fsns::path tmp_file_path =
@@ -461,7 +463,7 @@ void megamol::gui::GUIUtils::validateFile(const std::string& file_str, GUIUtils:
                 }
 
                 std::string actual_filename = file_str;
-                if (!valid_ending) {
+                if (!this->valid_ending) {
                     actual_filename.append(ext);
                 }
                 fsns::path tmp_file_path =
@@ -495,6 +497,5 @@ void megamol::gui::GUIUtils::validateFile(const std::string& file_str, GUIUtils:
         return;
     }
 }
-
 
 #endif // GUI_USE_FILESYSTEM

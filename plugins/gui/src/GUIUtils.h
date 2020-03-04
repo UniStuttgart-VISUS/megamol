@@ -137,7 +137,6 @@ private:
     std::string search_string;
 
 #ifdef GUI_USE_FILESYSTEM
-    /** File Browser Stuff */
 
     std::string file_name_str;
     std::string file_path_str;
