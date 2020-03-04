@@ -158,11 +158,11 @@ bool megamol::gui::configurator::CallSlot::ConnectParentModule(
 
 bool megamol::gui::configurator::CallSlot::DisConnectParentModule(void) {
 
-    if (parent_module == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "Pointer to parent module is already nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
+    // if (parent_module == nullptr) {
+    //    vislib::sys::Log::DefaultLog.WriteWarn(
+    //        "Pointer to parent module is already nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //    return false;
+    //}
     this->parent_module.reset();
     return true;
 }
@@ -185,9 +185,9 @@ int megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(
         if ((call_slot_1 != call_slot_2) && (call_slot_1->GetParentModule() != call_slot_2->GetParentModule()) &&
             (call_slot_1->type != call_slot_2->type)) {
             // Return first found compatible call index
-            for (auto& selected_comp_call_slots : call_slot_1->compatible_call_idxs) {
+            for (auto& selected_comp_call_slot : call_slot_1->compatible_call_idxs) {
                 for (auto& current_comp_call_slots : call_slot_2->compatible_call_idxs) {
-                    if (selected_comp_call_slots == current_comp_call_slots) {
+                    if (selected_comp_call_slot == current_comp_call_slots) {
                         // Show only comaptible calls for unconnected caller slots
                         if ((call_slot_1->type == CallSlot::CallSlotType::CALLER) && (call_slot_1->CallsConnected())) {
                             return GUI_INVALID_ID;

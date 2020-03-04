@@ -124,21 +124,29 @@ bool megamol::gui::configurator::Graph::DeleteModule(int module_uid) {
 }
 
 
-bool megamol::gui::configurator::Graph::AddCall(
-    const CallStockVectorType& stock_calls, int call_idx, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2) {
+bool megamol::gui::configurator::Graph::AddCall(const CallStockVectorType& stock_calls,
+    const std::string& call_class_name, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2) {
 
     try {
-        if ((call_idx > stock_calls.size()) || (call_idx < 0)) {
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "Compatible call index out of range. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        bool found_stock_call = false;
+        Call::StockCall call_stock_data;
+        for (auto& csd : stock_calls) {
+            if (csd.class_name == call_class_name) {
+                call_stock_data = csd;
+                found_stock_call = true;
+            }
+        }
+        if (!found_stock_call) {
+            vislib::sys::Log::DefaultLog.WriteWarn("Unable to find call: %s [%s, %s, line %d]\n",
+                call_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-        auto call = stock_calls[call_idx];
+
         auto call_ptr = std::make_shared<Call>(this->generate_unique_id());
-        call_ptr->class_name = call.class_name;
-        call_ptr->description = call.description;
-        call_ptr->plugin_name = call.plugin_name;
-        call_ptr->functions = call.functions;
+        call_ptr->class_name = call_stock_data.class_name;
+        call_ptr->description = call_stock_data.description;
+        call_ptr->plugin_name = call_stock_data.plugin_name;
+        call_ptr->functions = call_stock_data.functions;
 
         if (call_ptr->ConnectCallSlots(call_slot_1, call_slot_2) && call_slot_1->ConnectCall(call_ptr) &&
             call_slot_2->ConnectCall(call_ptr)) {

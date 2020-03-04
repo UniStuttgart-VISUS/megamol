@@ -38,8 +38,8 @@ public:
     bool AddModule(const ModuleStockVectorType& stock_modules, const std::string& module_class_name);
     bool DeleteModule(int module_uid);
 
-    bool AddCall(
-        const CallStockVectorType& stock_calls, int call_idx, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
+    bool AddCall(const CallStockVectorType& stock_calls, const std::string& call_class_name,
+        CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
     bool DeleteDisconnectedCalls(void);
     bool DeleteCall(int call_uid);
 
