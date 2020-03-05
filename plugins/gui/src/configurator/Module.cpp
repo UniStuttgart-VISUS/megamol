@@ -105,7 +105,7 @@ megamol::gui::configurator::Module::GetCallSlots(void) {
 megamol::gui::configurator::Module::Presentation::Presentation(void)
     : presentations(Module::Presentations::DEFAULT)
     , label_visible(true)
-    , position(ImVec2(0.0f, 0.0f))
+    , position(ImVec2(10.0f, 10.0f))
     , size(ImVec2(250.0f, 50.0f))
     , class_label()
     , name_label()
