@@ -63,13 +63,15 @@ public:
     std::vector<Parameter> parameters;
 
     std::string name;
-    std::string full_name;
+    std::string name_space;
     bool is_view_instance;
 
     bool AddCallSlot(CallSlotPtrType call_slot);
     bool RemoveAllCallSlots(void);
     const std::vector<CallSlotPtrType>& GetCallSlots(CallSlot::CallSlotType type);
     const std::map<CallSlot::CallSlotType, std::vector<CallSlotPtrType>>& GetCallSlots(void);
+
+    const std::string FullName(void) const { return std::string(this->name_space + "::" + this->name); }
 
     // GUI Presentation -------------------------------------------------------
 

@@ -35,15 +35,15 @@ bool megamol::gui::configurator::Graph::AddModule(
                 mod_ptr->description = mod.description;
                 mod_ptr->plugin_name = mod.plugin_name;
                 mod_ptr->is_view = mod.is_view;
-                mod_ptr->name = mod.class_name;      /// XXX GENERATE or set from core
-                mod_ptr->full_name = mod.class_name; /// XXX GENERATE or set from core
-                mod_ptr->is_view_instance = false;   /// XXX GENERATE or set from core
+                mod_ptr->name = mod.class_name + "_" + std::to_string(mod_ptr->uid);
+                mod_ptr->name_space = "::";
+                mod_ptr->is_view_instance = false;
 
                 for (auto& p : mod.parameters) {
                     Parameter param_slot(this->generate_unique_id(), p.type);
                     param_slot.name = p.name;
                     param_slot.description = p.description;
-                    param_slot.full_name = p.name; /// XXX GENERATE or set from core
+                    param_slot.name = p.name; /// XXX GENERATE or set from core
 
                     mod_ptr->parameters.emplace_back(param_slot);
                 }

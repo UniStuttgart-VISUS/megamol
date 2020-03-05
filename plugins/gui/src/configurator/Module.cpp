@@ -145,10 +145,6 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(
 
         // Draw module --------------------------------------------------------
 
-        if ((this->position.x == 0.0f) && (this->position.y == 0.0f)) {
-            this->position = canvas_offset;
-        }
-
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         assert(draw_list != nullptr);
 
@@ -210,7 +206,7 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(
         draw_list->ChannelsSetCurrent(0); // Background
 
         ImGui::SetCursorScreenPos(module_rect_min);
-        label = "module_" + mod.full_name + std::to_string(mod.uid);
+        label = "module_" + mod.name + std::to_string(mod.uid);
         ImGui::InvisibleButton(label.c_str(), module_size);
         // Gives slots which overlap modules priority for ToolTip and Context Menu.
         if (hovered_slot_uid == GUI_INVALID_ID) {

@@ -232,7 +232,6 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
         }
 
         // Filter module by compatible call slots
-        /// XXX Optimize ...?
         bool compat_filter = true;
         std::string call_name;
         std::string compat_call_slot_name;

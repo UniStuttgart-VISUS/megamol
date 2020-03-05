@@ -96,7 +96,7 @@ public:
         glm::vec2,                       // VECTOR_2f
         glm::vec3,                       // VECTOR_3f
         glm::vec4                        // VECTOR_4f
-    >
+        >
         MinType;
 
     typedef std::variant<std::monostate, // default (unused/unavailable)
@@ -105,14 +105,14 @@ public:
         glm::vec2,                       // VECTOR_2f
         glm::vec3,                       // VECTOR_3f
         glm::vec4                        // VECTOR_4f
-    >
+        >
         MaxType;
 
     typedef std::variant<std::monostate,               // default (unused/unavailable)
         megamol::core::view::KeyCode,                  // BUTTON
         EnumStorageType,                               // ENUM
         megamol::core::param::FlexEnumParam::Storage_t // FLEXENUM
-    >
+        >
         StroageType;
 
     struct StockParameter {
@@ -134,8 +134,6 @@ public:
     std::string name;
     std::string description;
 
-    std::string full_name;
-
     // Get ----------------------------------
     std::string GetValueString(void);
 
@@ -145,7 +143,7 @@ public:
         try {
             return std::get<T>(this->minval);
         } catch (std::bad_variant_access&) {
-            ///XXX
+            /// XXX
         }
     }
 
@@ -153,7 +151,7 @@ public:
         try {
             return std::get<T>(this->maxval);
         } catch (std::bad_variant_access&) {
-            ///XXX
+            /// XXX
         }
     }
 
@@ -161,7 +159,7 @@ public:
         try {
             return std::get<T>(this->storage);
         } catch (std::bad_variant_access&) {
-            ///XXX
+            /// XXX
         }
     }
 
@@ -216,7 +214,6 @@ public:
     }
 
 private:
-
     MinType minval;
     MaxType maxval;
     StroageType storage;
@@ -245,12 +242,8 @@ private:
         megamol::gui::TransferFunctionEditor tf_editor;
         bool show_tf_editor;
 
-        std::map<std::string, std::string> widgtmap_text;
-        std::map<std::string, int> widgtmap_int;
-        std::map<std::string, float> widgtmap_float;
-        std::map<std::string, glm::vec2> widgtmap_vec2;
-        std::map<std::string, glm::vec3> widgtmap_vec3;
-        std::map<std::string, glm::vec4> widgtmap_vec4;
+
+        std::variant<std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
 
         void present_prefix(Parameter& param);
         void present_value(Parameter& param);

@@ -258,12 +258,7 @@ megamol::gui::configurator::Parameter::Presentation::Presentation(void)
     , utils()
     , tf_editor()
     , show_tf_editor(false)
-    , widgtmap_text()
-    , widgtmap_float()
-    , widgtmap_int()
-    , widgtmap_vec2()
-    , widgtmap_vec3()
-    , widgtmap_vec4() {}
+    , widget_store() {}
 
 
 megamol::gui::configurator::Parameter::Presentation::~Presentation(void) {}
@@ -419,14 +414,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
     }
 
-    std::string param_name = param.name;
-    std::string param_id = std::string(param.full_name);
-    auto pos = param_name.find("::");
-    if (pos != std::string::npos) {
-        param_name = param_name.substr(pos + 2);
-    }
-    std::string param_label_hidden = "###" + param_id;
-    std::string param_label = param_name + param_label_hidden;
+    std::string param_label = param.name;
     std::string float_format = "%.7f";
 
     auto visitor = [&](auto&& arg) {
@@ -444,33 +432,28 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
                          "[CTRL+Click] on individual component to input value.\n"
                          "[Right-Click] on the individual color widget to show options.";
         } else if constexpr (std::is_same_v<T, float>) {
-            auto it = this->widgtmap_float.find(param_id);
-            if (it == this->widgtmap_float.end()) {
-                this->widgtmap_float.emplace(param_id, arg);
-                it = this->widgtmap_float.find(param_id);
-            }
-            ImGui::InputFloat(
-                param_label.c_str(), &it->second, 1.0f, 10.0f, float_format.c_str(), ImGuiInputTextFlags_None);
+            this->widget_store = arg;
+            ImGui::InputFloat(param_label.c_str(), &std::get<float>(this->widget_store), 1.0f, 10.0f,
+                float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                it->second = std::max(param.GetMinValue<float>(), std::min(it->second, param.GetMaxValue<float>()));
-                param.SetValue(it->second);
+                this->widget_store = std::max(param.GetMinValue<float>(),
+                    std::min(std::get<float>(this->widget_store), param.GetMaxValue<float>()));
+                param.SetValue(std::get<float>(this->widget_store));
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                it->second = arg;
+                this->widget_store = arg;
             }
         } else if constexpr (std::is_same_v<T, int>) {
             switch (param.type) {
             case (Parameter::ParamType::INT): {
-                auto it = this->widgtmap_int.find(param_id);
-                if (it == this->widgtmap_int.end()) {
-                    this->widgtmap_int.emplace(param_id, arg);
-                    it = this->widgtmap_int.find(param_id);
-                }
-                ImGui::InputInt(param_label.c_str(), &it->second, 1, 10, ImGuiInputTextFlags_None);
+                this->widget_store = arg;
+                ImGui::InputInt(
+                    param_label.c_str(), &std::get<int>(this->widget_store), 1, 10, ImGuiInputTextFlags_None);
                 if (ImGui::IsItemDeactivatedAfterEdit()) {
-                    it->second = std::max(param.GetMinValue<int>(), std::min(it->second, param.GetMaxValue<int>()));
-                    param.SetValue(it->second);
+                    this->widget_store = std::max(param.GetMinValue<int>(),
+                        std::min(std::get<int>(this->widget_store), param.GetMaxValue<int>()));
+                    param.SetValue(std::get<int>(this->widget_store));
                 } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                    it->second = arg;
+                    this->widget_store = arg;
                 }
             } break;
             case (Parameter::ParamType::ENUM): {
@@ -496,31 +479,29 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
             switch (param.type) {
             case (Parameter::ParamType::STRING): {
                 /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-                auto it = this->widgtmap_text.find(param_id);
-                if (it == this->widgtmap_text.end()) {
-                    std::string utf8Str = arg;
-                    this->utils.Utf8Encode(utf8Str);
-                    this->widgtmap_text.emplace(param_id, utf8Str);
-                    it = this->widgtmap_text.find(param_id);
-                }
+                std::string utf8Str = arg;
+                this->utils.Utf8Encode(utf8Str);
+                this->widget_store = utf8Str;
                 // Determine multi line count of string
-                int lcnt = static_cast<int>(std::count(it->second.begin(), it->second.end(), '\n'));
+                int lcnt = static_cast<int>(std::count(std::get<std::string>(this->widget_store).begin(),
+                    std::get<std::string>(this->widget_store).end(), '\n'));
                 lcnt = std::min(static_cast<int>(GUI_MAX_MULITLINE), lcnt);
                 ImVec2 ml_dim = ImVec2(ImGui::CalcItemWidth(),
                     ImGui::GetFrameHeight() + (ImGui::GetFontSize() * static_cast<float>(lcnt)));
-                ImGui::InputTextMultiline(
-                    param_label_hidden.c_str(), &it->second, ml_dim, ImGuiInputTextFlags_CtrlEnterForNewLine);
+                std::string hidden_label = "###" + param_label;
+                ImGui::InputTextMultiline(hidden_label.c_str(), &std::get<std::string>(this->widget_store), ml_dim,
+                    ImGuiInputTextFlags_CtrlEnterForNewLine);
                 if (ImGui::IsItemDeactivatedAfterEdit()) {
-                    std::string utf8Str = it->second;
+                    std::string utf8Str = std::get<std::string>(this->widget_store);
                     this->utils.Utf8Decode(utf8Str);
                     param.SetValue(utf8Str);
                 } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                     std::string utf8Str = arg;
                     this->utils.Utf8Encode(utf8Str);
-                    it->second = utf8Str;
+                    this->widget_store = utf8Str;
                 }
                 ImGui::SameLine();
-                ImGui::Text(param_name.c_str());
+                ImGui::Text(param_label.c_str());
                 this->help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
             } break;
             case (Parameter::ParamType::TRANSFERFUNCTION): {
@@ -528,23 +509,19 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
             } break;
             case (Parameter::ParamType::FILEPATH): {
                 /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-                auto it = this->widgtmap_text.find(param_id);
-                if (it == this->widgtmap_text.end()) {
-                    std::string utf8Str = arg;
-                    this->utils.Utf8Encode(utf8Str);
-                    this->widgtmap_text.emplace(param_id, utf8Str);
-                    it = this->widgtmap_text.find(param_id);
-                }
-                ImGui::InputText(param_label.c_str(), &it->second, ImGuiInputTextFlags_None);
+                std::string utf8Str = arg;
+                this->utils.Utf8Encode(utf8Str);
+                this->widget_store = utf8Str;
+                ImGui::InputText(
+                    param_label.c_str(), &std::get<std::string>(this->widget_store), ImGuiInputTextFlags_None);
                 if (ImGui::IsItemDeactivatedAfterEdit()) {
-                    this->utils.Utf8Decode(it->second);
-                    param.SetValue(it->second);
+                    this->utils.Utf8Decode(std::get<std::string>(this->widget_store));
+                    param.SetValue(std::get<std::string>(this->widget_store));
                 } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                     std::string utf8Str = arg;
                     this->utils.Utf8Encode(utf8Str);
-                    it->second = utf8Str;
+                    this->widget_store = utf8Str;
                 }
-
             } break;
             case (Parameter::ParamType::FLEXENUM): {
                 /// XXX: no UTF8 fanciness required here?
@@ -560,7 +537,6 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
                     }
                     ImGui::EndCombo();
                 }
-
             } break;
             default:
                 break;
@@ -580,63 +556,51 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
             ImGui::SameLine();
             ImGui::TextDisabled("|");
             ImGui::SameLine();
-            ImGui::Text(param_name.c_str());
+            ImGui::Text(param_label.c_str());
         } else if constexpr (std::is_same_v<T, glm::vec2>) {
-            auto it = this->widgtmap_vec2.find(param_id);
-            if (it == this->widgtmap_vec2.end()) {
-                this->widgtmap_vec2.emplace(param_id, arg);
-                it = this->widgtmap_vec2.find(param_id);
-            }
-            ImGui::InputFloat2(
-                param_label.c_str(), glm::value_ptr(it->second), float_format.c_str(), ImGuiInputTextFlags_None);
+            this->widget_store = arg;
+            ImGui::InputFloat2(param_label.c_str(), glm::value_ptr(std::get<glm::vec2>(this->widget_store)),
+                float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 auto max = param.GetMaxValue<glm::vec2>();
                 auto min = param.GetMinValue<glm::vec2>();
-                auto x = std::max(min.x, std::min(it->second.x, max.x));
-                auto y = std::max(min.y, std::min(it->second.y, max.y));
-                it->second = glm::vec2(x, y);
-                param.SetValue(it->second);
+                auto x = std::max(min.x, std::min(std::get<glm::vec2>(this->widget_store).x, max.x));
+                auto y = std::max(min.y, std::min(std::get<glm::vec2>(this->widget_store).y, max.y));
+                this->widget_store = glm::vec2(x, y);
+                param.SetValue(std::get<glm::vec2>(this->widget_store));
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                it->second = arg;
+                this->widget_store = arg;
             }
         } else if constexpr (std::is_same_v<T, glm::vec3>) {
-            auto it = this->widgtmap_vec3.find(param_id);
-            if (it == this->widgtmap_vec3.end()) {
-                this->widgtmap_vec3.emplace(param_id, arg);
-                it = this->widgtmap_vec3.find(param_id);
-            }
-            ImGui::InputFloat3(
-                param_label.c_str(), glm::value_ptr(it->second), float_format.c_str(), ImGuiInputTextFlags_None);
+            this->widget_store = arg;
+            ImGui::InputFloat3(param_label.c_str(), glm::value_ptr(std::get<glm::vec3>(this->widget_store)),
+                float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 auto max = param.GetMaxValue<glm::vec3>();
                 auto min = param.GetMinValue<glm::vec3>();
-                auto x = std::max(min.x, std::min(it->second.x, max.x));
-                auto y = std::max(min.y, std::min(it->second.y, max.y));
-                auto z = std::max(min.z, std::min(it->second.z, max.z));
-                it->second = glm::vec3(x, y, z);
-                param.SetValue(it->second);
+                auto x = std::max(min.x, std::min(std::get<glm::vec3>(this->widget_store).x, max.x));
+                auto y = std::max(min.y, std::min(std::get<glm::vec3>(this->widget_store).y, max.y));
+                auto z = std::max(min.z, std::min(std::get<glm::vec3>(this->widget_store).z, max.z));
+                this->widget_store = glm::vec3(x, y, z);
+                param.SetValue(std::get<glm::vec3>(this->widget_store));
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                it->second = arg;
+                this->widget_store = arg;
             }
         } else if constexpr (std::is_same_v<T, glm::vec4>) {
-            auto it = this->widgtmap_vec4.find(param_id);
-            if (it == this->widgtmap_vec4.end()) {
-                this->widgtmap_vec4.emplace(param_id, arg);
-                it = this->widgtmap_vec4.find(param_id);
-            }
-            ImGui::InputFloat4(
-                param_label.c_str(), glm::value_ptr(it->second), float_format.c_str(), ImGuiInputTextFlags_None);
+            this->widget_store = arg;
+            ImGui::InputFloat4(param_label.c_str(), glm::value_ptr(std::get<glm::vec4>(this->widget_store)),
+                float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 auto max = param.GetMaxValue<glm::vec4>();
                 auto min = param.GetMinValue<glm::vec4>();
-                auto x = std::max(min.x, std::min(it->second.x, max.x));
-                auto y = std::max(min.y, std::min(it->second.y, max.y));
-                auto z = std::max(min.z, std::min(it->second.z, max.z));
-                auto w = std::max(min.w, std::min(it->second.w, max.w));
-                it->second = glm::vec4(x, y, z, w);
-                param.SetValue(it->second);
+                auto x = std::max(min.x, std::min(std::get<glm::vec4>(this->widget_store).x, max.x));
+                auto y = std::max(min.y, std::min(std::get<glm::vec4>(this->widget_store).y, max.y));
+                auto z = std::max(min.z, std::min(std::get<glm::vec4>(this->widget_store).z, max.z));
+                auto w = std::max(min.w, std::min(std::get<glm::vec4>(this->widget_store).w, max.w));
+                this->widget_store = glm::vec4(x, y, z, w);
+                param.SetValue(std::get<glm::vec4>(this->widget_store));
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                it->second = arg;
+                this->widget_store = arg;
             }
         } else if constexpr (std::is_same_v<T, std::monostate>) {
             switch (param.type) {
@@ -647,8 +611,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
                 if (!button_hotkey.empty()) {
                     hotkey = " (" + button_hotkey + ")";
                 }
-                auto insert_pos = param_label.find("###");
-                param_label.insert(insert_pos, hotkey);
+                param_label += hotkey;
                 if (ImGui::Button(param_label.c_str())) {
                     // param.setDirty();
                 }

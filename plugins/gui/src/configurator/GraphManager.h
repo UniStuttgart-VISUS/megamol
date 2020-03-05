@@ -106,7 +106,7 @@ private:
 
     std::string writeLuaProjectConfPos(const ImVec2& pos);
 
-    bool readModuleAndSlotName(const std::string& full_slot_name, std::string& module_name, std::string& slot_name);
+    bool separateNamespaceAndName(const std::string& full_name, std::string& name_space, std::string& name);
 
     // ------------------------------------------------------------------------
 };
