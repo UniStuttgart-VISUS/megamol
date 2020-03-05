@@ -4746,15 +4746,6 @@ void MapGenerator::writeValueImage(const vislib::TString& path_to_image, const g
     this->store_values_fbo.GetColourTexture(&texture[0], 0, GL_RED, GL_FLOAT);
     this->map_fbo.GetColourTexture(&textureold[0], 1, GL_RED, GL_FLOAT);
 
-    auto minmax = std::minmax_element(textureold.begin(), textureold.end());
-    auto minmax2 = std::minmax_element(texture.begin(), texture.end());
-    float minalpha = (this->bufferMinMax.first - *minmax.first) / (*minmax.second - *minmax.first);
-    for (auto& v : texture) { // pull everything up
-        if (v < minalpha) {
-            v = minalpha;
-        }
-    }
-
     this->store_values_image.Image() =
         new vislib::graphics::BitmapImage(this->store_values_fbo.GetWidth(), this->store_values_fbo.GetHeight(), 1U,
             vislib::graphics::BitmapImage::CHANNELTYPE_FLOAT, static_cast<const void*>(texture.data()));
