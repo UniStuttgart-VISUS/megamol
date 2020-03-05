@@ -80,12 +80,14 @@ private:
 
     struct GlyphScalarProbeData {
         glm::vec4 position;
-        GLuint64 texture_handle;
-        float slice_idx;
+        glm::vec4 probe_direction;
         float scale;
 
+        float min_value;
+        float max_value;
+
         float sample_cnt;
-        float samples[51];
+        float samples[32];
     };
 
     template <typename ProbeType> TexturedGlyphData createTexturedGlyphData(

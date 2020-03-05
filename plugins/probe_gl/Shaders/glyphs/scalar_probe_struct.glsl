@@ -5,8 +5,8 @@ struct MeshShaderParams
     vec4 probe_direction;
     float scale;
 
-    float padding0;
-    float padding1;
+    float min_value;
+    float max_value;
 
     float sample_cnt;
     float samples[32];
