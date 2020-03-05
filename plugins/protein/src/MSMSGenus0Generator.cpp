@@ -182,6 +182,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
             probeRadius += stepSize;
             step++;
         }
+        if (genus != 0) exit(0);
         if (genus != 0) return false;
     }
     if (this->filenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty() &&
@@ -199,6 +200,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
             probeRadius += stepSize;
             step++;
         }
+        if (genus != 0) exit(0);
         if (genus != 0) return false;
     }
 
@@ -568,6 +570,7 @@ bool MSMSGenus0Generator::getExtentCallback(core::Call& caller) {
             probeRadius += stepSize;
             step++;
         }
+        if (genus > 0) exit(0);
         if (genus > 0) return false;
     }
 
