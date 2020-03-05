@@ -4738,7 +4738,7 @@ void MapGenerator::writeValueImage(const vislib::TString& path_to_image, const g
 #endif
 
     this->store_values_fbo.Enable();
-    this->map_fbo.DrawColourTexture(0, GL_LINEAR, GL_LINEAR, 0.9);
+    this->map_fbo.DrawColourTexture(1, GL_LINEAR, GL_LINEAR, 0.9);
     this->store_values_fbo.Disable();
 
     std::vector<float> texture(this->store_values_fbo.GetWidth() * this->store_values_fbo.GetHeight());
@@ -4763,9 +4763,6 @@ void MapGenerator::writeValueImage(const vislib::TString& path_to_image, const g
     std::vector<float> newvalues(texture.size());
     std::copy(data, data + texture.size(), newvalues.begin());
     delete this->store_png_image.Image();
-    for (auto& v : newvalues) {
-        v = glm::mix(*minmax.first, *minmax.second, v);
-    }
 
     std::string path = T2A(path_to_image).PeekBuffer();
     std::ofstream file(path, std::ios::binary);
