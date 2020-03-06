@@ -160,15 +160,13 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
             XYZ = cad->getData(pos_str)->GetAsFloat();
             p_count = XYZ.size() / 3;
             stride += 3 * sizeof(float);
-        }
-
-        if (x_str != "undef" || y_str != "undef" || z_str != "undef") {
+        } else if (x_str != "undef" || y_str != "undef" || z_str != "undef") {
             X = cad->getData(x_str)->GetAsFloat();
             Y = cad->getData(y_str)->GetAsFloat();
             Z = cad->getData(z_str)->GetAsFloat();
             p_count = X.size();
             stride += 3 * sizeof(float);
-        }
+        } else { return false; }
 
         std::vector<float> col;
         if (col_str != "undef") {
@@ -243,8 +241,11 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
         mpdc->AccessParticles(0).SetCount(p_count);
 
         mpdc->AccessParticles(0).SetVertexData(vertType, mix.data(), stride);
+        //mpdc->AccessParticles(0).SetColourData(
+        //    colType, mix.data() + core::moldyn::SimpleSphericalParticles::VertexDataSize[vertType], stride);
         mpdc->AccessParticles(0).SetColourData(
-            colType, mix.data() + core::moldyn::SimpleSphericalParticles::VertexDataSize[vertType], stride);
+            colType, &mix[3], stride);
+
         mpdc->AccessParticles(0).SetIDData(idType,
             mix.data() + core::moldyn::SimpleSphericalParticles::VertexDataSize[vertType] +
                 core::moldyn::SimpleSphericalParticles::ColorDataSize[colType],
