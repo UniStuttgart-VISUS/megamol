@@ -16,8 +16,8 @@ using namespace megamol;
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::Parameter::Parameter(int uid, megamol::gui::configurator::Parameter::ParamType type)
-    : uid(uid), type(type), minval(), maxval(), storage(), value(), present() {
+megamol::gui::configurator::Parameter::Parameter(int uid, ParamType type, StroageType store, MinType min, MaxType max)
+    : uid(uid), type(type), minval(min), maxval(max), storage(store), value(), present() {
 
     // Initialize variant types which should/can not be changed afterwards.
     // Default ctor of variants initializes std::monostate.
@@ -26,31 +26,24 @@ megamol::gui::configurator::Parameter::Parameter(int uid, megamol::gui::configur
         this->value = bool(false);
     } break;
     case (Parameter::ParamType::BUTTON): {
-        this->storage = megamol::core::view::KeyCode();
     } break;
     case (Parameter::ParamType::COLOR): {
         this->value = megamol::core::param::ColorParam::ColorType();
     } break;
     case (Parameter::ParamType::ENUM): {
         this->value = int(0);
-        this->storage = EnumStorageType();
     } break;
     case (Parameter::ParamType::FILEPATH): {
         this->value = std::string();
     } break;
     case (Parameter::ParamType::FLEXENUM): {
         this->value = std::string();
-        this->storage = megamol::core::param::FlexEnumParam::Storage_t();
     } break;
     case (Parameter::ParamType::FLOAT): {
         this->value = float(0.0f);
-        this->minval = -FLT_MAX;
-        this->maxval = FLT_MAX;
     } break;
     case (Parameter::ParamType::INT): {
         this->value = int();
-        this->minval = INT_MIN;
-        this->maxval = INT_MAX;
     } break;
     case (Parameter::ParamType::STRING): {
         this->value = std::string();
@@ -63,18 +56,12 @@ megamol::gui::configurator::Parameter::Parameter(int uid, megamol::gui::configur
     } break;
     case (Parameter::ParamType::VECTOR2F): {
         this->value = glm::vec2();
-        this->minval = glm::vec2(-FLT_MAX, -FLT_MAX);
-        this->maxval = glm::vec2(FLT_MAX, FLT_MAX);
     } break;
     case (Parameter::ParamType::VECTOR3F): {
         this->value = glm::vec3();
-        this->minval = glm::vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-        this->maxval = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
     } break;
     case (Parameter::ParamType::VECTOR4F): {
         this->value = glm::vec4();
-        this->minval = glm::vec4(-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX);
-        this->maxval = glm::vec4(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX);
     } break;
     default:
         break;

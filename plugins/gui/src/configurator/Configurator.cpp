@@ -108,7 +108,7 @@ bool megamol::gui::configurator::Configurator::Draw(
         // 2] Load available modules and calls and currently loaded project from core once(!)
 
         this->graph_manager.UpdateModulesCallsStock(core_instance);
-        this->graph_manager.AddGraph(this->get_unique_project_name());
+        this->addProject();
         this->window_state++;
     } else {
         // 3] Render configurator gui content
@@ -148,7 +148,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
         if (ImGui::BeginMenu("File")) {
 
             if (ImGui::MenuItem("New Project", nullptr)) {
-                this->graph_manager.AddGraph(this->get_unique_project_name());
+                this->addProject();
             }
 
             if (ImGui::MenuItem("Load Running Project")) {
@@ -308,4 +308,33 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
     ImGui::EndChild();
 
     ImGui::EndGroup();
+}
+
+
+void megamol::gui::configurator::Configurator::addProject(void) {
+
+    if (this->graph_manager.AddGraph(this->get_unique_project_name())) {
+
+        // Add initial GUIView and set as view instance
+        auto graph_ptr = this->graph_manager.GetGraphs().back();
+        if (graph_ptr != nullptr) {
+            std::string guiview_class_name = "GUIView";
+            if (graph_ptr->AddModule(this->graph_manager.GetModulesStock(), guiview_class_name)) {
+                auto graph_module = graph_ptr->GetGraphModules().back();
+                graph_module->name = guiview_class_name + "_" + std::to_string(graph_module->uid);
+                graph_module->name_space = "";
+                graph_module->is_view_instance = true;
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "Unable to add initial gui view module: '%s'. [%s, %s, line %d]\n", guiview_class_name.c_str(),
+                    __FILE__, __FUNCTION__, __LINE__);
+            }
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Unable to get last added graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        }
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Unable to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
 }

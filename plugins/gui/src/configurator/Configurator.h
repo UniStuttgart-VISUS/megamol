@@ -77,6 +77,8 @@ private:
 
     void draw_window_module_list(float width);
 
+    void addProject(void);
+
     inline const std::string get_unique_project_name(void) {
         return ("Project_" + std::to_string(++unique_project_id));
     }

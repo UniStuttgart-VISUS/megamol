@@ -119,13 +119,12 @@ public:
         std::string full_name;
         std::string description;
         Parameter::ParamType type;
-        std::string value_string;
         MinType minval;
         MaxType maxval;
         StroageType storage;
     };
 
-    Parameter(int uid, ParamType type);
+    Parameter(int uid, ParamType type, StroageType store, MinType min, MaxType max);
     ~Parameter() {}
 
     const int uid;

@@ -41,7 +41,7 @@ bool megamol::gui::configurator::Graph::AddModule(
                 mod_ptr->is_view_instance = false;
 
                 for (auto& p : mod.parameters) {
-                    Parameter param_slot(this->generate_unique_id(), p.type);
+                    Parameter param_slot(this->generate_unique_id(), p.type, p.storage, p.minval, p.maxval);
                     param_slot.full_name = p.full_name;
                     param_slot.description = p.description;
 

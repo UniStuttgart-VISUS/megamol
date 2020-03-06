@@ -24,22 +24,6 @@ bool megamol::gui::configurator::GraphManager::AddGraph(std::string name) {
     try {
         Graph graph(name);
         this->graphs.emplace_back(std::make_shared<Graph>(graph));
-
-        auto graph_ptr = this->GetGraphs().back();
-        if (graph_ptr == nullptr) return false;
-
-        // Add initial GUIView and set as view instance
-        std::string guiview_class_name = "GUIView";
-        if (!graph_ptr->AddModule(this->modules_stock, guiview_class_name)) {
-            vislib::sys::Log::DefaultLog.WriteError("Unable to add initial gui view module '%s'. [%s, %s, line %d]\n",
-                guiview_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        auto graph_module = graph_ptr->GetGraphModules().back();
-        graph_module->name = guiview_class_name + "_1";
-        graph_module->name_space = "";
-        graph_module->is_view_instance = true;
-
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -870,20 +854,34 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
             // Set parameter type
             if (auto* p_ptr = param_slot->Param<core::param::ButtonParam>()) {
                 psd.type = Parameter::ParamType::BUTTON;
+                psd.storage = p_ptr->GetKeyCode();
             } else if (auto* p_ptr = param_slot->Param<core::param::BoolParam>()) {
                 psd.type = Parameter::ParamType::BOOL;
             } else if (auto* p_ptr = param_slot->Param<core::param::ColorParam>()) {
                 psd.type = Parameter::ParamType::COLOR;
             } else if (auto* p_ptr = param_slot->Param<core::param::EnumParam>()) {
                 psd.type = Parameter::ParamType::ENUM;
+                Parameter::EnumStorageType map;
+                auto psd_map = p_ptr->getMap();
+                auto iter = psd_map.GetConstIterator();
+                while (iter.HasNext()) {
+                    auto pair = iter.Next();
+                    map.emplace(pair.Key(), std::string(pair.Value().PeekBuffer()));
+                }
+                psd.storage = map;
             } else if (auto* p_ptr = param_slot->Param<core::param::FilePathParam>()) {
                 psd.type = Parameter::ParamType::FILEPATH;
             } else if (auto* p_ptr = param_slot->Param<core::param::FlexEnumParam>()) {
                 psd.type = Parameter::ParamType::FLEXENUM;
+                psd.storage = p_ptr->getStorage();
             } else if (auto* p_ptr = param_slot->Param<core::param::FloatParam>()) {
                 psd.type = Parameter::ParamType::FLOAT;
+                psd.minval = p_ptr->MinValue();
+                psd.maxval = p_ptr->MaxValue();
             } else if (auto* p_ptr = param_slot->Param<core::param::IntParam>()) {
                 psd.type = Parameter::ParamType::INT;
+                psd.minval = p_ptr->MinValue();
+                psd.maxval = p_ptr->MaxValue();
             } else if (auto* p_ptr = param_slot->Param<core::param::StringParam>()) {
                 psd.type = Parameter::ParamType::STRING;
             } else if (auto* p_ptr = param_slot->Param<core::param::TernaryParam>()) {
@@ -892,10 +890,22 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
                 psd.type = Parameter::ParamType::TRANSFERFUNCTION;
             } else if (auto* p_ptr = param_slot->Param<core::param::Vector2fParam>()) {
                 psd.type = Parameter::ParamType::VECTOR2F;
+                auto min = p_ptr->MinValue();
+                psd.minval = glm::vec2(min.X(), min.Y());
+                auto max = p_ptr->MaxValue();
+                psd.maxval = glm::vec2(max.X(), max.Y());
             } else if (auto* p_ptr = param_slot->Param<core::param::Vector3fParam>()) {
                 psd.type = Parameter::ParamType::VECTOR3F;
+                auto min = p_ptr->MinValue();
+                psd.minval = glm::vec3(min.X(), min.Y(), min.Z());
+                auto max = p_ptr->MaxValue();
+                psd.maxval = glm::vec3(max.X(), max.Y(), max.Z());
             } else if (auto* p_ptr = param_slot->Param<core::param::Vector4fParam>()) {
                 psd.type = Parameter::ParamType::VECTOR4F;
+                auto min = p_ptr->MinValue();
+                psd.minval = glm::vec4(min.X(), min.Y(), min.Z(), min.W());
+                auto max = p_ptr->MaxValue();
+                psd.maxval = glm::vec4(max.X(), max.Y(), max.Z(), max.W());
             } else {
                 vislib::sys::Log::DefaultLog.WriteError("Found unknown parameter type. Please extend parameter types "
                                                         "for the configurator. [%s, %s, line %d]\n",

@@ -223,8 +223,15 @@ bool megamol::gui::GUIUtils::VerticalSplitter(float* size_left, float* size_righ
     bb.Max = bb.Min + ImGui::CalcItemSize(split_vertically ? ImVec2(thickness - 4.0f, splitter_long_axis_size)
                                                            : ImVec2(splitter_long_axis_size, thickness - 4.0f),
                           0.0f, 0.0f);
-    return ImGui::SplitterBehavior(
+
+    bool retval = ImGui::SplitterBehavior(
         bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size_left, size_right, min_size, min_size, 0.0f);
+
+    if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
+        /// Do something when splitter is double clicked ...
+    }
+
+    return retval;
 }
 
 
