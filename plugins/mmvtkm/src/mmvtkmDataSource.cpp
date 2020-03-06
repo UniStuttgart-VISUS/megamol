@@ -18,9 +18,11 @@
 #include "vislib/sys/Log.h"
 #include "vislib/sys/SystemInformation.h"
 //#include "vtkm/io/reader/VTKPolyDataReader.h"
+#include "vtkm/cont/DataSetBuilderExplicit.h"
+#include "vtkm/cont/DataSetFieldAdd.h"
 #include "vtkm/io/reader/VTKDataSetReader.h"
 #include "vtkm/io/writer/VTKDataSetWriter.h"
-#include "vtkm/cont/DataSetBuilderExplicit.h"
+#include "vtkm/VecTraits.h"
 
 
 using namespace megamol;
@@ -206,67 +208,93 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
     std::vector<float> x_coord = nodesCad->getData("x")->GetAsFloat();
     std::vector<float> y_coord = nodesCad->getData("y")->GetAsFloat();
     std::vector<float> z_coord = nodesCad->getData("z")->GetAsFloat();
+    std::vector<float> hs1_wert = nodesCad->getData("hs1_wert")->GetAsFloat();
+    std::vector<float> hs1_x = nodesCad->getData("hs1_x")->GetAsFloat();
+    std::vector<float> hs1_y = nodesCad->getData("hs1_y")->GetAsFloat();
+    std::vector<float> hs1_z = nodesCad->getData("hs1_z")->GetAsFloat();
+    std::vector<float> hs2_wert = nodesCad->getData("hs2_wert")->GetAsFloat();
+    std::vector<float> hs2_x = nodesCad->getData("hs2_x")->GetAsFloat();
+    std::vector<float> hs2_y = nodesCad->getData("hs2_y")->GetAsFloat();
+    std::vector<float> hs2_z = nodesCad->getData("hs2_z")->GetAsFloat();
+    std::vector<float> hs3_wert = nodesCad->getData("hs3_wert")->GetAsFloat();
+    std::vector<float> hs3_x = nodesCad->getData("hs3_x")->GetAsFloat();
+    std::vector<float> hs3_y = nodesCad->getData("hs3_y")->GetAsFloat();
+    std::vector<float> hs3_z = nodesCad->getData("hs3_z")->GetAsFloat();
 
-    std::vector<float> element_label = labelCad->getData("element")->GetAsFloat();
+    // TODO check if size of each vector is the same (assert)
+
+    std::vector<float> element_label = labelCad->getData("element-label")->GetAsFloat();
     std::vector<float> nodeA = labelCad->getData("nodea")->GetAsFloat();
     std::vector<float> nodeB = labelCad->getData("nodeb")->GetAsFloat();
     std::vector<float> nodeC = labelCad->getData("nodec")->GetAsFloat();
     std::vector<float> nodeD = labelCad->getData("noded")->GetAsFloat();
 
-	int num_elements = 100;
-    //element_label.size();
-	vtkm::cont::DataSetBuilderExplicitIterative dataSetBuilder;
 
-	int cell_idx = 0;
+    int num_elements = element_label.size();
+    vtkm::cont::DataSetBuilderExplicitIterative dataSetBuilder;
+    vtkm::cont::DataSetFieldAdd dataSetFieldAdd;
+
+    int cell_idx = 0;
     int num_skipped = 0;
+    std::vector<std::vector<vtkm::Vec<float, 3>>> point_hs;
 
     for (int i = 0; i < num_elements; ++i) {
-		std::vector<int> labels = {(int)nodeA[i], (int)nodeB[i], (int)nodeC[i], (int)nodeD[i]};
-		std::vector<vtkm::Vec<float, 3>> vertex_buffer(4);
+        std::vector<int> labels = {(int)nodeA[i], (int)nodeB[i], (int)nodeC[i], (int)nodeD[i]};
+        std::vector<vtkm::Vec<float, 3>> vertex_buffer(4);
+        std::vector<std::vector<vtkm::Vec<float, 3>>> hs(4);
+
         bool not_found = false;
 
         // BUILD TETRAHEDRON HERE
-		// get vertex cooridnates for current tetrahedron vertices
+        // get vertex cooridnates for current tetrahedron vertices
         for (int j = 0; j < 4; ++j) {
             auto it = std::find(node_labels.begin(), node_labels.end(), labels[j]);
-			int node_index = std::distance(node_labels.begin(), it);
+            int node_index = std::distance(node_labels.begin(), it);
             if (node_index == node_labels.size()) {
-				//vislib::sys::Log::DefaultLog.WriteInfo("(%i, %i) with %i", i, j, labels[j]);
+                // vislib::sys::Log::DefaultLog.WriteInfo("(%i, %i) with %i", i, j, labels[j]);
                 ++num_skipped;
                 not_found = true;
                 break;
-			}
+            }
+            int idx = 3 * j;
             vertex_buffer[j] = {x_coord[node_index], y_coord[node_index], z_coord[node_index]};
+            hs.clear();
+            hs.resize(3);
+            hs[j][0] = {hs1_x[node_index], hs1_y[node_index], hs1_z[node_index]};
+            hs[j][1] = {hs2_x[node_index], hs2_y[node_index], hs2_z[node_index]};
+            hs[j][2] = {hs3_x[node_index], hs3_y[node_index], hs3_z[node_index]};
         }
 
-		if (not_found) continue;
+        if (not_found) continue;
 
-		for (int j = 0; j < 4; ++j) {
-			// TODO better vertex handling: could use vertex multiple times by just adding correct index
-			// add vertices of all "correct" vertices and get indices
+        for (int j = 0; j < 4; ++j) {
+            // TODO better vertex handling: could use vertex multiple times by just adding correct index
+            // add vertices of all "correct" vertices and get indices
             dataSetBuilder.AddPoint(vertex_buffer[j][0], vertex_buffer[j][1], vertex_buffer[j][2]);
+            point_hs.emplace_back(hs[j]);
         }
 
         dataSetBuilder.AddCell(vtkm::CELL_SHAPE_TETRA);
         for (int j = 0; j < 4; ++j) {
-			// TODO better index connection --> could use index multiple times
+            // TODO better index connection --> could use index multiple times
             dataSetBuilder.AddCellPoint(4 * cell_idx + j);
-		}
+        }
 
-		++cell_idx;
+        ++cell_idx;
     }
 
-	vislib::sys::Log::DefaultLog.WriteInfo("Number of skipped tetrahedrons: %i", num_skipped);
+    vislib::sys::Log::DefaultLog.WriteInfo("Number of skipped tetrahedrons: %i", num_skipped);
 
-    //vtkmData = dataSetBuilder.Create(vertices, shapes, numIndices, connectivity);
+    // vtkmData = dataSetBuilder.Create(vertices, shapes, numIndices, connectivity);
     vtkmData = dataSetBuilder.Create();
+    dataSetFieldAdd.AddPointField<std::vector<vtkm::Vec<float, 3>>>(vtkmData, "hs_points", point_hs);
 
-	vtkm::io::writer::VTKDataSetWriter writer("tetrahedron.vtk");
+    vtkm::io::writer::VTKDataSetWriter writer("tetrahedron.vtk");
     writer.WriteDataSet(vtkmData);
 
     this->data_hash++;
 
-	this->filename.ForceSetDirty();
+    this->filename.ForceSetDirty();
     // update data only when we have a new file
     if (this->filename.IsDirty()) {
         c2->SetDataHash(this->data_hash);
