@@ -173,6 +173,18 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
             ImGui::EndMenu();
         }
 
+        ImGui::SameLine();
+        std::string info_text = "----- Additonal Options -----\n"
+                                "- Add module from stock list to graph\n"
+                                "     - [Double Click] with left mouse button\n"
+                                "     - [Richt Click] on selected module -> Context Menu: Add\n"
+                                "- Delete selected module/call from graph\n"
+                                "     - Select item an press [Delete]\n"
+                                "     - [Richt Click] on selected item -> Context Menu: Delete\n"
+                                "- Rename graph or module\n"
+                                "     - [Richt Click] on graph tab or module -> Context Menu: Rename";
+        this->utils.HelpMarkerToolTip(info_text.c_str(), "[?]");
+
         // Info text ----------------------------------------------------------
         ImGui::SameLine(260.0f);
         std::string label = "This is a PROTOTYPE. Changes will NOT effect the currently loaded MegaMol project.";
