@@ -35,15 +35,15 @@ bool megamol::gui::configurator::Graph::AddModule(
                 mod_ptr->description = mod.description;
                 mod_ptr->plugin_name = mod.plugin_name;
                 mod_ptr->is_view = mod.is_view;
+                // Generate unique name based on uid
                 mod_ptr->name = mod.class_name + "_" + std::to_string(mod_ptr->uid);
-                mod_ptr->name_space = "::";
+                mod_ptr->name_space = "";
                 mod_ptr->is_view_instance = false;
 
                 for (auto& p : mod.parameters) {
                     Parameter param_slot(this->generate_unique_id(), p.type);
-                    param_slot.name = p.name;
+                    param_slot.full_name = p.full_name;
                     param_slot.description = p.description;
-                    param_slot.name = p.name; /// XXX GENERATE or set from core
 
                     mod_ptr->parameters.emplace_back(param_slot);
                 }
@@ -254,13 +254,12 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , selected_slot_ptr(nullptr)
     , process_selected_slot(0)
     , update_current_graph(true)
-    , rename_popup_open(false)
-    , rename_popup_string(nullptr)
     , split_width(-1.0f) // !
     , font(nullptr)
     , mouse_wheel(0.0f)
     , params_visible(true)
     , params_readonly(false)
+    , param_name_space()
     , param_present(Parameter::Presentations::DEFAULT) {}
 
 
@@ -268,11 +267,11 @@ megamol::gui::configurator::Graph::Presentation::~Presentation(void) {}
 
 
 bool megamol::gui::configurator::Graph::Presentation::GUI_Present(megamol::gui::configurator::Graph& graph,
-    float child_width, ImFont* graph_font, HotkeyData& paramter_search, HotkeyData& delete_graph_element,
-    bool& delete_graph) {
+    float child_width, ImFont* graph_font, megamol::gui::HotKeyArrayType& hotkeys, bool& delete_graph) {
 
     bool retval = false;
     this->font = graph_font;
+    bool rename_popup_open = false;
 
     try {
 
@@ -298,15 +297,14 @@ bool megamol::gui::configurator::Graph::Presentation::GUI_Present(megamol::gui::
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Rename")) {
-                    this->rename_popup_open = true;
-                    this->rename_popup_string = &graph.GetName();
+                    rename_popup_open = true;
                 }
                 ImGui::EndPopup();
             }
 
             // Process module deletion
-            if (std::get<1>(delete_graph_element)) {
-                std::get<1>(delete_graph_element) = false;
+            if (std::get<1>(hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM])) {
+                std::get<1>(hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = false;
                 this->selected_slot_ptr = nullptr;
                 if (this->selected_module_uid > 0) {
                     graph.DeleteModule(this->selected_module_uid);
@@ -347,11 +345,11 @@ bool megamol::gui::configurator::Graph::Presentation::GUI_Present(megamol::gui::
                 float child_width_auto = 0.0f;
                 this->utils.VerticalSplitter(&this->split_width, &child_width_auto);
 
-                this->canvas(graph, this->split_width);
+                this->canvas(graph, this->split_width, hotkeys);
                 ImGui::SameLine();
-                this->parameters(graph, child_width_auto, paramter_search);
+                this->parameters(graph, child_width_auto, hotkeys);
             } else {
-                this->canvas(graph, child_width);
+                this->canvas(graph, child_width, hotkeys);
             }
 
             retval = true;
@@ -361,28 +359,8 @@ bool megamol::gui::configurator::Graph::Presentation::GUI_Present(megamol::gui::
         // Set delete flag if tab was closed
         if (!open) delete_graph = true;
 
-        // Rename pop-up (grpah or module name)
-        if (this->rename_popup_open) {
-            ImGui::OpenPopup("Rename");
-        }
-        if (ImGui::BeginPopupModal("Rename", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-
-            std::string label = "Enter new  project name";
-            auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
-            if (ImGui::InputText("Enter new  project name", this->rename_popup_string, flags)) {
-                this->rename_popup_string = nullptr;
-                ImGui::CloseCurrentPopup();
-            }
-            // Set focus on input text once (applied next frame)
-            if (this->rename_popup_open) {
-                ImGuiID id = ImGui::GetID(label.c_str());
-                ImGui::ActivateItem(id);
-            }
-
-            ImGui::EndPopup();
-        }
-        this->rename_popup_open = false;
-
+        // Rename pop-up
+        this->utils.RenamePopUp("Rename Project", rename_popup_open, graph.GetName());
 
         ImGui::PopID();
     } catch (std::exception e) {
@@ -475,7 +453,7 @@ void megamol::gui::configurator::Graph::Presentation::menu(megamol::gui::configu
 
 
 void megamol::gui::configurator::Graph::Presentation::canvas(
-    megamol::gui::configurator::Graph& graph, float child_width) {
+    megamol::gui::configurator::Graph& graph, float child_width, megamol::gui::HotKeyArrayType& hotkeys) {
 
     ImGuiIO& io = ImGui::GetIO();
 
@@ -520,7 +498,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
 
     // Draw modules -------------------
     for (auto& mod : graph.GetGraphModules()) {
-        auto id = mod->GUI_Present(this->canvas_offset, this->canvas_zooming);
+        auto id = mod->GUI_Present(this->canvas_offset, this->canvas_zooming, hotkeys);
         if (id != GUI_INVALID_ID) {
             this->selected_module_uid = id;
         }
@@ -587,7 +565,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
 }
 
 void megamol::gui::configurator::Graph::Presentation::parameters(
-    megamol::gui::configurator::Graph& graph, float child_width, HotkeyData& paramter_search) {
+    megamol::gui::configurator::Graph& graph, float child_width, HotKeyArrayType& hotkeys) {
 
     ImGui::BeginGroup();
 
@@ -599,11 +577,11 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
     ImGui::Text("Parameters");
     ImGui::Separator();
 
-    if (std::get<1>(paramter_search)) {
-        std::get<1>(paramter_search) = false;
+    if (std::get<1>(hotkeys[HotkeyIndex::PARAMETER_SEARCH])) {
+        std::get<1>(hotkeys[HotkeyIndex::PARAMETER_SEARCH]) = false;
         this->utils.SetSearchFocus(true);
     }
-    std::string help_text = "[" + std::get<0>(paramter_search).ToString() +
+    std::string help_text = "[" + std::get<0>(hotkeys[HotkeyIndex::PARAMETER_SEARCH]).ToString() +
                             "] Set keyboard focus to search input field.\n"
                             "Case insensitive substring search in parameter names.";
     this->utils.StringSearch("graph_parameter_search", help_text);
@@ -659,15 +637,43 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
         auto child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar;
         ImGui::BeginChild("parameter_list_child", ImVec2(child_width, 0.0f), true, child_flags);
 
+        bool param_name_space_open = true;
+        unsigned int param_indent_stack = 0;
+
         for (auto& param : modptr->parameters) {
             // Filter module by given search string
             bool search_filter = true;
             if (!search_string.empty()) {
-
-                search_filter = this->utils.FindCaseInsensitiveSubstring(param.name, search_string);
+                search_filter = this->utils.FindCaseInsensitiveSubstring(param.full_name, search_string);
             }
 
-            if (search_filter) {
+            // Add Collapsing header depending on parameter namespace
+            std::string current_param_namespace = param.GetNameSpace();
+            if (current_param_namespace != this->param_name_space) {
+                this->param_name_space = current_param_namespace;
+                while (param_indent_stack > 0) {
+                    param_indent_stack--;
+                    ImGui::Unindent();
+                }
+
+                ImGui::Separator();
+                if (!this->param_name_space.empty()) {
+                    ImGui::Indent();
+                    std::string label = this->param_name_space + "###" + param.full_name;
+                    // Open all namespace headers when parameter search is active
+                    if (!search_string.empty()) {
+                        auto headerId = ImGui::GetID(label.c_str());
+                        ImGui::GetStateStorage()->SetInt(headerId, 1);
+                    }
+                    param_name_space_open = ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
+                    param_indent_stack++;
+                } else {
+                    param_name_space_open = true;
+                }
+            }
+
+            // Draw parameter
+            if (search_filter && param_name_space_open) {
                 param.GUI_Present();
             }
         }

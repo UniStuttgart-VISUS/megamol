@@ -116,7 +116,7 @@ public:
         StroageType;
 
     struct StockParameter {
-        std::string name;
+        std::string full_name;
         std::string description;
         Parameter::ParamType type;
         std::string value_string;
@@ -131,10 +131,28 @@ public:
     const int uid;
     const ParamType type;
 
-    std::string name;
+    std::string full_name;
     std::string description;
 
     // Get ----------------------------------
+    std::string GetName(void) {
+        std::string name = this->full_name;
+        auto idx = this->full_name.rfind(':');
+        if (idx != std::string::npos) {
+            name = name.substr(idx + 1);
+        }
+        return name;
+    }
+    std::string GetNameSpace(void) {
+        std::string name_space = "";
+        auto idx = this->full_name.rfind(':');
+        if (idx != std::string::npos) {
+            name_space = this->full_name.substr(0, idx - 1);
+            name_space.erase(std::remove(name_space.begin(), name_space.end(), ':'), name_space.end());
+        }
+        return name_space;
+    }
+
     std::string GetValueString(void);
 
     ValueType& GetValue(void) { return this->value; }

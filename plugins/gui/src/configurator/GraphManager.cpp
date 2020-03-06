@@ -37,7 +37,7 @@ bool megamol::gui::configurator::GraphManager::AddGraph(std::string name) {
         }
         auto graph_module = graph_ptr->GetGraphModules().back();
         graph_module->name = guiview_class_name + "_1";
-        // graph_module->full_name = view_full_name;
+        graph_module->name_space = "";
         graph_module->is_view_instance = true;
 
     } catch (std::exception e) {
@@ -248,6 +248,7 @@ bool megamol::gui::configurator::GraphManager::LoadCurrentCoreProject(
             graph_module->name = std::string(mod->Name().PeekBuffer());
             std::string full_name = std::string(mod->FullName().PeekBuffer());
             graph_module->name_space = full_name.substr(0, full_name.find(graph_module->name) - 2);
+            graph_module->is_view_instance = false;
 
             if (view_instances.find(std::string(mod->FullName().PeekBuffer())) != view_instances.end()) {
                 // Instance Name
@@ -263,9 +264,9 @@ bool megamol::gui::configurator::GraphManager::LoadCurrentCoreProject(
                 // Parameter
                 const auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
                 if (param_slot != nullptr) {
-                    std::string param_name = std::string(param_slot->Name().PeekBuffer());
+                    std::string param_full_name = std::string(param_slot->Name().PeekBuffer());
                     for (auto& param : graph_module->parameters) {
-                        if (param.name == param_name) {
+                        if (param.full_name == param_full_name) {
                             if (auto* p_ptr = param_slot->Param<core::param::ButtonParam>()) {
                                 param.SetStorage(p_ptr->GetKeyCode());
                             } else if (auto* p_ptr = param_slot->Param<core::param::BoolParam>()) {
@@ -701,9 +702,10 @@ bool megamol::gui::configurator::GraphManager::LoadProjectFile(
                     module_namesp = "::" + mod->name + "::";
                     module_name_idx = param_slot_full_name.find(module_namesp);
                     if (module_name_idx != std::string::npos) {
-                        std::string param_name = param_slot_full_name.substr(module_name_idx + mod->name.size() + 2);
+                        std::string param_full_name =
+                            param_slot_full_name.substr(module_name_idx + mod->name.size() + 2);
                         for (auto& param : mod->parameters) {
-                            if (param.name == param_name) {
+                            if (param.full_name == param_full_name) {
                                 param.SetValueString(value_str);
                             }
                         }
@@ -760,8 +762,8 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(
                             vislib::StringA valueString;
                             vislib::UTF8Encoder::Encode(
                                 valueString, vislib::StringA(param_slot.GetValueString().c_str()));
-                            confParams << "mmSetParamValue(\"" << mod->FullName() << "::" << param_slot.name << "\",[=["
-                                       << std::string(valueString.PeekBuffer()) << "]=])\n";
+                            confParams << "mmSetParamValue(\"" << mod->FullName() << "::" << param_slot.full_name
+                                       << "\",[=[" << std::string(valueString.PeekBuffer()) << "]=])\n";
                         }
                     }
 
@@ -862,7 +864,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
         for (std::shared_ptr<core::param::ParamSlot> param_slot : paramSlots) {
 
             Parameter::StockParameter psd;
-            psd.name = std::string(param_slot->Name().PeekBuffer());
+            psd.full_name = std::string(param_slot->Name().PeekBuffer());
             psd.description = std::string(param_slot->Description().PeekBuffer());
 
             // Set parameter type
@@ -1043,7 +1045,7 @@ megamol::gui::configurator::GraphManager::Presentation::~Presentation(void) {}
 
 bool megamol::gui::configurator::GraphManager::Presentation::GUI_Present(
     megamol::gui::configurator::GraphManager& graph_manager, float child_width, ImFont* graph_font,
-    megamol::gui::HotkeyData& paramter_search, megamol::gui::HotkeyData& delete_graph_element) {
+    megamol::gui::HotKeyArrayType& hotkeys) {
 
     try {
         if (ImGui::GetCurrentContext() == nullptr) {
@@ -1065,7 +1067,7 @@ bool megamol::gui::configurator::GraphManager::Presentation::GUI_Present(
         for (auto& graph : graph_manager.GetGraphs()) {
 
             bool delete_graph = false;
-            if (graph->GUI_Present(child_width, graph_font, paramter_search, delete_graph_element, delete_graph)) {
+            if (graph->GUI_Present(child_width, graph_font, hotkeys, delete_graph)) {
                 this->presented_graph = graph;
             }
 

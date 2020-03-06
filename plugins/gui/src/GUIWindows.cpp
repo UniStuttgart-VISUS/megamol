@@ -29,9 +29,9 @@ using namespace megamol::gui;
 GUIWindows::GUIWindows()
     : core_instance(nullptr)
     , param_slots()
-    , style_param("gui::style", "Color style, theme")
-    , state_param("gui::state", "Current state of all windows. Automatically updated.")
-    , autostart_configurator("gui::autostart_configurator", "Start the configurator at start up automatically. ")
+    , style_param("style", "Color style, theme")
+    , state_param("state", "Current state of all windows. Automatically updated.")
+    , autostart_configurator("autostart_configurator", "Start the configurator at start up automatically. ")
     , context(nullptr)
     , impl(Implementation::NONE)
     , window_manager()
@@ -64,15 +64,16 @@ GUIWindows::GUIWindows()
     this->param_slots.push_back(&this->style_param);
     this->param_slots.push_back(&this->autostart_configurator);
 
-    this->hotkeys[HotkeyIndex::EXIT_PROGRAM] =
-        HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
-    this->hotkeys[HotkeyIndex::PARAMETER_SEARCH] =
-        HotkeyData(megamol::core::view::KeyCode(
-                       megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL | core::view::Modifier::ALT),
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = HotkeyDataType(
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] =
+        HotkeyDataType(megamol::core::view::KeyCode(
+                           megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL | core::view::Modifier::ALT),
             false);
-    this->hotkeys[HotkeyIndex::SAVE_PROJECT] = HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S,
-                                                              core::view::Modifier::CTRL | core::view::Modifier::ALT),
-        false);
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT] =
+        HotkeyDataType(megamol::core::view::KeyCode(
+                           megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::ALT),
+            false);
 }
 
 
@@ -109,7 +110,7 @@ bool GUIWindows::Draw(vislib::math::Rectangle<int> viewport, double instanceTime
         return false;
     }
 
-    if (std::get<1>(this->hotkeys[HotkeyIndex::EXIT_PROGRAM])) {
+    if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM])) {
         this->shutdown();
         return true;
     }
@@ -798,12 +799,12 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
 
     // Paramter substring name filtering (only for main parameter view)
     if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
-        if (std::get<1>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH])) {
+        if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH])) {
             this->utils.SetSearchFocus(true);
-            std::get<1>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH]) = false;
+            std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH]) = false;
         }
         std::string help_test =
-            "[" + std::get<0>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH]).ToString() +
+            "[" + std::get<0>(this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH]).ToString() +
             "] Set keyboard focus to search input field.\n"
             "Case insensitive substring search in\nparameter names.\nGlobally in all parameter views.\n";
         this->utils.StringSearch("guiwindow_parameter_earch", help_test);
@@ -1267,7 +1268,8 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
     if (ImGui::BeginMenu("File")) {
 #ifdef GUI_USE_FILESYSTEM
         // Load/save parameter values to LUA file
-        if (ImGui::MenuItem("Save Project", std::get<0>(this->hotkeys[HotkeyIndex::SAVE_PROJECT]).ToString().c_str())) {
+        if (ImGui::MenuItem("Save Project",
+                std::get<0>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]).ToString().c_str())) {
             open_popup_project = true;
         }
         /// Not supported so far
@@ -1412,12 +1414,12 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 
     // SAVE PROJECT pop-up
 #ifdef GUI_USE_FILESYSTEM
-    open_popup_project = (open_popup_project || std::get<1>(this->hotkeys[HotkeyIndex::SAVE_PROJECT]));
+    open_popup_project = (open_popup_project || std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]));
     if (open_popup_project) {
-        std::get<1>(this->hotkeys[HotkeyIndex::SAVE_PROJECT]) = false;
+        std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]) = false;
     }
     if (this->utils.FileBrowserPopUp(
-            GUIUtils::FileBrowserFlag::SAVE, open_popup_project, "Save Project", wc.main_project_file)) {
+            GUIUtils::FileBrowserFlag::SAVE, "Save Project", open_popup_project, wc.main_project_file)) {
         // Serialize current state to parameter.
         std::string state;
         this->window_manager.StateToJSON(state);

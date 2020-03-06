@@ -154,8 +154,8 @@ private:
     megamol::core::param::ParamSlot autostart_configurator;
 
     /** Hotkeys */
-    enum HotkeyIndex : size_t { EXIT_PROGRAM = 0, PARAMETER_SEARCH = 1, SAVE_PROJECT = 2, INDEX_COUNT = 3 };
-    std::array<HotkeyData, HotkeyIndex::INDEX_COUNT> hotkeys;
+    enum GuiHotkeyIndex : size_t { EXIT_PROGRAM = 0, PARAMETER_SEARCH = 1, SAVE_PROJECT = 2, INDEX_COUNT = 3 };
+    std::array<HotkeyDataType, GuiHotkeyIndex::INDEX_COUNT> hotkeys;
 
     /** The ImGui context created and used by this GUIWindows */
     ImGuiContext* context;

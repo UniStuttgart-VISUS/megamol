@@ -34,15 +34,15 @@ megamol::gui::configurator::Configurator::Configurator()
 
     // Define HotKeys
     this->hotkeys[HotkeyIndex::MODULE_SEARCH] =
-        HotkeyData(megamol::core::view::KeyCode(
-                       megamol::core::view::Key::KEY_M, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
+        HotkeyDataType(megamol::core::view::KeyCode(
+                           megamol::core::view::Key::KEY_M, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
             false);
     this->hotkeys[HotkeyIndex::PARAMETER_SEARCH] =
-        HotkeyData(megamol::core::view::KeyCode(
-                       megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
+        HotkeyDataType(megamol::core::view::KeyCode(
+                           megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
             false);
     this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM] =
-        HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_DELETE), false);
+        HotkeyDataType(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_DELETE), false);
 }
 
 
@@ -124,8 +124,7 @@ bool megamol::gui::configurator::Configurator::Draw(
 
         this->graph_ptr = nullptr;
 
-        this->graph_manager.GUI_Present(child_width_auto, this->graph_font,
-            this->hotkeys[HotkeyIndex::PARAMETER_SEARCH], this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]);
+        this->graph_manager.GUI_Present(child_width_auto, this->graph_font, this->hotkeys);
 
         this->graph_ptr = this->graph_manager.GUI_GetPresentedGraph();
     }
@@ -185,11 +184,11 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     // SAVE/LOAD PROJECT pop-up
 #ifdef GUI_USE_FILESYSTEM
     if (this->utils.FileBrowserPopUp(
-            GUIUtils::FileBrowserFlag::LOAD, open_load_popup, "Load Project", this->project_filename)) {
+            GUIUtils::FileBrowserFlag::LOAD, "Load Project", open_load_popup, this->project_filename)) {
         this->graph_manager.LoadProjectFile(this->graph_ptr->GetUID(), this->project_filename, core_instance);
     }
     if (this->utils.FileBrowserPopUp(
-            GUIUtils::FileBrowserFlag::SAVE, open_save_popup, "Save Project", this->project_filename)) {
+            GUIUtils::FileBrowserFlag::SAVE, "Save Project", open_save_popup, this->project_filename)) {
         this->graph_manager.SaveProjectFile(this->graph_ptr->GetUID(), this->project_filename, core_instance);
     }
 #endif // GUI_USE_FILESYSTEM

@@ -38,8 +38,10 @@ namespace gui {
 #define GUI_INVALID_ID (-1)
 
 
-/** Type for holding data of hotkeys*/
-typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyData;
+/** HotKey Types for Configurator */
+typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyDataType;
+enum HotkeyIndex : size_t { MODULE_SEARCH = 0, PARAMETER_SEARCH = 1, DELETE_GRAPH_ITEM = 2, INDEX_COUNT = 3 };
+typedef std::array<HotkeyDataType, HotkeyIndex::INDEX_COUNT> HotKeyArrayType;
 
 
 /**
@@ -71,6 +73,29 @@ public:
      */
     void HelpMarkerToolTip(const std::string& text, std::string label = "(?)");
 
+
+    // Pu-up widgets -------------------------------------------------------
+
+    bool RenamePopUp(const std::string& label, bool open_popup, std::string& rename);
+
+
+#ifdef GUI_USE_FILESYSTEM
+
+    enum FileBrowserFlag { SAVE, LOAD };
+    bool FileBrowserPopUp(FileBrowserFlag flag, const std::string& label, bool open_popup, std::string& inout_filename);
+
+#endif // GUI_USE_FILESYSTEM
+
+
+    // Misc widgets -------------------------------------------------------
+
+    /**
+     * Draw draggable splitter between two child windows, relative to parent window size.
+     * https://github.com/ocornut/imgui/issues/319
+     */
+    bool VerticalSplitter(float* size_left, float* size_right);
+
+
     // UTF8 String En-/Decoding -----------------------------------------------
 
     /** Decode string from UTF-8. */
@@ -78,6 +103,7 @@ public:
 
     /** Encode string into UTF-8. */
     bool Utf8Encode(std::string& str) const;
+
 
     // String search widget ---------------------------------------------------
 
@@ -103,25 +129,13 @@ public:
     /** Set keyboard focus to search text input. */
     inline std::string GetSearchString(void) const { return this->search_string; }
 
+
     // Other utility functions ------------------------------------------------
 
     /**
      * Returns width of text drawn as widget.
      */
     float TextWidgetWidth(const std::string& text) const;
-
-    /**
-     * Draw draggable splitter between two child windows, relative to parent window size.
-     * https://github.com/ocornut/imgui/issues/319
-     */
-    bool VerticalSplitter(float* size_left, float* size_right);
-
-#ifdef GUI_USE_FILESYSTEM
-
-    enum FileBrowserFlag { SAVE, LOAD };
-    bool FileBrowserPopUp(FileBrowserFlag flag, bool open_popup, const std::string& label, std::string& inout_filename);
-
-#endif // GUI_USE_FILESYSTEM
 
 private:
     /** Current tooltip hover time. */
@@ -135,6 +149,9 @@ private:
 
     /** Current search string. */
     std::string search_string;
+
+    /** Current rename string. */
+    std::string rename_string;
 
 #ifdef GUI_USE_FILESYSTEM
 

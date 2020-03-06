@@ -59,7 +59,6 @@ public:
     std::string description;
     std::string plugin_name;
     bool is_view;
-
     std::vector<Parameter> parameters;
 
     std::string name;
@@ -75,8 +74,8 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    ImGuiID GUI_Present(ImVec2 canvas_offset, float canvas_zooming) {
-        return this->present.Present(*this, canvas_offset, canvas_zooming);
+    ImGuiID GUI_Present(ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys) {
+        return this->present.Present(*this, canvas_offset, canvas_zooming, hotkeys);
     }
 
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
@@ -97,7 +96,7 @@ private:
 
         ~Presentation(void);
 
-        ImGuiID Present(Module& mod, ImVec2 canvas_offset, float canvas_zooming);
+        ImGuiID Present(Module& mod, ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys);
 
         void SetPosition(ImVec2 pos) { this->position = pos; }
 

@@ -414,7 +414,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
     }
 
-    std::string param_label = param.name;
+    std::string param_label = param.GetName();
     std::string float_format = "%.7f";
 
     auto visitor = [&](auto&& arg) {
@@ -705,7 +705,7 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
 
     ImGui::SameLine();
 
-    std::string label = param.name;
+    std::string label = param.full_name;
     ImGui::Text(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
 
     ImGui::EndGroup();

@@ -22,6 +22,7 @@ GUIUtils::GUIUtils(void)
     , tooltip_id(GUI_INVALID_ID)
     , search_focus(false)
     , search_string()
+    , rename_string()
 #ifdef GUI_USE_FILESYSTEM
     , file_name_str()
     , file_path_str()
@@ -84,6 +85,46 @@ void GUIUtils::HelpMarkerToolTip(const std::string& text, std::string label) {
 }
 
 
+bool megamol::gui::GUIUtils::RenamePopUp(const std::string& label, bool open_popup, std::string& rename) {
+
+    ImGui::PushID(label.c_str());
+
+    if (open_popup) {
+        this->rename_string = rename;
+        ImGui::OpenPopup(label.c_str());
+    }
+    if (ImGui::BeginPopupModal(label.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+        std::string text_label = "New Name";
+        auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
+        if (ImGui::InputText(text_label.c_str(), &this->rename_string, flags)) {
+            rename = this->rename_string;
+            ImGui::CloseCurrentPopup();
+        }
+        // Set focus on input text once (applied next frame)
+        if (open_popup) {
+            ImGuiID id = ImGui::GetID(text_label.c_str());
+            ImGui::ActivateItem(id);
+        }
+
+        if (ImGui::Button("OK")) {
+            rename = this->rename_string;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel")) {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+
+    ImGui::PopID();
+
+    return false;
+}
+
+
 float GUIUtils::TextWidgetWidth(const std::string& text) const {
     assert(ImGui::GetCurrentContext() != nullptr);
 
@@ -115,6 +156,7 @@ bool GUIUtils::Utf8Encode(std::string& str) const {
     }
     return false;
 }
+
 
 void megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::string& help) {
     assert(ImGui::GetCurrentContext() != nullptr);
@@ -189,7 +231,7 @@ bool megamol::gui::GUIUtils::VerticalSplitter(float* size_left, float* size_righ
 #ifdef GUI_USE_FILESYSTEM
 
 bool megamol::gui::GUIUtils::FileBrowserPopUp(
-    FileBrowserFlag flag, bool open_popup, const std::string& label, std::string& inout_filename) {
+    FileBrowserFlag flag, const std::string& label, bool open_popup, std::string& inout_filename) {
 
     bool retval = false;
 

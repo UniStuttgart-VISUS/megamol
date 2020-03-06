@@ -56,8 +56,8 @@ public:
 
 private:
     // VARIABLES --------------------------------------------------------------
-    enum HotkeyIndex : size_t { MODULE_SEARCH = 0, PARAMETER_SEARCH = 1, DELETE_GRAPH_ITEM = 2, INDEX_COUNT = 3 };
-    std::array<HotkeyData, HotkeyIndex::INDEX_COUNT> hotkeys;
+
+    HotKeyArrayType hotkeys;
 
     GraphManager graph_manager;
     GUIUtils utils;

@@ -115,10 +115,11 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
 megamol::gui::configurator::Module::Presentation::~Presentation(void) {}
 
 
-ImGuiID megamol::gui::configurator::Module::Presentation::Present(
-    megamol::gui::configurator::Module& mod, ImVec2 canvas_offset, float canvas_zooming) {
+ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::configurator::Module& mod,
+    ImVec2 canvas_offset, float canvas_zooming, megamol::gui::HotKeyArrayType& hotkeys) {
 
     int retval_id = GUI_INVALID_ID;
+    bool rename_popup_open = false;
 
     try {
 
@@ -206,28 +207,23 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(
         draw_list->ChannelsSetCurrent(0); // Background
 
         ImGui::SetCursorScreenPos(module_rect_min);
-        label = "module_" + mod.name + std::to_string(mod.uid);
+        label = "module_" + mod.name;
         ImGui::InvisibleButton(label.c_str(), module_size);
         // Gives slots which overlap modules priority for ToolTip and Context Menu.
         if (hovered_slot_uid == GUI_INVALID_ID) {
             this->utils.HoverToolTip(mod.description, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
             // Context menu
-            /// XXX
-            /*
-             if (ImGui::BeginPopupContextItem()) {
+            if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem(
-                        "Delete", std::get<0>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str()))
-                        {
-                    std::get<1>(this->hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+                        "Delete", std::get<0>(hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
+                    std::get<1>(hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+                    retval_id = mod.uid;
                 }
                 if (ImGui::MenuItem("Rename")) {
-                    this->gui.rename_popup_open = true;
-                    this->gui.rename_popup_string = &mod->name;
+                    rename_popup_open = true;
                 }
-
                 ImGui::EndPopup();
             }
-            */
         }
         bool module_active = ImGui::IsItemActive();
         if (module_active) {
@@ -243,6 +239,9 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(
             (hovered_module == mod.uid || retval_id == mod.uid) ? COLOR_MODULE_HIGHTLIGHT : COLOR_MODULE_BACKGROUND;
         draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 4.0f);
         draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 4.0f);
+
+        // Rename pop-up
+        this->utils.RenamePopUp("Rename Project", rename_popup_open, mod.name);
 
         ImGui::PopID();
 
