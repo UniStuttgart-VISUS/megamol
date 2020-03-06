@@ -442,10 +442,10 @@ bool megamol::gui::configurator::GraphManager::LoadProjectFile(
                 ImVec2 module_pos = this->readLuaProjectConfPos(lines[i]);
 
                 /// DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo(
-                    ">>>> Instance: '%s' Class: '%s' NameSpace: '%s' Name: '%s' ConfPos: %f, %f.\n",
-                    view_instance.c_str(), view_class_name.c_str(), view_name_space.c_str(), view_name.c_str(),
-                    module_pos.x, module_pos.y);
+                // vislib::sys::Log::DefaultLog.WriteInfo(
+                //     ">>>> Instance: '%s' Class: '%s' NameSpace: '%s' Name: '%s' ConfPos: %f, %f.\n",
+                //     view_instance.c_str(), view_class_name.c_str(), view_name_space.c_str(), view_name.c_str(),
+                //     module_pos.x, module_pos.y);
 
                 // Create new graph
                 if (!this->AddGraph(view_instance)) {
@@ -508,9 +508,9 @@ bool megamol::gui::configurator::GraphManager::LoadProjectFile(
                 ImVec2 module_pos = this->readLuaProjectConfPos(lines[i]);
 
                 /// DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo(">>>> Class: '%s' NameSpace: '%s' Name: '%s' ConfPos: %f, %f.\n",
-                    module_class_name.c_str(), module_name_space.c_str(), module_name.c_str(), module_pos.x,
-                    module_pos.y);
+                // vislib::sys::Log::DefaultLog.WriteInfo(">>>> Class: '%s' NameSpace: '%s' Name: '%s' ConfPos: %f, %f.\n",
+                //     module_class_name.c_str(), module_name_space.c_str(), module_name.c_str(), module_pos.x,
+                //     module_pos.y);
 
                 // Get last added graph
                 auto graph_ptr = this->GetGraphs().back();
@@ -566,10 +566,10 @@ bool megamol::gui::configurator::GraphManager::LoadProjectFile(
                 }
 
                 /// DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo(
-                    ">>>> Call Name: '%s' CALLER Module: '%s' Slot: '%s' - CALLEE Module: '%s' Slot: '%s'.\n",
-                    call_class_name.c_str(), caller_module_name.c_str(), caller_slot_name.c_str(),
-                    callee_module_name.c_str(), callee_slot_name.c_str());
+                // vislib::sys::Log::DefaultLog.WriteInfo(
+                //     ">>>> Call Name: '%s' CALLER Module: '%s' Slot: '%s' - CALLEE Module: '%s' Slot: '%s'.\n",
+                //     call_class_name.c_str(), caller_module_name.c_str(), caller_slot_name.c_str(),
+                //     callee_module_name.c_str(), callee_slot_name.c_str());
 
                 // Get last added graph
                 auto graph_ptr = this->GetGraphs().back();
@@ -641,7 +641,7 @@ bool megamol::gui::configurator::GraphManager::LoadProjectFile(
                 param_slot_full_name = param_slot_full_name.substr(1, param_slot_full_name.size() - 2);
 
                 /// DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo(">>>> %s\n", param_slot_full_name.c_str());
+                //vislib::sys::Log::DefaultLog.WriteInfo(">>>> %s\n", param_slot_full_name.c_str());
 
                 // Copy multi line parameter values into one string
                 auto value_start_idx = param_line.find(start_delimieter);
@@ -673,7 +673,7 @@ bool megamol::gui::configurator::GraphManager::LoadProjectFile(
 
 
                 /// DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo(">>>> '%s'\n", value_str.c_str());
+                //vislib::sys::Log::DefaultLog.WriteInfo(">>>> '%s'\n", value_str.c_str());
 
                 // Get last added graph
                 auto graph_ptr = this->GetGraphs().back();
@@ -1242,7 +1242,7 @@ std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfPos(con
 
     std::stringstream conf_idx;
     /// XXX Should position values be int for compatibility with old configurator?
-    conf_idx << " --confPos{X=" << pos.x << ",Y=" << pos.y << "} ";
+    conf_idx << " --confPos={X=" << pos.x << ",Y=" << pos.y << "} ";
     return conf_idx.str();
 }
 
@@ -1256,7 +1256,7 @@ bool megamol::gui::configurator::GraphManager::separateNamespaceAndName(
         name_space = full_name.substr(0, delimiter_index - 1);
     }
 
-    if (name_space.empty() || name.empty()) {
+    if (name.empty()) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Invalid name in argument. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
