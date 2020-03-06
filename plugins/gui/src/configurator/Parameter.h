@@ -260,8 +260,7 @@ private:
         megamol::gui::TransferFunctionEditor tf_editor;
         bool show_tf_editor;
 
-
-        std::variant<std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
+        std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
 
         void present_prefix(Parameter& param);
         void present_value(Parameter& param);

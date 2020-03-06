@@ -432,7 +432,9 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
                          "[CTRL+Click] on individual component to input value.\n"
                          "[Right-Click] on the individual color widget to show options.";
         } else if constexpr (std::is_same_v<T, float>) {
-            this->widget_store = arg;
+            if (!std::holds_alternative<T>(this->widget_store)) {
+                this->widget_store = arg;
+            }
             ImGui::InputFloat(param_label.c_str(), &std::get<float>(this->widget_store), 1.0f, 10.0f,
                 float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -445,7 +447,9 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
         } else if constexpr (std::is_same_v<T, int>) {
             switch (param.type) {
             case (Parameter::ParamType::INT): {
-                this->widget_store = arg;
+                if (!std::holds_alternative<T>(this->widget_store)) {
+                    this->widget_store = arg;
+                }
                 ImGui::InputInt(
                     param_label.c_str(), &std::get<int>(this->widget_store), 1, 10, ImGuiInputTextFlags_None);
                 if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -478,10 +482,12 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
         } else if constexpr (std::is_same_v<T, std::string>) {
             switch (param.type) {
             case (Parameter::ParamType::STRING): {
-                /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-                std::string utf8Str = arg;
-                this->utils.Utf8Encode(utf8Str);
-                this->widget_store = utf8Str;
+                if (!std::holds_alternative<T>(this->widget_store)) {
+                    /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+                    std::string utf8Str = arg;
+                    this->utils.Utf8Encode(utf8Str);
+                    this->widget_store = utf8Str;
+                }
                 // Determine multi line count of string
                 int lcnt = static_cast<int>(std::count(std::get<std::string>(this->widget_store).begin(),
                     std::get<std::string>(this->widget_store).end(), '\n'));
@@ -508,10 +514,12 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
                 this->transfer_function_edit(param);
             } break;
             case (Parameter::ParamType::FILEPATH): {
-                /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-                std::string utf8Str = arg;
-                this->utils.Utf8Encode(utf8Str);
-                this->widget_store = utf8Str;
+                if (!std::holds_alternative<T>(this->widget_store)) {
+                    /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+                    std::string utf8Str = arg;
+                    this->utils.Utf8Encode(utf8Str);
+                    this->widget_store = utf8Str;
+                }
                 ImGui::InputText(
                     param_label.c_str(), &std::get<std::string>(this->widget_store), ImGuiInputTextFlags_None);
                 if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -558,7 +566,9 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
             ImGui::SameLine();
             ImGui::Text(param_label.c_str());
         } else if constexpr (std::is_same_v<T, glm::vec2>) {
-            this->widget_store = arg;
+            if (!std::holds_alternative<T>(this->widget_store)) {
+                this->widget_store = arg;
+            }
             ImGui::InputFloat2(param_label.c_str(), glm::value_ptr(std::get<glm::vec2>(this->widget_store)),
                 float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -572,7 +582,9 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
                 this->widget_store = arg;
             }
         } else if constexpr (std::is_same_v<T, glm::vec3>) {
-            this->widget_store = arg;
+            if (!std::holds_alternative<T>(this->widget_store)) {
+                this->widget_store = arg;
+            }
             ImGui::InputFloat3(param_label.c_str(), glm::value_ptr(std::get<glm::vec3>(this->widget_store)),
                 float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -587,7 +599,9 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
                 this->widget_store = arg;
             }
         } else if constexpr (std::is_same_v<T, glm::vec4>) {
-            this->widget_store = arg;
+            if (!std::holds_alternative<T>(this->widget_store)) {
+                this->widget_store = arg;
+            }
             ImGui::InputFloat4(param_label.c_str(), glm::value_ptr(std::get<glm::vec4>(this->widget_store)),
                 float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
