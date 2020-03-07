@@ -77,10 +77,12 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    ImGuiID GUI_Present(ImVec2 canvas_offset, float canvas_zooming) {
+    int GUI_Present(ImVec2 canvas_offset, float canvas_zooming) {
         return this->present.Present(*this, canvas_offset, canvas_zooming);
     }
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
+    bool GUI_GetLabelVisibility(void) { return this->present.label_visible; }
+    float GUI_GetSlotRadius(void) { return this->present.slot_radius; }
     void GUI_SetPresentation(CallSlot::Presentations present) { this->present.presentations = present; }
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
 
@@ -97,7 +99,7 @@ private:
 
         ~Presentation(void);
 
-        ImGuiID Present(CallSlot& call_slot, ImVec2 canvas_offset, float canvas_zooming);
+        int Present(CallSlot& call_slot, ImVec2 canvas_offset, float canvas_zooming);
 
         ImVec2 GetPosition(void) { return this->position; }
 
@@ -105,10 +107,11 @@ private:
 
         CallSlot::Presentations presentations;
         bool label_visible;
+        const float slot_radius;
 
     private:
+        // Absolute position including canvas offset and zooming
         ImVec2 position;
-        const float slot_radius;
         GUIUtils utils;
 
     } present;

@@ -53,15 +53,15 @@ bool megamol::gui::configurator::Module::RemoveAllCallSlots(void) {
         for (auto& call_slots_map : this->call_slots) {
             for (auto& call_slot_ptr : call_slots_map.second) {
                 if (call_slot_ptr == nullptr) {
-                    vislib::sys::Log::DefaultLog.WriteWarn(
-                        "Call slot is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                    // vislib::sys::Log::DefaultLog.WriteWarn(
+                    //     "Call slot is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 } else {
                     call_slot_ptr->DisConnectCalls();
                     call_slot_ptr->DisConnectParentModule();
 
-                    vislib::sys::Log::DefaultLog.WriteWarn(
-                        "Found %i references pointing to call slot. [%s, %s, line %d]\n", call_slot_ptr.use_count(),
-                        __FILE__, __FUNCTION__, __LINE__);
+                    // vislib::sys::Log::DefaultLog.WriteWarn(
+                    //     "Found %i references pointing to call slot. [%s, %s, line %d]\n", call_slot_ptr.use_count(),
+                    //     __FILE__, __FUNCTION__, __LINE__);
                     assert(call_slot_ptr.use_count() == 1);
 
                     call_slot_ptr.reset();
@@ -116,7 +116,7 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
 megamol::gui::configurator::Module::Presentation::~Presentation(void) {}
 
 
-ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::configurator::Module& mod,
+int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::configurator::Module& mod,
     ImVec2 canvas_offset, float canvas_zooming, megamol::gui::HotKeyArrayType& hotkeys) {
 
     int retval_id = GUI_INVALID_ID;
@@ -156,36 +156,45 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         const ImU32 COLOR_MODULE_HIGHTLIGHT = IM_COL32(92, 116, 92, 255);
         const ImU32 COLOR_MODULE_BORDER = IM_COL32(128, 128, 128, 255);
 
+        ///XXX Trigger only when necessary
+        this->UpdateSize(mod, canvas_offset, canvas_zooming);
+
         ImVec2 module_size = this->size;
         ImVec2 module_rect_min = canvas_offset + this->position * canvas_zooming;
         ImVec2 module_rect_max = module_rect_min + module_size;
         ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
-        std::string label = this->class_label;
+
+        std::string label;
 
         // Draw text
-        draw_list->ChannelsSetCurrent(1); // Foreground
-        ImGui::BeginGroup();
+        if (this->label_visible) {
+            draw_list->ChannelsSetCurrent(1); // Foreground
+            ImGui::BeginGroup();
 
-        float line_offset = 0.0f;
-        if (mod.is_view) {
-            line_offset = -0.5f * ImGui::GetItemsLineHeightWithSpacing();
+            float line_offset = 0.0f;
+            if (mod.is_view_instance) {
+                line_offset = -0.5f * ImGui::GetItemsLineHeightWithSpacing();
+            }
+
+            label = this->class_label;
+            float name_width = this->utils.TextWidgetWidth(label);
+            ImGui::SetCursorScreenPos(
+                module_center + ImVec2(-(name_width / 2.0f), line_offset - ImGui::GetItemsLineHeightWithSpacing()));
+            ImGui::Text(label.c_str());
+
+            label = this->name_label;
+            name_width = this->utils.TextWidgetWidth(label);
+            ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), line_offset));
+            ImGui::Text(label.c_str());
+
+            if (mod.is_view_instance) {
+                label = "[Main View]";
+                name_width = this->utils.TextWidgetWidth(label);
+                ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), line_offset + ImGui::GetItemsLineHeightWithSpacing()));
+                ImGui::Text(label.c_str());
+            }
+            ImGui::EndGroup();
         }
-
-        auto class_name_width = this->utils.TextWidgetWidth(label);
-        ImGui::SetCursorScreenPos(
-            module_center + ImVec2(-(class_name_width / 2.0f), line_offset - ImGui::GetItemsLineHeightWithSpacing()));
-        ImGui::Text(label.c_str());
-
-        label = this->name_label;
-        auto name_width = this->utils.TextWidgetWidth(label);
-        ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), line_offset));
-        ImGui::Text(label.c_str());
-
-        if (mod.is_view_instance) {
-            ImGui::Text("[Main View]");
-        }
-        
-        ImGui::EndGroup();
 
         // Draw box
         draw_list->ChannelsSetCurrent(0); // Background
@@ -230,7 +239,7 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 5.0f);
 
         ///XXX
-        // Use ImGui::ArrowButton fto show/hide paramters insode module box
+        // Use ImGui::ArrowButton to show/hide parameters inside module box
 
         // Rename pop-up
         this->utils.RenamePopUp("Rename Project", rename_popup_open, mod.name);
@@ -247,4 +256,45 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
     }
 
     return retval_id;
+}
+
+
+void megamol::gui::configurator::Module::Presentation::UpdateSize(
+    megamol::gui::configurator::Module& mod, ImVec2 canvas_offset, float canvas_zooming) {
+
+    float max_label_length = 0.0f;
+    if (this->label_visible) {
+        this->class_label = "Class: " + mod.class_name;
+        float class_name_length = this->utils.TextWidgetWidth(this->class_label);
+        this->name_label = "Name: " + mod.name;
+        float name_length = this->utils.TextWidgetWidth(mod.present.name_label);
+        max_label_length = std::max(class_name_length, name_length);
+    }
+
+    float max_slot_name_length = 0.0f;
+    float slot_radius = 0.0f;
+    for (auto& call_slot_type_list : mod.GetCallSlots()) {
+        for (auto& call_slot : call_slot_type_list.second) {
+            slot_radius = std::max(slot_radius, call_slot->GUI_GetSlotRadius());
+            if (call_slot->GUI_GetLabelVisibility()) {
+                max_slot_name_length = std::max(this->utils.TextWidgetWidth(call_slot->name), max_slot_name_length);
+            }
+        }
+    }
+    if (max_slot_name_length != 0.0f) {
+        max_slot_name_length = (2.0f * max_slot_name_length) + (2.0f * slot_radius);
+    }
+
+    float module_width = (max_label_length + max_slot_name_length) + (4.0f * slot_radius);
+
+    auto max_slot_count = std::max(mod.GetCallSlots(CallSlot::CallSlotType::CALLEE).size(),
+        mod.GetCallSlots(CallSlot::CallSlotType::CALLER).size());
+    float module_slot_height = (static_cast<float>(max_slot_count) * (slot_radius * 2.0f) * 1.5f) +
+        ((slot_radius * 2.0f) * 0.5f);
+
+    float module_height =
+        std::max(module_slot_height, ImGui::GetItemsLineHeightWithSpacing() * ((mod.is_view_instance) ? (4.0f) : (3.0f)));
+
+    // Clamp to minimum size
+    this->size = ImVec2(std::max(module_width, 150.0f), std::max(module_height, 50.0f)); 
 }

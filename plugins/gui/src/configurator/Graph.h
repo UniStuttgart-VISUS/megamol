@@ -92,25 +92,30 @@ private:
         inline const CallSlotPtrType GetSelectedSlot(void) const { return this->selected_slot_ptr; }
 
     private:
+        ImFont* font;
+        GUIUtils utils;
+
         ImVec2 canvas_position;
         ImVec2 canvas_size;
         ImVec2 canvas_scrolling;
         float canvas_zooming;
         ImVec2 canvas_offset;
+
         bool show_grid;
         bool show_call_names;
         bool show_slot_names;
         bool show_module_names;
+
         int selected_module_uid;
         int selected_call_uid;
-        int hovered_slot_uid;
-        CallSlotPtrType selected_slot_ptr;
-        int process_selected_slot;
-        bool update_current_graph;
+
+        CallSlotPtrType selected_slot_ptr;//
+        int process_selected_slot;//
+
+        bool layout_current_graph;
         float split_width;
-        ImFont* font;
         float mouse_wheel;
-        GUIUtils utils;
+
         bool params_visible;
         bool params_readonly;
         std::string param_name_space;
@@ -122,6 +127,8 @@ private:
 
         void canvas_grid(megamol::gui::configurator::Graph& graph);
         void canvas_dragged_call(megamol::gui::configurator::Graph& graph);
+
+        bool layout_graph(megamol::gui::configurator::Graph& graph); 
 
     } present;
 };

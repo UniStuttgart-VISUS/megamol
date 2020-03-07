@@ -77,7 +77,7 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    ImGuiID GUI_Present(ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys) {
+    int GUI_Present(ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys) {
         return this->present.Present(*this, canvas_offset, canvas_zooming, hotkeys);
     }
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
@@ -98,18 +98,22 @@ private:
 
         ~Presentation(void);
 
-        ImGuiID Present(Module& mod, ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys);
+        int Present(Module& mod, ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys);
 
         void SetPosition(ImVec2 pos) { this->position = pos; }
 
         ImVec2 GetPosition(void) { return this->position; }
         ImVec2 GetSize(void) { return this->size; }
 
+        void UpdateSize(Module& mod, ImVec2 canvas_offset, float canvas_zooming);
+
         Module::Presentations presentations;
         bool label_visible;
 
     private:
+        // Relative position without canvas offset and zooming  
         ImVec2 position;
+        // Absolute size including canvas offset and zooming  
         ImVec2 size;
         std::string class_label;
         std::string name_label;

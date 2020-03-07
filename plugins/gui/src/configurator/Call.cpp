@@ -120,7 +120,7 @@ megamol::gui::configurator::Call::Presentation::Presentation(void)
 megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
 
 
-ImGuiID megamol::gui::configurator::Call::Presentation::Present(
+int megamol::gui::configurator::Call::Presentation::Present(
     megamol::gui::configurator::Call& call, ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys) {
 
     int retval_id = GUI_INVALID_ID;
@@ -151,9 +151,8 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(
             ImVec2 p1 = call.GetCallSlot(CallSlot::CallSlotType::CALLER)->GUI_GetPosition();
             ImVec2 p2 = call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->GUI_GetPosition();
 
-            draw_list->ChannelsSetCurrent(0); // Background
-
             // Draw simple line if zooming is too small for nice bezier curves
+            draw_list->ChannelsSetCurrent(0); // Background
             const float zooming_switch_curve = 0.4f;
             if (canvas_zooming < zooming_switch_curve) {
                 draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * canvas_zooming);

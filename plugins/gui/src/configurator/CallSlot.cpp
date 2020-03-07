@@ -232,7 +232,7 @@ megamol::gui::configurator::CallSlot::Presentation::Presentation(void)
 megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
 
-ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
+int megamol::gui::configurator::CallSlot::Presentation::Present(
     megamol::gui::configurator::CallSlot& call_slot, ImVec2 canvas_offset, float canvas_zooming) {
 
     int retval_id = GUI_INVALID_ID;
@@ -245,7 +245,7 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
             return false;
         }
 
-        /// XXX Trigger only when necessary
+        ///XXX Trigger only when necessary
         this->UpdatePosition(call_slot, canvas_offset, canvas_zooming);
 
         ImGui::PushID(call_slot.uid);

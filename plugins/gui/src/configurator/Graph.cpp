@@ -102,8 +102,8 @@ bool megamol::gui::configurator::Graph::DeleteModule(int module_uid) {
                 (*iter).reset();
                 this->modules.erase(iter);
                 this->DeleteDisconnectedCalls();
-                // vislib::sys::Log::DefaultLog.WriteInfo("Deleted module: %s [%s, %s, line %d]\n",
-                //    (*iter)->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                vislib::sys::Log::DefaultLog.WriteInfo("Deleted module: %s [%s, %s, line %d]\n",
+                   (*iter)->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
 
                 this->dirty_flag = true;
                 return true;
@@ -238,7 +238,8 @@ bool megamol::gui::configurator::Graph::DeleteCall(int call_uid) {
 // GRAPH PRESENTATION ####################################################
 
 megamol::gui::configurator::Graph::Presentation::Presentation(void)
-    : utils()
+    : font(nullptr)
+    , utils()
     , canvas_position(ImVec2(0.0f, 0.0f))
     , canvas_size(ImVec2(1.0f, 1.0f))
     , canvas_scrolling(ImVec2(0.0f, 0.0f))
@@ -250,12 +251,12 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , show_module_names(true)
     , selected_module_uid(GUI_INVALID_ID)
     , selected_call_uid(GUI_INVALID_ID)
-    , hovered_slot_uid(GUI_INVALID_ID)
-    , selected_slot_ptr(nullptr)
-    , process_selected_slot(0)
-    , update_current_graph(true)
+
+    , selected_slot_ptr(nullptr)//
+    , process_selected_slot(0)//
+
+    , layout_current_graph(true)
     , split_width(-1.0f) // !
-    , font(nullptr)
     , mouse_wheel(0.0f)
     , params_visible(true)
     , params_readonly(false)
@@ -305,7 +306,7 @@ bool megamol::gui::configurator::Graph::Presentation::GUI_Present(megamol::gui::
             // Process module deletion
             if (std::get<1>(hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM])) {
                 std::get<1>(hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = false;
-                this->selected_slot_ptr = nullptr;
+                this->selected_slot_ptr = nullptr; //!
                 if (this->selected_module_uid > 0) {
                     graph.DeleteModule(this->selected_module_uid);
                 }
@@ -319,19 +320,10 @@ bool megamol::gui::configurator::Graph::Presentation::GUI_Present(megamol::gui::
                 this->process_selected_slot = 2;
             }
 
-            for (auto& mod : graph.GetGraphModules()) {
-                /// XXX this->update_module_size(graph, mod);
-                for (auto& slot_pair : mod->GetCallSlots()) {
-                    for (auto& slot : slot_pair.second) {
-                        /// XXX this->update_slot_position(graph, slot);
-                    }
-                }
-            }
-
             // Update positions and sizes
-            if (this->update_current_graph) {
-                /// XXX this->update_graph_layout(graph);
-                this->update_current_graph = false;
+            if (this->layout_current_graph) {
+                this->layout_graph(graph);
+                this->layout_current_graph = false;
             }
 
             // Draw
@@ -413,7 +405,7 @@ void megamol::gui::configurator::Graph::Presentation::menu(megamol::gui::configu
         }
     }
     ImGui::SameLine();
-    
+
     if (ImGui::Button("Reset###reset_scrolling")) {
         this->canvas_scrolling = ImVec2(0.0f, 0.0f);
     }
@@ -464,7 +456,7 @@ void megamol::gui::configurator::Graph::Presentation::menu(megamol::gui::configu
     ImGui::SameLine();
 
     if (ImGui::Button("Layout Graph")) {
-        this->update_current_graph = true;
+        this->layout_current_graph = true;
     }
 
     ImGui::EndChild();
@@ -502,11 +494,11 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
     assert(draw_list != nullptr);
     draw_list->ChannelsSplit(2);
 
-    if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered()) {
+    //if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered()) {
         this->selected_module_uid = GUI_INVALID_ID;
         this->selected_call_uid = GUI_INVALID_ID;
         this->selected_slot_ptr = nullptr;
-    }
+    //}
 
     // Display grid -------------------
     if (this->show_grid) {
@@ -739,7 +731,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas_dragged_call(megamo
 
     const float CURVE_THICKNESS = 3.0f;
 
-    if ((this->selected_slot_ptr != nullptr) && (this->hovered_slot_uid == GUI_INVALID_ID)) {
+    if (this->selected_slot_ptr != nullptr) {
         ImVec2 current_pos = ImGui::GetMousePos();
         bool mouse_inside_canvas = false;
 
@@ -764,45 +756,10 @@ void megamol::gui::configurator::Graph::Presentation::canvas_dragged_call(megamo
 }
 
 
+bool megamol::gui::configurator::Graph::Presentation::layout_graph(
+    megamol::gui::configurator::Graph& graph) {
+
 /*
-bool megamol::gui::configurator::Configurator::update_module_size(
-    megamol::gui::configurator::GraphManager::GraphPtrType graph, megamol::gui::configurator::ModulePtrType mod) {
-
-    mod->present.class_label = "Class: " + mod->class_name;
-    float class_name_length = this->utils.TextWidgetWidth(mod->present.class_label);
-    mod->present.name_label = "Name: " + mod->name;
-    float name_length = this->utils.TextWidgetWidth(mod->present.name_label);
-    float max_label_length = std::max(class_name_length, name_length);
-
-    float max_slot_name_length = 0.0f;
-    if (this->show_slot_names) {
-        for (auto& call_slot_type_list : mod->GetCallSlots()) {
-            for (auto& call_slot : call_slot_type_list.second) {
-                max_slot_name_length = std::max(this->utils.TextWidgetWidth(call_slot->name), max_slot_name_length);
-            }
-        }
-        max_slot_name_length = (2.0f * max_slot_name_length) + (2.0f * this->slot_radius);
-    }
-
-    float module_width = (max_label_length + max_slot_name_length) + (4.0f * this->slot_radius);
-
-    auto max_slot_count = std::max(mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLEE).size(),
-        mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLER).size());
-    float module_slot_height = (static_cast<float>(max_slot_count) * (this->slot_radius * 2.0f) * 1.5f) +
-        ((this->slot_radius * 2.0f) * 0.5f);
-
-    float module_height =
-        std::max(module_slot_height, ImGui::GetItemsLineHeightWithSpacing() * ((mod->is_view) ? (4.0f) : (3.0f)));
-
-    mod->present.size = ImVec2(module_width, module_height);
-
-    return true;
-}
-
-
-bool megamol::gui::configurator::Configurator::update_graph_layout(
-    megamol::gui::configurator::GraphManager::GraphPtrType graph) {
-
     // Really simple layouting sorting modules into differnet layers
     std::vector<std::vector<graph::ModulePtrType>> layers;
     layers.clear();
@@ -888,7 +845,6 @@ bool megamol::gui::configurator::Configurator::update_graph_layout(
         }
         pos.x += (max_module_width + max_call_width + border_offset);
     }
-
+*/
     return true;
 }
-*/
