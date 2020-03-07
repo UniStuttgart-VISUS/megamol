@@ -318,7 +318,7 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(
             slot_color = COLOR_SLOT_COMPATIBLE;
         }
         */
-        if (mouse_clicked && !hovered) {
+        if (mouse_clicked && !hovered) { //  && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
             this->selected = false;
         }
         if (active) {

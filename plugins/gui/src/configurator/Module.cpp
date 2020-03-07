@@ -202,7 +202,7 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
         ImGui::SetCursorScreenPos(module_rect_min);
         label = "module_" + mod.name;
         ImGui::InvisibleButton(label.c_str(), module_size);
-       bool hovered = false;
+        bool hovered = false;
         // Gives slots which overlap modules priority for ToolTip and Context Menu.
         if (hovered_slot_uid == GUI_INVALID_ID) {
             this->utils.HoverToolTip(mod.description, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
@@ -221,9 +221,9 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
             bool active = ImGui::IsItemActive();
             hovered = ImGui::IsItemHovered();
             bool mouse_clicked = ImGui::IsMouseClicked(0);             
-            if (mouse_clicked && !hovered) {
+            if (mouse_clicked && !hovered) { // } && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
                 this->selected = false;
-            }
+            }                    
             if (active) {
                 this->selected = true;
                 if (ImGui::IsMouseDragging(0)) {

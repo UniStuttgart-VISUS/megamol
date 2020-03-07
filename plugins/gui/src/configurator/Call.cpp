@@ -188,7 +188,7 @@ int megamol::gui::configurator::Call::Presentation::Present(
                 bool active = ImGui::IsItemActive();
                 bool hovered = ImGui::IsItemHovered();
                 bool mouse_clicked = ImGui::IsMouseClicked(0);
-                if (mouse_clicked && !hovered) {
+                if (mouse_clicked && !hovered) { //  && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
                     this->selected = false;
                 }
                 if (active) {

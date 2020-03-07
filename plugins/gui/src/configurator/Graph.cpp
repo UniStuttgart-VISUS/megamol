@@ -307,10 +307,10 @@ bool megamol::gui::configurator::Graph::Presentation::GUI_Present(megamol::gui::
             if (std::get<1>(hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM])) {
                 std::get<1>(hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = false;
                 this->selected_slot_ptr = nullptr; //!
-                if (this->selected_module_uid > 0) {
+                if (this->selected_module_uid != GUI_INVALID_ID) {
                     graph.DeleteModule(this->selected_module_uid);
                 }
-                if (this->selected_call_uid > 0) {
+                if (this->selected_call_uid != GUI_INVALID_ID) {
                     graph.DeleteCall(this->selected_call_uid);
                 }
             }
@@ -329,7 +329,7 @@ bool megamol::gui::configurator::Graph::Presentation::GUI_Present(megamol::gui::
             // Draw
             this->menu(graph);
 
-            if (this->selected_module_uid > 0) {
+            if (this->selected_module_uid != GUI_INVALID_ID) {
                 // One time init depending on available window width
                 if (this->split_width < 0.0f) {
                     this->split_width = ImGui::GetWindowWidth() * 0.75f;
@@ -494,11 +494,19 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
     assert(draw_list != nullptr);
     draw_list->ChannelsSplit(2);
 
-    if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered()) {
-        this->selected_module_uid = GUI_INVALID_ID;
-        this->selected_call_uid = GUI_INVALID_ID;
-        this->selected_slot_ptr = nullptr;
-    }
+    /*
+    ImVec2 mouse_pos = ImGui::GetMousePos();
+    float xmin = this->canvas_position.x;
+    float ymin = this->canvas_position.y;
+    float xmax = xmin + this->canvas_size.x;
+    float ymax = ymin + this->canvas_size.y;
+    if (ImGui::IsMouseClicked(0) && (mouse_pos.x >= xmin) && (mouse_pos.x <= xmax) && (mouse_pos.y >= ymin) && (mouse_pos.y <= ymax)) { 
+    */
+    //if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered()) { // ImGuiHoveredFlags_ChildWindows
+    //    this->selected_module_uid = GUI_INVALID_ID;
+    //    this->selected_call_uid = GUI_INVALID_ID;
+    //    this->selected_slot_ptr = nullptr;
+    //}
 
     // Display grid -------------------
     if (this->show_grid) {
