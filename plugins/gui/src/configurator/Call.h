@@ -39,6 +39,7 @@ typedef std::shared_ptr<Module> ModulePtrType;
  */
 class Call {
 public:
+
     struct StockCall {
         std::string class_name;
         std::string description;
@@ -53,6 +54,7 @@ public:
 
     const int uid;
 
+    // Init when adding call from stock
     std::string class_name;
     std::string description;
     std::string plugin_name;
@@ -65,10 +67,9 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    ImGuiID GUI_Present(ImVec2 canvas_offset, float canvas_zooming) {
-        return this->present.Present(*this, canvas_offset, canvas_zooming);
+    ImGuiID GUI_Present(ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys) {
+        return this->present.Present(*this, canvas_offset, canvas_zooming, hotkeys);
     }
-
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
     void GUI_SetPresentation(Call::Presentations present) { this->present.presentations = present; }
 
@@ -84,13 +85,14 @@ private:
 
         ~Presentation(void);
 
-        ImGuiID Present(Call& call, ImVec2 canvas_offset, float canvas_zooming);
+        ImGuiID Present(Call& call, ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys);
 
         Call::Presentations presentations;
         bool label_visible;
 
     private:
         GUIUtils utils;
+        bool selected;
 
     } present;
 };

@@ -55,6 +55,7 @@ typedef std::shared_ptr<Parameter> ParamPtrType;
  */
 class Parameter {
 public:
+
     enum ParamType {
         BOOL,
         BUTTON,
@@ -130,6 +131,7 @@ public:
     const int uid;
     const ParamType type;
 
+    // Init when adding parameter from stock
     std::string full_name;
     std::string description;
 

@@ -383,6 +383,37 @@ void megamol::gui::configurator::Graph::Presentation::menu(megamol::gui::configu
 
     ImGui::BeginChild("graph_menu", ImVec2(0.0f, child_height), false, child_flags);
 
+    // Main View Checkbox
+    ModulePtrType selected_mod_ptr = nullptr;
+    if (this->selected_module_uid != GUI_INVALID_ID) {
+        for (auto& mod : graph.GetGraphModules()) {
+            if ((this->selected_module_uid == mod->uid) && (mod->is_view)) {
+                selected_mod_ptr = mod;
+            }
+        }
+    }
+    if (selected_mod_ptr == nullptr) {
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+        bool checked = false;
+        ImGui::Checkbox("Main View", &checked);
+        ImGui::PopItemFlag();
+        ImGui::PopStyleVar();
+    }
+    else {
+        if (ImGui::Checkbox("Main View", &selected_mod_ptr->is_view_instance)) {
+            if (selected_mod_ptr->is_view_instance) {
+                // Set all other modules to non main views
+                for (auto& mod : graph.GetGraphModules()) {
+                    if (this->selected_module_uid != mod->uid) {
+                        mod->is_view_instance = false;
+                    }
+                }
+            }
+        }
+    }
+    ImGui::SameLine();
+    
     if (ImGui::Button("Reset###reset_scrolling")) {
         this->canvas_scrolling = ImVec2(0.0f, 0.0f);
     }
@@ -494,7 +525,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
 
     // Draw calls ---------------------
     for (auto& call : graph.GetGraphCalls()) {
-        auto id = call->GUI_Present(this->canvas_offset, this->canvas_zooming);
+        auto id = call->GUI_Present(this->canvas_offset, this->canvas_zooming, hotkeys);
         if (id != GUI_INVALID_ID) {
             this->selected_call_uid = id;
         }

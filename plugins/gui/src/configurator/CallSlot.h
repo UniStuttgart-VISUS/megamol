@@ -38,6 +38,7 @@ typedef std::shared_ptr<Module> ModulePtrType;
  */
 class CallSlot {
 public:
+
     enum CallSlotType { CALLEE, CALLER };
 
     struct StockCallSlot {
@@ -54,6 +55,7 @@ public:
 
     const int uid;
 
+    // Init when adding call slot from stock
     std::string name;
     std::string description;
     std::vector<size_t> compatible_call_idxs; // (Storing only indices of compatible calls for faster comparison.)
@@ -78,7 +80,6 @@ public:
     ImGuiID GUI_Present(ImVec2 canvas_offset, float canvas_zooming) {
         return this->present.Present(*this, canvas_offset, canvas_zooming);
     }
-
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     void GUI_SetPresentation(CallSlot::Presentations present) { this->present.presentations = present; }
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
@@ -112,7 +113,6 @@ private:
 
     } present;
 };
-
 
 } // namespace configurator
 } // namespace gui

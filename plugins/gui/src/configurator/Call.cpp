@@ -114,14 +114,14 @@ const megamol::gui::configurator::CallSlotPtrType megamol::gui::configurator::Ca
 // CALL PRESENTATION #########################################################
 
 megamol::gui::configurator::Call::Presentation::Presentation(void)
-    : presentations(Call::Presentations::DEFAULT), label_visible(true), utils() {}
+    : presentations(Call::Presentations::DEFAULT), label_visible(true), utils(), selected(false) {}
 
 
 megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
 
 
 ImGuiID megamol::gui::configurator::Call::Presentation::Present(
-    megamol::gui::configurator::Call& call, ImVec2 canvas_offset, float canvas_zooming) {
+    megamol::gui::configurator::Call& call, ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys) {
 
     int retval_id = GUI_INVALID_ID;
 
@@ -141,12 +141,10 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(
 
         const ImU32 COLOR_CALL_CURVE = IM_COL32(225, 225, 0, 255);
         const ImU32 COLOR_CALL_BACKGROUND = IM_COL32(64, 61, 64, 255);
-        const ImU32 COLOR_CALL_HIGHTLIGHT = IM_COL32(92, 92, 92, 255);
+        const ImU32 COLOR_CALL_HIGHTLIGHT = IM_COL32(92, 116, 92, 255);
         const ImU32 COLOR_CALL_BORDER = IM_COL32(128, 128, 128, 255);
 
         const float CURVE_THICKNESS = 3.0f;
-
-        int hovered_call = GUI_INVALID_ID;
 
         if (call.IsConnected()) {
 
@@ -156,7 +154,8 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(
             draw_list->ChannelsSetCurrent(0); // Background
 
             // Draw simple line if zooming is too small for nice bezier curves
-            if (canvas_zooming < 0.4f) {
+            const float zooming_switch_curve = 0.4f;
+            if (canvas_zooming < zooming_switch_curve) {
                 draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * canvas_zooming);
             } else {
                 draw_list->AddBezierCurve(p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2, COLOR_CALL_CURVE,
@@ -178,15 +177,29 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(
                 ImGui::SetCursorScreenPos(call_rect_min);
                 std::string label = "call_" + call.class_name + std::to_string(call.uid);
                 ImGui::InvisibleButton(label.c_str(), rect_size);
-                bool call_active = ImGui::IsItemActive();
-                if (call_active) {
+                // Context menu
+                if (ImGui::BeginPopupContextItem()) {
+                if (ImGui::MenuItem(
+                        "Delete", std::get<0>(hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
+                    std::get<1>(hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
                     retval_id = call.uid;
                 }
-                if (ImGui::IsItemHovered() && (hovered_call < 0)) {
-                    hovered_call = call.uid;
+                    ImGui::EndPopup();
                 }
+                bool active = ImGui::IsItemActive();
+                bool hovered = ImGui::IsItemHovered();
+                bool mouse_clicked = ImGui::IsMouseClicked(0);
+                if (mouse_clicked && !hovered) {
+                    this->selected = false;
+                }
+                if (active) {
+                    this->selected = true;
+                }
+                if (this->selected) {
+                    retval_id = call.uid;
+                }   
                 ImU32 call_bg_color =
-                    (hovered_call == call.uid || retval_id == call.uid) ? COLOR_CALL_HIGHTLIGHT : COLOR_CALL_BACKGROUND;
+                    (hovered || this->selected) ? COLOR_CALL_HIGHTLIGHT : COLOR_CALL_BACKGROUND;
                 draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, 4.0f);
                 draw_list->AddRect(call_rect_min, call_rect_max, COLOR_CALL_BORDER, 4.0f);
 

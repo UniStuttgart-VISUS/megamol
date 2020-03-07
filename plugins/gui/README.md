@@ -40,6 +40,15 @@ The `OverlayRenderer` is a rendering module which implements a `megamol::core::v
 * `font::size` (`20.0`): The font size.
 * `font::color` (`0.5f, 0.5f, 0.5f`): The font color.
 
+
+--- 
+
+## How to use the Configurator
+
+Start MegaMol using the example project: `-p ../examples/configurator.lua`. 
+This project automatically starts the configurator.
+
+
 --- 
 
 ## Plugin Class Dependecies

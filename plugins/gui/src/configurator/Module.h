@@ -39,6 +39,7 @@ typedef std::shared_ptr<Module> ModulePtrType;
  */
 class Module {
 public:
+
     struct StockModule {
         std::string class_name;
         std::string description;
@@ -55,12 +56,14 @@ public:
 
     const int uid;
 
+    // Init when adding module from stock
     std::string class_name;
     std::string description;
     std::string plugin_name;
     bool is_view;
     std::vector<Parameter> parameters;
 
+    // Init when adding module to graph
     std::string name;
     std::string name_space;
     bool is_view_instance;
@@ -77,7 +80,6 @@ public:
     ImGuiID GUI_Present(ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys) {
         return this->present.Present(*this, canvas_offset, canvas_zooming, hotkeys);
     }
-
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
     void GUI_SetPresentation(Module::Presentations present) { this->present.presentations = present; }
     void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
@@ -112,6 +114,7 @@ private:
         std::string class_label;
         std::string name_label;
         GUIUtils utils;
+        bool selected;
 
     } present;
 };

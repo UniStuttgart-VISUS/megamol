@@ -109,7 +109,8 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
     , size(ImVec2(250.0f, 50.0f))
     , class_label()
     , name_label()
-    , utils() {}
+    , utils()
+    , selected(false) {}
 
 
 megamol::gui::configurator::Module::Presentation::~Presentation(void) {}
@@ -120,6 +121,8 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
 
     int retval_id = GUI_INVALID_ID;
     bool rename_popup_open = false;
+
+    ///XXX Draw module only if sure within canvas
 
     try {
 
@@ -150,10 +153,8 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         assert(draw_list != nullptr);
 
         const ImU32 COLOR_MODULE_BACKGROUND = IM_COL32(64, 61, 64, 255);
-        const ImU32 COLOR_MODULE_HIGHTLIGHT = IM_COL32(92, 92, 92, 255);
+        const ImU32 COLOR_MODULE_HIGHTLIGHT = IM_COL32(92, 116, 92, 255);
         const ImU32 COLOR_MODULE_BORDER = IM_COL32(128, 128, 128, 255);
-
-        int hovered_module = GUI_INVALID_ID;
 
         ImVec2 module_size = this->size;
         ImVec2 module_rect_min = canvas_offset + this->position * canvas_zooming;
@@ -180,27 +181,10 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), line_offset));
         ImGui::Text(label.c_str());
 
-        if (mod.is_view) {
-            if (false) {
-                std::string view_label = "[View]";
-                if (mod.is_view_instance) {
-                    view_label = "[Main View]";
-                }
-                name_width = this->utils.TextWidgetWidth(view_label);
-                ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), -line_offset));
-                ImGui::Text(view_label.c_str());
-            } else {
-                std::string view_label = "Main View";
-                name_width = this->utils.TextWidgetWidth(view_label);
-                ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f) - 20.0f, -line_offset));
-                ImGui::Checkbox(view_label.c_str(), &mod.is_view_instance);
-                ImGui::SameLine();
-                this->utils.HelpMarkerToolTip(
-                    "There should be only one main view.\nOtherwise first one found is used.");
-                /// TODO ensure that there is always just one main view ...
-            }
+        if (mod.is_view_instance) {
+            ImGui::Text("[Main View]");
         }
-
+        
         ImGui::EndGroup();
 
         // Draw box
@@ -225,20 +209,28 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
                 ImGui::EndPopup();
             }
         }
-        bool module_active = ImGui::IsItemActive();
-        if (module_active) {
+        bool active = ImGui::IsItemActive();
+        bool hovered = ImGui::IsItemHovered();
+        bool mouse_clicked = ImGui::IsMouseClicked(0);
+        if (mouse_clicked && !hovered) {
+            this->selected = false;
+        }
+        if (active) {
+            this->selected = true;
+            if (ImGui::IsMouseDragging(0)) {
+                this->position = ((module_rect_min - canvas_offset) + ImGui::GetIO().MouseDelta) / canvas_zooming;
+            }
+        }
+        if (this->selected) {
             retval_id = mod.uid;
-        }
-        if (module_active && ImGui::IsMouseDragging(0)) {
-            this->position = ((module_rect_min - canvas_offset) + ImGui::GetIO().MouseDelta) / canvas_zooming;
-        }
-        if (ImGui::IsItemHovered() && (hovered_module < 0)) {
-            hovered_module = mod.uid;
-        }
+        }        
         ImU32 module_bg_color =
-            (hovered_module == mod.uid || retval_id == mod.uid) ? COLOR_MODULE_HIGHTLIGHT : COLOR_MODULE_BACKGROUND;
-        draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 4.0f);
-        draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 4.0f);
+            (hovered || this->selected) ? COLOR_MODULE_HIGHTLIGHT : COLOR_MODULE_BACKGROUND;
+        draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 5.0f);
+        draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 5.0f);
+
+        ///XXX
+        // Use ImGui::ArrowButton fto show/hide paramters insode module box
 
         // Rename pop-up
         this->utils.RenamePopUp("Rename Project", rename_popup_open, mod.name);

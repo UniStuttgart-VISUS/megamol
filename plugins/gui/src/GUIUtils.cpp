@@ -210,8 +210,8 @@ bool megamol::gui::GUIUtils::VerticalSplitter(float* size_left, float* size_righ
     float width_avail = ImGui::GetWindowSize().x - (3.0f * thickness);
 
     if (width_avail < thickness) return false;
-
-    (*size_left) = std::min((*size_left), width_avail);
+    /// Uncomment to limit slider position to current width_avail
+    //(*size_left) = std::min((*size_left), width_avail);
     (*size_right) = width_avail - (*size_left);
 
     ImGuiContext& g = *GImGui;
