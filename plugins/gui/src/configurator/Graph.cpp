@@ -502,11 +502,11 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
     float ymax = ymin + this->canvas_size.y;
     if (ImGui::IsMouseClicked(0) && (mouse_pos.x >= xmin) && (mouse_pos.x <= xmax) && (mouse_pos.y >= ymin) && (mouse_pos.y <= ymax)) { 
     */
-    //if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered()) { // ImGuiHoveredFlags_ChildWindows
-    //    this->selected_module_uid = GUI_INVALID_ID;
-    //    this->selected_call_uid = GUI_INVALID_ID;
-    //    this->selected_slot_ptr = nullptr;
-    //}
+    if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered()) { // ImGuiHoveredFlags_ChildWindows
+        this->selected_module_uid = GUI_INVALID_ID;
+        this->selected_call_uid = GUI_INVALID_ID;
+        this->selected_slot_ptr = nullptr;
+    }
 
     // Display grid -------------------
     if (this->show_grid) {
