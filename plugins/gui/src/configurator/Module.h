@@ -105,7 +105,7 @@ private:
         ImVec2 GetPosition(void) { return this->position; }
         ImVec2 GetSize(void) { return this->size; }
 
-        void UpdateSize(Module& mod, ImVec2 canvas_offset, float canvas_zooming);
+        void UpdateSize(Module& mod, float canvas_zooming);
 
         Module::Presentations presentations;
         bool label_visible;

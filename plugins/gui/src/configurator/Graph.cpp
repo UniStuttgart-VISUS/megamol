@@ -494,18 +494,17 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
     assert(draw_list != nullptr);
     draw_list->ChannelsSplit(2);
 
-    //if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered()) {
+    if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered()) {
         this->selected_module_uid = GUI_INVALID_ID;
         this->selected_call_uid = GUI_INVALID_ID;
         this->selected_slot_ptr = nullptr;
-    //}
+    }
 
     // Display grid -------------------
     if (this->show_grid) {
         this->canvas_grid(graph);
     }
     ImGui::PopStyleVar(2);
-
 
     // Draw modules -------------------
     for (auto& mod : graph.GetGraphModules()) {
@@ -535,7 +534,6 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
             this->canvas_scrolling = this->canvas_scrolling + ImGui::GetIO().MouseDelta / this->canvas_zooming;
         }
 
-        /*
         // Zooming (Mouse Wheel)
         if (this->mouse_wheel != io.MouseWheel) {
             const float factor = (30.0f / this->canvas_zooming);
@@ -553,10 +551,8 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
                 ImVec2 new_mouse_position = (current_mouse_pos / last_zooming) * this->canvas_zooming;
                 this->canvas_scrolling += ((new_mouse_position - current_mouse_pos) / this->canvas_zooming);
             }
-            ///XXX this->gui.update_current_graph = true;
         }
         this->mouse_wheel = io.MouseWheel;
-        */
     }
     this->canvas_offset = this->canvas_position + (this->canvas_scrolling * this->canvas_zooming);
 

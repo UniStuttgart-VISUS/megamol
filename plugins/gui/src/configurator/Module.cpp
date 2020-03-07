@@ -157,7 +157,7 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
         const ImU32 COLOR_MODULE_BORDER = IM_COL32(128, 128, 128, 255);
 
         ///XXX Trigger only when necessary
-        this->UpdateSize(mod, canvas_offset, canvas_zooming);
+        this->UpdateSize(mod, canvas_zooming);
 
         ImVec2 module_size = this->size;
         ImVec2 module_rect_min = canvas_offset + this->position * canvas_zooming;
@@ -202,6 +202,7 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
         ImGui::SetCursorScreenPos(module_rect_min);
         label = "module_" + mod.name;
         ImGui::InvisibleButton(label.c_str(), module_size);
+       bool hovered = false;
         // Gives slots which overlap modules priority for ToolTip and Context Menu.
         if (hovered_slot_uid == GUI_INVALID_ID) {
             this->utils.HoverToolTip(mod.description, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
@@ -217,22 +218,22 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
                 }
                 ImGui::EndPopup();
             }
-        }
-        bool active = ImGui::IsItemActive();
-        bool hovered = ImGui::IsItemHovered();
-        bool mouse_clicked = ImGui::IsMouseClicked(0);
-        if (mouse_clicked && !hovered) {
-            this->selected = false;
-        }
-        if (active) {
-            this->selected = true;
-            if (ImGui::IsMouseDragging(0)) {
-                this->position = ((module_rect_min - canvas_offset) + ImGui::GetIO().MouseDelta) / canvas_zooming;
+            bool active = ImGui::IsItemActive();
+            hovered = ImGui::IsItemHovered();
+            bool mouse_clicked = ImGui::IsMouseClicked(0);             
+            if (mouse_clicked && !hovered) {
+                this->selected = false;
             }
+            if (active) {
+                this->selected = true;
+                if (ImGui::IsMouseDragging(0)) {
+                    this->position = ((module_rect_min - canvas_offset) + ImGui::GetIO().MouseDelta) / canvas_zooming;
+                }
+            }
+            if (this->selected) {
+                retval_id = mod.uid;
+            } 
         }
-        if (this->selected) {
-            retval_id = mod.uid;
-        }        
         ImU32 module_bg_color =
             (hovered || this->selected) ? COLOR_MODULE_HIGHTLIGHT : COLOR_MODULE_BACKGROUND;
         draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 5.0f);
@@ -260,7 +261,7 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
 
 
 void megamol::gui::configurator::Module::Presentation::UpdateSize(
-    megamol::gui::configurator::Module& mod, ImVec2 canvas_offset, float canvas_zooming) {
+    megamol::gui::configurator::Module& mod, float canvas_zooming) {
 
     float max_label_length = 0.0f;
     if (this->label_visible) {
@@ -296,5 +297,5 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
         std::max(module_slot_height, ImGui::GetItemsLineHeightWithSpacing() * ((mod.is_view_instance) ? (4.0f) : (3.0f)));
 
     // Clamp to minimum size
-    this->size = ImVec2(std::max(module_width, 150.0f), std::max(module_height, 50.0f)); 
+    this->size = ImVec2(std::max(module_width, 150.0f), std::max(module_height, 50.0f)) * canvas_zooming; 
 }

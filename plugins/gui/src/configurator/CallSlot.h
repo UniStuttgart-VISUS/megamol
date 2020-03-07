@@ -113,7 +113,8 @@ private:
         // Absolute position including canvas offset and zooming
         ImVec2 position;
         GUIUtils utils;
-
+        bool selected;
+        
     } present;
 };
 

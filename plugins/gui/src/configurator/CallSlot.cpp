@@ -227,7 +227,7 @@ int megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(megamol::gui::c
 // CALL SLOT PRESENTATION ####################################################
 
 megamol::gui::configurator::CallSlot::Presentation::Presentation(void)
-    : presentations(CallSlot::Presentations::DEFAULT), label_visible(true), position(), slot_radius(8.0f), utils() {}
+    : presentations(CallSlot::Presentations::DEFAULT), label_visible(true), position(), slot_radius(8.0f), utils(), selected(false) {}
 
 megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
@@ -288,8 +288,10 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(
             tooltip = call_slot.name + " | " + tooltip;
         }
         this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
-        auto hovered = ImGui::IsItemHovered();
-        auto clicked = ImGui::IsItemClicked();
+        bool active = ImGui::IsItemActive();
+        bool hovered = ImGui::IsItemHovered();
+        bool mouse_clicked = ImGui::IsMouseClicked(0);
+      
         /// XXX
         /*
          int compat_call_idx = CallSlot::GetCompatibleCallIndex(selected_slot_ptr, call_slot);
@@ -310,16 +312,27 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(
                 selected_slot_ptr = nullptr;
             }
         }
-         if (hovered || (selected_slot_ptr == call_slot)) {
-            slot_color = slot_highl_color;
-        }
          //Highlight if compatible to selected slot
 
          if (compat_call_idx > 0) {
             slot_color = COLOR_SLOT_COMPATIBLE;
         }
         */
-
+        if (mouse_clicked && !hovered) {
+            this->selected = false;
+        }
+        if (active) {
+            this->selected = true;
+        }
+        // if (this->selected) {
+        //     retval_id = mod.uid;
+        // }
+        if (hovered) {
+           retval_id = call_slot.uid;
+        }         
+        if (hovered || this->selected) {
+            slot_color = slot_highl_color;
+        }
         ImGui::SetCursorScreenPos(slot_position);
         draw_list->AddCircleFilled(slot_position, radius, slot_color);
         draw_list->AddCircle(slot_position, radius, COLOR_SLOT_BORDER);

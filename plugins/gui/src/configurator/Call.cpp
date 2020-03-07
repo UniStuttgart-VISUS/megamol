@@ -178,11 +178,11 @@ int megamol::gui::configurator::Call::Presentation::Present(
                 ImGui::InvisibleButton(label.c_str(), rect_size);
                 // Context menu
                 if (ImGui::BeginPopupContextItem()) {
-                if (ImGui::MenuItem(
-                        "Delete", std::get<0>(hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
-                    std::get<1>(hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-                    retval_id = call.uid;
-                }
+                    if (ImGui::MenuItem(
+                            "Delete", std::get<0>(hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
+                        std::get<1>(hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+                        retval_id = call.uid;
+                    }
                     ImGui::EndPopup();
                 }
                 bool active = ImGui::IsItemActive();
