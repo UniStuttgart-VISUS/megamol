@@ -125,6 +125,8 @@ int megamol::gui::configurator::Call::Presentation::Present(
 
     int retval_id = GUI_INVALID_ID;
 
+    ///XXX Clip call if lying ouside the canvas
+
     try {
 
         if (ImGui::GetCurrentContext() == nullptr) {
@@ -136,8 +138,10 @@ int megamol::gui::configurator::Call::Presentation::Present(
         ImGui::PushID(call.uid);
 
         ImGuiStyle& style = ImGui::GetStyle();
+
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         assert(draw_list != nullptr);
+        draw_list->ChannelsSplit(2);
 
         const ImU32 COLOR_CALL_CURVE = IM_COL32(225, 225, 0, 255);
         const ImU32 COLOR_CALL_BACKGROUND = IM_COL32(64, 61, 64, 255);
@@ -187,8 +191,8 @@ int megamol::gui::configurator::Call::Presentation::Present(
                 }
                 bool active = ImGui::IsItemActive();
                 bool hovered = ImGui::IsItemHovered();
-                bool mouse_clicked = ImGui::IsMouseClicked(0);
-                if (mouse_clicked && !hovered) { //  && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+                bool mouse_clicked = ImGui::GetIO().MouseClicked[0];
+                if (mouse_clicked && !hovered) { // && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
                     this->selected = false;
                 }
                 if (active) {

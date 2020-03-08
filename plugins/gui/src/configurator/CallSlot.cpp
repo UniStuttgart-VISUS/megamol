@@ -158,11 +158,11 @@ bool megamol::gui::configurator::CallSlot::ConnectParentModule(
 
 bool megamol::gui::configurator::CallSlot::DisConnectParentModule(void) {
 
-    // if (parent_module == nullptr) {
-    //    vislib::sys::Log::DefaultLog.WriteWarn(
-    //        "Pointer to parent module is already nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    //    return false;
-    //}
+    if (parent_module == nullptr) {
+        // vislib::sys::Log::DefaultLog.WriteWarn(
+        //      "Pointer to parent module is already nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
     this->parent_module.reset();
     return true;
 }
@@ -252,6 +252,7 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(
 
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         assert(draw_list != nullptr);
+
         draw_list->ChannelsSetCurrent(1); // Foreground
 
         const ImU32 COLOR_SLOT = IM_COL32(175, 175, 175, 255);
@@ -290,8 +291,7 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(
         this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
         bool active = ImGui::IsItemActive();
         bool hovered = ImGui::IsItemHovered();
-        bool mouse_clicked = ImGui::IsMouseClicked(0);
-      
+        bool mouse_clicked = ImGui::GetIO().MouseClicked[0];      
         /// XXX
         /*
          int compat_call_idx = CallSlot::GetCompatibleCallIndex(selected_slot_ptr, call_slot);
@@ -318,7 +318,7 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(
             slot_color = COLOR_SLOT_COMPATIBLE;
         }
         */
-        if (mouse_clicked && !hovered) { //  && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+        if (mouse_clicked && !hovered) { // && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
             this->selected = false;
         }
         if (active) {

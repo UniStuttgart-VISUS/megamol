@@ -60,8 +60,8 @@ bool megamol::gui::configurator::Module::RemoveAllCallSlots(void) {
                     call_slot_ptr->DisConnectParentModule();
 
                     // vislib::sys::Log::DefaultLog.WriteWarn(
-                    //     "Found %i references pointing to call slot. [%s, %s, line %d]\n", call_slot_ptr.use_count(),
-                    //     __FILE__, __FUNCTION__, __LINE__);
+                    //      "Found %i references pointing to call slot. [%s, %s, line %d]\n", call_slot_ptr.use_count(),
+                    //      __FILE__, __FUNCTION__, __LINE__);
                     assert(call_slot_ptr.use_count() == 1);
 
                     call_slot_ptr.reset();
@@ -122,7 +122,7 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
     int retval_id = GUI_INVALID_ID;
     bool rename_popup_open = false;
 
-    ///XXX Draw module only if sure within canvas
+    ///XXX Clip module if lying ouside the canvas
 
     try {
 
@@ -202,7 +202,11 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
         ImGui::SetCursorScreenPos(module_rect_min);
         label = "module_" + mod.name;
         ImGui::InvisibleButton(label.c_str(), module_size);
-        bool hovered = false;
+        bool hovered = ImGui::IsItemHovered() && (hovered_slot_uid == GUI_INVALID_ID);
+        bool mouse_clicked = ImGui::GetIO().MouseClicked[0];
+        if (mouse_clicked && (!hovered || (hovered_slot_uid != GUI_INVALID_ID))) { // && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+            this->selected = false;
+        }         
         // Gives slots which overlap modules priority for ToolTip and Context Menu.
         if (hovered_slot_uid == GUI_INVALID_ID) {
             this->utils.HoverToolTip(mod.description, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
@@ -219,11 +223,6 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
                 ImGui::EndPopup();
             }
             bool active = ImGui::IsItemActive();
-            hovered = ImGui::IsItemHovered();
-            bool mouse_clicked = ImGui::IsMouseClicked(0);             
-            if (mouse_clicked && !hovered) { // } && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
-                this->selected = false;
-            }                    
             if (active) {
                 this->selected = true;
                 if (ImGui::IsMouseDragging(0)) {

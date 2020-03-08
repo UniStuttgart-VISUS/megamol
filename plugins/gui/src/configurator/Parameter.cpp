@@ -315,8 +315,10 @@ bool megamol::gui::configurator::Parameter::Presentation::PresentationButton(
     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]));
     ImGui::BeginChild("special_button_background", ImVec2(height, height), false,
         ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
+
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
+
     float thickness = height / 5.0f;
     ImVec2 center = position + ImVec2(half_height, half_height);
 

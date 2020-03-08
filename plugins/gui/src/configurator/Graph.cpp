@@ -97,14 +97,15 @@ bool megamol::gui::configurator::Graph::DeleteModule(int module_uid) {
                 (*iter)->RemoveAllCallSlots();
 
                 // vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to module. [%s, %s, line %d]\n",
-                //    (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+                //     (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 assert((*iter).use_count() == 1);
-                (*iter).reset();
-                this->modules.erase(iter);
-                this->DeleteDisconnectedCalls();
+
                 vislib::sys::Log::DefaultLog.WriteInfo("Deleted module: %s [%s, %s, line %d]\n",
                    (*iter)->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                (*iter).reset();
+                this->modules.erase(iter);
 
+                this->DeleteDisconnectedCalls();
                 this->dirty_flag = true;
                 return true;
             }
@@ -210,12 +211,13 @@ bool megamol::gui::configurator::Graph::DeleteCall(int call_uid) {
                 (*iter)->DisConnectCallSlots();
 
                 // vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to call. [%s, %s, line %d]\n",
-                //    (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+                //     (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 assert((*iter).use_count() == 1);
-                (*iter).reset();
-                this->calls.erase(iter);
+
                 vislib::sys::Log::DefaultLog.WriteInfo("Deleted call: %s [%s, %s, line %d]\n",
                     (*iter)->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                (*iter).reset();
+                this->calls.erase(iter);
 
                 this->dirty_flag = true;
                 return true;
@@ -332,7 +334,7 @@ bool megamol::gui::configurator::Graph::Presentation::GUI_Present(megamol::gui::
             if (this->selected_module_uid != GUI_INVALID_ID) {
                 // One time init depending on available window width
                 if (this->split_width < 0.0f) {
-                    this->split_width = ImGui::GetWindowWidth() * 0.75f;
+                    this->split_width = ImGui::GetWindowWidth() * 0.65f;
                 }
                 float child_width_auto = 0.0f;
                 this->utils.VerticalSplitter(&this->split_width, &child_width_auto);
@@ -489,23 +491,21 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
         "region", ImVec2(child_width, 0.0f), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
     this->canvas_position = ImGui::GetCursorScreenPos();
     this->canvas_size = ImGui::GetWindowSize();
+    this->canvas_offset = this->canvas_position + (this->canvas_scrolling * this->canvas_zooming);
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
-    draw_list->ChannelsSplit(2);
+    draw_list->ChannelsSplit(2); // Used by subsequent graph elements!
 
-    /*
+    // Propagete only left clicks within the canvas
+    bool left_click = io.MouseClicked[0];
     ImVec2 mouse_pos = ImGui::GetMousePos();
     float xmin = this->canvas_position.x;
     float ymin = this->canvas_position.y;
     float xmax = xmin + this->canvas_size.x;
     float ymax = ymin + this->canvas_size.y;
-    if (ImGui::IsMouseClicked(0) && (mouse_pos.x >= xmin) && (mouse_pos.x <= xmax) && (mouse_pos.y >= ymin) && (mouse_pos.y <= ymax)) { 
-    */
-    if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered()) { // ImGuiHoveredFlags_ChildWindows
-        this->selected_module_uid = GUI_INVALID_ID;
-        this->selected_call_uid = GUI_INVALID_ID;
-        this->selected_slot_ptr = nullptr;
+    if (left_click && !((mouse_pos.x >= xmin) && (mouse_pos.x <= xmax) && (mouse_pos.y >= ymin) && (mouse_pos.y <= ymax))) { 
+        io.MouseClicked[0] = false;
     }
 
     // Display grid -------------------
@@ -562,12 +562,12 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
         }
         this->mouse_wheel = io.MouseWheel;
     }
-    this->canvas_offset = this->canvas_position + (this->canvas_scrolling * this->canvas_zooming);
 
     /// DEBUG Draw point at origin
     draw_list->AddCircleFilled(this->canvas_offset, 10.0f * this->canvas_zooming, IM_COL32(192, 0, 0, 255));
 
     draw_list->ChannelsMerge();
+    io.MouseClicked[0] = left_click;
     ImGui::EndChild();
     ImGui::PopStyleColor();
 

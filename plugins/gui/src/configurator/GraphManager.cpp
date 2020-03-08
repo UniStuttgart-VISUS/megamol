@@ -42,8 +42,8 @@ bool megamol::gui::configurator::GraphManager::DeleteGraph(int graph_uid) {
     for (auto iter = this->graphs.begin(); iter != this->graphs.end(); iter++) {
         if ((*iter)->GetUID() == graph_uid) {
 
-            // vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to graph. [%s, %s, line %d]\n",
-            //    (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to graph. [%s, %s, line %d]\n",
+                (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
             assert((*iter).use_count() == 1);
             (*iter) = nullptr;
             this->graphs.erase(iter);
@@ -1129,7 +1129,7 @@ bool megamol::gui::configurator::GraphManager::Presentation::close_unsaved_popup
             ImGui::CloseCurrentPopup();
             retval = true;
         }
-        ImGui::SameLine(0.0f, 120.0f);
+        ImGui::SameLine();
         if (ImGui::Button("No")) {
             ImGui::CloseCurrentPopup();
             this->delete_graph_uid = GUI_INVALID_ID;
