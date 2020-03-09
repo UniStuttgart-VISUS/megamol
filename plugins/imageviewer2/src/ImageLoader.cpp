@@ -23,6 +23,8 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::imageviewer2;
 
+uint32_t ImageLoader::loaded = 0;
+
 /*
  * ImageLoader::ImageLoader
  */
@@ -158,7 +160,7 @@ bool ImageLoader::GetMetaData(core::Call& call) {
 /*
  * ImageLoader::SetWishlist
  */
-bool ImageLoader::SetWishlist(core::Call& call) { 
+bool ImageLoader::SetWishlist(core::Call& call) {
     image_calls::Image2DCall* ic = dynamic_cast<image_calls::Image2DCall*>(&call);
     if (ic == nullptr) return false;
     const auto wishlist = ic->GetWishlistPtr();
@@ -175,7 +177,8 @@ bool ImageLoader::SetWishlist(core::Call& call) {
     } else {
         for (const auto& id : *wishlist) {
             if (id >= wishlist->size()) {
-                vislib::sys::Log::DefaultLog.WriteError("There is no image with the id %u", static_cast<unsigned int>(id));
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "There is no image with the id %u", static_cast<unsigned int>(id));
                 continue;
             }
             const auto& e = this->availableFiles->at(id);
@@ -188,7 +191,7 @@ bool ImageLoader::SetWishlist(core::Call& call) {
         }
     }
 
-    return true; 
+    return true;
 }
 
 /*
@@ -197,8 +200,7 @@ bool ImageLoader::SetWishlist(core::Call& call) {
 bool ImageLoader::WaitForData(core::Call& call) {
     std::mutex waitmutex; // this has to be different from the queueMutex to avoid deadlocks
     std::unique_lock<std::mutex> lock(this->queueMutex);
-    std::condition_variable condvar;
-    condvar.wait(lock, [this] { return queueElements.empty(); });
+    this->condvar.wait(lock, [this] { return queueElements.empty(); });
     return true;
 }
 
@@ -228,6 +230,8 @@ bool ImageLoader::loadImage(const std::filesystem::path& path) {
         this->imageMutex.lock();
         this->newImageData.insert(std::pair(path.string(), image));
         this->imageMutex.unlock();
+        this->loaded++;
+        vislib::sys::Log::DefaultLog.WriteInfo("Successfully loaded image %u", this->loaded);
     } else {
         vislib::sys::Log::DefaultLog.WriteError("ImageLoader: failed decoding file \"%s\"", path.c_str());
         return false;
@@ -249,6 +253,7 @@ void ImageLoader::loadingLoop(void) {
             this->queueElements.erase(elem);
             this->queueMutex.unlock();
             this->newImageAvailable = true;
+            this->condvar.notify_one();
         }
     }
 }

@@ -158,6 +158,10 @@ private:
      * Loop responsible for loading all images that are present in the imageLoadingQueue
      */
     void loadingLoop(void);
+
+    static uint32_t loaded;
+
+    std::condition_variable condvar;
 };
 
 } // namespace imageviewer2
