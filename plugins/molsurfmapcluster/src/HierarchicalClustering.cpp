@@ -225,15 +225,13 @@ void HierarchicalClustering::calculateImageMomentsValue(CLUSTERNODE* node) {
     std::vector<double> nu;
     for (int i = 0; i <= IMAGEORDER; i++) {
         for (int j = 0; j <= IMAGEORDER; j++) {
-            //if ((i + j) <= 3) {
-                nu.push_back(müij[i][j] / (pow(müij[0][0], (1.0 + (static_cast<double>(i + j) / 2.0)))));
-            //}
+            nu.push_back(müij[i][j] / (pow(müij[0][0], (1.0 + (static_cast<double>(i + j) / 2.0)))));
         }
     }
 
     double i1 = nu[2 * IMAGEORDER + 0] + nu[2];
     double i2 = pow(nu[2 * IMAGEORDER + 0] - nu[2], 2) + 4.0 * pow(nu[1 * IMAGEORDER + 1], 2);
-    //double i3 =
+    // double i3 =
     //    pow(nu[3 * IMAGEORDER + 0] - 3.0 * nu[1 * IMAGEORDER + 2], 2) + pow(3.0 * nu[2 * IMAGEORDER + 1] - nu[3], 2);
     double i4 = pow(nu[3 * IMAGEORDER + 0] + nu[1 * IMAGEORDER + 2], 2) + pow(nu[2 * IMAGEORDER + 1] + nu[3], 2);
     double i5 =
@@ -269,7 +267,7 @@ void HierarchicalClustering::calculateColorMoments(CLUSTERNODE* node) {
     double deviation[3] = {0};
     double skewness[3] = {0};
 
-    double factor = (pic->width * pic->height);
+    double factor = static_cast<double>(pic->width * pic->height);
     auto picptr = pic->image->PeekDataAs<BYTE>();
 
     // Calculate Mean
@@ -277,11 +275,11 @@ void HierarchicalClustering::calculateColorMoments(CLUSTERNODE* node) {
     for (int i = 0; i < pic->height; i++) {
         for (int j = 0; j < pic->width * 3; j += 3) {
             // summean[0] += pic->rows[i][j];
-            summean[0] += picptr[pic->width * i + j];
+            summean[0] += static_cast<double>(picptr[pic->width * i + j]);
             // summean[1] += pic->rows[i][j + 1];
-            summean[1] += picptr[pic->width * i + j + 1];
+            summean[1] += static_cast<double>(picptr[pic->width * i + j + 1]);
             // summean[2] += pic->rows[i][j + 2];
-            summean[2] += picptr[pic->width * i + j + 2];
+            summean[2] += static_cast<double>(picptr[pic->width * i + j + 2]);
         }
     }
 
@@ -290,17 +288,17 @@ void HierarchicalClustering::calculateColorMoments(CLUSTERNODE* node) {
     mean[2] = summean[2] / factor;
 
     // Calculate Deviation and Skewness
-    double deviationsum[3] = {0};
-    double skewnesssum[3] = {0};
+    double deviationsum[3] = {0.0};
+    double skewnesssum[3] = {0.0};
     for (int i = 0; i < pic->height; i++) {
         for (int j = 0; j < pic->width * 3; j += 3) {
-            deviationsum[0] += pow(picptr[pic->width * i + j] - mean[0], 2);
-            deviationsum[1] += pow(picptr[pic->width * i + j + 1] - mean[1], 2);
-            deviationsum[2] += pow(picptr[pic->width * i + j + 2] - mean[2], 2);
+            deviationsum[0] += pow(static_cast<double>(picptr[pic->width * i + j]) - mean[0], 2);
+            deviationsum[1] += pow(static_cast<double>(picptr[pic->width * i + j + 1]) - mean[1], 2);
+            deviationsum[2] += pow(static_cast<double>(picptr[pic->width * i + j + 2]) - mean[2], 2);
 
-            skewnesssum[0] += pow(picptr[pic->width * i + j] - mean[0], 3);
-            skewnesssum[1] += pow(picptr[pic->width * i + j + 1] - mean[1], 3);
-            skewnesssum[2] += pow(picptr[pic->width * i + j + 2] - mean[2], 3);
+            skewnesssum[0] += pow(static_cast<double>(picptr[pic->width * i + j]) - mean[0], 3);
+            skewnesssum[1] += pow(static_cast<double>(picptr[pic->width * i + j + 1]) - mean[1], 3);
+            skewnesssum[2] += pow(static_cast<double>(picptr[pic->width * i + j + 2]) - mean[2], 3);
         }
     }
 
@@ -338,7 +336,7 @@ void HierarchicalClustering::calculateColorMomentsValue(CLUSTERNODE* node) {
     double deviation[3] = {0};
     double skewness[3] = {0};
 
-    double factor = (pic->width * pic->height);
+    double factor = static_cast<double>(pic->width * pic->height);
     auto picptr = pic->image->PeekDataAs<BYTE>();
 
     // Calculate Mean
@@ -346,11 +344,11 @@ void HierarchicalClustering::calculateColorMomentsValue(CLUSTERNODE* node) {
     for (int i = 0; i < pic->height; i++) {
         for (int j = 0; j < pic->width * 3; j += 3) {
             // summean[0] += pic->rows[i][j];
-            summean[0] += picptr[pic->width * i + j];
+            summean[0] += static_cast<double>(picptr[pic->width * i + j]);
             // summean[1] += pic->rows[i][j + 1];
-            summean[1] += picptr[pic->width * i + j + 1];
+            summean[1] += static_cast<double>(picptr[pic->width * i + j + 1]);
             // summean[2] += pic->rows[i][j + 2];
-            summean[2] += picptr[pic->width * i + j + 2];
+            summean[2] += static_cast<double>(picptr[pic->width * i + j + 2]);
         }
     }
 
@@ -359,17 +357,17 @@ void HierarchicalClustering::calculateColorMomentsValue(CLUSTERNODE* node) {
     mean[2] = summean[2] / factor;
 
     // Calculate Deviation and Skewness
-    double deviationsum[3] = {0};
-    double skewnesssum[3] = {0};
+    double deviationsum[3] = {0.0};
+    double skewnesssum[3] = {0.0};
     for (int i = 0; i < pic->height; i++) {
         for (int j = 0; j < pic->width * 3; j += 3) {
-            deviationsum[0] += pow(picptr[pic->width * i + j] - mean[0], 2);
-            deviationsum[1] += pow(picptr[pic->width * i + j + 1] - mean[1], 2);
-            deviationsum[2] += pow(picptr[pic->width * i + j + 2] - mean[2], 2);
+            deviationsum[0] += pow(static_cast<double>(picptr[pic->width * i + j]) - mean[0], 2);
+            deviationsum[1] += pow(static_cast<double>(picptr[pic->width * i + j + 1]) - mean[1], 2);
+            deviationsum[2] += pow(static_cast<double>(picptr[pic->width * i + j + 2]) - mean[2], 2);
 
-            skewnesssum[0] += pow(picptr[pic->width * i + j] - mean[0], 3);
-            skewnesssum[1] += pow(picptr[pic->width * i + j + 1] - mean[1], 3);
-            skewnesssum[2] += pow(picptr[pic->width * i + j + 2] - mean[2], 3);
+            skewnesssum[0] += pow(static_cast<double>(picptr[pic->width * i + j]) - mean[0], 3);
+            skewnesssum[1] += pow(static_cast<double>(picptr[pic->width * i + j + 1]) - mean[1], 3);
+            skewnesssum[2] += pow(static_cast<double>(picptr[pic->width * i + j + 2]) - mean[2], 3);
         }
     }
 
@@ -426,7 +424,7 @@ double HierarchicalClustering::distance(std::vector<double>* X, std::vector<doub
         if (X->size() == Y->size()) {
             double summe = 0.0;
             for (int i = 0; i < X->size(); i++) {
-                summe += (*X)[i] - (*Y)[i];
+                summe += abs((*X)[i] - (*Y)[i]);
             }
             distance = summe;
         } else {
@@ -451,7 +449,7 @@ double HierarchicalClustering::distance(std::vector<double>* X, std::vector<doub
         if (X->size() == Y->size()) {
             double summe = 0.0;
             for (int i = 0; i < X->size(); i++) {
-                summe += pow((*X)[i] - (*Y)[i], r);
+                summe += pow((*X)[i] - (*Y)[i], 3);
             }
             distance = cbrt(summe);
         } else {
@@ -914,8 +912,8 @@ double HierarchicalClustering::similarity(std::vector<double>* X, std::vector<do
             // Calculate summs
             for (int i = 0; i < X->size(); i++) {
                 sumXY += (*X)[i] * (*Y)[i];
-                sumX += pow((*X)[i], 2);
-                sumY += pow((*Y)[i], 2);
+                sumX += (*X)[i];
+                sumY += (*Y)[i];
             }
             // Calculate similarity
             similar = sumXY / (sumX + sumY - sumXY);
