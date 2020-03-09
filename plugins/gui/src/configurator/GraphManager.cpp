@@ -1083,8 +1083,8 @@ megamol::gui::configurator::GraphManager::Presentation::~Presentation(void) {}
 
 
 int megamol::gui::configurator::GraphManager::Presentation::Present(
-    megamol::gui::configurator::GraphManager& graph_manager, float child_width, ImFont* graph_font,
-    megamol::gui::HotKeyArrayType& hotkeys) {
+    megamol::gui::configurator::GraphManager& inout_graph_manager, float in_child_width, ImFont* in_graph_font,
+    HotKeyArrayType& inout_hotkeys) {
 
     int retval = GUI_INVALID_ID;
 
@@ -1097,7 +1097,7 @@ int megamol::gui::configurator::GraphManager::Presentation::Present(
 
         const auto child_flags = ImGuiWindowFlags_None;
 
-        ImGui::BeginChild("graph_child_window", ImVec2(child_width, 0.0f), true, child_flags);
+        ImGui::BeginChild("graph_child_window", ImVec2(in_child_width, 0.0f), true, child_flags);
 
         // Assuming only one closed tab/graph per frame.
         bool open_close_unsaved_popup = false;
@@ -1105,10 +1105,10 @@ int megamol::gui::configurator::GraphManager::Presentation::Present(
         // Draw Graphs
         ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
         ImGui::BeginTabBar("Graphs", tab_bar_flags);
-        for (auto& graph : graph_manager.GetGraphs()) {
+        for (auto& graph : inout_graph_manager.GetGraphs()) {
 
             bool delete_graph = false;
-            auto id = graph->GUI_Present(child_width, graph_font, hotkeys, delete_graph);
+            auto id = graph->GUI_Present(in_child_width, in_graph_font, inout_hotkeys, delete_graph);
             if (id != GUI_INVALID_ID) {
                 retval = id;
             }
@@ -1125,7 +1125,7 @@ int megamol::gui::configurator::GraphManager::Presentation::Present(
 
         // Delete marked graph when tab closed and
         if ((this->delete_graph_uid != GUI_INVALID_ID) && this->close_unsaved_popup(open_close_unsaved_popup)) {
-            graph_manager.DeleteGraph(delete_graph_uid);
+            inout_graph_manager.DeleteGraph(delete_graph_uid);
             this->delete_graph_uid = GUI_INVALID_ID;
         }
 

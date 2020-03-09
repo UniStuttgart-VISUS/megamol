@@ -71,13 +71,15 @@ public:
     bool DisConnectParentModule(void);
     const ModulePtrType GetParentModule(void);
 
-    static int GetCompatibleCallIndex(CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
-    static int GetCompatibleCallIndex(CallSlotPtrType call_slot, CallSlot::StockCallSlot stock_call_slot);
+    static int GetAvailableCompatibleCallIndex(const CallSlotPtrType call_slot_ptr, CallSlot& call_slot);
+    static int GetCompatibleCallIndex(const CallSlotPtrType call_slot, const CallSlot::StockCallSlot& stock_call_slot);
 
     // GUI Presentation -------------------------------------------------------
 
-    int GUI_Present(ImVec2 canvas_offset, float canvas_zooming, bool& hovered_call_slot) {
-        return this->present.Present(*this, canvas_offset, canvas_zooming, hovered_call_slot);
+    int GUI_Present(ImVec2 in_canvas_offset, float in_canvas_zooming, bool& out_hovered_call_slot,
+        const CallSlotPtrType selected_call_slot_ptr) {
+        return this->present.Present(
+            *this, in_canvas_offset, in_canvas_zooming, out_hovered_call_slot, selected_call_slot_ptr);
     }
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     bool GUI_GetLabelVisibility(void) { return this->present.label_visible; }
@@ -98,7 +100,8 @@ private:
 
         ~Presentation(void);
 
-        int Present(CallSlot& call_slot, ImVec2 canvas_offset, float canvas_zooming, bool& hovered_call_slot);
+        int Present(CallSlot& inout_call_slot, ImVec2 in_canvas_offset, float in_canvas_zooming,
+            bool& out_hovered_call_slot, const CallSlotPtrType selected_call_slot_ptr);
 
         ImVec2 GetPosition(void) { return this->position; }
 

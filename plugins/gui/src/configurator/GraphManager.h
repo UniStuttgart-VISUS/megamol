@@ -54,8 +54,8 @@ public:
     bool SaveProjectFile(int graph_id, const std::string& project_filename, megamol::core::CoreInstance* core_instance);
 
     // GUI Presentation -------------------------------------------------------
-    int GUI_Present(float child_width, ImFont* graph_font, HotKeyArrayType& hotkeys) {
-        return this->present.Present(*this, child_width, graph_font, hotkeys);
+    int GUI_Present(float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys) {
+        return this->present.Present(*this, in_child_width, in_graph_font, inout_hotkeys);
     }
 
 private:
@@ -75,7 +75,8 @@ private:
 
         ~Presentation(void);
 
-        int Present(GraphManager& graph_manager, float child_width, ImFont* graph_font, HotKeyArrayType& hotkeys);
+        int Present(GraphManager& inout_graph_manager, float in_child_width, ImFont* in_graph_font,
+            HotKeyArrayType& inout_hotkeys);
 
     private:
         int delete_graph_uid;

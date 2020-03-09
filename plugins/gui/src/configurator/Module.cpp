@@ -133,8 +133,9 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
 megamol::gui::configurator::Module::Presentation::~Presentation(void) {}
 
 
-int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::configurator::Module& mod,
-    ImVec2 canvas_offset, float canvas_zooming, megamol::gui::HotKeyArrayType& hotkeys, int& selected_call_slot_uid) {
+int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::configurator::Module& inout_mod,
+    ImVec2 in_canvas_offset, float in_canvas_zooming, HotKeyArrayType& inout_hotkeys, int& out_selected_call_slot_uid,
+    const CallSlotPtrType selected_call_slot_ptr) {
 
     int retval_id = GUI_INVALID_ID;
     bool rename_popup_open = false;
@@ -151,16 +152,17 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
             return false;
         }
 
-        ImGui::PushID(mod.uid);
+        ImGui::PushID(inout_mod.uid);
 
         // Draw call slots ----------------------------------------------------
         /// Draw call slots prior to modules to catch mouse clicks on slot area lying over module box.
         bool hovered_call_slot = false;
-        for (auto& slot_pair : mod.GetCallSlots()) {
+        for (auto& slot_pair : inout_mod.GetCallSlots()) {
             for (auto& slot : slot_pair.second) {
-                auto id = slot->GUI_Present(canvas_offset, canvas_zooming, hovered_call_slot);
+                auto id =
+                    slot->GUI_Present(in_canvas_offset, in_canvas_zooming, hovered_call_slot, selected_call_slot_ptr);
                 if (id != GUI_INVALID_ID) {
-                    selected_call_slot_uid = id;
+                    out_selected_call_slot_uid = id;
                 }
             }
         }
@@ -174,15 +176,15 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
 
         // Init position once
         if (this->init_position) {
-            this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - canvas_offset) / canvas_zooming;
+            this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - in_canvas_offset) / in_canvas_zooming;
             this->init_position = false;
         }
 
         /// XXX Trigger only when necessary
-        this->UpdateSize(mod, canvas_zooming);
+        this->UpdateSize(inout_mod, in_canvas_zooming);
 
         ImVec2 module_size = this->size;
-        ImVec2 module_rect_min = canvas_offset + this->position * canvas_zooming;
+        ImVec2 module_rect_min = in_canvas_offset + this->position * in_canvas_zooming;
         ImVec2 module_rect_max = module_rect_min + module_size;
         ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
 
@@ -195,7 +197,7 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
             ImGui::BeginGroup();
 
             float line_offset = 0.0f;
-            if (mod.is_view_instance) {
+            if (inout_mod.is_view_instance) {
                 line_offset = -0.5f * ImGui::GetItemsLineHeightWithSpacing();
             }
 
@@ -210,7 +212,7 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
             ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), line_offset));
             ImGui::Text(label.c_str());
 
-            if (mod.is_view_instance) {
+            if (inout_mod.is_view_instance) {
                 label = "[Main View]";
                 name_width = this->utils.TextWidgetWidth(label);
                 ImGui::SetCursorScreenPos(
@@ -224,7 +226,7 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
         draw_list->ChannelsSetCurrent(0); // Background
 
         ImGui::SetCursorScreenPos(module_rect_min);
-        label = "module_" + mod.name;
+        label = "module_" + inout_mod.name;
         ImGui::InvisibleButton(label.c_str(), module_size);
         bool hovered = ImGui::IsItemHovered() && (!hovered_call_slot);
         bool mouse_clicked = ImGui::GetIO().MouseClicked[0];
@@ -234,17 +236,17 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
         }
         // Gives slots which overlap modules priority for ToolTip and Context Menu.
         if (!hovered_call_slot) {
-            std::string hover_text = mod.description;
+            std::string hover_text = inout_mod.description;
             if (!this->label_visible) {
-                hover_text = "[" + mod.name + "]" + hover_text;
+                hover_text = "[" + inout_mod.name + "]" + hover_text;
             }
             this->utils.HoverToolTip(hover_text.c_str(), ImGui::GetID(label.c_str()), 0.5f, 5.0f);
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem(
-                        "Delete", std::get<0>(hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
-                    std::get<1>(hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-                    retval_id = mod.uid;
+                        "Delete", std::get<0>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
+                    std::get<1>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+                    retval_id = inout_mod.uid;
                 }
                 if (ImGui::MenuItem("Rename")) {
                     rename_popup_open = true;
@@ -255,11 +257,12 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
             if (active) {
                 this->selected = true;
                 if (ImGui::IsMouseDragging(0)) {
-                    this->position = ((module_rect_min - canvas_offset) + ImGui::GetIO().MouseDelta) / canvas_zooming;
+                    this->position =
+                        ((module_rect_min - in_canvas_offset) + ImGui::GetIO().MouseDelta) / in_canvas_zooming;
                 }
             }
             if (this->selected) {
-                retval_id = mod.uid;
+                retval_id = inout_mod.uid;
             }
         }
         ImU32 module_bg_color = (hovered || this->selected) ? COLOR_MODULE_HIGHTLIGHT : COLOR_MODULE_BACKGROUND;
@@ -270,7 +273,7 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
         // Use ImGui::ArrowButton to show/hide parameters inside module box
 
         // Rename pop-up
-        this->utils.RenamePopUp("Rename Project", rename_popup_open, mod.name);
+        this->utils.RenamePopUp("Rename Project", rename_popup_open, inout_mod.name);
         /// XXX Prevent assignement of already existing module names (consider FullName for checking).
 
         ImGui::PopID();

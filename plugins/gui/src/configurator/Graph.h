@@ -57,8 +57,9 @@ public:
     int generate_unique_id(void) { return (++this->generated_uid); }
 
     // GUI Presentation -------------------------------------------------------
-    int GUI_Present(float child_width, ImFont* graph_font, HotKeyArrayType& hotkeys, bool& delete_graph) {
-        return this->present.Present(*this, child_width, graph_font, hotkeys, delete_graph);
+    int GUI_Present(
+        float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys, bool& out_delete_graph) {
+        return this->present.Present(*this, in_child_width, in_graph_font, inout_hotkeys, out_delete_graph);
     }
     inline int GUI_GetSelectedCallSlot(void) const { return this->present.GetSelectedCallSlot(); }
 
@@ -85,7 +86,8 @@ private:
 
         ~Presentation(void);
 
-        int Present(Graph& graph, float child_width, ImFont* graph_font, HotKeyArrayType& hotkeys, bool& delete_graph);
+        int Present(Graph& inout_graph, float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys,
+            bool& out_delete_graph);
 
         int GetSelectedCallSlot(void) const { return this->selected_call_slot_uid; }
 
@@ -117,14 +119,14 @@ private:
         std::string param_name_space;
         Parameter::Presentations param_present;
 
-        void menu(megamol::gui::configurator::Graph& graph);
-        void canvas(megamol::gui::configurator::Graph& graph, float child_width, HotKeyArrayType& hotkeys);
-        void parameters(megamol::gui::configurator::Graph& graph, float child_width, HotKeyArrayType& hotkeys);
+        void menu(Graph& inout_graph);
+        void canvas(Graph& inout_graph, float in_child_width, HotKeyArrayType& inout_hotkeys);
+        void parameters(Graph& inout_graph, float in_child_width, HotKeyArrayType& inout_hotkeys);
 
-        void canvas_grid(megamol::gui::configurator::Graph& graph);
-        void canvas_dragged_call(megamol::gui::configurator::Graph& graph);
+        void canvas_grid(void);
+        void canvas_dragged_call(Graph& inout_graph);
 
-        bool layout_graph(megamol::gui::configurator::Graph& graph);
+        bool layout_graph(Graph& inout_graph);
 
     } present;
 };

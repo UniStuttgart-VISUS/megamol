@@ -120,8 +120,8 @@ megamol::gui::configurator::Call::Presentation::Presentation(void)
 megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
 
 
-int megamol::gui::configurator::Call::Presentation::Present(
-    megamol::gui::configurator::Call& call, ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys) {
+int megamol::gui::configurator::Call::Presentation::Present(megamol::gui::configurator::Call& inout_call,
+    ImVec2 in_canvas_offset, float in_canvas_zooming, HotKeyArrayType& inout_hotkeys) {
 
     int retval_id = GUI_INVALID_ID;
     ImGuiStyle& style = ImGui::GetStyle();
@@ -137,7 +137,7 @@ int megamol::gui::configurator::Call::Presentation::Present(
             return false;
         }
 
-        ImGui::PushID(call.uid);
+        ImGui::PushID(inout_call.uid);
 
         ImVec4 tmpcol = style.Colors[ImGuiCol_Button];
         // tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
@@ -148,20 +148,20 @@ int megamol::gui::configurator::Call::Presentation::Present(
 
         const float CURVE_THICKNESS = 3.0f;
 
-        if (call.IsConnected()) {
+        if (inout_call.IsConnected()) {
 
-            ImVec2 p1 = call.GetCallSlot(CallSlot::CallSlotType::CALLER)->GUI_GetPosition();
-            ImVec2 p2 = call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->GUI_GetPosition();
+            ImVec2 p1 = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->GUI_GetPosition();
+            ImVec2 p2 = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->GUI_GetPosition();
 
             // Draw simple line if zooming is too small for nice bezier curves
             draw_list->ChannelsSetCurrent(0); // Background
 
             const float zooming_switch_curve = 0.4f;
-            if (canvas_zooming < zooming_switch_curve) {
-                draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * canvas_zooming);
+            if (in_canvas_zooming < zooming_switch_curve) {
+                draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * in_canvas_zooming);
             } else {
                 draw_list->AddBezierCurve(p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2, COLOR_CALL_CURVE,
-                    CURVE_THICKNESS * canvas_zooming);
+                    CURVE_THICKNESS * in_canvas_zooming);
             }
 
             if (this->label_visible) {
@@ -169,7 +169,7 @@ int megamol::gui::configurator::Call::Presentation::Present(
                 draw_list->ChannelsSetCurrent(1); // Foreground
 
                 ImVec2 call_center = ImVec2(p1.x + (p2.x - p1.x) / 2.0f, p1.y + (p2.y - p1.y) / 2.0f);
-                auto call_name_width = this->utils.TextWidgetWidth(call.class_name);
+                auto call_name_width = this->utils.TextWidgetWidth(inout_call.class_name);
 
                 // Draw box
                 ImVec2 rect_size = ImVec2(call_name_width + (2.0f * style.ItemSpacing.x),
@@ -178,14 +178,14 @@ int megamol::gui::configurator::Call::Presentation::Present(
                     ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
                 ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
                 ImGui::SetCursorScreenPos(call_rect_min);
-                std::string label = "call_" + call.class_name + std::to_string(call.uid);
+                std::string label = "call_" + inout_call.class_name + std::to_string(inout_call.uid);
                 ImGui::InvisibleButton(label.c_str(), rect_size);
                 // Context menu
                 if (ImGui::BeginPopupContextItem()) {
                     if (ImGui::MenuItem(
-                            "Delete", std::get<0>(hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
-                        std::get<1>(hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-                        retval_id = call.uid;
+                            "Delete", std::get<0>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
+                        std::get<1>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+                        retval_id = inout_call.uid;
                     }
                     ImGui::EndPopup();
                 }
@@ -199,7 +199,7 @@ int megamol::gui::configurator::Call::Presentation::Present(
                     this->selected = true;
                 }
                 if (this->selected) {
-                    retval_id = call.uid;
+                    retval_id = inout_call.uid;
                 }
                 ImU32 call_bg_color = (hovered || this->selected) ? COLOR_CALL_HIGHTLIGHT : COLOR_CALL_BACKGROUND;
                 draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, 4.0f);
@@ -208,7 +208,7 @@ int megamol::gui::configurator::Call::Presentation::Present(
                 // Draw text
                 ImGui::SetCursorScreenPos(
                     call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
-                ImGui::Text(call.class_name.c_str());
+                ImGui::Text(inout_call.class_name.c_str());
             }
         }
 

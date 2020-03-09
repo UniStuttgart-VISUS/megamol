@@ -66,8 +66,8 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    int GUI_Present(ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys) {
-        return this->present.Present(*this, canvas_offset, canvas_zooming, hotkeys);
+    int GUI_Present(ImVec2 in_canvas_offset, float in_canvas_zooming, HotKeyArrayType& inout_hotkeys) {
+        return this->present.Present(*this, in_canvas_offset, in_canvas_zooming, inout_hotkeys);
     }
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
     void GUI_SetPresentation(Call::Presentations present) { this->present.presentations = present; }
@@ -84,7 +84,7 @@ private:
 
         ~Presentation(void);
 
-        int Present(Call& call, ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys);
+        int Present(Call& inout_call, ImVec2 in_canvas_offset, float in_canvas_zooming, HotKeyArrayType& inout_hotkeys);
 
         Call::Presentations presentations;
         bool label_visible;
