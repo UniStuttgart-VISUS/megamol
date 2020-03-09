@@ -288,8 +288,10 @@ void ClusterRenderer::renderLeaveNode(HierarchicalClustering::CLUSTERNODE* node,
         size, false, id, megamol::core::utility::AbstractFont::ALIGN_CENTER_BOTTOM);
 
     // Render Bild
-    glEnable(GL_TEXTURE_2D);
+    glDisable(GL_CULL_FACE);
+    glActiveTexture(GL_TEXTURE5);
     node->pic->texture->bindTexture();
+    glEnable(GL_TEXTURE_2D);
 
     auto pos = node->pca2d;
 
@@ -306,21 +308,23 @@ void ClusterRenderer::renderLeaveNode(HierarchicalClustering::CLUSTERNODE* node,
     glUniform2f(
         this->textureShader.ParameterLocation("upperright"), posx + 0.5 * picwidth, this->viewport.GetY() - strHeight);
     glUniformMatrix4fv(this->textureShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
-    glUniform1i(this->textureShader.ParameterLocation("tex"), 0);
+    glUniform1i(this->textureShader.ParameterLocation("tex"), 5);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     this->textureShader.Disable();
     glBindVertexArray(0);
 
     glDisable(GL_TEXTURE_2D);
+    glEnable(GL_CULL_FACE);
 }
 
 void ClusterRenderer::renderNode(
     HierarchicalClustering::CLUSTERNODE* node, glm::mat4 mvp, double minX, double maxX, double minY, double maxY) {
 
-    glActiveTexture(GL_TEXTURE0);
-    node->pic->texture->bindTexture();
+    glDisable(GL_CULL_FACE);
     glEnable(GL_TEXTURE_2D);
+    glActiveTexture(GL_TEXTURE5);
+    node->pic->texture->bindTexture();
 
     auto pos = node->pca2d;
 
@@ -338,7 +342,7 @@ void ClusterRenderer::renderNode(
     glUniform2f(this->textureShader.ParameterLocation("lowerleft"), posx - 0.5 * picwidth, posy - 0.5 * picheight);
     glUniform2f(this->textureShader.ParameterLocation("upperright"), posx + 0.5 * picwidth, posy + 0.5 * picheight);
     glUniformMatrix4fv(this->textureShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
-    glUniform1i(this->textureShader.ParameterLocation("tex"), 0);
+    glUniform1i(this->textureShader.ParameterLocation("tex"), 5);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     this->textureShader.Disable();
@@ -346,6 +350,9 @@ void ClusterRenderer::renderNode(
 
     // Cluster beschriftung
     this->renderClusterText(node, mvp, posx, posy);
+
+    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_CULL_FACE);
 }
 
 void ClusterRenderer::renderAllLeaves(
@@ -731,7 +738,9 @@ void ClusterRenderer::renderText(vislib::StringA text, glm::mat4 mvp, double x, 
     float strWidth = this->theFont.LineWidth(this->fontSize, text);
 
     // Render Text
+    glDisable(GL_CULL_FACE);
     this->theFont.DrawString(fgColor, x, y, this->fontSize, false, text, alignment);
+    glEnable(GL_CULL_FACE);
 }
 
 

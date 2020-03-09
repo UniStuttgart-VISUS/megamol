@@ -35,12 +35,14 @@
 using namespace megamol;
 using namespace megamol::MolSurfMapCluster;
 
+uint32_t HierarchicalClustering::bla = 0;
+
 HierarchicalClustering::HierarchicalClustering() {}
 
 HierarchicalClustering::~HierarchicalClustering() {}
 
-HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& pics, SIZE_T picturecount,
-    bool actualValue, int method, int mode, int linkage, int moments) {
+HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& pics, SIZE_T picturecount, bool actualValue,
+    int method, int mode, int linkage, int moments) {
 
     // Initalize Variables
     this->cluster = new std::vector<CLUSTERNODE*>();
@@ -176,6 +178,11 @@ void HierarchicalClustering::calculateImageMoments(CLUSTERNODE* node) {
             if ((i + j) <= 3) node->features->push_back(müij[i][j] / (pow(müij[0][0], (1 + ((i + j) / 2)))));
         }
     }
+
+    delete graypicintensity;
+
+    bla++;
+    vislib::sys::Log::DefaultLog.WriteInfo("Calculated %u", bla);
 }
 
 void HierarchicalClustering::calculateImageMomentsValue(CLUSTERNODE* node) {
@@ -184,29 +191,29 @@ void HierarchicalClustering::calculateImageMomentsValue(CLUSTERNODE* node) {
     PictureData* pic = node->pic;
     const auto& img = node->pic->valueImage;
 
-    double m00 = 0;
-    double m01 = 0;
-    double m10 = 0;
+    double m00 = 0.0;
+    double m01 = 0.0;
+    double m10 = 0.0;
 
     for (int y = 0; y < pic->height; y++) {
         for (int x = 0; x < pic->width; x++) {
-            m00 += img[(y * pic->width) + x];
-            m10 += pow(x, 1) * img[(y * pic->width) + x];
-            m01 += pow(y, 1) * img[(y * pic->width) + x];
+            m00 += static_cast<double>(img[(y * pic->width) + x]);
+            m10 += static_cast<double>(x) * static_cast<double>(img[(y * pic->width) + x]);
+            m01 += static_cast<double>(y) * static_cast<double>(img[(y * pic->width) + x]);
         }
     }
 
     double xc = m10 / m00;
     double yc = m01 / m00;
 
-    double müij[IMAGEORDER + 1][IMAGEORDER + 1] = {0};
-
-    for (int x = 0; x < pic->width; x++) {
-        for (int y = 0; y < pic->height; y++) {
-            for (int i = 0; i <= IMAGEORDER; i++) {
-                for (int j = 0; j <= IMAGEORDER; j++) {
+    double müij[IMAGEORDER + 1][IMAGEORDER + 1] = {0.0};
+    for (int i = 0; i <= IMAGEORDER; i++) {
+        for (int j = 0; j <= IMAGEORDER; j++) {
+            for (int y = 0; y < pic->height; y++) {
+                for (int x = 0; x < pic->width; x++) {
                     if ((i + j <= 3) && !((i == 1 && j == 0) || (i == 0 && j == 1))) {
-                        müij[i][j] += pow(x - xc, i) * pow(y - yc, j) * img[(x * pic->height) + y];
+                        müij[i][j] += pow(static_cast<double>(x) - xc, i) * pow(static_cast<double>(y) - yc, j) *
+                                      static_cast<double>(img[(y * pic->width) + x]);
                     }
                 }
             }
@@ -215,11 +222,42 @@ void HierarchicalClustering::calculateImageMomentsValue(CLUSTERNODE* node) {
 
     delete node->features;
     node->features = new std::vector<double>();
+    std::vector<double> nu;
     for (int i = 0; i <= IMAGEORDER; i++) {
         for (int j = 0; j <= IMAGEORDER; j++) {
-            if ((i + j) <= 3) node->features->push_back(müij[i][j] / (pow(müij[0][0], (1 + ((i + j) / 2)))));
+            //if ((i + j) <= 3) {
+                nu.push_back(müij[i][j] / (pow(müij[0][0], (1.0 + (static_cast<double>(i + j) / 2.0)))));
+            //}
         }
     }
+
+    double i1 = nu[2 * IMAGEORDER + 0] + nu[2];
+    double i2 = pow(nu[2 * IMAGEORDER + 0] - nu[2], 2) + 4.0 * pow(nu[1 * IMAGEORDER + 1], 2);
+    //double i3 =
+    //    pow(nu[3 * IMAGEORDER + 0] - 3.0 * nu[1 * IMAGEORDER + 2], 2) + pow(3.0 * nu[2 * IMAGEORDER + 1] - nu[3], 2);
+    double i4 = pow(nu[3 * IMAGEORDER + 0] + nu[1 * IMAGEORDER + 2], 2) + pow(nu[2 * IMAGEORDER + 1] + nu[3], 2);
+    double i5 =
+        (nu[3 * IMAGEORDER + 0] - 3.0 * nu[1 * IMAGEORDER + 2]) * (nu[3 * IMAGEORDER + 0] + nu[1 * IMAGEORDER + 2]) *
+            (pow((nu[3 * IMAGEORDER + 0] + nu[1 * IMAGEORDER + 2]), 2) - 3.0 * pow(nu[2 * IMAGEORDER + 1] + nu[3], 2)) +
+        (3 * nu[2 * IMAGEORDER + 1] - nu[3]) * (nu[2 * IMAGEORDER + 1] + nu[3]) *
+            (3.0 * pow(nu[3 * IMAGEORDER + 0] + nu[1 * IMAGEORDER + 2], 2) - pow(nu[2 * IMAGEORDER + 1] + nu[3], 2));
+    double i6 = (nu[2 * IMAGEORDER + 0] - nu[2]) *
+                    (pow(nu[3 * IMAGEORDER + 0] + nu[1 * IMAGEORDER + 2], 2) - pow(nu[2 * IMAGEORDER + 1] + nu[3], 2)) +
+                4.0 * nu[1 * IMAGEORDER + 1] * (nu[3 * IMAGEORDER + 0] + nu[1 * IMAGEORDER + 2]) *
+                    (nu[2 * IMAGEORDER + 1] + nu[3]);
+    double i7 =
+        (3.0 * nu[2 * IMAGEORDER + 1] - nu[3]) * (nu[3 * IMAGEORDER + 0] + nu[1 * IMAGEORDER + 2]) *
+            (pow((nu[3 * IMAGEORDER + 0] + nu[1 * IMAGEORDER + 2]), 2) - 3.0 * pow(nu[2 * IMAGEORDER + 1] + nu[3], 2)) -
+        (nu[3 * IMAGEORDER + 0] - 3 * nu[1 * IMAGEORDER + 2]) * (nu[2 * IMAGEORDER + 1] + nu[3]) *
+            (3.0 * pow(nu[3 * IMAGEORDER + 0] + nu[1 * IMAGEORDER + 2], 2) - pow(nu[2 * IMAGEORDER + 1] + nu[3], 2));
+    double i8 = nu[1 * IMAGEORDER + 1] *
+                    (pow(nu[3 * IMAGEORDER + 0] + nu[1 * IMAGEORDER + 2], 2) - pow(nu[3] + nu[2 * IMAGEORDER + 1], 2)) -
+                (nu[2 * IMAGEORDER + 0] - nu[2]) * (nu[3 * IMAGEORDER + 0] + nu[1 * IMAGEORDER + 2]) *
+                    (nu[3] + nu[2 * IMAGEORDER + 1]);
+
+    *node->features = {i1, 0.0, 0.0, i2, i4, i5, i6, i7, i8};
+    bla++;
+    vislib::sys::Log::DefaultLog.WriteInfo("Calculated %u", bla);
 }
 
 void HierarchicalClustering::calculateColorMoments(CLUSTERNODE* node) {
@@ -286,6 +324,9 @@ void HierarchicalClustering::calculateColorMoments(CLUSTERNODE* node) {
     node->features->push_back(skewness[0]);
     node->features->push_back(skewness[1]);
     node->features->push_back(skewness[2]);
+
+    bla++;
+    vislib::sys::Log::DefaultLog.WriteInfo("Calculated %u", bla);
 }
 
 void HierarchicalClustering::calculateColorMomentsValue(CLUSTERNODE* node) {
@@ -352,6 +393,9 @@ void HierarchicalClustering::calculateColorMomentsValue(CLUSTERNODE* node) {
     node->features->push_back(skewness[0]);
     node->features->push_back(skewness[1]);
     node->features->push_back(skewness[2]);
+
+    bla++;
+    vislib::sys::Log::DefaultLog.WriteInfo("Calculated %u", bla);
 }
 
 std::vector<double>* HierarchicalClustering::gray_scale_image(PictureData* pic) {
@@ -394,7 +438,7 @@ double HierarchicalClustering::distance(std::vector<double>* X, std::vector<doub
         if (X->size() == Y->size()) {
             double summe = 0.0;
             for (int i = 0; i < X->size(); i++) {
-                summe += pow((*X)[i] - (*Y)[i], r);
+                summe += pow((*X)[i] - (*Y)[i], 2);
             }
             distance = sqrt(summe);
 
@@ -453,20 +497,38 @@ HierarchicalClustering::CLUSTERNODE* HierarchicalClustering::mergeCluster(
     newnode->right = cluster2;
     newnode->similiaritychildren = this->similarity(cluster1->features, cluster2->features, this->similaritymethod);
     newnode->parent = nullptr;
-    newnode->features = new std::vector<double>();
+    newnode->features = new std::vector<double>(cluster1->features->size(), 0.0);
     newnode->distances = new std::vector<std::tuple<CLUSTERNODE*, double>>();
 
+    // Get all features from left childs
+    auto cluster1Ptr = getLeavesOfNode(cluster1);
+    for (const auto v : *cluster1Ptr) {
+        std::transform(newnode->features->begin(), newnode->features->end(), v->features->begin(),
+            newnode->features->begin(), std::plus<double>());
+    }
+
+    // Get all features from right childs
+    auto cluster2Ptr = getLeavesOfNode(cluster2);
+    for (const auto v : *cluster2Ptr) {
+        std::transform(newnode->features->begin(), newnode->features->end(), v->features->begin(),
+            newnode->features->begin(), std::plus<double>());
+    }
+
     // Recalculate Featrues of Cluster
-    for (int i = 0; i < cluster1->features->size(); i++) {
-        int cluster1count = getLeavesOfNode(cluster1)->size();
-        int cluster2count = getLeavesOfNode(cluster2)->size();
+    double clength = static_cast<double>(cluster1Ptr->size() + cluster2Ptr->size());
+    for (auto& v : *newnode->features) {
+        v /= clength;
+    }
+
+    // FLAK THIS!!!111!!!1
+    /*for (int i = 0; i < cluster1->features->size(); i++) {
 
         newnode->features->push_back(
             (((*cluster1->features)[i] * cluster1count) + ((*cluster2->features)[i] * cluster2count)) /
             (cluster1count + cluster2count));
-    }
+    }*/
 
-    newnode->pic = findNearestPicture(newnode->features);
+    newnode->pic = findNearestPicture(newnode->features, cluster1Ptr, cluster2Ptr);
 
     std::vector<CLUSTERNODE*>* leavesnew = getLeavesOfNode(newnode);
     // Recalculate Distances to all other Clusters
@@ -552,12 +614,20 @@ HierarchicalClustering::CLUSTERNODE* HierarchicalClustering::mergeCluster(
     return newnode;
 }
 
-PictureData* HierarchicalClustering::findNearestPicture(std::vector<double>* position) {
+PictureData* HierarchicalClustering::findNearestPicture(std::vector<double>* features,
+    std::vector<HierarchicalClustering::CLUSTERNODE*>* leftleaves,
+    std::vector<HierarchicalClustering::CLUSTERNODE*>* rightleaves) {
     PictureData* pic = nullptr;
     double mindistance = DBL_MAX;
-    for (CLUSTERNODE* node : *this->leaves) {
-        if (distance(position, node->features) < mindistance) {
-            mindistance = distance(position, node->features);
+    for (CLUSTERNODE* node : *leftleaves) {
+        if (distance(features, node->features) < mindistance) {
+            mindistance = distance(features, node->features);
+            pic = node->pic;
+        }
+    }
+    for (CLUSTERNODE* node : *rightleaves) {
+        if (distance(features, node->features) < mindistance) {
+            mindistance = distance(features, node->features);
             pic = node->pic;
         }
     }
@@ -825,11 +895,11 @@ double HierarchicalClustering::similarity(std::vector<double>* X, std::vector<do
             // Calculate summs
             for (int i = 0; i < X->size(); i++) {
                 sumXY += (*X)[i] * (*Y)[i];
-                sumX += pow((*X)[i], 2);
-                sumY += pow((*Y)[i], 2);
+                sumX += (*X)[i];
+                sumY += (*Y)[i];
             }
             // Calculate similarity
-            similar = 2 * sumXY / (sumX + sumY);
+            similar = 2.0 * sumXY / (sumX + sumY);
 
         } else {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Can not calculate Similarity");

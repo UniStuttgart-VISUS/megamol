@@ -372,48 +372,54 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
     megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
 
     auto down = action == MouseButtonAction::PRESS;
+    auto shiftmod = mods.test(Modifier::SHIFT);
     this->mouseAction = action;
     this->mouseButton = button;
 
     if (actionavailable) {
         // Wenn mouse-click auf cluster => change position ...
         // Check position
-        this->counter = 0;
+        if (!shiftmod) {
 
-        double height = this->viewport.GetY() * 0.9;
-        double width = this->viewport.GetX() * 0.9;
+            this->counter = 0;
 
-        double minheight = this->viewport.GetY() * 0.05;
-        double minwidth = this->viewport.GetX() * 0.05;
+            double height = this->viewport.GetY() * 0.9;
+            double width = this->viewport.GetX() * 0.9;
 
-        double spacey = height / (this->root->level);
-        double spacex = width / (this->clustering->getLeaves()->size() - 1);
+            double minheight = this->viewport.GetY() * 0.05;
+            double minwidth = this->viewport.GetX() * 0.05;
 
-        if (checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex) == -1) {
-            this->position = this->popup;
-        }
+            double spacey = height / (this->root->level);
+            double spacex = width / (this->clustering->getLeaves()->size() - 1);
 
-        // Todo Clusterparent neu berechnen wenn nicht gesetzt...
-        auto parent = this->root;
-        bool change = false;
-        while (this->position->clusterparent == nullptr) {
-            change = false;
-            auto tmpcluster = this->clustering->getClusterNodesOfNode(parent);
-            for (HierarchicalClustering::CLUSTERNODE* node : *tmpcluster) {
-                if (this->position == node) {
+            if (checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex) == -1) {
+                this->position = this->popup;
+            }
+
+            // Todo Clusterparent neu berechnen wenn nicht gesetzt...
+            auto parent = this->root;
+            bool change = false;
+            while (this->position->clusterparent == nullptr) {
+                change = false;
+                auto tmpcluster = this->clustering->getClusterNodesOfNode(parent);
+                for (HierarchicalClustering::CLUSTERNODE* node : *tmpcluster) {
+                    if (this->position == node) {
+                        this->position->clusterparent = parent;
+                        change = true;
+                        break;
+                    } else if (this->clustering->parentIs(this->position, node)) {
+                        parent = node;
+                        change = true;
+                        break;
+                    }
+                }
+
+                if (!change) {
                     this->position->clusterparent = parent;
-                    change = true;
-                    break;
-                } else if (this->clustering->parentIs(this->position, node)) {
-                    parent = node;
-                    change = true;
-                    break;
                 }
             }
-
-            if (!change) {
-                this->position->clusterparent = parent;
-            }
+        } else {
+            // TODO
         }
     } else {
         if (action == MouseButtonAction::RELEASE) {
@@ -464,6 +470,7 @@ bool ClusterHierarchieRenderer::OnMouseMove(double x, double y) {
 void ClusterHierarchieRenderer::renderPopup(glm::mat4 mvp) {
     if (this->popup != nullptr) {
         // Load texture if not loaded
+        glDisable(GL_CULL_FACE);
         glEnable(GL_TEXTURE_2D);
         this->popup->pic->popup = true;
         TextureLoader::loadTexturesToRender(this->clustering);
@@ -500,6 +507,7 @@ void ClusterHierarchieRenderer::renderPopup(glm::mat4 mvp) {
         this->textureShader.Disable();
         glBindVertexArray(0);
         glDisable(GL_TEXTURE_2D);
+        glEnable(GL_CULL_FACE);
     }
 }
 

@@ -190,7 +190,7 @@ bool Clustering::getDataCallback(core::Call& caller) {
     if (this->datatocluster) {
         // reset new data flag
         this->datatocluster = false;
-
+         
         if (imageloader && clusterloader) {
             return false;
         } else {
@@ -436,6 +436,7 @@ void Clustering::fillPictureDataVector(image_calls::Image2DCall& imc) {
         this->picdata[id].image = &p.second;
         this->loadValueImageForGivenPicture(std::filesystem::path(p.first), this->picdata[id].valueImage);
         ++id;
+        vislib::sys::Log::DefaultLog.WriteInfo("loaded stuff %u", id);
     }
 }
 

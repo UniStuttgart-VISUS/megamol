@@ -114,11 +114,14 @@ private:
 
     CLUSTERNODE* mergeCluster(CLUSTERNODE* cluster1, CLUSTERNODE* cluster2);
 
-    PictureData* findNearestPicture(std::vector<double>*);
+    PictureData* findNearestPicture(std::vector<double>* features, std::vector<HierarchicalClustering::CLUSTERNODE*>* leftleaves,
+        std::vector<HierarchicalClustering::CLUSTERNODE*>* rightleaves);
 
     HierarchicalClustering::CLUSTERNODE* getRootOfNode(HierarchicalClustering::CLUSTERNODE*);
 
     void calculatePCA(std::vector<HierarchicalClustering::CLUSTERNODE*>*);
+
+    static uint32_t bla;
 };
 
 } // namespace MolSurfMapCluster
