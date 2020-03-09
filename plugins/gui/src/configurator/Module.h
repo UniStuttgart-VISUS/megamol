@@ -69,6 +69,7 @@ public:
 
     bool AddCallSlot(CallSlotPtrType call_slot);
     bool RemoveAllCallSlots(void);
+    const CallSlotPtrType GetCallSlot(int call_slot_uid);
     const std::vector<CallSlotPtrType>& GetCallSlots(CallSlot::CallSlotType type);
     const std::map<CallSlot::CallSlotType, std::vector<CallSlotPtrType>>& GetCallSlots(void);
 
@@ -76,8 +77,8 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    int GUI_Present(ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys) {
-        return this->present.Present(*this, canvas_offset, canvas_zooming, hotkeys);
+    int GUI_Present(ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys, int& selected_call_slot_uid) {
+        return this->present.Present(*this, canvas_offset, canvas_zooming, hotkeys, selected_call_slot_uid);
     }
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
     void GUI_SetPresentation(Module::Presentations present) { this->present.presentations = present; }
@@ -97,7 +98,8 @@ private:
 
         ~Presentation(void);
 
-        int Present(Module& mod, ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys);
+        int Present(Module& mod, ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys,
+            int& selected_call_slot_uid);
 
         void SetPosition(ImVec2 pos) { this->position = pos; }
 
@@ -118,6 +120,7 @@ private:
         std::string name_label;
         GUIUtils utils;
         bool selected;
+        bool init_position;
 
     } present;
 };

@@ -76,8 +76,8 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    int GUI_Present(ImVec2 canvas_offset, float canvas_zooming) {
-        return this->present.Present(*this, canvas_offset, canvas_zooming);
+    int GUI_Present(ImVec2 canvas_offset, float canvas_zooming, bool& hovered_call_slot) {
+        return this->present.Present(*this, canvas_offset, canvas_zooming, hovered_call_slot);
     }
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     bool GUI_GetLabelVisibility(void) { return this->present.label_visible; }
@@ -98,7 +98,7 @@ private:
 
         ~Presentation(void);
 
-        int Present(CallSlot& call_slot, ImVec2 canvas_offset, float canvas_zooming);
+        int Present(CallSlot& call_slot, ImVec2 canvas_offset, float canvas_zooming, bool& hovered_call_slot);
 
         ImVec2 GetPosition(void) { return this->position; }
 

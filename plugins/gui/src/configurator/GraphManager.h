@@ -50,14 +50,13 @@ public:
 
     bool LoadCurrentCoreProject(const std::string& name, megamol::core::CoreInstance* core_instance);
 
-    bool LoadProjectFile(int graph_id, const std::string& project_filename, megamol::core::CoreInstance* core_instance);
+    bool LoadProjectFile(const std::string& project_filename, megamol::core::CoreInstance* core_instance);
     bool SaveProjectFile(int graph_id, const std::string& project_filename, megamol::core::CoreInstance* core_instance);
 
     // GUI Presentation -------------------------------------------------------
-    bool GUI_Present(float child_width, ImFont* graph_font, HotKeyArrayType& hotkeys) {
-        return this->present.GUI_Present(*this, child_width, graph_font, hotkeys);
+    int GUI_Present(float child_width, ImFont* graph_font, HotKeyArrayType& hotkeys) {
+        return this->present.Present(*this, child_width, graph_font, hotkeys);
     }
-    int GUI_GetPresentedGraphUID(void) { return this->present.GetPresentedGraphUID(); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -76,18 +75,9 @@ private:
 
         ~Presentation(void);
 
-        bool GUI_Present(GraphManager& graph_manager, float child_width, ImFont* graph_font, HotKeyArrayType& hotkeys);
-
-        int GetPresentedGraphUID(void) {
-            if (this->presented_graph != nullptr) {
-                return this->presented_graph->GetUID();
-            } else {
-                return GUI_INVALID_ID;
-            }
-        }
+        int Present(GraphManager& graph_manager, float child_width, ImFont* graph_font, HotKeyArrayType& hotkeys);
 
     private:
-        GraphManager::GraphPtrType presented_graph;
         int delete_graph_uid;
 
         bool close_unsaved_popup(bool open_popup);

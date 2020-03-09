@@ -237,8 +237,8 @@ megamol::gui::configurator::CallSlot::Presentation::Presentation(void)
 megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
 
-int megamol::gui::configurator::CallSlot::Presentation::Present(
-    megamol::gui::configurator::CallSlot& call_slot, ImVec2 canvas_offset, float canvas_zooming) {
+int megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::configurator::CallSlot& call_slot,
+    ImVec2 canvas_offset, float canvas_zooming, bool& hovered_call_slot) {
 
     int retval_id = GUI_INVALID_ID;
     ImGuiStyle& style = ImGui::GetStyle();
@@ -318,21 +318,19 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(
             slot_color = COLOR_SLOT_COMPATIBLE;
         }
         */
+
         if (mouse_clicked && !hovered) { // && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
             this->selected = false;
         }
         if (active) {
             this->selected = true;
         }
-        // if (this->selected) {
-        //     retval_id = mod.uid;
-        // }
-        if (hovered) {
-            retval_id = call_slot.uid;
-        }
         if (hovered || this->selected) {
             slot_color = slot_highlight_color;
         }
+        hovered_call_slot = hovered;
+        retval_id = ((this->selected) ? (call_slot.uid) : (GUI_INVALID_ID));
+
         ImGui::SetCursorScreenPos(slot_position);
         draw_list->AddCircleFilled(slot_position, radius, slot_color);
         draw_list->AddCircle(slot_position, radius, COLOR_SLOT_BORDER);

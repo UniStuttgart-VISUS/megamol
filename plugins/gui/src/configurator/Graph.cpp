@@ -249,11 +249,12 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , canvas_offset(ImVec2(0.0f, 0.0f))
     , show_grid(false)
     , show_call_names(true)
-    , show_slot_names(true)
+    , show_slot_names(false)
     , show_module_names(true)
     , selected_module_uid(GUI_INVALID_ID)
     , selected_call_uid(GUI_INVALID_ID)
-    , layout_current_graph(true)
+    , selected_call_slot_uid(GUI_INVALID_ID)
+    , layout_current_graph(false)
     , split_width(-1.0f) // !
     , mouse_wheel(0.0f)
     , params_visible(true)
@@ -265,10 +266,10 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
 megamol::gui::configurator::Graph::Presentation::~Presentation(void) {}
 
 
-bool megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::configurator::Graph& graph,
+int megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::configurator::Graph& graph,
     float child_width, ImFont* graph_font, megamol::gui::HotKeyArrayType& hotkeys, bool& delete_graph) {
 
-    bool retval = false;
+    int retval = GUI_INVALID_ID;
     this->font = graph_font;
     bool rename_popup_open = false;
 
@@ -312,11 +313,6 @@ bool megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::conf
                 }
             }
 
-            /// XXX Register trigger for connecting call
-            // if ((this->selected_slot_ptr != nullptr) && (io.MouseReleased[0])) {
-            //    this->process_selected_slot = 2;
-            //}
-
             // Update positions and sizes
             if (this->layout_current_graph) {
                 this->layout_graph(graph);
@@ -341,7 +337,7 @@ bool megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::conf
                 this->canvas(graph, child_width, hotkeys);
             }
 
-            retval = true;
+            retval = graph.GetUID();
             ImGui::EndTabItem();
         }
 
@@ -355,10 +351,10 @@ bool megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::conf
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        return GUI_INVALID_ID;
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        return GUI_INVALID_ID;
     }
 
     return retval;
@@ -451,10 +447,9 @@ void megamol::gui::configurator::Graph::Presentation::menu(megamol::gui::configu
     }
     ImGui::SameLine();
 
-    /// XXX
-    // if (ImGui::Button("Layout Graph")) {
-    //    this->layout_current_graph = true;
-    //}
+    if (ImGui::Button("Layout Graph")) {
+        this->layout_current_graph = true;
+    }
 
     ImGui::EndChild();
 }
@@ -512,14 +507,17 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
     ImGui::PopStyleVar(2);
 
     // Draw modules -------------------
+    this->selected_module_uid = GUI_INVALID_ID;
+    this->selected_call_slot_uid = GUI_INVALID_ID;
     for (auto& mod : graph.GetGraphModules()) {
-        auto id = mod->GUI_Present(this->canvas_offset, this->canvas_zooming, hotkeys);
+        auto id = mod->GUI_Present(this->canvas_offset, this->canvas_zooming, hotkeys, this->selected_call_slot_uid);
         if (id != GUI_INVALID_ID) {
             this->selected_module_uid = id;
         }
     }
 
     // Draw calls ---------------------
+    this->selected_call_uid = GUI_INVALID_ID;
     for (auto& call : graph.GetGraphCalls()) {
         auto id = call->GUI_Present(this->canvas_offset, this->canvas_zooming, hotkeys);
         if (id != GUI_INVALID_ID) {
@@ -561,7 +559,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
     }
 
     /// DEBUG Draw point at origin
-    draw_list->AddCircleFilled(this->canvas_offset, 10.0f * this->canvas_zooming, IM_COL32(192, 0, 0, 255));
+    // draw_list->AddCircleFilled(this->canvas_offset, 10.0f * this->canvas_zooming, IM_COL32(192, 0, 0, 255));
 
     draw_list->ChannelsMerge();
     io.MouseClicked[0] = left_click;
@@ -722,16 +720,16 @@ void megamol::gui::configurator::Graph::Presentation::canvas_grid(megamol::gui::
 
 void megamol::gui::configurator::Graph::Presentation::canvas_dragged_call(megamol::gui::configurator::Graph& graph) {
 
+    ImGuiStyle& style = ImGui::GetStyle();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
     draw_list->ChannelsSetCurrent(0); // Background
 
-    const auto COLOR_CALL_CURVE = IM_COL32(128, 128, 0, 255);
+    const auto COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Button]);
 
     const float CURVE_THICKNESS = 3.0f;
 
-    /*
-    if (this->selected_slot_ptr != nullptr) {
+    if (this->selected_call_slot_uid != GUI_INVALID_ID) {
         ImVec2 current_pos = ImGui::GetMousePos();
         bool mouse_inside_canvas = false;
 
@@ -742,109 +740,123 @@ void megamol::gui::configurator::Graph::Presentation::canvas_dragged_call(megamo
             mouse_inside_canvas = true;
         }
         if (ImGui::IsMouseDown(0) && mouse_inside_canvas) {
-            ImVec2 p1 = this->selected_slot_ptr->GUI_GetPosition();
-            ImVec2 p2 = ImGui::GetMousePos();
-            if (this->selected_slot_ptr->type == CallSlot::CallSlotType::CALLEE) {
-                ImVec2 tmp = p1;
-                p1 = p2;
-                p2 = tmp;
+            CallSlotPtrType selected_call_slot_ptr;
+            for (auto& mods : graph.GetGraphModules()) {
+                CallSlotPtrType call_slot_ptr = mods->GetCallSlot(this->selected_call_slot_uid);
+                if (call_slot_ptr != nullptr) {
+                    selected_call_slot_ptr = call_slot_ptr;
+                }
             }
-            draw_list->AddBezierCurve(p1, p1 + ImVec2(+50, 0), p2 + ImVec2(-50, 0), p2, COLOR_CALL_CURVE,
-                CURVE_THICKNESS * this->canvas_zooming);
+            if (selected_call_slot_ptr != nullptr) {
+                ImVec2 p1 = selected_call_slot_ptr->GUI_GetPosition();
+                ImVec2 p2 = ImGui::GetMousePos();
+                if (glm::length(glm::vec2(p1.x, p1.y) - glm::vec2(p2.x, p2.y)) >
+                    selected_call_slot_ptr->GUI_GetSlotRadius()) {
+                    if (selected_call_slot_ptr->type == CallSlot::CallSlotType::CALLEE) {
+                        ImVec2 tmp = p1;
+                        p1 = p2;
+                        p2 = tmp;
+                    }
+                    draw_list->AddBezierCurve(p1, p1 + ImVec2(+50, 0), p2 + ImVec2(-50, 0), p2, COLOR_CALL_CURVE,
+                        CURVE_THICKNESS * this->canvas_zooming);
+                }
+            }
         }
     }
-    */
 }
 
 
 bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui::configurator::Graph& graph) {
 
-    /*
-        // Really simple layouting sorting modules into differnet layers
-        std::vector<std::vector<graph::ModulePtrType>> layers;
-        layers.clear();
+    ImGuiStyle& style = ImGui::GetStyle();
 
-        // Fill first layer with modules having no connected callee
-        // (Cycles are ignored)
-        layers.emplace_back();
-        for (auto& mod : graph->GetGraphModules()) {
-            bool any_connected_callee = false;
-            for (auto& callee_slot : mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLEE)) {
-                if (callee_slot->CallsConnected()) {
-                    any_connected_callee = true;
-                }
-            }
-            if (!any_connected_callee) {
-                layers.back().emplace_back(mod);
+    // Really simple layouting sorting modules into differnet layers
+    std::vector<std::vector<ModulePtrType>> layers;
+    layers.clear();
+
+    // Fill first layer with modules having no connected callee
+    // (Cycles are ignored)
+    layers.emplace_back();
+    for (auto& mod : graph.GetGraphModules()) {
+        bool any_connected_callee = false;
+        for (auto& callee_slot : mod->GetCallSlots(CallSlot::CallSlotType::CALLEE)) {
+            if (callee_slot->CallsConnected()) {
+                any_connected_callee = true;
             }
         }
+        if (!any_connected_callee) {
+            layers.back().emplace_back(mod);
+        }
+    }
 
-        // Loop while modules are added to new layer.
-        bool added_module = true;
-        while (added_module) {
-            added_module = false;
-            // Add new layer
-            layers.emplace_back();
-            // Loop through last filled layer
-            for (auto& mod : layers[layers.size() - 2]) {
-                for (auto& caller_slot : mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLER)) {
-                    if (caller_slot->CallsConnected()) {
-                        for (auto& call : caller_slot->GetConnectedCalls()) {
-                            auto add_mod = call->GetCallSlot(graph::CallSlot::CallSlotType::CALLEE)->GetParentModule();
-                            // Check if module was already added
-                            bool found_module = false;
-                            for (auto& layer : layers) {
-                                for (auto& m : layer) {
-                                    if (m == add_mod) {
-                                        found_module = true;
-                                    }
+    // Loop while modules are added to new layer.
+    float call_slot_radius = 0.0f;
+    bool added_module = true;
+    while (added_module) {
+        added_module = false;
+        // Add new layer
+        layers.emplace_back();
+        // Loop through last filled layer
+        for (auto& mod : layers[layers.size() - 2]) {
+            for (auto& caller_slot : mod->GetCallSlots(CallSlot::CallSlotType::CALLER)) {
+                call_slot_radius = std::max(caller_slot->GUI_GetSlotRadius(), call_slot_radius);
+                if (caller_slot->CallsConnected()) {
+                    for (auto& call : caller_slot->GetConnectedCalls()) {
+                        auto add_mod = call->GetCallSlot(CallSlot::CallSlotType::CALLEE)->GetParentModule();
+                        // Check if module was already added
+                        bool found_module = false;
+                        for (auto& layer : layers) {
+                            for (auto& m : layer) {
+                                if (m == add_mod) {
+                                    found_module = true;
                                 }
                             }
-                            if (!found_module) {
-                                layers.back().emplace_back(add_mod);
-                                added_module = true;
-                            }
+                        }
+                        if (!found_module) {
+                            layers.back().emplace_back(add_mod);
+                            added_module = true;
                         }
                     }
                 }
             }
         }
+    }
 
-        // Calculate new positions of modules
-        const float border_offset = this->slot_radius * 4.0f;
-        ImVec2 init_position = ImVec2(-1.0f * this->canvas_scrolling.x, -1.0f * this->canvas_scrolling.y);
-        ImVec2 pos = init_position;
-        float max_call_width = 25.0f;
-        float max_module_width = 0.0f;
-        size_t layer_mod_cnt = 0;
-        for (auto& layer : layers) {
+    // Calculate new positions of modules
+    const float border_offset = call_slot_radius * 4.0f;
+    ImVec2 init_position = ImVec2(-1.0f * this->canvas_scrolling.x, -1.0f * this->canvas_scrolling.y);
+    ImVec2 pos = init_position;
+    float max_call_width = 25.0f;
+    float max_module_width = 0.0f;
+    size_t layer_mod_cnt = 0;
+    for (auto& layer : layers) {
+        if (this->show_call_names) {
+            max_call_width = 0.0f;
+        }
+        max_module_width = 0.0f;
+        layer_mod_cnt = layer.size();
+        pos.x += border_offset;
+        pos.y = init_position.y + border_offset;
+        for (int i = 0; i < layer_mod_cnt; i++) {
+            auto mod = layer[i];
             if (this->show_call_names) {
-                max_call_width = 0.0f;
-            }
-            max_module_width = 0.0f;
-            layer_mod_cnt = layer.size();
-            pos.x += border_offset;
-            pos.y = init_position.y + border_offset;
-            for (int i = 0; i < layer_mod_cnt; i++) {
-                auto mod = layer[i];
-                if (this->show_call_names) {
-                    for (auto& caller_slot : mod->GetCallSlots(graph::CallSlot::CallSlotType::CALLER)) {
-                        if (caller_slot->CallsConnected()) {
-                            for (auto& call : caller_slot->GetConnectedCalls()) {
-                                auto call_name_length = this->utils.TextWidgetWidth(call->class_name);
-                                max_call_width =
-                                    (call_name_length > max_call_width) ? (call_name_length) : (max_call_width);
-                            }
+                for (auto& caller_slot : mod->GetCallSlots(CallSlot::CallSlotType::CALLER)) {
+                    if (caller_slot->CallsConnected()) {
+                        for (auto& call : caller_slot->GetConnectedCalls()) {
+                            auto call_name_length = this->utils.TextWidgetWidth(call->class_name) * 1.5f;
+                            max_call_width =
+                                (call_name_length > max_call_width) ? (call_name_length) : (max_call_width);
                         }
                     }
                 }
-                mod->present.position = pos;
-                pos.y += mod->present.size.y + border_offset;
-                max_module_width = (mod->present.size.x > max_module_width) ? (mod->present.size.x) :
-    (max_module_width);
             }
-            pos.x += (max_module_width + max_call_width + border_offset);
+            mod->GUI_SetPosition(pos);
+            auto mod_size = mod->GUI_GetSize();
+            pos.y += mod_size.y + border_offset;
+            max_module_width = (mod_size.x > max_module_width) ? (mod_size.x) : (max_module_width);
         }
-    */
+        pos.x += (max_module_width + max_call_width + border_offset);
+    }
+
     return true;
 }

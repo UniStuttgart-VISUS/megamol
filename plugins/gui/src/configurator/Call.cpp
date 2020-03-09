@@ -129,7 +129,6 @@ int megamol::gui::configurator::Call::Presentation::Present(
     assert(draw_list != nullptr);
 
     /// XXX Clip call if lying ouside the canvas
-
     try {
 
         if (ImGui::GetCurrentContext() == nullptr) {
