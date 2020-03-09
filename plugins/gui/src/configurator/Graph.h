@@ -58,10 +58,8 @@ public:
 
     // GUI Presentation -------------------------------------------------------
     bool GUI_Present(float child_width, ImFont* graph_font, HotKeyArrayType& hotkeys, bool& delete_graph) {
-        return this->present.GUI_Present(*this, child_width, graph_font, hotkeys, delete_graph);
+        return this->present.Present(*this, child_width, graph_font, hotkeys, delete_graph);
     }
-
-    inline const CallSlotPtrType GUI_GetSelectedSlot(void) const { return this->present.GetSelectedSlot(); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -86,10 +84,7 @@ private:
 
         ~Presentation(void);
 
-        bool GUI_Present(
-            Graph& graph, float child_width, ImFont* graph_font, HotKeyArrayType& hotkeys, bool& delete_graph);
-
-        inline const CallSlotPtrType GetSelectedSlot(void) const { return this->selected_slot_ptr; }
+        bool Present(Graph& graph, float child_width, ImFont* graph_font, HotKeyArrayType& hotkeys, bool& delete_graph);
 
     private:
         ImFont* font;
@@ -109,9 +104,6 @@ private:
         int selected_module_uid;
         int selected_call_uid;
 
-        CallSlotPtrType selected_slot_ptr;//
-        int process_selected_slot;//
-
         bool layout_current_graph;
         float split_width;
         float mouse_wheel;
@@ -128,7 +120,7 @@ private:
         void canvas_grid(megamol::gui::configurator::Graph& graph);
         void canvas_dragged_call(megamol::gui::configurator::Graph& graph);
 
-        bool layout_graph(megamol::gui::configurator::Graph& graph); 
+        bool layout_graph(megamol::gui::configurator::Graph& graph);
 
     } present;
 };

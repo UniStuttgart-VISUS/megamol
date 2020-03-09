@@ -39,7 +39,6 @@ typedef std::shared_ptr<Module> ModulePtrType;
  */
 class Call {
 public:
-
     struct StockCall {
         std::string class_name;
         std::string description;

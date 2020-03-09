@@ -55,7 +55,6 @@ typedef std::shared_ptr<Parameter> ParamPtrType;
  */
 class Parameter {
 public:
-
     enum ParamType {
         BOOL,
         BUTTON,
@@ -183,7 +182,7 @@ public:
     }
 
     // SET ----------------------------------
-    bool SetValueString(std::string val_str);
+    bool SetValueString(const std::string& val_str);
 
     template <typename T> void SetValue(T val) {
         if (std::holds_alternative<T>(this->value)) {
@@ -228,7 +227,7 @@ public:
     void GUI_SetPresentation(Parameter::Presentations present) { this->present.presentations = present; }
     void GUI_SetReadOnly(bool readonly) { this->present.read_only = readonly; }
 
-    static bool GUI_PresentationButton(Parameter::Presentations& inout_present, std::string label = "") {
+    static bool GUI_PresentationButton(Parameter::Presentations& inout_present, const std::string& label = "") {
         return Presentation::PresentationButton(inout_present, label);
     }
 
@@ -253,7 +252,7 @@ private:
         bool read_only;
         bool visible;
 
-        static bool PresentationButton(Parameter::Presentations& inout_present, std::string label = "");
+        static bool PresentationButton(Parameter::Presentations& inout_present, const std::string& label = "");
 
     private:
         std::string help;

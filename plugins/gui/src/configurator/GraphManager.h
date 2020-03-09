@@ -57,8 +57,7 @@ public:
     bool GUI_Present(float child_width, ImFont* graph_font, HotKeyArrayType& hotkeys) {
         return this->present.GUI_Present(*this, child_width, graph_font, hotkeys);
     }
-
-    const GraphManager::GraphPtrType GUI_GetPresentedGraph(void) { return this->present.GetPresentedGraph(); }
+    int GUI_GetPresentedGraphUID(void) { return this->present.GetPresentedGraphUID(); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -79,7 +78,13 @@ private:
 
         bool GUI_Present(GraphManager& graph_manager, float child_width, ImFont* graph_font, HotKeyArrayType& hotkeys);
 
-        const GraphManager::GraphPtrType GetPresentedGraph(void) { return this->presented_graph; }
+        int GetPresentedGraphUID(void) {
+            if (this->presented_graph != nullptr) {
+                return this->presented_graph->GetUID();
+            } else {
+                return GUI_INVALID_ID;
+            }
+        }
 
     private:
         GraphManager::GraphPtrType presented_graph;
@@ -104,7 +109,7 @@ private:
 
     std::string writeLuaProjectConfPos(const ImVec2& pos);
 
-    bool separateNamespaceAndName(const std::string& full_name, std::string& name_space, std::string& name);
+    bool separateNameAndPrefix(const std::string& full_name, std::string& name_space, std::string& name);
 
     // ------------------------------------------------------------------------
 };

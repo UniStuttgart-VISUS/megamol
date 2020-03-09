@@ -26,11 +26,11 @@ megamol::gui::configurator::Configurator::Configurator()
     , utils()
     , window_state(0)
     , project_filename("")
-    , graph_ptr(nullptr)
-    , selected_list_module_id(GUI_INVALID_ID)
+    , graph_uid(GUI_INVALID_ID)
+    , selected_list_module_uid(GUI_INVALID_ID)
     , graph_font(nullptr)
     , split_width(250.0f)
-    , unique_project_id(0) {
+    , project_uid(0) {
 
     // Define HotKeys
     this->hotkeys[HotkeyIndex::MODULE_SEARCH] =
@@ -122,11 +122,9 @@ bool megamol::gui::configurator::Configurator::Draw(
 
         ImGui::SameLine();
 
-        this->graph_ptr = nullptr;
-
+        this->graph_uid = GUI_INVALID_ID;
         this->graph_manager.GUI_Present(child_width_auto, this->graph_font, this->hotkeys);
-
-        this->graph_ptr = this->graph_manager.GUI_GetPresentedGraph();
+        this->graph_uid = this->graph_manager.GUI_GetPresentedGraphUID();
     }
 
     return true;
@@ -165,7 +163,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
             }
 
             // Save currently active project to LUA file
-            if (ImGui::MenuItem("Save Project", nullptr, false, (this->graph_ptr != nullptr))) {
+            if (ImGui::MenuItem("Save Project", nullptr, false, (this->graph_uid != GUI_INVALID_ID))) {
                 open_save_popup = true;
             }
 #endif // GUI_USE_FILESYSTEM
@@ -197,11 +195,11 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 #ifdef GUI_USE_FILESYSTEM
     if (this->utils.FileBrowserPopUp(
             GUIUtils::FileBrowserFlag::LOAD, "Load Project", open_load_popup, this->project_filename)) {
-        this->graph_manager.LoadProjectFile(this->graph_ptr->GetUID(), this->project_filename, core_instance);
+        this->graph_manager.LoadProjectFile(this->graph_uid, this->project_filename, core_instance);
     }
     if (this->utils.FileBrowserPopUp(
             GUIUtils::FileBrowserFlag::SAVE, "Save Project", open_save_popup, this->project_filename)) {
-        this->graph_manager.SaveProjectFile(this->graph_ptr->GetUID(), this->project_filename, core_instance);
+        this->graph_manager.SaveProjectFile(this->graph_uid, this->project_filename, core_instance);
     }
 #endif // GUI_USE_FILESYSTEM
 }
@@ -243,24 +241,26 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
         }
 
         // Filter module by compatible call slots
+
         bool compat_filter = true;
+        /*
         std::string call_name;
         std::string compat_call_slot_name;
-        if (this->graph_ptr != nullptr) {
-            if (this->graph_ptr->GUI_GetSelectedSlot() != nullptr) {
-                compat_filter = false;
-                for (auto& cst : mod.call_slots) {
-                    for (auto& cs : cst.second) {
-                        int cpidx = CallSlot::GetCompatibleCallIndex(this->graph_ptr->GUI_GetSelectedSlot(), cs);
-                        if (cpidx != GUI_INVALID_ID) {
-                            call_name = this->graph_manager.GetCallsStock()[cpidx].class_name;
-                            compat_call_slot_name = cs.name;
-                            compat_filter = true;
-                        }
+        auto graph_ptr = this->graph_manager.GetGraph(this->graph_uid);
+        if (graph_ptr != nullptr) {
+            compat_filter = false;
+            for (auto& cst : mod.call_slots) {
+                for (auto& cs : cst.second) {
+                    int cpidx = CallSlot::GetCompatibleCallIndex(graph_ptr->GUI_GetSelectedSlot(), cs);
+                    if (cpidx != GUI_INVALID_ID) {
+                        call_name = this->graph_manager.GetCallsStock()[cpidx].class_name;
+                        compat_call_slot_name = cs.name;
+                        compat_filter = true;
                     }
                 }
             }
         }
+        */
 
         if (search_filter && compat_filter) {
             ImGui::PushID(id);
@@ -269,8 +269,8 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
             if (mod.is_view) {
                 label += " [View]";
             }
-            if (ImGui::Selectable(label.c_str(), (id == this->selected_list_module_id))) {
-                this->selected_list_module_id = id;
+            if (ImGui::Selectable(label.c_str(), (id == this->selected_list_module_uid))) {
+                this->selected_list_module_uid = id;
             }
             bool add_module = false;
             // Left mouse button double click action
@@ -285,18 +285,19 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                 ImGui::EndPopup();
             }
 
+            /*
             if (add_module) {
-                if (this->graph_ptr != nullptr) {
-                    this->graph_ptr->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
+                if (graph_ptr != nullptr) {
+                    graph_ptr->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
 
-                    auto selected_slot = this->graph_ptr->GUI_GetSelectedSlot();
+                    auto selected_slot_uid = graph_ptr->GUI_GetSelectedSlotUID();
                     // If there is a call slot selected, create call to compatible call slot of new module
-                    if (selected_slot != nullptr) {
+                    if (selected_slot_uid != GUI_INVALID_ID) {
                         // Get call slots of last added module
-                        for (auto& call_slot_map : this->graph_ptr->GetGraphModules().back()->GetCallSlots()) {
+                        for (auto& call_slot_map : graph_ptr->GetGraphModules().back()->GetCallSlots()) {
                             for (auto& call_slot : call_slot_map.second) {
                                 if (call_slot->name == compat_call_slot_name) {
-                                    if (this->graph_ptr->AddCall(
+                                    if (graph_ptr->AddCall(
                                             this->graph_manager.GetCallsStock(), call_name, selected_slot, call_slot)) {
                                     }
                                 }
@@ -308,6 +309,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                         "No project loaded. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 }
             }
+            */
 
             // Hover tool tip
             this->utils.HoverToolTip(mod.description, id, 0.5f, 5.0f);

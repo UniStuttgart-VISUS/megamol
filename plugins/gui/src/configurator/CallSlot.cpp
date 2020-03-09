@@ -227,7 +227,12 @@ int megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(megamol::gui::c
 // CALL SLOT PRESENTATION ####################################################
 
 megamol::gui::configurator::CallSlot::Presentation::Presentation(void)
-    : presentations(CallSlot::Presentations::DEFAULT), label_visible(true), position(), slot_radius(8.0f), utils(), selected(false) {}
+    : presentations(CallSlot::Presentations::DEFAULT)
+    , label_visible(false)
+    , position()
+    , slot_radius(8.0f)
+    , utils()
+    , selected(false) {}
 
 megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
@@ -236,6 +241,9 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(
     megamol::gui::configurator::CallSlot& call_slot, ImVec2 canvas_offset, float canvas_zooming) {
 
     int retval_id = GUI_INVALID_ID;
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
 
     try {
 
@@ -245,40 +253,32 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(
             return false;
         }
 
-        ///XXX Trigger only when necessary
+        /// XXX Trigger only when necessary
         this->UpdatePosition(call_slot, canvas_offset, canvas_zooming);
 
         ImGui::PushID(call_slot.uid);
-
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        assert(draw_list != nullptr);
-
         draw_list->ChannelsSetCurrent(1); // Foreground
 
-        const ImU32 COLOR_SLOT = IM_COL32(175, 175, 175, 255);
-        const ImU32 COLOR_SLOT_BORDER = IM_COL32(225, 225, 225, 255);
-        const ImU32 COLOR_SLOT_CALLER_LABEL = IM_COL32(0, 255, 255, 255);
-        const ImU32 COLOR_SLOT_CALLER_HIGHTLIGHT = IM_COL32(0, 255, 255, 255);
-        const ImU32 COLOR_SLOT_CALLEE_LABEL = IM_COL32(255, 92, 255, 255);
-        const ImU32 COLOR_SLOT_CALLEE_HIGHTLIGHT = IM_COL32(255, 92, 255, 255);
-        const ImU32 COLOR_SLOT_COMPATIBLE = IM_COL32(0, 255, 0, 255);
+        ImVec4 tmpcol = style.Colors[ImGuiCol_Button];
+        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+        const ImU32 COLOR_SLOT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
+        const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PopupBg]);
+        const ImU32 COLOR_SLOT_CALLER = IM_COL32(0, 224, 224, 255);
+        const ImU32 COLOR_SLOT_CALLEE = IM_COL32(192, 0, 224, 255);
+        const ImU32 COLOR_SLOT_COMPATIBLE = IM_COL32(0, 224, 0, 255);
 
-        ImU32 slot_color = COLOR_SLOT;
-        ImU32 slot_highl_color;
-        ImU32 slot_label_color;
+        ImU32 slot_color = COLOR_SLOT_BACKGROUND;
 
+        ImU32 slot_highlight_color = COLOR_SLOT_BACKGROUND;
         if (call_slot.type == CallSlot::CallSlotType::CALLER) {
-            slot_highl_color = COLOR_SLOT_CALLER_HIGHTLIGHT;
-            slot_label_color = COLOR_SLOT_CALLER_LABEL;
+            slot_highlight_color = COLOR_SLOT_CALLER;
         } else if (call_slot.type == CallSlot::CallSlotType::CALLEE) {
-            slot_highl_color = COLOR_SLOT_CALLEE_HIGHTLIGHT;
-            slot_label_color = COLOR_SLOT_CALLEE_LABEL;
+            slot_highlight_color = COLOR_SLOT_CALLEE;
         }
 
         ImVec2 slot_position = this->position;
         float radius = this->slot_radius * canvas_zooming;
         std::string slot_name = call_slot.name;
-        slot_color = COLOR_SLOT;
 
         ImGui::SetCursorScreenPos(slot_position - ImVec2(radius, radius));
         std::string label = "slot_" + slot_name + std::to_string(call_slot.uid);
@@ -286,12 +286,12 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(
 
         std::string tooltip = call_slot.description;
         if (!this->label_visible) {
-            tooltip = call_slot.name + " | " + tooltip;
+            tooltip = "[" + call_slot.name + "] " + tooltip;
         }
         this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
         bool active = ImGui::IsItemActive();
         bool hovered = ImGui::IsItemHovered();
-        bool mouse_clicked = ImGui::GetIO().MouseClicked[0];      
+        bool mouse_clicked = ImGui::GetIO().MouseClicked[0];
         /// XXX
         /*
          int compat_call_idx = CallSlot::GetCompatibleCallIndex(selected_slot_ptr, call_slot);
@@ -328,10 +328,10 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(
         //     retval_id = mod.uid;
         // }
         if (hovered) {
-           retval_id = call_slot.uid;
-        }         
+            retval_id = call_slot.uid;
+        }
         if (hovered || this->selected) {
-            slot_color = slot_highl_color;
+            slot_color = slot_highlight_color;
         }
         ImGui::SetCursorScreenPos(slot_position);
         draw_list->AddCircleFilled(slot_position, radius, slot_color);
@@ -346,7 +346,7 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(
             } else if (call_slot.type == CallSlot::CallSlotType::CALLEE) {
                 text_pos.x = slot_position.x + (2.0f * radius);
             }
-            draw_list->AddText(text_pos, slot_label_color, slot_name.c_str());
+            draw_list->AddText(text_pos, slot_highlight_color, slot_name.c_str());
         }
 
         ImGui::PopID();

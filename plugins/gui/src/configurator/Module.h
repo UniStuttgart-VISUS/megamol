@@ -39,7 +39,6 @@ typedef std::shared_ptr<Module> ModulePtrType;
  */
 class Module {
 public:
-
     struct StockModule {
         std::string class_name;
         std::string description;
@@ -111,9 +110,9 @@ private:
         bool label_visible;
 
     private:
-        // Relative position without canvas offset and zooming  
+        // Relative position without canvas offset and zooming
         ImVec2 position;
-        // Absolute size including canvas offset and zooming  
+        // Absolute size including canvas offset and zooming
         ImVec2 size;
         std::string class_label;
         std::string name_label;

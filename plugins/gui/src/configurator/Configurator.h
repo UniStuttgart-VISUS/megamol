@@ -64,12 +64,12 @@ private:
 
     int window_state;
     std::string project_filename;
-    GraphManager::GraphPtrType graph_ptr;
-    int selected_list_module_id;
+    int graph_uid;
+    int selected_list_module_uid;
     ImFont* graph_font;
     float split_width;
 
-    unsigned int unique_project_id;
+    unsigned int project_uid;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -79,9 +79,7 @@ private:
 
     void addProject(void);
 
-    inline const std::string get_unique_project_name(void) {
-        return ("Project_" + std::to_string(++unique_project_id));
-    }
+    inline const std::string get_unique_project_name(void) { return ("Project_" + std::to_string(++project_uid)); }
     // ------------------------------------------------------------------------
 };
 

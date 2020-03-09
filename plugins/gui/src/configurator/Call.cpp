@@ -124,8 +124,11 @@ int megamol::gui::configurator::Call::Presentation::Present(
     megamol::gui::configurator::Call& call, ImVec2 canvas_offset, float canvas_zooming, HotKeyArrayType& hotkeys) {
 
     int retval_id = GUI_INVALID_ID;
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
 
-    ///XXX Clip call if lying ouside the canvas
+    /// XXX Clip call if lying ouside the canvas
 
     try {
 
@@ -137,16 +140,12 @@ int megamol::gui::configurator::Call::Presentation::Present(
 
         ImGui::PushID(call.uid);
 
-        ImGuiStyle& style = ImGui::GetStyle();
-
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        assert(draw_list != nullptr);
-        draw_list->ChannelsSplit(2);
-
-        const ImU32 COLOR_CALL_CURVE = IM_COL32(225, 225, 0, 255);
-        const ImU32 COLOR_CALL_BACKGROUND = IM_COL32(64, 61, 64, 255);
-        const ImU32 COLOR_CALL_HIGHTLIGHT = IM_COL32(92, 116, 92, 255);
-        const ImU32 COLOR_CALL_BORDER = IM_COL32(128, 128, 128, 255);
+        ImVec4 tmpcol = style.Colors[ImGuiCol_Button];
+        // tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+        const ImU32 COLOR_CALL_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
+        const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
+        const ImU32 COLOR_CALL_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonHovered]);
+        const ImU32 COLOR_CALL_BORDER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PopupBg]);
 
         const float CURVE_THICKNESS = 3.0f;
 
@@ -157,6 +156,7 @@ int megamol::gui::configurator::Call::Presentation::Present(
 
             // Draw simple line if zooming is too small for nice bezier curves
             draw_list->ChannelsSetCurrent(0); // Background
+
             const float zooming_switch_curve = 0.4f;
             if (canvas_zooming < zooming_switch_curve) {
                 draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * canvas_zooming);
@@ -166,6 +166,7 @@ int megamol::gui::configurator::Call::Presentation::Present(
             }
 
             if (this->label_visible) {
+
                 draw_list->ChannelsSetCurrent(1); // Foreground
 
                 ImVec2 call_center = ImVec2(p1.x + (p2.x - p1.x) / 2.0f, p1.y + (p2.y - p1.y) / 2.0f);
@@ -200,9 +201,8 @@ int megamol::gui::configurator::Call::Presentation::Present(
                 }
                 if (this->selected) {
                     retval_id = call.uid;
-                }   
-                ImU32 call_bg_color =
-                    (hovered || this->selected) ? COLOR_CALL_HIGHTLIGHT : COLOR_CALL_BACKGROUND;
+                }
+                ImU32 call_bg_color = (hovered || this->selected) ? COLOR_CALL_HIGHTLIGHT : COLOR_CALL_BACKGROUND;
                 draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, 4.0f);
                 draw_list->AddRect(call_rect_min, call_rect_max, COLOR_CALL_BORDER, 4.0f);
 

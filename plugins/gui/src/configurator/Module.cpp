@@ -121,8 +121,11 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
 
     int retval_id = GUI_INVALID_ID;
     bool rename_popup_open = false;
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
 
-    ///XXX Clip module if lying ouside the canvas
+    /// XXX Clip module if lying ouside the canvas
 
     try {
 
@@ -136,7 +139,6 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
 
         // Draw call slots ----------------------------------------------------
         /// Draw call slots prior to modules to catch mouse clicks on slot area lying over module box.
-
         int hovered_slot_uid = GUI_INVALID_ID;
         for (auto& slot_pair : mod.GetCallSlots()) {
             for (auto& slot : slot_pair.second) {
@@ -148,15 +150,13 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
         }
 
         // Draw module --------------------------------------------------------
+        ImVec4 tmpcol = style.Colors[ImGuiCol_Button];
+        // tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+        const ImU32 COLOR_MODULE_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
+        const ImU32 COLOR_MODULE_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonHovered]);
+        const ImU32 COLOR_MODULE_BORDER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PopupBg]);
 
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        assert(draw_list != nullptr);
-
-        const ImU32 COLOR_MODULE_BACKGROUND = IM_COL32(64, 61, 64, 255);
-        const ImU32 COLOR_MODULE_HIGHTLIGHT = IM_COL32(92, 116, 92, 255);
-        const ImU32 COLOR_MODULE_BORDER = IM_COL32(128, 128, 128, 255);
-
-        ///XXX Trigger only when necessary
+        /// XXX Trigger only when necessary
         this->UpdateSize(mod, canvas_zooming);
 
         ImVec2 module_size = this->size;
@@ -169,6 +169,7 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
         // Draw text
         if (this->label_visible) {
             draw_list->ChannelsSetCurrent(1); // Foreground
+
             ImGui::BeginGroup();
 
             float line_offset = 0.0f;
@@ -190,7 +191,8 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
             if (mod.is_view_instance) {
                 label = "[Main View]";
                 name_width = this->utils.TextWidgetWidth(label);
-                ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), line_offset + ImGui::GetItemsLineHeightWithSpacing()));
+                ImGui::SetCursorScreenPos(
+                    module_center + ImVec2(-(name_width / 2.0f), line_offset + ImGui::GetItemsLineHeightWithSpacing()));
                 ImGui::Text(label.c_str());
             }
             ImGui::EndGroup();
@@ -204,12 +206,18 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
         ImGui::InvisibleButton(label.c_str(), module_size);
         bool hovered = ImGui::IsItemHovered() && (hovered_slot_uid == GUI_INVALID_ID);
         bool mouse_clicked = ImGui::GetIO().MouseClicked[0];
-        if (mouse_clicked && (!hovered || (hovered_slot_uid != GUI_INVALID_ID))) { // && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+        if (mouse_clicked &&
+            (!hovered ||
+                (hovered_slot_uid != GUI_INVALID_ID))) { // && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
             this->selected = false;
-        }         
+        }
         // Gives slots which overlap modules priority for ToolTip and Context Menu.
         if (hovered_slot_uid == GUI_INVALID_ID) {
-            this->utils.HoverToolTip(mod.description, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
+            std::string hover_text = mod.description;
+            if (!this->label_visible) {
+                hover_text = "[" + mod.name + "]" + hover_text;
+            }
+            this->utils.HoverToolTip(hover_text.c_str(), ImGui::GetID(label.c_str()), 0.5f, 5.0f);
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem(
@@ -231,14 +239,13 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
             }
             if (this->selected) {
                 retval_id = mod.uid;
-            } 
+            }
         }
-        ImU32 module_bg_color =
-            (hovered || this->selected) ? COLOR_MODULE_HIGHTLIGHT : COLOR_MODULE_BACKGROUND;
+        ImU32 module_bg_color = (hovered || this->selected) ? COLOR_MODULE_HIGHTLIGHT : COLOR_MODULE_BACKGROUND;
         draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 5.0f);
         draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 5.0f);
 
-        ///XXX
+        /// XXX
         // Use ImGui::ArrowButton to show/hide parameters inside module box
 
         // Rename pop-up
@@ -289,12 +296,12 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
 
     auto max_slot_count = std::max(mod.GetCallSlots(CallSlot::CallSlotType::CALLEE).size(),
         mod.GetCallSlots(CallSlot::CallSlotType::CALLER).size());
-    float module_slot_height = (static_cast<float>(max_slot_count) * (slot_radius * 2.0f) * 1.5f) +
-        ((slot_radius * 2.0f) * 0.5f);
+    float module_slot_height =
+        (static_cast<float>(max_slot_count) * (slot_radius * 2.0f) * 1.5f) + ((slot_radius * 2.0f) * 0.5f);
 
-    float module_height =
-        std::max(module_slot_height, ImGui::GetItemsLineHeightWithSpacing() * ((mod.is_view_instance) ? (4.0f) : (3.0f)));
+    float module_height = std::max(
+        module_slot_height, ImGui::GetItemsLineHeightWithSpacing() * ((mod.is_view_instance) ? (4.0f) : (3.0f)));
 
     // Clamp to minimum size
-    this->size = ImVec2(std::max(module_width, 150.0f), std::max(module_height, 50.0f)) * canvas_zooming; 
+    this->size = ImVec2(std::max(module_width, 150.0f), std::max(module_height, 50.0f)) * canvas_zooming;
 }

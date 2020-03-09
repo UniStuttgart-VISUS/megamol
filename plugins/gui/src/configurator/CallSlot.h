@@ -38,7 +38,6 @@ typedef std::shared_ptr<Module> ModulePtrType;
  */
 class CallSlot {
 public:
-
     enum CallSlotType { CALLEE, CALLER };
 
     struct StockCallSlot {
@@ -114,7 +113,7 @@ private:
         ImVec2 position;
         GUIUtils utils;
         bool selected;
-        
+
     } present;
 };
 

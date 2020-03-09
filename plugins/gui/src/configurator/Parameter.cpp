@@ -150,7 +150,7 @@ std::string megamol::gui::configurator::Parameter::GetValueString(void) {
 }
 
 
-bool megamol::gui::configurator::Parameter::SetValueString(std::string val_str) {
+bool megamol::gui::configurator::Parameter::SetValueString(const std::string& val_str) {
 
     bool retval = false;
     vislib::TString val_tstr(val_str.c_str());
@@ -302,7 +302,7 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
 
 
 bool megamol::gui::configurator::Parameter::Presentation::PresentationButton(
-    megamol::gui::configurator::Parameter::Presentations& inout_present, std::string label) {
+    megamol::gui::configurator::Parameter::Presentations& inout_present, const std::string& label) {
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -672,7 +672,6 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
         // Set once
         if (this->show_tf_editor) {
             updateEditor = true;
-            /// XXX this->tf_editor.SetActiveParameter(&param);
         }
     }
     ImGui::SameLine();
