@@ -61,6 +61,12 @@ void main() {
         flag = flagsArray[(flag_offset + inst)];
     }
     vec4 col = vec4(colArray[inst].x, colArray[inst].y, colArray[inst].z, colArray[inst].w);
+
+    bool use_per_axis_color = (options & OPTIONS_USE_PER_AXIS_COLOR) > 0;
+    if(use_per_axis_color){
+        col.r = face == 0 ? radii.x : face == 1 ? radii.y : radii.z;
+    }
+
     vertColor = compute_color(col, flag, tf_texture, tf_range, global_color, flag_selected_col, flag_softselected_col, options);
     
     cornerPos.xyz *= absradii; // scale
