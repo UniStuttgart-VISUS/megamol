@@ -66,6 +66,7 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
+    // Returns uid if the call is selected.
     int GUI_Present(ImVec2 in_canvas_offset, float in_canvas_zooming, HotKeyArrayType& inout_hotkeys) {
         return this->present.Present(*this, in_canvas_offset, in_canvas_zooming, inout_hotkeys);
     }

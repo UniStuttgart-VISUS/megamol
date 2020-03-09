@@ -54,6 +54,8 @@ public:
     bool SaveProjectFile(int graph_id, const std::string& project_filename, megamol::core::CoreInstance* core_instance);
 
     // GUI Presentation -------------------------------------------------------
+
+    // Returns uid of the currently active/drawn graph.
     int GUI_Present(float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys) {
         return this->present.Present(*this, in_child_width, in_graph_font, inout_hotkeys);
     }

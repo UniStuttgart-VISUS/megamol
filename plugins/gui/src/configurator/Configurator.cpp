@@ -233,18 +233,15 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
     bool search_filter = true;
     bool compat_filter = true;
 
-    std::string compat_call_name;
     std::string compat_call_slot_name;
     CallSlotPtrType selected_call_slot_ptr;
     auto graph_ptr = this->graph_manager.GetGraph(this->graph_uid);
     if (graph_ptr != nullptr) {
         auto call_slot_id = graph_ptr->GUI_GetSelectedCallSlot();
-        if (call_slot_id != GUI_INVALID_ID) {
-            for (auto& mods : graph_ptr->GetGraphModules()) {
-                CallSlotPtrType call_slot_ptr = mods->GetCallSlot(call_slot_id);
-                if (call_slot_ptr != nullptr) {
-                    selected_call_slot_ptr = call_slot_ptr;
-                }
+        for (auto& mods : graph_ptr->GetGraphModules()) {
+            CallSlotPtrType call_slot_ptr = mods->GetCallSlot(call_slot_id);
+            if (call_slot_ptr != nullptr) {
+                selected_call_slot_ptr = call_slot_ptr;
             }
         }
     }
@@ -265,7 +262,6 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                 for (auto& stock_call_slot : stock_call_slot_map.second) {
                     int cpcidx = CallSlot::GetCompatibleCallIndex(selected_call_slot_ptr, stock_call_slot);
                     if (cpcidx != GUI_INVALID_ID) {
-                        compat_call_name = this->graph_manager.GetCallsStock()[cpcidx].class_name;
                         compat_call_slot_name = stock_call_slot.name;
                         compat_filter = true;
                     }
@@ -305,8 +301,8 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                         for (auto& call_slot_map : graph_ptr->GetGraphModules().back()->GetCallSlots()) {
                             for (auto& call_slot : call_slot_map.second) {
                                 if (call_slot->name == compat_call_slot_name) {
-                                    if (graph_ptr->AddCall(this->graph_manager.GetCallsStock(), compat_call_name,
-                                            selected_call_slot_ptr, call_slot)) {
+                                    if (graph_ptr->AddCall(
+                                            this->graph_manager.GetCallsStock(), selected_call_slot_ptr, call_slot)) {
                                     }
                                 }
                             }

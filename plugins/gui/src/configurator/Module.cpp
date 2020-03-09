@@ -135,7 +135,7 @@ megamol::gui::configurator::Module::Presentation::~Presentation(void) {}
 
 int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::configurator::Module& inout_mod,
     ImVec2 in_canvas_offset, float in_canvas_zooming, HotKeyArrayType& inout_hotkeys, int& out_selected_call_slot_uid,
-    const CallSlotPtrType selected_call_slot_ptr) {
+    int& out_hovered_call_slot_uid, const CallSlotPtrType selected_call_slot_ptr) {
 
     int retval_id = GUI_INVALID_ID;
     bool rename_popup_open = false;
@@ -156,15 +156,18 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
 
         // Draw call slots ----------------------------------------------------
         /// Draw call slots prior to modules to catch mouse clicks on slot area lying over module box.
-        bool hovered_call_slot = false;
+        int hovered_call_slot_id = GUI_INVALID_ID;
         for (auto& slot_pair : inout_mod.GetCallSlots()) {
             for (auto& slot : slot_pair.second) {
-                auto id =
-                    slot->GUI_Present(in_canvas_offset, in_canvas_zooming, hovered_call_slot, selected_call_slot_ptr);
+                auto id = slot->GUI_Present(
+                    in_canvas_offset, in_canvas_zooming, hovered_call_slot_id, selected_call_slot_ptr);
                 if (id != GUI_INVALID_ID) {
                     out_selected_call_slot_uid = id;
                 }
             }
+        }
+        if (hovered_call_slot_id != GUI_INVALID_ID) {
+            out_hovered_call_slot_uid = hovered_call_slot_id;
         }
 
         // Draw module --------------------------------------------------------
@@ -228,14 +231,15 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
         ImGui::SetCursorScreenPos(module_rect_min);
         label = "module_" + inout_mod.name;
         ImGui::InvisibleButton(label.c_str(), module_size);
-        bool hovered = ImGui::IsItemHovered() && (!hovered_call_slot);
+        bool hovered = ImGui::IsItemHovered() && (hovered_call_slot_id == GUI_INVALID_ID);
         bool mouse_clicked = ImGui::GetIO().MouseClicked[0];
         if (mouse_clicked &&
-            (!hovered || (hovered_call_slot))) { // && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+            (!hovered || (hovered_call_slot_id !=
+                             GUI_INVALID_ID))) { // && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
             this->selected = false;
         }
         // Gives slots which overlap modules priority for ToolTip and Context Menu.
-        if (!hovered_call_slot) {
+        if (hovered_call_slot_id == GUI_INVALID_ID) {
             std::string hover_text = inout_mod.description;
             if (!this->label_visible) {
                 hover_text = "[" + inout_mod.name + "]" + hover_text;

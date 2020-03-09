@@ -196,7 +196,6 @@ bool megamol::gui::configurator::GraphManager::LoadCurrentCoreProject(
     try {
         // Temporary data structure holding call connection data
         struct CallData {
-            std::string call_class_name;
             std::string caller_module_full_name;
             std::string caller_module_call_slot_name;
             std::string callee_module_full_name;
@@ -325,7 +324,6 @@ bool megamol::gui::configurator::GraphManager::LoadCurrentCoreProject(
                     if (call != nullptr) {
                         CallData cd;
 
-                        cd.call_class_name = std::string(call->ClassName());
                         cd.caller_module_full_name =
                             std::string(call->PeekCallerSlot()->Parent()->FullName().PeekBuffer());
                         cd.caller_module_call_slot_name = std::string(call->PeekCallerSlot()->Name().PeekBuffer());
@@ -362,7 +360,7 @@ bool megamol::gui::configurator::GraphManager::LoadCurrentCoreProject(
                     }
                 }
             }
-            graph_ptr->AddCall(this->GetCallsStock(), cd.call_class_name, call_slot_1, call_slot_2);
+            graph_ptr->AddCall(this->GetCallsStock(), call_slot_1, call_slot_2);
         }
 
     } catch (std::exception e) {
@@ -615,7 +613,7 @@ bool megamol::gui::configurator::GraphManager::LoadProjectFile(
                 }
 
                 // Add call
-                if (!graph_ptr->AddCall(this->calls_stock, call_class_name, caller_slot, callee_slot)) {
+                if (!graph_ptr->AddCall(this->calls_stock, caller_slot, callee_slot)) {
                     vislib::sys::Log::DefaultLog.WriteError(
                         "Project File '%s' line %i: Unable to add new call '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), i, call_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
@@ -1111,6 +1109,27 @@ int megamol::gui::configurator::GraphManager::Presentation::Present(
             auto id = graph->GUI_Present(in_child_width, in_graph_font, inout_hotkeys, delete_graph);
             if (id != GUI_INVALID_ID) {
                 retval = id;
+            }
+
+            // Checking for call creation at end of drag and drop
+            auto selected_call_slot_uid = graph->GUI_GetSelectedCallSlot();
+            auto hovered_call_slot_uid = graph->GUI_GetHoveredCallSlot();
+            if ((selected_call_slot_uid != GUI_INVALID_ID) && (hovered_call_slot_uid != GUI_INVALID_ID) &&
+                (selected_call_slot_uid != hovered_call_slot_uid) && ImGui::IsMouseReleased(0)) {
+
+                CallSlotPtrType selected_call_slot_ptr;
+                CallSlotPtrType hovered_call_slot_ptr;
+                for (auto& mods : graph->GetGraphModules()) {
+                    CallSlotPtrType call_slot_ptr = mods->GetCallSlot(selected_call_slot_uid);
+                    if (call_slot_ptr != nullptr) {
+                        selected_call_slot_ptr = call_slot_ptr;
+                    }
+                    call_slot_ptr = mods->GetCallSlot(hovered_call_slot_uid);
+                    if (call_slot_ptr != nullptr) {
+                        hovered_call_slot_ptr = call_slot_ptr;
+                    }
+                }
+                graph->AddCall(inout_graph_manager.calls_stock, selected_call_slot_ptr, hovered_call_slot_ptr);
             }
 
             // Do not delete graph while looping through graphs list

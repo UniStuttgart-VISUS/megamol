@@ -77,10 +77,11 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
+    // Returns uid if the module is selected.
     int GUI_Present(ImVec2 in_canvas_offset, float in_canvas_zooming, HotKeyArrayType& inout_hotkeys,
-        int& out_selected_call_slot_uid, const CallSlotPtrType selected_call_slot_ptr) {
+        int& out_selected_call_slot_uid, int& out_hovered_call_slot_uid, const CallSlotPtrType selected_call_slot_ptr) {
         return this->present.Present(*this, in_canvas_offset, in_canvas_zooming, inout_hotkeys,
-            out_selected_call_slot_uid, selected_call_slot_ptr);
+            out_selected_call_slot_uid, out_hovered_call_slot_uid, selected_call_slot_ptr);
     }
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
     void GUI_SetPresentation(Module::Presentations present) { this->present.presentations = present; }
@@ -101,7 +102,8 @@ private:
         ~Presentation(void);
 
         int Present(Module& inout_mod, ImVec2 in_canvas_offset, float in_canvas_zooming, HotKeyArrayType& inout_hotkeys,
-            int& out_selected_call_slot_uid, const CallSlotPtrType selected_call_slot_ptr);
+            int& out_selected_call_slot_uid, int& out_hovered_call_slot_uid,
+            const CallSlotPtrType selected_call_slot_ptr);
 
         void SetPosition(ImVec2 pos) { this->position = pos; }
 

@@ -178,7 +178,7 @@ const megamol::gui::configurator::ModulePtrType megamol::gui::configurator::Call
 }
 
 
-int megamol::gui::configurator::CallSlot::GetAvailableCompatibleCallIndex(
+int megamol::gui::configurator::CallSlot::CheckCompatibleAvailableCallIndex(
     const megamol::gui::configurator::CallSlotPtrType call_slot_ptr, megamol::gui::configurator::CallSlot& call_slot) {
 
     if (call_slot_ptr != nullptr) {
@@ -206,15 +206,35 @@ int megamol::gui::configurator::CallSlot::GetAvailableCompatibleCallIndex(
 
 
 int megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(
+    const CallSlotPtrType call_slot_1, const CallSlotPtrType call_slot_2) {
+
+    if ((call_slot_1 != nullptr) && (call_slot_2 != nullptr)) {
+        if (call_slot_1->GetParentModule() != call_slot_2->GetParentModule() &&
+            (call_slot_1->type != call_slot_2->type)) {
+            // Return first found compatible call index
+            for (auto& comp_call_idx_1 : call_slot_1->compatible_call_idxs) {
+                for (auto& comp_call_idx_2 : call_slot_2->compatible_call_idxs) {
+                    if (comp_call_idx_1 == comp_call_idx_2) {
+                        return static_cast<int>(comp_call_idx_1);
+                    }
+                }
+            }
+        }
+    }
+    return GUI_INVALID_ID;
+}
+
+
+int megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(
     const CallSlotPtrType call_slot, const CallSlot::StockCallSlot& stock_call_slot) {
 
     if (call_slot != nullptr) {
         if (call_slot->type != stock_call_slot.type) {
             // Return first found compatible call index
-            for (auto& selected_comp_call_slots : call_slot->compatible_call_idxs) {
-                for (auto& current_comp_call_slots : stock_call_slot.compatible_call_idxs) {
-                    if (selected_comp_call_slots == current_comp_call_slots) {
-                        return static_cast<int>(current_comp_call_slots);
+            for (auto& comp_call_idx_1 : call_slot->compatible_call_idxs) {
+                for (auto& comp_call_idx_2 : stock_call_slot.compatible_call_idxs) {
+                    if (comp_call_idx_1 == comp_call_idx_2) {
+                        return static_cast<int>(comp_call_idx_1);
                     }
                 }
             }
@@ -238,7 +258,7 @@ megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
 
 int megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::configurator::CallSlot& inout_call_slot,
-    ImVec2 in_canvas_offset, float in_canvas_zooming, bool& out_hovered_call_slot,
+    ImVec2 in_canvas_offset, float in_canvas_zooming, int& out_hovered_call_slot_uid,
     const CallSlotPtrType selected_call_slot_ptr) {
 
     int retval_id = GUI_INVALID_ID;
@@ -294,7 +314,7 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::co
         bool hovered = ImGui::IsItemHovered();
         bool mouse_clicked = ImGui::GetIO().MouseClicked[0];
 
-        int compat_call_idx = CallSlot::GetAvailableCompatibleCallIndex(selected_call_slot_ptr, inout_call_slot);
+        int compat_call_idx = CallSlot::CheckCompatibleAvailableCallIndex(selected_call_slot_ptr, inout_call_slot);
         // Highlight if compatible to selected slot
         if (compat_call_idx != GUI_INVALID_ID) {
             slot_color = COLOR_SLOT_COMPATIBLE;
@@ -309,7 +329,9 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::co
         if (hovered || this->selected) {
             slot_color = slot_highlight_color;
         }
-        out_hovered_call_slot = hovered;
+        if (hovered) {
+            out_hovered_call_slot_uid = inout_call_slot.uid;
+        }
         retval_id = ((this->selected) ? (inout_call_slot.uid) : (GUI_INVALID_ID));
 
         ImGui::SetCursorScreenPos(slot_position);

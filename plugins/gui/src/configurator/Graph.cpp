@@ -125,23 +125,18 @@ bool megamol::gui::configurator::Graph::DeleteModule(int module_uid) {
 }
 
 
-bool megamol::gui::configurator::Graph::AddCall(const CallStockVectorType& stock_calls,
-    const std::string& call_class_name, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2) {
+bool megamol::gui::configurator::Graph::AddCall(
+    const CallStockVectorType& stock_calls, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2) {
 
     try {
-        bool found_stock_call = false;
-        Call::StockCall call_stock_data;
-        for (auto& csd : stock_calls) {
-            if (csd.class_name == call_class_name) {
-                call_stock_data = csd;
-                found_stock_call = true;
-            }
-        }
-        if (!found_stock_call) {
-            vislib::sys::Log::DefaultLog.WriteWarn("Unable to find call: %s [%s, %s, line %d]\n",
-                call_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+
+        auto compat_idx = CallSlot::GetCompatibleCallIndex(call_slot_1, call_slot_2);
+        if (compat_idx == GUI_INVALID_ID) {
+            vislib::sys::Log::DefaultLog.WriteWarn(
+                "Unable to find compatible call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
+        Call::StockCall call_stock_data = stock_calls[compat_idx];
 
         auto call_ptr = std::make_shared<Call>(this->generate_unique_id());
         call_ptr->class_name = call_stock_data.class_name;
@@ -163,7 +158,6 @@ bool megamol::gui::configurator::Graph::AddCall(const CallStockVectorType& stock
                 call_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -254,6 +248,7 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , selected_module_uid(GUI_INVALID_ID)
     , selected_call_uid(GUI_INVALID_ID)
     , selected_call_slot_uid(GUI_INVALID_ID)
+    , hovered_call_slot_uid(GUI_INVALID_ID)
     , layout_current_graph(false)
     , split_width(-1.0f) // !
     , mouse_wheel(0.0f)
@@ -516,11 +511,11 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
         }
     }
     this->selected_call_slot_uid = GUI_INVALID_ID;
-
+    this->hovered_call_slot_uid = GUI_INVALID_ID;
     this->selected_module_uid = GUI_INVALID_ID;
     for (auto& mod : inout_graph.GetGraphModules()) {
         auto id = mod->GUI_Present(this->canvas_offset, this->canvas_zooming, inout_hotkeys,
-            this->selected_call_slot_uid, selected_call_slot_ptr);
+            this->selected_call_slot_uid, this->hovered_call_slot_uid, selected_call_slot_ptr);
         if (id != GUI_INVALID_ID) {
             this->selected_module_uid = id;
         }
@@ -740,7 +735,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas_dragged_call(
 
     const float CURVE_THICKNESS = 3.0f;
 
-    if (this->selected_call_slot_uid != GUI_INVALID_ID) {
+    if ((this->selected_call_slot_uid != GUI_INVALID_ID) && ImGui::IsMouseDown(0)) {
         ImVec2 current_pos = ImGui::GetMousePos();
         bool mouse_inside_canvas = false;
 
@@ -750,7 +745,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas_dragged_call(
             (current_pos.y <= (this->canvas_position.y + this->canvas_size.y))) {
             mouse_inside_canvas = true;
         }
-        if (ImGui::IsMouseDown(0) && mouse_inside_canvas) {
+        if (mouse_inside_canvas) {
             CallSlotPtrType selected_call_slot_ptr;
             for (auto& mods : inout_graph.GetGraphModules()) {
                 CallSlotPtrType call_slot_ptr = mods->GetCallSlot(this->selected_call_slot_uid);
@@ -758,6 +753,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas_dragged_call(
                     selected_call_slot_ptr = call_slot_ptr;
                 }
             }
+
             if (selected_call_slot_ptr != nullptr) {
                 ImVec2 p1 = selected_call_slot_ptr->GUI_GetPosition();
                 ImVec2 p2 = ImGui::GetMousePos();

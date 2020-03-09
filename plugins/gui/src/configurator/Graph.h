@@ -38,8 +38,7 @@ public:
     bool AddModule(const ModuleStockVectorType& stock_modules, const std::string& module_class_name);
     bool DeleteModule(int module_uid);
 
-    bool AddCall(const CallStockVectorType& stock_calls, const std::string& call_class_name,
-        CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
+    bool AddCall(const CallStockVectorType& stock_calls, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
     bool DeleteDisconnectedCalls(void);
     bool DeleteCall(int call_uid);
 
@@ -57,11 +56,14 @@ public:
     int generate_unique_id(void) { return (++this->generated_uid); }
 
     // GUI Presentation -------------------------------------------------------
+
+    // Returns uid if graph is the currently active/drawn one.
     int GUI_Present(
         float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys, bool& out_delete_graph) {
         return this->present.Present(*this, in_child_width, in_graph_font, inout_hotkeys, out_delete_graph);
     }
     inline int GUI_GetSelectedCallSlot(void) const { return this->present.GetSelectedCallSlot(); }
+    inline int GUI_GetHoveredCallSlot(void) const { return this->present.GetHoveredCallSlot(); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -90,6 +92,7 @@ private:
             bool& out_delete_graph);
 
         int GetSelectedCallSlot(void) const { return this->selected_call_slot_uid; }
+        int GetHoveredCallSlot(void) const { return this->hovered_call_slot_uid; }
 
     private:
         ImFont* font;
@@ -109,6 +112,7 @@ private:
         int selected_module_uid;
         int selected_call_uid;
         int selected_call_slot_uid;
+        int hovered_call_slot_uid;
 
         bool layout_current_graph;
         float split_width;
