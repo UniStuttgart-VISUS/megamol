@@ -63,7 +63,7 @@ void GUIUtils::HoverToolTip(const std::string& text, ImGuiID id, float time_star
         if (show_tooltip) {
             ImGui::BeginTooltip();
             ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-            ImGui::TextUnformatted(text.c_str());
+            ImGui::Text(text.c_str());
             ImGui::PopTextWrapPos();
             ImGui::EndTooltip();
         }
@@ -129,14 +129,13 @@ bool megamol::gui::GUIUtils::RenamePopUp(const std::string& label, bool open_pop
 float GUIUtils::TextWidgetWidth(const std::string& text) const {
     assert(ImGui::GetCurrentContext() != nullptr);
 
-    ImGuiStyle& style = ImGui::GetStyle();
     ImVec2 pos = ImGui::GetCursorPos();
     ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
     ImGui::Text(text.c_str());
     ImGui::PopStyleVar();
     ImGui::SetCursorPos(pos);
 
-    return (ImGui::GetItemRectSize().x + (2.0f * style.ItemInnerSpacing.x));
+    return ImGui::GetItemRectSize().x;
 }
 
 

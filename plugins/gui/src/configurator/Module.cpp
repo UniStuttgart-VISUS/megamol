@@ -184,7 +184,7 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
         }
 
         /// XXX Trigger only when necessary
-        this->UpdateSize(inout_mod);
+        this->UpdateSize(inout_mod, in_canvas_zooming);
 
         ImVec2 module_size = this->size * in_canvas_zooming;
         ImVec2 module_rect_min = in_canvas_offset + this->position * in_canvas_zooming;
@@ -295,41 +295,42 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
 }
 
 
-void megamol::gui::configurator::Module::Presentation::UpdateSize(megamol::gui::configurator::Module& mod) {
+void megamol::gui::configurator::Module::Presentation::UpdateSize(
+    megamol::gui::configurator::Module& mod, float canvas_zooming) {
 
     float max_label_length = 0.0f;
     if (this->label_visible) {
-        this->class_label = "Class: " + mod.class_name;
+        this->class_label = " Class: " + mod.class_name + " ";
         float class_name_length = this->utils.TextWidgetWidth(this->class_label);
-        this->name_label = "Name: " + mod.name;
+        this->name_label = " Name: " + mod.name + " ";
         float name_length = this->utils.TextWidgetWidth(mod.present.name_label);
         max_label_length = std::max(class_name_length, name_length);
     }
+    max_label_length /= canvas_zooming;
 
+    float radius = 0.0f;
     float max_slot_name_length = 0.0f;
-    float slot_radius = 0.0f;
     for (auto& call_slot_type_list : mod.GetCallSlots()) {
         for (auto& call_slot : call_slot_type_list.second) {
-            slot_radius = std::max(slot_radius, call_slot->GUI_GetSlotRadius());
+            radius = std::max(radius, call_slot->GUI_GetSlotRadius());
             if (call_slot->GUI_GetLabelVisibility()) {
                 max_slot_name_length = std::max(this->utils.TextWidgetWidth(call_slot->name), max_slot_name_length);
             }
         }
     }
     if (max_slot_name_length != 0.0f) {
-        max_slot_name_length = (2.0f * max_slot_name_length) + (2.0f * slot_radius);
+        max_slot_name_length = (2.0f * max_slot_name_length / canvas_zooming) + (4.0f * radius);
     }
 
-    float module_width = (max_label_length + max_slot_name_length) + (4.0f * slot_radius);
+    float module_width = (max_label_length + max_slot_name_length) + (2.0f * radius);
 
     auto max_slot_count = std::max(mod.GetCallSlots(CallSlot::CallSlotType::CALLEE).size(),
         mod.GetCallSlots(CallSlot::CallSlotType::CALLER).size());
-    float module_slot_height =
-        (static_cast<float>(max_slot_count) * (slot_radius * 2.0f) * 1.5f) + ((slot_radius * 2.0f) * 0.5f);
+    float module_slot_height = (static_cast<float>(max_slot_count) * (radius * 2.0f) * 1.5f) + ((radius * 2.0f) * 0.5f);
 
     float module_height = std::max(
-        module_slot_height, ImGui::GetTextLineHeightWithSpacing() * ((mod.is_view_instance) ? (4.0f) : (3.0f)));
+        module_slot_height, (ImGui::GetTextLineHeightWithSpacing() * ((mod.is_view_instance) ? (4.0f) : (3.0f))));
 
     // Clamp to minimum size
-    this->size = ImVec2(std::max(module_width, 150.0f), std::max(module_height, 50.0f));
+    this->size = ImVec2(std::max(module_width, 150.0f), std::max(module_height, 100.0f));
 }

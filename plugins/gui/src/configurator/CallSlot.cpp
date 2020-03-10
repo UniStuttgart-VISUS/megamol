@@ -298,11 +298,10 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::co
         }
 
         ImVec2 slot_position = this->position;
-        float radius = this->slot_radius * in_canvas_zooming * in_canvas_zooming;
-        std::string slot_name = inout_call_slot.name;
+        float radius = this->slot_radius * in_canvas_zooming;
 
         ImGui::SetCursorScreenPos(slot_position - ImVec2(radius, radius));
-        std::string label = "slot_" + slot_name + std::to_string(inout_call_slot.uid);
+        std::string label = "slot_" + inout_call_slot.name + std::to_string(inout_call_slot.uid);
         ImGui::InvisibleButton(label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
 
         std::string tooltip = inout_call_slot.description;
@@ -343,11 +342,11 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::co
             ImVec2 text_pos;
             text_pos.y = slot_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
             if (inout_call_slot.type == CallSlot::CallSlotType::CALLER) {
-                text_pos.x = slot_position.x - this->utils.TextWidgetWidth(slot_name) - (2.0f * radius);
+                text_pos.x = slot_position.x - this->utils.TextWidgetWidth(inout_call_slot.name) - (2.0f * radius);
             } else if (inout_call_slot.type == CallSlot::CallSlotType::CALLEE) {
                 text_pos.x = slot_position.x + (2.0f * radius);
             }
-            draw_list->AddText(text_pos, slot_highlight_color, slot_name.c_str());
+            draw_list->AddText(text_pos, slot_highlight_color, inout_call_slot.name.c_str());
         }
 
         ImGui::PopID();
