@@ -184,9 +184,9 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
         }
 
         /// XXX Trigger only when necessary
-        this->UpdateSize(inout_mod, in_canvas_zooming);
+        this->UpdateSize(inout_mod);
 
-        ImVec2 module_size = this->size;
+        ImVec2 module_size = this->size * in_canvas_zooming;
         ImVec2 module_rect_min = in_canvas_offset + this->position * in_canvas_zooming;
         ImVec2 module_rect_max = module_rect_min + module_size;
         ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
@@ -201,13 +201,13 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
 
             float line_offset = 0.0f;
             if (inout_mod.is_view_instance) {
-                line_offset = -0.5f * ImGui::GetItemsLineHeightWithSpacing();
+                line_offset = -0.5f * ImGui::GetTextLineHeightWithSpacing();
             }
 
             label = this->class_label;
             float name_width = this->utils.TextWidgetWidth(label);
             ImGui::SetCursorScreenPos(
-                module_center + ImVec2(-(name_width / 2.0f), line_offset - ImGui::GetItemsLineHeightWithSpacing()));
+                module_center + ImVec2(-(name_width / 2.0f), line_offset - ImGui::GetTextLineHeightWithSpacing()));
             ImGui::Text(label.c_str());
 
             label = this->name_label;
@@ -219,7 +219,7 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
                 label = "[Main View]";
                 name_width = this->utils.TextWidgetWidth(label);
                 ImGui::SetCursorScreenPos(
-                    module_center + ImVec2(-(name_width / 2.0f), line_offset + ImGui::GetItemsLineHeightWithSpacing()));
+                    module_center + ImVec2(-(name_width / 2.0f), line_offset + ImGui::GetTextLineHeightWithSpacing()));
                 ImGui::Text(label.c_str());
             }
             ImGui::EndGroup();
@@ -295,8 +295,7 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
 }
 
 
-void megamol::gui::configurator::Module::Presentation::UpdateSize(
-    megamol::gui::configurator::Module& mod, float canvas_zooming) {
+void megamol::gui::configurator::Module::Presentation::UpdateSize(megamol::gui::configurator::Module& mod) {
 
     float max_label_length = 0.0f;
     if (this->label_visible) {
@@ -329,8 +328,8 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
         (static_cast<float>(max_slot_count) * (slot_radius * 2.0f) * 1.5f) + ((slot_radius * 2.0f) * 0.5f);
 
     float module_height = std::max(
-        module_slot_height, ImGui::GetItemsLineHeightWithSpacing() * ((mod.is_view_instance) ? (4.0f) : (3.0f)));
+        module_slot_height, ImGui::GetTextLineHeightWithSpacing() * ((mod.is_view_instance) ? (4.0f) : (3.0f)));
 
     // Clamp to minimum size
-    this->size = ImVec2(std::max(module_width, 150.0f), std::max(module_height, 50.0f)) * canvas_zooming;
+    this->size = ImVec2(std::max(module_width, 150.0f), std::max(module_height, 50.0f));
 }

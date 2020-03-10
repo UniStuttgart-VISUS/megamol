@@ -458,8 +458,6 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
-    // Font scaling is applied next frame after ImGui::Begin()
-    // Font for graph should not be the currently used font of the gui.
     if (this->font == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Found no font for configurator. Provide font via GuiView::SetGraphFont(). [%s, %s, line %d]\n", __FILE__,
@@ -467,7 +465,6 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
         return;
     }
     ImGui::PushFont(this->font);
-    ImGui::GetFont()->Scale = this->getFontScaling(this->canvas_zooming);
 
     const ImU32 COLOR_CANVAS_BACKGROUND = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
 
@@ -483,7 +480,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
-    draw_list->ChannelsSplit(2); // Used by subsequent graph elements!
+    draw_list->ChannelsSplit(2); // 2 channels are used by subsequent graph elements!
 
     // Propagete only left clicks within the canvas
     bool left_click = io.MouseClicked[0];
@@ -571,6 +568,10 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
     io.MouseClicked[0] = left_click;
     ImGui::EndChild();
     ImGui::PopStyleColor();
+
+    // Font scaling is applied next frame after ImGui::Begin()
+    // Font for graph should not be the currently used font of the gui.
+    ImGui::GetFont()->Scale = this->getFontScaling(this->canvas_zooming);
 
     // Reset font
     ImGui::PopFont();

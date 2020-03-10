@@ -1,8 +1,7 @@
-# MegaMol Plugin: "GUI"
+# MegaMol GUI Plugin
 
 This is the plugin providing the GUI for MegaMol.
 
---- 
 
 ## Provided Modules
 
@@ -40,13 +39,11 @@ The `OverlayRenderer` is a rendering module which implements a `megamol::core::v
 * `font::size` (`20.0`): The font size.
 * `font::color` (`0.5f, 0.5f, 0.5f`): The font color.
 
---- 
 
 ## Plugin Class Dependencies
 
 ![gui plugin class dependencies](class_dependencies.png)
 
---- 
 
 ## Configurator [PROTOTYPE]
 

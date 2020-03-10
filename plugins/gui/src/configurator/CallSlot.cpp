@@ -298,7 +298,7 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::co
         }
 
         ImVec2 slot_position = this->position;
-        float radius = this->slot_radius * in_canvas_zooming;
+        float radius = this->slot_radius * in_canvas_zooming * in_canvas_zooming;
         std::string slot_name = inout_call_slot.name;
 
         ImGui::SetCursorScreenPos(slot_position - ImVec2(radius, radius));
@@ -341,7 +341,7 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::co
         // Draw text
         if (this->label_visible) {
             ImVec2 text_pos;
-            text_pos.y = slot_position.y - ImGui::GetFontSize() / 2.0f;
+            text_pos.y = slot_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
             if (inout_call_slot.type == CallSlot::CallSlotType::CALLER) {
                 text_pos.x = slot_position.x - this->utils.TextWidgetWidth(slot_name) - (2.0f * radius);
             } else if (inout_call_slot.type == CallSlot::CallSlotType::CALLEE) {
@@ -377,7 +377,7 @@ void megamol::gui::configurator::CallSlot::Presentation::UpdatePosition(
             }
         }
         auto pos = canvas_offset + call_slot.GetParentModule()->GUI_GetPosition() * canvas_zooming;
-        auto size = call_slot.GetParentModule()->GUI_GetSize();
+        auto size = call_slot.GetParentModule()->GUI_GetSize() * canvas_zooming;
         this->position = ImVec2(pos.x + ((call_slot.type == CallSlot::CallSlotType::CALLER) ? (size.x) : (0.0f)),
             pos.y + size.y * ((float)slot_idx + 1) / ((float)slot_count + 1));
     }

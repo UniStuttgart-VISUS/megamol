@@ -110,15 +110,15 @@ private:
         ImVec2 GetPosition(void) { return this->position; }
         ImVec2 GetSize(void) { return this->size; }
 
-        void UpdateSize(Module& mod, float canvas_zooming);
+        void UpdateSize(Module& mod);
 
         Module::Presentations presentations;
         bool label_visible;
 
     private:
-        // Relative position without canvas offset and zooming
+        // Relative position without considering canvas offset and zooming
         ImVec2 position;
-        // Absolute size including canvas offset and zooming
+        // Relative size without considering zooming
         ImVec2 size;
         std::string class_label;
         std::string name_label;
