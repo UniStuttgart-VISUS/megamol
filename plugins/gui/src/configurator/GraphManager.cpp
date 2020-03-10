@@ -703,7 +703,7 @@ bool megamol::gui::configurator::GraphManager::LoadProjectFile(
                     module_name_idx = param_slot_full_name.find(module_full_name);
                     if (module_name_idx != std::string::npos) {
                         std::string param_full_name =
-                            param_slot_full_name.substr(module_name_idx + mod->name.size() + 2);
+                            param_slot_full_name.substr(module_name_idx + module_full_name.size());
                         for (auto& param : mod->parameters) {
                             if (param.full_name == param_full_name) {
                                 param.SetValueString(value_str);
@@ -1074,7 +1074,8 @@ bool megamol::gui::configurator::GraphManager::get_call_stock_data(
 
 // GRAPH MANAGET PRESENTATION ####################################################
 
-megamol::gui::configurator::GraphManager::Presentation::Presentation(void) : delete_graph_uid(GUI_INVALID_ID) {}
+megamol::gui::configurator::GraphManager::Presentation::Presentation(void)
+    : delete_graph_uid(GUI_INVALID_ID), utils() {}
 
 
 megamol::gui::configurator::GraphManager::Presentation::~Presentation(void) {}
@@ -1169,8 +1170,10 @@ bool megamol::gui::configurator::GraphManager::Presentation::close_unsaved_popup
 
     if (open_popup) {
         ImGui::OpenPopup(save_project_label.c_str());
+        ImGui::SetNextWindowSize(ImVec2(this->utils.TextWidgetWidth(save_project_label), 0.0f));
     }
-    if (ImGui::BeginPopupModal(save_project_label.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (ImGui::BeginPopupModal(
+            save_project_label.c_str(), nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
         retval = false;
 
         ImGui::Text("Discard changes?");

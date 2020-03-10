@@ -89,11 +89,13 @@ public:
 
     // Misc widgets -------------------------------------------------------
 
+    enum FixedSplitterSide { LEFT, RIGHT };
+
     /**
      * Draw draggable splitter between two child windows, relative to parent window size.
      * https://github.com/ocornut/imgui/issues/319
      */
-    bool VerticalSplitter(float* size_left, float* size_right);
+    bool VerticalSplitter(FixedSplitterSide fixed_side, float& size_left, float& size_right);
 
 
     // UTF8 String En-/Decoding -----------------------------------------------
@@ -152,6 +154,9 @@ private:
 
     /** Current rename string. */
     std::string rename_string;
+
+    /** Splitter width for restoring after collapsing.  */
+    float splitter_last_width;
 
 #ifdef GUI_USE_FILESYSTEM
 

@@ -67,7 +67,7 @@ private:
     int graph_uid;
     int selected_list_module_uid;
     ImFont* graph_font;
-    float split_width;
+    float child_split_width;
 
     unsigned int project_uid;
 

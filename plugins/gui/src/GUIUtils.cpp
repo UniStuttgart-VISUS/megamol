@@ -23,6 +23,7 @@ GUIUtils::GUIUtils(void)
     , search_focus(false)
     , search_string()
     , rename_string()
+    , splitter_last_width(0.0f)
 #ifdef GUI_USE_FILESYSTEM
     , file_name_str()
     , file_path_str()
@@ -128,13 +129,14 @@ bool megamol::gui::GUIUtils::RenamePopUp(const std::string& label, bool open_pop
 float GUIUtils::TextWidgetWidth(const std::string& text) const {
     assert(ImGui::GetCurrentContext() != nullptr);
 
+    ImGuiStyle& style = ImGui::GetStyle();
     ImVec2 pos = ImGui::GetCursorPos();
     ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
     ImGui::Text(text.c_str());
     ImGui::PopStyleVar();
     ImGui::SetCursorPos(pos);
 
-    return ImGui::GetItemRectSize().x;
+    return (ImGui::GetItemRectSize().x + (2.0f * style.ItemInnerSpacing.x));
 }
 
 
@@ -198,8 +200,9 @@ void megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::stri
 }
 
 
-bool megamol::gui::GUIUtils::VerticalSplitter(float* size_left, float* size_right) {
+bool megamol::gui::GUIUtils::VerticalSplitter(FixedSplitterSide fixed_side, float& size_left, float& size_right) {
     assert(ImGui::GetCurrentContext() != nullptr);
+    ImGuiIO& io = ImGui::GetIO();
 
     const float thickness = 12.0f;
 
@@ -207,28 +210,44 @@ bool megamol::gui::GUIUtils::VerticalSplitter(float* size_left, float* size_righ
     float min_size = 1.0f; // >=1.0!
     float splitter_long_axis_size = ImGui::GetContentRegionAvail().y;
 
-    float width_avail = ImGui::GetWindowSize().x - (3.0f * thickness);
+    float width_avail = ImGui::GetWindowSize().x - (2.0f * thickness);
 
-    if (width_avail < thickness) return false;
-    /// Uncomment to limit slider position to current width_avail
-    //(*size_left) = std::min((*size_left), width_avail);
-    (*size_right) = width_avail - (*size_left);
+    size_left = ((fixed_side == GUIUtils::FixedSplitterSide::LEFT) ? size_left : (width_avail - size_right));
+    size_right = ((fixed_side == GUIUtils::FixedSplitterSide::LEFT) ? (width_avail - size_left) : size_right);
 
-    ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    size_left = std::max(size_left, min_size);
+    size_right = std::max(size_right, min_size);
+
+    ImGuiWindow* window = ImGui::GetCurrentContext()->CurrentWindow;
     ImGuiID id = window->GetID("##Splitter");
     ImRect bb;
-    bb.Min = window->DC.CursorPos +
-             (split_vertically ? ImVec2((*size_left) + 1.0f, 0.0f) : ImVec2(0.0f, (*size_left) + 1.0f));
+    if (fixed_side == GUIUtils::FixedSplitterSide::LEFT) {
+        bb.Min =
+            window->DC.CursorPos + (split_vertically ? ImVec2(size_left + 1.0f, 0.0f) : ImVec2(0.0f, size_left + 1.0f));
+    } else if (fixed_side == GUIUtils::FixedSplitterSide::RIGHT) {
+        bb.Min = window->DC.CursorPos + (split_vertically ? ImVec2((width_avail - size_right) + 1.0f, 0.0f)
+                                                          : ImVec2(0.0f, (width_avail - size_right) + 1.0f));
+    }
     bb.Max = bb.Min + ImGui::CalcItemSize(split_vertically ? ImVec2(thickness - 4.0f, splitter_long_axis_size)
                                                            : ImVec2(splitter_long_axis_size, thickness - 4.0f),
                           0.0f, 0.0f);
 
     bool retval = ImGui::SplitterBehavior(
-        bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size_left, size_right, min_size, min_size, 0.0f);
+        bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, &size_left, &size_right, min_size, min_size, 0.0f, 0.0f);
 
-    if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
-        /// Do something when splitter is double clicked ...
+    /// XXX Left mouse button (= 0) is not recognized poperly (?) ...
+    if (ImGui::IsMouseDoubleClicked(1) && ImGui::IsItemHovered()) {
+        float consider_width = ((fixed_side == GUIUtils::FixedSplitterSide::LEFT) ? size_left : size_right);
+        if (consider_width <= min_size) {
+            size_left = ((fixed_side == GUIUtils::FixedSplitterSide::LEFT) ? (this->splitter_last_width)
+                                                                           : (width_avail - this->splitter_last_width));
+            size_right = ((fixed_side == GUIUtils::FixedSplitterSide::LEFT) ? (width_avail - this->splitter_last_width)
+                                                                            : (this->splitter_last_width));
+        } else {
+            size_left = ((fixed_side == GUIUtils::FixedSplitterSide::LEFT) ? (min_size) : (width_avail - min_size));
+            size_right = ((fixed_side == GUIUtils::FixedSplitterSide::LEFT) ? (width_avail - min_size) : (min_size));
+            this->splitter_last_width = consider_width;
+        }
     }
 
     return retval;
@@ -266,6 +285,7 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
         bool open = true;
         if (ImGui::BeginPopupModal(popup_name.c_str(), &open, ImGuiWindowFlags_None)) {
 
+            bool apply = false;
             const auto error_color = ImVec4(0.9f, 0.0f, 0.0f, 1.0f);
             const auto warning_color = ImVec4(0.75f, 0.75f, 0.f, 1.0f);
 
@@ -355,13 +375,17 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
                     if (path_pair.second) {
                         ImGui::PopStyleColor();
                     }
+                    if (flag == GUIUtils::FileBrowserFlag::LOAD) {
+                        if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
+                            apply = true;
+                        }
+                    }
                 }
             }
             ImGui::EndChild();
 
             // Widget group -------------------------------------------------------
             ImGui::BeginGroup();
-            bool apply = false;
 
             // File name ------------------------
             if (flag == GUIUtils::FileBrowserFlag::LOAD) {

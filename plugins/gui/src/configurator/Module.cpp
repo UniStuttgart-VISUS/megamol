@@ -246,7 +246,7 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
             }
             this->utils.HoverToolTip(hover_text.c_str(), ImGui::GetID(label.c_str()), 0.5f, 5.0f);
             // Context menu
-            if (ImGui::BeginPopupContextItem()) {
+            if (ImGui::BeginPopupContextItem("invisible_button_context")) {
                 if (ImGui::MenuItem(
                         "Delete", std::get<0>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
                     std::get<1>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;

@@ -115,7 +115,7 @@ private:
         int hovered_call_slot_uid;
 
         bool layout_current_graph;
-        float split_width;
+        float child_split_width;
         float mouse_wheel;
 
         bool params_visible;

@@ -101,7 +101,7 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 }
 
 
-bool GUIWindows::Draw(vislib::math::Rectangle<int> viewport, double instanceTime) {
+bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceTime) {
 
     ImGui::SetCurrentContext(this->context);
     if (this->context == nullptr) {
@@ -122,7 +122,7 @@ bool GUIWindows::Draw(vislib::math::Rectangle<int> viewport, double instanceTime
     auto viewportWidth = viewport.Width();
     auto viewportHeight = viewport.Height();
 
-    // Set IO stuff
+    // Set IO stuff for next frame --------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
@@ -139,7 +139,7 @@ bool GUIWindows::Draw(vislib::math::Rectangle<int> viewport, double instanceTime
                                          ? (instanceTime)
                                          : (this->state.last_instance_time + io.DeltaTime);
 
-    // Changes that need to be applied before next ImGui::Begin: ---------------
+    // Changes that need to be applied before next frame ----------------------
     // Loading new font (set in FONT window)
     if (!this->state.font_file.empty()) {
         ImFontConfig config;
@@ -169,10 +169,32 @@ bool GUIWindows::Draw(vislib::math::Rectangle<int> viewport, double instanceTime
         this->state.win_delete.clear();
     }
 
-    // Start new frame --------------------------------------------------------
+    // Start new ImGui frame --------------------------------------------------
     ImGui_ImplOpenGL3_NewFrame();
     ImGui::NewFrame();
 
+    return true;
+}
+
+
+bool GUIWindows::PostDraw(void) {
+
+    if (ImGui::GetCurrentContext() != this->context) {
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "Unknown ImGui context ... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    ImGui::SetCurrentContext(this->context);
+    if (this->context == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    ImGuiIO& io = ImGui::GetIO();
+    ImVec2 viewport = ImVec2(io.DisplaySize.x, io.DisplaySize.y);
+
+    // Draw GUI Windows -------------------------------------------------------
     const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
         // Loading font (from FONT window configuration - even if FONT window is not shown)
         if (wc.buf_font_reset) {
@@ -206,7 +228,7 @@ bool GUIWindows::Draw(vislib::math::Rectangle<int> viewport, double instanceTime
 
             // Always set configurator window size to current viewport
             if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
-                wc.win_size = ImVec2(viewportWidth, viewportHeight);
+                wc.win_size = viewport;
                 wc.win_reset = true;
                 // Change visibility of main window if configurator window is closed.
                 if (!wc.win_show) {
@@ -244,8 +266,8 @@ bool GUIWindows::Draw(vislib::math::Rectangle<int> viewport, double instanceTime
     };
     this->window_manager.EnumWindows(func);
 
-    // Render the frame -------------------------------------------------------
-    glViewport(0, 0, viewportWidth, viewportHeight);
+    // Render the current ImGui frame -----------------------------------------
+    glViewport(0, 0, static_cast<GLsizei>(viewport.x), static_cast<GLsizei>(viewport.y));
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

@@ -70,12 +70,18 @@ public:
     bool CreateContext_GL(megamol::core::CoreInstance* core_instance);
 
     /**
-     * Draws the GUI.
+     * Setup and enable ImGui context for subsequent use.
      *
      * @param viewport      The currently available viewport.
      * @param instanceTime  The current instance time.
      */
-    bool Draw(vislib::math::Rectangle<int> viewport, double instanceTime);
+    bool PreDraw(vislib::math::Rectangle<int> viewport, double instanceTime);
+
+
+    /**
+     * Actual Gui windows drawing and final rednering of pushed ImGui draw commands.
+     */
+    bool PostDraw(void);
 
     /**
      * Process key events.

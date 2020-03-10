@@ -29,7 +29,7 @@ megamol::gui::configurator::Configurator::Configurator()
     , graph_uid(GUI_INVALID_ID)
     , selected_list_module_uid(GUI_INVALID_ID)
     , graph_font(nullptr)
-    , split_width(250.0f)
+    , child_split_width(250.0f)
     , project_uid(0) {
 
     // Define HotKeys
@@ -116,9 +116,9 @@ bool megamol::gui::configurator::Configurator::Draw(
         this->draw_window_menu(core_instance);
 
         float child_width_auto = 0.0f;
-        this->utils.VerticalSplitter(&this->split_width, &child_width_auto);
+        this->utils.VerticalSplitter(GUIUtils::FixedSplitterSide::LEFT, this->child_split_width, child_width_auto);
 
-        this->draw_window_module_list(this->split_width);
+        this->draw_window_module_list(this->child_split_width);
 
         ImGui::SameLine();
 
@@ -171,14 +171,16 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 
         ImGui::SameLine();
         std::string info_text = "----- Additonal Options -----\n"
-                                "- Add module from stock list to graph\n"
-                                "     - [Double Click] with left mouse button\n"
-                                "     - [Richt Click] on selected module -> Context Menu: Add\n"
-                                "- Delete selected module/call from graph\n"
+                                "- Add Module from Stock List to Graph\n"
+                                "     - [Double Left Click]\n"
+                                "     - [Richt Click] on Selected Module -> Context Menu: Add\n"
+                                "- Delete Selected Module/Call from Graph\n"
                                 "     - Select item an press [Delete]\n"
-                                "     - [Richt Click] on selected item -> Context Menu: Delete\n"
-                                "- Rename graph or module\n"
-                                "     - [Richt Click] on graph tab or module -> Context Menu: Rename";
+                                "     - [Richt Click] on Selected Item -> Context Menu: Delete\n"
+                                "- Rename Graph or Module\n"
+                                "     - [Richt Click] on Graph tab or Module -> Context Menu: Rename"
+                                "- Expand/Collapse Splitter\n"
+                                "     - [Double Richt Click] on splitter";
         this->utils.HelpMarkerToolTip(info_text.c_str(), "[?]");
 
         // Info text ----------------------------------------------------------

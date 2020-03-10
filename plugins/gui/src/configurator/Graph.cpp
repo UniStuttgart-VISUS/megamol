@@ -250,7 +250,7 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , selected_call_slot_uid(GUI_INVALID_ID)
     , hovered_call_slot_uid(GUI_INVALID_ID)
     , layout_current_graph(false)
-    , split_width(-1.0f) // !
+    , child_split_width(300.0f)
     , mouse_wheel(0.0f)
     , params_visible(true)
     , params_readonly(false)
@@ -319,16 +319,14 @@ int megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::confi
             this->menu(inout_graph);
 
             if (this->selected_module_uid != GUI_INVALID_ID) {
-                // One time init depending on available window width
-                if (this->split_width < 0.0f) {
-                    this->split_width = ImGui::GetWindowWidth() * 0.65f;
-                }
-                float child_width_auto = 0.0f;
-                this->utils.VerticalSplitter(&this->split_width, &child_width_auto);
 
-                this->canvas(inout_graph, this->split_width, inout_hotkeys);
+                float child_width_auto = 0.0f;
+                this->utils.VerticalSplitter(
+                    GUIUtils::FixedSplitterSide::RIGHT, child_width_auto, this->child_split_width);
+
+                this->canvas(inout_graph, child_width_auto, inout_hotkeys);
                 ImGui::SameLine();
-                this->parameters(inout_graph, child_width_auto, inout_hotkeys);
+                this->parameters(inout_graph, this->child_split_width, inout_hotkeys);
             } else {
                 this->canvas(inout_graph, in_child_width, inout_hotkeys);
             }
