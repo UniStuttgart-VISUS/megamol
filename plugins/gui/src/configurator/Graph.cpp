@@ -39,6 +39,7 @@ bool megamol::gui::configurator::Graph::AddModule(
                 mod_ptr->name = mod.class_name + "_" + std::to_string(mod_ptr->uid);
                 mod_ptr->name_space = "";
                 mod_ptr->is_view_instance = false;
+                mod_ptr->GUI_SetLabelVisibility(this->present.GetModuleLabelVisibility());
 
                 for (auto& p : mod.parameters) {
                     Parameter param_slot(this->generate_unique_id(), p.type, p.storage, p.minval, p.maxval);
@@ -55,6 +56,7 @@ bool megamol::gui::configurator::Graph::AddModule(
                         call_slot.description = c.description;
                         call_slot.compatible_call_idxs = c.compatible_call_idxs;
                         call_slot.type = c.type;
+                        call_slot.GUI_SetLabelVisibility(this->present.GetCallSlotLabelVisibility());
 
                         mod_ptr->AddCallSlot(std::make_shared<CallSlot>(call_slot));
                     }
@@ -143,6 +145,7 @@ bool megamol::gui::configurator::Graph::AddCall(
         call_ptr->description = call_stock_data.description;
         call_ptr->plugin_name = call_stock_data.plugin_name;
         call_ptr->functions = call_stock_data.functions;
+        call_ptr->GUI_SetLabelVisibility(this->present.GetCallLabelVisibility());
 
         if (call_ptr->ConnectCallSlots(call_slot_1, call_slot_2) && call_slot_1->ConnectCall(call_ptr) &&
             call_slot_2->ConnectCall(call_ptr)) {
@@ -255,7 +258,7 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , params_visible(true)
     , params_readonly(false)
     , param_name_space()
-    , param_present(Parameter::Presentations::DEFAULT) {}
+    , param_present(Parameter::Presentations::SIMPLE) {}
 
 
 megamol::gui::configurator::Graph::Presentation::~Presentation(void) {}
@@ -464,7 +467,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
         return;
     }
     ImGui::PushFont(this->font);
-    ImGui::GetFont()->Scale = this->canvas_zooming;
+    ImGui::GetFont()->Scale = this->getFontScaling(this->canvas_zooming);
 
     const ImU32 COLOR_CANVAS_BACKGROUND = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
 
@@ -578,7 +581,7 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
 
     ImGui::BeginGroup();
 
-    float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 2.25f;
+    float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 3.5f;
     auto child_flags = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar;
 
     ImGui::BeginChild("parameter_search_child", ImVec2(in_child_width, param_child_height), false, child_flags);
@@ -596,6 +599,36 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
     this->utils.StringSearch("graph_parameter_search", help_text);
     auto search_string = this->utils.GetSearchString();
 
+    // Visibility
+    if (ImGui::Checkbox("Visibility", &this->params_visible)) {
+        for (auto& modptr : inout_graph.GetGraphModules()) {
+            for (auto& param : modptr->parameters) {
+                param.GUI_SetLabelVisibility(this->params_visible);
+            }
+        }
+    }
+    ImGui::SameLine();
+
+    // Read-only option
+    if (ImGui::Checkbox("Read-Only", &this->params_readonly)) {
+        for (auto& modptr : inout_graph.GetGraphModules()) {
+            for (auto& param : modptr->parameters) {
+                param.GUI_SetReadOnly(this->params_readonly);
+            }
+        }
+    }
+    ImGui::SameLine();
+
+    // Presentations
+    if (Parameter::GUI_PresentationButton(this->param_present, "Presentation")) {
+        for (auto& modptr : inout_graph.GetGraphModules()) {
+            for (auto& param : modptr->parameters) {
+                param.GUI_SetPresentation(this->param_present);
+            }
+        }
+    }
+    ImGui::Separator();
+
     ImGui::EndChild();
 
     // Get pointer to currently selected module
@@ -607,40 +640,13 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
     }
     if (modptr != nullptr) {
 
-        float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 2.25f;
+        float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 1.0f;
         ImGui::BeginChild("parameter_info_child", ImVec2(in_child_width, param_child_height), false, child_flags);
-
-        ImGui::Separator();
 
         ImGui::Text("Selected Module:");
         ImGui::SameLine();
         ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive), modptr->name.c_str());
 
-        ImGui::Text("Options:");
-        ImGui::SameLine();
-
-        // Visibility
-        if (ImGui::Checkbox("Visibility", &this->params_visible)) {
-            for (auto& param : modptr->parameters) {
-                param.GUI_SetLabelVisibility(this->params_visible);
-            }
-        }
-        ImGui::SameLine();
-
-        // Read-only option
-        if (ImGui::Checkbox("Read-Only", &this->params_readonly)) {
-            for (auto& param : modptr->parameters) {
-                param.GUI_SetReadOnly(this->params_readonly);
-            }
-        }
-        ImGui::SameLine();
-
-        // Presentations
-        if (Parameter::GUI_PresentationButton(this->param_present, "Presentation")) {
-            for (auto& param : modptr->parameters) {
-                param.GUI_SetPresentation(this->param_present);
-            }
-        }
         ImGui::EndChild();
 
         auto child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar;
@@ -686,7 +692,6 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
                 param.GUI_Present();
             }
         }
-
 
         ImGui::EndChild();
     }
@@ -865,3 +870,6 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
 
     return true;
 }
+
+
+float megamol::gui::configurator::Graph::Presentation::getFontScaling(float zooming) { return zooming; }

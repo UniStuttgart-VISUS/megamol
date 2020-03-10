@@ -662,7 +662,7 @@ bool GUIWindows::createContext(void) {
         if (configurator_font.empty()) {
             io.Fonts->AddFontDefault(&config);
         } else {
-            io.Fonts->AddFontFromFileTTF(configurator_font.c_str(), 18.0f, &config);
+            io.Fonts->AddFontFromFileTTF(configurator_font.c_str(), 15.0f, &config);
         }
     }
     // Use las tadded font for graph text in configurator

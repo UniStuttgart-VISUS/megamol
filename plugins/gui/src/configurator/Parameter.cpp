@@ -347,7 +347,7 @@ bool megamol::gui::configurator::Parameter::Presentation::PresentationButton(
             }
             if (presentation_str.empty()) break;
             auto presentation_i = static_cast<Parameter::Presentations>(i);
-            if (ImGui::MenuItem(presentation_str.c_str(), nullptr, false)) { //(presentation_i == inout_present))) {
+            if (ImGui::MenuItem(presentation_str.c_str(), nullptr, (presentation_i == inout_present))) {
                 inout_present = presentation_i;
                 retval = true;
             }

@@ -94,6 +94,10 @@ private:
         int GetSelectedCallSlot(void) const { return this->selected_call_slot_uid; }
         int GetHoveredCallSlot(void) const { return this->hovered_call_slot_uid; }
 
+        bool GetModuleLabelVisibility(void) const { return this->show_module_names; }
+        bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
+        bool GetCallLabelVisibility(void) const { return this->show_call_names; }
+
     private:
         ImFont* font;
         GUIUtils utils;
@@ -131,6 +135,8 @@ private:
         void canvas_dragged_call(Graph& inout_graph);
 
         bool layout_graph(Graph& inout_graph);
+
+        float getFontScaling(float zooming);
 
     } present;
 };

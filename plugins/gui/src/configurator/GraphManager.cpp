@@ -1117,8 +1117,9 @@ int megamol::gui::configurator::GraphManager::Presentation::Present(
         // Draw Graphs
         ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
         ImGui::BeginTabBar("Graphs", tab_bar_flags);
-        for (auto& graph : inout_graph_manager.GetGraphs()) {
 
+        for (auto& graph : inout_graph_manager.GetGraphs()) {
+            // Draw graph
             bool delete_graph = false;
             auto id = graph->GUI_Present(in_child_width, in_graph_font, inout_hotkeys, delete_graph);
             if (id != GUI_INVALID_ID) {
@@ -1154,6 +1155,7 @@ int megamol::gui::configurator::GraphManager::Presentation::Present(
                 }
             }
         }
+
         ImGui::EndTabBar();
 
         // Delete marked graph when tab closed and
@@ -1179,7 +1181,7 @@ int megamol::gui::configurator::GraphManager::Presentation::Present(
 bool megamol::gui::configurator::GraphManager::Presentation::close_unsaved_popup(bool open_popup) {
 
     bool retval = true;
-    std::string save_project_label = "Warning: Closing Unsaved Project";
+    std::string save_project_label = " Closing Unsaved Project ";
 
     if (open_popup) {
         ImGui::OpenPopup(save_project_label.c_str());
