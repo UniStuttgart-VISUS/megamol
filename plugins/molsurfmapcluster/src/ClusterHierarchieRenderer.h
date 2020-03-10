@@ -103,6 +103,8 @@ private:
      **********************************************************************/
     /**The Viewport*/
     vislib::math::Vector<float, 2> viewport;
+    vislib::math::Rectangle<int> windowMeasurements;
+    float zoomFactor;
 
     // Font rendering
     megamol::core::utility::SDFFont theFont;
@@ -166,7 +168,7 @@ private:
     double drawTree(HierarchicalClustering::CLUSTERNODE*, glm::mat4, double, double, double, double,
         std::vector<std::tuple<HierarchicalClustering::CLUSTERNODE*, ClusterRenderer::RGBCOLOR*>*>*);
     void renderPopup(glm::mat4);
-    double checkposition(HierarchicalClustering::CLUSTERNODE*, float, float, double, double, double, double);
+    double checkposition(HierarchicalClustering::CLUSTERNODE*, float, float, double, double, double, double, double = 5.0, double = 5.0);
 
 
     /**********************************************************************

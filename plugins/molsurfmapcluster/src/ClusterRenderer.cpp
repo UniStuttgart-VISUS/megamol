@@ -25,6 +25,9 @@
 #define BLACK 0, 0, 0
 #define PICSCALING 0.2
 
+#define VIEWPORT_WIDTH 2560
+#define VIEWPORT_HEIGHT 1440
+
 
 using namespace megamol;
 using namespace megamol::core;
@@ -201,11 +204,11 @@ bool ClusterRenderer::GetExtents(view::CallRender2D& call) {
     core::view::CallRender2D* cr = dynamic_cast<core::view::CallRender2D*>(&call);
     if (cr == nullptr) return false;
 
-    cr->SetBoundingBox(cr->GetViewport());
-
     vislib::math::Vector<float, 2> currentViewport;
-    currentViewport.SetX(static_cast<float>(cr->GetViewport().GetSize().GetWidth()));
-    currentViewport.SetY(static_cast<float>(cr->GetViewport().GetSize().GetHeight()));
+    currentViewport.SetX(static_cast<float>(VIEWPORT_WIDTH));
+    currentViewport.SetY(static_cast<float>(VIEWPORT_HEIGHT));
+
+    cr->SetBoundingBox(0, 0, currentViewport.GetX(), currentViewport.GetY());
 
     // Check for new Data in clustering
     CallClustering* cc = this->clusterDataSlot.CallAs<CallClustering>();

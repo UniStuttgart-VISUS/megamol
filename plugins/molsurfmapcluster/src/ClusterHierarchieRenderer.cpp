@@ -16,6 +16,8 @@
 #include "ClusterHierarchieRenderer.h"
 #include "TextureLoader.h"
 
+#define VIEWPORT_WIDTH 2560
+#define VIEWPORT_HEIGHT 1440
 
 using namespace megamol;
 using namespace megamol::core;
@@ -188,11 +190,13 @@ bool ClusterHierarchieRenderer::GetExtents(view::CallRender2D& call) {
     core::view::CallRender2D* cr = dynamic_cast<core::view::CallRender2D*>(&call);
     if (cr == nullptr) return false;
 
-    cr->SetBoundingBox(cr->GetViewport());
+    this->windowMeasurements = cr->GetViewport();
 
     vislib::math::Vector<float, 2> currentViewport;
-    currentViewport.SetX(static_cast<float>(cr->GetViewport().GetSize().GetWidth()));
-    currentViewport.SetY(static_cast<float>(cr->GetViewport().GetSize().GetHeight()));
+    currentViewport.SetX(static_cast<float>(VIEWPORT_WIDTH));
+    currentViewport.SetY(static_cast<float>(VIEWPORT_HEIGHT));
+
+    cr->SetBoundingBox(0, 0, currentViewport.GetX(), currentViewport.GetY());
 
     // Check for new Data in clustering
     CallClustering* cc = this->clusterDataSlot.CallAs<CallClustering>();
@@ -304,6 +308,8 @@ bool ClusterHierarchieRenderer::Render(view::CallRender2D& call) {
     core::view::CallRender2D* cr = dynamic_cast<core::view::CallRender2D*>(&call);
     if (cr == nullptr) return false;
 
+    this->windowMeasurements = cr->GetViewport();
+
     // Update data Clustering
     CallClustering* ccc = this->clusterDataSlot.CallAs<CallClustering>();
     if (!ccc) return false;
@@ -318,6 +324,7 @@ bool ClusterHierarchieRenderer::Render(view::CallRender2D& call) {
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrixColumn);
     glm::mat4 proj = glm::make_mat4(projMatrixColumn);
     glm::mat4 mvp = proj * view;
+    this->zoomFactor = view[0][0];
 
     // Update data Position
     CallClusterPosition* ccp = this->positionDataSlot.CallAs<CallClusterPosition>();
@@ -392,7 +399,10 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
             double spacey = height / (this->root->level);
             double spacex = width / (this->clustering->getLeaves()->size() - 1);
 
-            if (checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex) == -1) {
+            double distanceX = 30.0 / (windowMeasurements.Width() * 2.0 * this->zoomFactor);
+            double distanceY = 30.0 / (windowMeasurements.Height() * 2.0 * this->zoomFactor);
+
+            if (checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex, distanceX, distanceY) == -1) {
                 this->position = this->popup;
             }
 
@@ -459,7 +469,10 @@ bool ClusterHierarchieRenderer::OnMouseMove(double x, double y) {
     double spacey = height / (this->root->level);
     double spacex = width / (this->clustering->getLeaves()->size() - 1);
 
-    checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex);
+    double distanceX = 30.0 / (windowMeasurements.Width() * 2.0 * this->zoomFactor);
+    double distanceY = 30.0 / (windowMeasurements.Height() * 2.0 * this->zoomFactor);
+
+    checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex, distanceX, distanceY);
 
     this->x = this->mouseX;
     this->y = this->mouseY;
@@ -477,8 +490,9 @@ void ClusterHierarchieRenderer::renderPopup(glm::mat4 mvp) {
 
         // Render Texture
         // Position -> Mouse Position? Cluster Center?
-        int width = 200;
-        int height = 100;
+        int width = static_cast<int>(1.0f / this->zoomFactor);
+        if (width % 2 == 1) width++;
+        int height = width / 2;
 
         // Berechne verschiebung
         int shiftx = 0;
@@ -512,7 +526,7 @@ void ClusterHierarchieRenderer::renderPopup(glm::mat4 mvp) {
 }
 
 double ClusterHierarchieRenderer::checkposition(HierarchicalClustering::CLUSTERNODE* node, float x, float y,
-    double minheight, double minwidth, double spacey, double spacex) {
+    double minheight, double minwidth, double spacey, double spacex, double distanceX, double distanceY) {
 
     double posx = 0;
     double posy = 0;
@@ -526,14 +540,14 @@ double ClusterHierarchieRenderer::checkposition(HierarchicalClustering::CLUSTERN
         this->counter++;
 
         // Check position => if found return -1;
-        if (x > posx - 5 && x < posx + 5 && y > posy - 5 && y < posy + 5) {
+        if (x > posx - distanceX && x < posx + distanceX && y > posy - distanceY && y < posy + distanceY) {
             this->popup = node;
             return -1;
         }
 
     } else {
-        posLeft = checkposition(node->left, x, y, minheight, minwidth, spacey, spacex);
-        posRight = checkposition(node->right, x, y, minheight, minwidth, spacey, spacex);
+        posLeft = checkposition(node->left, x, y, minheight, minwidth, spacey, spacex, distanceX, distanceY);
+        posRight = checkposition(node->right, x, y, minheight, minwidth, spacey, spacex, distanceX, distanceY);
 
         if (posLeft == -1 || posRight == -1) {
             return -1;
@@ -544,7 +558,7 @@ double ClusterHierarchieRenderer::checkposition(HierarchicalClustering::CLUSTERN
             posx = (posLeft + posRight) / 2;
             posy = minheight + (node->level * spacey);
 
-            if (x > posx - 5 && x < posx + 5 && y > posy - 5 && y < posy + 5) {
+            if (x > posx - distanceX && x < posx + distanceY && y > posy - distanceX && y < posy + distanceY) {
                 this->popup = node;
                 return -1;
             }
