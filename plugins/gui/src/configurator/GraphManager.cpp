@@ -745,16 +745,29 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(
         for (auto& graph : this->graphs) {
             if (graph->GetUID() == graph_id) {
 
-                // for (auto& mod_1 : graph->GetGraphModules()) {
-                //    for (auto& mod_2 : graph->GetGraphModules()) {
-                //        if ((mod_1 != mod_2) && (mod_1->FullName() == mod_2->FullName())) {
-                //            vislib::sys::Log::DefaultLog.WriteError(
-                //                "Found non unique module name: %s [%s, %s, line %d]\n", mod_1->FullName().c_str(),
-                //                __FILE__, __FUNCTION__, __LINE__);
-                //            return false;
-                //        }
-                //    }
-                //}
+                bool found_instance = false;
+                for (auto& mod_1 : graph->GetGraphModules()) {
+                    for (auto& mod_2 : graph->GetGraphModules()) {
+                        if ((mod_1 != mod_2) && (mod_1->FullName() == mod_2->FullName())) {
+                            vislib::sys::Log::DefaultLog.WriteWarn(
+                                "Save Project >>> Found non unique module name: %s [%s, %s, line %d]\n",
+                                mod_1->FullName().c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        }
+                    }
+                    if (mod_1->is_view_instance) {
+                        if (found_instance) {
+                            vislib::sys::Log::DefaultLog.WriteWarn(
+                                "Save Project >>> Found multiple view instances. [%s, %s, line %d]\n", __FILE__,
+                                __FUNCTION__, __LINE__);
+                        }
+                        found_instance = true;
+                    }
+                }
+                if (!found_instance) {
+                    vislib::sys::Log::DefaultLog.WriteWarn(
+                        "Save Project >>> Could not find required main view. [%s, %s, line %d]\n", __FILE__,
+                        __FUNCTION__, __LINE__);
+                }
 
                 for (auto& mod : graph->GetGraphModules()) {
                     std::string instance_name = graph->GetName();
