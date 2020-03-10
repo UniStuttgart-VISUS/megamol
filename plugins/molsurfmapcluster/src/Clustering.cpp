@@ -19,10 +19,10 @@
 #include <string>
 
 #include "mmcore/param//ButtonParam.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/param/BoolParam.h"
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/sys/Log.h"
@@ -44,7 +44,7 @@ Clustering::Clustering(void)
     , linkagemodeparam("Linkage Mode", "")
     , distancemultiplier("Distance Multiplier", "")
     , momentsmethode("Moments Methode", "")
-    , useActualValue("UseActualValue",""){
+    , useActualValue("UseActualValue", "") {
 
     // Callee-Slot
     this->outSlot.SetCallback(CallClustering::ClassName(), "GetData", &Clustering::getDataCallback);
@@ -142,7 +142,16 @@ void Clustering::clusterData(image_calls::Image2DCall& cpp) {
     // Clustering
     vislib::sys::Log::DefaultLog.WriteMsg(
         vislib::sys::Log::LEVEL_INFO, "Clustering %I64u Pictures", this->picturecount);
-    this->clustering = new HierarchicalClustering(this->picdata, this->picturecount, this->useActualValue.Param<core::param::BoolParam>()->Value());
+    int mode = this->selectionmode.Param<core::param::EnumParam>()->Value();
+    int bla = mode > 4 ? 1 : 2;
+    mode = mode > 4 ? mode - 4 : mode;
+
+    this->clustering = new HierarchicalClustering(this->picdata, this->picturecount,
+        this->useActualValue.Param<core::param::BoolParam>()->Value(),
+        mode,
+        bla,
+        this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
+        this->momentsmethode.Param<core::param::EnumParam>()->Value());
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Clustering finished", this->picturecount);
 }
 
@@ -156,8 +165,12 @@ void Clustering::clusterData(CallClusteringLoader* ccl) {
     // Clustering
     vislib::sys::Log::DefaultLog.WriteMsg(
         vislib::sys::Log::LEVEL_INFO, "Clustering %I64u Pictures", this->picturecount);
-    this->clustering = new HierarchicalClustering(
-        ccl->getLeaves(), ccl->Count(), this->useActualValue.Param<core::param::BoolParam>()->Value());
+    this->clustering = new HierarchicalClustering(ccl->getLeaves(), ccl->Count(),
+        this->useActualValue.Param<core::param::BoolParam>()->Value(),
+        this->momentsmethode.Param<core::param::EnumParam>()->Value(),
+        this->selectionmode.Param<core::param::EnumParam>()->Value(),
+        this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
+        this->momentsmethode.Param<core::param::EnumParam>()->Value());
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Clustering finished", this->picturecount);
 }
 
@@ -186,11 +199,13 @@ bool Clustering::getDataCallback(core::Call& caller) {
     CallClusteringLoader* cclIn = this->inSlotCLUSTERINGLoader.CallAs<CallClusteringLoader>();
     bool clusterloader = (cclIn == nullptr);
 
+    bool freshlyClustered = false;
+
     // Cluster Data
     if (this->datatocluster) {
         // reset new data flag
         this->datatocluster = false;
-         
+
         if (imageloader && clusterloader) {
             return false;
         } else {
@@ -200,11 +215,13 @@ bool Clustering::getDataCallback(core::Call& caller) {
                 if (!(*imin)(image_calls::Image2DCall::CallForWaitForData)) return false;
                 auto ptr = imin->GetImagePtr();
                 this->clusterData(*imin);
+                freshlyClustered = true;
             }
 
             if (!clusterloader) {
                 if (!(*cclIn)(CallClusteringLoader::CallForGetData)) return false;
                 this->clusterData(cclIn);
+                freshlyClustered = true;
             }
         }
     }
@@ -283,7 +300,7 @@ bool Clustering::getDataCallback(core::Call& caller) {
         }
 
         // Recalculate clusterin
-        clustering->clusterthedata();
+        if (!freshlyClustered) clustering->clusterthedata();
     }
 
     if (this->linkagemodechanged) {
@@ -309,7 +326,7 @@ bool Clustering::getDataCallback(core::Call& caller) {
         }
 
         // Recalculate clusterin
-        clustering->clusterthedata();
+        if (!freshlyClustered) clustering->clusterthedata();
     }
 
     if (this->distancemultiplierchanged) {
@@ -333,7 +350,7 @@ bool Clustering::getDataCallback(core::Call& caller) {
         }
 
         // Reanalyse Pictures
-        clustering->reanalyse(this->useActualValue.Param<core::param::BoolParam>()->Value());
+        if(!freshlyClustered) clustering->reanalyse(this->useActualValue.Param<core::param::BoolParam>()->Value());
     }
 
     if (this->clustering->finished()) {
@@ -392,23 +409,31 @@ bool Clustering::getExtentCallback(core::Call& caller) {
     if (this->dumpdot.IsDirty()) {
         this->dumpdotfile = true;
         this->dumpdot.ResetDirty();
-    } else if (this->selectionmode.IsDirty()) {
+    }
+    bool hashchange = false;
+
+    if (this->selectionmode.IsDirty()) {
         this->selectionmodechanged = true;
         this->selectionmode.ResetDirty();
-        this->outhashoffset++;
-    } else if (this->linkagemodeparam.IsDirty()) {
+        hashchange = true;
+    }
+    if (this->linkagemodeparam.IsDirty()) {
         this->linkagemodechanged = true;
         this->linkagemodeparam.ResetDirty();
-        this->outhashoffset++;
-    } else if (this->distancemultiplier.IsDirty()) {
+        hashchange = true;
+    }
+    if (this->distancemultiplier.IsDirty()) {
         this->distancemultiplierchanged = true;
         this->distancemultiplier.ResetDirty();
-        this->outhashoffset++;
-    } else if (this->momentsmethode.IsDirty()) {
+        hashchange = true;
+    }
+    if (this->momentsmethode.IsDirty()) {
         this->momentschanged = true;
         this->momentsmethode.ResetDirty();
-        this->outhashoffset++;
+        hashchange = true;
     }
+
+    if (hashchange) this->outhashoffset++;
 
     if (ccOut->DataHash() != this->outHash + this->outhashoffset)
         ccOut->SetDataHash(this->outHash + this->outhashoffset);
@@ -436,7 +461,6 @@ void Clustering::fillPictureDataVector(image_calls::Image2DCall& imc) {
         this->picdata[id].image = &p.second;
         this->loadValueImageForGivenPicture(std::filesystem::path(p.first), this->picdata[id].valueImage);
         ++id;
-        vislib::sys::Log::DefaultLog.WriteInfo("loaded stuff %u", id);
     }
 }
 
@@ -446,7 +470,7 @@ void Clustering::loadValueImageForGivenPicture(
     newpath = newpath.parent_path();
     newpath.append(originalPicture.stem().string() + "_values.dat");
     newpath = newpath.make_preferred();
-    
+
     auto filesize = std::filesystem::file_size(newpath);
     std::ifstream file(newpath, std::ios::binary);
     outValueImage.clear();
