@@ -246,28 +246,27 @@ function(require_external NAME)
 
   # imgui
   elseif(NAME STREQUAL "imgui")
-    if(TARGET imgui)
-      return()
-    endif()
+    if(NOT TARGET imgui)
+      
+      if(WIN32)
+        set(IMGUI_LIB "lib/imgui.lib")
+      else()
+        set(IMGUI_LIB "lib/libimgui.a")
+      endif()
 
-    if(WIN32)
-      set(IMGUI_LIB "lib/imgui.lib")
-    else()
-      set(IMGUI_LIB "lib/libimgui.a")
-    endif()
+      add_external_project(imgui STATIC
+        GIT_REPOSITORY https://github.com/ocornut/imgui.git
+        GIT_TAG "v1.70"
+        BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
+        PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+          "${CMAKE_SOURCE_DIR}/cmake/imgui/CMakeLists.txt"
+          "<SOURCE_DIR>/CMakeLists.txt")
 
-    add_external_project(imgui STATIC
-      GIT_REPOSITORY https://github.com/ocornut/imgui.git
-      GIT_TAG "v1.70"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
-      PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/cmake/imgui/CMakeLists.txt"
-        "<SOURCE_DIR>/CMakeLists.txt")
+      add_external_library(imgui
+      LIBRARY ${IMGUI_LIB})
+    endif()
 
     external_get_property(imgui SOURCE_DIR)
-
-    add_external_library(imgui
-      LIBRARY ${IMGUI_LIB})
 
     target_include_directories(imgui INTERFACE "${SOURCE_DIR}/examples" "${SOURCE_DIR}/misc/cpp")
 
