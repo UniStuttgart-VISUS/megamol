@@ -117,7 +117,6 @@ const megamol::gui::configurator::CallSlotPtrType megamol::gui::configurator::Ca
 megamol::gui::configurator::Call::Presentation::Presentation(void)
     : presentations(Call::Presentations::DEFAULT), label_visible(true), utils(), selected(false) {}
 
-
 megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
 
 
@@ -128,29 +127,25 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(
     ImGuiStyle& style = ImGui::GetStyle();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
+    if (ImGui::GetCurrentContext() == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
 
     try {
-
-        if (ImGui::GetCurrentContext() == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-
         if (inout_call.IsConnected()) {
 
             ImVec2 p1 = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->GUI_GetPosition();
             ImVec2 p2 = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->GUI_GetPosition();
 
-            // Clip module if lying ouside the canvas
-            /*
-            ImVec2 canvas_rect_min = in_canvas.position;
-            ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
-            if ((canvas_rect_min.x <= module_rect_min.x) && (canvas_rect_min.y <= module_rect_min.y) &&
-                (canvas_rect_max.x >= module_rect_max.x) && (canvas_rect_max.y >= module_rect_max.y)) {
-                return GUI_INVALID_ID;
-            }
-            */
+            /// XXX Too, expensive ? ..
+            // Clip calls if lying ouside the canvas
+            // ImVec2 canvas_rect_min = in_canvas.position;
+            // ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
+            // if (...) {
+            //    return GUI_INVALID_ID;
+            //}
 
             ImVec4 tmpcol = style.Colors[ImGuiCol_Button];
             // tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);

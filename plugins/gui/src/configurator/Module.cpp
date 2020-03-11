@@ -144,15 +144,13 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
     ImGuiStyle& style = ImGui::GetStyle();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
+    if (ImGui::GetCurrentContext() == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
 
     try {
-
-        if (ImGui::GetCurrentContext() == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-
         // Init position once
         if (this->init_position) {
             this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - in_canvas.offset) / in_canvas.zooming;
@@ -163,31 +161,6 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         if (in_canvas.updated) {
             this->UpdateSize(inout_mod, in_canvas.zooming);
         }
-
-        ImVec2 module_size = this->size * in_canvas.zooming;
-        ImVec2 module_rect_min = in_canvas.offset + this->position * in_canvas.zooming;
-        ImVec2 module_rect_max = module_rect_min + module_size;
-        ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
-
-        // Clip module if lying ouside the canvas
-
-        ImVec2 canvas_rect_min = in_canvas.position;
-        ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
-        if (!((canvas_rect_min.x < (module_rect_max.x + GUI_CALL_SLOT_RADIUS)) &&
-                (canvas_rect_max.x > (module_rect_min.x - GUI_CALL_SLOT_RADIUS)) &&
-                (canvas_rect_min.y < (module_rect_max.y + GUI_CALL_SLOT_RADIUS)) &&
-                (canvas_rect_max.y > (module_rect_min.y - GUI_CALL_SLOT_RADIUS)))) {
-            retval_id = GUI_INVALID_ID;
-            if (ImGui::GetIO().MouseClicked[0]) {
-                this->selected = false;
-            }
-            if (this->selected) {
-                retval_id = inout_mod.uid;
-            }
-            return retval_id;
-        }
-
-        ImGui::PushID(inout_mod.uid);
 
         // Draw call slots ----------------------------------------------------
         /// Draw call slots prior to modules to catch mouse clicks on slot area lying over module box.
@@ -207,6 +180,28 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         }
 
         // Draw module --------------------------------------------------------
+        ImVec2 module_size = this->size * in_canvas.zooming;
+        ImVec2 module_rect_min = in_canvas.offset + this->position * in_canvas.zooming;
+        ImVec2 module_rect_max = module_rect_min + module_size;
+        ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
+
+        // Clip module if lying ouside the canvas
+        ImVec2 canvas_rect_min = in_canvas.position;
+        ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
+        if (!((canvas_rect_min.x < module_rect_max.x) && (canvas_rect_max.x > module_rect_min.x) &&
+                (canvas_rect_min.y < module_rect_max.y) && (canvas_rect_max.y > module_rect_min.y))) {
+            retval_id = GUI_INVALID_ID;
+            if (ImGui::GetIO().MouseClicked[0]) {
+                this->selected = false;
+            }
+            if (this->selected) {
+                retval_id = inout_mod.uid;
+            }
+            return retval_id;
+        }
+
+        ImGui::PushID(inout_mod.uid);
+
         ImVec4 tmpcol = style.Colors[ImGuiCol_Button];
         // tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
         const ImU32 COLOR_MODULE_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);

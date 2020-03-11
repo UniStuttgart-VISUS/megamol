@@ -261,21 +261,31 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
     ImGuiStyle& style = ImGui::GetStyle();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
+    if (ImGui::GetCurrentContext() == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
 
     try {
-
-        if (ImGui::GetCurrentContext() == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-
         // Trigger only when canvas was updated
         if (in_canvas.updated) {
             this->UpdatePosition(inout_call_slot, in_canvas.offset, in_canvas.zooming);
         }
+        ImVec2 slot_position = this->position;
+        float radius = GUI_CALL_SLOT_RADIUS * in_canvas.zooming;
+
+        // Clip call slots if lying ouside the canvas
+        ImVec2 canvas_rect_min = in_canvas.position;
+        ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
+        if (!((canvas_rect_min.x < (slot_position.x + radius)) && (canvas_rect_max.x > (slot_position.x - radius)) &&
+                (canvas_rect_min.y < (slot_position.y + radius)) && (canvas_rect_max.y > (slot_position.y - radius)))) {
+            this->selected = false;
+            return GUI_INVALID_ID;
+        }
 
         ImGui::PushID(inout_call_slot.uid);
+
         draw_list->ChannelsSetCurrent(1); // Foreground
 
         ImVec4 tmpcol = style.Colors[ImGuiCol_Button];
@@ -294,9 +304,6 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
         } else if (inout_call_slot.type == CallSlot::CallSlotType::CALLEE) {
             slot_highlight_color = COLOR_SLOT_CALLEE;
         }
-
-        ImVec2 slot_position = this->position;
-        float radius = GUI_CALL_SLOT_RADIUS * in_canvas.zooming;
 
         ImGui::SetCursorScreenPos(slot_position - ImVec2(radius, radius));
         std::string label = "slot_" + inout_call_slot.name + std::to_string(inout_call_slot.uid);

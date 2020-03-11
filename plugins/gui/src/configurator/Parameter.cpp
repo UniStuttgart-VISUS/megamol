@@ -255,14 +255,13 @@ megamol::gui::configurator::Parameter::Presentation::~Presentation(void) {}
 
 bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::configurator::Parameter& param) {
 
+    if (ImGui::GetCurrentContext() == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
     try {
-
-        if (ImGui::GetCurrentContext() == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-
         if (this->visible) {
             ImGui::BeginGroup();
             ImGui::PushID(param.uid);
@@ -289,7 +288,6 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
             ImGui::PopID();
             ImGui::EndGroup();
         }
-
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
