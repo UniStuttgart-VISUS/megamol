@@ -12,6 +12,8 @@
 
 #include "ProbeCollection.h"
 
+#include <imgui.h>
+
 namespace megamol {
 namespace probe_gl {
 
@@ -38,6 +40,10 @@ public:
      */
     static bool IsAvailable(void) { return true; }
 
+    bool create();
+
+    void release();
+
     ProbeBillboardGlyphRenderTasks();
     ~ProbeBillboardGlyphRenderTasks();
 
@@ -53,7 +59,11 @@ private:
 
     core::CallerSlot m_probes_slot;
 
+    core::CallerSlot m_probe_manipulation_slot;
+
     std::shared_ptr<glowl::Mesh> m_billboard_dummy_mesh;
+
+    ImGuiContext* m_imgui_context;
 
     /**
      *
@@ -71,8 +81,8 @@ private:
         glm::vec4 probe_direction;
         float scale;
 
-        float padding0;
-        float padding1;
+        int probe_id;
+        int state;
 
         float sample_cnt;
         std::array<float, 4> samples[32];
@@ -88,27 +98,39 @@ private:
 
         float sample_cnt;
         float samples[32];
+
+        int probe_id;
+        int state;
+        int padding0;
+        int padding1;
     };
 
-    template <typename ProbeType> TexturedGlyphData createTexturedGlyphData(
-        ProbeType const& probe,
+    std::vector<TexturedGlyphData>    m_textured_glyph_data;
+    std::vector<GlyphVectorProbeData> m_vector_probe_glyph_data;
+    std::vector<GlyphScalarProbeData> m_scalar_probe_glyph_data;
+
+    template <typename ProbeType>
+    TexturedGlyphData createTexturedGlyphData(
+        ProbeType const& probe, 
+        int probe_id,
         GLuint64 texture_handle,
         float slice_idx,
         float scale);
 
      GlyphScalarProbeData createScalarProbeGlyphData(
         probe::FloatProbe const& probe,
+        int probe_id,
         float scale);
 
     GlyphVectorProbeData createVectorProbeGlyphData(
         probe::Vec4Probe const& probe,
+        int probe_id,
         float scale);
 };
 
 template <typename ProbeType>
 inline ProbeBillboardGlyphRenderTasks::TexturedGlyphData ProbeBillboardGlyphRenderTasks::createTexturedGlyphData(
-    ProbeType const& probe, GLuint64 texture_handle, float slice_idx, float scale)
-{
+    ProbeType const& probe, int probe_id, GLuint64 texture_handle, float slice_idx, float scale) {
     TexturedGlyphData glyph_data;
     glyph_data.position = glm::vec4(
         probe.m_position[0] + probe.m_direction[0] * (probe.m_begin * 1.1f),
@@ -118,6 +140,8 @@ inline ProbeBillboardGlyphRenderTasks::TexturedGlyphData ProbeBillboardGlyphRend
     glyph_data.texture_handle = texture_handle;
     glyph_data.slice_idx = slice_idx;
     glyph_data.scale = scale;
+
+    //glyph_data.probe_id = probe_id;
 
     return glyph_data;
 }

@@ -112,6 +112,7 @@ private:
 
     megamol::core::CallerSlot m_probe_fbo_slot;
     megamol::core::CallerSlot m_hull_fbo_slot;
+    megamol::core::CallerSlot m_glyph_fbo_slot;
 
     megamol::core::CalleeSlot m_interaction_collection_slot;
 
