@@ -1268,9 +1268,9 @@ ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
                 }
             }
 
-            /// XXX Hacky stuff ...
-            // Checking for possible call creation (first step for drag and drop call creation)
-            /// Capture independent of final call creation!
+            /// XXX Hacky stuff for recognising drag and drop call because mouse release event might be triggered one
+            /// frame before hovering of final call slot.
+            // Checking condition for possible call creation.
             auto selected_call_slot_uid = graph->GUI_GetSelectedCallSlot();
             auto hovered_call_slot_uid = graph->GUI_GetHoveredCallSlot();
             if ((selected_call_slot_uid != GUI_INVALID_ID) && (hovered_call_slot_uid != GUI_INVALID_ID) &&
@@ -1279,12 +1279,11 @@ ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
                 drop_call_data.selected_call_slot_uid = selected_call_slot_uid;
                 drop_call_data.hovered_call_slot_uid = hovered_call_slot_uid;
             }
-            // Capture button mouse release (second step for drag and drop call creation)
-            /// Capture independent of final call creation!
+            // Capture button mouse release as dropping event.
             if (ImGui::IsMouseReleased(0)) {
                 drop_call_data.trigger_drop_call = 2; /// Number of frames the action is valid.
             }
-            // Check for final call creation from drag and drop.
+            // Check for final call creation from finalised drag and drop of call.
             if ((drop_call_data.dragged_call_data > 0) && (this->drop_call_data.trigger_drop_call > 0)) {
                 CallSlotPtrType selected_call_slot_ptr;
                 CallSlotPtrType hovered_call_slot_ptr;

@@ -139,7 +139,7 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(
             ImVec2 p1 = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->GUI_GetPosition();
             ImVec2 p2 = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->GUI_GetPosition();
 
-            /// XXX Too, expensive ? ..
+            /// XXX Check is too expensive!? ...
             // Clip calls if lying ouside the canvas
             // ImVec2 canvas_rect_min = in_canvas.position;
             // ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;

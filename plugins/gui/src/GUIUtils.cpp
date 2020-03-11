@@ -279,17 +279,17 @@ bool megamol::gui::GUIUtils::VerticalSplitter(FixedSplitterSide fixed_side, floa
                           0.0f, 0.0f);
 
 
-    ImGui::PushStyleColor(ImGuiCol_Separator, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]));
-    ImGui::PushStyleColor(
-        ImGuiCol_SeparatorHovered, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonHovered]));
-    ImGui::PushStyleColor(ImGuiCol_SeparatorActive, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Button]));
+    // ImGui::PushStyleColor(ImGuiCol_Separator, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]));
+    // ImGui::PushStyleColor(
+    //    ImGuiCol_SeparatorHovered, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonHovered]));
+    // ImGui::PushStyleColor(ImGuiCol_SeparatorActive, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Button]));
 
     bool retval = ImGui::SplitterBehavior(
         bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, &size_left, &size_right, min_size, min_size, 0.0f, 0.0f);
 
-    ImGui::PopStyleColor(3);
+    // ImGui::PopStyleColor(3);
 
-    /// XXX Left mouse button (= 0) is not recognized poperly (?) ...
+    /// XXX Left mouse button (= 0) is not recognized poperly!? ...
     if (ImGui::IsMouseDoubleClicked(1) && ImGui::IsItemHovered()) {
         float consider_width = ((fixed_side == GUIUtils::FixedSplitterSide::LEFT) ? size_left : size_right);
         if (consider_width <= min_size) {

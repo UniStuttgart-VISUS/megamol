@@ -289,8 +289,7 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 5.0f);
         draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 5.0f);
 
-        /// XXX
-        // Use ImGui::ArrowButton to show/hide parameters inside module box
+        /// XXX Use ImGui::ArrowButton to show/hide parameters inside module box.
 
         // Rename pop-up
         this->utils.RenamePopUp("Rename Project", popup_rename, inout_mod.name);
