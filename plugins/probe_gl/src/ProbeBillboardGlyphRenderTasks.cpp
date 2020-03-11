@@ -18,26 +18,11 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::create() {
 
     AbstractGPURenderTaskDataSource::create();
 
-    IMGUI_CHECKVERSION();
-    m_imgui_context = ImGui::CreateContext();
-    if (m_imgui_context == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("[GUIView] Could not create ImGui context");
-        return false;
-    }
-    ImGui::SetCurrentContext(m_imgui_context);
-
-    // Init OpenGL for ImGui --------------------------------------------------
-    const char* glsl_version = "#version 130"; /// "#version 150"
-    ImGui_ImplOpenGL3_Init(glsl_version);    
-
     return true;
 }
 
 void megamol::probe_gl::ProbeBillboardGlyphRenderTasks::release() {
-    if (m_imgui_context != nullptr) {
-        ImGui_ImplOpenGL3_Shutdown();
-        ImGui::DestroyContext(m_imgui_context);
-    }
+
 }
 
 megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTasks()
@@ -247,36 +232,40 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                     bool my_tool_active = true;
                     float my_color[4] = {0.0, 0.0, 0.0, 0.0};
 
-                    //  ImGui::NewFrame();
-                    //  // Create a window called "My First Tool", with a menu bar.
-                    //  ImGui::Begin("My First Tool", &my_tool_active, ImGuiWindowFlags_MenuBar);
-                    //  if (ImGui::BeginMenuBar()) {
-                    //      if (ImGui::BeginMenu("File")) {
-                    //          if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */
-                    //          }
-                    //          if (ImGui::MenuItem("Save", "Ctrl+S")) { /* Do stuff */
-                    //          }
-                    //          if (ImGui::MenuItem("Close", "Ctrl+W")) {
-                    //              my_tool_active = false;
-                    //          }
-                    //          ImGui::EndMenu();
-                    //      }
-                    //      ImGui::EndMenuBar();
-                    //  }
-                    //  
-                    //  // Edit a color (stored as ~4 floats)
-                    //  ImGui::ColorEdit4("Color", my_color);
-                    //  
-                    //  // Plot some values
-                    //  const float my_values[] = {0.2f, 0.1f, 1.0f, 0.5f, 0.9f, 2.2f};
-                    //  ImGui::PlotLines("Frame Times", my_values, IM_ARRAYSIZE(my_values));
-                    //  
-                    //  // Display contents in a scrolling region
-                    //  ImGui::TextColored(ImVec4(1, 1, 0, 1), "Important Stuff");
-                    //  ImGui::BeginChild("Scrolling");
-                    //  for (int n = 0; n < 50; n++) ImGui::Text("%04d: Some text", n);
-                    //  ImGui::EndChild();
-                    //  ImGui::End();
+                    //ImGui::NewFrame();
+                    // Create a window called "My First Tool", with a menu bar.
+                    auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
+                    if (ctx != nullptr) {
+                    ImGui::SetCurrentContext(ctx);
+                    ImGui::Begin("My First Tool", &my_tool_active, ImGuiWindowFlags_MenuBar);
+                      if (ImGui::BeginMenuBar()) {
+                          if (ImGui::BeginMenu("File")) {
+                              if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */
+                              }
+                              if (ImGui::MenuItem("Save", "Ctrl+S")) { /* Do stuff */
+                              }
+                              if (ImGui::MenuItem("Close", "Ctrl+W")) {
+                                  my_tool_active = false;
+                              }
+                              ImGui::EndMenu();
+                          }
+                          ImGui::EndMenuBar();
+                      }
+                      
+                      // Edit a color (stored as ~4 floats)
+                      ImGui::ColorEdit4("Color", my_color);
+                      
+                      // Plot some values
+                      const float my_values[] = {0.2f, 0.1f, 1.0f, 0.5f, 0.9f, 2.2f};
+                      ImGui::PlotLines("Frame Times", my_values, IM_ARRAYSIZE(my_values));
+                      
+                      // Display contents in a scrolling region
+                      ImGui::TextColored(ImVec4(1, 1, 0, 1), "Important Stuff");
+                      ImGui::BeginChild("Scrolling");
+                      for (int n = 0; n < 50; n++) ImGui::Text("%04d: Some text", n);
+                      ImGui::EndChild();
+                    ImGui::End();
+                    }
 
                 } else if (itr->type == DEHIGHLIGHT) {
                     auto manipulation = *itr;
