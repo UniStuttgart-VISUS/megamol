@@ -17,6 +17,8 @@
 #include "Configurator.h"
 
 
+using namespace megamol;
+using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
@@ -178,9 +180,9 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                                 "     - Select item an press [Delete]\n"
                                 "     - [Richt Click] on Selected Item -> Context Menu: Delete\n"
                                 "- Rename Graph or Module\n"
-                                "     - [Richt Click] on Graph tab or Module -> Context Menu: Rename"
-                                "- Expand/Collapse Splitter\n"
-                                "     - [Double Richt Click] on splitter";
+                                "     - [Richt Click] on Graph Tab or Module -> Context Menu: Rename\n"
+                                "- Collapse/Expand Splitter\n"
+                                "     - [Double Richt Click] on Splitter";
         this->utils.HelpMarkerToolTip(info_text.c_str(), "[?]");
 
         // Info text ----------------------------------------------------------
@@ -239,7 +241,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
 
     ImGui::BeginChild("module_list_child_window", ImVec2(width, 0.0f), true, ImGuiWindowFlags_None);
 
-    int id = 1;
+    ImGuiID id = 1;
 
     bool search_filter = true;
     bool compat_filter = true;
@@ -271,7 +273,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
             compat_filter = false;
             for (auto& stock_call_slot_map : mod.call_slots) {
                 for (auto& stock_call_slot : stock_call_slot_map.second) {
-                    int cpcidx = CallSlot::GetCompatibleCallIndex(selected_call_slot_ptr, stock_call_slot);
+                    ImGuiID cpcidx = CallSlot::GetCompatibleCallIndex(selected_call_slot_ptr, stock_call_slot);
                     if (cpcidx != GUI_INVALID_ID) {
                         compat_call_slot_name = stock_call_slot.name;
                         compat_filter = true;

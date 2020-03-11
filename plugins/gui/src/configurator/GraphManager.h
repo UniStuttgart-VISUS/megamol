@@ -40,9 +40,9 @@ public:
     virtual ~GraphManager(void);
 
     bool AddGraph(std::string name);
-    bool DeleteGraph(int graph_uid);
+    bool DeleteGraph(ImGuiID graph_uid);
     const GraphManager::GraphsType& GetGraphs(void);
-    const GraphPtrType GetGraph(int graph_uid);
+    const GraphPtrType GetGraph(ImGuiID graph_uid);
 
     bool UpdateModulesCallsStock(const megamol::core::CoreInstance* core_instance);
     inline const ModuleStockVectorType& GetModulesStock(void) { return this->modules_stock; }
@@ -51,12 +51,13 @@ public:
     bool LoadCurrentCoreProject(const std::string& name, megamol::core::CoreInstance* core_instance);
 
     bool LoadProjectFile(const std::string& project_filename, megamol::core::CoreInstance* core_instance);
-    bool SaveProjectFile(int graph_id, const std::string& project_filename, megamol::core::CoreInstance* core_instance);
+    bool SaveProjectFile(
+        ImGuiID graph_id, const std::string& project_filename, megamol::core::CoreInstance* core_instance);
 
     // GUI Presentation -------------------------------------------------------
 
     // Returns uid of the currently active/drawn graph.
-    int GUI_Present(float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys) {
+    ImGuiID GUI_Present(float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys) {
         return this->present.Present(*this, in_child_width, in_graph_font, inout_hotkeys);
     }
 
@@ -77,11 +78,17 @@ private:
 
         ~Presentation(void);
 
-        int Present(GraphManager& inout_graph_manager, float in_child_width, ImFont* in_graph_font,
+        ImGuiID Present(GraphManager& inout_graph_manager, float in_child_width, ImFont* in_graph_font,
             HotKeyArrayType& inout_hotkeys);
 
     private:
-        int delete_graph_uid;
+        struct DropCallData {
+            bool mouse_released;
+            GraphPtrType graph_ptr;
+            ImGuiID hovered_call_slot_uid;
+            ImGuiID selected_call_slot_uid;
+        } drop_call_data;
+        ImGuiID delete_graph_uid;
         GUIUtils utils;
 
     } present;

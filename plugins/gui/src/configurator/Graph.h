@@ -36,11 +36,11 @@ public:
     virtual ~Graph(void);
 
     bool AddModule(const ModuleStockVectorType& stock_modules, const std::string& module_class_name);
-    bool DeleteModule(int module_uid);
+    bool DeleteModule(ImGuiID module_uid);
 
     bool AddCall(const CallStockVectorType& stock_calls, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
     bool DeleteDisconnectedCalls(void);
-    bool DeleteCall(int call_uid);
+    bool DeleteCall(ImGuiID call_uid);
 
     const ModuleGraphVectorType& GetGraphModules(void) { return this->modules; }
     const CallGraphVectorType& GetGraphCalls(void) { return this->calls; }
@@ -51,19 +51,19 @@ public:
     inline bool IsDirty(void) const { return this->dirty_flag; }
     inline void ResetDirty(void) { this->dirty_flag = false; }
 
-    inline int GetUID(void) const { return this->uid; }
+    inline ImGuiID GetUID(void) const { return this->uid; }
 
-    int generate_unique_id(void) { return (++this->generated_uid); }
+    ImGuiID generate_unique_id(void) { return (++this->generated_uid); }
 
     // GUI Presentation -------------------------------------------------------
 
     // Returns uid if graph is the currently active/drawn one.
-    int GUI_Present(
+    ImGuiID GUI_Present(
         float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys, bool& out_delete_graph) {
         return this->present.Present(*this, in_child_width, in_graph_font, inout_hotkeys, out_delete_graph);
     }
-    inline int GUI_GetSelectedCallSlot(void) const { return this->present.GetSelectedCallSlot(); }
-    inline int GUI_GetHoveredCallSlot(void) const { return this->present.GetHoveredCallSlot(); }
+    inline ImGuiID GUI_GetSelectedCallSlot(void) const { return this->present.GetSelectedCallSlot(); }
+    inline ImGuiID GUI_GetHoveredCallSlot(void) const { return this->present.GetHoveredCallSlot(); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -72,12 +72,12 @@ private:
     CallGraphVectorType calls;
 
     // UIDs are unique within a graph
-    const int uid;
+    const ImGuiID uid;
     std::string name;
     bool dirty_flag;
 
     // Global variable for unique id shared/accessible by all graphs.
-    static int generated_uid;
+    static ImGuiID generated_uid;
 
     /**
      * Defines GUI graph present.
@@ -88,11 +88,11 @@ private:
 
         ~Presentation(void);
 
-        int Present(Graph& inout_graph, float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys,
+        ImGuiID Present(Graph& inout_graph, float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys,
             bool& out_delete_graph);
 
-        int GetSelectedCallSlot(void) const { return this->selected_call_slot_uid; }
-        int GetHoveredCallSlot(void) const { return this->hovered_call_slot_uid; }
+        ImGuiID GetSelectedCallSlot(void) const { return this->selected_call_slot_uid; }
+        ImGuiID GetHoveredCallSlot(void) const { return this->hovered_call_slot_uid; }
 
         bool GetModuleLabelVisibility(void) const { return this->show_module_names; }
         bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
@@ -113,10 +113,10 @@ private:
         bool show_slot_names;
         bool show_module_names;
 
-        int selected_module_uid;
-        int selected_call_uid;
-        int selected_call_slot_uid;
-        int hovered_call_slot_uid;
+        ImGuiID selected_module_uid;
+        ImGuiID selected_call_uid;
+        ImGuiID selected_call_slot_uid;
+        ImGuiID hovered_call_slot_uid;
 
         bool layout_current_graph;
         float child_split_width;

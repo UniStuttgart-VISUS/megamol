@@ -14,6 +14,7 @@
 #include <vector>
 
 
+using namespace megamol;
 using namespace megamol::gui;
 
 
@@ -225,7 +226,7 @@ void megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::stri
     std::string complete_label = "Search (?)";
     auto width = ImGui::GetContentRegionAvailWidth() - ImGui::GetCursorPosX() + 4.0f * style.ItemInnerSpacing.x -
                  this->TextWidgetWidth(complete_label);
-    const int min_width = 50.0f;
+    const float min_width = 50.0f;
     width = (width < min_width) ? (min_width) : width;
     ImGui::PushItemWidth(width);
 

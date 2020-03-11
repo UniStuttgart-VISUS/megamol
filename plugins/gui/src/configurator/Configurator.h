@@ -64,8 +64,8 @@ private:
 
     int window_state;
     std::string project_filename;
-    int graph_uid;
-    int selected_list_module_uid;
+    ImGuiID graph_uid;
+    ImGuiID selected_list_module_uid;
     ImFont* graph_font;
     float child_split_width;
 

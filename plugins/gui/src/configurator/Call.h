@@ -48,10 +48,10 @@ public:
 
     enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
 
-    Call(int uid);
+    Call(ImGuiID uid);
     ~Call();
 
-    const int uid;
+    const ImGuiID uid;
 
     // Init when adding call from stock
     std::string class_name;
@@ -67,7 +67,7 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     // Returns uid if the call is selected.
-    int GUI_Present(ImVec2 in_canvas_offset, float in_canvas_zooming, HotKeyArrayType& inout_hotkeys) {
+    ImGuiID GUI_Present(ImVec2 in_canvas_offset, float in_canvas_zooming, HotKeyArrayType& inout_hotkeys) {
         return this->present.Present(*this, in_canvas_offset, in_canvas_zooming, inout_hotkeys);
     }
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
@@ -85,7 +85,8 @@ private:
 
         ~Presentation(void);
 
-        int Present(Call& inout_call, ImVec2 in_canvas_offset, float in_canvas_zooming, HotKeyArrayType& inout_hotkeys);
+        ImGuiID Present(
+            Call& inout_call, ImVec2 in_canvas_offset, float in_canvas_zooming, HotKeyArrayType& inout_hotkeys);
 
         Call::Presentations presentations;
         bool label_visible;

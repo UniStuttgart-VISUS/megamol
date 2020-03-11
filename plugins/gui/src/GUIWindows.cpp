@@ -97,6 +97,7 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
             return true;
         }
     }
+
     return false;
 }
 
@@ -807,7 +808,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.5f); // set general proportional item width
 
     // Options
-    int overrideState = GUI_INVALID_ID; /// invalid
+    ImGuiID overrideState = GUI_INVALID_ID; /// invalid
     if (ImGui::Button("Expand All")) {
         overrideState = 1; /// open
     }

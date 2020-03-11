@@ -124,10 +124,10 @@ public:
         StroageType storage;
     };
 
-    Parameter(int uid, ParamType type, StroageType store, MinType min, MaxType max);
+    Parameter(ImGuiID uid, ParamType type, StroageType store, MinType min, MaxType max);
     ~Parameter() {}
 
-    const int uid;
+    const ImGuiID uid;
     const ParamType type;
 
     // Init when adding parameter from stock
@@ -157,29 +157,11 @@ public:
 
     ValueType& GetValue(void) { return this->value; }
 
-    template <typename T> const T& GetMinValue(void) const {
-        try {
-            return std::get<T>(this->minval);
-        } catch (std::bad_variant_access&) {
-            /// XXX
-        }
-    }
+    template <typename T> const T& GetMinValue(void) const { return std::get<T>(this->minval); }
 
-    template <typename T> const T& GetMaxValue(void) const {
-        try {
-            return std::get<T>(this->maxval);
-        } catch (std::bad_variant_access&) {
-            /// XXX
-        }
-    }
+    template <typename T> const T& GetMaxValue(void) const { return std::get<T>(this->maxval); }
 
-    template <typename T> const T& GetStorage(void) const {
-        try {
-            return std::get<T>(this->storage);
-        } catch (std::bad_variant_access&) {
-            /// XXX
-        }
-    }
+    template <typename T> const T& GetStorage(void) const { return std::get<T>(this->storage); }
 
     // SET ----------------------------------
     bool SetValueString(const std::string& val_str);

@@ -13,10 +13,11 @@
 
 
 using namespace megamol;
+using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::Module::Module(int uid) : uid(uid), present() {
+megamol::gui::configurator::Module::Module(ImGuiID uid) : uid(uid), present() {
 
     this->call_slots.clear();
     this->call_slots.emplace(
@@ -81,7 +82,7 @@ bool megamol::gui::configurator::Module::RemoveAllCallSlots(void) {
 }
 
 
-const CallSlotPtrType megamol::gui::configurator::Module::GetCallSlot(int call_slot_uid) {
+const CallSlotPtrType megamol::gui::configurator::Module::GetCallSlot(ImGuiID call_slot_uid) {
 
     if (call_slot_uid != GUI_INVALID_ID) {
         for (auto& call_slot_map : this->GetCallSlots()) {
@@ -133,11 +134,12 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
 megamol::gui::configurator::Module::Presentation::~Presentation(void) {}
 
 
-int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::configurator::Module& inout_mod,
-    ImVec2 in_canvas_offset, float in_canvas_zooming, HotKeyArrayType& inout_hotkeys, int& out_selected_call_slot_uid,
-    int& out_hovered_call_slot_uid, const CallSlotPtrType selected_call_slot_ptr) {
+ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::configurator::Module& inout_mod,
+    ImVec2 in_canvas_offset, float in_canvas_zooming, megamol::gui::HotKeyArrayType& inout_hotkeys,
+    ImGuiID& out_selected_call_slot_uid, ImGuiID& out_hovered_call_slot_uid,
+    const megamol::gui::configurator::CallSlotPtrType compatible_call_slot_ptr) {
 
-    int retval_id = GUI_INVALID_ID;
+    ImGuiID retval_id = GUI_INVALID_ID;
     bool popup_rename = false;
     ImGuiStyle& style = ImGui::GetStyle();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -156,11 +158,11 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
 
         // Draw call slots ----------------------------------------------------
         /// Draw call slots prior to modules to catch mouse clicks on slot area lying over module box.
-        int hovered_call_slot_id = GUI_INVALID_ID;
+        ImGuiID hovered_call_slot_id = GUI_INVALID_ID;
         for (auto& slot_pair : inout_mod.GetCallSlots()) {
             for (auto& slot : slot_pair.second) {
                 auto id = slot->GUI_Present(
-                    in_canvas_offset, in_canvas_zooming, hovered_call_slot_id, selected_call_slot_ptr);
+                    in_canvas_offset, in_canvas_zooming, hovered_call_slot_id, compatible_call_slot_ptr);
                 if (id != GUI_INVALID_ID) {
                     out_selected_call_slot_uid = id;
                 }
@@ -194,7 +196,8 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
         std::string label;
 
         // Draw text
-        if (this->label_visible) {
+        /// LEVEL OF DETAIL depending on zooming
+        if (this->label_visible && (in_canvas_zooming > GUI_ZOOM_DETAIL_LEVEL)) {
             draw_list->ChannelsSetCurrent(1); // Foreground
 
             ImGui::BeginGroup();
@@ -233,16 +236,14 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
         ImGui::InvisibleButton(label.c_str(), module_size);
         bool hovered = ImGui::IsItemHovered() && (hovered_call_slot_id == GUI_INVALID_ID);
         bool mouse_clicked = ImGui::GetIO().MouseClicked[0];
-        if (mouse_clicked &&
-            (!hovered || (hovered_call_slot_id !=
-                             GUI_INVALID_ID))) { // && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+        if (mouse_clicked && (!hovered || (hovered_call_slot_id != GUI_INVALID_ID))) {
             this->selected = false;
         }
         // Gives slots which overlap modules priority for ToolTip and Context Menu.
         if (hovered_call_slot_id == GUI_INVALID_ID) {
             std::string hover_text = inout_mod.description;
             if (!this->label_visible) {
-                hover_text = "[" + inout_mod.name + "]" + hover_text;
+                hover_text = "[" + inout_mod.name + "] " + hover_text;
             }
             this->utils.HoverToolTip(hover_text.c_str(), ImGui::GetID(label.c_str()), 0.5f, 5.0f);
             // Context menu
@@ -329,7 +330,8 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
     float module_slot_height = (static_cast<float>(max_slot_count) * (radius * 2.0f) * 1.5f) + ((radius * 2.0f) * 0.5f);
 
     float module_height = std::max(
-        module_slot_height, (ImGui::GetTextLineHeightWithSpacing() * ((mod.is_view_instance) ? (4.0f) : (3.0f))));
+        module_slot_height, ((canvas_zooming > 1.0f) ? (1.0f / canvas_zooming) : (1.0f)) *
+                                (ImGui::GetTextLineHeightWithSpacing() * ((mod.is_view_instance) ? (4.0f) : (3.0f))));
 
     // Clamp to minimum size
     this->size = ImVec2(std::max(module_width, 150.0f), std::max(module_height, 100.0f));

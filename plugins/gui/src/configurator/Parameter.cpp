@@ -13,10 +13,12 @@
 
 
 using namespace megamol;
+using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::Parameter::Parameter(int uid, ParamType type, StroageType store, MinType min, MaxType max)
+megamol::gui::configurator::Parameter::Parameter(
+    ImGuiID uid, ParamType type, StroageType store, MinType min, MaxType max)
     : uid(uid), type(type), minval(min), maxval(max), storage(store), value(), present() {
 
     // Initialize variant types which should/can not be changed afterwards.

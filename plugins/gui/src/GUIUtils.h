@@ -35,7 +35,9 @@
 namespace megamol {
 namespace gui {
 
-#define GUI_INVALID_ID (-1)
+
+#define GUI_INVALID_ID (INT_MAX)
+#define GUI_ZOOM_DETAIL_LEVEL (0.3f)
 
 
 /** HotKey Types for Configurator */

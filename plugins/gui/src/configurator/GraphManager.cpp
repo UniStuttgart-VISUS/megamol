@@ -10,6 +10,7 @@
 
 
 using namespace megamol;
+using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
@@ -37,7 +38,7 @@ bool megamol::gui::configurator::GraphManager::AddGraph(std::string name) {
 }
 
 
-bool megamol::gui::configurator::GraphManager::DeleteGraph(int graph_uid) {
+bool megamol::gui::configurator::GraphManager::DeleteGraph(ImGuiID graph_uid) {
 
     for (auto iter = this->graphs.begin(); iter != this->graphs.end(); iter++) {
         if ((*iter)->GetUID() == graph_uid) {
@@ -61,7 +62,7 @@ bool megamol::gui::configurator::GraphManager::DeleteGraph(int graph_uid) {
 const GraphManager::GraphsType& megamol::gui::configurator::GraphManager::GetGraphs(void) { return this->graphs; }
 
 
-const GraphManager::GraphPtrType megamol::gui::configurator::GraphManager::GetGraph(int graph_uid) {
+const GraphManager::GraphPtrType megamol::gui::configurator::GraphManager::GetGraph(ImGuiID graph_uid) {
 
     for (auto iter = this->graphs.begin(); iter != this->graphs.end(); iter++) {
         if ((*iter)->GetUID() == graph_uid) {
@@ -728,7 +729,7 @@ bool megamol::gui::configurator::GraphManager::LoadProjectFile(
 
 
 bool megamol::gui::configurator::GraphManager::SaveProjectFile(
-    int graph_id, const std::string& project_filename, megamol::core::CoreInstance* core_instance) {
+    ImGuiID graph_id, const std::string& project_filename, megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -1090,106 +1091,6 @@ bool megamol::gui::configurator::GraphManager::get_call_stock_data(
 }
 
 
-// GRAPH MANAGET PRESENTATION ####################################################
-
-megamol::gui::configurator::GraphManager::Presentation::Presentation(void)
-    : delete_graph_uid(GUI_INVALID_ID), utils() {}
-
-
-megamol::gui::configurator::GraphManager::Presentation::~Presentation(void) {}
-
-
-int megamol::gui::configurator::GraphManager::Presentation::Present(
-    megamol::gui::configurator::GraphManager& inout_graph_manager, float in_child_width, ImFont* in_graph_font,
-    HotKeyArrayType& inout_hotkeys) {
-
-    int retval = GUI_INVALID_ID;
-
-    try {
-        if (ImGui::GetCurrentContext() == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-
-        const auto child_flags = ImGuiWindowFlags_None;
-
-        ImGui::BeginChild("graph_child_window", ImVec2(in_child_width, 0.0f), true, child_flags);
-
-        // Assuming only one closed tab/graph per frame.
-        bool popup_close_unsaved = false;
-
-        // Draw Graphs
-        ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
-        ImGui::BeginTabBar("Graphs", tab_bar_flags);
-
-        for (auto& graph : inout_graph_manager.GetGraphs()) {
-            // Draw graph
-            bool delete_graph = false;
-            auto id = graph->GUI_Present(in_child_width, in_graph_font, inout_hotkeys, delete_graph);
-            if (id != GUI_INVALID_ID) {
-                retval = id;
-            }
-
-            // Checking for call creation at end of drag and drop
-            auto selected_call_slot_uid = graph->GUI_GetSelectedCallSlot();
-            auto hovered_call_slot_uid = graph->GUI_GetHoveredCallSlot();
-            if ((selected_call_slot_uid != GUI_INVALID_ID) && (hovered_call_slot_uid != GUI_INVALID_ID) &&
-                (selected_call_slot_uid != hovered_call_slot_uid) && ImGui::IsMouseReleased(0)) {
-
-                CallSlotPtrType selected_call_slot_ptr;
-                CallSlotPtrType hovered_call_slot_ptr;
-                for (auto& mods : graph->GetGraphModules()) {
-                    CallSlotPtrType call_slot_ptr = mods->GetCallSlot(selected_call_slot_uid);
-                    if (call_slot_ptr != nullptr) {
-                        selected_call_slot_ptr = call_slot_ptr;
-                    }
-                    call_slot_ptr = mods->GetCallSlot(hovered_call_slot_uid);
-                    if (call_slot_ptr != nullptr) {
-                        hovered_call_slot_ptr = call_slot_ptr;
-                    }
-                }
-                graph->AddCall(inout_graph_manager.calls_stock, selected_call_slot_ptr, hovered_call_slot_ptr);
-            }
-
-            // Do not delete graph while looping through graphs list
-            if (delete_graph) {
-                this->delete_graph_uid = retval;
-                if (graph->IsDirty()) {
-                    popup_close_unsaved = true;
-                }
-            }
-        }
-
-        ImGui::EndTabBar();
-
-        // Delete marked graph when tab closed and
-        bool confirmed, aborted;
-        bool popup_open = this->utils.MinimalPopUp(
-            "Closing Unsaved Project", popup_close_unsaved, "Discard changes?", "Yes", confirmed, "No", aborted);
-        if (this->delete_graph_uid != GUI_INVALID_ID) {
-            if (popup_open && aborted) {
-                this->delete_graph_uid = GUI_INVALID_ID;
-            } else if ((popup_open && confirmed) || !popup_open) {
-                inout_graph_manager.DeleteGraph(delete_graph_uid);
-                this->delete_graph_uid = GUI_INVALID_ID;
-            }
-        }
-
-        ImGui::EndChild();
-    } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return GUI_INVALID_ID;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return GUI_INVALID_ID;
-    }
-
-    return retval;
-}
-
-
 bool megamol::gui::configurator::GraphManager::readLuaProjectCommandArguments(
     const std::string& line, size_t arg_count, std::vector<std::string>& out_args) {
 
@@ -1314,4 +1215,123 @@ bool megamol::gui::configurator::GraphManager::separateNameAndPrefix(
     }
 
     return true;
+}
+
+
+// GRAPH MANAGET PRESENTATION ####################################################
+
+megamol::gui::configurator::GraphManager::Presentation::Presentation(void)
+    : drop_call_data(), delete_graph_uid(GUI_INVALID_ID), utils() {}
+
+
+megamol::gui::configurator::GraphManager::Presentation::~Presentation(void) {}
+
+
+ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
+    megamol::gui::configurator::GraphManager& inout_graph_manager, float in_child_width, ImFont* in_graph_font,
+    HotKeyArrayType& inout_hotkeys) {
+
+    ImGuiID retval = GUI_INVALID_ID;
+
+    try {
+        if (ImGui::GetCurrentContext() == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+
+        const auto child_flags = ImGuiWindowFlags_None;
+
+        ImGui::BeginChild("graph_child_window", ImVec2(in_child_width, 0.0f), true, child_flags);
+
+        // Assuming only one closed tab/graph per frame.
+        bool popup_close_unsaved = false;
+
+        // Draw Graphs
+        ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
+        ImGui::BeginTabBar("Graphs", tab_bar_flags);
+
+        for (auto& graph : inout_graph_manager.GetGraphs()) {
+
+            // Draw graph
+            bool delete_graph = false;
+            auto id = graph->GUI_Present(in_child_width, in_graph_font, inout_hotkeys, delete_graph);
+            if (id != GUI_INVALID_ID) {
+                retval = id;
+            }
+
+            // Checking for possible call creation (first step for drag and drop call creation)
+            /// Capture independent of final call creation!
+            auto selected_call_slot_uid = graph->GUI_GetSelectedCallSlot();
+            auto hovered_call_slot_uid = graph->GUI_GetHoveredCallSlot();
+            if ((selected_call_slot_uid != GUI_INVALID_ID) && (hovered_call_slot_uid != GUI_INVALID_ID) &&
+                (selected_call_slot_uid != hovered_call_slot_uid)) {
+                drop_call_data.graph_ptr = graph;
+                drop_call_data.selected_call_slot_uid = selected_call_slot_uid;
+                drop_call_data.hovered_call_slot_uid = hovered_call_slot_uid;
+            }
+
+            // Do not delete graph while looping through graphs list
+            if (delete_graph) {
+                this->delete_graph_uid = retval;
+                if (graph->IsDirty()) {
+                    popup_close_unsaved = true;
+                }
+            }
+        }
+
+        ImGui::EndTabBar();
+
+        // Capture button mouse release (second step for drag and drop call creation)
+        /// Capture independent of final call creation!
+        if (ImGui::IsMouseReleased(0)) {
+            drop_call_data.mouse_released = true;
+        }
+        // Check for final call creation from drag and drop.
+        if (drop_call_data.mouse_released && (this->drop_call_data.graph_ptr != nullptr)) {
+            CallSlotPtrType selected_call_slot_ptr;
+            CallSlotPtrType hovered_call_slot_ptr;
+            for (auto& mods : this->drop_call_data.graph_ptr->GetGraphModules()) {
+                CallSlotPtrType call_slot_ptr = mods->GetCallSlot(drop_call_data.selected_call_slot_uid);
+                if (call_slot_ptr != nullptr) {
+                    selected_call_slot_ptr = call_slot_ptr;
+                }
+                call_slot_ptr = mods->GetCallSlot(drop_call_data.hovered_call_slot_uid);
+                if (call_slot_ptr != nullptr) {
+                    hovered_call_slot_ptr = call_slot_ptr;
+                }
+            }
+            this->drop_call_data.graph_ptr->AddCall(
+                inout_graph_manager.calls_stock, selected_call_slot_ptr, hovered_call_slot_ptr);
+
+            drop_call_data.mouse_released = false;
+            this->drop_call_data.graph_ptr.reset();
+            this->drop_call_data.selected_call_slot_uid = GUI_INVALID_ID;
+            this->drop_call_data.hovered_call_slot_uid = GUI_INVALID_ID;
+        }
+
+        // Delete marked graph when tab is closed and unsaved changes should be discarded.
+        bool confirmed, aborted;
+        bool popup_open = this->utils.MinimalPopUp(
+            "Closing Unsaved Project", popup_close_unsaved, "Discard changes?", "Yes", confirmed, "No", aborted);
+        if (this->delete_graph_uid != GUI_INVALID_ID) {
+            if (popup_open && aborted) {
+                this->delete_graph_uid = GUI_INVALID_ID;
+            } else if ((popup_open && confirmed) || !popup_open) {
+                inout_graph_manager.DeleteGraph(delete_graph_uid);
+                this->delete_graph_uid = GUI_INVALID_ID;
+            }
+        }
+
+        ImGui::EndChild();
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return GUI_INVALID_ID;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return GUI_INVALID_ID;
+    }
+
+    return retval;
 }

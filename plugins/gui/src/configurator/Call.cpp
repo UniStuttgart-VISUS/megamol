@@ -13,10 +13,11 @@
 
 
 using namespace megamol;
+using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::Call::Call(int uid) : uid(uid), present() {
+megamol::gui::configurator::Call::Call(ImGuiID uid) : uid(uid), present() {
 
     this->connected_call_slots.clear();
     this->connected_call_slots.emplace(CallSlot::CallSlotType::CALLER, nullptr);
@@ -120,10 +121,10 @@ megamol::gui::configurator::Call::Presentation::Presentation(void)
 megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
 
 
-int megamol::gui::configurator::Call::Presentation::Present(megamol::gui::configurator::Call& inout_call,
+ImGuiID megamol::gui::configurator::Call::Presentation::Present(megamol::gui::configurator::Call& inout_call,
     ImVec2 in_canvas_offset, float in_canvas_zooming, HotKeyArrayType& inout_hotkeys) {
 
-    int retval_id = GUI_INVALID_ID;
+    ImGuiID retval_id = GUI_INVALID_ID;
     ImGuiStyle& style = ImGui::GetStyle();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
@@ -156,15 +157,16 @@ int megamol::gui::configurator::Call::Presentation::Present(megamol::gui::config
             // Draw simple line if zooming is too small for nice bezier curves
             draw_list->ChannelsSetCurrent(0); // Background
 
-            const float zooming_switch_curve = 0.4f;
-            if (in_canvas_zooming < zooming_switch_curve) {
+            /// LEVEL OF DETAIL depending on zooming
+            if (in_canvas_zooming < GUI_ZOOM_DETAIL_LEVEL) {
                 draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * in_canvas_zooming);
             } else {
                 draw_list->AddBezierCurve(p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2, COLOR_CALL_CURVE,
                     CURVE_THICKNESS * in_canvas_zooming);
             }
 
-            if (this->label_visible) {
+            /// LEVEL OF DETAIL depending on zooming
+            if (this->label_visible && (in_canvas_zooming > GUI_ZOOM_DETAIL_LEVEL)) {
 
                 draw_list->ChannelsSetCurrent(1); // Foreground
 
@@ -192,7 +194,7 @@ int megamol::gui::configurator::Call::Presentation::Present(megamol::gui::config
                 bool active = ImGui::IsItemActive();
                 bool hovered = ImGui::IsItemHovered();
                 bool mouse_clicked = ImGui::GetIO().MouseClicked[0];
-                if (mouse_clicked && !hovered) { // && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+                if (mouse_clicked && !hovered) {
                     this->selected = false;
                 }
                 if (active) {

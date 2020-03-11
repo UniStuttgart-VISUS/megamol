@@ -13,10 +13,11 @@
 
 
 using namespace megamol;
+using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::CallSlot::CallSlot(int uid) : uid(uid), present() {
+megamol::gui::configurator::CallSlot::CallSlot(ImGuiID uid) : uid(uid), present() {
     this->parent_module.reset();
     connected_calls.clear();
 }
@@ -62,7 +63,7 @@ bool megamol::gui::configurator::CallSlot::ConnectCall(megamol::gui::configurato
 }
 
 
-bool megamol::gui::configurator::CallSlot::DisConnectCall(int call_uid, bool called_by_call) {
+bool megamol::gui::configurator::CallSlot::DisConnectCall(ImGuiID call_uid, bool called_by_call) {
 
     try {
         for (auto call_iter = this->connected_calls.begin(); call_iter != this->connected_calls.end(); call_iter++) {
@@ -178,7 +179,7 @@ const megamol::gui::configurator::ModulePtrType megamol::gui::configurator::Call
 }
 
 
-int megamol::gui::configurator::CallSlot::CheckCompatibleAvailableCallIndex(
+ImGuiID megamol::gui::configurator::CallSlot::CheckCompatibleAvailableCallIndex(
     const megamol::gui::configurator::CallSlotPtrType call_slot_ptr, megamol::gui::configurator::CallSlot& call_slot) {
 
     if (call_slot_ptr != nullptr) {
@@ -195,7 +196,7 @@ int megamol::gui::configurator::CallSlot::CheckCompatibleAvailableCallIndex(
                         } else if ((call_slot.type == CallSlot::CallSlotType::CALLER) && (call_slot.CallsConnected())) {
                             return GUI_INVALID_ID;
                         }
-                        return static_cast<int>(current_comp_call_slots);
+                        return static_cast<ImGuiID>(current_comp_call_slots);
                     }
                 }
             }
@@ -205,7 +206,7 @@ int megamol::gui::configurator::CallSlot::CheckCompatibleAvailableCallIndex(
 }
 
 
-int megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(
+ImGuiID megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(
     const CallSlotPtrType call_slot_1, const CallSlotPtrType call_slot_2) {
 
     if ((call_slot_1 != nullptr) && (call_slot_2 != nullptr)) {
@@ -215,7 +216,7 @@ int megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(
             for (auto& comp_call_idx_1 : call_slot_1->compatible_call_idxs) {
                 for (auto& comp_call_idx_2 : call_slot_2->compatible_call_idxs) {
                     if (comp_call_idx_1 == comp_call_idx_2) {
-                        return static_cast<int>(comp_call_idx_1);
+                        return static_cast<ImGuiID>(comp_call_idx_1);
                     }
                 }
             }
@@ -225,7 +226,7 @@ int megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(
 }
 
 
-int megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(
+ImGuiID megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(
     const CallSlotPtrType call_slot, const CallSlot::StockCallSlot& stock_call_slot) {
 
     if (call_slot != nullptr) {
@@ -234,7 +235,7 @@ int megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(
             for (auto& comp_call_idx_1 : call_slot->compatible_call_idxs) {
                 for (auto& comp_call_idx_2 : stock_call_slot.compatible_call_idxs) {
                     if (comp_call_idx_1 == comp_call_idx_2) {
-                        return static_cast<int>(comp_call_idx_1);
+                        return static_cast<ImGuiID>(comp_call_idx_1);
                     }
                 }
             }
@@ -257,11 +258,11 @@ megamol::gui::configurator::CallSlot::Presentation::Presentation(void)
 megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
 
-int megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::configurator::CallSlot& inout_call_slot,
-    ImVec2 in_canvas_offset, float in_canvas_zooming, int& out_hovered_call_slot_uid,
-    const CallSlotPtrType selected_call_slot_ptr) {
+ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
+    megamol::gui::configurator::CallSlot& inout_call_slot, ImVec2 in_canvas_offset, float in_canvas_zooming,
+    ImGuiID& out_hovered_call_slot_uid, const CallSlotPtrType compatible_call_slot_ptr) {
 
-    int retval_id = GUI_INVALID_ID;
+    ImGuiID retval_id = GUI_INVALID_ID;
     ImGuiStyle& style = ImGui::GetStyle();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
@@ -303,23 +304,21 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::co
         ImGui::SetCursorScreenPos(slot_position - ImVec2(radius, radius));
         std::string label = "slot_" + inout_call_slot.name + std::to_string(inout_call_slot.uid);
         ImGui::InvisibleButton(label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
+        bool active = ImGui::IsItemActive();
+        bool hovered = ImGui::IsItemHovered();
+        bool mouse_clicked = ImGui::GetIO().MouseClicked[0];
 
         std::string tooltip = inout_call_slot.description;
         if (!this->label_visible) {
             tooltip = "[" + inout_call_slot.name + "] " + tooltip;
         }
         this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
-        bool active = ImGui::IsItemActive();
-        bool hovered = ImGui::IsItemHovered();
-        bool mouse_clicked = ImGui::GetIO().MouseClicked[0];
 
-        int compat_call_idx = CallSlot::CheckCompatibleAvailableCallIndex(selected_call_slot_ptr, inout_call_slot);
-        // Highlight if compatible to selected slot
-        if (compat_call_idx != GUI_INVALID_ID) {
+        // Highlight if compatible to given call slot
+        if (CallSlot::CheckCompatibleAvailableCallIndex(compatible_call_slot_ptr, inout_call_slot) != GUI_INVALID_ID) {
             slot_color = COLOR_SLOT_COMPATIBLE;
         }
-
-        if (mouse_clicked && !hovered) { // && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+        if (mouse_clicked && !hovered) {
             this->selected = false;
         }
         if (active) {
@@ -331,14 +330,17 @@ int megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::co
         if (hovered) {
             out_hovered_call_slot_uid = inout_call_slot.uid;
         }
-        retval_id = ((this->selected) ? (inout_call_slot.uid) : (GUI_INVALID_ID));
+        if (this->selected) {
+            retval_id = inout_call_slot.uid;
+        }
 
         ImGui::SetCursorScreenPos(slot_position);
         draw_list->AddCircleFilled(slot_position, radius, slot_color);
         draw_list->AddCircle(slot_position, radius, COLOR_SLOT_BORDER);
 
         // Draw text
-        if (this->label_visible) {
+        /// LEVEL OF DETAIL depending on zooming
+        if (this->label_visible && (in_canvas_zooming > GUI_ZOOM_DETAIL_LEVEL)) {
             ImVec2 text_pos;
             text_pos.y = slot_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
             if (inout_call_slot.type == CallSlot::CallSlotType::CALLER) {

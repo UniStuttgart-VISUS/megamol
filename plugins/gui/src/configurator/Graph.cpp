@@ -10,10 +10,11 @@
 
 
 using namespace megamol;
+using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-int megamol::gui::configurator::Graph::generated_uid = 0; /// must be greater than or equal to zero
+ImGuiID megamol::gui::configurator::Graph::generated_uid = 0; /// must be greater than or equal to zero
 
 
 megamol::gui::configurator::Graph::Graph(const std::string& graph_name)
@@ -91,7 +92,7 @@ bool megamol::gui::configurator::Graph::AddModule(
 }
 
 
-bool megamol::gui::configurator::Graph::DeleteModule(int module_uid) {
+bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
 
     try {
         for (auto iter = this->modules.begin(); iter != this->modules.end(); iter++) {
@@ -177,7 +178,7 @@ bool megamol::gui::configurator::Graph::DeleteDisconnectedCalls(void) {
 
     try {
         // Create separate uid list to avoid iterator conflict when operating on calls list while deleting.
-        std::vector<int> call_uids;
+        std::vector<ImGuiID> call_uids;
         for (auto& call : this->calls) {
             if (!call->IsConnected()) {
                 call_uids.emplace_back(call->uid);
@@ -200,7 +201,7 @@ bool megamol::gui::configurator::Graph::DeleteDisconnectedCalls(void) {
 }
 
 
-bool megamol::gui::configurator::Graph::DeleteCall(int call_uid) {
+bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
 
     try {
         for (auto iter = this->calls.begin(); iter != this->calls.end(); iter++) {
@@ -264,10 +265,10 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
 megamol::gui::configurator::Graph::Presentation::~Presentation(void) {}
 
 
-int megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::configurator::Graph& inout_graph,
+ImGuiID megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::configurator::Graph& inout_graph,
     float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys, bool& out_delete_graph) {
 
-    int retval = GUI_INVALID_ID;
+    ImGuiID retval = GUI_INVALID_ID;
     this->font = in_graph_font;
     bool popup_rename = false;
 
@@ -280,7 +281,7 @@ int megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::confi
         }
 
         ImGuiIO& io = ImGui::GetIO();
-        int graph_uid = inout_graph.GetUID();
+        ImGuiID graph_uid = inout_graph.GetUID();
 
         ImGui::PushID(graph_uid);
 
@@ -501,11 +502,21 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
     ImGui::PopStyleVar(2);
 
     // Draw modules -------------------
-    CallSlotPtrType selected_call_slot_ptr;
-    for (auto& mods : inout_graph.GetGraphModules()) {
-        CallSlotPtrType call_slot_ptr = mods->GetCallSlot(this->selected_call_slot_uid);
-        if (call_slot_ptr != nullptr) {
-            selected_call_slot_ptr = call_slot_ptr;
+    CallSlotPtrType compatible_call_slot_ptr;
+    if (this->selected_call_slot_uid != GUI_INVALID_ID) {
+        for (auto& mods : inout_graph.GetGraphModules()) {
+            CallSlotPtrType call_slot_ptr = mods->GetCallSlot(this->selected_call_slot_uid);
+            if (call_slot_ptr != nullptr) {
+                compatible_call_slot_ptr = call_slot_ptr;
+            }
+        }
+    }
+    if (this->hovered_call_slot_uid != GUI_INVALID_ID) {
+        for (auto& mods : inout_graph.GetGraphModules()) {
+            CallSlotPtrType call_slot_ptr = mods->GetCallSlot(this->hovered_call_slot_uid);
+            if (call_slot_ptr != nullptr) {
+                compatible_call_slot_ptr = call_slot_ptr;
+            }
         }
     }
     this->selected_call_slot_uid = GUI_INVALID_ID;
@@ -513,7 +524,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
     this->selected_module_uid = GUI_INVALID_ID;
     for (auto& mod : inout_graph.GetGraphModules()) {
         auto id = mod->GUI_Present(this->canvas_offset, this->canvas_zooming, inout_hotkeys,
-            this->selected_call_slot_uid, this->hovered_call_slot_uid, selected_call_slot_ptr);
+            this->selected_call_slot_uid, this->hovered_call_slot_uid, compatible_call_slot_ptr);
         if (id != GUI_INVALID_ID) {
             this->selected_module_uid = id;
         }
@@ -854,7 +865,7 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
                 for (auto& caller_slot : mod->GetCallSlots(CallSlot::CallSlotType::CALLER)) {
                     if (caller_slot->CallsConnected()) {
                         for (auto& call : caller_slot->GetConnectedCalls()) {
-                            auto call_name_length = this->utils.TextWidgetWidth(call->class_name);
+                            auto call_name_length = this->utils.TextWidgetWidth(call->class_name) * 1.5f;
                             max_call_width =
                                 (call_name_length > max_call_width) ? (call_name_length) : (max_call_width);
                         }

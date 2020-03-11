@@ -12,6 +12,8 @@
 #include <array>
 #include <cmath>
 
+
+using namespace megamol;
 using namespace megamol::gui;
 using namespace megamol::core;
 
@@ -526,8 +528,8 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
         alpha_line_col,
     }};
 
-    int selected_node = GUI_INVALID_ID;
-    int selected_chan = GUI_INVALID_ID;
+    ImGuiID selected_node = GUI_INVALID_ID;
+    ImGuiID selected_chan = GUI_INVALID_ID;
     ImVec2 selected_delta = ImVec2(0.0f, 0.0f);
     // For each enabled color channel
     for (size_t c = 0; c < channelColors.size(); ++c) {
@@ -563,8 +565,8 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
             // Test for intersection of mouse position with node.
             ImVec2 d = ImVec2(point.x - mouse_cur_pos.x, point.y - mouse_cur_pos.y);
             if (sqrtf((d.x * d.x) + (d.y * d.y)) <= pointAndBorderRadius) {
-                selected_node = static_cast<int>(i);
-                selected_chan = static_cast<int>(c);
+                selected_node = static_cast<ImGuiID>(i);
+                selected_chan = static_cast<ImGuiID>(c);
                 selected_delta = d;
             }
         }
@@ -686,7 +688,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
                 if ((selected_node > 0) &&
                     (selected_node < (this->nodes.size() - 1))) { // First and last node can't be deleted
                     this->nodes.erase(this->nodes.begin() + selected_node);
-                    if (static_cast<int>(this->currentNode) >= selected_node) {
+                    if (static_cast<ImGuiID>(this->currentNode) >= selected_node) {
                         this->currentNode =
                             static_cast<unsigned int>(std::max(0, static_cast<int>(this->currentNode) - 1));
                     }
