@@ -86,15 +86,60 @@ void GUIUtils::HelpMarkerToolTip(const std::string& text, std::string label) {
 }
 
 
-bool megamol::gui::GUIUtils::RenamePopUp(const std::string& label, bool open_popup, std::string& rename) {
+bool megamol::gui::GUIUtils::MinimalPopUp(const std::string& caption, bool open_popup, const std::string& info_text,
+    const std::string& confirm_btn_text, bool& confirmed, const std::string& abort_btn_text, bool& aborted) {
 
-    ImGui::PushID(label.c_str());
+    bool retval = false;
+    confirmed = false;
+    aborted = false;
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    ImGui::PushID(caption.c_str());
+
+    if (open_popup) {
+        ImGui::OpenPopup(caption.c_str());
+        float max_width = std::max(this->TextWidgetWidth(caption), this->TextWidgetWidth(info_text));
+        max_width += (style.ItemSpacing.x * 2.0f);
+        ImGui::SetNextWindowSize(ImVec2(max_width, 0.0f));
+    }
+    if (ImGui::BeginPopupModal(caption.c_str(), nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
+        retval = true;
+
+        if (!info_text.empty()) {
+            ImGui::Text(info_text.c_str());
+        }
+
+        if (!confirm_btn_text.empty()) {
+            if (ImGui::Button(confirm_btn_text.c_str())) {
+                confirmed = true;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine();
+        }
+        if (!abort_btn_text.empty()) {
+            if (ImGui::Button(abort_btn_text.c_str())) {
+                aborted = true;
+                ImGui::CloseCurrentPopup();
+            }
+        }
+        ImGui::EndPopup();
+    }
+
+    ImGui::PopID();
+
+    return retval;
+}
+
+
+bool megamol::gui::GUIUtils::RenamePopUp(const std::string& caption, bool open_popup, std::string& rename) {
+
+    ImGui::PushID(caption.c_str());
 
     if (open_popup) {
         this->rename_string = rename;
-        ImGui::OpenPopup(label.c_str());
+        ImGui::OpenPopup(caption.c_str());
     }
-    if (ImGui::BeginPopupModal(label.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (ImGui::BeginPopupModal(caption.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 
         std::string text_label = "New Name";
         auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;

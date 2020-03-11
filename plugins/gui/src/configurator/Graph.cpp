@@ -269,7 +269,7 @@ int megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::confi
 
     int retval = GUI_INVALID_ID;
     this->font = in_graph_font;
-    bool rename_popup_open = false;
+    bool popup_rename = false;
 
     try {
 
@@ -296,7 +296,7 @@ int megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::confi
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Rename")) {
-                    rename_popup_open = true;
+                    popup_rename = true;
                 }
                 ImGui::EndPopup();
             }
@@ -342,7 +342,7 @@ int megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::confi
         if (!open) out_delete_graph = true;
 
         // Rename pop-up
-        this->utils.RenamePopUp("Rename Project", rename_popup_open, inout_graph.GetName());
+        this->utils.RenamePopUp("Rename Project", popup_rename, inout_graph.GetName());
 
         ImGui::PopID();
     } catch (std::exception e) {

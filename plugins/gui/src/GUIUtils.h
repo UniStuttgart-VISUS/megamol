@@ -76,7 +76,10 @@ public:
 
     // Pu-up widgets -------------------------------------------------------
 
-    bool RenamePopUp(const std::string& label, bool open_popup, std::string& rename);
+    bool MinimalPopUp(const std::string& caption, bool open_popup, const std::string& info_text,
+        const std::string& confirm_btn_text, bool& confirmed, const std::string& abort_btn_text, bool& aborted);
+
+    bool RenamePopUp(const std::string& caption, bool open_popup, std::string& rename);
 
 
 #ifdef GUI_USE_FILESYSTEM

@@ -137,8 +137,8 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
         return;
     }
 
-    bool open_save_popup = false;
-    bool open_load_popup = false;
+    bool popup_save_file = false;
+    bool popup_load_file = false;
     if (ImGui::BeginMenuBar()) {
 
         if (ImGui::BeginMenu("File")) {
@@ -157,12 +157,12 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 #ifdef GUI_USE_FILESYSTEM
             // Load project from LUA file
             if (ImGui::MenuItem("Load Project", nullptr)) {
-                open_load_popup = true;
+                popup_load_file = true;
             }
 
             // Save currently active project to LUA file
             if (ImGui::MenuItem("Save Project", nullptr, false, (this->graph_uid != GUI_INVALID_ID))) {
-                open_save_popup = true;
+                popup_save_file = true;
             }
 #endif // GUI_USE_FILESYSTEM
 
@@ -193,14 +193,23 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 
     // SAVE/LOAD PROJECT pop-up
 #ifdef GUI_USE_FILESYSTEM
+    bool popup_save_failed = false;
+    bool popup_load_failed = false;
     if (this->utils.FileBrowserPopUp(
-            GUIUtils::FileBrowserFlag::LOAD, "Load Project", open_load_popup, this->project_filename)) {
-        this->graph_manager.LoadProjectFile(this->project_filename, core_instance);
+            GUIUtils::FileBrowserFlag::LOAD, "Load Project", popup_load_file, this->project_filename)) {
+        popup_load_failed = !this->graph_manager.LoadProjectFile(this->project_filename, core_instance);
     }
     if (this->utils.FileBrowserPopUp(
-            GUIUtils::FileBrowserFlag::SAVE, "Save Project", open_save_popup, this->project_filename)) {
-        this->graph_manager.SaveProjectFile(this->graph_uid, this->project_filename, core_instance);
+            GUIUtils::FileBrowserFlag::SAVE, "Save Project", popup_save_file, this->project_filename)) {
+        popup_save_failed =
+            !this->graph_manager.SaveProjectFile(this->graph_uid, this->project_filename, core_instance);
     }
+    bool confirmed, aborted;
+    this->utils.MinimalPopUp("Failed to Save Project", popup_save_failed,
+        "See console log output for more information.", "", confirmed, "Cancel", aborted);
+    this->utils.MinimalPopUp("Failed to Load Project", popup_load_failed,
+        "See console log output for more information.", "", confirmed, "Cancel", aborted);
+
 #endif // GUI_USE_FILESYSTEM
 }
 

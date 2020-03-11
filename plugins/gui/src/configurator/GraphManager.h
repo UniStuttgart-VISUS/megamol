@@ -84,8 +84,6 @@ private:
         int delete_graph_uid;
         GUIUtils utils;
 
-        bool close_unsaved_popup(bool open_popup);
-
     } present;
 
     // FUNCTIONS --------------------------------------------------------------

@@ -745,29 +745,34 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(
         for (auto& graph : this->graphs) {
             if (graph->GetUID() == graph_id) {
 
+                bool found_error = false;
                 bool found_instance = false;
                 for (auto& mod_1 : graph->GetGraphModules()) {
                     for (auto& mod_2 : graph->GetGraphModules()) {
                         if ((mod_1 != mod_2) && (mod_1->FullName() == mod_2->FullName())) {
-                            vislib::sys::Log::DefaultLog.WriteWarn(
+                            vislib::sys::Log::DefaultLog.WriteError(
                                 "Save Project >>> Found non unique module name: %s [%s, %s, line %d]\n",
                                 mod_1->FullName().c_str(), __FILE__, __FUNCTION__, __LINE__);
+                            found_error = true;
                         }
                     }
                     if (mod_1->is_view_instance) {
                         if (found_instance) {
-                            vislib::sys::Log::DefaultLog.WriteWarn(
+                            vislib::sys::Log::DefaultLog.WriteError(
                                 "Save Project >>> Found multiple view instances. [%s, %s, line %d]\n", __FILE__,
                                 __FUNCTION__, __LINE__);
+                            found_error = true;
                         }
                         found_instance = true;
                     }
                 }
                 if (!found_instance) {
-                    vislib::sys::Log::DefaultLog.WriteWarn(
+                    vislib::sys::Log::DefaultLog.WriteError(
                         "Save Project >>> Could not find required main view. [%s, %s, line %d]\n", __FILE__,
                         __FUNCTION__, __LINE__);
+                    found_error = true;
                 }
+                if (found_error) return false;
 
                 for (auto& mod : graph->GetGraphModules()) {
                     std::string instance_name = graph->GetName();
@@ -1112,7 +1117,7 @@ int megamol::gui::configurator::GraphManager::Presentation::Present(
         ImGui::BeginChild("graph_child_window", ImVec2(in_child_width, 0.0f), true, child_flags);
 
         // Assuming only one closed tab/graph per frame.
-        bool open_close_unsaved_popup = false;
+        bool popup_close_unsaved = false;
 
         // Draw Graphs
         ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
@@ -1151,7 +1156,7 @@ int megamol::gui::configurator::GraphManager::Presentation::Present(
             if (delete_graph) {
                 this->delete_graph_uid = retval;
                 if (graph->IsDirty()) {
-                    open_close_unsaved_popup = true;
+                    popup_close_unsaved = true;
                 }
             }
         }
@@ -1159,9 +1164,16 @@ int megamol::gui::configurator::GraphManager::Presentation::Present(
         ImGui::EndTabBar();
 
         // Delete marked graph when tab closed and
-        if ((this->delete_graph_uid != GUI_INVALID_ID) && this->close_unsaved_popup(open_close_unsaved_popup)) {
-            inout_graph_manager.DeleteGraph(delete_graph_uid);
-            this->delete_graph_uid = GUI_INVALID_ID;
+        bool confirmed, aborted;
+        bool popup_open = this->utils.MinimalPopUp(
+            "Closing Unsaved Project", popup_close_unsaved, "Discard changes?", "Yes", confirmed, "No", aborted);
+        if (this->delete_graph_uid != GUI_INVALID_ID) {
+            if (popup_open && aborted) {
+                this->delete_graph_uid = GUI_INVALID_ID;
+            } else if ((popup_open && confirmed) || !popup_open) {
+                inout_graph_manager.DeleteGraph(delete_graph_uid);
+                this->delete_graph_uid = GUI_INVALID_ID;
+            }
         }
 
         ImGui::EndChild();
@@ -1172,37 +1184,6 @@ int megamol::gui::configurator::GraphManager::Presentation::Present(
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
-    }
-
-    return retval;
-}
-
-
-bool megamol::gui::configurator::GraphManager::Presentation::close_unsaved_popup(bool open_popup) {
-
-    bool retval = true;
-    std::string save_project_label = " Closing Unsaved Project ";
-
-    if (open_popup) {
-        ImGui::OpenPopup(save_project_label.c_str());
-        ImGui::SetNextWindowSize(ImVec2(this->utils.TextWidgetWidth(save_project_label), 0.0f));
-    }
-    if (ImGui::BeginPopupModal(
-            save_project_label.c_str(), nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
-        retval = false;
-
-        ImGui::Text("Discard changes?");
-
-        if (ImGui::Button("Yes")) {
-            ImGui::CloseCurrentPopup();
-            retval = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("No")) {
-            ImGui::CloseCurrentPopup();
-            this->delete_graph_uid = GUI_INVALID_ID;
-        }
-        ImGui::EndPopup();
     }
 
     return retval;

@@ -138,7 +138,7 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
     int& out_hovered_call_slot_uid, const CallSlotPtrType selected_call_slot_ptr) {
 
     int retval_id = GUI_INVALID_ID;
-    bool rename_popup_open = false;
+    bool popup_rename = false;
     ImGuiStyle& style = ImGui::GetStyle();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
@@ -253,7 +253,7 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
                     retval_id = inout_mod.uid;
                 }
                 if (ImGui::MenuItem("Rename")) {
-                    rename_popup_open = true;
+                    popup_rename = true;
                 }
                 ImGui::EndPopup();
             }
@@ -277,7 +277,7 @@ int megamol::gui::configurator::Module::Presentation::Present(megamol::gui::conf
         // Use ImGui::ArrowButton to show/hide parameters inside module box
 
         // Rename pop-up
-        this->utils.RenamePopUp("Rename Project", rename_popup_open, inout_mod.name);
+        this->utils.RenamePopUp("Rename Project", popup_rename, inout_mod.name);
         /// XXX Prevent assignement of already existing module names (consider FullName for checking).
 
         ImGui::PopID();
