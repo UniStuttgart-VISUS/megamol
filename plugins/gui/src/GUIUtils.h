@@ -36,8 +36,8 @@ namespace megamol {
 namespace gui {
 
 #define GUI_INVALID_ID (INT_MAX)
-
 #define GUI_ZOOM_DETAIL_LEVEL (0.3f)
+#define GUI_CALL_SLOT_RADIUS (8.0f)
 
 /** Hotkey Data Types for Configurator */
 typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyDataType;

@@ -86,7 +86,6 @@ public:
     }
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     bool GUI_GetLabelVisibility(void) { return this->present.label_visible; }
-    float GUI_GetSlotRadius(void) { return this->present.slot_radius; }
     void GUI_SetPresentation(CallSlot::Presentations present) { this->present.presentations = present; }
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
 
@@ -112,7 +111,6 @@ private:
 
         CallSlot::Presentations presentations;
         bool label_visible;
-        const float slot_radius;
 
     private:
         // Absolute position including canvas offset and zooming

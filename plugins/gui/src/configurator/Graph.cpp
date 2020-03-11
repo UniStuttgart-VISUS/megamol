@@ -778,8 +778,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_cal
             if (selected_call_slot_ptr != nullptr) {
                 ImVec2 p1 = selected_call_slot_ptr->GUI_GetPosition();
                 ImVec2 p2 = ImGui::GetMousePos();
-                if (glm::length(glm::vec2(p1.x, p1.y) - glm::vec2(p2.x, p2.y)) >
-                    selected_call_slot_ptr->GUI_GetSlotRadius()) {
+                if (glm::length(glm::vec2(p1.x, p1.y) - glm::vec2(p2.x, p2.y)) > GUI_CALL_SLOT_RADIUS) {
                     if (selected_call_slot_ptr->type == CallSlot::CallSlotType::CALLEE) {
                         ImVec2 tmp = p1;
                         p1 = p2;
@@ -818,7 +817,6 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
     }
 
     // Loop while modules are added to new layer.
-    float call_slot_radius = 0.0f;
     bool added_module = true;
     while (added_module) {
         added_module = false;
@@ -827,7 +825,6 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
         // Loop through last filled layer
         for (auto& mod : layers[layers.size() - 2]) {
             for (auto& caller_slot : mod->GetCallSlots(CallSlot::CallSlotType::CALLER)) {
-                call_slot_radius = std::max(caller_slot->GUI_GetSlotRadius(), call_slot_radius);
                 if (caller_slot->CallsConnected()) {
                     for (auto& call : caller_slot->GetConnectedCalls()) {
                         auto add_mod = call->GetCallSlot(CallSlot::CallSlotType::CALLEE)->GetParentModule();
@@ -851,7 +848,7 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
     }
 
     // Calculate new positions of modules
-    const float border_offset = call_slot_radius * 4.0f;
+    const float border_offset = GUI_CALL_SLOT_RADIUS * 4.0f;
     ImVec2 init_position = ImVec2(-1.0f * this->canvas.scrolling.x, -1.0f * this->canvas.scrolling.y);
     ImVec2 pos = init_position;
     float max_call_width = 25.0f;

@@ -248,12 +248,7 @@ ImGuiID megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(
 // CALL SLOT PRESENTATION ####################################################
 
 megamol::gui::configurator::CallSlot::Presentation::Presentation(void)
-    : presentations(CallSlot::Presentations::DEFAULT)
-    , label_visible(false)
-    , position()
-    , slot_radius(8.0f)
-    , utils()
-    , selected(false) {}
+    : presentations(CallSlot::Presentations::DEFAULT), label_visible(false), position(), utils(), selected(false) {}
 
 megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
@@ -301,7 +296,7 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
         }
 
         ImVec2 slot_position = this->position;
-        float radius = this->slot_radius * in_canvas.zooming;
+        float radius = GUI_CALL_SLOT_RADIUS * in_canvas.zooming;
 
         ImGui::SetCursorScreenPos(slot_position - ImVec2(radius, radius));
         std::string label = "slot_" + inout_call_slot.name + std::to_string(inout_call_slot.uid);

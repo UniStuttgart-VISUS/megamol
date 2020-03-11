@@ -170,14 +170,22 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
 
         // Clip module if lying ouside the canvas
-        /*
+
         ImVec2 canvas_rect_min = in_canvas.position;
         ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
-        if ((canvas_rect_min.x <= module_rect_min.x) && (canvas_rect_min.y <= module_rect_min.y) &&
-                (canvas_rect_max.x >= module_rect_max.x) && (canvas_rect_max.y >= module_rect_max.y)) {
-            return GUI_INVALID_ID;
+        if (!((canvas_rect_min.x < (module_rect_max.x + GUI_CALL_SLOT_RADIUS)) &&
+                (canvas_rect_max.x > (module_rect_min.x - GUI_CALL_SLOT_RADIUS)) &&
+                (canvas_rect_min.y < (module_rect_max.y + GUI_CALL_SLOT_RADIUS)) &&
+                (canvas_rect_max.y > (module_rect_min.y - GUI_CALL_SLOT_RADIUS)))) {
+            retval_id = GUI_INVALID_ID;
+            if (ImGui::GetIO().MouseClicked[0]) {
+                this->selected = false;
+            }
+            if (this->selected) {
+                retval_id = inout_mod.uid;
+            }
+            return retval_id;
         }
-        */
 
         ImGui::PushID(inout_mod.uid);
 
@@ -320,25 +328,24 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
     }
     max_label_length /= canvas_zooming;
 
-    float radius = 0.0f;
     float max_slot_name_length = 0.0f;
     for (auto& call_slot_type_list : mod.GetCallSlots()) {
         for (auto& call_slot : call_slot_type_list.second) {
-            radius = std::max(radius, call_slot->GUI_GetSlotRadius());
             if (call_slot->GUI_GetLabelVisibility()) {
                 max_slot_name_length = std::max(this->utils.TextWidgetWidth(call_slot->name), max_slot_name_length);
             }
         }
     }
     if (max_slot_name_length != 0.0f) {
-        max_slot_name_length = (2.0f * max_slot_name_length / canvas_zooming) + (4.0f * radius);
+        max_slot_name_length = (2.0f * max_slot_name_length / canvas_zooming) + (4.0f * GUI_CALL_SLOT_RADIUS);
     }
 
-    float module_width = (max_label_length + max_slot_name_length) + (2.0f * radius);
+    float module_width = (max_label_length + max_slot_name_length) + (2.0f * GUI_CALL_SLOT_RADIUS);
 
     auto max_slot_count = std::max(mod.GetCallSlots(CallSlot::CallSlotType::CALLEE).size(),
         mod.GetCallSlots(CallSlot::CallSlotType::CALLER).size());
-    float module_slot_height = (static_cast<float>(max_slot_count) * (radius * 2.0f) * 1.5f) + ((radius * 2.0f) * 0.5f);
+    float module_slot_height = (static_cast<float>(max_slot_count) * (GUI_CALL_SLOT_RADIUS * 2.0f) * 1.5f) +
+                               ((GUI_CALL_SLOT_RADIUS * 2.0f) * 0.5f);
 
     float module_height = std::max(
         module_slot_height, ((canvas_zooming > 1.0f) ? (1.0f / canvas_zooming) : (1.0f)) *
