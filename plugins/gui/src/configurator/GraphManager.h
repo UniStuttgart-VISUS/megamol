@@ -83,8 +83,8 @@ private:
 
     private:
         struct DropCallData {
-            bool mouse_released;
-            GraphPtrType graph_ptr;
+            int trigger_drop_call;
+            int dragged_call_data;
             ImGuiID hovered_call_slot_uid;
             ImGuiID selected_call_slot_uid;
         } drop_call_data;

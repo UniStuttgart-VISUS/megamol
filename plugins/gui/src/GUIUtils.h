@@ -35,15 +35,24 @@
 namespace megamol {
 namespace gui {
 
-
 #define GUI_INVALID_ID (INT_MAX)
+
 #define GUI_ZOOM_DETAIL_LEVEL (0.3f)
 
-
-/** HotKey Types for Configurator */
+/** Hotkey Data Types for Configurator */
 typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyDataType;
 enum HotkeyIndex : size_t { MODULE_SEARCH = 0, PARAMETER_SEARCH = 1, DELETE_GRAPH_ITEM = 2, INDEX_COUNT = 3 };
 typedef std::array<HotkeyDataType, HotkeyIndex::INDEX_COUNT> HotKeyArrayType;
+
+/* Canvas Data Type for Information of Graph */
+typedef struct _canvas_ {
+    ImVec2 position;
+    ImVec2 size;
+    ImVec2 scrolling;
+    float zooming;
+    ImVec2 offset;
+    bool updated;
+} Canvas;
 
 
 /**

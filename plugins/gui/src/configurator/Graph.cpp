@@ -240,11 +240,7 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
 megamol::gui::configurator::Graph::Presentation::Presentation(void)
     : font(nullptr)
     , utils()
-    , canvas_position(ImVec2(0.0f, 0.0f))
-    , canvas_size(ImVec2(1.0f, 1.0f))
-    , canvas_scrolling(ImVec2(0.0f, 0.0f))
-    , canvas_zooming(1.0f)
-    , canvas_offset(ImVec2(0.0f, 0.0f))
+    , canvas()
     , show_grid(false)
     , show_call_names(true)
     , show_slot_names(false)
@@ -259,7 +255,15 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , params_visible(true)
     , params_readonly(false)
     , param_name_space()
-    , param_present(Parameter::Presentations::SIMPLE) {}
+    , param_present(Parameter::Presentations::SIMPLE) {
+
+    this->canvas.position = ImVec2(0.0f, 0.0f);
+    this->canvas.size = ImVec2(1.0f, 1.0f);
+    this->canvas.scrolling = ImVec2(0.0f, 0.0f);
+    this->canvas.zooming = 1.0f;
+    this->canvas.offset = ImVec2(0.0f, 0.0f);
+    this->canvas.updated = true;
+}
 
 
 megamol::gui::configurator::Graph::Presentation::~Presentation(void) {}
@@ -320,7 +324,7 @@ ImGuiID megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::c
             }
 
             // Draw
-            this->menu(inout_graph);
+            this->present_menu(inout_graph);
 
             if (this->selected_module_uid != GUI_INVALID_ID) {
 
@@ -328,13 +332,14 @@ ImGuiID megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::c
                 this->utils.VerticalSplitter(
                     GUIUtils::FixedSplitterSide::RIGHT, child_width_auto, this->child_split_width);
 
-                this->canvas(inout_graph, child_width_auto, inout_hotkeys);
+                this->present_canvas(inout_graph, child_width_auto, inout_hotkeys);
                 ImGui::SameLine();
-                this->parameters(inout_graph, this->child_split_width, inout_hotkeys);
+                this->present_parameters(inout_graph, this->child_split_width, inout_hotkeys);
             } else {
-                this->canvas(inout_graph, in_child_width, inout_hotkeys);
+                this->present_canvas(inout_graph, in_child_width, inout_hotkeys);
             }
 
+            this->canvas.updated = false;
             retval = graph_uid;
             ImGui::EndTabItem();
         }
@@ -359,7 +364,7 @@ ImGuiID megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::c
 }
 
 
-void megamol::gui::configurator::Graph::Presentation::menu(megamol::gui::configurator::Graph& inout_graph) {
+void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui::configurator::Graph& inout_graph) {
 
     const float child_height = ImGui::GetItemsLineHeightWithSpacing() * 1.0f;
     const auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
@@ -397,21 +402,23 @@ void megamol::gui::configurator::Graph::Presentation::menu(megamol::gui::configu
     ImGui::SameLine();
 
     if (ImGui::Button("Reset###reset_scrolling")) {
-        this->canvas_scrolling = ImVec2(0.0f, 0.0f);
+        this->canvas.scrolling = ImVec2(0.0f, 0.0f);
+        this->canvas.updated = true;
     }
     ImGui::SameLine();
 
-    ImGui::Text("Scrolling: %.4f,%.4f", this->canvas_scrolling.x, this->canvas_scrolling.y);
+    ImGui::Text("Scrolling: %.4f,%.4f", this->canvas.scrolling.x, this->canvas.scrolling.y);
     this->utils.HelpMarkerToolTip("Middle Mouse Button");
 
     ImGui::SameLine();
 
     if (ImGui::Button("Reset###reset_zooming")) {
-        this->canvas_zooming = 1.0f;
+        this->canvas.zooming = 1.0f;
+        this->canvas.updated = true;
     }
     ImGui::SameLine();
 
-    ImGui::Text("Zooming: %.4f", this->canvas_zooming);
+    ImGui::Text("Zooming: %.4f", this->canvas.zooming);
     this->utils.HelpMarkerToolTip("Mouse Wheel");
 
     ImGui::SameLine();
@@ -453,7 +460,7 @@ void megamol::gui::configurator::Graph::Presentation::menu(megamol::gui::configu
 }
 
 
-void megamol::gui::configurator::Graph::Presentation::canvas(
+void megamol::gui::configurator::Graph::Presentation::present_canvas(
     megamol::gui::configurator::Graph& inout_graph, float in_child_width, HotKeyArrayType& inout_hotkeys) {
 
     ImGuiIO& io = ImGui::GetIO();
@@ -475,9 +482,40 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
 
     ImGui::BeginChild(
         "region", ImVec2(in_child_width, 0.0f), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
-    this->canvas_position = ImGui::GetCursorScreenPos();
-    this->canvas_size = ImGui::GetWindowSize();
-    this->canvas_offset = this->canvas_position + (this->canvas_scrolling * this->canvas_zooming);
+
+    // Zooming and Scaling  -----------
+    /// Must be checked inside canvas child window.
+    if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) {
+
+        // Scrolling (2 = Middle Mouse Button)
+        if (ImGui::IsMouseDragging(2, 0.0f)) {
+            this->canvas.scrolling = this->canvas.scrolling + ImGui::GetIO().MouseDelta / this->canvas.zooming;
+            this->canvas.updated = true;
+        }
+
+        // Zooming (Mouse Wheel)
+        if (this->mouse_wheel != io.MouseWheel) {
+            const float factor = (30.0f / this->canvas.zooming);
+            float last_zooming = this->canvas.zooming;
+            this->canvas.zooming = this->canvas.zooming + io.MouseWheel / factor;
+            // Limit zooming
+            this->canvas.zooming = (this->canvas.zooming <= 0.0f) ? 0.000001f : (this->canvas.zooming);
+            // Compensate zooming shift of origin
+            ImVec2 scrolling_diff =
+                (this->canvas.scrolling * last_zooming) - (this->canvas.scrolling * this->canvas.zooming);
+            this->canvas.scrolling += (scrolling_diff / this->canvas.zooming);
+            // Move origin away from mouse position
+            ImVec2 current_mouse_pos = this->canvas.offset - ImGui::GetMousePos();
+            ImVec2 new_mouse_position = (current_mouse_pos / last_zooming) * this->canvas.zooming;
+            this->canvas.scrolling += ((new_mouse_position - current_mouse_pos) / this->canvas.zooming);
+
+            this->canvas.updated = true;
+        }
+        this->mouse_wheel = io.MouseWheel;
+    }
+    this->canvas.position = ImGui::GetCursorScreenPos();
+    this->canvas.size = ImGui::GetWindowSize();
+    this->canvas.offset = this->canvas.position + (this->canvas.scrolling * this->canvas.zooming);
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
@@ -486,10 +524,10 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
     // Propagete only left clicks within the canvas
     bool left_click = io.MouseClicked[0];
     ImVec2 mouse_pos = ImGui::GetMousePos();
-    float xmin = this->canvas_position.x;
-    float ymin = this->canvas_position.y;
-    float xmax = xmin + this->canvas_size.x;
-    float ymax = ymin + this->canvas_size.y;
+    float xmin = this->canvas.position.x;
+    float ymin = this->canvas.position.y;
+    float xmax = xmin + this->canvas.size.x;
+    float ymax = ymin + this->canvas.size.y;
     if (left_click &&
         !((mouse_pos.x >= xmin) && (mouse_pos.x <= xmax) && (mouse_pos.y >= ymin) && (mouse_pos.y <= ymax))) {
         io.MouseClicked[0] = false;
@@ -497,11 +535,10 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
 
     // Display grid -------------------
     if (this->show_grid) {
-        this->canvas_grid();
+        this->present_canvas_grid();
     }
     ImGui::PopStyleVar(2);
 
-    // Draw modules -------------------
     CallSlotPtrType compatible_call_slot_ptr;
     if (this->selected_call_slot_uid != GUI_INVALID_ID) {
         for (auto& mods : inout_graph.GetGraphModules()) {
@@ -522,58 +559,27 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
     this->selected_call_slot_uid = GUI_INVALID_ID;
     this->hovered_call_slot_uid = GUI_INVALID_ID;
     this->selected_module_uid = GUI_INVALID_ID;
+    // Draw modules -------------------
     for (auto& mod : inout_graph.GetGraphModules()) {
-        auto id = mod->GUI_Present(this->canvas_offset, this->canvas_zooming, inout_hotkeys,
-            this->selected_call_slot_uid, this->hovered_call_slot_uid, compatible_call_slot_ptr);
+        auto id = mod->GUI_Present(this->canvas, inout_hotkeys, this->selected_call_slot_uid,
+            this->hovered_call_slot_uid, compatible_call_slot_ptr);
         if (id != GUI_INVALID_ID) {
             this->selected_module_uid = id;
         }
     }
 
     // Draw calls ---------------------
+    /// (Draw after modules for getting updated position of call slots)
     this->selected_call_uid = GUI_INVALID_ID;
     for (auto& call : inout_graph.GetGraphCalls()) {
-        auto id = call->GUI_Present(this->canvas_offset, this->canvas_zooming, inout_hotkeys);
+        auto id = call->GUI_Present(this->canvas, inout_hotkeys);
         if (id != GUI_INVALID_ID) {
             this->selected_call_uid = id;
         }
     }
 
     // Draw dragged call --------------
-    this->canvas_dragged_call(inout_graph);
-
-    // Zooming and Scaling  -----------
-    /// Must be checked inside canvas child window.
-    if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) {
-
-        // Scrolling (2 = Middle Mouse Button)
-        if (ImGui::IsMouseDragging(2, 0.0f)) {
-            this->canvas_scrolling = this->canvas_scrolling + ImGui::GetIO().MouseDelta / this->canvas_zooming;
-        }
-
-        // Zooming (Mouse Wheel)
-        if (this->mouse_wheel != io.MouseWheel) {
-            const float factor = (30.0f / this->canvas_zooming);
-            float last_zooming = this->canvas_zooming;
-            this->canvas_zooming = this->canvas_zooming + io.MouseWheel / factor;
-            // Limit zooming
-            this->canvas_zooming = (this->canvas_zooming < 0.0f) ? 0.000001f : (this->canvas_zooming);
-            if (this->canvas_zooming > 0.0f) {
-                // Compensate zooming shift of origin
-                ImVec2 scrolling_diff =
-                    (this->canvas_scrolling * last_zooming) - (this->canvas_scrolling * this->canvas_zooming);
-                this->canvas_scrolling += (scrolling_diff / this->canvas_zooming);
-                // Move origin away from mouse position
-                ImVec2 current_mouse_pos = this->canvas_offset - ImGui::GetMousePos();
-                ImVec2 new_mouse_position = (current_mouse_pos / last_zooming) * this->canvas_zooming;
-                this->canvas_scrolling += ((new_mouse_position - current_mouse_pos) / this->canvas_zooming);
-            }
-        }
-        this->mouse_wheel = io.MouseWheel;
-    }
-
-    /// DEBUG Draw point at origin
-    // draw_list->AddCircleFilled(this->canvas_offset, 10.0f * this->canvas_zooming, IM_COL32(192, 0, 0, 255));
+    this->present_canvas_dragged_call(inout_graph);
 
     draw_list->ChannelsMerge();
     io.MouseClicked[0] = left_click;
@@ -582,13 +588,13 @@ void megamol::gui::configurator::Graph::Presentation::canvas(
 
     // Font scaling is applied next frame after ImGui::Begin()
     // Font for graph should not be the currently used font of the gui.
-    ImGui::GetFont()->Scale = this->getFontScaling(this->canvas_zooming);
+    ImGui::GetFont()->Scale = this->canvas.zooming;
 
     // Reset font
     ImGui::PopFont();
 }
 
-void megamol::gui::configurator::Graph::Presentation::parameters(
+void megamol::gui::configurator::Graph::Presentation::present_parameters(
     megamol::gui::configurator::Graph& inout_graph, float in_child_width, HotKeyArrayType& inout_hotkeys) {
 
     ImGui::BeginGroup();
@@ -712,7 +718,7 @@ void megamol::gui::configurator::Graph::Presentation::parameters(
 }
 
 
-void megamol::gui::configurator::Graph::Presentation::canvas_grid(void) {
+void megamol::gui::configurator::Graph::Presentation::present_canvas_grid(void) {
 
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -722,23 +728,23 @@ void megamol::gui::configurator::Graph::Presentation::canvas_grid(void) {
     draw_list->ChannelsSetCurrent(0); // Background
 
     const ImU32 COLOR_GRID = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PopupBg]);
-    const float GRID_SIZE = 64.0f * this->canvas_zooming;
+    const float GRID_SIZE = 64.0f * this->canvas.zooming;
 
-    ImVec2 relative_offset = this->canvas_offset - this->canvas_position;
+    ImVec2 relative_offset = this->canvas.offset - this->canvas.position;
 
-    for (float x = fmodf(relative_offset.x, GRID_SIZE); x < this->canvas_size.x; x += GRID_SIZE) {
-        draw_list->AddLine(ImVec2(x, 0.0f) + this->canvas_position,
-            ImVec2(x, this->canvas_size.y) + this->canvas_position, COLOR_GRID);
+    for (float x = fmodf(relative_offset.x, GRID_SIZE); x < this->canvas.size.x; x += GRID_SIZE) {
+        draw_list->AddLine(ImVec2(x, 0.0f) + this->canvas.position,
+            ImVec2(x, this->canvas.size.y) + this->canvas.position, COLOR_GRID);
     }
 
-    for (float y = fmodf(relative_offset.y, GRID_SIZE); y < this->canvas_size.y; y += GRID_SIZE) {
-        draw_list->AddLine(ImVec2(0.0f, y) + this->canvas_position,
-            ImVec2(this->canvas_size.x, y) + this->canvas_position, COLOR_GRID);
+    for (float y = fmodf(relative_offset.y, GRID_SIZE); y < this->canvas.size.y; y += GRID_SIZE) {
+        draw_list->AddLine(ImVec2(0.0f, y) + this->canvas.position,
+            ImVec2(this->canvas.size.x, y) + this->canvas.position, COLOR_GRID);
     }
 }
 
 
-void megamol::gui::configurator::Graph::Presentation::canvas_dragged_call(
+void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_call(
     megamol::gui::configurator::Graph& inout_graph) {
 
     ImGuiStyle& style = ImGui::GetStyle();
@@ -754,10 +760,10 @@ void megamol::gui::configurator::Graph::Presentation::canvas_dragged_call(
         ImVec2 current_pos = ImGui::GetMousePos();
         bool mouse_inside_canvas = false;
 
-        if ((current_pos.x >= this->canvas_position.x) &&
-            (current_pos.x <= (this->canvas_position.x + this->canvas_size.x)) &&
-            (current_pos.y >= this->canvas_position.y) &&
-            (current_pos.y <= (this->canvas_position.y + this->canvas_size.y))) {
+        if ((current_pos.x >= this->canvas.position.x) &&
+            (current_pos.x <= (this->canvas.position.x + this->canvas.size.x)) &&
+            (current_pos.y >= this->canvas.position.y) &&
+            (current_pos.y <= (this->canvas.position.y + this->canvas.size.y))) {
             mouse_inside_canvas = true;
         }
         if (mouse_inside_canvas) {
@@ -780,7 +786,7 @@ void megamol::gui::configurator::Graph::Presentation::canvas_dragged_call(
                         p2 = tmp;
                     }
                     draw_list->AddBezierCurve(p1, p1 + ImVec2(+50, 0), p2 + ImVec2(-50, 0), p2, COLOR_CALL_CURVE,
-                        CURVE_THICKNESS * this->canvas_zooming);
+                        CURVE_THICKNESS * this->canvas.zooming);
                 }
             }
         }
@@ -846,7 +852,7 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
 
     // Calculate new positions of modules
     const float border_offset = call_slot_radius * 4.0f;
-    ImVec2 init_position = ImVec2(-1.0f * this->canvas_scrolling.x, -1.0f * this->canvas_scrolling.y);
+    ImVec2 init_position = ImVec2(-1.0f * this->canvas.scrolling.x, -1.0f * this->canvas.scrolling.y);
     ImVec2 pos = init_position;
     float max_call_width = 25.0f;
     float max_module_width = 0.0f;
@@ -882,6 +888,3 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
 
     return true;
 }
-
-
-float megamol::gui::configurator::Graph::Presentation::getFontScaling(float zooming) { return zooming; }

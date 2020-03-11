@@ -78,11 +78,10 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     // Returns uid if the module is selected.
-    ImGuiID GUI_Present(ImVec2 in_canvas_offset, float in_canvas_zooming, HotKeyArrayType& inout_hotkeys,
-        ImGuiID& out_selected_call_slot_uid, ImGuiID& out_hovered_call_slot_uid,
-        const CallSlotPtrType compatible_call_slot_ptr) {
-        return this->present.Present(*this, in_canvas_offset, in_canvas_zooming, inout_hotkeys,
-            out_selected_call_slot_uid, out_hovered_call_slot_uid, compatible_call_slot_ptr);
+    ImGuiID GUI_Present(const Canvas& in_canvas, HotKeyArrayType& inout_hotkeys, ImGuiID& out_selected_call_slot_uid,
+        ImGuiID& out_hovered_call_slot_uid, const CallSlotPtrType compatible_call_slot_ptr) {
+        return this->present.Present(*this, in_canvas, inout_hotkeys, out_selected_call_slot_uid,
+            out_hovered_call_slot_uid, compatible_call_slot_ptr);
     }
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
     void GUI_SetPresentation(Module::Presentations present) { this->present.presentations = present; }
@@ -102,8 +101,8 @@ private:
 
         ~Presentation(void);
 
-        ImGuiID Present(Module& inout_mod, ImVec2 in_canvas_offset, float in_canvas_zooming,
-            HotKeyArrayType& inout_hotkeys, ImGuiID& out_selected_call_slot_uid, ImGuiID& out_hovered_call_slot_uid,
+        ImGuiID Present(Module& inout_mod, const Canvas& in_canvas, HotKeyArrayType& inout_hotkeys,
+            ImGuiID& out_selected_call_slot_uid, ImGuiID& out_hovered_call_slot_uid,
             const CallSlotPtrType compatible_call_slot_ptr);
 
         void SetPosition(ImVec2 pos) { this->position = pos; }
@@ -126,6 +125,7 @@ private:
         GUIUtils utils;
         bool selected;
         bool init_position;
+        bool module_updated;
 
     } present;
 };

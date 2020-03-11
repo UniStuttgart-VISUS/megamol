@@ -102,11 +102,7 @@ private:
         ImFont* font;
         GUIUtils utils;
 
-        ImVec2 canvas_position;
-        ImVec2 canvas_size;
-        ImVec2 canvas_scrolling;
-        float canvas_zooming;
-        ImVec2 canvas_offset;
+        Canvas canvas;
 
         bool show_grid;
         bool show_call_names;
@@ -127,16 +123,15 @@ private:
         std::string param_name_space;
         Parameter::Presentations param_present;
 
-        void menu(Graph& inout_graph);
-        void canvas(Graph& inout_graph, float in_child_width, HotKeyArrayType& inout_hotkeys);
-        void parameters(Graph& inout_graph, float in_child_width, HotKeyArrayType& inout_hotkeys);
 
-        void canvas_grid(void);
-        void canvas_dragged_call(Graph& inout_graph);
+        void present_menu(Graph& inout_graph);
+        void present_canvas(Graph& inout_graph, float in_child_width, HotKeyArrayType& inout_hotkeys);
+        void present_parameters(Graph& inout_graph, float in_child_width, HotKeyArrayType& inout_hotkeys);
+
+        void present_canvas_grid(void);
+        void present_canvas_dragged_call(Graph& inout_graph);
 
         bool layout_graph(Graph& inout_graph);
-
-        float getFontScaling(float zooming);
 
     } present;
 };

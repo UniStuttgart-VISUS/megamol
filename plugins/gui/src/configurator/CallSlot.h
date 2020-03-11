@@ -80,10 +80,9 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     // Returns uid if the call slot is selected.
-    ImGuiID GUI_Present(ImVec2 in_canvas_offset, float in_canvas_zooming, ImGuiID& out_hovered_call_slot_uid,
-        const CallSlotPtrType compatible_call_slot_ptr) {
-        return this->present.Present(
-            *this, in_canvas_offset, in_canvas_zooming, out_hovered_call_slot_uid, compatible_call_slot_ptr);
+    ImGuiID GUI_Present(
+        const Canvas& in_canvas, ImGuiID& out_hovered_call_slot_uid, const CallSlotPtrType compatible_call_slot_ptr) {
+        return this->present.Present(*this, in_canvas, out_hovered_call_slot_uid, compatible_call_slot_ptr);
     }
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     bool GUI_GetLabelVisibility(void) { return this->present.label_visible; }
@@ -104,8 +103,8 @@ private:
 
         ~Presentation(void);
 
-        ImGuiID Present(CallSlot& inout_call_slot, ImVec2 in_canvas_offset, float in_canvas_zooming,
-            ImGuiID& out_hovered_call_slot_uid, const CallSlotPtrType compatible_call_slot_ptr);
+        ImGuiID Present(CallSlot& inout_call_slot, const Canvas& in_canvas, ImGuiID& out_hovered_call_slot_uid,
+            const CallSlotPtrType compatible_call_slot_ptr);
 
         ImVec2 GetPosition(void) { return this->position; }
 

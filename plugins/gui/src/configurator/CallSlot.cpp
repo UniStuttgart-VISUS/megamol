@@ -259,8 +259,8 @@ megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
 
 ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
-    megamol::gui::configurator::CallSlot& inout_call_slot, ImVec2 in_canvas_offset, float in_canvas_zooming,
-    ImGuiID& out_hovered_call_slot_uid, const CallSlotPtrType compatible_call_slot_ptr) {
+    megamol::gui::configurator::CallSlot& inout_call_slot, const Canvas& in_canvas, ImGuiID& out_hovered_call_slot_uid,
+    const CallSlotPtrType compatible_call_slot_ptr) {
 
     ImGuiID retval_id = GUI_INVALID_ID;
     ImGuiStyle& style = ImGui::GetStyle();
@@ -275,8 +275,10 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
             return false;
         }
 
-        /// XXX Trigger only when necessary
-        this->UpdatePosition(inout_call_slot, in_canvas_offset, in_canvas_zooming);
+        // Trigger only when canvas was updated
+        if (in_canvas.updated) {
+            this->UpdatePosition(inout_call_slot, in_canvas.offset, in_canvas.zooming);
+        }
 
         ImGui::PushID(inout_call_slot.uid);
         draw_list->ChannelsSetCurrent(1); // Foreground
@@ -285,9 +287,9 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
         const ImU32 COLOR_SLOT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
         const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PopupBg]);
-        const ImU32 COLOR_SLOT_CALLER = IM_COL32(0, 224, 224, 255);
-        const ImU32 COLOR_SLOT_CALLEE = IM_COL32(224, 0, 224, 255);
-        const ImU32 COLOR_SLOT_COMPATIBLE = IM_COL32(0, 224, 0, 255);
+        const ImU32 COLOR_SLOT_CALLER = IM_COL32(0, 255, 192, 255);
+        const ImU32 COLOR_SLOT_CALLEE = IM_COL32(192, 255, 64, 255);
+        const ImU32 COLOR_SLOT_COMPATIBLE = IM_COL32(0, 192, 0, 255);
 
         ImU32 slot_color = COLOR_SLOT_BACKGROUND;
 
@@ -299,7 +301,7 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
         }
 
         ImVec2 slot_position = this->position;
-        float radius = this->slot_radius * in_canvas_zooming;
+        float radius = this->slot_radius * in_canvas.zooming;
 
         ImGui::SetCursorScreenPos(slot_position - ImVec2(radius, radius));
         std::string label = "slot_" + inout_call_slot.name + std::to_string(inout_call_slot.uid);
@@ -340,7 +342,7 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
 
         // Draw text
         /// LEVEL OF DETAIL depending on zooming
-        if (this->label_visible && (in_canvas_zooming > GUI_ZOOM_DETAIL_LEVEL)) {
+        if (this->label_visible && (in_canvas.zooming > GUI_ZOOM_DETAIL_LEVEL)) {
             ImVec2 text_pos;
             text_pos.y = slot_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
             if (inout_call_slot.type == CallSlot::CallSlotType::CALLER) {

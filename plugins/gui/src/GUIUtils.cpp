@@ -248,6 +248,7 @@ void megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::stri
 bool megamol::gui::GUIUtils::VerticalSplitter(FixedSplitterSide fixed_side, float& size_left, float& size_right) {
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
 
     const float thickness = 12.0f;
 
@@ -277,8 +278,16 @@ bool megamol::gui::GUIUtils::VerticalSplitter(FixedSplitterSide fixed_side, floa
                                                            : ImVec2(splitter_long_axis_size, thickness - 4.0f),
                           0.0f, 0.0f);
 
+
+    ImGui::PushStyleColor(ImGuiCol_Separator, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]));
+    ImGui::PushStyleColor(
+        ImGuiCol_SeparatorHovered, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonHovered]));
+    ImGui::PushStyleColor(ImGuiCol_SeparatorActive, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Button]));
+
     bool retval = ImGui::SplitterBehavior(
         bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, &size_left, &size_right, min_size, min_size, 0.0f, 0.0f);
+
+    ImGui::PopStyleColor(3);
 
     /// XXX Left mouse button (= 0) is not recognized poperly (?) ...
     if (ImGui::IsMouseDoubleClicked(1) && ImGui::IsItemHovered()) {

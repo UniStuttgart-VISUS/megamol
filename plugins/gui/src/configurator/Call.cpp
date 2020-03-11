@@ -82,8 +82,8 @@ bool megamol::gui::configurator::Call::DisConnectCallSlots(void) {
     try {
         for (auto& call_slot_map : this->connected_call_slots) {
             if (call_slot_map.second == nullptr) {
-                vislib::sys::Log::DefaultLog.WriteWarn(
-                    "Call slot is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                // vislib::sys::Log::DefaultLog.WriteWarn(
+                //    "Call slot is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             } else {
                 call_slot_map.second->DisConnectCall(this->uid, true);
                 call_slot_map.second.reset();
@@ -121,15 +121,14 @@ megamol::gui::configurator::Call::Presentation::Presentation(void)
 megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
 
 
-ImGuiID megamol::gui::configurator::Call::Presentation::Present(megamol::gui::configurator::Call& inout_call,
-    ImVec2 in_canvas_offset, float in_canvas_zooming, HotKeyArrayType& inout_hotkeys) {
+ImGuiID megamol::gui::configurator::Call::Presentation::Present(
+    megamol::gui::configurator::Call& inout_call, const Canvas& in_canvas, HotKeyArrayType& inout_hotkeys) {
 
     ImGuiID retval_id = GUI_INVALID_ID;
     ImGuiStyle& style = ImGui::GetStyle();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
 
-    /// XXX Clip call if lying ouside the canvas
     try {
 
         if (ImGui::GetCurrentContext() == nullptr) {
@@ -138,35 +137,45 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(megamol::gui::co
             return false;
         }
 
-        ImGui::PushID(inout_call.uid);
-
-        ImVec4 tmpcol = style.Colors[ImGuiCol_Button];
-        // tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-        const ImU32 COLOR_CALL_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-        const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
-        const ImU32 COLOR_CALL_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonHovered]);
-        const ImU32 COLOR_CALL_BORDER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PopupBg]);
-
-        const float CURVE_THICKNESS = 3.0f;
-
         if (inout_call.IsConnected()) {
 
             ImVec2 p1 = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->GUI_GetPosition();
             ImVec2 p2 = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->GUI_GetPosition();
 
+            // Clip module if lying ouside the canvas
+            /*
+            ImVec2 canvas_rect_min = in_canvas.position;
+            ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
+            if ((canvas_rect_min.x <= module_rect_min.x) && (canvas_rect_min.y <= module_rect_min.y) &&
+                (canvas_rect_max.x >= module_rect_max.x) && (canvas_rect_max.y >= module_rect_max.y)) {
+                return GUI_INVALID_ID;
+            }
+            */
+
+            ImVec4 tmpcol = style.Colors[ImGuiCol_Button];
+            // tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+            const ImU32 COLOR_CALL_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
+            const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
+            const ImU32 COLOR_CALL_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
+            const ImU32 COLOR_CALL_BORDER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PopupBg]);
+
+            const float CURVE_THICKNESS = 3.0f;
+
+            ImGui::PushID(inout_call.uid);
+
             // Draw simple line if zooming is too small for nice bezier curves
             draw_list->ChannelsSetCurrent(0); // Background
 
             /// LEVEL OF DETAIL depending on zooming
-            if (in_canvas_zooming < GUI_ZOOM_DETAIL_LEVEL) {
-                draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * in_canvas_zooming);
+            if (in_canvas.zooming < GUI_ZOOM_DETAIL_LEVEL) {
+                draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * in_canvas.zooming);
             } else {
                 draw_list->AddBezierCurve(p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2, COLOR_CALL_CURVE,
-                    CURVE_THICKNESS * in_canvas_zooming);
+                    CURVE_THICKNESS * in_canvas.zooming);
             }
 
             /// LEVEL OF DETAIL depending on zooming
-            if (this->label_visible && (in_canvas_zooming > GUI_ZOOM_DETAIL_LEVEL)) {
+            if (this->label_visible && (in_canvas.zooming > GUI_ZOOM_DETAIL_LEVEL)) {
 
                 draw_list->ChannelsSetCurrent(1); // Foreground
 

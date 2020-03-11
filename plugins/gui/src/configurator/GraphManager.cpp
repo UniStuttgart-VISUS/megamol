@@ -1260,17 +1260,6 @@ ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
                 retval = id;
             }
 
-            // Checking for possible call creation (first step for drag and drop call creation)
-            /// Capture independent of final call creation!
-            auto selected_call_slot_uid = graph->GUI_GetSelectedCallSlot();
-            auto hovered_call_slot_uid = graph->GUI_GetHoveredCallSlot();
-            if ((selected_call_slot_uid != GUI_INVALID_ID) && (hovered_call_slot_uid != GUI_INVALID_ID) &&
-                (selected_call_slot_uid != hovered_call_slot_uid)) {
-                drop_call_data.graph_ptr = graph;
-                drop_call_data.selected_call_slot_uid = selected_call_slot_uid;
-                drop_call_data.hovered_call_slot_uid = hovered_call_slot_uid;
-            }
-
             // Do not delete graph while looping through graphs list
             if (delete_graph) {
                 this->delete_graph_uid = retval;
@@ -1278,37 +1267,52 @@ ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
                     popup_close_unsaved = true;
                 }
             }
-        }
 
-        ImGui::EndTabBar();
-
-        // Capture button mouse release (second step for drag and drop call creation)
-        /// Capture independent of final call creation!
-        if (ImGui::IsMouseReleased(0)) {
-            drop_call_data.mouse_released = true;
-        }
-        // Check for final call creation from drag and drop.
-        if (drop_call_data.mouse_released && (this->drop_call_data.graph_ptr != nullptr)) {
-            CallSlotPtrType selected_call_slot_ptr;
-            CallSlotPtrType hovered_call_slot_ptr;
-            for (auto& mods : this->drop_call_data.graph_ptr->GetGraphModules()) {
-                CallSlotPtrType call_slot_ptr = mods->GetCallSlot(drop_call_data.selected_call_slot_uid);
-                if (call_slot_ptr != nullptr) {
-                    selected_call_slot_ptr = call_slot_ptr;
-                }
-                call_slot_ptr = mods->GetCallSlot(drop_call_data.hovered_call_slot_uid);
-                if (call_slot_ptr != nullptr) {
-                    hovered_call_slot_ptr = call_slot_ptr;
-                }
+            /// XXX Hacky stuff ...
+            // Checking for possible call creation (first step for drag and drop call creation)
+            /// Capture independent of final call creation!
+            auto selected_call_slot_uid = graph->GUI_GetSelectedCallSlot();
+            auto hovered_call_slot_uid = graph->GUI_GetHoveredCallSlot();
+            if ((selected_call_slot_uid != GUI_INVALID_ID) && (hovered_call_slot_uid != GUI_INVALID_ID) &&
+                (selected_call_slot_uid != hovered_call_slot_uid)) {
+                drop_call_data.dragged_call_data = 2; /// Number of frames the action is valid.
+                drop_call_data.selected_call_slot_uid = selected_call_slot_uid;
+                drop_call_data.hovered_call_slot_uid = hovered_call_slot_uid;
             }
-            this->drop_call_data.graph_ptr->AddCall(
-                inout_graph_manager.calls_stock, selected_call_slot_ptr, hovered_call_slot_ptr);
+            // Capture button mouse release (second step for drag and drop call creation)
+            /// Capture independent of final call creation!
+            if (ImGui::IsMouseReleased(0)) {
+                drop_call_data.trigger_drop_call = 2; /// Number of frames the action is valid.
+            }
+            // Check for final call creation from drag and drop.
+            if ((drop_call_data.dragged_call_data > 0) && (this->drop_call_data.trigger_drop_call > 0)) {
+                CallSlotPtrType selected_call_slot_ptr;
+                CallSlotPtrType hovered_call_slot_ptr;
+                for (auto& mods : graph->GetGraphModules()) {
+                    CallSlotPtrType call_slot_ptr = mods->GetCallSlot(drop_call_data.selected_call_slot_uid);
+                    if (call_slot_ptr != nullptr) {
+                        selected_call_slot_ptr = call_slot_ptr;
+                    }
+                    call_slot_ptr = mods->GetCallSlot(drop_call_data.hovered_call_slot_uid);
+                    if (call_slot_ptr != nullptr) {
+                        hovered_call_slot_ptr = call_slot_ptr;
+                    }
+                }
+                graph->AddCall(inout_graph_manager.calls_stock, selected_call_slot_ptr, hovered_call_slot_ptr);
 
-            drop_call_data.mouse_released = false;
-            this->drop_call_data.graph_ptr.reset();
-            this->drop_call_data.selected_call_slot_uid = GUI_INVALID_ID;
-            this->drop_call_data.hovered_call_slot_uid = GUI_INVALID_ID;
+                drop_call_data.trigger_drop_call = -1;
+                drop_call_data.dragged_call_data = -1;
+                this->drop_call_data.selected_call_slot_uid = GUI_INVALID_ID;
+                this->drop_call_data.hovered_call_slot_uid = GUI_INVALID_ID;
+            }
+            if (drop_call_data.trigger_drop_call > 0) {
+                drop_call_data.trigger_drop_call--;
+            }
+            if (drop_call_data.dragged_call_data > 0) {
+                drop_call_data.dragged_call_data--;
+            }
         }
+        ImGui::EndTabBar();
 
         // Delete marked graph when tab is closed and unsaved changes should be discarded.
         bool confirmed, aborted;

@@ -128,16 +128,16 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
     , name_label()
     , utils()
     , selected(false)
-    , init_position(true) {}
+    , init_position(true)
+    , module_updated(true) {}
 
 
 megamol::gui::configurator::Module::Presentation::~Presentation(void) {}
 
 
 ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::configurator::Module& inout_mod,
-    ImVec2 in_canvas_offset, float in_canvas_zooming, megamol::gui::HotKeyArrayType& inout_hotkeys,
-    ImGuiID& out_selected_call_slot_uid, ImGuiID& out_hovered_call_slot_uid,
-    const megamol::gui::configurator::CallSlotPtrType compatible_call_slot_ptr) {
+    const Canvas& in_canvas, megamol::gui::HotKeyArrayType& inout_hotkeys, ImGuiID& out_selected_call_slot_uid,
+    ImGuiID& out_hovered_call_slot_uid, const megamol::gui::configurator::CallSlotPtrType compatible_call_slot_ptr) {
 
     ImGuiID retval_id = GUI_INVALID_ID;
     bool popup_rename = false;
@@ -145,7 +145,6 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
 
-    /// XXX Clip module if lying ouside the canvas
     try {
 
         if (ImGui::GetCurrentContext() == nullptr) {
@@ -154,15 +153,42 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
             return false;
         }
 
+        // Init position once
+        if (this->init_position) {
+            this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - in_canvas.offset) / in_canvas.zooming;
+            this->UpdateSize(inout_mod, in_canvas.zooming);
+            this->init_position = false;
+        }
+        // Trigger only when canvas was updated
+        if (in_canvas.updated) {
+            this->UpdateSize(inout_mod, in_canvas.zooming);
+        }
+
+        ImVec2 module_size = this->size * in_canvas.zooming;
+        ImVec2 module_rect_min = in_canvas.offset + this->position * in_canvas.zooming;
+        ImVec2 module_rect_max = module_rect_min + module_size;
+        ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
+
+        // Clip module if lying ouside the canvas
+        /*
+        ImVec2 canvas_rect_min = in_canvas.position;
+        ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
+        if ((canvas_rect_min.x <= module_rect_min.x) && (canvas_rect_min.y <= module_rect_min.y) &&
+                (canvas_rect_max.x >= module_rect_max.x) && (canvas_rect_max.y >= module_rect_max.y)) {
+            return GUI_INVALID_ID;
+        }
+        */
+
         ImGui::PushID(inout_mod.uid);
 
         // Draw call slots ----------------------------------------------------
         /// Draw call slots prior to modules to catch mouse clicks on slot area lying over module box.
+        auto in_canvas_mod = in_canvas;
+        in_canvas_mod.updated = (in_canvas.updated || this->module_updated);
         ImGuiID hovered_call_slot_id = GUI_INVALID_ID;
         for (auto& slot_pair : inout_mod.GetCallSlots()) {
             for (auto& slot : slot_pair.second) {
-                auto id = slot->GUI_Present(
-                    in_canvas_offset, in_canvas_zooming, hovered_call_slot_id, compatible_call_slot_ptr);
+                auto id = slot->GUI_Present(in_canvas_mod, hovered_call_slot_id, compatible_call_slot_ptr);
                 if (id != GUI_INVALID_ID) {
                     out_selected_call_slot_uid = id;
                 }
@@ -176,28 +202,13 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         ImVec4 tmpcol = style.Colors[ImGuiCol_Button];
         // tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
         const ImU32 COLOR_MODULE_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-        const ImU32 COLOR_MODULE_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonHovered]);
+        const ImU32 COLOR_MODULE_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
         const ImU32 COLOR_MODULE_BORDER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PopupBg]);
-
-        // Init position once
-        if (this->init_position) {
-            this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - in_canvas_offset) / in_canvas_zooming;
-            this->init_position = false;
-        }
-
-        /// XXX Trigger only when necessary
-        this->UpdateSize(inout_mod, in_canvas_zooming);
-
-        ImVec2 module_size = this->size * in_canvas_zooming;
-        ImVec2 module_rect_min = in_canvas_offset + this->position * in_canvas_zooming;
-        ImVec2 module_rect_max = module_rect_min + module_size;
-        ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
-
-        std::string label;
 
         // Draw text
         /// LEVEL OF DETAIL depending on zooming
-        if (this->label_visible && (in_canvas_zooming > GUI_ZOOM_DETAIL_LEVEL)) {
+        std::string label;
+        if (this->label_visible && (in_canvas.zooming > GUI_ZOOM_DETAIL_LEVEL)) {
             draw_list->ChannelsSetCurrent(1); // Foreground
 
             ImGui::BeginGroup();
@@ -263,7 +274,8 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
                 this->selected = true;
                 if (ImGui::IsMouseDragging(0)) {
                     this->position =
-                        ((module_rect_min - in_canvas_offset) + ImGui::GetIO().MouseDelta) / in_canvas_zooming;
+                        ((module_rect_min - in_canvas.offset) + ImGui::GetIO().MouseDelta) / in_canvas.zooming;
+                    this->module_updated = true;
                 }
             }
             if (this->selected) {
@@ -279,7 +291,6 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
 
         // Rename pop-up
         this->utils.RenamePopUp("Rename Project", popup_rename, inout_mod.name);
-        /// XXX Prevent assignement of already existing module names (consider FullName for checking).
 
         ImGui::PopID();
 
