@@ -123,7 +123,6 @@ private:
         std::string param_name_space;
         Parameter::Presentations param_present;
 
-
         void present_menu(Graph& inout_graph);
         void present_canvas(Graph& inout_graph, float in_child_width, HotKeyArrayType& inout_hotkeys);
         void present_parameters(Graph& inout_graph, float in_child_width, HotKeyArrayType& inout_hotkeys);

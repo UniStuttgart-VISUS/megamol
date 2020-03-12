@@ -37,7 +37,7 @@ bool megamol::gui::configurator::Graph::AddModule(
                 mod_ptr->plugin_name = mod.plugin_name;
                 mod_ptr->is_view = mod.is_view;
                 // Generate unique name based on uid
-                mod_ptr->name = mod.class_name + "_" + std::to_string(mod_ptr->uid);
+                mod_ptr->name = mod.class_name + "#" + std::to_string(mod_ptr->uid);
                 mod_ptr->name_space = "";
                 mod_ptr->is_view_instance = false;
                 mod_ptr->GUI_SetLabelVisibility(this->present.GetModuleLabelVisibility());
@@ -46,6 +46,7 @@ bool megamol::gui::configurator::Graph::AddModule(
                     Parameter param_slot(this->generate_unique_id(), p.type, p.storage, p.minval, p.maxval);
                     param_slot.full_name = p.full_name;
                     param_slot.description = p.description;
+                    param_slot.SetValueString(p.default_value, false);
 
                     mod_ptr->parameters.emplace_back(param_slot);
                 }
@@ -297,24 +298,12 @@ ImGuiID megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::c
         std::string graph_label = "    " + inout_graph.GetName() + "  ###graph" + std::to_string(graph_uid);
         bool open = true;
         if (ImGui::BeginTabItem(graph_label.c_str(), &open, tab_flags)) {
-
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Rename")) {
                     popup_rename = true;
                 }
                 ImGui::EndPopup();
-            }
-
-            // Process module deletion
-            if (std::get<1>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM])) {
-                std::get<1>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = false;
-                if (this->selected_module_uid != GUI_INVALID_ID) {
-                    inout_graph.DeleteModule(this->selected_module_uid);
-                }
-                if (this->selected_call_uid != GUI_INVALID_ID) {
-                    inout_graph.DeleteCall(this->selected_call_uid);
-                }
             }
 
             // Update positions and sizes
@@ -325,13 +314,11 @@ ImGuiID megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::c
 
             // Draw
             this->present_menu(inout_graph);
-
-            if (this->selected_module_uid != GUI_INVALID_ID) {
-
+            /// Always present parameter side bar
+            if (true) { // this->selected_module_uid != GUI_INVALID_ID) {
                 float child_width_auto = 0.0f;
                 this->utils.VerticalSplitter(
                     GUIUtils::FixedSplitterSide::RIGHT, child_width_auto, this->child_split_width);
-
                 this->present_canvas(inout_graph, child_width_auto, inout_hotkeys);
                 ImGui::SameLine();
                 this->present_parameters(inout_graph, this->child_split_width, inout_hotkeys);
@@ -339,7 +326,6 @@ ImGuiID megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::c
                 this->present_canvas(inout_graph, in_child_width, inout_hotkeys);
             }
 
-            this->canvas.updated = false;
             retval = graph_uid;
             ImGui::EndTabItem();
         }
@@ -389,6 +375,7 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
         ImGui::PopStyleVar();
     } else {
         if (ImGui::Checkbox("Main View", &selected_mod_ptr->is_view_instance)) {
+            this->canvas.updated = true;
             if (selected_mod_ptr->is_view_instance) {
                 // Set all other modules to non main views
                 for (auto& mod : inout_graph.GetGraphModules()) {
@@ -519,7 +506,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
-    draw_list->ChannelsSplit(2); // 2 channels are used by subsequent graph elements!
+    draw_list->ChannelsSplit(2); /// Both channels are used by subsequent graph elements!
 
     // Propagete only left clicks within the canvas
     bool left_click = io.MouseClicked[0];
@@ -581,6 +568,21 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     // Draw dragged call --------------
     this->present_canvas_dragged_call(inout_graph);
 
+
+    // Process module/call deletion ---
+    if (std::get<1>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM])) {
+        std::get<1>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = false;
+        // Preosecc deletion only when canvas child window is focused!
+        if (ImGui::IsWindowFocused()) {
+            if (this->selected_module_uid != GUI_INVALID_ID) {
+                inout_graph.DeleteModule(this->selected_module_uid);
+            }
+            if (this->selected_call_uid != GUI_INVALID_ID) {
+                inout_graph.DeleteCall(this->selected_call_uid);
+            }
+        }
+    }
+
     draw_list->ChannelsMerge();
     io.MouseClicked[0] = left_click;
     ImGui::EndChild();
@@ -589,6 +591,8 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     // Font scaling is applied next frame after ImGui::Begin()
     // Font for graph should not be the currently used font of the gui.
     ImGui::GetFont()->Scale = this->canvas.zooming;
+
+    this->canvas.updated = false;
 
     // Reset font
     ImGui::PopFont();

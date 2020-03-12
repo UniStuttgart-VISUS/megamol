@@ -122,13 +122,12 @@ megamol::gui::configurator::Module::GetCallSlots(void) {
 megamol::gui::configurator::Module::Presentation::Presentation(void)
     : presentations(Module::Presentations::DEFAULT)
     , label_visible(true)
-    , position(ImVec2(0.0f, 0.0f))
+    , position(ImVec2(FLT_MAX, FLT_MAX))
     , size(ImVec2(0.0f, 0.0f))
     , class_label()
     , name_label()
     , utils()
     , selected(false)
-    , init_position(true)
     , module_updated(true) {}
 
 
@@ -151,11 +150,10 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
     }
 
     try {
-        // Init position once
-        if (this->init_position) {
+        // Condition for initialization position (if position is not set yet via tag in project file)
+        if ((this->position.x == FLT_MAX) && (this->position.y == FLT_MAX)) {
             this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - in_canvas.offset) / in_canvas.zooming;
             this->UpdateSize(inout_mod, in_canvas.zooming);
-            this->init_position = false;
         }
         // Trigger only when canvas was updated
         if (in_canvas.updated) {
@@ -281,9 +279,6 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
                     this->module_updated = true;
                 }
             }
-            if (this->selected) {
-                retval_id = inout_mod.uid;
-            }
         }
         ImU32 module_bg_color = (hovered || this->selected) ? COLOR_MODULE_HIGHTLIGHT : COLOR_MODULE_BACKGROUND;
         draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 5.0f);
@@ -292,7 +287,13 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         /// XXX Use ImGui::ArrowButton to show/hide parameters inside module box.
 
         // Rename pop-up
-        this->utils.RenamePopUp("Rename Project", popup_rename, inout_mod.name);
+        if (this->utils.RenamePopUp("Rename Project", popup_rename, inout_mod.name)) {
+            this->UpdateSize(inout_mod, in_canvas.zooming);
+        }
+
+        if (this->selected) {
+            retval_id = inout_mod.uid;
+        }
 
         ImGui::PopID();
 
@@ -316,7 +317,7 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
     if (this->label_visible) {
         this->class_label = " Class: " + mod.class_name + " ";
         float class_name_length = this->utils.TextWidgetWidth(this->class_label);
-        this->name_label = " Name: " + mod.name + " ";
+        this->name_label = " Name: " + mod.FullName() + " ";
         float name_length = this->utils.TextWidgetWidth(mod.present.name_label);
         max_label_length = std::max(class_name_length, name_length);
     }
@@ -338,13 +339,13 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
 
     auto max_slot_count = std::max(mod.GetCallSlots(CallSlot::CallSlotType::CALLEE).size(),
         mod.GetCallSlots(CallSlot::CallSlotType::CALLER).size());
-    float module_slot_height = (static_cast<float>(max_slot_count) * (GUI_CALL_SLOT_RADIUS * 2.0f) * 1.5f) +
-                               ((GUI_CALL_SLOT_RADIUS * 2.0f) * 0.5f);
+    float module_slot_height =
+        (static_cast<float>(max_slot_count) * (GUI_CALL_SLOT_RADIUS * 2.0f) * 1.5f) + GUI_CALL_SLOT_RADIUS;
 
     float module_height = std::max(
         module_slot_height, ((canvas_zooming > 1.0f) ? (1.0f / canvas_zooming) : (1.0f)) *
                                 (ImGui::GetTextLineHeightWithSpacing() * ((mod.is_view_instance) ? (4.0f) : (3.0f))));
 
     // Clamp to minimum size
-    this->size = ImVec2(std::max(module_width, 150.0f), std::max(module_height, 100.0f));
+    this->size = ImVec2(std::max(module_width, 75.0f), std::max(module_height, 25.0f));
 }

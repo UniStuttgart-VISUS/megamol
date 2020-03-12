@@ -119,6 +119,7 @@ public:
         std::string full_name;
         std::string description;
         Parameter::ParamType type;
+        std::string default_value;
         MinType minval;
         MaxType maxval;
         StroageType storage;
@@ -163,12 +164,15 @@ public:
 
     template <typename T> const T& GetStorage(void) const { return std::get<T>(this->storage); }
 
-    // SET ----------------------------------
-    bool SetValueString(const std::string& val_str);
+    bool ValueChanged(void) { return this->value_changed; }
 
-    template <typename T> void SetValue(T val) {
+    // SET ----------------------------------
+    bool SetValueString(const std::string& val_str, bool log = true);
+
+    template <typename T> void SetValue(T val, bool log = true) {
         if (std::holds_alternative<T>(this->value)) {
             this->value = val;
+            this->value_changed = (log) ? (true) : (this->value_changed);
         } else {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -218,6 +222,8 @@ private:
     MaxType maxval;
     StroageType storage;
     ValueType value;
+
+    bool value_changed;
 
     /**
      * Defines GUI parameter presentation.

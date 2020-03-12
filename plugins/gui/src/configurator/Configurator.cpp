@@ -32,6 +32,7 @@ megamol::gui::configurator::Configurator::Configurator()
     , selected_list_module_uid(GUI_INVALID_ID)
     , graph_font(nullptr)
     , child_split_width(250.0f)
+    , add_project_graph_uid(GUI_INVALID_ID)
     , project_uid(0) {
 
     // Define HotKeys
@@ -110,7 +111,7 @@ bool megamol::gui::configurator::Configurator::Draw(
         // 2] Load available modules and calls and currently loaded project from core once(!)
 
         this->graph_manager.UpdateModulesCallsStock(core_instance);
-        this->addProject();
+        this->add_empty_project();
         this->window_state++;
     } else {
         // 3] Render configurator gui content
@@ -141,27 +142,52 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 
     bool popup_save_file = false;
     bool popup_load_file = false;
+
     if (ImGui::BeginMenuBar()) {
 
         if (ImGui::BeginMenu("File")) {
 
-            if (ImGui::MenuItem("New Project", nullptr)) {
-                this->addProject();
+            if (ImGui::BeginMenu("New Project")) {
+
+                if (ImGui::MenuItem("Empty", nullptr)) {
+                    this->add_empty_project();
+                }
+
+#ifdef GUI_USE_FILESYSTEM
+                // Load project from LUA file
+                if (ImGui::MenuItem("LUA File", nullptr)) {
+                    this->add_project_graph_uid = GUI_INVALID_ID;
+                    popup_load_file = true;
+                }
+#endif // GUI_USE_FILESYSTEM
+
+                if (ImGui::MenuItem("Running Project")) {
+                    this->graph_manager.LoadProjectCore(this->get_unique_project_name(), core_instance);
+                    // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
+                }
+
+                ImGui::EndMenu();
             }
 
-            if (ImGui::MenuItem("Load Running Project")) {
-                size_t graph_count = this->graph_manager.GetGraphs().size();
-                std::string graph_name = "Project_" + std::to_string(graph_count + 1);
-                this->graph_manager.LoadCurrentCoreProject(this->get_unique_project_name(), core_instance);
-                // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
+            if (ImGui::BeginMenu("Add Project")) {
+
+#ifdef GUI_USE_FILESYSTEM
+                // Add project from LUA file to current project
+                if (ImGui::MenuItem("LUA File", nullptr, false, (this->graph_uid != GUI_INVALID_ID))) {
+                    this->add_project_graph_uid = this->graph_uid;
+                    popup_load_file = true;
+                }
+#endif // GUI_USE_FILESYSTEM
+
+                if (ImGui::MenuItem("Running Project", nullptr, false, (this->graph_uid != GUI_INVALID_ID))) {
+                    this->graph_manager.AddProjectCore(this->graph_uid, core_instance);
+                    // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
+                }
+
+                ImGui::EndMenu();
             }
 
 #ifdef GUI_USE_FILESYSTEM
-            // Load project from LUA file
-            if (ImGui::MenuItem("Load Project", nullptr)) {
-                popup_load_file = true;
-            }
-
             // Save currently active project to LUA file
             if (ImGui::MenuItem("Save Project", nullptr, false, (this->graph_uid != GUI_INVALID_ID))) {
                 popup_save_file = true;
@@ -174,15 +200,17 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
         ImGui::SameLine();
         std::string info_text = "----- Additonal Options -----\n"
                                 "- Add Module from Stock List to Graph\n"
-                                "     - [Double Left Click]\n"
-                                "     - [Richt Click] on Selected Module -> Context Menu: Add\n"
+                                "    - [Double Left Click]\n"
+                                "    - [Richt Click] on Selected Module -> Context Menu: Add\n"
                                 "- Delete Selected Module/Call from Graph\n"
-                                "     - Select item an press [Delete]\n"
-                                "     - [Richt Click] on Selected Item -> Context Menu: Delete\n"
+                                "    - Select item an press [Delete]\n"
+                                "    - [Richt Click] on Selected Item -> Context Menu: Delete\n"
                                 "- Rename Graph or Module\n"
-                                "     - [Richt Click] on Graph Tab or Module -> Context Menu: Rename\n"
+                                "    - [Richt Click] on Graph Tab or Module -> Context Menu: Rename\n"
                                 "- Collapse/Expand Splitter\n"
-                                "     - [Double Richt Click] on Splitter";
+                                "    - [Double Richt Click] on Splitter\n"
+                                "- Create Call between Module Slots\n"
+                                "    - Select Slot and Drag&Drop Call to other Highlighted Compatible Slot.";
         this->utils.HelpMarkerToolTip(info_text.c_str(), "[?]");
 
         // Info text ----------------------------------------------------------
@@ -199,12 +227,12 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     bool popup_load_failed = false;
     if (this->utils.FileBrowserPopUp(
             GUIUtils::FileBrowserFlag::LOAD, "Load Project", popup_load_file, this->project_filename)) {
-        popup_load_failed = !this->graph_manager.LoadProjectFile(this->project_filename, core_instance);
+        popup_load_failed = !this->graph_manager.LoadAddProjectFile(add_project_graph_uid, this->project_filename);
+        this->add_project_graph_uid = GUI_INVALID_ID;
     }
     if (this->utils.FileBrowserPopUp(
             GUIUtils::FileBrowserFlag::SAVE, "Save Project", popup_save_file, this->project_filename)) {
-        popup_save_failed =
-            !this->graph_manager.SaveProjectFile(this->graph_uid, this->project_filename, core_instance);
+        popup_save_failed = !this->graph_manager.SaveProjectFile(this->graph_uid, this->project_filename);
     }
     bool confirmed, aborted;
     this->utils.MinimalPopUp("Failed to Save Project", popup_save_failed,
@@ -341,17 +369,16 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
 }
 
 
-void megamol::gui::configurator::Configurator::addProject(void) {
+void megamol::gui::configurator::Configurator::add_empty_project(void) {
 
     if (this->graph_manager.AddGraph(this->get_unique_project_name())) {
+
         // Add initial GUIView and set as view instance
         auto graph_ptr = this->graph_manager.GetGraphs().back();
         if (graph_ptr != nullptr) {
             std::string guiview_class_name = "GUIView";
             if (graph_ptr->AddModule(this->graph_manager.GetModulesStock(), guiview_class_name)) {
                 auto graph_module = graph_ptr->GetGraphModules().back();
-                graph_module->name = guiview_class_name + "_" + std::to_string(graph_module->uid);
-                graph_module->name_space = "";
                 graph_module->is_view_instance = true;
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(

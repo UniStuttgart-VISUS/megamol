@@ -68,6 +68,7 @@ private:
     ImGuiID selected_list_module_uid;
     ImFont* graph_font;
     float child_split_width;
+    ImGuiID add_project_graph_uid;
 
     unsigned int project_uid;
 
@@ -77,7 +78,7 @@ private:
 
     void draw_window_module_list(float width);
 
-    void addProject(void);
+    void add_empty_project(void);
 
     inline const std::string get_unique_project_name(void) { return ("Project_" + std::to_string(++project_uid)); }
     // ------------------------------------------------------------------------

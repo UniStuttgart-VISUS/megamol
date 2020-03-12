@@ -124,7 +124,6 @@ private:
         std::string name_label;
         GUIUtils utils;
         bool selected;
-        bool init_position;
         bool module_updated;
 
     } present;

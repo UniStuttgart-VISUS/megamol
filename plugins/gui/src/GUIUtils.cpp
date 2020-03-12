@@ -134,6 +134,8 @@ bool megamol::gui::GUIUtils::MinimalPopUp(const std::string& caption, bool open_
 
 bool megamol::gui::GUIUtils::RenamePopUp(const std::string& caption, bool open_popup, std::string& rename) {
 
+    bool retval = false;
+
     ImGui::PushID(caption.c_str());
 
     if (open_popup) {
@@ -146,6 +148,7 @@ bool megamol::gui::GUIUtils::RenamePopUp(const std::string& caption, bool open_p
         auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
         if (ImGui::InputText(text_label.c_str(), &this->rename_string, flags)) {
             rename = this->rename_string;
+            retval = true;
             ImGui::CloseCurrentPopup();
         }
         // Set focus on input text once (applied next frame)
@@ -156,6 +159,7 @@ bool megamol::gui::GUIUtils::RenamePopUp(const std::string& caption, bool open_p
 
         if (ImGui::Button("OK")) {
             rename = this->rename_string;
+            retval = true;
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
@@ -168,7 +172,7 @@ bool megamol::gui::GUIUtils::RenamePopUp(const std::string& caption, bool open_p
 
     ImGui::PopID();
 
-    return false;
+    return retval;
 }
 
 
@@ -277,7 +281,6 @@ bool megamol::gui::GUIUtils::VerticalSplitter(FixedSplitterSide fixed_side, floa
     bb.Max = bb.Min + ImGui::CalcItemSize(split_vertically ? ImVec2(thickness - 4.0f, splitter_long_axis_size)
                                                            : ImVec2(splitter_long_axis_size, thickness - 4.0f),
                           0.0f, 0.0f);
-
 
     // ImGui::PushStyleColor(ImGuiCol_Separator, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]));
     // ImGui::PushStyleColor(
