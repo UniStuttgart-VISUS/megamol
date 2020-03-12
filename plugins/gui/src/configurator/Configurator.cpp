@@ -155,13 +155,13 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 
 #ifdef GUI_USE_FILESYSTEM
                 // Load project from LUA file
-                if (ImGui::MenuItem("LUA File", nullptr)) {
+                if (ImGui::MenuItem("File", nullptr)) {
                     this->add_project_graph_uid = GUI_INVALID_ID;
                     popup_load_file = true;
                 }
 #endif // GUI_USE_FILESYSTEM
 
-                if (ImGui::MenuItem("Running Project")) {
+                if (ImGui::MenuItem("Running")) {
                     this->graph_manager.LoadProjectCore(this->get_unique_project_name(), core_instance);
                     // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
                 }
@@ -173,13 +173,13 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 
 #ifdef GUI_USE_FILESYSTEM
                 // Add project from LUA file to current project
-                if (ImGui::MenuItem("LUA File", nullptr, false, (this->graph_uid != GUI_INVALID_ID))) {
+                if (ImGui::MenuItem("File", nullptr, false, (this->graph_uid != GUI_INVALID_ID))) {
                     this->add_project_graph_uid = this->graph_uid;
                     popup_load_file = true;
                 }
 #endif // GUI_USE_FILESYSTEM
 
-                if (ImGui::MenuItem("Running Project", nullptr, false, (this->graph_uid != GUI_INVALID_ID))) {
+                if (ImGui::MenuItem("Running", nullptr, false, (this->graph_uid != GUI_INVALID_ID))) {
                     this->graph_manager.AddProjectCore(this->graph_uid, core_instance);
                     // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
                 }
