@@ -206,9 +206,8 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         const ImU32 COLOR_MODULE_BORDER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PopupBg]);
 
         // Draw text
-        /// LEVEL OF DETAIL depending on zooming
         std::string label;
-        if (this->label_visible && (in_canvas.zooming > GUI_ZOOM_DETAIL_LEVEL)) {
+        if (this->label_visible) {
             draw_list->ChannelsSetCurrent(1); // Foreground
 
             ImGui::BeginGroup();
@@ -342,9 +341,8 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
         (static_cast<float>(max_slot_count) * (GUI_CALL_SLOT_RADIUS * 2.0f) * 1.5f) + GUI_CALL_SLOT_RADIUS;
 
     float module_height = std::max(
-        module_slot_height, ((canvas_zooming > 1.0f) ? (1.0f / canvas_zooming) : (1.0f)) *
-                                (ImGui::GetTextLineHeightWithSpacing() * ((mod.is_view_instance) ? (4.0f) : (3.0f))));
+        module_slot_height, (1.0f / canvas_zooming) * (ImGui::GetTextLineHeightWithSpacing() * ((mod.is_view_instance) ? (4.0f) : (3.0f))));
 
     // Clamp to minimum size
-    this->size = ImVec2(std::max(module_width, 75.0f), std::max(module_height, 25.0f));
+    this->size = ImVec2(module_width, module_height);
 }

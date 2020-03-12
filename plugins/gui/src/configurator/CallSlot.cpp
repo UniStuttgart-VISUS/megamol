@@ -343,8 +343,7 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
         draw_list->AddCircle(slot_position, radius, COLOR_SLOT_BORDER);
 
         // Draw text
-        /// LEVEL OF DETAIL depending on zooming
-        if (this->label_visible && (in_canvas.zooming > GUI_ZOOM_DETAIL_LEVEL)) {
+        if (this->label_visible) {
             ImVec2 text_pos;
             text_pos.y = slot_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
             if (inout_call_slot.type == CallSlot::CallSlotType::CALLER) {

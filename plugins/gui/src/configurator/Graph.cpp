@@ -508,9 +508,9 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
             ImVec2 new_mouse_position = (current_mouse_pos / last_zooming) * this->canvas.zooming;
             this->canvas.scrolling += ((new_mouse_position - current_mouse_pos) / this->canvas.zooming);
 
+            this->mouse_wheel = io.MouseWheel;
             this->canvas.updated = true;
         }
-        this->mouse_wheel = io.MouseWheel;
     }
     this->canvas.position = ImGui::GetCursorScreenPos();
     this->canvas.size = ImGui::GetWindowSize();

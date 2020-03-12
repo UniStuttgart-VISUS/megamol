@@ -161,16 +161,15 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(
             // Draw simple line if zooming is too small for nice bezier curves
             draw_list->ChannelsSetCurrent(0); // Background
 
-            /// LEVEL OF DETAIL depending on zooming
-            if (in_canvas.zooming < GUI_ZOOM_DETAIL_LEVEL) {
+            // LEVEL OF DETAIL depending on zooming
+            if (in_canvas.zooming < 0.25f) {
                 draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * in_canvas.zooming);
             } else {
                 draw_list->AddBezierCurve(p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2, COLOR_CALL_CURVE,
                     CURVE_THICKNESS * in_canvas.zooming);
             }
 
-            /// LEVEL OF DETAIL depending on zooming
-            if (this->label_visible && (in_canvas.zooming > GUI_ZOOM_DETAIL_LEVEL)) {
+            if (this->label_visible) {
 
                 draw_list->ChannelsSetCurrent(1); // Foreground
 
