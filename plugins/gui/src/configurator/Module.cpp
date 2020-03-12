@@ -344,5 +344,5 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
         module_slot_height, (1.0f / canvas_zooming) * (ImGui::GetTextLineHeightWithSpacing() * ((mod.is_view_instance) ? (4.0f) : (3.0f))));
 
     // Clamp to minimum size
-    this->size = ImVec2(module_width, module_height);
+    this->size = ImVec2(std::max(module_width, 100.0f), module_height);
 }
