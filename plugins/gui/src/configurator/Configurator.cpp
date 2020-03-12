@@ -147,9 +147,9 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 
         if (ImGui::BeginMenu("File")) {
 
-            if (ImGui::BeginMenu("New Project")) {
+            if (ImGui::BeginMenu("Load Project")) {
 
-                if (ImGui::MenuItem("Empty", nullptr)) {
+                if (ImGui::MenuItem("New", nullptr)) {
                     this->add_empty_project();
                 }
 
