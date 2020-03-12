@@ -313,7 +313,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
         if (search_filter && compat_filter) {
             ImGui::PushID(id);
 
-            std::string label = mod.class_name + " (" + mod.plugin_name + ")"; /// std::to_string(id) + " " +
+            std::string label = mod.class_name + " (" + mod.plugin_name + ")";
             if (mod.is_view) {
                 label += " [View]";
             }

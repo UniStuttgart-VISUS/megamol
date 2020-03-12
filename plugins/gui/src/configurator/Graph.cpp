@@ -36,8 +36,20 @@ bool megamol::gui::configurator::Graph::AddModule(
                 mod_ptr->description = mod.description;
                 mod_ptr->plugin_name = mod.plugin_name;
                 mod_ptr->is_view = mod.is_view;
-                // Generate unique name based on uid
-                mod_ptr->name = mod.class_name + "#" + std::to_string(mod_ptr->uid);
+                // Generate unique name
+                int new_name_id = 0;
+                std::string new_name_prefix = mod.class_name + "_";
+                for (auto& other_mods : this->modules) {
+                    if (other_mods->name.find(new_name_prefix) == 0) {
+                        std::string int_postfix = other_mods->name.substr(new_name_prefix.length());
+                        try {
+                            int last_id = std::stoi(int_postfix);
+                            new_name_id = std::max(new_name_id, last_id);
+                        } catch (...) {
+                        }
+                    }
+                }
+                mod_ptr->name = new_name_prefix + std::to_string(new_name_id + 1);
                 mod_ptr->name_space = "";
                 mod_ptr->is_view_instance = false;
                 mod_ptr->GUI_SetLabelVisibility(this->present.GetModuleLabelVisibility());
