@@ -714,7 +714,7 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
 
     // Propagate the transfer function to the editor.
     if (updateEditor) {
-        this->tf_editor.SetTransferFunction(value);
+        this->tf_editor.SetTransferFunction(value, false);
     }
 
     // Draw transfer function editor

@@ -42,7 +42,7 @@ public:
      *
      * @return True if string was successfully converted into transfer function data, false otherwise.
      */
-    void SetTransferFunction(const std::string& tfs);
+    void SetTransferFunction(const std::string& tfs, bool useActiveParameter = true);
 
     /**
      * Get current transfer function data.
@@ -64,7 +64,7 @@ public:
     /**
      * Draws the transfer function editor.
      */
-    bool DrawTransferFunctionEditor(bool useActiveParamter = true);
+    bool DrawTransferFunctionEditor(bool useActiveParameter = true);
 
 
 private:

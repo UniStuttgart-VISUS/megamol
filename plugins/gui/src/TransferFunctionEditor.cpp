@@ -176,10 +176,13 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     this->widget_buffer.range_value = zero[4];
 }
 
-void TransferFunctionEditor::SetTransferFunction(const std::string& tfs) {
-    if (activeParameter == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Missing active parameter to edit");
-        return;
+void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool useActiveParameter) {
+
+    if (useActiveParameter) {
+        if (activeParameter == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Missing active parameter to edit");
+            return;
+        }
     }
 
     bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
@@ -212,9 +215,9 @@ bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
         tfs, this->nodes, this->mode, this->textureSize, this->range);
 }
 
-bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParamter) {
+bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter) {
 
-    if (useActiveParamter) {
+    if (useActiveParameter) {
         if (this->activeParameter == nullptr) {
             const char* message = "Changes have no effect.\n"
                                   "Please set a transfer function parameter.\n";
@@ -313,7 +316,6 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParamter) 
     }
 
     // Plot ---------------------------------------------------------------
-
     this->drawFunctionPlot(ImVec2(canvas_width, canvas_height));
 
     // Color channels -----------------------------------------------------
@@ -443,7 +445,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParamter) 
         this->pendingChanges = false;
     }
 
-    if (useActiveParamter) {
+    if (useActiveParameter) {
         if (apply_changes) {
             if (this->activeParameter != nullptr) {
                 std::string tf;
@@ -603,7 +605,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
         if (io.MouseClicked[0]) {
             // Left Click -> Change selected node selected node
-            if (selected_node >= 0) {
+            if (selected_node != GUI_INVALID_ID) {
                 this->currentNode = selected_node;
                 this->currentChannel = selected_chan;
                 this->currentDragChange = selected_delta;
