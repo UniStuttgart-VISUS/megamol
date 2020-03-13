@@ -17,7 +17,7 @@ void main() {
         vec2 vsPosition = valuesToPosition(plot, 
             vec2(values[rowOffset + plot.indexX],
             values[rowOffset + plot.indexY])).xy;
-        if (distance(mouse, vsPosition) < kernelWidth / 2.0) {
+        if (distance(mouse, vsPosition) < kernelWidth) {
             selected = true;
             break;
         }
