@@ -84,20 +84,11 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& pics, S
     this->cluster->insert(this->cluster->end(), this->leaves->begin(), this->leaves->end());
 
     // Getting Features of Pictures
-    std::vector<std::thread> threads;
     for (CLUSTERNODE* node : *this->cluster) {
-        if (this->momentsmethode == 1 && !actualValue)
-            threads.push_back(std::thread(std::bind(&HierarchicalClustering::calculateImageMoments, this, node)));
-        if (this->momentsmethode == 1 && actualValue)
-            threads.push_back(std::thread(std::bind(&HierarchicalClustering::calculateImageMomentsValue, this, node)));
-        if (this->momentsmethode == 2 && !actualValue)
-            threads.push_back(std::thread(std::bind(&HierarchicalClustering::calculateColorMoments, this, node)));
-        if (this->momentsmethode == 2 && actualValue)
-            threads.push_back(std::thread(std::bind(&HierarchicalClustering::calculateColorMomentsValue, this, node)));
-    }
-
-    for (std::thread& th : threads) {
-        th.join();
+        if (this->momentsmethode == 1 && !actualValue) HierarchicalClustering::calculateImageMoments(node);
+        if (this->momentsmethode == 1 && actualValue) HierarchicalClustering::calculateImageMomentsValue(node);
+        if (this->momentsmethode == 2 && !actualValue) HierarchicalClustering::calculateColorMoments(node);
+        if (this->momentsmethode == 2 && actualValue) HierarchicalClustering::calculateColorMomentsValue(node);
     }
 
     // Cluster the Data
@@ -725,20 +716,11 @@ void HierarchicalClustering::reanalyse(bool actualValue) {
     this->cluster->insert(this->cluster->end(), this->leaves->begin(), this->leaves->end());
 
     // Getting Features of Pictures
-    std::vector<std::thread> threads;
     for (CLUSTERNODE* node : *this->cluster) {
-        if (this->momentsmethode == 1 && !actualValue)
-            threads.push_back(std::thread(std::bind(&HierarchicalClustering::calculateImageMoments, this, node)));
-        if (this->momentsmethode == 1 && actualValue)
-            threads.push_back(std::thread(std::bind(&HierarchicalClustering::calculateImageMomentsValue, this, node)));
-        if (this->momentsmethode == 2 && !actualValue)
-            threads.push_back(std::thread(std::bind(&HierarchicalClustering::calculateColorMoments, this, node)));
-        if (this->momentsmethode == 2 && actualValue)
-            threads.push_back(std::thread(std::bind(&HierarchicalClustering::calculateColorMomentsValue, this, node)));
-    }
-
-    for (std::thread& th : threads) {
-        th.join();
+        if (this->momentsmethode == 1 && !actualValue) HierarchicalClustering::calculateImageMoments(node);
+        if (this->momentsmethode == 1 && actualValue) HierarchicalClustering::calculateImageMomentsValue(node);
+        if (this->momentsmethode == 2 && !actualValue) HierarchicalClustering::calculateColorMoments(node);
+        if (this->momentsmethode == 2 && actualValue) HierarchicalClustering::calculateColorMomentsValue(node);
     }
 
     // Cluster the Data

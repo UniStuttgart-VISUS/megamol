@@ -147,9 +147,7 @@ void Clustering::clusterData(image_calls::Image2DCall& cpp) {
     mode = mode > 4 ? mode - 4 : mode;
 
     this->clustering = new HierarchicalClustering(this->picdata, this->picturecount,
-        this->useActualValue.Param<core::param::BoolParam>()->Value(),
-        mode,
-        bla,
+        this->useActualValue.Param<core::param::BoolParam>()->Value(), mode, bla,
         this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
         this->momentsmethode.Param<core::param::EnumParam>()->Value());
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Clustering finished", this->picturecount);
@@ -350,7 +348,7 @@ bool Clustering::getDataCallback(core::Call& caller) {
         }
 
         // Reanalyse Pictures
-        if(!freshlyClustered) clustering->reanalyse(this->useActualValue.Param<core::param::BoolParam>()->Value());
+        if (!freshlyClustered) clustering->reanalyse(this->useActualValue.Param<core::param::BoolParam>()->Value());
     }
 
     if (this->clustering->finished()) {
@@ -478,6 +476,12 @@ void Clustering::loadValueImageForGivenPicture(
     if (file.is_open()) {
         file.read(reinterpret_cast<char*>(&outValueImage[0]), filesize);
         file.close();
+        auto minmax = std::minmax_element(outValueImage.begin(), outValueImage.end());
+        auto minele = std::abs(*minmax.first);
+        for (auto& v : outValueImage) {
+            v += minele;
+            v = std::abs(v); // paranoia
+        }
     } else {
         vislib::sys::Log::DefaultLog.WriteError("The file \"%s\" could not be opened for reading", newpath.c_str());
     }

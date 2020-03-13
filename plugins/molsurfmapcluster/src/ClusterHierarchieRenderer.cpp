@@ -311,8 +311,6 @@ bool ClusterHierarchieRenderer::Render(view::CallRender2D& call) {
 
     this->windowMeasurements = cr->GetViewport();
 
-    auto classes = EnzymeClassProvider::RetrieveClassesForPdbId("1vis", this->GetCoreInstance());
-
     // Update data Clustering
     CallClustering* ccc = this->clusterDataSlot.CallAs<CallClustering>();
     if (!ccc) return false;
