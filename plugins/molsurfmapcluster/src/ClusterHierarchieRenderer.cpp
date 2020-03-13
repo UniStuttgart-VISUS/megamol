@@ -15,6 +15,7 @@
 #include "CallClusterPosition.h"
 #include "ClusterHierarchieRenderer.h"
 #include "TextureLoader.h"
+#include "EnzymeClassProvider.h"
 
 #define VIEWPORT_WIDTH 2560
 #define VIEWPORT_HEIGHT 1440
@@ -309,6 +310,8 @@ bool ClusterHierarchieRenderer::Render(view::CallRender2D& call) {
     if (cr == nullptr) return false;
 
     this->windowMeasurements = cr->GetViewport();
+
+    auto classes = EnzymeClassProvider::RetrieveClassesForPdbId("1vis", this->GetCoreInstance());
 
     // Update data Clustering
     CallClustering* ccc = this->clusterDataSlot.CallAs<CallClustering>();

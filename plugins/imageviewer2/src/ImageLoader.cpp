@@ -131,7 +131,7 @@ bool ImageLoader::GetMetaData(core::Call& call) {
         if (path.has_extension() && path.extension().string().compare(".txt") != 0) { // normal file
             this->availableFiles->push_back(path.string());
         } else { // list of files
-            std::ifstream file(path);
+            std::ifstream file(path.string());
             if (file.is_open()) {
                 std::string line;
                 while (std::getline(file, line)) {
