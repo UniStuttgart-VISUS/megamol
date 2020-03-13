@@ -98,6 +98,10 @@ private:
         bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
         bool GetCallLabelVisibility(void) const { return this->show_call_names; }
 
+        bool params_visible;
+        bool params_readonly;
+        bool params_expert;
+
     private:
         ImFont* font;
         GUIUtils utils;
@@ -118,10 +122,7 @@ private:
         float child_split_width;
         float mouse_wheel;
 
-        bool params_visible;
-        bool params_readonly;
         std::string param_name_space;
-        Parameter::Presentations param_present;
 
         void present_menu(Graph& inout_graph);
         void present_canvas(Graph& inout_graph, float in_child_width, HotKeyArrayType& inout_hotkeys);

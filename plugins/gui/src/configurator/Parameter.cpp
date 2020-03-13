@@ -239,15 +239,19 @@ bool megamol::gui::configurator::Parameter::SetValueString(const std::string& va
 
 // PARAMETER PRESENTATION ####################################################
 
+bool megamol::gui::configurator::Parameter::Presentation::popup_open = false;
+
 megamol::gui::configurator::Parameter::Presentation::Presentation(void)
-    : presentations(Parameter::Presentations::SIMPLE)
+    : presentations(Presentations::DEFAULT)
     , read_only(false)
     , visible(true)
+    , expert(false)
     , help()
     , utils()
     , tf_editor()
     , show_tf_editor(false)
-    , widget_store() {}
+    , widget_store()
+    , float_format("%.7f") {}
 
 
 megamol::gui::configurator::Parameter::Presentation::~Presentation(void) {}
@@ -262,28 +266,33 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
     }
 
     try {
-        if (this->visible) {
+        // (Show all parameters in expert mode)
+        if (this->visible || this->expert) {
             ImGui::BeginGroup();
             ImGui::PushID(param.uid);
 
-            switch (this->presentations) {
-            case (Parameter::Presentations::DEFAULT): {
+            if (this->expert) {
                 this->present_prefix(param);
                 ImGui::SameLine();
-                this->present_value(param);
-                ImGui::SameLine();
-                this->present_postfix(param);
-                break;
             }
-            case (Parameter::Presentations::SIMPLE): {
-                this->present_value(param);
-                ImGui::SameLine();
-                this->present_postfix(param);
-                break;
-            }
+
+            switch (this->presentations) {
+            case (Presentations::DEFAULT): {
+                this->present_value_DEFAULT(param);
+            } break;
+            case (Presentations::PIN_VALUE_TO_MOUSE): {
+                this->present_value_DEFAULT(param);
+
+                ImGui::PopID();
+                this->present_value_PIN_VALUE_TO_MOUSE(param);
+                ImGui::PushID(param.uid);
+            } break;
             default:
                 break;
             }
+
+            ImGui::SameLine();
+            this->present_postfix(param);
 
             ImGui::PopID();
             ImGui::EndGroup();
@@ -301,66 +310,32 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
 }
 
 
-bool megamol::gui::configurator::Parameter::Presentation::PresentationButton(
-    megamol::gui::configurator::Parameter::Presentations& inout_present, const std::string& label) {
-    assert(ImGui::GetCurrentContext() != nullptr);
-    ImGuiStyle& style = ImGui::GetStyle();
+bool megamol::gui::configurator::Parameter::Presentation::presentation_button(void) {
 
     bool retval = false;
 
-    float height = ImGui::GetFrameHeight();
-    float half_height = height / 2.0f;
-    ImVec2 position = ImGui::GetCursorScreenPos();
-
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]));
-    ImGui::BeginChild("special_button_background", ImVec2(height, height), false,
-        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
-
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    assert(draw_list != nullptr);
-
-    float thickness = height / 5.0f;
-    ImVec2 center = position + ImVec2(half_height, half_height);
-
-    ImU32 color_front = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
-
-    draw_list->AddCircleFilled(center, thickness, color_front, 12);
-    draw_list->AddCircle(center, 2.0f * thickness, color_front, 12, (thickness / 2.0f));
-    ImGui::EndChild();
-    ImGui::PopStyleColor();
-
-    ImGui::SetCursorScreenPos(position);
-    ImVec2 rect = ImVec2(height, height);
-    ImGui::InvisibleButton("special_button", rect);
-    if (ImGui::BeginPopupContextItem("special_button_context", 0)) { // 0 = left mouse button
-        for (int i = 0; i < static_cast<int>(Parameter::Presentations::_COUNT_); i++) {
+    this->utils.PointCircleButton();
+    if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) { // 0 = left mouse button
+        for (int i = 0; i < static_cast<int>(Presentations::_COUNT_); i++) {
             std::string presentation_str;
-            switch (static_cast<Parameter::Presentations>(i)) {
-            case (Parameter::Presentations::DEFAULT):
-                presentation_str = "DEFAULT";
+            switch (static_cast<Presentations>(i)) {
+            case (Presentations::DEFAULT):
+                presentation_str = "Default";
                 break;
-            case (Parameter::Presentations::SIMPLE):
-                presentation_str = "SIMPLE";
+            case (Presentations::PIN_VALUE_TO_MOUSE):
+                presentation_str = "Pin Value to Mouse";
                 break;
             defalt:
                 break;
             }
             if (presentation_str.empty()) break;
-            auto presentation_i = static_cast<Parameter::Presentations>(i);
-            if (ImGui::MenuItem(presentation_str.c_str(), nullptr, (presentation_i == inout_present))) {
-                inout_present = presentation_i;
+            auto presentation_i = static_cast<Presentations>(i);
+            if (ImGui::MenuItem(presentation_str.c_str(), nullptr, (presentation_i == this->presentations))) {
+                this->presentations = presentation_i;
                 retval = true;
             }
         }
         ImGui::EndPopup();
-    }
-
-    if (!label.empty()) {
-        ImGui::SameLine();
-        position = ImGui::GetCursorScreenPos();
-        position.y += (ImGui::GetFrameHeight() / 2.0f - ImGui::GetFontSize() / 2.0f);
-        ImGui::SetCursorScreenPos(position);
-        ImGui::Text(label.c_str());
     }
 
     return retval;
@@ -384,13 +359,14 @@ void megamol::gui::configurator::Parameter::Presentation::present_prefix(megamol
     ImGui::SameLine();
 
     // Presentation
-    this->PresentationButton(this->presentations);
+    this->presentation_button();
 
     this->utils.HoverToolTip("Presentation", ImGui::GetItemID(), 0.5f);
 }
 
 
-void megamol::gui::configurator::Parameter::Presentation::present_value(megamol::gui::configurator::Parameter& param) {
+void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
+    megamol::gui::configurator::Parameter& param) {
 
     this->help.clear();
 
@@ -399,12 +375,10 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f); // set general proportional item width
 
     if (this->read_only) {
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+        this->utils.ReadOnlyWigetStyle(true);
     }
 
     std::string param_label = param.GetName();
-    std::string float_format = "%.7f";
 
     auto visitor = [&](auto&& arg) {
         using T = std::decay_t<decltype(arg)>;
@@ -425,7 +399,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
                 this->widget_store = arg;
             }
             ImGui::InputFloat(param_label.c_str(), &std::get<float>(this->widget_store), 1.0f, 10.0f,
-                float_format.c_str(), ImGuiInputTextFlags_None);
+                this->float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 this->widget_store = std::max(param.GetMinValue<float>(),
                     std::min(std::get<float>(this->widget_store), param.GetMaxValue<float>()));
@@ -559,7 +533,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
                 this->widget_store = arg;
             }
             ImGui::InputFloat2(param_label.c_str(), glm::value_ptr(std::get<glm::vec2>(this->widget_store)),
-                float_format.c_str(), ImGuiInputTextFlags_None);
+                this->float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 auto max = param.GetMaxValue<glm::vec2>();
                 auto min = param.GetMinValue<glm::vec2>();
@@ -575,7 +549,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
                 this->widget_store = arg;
             }
             ImGui::InputFloat3(param_label.c_str(), glm::value_ptr(std::get<glm::vec3>(this->widget_store)),
-                float_format.c_str(), ImGuiInputTextFlags_None);
+                this->float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 auto max = param.GetMaxValue<glm::vec3>();
                 auto min = param.GetMinValue<glm::vec3>();
@@ -592,7 +566,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
                 this->widget_store = arg;
             }
             ImGui::InputFloat4(param_label.c_str(), glm::value_ptr(std::get<glm::vec4>(this->widget_store)),
-                float_format.c_str(), ImGuiInputTextFlags_None);
+                this->float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 auto max = param.GetMaxValue<glm::vec4>();
                 auto min = param.GetMinValue<glm::vec4>();
@@ -628,11 +602,95 @@ void megamol::gui::configurator::Parameter::Presentation::present_value(megamol:
     std::visit(visitor, param.GetValue());
 
     if (this->read_only) {
-        ImGui::PopItemFlag();
-        ImGui::PopStyleVar();
+        this->utils.ReadOnlyWigetStyle(false);
     }
 
     ImGui::PopItemWidth();
+}
+
+
+void megamol::gui::configurator::Parameter::Presentation::present_value_PIN_VALUE_TO_MOUSE(
+    megamol::gui::configurator::Parameter& param) {
+
+    ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    std::string param_label = param.GetName();
+
+    std::string popup_label = "parameter_pin_value_mouse";
+    if (!this->popup_open) {
+        ImGui::OpenPopup(popup_label.c_str());
+        this->popup_open = true;
+    }
+    ImVec2 mouse_pos = ImGui::GetMousePos();
+    mouse_pos += ImVec2(15.0f, 15.0f);
+    ImGui::SetNextWindowPos(mouse_pos);
+    if (ImGui::BeginPopup(popup_label.c_str(), ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize)) {
+
+        auto visitor = [&](auto&& arg) {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, bool>) {
+
+            } else if constexpr (std::is_same_v<T, megamol::core::param::ColorParam::ColorType>) {
+
+            } else if constexpr (std::is_same_v<T, float>) {
+                ImGui::TextDisabled(param.GetValueString().c_str());
+            } else if constexpr (std::is_same_v<T, int>) {
+                switch (param.type) {
+                case (Parameter::ParamType::INT): {
+                    if (!std::holds_alternative<T>(this->widget_store)) {
+                        this->widget_store = arg;
+                    }
+                    ImGui::InputInt(
+                        param_label.c_str(), &std::get<int>(this->widget_store), ImGuiInputTextFlags_ReadOnly);
+
+                } break;
+                case (Parameter::ParamType::ENUM): {
+
+                } break;
+                default:
+                    break;
+                }
+            } else if constexpr (std::is_same_v<T, std::string>) {
+                switch (param.type) {
+                case (Parameter::ParamType::STRING): {
+
+                } break;
+                case (Parameter::ParamType::TRANSFERFUNCTION): {
+
+                } break;
+                case (Parameter::ParamType::FILEPATH): {
+
+                } break;
+                case (Parameter::ParamType::FLEXENUM): {
+
+                } break;
+                default:
+                    break;
+                }
+            } else if constexpr (std::is_same_v<T, vislib::math::Ternary>) {
+
+            } else if constexpr (std::is_same_v<T, glm::vec2>) {
+
+            } else if constexpr (std::is_same_v<T, glm::vec3>) {
+
+            } else if constexpr (std::is_same_v<T, glm::vec4>) {
+
+            } else if constexpr (std::is_same_v<T, std::monostate>) {
+                switch (param.type) {
+                case (Parameter::ParamType::BUTTON): {
+
+                } break;
+                default:
+                    break;
+                }
+            }
+        };
+
+        std::visit(visitor, param.GetValue());
+
+        ImGui::EndPopup();
+    }
 }
 
 

@@ -269,17 +269,43 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
 
     try {
         // Trigger only when canvas was updated
+        // Always update position before clipping -> calls need updated slot positions.
         if (in_canvas.updated) {
             this->UpdatePosition(inout_call_slot, in_canvas.offset, in_canvas.zooming);
         }
         ImVec2 slot_position = this->position;
         float radius = GUI_CALL_SLOT_RADIUS * in_canvas.zooming;
 
+        // Draw text
+        ImVec2 text_pos_left_upper = ImVec2(0.0f, 0.0f);
+        if (this->label_visible) {
+            text_pos_left_upper.y = slot_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
+            if (inout_call_slot.type == CallSlot::CallSlotType::CALLER) {
+                text_pos_left_upper.x =
+                    slot_position.x - this->utils.TextWidgetWidth(inout_call_slot.name) - (2.0f * radius);
+            } else if (inout_call_slot.type == CallSlot::CallSlotType::CALLEE) {
+                text_pos_left_upper.x = slot_position.x + (2.0f * radius);
+            }
+        }
+
         // Clip call slots if lying ouside the canvas
         ImVec2 canvas_rect_min = in_canvas.position;
         ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
-        if (!((canvas_rect_min.x < (slot_position.x + radius)) && (canvas_rect_max.x > (slot_position.x - radius)) &&
-                (canvas_rect_min.y < (slot_position.y + radius)) && (canvas_rect_max.y > (slot_position.y - radius)))) {
+        ImVec2 slot_rect_min = ImVec2(slot_position.x - radius, slot_position.y - radius);
+        ImVec2 slot_rect_max = ImVec2(slot_position.x + radius, slot_position.y + radius);
+        if (this->label_visible) {
+            ImVec2 text_clip_pos = text_pos_left_upper;
+            if (inout_call_slot.type == CallSlot::CallSlotType::CALLEE) {
+                text_clip_pos = ImVec2(
+                    text_pos_left_upper.x + this->utils.TextWidgetWidth(inout_call_slot.name), text_pos_left_upper.y);
+            }
+            if (text_clip_pos.x < slot_rect_min.x) slot_rect_min.x = text_clip_pos.x;
+            if (text_clip_pos.x > slot_rect_max.x) slot_rect_max.x = text_clip_pos.x;
+            if (text_clip_pos.y < slot_rect_min.y) slot_rect_min.y = text_clip_pos.y;
+            if (text_clip_pos.y > slot_rect_max.y) slot_rect_max.y = text_clip_pos.y;
+        }
+        if (!((canvas_rect_min.x < (slot_rect_max.x)) && (canvas_rect_max.x > (slot_rect_min.x)) &&
+                (canvas_rect_min.y < (slot_rect_max.y)) && (canvas_rect_max.y > (slot_rect_min.y)))) {
             this->selected = false;
             return GUI_INVALID_ID;
         }
@@ -342,16 +368,8 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
         draw_list->AddCircleFilled(slot_position, radius, slot_color);
         draw_list->AddCircle(slot_position, radius, COLOR_SLOT_BORDER);
 
-        // Draw text
         if (this->label_visible) {
-            ImVec2 text_pos;
-            text_pos.y = slot_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
-            if (inout_call_slot.type == CallSlot::CallSlotType::CALLER) {
-                text_pos.x = slot_position.x - this->utils.TextWidgetWidth(inout_call_slot.name) - (2.0f * radius);
-            } else if (inout_call_slot.type == CallSlot::CallSlotType::CALLEE) {
-                text_pos.x = slot_position.x + (2.0f * radius);
-            }
-            draw_list->AddText(text_pos, slot_highlight_color, inout_call_slot.name.c_str());
+            draw_list->AddText(text_pos_left_upper, slot_highlight_color, inout_call_slot.name.c_str());
         }
 
         ImGui::PopID();

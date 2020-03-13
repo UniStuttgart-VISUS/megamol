@@ -59,6 +59,9 @@ bool megamol::gui::configurator::Graph::AddModule(
                     param_slot.full_name = p.full_name;
                     param_slot.description = p.description;
                     param_slot.SetValueString(p.default_value, false);
+                    param_slot.GUI_SetLabelVisibility(this->present.params_visible);
+                    param_slot.GUI_SetReadOnly(this->present.params_readonly);
+                    param_slot.GUI_SetExpert(this->present.params_expert);
 
                     mod_ptr->parameters.emplace_back(param_slot);
                 }
@@ -267,8 +270,8 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , mouse_wheel(0.0f)
     , params_visible(true)
     , params_readonly(false)
-    , param_name_space()
-    , param_present(Parameter::Presentations::SIMPLE) {
+    , params_expert(false)
+    , param_name_space() {
 
     this->canvas.position = ImVec2(0.0f, 0.0f);
     this->canvas.size = ImVec2(1.0f, 1.0f);
@@ -380,12 +383,10 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
         }
     }
     if (selected_mod_ptr == nullptr) {
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+        this->utils.ReadOnlyWigetStyle(true);
         bool checked = false;
         ImGui::Checkbox("Main View", &checked);
-        ImGui::PopItemFlag();
-        ImGui::PopStyleVar();
+        this->utils.ReadOnlyWigetStyle(false);
     } else {
         if (ImGui::Checkbox("Main View", &selected_mod_ptr->is_view_instance)) {
             this->canvas.updated = true;
@@ -657,14 +658,28 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
     }
     ImGui::SameLine();
 
-    // Presentations
-    if (Parameter::GUI_PresentationButton(this->param_present, "Presentation")) {
-        for (auto& modptr : inout_graph.GetGraphModules()) {
-            for (auto& param : modptr->parameters) {
-                param.GUI_SetPresentation(this->param_present);
+    // Mode
+    this->utils.PointCircleButton("Mode");
+    if (ImGui::BeginPopupContextItem("param_mode_button_context", 0)) { // 0 = left mouse button
+        bool changed = false;
+        if (ImGui::MenuItem("Basic", nullptr, (this->params_expert == false))) {
+            this->params_expert = false;
+            changed = true;
+        }
+        if (ImGui::MenuItem("Expert", nullptr, (this->params_expert == true))) {
+            this->params_expert = true;
+            changed = true;
+        }
+        if (changed) {
+            for (auto& modptr : inout_graph.GetGraphModules()) {
+                for (auto& param : modptr->parameters) {
+                    param.GUI_SetExpert(this->params_expert);
+                }
             }
         }
+        ImGui::EndPopup();
     }
+
     ImGui::Separator();
 
     ImGui::EndChild();

@@ -75,8 +75,6 @@ public:
 
     typedef std::map<int, std::string> EnumStorageType;
 
-    enum Presentations : size_t { DEFAULT = 0, SIMPLE = 1, _COUNT_ = 2 };
-
     typedef std::variant<std::monostate,             // default  BUTTON
         bool,                                        // BOOL
         megamol::core::param::ColorParam::ColorType, // COLOR
@@ -210,12 +208,8 @@ public:
 
     bool GUI_Present(void) { return this->present.Present(*this); }
     void GUI_SetLabelVisibility(bool visible) { this->present.visible = visible; }
-    void GUI_SetPresentation(Parameter::Presentations present) { this->present.presentations = present; }
     void GUI_SetReadOnly(bool readonly) { this->present.read_only = readonly; }
-
-    static bool GUI_PresentationButton(Parameter::Presentations& inout_present, const std::string& label = "") {
-        return Presentation::PresentationButton(inout_present, label);
-    }
+    void GUI_SetExpert(bool expert) { this->present.expert = expert; }
 
 private:
     MinType minval;
@@ -230,29 +224,38 @@ private:
      */
     class Presentation {
     public:
+        enum Presentations : size_t { DEFAULT = 0, PIN_VALUE_TO_MOUSE = 1, _COUNT_ = 2 };
+
         Presentation(void);
 
         ~Presentation(void);
 
         bool Present(Parameter& param);
 
-        Parameter::Presentations presentations;
         bool read_only;
         bool visible;
-
-        static bool PresentationButton(Parameter::Presentations& inout_present, const std::string& label = "");
+        bool expert;
 
     private:
+        Presentations presentations;
+
         std::string help;
         megamol::gui::GUIUtils utils;
-        megamol::gui::TransferFunctionEditor tf_editor;
         bool show_tf_editor;
-
+        megamol::gui::TransferFunctionEditor tf_editor;
         std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
 
+        static bool popup_open;
+
+        const std::string float_format;
+
         void present_prefix(Parameter& param);
-        void present_value(Parameter& param);
+        void present_value_DEFAULT(Parameter& param);
+        void present_value_PIN_VALUE_TO_MOUSE(Parameter& param);
+
         void present_postfix(Parameter& param);
+
+        bool presentation_button(void);
 
         void transfer_function_edit(Parameter& param);
 

@@ -155,6 +155,7 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
             this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - in_canvas.offset) / in_canvas.zooming;
         }
         // Trigger only when canvas was updated
+        // Always update position before clipping -> calls need updated slot positions.
         if (in_canvas.updated || (this->size.x == 0.0f) || (this->size.y == 0.0f)) {
             this->UpdateSize(inout_mod, in_canvas.zooming);
         }

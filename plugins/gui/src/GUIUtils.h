@@ -35,12 +35,20 @@
 namespace megamol {
 namespace gui {
 
+
+/********** Defines **********/
+
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_CALL_SLOT_RADIUS (8.0f)
 
+
+/********** Types **********/
+
 /** Hotkey Data Types for Configurator */
 typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyDataType;
+
 enum HotkeyIndex : size_t { MODULE_SEARCH = 0, PARAMETER_SEARCH = 1, DELETE_GRAPH_ITEM = 2, INDEX_COUNT = 3 };
+
 typedef std::array<HotkeyDataType, HotkeyIndex::INDEX_COUNT> HotKeyArrayType;
 
 /* Canvas Data Type for Information of Graph */
@@ -102,14 +110,16 @@ public:
 
     // Misc widgets -------------------------------------------------------
 
-    enum FixedSplitterSide { LEFT, RIGHT };
-
     /**
      * Draw draggable splitter between two child windows, relative to parent window size.
      * https://github.com/ocornut/imgui/issues/319
      */
+    enum FixedSplitterSide { LEFT, RIGHT };
     bool VerticalSplitter(FixedSplitterSide fixed_side, float& size_left, float& size_right);
 
+
+    /** "Point in Circle" Button */
+    void PointCircleButton(const std::string& label = "");
 
     // UTF8 String En-/Decoding -----------------------------------------------
 
@@ -151,6 +161,11 @@ public:
      * Returns width of text drawn as widget.
      */
     float TextWidgetWidth(const std::string& text) const;
+
+    /**
+     * Set/Unset read only widget style.
+     */
+    void ReadOnlyWigetStyle(bool set);
 
 private:
     /** Current tooltip hover time. */

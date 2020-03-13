@@ -189,6 +189,18 @@ float GUIUtils::TextWidgetWidth(const std::string& text) const {
 }
 
 
+void megamol::gui::GUIUtils::ReadOnlyWigetStyle(bool set) {
+
+    if (set) {
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+    } else {
+        ImGui::PopItemFlag();
+        ImGui::PopStyleVar();
+    }
+}
+
+
 bool GUIUtils::Utf8Decode(std::string& str) const {
     vislib::StringA dec_tmp;
     if (vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(str.c_str()))) {
@@ -308,6 +320,43 @@ bool megamol::gui::GUIUtils::VerticalSplitter(FixedSplitterSide fixed_side, floa
     }
 
     return retval;
+}
+
+
+void megamol::gui::GUIUtils::PointCircleButton(const std::string& label) {
+
+    assert(ImGui::GetCurrentContext() != nullptr);
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    float height = ImGui::GetFrameHeight();
+    float half_height = height / 2.0f;
+    ImVec2 position = ImGui::GetCursorScreenPos();
+
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]));
+    ImGui::BeginChild("special_button_background", ImVec2(height, height), false,
+        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
+
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
+
+    float thickness = height / 5.0f;
+    ImVec2 center = position + ImVec2(half_height, half_height);
+
+    ImU32 color_front = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
+
+    draw_list->AddCircleFilled(center, thickness, color_front, 12);
+    draw_list->AddCircle(center, 2.0f * thickness, color_front, 12, (thickness / 2.0f));
+    ImGui::EndChild();
+    ImGui::PopStyleColor();
+
+    if (!label.empty()) {
+        ImGui::SameLine();
+        ImGui::Text(label.c_str());
+    }
+
+    ImGui::SetCursorScreenPos(position);
+    ImVec2 rect = ImVec2(height, height);
+    ImGui::InvisibleButton("special_button", rect);
 }
 
 

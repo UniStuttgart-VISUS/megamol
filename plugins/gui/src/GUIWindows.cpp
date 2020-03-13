@@ -1464,8 +1464,7 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
         // Set different style if parameter is read-only
         bool readOnly = param->IsGUIReadOnly();
         if (readOnly) {
-            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+            this->utils.ReadOnlyWigetStyle(true);
         }
 
         std::string param_name = slot.Name().PeekBuffer();
@@ -1688,8 +1687,7 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
 
         // Reset to default style
         if (param->IsGUIReadOnly()) {
-            ImGui::PopItemFlag();
-            ImGui::PopStyleVar();
+            this->utils.ReadOnlyWigetStyle(false);
         }
 
         this->utils.HoverToolTip(param_desc, ImGui::GetID(param_label.c_str()), 0.5f);
