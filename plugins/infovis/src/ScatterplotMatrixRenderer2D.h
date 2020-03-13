@@ -167,6 +167,8 @@ private:
 
     void drawText();
 
+    void drawPickIndicator();
+
     void unbindScreen();
 
     void bindAndClearScreen();
@@ -249,6 +251,8 @@ private:
     vislib::graphics::gl::GLSLGeometryShader lineShader;
 
     vislib::graphics::gl::GLSLShader triangleShader;
+
+    vislib::graphics::gl::GLSLShader pickIndicatorShader;
 
     vislib::graphics::gl::GLSLShader screenShader;
 

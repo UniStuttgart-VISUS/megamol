@@ -238,6 +238,7 @@ bool ScatterplotMatrixRenderer2D::create() {
     if (!makeProgram("::splom::point", this->pointShader)) return false;
     if (!makeProgram("::splom::line", this->lineShader)) return false;
     if (!makeProgram("::splom::triangle", this->triangleShader)) return false;
+    if (!makeProgram("::splom::pickIndicator", this->pickIndicatorShader)) return false;
     if (!makeProgram("::splom::screen", this->screenShader)) return false;
 
     if (!makeProgram("::splom::pick", this->pickProgram)) return false;
@@ -331,6 +332,9 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
             this->drawText();
             break;
         }
+
+        this->drawPickIndicator();
+
         this->drawScreen();
 
     } catch (...) {
@@ -950,6 +954,26 @@ void ScatterplotMatrixRenderer2D::drawText() {
     validateText();
 
     this->textFont.BatchDrawString();
+
+    debugPop();
+}
+
+void ScatterplotMatrixRenderer2D::drawPickIndicator() {
+    debugPush(15, "drawPickIndicator");
+
+    this->pickIndicatorShader.Enable();
+
+    float color[] = {0.0, 1.0, 1.0, 1.0};
+    glUniformMatrix4fv(this->pickIndicatorShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
+        getModelViewProjection().PeekComponents());
+    glUniform2f(this->pickIndicatorShader.ParameterLocation("mouse"), this->mouse.x, this->mouse.y);
+    glUniform1f(this->pickIndicatorShader.ParameterLocation("pickRadius"),
+        this->kernelWidthParam.Param<core::param::FloatParam>()->Value());
+    glUniform4fv(this->pickIndicatorShader.ParameterLocation("indicatorColor"), 1, color);
+    glDisable(GL_DEPTH_TEST);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glEnable(GL_DEPTH_TEST);
+    this->pickIndicatorShader.Disable();
 
     debugPop();
 }
