@@ -23,6 +23,7 @@ public:
      * Returns a reference to the enzyme class map.
      * The map will be loaded beforehand, if it is not loaded yet.
      *
+     * @param coreInstance The core instance needed for file path retrieval.
      * @return Reference to the stored map
      */
     static const std::multimap<std::string, std::array<int, 4>>& RetrieveEnzymeClassMap(const core::CoreInstance& coreInstance);
@@ -34,6 +35,7 @@ public:
      * The map will be loaded beforehand, if it is not loaded yet.
      *
      * @param pdbId The requested protein pdbId.
+     * @param coreInstance The core instance needed for file path retrieval.
      * @return Array with four entries, one for each subclass. If one subclass is not listed, the value will be -1.
      */
     static std::array<int, 4> RetrieveClassForPdbId(std::string pdbId, const core::CoreInstance& coreInstance);
@@ -44,6 +46,7 @@ public:
      * The map will be loaded beforehand, if it is not loaded yet.
      *
      * @param pdbId The requested protein pdbId.
+     * @param coreInstance The core instance needed for file path retrieval.
      * @return Array with four entries, one for each subclass. If one subclass is not listed, the value will be -1.
      */
     static std::vector<std::array<int, 4>> RetrieveClassesForPdbId(
@@ -52,12 +55,15 @@ public:
 private:
     /**
      * Loads the enzyme class map from the file in the resources folder
+     *
+     * @param coreInstance The core instance needed for file path retrieval.
      */
     static void loadMapFromFile(const core::CoreInstance& coreInstance);
 
     /**
      * Determines the file path of the file to load
      *
+     * @param coreInstance The core instance needed for file path retrieval.
      * @return Path to the map file
      */
     static std::filesystem::path determineFilePath(const core::CoreInstance& coreInstance);
