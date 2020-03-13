@@ -321,6 +321,7 @@ ImGuiID megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::c
             // Update positions and sizes
             if (this->layout_current_graph) {
                 this->layout_graph(inout_graph);
+                this->canvas.updated = true;
                 this->layout_current_graph = false;
             }
 
@@ -430,6 +431,7 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
         for (auto& call : inout_graph.GetGraphCalls()) {
             call->GUI_SetLabelVisibility(this->show_call_names);
         }
+        this->canvas.updated = true;
     }
     ImGui::SameLine();
 
@@ -437,6 +439,7 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
         for (auto& mod : inout_graph.GetGraphModules()) {
             mod->GUI_SetLabelVisibility(this->show_module_names);
         }
+        this->canvas.updated = true;
     }
     ImGui::SameLine();
 
@@ -448,6 +451,7 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
                 }
             }
         }
+        this->canvas.updated = true;
     }
     ImGui::SameLine();
 
