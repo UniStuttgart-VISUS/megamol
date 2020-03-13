@@ -15,6 +15,7 @@
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/param/ParamSlot.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/ShaderSource.h"
@@ -101,6 +102,11 @@ private:
     /**********************************************************************
      * variables
      **********************************************************************/
+    /** Parameters */
+    core::param::ParamSlot showEnzymeClassesParam;
+    core::param::ParamSlot showPDBIdsParam;
+    core::param::ParamSlot fontSizeParam;
+
     /**The Viewport*/
     vislib::math::Vector<float, 2> viewport;
     vislib::math::Rectangle<int> windowMeasurements;
@@ -108,7 +114,6 @@ private:
 
     // Font rendering
     megamol::core::utility::SDFFont theFont;
-    float fontSize;
 
     /** DataHash*/
     SIZE_T lastHashClustering;

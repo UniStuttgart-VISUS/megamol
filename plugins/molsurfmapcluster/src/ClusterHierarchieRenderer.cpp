@@ -8,14 +8,16 @@
 #include "stdafx.h"
 #include <tuple>
 
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/view/Renderer2DModule.h"
 
 #include "vislib/sys/Log.h"
 
 #include "CallClusterPosition.h"
 #include "ClusterHierarchieRenderer.h"
-#include "TextureLoader.h"
 #include "EnzymeClassProvider.h"
+#include "TextureLoader.h"
 
 #define VIEWPORT_WIDTH 2560
 #define VIEWPORT_HEIGHT 1440
@@ -34,10 +36,11 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
     , clusterDataSlot("inData", "The input data slot for sphere data.")
     , positionDataSlot("position", "The inoput data slot for the aktual position")
     , positionoutslot("getposition", "Returns the aktual Rendered-Root-Node from clustering")
-
+    , showEnzymeClassesParam("showEnzymeClasses", "Display the Enzyme classes alongside with the popup renders")
+    , showPDBIdsParam("showPDBIds", "Display the PDB Ids alongside with the popup renders")
+    , fontSizeParam("fontSize", "Size of the rendered font")
     , theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
-    , texVa(0)
-    , fontSize(22.0f) {
+    , texVa(0) {
 
     // Callee Slot
     this->positionoutslot.SetCallback(CallClusterPosition::ClassName(), CallClusterPosition::FunctionName(1),
@@ -54,7 +57,14 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
     this->MakeSlotAvailable(&this->positionDataSlot);
 
     // ParamSlot
+    this->showEnzymeClassesParam.SetParameter(new core::param::BoolParam(false));
+    this->MakeSlotAvailable(&this->showEnzymeClassesParam);
 
+    this->showPDBIdsParam.SetParameter(new core::param::BoolParam(true));
+    this->MakeSlotAvailable(&this->showPDBIdsParam);
+
+    this->fontSizeParam.SetParameter(new core::param::FloatParam(22.0f, 5.0f, 300.0f));
+    this->MakeSlotAvailable(&this->fontSizeParam);
 
     // Variablen
     this->lastHashClustering = 0;
@@ -403,7 +413,8 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
             double distanceX = 30.0 / (windowMeasurements.Width() * 2.0 * this->zoomFactor);
             double distanceY = 30.0 / (windowMeasurements.Height() * 2.0 * this->zoomFactor);
 
-            if (checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex, distanceX, distanceY) == -1) {
+            if (checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex, distanceX,
+                    distanceY) == -1) {
                 this->position = this->popup;
             }
 
@@ -522,6 +533,44 @@ void ClusterHierarchieRenderer::renderPopup(glm::mat4 mvp) {
         this->textureShader.Disable();
         glBindVertexArray(0);
         glDisable(GL_TEXTURE_2D);
+
+        auto fontSize = this->fontSizeParam.Param<param::FloatParam>()->Value();
+        auto lineHeight = theFont.LineHeight(fontSize);
+
+        // render fonts if necessary
+        if (this->showPDBIdsParam.Param<param::BoolParam>()->Value()) {
+            auto stringToDraw = this->popup->pic->pdbid.c_str();
+            auto lineWidth = theFont.LineWidth(fontSize, stringToDraw);
+
+            std::array<float, 4> color = {0.0f, 0.0f, 0.0f, 1.0f};
+            this->theFont.DrawString(color.data(), this->x + shiftx + width * 0.5f, this->y + shifty + height * 0.5f,
+                fontSize, false, stringToDraw, core::utility::AbstractFont::Alignment::ALIGN_CENTER_MIDDLE);
+        }
+        if (this->showEnzymeClassesParam.Param<param::BoolParam>()->Value()) {
+            auto classes =
+                EnzymeClassProvider::RetrieveClassesForPdbId(this->popup->pic->pdbid, *this->GetCoreInstance());
+            auto numClasses = static_cast<uint32_t>(classes.size());
+            float margin = 5.0f;
+
+            if (numClasses > 0) {
+                std::string text = "";
+                uint32_t idx = 0;
+                for (const auto& v : classes) {
+                    text += (v[0] != -1 ? std::to_string(v[0]) : "") + (v[1] != -1 ? "." + std::to_string(v[1]) : "") +
+                            (v[2] != -1 ? "." + std::to_string(v[2]) : "") +
+                            (v[3] != -1 ? "." + std::to_string(v[3]) : "");
+                    if (idx < numClasses - 1) {
+                        text += "\n";
+                    }
+                    ++idx;
+                }
+
+                std::array<float, 4> color = {1.0f, 1.0f, 1.0f, 1.0f};
+                this->theFont.DrawString(color.data(), this->x + shiftx + width + margin,
+                    this->y + shifty + height * 0.5f, fontSize, false, text.c_str(),
+                    core::utility::AbstractFont::Alignment::ALIGN_LEFT_MIDDLE);
+            }
+        }
         glEnable(GL_CULL_FACE);
     }
 }
