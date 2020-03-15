@@ -328,9 +328,11 @@ void megamol::gui::GUIUtils::PointCircleButton(const std::string& label) {
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
 
+    ImGui::BeginGroup();
+
     float height = ImGui::GetFrameHeight();
     float half_height = height / 2.0f;
-    ImVec2 position = ImGui::GetCursorScreenPos();
+    ImVec2 widget_start_pos = ImGui::GetCursorScreenPos();
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]));
     ImGui::BeginChild("special_button_background", ImVec2(height, height), false,
@@ -340,7 +342,7 @@ void megamol::gui::GUIUtils::PointCircleButton(const std::string& label) {
     assert(draw_list != nullptr);
 
     float thickness = height / 5.0f;
-    ImVec2 center = position + ImVec2(half_height, half_height);
+    ImVec2 center = widget_start_pos + ImVec2(half_height, half_height);
 
     ImU32 color_front = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
 
@@ -351,12 +353,15 @@ void megamol::gui::GUIUtils::PointCircleButton(const std::string& label) {
 
     if (!label.empty()) {
         ImGui::SameLine();
+        ImGui::AlignTextToFramePadding();
         ImGui::Text(label.c_str());
     }
 
-    ImGui::SetCursorScreenPos(position);
+    ImGui::SetCursorScreenPos(widget_start_pos);
     ImVec2 rect = ImVec2(height, height);
     ImGui::InvisibleButton("special_button", rect);
+
+    ImGui::EndGroup();
 }
 
 

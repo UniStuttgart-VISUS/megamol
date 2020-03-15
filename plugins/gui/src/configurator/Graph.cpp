@@ -638,26 +638,6 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
     this->utils.StringSearch("graph_parameter_search", help_text);
     auto search_string = this->utils.GetSearchString();
 
-    // Visibility
-    if (ImGui::Checkbox("Visibility", &this->params_visible)) {
-        for (auto& modptr : inout_graph.GetGraphModules()) {
-            for (auto& param : modptr->parameters) {
-                param.GUI_SetLabelVisibility(this->params_visible);
-            }
-        }
-    }
-    ImGui::SameLine();
-
-    // Read-only option
-    if (ImGui::Checkbox("Read-Only", &this->params_readonly)) {
-        for (auto& modptr : inout_graph.GetGraphModules()) {
-            for (auto& param : modptr->parameters) {
-                param.GUI_SetReadOnly(this->params_readonly);
-            }
-        }
-    }
-    ImGui::SameLine();
-
     // Mode
     this->utils.PointCircleButton("Mode");
     if (ImGui::BeginPopupContextItem("param_mode_button_context", 0)) { // 0 = left mouse button
@@ -680,6 +660,28 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
         ImGui::EndPopup();
     }
 
+    if (this->params_expert) {
+        ImGui::SameLine();
+
+        // Visibility
+        if (ImGui::Checkbox("Visibility", &this->params_visible)) {
+            for (auto& modptr : inout_graph.GetGraphModules()) {
+                for (auto& param : modptr->parameters) {
+                    param.GUI_SetLabelVisibility(this->params_visible);
+                }
+            }
+        }
+        ImGui::SameLine();
+
+        // Read-only option
+        if (ImGui::Checkbox("Read-Only", &this->params_readonly)) {
+            for (auto& modptr : inout_graph.GetGraphModules()) {
+                for (auto& param : modptr->parameters) {
+                    param.GUI_SetReadOnly(this->params_readonly);
+                }
+            }
+        }
+    }
     ImGui::Separator();
 
     ImGui::EndChild();
