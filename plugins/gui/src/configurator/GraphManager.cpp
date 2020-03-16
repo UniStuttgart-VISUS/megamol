@@ -273,11 +273,11 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
                             if (auto* p_ptr = param_slot->Param<core::param::ButtonParam>()) {
                                 param.SetStorage(p_ptr->GetKeyCode());
                             } else if (auto* p_ptr = param_slot->Param<core::param::BoolParam>()) {
-                                param.SetValue(p_ptr->Value(), false);
+                                param.SetValue(p_ptr->Value());
                             } else if (auto* p_ptr = param_slot->Param<core::param::ColorParam>()) {
-                                param.SetValue(p_ptr->Value(), false);
+                                param.SetValue(p_ptr->Value());
                             } else if (auto* p_ptr = param_slot->Param<core::param::EnumParam>()) {
-                                param.SetValue(p_ptr->Value(), false);
+                                param.SetValue(p_ptr->Value());
                                 Parameter::EnumStorageType map;
                                 auto param_map = p_ptr->getMap();
                                 auto iter = param_map.GetConstIterator();
@@ -287,41 +287,41 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
                                 }
                                 param.SetStorage(map);
                             } else if (auto* p_ptr = param_slot->Param<core::param::FilePathParam>()) {
-                                param.SetValue(std::string(p_ptr->Value().PeekBuffer()), false);
+                                param.SetValue(std::string(p_ptr->Value().PeekBuffer()));
                             } else if (auto* p_ptr = param_slot->Param<core::param::FlexEnumParam>()) {
-                                param.SetValue(p_ptr->Value(), false);
+                                param.SetValue(p_ptr->Value());
                                 param.SetStorage(p_ptr->getStorage());
                             } else if (auto* p_ptr = param_slot->Param<core::param::FloatParam>()) {
-                                param.SetValue(p_ptr->Value(), false);
+                                param.SetValue(p_ptr->Value());
                                 param.SetMinValue(p_ptr->MinValue());
                                 param.SetMaxValue(p_ptr->MaxValue());
                             } else if (auto* p_ptr = param_slot->Param<core::param::IntParam>()) {
-                                param.SetValue(p_ptr->Value(), false);
+                                param.SetValue(p_ptr->Value());
                                 param.SetMinValue(p_ptr->MinValue());
                                 param.SetMaxValue(p_ptr->MaxValue());
                             } else if (auto* p_ptr = param_slot->Param<core::param::StringParam>()) {
-                                param.SetValue(std::string(p_ptr->Value().PeekBuffer()), false);
+                                param.SetValue(std::string(p_ptr->Value().PeekBuffer()));
                             } else if (auto* p_ptr = param_slot->Param<core::param::TernaryParam>()) {
-                                param.SetValue(p_ptr->Value(), false);
+                                param.SetValue(p_ptr->Value());
                             } else if (auto* p_ptr = param_slot->Param<core::param::TransferFunctionParam>()) {
-                                param.SetValue(p_ptr->Value(), false);
+                                param.SetValue(p_ptr->Value());
                             } else if (auto* p_ptr = param_slot->Param<core::param::Vector2fParam>()) {
                                 auto val = p_ptr->Value();
-                                param.SetValue(glm::vec2(val.X(), val.Y()), false);
+                                param.SetValue(glm::vec2(val.X(), val.Y()));
                                 auto min = p_ptr->MinValue();
                                 param.SetMinValue(glm::vec2(min.X(), min.Y()));
                                 auto max = p_ptr->MaxValue();
                                 param.SetMaxValue(glm::vec2(max.X(), max.Y()));
                             } else if (auto* p_ptr = param_slot->Param<core::param::Vector3fParam>()) {
                                 auto val = p_ptr->Value();
-                                param.SetValue(glm::vec3(val.X(), val.Y(), val.Z()), false);
+                                param.SetValue(glm::vec3(val.X(), val.Y(), val.Z()));
                                 auto min = p_ptr->MinValue();
                                 param.SetMinValue(glm::vec3(min.X(), min.Y(), min.Z()));
                                 auto max = p_ptr->MaxValue();
                                 param.SetMaxValue(glm::vec3(max.X(), max.Y(), max.Z()));
                             } else if (auto* p_ptr = param_slot->Param<core::param::Vector4fParam>()) {
                                 auto val = p_ptr->Value();
-                                param.SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()), false);
+                                param.SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()));
                                 auto min = p_ptr->MinValue();
                                 param.SetMinValue(glm::vec4(min.X(), min.Y(), min.Z(), min.W()));
                                 auto max = p_ptr->MaxValue();
@@ -804,8 +804,9 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_id,
                     }
 
                     for (auto& param_slot : mod->parameters) {
-                        // Only write parameters with other values than the default.
-                        if (param_slot.ValueChanged() && (param_slot.type != Parameter::ParamType::BUTTON)) {
+                        // Only write parameters with other values than the default
+                        if (param_slot
+                                .DefaultValueMismatch()) { // && (param_slot.type != Parameter::ParamType::BUTTON)) {
                             // Encode to UTF-8 string
                             vislib::StringA valueString;
                             vislib::UTF8Encoder::Encode(

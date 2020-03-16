@@ -162,15 +162,23 @@ public:
 
     template <typename T> const T& GetStorage(void) const { return std::get<T>(this->storage); }
 
-    bool ValueChanged(void) { return this->value_changed; }
+    bool DefaultValueMismatch(void) { return this->default_value_mismatch; }
 
     // SET ----------------------------------
-    bool SetValueString(const std::string& val_str, bool log = true);
+    bool SetValueString(const std::string& val_str, bool set_default_val = false);
 
-    template <typename T> void SetValue(T val, bool log = true) {
+    template <typename T> void SetValue(T val, bool set_default_val = false) {
         if (std::holds_alternative<T>(this->value)) {
             this->value = val;
-            this->value_changed = (log) ? (true) : (this->value_changed);
+            if (set_default_val) {
+                this->default_value = val;
+                this->default_value_mismatch = false;
+            } else {
+                try {
+                    this->default_value_mismatch = (std::get<T>(this->default_value) != val);
+                } catch (...) {
+                }
+            }
         } else {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -217,7 +225,8 @@ private:
     StroageType storage;
     ValueType value;
 
-    bool value_changed;
+    ValueType default_value;
+    bool default_value_mismatch;
 
     /**
      * Defines GUI parameter presentation.

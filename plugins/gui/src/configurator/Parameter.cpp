@@ -19,7 +19,14 @@ using namespace megamol::gui::configurator;
 
 megamol::gui::configurator::Parameter::Parameter(
     ImGuiID uid, ParamType type, StroageType store, MinType min, MaxType max)
-    : uid(uid), type(type), minval(min), maxval(max), storage(store), value(), present(), value_changed(false) {
+    : uid(uid)
+    , type(type)
+    , minval(min)
+    , maxval(max)
+    , storage(store)
+    , value()
+    , present()
+    , default_value_mismatch(false) {
 
     // Initialize variant types which should/can not be changed afterwards.
     // Default ctor of variants initializes std::monostate.
@@ -28,6 +35,7 @@ megamol::gui::configurator::Parameter::Parameter(
         this->value = bool(false);
     } break;
     case (Parameter::ParamType::BUTTON): {
+        // set_default_value_mismatch = true;
     } break;
     case (Parameter::ParamType::COLOR): {
         this->value = megamol::core::param::ColorParam::ColorType();
@@ -68,6 +76,8 @@ megamol::gui::configurator::Parameter::Parameter(
     default:
         break;
     }
+
+    this->default_value = this->value;
 }
 
 
@@ -152,7 +162,7 @@ std::string megamol::gui::configurator::Parameter::GetValueString(void) {
 }
 
 
-bool megamol::gui::configurator::Parameter::SetValueString(const std::string& val_str, bool log) {
+bool megamol::gui::configurator::Parameter::SetValueString(const std::string& val_str, bool set_default_val) {
 
     bool retval = false;
     vislib::TString val_tstr(val_str.c_str());
@@ -161,7 +171,7 @@ bool megamol::gui::configurator::Parameter::SetValueString(const std::string& va
     case (Parameter::ParamType::BOOL): {
         megamol::core::param::BoolParam param(false);
         retval = param.ParseValue(val_tstr);
-        this->SetValue(param.Value(), log);
+        this->SetValue(param.Value(), set_default_val);
     } break;
     case (Parameter::ParamType::BUTTON): {
         retval = true;
@@ -169,65 +179,65 @@ bool megamol::gui::configurator::Parameter::SetValueString(const std::string& va
     case (Parameter::ParamType::COLOR): {
         megamol::core::param::ColorParam param(val_tstr);
         retval = param.ParseValue(val_tstr);
-        this->SetValue(param.Value(), log);
+        this->SetValue(param.Value(), set_default_val);
     } break;
     case (Parameter::ParamType::ENUM): {
         megamol::core::param::EnumParam param(0);
         retval = param.ParseValue(val_tstr);
-        this->SetValue(param.Value(), log);
+        this->SetValue(param.Value(), set_default_val);
     } break;
     case (Parameter::ParamType::FILEPATH): {
         megamol::core::param::FilePathParam param(val_tstr.PeekBuffer());
         retval = param.ParseValue(val_tstr);
-        this->SetValue(std::string(param.Value().PeekBuffer()), log);
+        this->SetValue(std::string(param.Value().PeekBuffer()), set_default_val);
     } break;
     case (Parameter::ParamType::FLEXENUM): {
         megamol::core::param::FlexEnumParam param(val_str);
         retval = param.ParseValue(val_tstr);
-        this->SetValue(param.Value(), log);
+        this->SetValue(param.Value(), set_default_val);
     } break;
     case (Parameter::ParamType::FLOAT): {
         megamol::core::param::FloatParam param(0.0f);
         retval = param.ParseValue(val_tstr);
-        this->SetValue(param.Value(), log);
+        this->SetValue(param.Value(), set_default_val);
     } break;
     case (Parameter::ParamType::INT): {
         megamol::core::param::IntParam param(0);
         retval = param.ParseValue(val_tstr);
-        this->SetValue(param.Value(), log);
+        this->SetValue(param.Value(), set_default_val);
     } break;
     case (Parameter::ParamType::STRING): {
         megamol::core::param::StringParam param(val_tstr.PeekBuffer());
         retval = param.ParseValue(val_tstr);
-        this->SetValue(std::string(param.Value().PeekBuffer()), log);
+        this->SetValue(std::string(param.Value().PeekBuffer()), set_default_val);
     } break;
     case (Parameter::ParamType::TERNARY): {
         megamol::core::param::TernaryParam param(vislib::math::Ternary::TRI_UNKNOWN);
         retval = param.ParseValue(val_tstr);
-        this->SetValue(param.Value(), log);
+        this->SetValue(param.Value(), set_default_val);
     } break;
     case (Parameter::ParamType::TRANSFERFUNCTION): {
         megamol::core::param::TransferFunctionParam param;
         retval = param.ParseValue(val_tstr);
-        this->SetValue(param.Value(), log);
+        this->SetValue(param.Value(), set_default_val);
     } break;
     case (Parameter::ParamType::VECTOR2F): {
         megamol::core::param::Vector2fParam param(vislib::math::Vector<float, 2>(0.0f, 0.0f));
         retval = param.ParseValue(val_tstr);
         auto val = param.Value();
-        this->SetValue(glm::vec2(val.X(), val.Y()), log);
+        this->SetValue(glm::vec2(val.X(), val.Y()), set_default_val);
     } break;
     case (Parameter::ParamType::VECTOR3F): {
         megamol::core::param::Vector3fParam param(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
         retval = param.ParseValue(val_tstr);
         auto val = param.Value();
-        this->SetValue(glm::vec3(val.X(), val.Y(), val.Z()), log);
+        this->SetValue(glm::vec3(val.X(), val.Y(), val.Z()), set_default_val);
     } break;
     case (Parameter::ParamType::VECTOR4F): {
         megamol::core::param::Vector4fParam param(vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 0.0f));
         retval = param.ParseValue(val_tstr);
         auto val = param.Value();
-        this->SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()), log);
+        this->SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()), set_default_val);
     } break;
     default:
         break;

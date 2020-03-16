@@ -58,7 +58,7 @@ bool megamol::gui::configurator::Graph::AddModule(
                     Parameter param_slot(this->generate_unique_id(), p.type, p.storage, p.minval, p.maxval);
                     param_slot.full_name = p.full_name;
                     param_slot.description = p.description;
-                    param_slot.SetValueString(p.default_value, false);
+                    param_slot.SetValueString(p.default_value, true);
                     param_slot.GUI_SetLabelVisibility(this->present.params_visible);
                     param_slot.GUI_SetReadOnly(this->present.params_readonly);
                     param_slot.GUI_SetExpert(this->present.params_expert);
