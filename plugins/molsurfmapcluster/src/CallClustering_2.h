@@ -21,7 +21,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "CallClusteringLoader"; }
+    static const char* ClassName(void) { return "CallClustering_2"; }
 
     /**
      * Gets a human readable description of the module.
@@ -68,6 +68,7 @@ public:
         switch (idx) {
         case 0:
             return "GetData";
+        case 1:
             return "GetExtent";
         }
         return nullptr;

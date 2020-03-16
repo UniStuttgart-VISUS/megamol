@@ -16,11 +16,15 @@
 #include "CallCluster.h"
 #include "CallClusterPosition.h"
 #include "CallClusteringLoader.h"
+#include "CallClustering_2.h"
 #include "CallPNGPics.h"
+#include "ClusterGraphRenderer.h"
 #include "ClusterHierarchieRenderer.h"
+#include "ClusterMapRenderer.h"
 #include "ClusterRenderer.h"
 #include "Clustering.h"
 #include "ClusteringLoader.h"
+#include "Clustering_2.h"
 #include "PNGPicLoader.h"
 
 /* anonymous namespace hides this type from any other object files */
@@ -54,12 +58,16 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::ClusterRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::ClusterHierarchieRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::ClusteringLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::Clustering_2>();
+        this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::ClusterMapRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::ClusterGraphRenderer>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::CallPNGPics>();
         this->call_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::CallClustering>();
         this->call_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::CallClusterPosition>();
         this->call_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::CallClusteringLoader>();
+        this->call_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::CallClustering_2>();
     }
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
 };

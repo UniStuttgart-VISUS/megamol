@@ -15,7 +15,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "Clustering"; }
+    static const char* ClassName(void) { return "Clustering_2"; }
 
     /**
      * Gets a human readable description of the module.
