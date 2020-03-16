@@ -33,7 +33,7 @@
 #define PCA 2
 
 using namespace megamol;
-using namespace megamol::MolSurfMapCluster;
+using namespace megamol::molsurfmapcluster;
 
 uint32_t HierarchicalClustering::bla = 0;
 

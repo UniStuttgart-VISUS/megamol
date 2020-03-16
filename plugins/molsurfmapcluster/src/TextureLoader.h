@@ -13,7 +13,7 @@
 #include <iostream>
 
 namespace megamol {
-namespace MolSurfMapCluster {
+namespace molsurfmapcluster {
 namespace TextureLoader {
 
 bool static loadTexture(HierarchicalClustering::CLUSTERNODE* node) {

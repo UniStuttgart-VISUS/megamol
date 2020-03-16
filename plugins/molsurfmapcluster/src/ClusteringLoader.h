@@ -28,7 +28,7 @@
 #include "HierarchicalClustering.h"
 
 namespace megamol {
-namespace MolSurfMapCluster {
+namespace molsurfmapcluster {
 
 /**
  * Loader module for simple ASCII comma seperated files

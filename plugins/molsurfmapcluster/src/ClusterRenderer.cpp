@@ -32,7 +32,7 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::view;
-using namespace megamol::MolSurfMapCluster;
+using namespace megamol::molsurfmapcluster;
 
 
 /*

@@ -9,7 +9,7 @@
 #include "CallPNGPics.h"
 
 using namespace megamol;
-using namespace megamol::MolSurfMapCluster;
+using namespace megamol::molsurfmapcluster;
 
 /*
  * CallPNGPics::CallForGetData

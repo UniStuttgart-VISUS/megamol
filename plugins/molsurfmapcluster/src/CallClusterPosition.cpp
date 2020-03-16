@@ -11,7 +11,7 @@
 #include "CallClusterPosition.h"
 
 using namespace megamol;
-using namespace megamol::MolSurfMapCluster;
+using namespace megamol::molsurfmapcluster;
 
 /*
  * CallClustering::CallForGetData

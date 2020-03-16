@@ -49,17 +49,17 @@ public:
     virtual void registerClasses(void) {
 
         // register modules here:
-        this->module_descriptions.RegisterAutoDescription<megamol::MolSurfMapCluster::PNGPicLoader>();
-        this->module_descriptions.RegisterAutoDescription<megamol::MolSurfMapCluster::Clustering>();
-        this->module_descriptions.RegisterAutoDescription<megamol::MolSurfMapCluster::ClusterRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::MolSurfMapCluster::ClusterHierarchieRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::MolSurfMapCluster::ClusteringLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::PNGPicLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::Clustering>();
+        this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::ClusterRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::ClusterHierarchieRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::ClusteringLoader>();
 
         // register calls here:
-        this->call_descriptions.RegisterAutoDescription<megamol::MolSurfMapCluster::CallPNGPics>();
-        this->call_descriptions.RegisterAutoDescription<megamol::MolSurfMapCluster::CallClustering>();
-        this->call_descriptions.RegisterAutoDescription<megamol::MolSurfMapCluster::CallClusterPosition>();
-        this->call_descriptions.RegisterAutoDescription<megamol::MolSurfMapCluster::CallClusteringLoader>();
+        this->call_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::CallPNGPics>();
+        this->call_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::CallClustering>();
+        this->call_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::CallClusterPosition>();
+        this->call_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::CallClusteringLoader>();
     }
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
 };

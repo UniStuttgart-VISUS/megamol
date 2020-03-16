@@ -18,7 +18,7 @@
 #include "PictureData.h"
 
 namespace megamol {
-namespace MolSurfMapCluster {
+namespace molsurfmapcluster {
 
 
 class HierarchicalClustering {

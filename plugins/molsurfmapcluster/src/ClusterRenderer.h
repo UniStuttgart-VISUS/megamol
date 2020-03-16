@@ -24,7 +24,7 @@
 
 
 namespace megamol {
-namespace MolSurfMapCluster {
+namespace molsurfmapcluster {
 
 /**
  * Mesh-based renderer for bézier curve tubes

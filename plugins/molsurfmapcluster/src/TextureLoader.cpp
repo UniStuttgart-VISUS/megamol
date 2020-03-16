@@ -1,7 +1,7 @@
 #include "TextureLoader.h"
 
 using namespace megamol;
-using namespace MolSurfMapCluster;
+using namespace molsurfmapcluster;
 using namespace TextureLoader;
 
 // Empty

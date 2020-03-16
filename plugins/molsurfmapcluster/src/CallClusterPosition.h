@@ -20,7 +20,7 @@
 #include "HierarchicalClustering.h"
 
 namespace megamol {
-namespace MolSurfMapCluster {
+namespace molsurfmapcluster {
 
 /**
  * Call for sphere data.

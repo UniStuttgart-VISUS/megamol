@@ -4,7 +4,7 @@
 #include "vislib/sys/Log.h"
 
 using namespace megamol;
-using namespace megamol::MolSurfMapCluster;
+using namespace megamol::molsurfmapcluster;
 
 /*
  * EnzymeClassProvider::classMap

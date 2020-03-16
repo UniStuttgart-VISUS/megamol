@@ -8,7 +8,7 @@
 #include <string>
 
 namespace megamol {
-namespace MolSurfMapCluster {
+namespace molsurfmapcluster {
 
     struct PictureData {
         std::string path;
