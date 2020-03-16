@@ -177,6 +177,8 @@ private:
 
     void updateSelection();
 
+    bool resetSelectionCallback(core::param::ParamSlot& caller);
+
     core::CallerSlot floatTableInSlot;
 
     core::CallerSlot transferFunctionInSlot;
@@ -198,6 +200,10 @@ private:
     core::param::ParamSlot kernelWidthParam;
 
     core::param::ParamSlot kernelTypeParam;
+
+    core::param::ParamSlot pickRadiusParam;
+
+    core::param::ParamSlot resetSelectionParam;
 
     core::param::ParamSlot triangulationSmoothnessParam;
 
@@ -270,6 +276,7 @@ private:
     core::FlagStorage::FlagVersionType flagsBufferVersion;
 
     bool selectionNeedsUpdate = false;
+    bool selectionNeedsReset = false;
 
     GLuint triangleVBO;
     GLuint triangleIBO;

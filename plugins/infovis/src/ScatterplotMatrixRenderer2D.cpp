@@ -3,6 +3,7 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
@@ -89,6 +90,8 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , geometryTypeParam("geometryType", "Geometry type to map data to")
     , kernelWidthParam("kernelWidth", "Kernel width of the geometry, i.e., point size or line width")
     , kernelTypeParam("kernelType", "Kernel function, i.e., box or gaussian kernel")
+    , pickRadiusParam("pickRadius", "Picking radius")
+    , resetSelectionParam("resetSelection", "Reset selection")
     , triangulationSmoothnessParam("triangulationSmoothness", "Number of iterations to smooth the triangulation")
     , axisModeParam("axisMode", "Axis drawing mode")
     , axisColorParam("axisColor", "Color of axis")
@@ -165,6 +168,13 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->kernelTypeParam << kernelTypes;
     this->MakeSlotAvailable(&this->kernelTypeParam);
 
+    this->pickRadiusParam << new core::param::FloatParam(1.0f, std::numeric_limits<float>::epsilon());
+    this->MakeSlotAvailable(&this->pickRadiusParam);
+
+    this->resetSelectionParam << new core::param::ButtonParam();
+    this->resetSelectionParam.SetUpdateCallback(this, &ScatterplotMatrixRenderer2D::resetSelectionCallback);
+    this->MakeSlotAvailable(&this->resetSelectionParam);
+
     auto* axisModes = new core::param::EnumParam(1);
     axisModes->SetTypePair(AXIS_MODE_NONE, "None");
     axisModes->SetTypePair(AXIS_MODE_MINIMALISTIC, "Minimalistic");
@@ -218,6 +228,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     screenParams.push_back(&this->geometryTypeParam);
     screenParams.push_back(&this->kernelWidthParam);
     screenParams.push_back(&this->kernelTypeParam);
+    screenParams.push_back(&this->pickRadiusParam);
     screenParams.push_back(&this->axisModeParam);
     screenParams.push_back(&this->axisColorParam);
     screenParams.push_back(&this->axisWidthParam);
@@ -268,9 +279,11 @@ bool ScatterplotMatrixRenderer2D::OnMouseButton(
 
     if (button == core::view::MouseButton::BUTTON_LEFT && action == core::view::MouseButtonAction::PRESS) {
         this->mouse.selector = BrushState::ADD;
+        this->selectionNeedsUpdate = true;
         return true;
     } else if (button == core::view::MouseButton::BUTTON_RIGHT && action == core::view::MouseButtonAction::PRESS) {
         this->mouse.selector = BrushState::REMOVE;
+        this->selectionNeedsUpdate = true;
         return true;
     }
 
@@ -968,7 +981,7 @@ void ScatterplotMatrixRenderer2D::drawPickIndicator() {
         getModelViewProjection().PeekComponents());
     glUniform2f(this->pickIndicatorShader.ParameterLocation("mouse"), this->mouse.x, this->mouse.y);
     glUniform1f(this->pickIndicatorShader.ParameterLocation("pickRadius"),
-        this->kernelWidthParam.Param<core::param::FloatParam>()->Value());
+        this->pickRadiusParam.Param<core::param::FloatParam>()->Value());
     glUniform4fv(this->pickIndicatorShader.ParameterLocation("indicatorColor"), 1, color);
     glDisable(GL_DEPTH_TEST);
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -1076,6 +1089,11 @@ void ScatterplotMatrixRenderer2D::updateSelection() {
     glUniform1i(pickProgram.ParameterLocation("rowStride"), this->floatTable->GetColumnsCount());
     glUniform1f(
         pickProgram.ParameterLocation("kernelWidth"), this->kernelWidthParam.Param<core::param::FloatParam>()->Value());
+    glUniform1f(
+        pickProgram.ParameterLocation("pickRadius"), this->pickRadiusParam.Param<core::param::FloatParam>()->Value());
+    glUniform1i(pickProgram.ParameterLocation("selector"), static_cast<int>(this->mouse.selector));
+    glUniform1i(pickProgram.ParameterLocation("reset"), static_cast<int>(this->selectionNeedsReset));
+    this->selectionNeedsReset = false;
 
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle(0));
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ValueSSBOBindingPoint, this->valueSSBO.GetHandle(0));
@@ -1098,4 +1116,10 @@ void ScatterplotMatrixRenderer2D::updateSelection() {
     }
     this->debugPop();
     this->screenValid = false;
+}
+
+bool ScatterplotMatrixRenderer2D::resetSelectionCallback(core::param::ParamSlot& caller) {
+    this->selectionNeedsUpdate = true;
+    this->selectionNeedsReset = true;
+    return true;
 }
