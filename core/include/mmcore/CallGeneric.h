@@ -66,6 +66,14 @@ public:
 
     MetaDataType const& getMetaData() { return m_meta_data; }
 
+    CallGeneric& operator=(const CallGeneric& rhs) {
+        if (this != &rhs) {
+            m_data = rhs.m_data;
+            m_meta_data = rhs.m_meta_data;
+        }
+        return *this;
+    }
+
 private:
     DataType     m_data;
     MetaDataType m_meta_data;
@@ -113,6 +121,16 @@ public:
     uint32_t version() { return m_set_version; }
 
     bool hasUpdate() { return (m_set_version > m_get_version); }
+
+    GenericVersionedCall& operator=(const GenericVersionedCall& rhs) {
+        if (this != &rhs) {
+            m_data = rhs.m_data;
+            m_meta_data = rhs.m_meta_data;
+            m_get_version = rhs.m_get_version;
+            m_set_version = rhs.m_set_version;
+        }
+        return *this;
+    }
 
 private:
     DataType m_data;
