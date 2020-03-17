@@ -54,7 +54,9 @@ void main() {
         float sample_value = mix(sample_0,sample_1,lerp);
 
         float sample_value_normalized = (sample_value - mesh_shader_params[draw_id].min_value) / (mesh_shader_params[draw_id].max_value - mesh_shader_params[draw_id].min_value);
-        out_colour = fakeViridis(sample_value_normalized);
+        //out_colour = fakeViridis(sample_value_normalized);
+		sampler2D tf_tx = sampler2D(mesh_shader_params[draw_id].tf_texture_handle);
+		out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
 
         if( radius > sample_value_normalized && radius < 0.96 ) discard;
     }

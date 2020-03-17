@@ -57,11 +57,21 @@ protected:
 private:
     uint32_t m_version;
 
+    core::CallerSlot m_transfer_function_Slot;
+
     core::CallerSlot m_probes_slot;
 
     core::CallerSlot m_probe_manipulation_slot;
 
+    core::param::ParamSlot m_rendering_mode_slot;
+
     std::shared_ptr<glowl::Mesh> m_billboard_dummy_mesh;
+
+    std::shared_ptr<glowl::Texture2D> m_transfer_function;
+
+    float m_tf_min;
+
+    float m_tf_max;
 
     ImGuiContext* m_imgui_context;
 
@@ -86,6 +96,10 @@ private:
 
         float sample_cnt;
         std::array<float, 4> samples[32];
+
+        GLuint64 tf_texture_handle;
+        float tf_min;
+        float tf_max;
     };
 
     struct GlyphScalarProbeData {
@@ -101,8 +115,8 @@ private:
 
         int probe_id;
         int state;
-        int padding0;
-        int padding1;
+
+        GLuint64 tf_texture_handle;
     };
 
     std::vector<TexturedGlyphData>    m_textured_glyph_data;

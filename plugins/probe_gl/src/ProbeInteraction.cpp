@@ -212,7 +212,7 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
         objId = -1;
     }
 
-    std::cout << "Object ID at " << m_cursor_x << "," << m_cursor_y << " : " << objId << std::endl;
+    //std::cout << "Object ID at " << m_cursor_x << "," << m_cursor_y << " : " << objId << std::endl;
 
     // Clear interactions from last frame
     m_interactions->accessPendingManipulations().clear();

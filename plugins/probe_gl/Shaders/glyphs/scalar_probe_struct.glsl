@@ -13,6 +13,6 @@ struct MeshShaderParams
 
     int probe_id;
     int state;
-    int padding0;
-    int padding1;
+
+    uvec2 tf_texture_handle;
 };

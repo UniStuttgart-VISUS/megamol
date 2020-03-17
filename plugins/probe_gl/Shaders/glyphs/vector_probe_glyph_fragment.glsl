@@ -104,7 +104,12 @@ void main() {
         float eps = -0.05;
         if( (eps + arc_dist) > abs( sample_dot_probe ) ) discard;
 
-        out_colour = fakeViridis( (sample_magnitude + 2.0) / 16.0);
+        sampler2D tf_tx = sampler2D(mesh_shader_params[draw_id].tf_texture_handle);
+        float tf_min = mesh_shader_params[draw_id].tf_min;
+        float tf_max = mesh_shader_params[draw_id].tf_max;
+        out_colour = texture(tf_tx, vec2((sample_magnitude - tf_min) / (tf_max-tf_min), 0.5) ).rgb;
+        //out_colour = fakeViridis( (sample_magnitude + 2.0) / 16.0);
+        
     }
     //else{
     //    // for now, try projection onto z-plane for billboards
