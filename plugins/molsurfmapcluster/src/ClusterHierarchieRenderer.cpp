@@ -9,6 +9,7 @@
 #include <tuple>
 
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/Renderer2DModule.h"
 
@@ -39,6 +40,11 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
     , showEnzymeClassesParam("showEnzymeClasses", "Display the Enzyme classes alongside with the popup renders")
     , showPDBIdsParam("showPDBIds", "Display the PDB Ids alongside with the popup renders")
     , fontSizeParam("fontSize", "Size of the rendered font")
+    , useDistanceColors("useDistanceColors", "Use the distance colors instead of the coloring by cluster")
+    , minColorParam("color::minColor", "the minimum color for interpolation")
+    , midColorParam("color::midColor", "the mid color for interpolation")
+    , maxColorParam("color::maxColor", "the maximum color for interpolation")
+    , failColorParam("color::failColor", "color used for failed comparisons")
     , theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
     , texVa(0) {
 
@@ -65,6 +71,21 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
 
     this->fontSizeParam.SetParameter(new core::param::FloatParam(22.0f, 5.0f, 300.0f));
     this->MakeSlotAvailable(&this->fontSizeParam);
+
+    this->useDistanceColors.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->useDistanceColors);
+
+    this->minColorParam.SetParameter(new param::ColorParam(0.266666f, 0.05098f, 0.32941f, 1.0f));
+    this->MakeSlotAvailable(&this->minColorParam);
+
+    this->midColorParam.SetParameter(new param::ColorParam(0.127255f, 0.54117f, 0.55294f, 1.0f));
+    this->MakeSlotAvailable(&this->midColorParam);
+
+    this->maxColorParam.SetParameter(new param::ColorParam(0.992157f, 0.90588f, 0.14509f, 1.0f));
+    this->MakeSlotAvailable(&this->maxColorParam);
+
+    this->failColorParam.SetParameter(new param::ColorParam(1.0f, 0.0f, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&this->failColorParam);
 
     // Variablen
     this->lastHashClustering = 0;
@@ -264,6 +285,36 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
                 double b = (255 - color->b) / 255;
                 currentcolor = glm::vec4(r, g, b, 1.0f);
                 clusternode = true;
+            }
+        }
+    }
+
+    if (this->useDistanceColors.Param<param::BoolParam>()->Value()) {
+        std::string leftpdb = node->left == nullptr ? node->pic->pdbid : node->left->pic->pdbid;
+        std::string rightpdb = node->right == nullptr ? node->pic->pdbid : node->right->pic->pdbid;
+        auto leftvec = EnzymeClassProvider::RetrieveClassesForPdbId(leftpdb, *this->GetCoreInstance());
+        auto rightvec = EnzymeClassProvider::RetrieveClassesForPdbId(rightpdb, *this->GetCoreInstance());
+
+        float mindist = 10.0f;
+        for (const auto& l : leftvec) {
+            for (const auto& r : rightvec) {
+                auto d = this->enzymeClassDistance(l, r);
+                if (d < mindist) mindist = d;
+            }
+        }
+
+        auto minColor = glm::make_vec4(this->minColorParam.Param<param::ColorParam>()->Value().data());
+        auto midColor = glm::make_vec4(this->midColorParam.Param<param::ColorParam>()->Value().data());
+        auto maxColor = glm::make_vec4(this->maxColorParam.Param<param::ColorParam>()->Value().data());
+        auto failColor = glm::make_vec4(this->failColorParam.Param<param::ColorParam>()->Value().data());
+
+        if (mindist > 5.0f) {
+            currentcolor = failColor;
+        } else {
+            if (mindist <= 2.0f) {
+                currentcolor = glm::mix(maxColor, midColor, mindist / 2.0f);
+            } else {
+                currentcolor = glm::mix(midColor, minColor, (mindist - 2.0f) / 2.0f);
             }
         }
     }
@@ -641,4 +692,21 @@ bool ClusterHierarchieRenderer::GetPositionData(Call& call) {
         this->DataHashPosition += this->hashoffset;
     }
     return true;
+}
+
+float ClusterHierarchieRenderer::enzymeClassDistance(const std::array<int, 4>& arr1, const std::array<int, 4>& arr2) {
+    if (arr1[0] < 0 || arr2[0] < 0) return 10.0f;
+    if (arr1[0] == arr2[0]) {
+        if (arr1[1] == arr2[1] || arr1[2] == arr2[2]) {
+            if (arr1[1] == arr2[1] && arr1[2] == arr2[2]) {
+                if (arr1[3] == arr2[3]) {
+                    return 0.0f;
+                }
+                return 1.0f;
+            }
+            return 2.0f;
+        }
+        return 3.0f;
+    }
+    return 4.0f;
 }

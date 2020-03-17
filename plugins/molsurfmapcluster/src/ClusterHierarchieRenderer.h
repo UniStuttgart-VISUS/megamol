@@ -106,6 +106,12 @@ private:
     core::param::ParamSlot showEnzymeClassesParam;
     core::param::ParamSlot showPDBIdsParam;
     core::param::ParamSlot fontSizeParam;
+    core::param::ParamSlot useDistanceColors;
+
+    core::param::ParamSlot minColorParam;
+    core::param::ParamSlot midColorParam;
+    core::param::ParamSlot maxColorParam;
+    core::param::ParamSlot failColorParam;
 
     /**The Viewport*/
     vislib::math::Vector<float, 2> viewport;
@@ -174,6 +180,7 @@ private:
         std::vector<std::tuple<HierarchicalClustering::CLUSTERNODE*, ClusterRenderer::RGBCOLOR*>*>*);
     void renderPopup(glm::mat4);
     double checkposition(HierarchicalClustering::CLUSTERNODE*, float, float, double, double, double, double, double = 5.0, double = 5.0);
+    float enzymeClassDistance(const std::array<int, 4>& arr1, const std::array<int, 4>& arr2);
 
 
     /**********************************************************************
