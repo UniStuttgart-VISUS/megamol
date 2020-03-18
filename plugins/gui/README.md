@@ -63,10 +63,6 @@ The `OverlayRenderer` is a rendering module which implements a `megamol::core::v
 * `font::size` (`20.0`): The font size.
 * `font::color` (`0.5f, 0.5f, 0.5f`): The font color.
 
-## Plugin Class Dependencies
-
-![gui plugin class dependencies](class_dependencies.png)
-
 ## Configurator [PROTOTYPE]
 
 The configurator prototype is part of the GUI and can be opened via the GUI menu: `Windows`/`Configurator`.\
@@ -96,3 +92,6 @@ Projects setting parameter values using `mmSetParamValue` must have the paramete
 
 ![configurator demo picture](configurator.png)
 
+## Plugin Class Dependencies
+
+![gui plugin class dependencies](class_dependencies.png)

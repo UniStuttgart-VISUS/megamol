@@ -151,6 +151,15 @@ bool megamol::gui::configurator::Graph::AddCall(
         call_ptr->functions = call_stock_data.functions;
         call_ptr->GUI_SetLabelVisibility(this->present.GetCallLabelVisibility());
 
+        if ((call_slot_1->type == CallSlot::CallSlotType::CALLER) && (call_slot_1->CallsConnected())) {
+            call_slot_1->DisConnectCalls();
+            this->DeleteDisconnectedCalls();
+        }
+        if ((call_slot_2->type == CallSlot::CallSlotType::CALLER) && (call_slot_2->CallsConnected())) {
+            call_slot_2->DisConnectCalls();
+            this->DeleteDisconnectedCalls();
+        }        
+
         if (call_ptr->ConnectCallSlots(call_slot_1, call_slot_2) && call_slot_1->ConnectCall(call_ptr) &&
             call_slot_2->ConnectCall(call_ptr)) {
 

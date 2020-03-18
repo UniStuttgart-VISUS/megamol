@@ -68,8 +68,8 @@ bool megamol::gui::configurator::CallSlot::DisConnectCall(ImGuiID call_uid, bool
     try {
         for (auto call_iter = this->connected_calls.begin(); call_iter != this->connected_calls.end(); call_iter++) {
             if ((*call_iter) == nullptr) {
-                vislib::sys::Log::DefaultLog.WriteWarn(
-                    "Call is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                // vislib::sys::Log::DefaultLog.WriteWarn(
+                //     "Call is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             } else {
                 if ((*call_iter)->uid == call_uid) {
                     if (!called_by_call) {
@@ -101,8 +101,8 @@ bool megamol::gui::configurator::CallSlot::DisConnectCalls(void) {
         auto connected_calls_copy = this->connected_calls;
         for (auto& call_ptr : connected_calls_copy) {
             if (call_ptr == nullptr) {
-                vislib::sys::Log::DefaultLog.WriteWarn(
-                    "Call is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                // vislib::sys::Log::DefaultLog.WriteWarn(
+                //     "Call is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             } else {
                 call_ptr->DisConnectCallSlots();
             }

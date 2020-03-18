@@ -1351,6 +1351,7 @@ ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
                         hovered_call_slot_ptr = call_slot_ptr;
                     }
                 }
+
                 graph->AddCall(inout_graph_manager.calls_stock, selected_call_slot_ptr, hovered_call_slot_ptr);
 
                 drop_call_data.trigger_drop_call = -1;
