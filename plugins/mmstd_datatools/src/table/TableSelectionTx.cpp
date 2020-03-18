@@ -8,7 +8,6 @@
 #include "stdafx.h"
 #include "TableSelectionTx.h"
 
-#include "mmcore/param/EnumParam.h"
 #include "vislib/sys/Log.h"
 
 using namespace megamol::stdplugin::datatools;
@@ -46,6 +45,11 @@ TableSelectionTx::~TableSelectionTx() {
 }
 
 bool TableSelectionTx::create() {
+    context_ = new zmq::context_t{1};
+
+    socket_ = new zmq::socket_t{*context_, ZMQ_REQ};
+    socket_->connect("tcp://localhost:10001");
+
     return true;
 }
 
@@ -133,7 +137,11 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
 
     delete[] flagsData;
 
-    // TODO send data
+    zmq::message_t request{selected.cbegin(), selected.cend()};
+    socket_->send(request, zmq::send_flags::none);
+
+    zmq::message_t reply{};
+    socket_->recv(reply, zmq::recv_flags::none);
 
     return true;
 }

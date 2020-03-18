@@ -8,6 +8,7 @@
 #ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLESELECTIONTX_H_INCLUDED
 #define MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLESELECTIONTX_H_INCLUDED
 
+#include <zmq.hpp>
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -62,6 +63,9 @@ private:
 
     core::CalleeSlot flagStorageReadOutSlot;
     core::CalleeSlot flagStorageWriteOutSlot;
+
+    zmq::context_t* context_;
+    zmq::socket_t* socket_;
 };
 
 } /* end namespace table */
