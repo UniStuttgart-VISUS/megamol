@@ -43,6 +43,7 @@ public:
     /** Struct holding a window configuration. */
     struct WindowConfiguration {
         bool win_show;                  // show/hide window
+        bool win_store_config;          // flag indicates whether consiguration of window should be stored or not
         ImGuiWindowFlags win_flags;     // imgui window flags
         DrawCallbacks win_callback;     // id of the callback drawing the window content
         core::view::KeyCode win_hotkey; // hotkey for opening/closing window
@@ -50,7 +51,7 @@ public:
         ImVec2 win_size;                // size for reset on state loading (current size)
         bool win_soft_reset;            // soft reset of window position and size
         ImVec2 win_reset_size;          // minimum window size for soft reset
-        bool win_reset; // flag for reset window position and size on state loading  (not saved in state)
+        bool win_reset;                 // flag for reset window position and size on state loading  (not saved in state)
         // ---------- Main window configuration ----------
         std::string main_project_file; // project file name
         // ---------- Parameter specific configuration ----------
@@ -75,6 +76,7 @@ public:
         // Ctor for default values
         WindowConfiguration(void)
             : win_show(false)
+            , win_store_config(true)
             , win_flags(0)
             , win_callback(DrawCallbacks::NONE)
             , win_hotkey(megamol::core::view::KeyCode())

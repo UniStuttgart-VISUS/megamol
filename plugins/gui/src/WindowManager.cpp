@@ -337,8 +337,20 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
             return false;
         }
 
-        this->windows.clear();
-        this->windows = tmp_windows;
+        // Replace existing window configurations and add new windows
+        for (auto& new_win : tmp_windows) {
+            bool found_existing = false;
+            for (auto& win : this->windows) {
+                // Check for same name
+                if (win.first == new_win.first) {
+                    win.second = new_win.second;
+                    found_existing = true;
+                }
+            }
+            if (!found_existing) {
+                this->windows.emplace(new_win);
+            }
+        }
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -380,32 +392,34 @@ bool WindowManager::StateToJSON(std::string& json_string) {
         nlohmann::json json;
 
         for (auto& w : this->windows) {
-            std::string window_name = w.first;
-            WindowConfiguration window_config = w.second;
-            json[window_name]["win_show"] = window_config.win_show;
-            json[window_name]["win_flags"] = static_cast<int>(window_config.win_flags);
-            json[window_name]["win_callback"] = static_cast<int>(window_config.win_callback);
-            json[window_name]["win_hotkey"] = {
-                static_cast<int>(window_config.win_hotkey.key), window_config.win_hotkey.mods.toInt()};
-            json[window_name]["win_position"] = {window_config.win_position.x, window_config.win_position.y};
-            json[window_name]["win_size"] = {window_config.win_size.x, window_config.win_size.y};
-            json[window_name]["win_soft_reset"] = window_config.win_soft_reset;
-            json[window_name]["win_reset_size"] = {window_config.win_reset_size.x, window_config.win_reset_size.y};
+            if (w.second.win_store_config) {
+                std::string window_name = w.first;
+                WindowConfiguration window_config = w.second;
+                json[window_name]["win_show"] = window_config.win_show;
+                json[window_name]["win_flags"] = static_cast<int>(window_config.win_flags);
+                json[window_name]["win_callback"] = static_cast<int>(window_config.win_callback);
+                json[window_name]["win_hotkey"] = {
+                    static_cast<int>(window_config.win_hotkey.key), window_config.win_hotkey.mods.toInt() };
+                json[window_name]["win_position"] = { window_config.win_position.x, window_config.win_position.y };
+                json[window_name]["win_size"] = { window_config.win_size.x, window_config.win_size.y };
+                json[window_name]["win_soft_reset"] = window_config.win_soft_reset;
+                json[window_name]["win_reset_size"] = { window_config.win_reset_size.x, window_config.win_reset_size.y };
 
-            this->utils.Utf8Encode(window_config.main_project_file);
-            json[window_name]["main_project_file"] = window_config.main_project_file;
+                this->utils.Utf8Encode(window_config.main_project_file);
+                json[window_name]["main_project_file"] = window_config.main_project_file;
 
-            json[window_name]["param_show_hotkeys"] = window_config.param_show_hotkeys;
-            json[window_name]["param_modules_list"] = window_config.param_modules_list;
-            json[window_name]["param_module_filter"] = static_cast<int>(window_config.param_module_filter);
+                json[window_name]["param_show_hotkeys"] = window_config.param_show_hotkeys;
+                json[window_name]["param_modules_list"] = window_config.param_modules_list;
+                json[window_name]["param_module_filter"] = static_cast<int>(window_config.param_module_filter);
 
-            json[window_name]["ms_show_options"] = window_config.ms_show_options;
-            json[window_name]["ms_max_history_count"] = window_config.ms_max_history_count;
-            json[window_name]["ms_refresh_rate"] = window_config.ms_refresh_rate;
-            json[window_name]["ms_mode"] = static_cast<int>(window_config.ms_mode);
+                json[window_name]["ms_show_options"] = window_config.ms_show_options;
+                json[window_name]["ms_max_history_count"] = window_config.ms_max_history_count;
+                json[window_name]["ms_refresh_rate"] = window_config.ms_refresh_rate;
+                json[window_name]["ms_mode"] = static_cast<int>(window_config.ms_mode);
 
-            this->utils.Utf8Encode(window_config.font_name);
-            json[window_name]["font_name"] = window_config.font_name;
+                this->utils.Utf8Encode(window_config.font_name);
+                json[window_name]["font_name"] = window_config.font_name;
+            }
         }
 
         json_string = json.dump(2); // Dump with indent of 2 spaces and new lines.
