@@ -255,7 +255,7 @@ megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
 
 ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
-    megamol::gui::configurator::CallSlot& inout_call_slot, const Canvas& in_canvas, ImGuiID& out_hovered_call_slot_uid,
+    megamol::gui::configurator::CallSlot& inout_call_slot, const CanvasType& in_canvas, ImGuiID& out_hovered_call_slot_uid,
     const CallSlotPtrType compatible_call_slot_ptr) {
 
     ImGuiID retval_id = GUI_INVALID_ID;

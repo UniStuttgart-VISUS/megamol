@@ -53,7 +53,7 @@ public:
 
     inline ImGuiID GetUID(void) const { return this->uid; }
 
-    ImGuiID generate_unique_id(void) { return (++this->generated_uid); }
+    bool RenameAssignedModuleName(const std::string& module_name);
 
     // GUI Presentation -------------------------------------------------------
 
@@ -62,6 +62,7 @@ public:
         float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys, bool& out_delete_graph) {
         return this->present.Present(*this, in_child_width, in_graph_font, inout_hotkeys, out_delete_graph);
     }
+    
     inline ImGuiID GUI_GetSelectedCallSlot(void) const { return this->present.GetSelectedCallSlot(); }
     inline ImGuiID GUI_GetHoveredCallSlot(void) const { return this->present.GetHoveredCallSlot(); }
 
@@ -106,7 +107,7 @@ private:
         ImFont* font;
         GUIUtils utils;
 
-        Canvas canvas;
+        CanvasType canvas;
 
         bool show_grid;
         bool show_call_names;
@@ -134,6 +135,12 @@ private:
         bool layout_graph(Graph& inout_graph);
 
     } present;
+
+    // FUNCTIONS --------------------------------------------------------------
+
+    std::string generate_unique_module_name(const std::string& module_name);
+
+    ImGuiID generate_unique_id(void) { return (++this->generated_uid); }
 };
 
 } // namespace configurator

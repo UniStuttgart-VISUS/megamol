@@ -36,20 +36,7 @@ bool megamol::gui::configurator::Graph::AddModule(
                 mod_ptr->description = mod.description;
                 mod_ptr->plugin_name = mod.plugin_name;
                 mod_ptr->is_view = mod.is_view;
-                // Generate unique name
-                int new_name_id = 0;
-                std::string new_name_prefix = mod.class_name + "_";
-                for (auto& other_mods : this->modules) {
-                    if (other_mods->name.find(new_name_prefix) == 0) {
-                        std::string int_postfix = other_mods->name.substr(new_name_prefix.length());
-                        try {
-                            int last_id = std::stoi(int_postfix);
-                            new_name_id = std::max(new_name_id, last_id);
-                        } catch (...) {
-                        }
-                    }
-                }
-                mod_ptr->name = new_name_prefix + std::to_string(new_name_id + 1);
+                mod_ptr->name = this->generate_unique_module_name(mod.class_name);
                 mod_ptr->name_space = "";
                 mod_ptr->is_view_instance = false;
                 mod_ptr->GUI_SetLabelVisibility(this->present.GetModuleLabelVisibility());
@@ -249,6 +236,39 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
     vislib::sys::Log::DefaultLog.WriteWarn("Invalid call uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
+
+
+bool megamol::gui::configurator::Graph::RenameAssignedModuleName(const std::string& module_name) {
+
+    for (auto& mod : this->modules) {
+        if (module_name == mod->name) {
+            mod->name = this->generate_unique_module_name(module_name);
+            mod->GUI_SetUpdated(true);
+            return true;
+        }
+    }
+    return false;
+}
+
+
+std::string megamol::gui::configurator::Graph::generate_unique_module_name(const std::string& module_name){
+
+
+    int new_name_id = 0;
+    std::string new_name_prefix = module_name + "_";
+    for (auto& mod : this->modules) {
+        if (mod->name.find(new_name_prefix) == 0) {
+            std::string int_postfix = mod->name.substr(new_name_prefix.length());
+            try {
+                int last_id = std::stoi(int_postfix);
+                new_name_id = std::max(new_name_id, last_id);
+            } catch (...) {
+            }
+        }
+    }
+    return std::string(new_name_prefix + std::to_string(new_name_id + 1));
+}
+
 
 
 // GRAPH PRESENTATION ####################################################

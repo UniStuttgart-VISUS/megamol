@@ -60,7 +60,7 @@ typedef struct _canvas_ {
     float zooming;
     ImVec2 offset;
     bool updated;
-} Canvas;
+} CanvasType;
 
 
 /**

@@ -215,6 +215,7 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     bool GUI_Present(void) { return this->present.Present(*this); }
+    
     void GUI_SetLabelVisibility(bool visible) { this->present.visible = visible; }
     void GUI_SetReadOnly(bool readonly) { this->present.read_only = readonly; }
     void GUI_SetExpert(bool expert) { this->present.expert = expert; }

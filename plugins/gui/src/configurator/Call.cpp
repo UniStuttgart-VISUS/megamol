@@ -121,7 +121,7 @@ megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
 
 
 ImGuiID megamol::gui::configurator::Call::Presentation::Present(
-    megamol::gui::configurator::Call& inout_call, const Canvas& in_canvas, HotKeyArrayType& inout_hotkeys) {
+    megamol::gui::configurator::Call& inout_call, const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys) {
 
     ImGuiID retval_id = GUI_INVALID_ID;
     ImGuiStyle& style = ImGui::GetStyle();

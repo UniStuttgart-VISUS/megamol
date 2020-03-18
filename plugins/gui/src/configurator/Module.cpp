@@ -135,7 +135,7 @@ megamol::gui::configurator::Module::Presentation::~Presentation(void) {}
 
 
 ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::configurator::Module& inout_mod,
-    const Canvas& in_canvas, megamol::gui::HotKeyArrayType& inout_hotkeys, ImGuiID& out_selected_call_slot_uid,
+    const CanvasType& in_canvas, megamol::gui::HotKeyArrayType& inout_hotkeys, ImGuiID& out_selected_call_slot_uid,
     ImGuiID& out_hovered_call_slot_uid, const megamol::gui::configurator::CallSlotPtrType compatible_call_slot_ptr) {
 
     ImGuiID retval_id = GUI_INVALID_ID;
@@ -154,20 +154,23 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         if ((this->position.x == FLT_MAX) && (this->position.y == FLT_MAX)) {
             this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - in_canvas.offset) / in_canvas.zooming;
         }
+
+        auto canvas_update_state = in_canvas;
+        canvas_update_state.updated = (canvas_update_state.updated || this->module_updated);
+        this->module_updated = false;
+
         // Trigger only when canvas was updated
         // Always update position before clipping -> calls need updated slot positions.
-        if (in_canvas.updated || (this->size.x == 0.0f) || (this->size.y == 0.0f)) {
+        if (canvas_update_state.updated || (this->size.x == 0.0f) || (this->size.y == 0.0f)) {
             this->UpdateSize(inout_mod, in_canvas.zooming);
         }
 
         // Draw call slots ----------------------------------------------------
         /// Draw call slots prior to modules to catch mouse clicks on slot area lying over module box.
-        auto in_canvas_mod = in_canvas;
-        in_canvas_mod.updated = (in_canvas.updated || this->module_updated);
         ImGuiID hovered_call_slot_id = GUI_INVALID_ID;
         for (auto& slot_pair : inout_mod.GetCallSlots()) {
             for (auto& slot : slot_pair.second) {
-                auto id = slot->GUI_Present(in_canvas_mod, hovered_call_slot_id, compatible_call_slot_ptr);
+                auto id = slot->GUI_Present(canvas_update_state, hovered_call_slot_id, compatible_call_slot_ptr);
                 if (id != GUI_INVALID_ID) {
                     out_selected_call_slot_uid = id;
                 }

@@ -67,9 +67,10 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     // Returns uid if the call is selected.
-    ImGuiID GUI_Present(const Canvas& in_canvas, HotKeyArrayType& inout_hotkeys) {
+    ImGuiID GUI_Present(const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys) {
         return this->present.Present(*this, in_canvas, inout_hotkeys);
     }
+    
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
     void GUI_SetPresentation(Call::Presentations present) { this->present.presentations = present; }
 
@@ -85,7 +86,7 @@ private:
 
         ~Presentation(void);
 
-        ImGuiID Present(Call& inout_call, const Canvas& in_canvas, HotKeyArrayType& inout_hotkeys);
+        ImGuiID Present(Call& inout_call, const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys);
 
         Call::Presentations presentations;
         bool label_visible;
