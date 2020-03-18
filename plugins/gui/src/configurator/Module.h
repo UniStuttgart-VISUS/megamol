@@ -78,8 +78,9 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     // Returns uid if the module is selected.
-    ImGuiID GUI_Present(const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys, ImGuiID& out_selected_call_slot_uid,
-        ImGuiID& out_hovered_call_slot_uid, const CallSlotPtrType compatible_call_slot_ptr) {
+    ImGuiID GUI_Present(const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys,
+        ImGuiID& out_selected_call_slot_uid, ImGuiID& out_hovered_call_slot_uid,
+        const CallSlotPtrType compatible_call_slot_ptr) {
         return this->present.Present(*this, in_canvas, inout_hotkeys, out_selected_call_slot_uid,
             out_hovered_call_slot_uid, compatible_call_slot_ptr);
     }

@@ -74,7 +74,7 @@ bool megamol::gui::configurator::Graph::AddModule(
 
                 this->modules.emplace_back(mod_ptr);
                 vislib::sys::Log::DefaultLog.WriteInfo("Added module '%s'. [%s, %s, line %d]\n",
-                   mod_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                    mod_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
 
                 this->dirty_flag = true;
                 return true;
@@ -158,14 +158,14 @@ bool megamol::gui::configurator::Graph::AddCall(
         if ((call_slot_2->type == CallSlot::CallSlotType::CALLER) && (call_slot_2->CallsConnected())) {
             call_slot_2->DisConnectCalls();
             this->DeleteDisconnectedCalls();
-        }        
+        }
 
         if (call_ptr->ConnectCallSlots(call_slot_1, call_slot_2) && call_slot_1->ConnectCall(call_ptr) &&
             call_slot_2->ConnectCall(call_ptr)) {
 
             this->calls.emplace_back(call_ptr);
-            vislib::sys::Log::DefaultLog.WriteInfo("Added call '%s'. [%s, %s, line %d]\n",
-               call_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteInfo(
+                "Added call '%s'. [%s, %s, line %d]\n", call_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
 
             this->dirty_flag = true;
         } else {
@@ -260,7 +260,7 @@ bool megamol::gui::configurator::Graph::RenameAssignedModuleName(const std::stri
 }
 
 
-std::string megamol::gui::configurator::Graph::generate_unique_module_name(const std::string& module_name){
+std::string megamol::gui::configurator::Graph::generate_unique_module_name(const std::string& module_name) {
 
 
     int new_name_id = 0;
@@ -277,7 +277,6 @@ std::string megamol::gui::configurator::Graph::generate_unique_module_name(const
     }
     return std::string(new_name_prefix + std::to_string(new_name_id + 1));
 }
-
 
 
 // GRAPH PRESENTATION ####################################################
@@ -374,7 +373,7 @@ ImGuiID megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::c
             retval = graph_uid;
             ImGui::EndTabItem();
         }
-        
+
         // Set delete flag if tab was closed
         if (!open) {
             out_delete_graph = true;
@@ -562,7 +561,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     this->canvas.size = new_size;
 
     ImVec2 new_offset = this->canvas.position + (this->canvas.scrolling * this->canvas.zooming);
-        if ((this->canvas.offset.x != new_offset.x) || (this->canvas.offset.y != new_offset.y)) {
+    if ((this->canvas.offset.x != new_offset.x) || (this->canvas.offset.y != new_offset.y)) {
         this->canvas.updated = true;
     }
     this->canvas.offset = new_offset;
