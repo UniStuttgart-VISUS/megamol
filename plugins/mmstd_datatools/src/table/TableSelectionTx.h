@@ -55,10 +55,6 @@ protected:
 
     bool validateCalls();
 
-    bool handleReadCall(core::Call& call, unsigned int function);
-
-    bool handleWriteCall(core::Call& call, unsigned int function);
-
 private:
     core::CallerSlot tableInSlot;
     core::CallerSlot flagStorageReadInSlot;

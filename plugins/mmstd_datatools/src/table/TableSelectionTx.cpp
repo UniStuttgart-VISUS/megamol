@@ -53,7 +53,21 @@ void TableSelectionTx::release() {
 }
 
 bool TableSelectionTx::readDataCallback(core::Call& call) {
-    return handleReadCall(call, core::FlagCallRead_GL::CallGetData);
+    auto *flagsReadOutCall = dynamic_cast<core::FlagCallRead_GL*>(&call);
+    if (flagsReadOutCall == nullptr) {
+        return false;
+    }
+
+    if (!validateCalls()) {
+        return false;
+    }
+
+    auto *flagsReadInCall = this->flagStorageReadInSlot.CallAs<core::FlagCallRead_GL>();
+
+    (*flagsReadInCall)(core::FlagCallRead_GL::CallGetData);
+    flagsReadOutCall->setData(flagsReadInCall->getData(), flagsReadInCall->version());
+
+    return true;
 }
 
 bool TableSelectionTx::readMetaDataCallback(core::Call& call) {
@@ -62,11 +76,22 @@ bool TableSelectionTx::readMetaDataCallback(core::Call& call) {
 }
 
 bool TableSelectionTx::writeDataCallback(core::Call& call) {
-    if (!handleWriteCall(call, core::FlagCallWrite_GL::CallGetData)) {
+    auto *flagsWriteOutCall = dynamic_cast<core::FlagCallWrite_GL*>(&call);
+    if (flagsWriteOutCall == nullptr) {
         return false;
     }
 
-    auto *flagsWriteOutCall = dynamic_cast<core::FlagCallWrite_GL*>(&call);
+    if (!validateCalls()) {
+        return false;
+    }
+
+    auto *flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core::FlagCallWrite_GL>();
+
+    flagsWriteInCall->setData(flagsWriteOutCall->getData(), flagsWriteOutCall->version());
+    (*flagsWriteInCall)(core::FlagCallWrite_GL::CallGetData);
+
+    // Send data
+
     auto *tableInCall = this->tableInSlot.CallAs<TableDataCall>();
 
     tableInCall->SetFrameID(0);
@@ -137,42 +162,6 @@ bool TableSelectionTx::validateCalls() {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "TableSelectionTx requires a write flag storage!");
         return false;
     }
-
-    return true;
-}
-
-bool TableSelectionTx::handleReadCall(core::Call& call, unsigned int function) {
-    auto *flagsReadOutCall = dynamic_cast<core::FlagCallRead_GL*>(&call);
-    if (flagsReadOutCall == nullptr) {
-        return false;
-    }
-
-    if (!validateCalls()) {
-        return false;
-    }
-
-    auto *flagsReadInCall = this->flagStorageReadInSlot.CallAs<core::FlagCallRead_GL>();
-
-    (*flagsReadInCall)(function);
-    flagsReadOutCall->setData(flagsReadInCall->getData(), flagsReadInCall->version());
-
-    return true;
-}
-
-bool TableSelectionTx::handleWriteCall(core::Call& call, unsigned int function) {
-    auto *flagsWriteOutCall = dynamic_cast<core::FlagCallWrite_GL*>(&call);
-    if (flagsWriteOutCall == nullptr) {
-        return false;
-    }
-
-    if (!validateCalls()) {
-        return false;
-    }
-
-    auto *flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core::FlagCallWrite_GL>();
-
-    flagsWriteInCall->setData(flagsWriteOutCall->getData(), flagsWriteOutCall->version());
-    (*flagsWriteInCall)(function);
 
     return true;
 }
