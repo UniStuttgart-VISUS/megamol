@@ -248,7 +248,7 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
             // Ensure unique module name is not yet assigned
             std::string module_name = std::string(mod->Name().PeekBuffer());
             if (graph_ptr->RenameAssignedModuleName(module_name)) {
-                vislib::sys::Log::DefaultLog.WriteWarn("Renamed existing module '%s' while adding module with same name."
+                vislib::sys::Log::DefaultLog.WriteWarn("Renamed existing module '%s' while adding module with same name. "
                 "This is required for successful unambiguous parameter addressing which uses the module name. [%s, %s, line %d]\n", 
                 module_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
             }              
@@ -495,7 +495,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
 
                 // Ensure unique module name is not yet assigned
                 if (graph_ptr->RenameAssignedModuleName(view_name)) {
-                    vislib::sys::Log::DefaultLog.WriteWarn("Project File '%s' line %i: Renamed existing module '%s' while adding module with same name."
+                    vislib::sys::Log::DefaultLog.WriteWarn("Project File '%s' line %i: Renamed existing module '%s' while adding module with same name. "
                     "This is required for successful unambiguous parameter addressing which uses the module name. [%s, %s, line %d]\n", 
                     project_filename.c_str(), i, view_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 }
@@ -559,7 +559,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
 
                     // Ensure unique module name is not yet assigned
                     if (graph_ptr->RenameAssignedModuleName(module_name)) {
-                        vislib::sys::Log::DefaultLog.WriteWarn("Project File '%s' line %i: Renamed existing module '%s' while adding module with same name."
+                        vislib::sys::Log::DefaultLog.WriteWarn("Project File '%s' line %i: Renamed existing module '%s' while adding module with same name. "
                         "This is required for successful unambiguous parameter addressing which uses the module name. [%s, %s, line %d]\n", 
                         project_filename.c_str(), i, module_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     }

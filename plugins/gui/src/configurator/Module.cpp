@@ -155,6 +155,7 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
             this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - in_canvas.offset) / in_canvas.zooming;
         }
 
+        // Add module update state to general canvas update state
         auto canvas_update_state = in_canvas;
         canvas_update_state.updated = (canvas_update_state.updated || this->module_updated);
         this->module_updated = false;
@@ -290,7 +291,7 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
 
         // Rename pop-up
         if (this->utils.RenamePopUp("Rename Project", popup_rename, inout_mod.name)) {
-            this->UpdateSize(inout_mod, in_canvas.zooming);
+            this->module_updated = true;
         }
 
         if (this->selected) {

@@ -73,8 +73,8 @@ bool megamol::gui::configurator::Graph::AddModule(
                 }
 
                 this->modules.emplace_back(mod_ptr);
-                // vislib::sys::Log::DefaultLog.WriteInfo("Added module: %s [%s, %s, line %d]\n",
-                //    mod_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                vislib::sys::Log::DefaultLog.WriteInfo("Added module '%s'. [%s, %s, line %d]\n",
+                   mod_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
 
                 this->dirty_flag = true;
                 return true;
@@ -164,8 +164,8 @@ bool megamol::gui::configurator::Graph::AddCall(
             call_slot_2->ConnectCall(call_ptr)) {
 
             this->calls.emplace_back(call_ptr);
-            // vislib::sys::Log::DefaultLog.WriteInfo("Added call: %s [%s, %s, line %d]\n",
-            //    call_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteInfo("Added call '%s'. [%s, %s, line %d]\n",
+               call_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
 
             this->dirty_flag = true;
         } else {
@@ -252,7 +252,7 @@ bool megamol::gui::configurator::Graph::RenameAssignedModuleName(const std::stri
     for (auto& mod : this->modules) {
         if (module_name == mod->name) {
             mod->name = this->generate_unique_module_name(module_name);
-            mod->GUI_SetUpdated(true);
+            mod->GUI_SetUpdated();
             return true;
         }
     }
@@ -350,7 +350,7 @@ ImGuiID megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::c
                 ImGui::EndPopup();
             }
 
-            // Update positions and sizes
+            // updated positions and sizes
             if (this->layout_current_graph) {
                 this->layout_graph(inout_graph);
                 this->canvas.updated = true;
@@ -549,9 +549,23 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
             this->canvas.updated = true;
         }
     }
-    this->canvas.position = ImGui::GetCursorScreenPos();
-    this->canvas.size = ImGui::GetWindowSize();
-    this->canvas.offset = this->canvas.position + (this->canvas.scrolling * this->canvas.zooming);
+    ImVec2 new_position = ImGui::GetCursorScreenPos();
+    if ((this->canvas.position.x != new_position.x) || (this->canvas.position.y != new_position.y)) {
+        this->canvas.updated = true;
+    }
+    this->canvas.position = new_position;
+
+    ImVec2 new_size = ImGui::GetWindowSize();
+    if ((this->canvas.size.x != new_size.x) || (this->canvas.size.y != new_size.y)) {
+        this->canvas.updated = true;
+    }
+    this->canvas.size = new_size;
+
+    ImVec2 new_offset = this->canvas.position + (this->canvas.scrolling * this->canvas.zooming);
+        if ((this->canvas.offset.x != new_offset.x) || (this->canvas.offset.y != new_offset.y)) {
+        this->canvas.updated = true;
+    }
+    this->canvas.offset = new_offset;
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
@@ -931,7 +945,7 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
         layer_mod_cnt = layer.size();
         pos.x += border_offset;
         pos.y = init_position.y + border_offset;
-        for (int i = 0; i < layer_mod_cnt; i++) {
+        for (size_t i = 0; i < layer_mod_cnt; i++) {
             auto mod = layer[i];
             if (this->show_call_names) {
                 for (auto& caller_slot : mod->GetCallSlots(CallSlot::CallSlotType::CALLER)) {

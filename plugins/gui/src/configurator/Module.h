@@ -87,7 +87,7 @@ public:
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
     void GUI_SetPresentation(Module::Presentations present) { this->present.presentations = present; }
     void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
-    void GUI_SetUpdated(bool updated) { this->present.module_updated = updated; }
+    void GUI_SetUpdated(void) { this->present.module_updated = true; }
 
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }

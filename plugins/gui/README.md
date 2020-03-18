@@ -2,7 +2,10 @@
 
 This is the plugin providing the GUI for MegaMol.
 
+
 ## Modules
+
+---
 
 ### GUIView
 
@@ -36,6 +39,8 @@ Hotkeys use the key mapping of the US keyboard layout. Other keyboard layouts ar
 * `style` (`Dark Colors`): Color style, theme.
 * `state` (` `): Current state of all windows. Automatically updated.
 
+---
+
 ### OverlayRenderer
 
 The `OverlayRenderer` is a rendering module which implements a `megamol::core::view::RendererModule<megamol::core::view::CallRender3D_2>`. The `OverlayRenderer` provides overlay rendering like textures, text, parameter values and transport control icons. Prepend the `OverlayRenderer` module any other existing 3D renderer module you want to have an overlay for. 
@@ -62,6 +67,8 @@ The `OverlayRenderer` is a rendering module which implements a `megamol::core::v
 * `font::name` (`Roboto Sans`): The font name.
 * `font::size` (`20.0`): The font size.
 * `font::color` (`0.5f, 0.5f, 0.5f`): The font color.
+
+---
 
 ## Configurator [PROTOTYPE]
 
@@ -91,6 +98,8 @@ The menu of the configurator window provides the following options:
 Projects setting parameter values using `mmSetParamValue` must have the parameter values enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are deprecated.
 
 ![configurator demo picture](configurator.png)
+
+---
 
 ## Plugin Class Dependencies
 
