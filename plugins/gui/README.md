@@ -8,6 +8,23 @@ This is the plugin providing the GUI for MegaMol.
 ### GUIView
 The `GUIView` is a view module which implements a `megamol::core::view::AbstractView`. The `GUIView` provides the complete GUI for MegaMol. Use the `GUIView` module as the main view module of your MegaMol project. 
 
+<span style="color:red">NOTE:</span> 
+Hotkeys use the key mapping of the US keyboard layout. Other keyboard layouts are currently not considerd or recognised. Consider possible transposed `z` and `y` which are used in `undo` and `redo` hotkeys on text input.
+
+#### Menu
+The menu of main window of the `GUIView` provides the following option:
+
+* `File`
+    * `Save Project` (`Ctrl + Alt + s`) Save the current project to a file (lua).
+    * `Exit` (`Alt + F4`) End the program.
+* `Windows` (Use `Shift` for resetting the window to fit the currrent viewport.)
+    * `Configurator` (`(Shift +) F8`) Show/Hide the configurator window.
+    * `Font Settings` (`(Shift +) F9`) Show/Hide the font settings window.
+    * `Main Windows` (`(Shift +) F10`) Show/Hide the main window.
+    * `Performance Metrics` (`(Shift +) F11`) Show/Hide the performance metrics window showing the current fps or ms.
+    * `Transfer Function Editor` (`(Shift +) F12`)Show/Hide the transfer function editor.
+* `Help`: Some information and links concerning the currently running MegaMol.
+
 #### Parameters
 (The values in brackets indicate the default values.)
 
@@ -50,4 +67,22 @@ The `OverlayRenderer` is a rendering module which implements a `megamol::core::v
 The configurator prototype can be opened via the GUI menu `Windows`/`Configurator`.\
 Use the example project: `-p ../examples/configurator.lua` for starting the configurator automatically.
 
+#### Menu
+The menu of configurator window provides the following option:
+
+<span style="color:red">NOTE:</span> 
+Projects setting parameter values using `mmSetParamValue` must have the parameter values enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are deprecated.
+
+* `File`
+    * `Load` 
+        * `New` Load new empty project containing only a `GUIView` as starting point.
+        * `File` Load existing project from a file.
+        * `Running` Load currently running project.
+    * `Add` 
+        * `File` Add existing project from a file to currently selected project.
+        * `Running` Add currently running project to currently selected project.
+    * `Save Project` (` `) Save the project of the currently selected tab to a file (lua).
+* `[?]` Information on additionally available options.
+
 ![configurator demo picture](configurator.png)
+
