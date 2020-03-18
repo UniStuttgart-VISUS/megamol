@@ -292,11 +292,6 @@ private:
     bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
 
     /**
-     * Defines behaviour for all windows when configurator window is opened or closed.
-     */
-    void configuratorWindowSate(WindowManager::WindowConfiguration& wc);
-
-    /**
      * Checks for multiple hotkey assignement.
      */
     void checkMultipleHotkeyAssignement(void);

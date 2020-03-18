@@ -337,7 +337,7 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
             return false;
         }
 
-        // Replace existing window configurations and add new windows
+        // Replace existing window configurations and add new windows.
         for (auto& new_win : tmp_windows) {
             bool found_existing = false;
             for (auto& win : this->windows) {

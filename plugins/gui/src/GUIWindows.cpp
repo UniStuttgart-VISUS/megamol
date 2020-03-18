@@ -219,7 +219,6 @@ bool GUIWindows::PostDraw(void) {
         }
 
         // Draw window content
-        this->configuratorWindowSate(wc);
         if (wc.win_show) {
             ImGui::SetNextWindowBgAlpha(1.0f);
             if (!ImGui::Begin(wn.c_str(), &wc.win_show, wc.win_flags)) {
@@ -231,10 +230,6 @@ bool GUIWindows::PostDraw(void) {
             if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
                 wc.win_size = viewport;
                 wc.win_reset = true;
-                // Change visibility of main window if configurator window is closed.
-                if (!wc.win_show) {
-                    this->configuratorWindowSate(wc);
-                }
             }
 
             // Apply soft reset of window position and size (before calling window callback)
@@ -358,7 +353,6 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
         bool windowHotkeyPressed = this->hotkeyPressed(wc.win_hotkey);
         if (windowHotkeyPressed) {
             wc.win_show = !wc.win_show;
-            this->configuratorWindowSate(wc);
         }
         hotkeyPressed = (hotkeyPressed || windowHotkeyPressed);
 
@@ -581,7 +575,8 @@ bool GUIWindows::createContext(void) {
 
     // CONFIGURATOR Window -----------------------------------------------
     buf_win.win_show = false;
-    buf_win.win_store_config = false; // !
+    // State of configurator should not be stored (visibility is configured via auto load parameter and will always be i viewport size).
+    buf_win.win_store_config = false; 
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
     buf_win.win_flags =
         ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse;
@@ -744,13 +739,12 @@ void GUIWindows::validateParameter() {
         this->window_manager.StateFromJSON(std::string(state));
         this->state_param.ResetDirty();
     } else if (this->state.win_save_state &&
-               (this->state.win_save_delay > 2.0f)) { // Delayed saving after triggering saving state
+               (this->state.win_save_delay > 2.0f)) { // Delayed saving after triggering saving state (in seconds).
         std::string state;
         this->window_manager.StateToJSON(state);
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
         this->state.win_save_state = false;
     }
-
 
     if (this->autostart_configurator.IsDirty()) {
         bool autostart = this->autostart_configurator.Param<core::param::BoolParam>()->Value();
@@ -1322,7 +1316,6 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
             }
             if (ImGui::MenuItem(wn.c_str(), hotkey_label.c_str(), &win_open)) {
                 wc.win_show = !wc.win_show;
-                this->configuratorWindowSate(wc);
             }
             // Add conext menu for deleting windows without hotkey (= custom parameter windows).
             if (wc.win_hotkey.key == core::view::Key::KEY_UNKNOWN) {
@@ -1813,29 +1806,6 @@ bool GUIWindows::considerModule(const std::string& modname, std::vector<std::str
         retval = (std::find(modules_list.begin(), modules_list.end(), modname) != modules_list.end());
     }
     return retval;
-}
-
-
-void GUIWindows::configuratorWindowSate(WindowManager::WindowConfiguration& wc) {
-    if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
-        if (wc.win_show) {
-            // Hide all other windows when configurator is opened.
-            const auto configurator_func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-                if (wc.win_callback != WindowManager::DrawCallbacks::CONFIGURATOR) {
-                    wc.win_show = false;
-                }
-            };
-            this->window_manager.EnumWindows(configurator_func);
-        } else {
-            // Show main window when configurator is closed.
-            const auto configurator_func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-                if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
-                    wc.win_show = true;
-                }
-            };
-            this->window_manager.EnumWindows(configurator_func);
-        }
-    }
 }
 
 
