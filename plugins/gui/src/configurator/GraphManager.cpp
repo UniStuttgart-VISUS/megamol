@@ -1346,13 +1346,14 @@ ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
         ImGui::EndTabBar();
 
         // Delete marked graph when tab is closed and unsaved changes should be discarded.
-        bool confirmed, aborted;
+        bool confirmed = false;
+        bool aborted = false;
         bool popup_open = this->utils.MinimalPopUp(
             "Closing Unsaved Project", popup_close_unsaved, "Discard changes?", "Yes", confirmed, "No", aborted);
         if (this->delete_graph_uid != GUI_INVALID_ID) {
-            if (popup_open && aborted) {
+            if (aborted) {
                 this->delete_graph_uid = GUI_INVALID_ID;
-            } else if ((popup_open && confirmed) || !popup_open) {
+            } else if (confirmed || !popup_open) {
                 inout_graph_manager.DeleteGraph(delete_graph_uid);
                 this->delete_graph_uid = GUI_INVALID_ID;
             }
