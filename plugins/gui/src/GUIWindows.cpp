@@ -827,7 +827,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
         this->utils.StringSearch("guiwindow_parameter_earch", help_test);
     }
 
-    ///XXX Disabled Feature
+    /// XXX Disabled Feature
     // Module filtering (only for main parameter view)
     // if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
     //     std::map<int, std::string> opts;
@@ -867,7 +867,8 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
     //                     this->GetCoreInstance()->EnumModulesNoLock(nullptr, view_func);
     //                     if (!viewname.empty()) {
     //                         if (wc.param_module_filter == WindowManager::FilterModes::INSTANCE) {
-    //                             // Considering modules depending on the INSTANCE NAME of the first view this module is
+    //                             // Considering modules depending on the INSTANCE NAME of the first view this module
+    //                             is
     //                             // connected to.
     //                             std::string instname = "";
     //                             if (viewname.find("::", 2) != std::string::npos) {
@@ -905,7 +906,8 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
     //             }
     //             std::string hover = "Show all Modules."; // == WindowManager::FilterModes::ALL
     //             if (i == static_cast<int>(WindowManager::FilterModes::INSTANCE)) {
-    //                 hover = "Show Modules with same Instance Name as current View and Modules with no Instance Name.";
+    //                 hover = "Show Modules with same Instance Name as current View and Modules with no Instance
+    //                 Name.";
     //             } else if (i == static_cast<int>(WindowManager::FilterModes::VIEW)) {
     //                 hover = "Show Modules subsequently connected to the View Module the Gui Module is connected to.";
     //             }

@@ -189,12 +189,13 @@ ImGuiID megamol::gui::configurator::CallSlot::CheckCompatibleAvailableCallIndex(
             for (auto& selected_comp_call_slot : call_slot_ptr->compatible_call_idxs) {
                 for (auto& current_comp_call_slots : call_slot.compatible_call_idxs) {
                     if (selected_comp_call_slot == current_comp_call_slots) {
-                        ///XXX Disabled Feature
+                        /// XXX Disabled Feature
                         // Show only comaptible calls for unconnected caller slots
                         // if ((call_slot_ptr->type == CallSlot::CallSlotType::CALLER) &&
                         //     (call_slot_ptr->CallsConnected())) {
                         //     return GUI_INVALID_ID;
-                        // } else if ((call_slot.type == CallSlot::CallSlotType::CALLER) && (call_slot.CallsConnected())) {
+                        // } else if ((call_slot.type == CallSlot::CallSlotType::CALLER) &&
+                        // (call_slot.CallsConnected())) {
                         //     return GUI_INVALID_ID;
                         // }
                         return static_cast<ImGuiID>(current_comp_call_slots);
@@ -255,8 +256,8 @@ megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
 
 ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
-    megamol::gui::configurator::CallSlot& inout_call_slot, const CanvasType& in_canvas, ImGuiID& out_hovered_call_slot_uid,
-    const CallSlotPtrType compatible_call_slot_ptr) {
+    megamol::gui::configurator::CallSlot& inout_call_slot, const CanvasType& in_canvas,
+    ImGuiID& out_hovered_call_slot_uid, const CallSlotPtrType compatible_call_slot_ptr) {
 
     ImGuiID retval_id = GUI_INVALID_ID;
     ImGuiStyle& style = ImGui::GetStyle();

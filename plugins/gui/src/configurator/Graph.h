@@ -62,7 +62,7 @@ public:
         float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys, bool& out_delete_graph) {
         return this->present.Present(*this, in_child_width, in_graph_font, inout_hotkeys, out_delete_graph);
     }
-    
+
     inline ImGuiID GUI_GetSelectedCallSlot(void) const { return this->present.GetSelectedCallSlot(); }
     inline ImGuiID GUI_GetHoveredCallSlot(void) const { return this->present.GetHoveredCallSlot(); }
 

@@ -70,7 +70,7 @@ public:
     ImGuiID GUI_Present(const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys) {
         return this->present.Present(*this, in_canvas, inout_hotkeys);
     }
-    
+
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
     void GUI_SetPresentation(Call::Presentations present) { this->present.presentations = present; }
 
