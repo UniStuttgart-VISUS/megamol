@@ -8,7 +8,7 @@ This is the plugin providing the GUI for MegaMol.
 ### GUIView
 The `GUIView` is a view module which implements a `megamol::core::view::AbstractView`. The `GUIView` provides the complete GUI for MegaMol. Use the `GUIView` module as the main view module of your MegaMol project. 
 
-<span style="color:red">NOTE:</span> 
+**NOTE:**\
 Hotkeys use the key mapping of the US keyboard layout. Other keyboard layouts are currently not considerd or recognised. Consider possible transposed `z` and `y` which are used in `undo` and `redo` hotkeys on text input.
 
 #### Menu
@@ -65,12 +65,16 @@ The `OverlayRenderer` is a rendering module which implements a `megamol::core::v
 ## Configurator [PROTOTYPE]
 
 The configurator prototype can be opened via the GUI menu `Windows`/`Configurator`.\
-Use the example project: `-p ../examples/configurator.lua` for starting the configurator automatically.
+Use the example project: `-p ../examples/configurator.lua` for starting the configurator automatically:
+
+        mmCreateView("testspheres", "GUIView", "::gui")
+        mmSetParamValue("::gui::autostart_configurator", "true")
+
 
 #### Menu
 The menu of configurator window provides the following option:
 
-<span style="color:red">NOTE:</span> 
+**NOTE:**\
 Projects setting parameter values using `mmSetParamValue` must have the parameter values enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are deprecated.
 
 * `File`

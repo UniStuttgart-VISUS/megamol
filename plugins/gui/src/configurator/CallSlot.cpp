@@ -189,13 +189,14 @@ ImGuiID megamol::gui::configurator::CallSlot::CheckCompatibleAvailableCallIndex(
             for (auto& selected_comp_call_slot : call_slot_ptr->compatible_call_idxs) {
                 for (auto& current_comp_call_slots : call_slot.compatible_call_idxs) {
                     if (selected_comp_call_slot == current_comp_call_slots) {
+                        ///XXX Disabled Feature
                         // Show only comaptible calls for unconnected caller slots
-                        if ((call_slot_ptr->type == CallSlot::CallSlotType::CALLER) &&
-                            (call_slot_ptr->CallsConnected())) {
-                            return GUI_INVALID_ID;
-                        } else if ((call_slot.type == CallSlot::CallSlotType::CALLER) && (call_slot.CallsConnected())) {
-                            return GUI_INVALID_ID;
-                        }
+                        // if ((call_slot_ptr->type == CallSlot::CallSlotType::CALLER) &&
+                        //     (call_slot_ptr->CallsConnected())) {
+                        //     return GUI_INVALID_ID;
+                        // } else if ((call_slot.type == CallSlot::CallSlotType::CALLER) && (call_slot.CallsConnected())) {
+                        //     return GUI_INVALID_ID;
+                        // }
                         return static_cast<ImGuiID>(current_comp_call_slots);
                     }
                 }

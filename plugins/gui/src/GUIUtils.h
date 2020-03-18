@@ -38,8 +38,9 @@ namespace gui {
 
 /********** Defines **********/
 
-#define GUI_INVALID_ID (UINT_MAX)
-#define GUI_CALL_SLOT_RADIUS (8.0f)
+#define GUI_INVALID_ID        (UINT_MAX)
+#define GUI_CALL_SLOT_RADIUS  (8.0f)
+#define GUI_MAX_MULITLINE     (7)
 
 
 /********** Types **********/
