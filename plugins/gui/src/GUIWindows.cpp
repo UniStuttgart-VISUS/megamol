@@ -1005,6 +1005,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                     ImGui::EndPopup();
                 }
 
+
                 // Drag source
                 label.resize(dnd_size);
                 if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
