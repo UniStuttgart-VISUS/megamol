@@ -57,7 +57,8 @@ bool TableSelectionTx::readDataCallback(core::Call& call) {
 }
 
 bool TableSelectionTx::readMetaDataCallback(core::Call& call) {
-    return handleReadCall(call, core::FlagCallRead_GL::CallGetMetaData);
+    // FlagCall_GL has empty meta data
+    return true;
 }
 
 bool TableSelectionTx::writeDataCallback(core::Call& call) {
@@ -113,7 +114,8 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
 }
 
 bool TableSelectionTx::writeMetaDataCallback(core::Call& call) {
-    return handleWriteCall(call, core::FlagCallWrite_GL::CallGetMetaData);
+    // FlagCall_GL has empty meta data
+    return true;
 }
 
 bool TableSelectionTx::validateCalls() {
@@ -151,9 +153,8 @@ bool TableSelectionTx::handleReadCall(core::Call& call, unsigned int function) {
 
     auto *flagsReadInCall = this->flagStorageReadInSlot.CallAs<core::FlagCallRead_GL>();
 
-    *flagsReadInCall = *flagsReadOutCall;
     (*flagsReadInCall)(function);
-    *flagsReadOutCall = *flagsReadInCall;
+    flagsReadOutCall->setData(flagsReadInCall->getData(), flagsReadInCall->version());
 
     return true;
 }
@@ -170,9 +171,8 @@ bool TableSelectionTx::handleWriteCall(core::Call& call, unsigned int function) 
 
     auto *flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core::FlagCallWrite_GL>();
 
-    *flagsWriteInCall = *flagsWriteOutCall;
+    flagsWriteInCall->setData(flagsWriteOutCall->getData(), flagsWriteOutCall->version());
     (*flagsWriteInCall)(function);
-    *flagsWriteOutCall = *flagsWriteInCall;
 
     return true;
 }
