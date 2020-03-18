@@ -572,8 +572,9 @@ bool GUIWindows::createContext(void) {
 
     // CONFIGURATOR Window -----------------------------------------------
     buf_win.win_show = false;
-    // State of configurator should not be stored (visibility is configured via auto load parameter and will always be i viewport size).
-    buf_win.win_store_config = false; 
+    // State of configurator should not be stored (visibility is configured via auto load parameter and will always be i
+    // viewport size).
+    buf_win.win_store_config = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
     buf_win.win_flags =
         ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse;

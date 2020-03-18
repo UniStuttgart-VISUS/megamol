@@ -399,11 +399,11 @@ bool WindowManager::StateToJSON(std::string& json_string) {
                 json[window_name]["win_flags"] = static_cast<int>(window_config.win_flags);
                 json[window_name]["win_callback"] = static_cast<int>(window_config.win_callback);
                 json[window_name]["win_hotkey"] = {
-                    static_cast<int>(window_config.win_hotkey.key), window_config.win_hotkey.mods.toInt() };
-                json[window_name]["win_position"] = { window_config.win_position.x, window_config.win_position.y };
-                json[window_name]["win_size"] = { window_config.win_size.x, window_config.win_size.y };
+                    static_cast<int>(window_config.win_hotkey.key), window_config.win_hotkey.mods.toInt()};
+                json[window_name]["win_position"] = {window_config.win_position.x, window_config.win_position.y};
+                json[window_name]["win_size"] = {window_config.win_size.x, window_config.win_size.y};
                 json[window_name]["win_soft_reset"] = window_config.win_soft_reset;
-                json[window_name]["win_reset_size"] = { window_config.win_reset_size.x, window_config.win_reset_size.y };
+                json[window_name]["win_reset_size"] = {window_config.win_reset_size.x, window_config.win_reset_size.y};
 
                 this->utils.Utf8Encode(window_config.main_project_file);
                 json[window_name]["main_project_file"] = window_config.main_project_file;
