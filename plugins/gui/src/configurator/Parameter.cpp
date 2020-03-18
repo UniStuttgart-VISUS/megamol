@@ -9,9 +9,6 @@
 #include "Parameter.h"
 
 
-#define GUI_MAX_MULITLINE 7
-
-
 using namespace megamol;
 using namespace megamol::gui;
 using namespace megamol::gui::configurator;
@@ -102,6 +99,11 @@ std::string megamol::gui::configurator::Parameter::GetValueString(void) {
             }
             case (Parameter::ParamType::ENUM): {
                 auto param = megamol::core::param::EnumParam(arg);
+                // Initialization of enum storage required
+                auto map = this->GetStorage<EnumStorageType>();
+                for (auto& pair : map) {
+                    param.SetTypePair(pair.first, pair.second.c_str());
+                }
                 value_string = std::string(param.ValueString().PeekBuffer());
             }
             default:
@@ -183,6 +185,11 @@ bool megamol::gui::configurator::Parameter::SetValueString(const std::string& va
     } break;
     case (Parameter::ParamType::ENUM): {
         megamol::core::param::EnumParam param(0);
+        // Initialization of enum storage required
+        auto map = this->GetStorage<EnumStorageType>();
+        for (auto& pair : map) {
+            param.SetTypePair(pair.first, pair.second.c_str());
+        }
         retval = param.ParseValue(val_tstr);
         this->SetValue(param.Value(), set_default_val);
     } break;
