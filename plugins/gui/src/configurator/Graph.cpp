@@ -345,9 +345,12 @@ ImGuiID megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::c
             retval = graph_uid;
             ImGui::EndTabItem();
         }
-
+        
         // Set delete flag if tab was closed
-        if (!open) out_delete_graph = true;
+        if (!open) {
+            out_delete_graph = true;
+            retval = graph_uid;
+        }
 
         // Rename pop-up
         this->utils.RenamePopUp("Rename Project", popup_rename, inout_graph.GetName());

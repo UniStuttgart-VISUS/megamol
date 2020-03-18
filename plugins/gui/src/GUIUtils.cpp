@@ -91,8 +91,7 @@ bool megamol::gui::GUIUtils::MinimalPopUp(const std::string& caption, bool open_
     const std::string& confirm_btn_text, bool& confirmed, const std::string& abort_btn_text, bool& aborted) {
 
     bool retval = false;
-    confirmed = false;
-    aborted = false;
+
     ImGuiStyle& style = ImGui::GetStyle();
 
     ImGui::PushID(caption.c_str());
