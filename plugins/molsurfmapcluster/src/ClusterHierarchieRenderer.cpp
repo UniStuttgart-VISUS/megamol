@@ -17,6 +17,7 @@
 
 #include "CallClusterPosition.h"
 #include "ClusterHierarchieRenderer.h"
+#include "DBScanClusteringProvider.h"
 #include "EnzymeClassProvider.h"
 #include "TextureLoader.h"
 
@@ -101,6 +102,7 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
     this->colorhash = 0;
 
     this->actionavailable = true;
+    this->dbscanclustercolor = false;
 
     this->popup = nullptr;
     this->x = 0;
@@ -319,6 +321,14 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
         }
     }
 
+    if (this->dbscanclustercolor) {
+        if (this->dbscancluster.count(node->pic->pdbid) > 0) {
+            currentcolor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        } else {
+            currentcolor = glm::vec4(0.3f, 0.3f, 0.3f, 1.0f);
+        }
+    }
+
     // Draw Point
     glPointSize(10);
     glBindVertexArray(this->dummyVa);
@@ -393,7 +403,6 @@ bool ClusterHierarchieRenderer::Render(view::CallRender2D& call) {
     if (!ccp) return false;
     // Updated data from cinematic camera call
     if (!(*ccp)(CallClusterPosition::CallForGetData)) return false;
-
 
     if (ccc->DataHash() != this->lastHashClustering) {
         // update Clustering to work with
@@ -492,7 +501,38 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
                 }
             }
         } else {
-            // TODO
+            this->counter = 0;
+
+            double height = this->viewport.GetY() * 0.9;
+            double width = this->viewport.GetX() * 0.9;
+
+            double minheight = this->viewport.GetY() * 0.05;
+            double minwidth = this->viewport.GetX() * 0.05;
+
+            double spacey = height / (this->root->level);
+            double spacex = width / (this->clustering->getLeaves()->size() - 1);
+
+            double distanceX = 30.0 / (windowMeasurements.Width() * 2.0 * this->zoomFactor);
+            double distanceY = 30.0 / (windowMeasurements.Height() * 2.0 * this->zoomFactor);
+
+            if (checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex, distanceX,
+                    distanceY) == -1) {
+                auto pdbid = this->popup->pic->pdbid;
+                auto clusterids = DBScanClusteringProvider::RetrieveClustersForPdbId(pdbid, *this->GetCoreInstance());
+                this->dbscancluster.clear();
+                for (const auto& id : clusterids) {
+                    if (id >= 0) {
+                        auto ids = DBScanClusteringProvider::RetrievePDBIdsForCluster(id, *this->GetCoreInstance());
+                        for (const auto val : ids) {
+                            this->dbscancluster.insert(val);
+                        }
+                    }
+                }
+                this->dbscanclustercolor = true;
+            } else {
+                this->dbscancluster.clear();
+                this->dbscanclustercolor = false;
+            }
         }
     } else {
         if (action == MouseButtonAction::RELEASE) {

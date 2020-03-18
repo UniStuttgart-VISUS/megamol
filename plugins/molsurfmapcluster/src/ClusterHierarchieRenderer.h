@@ -24,6 +24,7 @@
 
 #include "CallCluster.h"
 #include "ClusterRenderer.h"
+#include <set>
 
 namespace megamol {
 namespace molsurfmapcluster {
@@ -193,6 +194,8 @@ private:
 
     core::CalleeSlot positionoutslot;
     bool newposition;
+    bool dbscanclustercolor;
+    std::set<std::string> dbscancluster;
 };
 
 } // namespace MolSurfMapCluster

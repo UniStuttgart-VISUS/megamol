@@ -8,6 +8,19 @@
 namespace megamol {
 namespace molsurfmapcluster {
 
+/**
+ * Struct containing the data sent over CallClustering_2
+ */
+struct ClusteringData {};
+
+/**
+ * Struct containing the metadata sent over CallClustering_2
+ */
+struct ClusteringMetaData {};
+
+/**
+ * Call for transporting clustering information
+ */
 class CallClustering_2 : public core::Call {
 public:
     /** Index of the 'GetData' function */
@@ -37,20 +50,6 @@ public:
     virtual ~CallClustering_2(void);
 
     /**
-     * Returns the hash of the data.
-     *
-     * @return The current data hash value.
-     */
-    uint64_t GetDataHash(void) const;
-
-    /**
-     * Sets the hash value of the currently stored data.
-     *
-     * @param datahash The new hash value.
-     */
-    void SetDataHash(const uint64_t datahash);
-
-    /**
      * Answer the number of functions used for this call.
      *
      * @return The number of functions used for this call.
@@ -75,12 +74,15 @@ public:
     }
 
 private:
-    /** hash of the data */
-    uint64_t datahash;
+    /** The sent data */
+    ClusteringData data;
+
+    /** The sent metadata */
+    ClusteringMetaData metadata;
 };
 
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<CallClustering_2> CallClustering_2Description;
 
-} // namespace MolSurfMapCluster
+} // namespace molsurfmapcluster
 } // namespace megamol
