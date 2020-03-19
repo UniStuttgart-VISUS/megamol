@@ -341,9 +341,10 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
         bool hovered = ImGui::IsItemHovered();
         bool mouse_clicked = ImGui::GetIO().MouseClicked[0];
 
+        std::string slot_label = "[" + inout_call_slot.name + "]";
         std::string tooltip = inout_call_slot.description;
         if (!this->label_visible) {
-            tooltip = "[" + inout_call_slot.name + "] " + tooltip;
+            tooltip = slot_label + " " + tooltip;
         }
         this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
 
@@ -367,8 +368,6 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
         if (ImGui::BeginDragDropTarget()) {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(GUI_DND_CALL_UID_TYPE)) {
                 ImGuiID* uid = (ImGuiID*)payload->Data;
-                // vislib::sys::Log::DefaultLog.WriteError(
-                //    ">>>> Source Slot ID: %i - Target Slot ID: %i", (*uid), inout_call_slot.uid);
                 inout_slot_interact.out_dropped_uid = inout_call_slot.uid;
             }
             ImGui::EndDragDropTarget();
@@ -377,10 +376,10 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
             inout_slot_interact.out_selected_uid = inout_call_slot.uid;
             retval_id = inout_call_slot.uid;
 
-            auto dnd_flags = ImGuiDragDropFlags_AcceptNoDrawDefaultRect | ImGuiDragDropFlags_SourceNoPreviewTooltip;
+            auto dnd_flags = ImGuiDragDropFlags_AcceptNoDrawDefaultRect; // | ImGuiDragDropFlags_SourceNoPreviewTooltip;
             if (ImGui::BeginDragDropSource(dnd_flags)) {
                 ImGui::SetDragDropPayload(GUI_DND_CALL_UID_TYPE, &inout_call_slot.uid, sizeof(ImGuiID));
-                // vislib::sys::Log::DefaultLog.WriteError(">>>> DRAG Slot ID: %i", inout_call_slot.uid);
+                ImGui::Text(slot_label.c_str());
                 ImGui::EndDragDropSource();
             }
         }

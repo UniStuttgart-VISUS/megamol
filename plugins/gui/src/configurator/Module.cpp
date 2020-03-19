@@ -174,6 +174,7 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
                 slot->GUI_Present(canvas_update_state, inout_slot_interact);
             }
         }
+        // Register hovering of call slots only being part of current module
         bool module_slot_hovered = (module_slot_hovered_uid != inout_slot_interact.out_hovered_uid);
 
         // Draw module --------------------------------------------------------

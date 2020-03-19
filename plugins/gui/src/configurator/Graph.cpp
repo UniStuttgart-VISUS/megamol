@@ -348,7 +348,7 @@ ImGuiID megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::c
                 ImGui::EndPopup();
             }
 
-            // updated positions and sizes
+            // Apply graph layout
             if (this->layout_current_graph) {
                 this->layout_graph(inout_graph);
                 this->canvas.updated = true;
@@ -486,7 +486,7 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
     }
     ImGui::SameLine();
 
-    if (ImGui::Button("Layout Graph")) {
+    if (ImGui::Button("Layout Graph (experimental)")) {
         this->layout_current_graph = true;
     }
 
@@ -907,24 +907,49 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
         // Add new layer
         layers.emplace_back();
         // Loop through last filled layer
-        for (auto& mod : layers[layers.size() - 2]) {
-            for (auto& caller_slot : mod->GetCallSlots(CallSlot::CallSlotType::CALLER)) {
+        for (auto& layer_mod : layers[layers.size() - 2]) {
+            for (auto& caller_slot : layer_mod->GetCallSlots(CallSlot::CallSlotType::CALLER)) {
                 if (caller_slot->CallsConnected()) {
                     for (auto& call : caller_slot->GetConnectedCalls()) {
                         auto add_mod = call->GetCallSlot(CallSlot::CallSlotType::CALLEE)->GetParentModule();
-                        // Check if module was already added
-                        bool found_module = false;
-                        for (auto& layer : layers) {
-                            for (auto& m : layer) {
-                                if (m == add_mod) {
-                                    found_module = true;
-                                }
+
+                        // Delete module from previous layer
+                        // for (size_t i = 0; i < (layers.size() - 2); i++) {
+                        //    for (auto module_iter = layers[i].begin(); module_iter != layers[i].end(); module_iter++)
+                        //    {
+                        //        if ((*module_iter) == add_mod) {
+                        //            layers[i].erase(module_iter);
+                        //            break;
+                        //        }
+                        //    }
+                        //}
+
+                        // Add module only if not already present in current layer
+                        bool module_already_added = false;
+                        for (auto& last_layer_mod : layers.back()) {
+                            if (last_layer_mod == add_mod) {
+                                module_already_added = true;
                             }
                         }
-                        if (!found_module) {
+                        if (!module_already_added) {
                             layers.back().emplace_back(add_mod);
                             added_module = true;
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    // Delting duplicate modules from back to front
+    int layer_size = static_cast<int>(layers.size());
+    for (int i = (layer_size - 1); i >= 0; i--) {
+        for (auto& layer_module : layers[i]) {
+            for (int j = (i - 1); j >= 0; j--) {
+                for (auto module_iter = layers[j].begin(); module_iter != layers[j].end(); module_iter++) {
+                    if ((*module_iter) == layer_module) {
+                        layers[j].erase(module_iter);
+                        break;
                     }
                 }
             }

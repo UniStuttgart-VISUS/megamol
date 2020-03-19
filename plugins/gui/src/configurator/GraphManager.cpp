@@ -1332,23 +1332,23 @@ ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
             // Catch call drop event and create new call
             if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
                 if (payload->IsDataType(GUI_DND_CALL_UID_TYPE) && payload->IsDelivery()) {
-                    ImGuiID* selected_call_slot_uid_ptr = (ImGuiID*)payload->Data;
-                    auto selected_call_slot_uid = (*selected_call_slot_uid_ptr);
-                    // Currently hovered call slot corresponds to drop target call slot
-                    auto hovered_call_slot_uid = graph->GUI_GetDropCallSlot();
-                    CallSlotPtrType selected_call_slot_ptr;
-                    CallSlotPtrType hovered_call_slot_ptr;
+                    ImGuiID* dragged_call_slot_uid_ptr = (ImGuiID*)payload->Data;
+
+                    auto drag_call_slot_uid = (*dragged_call_slot_uid_ptr);
+                    auto drop_call_slot_uid = graph->GUI_GetDropCallSlot();
+                    CallSlotPtrType drag_call_slot_ptr;
+                    CallSlotPtrType drop_call_slot_ptr;
                     for (auto& mods : graph->GetGraphModules()) {
-                        CallSlotPtrType call_slot_ptr = mods->GetCallSlot(selected_call_slot_uid);
+                        CallSlotPtrType call_slot_ptr = mods->GetCallSlot(drag_call_slot_uid);
                         if (call_slot_ptr != nullptr) {
-                            selected_call_slot_ptr = call_slot_ptr;
+                            drag_call_slot_ptr = call_slot_ptr;
                         }
-                        call_slot_ptr = mods->GetCallSlot(hovered_call_slot_uid);
+                        call_slot_ptr = mods->GetCallSlot(drop_call_slot_uid);
                         if (call_slot_ptr != nullptr) {
-                            hovered_call_slot_ptr = call_slot_ptr;
+                            drop_call_slot_ptr = call_slot_ptr;
                         }
                     }
-                    graph->AddCall(inout_graph_manager.calls_stock, selected_call_slot_ptr, hovered_call_slot_ptr);
+                    graph->AddCall(inout_graph_manager.calls_stock, drag_call_slot_ptr, drop_call_slot_ptr);
                 }
             }
         }
