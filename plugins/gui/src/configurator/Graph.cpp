@@ -879,14 +879,13 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_cal
 
 bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui::configurator::Graph& inout_graph) {
 
-    ImGuiStyle& style = ImGui::GetStyle();
-
     // Really simple layouting sorting modules into differnet layers
+
+    ImGuiStyle& style = ImGui::GetStyle();
     std::vector<std::vector<ModulePtrType>> layers;
     layers.clear();
 
     // Fill first layer with modules having no connected callee
-    // (Cycles are ignored)
     layers.emplace_back();
     for (auto& mod : inout_graph.GetGraphModules()) {
         bool any_connected_callee = false;
@@ -913,17 +912,6 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
                     for (auto& call : caller_slot->GetConnectedCalls()) {
                         auto add_mod = call->GetCallSlot(CallSlot::CallSlotType::CALLEE)->GetParentModule();
 
-                        // Delete module from previous layer
-                        // for (size_t i = 0; i < (layers.size() - 2); i++) {
-                        //    for (auto module_iter = layers[i].begin(); module_iter != layers[i].end(); module_iter++)
-                        //    {
-                        //        if ((*module_iter) == add_mod) {
-                        //            layers[i].erase(module_iter);
-                        //            break;
-                        //        }
-                        //    }
-                        //}
-
                         // Add module only if not already present in current layer
                         bool module_already_added = false;
                         for (auto& last_layer_mod : layers.back()) {
@@ -941,7 +929,7 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
         }
     }
 
-    // Delting duplicate modules from back to front
+    // Deleting duplicate modules from back to front
     int layer_size = static_cast<int>(layers.size());
     for (int i = (layer_size - 1); i >= 0; i--) {
         for (auto& layer_module : layers[i]) {
