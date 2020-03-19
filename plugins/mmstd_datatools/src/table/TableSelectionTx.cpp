@@ -54,6 +54,8 @@ bool TableSelectionTx::create() {
 }
 
 void TableSelectionTx::release() {
+    delete socket_;
+    delete context_;
 }
 
 bool TableSelectionTx::readDataCallback(core::Call& call) {
