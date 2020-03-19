@@ -78,11 +78,9 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     // Returns uid if the module is selected.
-    ImGuiID GUI_Present(const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys,
-        ImGuiID& out_selected_call_slot_uid, ImGuiID& out_hovered_call_slot_uid,
-        const CallSlotPtrType compatible_call_slot_ptr) {
-        return this->present.Present(*this, in_canvas, inout_hotkeys, out_selected_call_slot_uid,
-            out_hovered_call_slot_uid, compatible_call_slot_ptr);
+    ImGuiID GUI_Present(
+        const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys, CallSlot::InteractType& inout_slot_interact) {
+        return this->present.Present(*this, in_canvas, inout_hotkeys, inout_slot_interact);
     }
 
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
@@ -106,8 +104,7 @@ private:
         ~Presentation(void);
 
         ImGuiID Present(Module& inout_mod, const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys,
-            ImGuiID& out_selected_call_slot_uid, ImGuiID& out_hovered_call_slot_uid,
-            const CallSlotPtrType compatible_call_slot_ptr);
+            CallSlot::InteractType& inout_slot_interact);
 
         void SetPosition(ImVec2 pos) { this->position = pos; }
 

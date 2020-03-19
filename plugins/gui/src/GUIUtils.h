@@ -41,6 +41,7 @@ namespace gui {
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_CALL_SLOT_RADIUS (8.0f)
 #define GUI_MAX_MULITLINE (7)
+#define GUI_DND_CALL_UID_TYPE ("DND_CALL")
 
 
 /********** Types **********/
@@ -52,7 +53,7 @@ enum HotkeyIndex : size_t { MODULE_SEARCH = 0, PARAMETER_SEARCH = 1, DELETE_GRAP
 
 typedef std::array<HotkeyDataType, HotkeyIndex::INDEX_COUNT> HotKeyArrayType;
 
-/* Canvas Data Type for Information of Graph */
+/* Data type holding information of graph canvas. */
 typedef struct _canvas_ {
     ImVec2 position;
     ImVec2 size;

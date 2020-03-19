@@ -49,6 +49,14 @@ public:
 
     enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
 
+    /* Data type holding information on call slot interaction */
+    typedef struct _call_slot_interact_ {
+        ImGuiID out_selected_uid;
+        ImGuiID out_hovered_uid;
+        ImGuiID out_dropped_uid;
+        CallSlotPtrType in_compat_slot_ptr;
+    } InteractType;
+
     CallSlot(ImGuiID uid);
     ~CallSlot();
 
@@ -80,9 +88,8 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     // Returns uid if the call slot is selected.
-    ImGuiID GUI_Present(const CanvasType& in_canvas, ImGuiID& out_hovered_call_slot_uid,
-        const CallSlotPtrType compatible_call_slot_ptr) {
-        return this->present.Present(*this, in_canvas, out_hovered_call_slot_uid, compatible_call_slot_ptr);
+    ImGuiID GUI_Present(const CanvasType& in_canvas, CallSlot::InteractType& inout_slot_interact) {
+        return this->present.Present(*this, in_canvas, inout_slot_interact);
     }
 
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
@@ -104,8 +111,8 @@ private:
 
         ~Presentation(void);
 
-        ImGuiID Present(CallSlot& inout_call_slot, const CanvasType& in_canvas, ImGuiID& out_hovered_call_slot_uid,
-            const CallSlotPtrType compatible_call_slot_ptr);
+        ImGuiID Present(
+            CallSlot& inout_call_slot, const CanvasType& in_canvas, CallSlot::InteractType& inout_slot_interact);
 
         ImVec2 GetPosition(void) { return this->position; }
 

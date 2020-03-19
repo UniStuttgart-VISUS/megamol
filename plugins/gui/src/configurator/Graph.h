@@ -64,7 +64,8 @@ public:
     }
 
     inline ImGuiID GUI_GetSelectedCallSlot(void) const { return this->present.GetSelectedCallSlot(); }
-    inline ImGuiID GUI_GetHoveredCallSlot(void) const { return this->present.GetHoveredCallSlot(); }
+    inline ImGuiID GUI_GetDropCallSlot(void) const { return this->present.GetDropCallSlot(); }
+    inline ImGuiID GUI_GetHoverdCallSlot(void) const { return this->present.GetHoveredCallSlot(); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -92,8 +93,9 @@ private:
         ImGuiID Present(Graph& inout_graph, float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys,
             bool& out_delete_graph);
 
-        ImGuiID GetSelectedCallSlot(void) const { return this->selected_call_slot_uid; }
-        ImGuiID GetHoveredCallSlot(void) const { return this->hovered_call_slot_uid; }
+        ImGuiID GetSelectedCallSlot(void) const { return this->call_slot_interact.out_selected_uid; }
+        ImGuiID GetDropCallSlot(void) const { return this->call_slot_interact.out_dropped_uid; }
+        ImGuiID GetHoveredCallSlot(void) const { return this->call_slot_interact.out_hovered_uid; }
 
         bool GetModuleLabelVisibility(void) const { return this->show_module_names; }
         bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
@@ -116,8 +118,7 @@ private:
 
         ImGuiID selected_module_uid;
         ImGuiID selected_call_uid;
-        ImGuiID selected_call_slot_uid;
-        ImGuiID hovered_call_slot_uid;
+        CallSlot::InteractType call_slot_interact;
 
         bool layout_current_graph;
         float child_split_width;

@@ -291,8 +291,7 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , show_module_names(true)
     , selected_module_uid(GUI_INVALID_ID)
     , selected_call_uid(GUI_INVALID_ID)
-    , selected_call_slot_uid(GUI_INVALID_ID)
-    , hovered_call_slot_uid(GUI_INVALID_ID)
+    , call_slot_interact()
     , layout_current_graph(false)
     , child_split_width(300.0f)
     , mouse_wheel(0.0f)
@@ -548,18 +547,19 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
             this->canvas.updated = true;
         }
     }
+    // Update canvas position
     ImVec2 new_position = ImGui::GetCursorScreenPos();
     if ((this->canvas.position.x != new_position.x) || (this->canvas.position.y != new_position.y)) {
         this->canvas.updated = true;
     }
     this->canvas.position = new_position;
-
+    // Update canvas size
     ImVec2 new_size = ImGui::GetWindowSize();
     if ((this->canvas.size.x != new_size.x) || (this->canvas.size.y != new_size.y)) {
         this->canvas.updated = true;
     }
     this->canvas.size = new_size;
-
+    // Update canvas offset
     ImVec2 new_offset = this->canvas.position + (this->canvas.scrolling * this->canvas.zooming);
     if ((this->canvas.offset.x != new_offset.x) || (this->canvas.offset.y != new_offset.y)) {
         this->canvas.updated = true;
@@ -588,30 +588,31 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     }
     ImGui::PopStyleVar(2);
 
-    CallSlotPtrType compatible_call_slot_ptr;
-    if (this->selected_call_slot_uid != GUI_INVALID_ID) {
+    this->call_slot_interact.in_compat_slot_ptr.reset();
+    if (this->call_slot_interact.out_selected_uid != GUI_INVALID_ID) {
         for (auto& mods : inout_graph.GetGraphModules()) {
-            CallSlotPtrType call_slot_ptr = mods->GetCallSlot(this->selected_call_slot_uid);
+            CallSlotPtrType call_slot_ptr = mods->GetCallSlot(this->call_slot_interact.out_selected_uid);
             if (call_slot_ptr != nullptr) {
-                compatible_call_slot_ptr = call_slot_ptr;
+                this->call_slot_interact.in_compat_slot_ptr = call_slot_ptr;
             }
         }
     }
-    if (this->hovered_call_slot_uid != GUI_INVALID_ID) {
+    if (this->call_slot_interact.out_hovered_uid != GUI_INVALID_ID) {
         for (auto& mods : inout_graph.GetGraphModules()) {
-            CallSlotPtrType call_slot_ptr = mods->GetCallSlot(this->hovered_call_slot_uid);
+            CallSlotPtrType call_slot_ptr = mods->GetCallSlot(this->call_slot_interact.out_hovered_uid);
             if (call_slot_ptr != nullptr) {
-                compatible_call_slot_ptr = call_slot_ptr;
+                this->call_slot_interact.in_compat_slot_ptr = call_slot_ptr;
             }
         }
     }
-    this->selected_call_slot_uid = GUI_INVALID_ID;
-    this->hovered_call_slot_uid = GUI_INVALID_ID;
-    this->selected_module_uid = GUI_INVALID_ID;
+    this->call_slot_interact.out_selected_uid = GUI_INVALID_ID;
+    this->call_slot_interact.out_hovered_uid = GUI_INVALID_ID;
+    this->call_slot_interact.out_dropped_uid = GUI_INVALID_ID;
+
     // Draw modules -------------------
+    this->selected_module_uid = GUI_INVALID_ID;
     for (auto& mod : inout_graph.GetGraphModules()) {
-        auto id = mod->GUI_Present(this->canvas, inout_hotkeys, this->selected_call_slot_uid,
-            this->hovered_call_slot_uid, compatible_call_slot_ptr);
+        auto id = mod->GUI_Present(this->canvas, inout_hotkeys, this->call_slot_interact);
         if (id != GUI_INVALID_ID) {
             this->selected_module_uid = id;
         }
@@ -629,7 +630,6 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
 
     // Draw dragged call --------------
     this->present_canvas_dragged_call(inout_graph);
-
 
     // Process module/call deletion ---
     if (std::get<1>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM])) {
@@ -739,7 +739,6 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
         }
     }
     if (modptr != nullptr) {
-
         float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 1.0f;
         ImGui::BeginChild("parameter_info_child", ImVec2(in_child_width, param_child_height), false, child_flags);
 
@@ -829,45 +828,48 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_grid(void) 
 void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_call(
     megamol::gui::configurator::Graph& inout_graph) {
 
-    ImGuiStyle& style = ImGui::GetStyle();
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    assert(draw_list != nullptr);
-    draw_list->ChannelsSetCurrent(0); // Background
+    if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
+        if (payload->IsDataType(GUI_DND_CALL_UID_TYPE)) {
+            ImGuiID* selected_call_slot_uid_ptr = (ImGuiID*)payload->Data;
 
-    const auto COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Button]);
+            ImGuiStyle& style = ImGui::GetStyle();
+            ImDrawList* draw_list = ImGui::GetWindowDrawList();
+            assert(draw_list != nullptr);
+            draw_list->ChannelsSetCurrent(0); // Background
 
-    const float CURVE_THICKNESS = 3.0f;
+            const auto COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Button]);
+            const float CURVE_THICKNESS = 3.0f;
 
-    if ((this->selected_call_slot_uid != GUI_INVALID_ID) && ImGui::IsMouseDown(0)) {
-        ImVec2 current_pos = ImGui::GetMousePos();
-        bool mouse_inside_canvas = false;
-
-        if ((current_pos.x >= this->canvas.position.x) &&
-            (current_pos.x <= (this->canvas.position.x + this->canvas.size.x)) &&
-            (current_pos.y >= this->canvas.position.y) &&
-            (current_pos.y <= (this->canvas.position.y + this->canvas.size.y))) {
-            mouse_inside_canvas = true;
-        }
-        if (mouse_inside_canvas) {
-            CallSlotPtrType selected_call_slot_ptr;
-            for (auto& mods : inout_graph.GetGraphModules()) {
-                CallSlotPtrType call_slot_ptr = mods->GetCallSlot(this->selected_call_slot_uid);
-                if (call_slot_ptr != nullptr) {
-                    selected_call_slot_ptr = call_slot_ptr;
-                }
+            ImVec2 current_pos = ImGui::GetMousePos();
+            bool mouse_inside_canvas = false;
+            if ((current_pos.x >= this->canvas.position.x) &&
+                (current_pos.x <= (this->canvas.position.x + this->canvas.size.x)) &&
+                (current_pos.y >= this->canvas.position.y) &&
+                (current_pos.y <= (this->canvas.position.y + this->canvas.size.y))) {
+                mouse_inside_canvas = true;
             }
+            if (mouse_inside_canvas) {
 
-            if (selected_call_slot_ptr != nullptr) {
-                ImVec2 p1 = selected_call_slot_ptr->GUI_GetPosition();
-                ImVec2 p2 = ImGui::GetMousePos();
-                if (glm::length(glm::vec2(p1.x, p1.y) - glm::vec2(p2.x, p2.y)) > GUI_CALL_SLOT_RADIUS) {
-                    if (selected_call_slot_ptr->type == CallSlot::CallSlotType::CALLEE) {
-                        ImVec2 tmp = p1;
-                        p1 = p2;
-                        p2 = tmp;
+                CallSlotPtrType selected_call_slot_ptr;
+                for (auto& mods : inout_graph.GetGraphModules()) {
+                    CallSlotPtrType call_slot_ptr = mods->GetCallSlot(*selected_call_slot_uid_ptr);
+                    if (call_slot_ptr != nullptr) {
+                        selected_call_slot_ptr = call_slot_ptr;
                     }
-                    draw_list->AddBezierCurve(p1, p1 + ImVec2(+50, 0), p2 + ImVec2(-50, 0), p2, COLOR_CALL_CURVE,
-                        CURVE_THICKNESS * this->canvas.zooming);
+                }
+
+                if (selected_call_slot_ptr != nullptr) {
+                    ImVec2 p1 = selected_call_slot_ptr->GUI_GetPosition();
+                    ImVec2 p2 = ImGui::GetMousePos();
+                    if (glm::length(glm::vec2(p1.x, p1.y) - glm::vec2(p2.x, p2.y)) > GUI_CALL_SLOT_RADIUS) {
+                        if (selected_call_slot_ptr->type == CallSlot::CallSlotType::CALLEE) {
+                            ImVec2 tmp = p1;
+                            p1 = p2;
+                            p2 = tmp;
+                        }
+                        draw_list->AddBezierCurve(p1, p1 + ImVec2(+50, 0), p2 + ImVec2(-50, 0), p2, COLOR_CALL_CURVE,
+                            CURVE_THICKNESS * this->canvas.zooming);
+                    }
                 }
             }
         }
