@@ -77,6 +77,8 @@ Use the example project: `-p ../examples/configurator.lua` for starting the conf
         mmCreateView("testspheres", "GUIView", "::gui")
         mmSetParamValue("::gui::autostart_configurator", "true")
 
+This is a prototype. Changes will not effect the currently loaded MegaMol project.
+
 #### Menu
 
 The menu of the configurator window provides the following options:
