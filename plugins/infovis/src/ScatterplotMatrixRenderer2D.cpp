@@ -92,6 +92,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , kernelTypeParam("kernelType", "Kernel function, i.e., box or gaussian kernel")
     , pickRadiusParam("pickRadius", "Picking radius")
     , resetSelectionParam("resetSelection", "Reset selection")
+    , drawPickIndicatorParam("drawPickIndicator", "Draw picking indicator")
     , triangulationSmoothnessParam("triangulationSmoothness", "Number of iterations to smooth the triangulation")
     , axisModeParam("axisMode", "Axis drawing mode")
     , axisColorParam("axisColor", "Color of axis")
@@ -174,6 +175,9 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->resetSelectionParam << new core::param::ButtonParam();
     this->resetSelectionParam.SetUpdateCallback(this, &ScatterplotMatrixRenderer2D::resetSelectionCallback);
     this->MakeSlotAvailable(&this->resetSelectionParam);
+
+    this->drawPickIndicatorParam << new core::param::BoolParam(true);
+    this->MakeSlotAvailable(&this->drawPickIndicatorParam);
 
     auto* axisModes = new core::param::EnumParam(1);
     axisModes->SetTypePair(AXIS_MODE_NONE, "None");
@@ -346,7 +350,9 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
             break;
         }
 
-        this->drawPickIndicator();
+        if (this->drawPickIndicatorParam.Param<core::param::BoolParam>()->Value()) {
+            this->drawPickIndicator();
+        }
 
         this->drawScreen();
 
