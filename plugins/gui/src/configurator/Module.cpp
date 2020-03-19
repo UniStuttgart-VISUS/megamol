@@ -245,6 +245,7 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         ImGui::SetCursorScreenPos(module_rect_min);
         label = "module_" + inout_mod.name;
         ImGui::InvisibleButton(label.c_str(), module_size);
+        ImGui::SetItemAllowOverlap();
         bool hovered = ImGui::IsItemHovered() && (!module_slot_hovered);
         bool mouse_clicked = ImGui::GetIO().MouseClicked[0];
         if (mouse_clicked && (!hovered || (module_slot_hovered))) {

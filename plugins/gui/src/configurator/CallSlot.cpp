@@ -336,6 +336,7 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
         ImGui::SetCursorScreenPos(slot_position - ImVec2(radius, radius));
         std::string label = "slot_" + inout_call_slot.name + std::to_string(inout_call_slot.uid);
         ImGui::InvisibleButton(label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
+        /// ImGui::SetItemAllowOverlap();
 
         bool active = ImGui::IsItemActive();
         bool hovered = ImGui::IsItemHovered();
