@@ -123,15 +123,15 @@ megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
 ImGuiID megamol::gui::configurator::Call::Presentation::Present(
     megamol::gui::configurator::Call& inout_call, const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys) {
 
-    ImGuiID retval_id = GUI_INVALID_ID;
-    ImGuiStyle& style = ImGui::GetStyle();
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    assert(draw_list != nullptr);
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+    ImGuiID retval_id = GUI_INVALID_ID;
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
 
     try {
         if (inout_call.IsConnected()) {

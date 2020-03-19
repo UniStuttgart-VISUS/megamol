@@ -257,17 +257,17 @@ megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
 ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
     megamol::gui::configurator::CallSlot& inout_call_slot, const CanvasType& in_canvas,
-    ImGuiID& out_hovered_call_slot_uid, const CallSlotPtrType compatible_call_slot_ptr) {
+    megamol::gui::configurator::CallSlot::InteractType& inout_slot_interact) {
 
-    ImGuiID retval_id = GUI_INVALID_ID;
-    ImGuiStyle& style = ImGui::GetStyle();
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    assert(draw_list != nullptr);
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+    ImGuiID retval_id = GUI_INVALID_ID;
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
 
     try {
         // Trigger only when canvas was updated
@@ -336,18 +336,22 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
         ImGui::SetCursorScreenPos(slot_position - ImVec2(radius, radius));
         std::string label = "slot_" + inout_call_slot.name + std::to_string(inout_call_slot.uid);
         ImGui::InvisibleButton(label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
+        /// ImGui::SetItemAllowOverlap();
+
         bool active = ImGui::IsItemActive();
         bool hovered = ImGui::IsItemHovered();
         bool mouse_clicked = ImGui::GetIO().MouseClicked[0];
 
+        std::string slot_label = "[" + inout_call_slot.name + "]";
         std::string tooltip = inout_call_slot.description;
         if (!this->label_visible) {
-            tooltip = "[" + inout_call_slot.name + "] " + tooltip;
+            tooltip = slot_label + " " + tooltip;
         }
         this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
 
         // Highlight if compatible to given call slot
-        if (CallSlot::CheckCompatibleAvailableCallIndex(compatible_call_slot_ptr, inout_call_slot) != GUI_INVALID_ID) {
+        if (CallSlot::CheckCompatibleAvailableCallIndex(inout_slot_interact.in_compat_slot_ptr, inout_call_slot) !=
+            GUI_INVALID_ID) {
             slot_color = COLOR_SLOT_COMPATIBLE;
         }
         if (mouse_clicked && !hovered) {
@@ -360,10 +364,25 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
             slot_color = slot_highlight_color;
         }
         if (hovered) {
-            out_hovered_call_slot_uid = inout_call_slot.uid;
+            inout_slot_interact.out_hovered_uid = inout_call_slot.uid;
+        }
+        if (ImGui::BeginDragDropTarget()) {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(GUI_DND_CALL_UID_TYPE)) {
+                ImGuiID* uid = (ImGuiID*)payload->Data;
+                inout_slot_interact.out_dropped_uid = inout_call_slot.uid;
+            }
+            ImGui::EndDragDropTarget();
         }
         if (this->selected) {
+            inout_slot_interact.out_selected_uid = inout_call_slot.uid;
             retval_id = inout_call_slot.uid;
+
+            auto dnd_flags = ImGuiDragDropFlags_AcceptNoDrawDefaultRect; // | ImGuiDragDropFlags_SourceNoPreviewTooltip;
+            if (ImGui::BeginDragDropSource(dnd_flags)) {
+                ImGui::SetDragDropPayload(GUI_DND_CALL_UID_TYPE, &inout_call_slot.uid, sizeof(ImGuiID));
+                ImGui::Text(slot_label.c_str());
+                ImGui::EndDragDropSource();
+            }
         }
 
         ImGui::SetCursorScreenPos(slot_position);

@@ -83,12 +83,6 @@ private:
             HotKeyArrayType& inout_hotkeys);
 
     private:
-        struct DropCallData {
-            int trigger_drop_call;
-            int dragged_call_data;
-            ImGuiID hovered_call_slot_uid;
-            ImGuiID selected_call_slot_uid;
-        } drop_call_data;
         ImGuiID delete_graph_uid;
         GUIUtils utils;
 

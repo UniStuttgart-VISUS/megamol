@@ -1282,7 +1282,7 @@ bool megamol::gui::configurator::GraphManager::separateNameAndPrefix(
 // GRAPH MANAGET PRESENTATION ####################################################
 
 megamol::gui::configurator::GraphManager::Presentation::Presentation(void)
-    : drop_call_data(), delete_graph_uid(GUI_INVALID_ID), utils() {}
+    : delete_graph_uid(GUI_INVALID_ID), utils() {}
 
 
 megamol::gui::configurator::GraphManager::Presentation::~Presentation(void) {}
@@ -1329,48 +1329,27 @@ ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
                 }
             }
 
-            /// XXX Hacky stuff for recognising drag and drop call because mouse release event might be triggered one
-            /// frame before hovering of final call slot.
-            // Checking condition for possible call creation.
-            auto selected_call_slot_uid = graph->GUI_GetSelectedCallSlot();
-            auto hovered_call_slot_uid = graph->GUI_GetHoveredCallSlot();
-            if ((selected_call_slot_uid != GUI_INVALID_ID) && (hovered_call_slot_uid != GUI_INVALID_ID) &&
-                (selected_call_slot_uid != hovered_call_slot_uid)) {
-                drop_call_data.dragged_call_data = 2; /// Number of frames the action is valid.
-                drop_call_data.selected_call_slot_uid = selected_call_slot_uid;
-                drop_call_data.hovered_call_slot_uid = hovered_call_slot_uid;
-            }
-            // Capture button mouse release as dropping event.
-            if (ImGui::IsMouseReleased(0)) {
-                drop_call_data.trigger_drop_call = 2; /// Number of frames the action is valid.
-            }
-            // Check for final call creation from finalised drag and drop of call.
-            if ((drop_call_data.dragged_call_data > 0) && (this->drop_call_data.trigger_drop_call > 0)) {
-                CallSlotPtrType selected_call_slot_ptr;
-                CallSlotPtrType hovered_call_slot_ptr;
-                for (auto& mods : graph->GetGraphModules()) {
-                    CallSlotPtrType call_slot_ptr = mods->GetCallSlot(drop_call_data.selected_call_slot_uid);
-                    if (call_slot_ptr != nullptr) {
-                        selected_call_slot_ptr = call_slot_ptr;
+            // Catch call drop event and create new call
+            if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
+                if (payload->IsDataType(GUI_DND_CALL_UID_TYPE) && payload->IsDelivery()) {
+                    ImGuiID* dragged_call_slot_uid_ptr = (ImGuiID*)payload->Data;
+
+                    auto drag_call_slot_uid = (*dragged_call_slot_uid_ptr);
+                    auto drop_call_slot_uid = graph->GUI_GetDropCallSlot();
+                    CallSlotPtrType drag_call_slot_ptr;
+                    CallSlotPtrType drop_call_slot_ptr;
+                    for (auto& mods : graph->GetGraphModules()) {
+                        CallSlotPtrType call_slot_ptr = mods->GetCallSlot(drag_call_slot_uid);
+                        if (call_slot_ptr != nullptr) {
+                            drag_call_slot_ptr = call_slot_ptr;
+                        }
+                        call_slot_ptr = mods->GetCallSlot(drop_call_slot_uid);
+                        if (call_slot_ptr != nullptr) {
+                            drop_call_slot_ptr = call_slot_ptr;
+                        }
                     }
-                    call_slot_ptr = mods->GetCallSlot(drop_call_data.hovered_call_slot_uid);
-                    if (call_slot_ptr != nullptr) {
-                        hovered_call_slot_ptr = call_slot_ptr;
-                    }
+                    graph->AddCall(inout_graph_manager.calls_stock, drag_call_slot_ptr, drop_call_slot_ptr);
                 }
-
-                graph->AddCall(inout_graph_manager.calls_stock, selected_call_slot_ptr, hovered_call_slot_ptr);
-
-                drop_call_data.trigger_drop_call = -1;
-                drop_call_data.dragged_call_data = -1;
-                this->drop_call_data.selected_call_slot_uid = GUI_INVALID_ID;
-                this->drop_call_data.hovered_call_slot_uid = GUI_INVALID_ID;
-            }
-            if (drop_call_data.trigger_drop_call > 0) {
-                drop_call_data.trigger_drop_call--;
-            }
-            if (drop_call_data.dragged_call_data > 0) {
-                drop_call_data.dragged_call_data--;
             }
 
             /*

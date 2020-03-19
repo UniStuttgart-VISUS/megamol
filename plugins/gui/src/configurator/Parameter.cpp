@@ -722,7 +722,11 @@ void megamol::gui::configurator::Parameter::Presentation::present_postfix(
 void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit(
     megamol::gui::configurator::Parameter& param) {
 
-    if (!std::holds_alternative<std::string>(param.GetValue())) {
+    if ((param.type != Parameter::ParamType::TRANSFERFUNCTION) ||
+        (!std::holds_alternative<std::string>(param.GetValue()))) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Transfer Function Editor is called for incompatible parameter type. [%s, %s, line %d]\n", __FILE__,
+            __FUNCTION__, __LINE__);
         return;
     }
     auto value = std::get<std::string>(param.GetValue());
