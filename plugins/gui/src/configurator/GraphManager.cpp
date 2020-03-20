@@ -1378,9 +1378,8 @@ ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
                 }
                 ImGui::EndDragDropTarget();
             }
-            
-            */
 
+            */
         }
         ImGui::EndTabBar();
 

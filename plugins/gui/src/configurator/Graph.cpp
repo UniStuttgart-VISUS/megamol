@@ -432,24 +432,21 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
     }
     ImGui::SameLine();
 
+    ImGui::Text("Scrolling: %.2f,%.2f", this->canvas.scrolling.x, this->canvas.scrolling.y);
+    ImGui::SameLine();
     if (ImGui::Button("Reset###reset_scrolling")) {
         this->canvas.scrolling = ImVec2(0.0f, 0.0f);
         this->canvas.updated = true;
     }
-    ImGui::SameLine();
-
-    ImGui::Text("Scrolling: %.4f,%.4f", this->canvas.scrolling.x, this->canvas.scrolling.y);
     this->utils.HelpMarkerToolTip("Middle Mouse Button");
-
     ImGui::SameLine();
 
+    ImGui::Text("Zooming: %.2f", this->canvas.zooming);
+    ImGui::SameLine();
     if (ImGui::Button("Reset###reset_zooming")) {
         this->canvas.zooming = 1.0f;
         this->canvas.updated = true;
     }
-    ImGui::SameLine();
-
-    ImGui::Text("Zooming: %.4f", this->canvas.zooming);
     this->utils.HelpMarkerToolTip("Mouse Wheel");
 
     ImGui::SameLine();
@@ -529,7 +526,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
 
         // Zooming (Mouse Wheel)
         if (this->mouse_wheel != io.MouseWheel) {
-            const float factor = (30.0f / this->canvas.zooming);
+            const float factor = (10.0f / this->canvas.zooming);
             float last_zooming = this->canvas.zooming;
             this->canvas.zooming = this->canvas.zooming + io.MouseWheel / factor;
             // Limit zooming
