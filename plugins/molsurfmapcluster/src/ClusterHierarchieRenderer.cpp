@@ -11,6 +11,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/view/Renderer2DModule.h"
 
 #include "vislib/sys/Log.h"
@@ -46,6 +47,8 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
     , midColorParam("color::midColor", "the mid color for interpolation")
     , maxColorParam("color::maxColor", "the maximum color for interpolation")
     , failColorParam("color::failColor", "color used for failed comparisons")
+    , windowHeightParam("window::height", "height of the displayed window")
+    , windowWidthParam("window::width", "width of the displayed window")
     , theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
     , texVa(0) {
 
@@ -87,6 +90,12 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
 
     this->failColorParam.SetParameter(new param::ColorParam(1.0f, 0.0f, 0.0f, 1.0f));
     this->MakeSlotAvailable(&this->failColorParam);
+
+    this->windowHeightParam.SetParameter(new param::IntParam(VIEWPORT_HEIGHT, 1000, 20000));
+    this->MakeSlotAvailable(&this->windowHeightParam);
+
+    this->windowWidthParam.SetParameter(new param::IntParam(VIEWPORT_WIDTH, 1000, 20000));
+    this->MakeSlotAvailable(&this->windowWidthParam);
 
     // Variablen
     this->lastHashClustering = 0;
@@ -227,8 +236,8 @@ bool ClusterHierarchieRenderer::GetExtents(view::CallRender2D& call) {
     this->windowMeasurements = cr->GetViewport();
 
     vislib::math::Vector<float, 2> currentViewport;
-    currentViewport.SetX(static_cast<float>(VIEWPORT_WIDTH));
-    currentViewport.SetY(static_cast<float>(VIEWPORT_HEIGHT));
+    currentViewport.SetX(static_cast<float>(this->windowWidthParam.Param<param::IntParam>()->Value()));
+    currentViewport.SetY(static_cast<float>(this->windowHeightParam.Param<param::IntParam>()->Value()));
 
     cr->SetBoundingBox(0, 0, currentViewport.GetX(), currentViewport.GetY());
 

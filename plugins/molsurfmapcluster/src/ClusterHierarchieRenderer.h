@@ -114,6 +114,9 @@ private:
     core::param::ParamSlot maxColorParam;
     core::param::ParamSlot failColorParam;
 
+    core::param::ParamSlot windowWidthParam;
+    core::param::ParamSlot windowHeightParam;
+
     /**The Viewport*/
     vislib::math::Vector<float, 2> viewport;
     vislib::math::Rectangle<int> windowMeasurements;
