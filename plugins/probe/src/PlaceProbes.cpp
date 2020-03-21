@@ -8,6 +8,7 @@
 #include <random>
 #include "ProbeCalls.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/IntParam.h"
 
 megamol::probe::PlaceProbes::PlaceProbes()
     : Module()
@@ -15,7 +16,8 @@ megamol::probe::PlaceProbes::PlaceProbes()
     , m_mesh_slot("getMesh", "")
     , m_probe_slot("deployProbes", "")
     , m_centerline_slot("getCenterLine", "")
-    , m_method_slot("method", "") {
+    , m_method_slot("method", "")
+    , m_probes_per_unit_slot("Probes_per_unit", "Sets the average probe count per unit area") {
 
     this->m_probe_slot.SetCallback(CallProbes::ClassName(), CallProbes::FunctionName(0), &PlaceProbes::getData);
     this->m_probe_slot.SetCallback(CallProbes::ClassName(), CallProbes::FunctionName(1), &PlaceProbes::getMetaData);
@@ -35,6 +37,8 @@ megamol::probe::PlaceProbes::PlaceProbes()
     ep->SetTypePair(4, "vertices+normals");
     this->m_method_slot << ep;
     this->MakeSlotAvailable(&this->m_method_slot);
+
+    this->m_probes_per_unit_slot << new core::param::IntParam(1,0);
 
     /* Feasibility test */
     m_probes = std::make_shared<ProbeCollection>();
@@ -208,7 +212,14 @@ void megamol::probe::PlaceProbes::dartSampling(mesh::MeshDataAccessCollection::V
 }
 
 void megamol::probe::PlaceProbes::forceDirectedSampling(
-    mesh::MeshDataAccessCollection::VertexAttribute& vertices, std::vector<std::array<float, 4>>& output) {}
+    mesh::MeshDataAccessCollection::VertexAttribute& vertices, std::vector<std::array<float, 4>>& output) {
+
+
+
+
+
+
+}
 
 
 void megamol::probe::PlaceProbes::vertexSampling(

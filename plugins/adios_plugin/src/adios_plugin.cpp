@@ -19,6 +19,7 @@
 #include "adiosWriter.h"
 #include "TableToADIOS.h"
 #include "ADIOSFlexConvert.h"
+#include "ADIOStoTable.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -53,6 +54,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::adios::MultiParticletoADIOS>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::TableToADIOS>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOSFlexConvert>();
+            this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOStoTable>();
 
             // register calls here:
 

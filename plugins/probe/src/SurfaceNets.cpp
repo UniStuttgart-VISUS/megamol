@@ -6,6 +6,7 @@
 
 #include "SurfaceNets.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 
@@ -18,11 +19,18 @@ SurfaceNets::SurfaceNets()
     , _getDataCall("getData", "")
     , _deployMeshCall("deployMesh", "")
     , _deployNormalsCall("deployNormals", "")
-    , _isoSlot("IsoValue", "") {
+    , _isoSlot("IsoValue", "")
+    , _faceTypeSlot("FaceType", "") {
 
     this->_isoSlot << new core::param::FloatParam(1.0f);
     this->_isoSlot.SetUpdateCallback(&SurfaceNets::isoChanged);
     this->MakeSlotAvailable(&this->_isoSlot);
+
+    core::param::EnumParam* ep = new core::param::EnumParam(0);
+    ep->SetTypePair(0, "Trianges");
+    ep->SetTypePair(1, "Quads");
+    this->_faceTypeSlot << ep;
+    this->MakeSlotAvailable(&this->_faceTypeSlot);
 
     this->_deployMeshCall.SetCallback(
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &SurfaceNets::getData);
@@ -430,6 +438,8 @@ void SurfaceNets::calculateSurfaceNets2() {
                 auto coords = coordinateFromLinearIndex(id, _dims[0], _dims[1]);
                 if (coords[0] > 0 && coords[1] > 0 && coords[2] > 0) {
                     std::array<uint32_t, 4> indices;
+                    std::array<uint32_t, 3> triangle1;
+                    std::array<uint32_t, 3> triangle2;
                     if (i == 0) {
                         indices[0] = voxel_lookup[offset_now(coords[0], coords[1] - 1, coords[2])];
                         indices[1] = voxel_lookup[offset_now(coords[0], coords[1] - 1, coords[2] - 1)];
@@ -446,7 +456,16 @@ void SurfaceNets::calculateSurfaceNets2() {
                         indices[2] = voxel_lookup[offset_now(coords[0], coords[1], coords[2] - 1)];
                         indices[3] = voxel_lookup[offset_now(coords[0] - 1, coords[1], coords[2] - 1)];
                     }
-                    _faces.push_back(indices);
+                    triangle1[0] = indices[0];
+                    triangle1[1] = indices[1];
+                    triangle1[2] = indices[2];
+                    triangle2[0] = indices[0];
+                    triangle2[1] = indices[2];
+                    triangle2[2] = indices[3];
+
+                    _faces.emplace_back(indices);
+                    _triangles.emplace_back(triangle1);
+                    _triangles.emplace_back(triangle2);
                 }
             }
         } // for i < 3
@@ -507,17 +526,24 @@ bool SurfaceNets::getData(core::Call& call) {
         _mesh_attribs[1].data = reinterpret_cast<uint8_t*>(_normals.data());
         _mesh_attribs[1].semantic = mesh::MeshDataAccessCollection::NORMAL;
 
-        _mesh_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
-        _mesh_indices.byte_size = _faces.size() * sizeof(std::array<uint32_t, 4>);
-        _mesh_indices.data = reinterpret_cast<uint8_t*>(_faces.data());
-
+        if (this->_faceTypeSlot.Param<core::param::EnumParam>()->Value() == 0) {
+            _mesh_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
+            _mesh_indices.byte_size = _triangles.size() * sizeof(std::array<uint32_t, 3>);
+            _mesh_indices.data = reinterpret_cast<uint8_t*>(_triangles.data());
+            _mesh_type = mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLES;
+        } else {
+            _mesh_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
+            _mesh_indices.byte_size = _faces.size() * sizeof(std::array<uint32_t, 4>);
+            _mesh_indices.data = reinterpret_cast<uint8_t*>(_faces.data());
+            _mesh_type = mesh::MeshDataAccessCollection::PrimitiveType::QUADS;
+        }
         ++_version;
     }
 
     // put data in mesh
     mesh::MeshDataAccessCollection mesh;
 
-    mesh.addMesh(_mesh_attribs, _mesh_indices, mesh::MeshDataAccessCollection::PrimitiveType::QUADS);
+    mesh.addMesh(_mesh_attribs, _mesh_indices, _mesh_type);
     cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)),_version);
     _old_datahash = cd->DataHash();
     _recalc = false;

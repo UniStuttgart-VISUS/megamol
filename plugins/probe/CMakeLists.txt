@@ -62,6 +62,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   require_external(Eigen)
   require_external(nanoflann)
+  require_external(libigl)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
@@ -99,7 +100,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/probe_ospray/include> "probe_ospray/src")
   endif()
 
-  target_link_libraries(${PROJECT_NAME} PRIVATE core adios_plugin Eigen nanoflann mesh blend2d qhull)# Qhull::libqhull )
+  target_link_libraries(${PROJECT_NAME} PRIVATE core adios_plugin Eigen nanoflann mesh blend2d qhull libigl)# Qhull::libqhull )
   if(BUILD_OSPRAY_PLUGIN_PLUGIN)
     target_link_libraries(${PROJECT_NAME} PUBLIC OSPRay_plugin)
   endif()

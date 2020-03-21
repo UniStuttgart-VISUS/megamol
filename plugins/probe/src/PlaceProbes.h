@@ -59,6 +59,8 @@ protected:
     core::CalleeSlot m_probe_slot;
 
     core::param::ParamSlot m_method_slot;
+
+    core::param::ParamSlot m_probes_per_unit_slot;
     
 private:
     bool getData(core::Call& call);

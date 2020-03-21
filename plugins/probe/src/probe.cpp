@@ -21,6 +21,7 @@
 #include "SurfaceNets.h"
 #include "ExtractCenterline.h"
 #include "ConstructKDTree.h"
+#include "ManipulateMesh.h"
 #ifdef PROBE_HAS_OSPRAY
 #include "OSPRayGlyphGeometry.h"
 #endif
@@ -60,6 +61,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::probe::SurfaceNets>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractCenterline>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ConstructKDTree>();
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::ManipulateMesh>();
 #ifdef PROBE_HAS_OSPRAY
             this->module_descriptions.RegisterAutoDescription<megamol::probe::OSPRayGlyphGeometry>();
 #endif

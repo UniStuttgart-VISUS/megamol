@@ -57,6 +57,8 @@ protected:
     core::CalleeSlot _deployNormalsCall;
 
     core::param::ParamSlot _isoSlot;
+    core::param::ParamSlot _faceTypeSlot;
+
 
 private:
     bool InterfaceIsDirty();
@@ -76,6 +78,7 @@ private:
     // CallMesh stuff
     std::vector<mesh::MeshDataAccessCollection::VertexAttribute> _mesh_attribs;
     mesh::MeshDataAccessCollection::IndexData _mesh_indices;
+    mesh::MeshDataAccessCollection::PrimitiveType _mesh_type;
     uint32_t _version = 0;
 
     size_t _old_datahash;
@@ -90,6 +93,7 @@ private:
     std::vector<std::array<float, 3>> _vertices;
     std::vector<std::array<float, 3>> _normals;
     std::vector<std::array<uint32_t, 4>> _faces;
+    std::vector<std::array<uint32_t, 3>> _triangles;
 };
 
 } // namespace probe
