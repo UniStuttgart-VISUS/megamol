@@ -322,6 +322,8 @@ void GUIView::Render(const mmcRenderViewContext& context) {
         crv->SetInstanceTime(context.InstanceTime);
         crv->SetTime(
             -1.0f); // Should be negative to trigger animation! (see View3D.cpp line ~660 | View2D.cpp line ~350)
+        // this implies we only allow one GuiView at the moment!
+        this->setupGUI(crv->GetViewport());
         (*crv)(core::view::AbstractCallRender::FnRender);
         this->drawGUI(crv->GetViewport(), crv->InstanceTime());
     } else {
@@ -682,9 +684,9 @@ void GUIView::validateGUI() {
     }
 }
 
-
-bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime) {
+bool GUIView::setupGUI(vislib::math::Rectangle<int> viewport) {
     ImGui::SetCurrentContext(this->context);
+    this->GetCoreInstance()->SetCurrentImGuiContext(this->context);
 
     this->validateGUI();
     /// So far: Checked only once
@@ -697,16 +699,6 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
     ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
-
-    if ((instanceTime - this->state.last_instance_time) < 0.0) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[GUIView] Current instance time results in negative time delta.");
-    }
-    io.DeltaTime = ((instanceTime - this->state.last_instance_time) > 0.0)
-                       ? (static_cast<float>(instanceTime - this->state.last_instance_time))
-                       : (io.DeltaTime);
-    this->state.last_instance_time = ((instanceTime - this->state.last_instance_time) > 0.0)
-                                         ? (instanceTime)
-                                         : (this->state.last_instance_time + io.DeltaTime);
 
     // Changes that need to be applied before next ImGui::Begin: ---------------
     // Loading new font (set in FONT window)
@@ -741,6 +733,26 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
     // Start new frame --------------------------------------------------------
     ImGui_ImplOpenGL3_NewFrame();
     ImGui::NewFrame();
+
+    return true;
+}
+
+bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime) {
+    ImGui::SetCurrentContext(this->context);
+
+    auto viewportWidth = viewport.Width();
+    auto viewportHeight = viewport.Height();
+
+    ImGuiIO& io = ImGui::GetIO();
+    if ((instanceTime - this->state.last_instance_time) < 0.0) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[GUIView] Current instance time results in negative time delta.");
+    }
+    io.DeltaTime = ((instanceTime - this->state.last_instance_time) > 0.0)
+                       ? (static_cast<float>(instanceTime - this->state.last_instance_time))
+                       : (io.DeltaTime);
+    this->state.last_instance_time = ((instanceTime - this->state.last_instance_time) > 0.0)
+                                         ? (instanceTime)
+                                         : (this->state.last_instance_time + io.DeltaTime);
 
     const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
         // Loading font (from FONT window configuration - even if FONT window is not shown)

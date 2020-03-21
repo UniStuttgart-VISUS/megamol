@@ -794,6 +794,16 @@ public:
      */
     AbstractService* GetInstalledService(unsigned int id);
 
+    /**
+     * sets the current ImGui context, i.e. the one that was last touched when traversing the graph
+     */
+    inline void SetCurrentImGuiContext(void* ctx) { this->lastImGuiContext = ctx; }
+
+    /**
+     * gets the current ImGui context, i.e. the one that was last touched when traversing the graph
+     */
+    inline void* GetCurrentImGuiContext() const { return this->lastImGuiContext; }
+
 private:
     /**
      * Nested class with pre initialisation values.
@@ -1164,6 +1174,9 @@ private:
 
     /** The Lua state */
     megamol::core::LuaState* lua;
+
+    /** illegal hack: the last ImGui context */
+    void* lastImGuiContext = nullptr;
 
     /**
      * All of the verbatim loaded project files. We need to keep them to send them

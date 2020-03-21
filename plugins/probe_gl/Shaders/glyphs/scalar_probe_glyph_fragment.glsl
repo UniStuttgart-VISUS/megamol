@@ -7,6 +7,8 @@ layout(location = 1) in vec2 uv_coords;
 layout(location = 0) out vec4 albedo_out;
 layout(location = 1) out vec3 normal_out;
 layout(location = 2) out float depth_out;
+layout(location = 3) out int objID_out;
+layout(location = 4) out vec4 interactionData_out;
 
 vec3 fakeViridis(float lerp)
 {
@@ -52,7 +54,9 @@ void main() {
         float sample_value = mix(sample_0,sample_1,lerp);
 
         float sample_value_normalized = (sample_value - mesh_shader_params[draw_id].min_value) / (mesh_shader_params[draw_id].max_value - mesh_shader_params[draw_id].min_value);
-        out_colour = fakeViridis(sample_value_normalized);
+        //out_colour = fakeViridis(sample_value_normalized);
+		sampler2D tf_tx = sampler2D(mesh_shader_params[draw_id].tf_texture_handle);
+		out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
 
         if( radius > sample_value_normalized && radius < 0.96 ) discard;
     }
@@ -61,7 +65,12 @@ void main() {
     if(abs(radius - zero_value_radius) < 0.005) out_colour = vec3(1.0);
     if(radius > 0.96 && radius < 0.98) out_colour = vec3(0.0);
 
+    float test = dFdx(radius);
+
     albedo_out = vec4(out_colour,1.0);
     normal_out = vec3(0.0,0.0,1.0);
     depth_out = gl_FragCoord.z;
+
+    objID_out = mesh_shader_params[draw_id].probe_id;
+    interactionData_out = vec4(0.0);
 }

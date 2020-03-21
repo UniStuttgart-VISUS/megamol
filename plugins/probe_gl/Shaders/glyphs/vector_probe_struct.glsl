@@ -5,9 +5,13 @@ struct MeshShaderParams
     vec4 probe_direction;
     float scale;
 
-    float padding0;
-    float padding1;
+    int probe_id;
+    int state;
 
     float sample_cnt;
-    vec4 samples[32];
+    vec4 samples[32];  
+
+	uvec2 tf_texture_handle;
+	float tf_min;
+    float tf_max;
 };

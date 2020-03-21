@@ -192,6 +192,8 @@ private:
      */
     bool drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime);
 
+    bool setupGUI(vislib::math::Rectangle<int> viewport);
+
     /**
      * Callback for drawing the parameter window.
      *

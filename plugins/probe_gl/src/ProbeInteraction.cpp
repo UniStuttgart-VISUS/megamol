@@ -12,6 +12,7 @@ megamol::probe_gl::ProbeInteraction::ProbeInteraction()
     , last_active_probe_id(-1)
     , m_probe_fbo_slot("getProbeFBO", "")
     , m_hull_fbo_slot("getHullFBO", "")
+    , m_glyph_fbo_slot("getGlyphFBO", "")
     , m_interaction_collection_slot("deployInteractions","")
 {
     this->m_probe_fbo_slot.SetCompatibleCall<compositing::CallFramebufferGLDescription>();
@@ -19,6 +20,9 @@ megamol::probe_gl::ProbeInteraction::ProbeInteraction()
 
     this->m_hull_fbo_slot.SetCompatibleCall<compositing::CallFramebufferGLDescription>();
     this->MakeSlotAvailable(&this->m_hull_fbo_slot);
+
+    this->m_glyph_fbo_slot.SetCompatibleCall<compositing::CallFramebufferGLDescription>();
+    this->MakeSlotAvailable(&this->m_glyph_fbo_slot);
 
     this->m_interaction_collection_slot.SetCallback(
         CallProbeInteraction::ClassName(), "GetData", &ProbeInteraction::getInteractionCollection);
@@ -78,15 +82,19 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
 
     auto call_probe_fbo = this->m_probe_fbo_slot.CallAs<compositing::CallFramebufferGL>();
     auto call_hull_fbo = this->m_hull_fbo_slot.CallAs<compositing::CallFramebufferGL>();
+    auto call_glyph_fbo = this->m_glyph_fbo_slot.CallAs<compositing::CallFramebufferGL>();
 
     if (call_probe_fbo == NULL) return false;
     if (call_hull_fbo == NULL) return false;
+    if (call_glyph_fbo == NULL) return false;
 
     if ((!(*call_probe_fbo)(0))) return false;
     if ((!(*call_hull_fbo)(0))) return false;
+    if ((!(*call_glyph_fbo)(0))) return false;
 
     auto probe_fbo = call_probe_fbo->getData();
     auto hull_fbo = call_hull_fbo->getData();
+    auto glyph_fbo = call_glyph_fbo->getData();
 
     //TODO read obj ids from FBOs...
 
@@ -125,6 +133,37 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
         //std::cerr << err << std::endl;
     }
 
+    // bind fbo to read buffer for retrieving pixel data and bliting to default framebuffer
+    glyph_fbo->bindToRead(2);
+    {
+        // auto err = glGetError();
+        // std::cerr << err << std::endl;
+    }
+    // get object id at cursor location from framebuffer's second color attachment
+    float glyph_depth_pixel_data = 0.0;
+    // TODO check if cursor position is within framebuffer pixel range?
+    glReadPixels(static_cast<GLint>(this->m_cursor_x), glyph_fbo->getHeight() - static_cast<GLint>(this->m_cursor_y), 1,
+        1, GL_RED, GL_FLOAT, &glyph_depth_pixel_data);
+    {
+        // auto err = glGetError();
+        // std::cerr << err << std::endl;
+    }
+
+    // bind fbo to read buffer for retrieving pixel data
+    glyph_fbo->bindToRead(3);
+    {
+        // auto err = glGetError();
+        // std::cerr << err << std::endl;
+    }
+    // get object id at cursor location from framebuffer's second color attachment
+    GLint glyph_objId_pixel_data = -1;
+    // TODO check if cursor position is within framebuffer pixel range?
+    glReadPixels(static_cast<GLint>(this->m_cursor_x), glyph_fbo->getHeight() - static_cast<GLint>(this->m_cursor_y), 1,
+        1, GL_RED_INTEGER, GL_INT, &glyph_objId_pixel_data);
+    {
+        // auto err = glGetError();
+        // std::cerr << err << std::endl;
+    }
 
     // bind fbo to read buffer for retrieving pixel data and bliting to default framebuffer
     probe_fbo->bindToRead(3);
@@ -142,25 +181,54 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
         //std::cerr << err << std::endl;
     }
 
-    //std::cout << "Object ID at " << m_cursor_x << "," << m_cursor_y << " : " << probe_objId_pixel_data << std::endl;
+    //std::cout << "Object ID at " << m_cursor_x << "," << m_cursor_y << " : " << glyph_objId_pixel_data << std::endl;
 
-    if (probe_depth_pixel_data > hull_depth_pixel_data)
+    GLint objId = -1;
+    float depth = 0.0;
+
+    if (probe_depth_pixel_data > 0.0 && glyph_depth_pixel_data > 0.0) {
+        if (probe_depth_pixel_data < glyph_depth_pixel_data) {
+            objId = probe_objId_pixel_data;
+            depth = probe_depth_pixel_data;
+        } else {
+            objId = glyph_objId_pixel_data;
+            depth = glyph_depth_pixel_data;
+        }
+    }
+    else if (probe_depth_pixel_data > 0.0)
     {
-        probe_objId_pixel_data = -1;
+        objId = probe_objId_pixel_data;
+        depth = probe_depth_pixel_data;
+    }
+    else if (glyph_depth_pixel_data > 0.0) 
+    {
+        objId = glyph_objId_pixel_data;
+        depth = glyph_depth_pixel_data;
     }
 
-    if (probe_objId_pixel_data > -1)
+
+    if (depth > hull_depth_pixel_data)
+    {
+        objId = -1;
+    }
+
+    //std::cout << "Object ID at " << m_cursor_x << "," << m_cursor_y << " : " << objId << std::endl;
+
+    // Clear interactions from last frame
+    m_interactions->accessPendingManipulations().clear();
+
+    if (objId > -1)
     {
         m_interactions->accessPendingManipulations().push_back(
-            ProbeManipulation{InteractionType::HIGHLIGHT, static_cast<uint32_t>(probe_objId_pixel_data), 0, 0, 0});
+            ProbeManipulation{InteractionType::HIGHLIGHT, static_cast<uint32_t>(objId), 0, 0, 0});
     }
-    if (last_active_probe_id > 0 && last_active_probe_id != probe_objId_pixel_data)
+    if (last_active_probe_id > 0 && last_active_probe_id != objId)
     {
         m_interactions->accessPendingManipulations().push_back(
             ProbeManipulation{InteractionType::DEHIGHLIGHT, static_cast<uint32_t>(last_active_probe_id), 0, 0, 0});
     }
 
-    last_active_probe_id = probe_objId_pixel_data;
+    last_active_probe_id = objId;
 
     return true;
 }

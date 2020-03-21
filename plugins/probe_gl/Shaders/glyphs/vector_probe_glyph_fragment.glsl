@@ -12,6 +12,8 @@ layout(location = 4) in vec3 pixel_right;
 layout(location = 0) out vec4 albedo_out;
 layout(location = 1) out vec3 normal_out;
 layout(location = 2) out float depth_out;
+layout(location = 3) out int objID_out;
+layout(location = 4) out vec4 interactionData_out;
 
 vec3 fakeViridis(float lerp)
 {
@@ -38,6 +40,20 @@ void main() {
         return;
     }
     else if(uv_coords.y > 0.99 && uv_coords.x < uv_coords.y && uv_coords.x > 0.9)
+    {
+        albedo_out = vec4(1.0);
+        normal_out = vec3(0.0,0.0,1.0);
+        depth_out = gl_FragCoord.z;
+        return;
+    }
+    else if(uv_coords.x < 0.01 && uv_coords.x < uv_coords.y && uv_coords.y < 0.05)
+    {
+        albedo_out = vec4(1.0);
+        normal_out = vec3(0.0,0.0,1.0);
+        depth_out = gl_FragCoord.z;
+        return;
+    }
+    else if(uv_coords.y < 0.01 && uv_coords.x > uv_coords.y && uv_coords.x < 0.05)
     {
         albedo_out = vec4(1.0);
         normal_out = vec3(0.0,0.0,1.0);
@@ -85,9 +101,15 @@ void main() {
         float diff0 = sample_dot_probe - pixel_dot_probe;
         float diff1 = sample_dot_probe - arc_dist;
 
-        if( (arc_dist) > abs( sample_dot_probe ) ) discard;
+        float eps = -0.05;
+        if( (eps + arc_dist) > abs( sample_dot_probe ) ) discard;
 
-        out_colour = fakeViridis(sample_magnitude / 2.0);
+        sampler2D tf_tx = sampler2D(mesh_shader_params[draw_id].tf_texture_handle);
+        float tf_min = mesh_shader_params[draw_id].tf_min;
+        float tf_max = mesh_shader_params[draw_id].tf_max;
+        out_colour = texture(tf_tx, vec2((sample_magnitude - tf_min) / (tf_max-tf_min), 0.5) ).rgb;
+        //out_colour = fakeViridis( (sample_magnitude + 2.0) / 16.0);
+        
     }
     //else{
     //    // for now, try projection onto z-plane for billboards
@@ -99,7 +121,15 @@ void main() {
     //    out_colour = fakeViridis(sample_magnitude_0 / 2.0);
     //}
 
+    if(mesh_shader_params[draw_id].state == 1)
+    {
+        out_colour = vec3(1.0,0.0,1.0);
+    }
+
     albedo_out = vec4(out_colour,1.0);
     normal_out = vec3(0.0,0.0,1.0);
     depth_out = gl_FragCoord.z;
+
+    objID_out = mesh_shader_params[draw_id].probe_id;
+    interactionData_out = vec4(0.0);
 }

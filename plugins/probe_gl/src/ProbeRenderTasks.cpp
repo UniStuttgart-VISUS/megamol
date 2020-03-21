@@ -164,12 +164,12 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
             }
             auto probes = pc->getData();
 
-            for (auto itr = pending_manips.begin(); itr != pending_manips.end();) {
+            for (auto itr = pending_manips.begin(); itr != pending_manips.end(); ++itr) {
                 if (itr->type == HIGHLIGHT) 
                 {
                     // TODO remove from list and apply hightlight to render task
                     auto manipulation = *itr;
-                    itr = pending_manips.erase(itr);
+                    //itr = pending_manips.erase(itr);
 
                     std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[manipulation.obj_id]};
                     per_probe_data[0].highlighted = 1;
@@ -180,7 +180,7 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                 {
                     // TODO remove from list and apply hightlight to render task
                     auto manipulation = *itr;
-                    itr = pending_manips.erase(itr);
+                    //itr = pending_manips.erase(itr);
 
                     std::array<PerProbeDrawData,1> per_probe_data = { m_probe_draw_data[manipulation.obj_id] };
 
@@ -190,7 +190,7 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                 {
                     // TODO remove from list and apply hightlight to render task
                     auto manipulation = *itr;
-                    itr = pending_manips.erase(itr);
+                    //itr = pending_manips.erase(itr);
 
                     m_probe_draw_data[manipulation.obj_id].highlighted = 2;
                     std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[manipulation.obj_id]};

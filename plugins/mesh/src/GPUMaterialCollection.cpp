@@ -15,7 +15,7 @@
 namespace megamol {
 namespace mesh {
 
-void GPUMaterialCollecton::addMaterial(
+size_t GPUMaterialCollecton::addMaterial(
     megamol::core::CoreInstance* mm_core_inst,
     std::string  const& shader_btf_name,
     std::vector<std::shared_ptr<glowl::Texture>> const& textures) 
@@ -75,16 +75,20 @@ void GPUMaterialCollecton::addMaterial(
         std::cout << shader->getLog();
     }
 
-    addMaterial(shader, textures);
+    return addMaterial(shader, textures);
 }
 
-void GPUMaterialCollecton::addMaterial(
+size_t GPUMaterialCollecton::addMaterial(
     std::shared_ptr<Shader> const& shader, 
     std::vector<std::shared_ptr<glowl::Texture>> const& textures) 
 {
+    size_t retval = m_materials.size();
+
     m_materials.push_back(Material());
     m_materials.back().shader_program = shader;
     m_materials.back().textures = textures;
+
+    return retval;
 }
 
 void GPUMaterialCollecton::updateMaterialTexture(

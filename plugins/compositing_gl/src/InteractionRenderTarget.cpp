@@ -17,6 +17,7 @@ bool megamol::compositing::InteractionRenderTarget::create() {
     SimpleRenderTarget::create();
 
     m_GBuffer->createColorAttachment(GL_R32I, GL_RED, GL_INT); // object ids
+    m_GBuffer->createColorAttachment(GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT); // additional interaction information, e.g. clicked screen value
 
     return true; 
 }

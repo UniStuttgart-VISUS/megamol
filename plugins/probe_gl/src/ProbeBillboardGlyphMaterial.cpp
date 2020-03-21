@@ -5,7 +5,11 @@
 
 megamol::probe_gl::ProbeBillboardGlyphMaterial::ProbeBillboardGlyphMaterial() 
     : m_version(0)
-    , m_glyph_images_slot("GetProbes", "Slot for accessing a probe collection") {
+    , m_textured_glyph_mtl_idx(0)
+    , m_vector_glpyh_mtl_idx(0)
+    , m_scalar_glyph_mtl_idx(0)
+    , m_glyph_images_slot("GetProbes", "Slot for accessing a probe collection") 
+{
 
     this->m_glyph_images_slot.SetCompatibleCall<mesh::CallImageDescription>();
     this->MakeSlotAvailable(&this->m_glyph_images_slot);
@@ -60,9 +64,9 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
 
     // Set intial state of module
     ++m_version;
-    m_gpu_materials->addMaterial(m_textured_glyph_prgm);
-    m_gpu_materials->addMaterial(m_scalar_probe_glyph_prgm);
-    m_gpu_materials->addMaterial(m_vector_probe_glyph_prgm);
+    m_textured_glyph_mtl_idx = m_gpu_materials->addMaterial(m_textured_glyph_prgm);
+    m_scalar_glyph_mtl_idx = m_gpu_materials->addMaterial(m_scalar_probe_glyph_prgm);
+    m_vector_glpyh_mtl_idx = m_gpu_materials->addMaterial(m_vector_probe_glyph_prgm);
 
     return true;
 }
@@ -81,7 +85,11 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::getDataCallback(core::Call&
 
     // if there is a material connection to the right, pass on the material collection
     mesh::CallGPUMaterialData* rhs_mtl_call = this->m_mtl_callerSlot.CallAs<mesh::CallGPUMaterialData>();
-    if (rhs_mtl_call != NULL) rhs_mtl_call->setData(mtl_collection,0);
+    if (rhs_mtl_call != NULL){
+        auto rhs_version = rhs_mtl_call->version();
+        rhs_mtl_call->setData(mtl_collection, rhs_version);
+        (*rhs_mtl_call)(0);
+    }
 
     mesh::CallImage* ic = this->m_glyph_images_slot.CallAs<mesh::CallImage>();
     if (ic != NULL){
@@ -144,7 +152,6 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::getDataCallback(core::Call&
             mtl_collection->clearMaterials();
 
             mtl_collection->addMaterial(this->m_textured_glyph_prgm, textures);
-
             m_gpu_materials->addMaterial(this->m_scalar_probe_glyph_prgm);
             m_gpu_materials->addMaterial(this->m_vector_probe_glyph_prgm);
         }

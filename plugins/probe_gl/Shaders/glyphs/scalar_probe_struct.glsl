@@ -10,4 +10,9 @@ struct MeshShaderParams
 
     float sample_cnt;
     float samples[32];
+
+    int probe_id;
+    int state;
+
+    uvec2 tf_texture_handle;
 };
