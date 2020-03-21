@@ -12,6 +12,8 @@
 #include <array>
 #include <cmath>
 
+
+using namespace megamol;
 using namespace megamol::gui;
 using namespace megamol::core;
 
@@ -88,8 +90,8 @@ template <size_t PaletteSize> PresetGenerator ColormapAdapter(const float palett
             auto t = i / static_cast<double>(n - 1);
 
             // Linear interpolation from palette.
-            size_t i0 = std::floor(t * LastIndex);
-            size_t i1 = std::ceil(t * LastIndex);
+            size_t i0 = static_cast<size_t>(std::floor(t * LastIndex));
+            size_t i1 = static_cast<size_t>(std::ceil(t * LastIndex));
             double it = std::fmod(t * LastIndex, LastIndex);
             double r[2] = {static_cast<double>(palette[i0][0]), static_cast<double>(palette[i1][0])};
             double g[2] = {static_cast<double>(palette[i0][1]), static_cast<double>(palette[i1][1])};
@@ -152,7 +154,8 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , textureSize(256)
     , textureId(0)
-    , textureInvalid(false)
+    , textureInvalid(true)
+    , pendingChanges(true)
     , activeChannels{false, false, false, false}
     , currentNode(0)
     , currentChannel(0)
@@ -171,14 +174,15 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     this->widget_buffer.tex_size = textureSize;
     this->widget_buffer.gauss_sigma = zero[5];
     this->widget_buffer.range_value = zero[4];
-
-    this->textureInvalid = true;
 }
 
-void TransferFunctionEditor::SetTransferFunction(const std::string& tfs) {
-    if (activeParameter == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Missing active parameter to edit");
-        return;
+void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool useActiveParameter) {
+
+    if (useActiveParameter) {
+        if (activeParameter == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Missing active parameter to edit");
+            return;
+        }
     }
 
     bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
@@ -211,18 +215,22 @@ bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
         tfs, this->nodes, this->mode, this->textureSize, this->range);
 }
 
-bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
+bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter) {
+
+    if (useActiveParameter) {
+        if (this->activeParameter == nullptr) {
+            const char* message = "Changes have no effect.\n"
+                                  "Please set a transfer function parameter.\n";
+            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), message);
+        }
+    }
+
     assert(ImGui::GetCurrentContext() != nullptr);
     assert(this->nodes.size() > 1);
 
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
-    if (this->activeParameter == nullptr) {
-        const char* message = "Changes have no effect.\n"
-                              "Please set a transfer function parameter.\n";
-        ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), message);
-    }
 
     // Test if selected node is still in range
     if (this->nodes.size() <= this->currentNode) {
@@ -248,7 +256,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     ImGui::Separator();
 
     // Interval range -----------------------------------------------------
-    ImGui::PushItemWidth(tfw_item_width * 0.5 - style.ItemInnerSpacing.x);
+    ImGui::PushItemWidth(tfw_item_width * 0.5f - style.ItemInnerSpacing.x);
 
     ImGui::InputFloat("###min", &this->widget_buffer.min_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -274,7 +282,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     }
     ImGui::SameLine();
     ImGui::PopItemWidth();
-    ImGui::SetCursorPosX(tfw_item_width + style.ItemSpacing.x + style.ItemInnerSpacing.x);
+    ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x);
     ImGui::Text("Value Range");
 
     // Value slider -------------------------------------------------------
@@ -308,18 +316,17 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     }
 
     // Plot ---------------------------------------------------------------
-
     this->drawFunctionPlot(ImVec2(canvas_width, canvas_height));
 
     // Color channels -----------------------------------------------------
     ImGui::Checkbox("Red", &this->activeChannels[0]);
-    ImGui::SameLine(tfw_item_width * 0.26);
+    ImGui::SameLine(tfw_item_width * 0.26f);
     ImGui::Checkbox("Green", &this->activeChannels[1]);
-    ImGui::SameLine(tfw_item_width * 0.49);
+    ImGui::SameLine(tfw_item_width * 0.49f);
     ImGui::Checkbox("Blue", &this->activeChannels[2]);
-    ImGui::SameLine(tfw_item_width * 0.725);
+    ImGui::SameLine(tfw_item_width * 0.725f);
     ImGui::Checkbox("Alpha", &this->activeChannels[3]);
-    ImGui::SameLine(tfw_item_width + style.ItemSpacing.x + style.ItemInnerSpacing.x);
+    ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x);
     ImGui::Text("Color Channels");
 
     // Color editor for selected node -------------------------------------
@@ -344,9 +351,9 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     std::map<param::TransferFunctionParam::InterpolationMode, std::string> opts;
     opts[param::TransferFunctionParam::InterpolationMode::LINEAR] = "Linear";
     opts[param::TransferFunctionParam::InterpolationMode::GAUSS] = "Gauss";
-    int opts_cnt = opts.size();
+    size_t opts_cnt = opts.size();
     if (ImGui::BeginCombo("Interpolation", opts[this->mode].c_str())) {
-        for (int i = 0; i < opts_cnt; ++i) {
+        for (size_t i = 0; i < opts_cnt; ++i) {
             if (ImGui::Selectable(opts[(param::TransferFunctionParam::InterpolationMode)i].c_str(),
                     (this->mode == (param::TransferFunctionParam::InterpolationMode)i))) {
                 this->mode = (param::TransferFunctionParam::InterpolationMode)i;
@@ -378,7 +385,9 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     // --------------------------------------------------------------------
 
     // Create current texture data
-    bool imm_apply_tex_modified = this->textureInvalid;
+    if (this->textureInvalid) {
+        this->pendingChanges = true;
+    }
     if (this->textureInvalid) {
         if (this->mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
             param::TransferFunctionParam::LinearInterpolation(this->texturePixels, this->textureSize, this->nodes);
@@ -408,31 +417,46 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         this->textureInvalid = false;
     }
 
-    bool shouldApply = false;
+    bool apply_changes = false;
 
     // Return true for current changes being applied
+    const auto err_btn_color = ImVec4(0.6f, 0.0f, 0.0f, 1.0f);
+    const auto er_btn_hov_color = ImVec4(0.9f, 0.0f, 0.0f, 1.0f);
+    ImGui::PushStyleColor(ImGuiCol_Button, this->pendingChanges ? err_btn_color : style.Colors[ImGuiCol_Button]);
+    ImGui::PushStyleColor(
+        ImGuiCol_ButtonHovered, this->pendingChanges ? er_btn_hov_color : style.Colors[ImGuiCol_ButtonHovered]);
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
     if (ImGui::Button("Apply")) {
-        shouldApply = true;
+        apply_changes = true;
     }
+    ImGui::PopStyleColor(3);
+
     ImGui::SameLine();
+
     if (ImGui::Checkbox("Auto-apply", &this->immediateMode)) {
-        shouldApply = this->immediateMode;
+        apply_changes = this->immediateMode;
     }
 
-    if (this->immediateMode && imm_apply_tex_modified) {
-        shouldApply = true;
+    if (this->immediateMode && this->pendingChanges) {
+        apply_changes = true;
     }
 
-    if (shouldApply) {
-        if (this->activeParameter != nullptr) {
-            std::string tf;
-            if (this->GetTransferFunction(tf)) {
-                this->activeParameter->SetValue(tf);
+    if (apply_changes) {
+        this->pendingChanges = false;
+    }
+
+    if (useActiveParameter) {
+        if (apply_changes) {
+            if (this->activeParameter != nullptr) {
+                std::string tf;
+                if (this->GetTransferFunction(tf)) {
+                    this->activeParameter->SetValue(tf);
+                }
             }
         }
     }
 
-    return shouldApply;
+    return apply_changes;
 }
 
 
@@ -506,8 +530,8 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
         alpha_line_col,
     }};
 
-    int selected_node = -1;
-    int selected_chan = -1;
+    ImGuiID selected_node = GUI_INVALID_ID;
+    ImGuiID selected_chan = GUI_INVALID_ID;
     ImVec2 selected_delta = ImVec2(0.0f, 0.0f);
     // For each enabled color channel
     for (size_t c = 0; c < channelColors.size(); ++c) {
@@ -543,8 +567,8 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
             // Test for intersection of mouse position with node.
             ImVec2 d = ImVec2(point.x - mouse_cur_pos.x, point.y - mouse_cur_pos.y);
             if (sqrtf((d.x * d.x) + (d.y * d.y)) <= pointAndBorderRadius) {
-                selected_node = i;
-                selected_chan = c;
+                selected_node = static_cast<ImGuiID>(i);
+                selected_chan = static_cast<ImGuiID>(c);
                 selected_delta = d;
             }
         }
@@ -581,7 +605,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
         if (io.MouseClicked[0]) {
             // Left Click -> Change selected node selected node
-            if (selected_node >= 0) {
+            if (selected_node != GUI_INVALID_ID) {
                 this->currentNode = selected_node;
                 this->currentChannel = selected_chan;
                 this->currentDragChange = selected_delta;
@@ -666,8 +690,9 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
                 if ((selected_node > 0) &&
                     (selected_node < (this->nodes.size() - 1))) { // First and last node can't be deleted
                     this->nodes.erase(this->nodes.begin() + selected_node);
-                    if (this->currentNode >= selected_node) {
-                        this->currentNode = (unsigned int)std::max(0, (int)this->currentNode - 1);
+                    if (static_cast<ImGuiID>(this->currentNode) >= selected_node) {
+                        this->currentNode =
+                            static_cast<unsigned int>(std::max(0, static_cast<int>(this->currentNode) - 1));
                     }
                     this->textureInvalid = true;
                 }
