@@ -193,21 +193,19 @@ function(require_external NAME)
       return()
     endif()
 
+    include(GNUInstallDirs)
+
     if(WIN32)
-      set(GLFW_IMPORT_LIB "lib/glfw3dll.lib")
-      set(GLFW_LIB "lib/glfw3.dll")
-      set(MOVE_CMD COMMANDS COMMAND ${CMAKE_COMMAND} -E copy "\"<INSTALL_DIR>/lib/glfw3.dll\" \"<INSTALL_DIR>/bin/glfw3.dll\""
-                            COMMAND ${CMAKE_COMMAND} -E remove -f \"<INSTALL_DIR>/lib/glfw3.dll\")
+      set(GLFW_IMPORT_LIB "${CMAKE_INSTALL_LIBDIR}/glfw3dll.lib")
+      set(GLFW_LIB "bin/glfw3.dll")
     else()
-      set(GLFW_LIB "lib/libglfw.so")
-      set(MOVE_CMD)
+      set(GLFW_LIB "${CMAKE_INSTALL_LIBDIR}/libglfw.so")
     endif()
 
     add_external_project(glfw SHARED
       GIT_REPOSITORY https://github.com/glfw/glfw.git
-      GIT_TAG "3.2.1"
+      GIT_TAG "3.3.2"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_LIB}" "<INSTALL_DIR>/${GLFW_IMPORT_LIB}"
-      ${MOVE_CMD}
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DGLFW_BUILD_EXAMPLES=OFF
@@ -282,7 +280,8 @@ function(require_external NAME)
           "<SOURCE_DIR>/CMakeLists.txt")
 
       add_external_library(imgui
-      LIBRARY ${IMGUI_LIB})
+        LIBRARY ${IMGUI_LIB})
+
     endif()
 
     external_get_property(imgui SOURCE_DIR)

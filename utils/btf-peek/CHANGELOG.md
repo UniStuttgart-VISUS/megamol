@@ -1,7 +1,10 @@
 # Change Log
-All notable changes to the "btf-peek" extension will be documented in this file.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+### 0.0.2
 
-## [Unreleased]
-- Initial release
+* Added snippet reference support
+* provideDefinition is now asynchronous
+
+### 0.0.1
+
+* Initial release of btf-peek

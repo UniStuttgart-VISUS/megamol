@@ -24,30 +24,17 @@ namespace fsns = std::experimental::filesystem;
 #    endif
 #endif
 
+#include "mmcore/CoreInstance.h"
 
 #include <fstream>
 #include <iostream>
 #include <string>
 
-#include "mmcore/AbstractNamedObject.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/Module.h"
-
-#include "vislib/sys/AbstractReaderWriterLock.h"
-
 
 namespace megamol {
 namespace gui {
+namespace file {
 
-/** Type for filesystem paths. */
-typedef fsns::path PathType;
-
-/**
- * Check if given file or directory exists.
- *
- * @param path  The file or directory path.
- */
-inline bool PathExists(PathType path) { return fsns::exists(path); }
 
 /**
  * Check if file exists and has specified file extension.
@@ -55,12 +42,14 @@ inline bool PathExists(PathType path) { return fsns::exists(path); }
  * @param path  The file or directory path.
  * @param ext   The extension the given file should have.
  */
-inline bool HasExistingFileExtension(PathType path, std::string ext) {
-    if (!fsns::exists(static_cast<PathType>(path))) {
+template <typename T> inline bool FilesExistingExtension(const T& path_str, const std::string& ext) {
+    auto path = static_cast<fsns::path>(path_str);
+    if (!fsns::exists(path) || !fsns::is_regular_file(path)) {
         return false;
     }
-    return (path.extension().generic_string() == ext);
+    return (path.extension().generic_u8string() == ext);
 }
+
 
 /**
  * Check if file has specified file extension.
@@ -68,7 +57,11 @@ inline bool HasExistingFileExtension(PathType path, std::string ext) {
  * @param path  The file or directory path.
  * @param ext   The extension the given file should have.
  */
-inline bool HasFileExtension(PathType path, std::string ext) { return (path.extension().generic_string() == ext); }
+template <typename T> inline bool FileExtension(const T& path_str, const std::string& ext) {
+    auto path = static_cast<fsns::path>(path_str);
+    return (path.extension().generic_u8string() == ext);
+}
+
 
 /**
  * Search recursively for file or path beginning at given directory.
@@ -78,53 +71,135 @@ inline bool HasFileExtension(PathType path, std::string ext) { return (path.exte
  *
  * @return              The complete path of the found file, empty string otherwise.
  */
-inline std::string SearchFileRecursive(std::string file, PathType searchPath) {
-    std::string foundPath;
-    for (const auto& entry : fsns::recursive_directory_iterator(searchPath)) {
-        if (entry.path().filename().generic_string() == file) {
-            foundPath = entry.path().generic_string();
+template <typename T, typename S>
+inline std::string SearchFileRecursive(const T& search_path_str, const S& search_file_str) {
+    auto search_path = static_cast<fsns::path>(search_path_str);
+    auto file_path = static_cast<fsns::path>(search_file_str);
+    std::string found_path;
+    for (const auto& entry : fsns::recursive_directory_iterator(search_path)) {
+        if (entry.path().filename() == file_path) {
+            found_path = entry.path().generic_u8string();
             break;
         }
     }
-    return foundPath;
+    return found_path;
 }
 
+
 /**
- * Save project to file.
+ * Save currently loaded project to lua file.
  *
- * @param projectFilename The file name for the project.
- * @param coreInstance    The pointer to the core instance.
+ * @param project_filename The file name for the project.
+ * @param core_instance    The pointer to the core instance.
  *
  * @return True on success, false otherwise.
  */
-inline bool SaveProjectFile(std::string projectFilename, megamol::core::CoreInstance* coreInstance) {
+inline bool SaveProjectFile(const std::string& project_filename, megamol::core::CoreInstance* core_instance) {
 
-    if (coreInstance == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("[SaveProjectFile] Pointer to CoreInstance is nullptr.");
+    if (core_instance == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Pointer to CoreInstance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     std::string serInstances, serModules, serCalls, serParams;
-    coreInstance->SerializeGraph(serInstances, serModules, serCalls, serParams);
+    core_instance->SerializeGraph(serInstances, serModules, serCalls, serParams);
     auto confstr = serInstances + "\n" + serModules + "\n" + serCalls + "\n" + serParams + "\n";
 
     try {
         std::ofstream file;
-        file.open(projectFilename);
+        file.open(project_filename);
         if (file.good()) {
             file << confstr.c_str();
             file.close();
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("[SaveProjectFile] Couldn't create project file.");
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Unable to create project file. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             file.close();
             return false;
         }
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
     } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    return true;
+}
+
+
+/**
+ * Writes content to file.
+ *
+ * @param filename      The file name of the file.
+ * @param in_content    The content to wirte to the file.
+ *
+ * @return True on success, false otherwise.
+ */
+inline bool WriteFile(const std::string& filename, const std::string& in_content) {
+
+    try {
+        std::ofstream file;
+        file.open(filename, std::ios_base::out);
+        if (file.is_open() && file.good()) {
+            file << in_content.c_str();
+            file.close();
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Unable to create file. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            file.close();
+            return false;
+        }
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
     }
 
     return true;
 }
 
 
+/**
+ * Read content from file.
+ *
+ * @param filename      The file name of the file.
+ * @param in_content    The content to wirte to the file.
+ *
+ * @return True on success, false otherwise.
+ */
+inline bool ReadFile(const std::string& filename, std::string& out_content) {
+
+    try {
+        std::ifstream file;
+        file.open(filename, std::ios_base::in);
+        if (file.is_open() && file.good()) {
+            out_content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+            file.close();
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Unable to open file. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            file.close();
+            return false;
+        }
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return true;
+}
+
+
+} // namespace file
 } // namespace gui
 } // namespace megamol
 
