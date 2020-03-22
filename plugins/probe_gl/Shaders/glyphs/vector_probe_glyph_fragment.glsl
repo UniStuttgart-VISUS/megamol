@@ -6,8 +6,7 @@ uniform mat4 view_mx;
 layout(location = 0) flat in int draw_id;
 layout(location = 1) in vec2 uv_coords;
 layout(location = 2) in vec3 pixel_vector;
-layout(location = 3) in vec3 glyph_up;
-layout(location = 4) in vec3 pixel_right;
+layout(location = 3) in vec3 cam_vector;
 
 layout(location = 0) out vec4 albedo_out;
 layout(location = 1) out vec3 normal_out;
@@ -30,6 +29,10 @@ vec3 projectOntoPlane(vec3 v, vec3 n)
 };
 
 void main() {
+
+    if(dot(cam_vector,mesh_shader_params[draw_id].probe_direction.xyz) < 0.0 ){
+        discard;
+    }
 
     // For debugging purposes, hightlight glyph up and glyph right directions
     if(uv_coords.x > 0.99 && uv_coords.x > uv_coords.y && uv_coords.y > 0.9) 
@@ -70,6 +73,9 @@ void main() {
     float pixel_dot_probe = dot(pixel_vector,mesh_shader_params[draw_id].probe_direction.xyz);
 
     if(r > 1.0) discard;
+
+	// inverse direction of sample lookup to map higher sample depth to smaller radius
+	r = 1.0 - r;
 
     // identify section of radar glyph that the pixel belongs to
     int radar_section_0 = int(floor(r * radar_sections_cnt));

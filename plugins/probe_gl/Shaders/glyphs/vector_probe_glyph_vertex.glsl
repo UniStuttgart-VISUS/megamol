@@ -7,8 +7,7 @@ uniform mat4 proj_mx;
 layout(location = 0) flat out int draw_id;
 layout(location = 1) out vec2 uv_coords;
 layout(location = 2) out vec3 pixel_vector;
-layout(location = 3) out vec3 glyph_up_out;
-layout(location = 4) out vec3 pixel_right_out;
+layout(location = 3) out vec3 cam_vector;
 
 //http://www.neilmendoza.com/glsl-rotation-about-an-arbitrary-axis/
 mat4 rotationMatrix(vec3 axis, float angle)
@@ -72,6 +71,7 @@ void main()
 
     // tilt glyph towards camera a little bit
     vec3 cam_front = normalize(transpose(mat3(view_mx)) * vec3(0.0,0.0,-1.0));
+    cam_vector = cam_front;
 
     float probe_dot_cam = dot(probe_direction, cam_front);
     if( probe_dot_cam > 0.0 )
@@ -139,9 +139,6 @@ void main()
         //pixel_vector = vec3(dot(glyph_right_0,glyph_right_1),0.0,0.0);
         */
     }
-
-    glyph_up_out = glyph_up;
-    pixel_right_out = glyph_right;
     
     //gl_Position = clip_pos + vec4(bboard_vertex.x * mesh_shader_params[gl_DrawIDARB].scale,
     //                             bboard_vertex.y * mesh_shader_params[gl_DrawIDARB].scale * aspect, 0.0, 0.0);
