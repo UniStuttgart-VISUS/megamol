@@ -235,6 +235,10 @@ bool SampleAlongPobes::getMetaData(core::Call& call) {
     auto vars = cd->getAvailableVars();
     for (auto var : vars) {
         this->_parameter_to_sample_slot.Param<core::param::FlexEnumParam>()->AddValue(var);
+        this->_vec_param_to_samplex_x.Param<core::param::FlexEnumParam>()->AddValue(var);
+        this->_vec_param_to_samplex_y.Param<core::param::FlexEnumParam>()->AddValue(var);
+        this->_vec_param_to_samplex_z.Param<core::param::FlexEnumParam>()->AddValue(var);
+        this->_vec_param_to_samplex_w.Param<core::param::FlexEnumParam>()->AddValue(var);
     }
 
     // put metadata in mesh call
