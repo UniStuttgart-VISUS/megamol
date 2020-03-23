@@ -338,7 +338,7 @@ bool megamol::gui::configurator::Parameter::Presentation::presentation_button(vo
             case (Presentations::PIN_VALUE_TO_MOUSE):
                 presentation_str = "Pin Value to Mouse";
                 break;
-            defalt:
+            default:
                 break;
             }
             if (presentation_str.empty()) break;
