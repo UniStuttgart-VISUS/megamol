@@ -96,7 +96,7 @@ std::string megamol::gui::configurator::Parameter::GetValueString(void) {
             case (Parameter::ParamType::INT): {
                 auto param = megamol::core::param::IntParam(arg);
                 value_string = std::string(param.ValueString().PeekBuffer());
-            }
+            } break;
             case (Parameter::ParamType::ENUM): {
                 auto param = megamol::core::param::EnumParam(arg);
                 // Initialization of enum storage required
@@ -105,7 +105,7 @@ std::string megamol::gui::configurator::Parameter::GetValueString(void) {
                     param.SetTypePair(pair.first, pair.second.c_str());
                 }
                 value_string = std::string(param.ValueString().PeekBuffer());
-            }
+            } break;
             default:
                 break;
             }
@@ -114,23 +114,19 @@ std::string megamol::gui::configurator::Parameter::GetValueString(void) {
             case (Parameter::ParamType::STRING): {
                 auto param = megamol::core::param::StringParam(arg.c_str());
                 value_string = std::string(param.ValueString().PeekBuffer());
-                break;
-            }
+            } break;
             case (Parameter::ParamType::TRANSFERFUNCTION): {
                 auto param = megamol::core::param::TransferFunctionParam(arg);
                 value_string = std::string(param.ValueString().PeekBuffer());
-                break;
-            }
+            } break;
             case (Parameter::ParamType::FILEPATH): {
                 auto param = megamol::core::param::FilePathParam(arg.c_str());
                 value_string = std::string(param.ValueString().PeekBuffer());
-                break;
-            }
+            } break;
             case (Parameter::ParamType::FLEXENUM): {
                 auto param = megamol::core::param::FlexEnumParam(arg.c_str());
                 value_string = std::string(param.ValueString().PeekBuffer());
-                break;
-            }
+            } break;
             default:
                 break;
             }
