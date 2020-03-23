@@ -73,6 +73,34 @@ public:
         return nullptr;
     }
 
+    /**
+     * Answer the currently stored data
+     *
+     * @return The currently stored data
+     */
+    ClusteringData GetData(void) const;
+
+    /**
+     * Set the stored data
+     *
+     * @param data The new data
+     */
+    void SetData(const ClusteringData& data);
+
+    /**
+     * Answer the currently stored metadata
+     *
+     * @return The currently stored metadata
+     */
+    ClusteringMetaData GetMetaData(void) const;
+
+    /**
+     * Set the stored metadata
+     *
+     * @param data The new metadata
+     */
+    void SetMetaData(const ClusteringMetaData& metadata);
+
 private:
     /** The sent data */
     ClusteringData data;

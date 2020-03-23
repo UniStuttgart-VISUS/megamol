@@ -1,9 +1,10 @@
 #pragma once
 
 #include "mmcore/Call.h"
-#include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
 namespace molsurfmapcluster {
@@ -69,9 +70,15 @@ protected:
 private:
     /** Slot to retrieve the image data */
     core::CallerSlot getImageSlot;
+    core::CallerSlot getImageSlot2;
+    core::CallerSlot getImageSlot3;
+    core::CallerSlot getImageSlot4;
 
     /** Slot to send the resulting clustering over */
     core::CalleeSlot sendClusterSlot;
+
+    /** Parameter to enable clustering using multiple maps */
+    core::param::ParamSlot useMultipleMapsParam;
 
     /** The last hash of the incoming data */
     uint64_t lastDataHash;
@@ -80,5 +87,5 @@ private:
     uint64_t dataHashOffset;
 };
 
-} // namespace MolSurfMapClustering
+} // namespace molsurfmapcluster
 } // namespace megamol

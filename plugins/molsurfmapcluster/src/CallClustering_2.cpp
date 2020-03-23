@@ -27,3 +27,23 @@ CallClustering_2::CallClustering_2(void) : Call() {
 CallClustering_2::~CallClustering_2(void) {
     // intentionally empty
 }
+
+/*
+ * CallClustering_2::GetData
+ */
+ClusteringData CallClustering_2::GetData(void) const { return this->data; }
+
+/*
+ * CallClustering_2::GetMetaData
+ */
+ClusteringMetaData CallClustering_2::GetMetaData(void) const { return this->metadata; }
+
+/*
+ * CallClustering_2::SetData
+ */
+void CallClustering_2::SetData(const ClusteringData& data) { this->data = data; }
+
+/*
+ * CallClustering_2::SetMetaData
+ */
+void CallClustering_2::SetMetaData(const ClusteringMetaData& metadata) { this->metadata = metadata; }

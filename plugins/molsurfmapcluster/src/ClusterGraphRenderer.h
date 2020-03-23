@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/Renderer2DModule.h"
 
@@ -71,7 +72,13 @@ protected:
 private:
     /** Slot for the cluster data */
     core::CallerSlot clusterDataSlot;
+
+    /** Parameter setting the height of the used viewport */
+    core::param::ParamSlot viewportHeightParam;
+
+    /** Parameter setting the width of the used viewport */
+    core::param::ParamSlot viewportWidthParam;
 };
 
-} // namespace MolSurfMapCluster
+} // namespace molsurfmapcluster
 } // namespace megamol
