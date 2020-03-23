@@ -101,13 +101,8 @@ public:
 
     bool RenamePopUp(const std::string& caption, bool open_popup, std::string& rename);
 
-
-#ifdef GUI_USE_FILESYSTEM
-
-    enum FileBrowserFlag { SAVE, LOAD };
+    enum FileBrowserFlag { SAVE, LOAD, SELECT };
     bool FileBrowserPopUp(FileBrowserFlag flag, const std::string& label, bool open_popup, std::string& inout_filename);
-
-#endif // GUI_USE_FILESYSTEM
 
 
     // Misc widgets -------------------------------------------------------
@@ -119,9 +114,12 @@ public:
     enum FixedSplitterSide { LEFT, RIGHT };
     bool VerticalSplitter(FixedSplitterSide fixed_side, float& size_left, float& size_right);
 
+    /** "Point in Circle" Button */
+    bool PointCircleButton(const std::string& label = "");
 
     /** "Point in Circle" Button */
-    void PointCircleButton(const std::string& label = "");
+    bool FileBrowserButton(std::string& inout_filename);    
+
 
     // UTF8 String En-/Decoding -----------------------------------------------
 
@@ -135,7 +133,7 @@ public:
     // String search widget ---------------------------------------------------
 
     /** Show string serach widget. */
-    void StringSearch(const std::string& label, const std::string& help);
+    bool StringSearch(const std::string& label, const std::string& help);
 
     /**
      * Returns true if search string is found in source as a case insensitive substring.

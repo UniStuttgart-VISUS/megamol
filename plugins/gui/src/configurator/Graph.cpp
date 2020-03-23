@@ -438,7 +438,7 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
         this->canvas.scrolling = ImVec2(0.0f, 0.0f);
         this->canvas.updated = true;
     }
-    this->utils.HelpMarkerToolTip("Middle Mouse Button");
+    //this->utils.HelpMarkerToolTip("Middle Mouse Button");
     ImGui::SameLine();
 
     ImGui::Text("Zooming: %.2f", this->canvas.zooming);
@@ -447,8 +447,7 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
         this->canvas.zooming = 1.0f;
         this->canvas.updated = true;
     }
-    this->utils.HelpMarkerToolTip("Mouse Wheel");
-
+    //this->utils.HelpMarkerToolTip("Mouse Wheel");
     ImGui::SameLine();
 
     ImGui::Checkbox("Grid", &this->show_grid);
@@ -514,6 +513,12 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     ImGui::BeginChild(
         "region", ImVec2(in_child_width, 0.0f), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
 
+    // Disable left click checks for mouse positions lying outside the canvas or when any pop-up is open (deselect check for graph items)
+    bool left_click = io.MouseClicked[0];
+    if (left_click && !ImGui::IsWindowHovered()) {
+        io.MouseClicked[0] = false;
+    }
+
     // Zooming and Scaling  -----------
     /// Must be checked inside canvas child window.
     if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) {
@@ -561,23 +566,11 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     if ((this->canvas.offset.x != new_offset.x) || (this->canvas.offset.y != new_offset.y)) {
         this->canvas.updated = true;
     }
-    this->canvas.offset = new_offset;
+    this->canvas.offset = new_offset;   
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
     draw_list->ChannelsSplit(2); /// Both channels are used by subsequent graph elements!
-
-    // Propagete only left clicks within the canvas
-    bool left_click = io.MouseClicked[0];
-    ImVec2 mouse_pos = ImGui::GetMousePos();
-    float xmin = this->canvas.position.x;
-    float ymin = this->canvas.position.y;
-    float xmax = xmin + this->canvas.size.x;
-    float ymax = ymin + this->canvas.size.y;
-    if (left_click &&
-        !((mouse_pos.x >= xmin) && (mouse_pos.x <= xmax) && (mouse_pos.y >= ymin) && (mouse_pos.y <= ymax))) {
-        io.MouseClicked[0] = false;
-    }
 
     // Display grid -------------------
     if (this->show_grid) {
@@ -681,6 +674,7 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
     auto search_string = this->utils.GetSearchString();
 
     // Mode
+    ImGui::BeginGroup();
     this->utils.PointCircleButton("Mode");
     if (ImGui::BeginPopupContextItem("param_mode_button_context", 0)) { // 0 = left mouse button
         bool changed = false;
@@ -701,6 +695,7 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
         }
         ImGui::EndPopup();
     }
+    ImGui::EndGroup();
 
     if (this->params_expert) {
         ImGui::SameLine();

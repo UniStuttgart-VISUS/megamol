@@ -220,7 +220,10 @@ bool GUIUtils::Utf8Encode(std::string& str) const {
 }
 
 
-void megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::string& help) {
+bool megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::string& help) {
+
+    bool retval = false;
+
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -249,6 +252,9 @@ void megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::stri
     this->Utf8Encode(this->search_string);
     ImGui::InputText("Search", &this->search_string, ImGuiInputTextFlags_AutoSelectAll);
     this->Utf8Decode(this->search_string);
+    if (ImGui::IsItemActive()) {
+        retval = true;
+    }
 
     ImGui::PopItemWidth();
     ImGui::SameLine();
@@ -257,6 +263,8 @@ void megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::stri
 
     ImGui::PopID();
     ImGui::EndGroup();
+
+    return retval;
 }
 
 
@@ -322,55 +330,97 @@ bool megamol::gui::GUIUtils::VerticalSplitter(FixedSplitterSide fixed_side, floa
 }
 
 
-void megamol::gui::GUIUtils::PointCircleButton(const std::string& label) {
+bool megamol::gui::GUIUtils::PointCircleButton(const std::string& label) {
+
+    bool retval = false;
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
 
-    ImGui::BeginGroup();
-
-    float height = ImGui::GetFrameHeight();
-    float half_height = height / 2.0f;
+    float edge_length = ImGui::GetFrameHeight();
+    float half_edge_length = edge_length / 2.0f;
     ImVec2 widget_start_pos = ImGui::GetCursorScreenPos();
 
+    if (!label.empty()) {
+        float text_x_offset_pos = edge_length + style.ItemInnerSpacing.x;
+        ImGui::SetCursorScreenPos(widget_start_pos + ImVec2(text_x_offset_pos, 0.0f));
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text(label.c_str());
+        ImGui::SetCursorScreenPos(widget_start_pos);
+    }
+
     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]));
-    ImGui::BeginChild("special_button_background", ImVec2(height, height), false,
+    ImGui::BeginChild("special_button_background", ImVec2(edge_length, edge_length), false,
         ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
 
-    float thickness = height / 5.0f;
-    ImVec2 center = widget_start_pos + ImVec2(half_height, half_height);
-
+    float thickness = edge_length / 5.0f;
+    ImVec2 center = widget_start_pos + ImVec2(half_edge_length, half_edge_length);
     ImU32 color_front = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
-
     draw_list->AddCircleFilled(center, thickness, color_front, 12);
     draw_list->AddCircle(center, 2.0f * thickness, color_front, 12, (thickness / 2.0f));
+
+    ImVec2 rect = ImVec2(edge_length, edge_length);
+    retval = ImGui::InvisibleButton("special_button", rect);
+
     ImGui::EndChild();
     ImGui::PopStyleColor();
 
-    if (!label.empty()) {
-        ImGui::SameLine();
-        ImGui::AlignTextToFramePadding();
-        ImGui::Text(label.c_str());
-    }
-
-    ImGui::SetCursorScreenPos(widget_start_pos);
-    ImVec2 rect = ImVec2(height, height);
-    ImGui::InvisibleButton("special_button", rect);
-
-    ImGui::EndGroup();
+    return retval;
 }
 
 
-#ifdef GUI_USE_FILESYSTEM
+bool megamol::gui::GUIUtils::FileBrowserButton(std::string& inout_filename) {
+
+    assert(ImGui::GetCurrentContext() != nullptr);
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    float edge_length = ImGui::GetFrameHeight();
+    float half_edge_length = edge_length / 2.0f;
+    ImVec2 widget_start_pos = ImGui::GetCursorScreenPos();
+
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]));
+    ImGui::BeginChild("filebrowser_button_background", ImVec2(edge_length, edge_length), false,
+        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
+
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
+
+    float width = half_edge_length *0.7f;
+    float height = width *0.7f;
+
+    ImVec2 center = widget_start_pos + ImVec2(half_edge_length, half_edge_length);
+    ImVec2 upper_left = center - ImVec2(width, height);
+    ImVec2 lower_right = center + ImVec2(width, height);
+    ImVec4 color_front = style.Colors[ImGuiCol_ButtonActive];
+    color_front.w = 1.0f;
+    draw_list->AddRectFilled(upper_left, lower_right, ImGui::ColorConvertFloat4ToU32(color_front), 1.0f);
+
+    center += ImVec2(half_edge_length*0.25f, half_edge_length*0.25f);
+    upper_left = center - ImVec2(width, height);
+    lower_right = center + ImVec2(width, height);
+    color_front = style.Colors[ImGuiCol_ButtonHovered];
+    color_front.w = 1.0f;
+    draw_list->AddRectFilled(upper_left, lower_right, ImGui::ColorConvertFloat4ToU32(color_front), 1.0f);
+
+    ImVec2 rect = ImVec2(edge_length, edge_length);
+    bool popup_select_file = ImGui::InvisibleButton("special_button", rect);
+
+    ImGui::EndChild();
+    ImGui::PopStyleColor();
+
+    return this->FileBrowserPopUp(FileBrowserFlag::SELECT, "Select File", popup_select_file, inout_filename);
+}
+
 
 bool megamol::gui::GUIUtils::FileBrowserPopUp(
-    FileBrowserFlag flag, const std::string& label, bool open_popup, std::string& inout_filename) {
+    megamol::gui::GUIUtils::FileBrowserFlag flag, const std::string& label, bool open_popup, std::string& inout_filename) {
 
     bool retval = false;
 
+#ifdef GUI_USE_FILESYSTEM
     try {
         std::string popup_name = label;
         ImGui::PushID(label.c_str());
@@ -403,6 +453,14 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
 
             // Path ---------------------------------------------------
             auto last_file_path_str = this->file_path_str;
+            if (ImGui::ArrowButton("###arrow_up_directory", ImGuiDir_Up)) {
+                fsns::path tmp_file_path = static_cast<fsns::path>(this->file_path_str);
+                if (tmp_file_path.has_parent_path()) {
+                    // Assuming that parent is still valid directory
+                    this->file_path_str = tmp_file_path.parent_path().generic_u8string();
+                }
+            }
+            ImGui::SameLine();
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             this->Utf8Encode(this->file_path_str);
             ImGui::InputText("Directory", &this->file_path_str, ImGuiInputTextFlags_AutoSelectAll);
@@ -417,7 +475,6 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
             }
 
             // File browser selectables ---------------------------------------
-
             auto select_flags = ImGuiSelectableFlags_DontClosePopups;
             float child_select_height =
                 (ImGui::GetContentRegionAvail().y - (ImGui::GetTextLineHeightWithSpacing() * this->additional_lines) -
@@ -471,7 +528,7 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
                 for (const auto& path_pair : this->child_paths) {
                     // Different color for directories
                     if (path_pair.second) {
-                        ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
                     }
                     auto label = path_pair.first.filename().generic_u8string();
                     if (ImGui::Selectable(label.c_str(), (label == this->file_name_str), select_flags)) {
@@ -485,10 +542,8 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
                     if (path_pair.second) {
                         ImGui::PopStyleColor();
                     }
-                    if (flag == GUIUtils::FileBrowserFlag::LOAD) {
-                        if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
-                            apply = true;
-                        }
+                    if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
+                        apply = true;
                     }
                 }
             }
@@ -528,18 +583,20 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
                 label = "Save";
             } else if (flag == GUIUtils::FileBrowserFlag::LOAD) {
                 label = "Load";
-            }
-            const auto err_btn_color = ImVec4(0.6f, 0.0f, 0.0f, 1.0f);
-            const auto er_btn_hov_color = ImVec4(0.9f, 0.0f, 0.0f, 1.0f);
-            ImGui::PushStyleColor(ImGuiCol_Button,
-                !(this->valid_directory && this->valid_file) ? err_btn_color : style.Colors[ImGuiCol_Button]);
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-                !(this->valid_directory && this->valid_file) ? er_btn_hov_color : style.Colors[ImGuiCol_ButtonHovered]);
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
+            } else if (flag == GUIUtils::FileBrowserFlag::SELECT) {
+                label = "Select";
+            }            
+            // const auto err_btn_color = ImVec4(0.6f, 0.0f, 0.0f, 1.0f);
+            // const auto er_btn_hov_color = ImVec4(0.9f, 0.0f, 0.0f, 1.0f);
+            // ImGui::PushStyleColor(ImGuiCol_Button,
+            //     !(this->valid_directory && this->valid_file) ? err_btn_color : style.Colors[ImGuiCol_Button]);
+            // ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+            //     !(this->valid_directory && this->valid_file) ? er_btn_hov_color : style.Colors[ImGuiCol_ButtonHovered]);
+            //ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
             if (ImGui::Button(label.c_str())) {
                 apply = true;
             }
-            ImGui::PopStyleColor(3);
+            //ImGui::PopStyleColor(3);
 
             ImGui::SameLine();
 
@@ -577,9 +634,14 @@ bool megamol::gui::GUIUtils::FileBrowserPopUp(
         return false;
     }
 
+#else // GUI_USE_FILESYSTEM
+    vislib::sys::Log::DefaultLog.WriteError("Filesystem functionality not available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+#endif // GUI_USE_FILESYSTEM
+
     return retval;
 }
 
+#ifdef GUI_USE_FILESYSTEM
 
 bool megamol::gui::GUIUtils::splitPath(const fsns::path& in_file_path, std::string& out_path, std::string& out_file) {
 
@@ -630,6 +692,8 @@ void megamol::gui::GUIUtils::validateFile(const std::string& file_str, GUIUtils:
         this->valid_file = true;
         this->valid_ending = true;
 
+        fsns::path tmp_file_path = static_cast<fsns::path>(this->file_path_str) / static_cast<fsns::path>(file_str);   
+        
         if (flag == GUIUtils::FileBrowserFlag::SAVE) {
             // Warn when no file name is given
             if (file_str.empty()) {
@@ -637,33 +701,24 @@ void megamol::gui::GUIUtils::validateFile(const std::string& file_str, GUIUtils:
                 this->additional_lines++;
                 this->valid_file = false;
             } else {
-
                 // Warn when file has not required extension
                 if (!file::FileExtension<std::string>(file_str, ext)) {
                     this->file_warning += "Appending required file extension '" + ext + "'\n";
                     this->additional_lines++;
                     this->valid_ending = false;
                 }
-
                 std::string actual_filename = file_str;
                 if (!this->valid_ending) {
                     actual_filename.append(ext);
                 }
-                fsns::path tmp_file_path =
-                    static_cast<fsns::path>(this->file_path_str) / static_cast<fsns::path>(actual_filename);
-
+                tmp_file_path =
+                    static_cast<fsns::path>(this->file_path_str) / static_cast<fsns::path>(actual_filename);                    
+        
                 // Warn when file already exists
                 if (fsns::exists(tmp_file_path) && fsns::is_regular_file(tmp_file_path)) {
                     this->file_warning += "Overwriting existing file.\n";
                     this->additional_lines++;
-                }
-
-                // Error when file is directory
-                if (fsns::is_directory(tmp_file_path)) {
-                    this->file_error += "File is directory.\n";
-                    this->additional_lines++;
-                    this->valid_file = false;
-                }
+                }               
             }
         } else if (flag == GUIUtils::FileBrowserFlag::LOAD) {
             // Error when file has not required extension
@@ -672,8 +727,18 @@ void megamol::gui::GUIUtils::validateFile(const std::string& file_str, GUIUtils:
                 this->additional_lines++;
                 this->valid_ending = false;
                 this->valid_file = false;
-            }
+            }           
+        } else if (flag == GUIUtils::FileBrowserFlag::SELECT) {
+            // nothing to check ...
         }
+
+        // Error when file is directory
+        if (fsns::is_directory(tmp_file_path)) {
+            this->file_error += "File is directory.\n";
+            this->additional_lines++;
+            this->valid_file = false;
+        }  
+
     } catch (fsns::filesystem_error e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);

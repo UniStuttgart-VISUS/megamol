@@ -142,7 +142,8 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 
     bool popup_save_file = false;
     bool popup_load_file = false;
-
+    bool popup_help = false;
+    
     if (ImGui::BeginMenuBar()) {
 
         if (ImGui::BeginMenu("File")) {
@@ -153,13 +154,11 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                     this->add_empty_project();
                 }
 
-#ifdef GUI_USE_FILESYSTEM
                 // Load project from LUA file
                 if (ImGui::MenuItem("File", nullptr)) {
                     this->add_project_graph_uid = GUI_INVALID_ID;
                     popup_load_file = true;
                 }
-#endif // GUI_USE_FILESYSTEM
 
                 if (ImGui::MenuItem("Running")) {
                     this->graph_manager.LoadProjectCore(this->get_unique_project_name(), core_instance);
@@ -171,13 +170,11 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 
             if (ImGui::BeginMenu("Add Project")) {
 
-#ifdef GUI_USE_FILESYSTEM
                 // Add project from LUA file to current project
                 if (ImGui::MenuItem("File", nullptr, false, (this->graph_uid != GUI_INVALID_ID))) {
                     this->add_project_graph_uid = this->graph_uid;
                     popup_load_file = true;
                 }
-#endif // GUI_USE_FILESYSTEM
 
                 if (ImGui::MenuItem("Running", nullptr, false, (this->graph_uid != GUI_INVALID_ID))) {
                     this->graph_manager.AddProjectCore(this->graph_uid, core_instance);
@@ -187,31 +184,19 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                 ImGui::EndMenu();
             }
 
-#ifdef GUI_USE_FILESYSTEM
             // Save currently active project to LUA file
             if (ImGui::MenuItem("Save Project", nullptr, false, (this->graph_uid != GUI_INVALID_ID))) {
                 popup_save_file = true;
             }
-#endif // GUI_USE_FILESYSTEM
 
             ImGui::EndMenu();
         }
 
         ImGui::SameLine();
-        std::string info_text = "----- Additonal Options -----\n"
-                                "- Add Module from Stock List to Graph\n"
-                                "    - [Double Left Click]\n"
-                                "    - [Richt Click] on Selected Module -> Context Menu: Add\n"
-                                "- Delete Selected Module/Call from Graph\n"
-                                "    - Select item an press [Delete]\n"
-                                "    - [Richt Click] on Selected Item -> Context Menu: Delete\n"
-                                "- Rename Graph or Module\n"
-                                "    - [Richt Click] on Graph Tab or Module -> Context Menu: Rename\n"
-                                "- Collapse/Expand Splitter\n"
-                                "    - [Double Richt Click] on Splitter\n"
-                                "- Create Call between Module Slots\n"
-                                "    - Select Slot and Drag&Drop Call to other Highlighted Compatible Slot.";
-        this->utils.HelpMarkerToolTip(info_text.c_str(), "[?]");
+
+        if (ImGui::MenuItem("Help")) {
+            popup_help = true;
+        }
 
         // Info text ----------------------------------------------------------
         ImGui::SameLine(260.0f);
@@ -221,8 +206,9 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
         ImGui::EndMenuBar();
     }
 
-    // SAVE/LOAD PROJECT pop-up
-#ifdef GUI_USE_FILESYSTEM
+    bool confirmed, aborted;
+
+    // Save/Load project pop-up
     bool popup_save_failed = false;
     bool popup_load_failed = false;
     if (this->utils.FileBrowserPopUp(
@@ -234,13 +220,29 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
             GUIUtils::FileBrowserFlag::SAVE, "Save Project", popup_save_file, this->project_filename)) {
         popup_save_failed = !this->graph_manager.SaveProjectFile(this->graph_uid, this->project_filename);
     }
-    bool confirmed, aborted;
     this->utils.MinimalPopUp("Failed to Save Project", popup_save_failed,
         "See console log output for more information.", "", confirmed, "Cancel", aborted);
     this->utils.MinimalPopUp("Failed to Load Project", popup_load_failed,
         "See console log output for more information.", "", confirmed, "Cancel", aborted);
 
-#endif // GUI_USE_FILESYSTEM
+    // HELP pop-up
+    std::string info_text = "Add Module from Stock List\n"
+                            "    - [Double Left Click] on Module in Stock List\n"
+                            "    - [Richt Click] on Module in Stock List -> Context Menu: Add\n\n"
+                            "Delete Module/Call\n"
+                            "    - Select Module/Call with [Left Click] an press [Delete]\n"
+                            "    - [Richt Click] on Module/Call -> Context Menu: Delete\n\n"
+                            "Rename Project/Module\n"
+                            "    - [Richt Click] on Project Tab/Module -> Context Menu: Rename\n\n"
+                            "Collapse/Expand Splitter\n"
+                            "    - [Double Richt Click] on Splitter\n\n"
+                            "Create Call\n"
+                            "    - Drag and drop Call from Call Slot to other highlighted compatible Call Slot.\n\n"
+                            "Zoom Graph\n"
+                            "    - Mouse Wheel\n\n"
+                            "Scroll Graph\n"
+                            "    - Middle Mouse Button\n\n";
+    this->utils.MinimalPopUp("Additional Options", popup_help, info_text, "", confirmed, "Cancel", aborted);
 }
 
 
@@ -269,8 +271,6 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
 
     ImGui::BeginChild("module_list_child_window", ImVec2(width, 0.0f), true, ImGuiWindowFlags_None);
 
-    ImGuiID id = 1;
-
     bool search_filter = true;
     bool compat_filter = true;
 
@@ -287,6 +287,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
         }
     }
 
+    ImGuiID id = 1;
     for (auto& mod : this->graph_manager.GetModulesStock()) {
 
         // Filter module by given search string
@@ -316,7 +317,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
             std::string label = mod.class_name + " (" + mod.plugin_name + ")";
             if (mod.is_view) {
                 label += " [View]";
-            }
+            }          
             if (ImGui::Selectable(label.c_str(), (id == this->selected_list_module_uid))) {
                 this->selected_list_module_uid = id;
             }
@@ -359,12 +360,11 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
             this->utils.HoverToolTip(mod.description, id, 0.5f, 5.0f);
 
             ImGui::PopID();
-            id++;
         }
-    };
+        id++;
+    }
 
     ImGui::EndChild();
-
     ImGui::EndGroup();
 }
 

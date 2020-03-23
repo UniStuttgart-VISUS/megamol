@@ -71,13 +71,12 @@ The `OverlayRenderer` is a rendering module which implements a `megamol::core::v
 
 ## Configurator [PROTOTYPE]
 
-The configurator prototype is part of the GUI and can be opened via the GUI menu: `Windows`/`Configurator`.\
-Use the example project: `-p ../examples/configurator.lua` for starting the configurator automatically:
+The configurator is part of the GUI and can be opened via the GUI menu: `Windows`/`Configurator`.\
+Any changes applied in the configurator will not effect the currently loaded MegaMol project.\
+In order to start the configurator automatically, you can use the project  `/examples/configurator.lua`.
 
         mmCreateView("testspheres", "GUIView", "::gui")
         mmSetParamValue("::gui::autostart_configurator", "true")
-
-This is a prototype. Changes will not effect the currently loaded MegaMol project.
 
 #### Menu
 
