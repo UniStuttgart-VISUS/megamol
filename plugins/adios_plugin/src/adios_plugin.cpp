@@ -19,6 +19,9 @@
 #include "adiosWriter.h"
 #include "TableToADIOS.h"
 
+#include "DFT.h"
+#include "SignalPeaks.h"
+
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -51,6 +54,8 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::adios::adiosWriter>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::MultiParticletoADIOS>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::TableToADIOS>();
+            this->module_descriptions.RegisterAutoDescription<megamol::adios::DFT>();
+            this->module_descriptions.RegisterAutoDescription<megamol::adios::SignalPeaks>();
 
             // register calls here:
 
