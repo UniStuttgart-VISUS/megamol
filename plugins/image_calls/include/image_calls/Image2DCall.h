@@ -13,7 +13,7 @@
 namespace megamol {
 namespace image_calls {
 
-class image_calls_API Image2DCall : public megamol::core::AbstractGetDataCall {
+class IMAGE_CALLS_API Image2DCall : public megamol::core::AbstractGetDataCall {
 public:
     typedef std::map<std::string, vislib::graphics::BitmapImage> ImageMap;
 

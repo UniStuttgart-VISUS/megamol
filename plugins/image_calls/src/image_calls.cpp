@@ -68,7 +68,7 @@ namespace {
 /*
  * mmplgPluginAPIVersion
  */
-image_calls_API int mmplgPluginAPIVersion(void) {
+IMAGE_CALLS_API int mmplgPluginAPIVersion(void){
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion
 }
 
@@ -76,7 +76,7 @@ image_calls_API int mmplgPluginAPIVersion(void) {
 /*
  * mmplgGetPluginCompatibilityInfo
  */
-image_calls_API
+IMAGE_CALLS_API
 ::megamol::core::utility::plugins::PluginCompatibilityInfo *
 mmplgGetPluginCompatibilityInfo(
         ::megamol::core::utility::plugins::ErrorCallback onError) {
@@ -118,7 +118,7 @@ mmplgGetPluginCompatibilityInfo(
 /*
  * mmplgReleasePluginCompatibilityInfo
  */
-image_calls_API
+IMAGE_CALLS_API
 void mmplgReleasePluginCompatibilityInfo(
         ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci) {
     // release compatiblity data on the correct heap
@@ -129,7 +129,7 @@ void mmplgReleasePluginCompatibilityInfo(
 /*
  * mmplgGetPluginInstance
  */
-image_calls_API
+IMAGE_CALLS_API
 ::megamol::core::utility::plugins::AbstractPluginInstance*
 mmplgGetPluginInstance(
         ::megamol::core::utility::plugins::ErrorCallback onError) {
@@ -140,7 +140,7 @@ mmplgGetPluginInstance(
 /*
  * mmplgReleasePluginInstance
  */
-image_calls_API
+IMAGE_CALLS_API
 void mmplgReleasePluginInstance(
         ::megamol::core::utility::plugins::AbstractPluginInstance* pi) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginInstance(pi)
