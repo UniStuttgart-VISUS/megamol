@@ -108,7 +108,7 @@ namespace protein {
          * @return The number of coloring modes.
          */
 		static unsigned int GetNumOfColoringModes(const megamol::protein_calls::MolecularDataCall *mol) {
-            return 12;
+            return 13;
         }
 
         /**
@@ -119,7 +119,7 @@ namespace protein {
         * @return The number of coloring modes.
         */
         static unsigned int GetNumOfColoringModes(const megamol::protein_calls::MolecularDataCall *mol, const protein_calls::BindingSiteCall *bs) {
-            return 13;
+            return 14;
         }
 
         /**
@@ -267,6 +267,15 @@ namespace protein {
 		 * @return The hydrophobicity.
 		 */
 		static float GetHydrophibicityByResName(vislib::StringA resName);
+
+        /**
+         * Lookup table for amino acid properties
+         * 0 -> bla. 1 -> bla. 2 -> bla. 3 -> bla.
+         *
+         * @param resName The name of the residue as 3-letter code
+         * @return The property value
+         */
+        static float GetAminoAcidPropertiesByResName(vislib::StringA resName);
     };
 
 } /* end namespace protein */

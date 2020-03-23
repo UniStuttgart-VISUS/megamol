@@ -88,6 +88,8 @@ Color::ColoringMode Color::GetModeByIndex(const megamol::protein_calls::Molecula
         return HEIGHTMAP_COL;
     case 11:
         return HEIGHTMAP_VAL;
+    case 12:
+        return AMINOACID;
     default:
         return ELEMENT;
     }
@@ -125,6 +127,8 @@ Color::ColoringMode Color::GetModeByIndex(
         return HEIGHTMAP_VAL;
     case 12:
         return BINDINGSITE;
+    case 13:
+        return AMINOACID;
     default:
         return ELEMENT;
     }
@@ -317,6 +321,53 @@ float Color::GetHydrophibicityByResName(vislib::StringA resName) {
 }
 
 /*
+ * Get the amino acid property value for an amino acid
+ */
+float Color::GetAminoAcidPropertiesByResName(vislib::StringA resName) {
+    if (resName.Equals("Ala", false))
+        return 0.0f;
+    else if (resName.Equals("Arg", false))
+        return 2.0f;
+    else if (resName.Equals("Asn", false))
+        return 1.0f;
+    else if (resName.Equals("Asp", false))
+        return 3.0f;
+    else if (resName.Equals("Cys", false))
+        return 1.0f;
+    else if (resName.Equals("Glu", false))
+        return 3.0f;
+    else if (resName.Equals("Gln", false))
+        return 1.0f;
+    else if (resName.Equals("Gly", false))
+        return 1.0f;
+    else if (resName.Equals("His", false))
+        return 2.0f;
+    else if (resName.Equals("Ile", false))
+        return 0.0f;
+    else if (resName.Equals("Leu", false))
+        return 0.0f;
+    else if (resName.Equals("Lys", false))
+        return 2.0f;
+    else if (resName.Equals("Met", false))
+        return 0.0f;
+    else if (resName.Equals("Phe", false))
+        return 0.0f;
+    else if (resName.Equals("Pro", false))
+        return 0.0f;
+    else if (resName.Equals("Ser", false))
+        return 1.0f;
+    else if (resName.Equals("Thr", false))
+        return 1.0f;
+    else if (resName.Equals("Trp", false))
+        return 0.0f;
+    else if (resName.Equals("Tyr", false))
+        return 1.0f;
+    else if (resName.Equals("Val", false))
+        return 0.0f;
+    return 4.0f;
+}
+
+/*
  * MakeColorTable routine for molecular data call
  */
 std::pair<float, float> Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
@@ -389,6 +440,8 @@ std::pair<float, float> Color::MakeColorTable(const megamol::protein_calls::Mole
         } // ... END coloring mode RESIDUE
         else if (currentColoringMode == AMINOACID) {
             unsigned int resTypeIdx, colour_idx;
+            result = std::make_pair(0.0f, 3.0f);
+            float valfloat;
             // loop over all residues
             for (cntRes = 0; cntRes < mol->ResidueCount(); ++cntRes) {
                 // loop over all atoms of the current residue
@@ -396,42 +449,8 @@ std::pair<float, float> Color::MakeColorTable(const megamol::protein_calls::Mole
                 cnt = mol->Residues()[cntRes]->AtomCount();
                 // get residue type index
                 resTypeIdx = mol->Residues()[cntRes]->Type();
-                if (mol->ResidueTypeNames()[resTypeIdx].Equals("ALA") ||
-                    mol->ResidueTypeNames()[resTypeIdx].Equals("VAL") ||
-                    mol->ResidueTypeNames()[resTypeIdx].Equals("MET") ||
-                    mol->ResidueTypeNames()[resTypeIdx].Equals("LEU") ||
-                    mol->ResidueTypeNames()[resTypeIdx].Equals("ILE") ||
-                    mol->ResidueTypeNames()[resTypeIdx].Equals("PRO") ||
-                    mol->ResidueTypeNames()[resTypeIdx].Equals("TRP") ||
-                    mol->ResidueTypeNames()[resTypeIdx].Equals("PHE")) {
-                    colour_idx = 0;
-                } else if (mol->ResidueTypeNames()[resTypeIdx].Equals("TYR") ||
-                           mol->ResidueTypeNames()[resTypeIdx].Equals("TYM") ||
-                           mol->ResidueTypeNames()[resTypeIdx].Equals("THR") ||
-                           mol->ResidueTypeNames()[resTypeIdx].Equals("GLN") ||
-                           mol->ResidueTypeNames()[resTypeIdx].Equals("GLY") ||
-                           mol->ResidueTypeNames()[resTypeIdx].Equals("SER") ||
-                           mol->ResidueTypeNames()[resTypeIdx].Equals("CYS") ||
-                           mol->ResidueTypeNames()[resTypeIdx].Equals("CYX") ||
-                           mol->ResidueTypeNames()[resTypeIdx].Equals("CYM") ||
-                           mol->ResidueTypeNames()[resTypeIdx].Equals("ASN") ||
-                           mol->ResidueTypeNames()[resTypeIdx].Equals("ASH")) {
-                    colour_idx = 1;
-                } else if (mol->ResidueTypeNames()[resTypeIdx].Equals("LYS") ||
-                           mol->ResidueTypeNames()[resTypeIdx].Equals("LYN") ||
-                           mol->ResidueTypeNames()[resTypeIdx].Equals("ARG") ||
-                           mol->ResidueTypeNames()[resTypeIdx].Equals("HIS") ||
-                           mol->ResidueTypeNames()[resTypeIdx].Equals("HID") ||
-                           mol->ResidueTypeNames()[resTypeIdx].Equals("HIE") ||
-                           mol->ResidueTypeNames()[resTypeIdx].Equals("HIP")) {
-                    colour_idx = 2;
-                } else if (mol->ResidueTypeNames()[resTypeIdx].Equals("GLU") ||
-                           mol->ResidueTypeNames()[resTypeIdx].Equals("GLH") ||
-                           mol->ResidueTypeNames()[resTypeIdx].Equals("ASP")) {
-                    colour_idx = 3;
-                } else {
-                    colour_idx = 4;
-                }
+                valfloat = Color::GetAminoAcidPropertiesByResName(mol->ResidueTypeNames()[resTypeIdx]);
+                colour_idx = static_cast<unsigned int>(std::nearbyint(valfloat));
                 for (cntAtom = idx; cntAtom < idx + cnt; ++cntAtom) {
                     if (colour_idx == 0) {
                         atomColorTable.Add(255.0f / 255.0f);

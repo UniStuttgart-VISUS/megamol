@@ -427,6 +427,10 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                         auto resIdx = mol->AtomResidueIndices()[atomIndex[i]];
                         auto typeIdx = mol->Residues()[resIdx]->Type();
                         values[i] = Color::GetHydrophibicityByResName(mol->ResidueTypeNames()[typeIdx]);
+                    } else if (colmode == Color::AMINOACID) {
+                        auto resIdx = mol->AtomResidueIndices()[atomIndex[i]];
+                        auto typeIdx = mol->Residues()[resIdx]->Type();
+                        values[i] = Color::GetAminoAcidPropertiesByResName(mol->ResidueTypeNames()[typeIdx]);
                     }
 
                     // create hightmap colours or read per atom colours
