@@ -8,6 +8,7 @@
 #ifndef MEGAMOL_GUI_OVERLAYRENDERER_H_INCLUDED
 #define MEGAMOL_GUI_OVERLAYRENDERER_H_INCLUDED
 
+
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/PngBitmapCodec.h"
