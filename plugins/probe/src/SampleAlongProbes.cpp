@@ -10,6 +10,7 @@
 #include "adios_plugin/CallADIOSData.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
+#include "mmcore/param/FloatParam.h"
 
 namespace megamol {
 namespace probe {
@@ -23,7 +24,8 @@ SampleAlongPobes::SampleAlongPobes()
     , _adios_rhs_slot("getData", "")
     , _full_tree_rhs_slot("getTree", "")
     , _parameter_to_sample_slot("ParameterToSample", "")
-    , _num_samples_per_probe_slot("NumSamplesPerProbe", "")
+    , _num_samples_per_probe_slot("NumSamplesPerProbe", "Note: Tighter sample placement leads to reduced sampling radius.")
+    , _sample_radius_factor_slot("SampleRadiusFactor", "Multiplier for base sampling distance.")
     , _sampling_mode("SamplingMode", "")
     , _vec_param_to_samplex_x("ParameterToSampleX", "")
     , _vec_param_to_samplex_y("ParameterToSampleY", "")
@@ -49,6 +51,10 @@ SampleAlongPobes::SampleAlongPobes()
     this->_parameter_to_sample_slot.SetUpdateCallback(&SampleAlongPobes::paramChanged);
     this->MakeSlotAvailable(&this->_parameter_to_sample_slot);
 
+    this->_sample_radius_factor_slot << new core::param::FloatParam(1.0f);
+    this->_sample_radius_factor_slot.SetUpdateCallback(&SampleAlongPobes::paramChanged);
+    this->MakeSlotAvailable(&this->_sample_radius_factor_slot);
+
     this->_num_samples_per_probe_slot << new core::param::IntParam(10);
     this->_num_samples_per_probe_slot.SetUpdateCallback(&SampleAlongPobes::paramChanged);
     this->MakeSlotAvailable(&this->_num_samples_per_probe_slot);
@@ -56,6 +62,7 @@ SampleAlongPobes::SampleAlongPobes()
     this->_sampling_mode << new megamol::core::param::EnumParam(0);
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Scalar");
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Vector");
+    this->_sampling_mode.SetUpdateCallback(&SampleAlongPobes::paramChanged);
     this->MakeSlotAvailable(&this->_sampling_mode);
 	
 	core::param::FlexEnumParam* paramEnum_1 = new core::param::FlexEnumParam("undef");
@@ -127,7 +134,7 @@ bool SampleAlongPobes::getData(core::Call& call) {
         if (!cd->inquire(var)) return false;
     }
 
-    if (cd->getDataHash() != _old_datahash) {
+    if (cd->getDataHash() != _old_datahash || _trigger_recalc) {
         if (!(*cd)(0)) return false;
     }
 
@@ -141,7 +148,7 @@ bool SampleAlongPobes::getData(core::Call& call) {
     if (cprobes == nullptr) return false;
     if (!(*cprobes)(0)) return false;
 
-    bool something_has_changed = (cd->getDataHash() != _old_datahash) || ct->hasUpdate() || cprobes->hasUpdate();
+    bool something_has_changed = (cd->getDataHash() != _old_datahash) || ct->hasUpdate() || cprobes->hasUpdate() || _trigger_recalc;
 
     auto meta_data = cp->getMetaData();
     auto tree_meta_data = ct->getMetaData();

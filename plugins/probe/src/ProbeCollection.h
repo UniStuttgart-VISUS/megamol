@@ -94,11 +94,6 @@ public:
 
     uint32_t getProbeCount() const { return m_probes.size(); }
 
-    template <typename ProbeType> bool checkProbeType(size_t idx) const {
-        using T = std::decay_t<decltype(m_probes[idx])>;
-        return constexpr(std::is_same_v<T, ProbeType>);
-    }
-
 private:
     std::vector<GenericProbe> m_probes;
 };

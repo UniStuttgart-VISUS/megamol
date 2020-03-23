@@ -66,6 +66,7 @@ protected:
 
     core::param::ParamSlot _parameter_to_sample_slot;
     core::param::ParamSlot _num_samples_per_probe_slot;
+    core::param::ParamSlot _sample_radius_factor_slot;
 
 	core::param::ParamSlot _sampling_mode;
     core::param::ParamSlot _vec_param_to_samplex_x;
@@ -98,28 +99,41 @@ template <typename T>
 void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data) {
 
     const int samples_per_probe = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
+    const float sample_radius_factor = this->_sample_radius_factor_slot.Param<core::param::FloatParam>()->Value();
 
 //#pragma omp parallel for
     for (int32_t i = 0; i < static_cast<int32_t>(_probes->getProbeCount()); i++) {
 
-        auto base_probe = _probes->getProbe<BaseProbe>(i);
         FloatProbe probe;
-        probe.m_timestamp = base_probe.m_timestamp;
-        probe.m_value_name = base_probe.m_value_name;
-        probe.m_position = base_probe.m_position;
-        probe.m_direction = base_probe.m_direction;
-        probe.m_begin = base_probe.m_begin;
-        probe.m_end = base_probe.m_end;
-        auto samples = probe.getSamplingResult();
 
-        _probes->setProbe(i, probe);
+        auto visitor = [&probe, i, this](auto&& arg) {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::Vec4Probe>) {
 
-        //auto probe = _probes->getProbe<FloatProbe>(i);
-        //auto samples = probe.getSamplingResult();
-        // samples = std::make_shared<FloatProbe::SamplingResult>();
+                probe.m_timestamp = arg.m_timestamp;
+                probe.m_value_name = arg.m_value_name;
+                probe.m_position = arg.m_position;
+                probe.m_direction = arg.m_direction;
+                probe.m_begin = arg.m_begin;
+                probe.m_end = arg.m_end;
+
+                _probes->setProbe(i, probe);
+
+            } else if constexpr (std::is_same_v<T, probe::FloatProbe>) {
+                probe = arg;
+
+            } else {
+                // unknown/incompatible probe type, throw error? do nothing?
+            }
+        };
+
+        auto generic_probe = _probes->getGenericProbe(i);
+        std::visit(visitor, generic_probe);
+
+        std::shared_ptr<FloatProbe::SamplingResult> samples = probe.getSamplingResult();
 
         auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
-        auto radius = sample_step / 2.0f;
+        auto radius = sample_step * sample_radius_factor;
 
         float min_value = std::numeric_limits<float>::max();
         float max_value = -std::numeric_limits<float>::max();
@@ -169,27 +183,41 @@ inline void SampleAlongPobes::doVectorSamling(
     const std::vector<T>& data_w) {
 	
     const int samples_per_probe = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
+    const float sample_radius_factor = this->_sample_radius_factor_slot.Param<core::param::FloatParam>()->Value();
 
     //#pragma omp parallel for
     for (int32_t i = 0; i < static_cast<int32_t>(_probes->getProbeCount()); i++) {
 
-        auto base_probe = _probes->getProbe<BaseProbe>(i);
         Vec4Probe probe;
-        probe.m_timestamp = base_probe.m_timestamp;
-        probe.m_value_name = base_probe.m_value_name;
-        probe.m_position = base_probe.m_position;
-        probe.m_direction = base_probe.m_direction;
-        probe.m_begin = base_probe.m_begin;
-        probe.m_end = base_probe.m_end;
-        auto samples = probe.getSamplingResult();
 
-        _probes->setProbe(i, probe);
+        auto visitor = [&probe,i,this](auto&& arg) {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::FloatProbe>) {
 
-        //auto probe = _probes->getProbe<Vec4Probe>(i);
-        // samples = std::make_shared<FloatProbe::SamplingResult>();
+                probe.m_timestamp = arg.m_timestamp;
+                probe.m_value_name = arg.m_value_name;
+                probe.m_position = arg.m_position;
+                probe.m_direction = arg.m_direction;
+                probe.m_begin = arg.m_begin;
+                probe.m_end = arg.m_end;
+
+                _probes->setProbe(i, probe);
+
+            } else if constexpr (std::is_same_v<T, probe::Vec4Probe>) {
+                probe = arg;
+
+            } else {
+                // unknown/incompatible probe type, throw error? do nothing?
+            }
+        };
+
+        auto generic_probe = _probes->getGenericProbe(i);
+        std::visit(visitor, generic_probe);
+
+        std::shared_ptr<Vec4Probe::SamplingResult> samples = probe.getSamplingResult();
 
         auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
-        auto radius = sample_step / 2.0f;
+        auto radius = sample_step * sample_radius_factor;
 
         float min_value = std::numeric_limits<float>::max();
         float max_value = -std::numeric_limits<float>::max();
