@@ -187,7 +187,7 @@ void megamol::gui::GUIUtils::ReadOnlyWigetStyle(bool set) {
 }
 
 
-bool GUIUtils::Utf8Decode(std::string& str) const {
+bool GUIUtils::Utf8Decode(std::string& str) {
     vislib::StringA dec_tmp;
     if (vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(str.c_str()))) {
         str = std::string(dec_tmp.PeekBuffer());
@@ -197,7 +197,7 @@ bool GUIUtils::Utf8Decode(std::string& str) const {
 }
 
 
-bool GUIUtils::Utf8Encode(std::string& str) const {
+bool GUIUtils::Utf8Encode(std::string& str) {
     vislib::StringA dec_tmp;
     if (vislib::UTF8Encoder::Encode(dec_tmp, vislib::StringA(str.c_str()))) {
         str = std::string(dec_tmp.PeekBuffer());
@@ -228,13 +228,12 @@ bool megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::stri
         this->search_focus = false;
     }
 
-    std::string complete_label = "Search (?)";
-    auto width = ImGui::GetContentRegionAvailWidth() - ImGui::GetCursorPosX() + 4.0f * style.ItemInnerSpacing.x -
-                 this->TextWidgetWidth(complete_label);
-    const float min_width = 50.0f;
-    width = (width < min_width) ? (min_width) : width;
-    ImGui::PushItemWidth(width);
-
+    // std::string complete_label = "Search (?)";
+    // auto width = ImGui::GetContentRegionAvailWidth() - ImGui::GetCursorPosX() + 4.0f * style.ItemInnerSpacing.x -
+    //              this->TextWidgetWidth(complete_label);
+    // const float min_width = 50.0f;
+    // width = (width < min_width) ? (min_width) : width;
+    // ImGui::PushItemWidth(width);
     /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
     this->Utf8Encode(this->search_string);
     ImGui::InputText("Search", &this->search_string, ImGuiInputTextFlags_AutoSelectAll);
@@ -242,8 +241,7 @@ bool megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::stri
     if (ImGui::IsItemActive()) {
         retval = true;
     }
-
-    ImGui::PopItemWidth();
+    //ImGui::PopItemWidth();
     ImGui::SameLine();
 
     this->HelpMarkerToolTip(help);

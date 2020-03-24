@@ -462,7 +462,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                 if (!std::holds_alternative<T>(this->widget_store)) {
                     /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
                     std::string utf8Str = arg;
-                    this->utils.Utf8Encode(utf8Str);
+                    GUIUtils::Utf8Encode(utf8Str);
                     this->widget_store = utf8Str;
                 }
                 // Determine multi line count of string
@@ -476,11 +476,11 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                     ImGuiInputTextFlags_CtrlEnterForNewLine);
                 if (ImGui::IsItemDeactivatedAfterEdit()) {
                     std::string utf8Str = std::get<std::string>(this->widget_store);
-                    this->utils.Utf8Decode(utf8Str);
+                    GUIUtils::Utf8Decode(utf8Str);
                     param.SetValue(utf8Str);
                 } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                     std::string utf8Str = arg;
-                    this->utils.Utf8Encode(utf8Str);
+                    GUIUtils::Utf8Encode(utf8Str);
                     this->widget_store = utf8Str;
                 }
                 ImGui::SameLine();
@@ -494,23 +494,21 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                 if (!std::holds_alternative<T>(this->widget_store)) {
                     /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
                     std::string utf8Str = arg;
-                    this->utils.Utf8Encode(utf8Str);
+                    GUIUtils::Utf8Encode(utf8Str);
                     this->widget_store = utf8Str;
                 }
-                
-                bool button_edit = this->file_utils.FileBrowserButton(std::get<std::string>(this->widget_store));
-                ImGui::SameLine();
-
                 ImGuiStyle& style = ImGui::GetStyle();
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f - ImGui::GetFrameHeight() - style.ItemSpacing.x);
+                bool button_edit = this->file_utils.FileBrowserButton(std::get<std::string>(this->widget_store));
+                ImGui::SameLine();
                 ImGui::InputText(
                     param_label.c_str(), &std::get<std::string>(this->widget_store), ImGuiInputTextFlags_None);
                 if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
-                    this->utils.Utf8Decode(std::get<std::string>(this->widget_store));
+                    GUIUtils::Utf8Decode(std::get<std::string>(this->widget_store));
                     param.SetValue(std::get<std::string>(this->widget_store));
                 } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                     std::string utf8Str = arg;
-                    this->utils.Utf8Encode(utf8Str);
+                    GUIUtils::Utf8Encode(utf8Str);
                     this->widget_store = utf8Str;
                 }
                 ImGui::PopItemWidth();

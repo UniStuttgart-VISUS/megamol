@@ -146,7 +146,7 @@ bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceT
         config.OversampleV = 1;
         config.GlyphRanges = this->state.font_utf8_ranges.data();
 
-        this->utils.Utf8Encode(this->state.font_file);
+        GUIUtils::Utf8Encode(this->state.font_file);
         io.Fonts->AddFontFromFileTTF(this->state.font_file.c_str(), this->state.font_size, &config);
         ImGui_ImplOpenGL3_CreateFontsTexture();
         /// Load last added font
@@ -202,7 +202,7 @@ bool GUIWindows::PostDraw(void) {
                 for (int n = 0; n < io.Fonts->Fonts.Size; n++) {
 
                     std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
-                    this->utils.Utf8Decode(font_name);
+                    GUIUtils::Utf8Decode(font_name);
                     if (font_name == wc.font_name) {
                         this->state.font_index = n;
                     }
@@ -1241,7 +1241,7 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
 
     // Saving current font to window configuration.
     wc.font_name = std::string(font_current->GetDebugName());
-    this->utils.Utf8Decode(wc.font_name);
+    GUIUtils::Utf8Decode(wc.font_name);
 
     ImGui::Separator();
     ImGui::Text("Load Font from File");
@@ -1257,9 +1257,9 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
 
     label = "Font File Name (.ttf)";
     /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-    this->utils.Utf8Encode(wc.buf_font_file);
+    GUIUtils::Utf8Encode(wc.buf_font_file);
     ImGui::InputText(label.c_str(), &wc.buf_font_file, ImGuiInputTextFlags_AutoSelectAll);
-    this->utils.Utf8Decode(wc.buf_font_file);
+    GUIUtils::Utf8Decode(wc.buf_font_file);
     // Validate font file before offering load button
     if (FileUtils::FilesExistingExtension<std::string>(wc.buf_font_file, std::string(".ttf"))) {
         if (ImGui::Button("Add Font")) {
@@ -1454,6 +1454,9 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
         std::string param_desc = slot.Description().PeekBuffer();
         std::string float_format = "%.7f";
 
+        ImGui::PushID(param_label.c_str());
+        ImGui::BeginGroup();
+
         if (auto* p = slot.template Param<core::param::BoolParam>()) {
             auto value = p->Value();
             if (ImGui::Checkbox(param_label.c_str(), &value)) {
@@ -1614,7 +1617,7 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
             auto it = this->widgtmap_text.find(param_id);
             if (it == this->widgtmap_text.end()) {
                 std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                this->utils.Utf8Encode(utf8Str);
+                GUIUtils::Utf8Encode(utf8Str);
                 this->widgtmap_text.emplace(param_id, utf8Str);
                 it = this->widgtmap_text.find(param_id);
             }
@@ -1627,11 +1630,11 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
                 param_label_hidden.c_str(), &it->second, ml_dim, ImGuiInputTextFlags_CtrlEnterForNewLine);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 std::string utf8Str = it->second;
-                this->utils.Utf8Decode(utf8Str);
+                GUIUtils::Utf8Decode(utf8Str);
                 p->SetValue(vislib::StringA(utf8Str.c_str()));
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                this->utils.Utf8Encode(utf8Str);
+                GUIUtils::Utf8Encode(utf8Str);
                 it->second = utf8Str;
             }
             ImGui::SameLine();
@@ -1642,22 +1645,20 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
             auto it = this->widgtmap_text.find(param_id);
             if (it == this->widgtmap_text.end()) {
                 std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                this->utils.Utf8Encode(utf8Str);
+                GUIUtils::Utf8Encode(utf8Str);
                 this->widgtmap_text.emplace(param_id, utf8Str);
                 it = this->widgtmap_text.find(param_id);
             }
-            
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f - ImGui::GetFrameHeight() - style.ItemSpacing.x);
             bool button_edit = this->file_utils.FileBrowserButton(it->second);
             ImGui::SameLine();
-
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f - ImGui::GetFrameHeight() - style.ItemSpacing.x);
             ImGui::InputText(param_label.c_str(), &it->second, ImGuiInputTextFlags_None);
-            if (ImGui::IsItemDeactivatedAfterEdit()) {
-                this->utils.Utf8Decode(it->second);
+            if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
+                GUIUtils::Utf8Decode(it->second);
                 p->SetValue(vislib::StringA(it->second.c_str()));
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                this->utils.Utf8Encode(utf8Str);
+                GUIUtils::Utf8Encode(utf8Str);
                 it->second = utf8Str;
             }
             ImGui::PopItemWidth();
@@ -1666,6 +1667,9 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
                 "Unknown Parameter Type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return;
         }
+
+        ImGui::EndGroup();
+        ImGui::PopID();
 
         // Reset to default style
         if (param->IsGUIReadOnly()) {

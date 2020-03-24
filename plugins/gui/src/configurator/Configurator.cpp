@@ -112,7 +112,11 @@ bool megamol::gui::configurator::Configurator::Draw(
         // 2] Load available modules and calls and currently loaded project from core once(!)
 
         this->graph_manager.UpdateModulesCallsStock(core_instance);
-        this->add_empty_project();
+
+        // Load inital project
+        //this->add_empty_project();
+        this->graph_manager.LoadProjectCore(this->get_unique_project_name(), core_instance);
+
         this->window_state++;
     } else {
         // 3] Render configurator gui content

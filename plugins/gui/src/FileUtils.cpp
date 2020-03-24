@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "Fileutils.h"
+#include "FileUtils.h"
 
 
 using namespace megamol;
@@ -15,7 +15,8 @@ using namespace megamol::gui;
 
 megamol::gui::FileUtils::FileUtils(void)
 #ifdef GUI_USE_FILESYSTEM 
-    : file_name_str()
+    : utils()
+    , file_name_str()
     , file_path_str()
     , child_paths()
     , path_changed(false)
@@ -24,9 +25,11 @@ megamol::gui::FileUtils::FileUtils(void)
     , valid_ending(false)
     , file_error()
     , file_warning()
-    , additional_lines(0)
+    , additional_lines(0) {
+#else
+    {
+    vislib::sys::Log::DefaultLog.WriteWarn("Filesystem functionality is not available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);   
 #endif // GUI_USE_FILESYSTEM 
-{
 }
 
 
@@ -63,8 +66,7 @@ bool megamol::gui::FileUtils::SaveProjectFile(const std::string& project_filenam
     }
     return true;
 #else
-    vislib::sys::Log::DefaultLog.WriteWarn("Filesystem functionality is not available. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-    retuirn std::string();
+    return false;
 #endif // GUI_USE_FILESYSTEM      
 }
 
@@ -94,8 +96,7 @@ bool megamol::gui::FileUtils::WriteFile(const std::string& filename, const std::
 
     return true;
 #else
-    vislib::sys::Log::DefaultLog.WriteWarn("Filesystem functionality is not available. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-    retuirn std::string();
+    return false;
 #endif // GUI_USE_FILESYSTEM      
 }
 
@@ -125,14 +126,13 @@ bool megamol::gui::FileUtils::ReadFile(const std::string& filename, std::string&
 
     return true;
 #else
-    vislib::sys::Log::DefaultLog.WriteWarn("Filesystem functionality is not available. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-    retuirn std::string();
+    return false;
 #endif // GUI_USE_FILESYSTEM      
 }
 
 
 bool megamol::gui::FileUtils::FileBrowserButton(std::string& inout_filename) {
-#ifdef GUI_USE_FILESYSTEM 
+
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -171,16 +171,12 @@ bool megamol::gui::FileUtils::FileBrowserButton(std::string& inout_filename) {
     ImGui::PopStyleColor();
 
     return this->FileBrowserPopUp(FileBrowserFlag::SELECT, "Select File", popup_select_file, inout_filename);
-#else
-    vislib::sys::Log::DefaultLog.WriteWarn("Filesystem functionality is not available. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-    retuirn std::string();
-#endif // GUI_USE_FILESYSTEM      
 }
 
 
 bool megamol::gui::FileUtils::FileBrowserPopUp(
     megamol::gui::FileUtils::FileBrowserFlag flag, const std::string& label, bool open_popup, std::string& inout_filename) {
-#ifdef GUI_USE_FILESYSTEM 
+
     bool retval = false;
 
     try {
@@ -188,8 +184,8 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(
         ImGui::PushID(label.c_str());
 
         if (open_popup) {
+#ifdef GUI_USE_FILESYSTEM 
             // Check given file name path
-
             fsns::path tmp_file_path = static_cast<fsns::path>(inout_filename);
             if (tmp_file_path.empty() || !fsns::exists(tmp_file_path)) {
                 tmp_file_path = fsns::current_path();
@@ -202,8 +198,12 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(
             ImGui::OpenPopup(popup_name.c_str());
             // Set initial window size of pop up
             ImGui::SetNextWindowSize(ImVec2(600.0f, 300.0f));
+#else
+            vislib::sys::Log::DefaultLog.WriteWarn("Filesystem functionality is not available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+#endif // GUI_USE_FILESYSTEM               
         }
 
+#ifdef GUI_USE_FILESYSTEM 
         bool open = true;
         if (ImGui::BeginPopupModal(popup_name.c_str(), &open, ImGuiWindowFlags_None)) {
 
@@ -212,7 +212,7 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(
             const auto warning_color = ImVec4(0.75f, 0.75f, 0.f, 1.0f);
 
             ImGuiStyle& style = ImGui::GetStyle();
-
+           
             // Path ---------------------------------------------------
             auto last_file_path_str = this->file_path_str;
             if (ImGui::ArrowButton("###arrow_up_directory", ImGuiDir_Up)) {
@@ -224,9 +224,9 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(
             }
             ImGui::SameLine();
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            this->Utf8Encode(this->file_path_str);
+            GUIUtils::Utf8Encode(this->file_path_str);
             ImGui::InputText("Directory", &this->file_path_str, ImGuiInputTextFlags_AutoSelectAll);
-            this->Utf8Decode(this->file_path_str);
+            GUIUtils::Utf8Decode(this->file_path_str);
             if (last_file_path_str != this->file_path_str) {
                 this->path_changed = true;
                 this->validateDirectory(this->file_path_str);
@@ -236,18 +236,20 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(
                 ImGui::TextColored(error_color, "Invalid Directory");
             }
 
+            // Search -------------------------------
+            std::string help_test = "Case insensitive substring search in\nlisted file and directory names.";            
+            this->utils.StringSearch("guiwindow_parameter_earch", help_test);
+            auto currentSearchString = this->utils.GetSearchString();
+
             // File browser selectables ---------------------------------------
             auto select_flags = ImGuiSelectableFlags_DontClosePopups;
             float child_select_height =
                 (ImGui::GetContentRegionAvail().y - (ImGui::GetTextLineHeightWithSpacing() * this->additional_lines) -
                     ImGui::GetItemsLineHeightWithSpacing() * 2.0f);
-
-            // Files and directories ----------------
             ImGui::BeginChild(
                 "files_list_child_window", ImVec2(0.0f, child_select_height), true, ImGuiWindowFlags_None);
 
             if (this->valid_directory) {
-
                 // Parent directory selectable
                 std::string tag_parent = "..";
                 if (ImGui::Selectable(tag_parent.c_str(), false, select_flags)) {
@@ -286,26 +288,35 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(
                     this->path_changed = false;
                 }
 
-                // Files and directories of current directory
+                // Files and directories ----------------
                 for (const auto& path_pair : this->child_paths) {
-                    // Different color for directories
-                    if (path_pair.second) {
-                        ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
-                    }
+
                     auto label = path_pair.first.filename().generic_u8string();
-                    if (ImGui::Selectable(label.c_str(), (label == this->file_name_str), select_flags)) {
-                        last_file_path_str = this->file_path_str;
-                        this->splitPath(path_pair.first, this->file_path_str, this->file_name_str);
-                        this->validateFile(this->file_name_str, flag);
-                        if (last_file_path_str != this->file_path_str) {
-                            this->path_changed = true;
+                    bool showSearchedParameter = true;
+                    if (!currentSearchString.empty()) {
+                        showSearchedParameter = this->utils.FindCaseInsensitiveSubstring(label, currentSearchString);
+                    }
+                    if (showSearchedParameter) {
+                        // Different color for directories
+                        if (path_pair.second) {
+                            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
                         }
-                    }
-                    if (path_pair.second) {
-                        ImGui::PopStyleColor();
-                    }
-                    if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
-                        apply = true;
+                        
+                        if (ImGui::Selectable(label.c_str(), (label == this->file_name_str), select_flags)) {
+                            last_file_path_str = this->file_path_str;
+                            this->splitPath(path_pair.first, this->file_path_str, this->file_name_str);
+                            this->validateFile(this->file_name_str, flag);
+                            if (last_file_path_str != this->file_path_str) {
+                                this->path_changed = true;
+                            }
+                        }
+
+                        if (path_pair.second) {
+                            ImGui::PopStyleColor();
+                        }
+                        if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
+                            apply = true;
+                        }
                     }
                 }
             }
@@ -320,12 +331,12 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(
             }
             auto last_file_name_str = this->file_name_str;
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            this->Utf8Encode(this->file_name_str);
+            GUIUtils::Utf8Encode(this->file_name_str);
             if (ImGui::InputText("File Name", &this->file_name_str,
                     ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
                 apply = true;
             }
-            this->Utf8Decode(this->file_name_str);
+            GUIUtils::Utf8Decode(this->file_name_str);
             if (flag == FileUtils::FileBrowserFlag::LOAD) {
                 ImGui::PopItemFlag();
             }
@@ -384,6 +395,7 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(
 
             ImGui::EndPopup();
         }
+#endif // GUI_USE_FILESYSTEM 
 
         ImGui::PopID();
 
@@ -396,11 +408,7 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(
         return false;
     }
 
-    return retval;
-#else
-    vislib::sys::Log::DefaultLog.WriteWarn("Filesystem functionality is not available. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-    retuirn std::string();
-#endif // GUI_USE_FILESYSTEM      
+    return retval;   
 }
 
 
@@ -444,7 +452,7 @@ void megamol::gui::FileUtils::validateDirectory(const std::string& path_str) {
 }
 
 
-void megamol::gui::FileUtils::validateFile(const std::string& file_str, megamol::gui::::FileUtils::FileBrowserFlag flag) {
+void megamol::gui::FileUtils::validateFile(const std::string& file_str, megamol::gui::FileUtils::FileBrowserFlag flag) {
 
     // Validating file
     try {
@@ -465,7 +473,7 @@ void megamol::gui::FileUtils::validateFile(const std::string& file_str, megamol:
                 this->valid_file = false;
             } else {
                 // Warn when file has not required extension
-                if (!file::FileExtension<std::string>(file_str, ext)) {
+                if (!FileUtils::FileExtension<std::string>(file_str, ext)) {
                     this->file_warning += "Appending required file extension '" + ext + "'\n";
                     this->additional_lines++;
                     this->valid_ending = false;
@@ -485,7 +493,7 @@ void megamol::gui::FileUtils::validateFile(const std::string& file_str, megamol:
             }
         } else if (flag == FileUtils::FileBrowserFlag::LOAD) {
             // Error when file has not required extension
-            if (!file::FileExtension<std::string>(file_str, ext)) {
+            if (!FileUtils::FileExtension<std::string>(file_str, ext)) {
                 this->file_error += "File with extension '" + ext + "' required.\n";
                 this->additional_lines++;
                 this->valid_ending = false;

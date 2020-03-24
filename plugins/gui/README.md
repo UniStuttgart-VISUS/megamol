@@ -75,8 +75,8 @@ The configurator is part of the GUI and can be opened via the GUI menu: `Windows
 Any changes applied in the configurator will not effect the currently loaded MegaMol project.\
 In order to start the configurator automatically, you can use the project  `/examples/configurator.lua`.
 
-        mmCreateView("testspheres", "GUIView", "::gui")
-        mmSetParamValue("::gui::autostart_configurator", "true")
+        mmCreateView("configurator","GUIView","::gui")
+        mmSetParamValue("::gui::autostart_configurator",[=[true]=])
 
 #### Menu
 

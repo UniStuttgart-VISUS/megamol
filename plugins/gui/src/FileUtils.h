@@ -136,6 +136,7 @@ private:
 #ifdef GUI_USE_FILESYSTEM
 
     // VARIABLES --------------------------------------------------------------
+    GUIUtils utils;
     std::string file_name_str;
     std::string file_path_str;
     bool path_changed;
@@ -166,19 +167,17 @@ template <typename T> bool megamol::gui::FileUtils::FilesExistingExtension(const
     }
     return (path.extension().generic_u8string() == ext);
 #else
-    vislib::sys::Log::DefaultLog.WriteWarn("Filesystem functionality is not available. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-    retuirn false;
+    return false;
 #endif // GUI_USE_FILESYSTEM    
 }
 
 
 template <typename T> bool megamol::gui::FileUtils::FileExtension(const T& path_str, const std::string& ext) {
-    auto path = static_cast<fsns::path>(path_str);
 #ifdef GUI_USE_FILESYSTEM    
+    auto path = static_cast<fsns::path>(path_str);
     return (path.extension().generic_u8string() == ext);
 #else
-    vislib::sys::Log::DefaultLog.WriteWarn("Filesystem functionality is not available. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-    retuirn false;
+    return false;
 #endif // GUI_USE_FILESYSTEM      
 }
 
@@ -197,8 +196,7 @@ std::string megamol::gui::FileUtils::SearchFileRecursive(const T& search_path_st
     }
     return found_path;
 #else
-    vislib::sys::Log::DefaultLog.WriteWarn("Filesystem functionality is not available. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-    retuirn std::string();
+    return std::string();
 #endif // GUI_USE_FILESYSTEM      
 }
 

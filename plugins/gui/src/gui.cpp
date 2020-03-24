@@ -16,9 +16,6 @@
 #include "OverlayRenderer.h"
 
 
-//#undef GUI_USE_FILESYSTEM  
-
-
 /* anonymous namespace hides this type from any other object files */
 namespace {
 /** Implementing the instance class of this plugin */

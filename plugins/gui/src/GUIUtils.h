@@ -8,6 +8,7 @@
 #ifndef MEGAMOL_GUI_GUIUTILS_INCLUDED
 #define MEGAMOL_GUI_GUIUTILS_INCLUDED
 
+
 #include "mmcore/view/Input.h"
 
 #include <imgui.h>
@@ -112,10 +113,10 @@ public:
     // UTF8 String En-/Decoding -----------------------------------------------
 
     /** Decode string from UTF-8. */
-    bool Utf8Decode(std::string& str) const;
+    static bool Utf8Decode(std::string& str);
 
     /** Encode string into UTF-8. */
-    bool Utf8Encode(std::string& str) const;
+    static bool Utf8Encode(std::string& str);
 
 
     // String search widget ---------------------------------------------------

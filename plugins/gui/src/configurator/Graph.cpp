@@ -520,36 +520,6 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
         io.MouseClicked[0] = false;
     }
 
-    // Zooming and Scaling  -----------
-    /// Must be checked inside canvas child window.
-    if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) {
-
-        // Scrolling (2 = Middle Mouse Button)
-        if (ImGui::IsMouseDragging(2, 0.0f)) {
-            this->canvas.scrolling = this->canvas.scrolling + ImGui::GetIO().MouseDelta / this->canvas.zooming;
-            this->canvas.updated = true;
-        }
-
-        // Zooming (Mouse Wheel)
-        if (this->mouse_wheel != io.MouseWheel) {
-            const float factor = (10.0f / this->canvas.zooming);
-            float last_zooming = this->canvas.zooming;
-            this->canvas.zooming = this->canvas.zooming + io.MouseWheel / factor;
-            // Limit zooming
-            this->canvas.zooming = (this->canvas.zooming <= 0.0f) ? 0.000001f : (this->canvas.zooming);
-            // Compensate zooming shift of origin
-            ImVec2 scrolling_diff =
-                (this->canvas.scrolling * last_zooming) - (this->canvas.scrolling * this->canvas.zooming);
-            this->canvas.scrolling += (scrolling_diff / this->canvas.zooming);
-            // Move origin away from mouse position
-            ImVec2 current_mouse_pos = this->canvas.offset - ImGui::GetMousePos();
-            ImVec2 new_mouse_position = (current_mouse_pos / last_zooming) * this->canvas.zooming;
-            this->canvas.scrolling += ((new_mouse_position - current_mouse_pos) / this->canvas.zooming);
-
-            this->mouse_wheel = io.MouseWheel;
-            this->canvas.updated = true;
-        }
-    }
     // Update canvas position
     ImVec2 new_position = ImGui::GetCursorScreenPos();
     if ((this->canvas.position.x != new_position.x) || (this->canvas.position.y != new_position.y)) {
@@ -635,6 +605,38 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
             }
         }
     }
+
+    // Zooming and Scaling  -----------
+    /// Must be checked inside canvas child window.
+    /// Check at the end for being applied in next frame when font scaling matches zooming.
+    if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) {
+
+        // Scrolling (2 = Middle Mouse Button)
+        if (ImGui::IsMouseDragging(2, 0.0f)) {
+            this->canvas.scrolling = this->canvas.scrolling + ImGui::GetIO().MouseDelta / this->canvas.zooming;
+            this->canvas.updated = true;
+        }
+
+        // Zooming (Mouse Wheel)
+        if (this->mouse_wheel != io.MouseWheel) {
+            const float factor = (10.0f / this->canvas.zooming);
+            float last_zooming = this->canvas.zooming;
+            this->canvas.zooming = this->canvas.zooming + io.MouseWheel / factor;
+            // Limit zooming
+            this->canvas.zooming = (this->canvas.zooming <= 0.0f) ? 0.000001f : (this->canvas.zooming);
+            // Compensate zooming shift of origin
+            ImVec2 scrolling_diff =
+                (this->canvas.scrolling * last_zooming) - (this->canvas.scrolling * this->canvas.zooming);
+            this->canvas.scrolling += (scrolling_diff / this->canvas.zooming);
+            // Move origin away from mouse position
+            ImVec2 current_mouse_pos = this->canvas.offset - ImGui::GetMousePos();
+            ImVec2 new_mouse_position = (current_mouse_pos / last_zooming) * this->canvas.zooming;
+            this->canvas.scrolling += ((new_mouse_position - current_mouse_pos) / this->canvas.zooming);
+
+            this->mouse_wheel = io.MouseWheel;
+            this->canvas.updated = true;
+        }
+    }    
 
     draw_list->ChannelsMerge();
     io.MouseClicked[0] = left_click;
