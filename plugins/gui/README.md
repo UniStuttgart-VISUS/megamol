@@ -77,6 +77,8 @@ In order to start the configurator automatically, you can use the project  `/exa
 
         mmCreateView("configurator","GUIView","::gui")
         mmSetParamValue("::gui::autostart_configurator",[=[true]=])
+        
+See issue #539 for a bug and feature tracker.
 
 #### Menu
 

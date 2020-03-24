@@ -127,6 +127,7 @@ private:
         bool layout_current_graph;
         float child_split_width;
         float mouse_wheel;
+        bool reset_zooming;
 
         std::string param_name_space;
 

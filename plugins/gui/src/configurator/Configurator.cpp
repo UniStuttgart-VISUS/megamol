@@ -94,7 +94,6 @@ bool megamol::gui::configurator::Configurator::Draw(
 
     if (this->window_state < 2) {
         // 1] Show pop-up before calling UpdateAvailableModulesCallsOnce of graph.
-
         /// Rendering of pop-up requires two complete Draw calls!
         bool open = true;
         std::string popup_label = "Loading";
@@ -110,26 +109,18 @@ bool megamol::gui::configurator::Configurator::Draw(
 
     } else if (this->window_state == 2) {
         // 2] Load available modules and calls and currently loaded project from core once(!)
-
         this->graph_manager.UpdateModulesCallsStock(core_instance);
-
-        // Load inital project
-        //this->add_empty_project();
+        // Load once inital project
         this->graph_manager.LoadProjectCore(this->get_unique_project_name(), core_instance);
-
+        ///this->add_empty_project();
         this->window_state++;
     } else {
         // 3] Render configurator gui content
-
         this->draw_window_menu(core_instance);
-
         float child_width_auto = 0.0f;
         this->utils.VerticalSplitter(GUIUtils::FixedSplitterSide::LEFT, this->child_split_width, child_width_auto);
-
         this->draw_window_module_list(this->child_split_width);
-
         ImGui::SameLine();
-
         this->graph_uid = this->graph_manager.GUI_Present(child_width_auto, this->graph_font, this->hotkeys);
     }
 

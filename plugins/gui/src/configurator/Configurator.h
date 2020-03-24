@@ -83,7 +83,6 @@ private:
     void add_empty_project(void);
 
     inline const std::string get_unique_project_name(void) { return ("Project_" + std::to_string(++project_uid)); }
-    // ------------------------------------------------------------------------
 };
 
 } // namespace configurator

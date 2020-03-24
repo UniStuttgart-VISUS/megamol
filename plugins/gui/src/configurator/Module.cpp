@@ -183,7 +183,8 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         ImVec2 module_rect_max = module_rect_min + module_size;
         ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
 
-        // Clip module if lying ouside the canvas
+        // Clip module if lying ouside the canvas (useless since ImGui::PushClipRect is used?)
+        /*
         ImVec2 canvas_rect_min = in_canvas.position;
         ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
         if (!((canvas_rect_min.x < module_rect_max.x) && (canvas_rect_max.x > module_rect_min.x) &&
@@ -197,6 +198,7 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
             }
             return retval_id;
         }
+        */
 
         ImGui::PushID(inout_mod.uid);
 

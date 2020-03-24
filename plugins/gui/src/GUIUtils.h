@@ -110,7 +110,7 @@ public:
     bool PointCircleButton(const std::string& label = "");
 
 
-    // UTF8 String En-/Decoding -----------------------------------------------
+    // Static UTF8 String En-/Decoding ----------------------------------------
 
     /** Decode string from UTF-8. */
     static bool Utf8Decode(std::string& str);
@@ -157,8 +157,8 @@ public:
     void ReadOnlyWigetStyle(bool set);
 
 private:
-
     // VARIABLES --------------------------------------------------------------
+
     /** Current tooltip hover time. */
     float tooltip_time;
 

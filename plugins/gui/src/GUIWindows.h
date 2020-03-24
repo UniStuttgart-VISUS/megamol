@@ -309,8 +309,6 @@ private:
      * Shutdown megmol program.
      */
     void shutdown(void);
-
-    // ------------------------------------------------------------------------
 };
 
 } // namespace gui

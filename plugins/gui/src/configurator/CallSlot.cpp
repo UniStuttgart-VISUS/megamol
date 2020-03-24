@@ -290,7 +290,8 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
             }
         }
 
-        // Clip call slots if lying ouside the canvas
+        // Clip call slots if lying ouside the canvas (useless since ImGui::PushClipRect is used?)
+        /*
         ImVec2 canvas_rect_min = in_canvas.position;
         ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
         ImVec2 slot_rect_min = ImVec2(slot_position.x - radius, slot_position.y - radius);
@@ -311,6 +312,7 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
             this->selected = false;
             return GUI_INVALID_ID;
         }
+        */
 
         ImGui::PushID(inout_call_slot.uid);
 

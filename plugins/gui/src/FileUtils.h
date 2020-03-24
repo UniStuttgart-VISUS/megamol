@@ -134,8 +134,8 @@ public:
 
 private:
 #ifdef GUI_USE_FILESYSTEM
-
     // VARIABLES --------------------------------------------------------------
+
     GUIUtils utils;
     std::string file_name_str;
     std::string file_path_str;
@@ -151,6 +151,7 @@ private:
     size_t additional_lines;
 
     // FUNCTIONS --------------------------------------------------------------
+    
     bool splitPath(const fsns::path& in_file_path, std::string& out_path, std::string& out_file);
     void validateDirectory(const std::string& path_str);
     void validateFile(const std::string& file_str, FileBrowserFlag flag);
