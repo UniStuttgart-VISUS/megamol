@@ -5,6 +5,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+#include "ClusterDataTypes.h"
 
 namespace megamol {
 namespace molsurfmapcluster {
@@ -79,6 +80,18 @@ private:
 
     /** Parameter to enable clustering using multiple maps */
     core::param::ParamSlot useMultipleMapsParam;
+
+    /** Parameter to select the distance measure */
+    core::param::ParamSlot distanceMeasureSelectionParam;
+
+    /** Parameter to select the clustering method */
+    core::param::ParamSlot clusteringMethodSelectionParam;
+
+    /** Parameter to select the linkage method */
+    core::param::ParamSlot linkageMethodSelectionParam;
+
+    /** Pointer to the vector containing the cluster nodes */
+    std::shared_ptr<std::vector<ClusterNode_2>> nodes;
 
     /** The last hash of the incoming data */
     uint64_t lastDataHash;

@@ -3,7 +3,9 @@
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
+#include "ClusterDataTypes.h"
 #include <cstdint>
+#include <vector>
 
 namespace megamol {
 namespace molsurfmapcluster {
@@ -11,12 +13,21 @@ namespace molsurfmapcluster {
 /**
  * Struct containing the data sent over CallClustering_2
  */
-struct ClusteringData {};
+struct ClusteringData {
+    /** Pointer to the vector containing all cluster nodes */
+    std::shared_ptr<std::vector<ClusterNode_2>> nodes;
+};
 
 /**
  * Struct containing the metadata sent over CallClustering_2
  */
-struct ClusteringMetaData {};
+struct ClusteringMetaData {
+    /** Number of proteins/leaf nodes */
+    uint64_t numLeafNodes;
+
+    /** Hash value of the data */
+    uint64_t dataHash;
+};
 
 /**
  * Call for transporting clustering information
