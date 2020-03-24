@@ -510,12 +510,6 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     ImGui::BeginChild(
         "region", ImVec2(in_child_width, 0.0f), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
 
-    // Disable left click checks for mouse positions lying outside the canvas or when any pop-up is open (deselect check for graph items)
-    bool left_click = io.MouseClicked[0];
-    if (left_click && !ImGui::IsWindowHovered()) { 
-        io.MouseClicked[0] = false;
-    }
-
     // Update canvas position
     ImVec2 new_position = ImGui::GetWindowPos();
     if ((this->canvas.position.x != new_position.x) || (this->canvas.position.y != new_position.y)) {
@@ -646,18 +640,14 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     }
 
     draw_list->ChannelsMerge();
-    io.MouseClicked[0] = left_click;
     ImGui::PopClipRect();
-
     ImGui::EndChild();
-
     ImGui::PopStyleColor();
 
     // Font scaling is applied next frame after ImGui::Begin()
     // Font for graph should not be the currently used font of the gui.
     ImGui::GetFont()->Scale = this->canvas.zooming;
-
-
+    
     // Reset font
     ImGui::PopFont();
 }

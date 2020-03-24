@@ -278,7 +278,6 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
         ImVec2 slot_position = this->position;
         float radius = GUI_CALL_SLOT_RADIUS * in_canvas.zooming;
 
-        // Draw text
         ImVec2 text_pos_left_upper = ImVec2(0.0f, 0.0f);
         if (this->label_visible) {
             text_pos_left_upper.y = slot_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
@@ -291,7 +290,6 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
         }
 
         // Clip call slots if lying ouside the canvas (useless since ImGui::PushClipRect is used?)
-        /*
         ImVec2 canvas_rect_min = in_canvas.position;
         ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
         ImVec2 slot_rect_min = ImVec2(slot_position.x - radius, slot_position.y - radius);
@@ -312,16 +310,17 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
             this->selected = false;
             return GUI_INVALID_ID;
         }
-        */
 
         ImGui::PushID(inout_call_slot.uid);
 
         draw_list->ChannelsSetCurrent(1); // Foreground
 
-        ImVec4 tmpcol = style.Colors[ImGuiCol_Button];
+        ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
         const ImU32 COLOR_SLOT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-        const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PopupBg]);
+        tmpcol = style.Colors[ImGuiCol_Border];
+        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);         
+        const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
         const ImU32 COLOR_SLOT_CALLER = IM_COL32(0, 255, 192, 255);
         const ImU32 COLOR_SLOT_CALLEE = IM_COL32(192, 255, 64, 255);
         const ImU32 COLOR_SLOT_COMPATIBLE = IM_COL32(0, 192, 0, 255);

@@ -147,12 +147,18 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(
             //    return GUI_INVALID_ID;
             //}
 
-            ImVec4 tmpcol = style.Colors[ImGuiCol_Button];
-            // tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+            ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
+            tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             const ImU32 COLOR_CALL_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-            const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
-            const ImU32 COLOR_CALL_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
-            const ImU32 COLOR_CALL_BORDER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PopupBg]);
+            tmpcol = style.Colors[ImGuiCol_FrameBgActive];
+            tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);            
+            const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
+            //tmpcol = style.Colors[ImGuiCol_ButtonActive];
+            //tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);            
+            const ImU32 COLOR_CALL_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
+            tmpcol = style.Colors[ImGuiCol_PopupBg];
+            tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);            
+            const ImU32 COLOR_CALL_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
             const float CURVE_THICKNESS = 3.0f;
 

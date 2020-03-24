@@ -184,7 +184,6 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
 
         // Clip module if lying ouside the canvas (useless since ImGui::PushClipRect is used?)
-        /*
         ImVec2 canvas_rect_min = in_canvas.position;
         ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
         if (!((canvas_rect_min.x < module_rect_max.x) && (canvas_rect_max.x > module_rect_min.x) &&
@@ -198,15 +197,18 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
             }
             return retval_id;
         }
-        */
 
         ImGui::PushID(inout_mod.uid);
 
-        ImVec4 tmpcol = style.Colors[ImGuiCol_Button];
-        // tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+        ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
+        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
         const ImU32 COLOR_MODULE_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-        const ImU32 COLOR_MODULE_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
-        const ImU32 COLOR_MODULE_BORDER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PopupBg]);
+        tmpcol = style.Colors[ImGuiCol_FrameBgActive];
+        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+        const ImU32 COLOR_MODULE_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
+        tmpcol = style.Colors[ImGuiCol_Border];
+        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+        const ImU32 COLOR_MODULE_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
         // Draw text
         std::string label;
@@ -249,7 +251,7 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         ImGui::InvisibleButton(label.c_str(), module_size);
         ImGui::SetItemAllowOverlap();
         bool hovered = ImGui::IsItemHovered() && (!module_slot_hovered);
-        bool mouse_clicked = ImGui::GetIO().MouseClicked[0];
+        bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
         if (mouse_clicked && (!hovered || (module_slot_hovered))) {
             this->selected = false;
         }
@@ -275,7 +277,7 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
             if (ImGui::IsItemActive()) {
                 this->selected = true;
             }
-            if (this->selected && ImGui::IsMouseDragging(0)) {
+            if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
                 this->position =
                     ((module_rect_min - in_canvas.offset) + ImGui::GetIO().MouseDelta) / in_canvas.zooming;
                 this->module_updated = true;
