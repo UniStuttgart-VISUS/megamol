@@ -202,7 +202,7 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(
                 }
                 bool active = ImGui::IsItemActive();
                 bool hovered = ImGui::IsItemHovered();
-                bool mouse_clicked = ImGui::GetIO().MouseClicked[0];
+                bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
                 if (mouse_clicked && !hovered) {
                     this->selected = false;
                 }
