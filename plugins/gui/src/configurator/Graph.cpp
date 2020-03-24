@@ -515,7 +515,8 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
 
     // Disable left click checks for mouse positions lying outside the canvas or when any pop-up is open (deselect check for graph items)
     bool left_click = io.MouseClicked[0];
-    if (left_click && !ImGui::IsWindowHovered()) {
+    /// XXX
+    if (left_click && !ImGui::IsWindowHovered()) { //} && !ImGui::IsMouseDragging(0)) {
         io.MouseClicked[0] = false;
     }
 

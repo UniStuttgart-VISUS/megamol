@@ -17,6 +17,7 @@
 #include <map>
 #include <math.h> // fmodf
 
+#include "FileUtils.h"
 #include "GraphManager.h"
 #include "WindowManager.h"
 
@@ -60,7 +61,8 @@ private:
     HotKeyArrayType hotkeys;
 
     GraphManager graph_manager;
-    GUIUtils utils;
+    megamol::gui::FileUtils file_utils;    
+    megamol::gui::GUIUtils utils;
 
     int window_state;
     std::string project_filename;

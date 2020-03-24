@@ -22,6 +22,7 @@
 #include <map>
 #include <vector>
 
+#include "FileUtils.h"
 #include "Graph.h"
 
 
@@ -69,7 +70,7 @@ private:
 
     ModuleStockVectorType modules_stock;
     CallStockVectorType calls_stock;
-
+    
     /**
      * Defines GUI graph present.
      */

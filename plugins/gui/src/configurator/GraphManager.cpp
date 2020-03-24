@@ -409,7 +409,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
     ImGuiID graph_uid, const std::string& project_filename) {
 
     std::string projectstr;
-    if (!file::ReadFile(project_filename, projectstr)) return false;
+    if (!FileUtils::ReadFile(project_filename, projectstr)) return false;
 
     const std::string lua_view = "mmCreateView";
     const std::string lua_module = "mmCreateModule";
@@ -884,7 +884,7 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_id,
         found_graph->ResetDirty();
     }
 
-    return file::WriteFile(project_filename, projectstr);
+    return FileUtils::WriteFile(project_filename, projectstr);
 }
 
 

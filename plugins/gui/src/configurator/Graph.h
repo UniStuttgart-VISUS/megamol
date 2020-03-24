@@ -18,6 +18,10 @@
 #include "Module.h"
 #include "Parameter.h"
 
+#ifdef GUI_USE_FILESYSTEM
+#    include "FileUtils.h"
+#endif // GUI_USE_FILESYSTEM
+
 
 namespace megamol {
 namespace gui {

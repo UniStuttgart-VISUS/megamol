@@ -261,6 +261,7 @@ megamol::gui::configurator::Parameter::Presentation::Presentation(void)
     , expert(false)
     , help()
     , utils()
+    , file_utils()
     , tf_editor()
     , show_tf_editor(false)
     , widget_store()
@@ -490,17 +491,18 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                 this->transfer_function_edit(param);
             } break;
             case (Parameter::ParamType::FILEPATH): {
-                ImGuiStyle& style = ImGui::GetStyle();
-                ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f - ImGui::GetFrameHeight() - style.ItemSpacing.x); // set general proportional item width
-
                 if (!std::holds_alternative<T>(this->widget_store)) {
                     /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
                     std::string utf8Str = arg;
                     this->utils.Utf8Encode(utf8Str);
                     this->widget_store = utf8Str;
                 }
-                bool button_edit = this->utils.FileBrowserButton(std::get<std::string>(this->widget_store));
+                
+                bool button_edit = this->file_utils.FileBrowserButton(std::get<std::string>(this->widget_store));
                 ImGui::SameLine();
+
+                ImGuiStyle& style = ImGui::GetStyle();
+                ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f - ImGui::GetFrameHeight() - style.ItemSpacing.x);
                 ImGui::InputText(
                     param_label.c_str(), &std::get<std::string>(this->widget_store), ImGuiInputTextFlags_None);
                 if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
@@ -511,7 +513,6 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                     this->utils.Utf8Encode(utf8Str);
                     this->widget_store = utf8Str;
                 }
-
                 ImGui::PopItemWidth();
             } break;
             case (Parameter::ParamType::FLEXENUM): {

@@ -92,7 +92,7 @@ The menu of the configurator window provides the following options:
         * `File` Add existing project from a file to currently selected project.
         * `Running` Add currently running project to currently selected project.
     * `Save Project` (` `) Save the project of the currently selected tab to a file (lua).
-* `[?]` Information on additionally available options.
+* `Help` Information on additionally available options.
 
 **NOTE:**\
 Projects setting parameter values using `mmSetParamValue` must have the parameter values enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are deprecated.

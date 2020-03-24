@@ -33,7 +33,8 @@ megamol::gui::configurator::Configurator::Configurator()
     , graph_font(nullptr)
     , child_split_width(250.0f)
     , add_project_graph_uid(GUI_INVALID_ID)
-    , project_uid(0) {
+    , project_uid(0)
+    , file_utils() {
 
     // Define HotKeys
     this->hotkeys[HotkeyIndex::MODULE_SEARCH] =
@@ -211,13 +212,13 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     // Save/Load project pop-up
     bool popup_save_failed = false;
     bool popup_load_failed = false;
-    if (this->utils.FileBrowserPopUp(
-            GUIUtils::FileBrowserFlag::LOAD, "Load Project", popup_load_file, this->project_filename)) {
+    if (this->file_utils.FileBrowserPopUp(
+            FileUtils::FileBrowserFlag::LOAD, "Load Project", popup_load_file, this->project_filename)) {
         popup_load_failed = !this->graph_manager.LoadAddProjectFile(add_project_graph_uid, this->project_filename);
         this->add_project_graph_uid = GUI_INVALID_ID;
     }
-    if (this->utils.FileBrowserPopUp(
-            GUIUtils::FileBrowserFlag::SAVE, "Save Project", popup_save_file, this->project_filename)) {
+    if (this->file_utils.FileBrowserPopUp(
+            FileUtils::FileBrowserFlag::SAVE, "Save Project", popup_save_file, this->project_filename)) {
         popup_save_failed = !this->graph_manager.SaveProjectFile(this->graph_uid, this->project_filename);
     }
     this->utils.MinimalPopUp("Failed to Save Project", popup_save_failed,

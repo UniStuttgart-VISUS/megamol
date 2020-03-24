@@ -35,6 +35,7 @@ GUIWindows::GUIWindows()
     , tf_editor()
     , configurator()
     , utils()
+    , file_utils()
     , state()
     , widgtmap_text()
     , widgtmap_float()
@@ -625,7 +626,6 @@ bool GUIWindows::createContext(void) {
         // Add default font for gui.
         io.Fonts->AddFontDefault(&config);
         std::string configurator_font = "";
-#ifdef GUI_USE_FILESYSTEM
         // Add other known fonts
         std::string font_file, font_path;
         if (this->core_instance != nullptr) {
@@ -634,14 +634,14 @@ bool GUIWindows::createContext(void) {
             for (size_t i = 0; i < search_paths.Count(); ++i) {
                 std::wstring search_path(search_paths[i].PeekBuffer());
                 font_file = "Roboto-Regular.ttf";
-                font_path = file::SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
+                font_path = FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
                 if (!font_path.empty()) {
                     io.Fonts->AddFontFromFileTTF(font_path.c_str(), 12.0f, &config);
                     /// Set as default.
                     io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
                 }
                 font_file = "SourceCodePro-Regular.ttf";
-                font_path = file::SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
+                font_path = FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
                 if (!font_path.empty()) {
                     io.Fonts->AddFontFromFileTTF(font_path.c_str(), 13.0f, &config);
                     configurator_font = font_path;
@@ -651,7 +651,6 @@ bool GUIWindows::createContext(void) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
-#endif // GUI_USE_FILESYSTEM
 
         // Add default font at index 0 for exclusive use in configurator graph.
         if (configurator_font.empty()) {
@@ -1244,7 +1243,6 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
     wc.font_name = std::string(font_current->GetDebugName());
     this->utils.Utf8Decode(wc.font_name);
 
-#ifdef GUI_USE_FILESYSTEM
     ImGui::Separator();
     ImGui::Text("Load Font from File");
     std::string help = "Same font can be loaded multiple times with different font size.";
@@ -1263,7 +1261,7 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
     ImGui::InputText(label.c_str(), &wc.buf_font_file, ImGuiInputTextFlags_AutoSelectAll);
     this->utils.Utf8Decode(wc.buf_font_file);
     // Validate font file before offering load button
-    if (file::FilesExistingExtension<std::string>(wc.buf_font_file, std::string(".ttf"))) {
+    if (FileUtils::FilesExistingExtension<std::string>(wc.buf_font_file, std::string(".ttf"))) {
         if (ImGui::Button("Add Font")) {
             this->state.font_file = wc.buf_font_file;
             this->state.font_size = wc.buf_font_size;
@@ -1271,7 +1269,6 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
     } else {
         ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Please enter valid font file name.");
     }
-#endif // GUI_USE_FILESYSTEM
 }
 
 
@@ -1280,19 +1277,11 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 
     bool open_popup_project = false;
     if (ImGui::BeginMenu("File")) {
-#ifdef GUI_USE_FILESYSTEM
         // Load/save parameter values to LUA file
         if (ImGui::MenuItem("Save Project",
                 std::get<0>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]).ToString().c_str())) {
             open_popup_project = true;
         }
-        /// Not supported so far
-        // if (ImGui::MenuItem("Load Project")) {
-        //    // TODO:  Load parameter file
-        //    std::string projectFilename;
-        //    this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
-        //}
-#endif // GUI_USE_FILESYSTEM
 
         if (ImGui::MenuItem("Exit", "ALT + 'F4'")) {
             // Exit program
@@ -1425,22 +1414,20 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
         ImGui::EndPopup();
     }
 
-    // SAVE PROJECT pop-up
-#ifdef GUI_USE_FILESYSTEM
+    // Save project pop-up
     open_popup_project = (open_popup_project || std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]));
     if (open_popup_project) {
         std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]) = false;
     }
-    if (this->utils.FileBrowserPopUp(
-            GUIUtils::FileBrowserFlag::SAVE, "Save Project", open_popup_project, wc.main_project_file)) {
+    if (this->file_utils.FileBrowserPopUp(
+            FileUtils::FileBrowserFlag::SAVE, "Save Project", open_popup_project, wc.main_project_file)) {
         // Serialize current state to parameter.
         std::string state;
         this->window_manager.StateToJSON(state);
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
         // Serialize project to file
-        file::SaveProjectFile(wc.main_project_file, this->core_instance);
+        FileUtils::SaveProjectFile(wc.main_project_file, this->core_instance);
     }
-#endif // GUI_USE_FILESYSTEM
 }
 
 
@@ -1659,6 +1646,11 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
                 this->widgtmap_text.emplace(param_id, utf8Str);
                 it = this->widgtmap_text.find(param_id);
             }
+            
+            bool button_edit = this->file_utils.FileBrowserButton(it->second);
+            ImGui::SameLine();
+
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f - ImGui::GetFrameHeight() - style.ItemSpacing.x);
             ImGui::InputText(param_label.c_str(), &it->second, ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 this->utils.Utf8Decode(it->second);
@@ -1668,6 +1660,7 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
                 this->utils.Utf8Encode(utf8Str);
                 it->second = utf8Str;
             }
+            ImGui::PopItemWidth();
         } else {
             vislib::sys::Log::DefaultLog.WriteWarn(
                 "Unknown Parameter Type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);

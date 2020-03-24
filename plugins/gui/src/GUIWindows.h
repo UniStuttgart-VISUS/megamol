@@ -35,6 +35,7 @@
 #include <iomanip>
 #include <sstream>
 
+#include "FileUtils.h"
 #include "CorporateGreyStyle.h"
 #include "CorporateWhiteStyle.h"
 #include "TransferFunctionEditor.h"
@@ -179,7 +180,10 @@ private:
     configurator::Configurator configurator;
 
     /** Utils being used all over the place */
-    GUIUtils utils;
+    megamol::gui::GUIUtils utils;
+
+    /** File utils providing stuff interacting with files */
+    megamol::gui::FileUtils file_utils;  
 
     /** The current local state of the gui. */
     StateBuffer state;
