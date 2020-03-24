@@ -3,11 +3,22 @@
 #include "compositing/CompositingCalls.h"
 #include "ProbeGlCalls.h"
 
+#include "mmcore/CoreInstance.h"
+
+#include <imgui.h>
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include <imgui_internal.h>
+#include "imgui_impl_opengl3.h"
+#include "imgui_stdlib.h"
+
 megamol::probe_gl::ProbeInteraction::ProbeInteraction()
     : Renderer3DModule_2()
     , m_version(0)
     , m_cursor_x(0)
     , m_cursor_y(0)
+    , m_cursor_x_lastRightClick(0)
+    , m_cursor_y_lastRightClick(0)
+    , m_open_context_menu(false)
     , m_interactions(new ProbeInteractionCollection())
     , last_active_probe_id(-1)
     , m_probe_fbo_slot("getProbeFBO", "")
@@ -44,6 +55,23 @@ bool megamol::probe_gl::ProbeInteraction::OnMouseButton(
                 ProbeManipulation{InteractionType::SELECT, static_cast<uint32_t>(last_active_probe_id), 0, 0, 0});
 
             return true;
+        }
+
+        m_open_context_menu = false;
+    } 
+    else if (button == core::view::MouseButton::BUTTON_RIGHT)// && action == core::view::MouseButtonAction::PRESS)
+    {
+        m_mouse_button_states[button] =
+            (action == core::view::MouseButtonAction::PRESS) ? true : 
+                (action == core::view::MouseButtonAction::RELEASE) ? false : m_mouse_button_states[button];
+
+
+        if (action == core::view::MouseButtonAction::PRESS) {
+
+            m_open_context_menu = true;
+
+            m_cursor_x_lastRightClick = m_cursor_x;
+            m_cursor_y_lastRightClick = m_cursor_y;
         }
     }
 
@@ -229,6 +257,39 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
     }
 
     last_active_probe_id = objId;
+
+
+    if (m_open_context_menu)
+    {
+        bool my_tool_active = true;
+        float my_color[4] = {0.0, 0.0, 0.0, 0.0};
+
+        auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
+        if (ctx != nullptr) {
+            ImGui::SetCurrentContext(ctx);
+
+            ImGuiIO& io = ImGui::GetIO();
+            ImVec2 viewport = ImVec2(io.DisplaySize.x, io.DisplaySize.y);
+
+            ImGui::SetNextWindowPos(ImVec2(m_cursor_x_lastRightClick, m_cursor_y_lastRightClick));
+
+            ImGui::Begin("ProbeInteractionTools", &my_tool_active, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+
+            if (ImGui::Button("AddProbe"))
+            {
+                // TODO add interaction to stack
+                m_open_context_menu = false;
+            }
+
+            if (ImGui::Button("MoveProbe")) {
+                // TODO add interaction to stack
+
+                m_open_context_menu = false;
+            }
+
+            ImGui::End();
+        }
+    }
 
     return true;
 }
