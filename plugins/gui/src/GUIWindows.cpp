@@ -593,7 +593,7 @@ bool GUIWindows::createContext(void) {
     io.IniSavingRate = 5.0f;          //  in seconds
     io.IniFilename = nullptr;         // "imgui.ini"; - disabled, using own window settings profile
     io.LogFilename = "imgui_log.txt"; // (set to nullptr to disable)
-    io.FontAllowUserScaling = true;
+    io.FontAllowUserScaling = false;  // disable font scaling using ctrl + mouse wheel
 
     // Init global state -------------------------------------------------------
     this->state.font_file = "";

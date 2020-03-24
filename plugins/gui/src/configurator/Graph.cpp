@@ -294,7 +294,6 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , call_slot_interact()
     , layout_current_graph(false)
     , child_split_width(300.0f)
-    , mouse_wheel(0.0f)
     , reset_zooming(false)
     , params_visible(true)
     , params_readonly(false)
@@ -519,7 +518,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     }
 
     // Update canvas position
-    ImVec2 new_position = ImGui::GetCursorScreenPos();
+    ImVec2 new_position = ImGui::GetWindowPos();
     if ((this->canvas.position.x != new_position.x) || (this->canvas.position.y != new_position.y)) {
         this->canvas.updated = true;
     }
@@ -620,7 +619,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
         }
 
         // Zooming (Mouse Wheel) + Reset
-        if ((this->mouse_wheel != io.MouseWheel) || this->reset_zooming) {
+        if ((io.MouseWheel != 0) || this->reset_zooming) {
             float last_zooming = this->canvas.zooming;
             ImVec2 current_mouse_pos;
             if (this->reset_zooming) {
@@ -642,8 +641,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
             // Move origin away from mouse position
             ImVec2 new_mouse_position = (current_mouse_pos / last_zooming) * this->canvas.zooming;
             this->canvas.scrolling += ((new_mouse_position - current_mouse_pos) / this->canvas.zooming);
-
-            this->mouse_wheel = io.MouseWheel;
+            
             this->canvas.updated = true;
         }
     }
@@ -830,10 +828,9 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_grid(void) 
             ImVec2(this->canvas.size.x, y) + this->canvas.position, COLOR_GRID);
     }
 
-    // Cross in origin
-    draw_list->ChannelsSetCurrent(1); // Foreground
-    draw_list->AddLine(ImVec2(this->canvas.offset.x - GRID_SIZE, this->canvas.offset.y),ImVec2(this->canvas.offset.x + GRID_SIZE, this->canvas.offset.y), IM_COL32(128, 0, 0, 255), 1.0f);
-    draw_list->AddLine(ImVec2(this->canvas.offset.x, this->canvas.offset.y - GRID_SIZE), ImVec2(this->canvas.offset.x, this->canvas.offset.y + GRID_SIZE), IM_COL32(0, 128, 0, 255), 1.0f);
+    // DEBUG Cross in origin
+    // draw_list->AddLine(ImVec2(this->canvas.offset.x - GRID_SIZE, this->canvas.offset.y),ImVec2(this->canvas.offset.x + GRID_SIZE, this->canvas.offset.y), IM_COL32(128, 0, 0, 255), 1.0f);
+    // draw_list->AddLine(ImVec2(this->canvas.offset.x, this->canvas.offset.y - GRID_SIZE), ImVec2(this->canvas.offset.x, this->canvas.offset.y + GRID_SIZE), IM_COL32(0, 128, 0, 255), 1.0f);
 }
 
 void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_call(
