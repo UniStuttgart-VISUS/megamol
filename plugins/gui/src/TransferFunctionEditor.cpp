@@ -217,6 +217,8 @@ bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
 
 bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter) {
 
+    ImGui::BeginGroup();
+
     if (useActiveParameter) {
         if (this->activeParameter == nullptr) {
             const char* message = "Changes have no effect.\n"
@@ -230,7 +232,6 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
 
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
-
 
     // Test if selected node is still in range
     if (this->nodes.size() <= this->currentNode) {
@@ -256,7 +257,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
     ImGui::Separator();
 
     // Interval range -----------------------------------------------------
-    ImGui::PushItemWidth(tfw_item_width * 0.5f - style.ItemInnerSpacing.x);
+    ImGui::PushItemWidth(tfw_item_width * 0.5f - style.ItemSpacing.x);
 
     ImGui::InputFloat("###min", &this->widget_buffer.min_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -280,8 +281,8 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
         this->widget_buffer.max_range = this->range[1];
         this->textureInvalid = true;
     }
-    ImGui::SameLine();
     ImGui::PopItemWidth();
+
     ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x);
     ImGui::Text("Value Range");
 
@@ -455,6 +456,10 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
             }
         }
     }
+
+    ImGui::PopItemWidth();
+
+    ImGui::EndGroup();
 
     return apply_changes;
 }
