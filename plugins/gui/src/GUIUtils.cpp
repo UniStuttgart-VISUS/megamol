@@ -333,8 +333,8 @@ bool megamol::gui::GUIUtils::PointCircleButton(const std::string& label) {
     }
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]));
-    ImGui::BeginChild("special_button_background", ImVec2(edge_length, edge_length), false,
-        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
+    auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
+    ImGui::BeginChild("special_button_background", ImVec2(edge_length, edge_length), false, child_flags);
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);

@@ -399,8 +399,7 @@ ImGuiID megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::c
 void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui::configurator::Graph& inout_graph) {
 
     const float child_height = ImGui::GetItemsLineHeightWithSpacing() * 1.0f;
-    const auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
-
+    auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened;
     ImGui::BeginChild("graph_menu", ImVec2(0.0f, child_height), false, child_flags);
 
     // Main View Checkbox
@@ -506,9 +505,8 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     ImGui::PushStyleColor(ImGuiCol_ChildBg, COLOR_CANVAS_BACKGROUND);
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-
-    ImGui::BeginChild(
-        "region", ImVec2(in_child_width, 0.0f), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
+    auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened;
+    ImGui::BeginChild("region", ImVec2(in_child_width, 0.0f), true, child_flags);
 
     // Update canvas position
     ImVec2 new_position = ImGui::GetWindowPos();
@@ -647,7 +645,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     // Font scaling is applied next frame after ImGui::Begin()
     // Font for graph should not be the currently used font of the gui.
     ImGui::GetFont()->Scale = this->canvas.zooming;
-    
+
     // Reset font
     ImGui::PopFont();
 }
@@ -658,8 +656,7 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
     ImGui::BeginGroup();
 
     float param_child_height = ImGui::GetItemsLineHeightWithSpacing() * 3.5f;
-    auto child_flags = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar;
-
+    auto child_flags = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
     ImGui::BeginChild("parameter_search_child", ImVec2(in_child_width, param_child_height), false, child_flags);
 
     ImGui::Text("Parameters");
@@ -741,8 +738,7 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
         ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive), modptr->name.c_str());
 
         ImGui::EndChild();
-
-        auto child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar;
+        auto child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NavFlattened;
         ImGui::BeginChild("parameter_list_child", ImVec2(in_child_width, 0.0f), true, child_flags);
 
         bool param_name_space_open = true;

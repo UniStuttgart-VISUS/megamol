@@ -247,8 +247,8 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
     ImGui::BeginGroup();
 
     const float search_child_height = ImGui::GetItemsLineHeightWithSpacing() * 2.25f;
-    ImGui::BeginChild("module_search_child_window", ImVec2(width, search_child_height), false,
-        ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar);
+    auto child_flags = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
+    ImGui::BeginChild("module_search_child_window", ImVec2(width, search_child_height), false, child_flags);
 
     ImGui::Text("Available Modules");
     ImGui::Separator();
@@ -265,7 +265,8 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
 
     ImGui::EndChild();
 
-    ImGui::BeginChild("module_list_child_window", ImVec2(width, 0.0f), true, ImGuiWindowFlags_None);
+    child_flags = ImGuiWindowFlags_NavFlattened;
+    ImGui::BeginChild("module_list_child_window", ImVec2(width, 0.0f), true, child_flags);
 
     bool search_filter = true;
     bool compat_filter = true;
@@ -319,7 +320,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
             }
             bool add_module = false;
             // Left mouse button double click action
-            if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
+            if ((ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) || (ImGui::IsItemFocused() && ImGui::IsItemActivated())) {
                 add_module = true;
             }
             // Context menu

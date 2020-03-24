@@ -577,8 +577,7 @@ bool GUIWindows::createContext(void) {
     // viewport size).
     buf_win.win_store_config = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
-    buf_win.win_flags =
-        ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse;
+    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse;
     buf_win.win_callback = WindowManager::DrawCallbacks::CONFIGURATOR;
     // buf_win.win_size is set to current viewport later
     this->window_manager.AddWindowConfiguration("Configurator", buf_win);
@@ -594,6 +593,7 @@ bool GUIWindows::createContext(void) {
     io.IniFilename = nullptr;         // "imgui.ini"; - disabled, using own window settings profile
     io.LogFilename = "imgui_log.txt"; // (set to nullptr to disable)
     io.FontAllowUserScaling = false;  // disable font scaling using ctrl + mouse wheel
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // allow keyboard navigation
 
     // Init global state -------------------------------------------------------
     this->state.font_file = "";
