@@ -64,6 +64,9 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
     if (something_has_changed) {
         ++m_version;
 
+        //TODO this breaks chaining...
+        rt_collection->clear();
+
         auto gpu_mtl_storage = mtlc->getData();
         auto gpu_mesh_storage = mc->getData();
         auto probes = pc->getData();
