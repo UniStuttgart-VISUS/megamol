@@ -512,8 +512,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
 
     // Disable left click checks for mouse positions lying outside the canvas or when any pop-up is open (deselect check for graph items)
     bool left_click = io.MouseClicked[0];
-    /// XXX
-    if (left_click && !ImGui::IsWindowHovered()) { //} && !ImGui::IsMouseDragging(0)) {
+    if (left_click && !ImGui::IsWindowHovered()) { 
         io.MouseClicked[0] = false;
     }
 
@@ -641,7 +640,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
             // Move origin away from mouse position
             ImVec2 new_mouse_position = (current_mouse_pos / last_zooming) * this->canvas.zooming;
             this->canvas.scrolling += ((new_mouse_position - current_mouse_pos) / this->canvas.zooming);
-            
+
             this->canvas.updated = true;
         }
     }

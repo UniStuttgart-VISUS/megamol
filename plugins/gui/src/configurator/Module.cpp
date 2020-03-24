@@ -272,15 +272,14 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
                 }
                 ImGui::EndPopup();
             }
-            bool active = ImGui::IsItemActive();
-            if (active) {
+            if (ImGui::IsItemActive()) {
                 this->selected = true;
-                if (ImGui::IsMouseDragging(0)) {
-                    this->position =
-                        ((module_rect_min - in_canvas.offset) + ImGui::GetIO().MouseDelta) / in_canvas.zooming;
-                    this->module_updated = true;
-                }
             }
+            if (this->selected && ImGui::IsMouseDragging(0)) {
+                this->position =
+                    ((module_rect_min - in_canvas.offset) + ImGui::GetIO().MouseDelta) / in_canvas.zooming;
+                this->module_updated = true;
+            }            
         }
         ImU32 module_bg_color = (hovered || this->selected) ? COLOR_MODULE_HIGHTLIGHT : COLOR_MODULE_BACKGROUND;
         draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 5.0f);
