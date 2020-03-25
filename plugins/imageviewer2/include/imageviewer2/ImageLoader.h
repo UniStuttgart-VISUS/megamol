@@ -20,6 +20,8 @@
 #include <set>
 #include <thread>
 
+//#define LOADED_MESSAGE
+
 namespace megamol {
 namespace imageviewer2 {
 
@@ -159,7 +161,9 @@ private:
      */
     void loadingLoop(void);
 
+#ifdef LOADED_MESSAGE
     static uint32_t loaded;
+#endif
 
     std::condition_variable condvar;
 };

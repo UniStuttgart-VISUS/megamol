@@ -23,7 +23,9 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::imageviewer2;
 
+#ifdef LOADED_MESSAGE
 uint32_t ImageLoader::loaded = 0;
+#endif
 
 /*
  * ImageLoader::ImageLoader
@@ -230,8 +232,10 @@ bool ImageLoader::loadImage(const std::filesystem::path& path) {
         this->imageMutex.lock();
         this->newImageData.insert(std::pair(path.string(), image));
         this->imageMutex.unlock();
+#ifdef LOADED_MESSAGE
         this->loaded++;
         vislib::sys::Log::DefaultLog.WriteInfo("Successfully loaded image %u", this->loaded);
+#endif
     } else {
         vislib::sys::Log::DefaultLog.WriteError("ImageLoader: failed decoding file \"%s\"", path.c_str());
         return false;
