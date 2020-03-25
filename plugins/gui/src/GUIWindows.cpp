@@ -583,7 +583,7 @@ bool GUIWindows::createContext(void) {
     this->window_manager.AddWindowConfiguration("Configurator", buf_win);
 
     // Style settings ---------------------------------------------------------
-    ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB |
+    ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_DisplayRGB |
                                ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_AlphaBar |
                                ImGuiColorEditFlags_AlphaPreview);
 

@@ -246,7 +246,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
 
     ImGui::BeginGroup();
 
-    const float search_child_height = ImGui::GetItemsLineHeightWithSpacing() * 2.25f;
+    const float search_child_height = ImGui::GetFrameHeightWithSpacing() * 2.25f;
     auto child_flags = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
     ImGui::BeginChild("module_search_child_window", ImVec2(width, search_child_height), false, child_flags);
 

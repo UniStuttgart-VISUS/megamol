@@ -270,11 +270,6 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
     assert(draw_list != nullptr);
 
     try {
-        // Trigger only when canvas was updated
-        // Always update position before clipping -> calls need updated slot positions.
-        if (in_canvas.updated) {
-            this->UpdatePosition(inout_call_slot, in_canvas.offset, in_canvas.zooming);
-        }
         ImVec2 slot_position = this->position;
         float radius = GUI_CALL_SLOT_RADIUS * in_canvas.zooming;
 
@@ -289,7 +284,8 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
             }
         }
 
-        // Clip call slots if lying ouside the canvas (useless since ImGui::PushClipRect is used?)
+        // Clip call slots if lying ouside the canvas 
+        /// XXX Is there a benefit since ImGui::PushClipRect is used?
         ImVec2 canvas_rect_min = in_canvas.position;
         ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
         ImVec2 slot_rect_min = ImVec2(slot_position.x - radius, slot_position.y - radius);
@@ -313,7 +309,7 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
 
         ImGui::PushID(inout_call_slot.uid);
 
-        draw_list->ChannelsSetCurrent(1); // Foreground
+        //draw_list->ChannelsSetCurrent(1); // Foreground
 
         ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
@@ -410,7 +406,7 @@ ImGuiID megamol::gui::configurator::CallSlot::Presentation::Present(
 
 
 void megamol::gui::configurator::CallSlot::Presentation::UpdatePosition(
-    megamol::gui::configurator::CallSlot& call_slot, ImVec2 canvas_offset, float canvas_zooming) {
+    megamol::gui::configurator::CallSlot& call_slot, const CanvasType& in_canvas) {
 
     if (call_slot.ParentModuleConnected()) {
         auto slot_count = call_slot.GetParentModule()->GetCallSlots(call_slot.type).size();
@@ -420,8 +416,8 @@ void megamol::gui::configurator::CallSlot::Presentation::UpdatePosition(
                 slot_idx = idx;
             }
         }
-        auto pos = canvas_offset + call_slot.GetParentModule()->GUI_GetPosition() * canvas_zooming;
-        auto size = call_slot.GetParentModule()->GUI_GetSize() * canvas_zooming;
+        auto pos = in_canvas.offset + call_slot.GetParentModule()->GUI_GetPosition() * in_canvas.zooming;
+        auto size = call_slot.GetParentModule()->GUI_GetSize() * in_canvas.zooming;
         this->position = ImVec2(pos.x + ((call_slot.type == CallSlot::CallSlotType::CALLER) ? (size.x) : (0.0f)),
             pos.y + size.y * ((float)slot_idx + 1) / ((float)slot_count + 1));
     }

@@ -139,8 +139,8 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(
             ImVec2 p1 = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->GUI_GetPosition();
             ImVec2 p2 = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->GUI_GetPosition();
 
-            /// XXX Check is too expensive!? ...
             // Clip calls if lying ouside the canvas
+            /// XXX Check is too expensive
             // ImVec2 canvas_rect_min = in_canvas.position;
             // ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
             // if (...) {
@@ -165,7 +165,7 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(
             ImGui::PushID(inout_call.uid);
 
             // Draw simple line if zooming is too small for nice bezier curves
-            draw_list->ChannelsSetCurrent(0); // Background
+            //draw_list->ChannelsSetCurrent(0); // Background
 
             // LEVEL OF DETAIL depending on zooming
             if (in_canvas.zooming < 0.25f) {
@@ -177,7 +177,7 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(
 
             if (this->label_visible) {
 
-                draw_list->ChannelsSetCurrent(1); // Foreground
+                //draw_list->ChannelsSetCurrent(1); // Foreground
 
                 ImVec2 call_center = ImVec2(p1.x + (p2.x - p1.x) / 2.0f, p1.y + (p2.y - p1.y) / 2.0f);
                 auto call_name_width = this->utils.TextWidgetWidth(inout_call.class_name);

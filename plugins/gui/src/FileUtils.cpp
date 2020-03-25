@@ -244,8 +244,8 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(
             // File browser selectables ---------------------------------------
             auto select_flags = ImGuiSelectableFlags_DontClosePopups;
             float child_select_height =
-                (ImGui::GetContentRegionAvail().y - (ImGui::GetTextLineHeightWithSpacing() * this->additional_lines) -
-                    ImGui::GetItemsLineHeightWithSpacing() * 2.0f);
+                (ImGui::GetContentRegionAvail().y - (ImGui::GetFrameHeightWithSpacing() * this->additional_lines) -
+                    ImGui::GetFrameHeightWithSpacing() * 2.0f);
             ImGui::BeginChild(
                 "files_list_child_window", ImVec2(0.0f, child_select_height), true, ImGuiWindowFlags_None);
 

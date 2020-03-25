@@ -11,9 +11,12 @@
 
 #include "mmcore/view/Input.h"
 
+#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #include <imgui.h>
+
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
+
 #include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
 
@@ -55,7 +58,6 @@ typedef struct _canvas_ {
     ImVec2 scrolling;
     float zooming;
     ImVec2 offset;
-    bool updated;
 } CanvasType;
 
 

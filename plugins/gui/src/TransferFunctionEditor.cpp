@@ -239,7 +239,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
     }
 
     const float tfw_height = 28.0f;
-    const float tfw_item_width = ImGui::GetContentRegionAvailWidth() * 0.75f;
+    const float tfw_item_width = ImGui::GetContentRegionAvail().x * 0.75f;
     const float canvas_height = 150.0f;
     const float canvas_width = tfw_item_width;
     ImGui::PushItemWidth(tfw_item_width); // set general proportional item width
@@ -334,7 +334,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
     float edit_col[4] = {this->nodes[this->currentNode][0], this->nodes[this->currentNode][1],
         this->nodes[this->currentNode][2], this->nodes[this->currentNode][3]};
     ImGuiColorEditFlags numberColorFlags =
-        ImGuiColorEditFlags_RGB | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_Float;
+        ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_Float;
     if (ImGui::ColorEdit4("Selected Color", edit_col, numberColorFlags)) {
         this->nodes[this->currentNode][0] = edit_col[0];
         this->nodes[this->currentNode][1] = edit_col[1];

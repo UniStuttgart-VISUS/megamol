@@ -127,8 +127,7 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
     , class_label()
     , name_label()
     , utils()
-    , selected(false)
-    , module_updated(true) {}
+    , selected(false) {}
 
 
 megamol::gui::configurator::Module::Presentation::~Presentation(void) {}
@@ -154,16 +153,9 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         if ((this->position.x == FLT_MAX) && (this->position.y == FLT_MAX)) {
             this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - in_canvas.offset) / in_canvas.zooming;
         }
-
-        // Add module update state to general canvas update state
-        auto canvas_update_state = in_canvas;
-        canvas_update_state.updated = (canvas_update_state.updated || this->module_updated);
-        this->module_updated = false;
-
-        // Trigger only when canvas was updated
-        // Always update position before clipping -> calls need updated slot positions.
-        if (canvas_update_state.updated || (this->size.x == 0.0f) || (this->size.y == 0.0f)) {
-            this->UpdateSize(inout_mod, in_canvas.zooming);
+        // Update size if current values are invalid
+        if ((this->size.x <= 0.0f) || (this->size.y <= 0.0f)) {
+            this->UpdateSize(inout_mod, in_canvas);
         }
 
         // Draw call slots ----------------------------------------------------
@@ -171,7 +163,7 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         ImGuiID module_slot_hovered_uid = inout_slot_interact.out_hovered_uid;
         for (auto& slot_pair : inout_mod.GetCallSlots()) {
             for (auto& slot : slot_pair.second) {
-                slot->GUI_Present(canvas_update_state, inout_slot_interact);
+                slot->GUI_Present(in_canvas, inout_slot_interact);
             }
         }
         // Register hovering of call slots only being part of current module
@@ -183,7 +175,8 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         ImVec2 module_rect_max = module_rect_min + module_size;
         ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
 
-        // Clip module if lying ouside the canvas (useless since ImGui::PushClipRect is used?)
+        // Clip module if lying ouside the canvas 
+        /// XXX Is there a benefit since ImGui::PushClipRect is used?
         ImVec2 canvas_rect_min = in_canvas.position;
         ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
         if (!((canvas_rect_min.x < module_rect_max.x) && (canvas_rect_max.x > module_rect_min.x) &&
@@ -213,7 +206,7 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         // Draw text
         std::string label;
         if (this->label_visible) {
-            draw_list->ChannelsSetCurrent(1); // Foreground
+            //draw_list->ChannelsSetCurrent(1); // Foreground
 
             ImGui::BeginGroup();
 
@@ -244,12 +237,13 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
         }
 
         // Draw box
-        draw_list->ChannelsSetCurrent(0); // Background
+        //draw_list->ChannelsSetCurrent(0); // Background
 
         ImGui::SetCursorScreenPos(module_rect_min);
         label = "module_" + inout_mod.name;
         ImGui::InvisibleButton(label.c_str(), module_size);
-        ImGui::SetItemAllowOverlap();
+
+        //ImGui::SetItemAllowOverlap();
         bool hovered = ImGui::IsItemHovered() && (!module_slot_hovered);
         bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
         if (mouse_clicked && (!hovered || (module_slot_hovered))) {
@@ -274,13 +268,12 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
                 }
                 ImGui::EndPopup();
             }
-            if (ImGui::IsItemActive()) {
+            if (ImGui::IsItemActivated()) {
                 this->selected = true;
             }
             if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
                 this->position =
                     ((module_rect_min - in_canvas.offset) + ImGui::GetIO().MouseDelta) / in_canvas.zooming;
-                this->module_updated = true;
             }            
         }
         ImU32 module_bg_color = (hovered || this->selected) ? COLOR_MODULE_HIGHTLIGHT : COLOR_MODULE_BACKGROUND;
@@ -291,7 +284,7 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
 
         // Rename pop-up
         if (this->utils.RenamePopUp("Rename Project", popup_rename, inout_mod.name)) {
-            this->module_updated = true;
+            this->UpdateSize(inout_mod, in_canvas);
         }
 
         if (this->selected) {
@@ -314,7 +307,7 @@ ImGuiID megamol::gui::configurator::Module::Presentation::Present(megamol::gui::
 
 
 void megamol::gui::configurator::Module::Presentation::UpdateSize(
-    megamol::gui::configurator::Module& mod, float canvas_zooming) {
+    megamol::gui::configurator::Module& mod, const CanvasType& in_canvas) {
 
     float max_label_length = 0.0f;
     if (this->label_visible) {
@@ -324,7 +317,7 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
         float name_length = this->utils.TextWidgetWidth(mod.present.name_label);
         max_label_length = std::max(class_name_length, name_length);
     }
-    max_label_length /= canvas_zooming;
+    max_label_length /= in_canvas.zooming;
 
     float max_slot_name_length = 0.0f;
     for (auto& call_slot_type_list : mod.GetCallSlots()) {
@@ -335,7 +328,7 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
         }
     }
     if (max_slot_name_length != 0.0f) {
-        max_slot_name_length = (2.0f * max_slot_name_length / canvas_zooming) + (4.0f * GUI_CALL_SLOT_RADIUS);
+        max_slot_name_length = (2.0f * max_slot_name_length / in_canvas.zooming) + (4.0f * GUI_CALL_SLOT_RADIUS);
     }
 
     float module_width = (max_label_length + max_slot_name_length) + (2.0f * GUI_CALL_SLOT_RADIUS);
@@ -346,7 +339,7 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
         (static_cast<float>(max_slot_count) * (GUI_CALL_SLOT_RADIUS * 2.0f) * 1.5f) + GUI_CALL_SLOT_RADIUS;
 
     float module_height = std::max(module_slot_height,
-        (1.0f / canvas_zooming) * (ImGui::GetTextLineHeightWithSpacing() * ((mod.is_view_instance) ? (4.0f) : (3.0f))));
+        (1.0f / in_canvas.zooming) * (ImGui::GetTextLineHeightWithSpacing() * ((mod.is_view_instance) ? (4.0f) : (3.0f))));
 
     // Clamp to minimum size
     this->size = ImVec2(std::max(module_width, 75.0f), std::max(module_height, 25.0f));

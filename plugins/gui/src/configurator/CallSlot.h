@@ -91,6 +91,7 @@ public:
     ImGuiID GUI_Present(const CanvasType& in_canvas, CallSlot::InteractType& inout_slot_interact) {
         return this->present.Present(*this, in_canvas, inout_slot_interact);
     }
+    void GUI_UpdatePosition(const CanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
 
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     bool GUI_GetLabelVisibility(void) { return this->present.label_visible; }
@@ -114,9 +115,9 @@ private:
         ImGuiID Present(
             CallSlot& inout_call_slot, const CanvasType& in_canvas, CallSlot::InteractType& inout_slot_interact);
 
-        ImVec2 GetPosition(void) { return this->position; }
+        void UpdatePosition(CallSlot& call_slot, const CanvasType& in_canvas);
 
-        void UpdatePosition(CallSlot& call_slot, ImVec2 canvas_offset, float canvas_zooming);
+        ImVec2 GetPosition(void) { return this->position; }
 
         CallSlot::Presentations presentations;
         bool label_visible;

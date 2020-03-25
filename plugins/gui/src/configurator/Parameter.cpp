@@ -294,13 +294,12 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
             case (Presentations::DEFAULT): {
                 this->present_value_DEFAULT(param);
             } break;
-            case (Presentations::PIN_VALUE_TO_MOUSE): {
-                this->present_value_DEFAULT(param);
-
-                ImGui::PopID();
-                this->present_value_PIN_VALUE_TO_MOUSE(param);
-                ImGui::PushID(param.uid);
-            } break;
+            // case (Presentations::PIN_VALUE_TO_MOUSE): {
+            //     this->present_value_DEFAULT(param);
+            //     ImGui::PopID();
+            //     this->present_value_PIN_VALUE_TO_MOUSE(param);
+            //     ImGui::PushID(param.uid);
+            // } break;
             default:
                 break;
             }
@@ -336,9 +335,9 @@ bool megamol::gui::configurator::Parameter::Presentation::presentation_button(vo
             case (Presentations::DEFAULT):
                 presentation_str = "Default";
                 break;
-            case (Presentations::PIN_VALUE_TO_MOUSE):
-                presentation_str = "Pin Value to Mouse";
-                break;
+            // case (Presentations::PIN_VALUE_TO_MOUSE):
+            //     presentation_str = "Pin Value to Mouse";
+            //     break;
             default:
                 break;
             }
@@ -627,7 +626,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
     ImGui::PopItemWidth();
 }
 
-
+/*
 void megamol::gui::configurator::Parameter::Presentation::present_value_PIN_VALUE_TO_MOUSE(
     megamol::gui::configurator::Parameter& param) {
 
@@ -711,7 +710,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_PIN_VALU
         ImGui::EndPopup();
     }
 }
-
+*/
 
 void megamol::gui::configurator::Parameter::Presentation::present_postfix(
     megamol::gui::configurator::Parameter& param) {

@@ -82,12 +82,12 @@ public:
         const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys, CallSlot::InteractType& inout_slot_interact) {
         return this->present.Present(*this, in_canvas, inout_hotkeys, inout_slot_interact);
     }
+    void GUI_UpdateSize(const CanvasType& in_canvas) { this->present.UpdateSize(*this, in_canvas); }
 
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
     void GUI_SetPresentation(Module::Presentations present) { this->present.presentations = present; }
     void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
-    void GUI_SetUpdated(void) { this->present.module_updated = true; }
-
+    
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
 
@@ -106,16 +106,15 @@ private:
         ImGuiID Present(Module& inout_mod, const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys,
             CallSlot::InteractType& inout_slot_interact);
 
+        void UpdateSize(Module& mod, const CanvasType& in_canvas);
+
         void SetPosition(ImVec2 pos) { this->position = pos; }
 
         ImVec2 GetPosition(void) { return this->position; }
         ImVec2 GetSize(void) { return this->size; }
 
-        void UpdateSize(Module& mod, float canvas_zooming);
-
         Module::Presentations presentations;
         bool label_visible;
-        bool module_updated;
 
     private:
         // Relative position without considering canvas offset and zooming

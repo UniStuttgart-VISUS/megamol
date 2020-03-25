@@ -108,12 +108,13 @@ private:
         bool params_visible;
         bool params_readonly;
         bool params_expert;
+        CanvasType canvas;
 
     private:
         ImFont* font;
         GUIUtils utils;
 
-        CanvasType canvas;
+        bool update;
 
         bool show_grid;
         bool show_call_names;
