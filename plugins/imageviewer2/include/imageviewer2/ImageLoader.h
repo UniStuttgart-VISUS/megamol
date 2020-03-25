@@ -103,6 +103,15 @@ protected:
      */
     virtual bool WaitForData(core::Call& call);
 
+    /**
+     * The delete data callback.
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function
+     */
+    virtual bool DeleteData(core::Call& call);
+
 private:
     /** Callee slot requesting images from this module */
     core::CalleeSlot callRequestImage;

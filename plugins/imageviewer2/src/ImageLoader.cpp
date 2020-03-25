@@ -56,6 +56,8 @@ ImageLoader::ImageLoader(void)
     this->callRequestImage.SetCallback(image_calls::Image2DCall::ClassName(),
         image_calls::Image2DCall::FunctionName(image_calls::Image2DCall::CallForWaitForData),
         &ImageLoader::WaitForData);
+    this->callRequestImage.SetCallback(image_calls::Image2DCall::ClassName(),
+        image_calls::Image2DCall::FunctionName(image_calls::Image2DCall::CallForDeleteData), &ImageLoader::DeleteData);
     this->MakeSlotAvailable(&this->callRequestImage);
 
     this->filenameSlot.SetParameter(new param::FilePathParam(""));
@@ -200,10 +202,24 @@ bool ImageLoader::SetWishlist(core::Call& call) {
  * ImageLoader::WaitForData
  */
 bool ImageLoader::WaitForData(core::Call& call) {
-    std::mutex waitmutex; // this has to be different from the queueMutex to avoid deadlocks
     std::unique_lock<std::mutex> lock(this->queueMutex);
     this->condvar.wait(lock, [this] { return queueElements.empty(); });
     return true;
+}
+
+bool ImageLoader::DeleteData(core::Call& call) {
+    // first, clear the queue
+    {
+        std::queue<std::string> empty;
+        this->queueMutex.lock();
+        std::swap(this->imageLoadingQueue, empty);
+        this->queueElements.clear();
+        this->queueMutex.unlock();
+    }
+    
+    // second, delete the data
+    this->imageData->clear();
+    this->newImageData.clear();
 }
 
 /*

@@ -25,6 +25,11 @@ const uint32_t Image2DCall::CallForSetWishlist = 2;
 const uint32_t Image2DCall::CallForWaitForData = 3;
 
 /*
+ * Image2DCall::CallForDeleteData
+ */
+const uint32_t Image2DCall::CallForDeleteData = 4;
+
+/*
  * Image2DCall::Image2DCall
  */
 Image2DCall::Image2DCall(void) : core::AbstractGetDataCall(), imagePtr(nullptr) {}
