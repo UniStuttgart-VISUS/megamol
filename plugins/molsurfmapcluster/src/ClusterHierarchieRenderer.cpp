@@ -270,19 +270,22 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
     double posLeft = 0;
     double posRight = 0;
 
+    double totalheight = 0.9 * this->viewport.GetY();
+    double maxheight = this->root->height;
+    double myheight = node->height / maxheight;
+
     // draw child node
     if (node->level == 0) {
         posx = minwidth + (counter * spacex);
-        posy = minheight + (node->level * spacey);
         this->counter++;
 
     } else {
         posLeft = drawTree(node->left, mvp, minheight, minwidth, spacey, spacex, colors);
         posRight = drawTree(node->right, mvp, minheight, minwidth, spacey, spacex, colors);
-
-        posx = (posLeft + posRight) / 2;
-        posy = minheight + (node->level * spacey);
+        posx = (posLeft + posRight) / 2;       
     }
+    //posy = minheight + (node->level * spacey);
+    posy = minheight + myheight * totalheight;
 
     // Select Color
     bool clusternode = false;
@@ -360,8 +363,11 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
 
     if (node->level != 0) {
         // Connect the Nodes
-        double posLeftY = minheight + (node->left->level * spacey);
-        double posRightY = minheight + (node->right->level * spacey);
+        //double posLeftY = minheight + (node->left->level * spacey);
+        //double posRightY = minheight + (node->right->level * spacey);
+        double posLeftY = minheight + (node->left->height / maxheight) * totalheight;
+        double posRightY = minheight + (node->right->height / maxheight) * totalheight;
+        
         glLineWidth(2);
         std::vector<glm::vec4> data(6);
         data[0] = glm::vec4(posRight, posy, 0.0f, 1.0f);
@@ -683,10 +689,14 @@ double ClusterHierarchieRenderer::checkposition(HierarchicalClustering::CLUSTERN
     double posLeft = 0;
     double posRight = 0;
 
+    double totalheight = 0.9 * this->viewport.GetY();
+    double maxheight = this->root->height;
+
     // draw child node
     if (node->level == 0) {
         posx = minwidth + (counter * spacex);
-        posy = minheight + (node->level * spacey);
+        //posy = minheight + (node->level * spacey);
+        posy = minheight + (node->height / maxheight) * totalheight;
         this->counter++;
 
         // Check position => if found return -1;
@@ -706,7 +716,8 @@ double ClusterHierarchieRenderer::checkposition(HierarchicalClustering::CLUSTERN
             // Check position => if found return -1;
 
             posx = (posLeft + posRight) / 2;
-            posy = minheight + (node->level * spacey);
+            //posy = minheight + (node->level * spacey);
+            posy = minheight + (node->height / maxheight) * totalheight;
 
             if (x > posx - distanceX && x < posx + distanceY && y > posy - distanceX && y < posy + distanceY) {
                 this->popup = node;

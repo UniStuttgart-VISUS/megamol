@@ -63,6 +63,7 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& pics, S
         // Set ID
         node->id = this->leaves->size() + 1;
         node->level = 0;
+        node->height = 0.0f;
 
         // Set Beziehungen
         node->parent = nullptr;
@@ -591,6 +592,14 @@ HierarchicalClustering::CLUSTERNODE* HierarchicalClustering::mergeCluster(
             break;
         }
     }
+
+    float dist = 0.0f;
+    if (this->mode == DISTANCEMODE) {
+        dist = this->distance(cluster1->features, cluster2->features, distancemethod);
+    } else if (this->mode == SIMILARITYMODE) {
+        dist = this->similarity(cluster1->features, cluster2->features, similaritymethod);
+    }
+    newnode->height = dist / 2.0f;
 
     // Update Parent of cluster1 and cluster2
     cluster1->parent = newnode;
