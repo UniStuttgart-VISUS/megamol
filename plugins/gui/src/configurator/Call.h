@@ -9,27 +9,22 @@
 #define MEGAMOL_GUI_GRAPH_CALL_H_INCLUDED
 
 
-#include "vislib/sys/Log.h"
-
-#include <map>
-#include <memory>
-#include <vector>
-
-#include "CallSlot.h"
 #include "GUIUtils.h"
+#include "CallSlot.h"
 
 
 namespace megamol {
 namespace gui {
 namespace configurator {
 
-
 // Forward declaration
 class Call;
 class CallSlot;
 class Module;
+class Parameter;
 
 // Pointer types to classes
+typedef std::shared_ptr<Parameter> ParamPtrType;
 typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
@@ -67,8 +62,8 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     // Returns uid if the call is selected.
-    ImGuiID GUI_Present(const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys) {
-        return this->present.Present(*this, in_canvas, inout_hotkeys);
+    void GUI_Present(const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys, InteractType& interact_state) {
+        this->present.Present(*this, in_canvas, inout_hotkeys, interact_state);
     }
 
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
@@ -86,7 +81,7 @@ private:
 
         ~Presentation(void);
 
-        ImGuiID Present(Call& inout_call, const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys);
+        void Present(Call& inout_call, const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys, InteractType& interact_state);
 
         Call::Presentations presentations;
         bool label_visible;

@@ -120,15 +120,14 @@ megamol::gui::configurator::Call::Presentation::Presentation(void)
 megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
 
 
-ImGuiID megamol::gui::configurator::Call::Presentation::Present(
-    megamol::gui::configurator::Call& inout_call, const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys) {
+void megamol::gui::configurator::Call::Presentation::Present(
+    megamol::gui::configurator::Call& inout_call, const megamol::gui::CanvasType& in_canvas, megamol::gui::HotKeyArrayType& inout_hotkeys, megamol::gui::InteractType& interact_state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        return;
     }
-    ImGuiID retval_id = GUI_INVALID_ID;
     ImGuiStyle& style = ImGui::GetStyle();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
@@ -136,6 +135,7 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(
     try {
         if (inout_call.IsConnected()) {
 
+            const float CURVE_THICKNESS = 3.0f;
             ImVec2 p1 = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->GUI_GetPosition();
             ImVec2 p2 = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->GUI_GetPosition();
 
@@ -147,25 +147,21 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(
             //    return GUI_INVALID_ID;
             //}
 
-            ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
+            // Draw simple line if zooming is too small for nice bezier curves
+            ImGui::PushID(inout_call.uid);
+
+            ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg]; // ImGuiCol_FrameBg ImGuiCol_Button
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             const ImU32 COLOR_CALL_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-            tmpcol = style.Colors[ImGuiCol_FrameBgActive];
+            tmpcol = style.Colors[ImGuiCol_FrameBgActive]; // ImGuiCol_FrameBgActive ImGuiCol_ButtonActive
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);            
             const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
             //tmpcol = style.Colors[ImGuiCol_ButtonActive];
             //tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);            
             const ImU32 COLOR_CALL_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
-            tmpcol = style.Colors[ImGuiCol_PopupBg];
+            tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive]; // ImGuiCol_Border ImGuiCol_ScrollbarGrabActive
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);            
             const ImU32 COLOR_CALL_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-            const float CURVE_THICKNESS = 3.0f;
-
-            ImGui::PushID(inout_call.uid);
-
-            // Draw simple line if zooming is too small for nice bezier curves
-            //draw_list->ChannelsSetCurrent(0); // Background
 
             // LEVEL OF DETAIL depending on zooming
             if (in_canvas.zooming < 0.25f) {
@@ -176,8 +172,6 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(
             }
 
             if (this->label_visible) {
-
-                //draw_list->ChannelsSetCurrent(1); // Foreground
 
                 ImVec2 call_center = ImVec2(p1.x + (p2.x - p1.x) / 2.0f, p1.y + (p2.y - p1.y) / 2.0f);
                 auto call_name_width = this->utils.TextWidgetWidth(inout_call.class_name);
@@ -196,22 +190,25 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(
                     if (ImGui::MenuItem(
                             "Delete", std::get<0>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
                         std::get<1>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-                        retval_id = inout_call.uid;
+                        this->selected = true;
                     }
                     ImGui::EndPopup();
                 }
                 bool active = ImGui::IsItemActive();
                 bool hovered = ImGui::IsItemHovered();
                 bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
-                if (mouse_clicked && !hovered) {
+                if ((mouse_clicked && !hovered) || (interact_state.call_selected_uid != inout_call.uid)) {
                     this->selected = false;
+                    if (interact_state.call_selected_uid == inout_call.uid) {
+                        interact_state.call_selected_uid = GUI_INVALID_ID;
+                    }
                 }
                 if (active) {
                     this->selected = true;
+                    interact_state.call_selected_uid = inout_call.uid;
+                    interact_state.module_selected_uid = GUI_INVALID_ID;
                 }
-                if (this->selected) {
-                    retval_id = inout_call.uid;
-                }
+
                 ImU32 call_bg_color = (hovered || this->selected) ? COLOR_CALL_HIGHTLIGHT : COLOR_CALL_BACKGROUND;
                 draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, 4.0f);
                 draw_list->AddRect(call_rect_min, call_rect_max, COLOR_CALL_BORDER, 4.0f);
@@ -221,18 +218,15 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(
                     call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
                 ImGui::Text(inout_call.class_name.c_str());
             }
+
+            ImGui::PopID();
         }
-
-        ImGui::PopID();
-
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return GUI_INVALID_ID;
+        return;
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return GUI_INVALID_ID;
+        return;
     }
-
-    return retval_id;
 }

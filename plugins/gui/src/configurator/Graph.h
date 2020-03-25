@@ -97,9 +97,9 @@ private:
         ImGuiID Present(Graph& inout_graph, float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys,
             bool& out_delete_graph);
 
-        ImGuiID GetSelectedCallSlot(void) const { return this->call_slot_interact.out_selected_uid; }
-        ImGuiID GetDropCallSlot(void) const { return this->call_slot_interact.out_dropped_uid; }
-        ImGuiID GetHoveredCallSlot(void) const { return this->call_slot_interact.out_hovered_uid; }
+        ImGuiID GetSelectedCallSlot(void) const { return this->interact_state.callslot_selected_uid; }
+        ImGuiID GetDropCallSlot(void) const { return this->interact_state.callslot_dropped_uid; }
+        ImGuiID GetHoveredCallSlot(void) const { return this->interact_state.callslot_hovered_uid; }
 
         bool GetModuleLabelVisibility(void) const { return this->show_module_names; }
         bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
@@ -121,9 +121,7 @@ private:
         bool show_slot_names;
         bool show_module_names;
 
-        ImGuiID selected_module_uid;
-        ImGuiID selected_call_uid;
-        CallSlot::InteractType call_slot_interact;
+        InteractType interact_state;
 
         bool layout_current_graph;
         float child_split_width;

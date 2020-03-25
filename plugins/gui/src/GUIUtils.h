@@ -11,6 +11,8 @@
 
 #include "mmcore/view/Input.h"
 
+#include "vislib/sys/Log.h"
+
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #include <imgui.h>
 
@@ -29,10 +31,28 @@
 #include <string>
 #include <tuple>
 #include <utility>
+#include <map>
+#include <memory>
+#include <vector>
 
 namespace megamol {
 namespace gui {
 
+namespace configurator {
+
+// Forward declaration
+class Call;
+class CallSlot;
+class Module;
+class Parameter;
+
+// Pointer types to classes
+typedef std::shared_ptr<Parameter> ParamPtrType;
+typedef std::shared_ptr<Call> CallPtrType;
+typedef std::shared_ptr<CallSlot> CallSlotPtrType;
+typedef std::shared_ptr<Module> ModulePtrType;
+
+}
 
 /********** Defines **********/
 
@@ -40,7 +60,6 @@ namespace gui {
 #define GUI_CALL_SLOT_RADIUS (8.0f)
 #define GUI_MAX_MULITLINE (7)
 #define GUI_DND_CALL_UID_TYPE ("DND_CALL")
-
 
 /********** Types **********/
 
@@ -59,6 +78,17 @@ typedef struct _canvas_ {
     float zooming;
     ImVec2 offset;
 } CanvasType;
+
+/* Data type holding information on call slot interaction */
+typedef struct _interact_state_ {
+    ImGuiID module_selected_uid;
+    ImGuiID module_hovered_uid;
+    ImGuiID call_selected_uid;
+    ImGuiID callslot_selected_uid;
+    ImGuiID callslot_hovered_uid;
+    ImGuiID callslot_dropped_uid;
+    configurator::CallSlotPtrType in_compat_slot_ptr;
+} InteractType;
 
 
 /**

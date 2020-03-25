@@ -282,17 +282,12 @@ bool megamol::gui::GUIUtils::VerticalSplitter(FixedSplitterSide fixed_side, floa
         bb.Min = window->DC.CursorPos + (split_vertically ? ImVec2((width_avail - size_right) + 1.0f, 0.0f)
                                                           : ImVec2(0.0f, (width_avail - size_right) + 1.0f));
     }
-    bb.Max = bb.Min + ImGui::CalcItemSize(split_vertically ? ImVec2(thickness - 4.0f, splitter_long_axis_size)
-                                                           : ImVec2(splitter_long_axis_size, thickness - 4.0f),
+    bb.Max = bb.Min + ImGui::CalcItemSize(split_vertically ? ImVec2(thickness - 6.0f, splitter_long_axis_size)
+                                                           : ImVec2(splitter_long_axis_size, thickness - 6.0f),
                           0.0f, 0.0f);
 
-    // ImGui::PushStyleColor(ImGuiCol_Separator, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]));
-    // ImGui::PushStyleColor(
-    //    ImGuiCol_SeparatorHovered, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonHovered]));
-    // ImGui::PushStyleColor(ImGuiCol_SeparatorActive, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Button]));
     bool retval = ImGui::SplitterBehavior(
         bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, &size_left, &size_right, min_size, min_size, 0.0f, 0.0f);
-    // ImGui::PopStyleColor(3);
 
     /// XXX Left mouse button (= 0) is not recognized poperly!? ...
     if (ImGui::IsMouseDoubleClicked(1) && ImGui::IsItemHovered()) {

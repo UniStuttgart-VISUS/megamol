@@ -24,11 +24,7 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 
-#include "vislib/sys/Log.h"
-
-#include <map>
 #include <variant>
-#include <vector>
 
 #include "GUIUtils.h"
 #include "FileUtils.h"
@@ -44,12 +40,17 @@ namespace megamol {
 namespace gui {
 namespace configurator {
 
-
 // Forward declaration
+class Call;
+class CallSlot;
+class Module;
 class Parameter;
 
 // Pointer types to classes
 typedef std::shared_ptr<Parameter> ParamPtrType;
+typedef std::shared_ptr<Call> CallPtrType;
+typedef std::shared_ptr<CallSlot> CallSlotPtrType;
+typedef std::shared_ptr<Module> ModulePtrType;
 
 /**
  * Defines parameter data structure for graph.

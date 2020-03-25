@@ -252,7 +252,7 @@ bool megamol::gui::configurator::Graph::RenameAssignedModuleName(const std::stri
     for (auto& mod : this->modules) {
         if (module_name == mod->name) {
             mod->name = this->generate_unique_module_name(module_name);
-            mod->GUI_UpdateSize(this->present.canvas);
+            mod->GUI_Update(this->present.canvas);
             return true;
         }
     }
@@ -285,17 +285,15 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     : font(nullptr)
     , utils()
     , canvas()
-    , update()
+    , update(true)
     , show_grid(false)
     , show_call_names(true)
     , show_slot_names(false)
     , show_module_names(true)
-    , selected_module_uid(GUI_INVALID_ID)
-    , selected_call_uid(GUI_INVALID_ID)
-    , call_slot_interact()
+    , interact_state()
     , layout_current_graph(false)
     , child_split_width(300.0f)
-    , reset_zooming(false)
+    , reset_zooming(true)
     , params_visible(true)
     , params_readonly(false)
     , params_expert(false)
@@ -306,6 +304,14 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     this->canvas.scrolling = ImVec2(0.0f, 0.0f);
     this->canvas.zooming = 1.0f;
     this->canvas.offset = ImVec2(0.0f, 0.0f);
+
+    this->interact_state.module_selected_uid = GUI_INVALID_ID;
+    this->interact_state.module_hovered_uid = GUI_INVALID_ID;
+    this->interact_state.call_selected_uid = GUI_INVALID_ID;
+    this->interact_state.callslot_selected_uid = GUI_INVALID_ID;
+    this->interact_state.callslot_hovered_uid = GUI_INVALID_ID;
+    this->interact_state.callslot_dropped_uid = GUI_INVALID_ID;
+    this->interact_state.in_compat_slot_ptr = nullptr;
 }
 
 
@@ -358,7 +364,7 @@ ImGuiID megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::c
             // Draw
             this->present_menu(inout_graph);
             /// Always present parameter side bar
-            if (true) { // this->selected_module_uid != GUI_INVALID_ID) {
+            if (true) { // this->interact_state.module_selected_uid != GUI_INVALID_ID) {
                 float child_width_auto = 0.0f;
                 this->utils.VerticalSplitter(
                     GUIUtils::FixedSplitterSide::RIGHT, child_width_auto, this->child_split_width);
@@ -404,9 +410,9 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
 
     // Main View Checkbox
     ModulePtrType selected_mod_ptr = nullptr;
-    if (this->selected_module_uid != GUI_INVALID_ID) {
+    if (this->interact_state.module_selected_uid != GUI_INVALID_ID) {
         for (auto& mod : inout_graph.GetGraphModules()) {
-            if ((this->selected_module_uid == mod->uid) && (mod->is_view)) {
+            if ((this->interact_state.module_selected_uid == mod->uid) && (mod->is_view)) {
                 selected_mod_ptr = mod;
             }
         }
@@ -422,7 +428,7 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
             if (selected_mod_ptr->is_view_instance) {
                 // Set all other modules to non main views
                 for (auto& mod : inout_graph.GetGraphModules()) {
-                    if (this->selected_module_uid != mod->uid) {
+                    if (this->interact_state.module_selected_uid != mod->uid) {
                         mod->is_view_instance = false;
                     }
                 }
@@ -500,7 +506,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     }
     ImGui::PushFont(this->font);
 
-    const ImU32 COLOR_CANVAS_BACKGROUND = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
+    const ImU32 COLOR_CANVAS_BACKGROUND = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ChildBg]); // ImGuiCol_ScrollbarBg ImGuiCol_ScrollbarGrab ImGuiCol_Border
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, COLOR_CANVAS_BACKGROUND);
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
@@ -530,22 +536,34 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     // Update module size and call slot positions
     if (this->update) {
         for (auto& mod : inout_graph.GetGraphModules()) {
-            mod->GUI_UpdateSize(this->canvas);
-            for (auto& slot_pair : mod->GetCallSlots()) {
-                for (auto& slot : slot_pair.second) {
-                    slot->GUI_UpdatePosition(this->canvas);
-                }
-            }
+            mod->GUI_Update(this->canvas);
         }
         this->update = false;
     }
 
-    ImGui::PushClipRect(this->canvas.position, this->canvas.position + this->canvas.size, true);
+    // Interaction state handling
+    this->interact_state.in_compat_slot_ptr.reset();
+    if (this->interact_state.callslot_selected_uid != GUI_INVALID_ID) {
+        for (auto& mods : inout_graph.GetGraphModules()) {
+            CallSlotPtrType call_slot_ptr = mods->GetCallSlot(this->interact_state.callslot_selected_uid);
+            if (call_slot_ptr != nullptr) {
+                this->interact_state.in_compat_slot_ptr = call_slot_ptr;
+            }
+        }
+    }
+    if (this->interact_state.callslot_hovered_uid != GUI_INVALID_ID) {
+        for (auto& mods : inout_graph.GetGraphModules()) {
+            CallSlotPtrType call_slot_ptr = mods->GetCallSlot(this->interact_state.callslot_hovered_uid);
+            if (call_slot_ptr != nullptr) {
+                this->interact_state.in_compat_slot_ptr = call_slot_ptr;
+            }
+        }
+    }
+    this->interact_state.callslot_dropped_uid = GUI_INVALID_ID;
 
+    ImGui::PushClipRect(this->canvas.position, this->canvas.position + this->canvas.size, true);
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
-    draw_list->ChannelsSplit(2); /// Both channels are used by subsequent graph elements!
-    draw_list->ChannelsSetCurrent(0); // Background
 
     // 1] GRID ----------------------------------
     if (this->show_grid) {
@@ -553,58 +571,31 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     }
     ImGui::PopStyleVar(2);
 
-    // 2] CALLS ---------------------------------
-    this->selected_call_uid = GUI_INVALID_ID;
-    for (auto& call : inout_graph.GetGraphCalls()) {
-        auto id = call->GUI_Present(this->canvas, inout_hotkeys);
-        if (id != GUI_INVALID_ID) {
-            this->selected_call_uid = id;
-        }
-    }
-
-    // 3] MODULES and CALL SLOTS ----------------
-    this->call_slot_interact.in_compat_slot_ptr.reset();
-    if (this->call_slot_interact.out_selected_uid != GUI_INVALID_ID) {
-        for (auto& mods : inout_graph.GetGraphModules()) {
-            CallSlotPtrType call_slot_ptr = mods->GetCallSlot(this->call_slot_interact.out_selected_uid);
-            if (call_slot_ptr != nullptr) {
-                this->call_slot_interact.in_compat_slot_ptr = call_slot_ptr;
-            }
-        }
-    }
-    if (this->call_slot_interact.out_hovered_uid != GUI_INVALID_ID) {
-        for (auto& mods : inout_graph.GetGraphModules()) {
-            CallSlotPtrType call_slot_ptr = mods->GetCallSlot(this->call_slot_interact.out_hovered_uid);
-            if (call_slot_ptr != nullptr) {
-                this->call_slot_interact.in_compat_slot_ptr = call_slot_ptr;
-            }
-        }
-    }
-    this->call_slot_interact.out_selected_uid = GUI_INVALID_ID;
-    this->call_slot_interact.out_hovered_uid = GUI_INVALID_ID;
-    this->call_slot_interact.out_dropped_uid = GUI_INVALID_ID;
-
-    this->selected_module_uid = GUI_INVALID_ID;
+    // 2] MODULES and CALL SLOTS ----------------
     for (auto& mod : inout_graph.GetGraphModules()) {
-        auto id = mod->GUI_Present(this->canvas, inout_hotkeys, this->call_slot_interact);
-        if (id != GUI_INVALID_ID) {
-            this->selected_module_uid = id;
-        }
+        mod->GUI_Present(this->canvas, inout_hotkeys, this->interact_state);
+    }
+
+    // 3] CALLS ---------------------------------;
+    for (auto& call : inout_graph.GetGraphCalls()) {
+        call->GUI_Present(this->canvas, inout_hotkeys, this->interact_state);
     }
 
     // 4] Dragged CALL --------------------------
-    this->present_canvas_dragged_call(inout_graph);
+    this->present_canvas_dragged_call(inout_graph);     
+
+    ImGui::PopClipRect();
 
     // Process module/call deletion -------------
     if (std::get<1>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM])) {
         std::get<1>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = false;
         // Preosecc deletion only when canvas child window is focused!
         if (ImGui::IsWindowFocused()) {
-            if (this->selected_module_uid != GUI_INVALID_ID) {
-                inout_graph.DeleteModule(this->selected_module_uid);
+            if (this->interact_state.module_selected_uid != GUI_INVALID_ID) {
+                inout_graph.DeleteModule(this->interact_state.module_selected_uid);
             }
-            if (this->selected_call_uid != GUI_INVALID_ID) {
-                inout_graph.DeleteCall(this->selected_call_uid);
+            if (this->interact_state.call_selected_uid != GUI_INVALID_ID) {
+                inout_graph.DeleteCall(this->interact_state.call_selected_uid);
             }
         }
     }
@@ -648,8 +639,6 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
         }
     }
 
-    draw_list->ChannelsMerge();
-    ImGui::PopClipRect();
     ImGui::EndChild();
     ImGui::PopStyleColor();
 
@@ -736,7 +725,7 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
     // Get pointer to currently selected module
     ModulePtrType modptr;
     for (auto& mod : inout_graph.GetGraphModules()) {
-        if (mod->uid == this->selected_module_uid) {
+        if (mod->uid == this->interact_state.module_selected_uid) {
             modptr = mod;
         }
     }
@@ -807,8 +796,6 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_grid(void) 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
 
-    //draw_list->ChannelsSetCurrent(0); // Background
-
     const ImU32 COLOR_GRID = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PopupBg]);
     const float GRID_SIZE = 64.0f * this->canvas.zooming;
 
@@ -839,8 +826,6 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_cal
             ImGuiStyle& style = ImGui::GetStyle();
             ImDrawList* draw_list = ImGui::GetWindowDrawList();
             assert(draw_list != nullptr);
-
-            //draw_list->ChannelsSetCurrent(0); // Background
 
             const auto COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Button]);
             const float CURVE_THICKNESS = 3.0f;

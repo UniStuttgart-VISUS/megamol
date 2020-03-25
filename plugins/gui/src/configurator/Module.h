@@ -9,11 +9,6 @@
 #define MEGAMOL_GUI_GRAPH_MODULE_H_INCLUDED
 
 
-#include "vislib/sys/Log.h"
-
-#include <map>
-#include <vector>
-
 #include "CallSlot.h"
 #include "GUIUtils.h"
 #include "Parameter.h"
@@ -23,13 +18,14 @@ namespace megamol {
 namespace gui {
 namespace configurator {
 
-
 // Forward declaration
 class Call;
 class CallSlot;
 class Module;
+class Parameter;
 
 // Pointer types to classes
+typedef std::shared_ptr<Parameter> ParamPtrType;
 typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
@@ -78,11 +74,11 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     // Returns uid if the module is selected.
-    ImGuiID GUI_Present(
-        const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys, CallSlot::InteractType& inout_slot_interact) {
-        return this->present.Present(*this, in_canvas, inout_hotkeys, inout_slot_interact);
+    void GUI_Present(
+        const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys, InteractType& interact_state) {
+        this->present.Present(*this, in_canvas, inout_hotkeys, interact_state);
     }
-    void GUI_UpdateSize(const CanvasType& in_canvas) { this->present.UpdateSize(*this, in_canvas); }
+    void GUI_Update(const CanvasType& in_canvas) { this->present.UpdateSize(*this, in_canvas); }
 
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
     void GUI_SetPresentation(Module::Presentations present) { this->present.presentations = present; }
@@ -103,8 +99,7 @@ private:
 
         ~Presentation(void);
 
-        ImGuiID Present(Module& inout_mod, const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys,
-            CallSlot::InteractType& inout_slot_interact);
+        void Present(Module& inout_mod, const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys, InteractType& interact_state);
 
         void UpdateSize(Module& mod, const CanvasType& in_canvas);
 
@@ -125,6 +120,7 @@ private:
         std::string name_label;
         GUIUtils utils;
         bool selected;
+        bool update_once;
 
     } present;
 };

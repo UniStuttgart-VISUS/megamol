@@ -9,12 +9,6 @@
 #define MEGAMOL_GUI_GRAPH_CALLSLOT_H_INCLUDED
 
 
-#include "vislib/sys/Log.h"
-
-#include <map>
-#include <memory>
-#include <vector>
-
 #include "GUIUtils.h"
 
 
@@ -22,13 +16,14 @@ namespace megamol {
 namespace gui {
 namespace configurator {
 
-
 // Forward declaration
 class Call;
 class CallSlot;
 class Module;
+class Parameter;
 
 // Pointer types to classes
+typedef std::shared_ptr<Parameter> ParamPtrType;
 typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
@@ -48,14 +43,6 @@ public:
     };
 
     enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
-
-    /* Data type holding information on call slot interaction */
-    typedef struct _call_slot_interact_ {
-        ImGuiID out_selected_uid;
-        ImGuiID out_hovered_uid;
-        ImGuiID out_dropped_uid;
-        CallSlotPtrType in_compat_slot_ptr;
-    } InteractType;
 
     CallSlot(ImGuiID uid);
     ~CallSlot();
@@ -88,10 +75,10 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     // Returns uid if the call slot is selected.
-    ImGuiID GUI_Present(const CanvasType& in_canvas, CallSlot::InteractType& inout_slot_interact) {
-        return this->present.Present(*this, in_canvas, inout_slot_interact);
+    void GUI_Present(const CanvasType& in_canvas, InteractType& interact_state) {
+        this->present.Present(*this, in_canvas, interact_state);
     }
-    void GUI_UpdatePosition(const CanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
+    void GUI_Update(const CanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
 
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     bool GUI_GetLabelVisibility(void) { return this->present.label_visible; }
@@ -112,8 +99,8 @@ private:
 
         ~Presentation(void);
 
-        ImGuiID Present(
-            CallSlot& inout_call_slot, const CanvasType& in_canvas, CallSlot::InteractType& inout_slot_interact);
+        void Present(
+            CallSlot& inout_call_slot, const CanvasType& in_canvas, InteractType& interact_state);
 
         void UpdatePosition(CallSlot& call_slot, const CanvasType& in_canvas);
 
@@ -127,6 +114,7 @@ private:
         ImVec2 position;
         GUIUtils utils;
         bool selected;
+        bool update_once;
 
     } present;
 };

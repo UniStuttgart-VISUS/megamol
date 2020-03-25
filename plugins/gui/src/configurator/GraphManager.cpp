@@ -1351,35 +1351,6 @@ ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
                     graph->AddCall(inout_graph_manager.calls_stock, drag_call_slot_ptr, drop_call_slot_ptr);
                 }
             }
-
-            /*
-
-            // Drag source
-            label.resize(dnd_size);
-            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
-                ImGui::SetDragDropPayload(
-                    "DND_COPY_MODULE_PARAMETERS", label.c_str(), (label.size() * sizeof(char)));
-                ImGui::Text(label.c_str());
-                ImGui::EndDragDropSource();
-            }
-
-            // Drop target
-            ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFontSize()));
-            if (ImGui::BeginDragDropTarget()) {
-                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_COPY_MODULE_PARAMETERS")) {
-
-                    IM_ASSERT(payload->DataSize == (dnd_size * sizeof(char)));
-                    std::string payload_id = (const char*)payload->Data;
-
-                    // Insert dragged module name only if not contained in list
-                    if (!this->considerModule(payload_id, wc.param_modules_list)) {
-                        wc.param_modules_list.emplace_back(payload_id);
-                    }
-                }
-                ImGui::EndDragDropTarget();
-            }
-
-            */
         }
         ImGui::EndTabBar();
 
@@ -1398,6 +1369,7 @@ ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
         }
 
         ImGui::EndChild();
+        
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
