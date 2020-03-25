@@ -34,9 +34,9 @@ public:
     static const char* Description(void) { return "Call that transports..."; }
 };
 
-class MESH_API CallGlTFData : public core::CallGeneric<std::shared_ptr<tinygltf::Model>, core::BasicMetaData> {
+class MESH_API CallGlTFData : public core::GenericVersionedCall<std::shared_ptr<tinygltf::Model>, core::BasicMetaData> {
 public:
-    inline CallGlTFData() : CallGeneric<std::shared_ptr<tinygltf::Model>, core::BasicMetaData>() {}
+    inline CallGlTFData() : GenericVersionedCall<std::shared_ptr<tinygltf::Model>, core::BasicMetaData>() {}
     ~CallGlTFData() = default;
 
     static const char* ClassName(void) { return "CallGlTFData"; }
@@ -74,9 +74,9 @@ public:
     static const char* Description(void) { return "Call that gives access to render tasks."; }
 };
 
-class MESH_API CallMesh : public core::CallGeneric<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData> {
+class MESH_API CallMesh : public core::GenericVersionedCall<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData> {
 public:
-    CallMesh() : CallGeneric<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData>() {}
+    CallMesh() : core::GenericVersionedCall<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData>() {}
     ~CallMesh(){};
 
     static const char* ClassName(void) { return "CallMesh"; }
