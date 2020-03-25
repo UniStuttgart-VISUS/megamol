@@ -96,7 +96,7 @@ private:
     /** The texture shader */
     vislib::graphics::gl::GLSLShader osprayShader;
 
-   // Interface dirty flag
+    // Interface dirty flag
     bool InterfaceIsDirty();
     void InterfaceResetDirty();
 
@@ -105,6 +105,7 @@ private:
     bool material_has_changed;
     bool light_has_changed;
     bool cam_has_changed;
+    bool transformation_has_changed;
 
 	core::view::Camera_2 cam;
     float time;

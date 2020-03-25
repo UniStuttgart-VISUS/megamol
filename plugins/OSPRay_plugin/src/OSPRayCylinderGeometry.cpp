@@ -1,11 +1,11 @@
 /*
-* OSPRayNHSphereGeometry.cpp
+* OSPRayCylinderGeometry.cpp
 * Copyright (C) 2009-2017 by MegaMol Team
 * Alle Rechte vorbehalten.
 */
 
 #include "stdafx.h"
-#include "OSPRayNHSphereGeometry.h"
+#include "OSPRayCylinderGeometry.h"
 #include "vislib/forceinline.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/FloatParam.h"
@@ -25,7 +25,7 @@ typedef float(*floatFromArrayFunc)(const megamol::core::moldyn::MultiParticleDat
 typedef unsigned char(*byteFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
 
 
-OSPRayNHSphereGeometry::OSPRayNHSphereGeometry(void) :
+OSPRayCylinderGeometry::OSPRayCylinderGeometry(void) :
     AbstractOSPRayStructure(),
     getDataSlot("getdata", "Connects to the data source"),
 
@@ -40,7 +40,7 @@ OSPRayNHSphereGeometry::OSPRayNHSphereGeometry(void) :
 }
 
 
-bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
+bool OSPRayCylinderGeometry::readData(megamol::core::Call &call) {
 
     // fill material container
     this->processMaterial();
@@ -112,7 +112,7 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
 
     // Write stuff into the structureContainer
     this->structureContainer.type = structureTypeEnum::GEOMETRY;
-    this->structureContainer.geometryType = geometryTypeEnum::NHSPHERES;
+    this->structureContainer.geometryType = geometryTypeEnum::CYLINDERS;
     this->structureContainer.raw = parts.GetVertexData();
     this->structureContainer.vertexLength = vertexLength;
     this->structureContainer.vertexStride = vstride;
@@ -126,22 +126,22 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
 }
 
 
-OSPRayNHSphereGeometry::~OSPRayNHSphereGeometry() {
+OSPRayCylinderGeometry::~OSPRayCylinderGeometry() {
     this->Release();
 }
 
-bool OSPRayNHSphereGeometry::create() {
+bool OSPRayCylinderGeometry::create() {
     return true;
 }
 
-void OSPRayNHSphereGeometry::release() {
+void OSPRayCylinderGeometry::release() {
 
 }
 
 /*
-ospray::OSPRayNHSphereGeometry::InterfaceIsDirty()
+ospray::OSPRayCylinderGeometry::InterfaceIsDirty()
 */
-bool OSPRayNHSphereGeometry::InterfaceIsDirty() {
+bool OSPRayCylinderGeometry::InterfaceIsDirty() {
     if (
         this->particleList.IsDirty()
         ) {
@@ -153,7 +153,7 @@ bool OSPRayNHSphereGeometry::InterfaceIsDirty() {
 }
 
 
-bool OSPRayNHSphereGeometry::getExtends(megamol::core::Call &call) {
+bool OSPRayCylinderGeometry::getExtends(megamol::core::Call &call) {
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
     megamol::core::moldyn::MultiParticleDataCall *cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
     

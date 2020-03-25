@@ -40,11 +40,11 @@ OSPRayGlassMaterial::~OSPRayGlassMaterial(void) {
 void OSPRayGlassMaterial::readParams() {
     materialContainer.materialType = materialTypeEnum::GLASS;
 
-    auto colori = this->glassAttenuationColorInside.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.glassAttenuationColorInside.assign(colori, colori + 3);
+    auto colori = this->glassAttenuationColorInside.Param<core::param::Vector3fParam>();
+    materialContainer.glassAttenuationColorInside = colori->getArray();
 
-    auto coloro = this->glassAttenuationColorOutside.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.glassAttenuationColorOutside.assign(coloro, coloro + 3);
+    auto coloro = this->glassAttenuationColorOutside.Param<core::param::Vector3fParam>();
+    materialContainer.glassAttenuationColorOutside = coloro->getArray();
 
     materialContainer.glassEtaInside = this->glassEtaInside.Param<core::param::FloatParam>()->Value();
 

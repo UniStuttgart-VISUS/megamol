@@ -1,6 +1,6 @@
 /*
-* OSPRayLineGeometry.h
-* Copyright (C) 2009-2017 by MegaMol Team
+* OSPRayQuadMesh.h
+* Copyright (C) 2019 by MegaMol Team
 * Alle Rechte vorbehalten.
 */
 #pragma once
@@ -12,7 +12,7 @@
 namespace megamol {
 namespace ospray {
 
-class OSPRayLineGeometry : public AbstractOSPRayStructure {
+class OSPRayQuadMesh : public AbstractOSPRayStructure {
 
 public:
 
@@ -22,7 +22,7 @@ public:
     * @return The name of this module.
     */
     static const char *ClassName(void) {
-        return "OSPRayLineGeometry";
+        return "OSPRayQuadMesh";
     }
 
     /**
@@ -31,7 +31,7 @@ public:
     * @return A human readable description of this module.
     */
     static const char *Description(void) {
-        return "Creator for OSPRay Line Geometry.";
+        return "Creator for OSPRay quad mesh geometries.";
     }
 
     /**
@@ -44,13 +44,12 @@ public:
     }
 
     /** Dtor. */
-    virtual ~OSPRayLineGeometry(void);
+    virtual ~OSPRayQuadMesh(void);
 
     /** Ctor. */
-    OSPRayLineGeometry(void);
+    OSPRayQuadMesh(void);
 
 protected:
-
 
     virtual bool create();
     virtual void release();
@@ -59,19 +58,13 @@ protected:
     virtual bool getExtends(core::Call &call);
 
 
-private:
-    /** detects interface dirtyness */
     bool InterfaceIsDirty();
 
-    /** The call for data */
-    core::CallerSlot getDataSlot;
-    core::CallerSlot getLineDataSlot;
-
-    core::param::ParamSlot globalRadiusSlot;
-
-    core::param::ParamSlot smoothSlot;
+     /** The call for data */
+    core::CallerSlot getMeshDataSlot;
+    std::vector<float> _color;
 
 };
 
-} // namespace dihu
+} // namespace ospray
 } // namespace megamol

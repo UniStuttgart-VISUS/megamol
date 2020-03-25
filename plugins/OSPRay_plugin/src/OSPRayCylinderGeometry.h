@@ -1,5 +1,5 @@
 /*
-* OSPRayLineGeometry.h
+* OSPRayCylinderGeometry.h
 * Copyright (C) 2009-2017 by MegaMol Team
 * Alle Rechte vorbehalten.
 */
@@ -12,7 +12,7 @@
 namespace megamol {
 namespace ospray {
 
-class OSPRayLineGeometry : public AbstractOSPRayStructure {
+class OSPRayCylinderGeometry : public AbstractOSPRayStructure {
 
 public:
 
@@ -22,7 +22,7 @@ public:
     * @return The name of this module.
     */
     static const char *ClassName(void) {
-        return "OSPRayLineGeometry";
+        return "OSPRayCylinderGeometry";
     }
 
     /**
@@ -31,7 +31,7 @@ public:
     * @return A human readable description of this module.
     */
     static const char *Description(void) {
-        return "Creator for OSPRay Line Geometry.";
+        return "Creator for OSPRay cylinder geometries.";
     }
 
     /**
@@ -44,13 +44,20 @@ public:
     }
 
     /** Dtor. */
-    virtual ~OSPRayLineGeometry(void);
+    virtual ~OSPRayCylinderGeometry(void);
 
     /** Ctor. */
-    OSPRayLineGeometry(void);
+    OSPRayCylinderGeometry(void);
 
 protected:
-
+    /**
+    * color transfer helper
+    * @param array with gray scales
+    * @param transferfunction table/texture
+    * @param transferfunction table/texture size
+    * @param target array (rgba)
+    */
+    //void colorTransferGray(std::vector<float> &grayArray, float const* transferTable, unsigned int tableSize, std::vector<float> &rgbaArray);
 
     virtual bool create();
     virtual void release();
@@ -59,19 +66,21 @@ protected:
     virtual bool getExtends(core::Call &call);
 
 
-private:
-    /** detects interface dirtyness */
     bool InterfaceIsDirty();
+
+    core::param::ParamSlot particleList;
 
     /** The call for data */
     core::CallerSlot getDataSlot;
-    core::CallerSlot getLineDataSlot;
 
-    core::param::ParamSlot globalRadiusSlot;
+private:
 
-    core::param::ParamSlot smoothSlot;
+
+    // color transfer data
+    unsigned int tex_size;
+
 
 };
 
-} // namespace dihu
+} // namespace ospray
 } // namespace megamol

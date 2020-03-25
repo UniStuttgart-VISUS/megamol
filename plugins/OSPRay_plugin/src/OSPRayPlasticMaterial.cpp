@@ -38,8 +38,8 @@ OSPRayPlasticMaterial::~OSPRayPlasticMaterial(void) {
 void OSPRayPlasticMaterial::readParams() {
     materialContainer.materialType = materialTypeEnum::PLASTIC;
 
-    auto pcolor = this->plasticPigmentColor.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.plasticPigmentColor.assign(pcolor, pcolor + 3);
+    auto pcolor = this->plasticPigmentColor.Param<core::param::Vector3fParam>();
+    materialContainer.plasticPigmentColor = pcolor->getArray();
 
     materialContainer.plasticEta = this->plasticEta.Param<core::param::FloatParam>()->Value();
 
