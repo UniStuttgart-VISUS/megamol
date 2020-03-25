@@ -47,6 +47,8 @@ public:
 
         // PCA
         std::vector<double>* pca2d;
+
+        float height;
     };
 
     /** Constructor */

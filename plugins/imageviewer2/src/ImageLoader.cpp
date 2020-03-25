@@ -216,10 +216,10 @@ bool ImageLoader::DeleteData(core::Call& call) {
         this->queueElements.clear();
         this->queueMutex.unlock();
     }
-    
     // second, delete the data
     this->imageData->clear();
     this->newImageData.clear();
+    return true;
 }
 
 /*
