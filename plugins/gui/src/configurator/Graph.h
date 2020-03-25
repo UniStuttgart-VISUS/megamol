@@ -17,6 +17,7 @@
 #include "CallSlot.h"
 #include "Module.h"
 #include "Parameter.h"
+#include "Group.h"
 
 #ifdef GUI_USE_FILESYSTEM
 #    include "FileUtils.h"

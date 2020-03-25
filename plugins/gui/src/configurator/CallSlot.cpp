@@ -347,6 +347,21 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         bool hovered = (ImGui::IsItemHovered() && ((interact_state.callslot_hovered_uid == GUI_INVALID_ID) || (interact_state.callslot_hovered_uid == inout_call_slot.uid)));
         bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
 
+        // Context menu
+        if (ImGui::BeginPopupContextItem("invisible_button_context")) {
+            if (ImGui::BeginMenu("Add Group Interface ", false)) {
+                /// TODO
+                // Loop over all exisiting groups
+                //if (ImGui::MenuItem("<group name>"")) {
+                //}     
+                ImGui::EndMenu();
+            }
+            if (ImGui::MenuItem("Remove Group Interface", nullptr, false, false)) {
+                /// TODO
+            }                                
+            ImGui::EndPopup();
+        }
+
         std::string slot_label = "[" + inout_call_slot.name + "]";
         std::string tooltip = inout_call_slot.description;
         if (!this->label_visible) {

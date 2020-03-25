@@ -462,9 +462,9 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 std::string view_instance = args[0];
                 std::string view_class_name = args[1];
                 std::string view_full_name = args[2];
-                std::string view_name_prefix;
+                std::string view_name_namespace;
                 std::string view_name;
-                if (!this->separateNameAndPrefix(view_full_name, view_name_prefix, view_name)) {
+                if (!this->separateNameAndNamespace(view_full_name, view_name_namespace, view_name)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Invalid view name argument "
                                                             "(3rd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), i, lua_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
@@ -513,7 +513,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 }
                 auto graph_module = graph_ptr->GetGraphModules().back();
                 graph_module->name = view_name;
-                graph_module->name_space = view_name_prefix;
+                graph_module->name_space = view_name_namespace;
                 graph_module->is_view_instance = true;
                 graph_module->GUI_SetPosition(module_pos);
 
@@ -542,9 +542,9 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
 
                 std::string module_class_name = args[0];
                 std::string module_full_name = args[1];
-                std::string module_name_prefix;
+                std::string module_name_namespace;
                 std::string module_name;
-                if (!this->separateNameAndPrefix(module_full_name, module_name_prefix, module_name)) {
+                if (!this->separateNameAndNamespace(module_full_name, module_name_namespace, module_name)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Invalid module name argument "
                                                             "(2nd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), i, lua_module.c_str(), __FILE__, __FUNCTION__, __LINE__);
@@ -579,7 +579,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                     }
                     auto graph_module = graph_ptr->GetGraphModules().back();
                     graph_module->name = module_name;
-                    graph_module->name_space = module_name_prefix;
+                    graph_module->name_space = module_name_namespace;
                     graph_module->is_view_instance = false;
                     graph_module->GUI_SetPosition(module_pos);
                 }
@@ -605,16 +605,16 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 std::string callee_slot_full_name = args[2];
 
                 std::string caller_slot_name;
-                std::string caller_slot_prefix;
-                if (!this->separateNameAndPrefix(caller_slot_full_name, caller_slot_prefix, caller_slot_name)) {
+                std::string caller_slot_namespace;
+                if (!this->separateNameAndNamespace(caller_slot_full_name, caller_slot_namespace, caller_slot_name)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Invalid caller slot name "
                                                             "argument (2nd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), i, lua_call.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 }
 
                 std::string callee_slot_name;
-                std::string callee_slot_prefix;
-                if (!this->separateNameAndPrefix(callee_slot_full_name, callee_slot_prefix, callee_slot_name)) {
+                std::string callee_slot_namespace;
+                if (!this->separateNameAndNamespace(callee_slot_full_name, callee_slot_namespace, callee_slot_name)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Invalid callee slot name "
                                                             "argument (3nd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), i, lua_call.c_str(), __FILE__, __FUNCTION__, __LINE__);
@@ -1258,15 +1258,24 @@ std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfPos(con
 }
 
 
-bool megamol::gui::configurator::GraphManager::separateNameAndPrefix(
+bool megamol::gui::configurator::GraphManager::separateNameAndNamespace(
     const std::string& full_name, std::string& name_space, std::string& name) {
 
     name = full_name;
     name_space = "";
-    size_t delimiter_index = full_name.rfind(':');
+    size_t delimiter_index = full_name.rfind("::");
     if (delimiter_index != std::string::npos) {
-        name = full_name.substr(delimiter_index + 1);
-        name_space = full_name.substr(0, delimiter_index - 1);
+        name = full_name.substr(delimiter_index + 2);
+        name_space = full_name.substr(0, delimiter_index);
+        if (!name_space.empty()) {
+            if (name_space.find("::") == 0) {
+                name_space = name_space.substr(2);
+            } else {
+                 vislib::sys::Log::DefaultLog.WriteError(
+                    "Invalid namespace in argument. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                return false;
+            }
+        }
     }
 
     if (name.empty()) {

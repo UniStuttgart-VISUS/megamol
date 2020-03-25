@@ -60,8 +60,7 @@ public:
     const CallSlotPtrType GetCallSlot(CallSlot::CallSlotType type);
 
     // GUI Presentation -------------------------------------------------------
-
-    // Returns uid if the call is selected.
+    
     void GUI_Present(const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys, InteractType& interact_state) {
         this->present.Present(*this, in_canvas, inout_hotkeys, interact_state);
     }

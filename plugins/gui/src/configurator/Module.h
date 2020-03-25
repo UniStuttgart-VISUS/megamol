@@ -9,9 +9,9 @@
 #define MEGAMOL_GUI_GRAPH_MODULE_H_INCLUDED
 
 
-#include "CallSlot.h"
 #include "GUIUtils.h"
 #include "Parameter.h"
+#include "CallSlot.h"
 
 
 namespace megamol {
@@ -69,11 +69,16 @@ public:
     const std::vector<CallSlotPtrType>& GetCallSlots(CallSlot::CallSlotType type);
     const std::map<CallSlot::CallSlotType, std::vector<CallSlotPtrType>>& GetCallSlots(void);
 
-    const std::string FullName(void) const { return std::string(this->name_space + "::" + this->name); }
+    const inline std::string FullName(void) const { 
+        std::string fullname = "::" + this->name;
+        if (!this->name_space.empty()) {
+            fullname = "::" + this->name_space + fullname;
+        }
+        return fullname; 
+    }
 
     // GUI Presentation -------------------------------------------------------
 
-    // Returns uid if the module is selected.
     void GUI_Present(
         const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys, InteractType& interact_state) {
         this->present.Present(*this, in_canvas, inout_hotkeys, interact_state);

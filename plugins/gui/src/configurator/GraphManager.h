@@ -104,7 +104,7 @@ private:
 
     std::string writeLuaProjectConfPos(const ImVec2& pos);
 
-    bool separateNameAndPrefix(const std::string& full_name, std::string& name_space, std::string& name);
+    bool separateNameAndNamespace(const std::string& full_name, std::string& name_space, std::string& name);
 
     // ------------------------------------------------------------------------
 };

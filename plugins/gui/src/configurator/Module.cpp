@@ -238,6 +238,16 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
                 if (ImGui::MenuItem("Rename")) {
                     popup_rename = true;
                 }
+                if (ImGui::BeginMenu("Add Group", false)) {
+                    /// TODO
+                    // Loop over all exisiting groups or add to new one
+                    //if (ImGui::MenuItem("<group name>"")) {
+                    //}                       
+                    ImGui::EndMenu();
+                }
+                if (ImGui::MenuItem("Remove Group", nullptr, false, false)) {
+                    /// TODO
+                }                                
                 ImGui::EndPopup();
             }
             if (active) {

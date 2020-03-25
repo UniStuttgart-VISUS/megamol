@@ -74,7 +74,6 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    // Returns uid if the call slot is selected.
     void GUI_Present(const CanvasType& in_canvas, InteractType& interact_state) {
         this->present.Present(*this, in_canvas, interact_state);
     }
