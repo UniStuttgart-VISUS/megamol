@@ -233,7 +233,7 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
                 if (ImGui::MenuItem(
                         "Delete", std::get<0>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
                     std::get<1>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-                    this->selected = true;
+                    active = true;
                 }
                 if (ImGui::MenuItem("Rename")) {
                     popup_rename = true;

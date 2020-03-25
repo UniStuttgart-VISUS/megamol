@@ -59,8 +59,8 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     // Returns uid of the currently active/drawn graph.
-    ImGuiID GUI_Present(float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys) {
-        return this->present.Present(*this, in_child_width, in_graph_font, inout_hotkeys);
+    ImGuiID GUI_Present(float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys, bool& show_parameter_sidebar) {
+        return this->present.Present(*this, in_child_width, in_graph_font, inout_hotkeys, show_parameter_sidebar);
     }
 
 private:
@@ -81,7 +81,7 @@ private:
         ~Presentation(void);
 
         ImGuiID Present(GraphManager& inout_graph_manager, float in_child_width, ImFont* in_graph_font,
-            HotKeyArrayType& inout_hotkeys);
+            HotKeyArrayType& inout_hotkeys, bool& show_parameter_sidebar);
 
     private:
         ImGuiID delete_graph_uid;

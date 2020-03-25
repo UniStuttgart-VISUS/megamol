@@ -1299,7 +1299,7 @@ megamol::gui::configurator::GraphManager::Presentation::~Presentation(void) {}
 
 ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
     megamol::gui::configurator::GraphManager& inout_graph_manager, float in_child_width, ImFont* in_graph_font,
-    HotKeyArrayType& inout_hotkeys) {
+    HotKeyArrayType& inout_hotkeys, bool& show_parameter_sidebar) {
 
     ImGuiID retval = GUI_INVALID_ID;
 
@@ -1325,7 +1325,7 @@ ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
 
             // Draw graph
             bool delete_graph = false;
-            auto id = graph->GUI_Present(in_child_width, in_graph_font, inout_hotkeys, delete_graph);
+            auto id = graph->GUI_Present(in_child_width, in_graph_font, inout_hotkeys, delete_graph, show_parameter_sidebar);
             if (id != GUI_INVALID_ID) {
                 retval = id;
             }

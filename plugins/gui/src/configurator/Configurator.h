@@ -64,13 +64,15 @@ private:
     megamol::gui::FileUtils file_utils;    
     megamol::gui::GUIUtils utils;
 
-    int window_state;
+    int init_state;
     std::string project_filename;
     ImGuiID graph_uid;
     ImGuiID selected_list_module_uid;
     ImFont* graph_font;
     float child_split_width;
     ImGuiID add_project_graph_uid;
+    bool show_module_list_sidebar;
+    bool show_parameter_sidebar;
 
     unsigned int project_uid;
 

@@ -35,6 +35,7 @@ class Graph {
 public:
     typedef std::vector<ModulePtrType> ModuleGraphVectorType;
     typedef std::vector<CallPtrType> CallGraphVectorType;
+    typedef std::vector<GroupPtrType> GroupGraphVectorType;
 
     Graph(const std::string& graph_name);
 
@@ -46,6 +47,9 @@ public:
     bool AddCall(const CallStockVectorType& stock_calls, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
     bool DeleteDisconnectedCalls(void);
     bool DeleteCall(ImGuiID call_uid);
+
+    bool AddGroup(const std::string& group_name);
+    bool DeleteGroup(ImGuiID group_uid);
 
     const ModuleGraphVectorType& GetGraphModules(void) { return this->modules; }
     const CallGraphVectorType& GetGraphCalls(void) { return this->calls; }
@@ -64,8 +68,8 @@ public:
 
     // Returns uid if graph is the currently active/drawn one.
     ImGuiID GUI_Present(
-        float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys, bool& out_delete_graph) {
-        return this->present.Present(*this, in_child_width, in_graph_font, inout_hotkeys, out_delete_graph);
+        float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys, bool& out_delete_graph, bool& show_parameter_sidebar) {
+        return this->present.Present(*this, in_child_width, in_graph_font, inout_hotkeys, out_delete_graph, show_parameter_sidebar);
     }
 
     inline ImGuiID GUI_GetSelectedCallSlot(void) const { return this->present.GetSelectedCallSlot(); }
@@ -77,6 +81,8 @@ private:
 
     ModuleGraphVectorType modules;
     CallGraphVectorType calls;
+
+    GroupGraphVectorType groups;
 
     // UIDs are unique within a graph
     const ImGuiID uid;
@@ -96,7 +102,7 @@ private:
         ~Presentation(void);
 
         ImGuiID Present(Graph& inout_graph, float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys,
-            bool& out_delete_graph);
+            bool& out_delete_graph, bool& show_parameter_sidebar);
 
         ImGuiID GetSelectedCallSlot(void) const { return this->interact_state.callslot_selected_uid; }
         ImGuiID GetDropCallSlot(void) const { return this->interact_state.callslot_dropped_uid; }

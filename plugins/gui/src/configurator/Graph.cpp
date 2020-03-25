@@ -18,7 +18,7 @@ ImGuiID megamol::gui::configurator::Graph::generated_uid = 0; /// must be greate
 
 
 megamol::gui::configurator::Graph::Graph(const std::string& graph_name)
-    : modules(), calls(), uid(this->generate_unique_id()), name(graph_name), dirty_flag(true), present() {}
+    : modules(), calls(), groups(), uid(this->generate_unique_id()), name(graph_name), dirty_flag(true), present() {}
 
 
 megamol::gui::configurator::Graph::~Graph(void) {}
@@ -247,6 +247,18 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
 }
 
 
+bool megamol::gui::configurator::Graph::AddGroup(const std::string& group_name) {
+
+
+}
+
+
+bool megamol::gui::configurator::Graph::DeleteGroup(ImGuiID group_uid) {
+
+
+}
+
+
 bool megamol::gui::configurator::Graph::RenameAssignedModuleName(const std::string& module_name) {
 
     for (auto& mod : this->modules) {
@@ -319,7 +331,7 @@ megamol::gui::configurator::Graph::Presentation::~Presentation(void) {}
 
 
 ImGuiID megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::configurator::Graph& inout_graph,
-    float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys, bool& out_delete_graph) {
+    float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys, bool& out_delete_graph, bool& show_parameter_sidebar) {
 
     ImGuiID retval = GUI_INVALID_ID;
     this->font = in_graph_font;
@@ -363,8 +375,7 @@ ImGuiID megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::c
 
             // Draw
             this->present_menu(inout_graph);
-            /// Always present parameter side bar
-            if (true) { // this->interact_state.module_selected_uid != GUI_INVALID_ID) {
+            if (show_parameter_sidebar) { 
                 float child_width_auto = 0.0f;
                 this->utils.VerticalSplitter(
                     GUIUtils::FixedSplitterSide::RIGHT, child_width_auto, this->child_split_width);
@@ -589,7 +600,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     // Process module/call deletion -------------
     if (std::get<1>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM])) {
         std::get<1>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = false;
-        // Preosecc deletion only when canvas child window is focused!
+        // Process deletion only when canvas child window is focused!
         if (ImGui::IsWindowFocused()) {
             if (this->interact_state.module_selected_uid != GUI_INVALID_ID) {
                 inout_graph.DeleteModule(this->interact_state.module_selected_uid);
@@ -663,7 +674,6 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
     ImGui::Separator();
 
     if (std::get<1>(inout_hotkeys[HotkeyIndex::PARAMETER_SEARCH])) {
-        std::get<1>(inout_hotkeys[HotkeyIndex::PARAMETER_SEARCH]) = false;
         this->utils.SetSearchFocus(true);
     }
     std::string help_text = "[" + std::get<0>(inout_hotkeys[HotkeyIndex::PARAMETER_SEARCH]).ToString() +
@@ -796,7 +806,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_grid(void) 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
 
-    const ImU32 COLOR_GRID = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PopupBg]);
+    const ImU32 COLOR_GRID = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
     const float GRID_SIZE = 64.0f * this->canvas.zooming;
 
     ImVec2 relative_offset = this->canvas.offset - this->canvas.position;

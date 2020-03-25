@@ -185,18 +185,21 @@ void megamol::gui::configurator::Call::Presentation::Present(
                 ImGui::SetCursorScreenPos(call_rect_min);
                 std::string label = "call_" + inout_call.class_name + std::to_string(inout_call.uid);
                 ImGui::InvisibleButton(label.c_str(), rect_size);
+
+                bool active = ImGui::IsItemActive();
+                bool hovered = ImGui::IsItemHovered();
+                bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+
                 // Context menu
                 if (ImGui::BeginPopupContextItem()) {
                     if (ImGui::MenuItem(
                             "Delete", std::get<0>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
                         std::get<1>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-                        this->selected = true;
+                        active = true;
                     }
                     ImGui::EndPopup();
                 }
-                bool active = ImGui::IsItemActive();
-                bool hovered = ImGui::IsItemHovered();
-                bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+
                 if ((mouse_clicked && !hovered) || (interact_state.call_selected_uid != inout_call.uid)) {
                     this->selected = false;
                     if (interact_state.call_selected_uid == inout_call.uid) {

@@ -66,7 +66,7 @@ typedef std::shared_ptr<Module> ModulePtrType;
 /** Hotkey Data Types for Configurator */
 typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyDataType;
 
-enum HotkeyIndex : size_t { MODULE_SEARCH = 0, PARAMETER_SEARCH = 1, DELETE_GRAPH_ITEM = 2, INDEX_COUNT = 3 };
+enum HotkeyIndex : size_t { MODULE_SEARCH = 0, PARAMETER_SEARCH = 1, DELETE_GRAPH_ITEM = 2, SAVE_PROJECT = 3, INDEX_COUNT = 4 };
 
 typedef std::array<HotkeyDataType, HotkeyIndex::INDEX_COUNT> HotKeyArrayType;
 
