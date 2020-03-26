@@ -107,6 +107,16 @@ function(require_external NAME)
       GIT_TAG "v1.3.0"
       INCLUDE_DIR "include")
 
+  # tinygltf
+  elseif(NAME STREQUAL "tinygltf")
+    if(TARGET tinygltf)
+      return()
+    endif()
+
+    add_external_headeronly_project(tinygltf
+      GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
+      GIT_TAG "v2.2.0")
+
   # Built libraries #####################################################
 
   # adios2
@@ -174,21 +184,19 @@ function(require_external NAME)
       return()
     endif()
 
+    include(GNUInstallDirs)
+
     if(WIN32)
-      set(GLFW_IMPORT_LIB "lib/glfw3dll.lib")
-      set(GLFW_LIB "lib/glfw3.dll")
-      set(MOVE_CMD COMMANDS COMMAND ${CMAKE_COMMAND} -E copy "\"<INSTALL_DIR>/lib/glfw3.dll\" \"<INSTALL_DIR>/bin/glfw3.dll\""
-                            COMMAND ${CMAKE_COMMAND} -E remove -f \"<INSTALL_DIR>/lib/glfw3.dll\")
+      set(GLFW_IMPORT_LIB "${CMAKE_INSTALL_LIBDIR}/glfw3dll.lib")
+      set(GLFW_LIB "bin/glfw3.dll")
     else()
-      set(GLFW_LIB "lib/libglfw.so")
-      set(MOVE_CMD)
+      set(GLFW_LIB "${CMAKE_INSTALL_LIBDIR}/libglfw.so")
     endif()
 
     add_external_project(glfw SHARED
       GIT_REPOSITORY https://github.com/glfw/glfw.git
-      GIT_TAG "3.2.1"
+      GIT_TAG "3.3.2"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_LIB}" "<INSTALL_DIR>/${GLFW_IMPORT_LIB}"
-      ${MOVE_CMD}
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DGLFW_BUILD_EXAMPLES=OFF
@@ -246,28 +254,28 @@ function(require_external NAME)
 
   # imgui
   elseif(NAME STREQUAL "imgui")
-    if(TARGET imgui)
-      return()
-    endif()
+    if(NOT TARGET imgui)
 
-    if(WIN32)
-      set(IMGUI_LIB "lib/imgui.lib")
-    else()
-      set(IMGUI_LIB "lib/libimgui.a")
-    endif()
+      if(WIN32)
+        set(IMGUI_LIB "lib/imgui.lib")
+      else()
+        set(IMGUI_LIB "lib/libimgui.a")
+      endif()
 
-    add_external_project(imgui STATIC
-      GIT_REPOSITORY https://github.com/ocornut/imgui.git
-      GIT_TAG "v1.70"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
-      PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/cmake/imgui/CMakeLists.txt"
-        "<SOURCE_DIR>/CMakeLists.txt")
+      add_external_project(imgui STATIC
+        GIT_REPOSITORY https://github.com/ocornut/imgui.git
+        GIT_TAG "v1.70"
+        BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
+        PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+          "${CMAKE_SOURCE_DIR}/cmake/imgui/CMakeLists.txt"
+          "<SOURCE_DIR>/CMakeLists.txt")
+
+      add_external_library(imgui
+        LIBRARY ${IMGUI_LIB})
+
+    endif()
 
     external_get_property(imgui SOURCE_DIR)
-
-    add_external_library(imgui
-      LIBRARY ${IMGUI_LIB})
 
     target_include_directories(imgui INTERFACE "${SOURCE_DIR}/examples" "${SOURCE_DIR}/misc/cpp")
 

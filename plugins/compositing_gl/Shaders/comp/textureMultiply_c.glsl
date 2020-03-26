@@ -16,7 +16,10 @@ void main() {
 
     vec2 pixel_coords_norm = vec2(pixel_coords) / vec2(tgt_resolution);
 
-    vec4 retval = texture(src0_tx2D,pixel_coords_norm) * texture(src1_tx2D,pixel_coords_norm);
+    vec2 src0_pixel_offset = 0.5 / textureSize(src0_tx2D,0);
+    vec2 src1_pixel_offset = 0.5 / textureSize(src1_tx2D,0);
+
+    vec4 retval = texture(src0_tx2D,pixel_coords_norm + src0_pixel_offset) * texture(src1_tx2D,pixel_coords_norm + src1_pixel_offset);
 
     imageStore(tgt_tx2D, pixel_coords , retval );
 }

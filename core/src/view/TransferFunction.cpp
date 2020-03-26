@@ -101,7 +101,7 @@ bool TransferFunction::requestTF(Call& call) {
         glGetIntegerv(GL_TEXTURE_BINDING_1D, &otid);
         glBindTexture(GL_TEXTURE_1D, (GLuint)this->texID);
 
-        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, this->texSize, 0, GL_RGBA, GL_FLOAT, this->tex.data());
+        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, this->texSize, 0, this->texFormat, GL_FLOAT, this->tex.data());
 
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
