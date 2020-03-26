@@ -35,6 +35,8 @@ public:
     bool AddModule(const ModulePtrType& module_ptr);
     bool DeleteModule(ImGuiID module_uid);
 
+    const ModuleGraphVectorType& GetGroupModules(void) { return this->modules; }
+
     // GUI Presentation -------------------------------------------------------
 
     void GUI_Present(StateType& state) {
@@ -58,8 +60,18 @@ private:
 
         void Present(Group& inout_group, StateType& state);
 
-    private:
+        void UpdateSize(Group& inout_group, const CanvasType& in_canvas);
 
+    private:
+        // Relative position without considering canvas offset and zooming
+        ImVec2 position;
+        // Relative size without considering zooming
+        ImVec2 size;
+        GUIUtils utils;
+        std::string name_label;
+        bool minimized_view;
+        bool selected;
+        bool update_once;        
 
     } present;
 

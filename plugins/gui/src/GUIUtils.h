@@ -81,10 +81,8 @@ typedef struct _canvas_ {
 
 /* Data type holding information on call slot interaction */
 typedef struct _interact_state_ {
-    ImGuiID module_selected_uid;
+    ImGuiID item_selected_uid;
     ImGuiID module_hovered_uid;
-    ImGuiID call_selected_uid;
-    ImGuiID callslot_selected_uid;
     ImGuiID callslot_hovered_uid;
     ImGuiID callslot_dropped_uid;
     configurator::CallSlotPtrType in_compat_slot_ptr;

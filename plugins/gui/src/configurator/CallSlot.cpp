@@ -307,16 +307,22 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
         }
         if (!((canvas_rect_min.x < (slot_rect_max.x)) && (canvas_rect_max.x > (slot_rect_min.x)) &&
                 (canvas_rect_min.y < (slot_rect_max.y)) && (canvas_rect_max.y > (slot_rect_min.y)))) {
-            this->selected = false;
-            if (state.interact.callslot_selected_uid == inout_call_slot.uid) {
-                state.interact.callslot_selected_uid = GUI_INVALID_ID;
-            }            
+            if (mouse_clicked) {
+                this->selected = false;
+                if (state.interact.item_selected_uid == inout_module.uid) {
+                    state.interact.item_selected_uid = GUI_INVALID_ID;
+                }                
+            }
+            if (this->selected) {
+                state.interact.item_selected_uid = inout_module.uid;
+            }
             return;
         }
         */
 
         ImGui::PushID(inout_call_slot.uid);
 
+        // Colors
         ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg]; // ImGuiCol_FrameBg ImGuiCol_Button
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
         const ImU32 COLOR_SLOT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
@@ -338,8 +344,10 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
 
         ImGui::SetCursorScreenPos(slot_position - ImVec2(radius, radius));
         std::string label = "slot_" + inout_call_slot.name + std::to_string(inout_call_slot.uid);
+
+        ImGui::SetItemAllowOverlap();
         ImGui::InvisibleButton(label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
-        /// ImGui::SetItemAllowOverlap();
+        ImGui::SetItemAllowOverlap();
 
         bool active = ImGui::IsItemActive();
         bool hovered = (ImGui::IsItemHovered() && ((state.interact.callslot_hovered_uid == GUI_INVALID_ID) || (state.interact.callslot_hovered_uid == inout_call_slot.uid)));
@@ -360,7 +368,8 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
             ImGui::EndPopup();
         }
 
-        std::string slot_label = "[" + inout_call_slot.name + "]";
+        // Hover Tooltip
+        std::string slot_label = "[" + inout_call_slot.name + "]";        
         std::string tooltip = inout_call_slot.description;
         if (!this->label_visible) {
             tooltip = slot_label + " " + tooltip;
@@ -371,15 +380,15 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
             GUI_INVALID_ID) {
             slot_color = COLOR_SLOT_COMPATIBLE;
         }
-        if ((mouse_clicked && !hovered) || (state.interact.callslot_selected_uid != inout_call_slot.uid)) {
+        if ((mouse_clicked && !hovered) || (state.interact.item_selected_uid != inout_call_slot.uid)) {
             this->selected = false;
-            if (state.interact.callslot_selected_uid == inout_call_slot.uid) {
-                state.interact.callslot_selected_uid = GUI_INVALID_ID;
+            if (state.interact.item_selected_uid == inout_call_slot.uid) {
+                state.interact.item_selected_uid = GUI_INVALID_ID;
             }
         }
         if (active) {
             this->selected = true;
-            state.interact.callslot_selected_uid = inout_call_slot.uid;
+            state.interact.item_selected_uid = inout_call_slot.uid;
         }
         if (hovered || this->selected) {
             slot_color = slot_highlight_color;
@@ -428,19 +437,19 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
 
 
 void megamol::gui::configurator::CallSlot::Presentation::UpdatePosition(
-    megamol::gui::configurator::CallSlot& call_slot, const CanvasType& in_canvas) {
+    megamol::gui::configurator::CallSlot& inout_call_slot, const CanvasType& in_canvas) {
 
-    if (call_slot.ParentModuleConnected()) {
-        auto slot_count = call_slot.GetParentModule()->GetCallSlots(call_slot.type).size();
+    if (inout_call_slot.ParentModuleConnected()) {
+        auto slot_count = inout_call_slot.GetParentModule()->GetCallSlots(inout_call_slot.type).size();
         size_t slot_idx = 0;
         for (size_t idx = 0; idx < slot_count; idx++) {
-            if (call_slot.name == call_slot.GetParentModule()->GetCallSlots(call_slot.type)[idx]->name) {
+            if (inout_call_slot.name == inout_call_slot.GetParentModule()->GetCallSlots(inout_call_slot.type)[idx]->name) {
                 slot_idx = idx;
             }
         }
-        auto pos = in_canvas.offset + call_slot.GetParentModule()->GUI_GetPosition() * in_canvas.zooming;
-        auto size = call_slot.GetParentModule()->GUI_GetSize() * in_canvas.zooming;
-        this->position = ImVec2(pos.x + ((call_slot.type == CallSlot::CallSlotType::CALLER) ? (size.x) : (0.0f)),
+        auto pos = in_canvas.offset + inout_call_slot.GetParentModule()->GUI_GetPosition() * in_canvas.zooming;
+        auto size = inout_call_slot.GetParentModule()->GUI_GetSize() * in_canvas.zooming;
+        this->position = ImVec2(pos.x + ((inout_call_slot.type == CallSlot::CallSlotType::CALLER) ? (size.x) : (0.0f)),
             pos.y + size.y * ((float)slot_idx + 1) / ((float)slot_count + 1));
     }
 }

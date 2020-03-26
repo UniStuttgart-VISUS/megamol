@@ -109,7 +109,7 @@ private:
 
         void Present(Module& inout_mod, StateType& state);
 
-        void UpdateSize(Module& mod, const CanvasType& in_canvas);
+        void UpdateSize(Module& inout_mod, const CanvasType& in_canvas);
 
         void SetPosition(ImVec2 pos) { this->position = pos; }
 

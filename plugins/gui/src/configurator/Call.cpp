@@ -149,6 +149,7 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::confi
             // Draw simple line if zooming is too small for nice bezier curves
             ImGui::PushID(inout_call.uid);
 
+            // Colors
             ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg]; // ImGuiCol_FrameBg ImGuiCol_Button
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             const ImU32 COLOR_CALL_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
@@ -183,7 +184,10 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::confi
                 ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
                 ImGui::SetCursorScreenPos(call_rect_min);
                 std::string label = "call_" + inout_call.class_name + std::to_string(inout_call.uid);
+
+                ImGui::SetItemAllowOverlap();
                 ImGui::InvisibleButton(label.c_str(), rect_size);
+                ImGui::SetItemAllowOverlap();
 
                 bool active = ImGui::IsItemActive();
                 bool hovered = ImGui::IsItemHovered();
@@ -200,16 +204,15 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::confi
                     ImGui::EndPopup();
                 }
 
-                if ((mouse_clicked && !hovered) || (state.interact.call_selected_uid != inout_call.uid)) {
+                if ((mouse_clicked && !hovered) || (state.interact.item_selected_uid != inout_call.uid)) {
                     this->selected = false;
-                    if (state.interact.call_selected_uid == inout_call.uid) {
-                        state.interact.call_selected_uid = GUI_INVALID_ID;
+                    if (state.interact.item_selected_uid == inout_call.uid) {
+                        state.interact.item_selected_uid = GUI_INVALID_ID;
                     }
                 }
                 if (active) {
                     this->selected = true;
-                    state.interact.call_selected_uid = inout_call.uid;
-                    state.interact.module_selected_uid = GUI_INVALID_ID;
+                    state.interact.item_selected_uid = inout_call.uid;
                 }
 
                 ImU32 call_bg_color = (hovered || this->selected) ? COLOR_CALL_HIGHTLIGHT : COLOR_CALL_BACKGROUND;

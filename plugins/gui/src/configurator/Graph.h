@@ -49,6 +49,7 @@ public:
 
     const ModuleGraphVectorType& GetGraphModules(void) { return this->modules; }
     const CallGraphVectorType& GetGraphCalls(void) { return this->calls; }
+    GroupGraphVectorType& GetGraphGroups(void) { return this->groups; }
 
     inline void SetName(const std::string& graph_name) { this->name = graph_name; }
     inline std::string& GetName(void) { return this->name; }
@@ -67,9 +68,8 @@ public:
         return this->present.Present(*this, in_child_width, in_graph_font, inout_hotkeys, out_delete_graph, show_parameter_sidebar);
     }
 
-    inline ImGuiID GUI_GetSelectedCallSlot(void) const { return this->present.GetSelectedCallSlot(); }
+    inline ImGuiID GUI_GetSelectedItem(void) const { return this->present.GetSelectedItem(); }
     inline ImGuiID GUI_GetDropCallSlot(void) const { return this->present.GetDropCallSlot(); }
-    inline ImGuiID GUI_GetHoverdCallSlot(void) const { return this->present.GetHoveredCallSlot(); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -99,9 +99,8 @@ private:
         ImGuiID Present(Graph& inout_graph, float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys,
             bool& out_delete_graph, bool& show_parameter_sidebar);
 
-        ImGuiID GetSelectedCallSlot(void) const { return this->state.interact.callslot_selected_uid; }
+        ImGuiID GetSelectedItem(void) const { return this->state.interact.item_selected_uid; }
         ImGuiID GetDropCallSlot(void) const { return this->state.interact.callslot_dropped_uid; }
-        ImGuiID GetHoveredCallSlot(void) const { return this->state.interact.callslot_hovered_uid; }
 
         bool GetModuleLabelVisibility(void) const { return this->show_module_names; }
         bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }

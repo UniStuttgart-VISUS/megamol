@@ -100,7 +100,7 @@ private:
 
         void Present(CallSlot& inout_call_slot, StateType& state);
 
-        void UpdatePosition(CallSlot& call_slot, const CanvasType& in_canvas);
+        void UpdatePosition(CallSlot& inout_call_slot, const CanvasType& in_canvas);
 
         ImVec2 GetPosition(void) { return this->position; }
 

@@ -303,11 +303,13 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
     CallSlotPtrType selected_call_slot_ptr;
     auto graph_ptr = this->graph_manager.GetGraph(this->graph_uid);
     if (graph_ptr != nullptr) {
-        auto call_slot_id = graph_ptr->GUI_GetSelectedCallSlot();
-        for (auto& mods : graph_ptr->GetGraphModules()) {
-            CallSlotPtrType call_slot_ptr = mods->GetCallSlot(call_slot_id);
-            if (call_slot_ptr != nullptr) {
-                selected_call_slot_ptr = call_slot_ptr;
+        auto call_slot_id = graph_ptr->GUI_GetSelectedItem();
+        if (call_slot_id != GUI_INVALID_ID) {
+            for (auto& mods : graph_ptr->GetGraphModules()) {
+                CallSlotPtrType call_slot_ptr = mods->GetCallSlot(call_slot_id);
+                if (call_slot_ptr != nullptr) {
+                    selected_call_slot_ptr = call_slot_ptr;
+                }
             }
         }
     }
