@@ -237,11 +237,12 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
     int cell_idx = 0;
     int num_skipped = 0;
     std::vector<std::vector<vtkm::Vec<float, 3>>> point_hs;
+    std::vector<float> point_hstest;
 
     for (int i = 0; i < num_elements; ++i) {
         std::vector<int> labels = {(int)nodeA[i], (int)nodeB[i], (int)nodeC[i], (int)nodeD[i]};
         std::vector<vtkm::Vec<float, 3>> vertex_buffer(4);
-        std::vector<std::vector<vtkm::Vec<float, 3>>> hs(4);
+        //std::vector<std::vector<vtkm::Vec<float, 3>>> hs(4);
 
         bool not_found = false;
 
@@ -258,11 +259,11 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
             }
             int idx = 3 * j;
             vertex_buffer[j] = {x_coord[node_index], y_coord[node_index], z_coord[node_index]};
-            hs.clear();
-            hs.resize(3);
-            hs[j][0] = {hs1_x[node_index], hs1_y[node_index], hs1_z[node_index]};
-            hs[j][1] = {hs2_x[node_index], hs2_y[node_index], hs2_z[node_index]};
-            hs[j][2] = {hs3_x[node_index], hs3_y[node_index], hs3_z[node_index]};
+            //hs.clear();
+            //hs.resize(3);
+            //hs[j][0] = {hs1_x[node_index], hs1_y[node_index], hs1_z[node_index]};
+            //hs[j][1] = {hs2_x[node_index], hs2_y[node_index], hs2_z[node_index]};
+            //hs[j][2] = {hs3_x[node_index], hs3_y[node_index], hs3_z[node_index]};
         }
 
         if (not_found) continue;
@@ -271,7 +272,8 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
             // TODO better vertex handling: could use vertex multiple times by just adding correct index
             // add vertices of all "correct" vertices and get indices
             dataSetBuilder.AddPoint(vertex_buffer[j][0], vertex_buffer[j][1], vertex_buffer[j][2]);
-            point_hs.emplace_back(hs[j]);
+            //point_hs.emplace_back(hs[j]);
+            point_hstest.emplace_back(1.f);
         }
 
         dataSetBuilder.AddCell(vtkm::CELL_SHAPE_TETRA);
@@ -287,10 +289,12 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
 
     // vtkmData = dataSetBuilder.Create(vertices, shapes, numIndices, connectivity);
     vtkmData = dataSetBuilder.Create();
-    dataSetFieldAdd.AddPointField<std::vector<vtkm::Vec<float, 3>>>(vtkmData, "hs_points", point_hs);
+    dataSetFieldAdd.AddPointField(vtkmData, "hs_points", point_hstest);
 
     vtkm::io::writer::VTKDataSetWriter writer("tetrahedron.vtk");
     writer.WriteDataSet(vtkmData);
+
+    vislib::sys::Log::DefaultLog.WriteInfo("vtkmData is successfully stored in tetrahedron.vtk.");
 
     this->data_hash++;
 
