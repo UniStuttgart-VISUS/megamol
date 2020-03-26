@@ -56,6 +56,7 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
     , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
     , normalizeSlot("normalize", "Normalize the output volume")
     , sigmaSlot("sigma", "Sigma for Gauss in multiple of rad")
+    , surfaceSlot("forSurfaceReconstruction", "Set true if this volume is used for surface reconstruction")
     //, datahash(std::numeric_limits<size_t>::max())
     , datahash(0)
     , time(std::numeric_limits<unsigned int>::max())
@@ -118,6 +119,9 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
         1.0f, std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
     this->MakeSlotAvailable(&this->sigmaSlot);
 
+    this->surfaceSlot << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->surfaceSlot);
+
     this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 }
@@ -173,6 +177,7 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
         return false;
     }
     if (this->time != inMpdc->FrameID() || this->in_datahash != inMpdc->DataHash() || this->anythingDirty()) {
+        if (this->surfaceSlot.Param<core::param::BoolParam>()->Value()) modifyBBox(inMpdc);
         if (!this->createVolumeCPU(inMpdc)) return false;
         this->time = inMpdc->FrameID();
         this->in_datahash = inMpdc->DataHash();
@@ -449,6 +454,58 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         totalParticles, diffMillis.count());
 
     return true;
+}
+
+void datatools::ParticlesToDensity::modifyBBox(megamol::core::moldyn::MultiParticleDataCall* c2) {
+
+    auto sx = this->xResSlot.Param<core::param::IntParam>()->Value();
+    auto sy = this->yResSlot.Param<core::param::IntParam>()->Value();
+    auto sz = this->zResSlot.Param<core::param::IntParam>()->Value();
+
+    auto rangeOSx = c2->AccessBoundingBoxes().ObjectSpaceBBox().Width();
+    auto rangeOSy = c2->AccessBoundingBoxes().ObjectSpaceBBox().Height();
+    auto rangeOSz = c2->AccessBoundingBoxes().ObjectSpaceBBox().Depth();
+
+    float general_box_scaling = 1.1;
+
+    // extend deph
+    auto spacing = (rangeOSz * general_box_scaling) /sz;
+    auto newDepth = (rangeOSz * general_box_scaling) + 2 * spacing;
+    spacing = newDepth / sz;
+
+    // ensure cubic voxels
+    auto newWidth = (rangeOSx * general_box_scaling) + 2*spacing;
+    int resolutionX = newWidth/spacing;
+    auto rest = newWidth / spacing - static_cast<float>(resolutionX);
+    newWidth += (1-rest)*spacing;
+    resolutionX += 1;
+    this->xResSlot.Param<core::param::IntParam>()->SetValue(resolutionX);
+
+    auto newHeight = (rangeOSy * general_box_scaling) + 2 * spacing;
+    int resolutionY = newHeight / spacing;
+    rest = newHeight / spacing - static_cast<float>(resolutionY);
+    newHeight += (1 - rest) * spacing;
+    resolutionY += 1;
+    this->yResSlot.Param<core::param::IntParam>()->SetValue(resolutionY);
+
+    auto minOSx = c2->AccessBoundingBoxes().ObjectSpaceBBox().Left();
+    auto minOSy = c2->AccessBoundingBoxes().ObjectSpaceBBox().Bottom();
+    auto minOSz = c2->AccessBoundingBoxes().ObjectSpaceBBox().Back();
+
+    auto maxOSx = c2->AccessBoundingBoxes().ObjectSpaceBBox().Right();
+    auto maxOSy = c2->AccessBoundingBoxes().ObjectSpaceBBox().Top();
+    auto maxOSz = c2->AccessBoundingBoxes().ObjectSpaceBBox().Front();
+
+    auto newLeft = minOSx - (newWidth - rangeOSx) / 2;
+    auto newBottom = minOSy - (newHeight - rangeOSy) / 2;
+    auto newBack = minOSz - (newDepth - rangeOSz) / 2;
+
+    auto newRight = maxOSx + (newWidth - rangeOSx) / 2;
+    auto newTop = maxOSy + (newHeight - rangeOSy) / 2;
+    auto newFront = maxOSz + (newDepth - rangeOSz) / 2;
+
+    c2->AccessBoundingBoxes().SetObjectSpaceBBox(newLeft, newBottom, newBack, newRight, newTop, newFront);
+    c2->AccessBoundingBoxes().SetObjectSpaceClipBox(newLeft, newBottom, newBack, newRight, newTop, newFront);
 }
 
 

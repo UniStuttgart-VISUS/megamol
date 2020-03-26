@@ -171,7 +171,10 @@ bool OSPRayPKDGeometry::getExtendsCallback(core::Call& call) {
     // if (!(*cd)(1)) return false; // table returns flase at first attempt and breaks everything
     (*cd)(1);
 
-    os->SetExtent(cd->FrameCount(), cd->AccessBoundingBoxes());
+    core::BoundingBoxes_2 box;
+    box.SetBoundingBox(cd->AccessBoundingBoxes().ObjectSpaceBBox());
+
+    os->SetExtent(cd->FrameCount(), box);
 
     return true;
 }

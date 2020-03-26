@@ -23,7 +23,6 @@ AbstractOSPRayMaterial::AbstractOSPRayMaterial(void) :
     this->deployMaterialSlot.SetCallback(CallOSPRayMaterial::ClassName(), CallOSPRayMaterial ::FunctionName(0), &AbstractOSPRayMaterial::getMaterialCallback);
     this->MakeSlotAvailable(&this->deployMaterialSlot);
 
-    this->create();
 }
 
 AbstractOSPRayMaterial::~AbstractOSPRayMaterial(void) {

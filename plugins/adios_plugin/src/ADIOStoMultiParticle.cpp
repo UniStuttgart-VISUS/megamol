@@ -7,12 +7,13 @@
 
 #include "stdafx.h"
 #include "ADIOStoMultiParticle.h"
-#include "CallADIOSData.h"
+#include "adios_plugin/CallADIOSData.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "vislib/sys/Log.h"
 #include <numeric>
 #include <complex.h>
 #include <complex.h>
+
 
 namespace megamol {
 namespace adios {
@@ -121,17 +122,28 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
         if (cad->isInVars("xyz")) {
             X = cad->getData("xyz")->GetAsChar();
             stride += 3 * cad->getData("xyz")->getTypeSize();
+            if (cad->getData("xyz")->getTypeSize() == 4) {
+                vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
+            } else {
+                vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ;
+            }
         } else if (cad->isInVars("x") && cad->isInVars("y") && cad->isInVars("z")) {
             X = cad->getData("x")->GetAsChar();
             Y = cad->getData("y")->GetAsChar();
             Z = cad->getData("z")->GetAsChar();
             stride += 3 * cad->getData("x")->getTypeSize();
+            if (cad->getData("x")->getTypeSize() == 4) {
+                vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
+            } else {
+                vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ;
+            }
         } else {
             vislib::sys::Log::DefaultLog.WriteError("ADIOStoMultiParticle: No particle positions found");
             return false;
         }
-        auto box = cad->getData("global_box")->GetAsFloat();
-        std::vector<unsigned long long int> p_count = cad->getData("count")->GetAsUInt64();
+        std::vector<float> box = cad->getData("global_box")->GetAsFloat();
+
+        auto p_count = cad->getData("count")->GetAsUInt64();
         std::vector<char> radius;
         std::vector<char> r;
         std::vector<char> g;
@@ -148,8 +160,6 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
         if (cad->isInVars("radius")) {
             radius = cad->getData("radius")->GetAsChar();
             stride += 3 * cad->getData("radius")->getTypeSize();
-        } else if (cad->isInVars("global_radius")) {
-            radius = cad->getData("global_radius")->GetAsChar();
         }
         // Colors
         if (cad->isInVars("r")) {
@@ -213,7 +223,7 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
             unsigned long long int particleCount;
 
             if (k == plist_offset.size()-1) {
-                auto tot_count = std::accumulate(p_count.begin(), p_count.end(), 0);
+                auto const tot_count = std::accumulate(p_count.begin(), p_count.end(), uint64_t(0));
                 particleCount = tot_count - plist_offset[k];
             } else {
                 particleCount = plist_offset[k + 1] - plist_offset[k];
@@ -222,11 +232,10 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
 
             // Set types
             colType = core::moldyn::SimpleSphericalParticles::COLDATA_NONE;
-            vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
             idType = core::moldyn::SimpleSphericalParticles::IDDATA_NONE;
 
             if (cad->isInVars("global_radius")) {
-                auto flt_radius = reinterpret_cast<std::vector<float>&>(radius);
+                auto flt_radius = cad->getData("global_radius")->GetAsFloat();
                 mpdc->AccessParticles(k).SetGlobalRadius(flt_radius[0]);
             } else if (cad->isInVars("radius")) {
                 vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR;
@@ -246,14 +255,18 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
                     colType = core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA;
                 }
             } else if (cad->isInVars("i")) {
-                colType = core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I;
+                if (cad->getData("i")->getType() == "float") {
+                    colType = core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I;
+                } else {
+                    colType = core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I;
+                }
             } else {
                 mpdc->AccessParticles(k).SetGlobalColour(0.8 * 255, 0.8 * 255, 0.8 * 255, 1.0 * 255);
             }
             if (cad->isInVars("id")) {
-                if (cad->getData("id")->getType() == "unsigned long long int") {
+                if (cad->getData("id")->getType() == "uint64_t") {
                     idType = core::moldyn::SimpleSphericalParticles::IDDATA_UINT64;
-                } else if (cad->getData("id")->getType() == "unsigned int") {
+                } else if (cad->getData("id")->getType() == "uint32_t") {
                     idType = core::moldyn::SimpleSphericalParticles::IDDATA_UINT32;
                 }
             }
@@ -309,8 +322,8 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
                 core::moldyn::SimpleSphericalParticles::ColorDataSize[colType],
             stride);
         if (cad->isInVars("list_box")) {
-            vislib::math::Cuboid<float> lbox(list_box[6 * k + 0], list_box[6 * k + 1], list_box[6 * k + 2],
-                list_box[6 * k + 3], list_box[6 * k + 4], list_box[6 * k + 5]);
+            vislib::math::Cuboid<float> lbox(list_box[6 * k + 0], list_box[6 * k + 1], std::min(list_box[6 * k + 2], list_box[6 * k + 5]),
+                list_box[6 * k + 3], list_box[6 * k + 4], std::max(list_box[6 * k + 2],list_box[6 * k + 5]));
             mpdc->AccessParticles(k).SetBBox(lbox);
         }
     }

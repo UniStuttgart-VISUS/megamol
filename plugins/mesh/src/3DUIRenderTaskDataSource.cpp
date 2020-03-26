@@ -10,7 +10,8 @@
 
 
 megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::ThreeDimensionalUIRenderTaskDataSource()
-    : m_interaction_collection(new ThreeDimensionalInteractionCollection)
+    : m_version(0)
+    , m_interaction_collection(new ThreeDimensionalInteractionCollection)
     , m_3DInteraction_calleeSlot("getInteraction", "The slot publishing available interactions and receiving pending manipulations")
     , m_3DInteraction_callerSlot("","")
     , m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file")
@@ -40,7 +41,6 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
     if (lhs_rtc->getData() == nullptr) {
         rt_collection = this->m_gpu_render_tasks;
-        lhs_rtc->setData(rt_collection);
     } else {
         rt_collection = lhs_rtc->getData();
     }
@@ -57,14 +57,12 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
     if (gltf_call == NULL) return false;
     if (!(*gltf_call)(0)) return false;
 
-    auto gpu_mtl_storage = mtlc->getData();
-    auto gpu_mesh_storage = mc->getData();
+    
+    bool something_has_changed = mtlc->hasUpdate() || mc->hasUpdate() || gltf_call->hasUpdate();
 
-    // TODO nullptr check
-
-    if (gltf_call->getMetaData().m_data_hash > m_glTF_cached_hash)
+    if (something_has_changed)
     {
-        m_glTF_cached_hash = gltf_call->getMetaData().m_data_hash;
+        ++m_version;
 
         // rt_collection->clear();
         if (!m_rt_collection_indices.empty()) {
@@ -77,6 +75,8 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
         }
 
         auto model = gltf_call->getData();
+        auto gpu_mtl_storage = mtlc->getData();
+        auto gpu_mesh_storage = mc->getData();
 
         for (size_t node_idx = 0; node_idx < model->nodes.size(); node_idx++) {
             if (node_idx < model->nodes.size() && model->nodes[node_idx].mesh != -1) {
@@ -255,9 +255,11 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
     }
 
+    lhs_rtc->setData(rt_collection,m_version);
+
     CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
-        rhs_rtc->setData(rt_collection);
+        rhs_rtc->setData(rt_collection,0);
 
         (*rhs_rtc)(0);
     }
@@ -271,7 +273,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getInteractionCallba
     if (ci == NULL) return false;
 
     if (ci->getData() == nullptr){
-        ci->setData(this->m_interaction_collection);
+        ci->setData(this->m_interaction_collection,m_version);
     }
 
     // clear non persistent changes, such has highlighting
