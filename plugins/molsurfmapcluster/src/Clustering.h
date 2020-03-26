@@ -124,6 +124,8 @@ private:
 
     /** The slot for getting data. */
     core::CallerSlot inSlotImageLoader;
+    core::CallerSlot inSlotImageLoader2;
+    core::CallerSlot inSlotImageLoader3;
     core::CallerSlot inSlotCLUSTERINGLoader;
 
     /** The data update hash */
@@ -151,7 +153,6 @@ private:
     core::param::ParamSlot linkagemodeparam;
     core::param::ParamSlot distancemultiplier;
     core::param::ParamSlot momentsmethode;
-    core::param::ParamSlot useActualValue;
     bool dumpdotfile;
     bool selectionmodechanged;
     bool linkagemodechanged;

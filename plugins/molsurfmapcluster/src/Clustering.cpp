@@ -36,6 +36,8 @@ using namespace megamol::molsurfmapcluster;
 Clustering::Clustering(void)
     : core::Module()
     , inSlotImageLoader("inImages", "Input slot for image data")
+    , inSlotImageLoader2("inImages2", "Second input slot for image data")
+    , inSlotImageLoader3("inImages3", "Third input slot for image data")
     , inSlotCLUSTERINGLoader("inClustering", "Input Slot for Clustering Data")
     , outSlot("outClusteringSlot", "OUtput slot for the Clustering")
     , dumpdot("Dump Dot-File", "")
@@ -43,8 +45,7 @@ Clustering::Clustering(void)
     , selectionmode("Mode for selection of similar nodes", "")
     , linkagemodeparam("Linkage Mode", "")
     , distancemultiplier("Distance Multiplier", "")
-    , momentsmethode("Moments Methode", "")
-    , useActualValue("UseActualValue", "") {
+    , momentsmethode("Moments Methode", "") {
 
     // Callee-Slot
     this->outSlot.SetCallback(CallClustering::ClassName(), "GetData", &Clustering::getDataCallback);
@@ -54,6 +55,12 @@ Clustering::Clustering(void)
     // Caller-Slot
     this->inSlotImageLoader.SetCompatibleCall<image_calls::Image2DCallDescription>();
     this->MakeSlotAvailable(&this->inSlotImageLoader);
+
+    this->inSlotImageLoader2.SetCompatibleCall<image_calls::Image2DCallDescription>();
+    this->MakeSlotAvailable(&this->inSlotImageLoader2);
+
+    this->inSlotImageLoader3.SetCompatibleCall<image_calls::Image2DCallDescription>();
+    this->MakeSlotAvailable(&this->inSlotImageLoader3);
 
     this->inSlotCLUSTERINGLoader.SetCompatibleCall<CallClusteringLoaderDescription>();
     this->MakeSlotAvailable(&this->inSlotCLUSTERINGLoader);
@@ -108,9 +115,6 @@ Clustering::Clustering(void)
     this->distancemultiplier.SetParameter(new megamol::core::param::FloatParam(0.75, 0.0, 1.0));
     this->MakeSlotAvailable(&this->distancemultiplier);
 
-    this->useActualValue.SetParameter(new core::param::BoolParam(true));
-    this->MakeSlotAvailable(&this->useActualValue);
-
     // Other Default Varialbles
     this->lastHash = 0;
     this->outHash = 0;
@@ -147,7 +151,7 @@ void Clustering::clusterData(image_calls::Image2DCall& cpp) {
     mode = mode > 4 ? mode - 4 : mode;
 
     this->clustering = new HierarchicalClustering(this->picdata, this->picturecount,
-        this->useActualValue.Param<core::param::BoolParam>()->Value(), mode, bla,
+        mode, bla,
         this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
         this->momentsmethode.Param<core::param::EnumParam>()->Value());
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Clustering finished", this->picturecount);
@@ -164,7 +168,6 @@ void Clustering::clusterData(CallClusteringLoader* ccl) {
     vislib::sys::Log::DefaultLog.WriteMsg(
         vislib::sys::Log::LEVEL_INFO, "Clustering %I64u Pictures", this->picturecount);
     this->clustering = new HierarchicalClustering(ccl->getLeaves(), ccl->Count(),
-        this->useActualValue.Param<core::param::BoolParam>()->Value(),
         this->momentsmethode.Param<core::param::EnumParam>()->Value(),
         this->selectionmode.Param<core::param::EnumParam>()->Value(),
         this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
@@ -348,7 +351,7 @@ bool Clustering::getDataCallback(core::Call& caller) {
         }
 
         // Reanalyse Pictures
-        if (!freshlyClustered) clustering->reanalyse(this->useActualValue.Param<core::param::BoolParam>()->Value());
+        if (!freshlyClustered) clustering->reanalyse();
     }
 
     if (this->clustering->finished()) {

@@ -41,8 +41,8 @@ HierarchicalClustering::HierarchicalClustering() {}
 
 HierarchicalClustering::~HierarchicalClustering() {}
 
-HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& pics, SIZE_T picturecount, bool actualValue,
-    int method, int mode, int linkage, int moments) {
+HierarchicalClustering::HierarchicalClustering(
+    std::vector<PictureData>& pics, SIZE_T picturecount, int method, int mode, int linkage, int moments) {
 
     // Initalize Variables
     this->cluster = new std::vector<CLUSTERNODE*>();
@@ -86,18 +86,16 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& pics, S
 
     // Getting Features of Pictures
     for (CLUSTERNODE* node : *this->cluster) {
-        if (this->momentsmethode == 1 && !actualValue) HierarchicalClustering::calculateImageMoments(node);
-        if (this->momentsmethode == 1 && actualValue) HierarchicalClustering::calculateImageMomentsValue(node);
-        if (this->momentsmethode == 2 && !actualValue) HierarchicalClustering::calculateColorMoments(node);
-        if (this->momentsmethode == 2 && actualValue) HierarchicalClustering::calculateColorMomentsValue(node);
+        if (this->momentsmethode == 1) HierarchicalClustering::calculateImageMomentsValue(node);
+        if (this->momentsmethode == 2) HierarchicalClustering::calculateColorMomentsValue(node);
     }
 
     // Cluster the Data
     this->clusterthedata();
 }
 
-HierarchicalClustering::HierarchicalClustering(HierarchicalClustering::CLUSTERNODE* node, SIZE_T picturecount,
-    bool actualValue, int method, int mode, int linkage, int moments) {
+HierarchicalClustering::HierarchicalClustering(
+    HierarchicalClustering::CLUSTERNODE* node, SIZE_T picturecount, int method, int mode, int linkage, int moments) {
 
     // Initalize Variables
     this->cluster = new std::vector<CLUSTERNODE*>();
@@ -125,56 +123,6 @@ HierarchicalClustering::HierarchicalClustering(HierarchicalClustering::CLUSTERNO
 
     // Cluster the Data
     this->clusterthedata();
-}
-
-void HierarchicalClustering::calculateImageMoments(CLUSTERNODE* node) {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "\tAnalyzing %s", node->pic->path.c_str());
-
-    PictureData* pic = node->pic;
-
-    std::vector<double>* graypicintensity = gray_scale_image(pic);
-
-    double m00 = 0;
-    double m01 = 0;
-    double m10 = 0;
-
-    for (int y = 0; y < pic->height; y++) {
-        for (int x = 0; x < pic->width; x++) {
-            m00 += (*graypicintensity)[(y * pic->width) + x];
-            m10 += pow(x, 1) * (*graypicintensity)[(y * pic->width) + x];
-            m01 += pow(y, 1) * (*graypicintensity)[(y * pic->width) + x];
-        }
-    }
-
-    double xc = m10 / m00;
-    double yc = m01 / m00;
-
-    double müij[IMAGEORDER + 1][IMAGEORDER + 1] = {0};
-
-    for (int x = 0; x < pic->width; x++) {
-        for (int y = 0; y < pic->height; y++) {
-            for (int i = 0; i <= IMAGEORDER; i++) {
-                for (int j = 0; j <= IMAGEORDER; j++) {
-                    if ((i + j <= 3) && !((i == 1 && j == 0) || (i == 0 && j == 1))) {
-                        müij[i][j] += pow(x - xc, i) * pow(y - yc, j) * (*graypicintensity)[(x * pic->height) + y];
-                    }
-                }
-            }
-        }
-    }
-
-    delete node->features;
-    node->features = new std::vector<double>();
-    for (int i = 0; i <= IMAGEORDER; i++) {
-        for (int j = 0; j <= IMAGEORDER; j++) {
-            if ((i + j) <= 3) node->features->push_back(müij[i][j] / (pow(müij[0][0], (1 + ((i + j) / 2)))));
-        }
-    }
-
-    delete graypicintensity;
-
-    bla++;
-    vislib::sys::Log::DefaultLog.WriteInfo("Calculated %u", bla);
 }
 
 void HierarchicalClustering::calculateImageMomentsValue(CLUSTERNODE* node) {
@@ -246,75 +194,6 @@ void HierarchicalClustering::calculateImageMomentsValue(CLUSTERNODE* node) {
                     (nu[3] + nu[2 * IMAGEORDER + 1]);
 
     *node->features = {i1, 0.0, 0.0, i2, i4, i5, i6, i7, i8};
-    bla++;
-    vislib::sys::Log::DefaultLog.WriteInfo("Calculated %u", bla);
-}
-
-void HierarchicalClustering::calculateColorMoments(CLUSTERNODE* node) {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "\tAnalyzing %s", node->pic->path);
-
-    PictureData* pic = node->pic;
-
-    double mean[3] = {0};
-    double deviation[3] = {0};
-    double skewness[3] = {0};
-
-    double factor = static_cast<double>(pic->width * pic->height);
-    auto picptr = pic->image->PeekDataAs<BYTE>();
-
-    // Calculate Mean
-    double summean[3] = {0};
-    for (int i = 0; i < pic->height; i++) {
-        for (int j = 0; j < pic->width * 3; j += 3) {
-            // summean[0] += pic->rows[i][j];
-            summean[0] += static_cast<double>(picptr[pic->width * i + j]);
-            // summean[1] += pic->rows[i][j + 1];
-            summean[1] += static_cast<double>(picptr[pic->width * i + j + 1]);
-            // summean[2] += pic->rows[i][j + 2];
-            summean[2] += static_cast<double>(picptr[pic->width * i + j + 2]);
-        }
-    }
-
-    mean[0] = summean[0] / factor;
-    mean[1] = summean[1] / factor;
-    mean[2] = summean[2] / factor;
-
-    // Calculate Deviation and Skewness
-    double deviationsum[3] = {0.0};
-    double skewnesssum[3] = {0.0};
-    for (int i = 0; i < pic->height; i++) {
-        for (int j = 0; j < pic->width * 3; j += 3) {
-            deviationsum[0] += pow(static_cast<double>(picptr[pic->width * i + j]) - mean[0], 2);
-            deviationsum[1] += pow(static_cast<double>(picptr[pic->width * i + j + 1]) - mean[1], 2);
-            deviationsum[2] += pow(static_cast<double>(picptr[pic->width * i + j + 2]) - mean[2], 2);
-
-            skewnesssum[0] += pow(static_cast<double>(picptr[pic->width * i + j]) - mean[0], 3);
-            skewnesssum[1] += pow(static_cast<double>(picptr[pic->width * i + j + 1]) - mean[1], 3);
-            skewnesssum[2] += pow(static_cast<double>(picptr[pic->width * i + j + 2]) - mean[2], 3);
-        }
-    }
-
-    // Calculate Deviation
-    deviation[0] = sqrt(deviationsum[0] / factor);
-    deviation[1] = sqrt(deviationsum[1] / factor);
-    deviation[2] = sqrt(deviationsum[2] / factor);
-
-    skewness[0] = cbrt((skewnesssum[0] / factor));
-    skewness[1] = cbrt((skewnesssum[1] / factor));
-    skewness[2] = cbrt((skewnesssum[2] / factor));
-
-    delete node->features;
-    node->features = new std::vector<double>();
-    node->features->push_back(mean[0]);
-    node->features->push_back(mean[1]);
-    node->features->push_back(mean[2]);
-    node->features->push_back(deviation[0]);
-    node->features->push_back(deviation[1]);
-    node->features->push_back(deviation[2]);
-    node->features->push_back(skewness[0]);
-    node->features->push_back(skewness[1]);
-    node->features->push_back(skewness[2]);
-
     bla++;
     vislib::sys::Log::DefaultLog.WriteInfo("Calculated %u", bla);
 }
@@ -716,7 +595,7 @@ void HierarchicalClustering::dump_pca(const vislib::TString& filename) {
 
 bool HierarchicalClustering::finished() { return this->clusteringfinished; }
 
-void HierarchicalClustering::reanalyse(bool actualValue) {
+void HierarchicalClustering::reanalyse(void) {
 
     this->clusteringfinished = false;
 
@@ -726,10 +605,8 @@ void HierarchicalClustering::reanalyse(bool actualValue) {
 
     // Getting Features of Pictures
     for (CLUSTERNODE* node : *this->cluster) {
-        if (this->momentsmethode == 1 && !actualValue) HierarchicalClustering::calculateImageMoments(node);
-        if (this->momentsmethode == 1 && actualValue) HierarchicalClustering::calculateImageMomentsValue(node);
-        if (this->momentsmethode == 2 && !actualValue) HierarchicalClustering::calculateColorMoments(node);
-        if (this->momentsmethode == 2 && actualValue) HierarchicalClustering::calculateColorMomentsValue(node);
+        if (this->momentsmethode == 1) HierarchicalClustering::calculateImageMomentsValue(node);
+        if (this->momentsmethode == 2) HierarchicalClustering::calculateColorMomentsValue(node);
     }
 
     // Cluster the Data
