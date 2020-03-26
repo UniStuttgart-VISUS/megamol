@@ -106,11 +106,11 @@ private:
         bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
         bool GetCallLabelVisibility(void) const { return this->show_call_names; }
 
+        void SetUpdate(void) { this->update = true; }
+
         bool params_visible;
         bool params_readonly;
         bool params_expert;
-
-        StateType state;
 
     private:
         ImFont* font;
@@ -125,6 +125,9 @@ private:
         float child_split_width;
         bool reset_zooming;
         std::string param_name_space;
+
+        // State propagated and shared by all graph items.
+        StateType state;
 
         void present_menu(Graph& inout_graph);
         void present_canvas(Graph& inout_graph, float in_child_width);

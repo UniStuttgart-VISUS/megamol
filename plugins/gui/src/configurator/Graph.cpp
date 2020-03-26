@@ -256,7 +256,7 @@ bool megamol::gui::configurator::Graph::RenameAssignedModuleName(const std::stri
     for (auto& mod : this->modules) {
         if (module_name == mod->name) {
             mod->name = this->generate_unique_module_name(module_name);
-            mod->GUI_Update(this->present.state.canvas);
+            this->present.SetUpdate();
             return true;
         }
     }

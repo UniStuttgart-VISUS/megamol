@@ -273,7 +273,6 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
 
         // Draw text
         if (this->label_visible) {
-            ImGui::BeginGroup();
 
             float line_offset = 0.0f;
             if (inout_module.is_view_instance) {
@@ -282,23 +281,20 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
 
             label = this->class_label;
             float name_width = this->utils.TextWidgetWidth(label);
-            ImGui::SetCursorScreenPos(
-                module_center + ImVec2(-(name_width / 2.0f), line_offset - ImGui::GetTextLineHeightWithSpacing()));
-            ImGui::Text(label.c_str());
+            ImVec2 text_pos_left_upper = (module_center + ImVec2(-(name_width / 2.0f), line_offset - ImGui::GetTextLineHeightWithSpacing()));
+            draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), label.c_str());
 
             label = this->name_label;
             name_width = this->utils.TextWidgetWidth(label);
-            ImGui::SetCursorScreenPos(module_center + ImVec2(-(name_width / 2.0f), line_offset));
-            ImGui::Text(label.c_str());
+            text_pos_left_upper = (module_center + ImVec2(-(name_width / 2.0f), line_offset));
+            draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), label.c_str());
 
             if (inout_module.is_view_instance) {
                 label = "[Main View]";
                 name_width = this->utils.TextWidgetWidth(label);
-                ImGui::SetCursorScreenPos(
-                    module_center + ImVec2(-(name_width / 2.0f), line_offset + ImGui::GetTextLineHeightWithSpacing()));
-                ImGui::Text(label.c_str());
+                text_pos_left_upper = (module_center + ImVec2(-(name_width / 2.0f), line_offset + ImGui::GetTextLineHeightWithSpacing()));
+                draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), label.c_str());
             }
-            ImGui::EndGroup();
         }
 
         /// XXX Use ImGui::ArrowButton to show/hide parameters inside module box.
@@ -350,10 +346,10 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
         }
     }
     if (max_slot_name_length != 0.0f) {
-        max_slot_name_length = (2.0f * max_slot_name_length / in_canvas.zooming) + (2.0f * GUI_CALL_SLOT_RADIUS);
+        max_slot_name_length = (2.0f * max_slot_name_length / in_canvas.zooming) + (1.0f * GUI_CALL_SLOT_RADIUS);
     }
 
-    float module_width = (max_label_length + max_slot_name_length) + (1.0f * GUI_CALL_SLOT_RADIUS);
+    float module_width = (max_label_length + max_slot_name_length) + (3.0f * GUI_CALL_SLOT_RADIUS);
 
     auto max_slot_count = std::max(inout_mod.GetCallSlots(CallSlot::CallSlotType::CALLEE).size(),
         inout_mod.GetCallSlots(CallSlot::CallSlotType::CALLER).size());

@@ -281,9 +281,9 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
             text_pos_left_upper.y = slot_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
             if (inout_call_slot.type == CallSlot::CallSlotType::CALLER) {
                 text_pos_left_upper.x =
-                    slot_position.x - this->utils.TextWidgetWidth(inout_call_slot.name) - (2.0f * radius);
+                    slot_position.x - this->utils.TextWidgetWidth(inout_call_slot.name) - (1.5f * radius);
             } else if (inout_call_slot.type == CallSlot::CallSlotType::CALLEE) {
-                text_pos_left_upper.x = slot_position.x + (2.0f * radius);
+                text_pos_left_upper.x = slot_position.x + (1.5f * radius);
             }
         }
 

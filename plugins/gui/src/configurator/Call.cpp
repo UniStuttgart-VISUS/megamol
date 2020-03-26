@@ -220,9 +220,8 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::confi
                 draw_list->AddRect(call_rect_min, call_rect_max, COLOR_CALL_BORDER, 4.0f);
 
                 // Draw text
-                ImGui::SetCursorScreenPos(
-                    call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
-                ImGui::Text(inout_call.class_name.c_str());
+                ImVec2 text_pos_left_upper =(call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
+                draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), inout_call.class_name.c_str());
             }
 
             ImGui::PopID();
