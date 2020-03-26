@@ -4,7 +4,7 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 string(TOUPPER probe_gl EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build probe_gl" ON)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build probe_gl" OFF)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(probe_gl)

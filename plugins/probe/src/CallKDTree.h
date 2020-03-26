@@ -10,9 +10,11 @@
 
 namespace megamol {
 namespace probe {
-class CallKDTree : public core::CallGeneric<std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>, core::Spatial3DMetaData> {
+class CallKDTree
+    : public core::GenericVersionedCall<std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>, core::Spatial3DMetaData> {
 public:
-    CallKDTree() : core::CallGeneric<std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>, core::Spatial3DMetaData>() {}
+    CallKDTree()
+        : core::GenericVersionedCall<std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>, core::Spatial3DMetaData>() {}
     ~CallKDTree(){};
 
     static const char* ClassName(void) { return "CallKDTree"; }

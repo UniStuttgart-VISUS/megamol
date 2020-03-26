@@ -14,12 +14,6 @@
 namespace megamol {
 namespace core {
 
-
-/**
- * Empty meta data struct for calls that don't have anything to say about themselves
- */
-struct EmptyMetaData {};
-
 /**
  * The most basic meta data only features a hash value to indicate when "something has changed".
  */
@@ -33,13 +27,19 @@ struct BasicMetaData {
  * A hash value provides the possibility to communicate when "something has changed".
  */
 struct Spatial3DMetaData {
+    size_t m_data_hash = 0;
     unsigned int m_frame_cnt = 0;
     unsigned int m_frame_ID = 0;
     megamol::core::BoundingBoxes_2 m_bboxs;
 };
 
-template <typename DataType, typename MetaDataType> class CallGeneric : public Call {
+struct EmptyMetaData {
+};
+
+template <typename DataType, typename MetaDataType> class CallGeneric : public Call 
+{
 public:
+
     using data_type = DataType;
     using meta_data_type = MetaDataType;
 
@@ -58,30 +58,17 @@ public:
         return NULL;
     }
 
-    void setData(DataType const& data, uint32_t version) {
-        m_data = data;
-        m_set_version = version;
-    }
+    void setData(DataType const& data) { m_data = data; }
 
     void setMetaData(MetaDataType const& meta_data) { m_meta_data = meta_data; }
 
-    DataType const& getData() {
-        m_get_version = m_set_version;
-        return m_data;
-    }
+    DataType const& getData() { return m_data; }
 
     MetaDataType const& getMetaData() { return m_meta_data; }
 
-    uint32_t version() { return m_set_version; }
-
-    bool hasUpdate() { return (m_set_version > m_get_version); }
-
 private:
-    DataType m_data;
+    DataType     m_data;
     MetaDataType m_meta_data;
-
-    uint32_t m_get_version = 0;
-    uint32_t m_set_version = 0;
 };
 
 
@@ -135,7 +122,7 @@ private:
     uint32_t m_set_version = 0;
 };
 
-} // namespace core
+} // namespace mesh
 } // namespace megamol
 
 #endif // !CALL_GENERIC_H_INCLUDED

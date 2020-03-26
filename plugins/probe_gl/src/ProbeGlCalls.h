@@ -17,10 +17,10 @@ namespace megamol {
 namespace probe_gl {
 
 class PROBE_GL_API CallProbeInteraction
-    : public core::CallGeneric<std::shared_ptr<ProbeInteractionCollection>, core::Spatial3DMetaData> {
+    : public core::GenericVersionedCall<std::shared_ptr<ProbeInteractionCollection>, core::Spatial3DMetaData> {
 public:
     inline CallProbeInteraction()
-        : CallGeneric<std::shared_ptr<ProbeInteractionCollection>, core::Spatial3DMetaData>() {}
+        : GenericVersionedCall<std::shared_ptr<ProbeInteractionCollection>, core::Spatial3DMetaData>() {}
     ~CallProbeInteraction() = default;
 
     static const char* ClassName(void) { return "CallProbeInteraction"; }
