@@ -18,12 +18,6 @@ namespace megamol {
 namespace gui {
 namespace configurator {
 
-// Forward declaration
-class Group;
-
-// Pointer types to class
-typedef std::shared_ptr<Group> GroupPtrType;
-
 /**
  * Defines module data structure for graph.
  */
@@ -35,19 +29,23 @@ public:
 
     const ImGuiID uid;
 
- 
     // Init when adding group to graph
     std::string name;
 
+    bool AddModule(const ModulePtrType& module_ptr);
+    bool DeleteModule(ImGuiID module_uid);
 
     // GUI Presentation -------------------------------------------------------
 
-    void GUI_Present(
-        const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys, InteractType& interact_state) {
-        this->present.Present(*this, in_canvas, inout_hotkeys, interact_state);
+    void GUI_Present(StateType& state) {
+        this->present.Present(*this, state);
     }
 
 private:
+
+    // VARIABLES --------------------------------------------------------------
+
+    ModuleGraphVectorType modules;
 
     /**
      * Defines GUI group presentation.
@@ -58,12 +56,16 @@ private:
 
         ~Presentation(void);
 
-        void Present(Group& inout_mod, const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys, InteractType& interact_state);
+        void Present(Group& inout_group, StateType& state);
 
     private:
 
 
     } present;
+
+    // FUNCTIONS --------------------------------------------------------------
+
+
 };
 
 

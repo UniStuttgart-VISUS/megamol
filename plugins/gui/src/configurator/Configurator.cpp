@@ -35,7 +35,6 @@ megamol::gui::configurator::Configurator::Configurator()
     , add_project_graph_uid(GUI_INVALID_ID)
     , show_module_list_sidebar(true)
     , show_parameter_sidebar(true)
-    , project_uid(0)
     , file_utils() {
 
     // Define HotKeys
@@ -112,7 +111,7 @@ bool megamol::gui::configurator::Configurator::Draw(
         // 2] Load available modules and calls and currently loaded project from core once(!)
         this->graph_manager.UpdateModulesCallsStock(core_instance);
         // Load once inital project
-        this->graph_manager.LoadProjectCore(this->get_unique_project_name(), core_instance);
+        this->graph_manager.LoadProjectCore(core_instance);
         ///this->add_empty_project();
         this->init_state++;
     } else {
@@ -178,7 +177,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                 }
 
                 if (ImGui::MenuItem("Running")) {
-                    this->graph_manager.LoadProjectCore(this->get_unique_project_name(), core_instance);
+                    this->graph_manager.LoadProjectCore(core_instance);
                     // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
                 }
 
@@ -209,7 +208,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Windows")) {
+        if (ImGui::BeginMenu("View")) {
             if (ImGui::MenuItem("Modules Sidebar", std::get<0>(this->hotkeys[HotkeyIndex::MODULE_SEARCH]).ToString().c_str(), this->show_module_list_sidebar)) {
                 this->show_module_list_sidebar = !this->show_module_list_sidebar;
             }
@@ -397,7 +396,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
 
 void megamol::gui::configurator::Configurator::add_empty_project(void) {
 
-    if (this->graph_manager.AddGraph(this->get_unique_project_name())) {
+    if (this->graph_manager.AddGraph()) {
 
         // Add initial GUIView and set as view instance
         auto graph_ptr = this->graph_manager.GetGraphs().back();

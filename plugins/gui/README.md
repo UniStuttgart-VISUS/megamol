@@ -73,7 +73,7 @@ The `OverlayRenderer` is a rendering module which implements a `megamol::core::v
 
 The configurator is part of the GUI and can be opened via the GUI menu: `Windows`/`Configurator`.\
 Any changes applied in the configurator will not effect the currently loaded MegaMol project.\
-In order to start the configurator automatically, you can use the project  `/examples/configurator.lua`.
+In order to start the configurator automatically, you can use the project  `/examples/configurator.lua`:
 
         mmCreateView("configurator","GUIView","::gui")
         mmSetParamValue("::gui::autostart_configurator",[=[true]=])
@@ -93,11 +93,14 @@ The menu of the configurator window provides the following options:
     * `Add` 
         * `File` Add existing project from a file to currently selected project.
         * `Running` Add currently running project to currently selected project.
-    * `Save Project` (` `) Save the project of the currently selected tab to a file (lua).
+    * `Save Project` (`Ctrl + s`) Save the project of the currently selected tab to a file (lua).
+* `View`
+    * `Modules Sidebar` (`Ctrl + Shift + m`) Show/Hide sidebar with module stock list.
+    * `Parameter Sidebar` (`Ctrl + Shift + p`) Show/Hide sidebar with parameters of currently selected module.
 * `Help` Information on additionally available options.
 
 **NOTE:**\
-Projects setting parameter values using `mmSetParamValue` must have the parameter values enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are deprecated.
+Parameter values in lua command `mmSetParamValue` must have the value enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are not supported.
 
 ![configurator demo picture](configurator.png)
 

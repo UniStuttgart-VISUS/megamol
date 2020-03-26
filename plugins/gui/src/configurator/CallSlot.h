@@ -74,8 +74,8 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    void GUI_Present(const CanvasType& in_canvas, InteractType& interact_state) {
-        this->present.Present(*this, in_canvas, interact_state);
+    void GUI_Present(StateType& state) {
+        this->present.Present(*this, state);
     }
     void GUI_Update(const CanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
 
@@ -98,8 +98,7 @@ private:
 
         ~Presentation(void);
 
-        void Present(
-            CallSlot& inout_call_slot, const CanvasType& in_canvas, InteractType& interact_state);
+        void Present(CallSlot& inout_call_slot, StateType& state);
 
         void UpdatePosition(CallSlot& call_slot, const CanvasType& in_canvas);
 

@@ -90,6 +90,12 @@ typedef struct _interact_state_ {
     configurator::CallSlotPtrType in_compat_slot_ptr;
 } InteractType;
 
+typedef struct _state_ {
+    CanvasType canvas;
+    InteractType interact;
+    HotKeyArrayType hotkeys;
+} StateType;
+
 
 /**
  * Utility class for GUIUtils-style widgets.

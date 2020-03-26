@@ -255,9 +255,7 @@ megamol::gui::configurator::CallSlot::Presentation::Presentation(void)
 megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
 
-void megamol::gui::configurator::CallSlot::Presentation::Present(
-    megamol::gui::configurator::CallSlot& inout_call_slot, const CanvasType& in_canvas,
-    megamol::gui::InteractType& interact_state) {
+void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::configurator::CallSlot& inout_call_slot, megamol::gui::StateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -271,12 +269,12 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
     try {
 
         if (this->update_once) {
-            this->UpdatePosition(inout_call_slot, in_canvas);
+            this->UpdatePosition(inout_call_slot, state.canvas);
             this->update_once = false;
         }
 
         ImVec2 slot_position = this->position;
-        float radius = GUI_CALL_SLOT_RADIUS * in_canvas.zooming;
+        float radius = GUI_CALL_SLOT_RADIUS * state.canvas.zooming;
 
         ImVec2 text_pos_left_upper = ImVec2(0.0f, 0.0f);
         if (this->label_visible) {
@@ -292,8 +290,8 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         // Clip call slots if lying ouside the canvas 
         /// XXX Is there a benefit since ImGui::PushClipRect is used?
         /*
-        ImVec2 canvas_rect_min = in_canvas.position;
-        ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
+        ImVec2 canvas_rect_min = state.canvas.position;
+        ImVec2 canvas_rect_max = state.canvas.position + state.canvas.size;
         ImVec2 slot_rect_min = ImVec2(slot_position.x - radius, slot_position.y - radius);
         ImVec2 slot_rect_max = ImVec2(slot_position.x + radius, slot_position.y + radius);
         if (this->label_visible) {
@@ -310,8 +308,8 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         if (!((canvas_rect_min.x < (slot_rect_max.x)) && (canvas_rect_max.x > (slot_rect_min.x)) &&
                 (canvas_rect_min.y < (slot_rect_max.y)) && (canvas_rect_max.y > (slot_rect_min.y)))) {
             this->selected = false;
-            if (interact_state.callslot_selected_uid == inout_call_slot.uid) {
-                interact_state.callslot_selected_uid = GUI_INVALID_ID;
+            if (state.interact.callslot_selected_uid == inout_call_slot.uid) {
+                state.interact.callslot_selected_uid = GUI_INVALID_ID;
             }            
             return;
         }
@@ -344,7 +342,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         /// ImGui::SetItemAllowOverlap();
 
         bool active = ImGui::IsItemActive();
-        bool hovered = (ImGui::IsItemHovered() && ((interact_state.callslot_hovered_uid == GUI_INVALID_ID) || (interact_state.callslot_hovered_uid == inout_call_slot.uid)));
+        bool hovered = (ImGui::IsItemHovered() && ((state.interact.callslot_hovered_uid == GUI_INVALID_ID) || (state.interact.callslot_hovered_uid == inout_call_slot.uid)));
         bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
 
         // Context menu
@@ -369,33 +367,33 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         }
         this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
 
-        if (CallSlot::CheckCompatibleAvailableCallIndex(interact_state.in_compat_slot_ptr, inout_call_slot) !=
+        if (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.in_compat_slot_ptr, inout_call_slot) !=
             GUI_INVALID_ID) {
             slot_color = COLOR_SLOT_COMPATIBLE;
         }
-        if ((mouse_clicked && !hovered) || (interact_state.callslot_selected_uid != inout_call_slot.uid)) {
+        if ((mouse_clicked && !hovered) || (state.interact.callslot_selected_uid != inout_call_slot.uid)) {
             this->selected = false;
-            if (interact_state.callslot_selected_uid == inout_call_slot.uid) {
-                interact_state.callslot_selected_uid = GUI_INVALID_ID;
+            if (state.interact.callslot_selected_uid == inout_call_slot.uid) {
+                state.interact.callslot_selected_uid = GUI_INVALID_ID;
             }
         }
         if (active) {
             this->selected = true;
-            interact_state.callslot_selected_uid = inout_call_slot.uid;
+            state.interact.callslot_selected_uid = inout_call_slot.uid;
         }
         if (hovered || this->selected) {
             slot_color = slot_highlight_color;
         }
         if (hovered) {
-            interact_state.callslot_hovered_uid = inout_call_slot.uid;
+            state.interact.callslot_hovered_uid = inout_call_slot.uid;
         }
-        if (!hovered && (interact_state.callslot_hovered_uid == inout_call_slot.uid)) {
-            interact_state.callslot_hovered_uid = GUI_INVALID_ID;
+        if (!hovered && (state.interact.callslot_hovered_uid == inout_call_slot.uid)) {
+            state.interact.callslot_hovered_uid = GUI_INVALID_ID;
         }        
         if (ImGui::BeginDragDropTarget()) {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(GUI_DND_CALL_UID_TYPE)) {
                 ImGuiID* uid = (ImGuiID*)payload->Data;
-                interact_state.callslot_dropped_uid = inout_call_slot.uid;
+                state.interact.callslot_dropped_uid = inout_call_slot.uid;
             }
             ImGui::EndDragDropTarget();
         }

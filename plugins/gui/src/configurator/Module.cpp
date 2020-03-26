@@ -134,9 +134,7 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
 megamol::gui::configurator::Module::Presentation::~Presentation(void) {}
 
 
-void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::configurator::Module& inout_module,
-    const CanvasType& in_canvas, megamol::gui::HotKeyArrayType& inout_hotkeys,
-    megamol::gui::InteractType& interact_state) {
+void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::configurator::Module& inout_module, megamol::gui::StateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -151,17 +149,17 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
     try {
         // Condition for initialization position (if position is not set yet via tag in project file)
         if ((this->position.x == FLT_MAX) && (this->position.y == FLT_MAX)) {
-            this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - in_canvas.offset) / in_canvas.zooming;
+            this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - state.canvas.offset) / state.canvas.zooming;
         }
         // Update size if current values are invalid
         if (this->update_once || (this->size.x <= 0.0f) || (this->size.y <= 0.0f)) {
-            this->UpdateSize(inout_module, in_canvas);
+            this->UpdateSize(inout_module, state.canvas);
             this->update_once = false;
         }
 
         // Draw module --------------------------------------------------------
-        ImVec2 module_size = this->size * in_canvas.zooming;
-        ImVec2 module_rect_min = in_canvas.offset + this->position * in_canvas.zooming;
+        ImVec2 module_size = this->size * state.canvas.zooming;
+        ImVec2 module_rect_min = state.canvas.offset + this->position * state.canvas.zooming;
         ImVec2 module_rect_max = module_rect_min + module_size;
         ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
 
@@ -170,18 +168,18 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
         // Clip module if lying ouside the canvas 
         /// XXX Is there a benefit since ImGui::PushClipRect is used?
         /*
-        ImVec2 canvas_rect_min = in_canvas.position;
-        ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
+        ImVec2 canvas_rect_min = state.canvas.position;
+        ImVec2 canvas_rect_max = state.canvas.position + state.canvas.size;
         if (!((canvas_rect_min.x < module_rect_max.x) && (canvas_rect_max.x > module_rect_min.x) &&
                 (canvas_rect_min.y < module_rect_max.y) && (canvas_rect_max.y > module_rect_min.y))) {
             if (mouse_clicked) {
                 this->selected = false;
-                if (interact_state.module_selected_uid == inout_module.uid) {
-                    interact_state.module_selected_uid = GUI_INVALID_ID;
+                if (state.interact.module_selected_uid == inout_module.uid) {
+                    state.interact.module_selected_uid = GUI_INVALID_ID;
                 }                
             }
             if (this->selected) {
-                interact_state.module_selected_uid = inout_module.uid;
+                state.interact.module_selected_uid = inout_module.uid;
             }
             return;
         }
@@ -209,20 +207,20 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
         ImGui::SetItemAllowOverlap();
 
         bool active = ImGui::IsItemActive();
-        bool hovered = (ImGui::IsItemHovered() && (interact_state.callslot_hovered_uid == GUI_INVALID_ID) && 
-            ((interact_state.module_hovered_uid == GUI_INVALID_ID) || (interact_state.module_hovered_uid == inout_module.uid)));
+        bool hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) && 
+            ((state.interact.module_hovered_uid == GUI_INVALID_ID) || (state.interact.module_hovered_uid == inout_module.uid)));
 
-        if ((mouse_clicked && (!hovered || interact_state.callslot_hovered_uid != GUI_INVALID_ID)) || (interact_state.module_selected_uid != inout_module.uid)) {
+        if ((mouse_clicked && (!hovered || state.interact.callslot_hovered_uid != GUI_INVALID_ID)) || (state.interact.module_selected_uid != inout_module.uid)) {
             this->selected = false;
-            if (interact_state.module_selected_uid == inout_module.uid) {
-                interact_state.module_selected_uid = GUI_INVALID_ID;
+            if (state.interact.module_selected_uid == inout_module.uid) {
+                state.interact.module_selected_uid = GUI_INVALID_ID;
             }
         }     
-        if (!hovered && (interact_state.module_hovered_uid == inout_module.uid)) {
-            interact_state.module_hovered_uid = GUI_INVALID_ID;
+        if (!hovered && (state.interact.module_hovered_uid == inout_module.uid)) {
+            state.interact.module_hovered_uid = GUI_INVALID_ID;
         }              
-        if (interact_state.callslot_hovered_uid == GUI_INVALID_ID) {
-            interact_state.module_hovered_uid = inout_module.uid;
+        if (state.interact.callslot_hovered_uid == GUI_INVALID_ID) {
+            state.interact.module_hovered_uid = inout_module.uid;
             std::string hover_text = inout_module.description;
             if (!this->label_visible) {
                 hover_text = "[" + inout_module.name + "] " + hover_text;
@@ -231,8 +229,9 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
             // Context menu
             if (ImGui::BeginPopupContextItem("invisible_button_context")) {
                 if (ImGui::MenuItem(
-                        "Delete", std::get<0>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
-                    std::get<1>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+                        "Delete", std::get<0>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
+                    std::get<1>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+                    // Force selection
                     active = true;
                 }
                 if (ImGui::MenuItem("Rename")) {
@@ -252,13 +251,13 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
             }
             if (active) {
                 this->selected = true;
-                interact_state.module_selected_uid = inout_module.uid;
-                interact_state.call_selected_uid = GUI_INVALID_ID;
+                state.interact.module_selected_uid = inout_module.uid;
+                state.interact.call_selected_uid = GUI_INVALID_ID;
             }
             if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
                 this->position =
-                    ((module_rect_min - in_canvas.offset) + ImGui::GetIO().MouseDelta) / in_canvas.zooming;
-                this->UpdateSize(inout_module, in_canvas);
+                    ((module_rect_min - state.canvas.offset) + ImGui::GetIO().MouseDelta) / state.canvas.zooming;
+                this->UpdateSize(inout_module, state.canvas);
             }            
         }
          
@@ -301,13 +300,13 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
         // Draw call slots ----------------------------------------------------
         for (auto& slot_pair : inout_module.GetCallSlots()) {
             for (auto& slot : slot_pair.second) {
-                slot->GUI_Present(in_canvas, interact_state);
+                slot->GUI_Present(state);
             }
         }
 
         // Rename pop-up ------------------------------------------------------
         if (this->utils.RenamePopUp("Rename Project", popup_rename, inout_module.name)) {
-            this->UpdateSize(inout_module, in_canvas);
+            this->UpdateSize(inout_module, state.canvas);
         }
 
         ImGui::PopID();

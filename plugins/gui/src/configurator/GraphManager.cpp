@@ -14,16 +14,16 @@ using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::GraphManager::GraphManager(void) : graphs(), modules_stock(), calls_stock() {}
+megamol::gui::configurator::GraphManager::GraphManager(void) : graphs(), modules_stock(), calls_stock(), graph_name_uid(0) {}
 
 
 megamol::gui::configurator::GraphManager::~GraphManager(void) {}
 
 
-bool megamol::gui::configurator::GraphManager::AddGraph(std::string name) {
+bool megamol::gui::configurator::GraphManager::AddGraph(void) {
 
     try {
-        Graph graph(name);
+        Graph graph(this->generate_unique_graph_name());
         this->graphs.emplace_back(std::make_shared<Graph>(graph));
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -191,19 +191,17 @@ bool megamol::gui::configurator::GraphManager::UpdateModulesCallsStock(
 }
 
 
-bool megamol::gui::configurator::GraphManager::LoadProjectCore(
-    const std::string& name, megamol::core::CoreInstance* core_instance) {
+bool megamol::gui::configurator::GraphManager::LoadProjectCore(megamol::core::CoreInstance* core_instance) {
 
     // Create new graph
-    bool retval = this->AddGraph(name);
+    bool retval = this->AddGraph();
     auto graph_ptr = this->GetGraphs().back();
-
     if (retval && (graph_ptr != nullptr)) {
         return this->AddProjectCore(graph_ptr->GetUID(), core_instance);
     }
 
     vislib::sys::Log::DefaultLog.WriteError(
-        "Failed to create new graph: %s [%s, %s, line %d]\n", name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        "Failed to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
 
@@ -480,7 +478,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
 
                 // Create new graph
                 if (graph_uid == GUI_INVALID_ID) {
-                    if (!this->AddGraph(view_instance)) {
+                    if (!this->AddGraph()) {
                         vislib::sys::Log::DefaultLog.WriteError(
                             "Project File '%s' line %i: Unable to create new graph '%s'. [%s, %s, line %d]\n",
                             project_filename.c_str(), i, view_instance.c_str(), __FILE__, __FUNCTION__, __LINE__);
@@ -493,6 +491,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                             __LINE__);
                         return false;
                     }
+                    graph_ptr->SetName(view_instance);
                 }
 
                 // Ensure unique module name is not yet assigned

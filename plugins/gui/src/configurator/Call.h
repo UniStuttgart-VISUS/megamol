@@ -29,6 +29,10 @@ typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
 
+
+typedef std::vector<CallPtrType> CallGraphVectorType;
+
+
 /**
  * Defines call data structure for graph.
  */
@@ -61,8 +65,8 @@ public:
 
     // GUI Presentation -------------------------------------------------------
     
-    void GUI_Present(const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys, InteractType& interact_state) {
-        this->present.Present(*this, in_canvas, inout_hotkeys, interact_state);
+    void GUI_Present(StateType& state) {
+        this->present.Present(*this, state);
     }
 
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
@@ -80,7 +84,7 @@ private:
 
         ~Presentation(void);
 
-        void Present(Call& inout_call, const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys, InteractType& interact_state);
+        void Present(Call& inout_call, StateType& state);
 
         Call::Presentations presentations;
         bool label_visible;

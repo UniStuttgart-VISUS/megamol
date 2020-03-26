@@ -30,6 +30,10 @@ typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
 
+
+typedef std::vector<ModulePtrType> ModuleGraphVectorType;
+
+
 /**
  * Defines module data structure for graph.
  */
@@ -79,9 +83,8 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    void GUI_Present(
-        const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys, InteractType& interact_state) {
-        this->present.Present(*this, in_canvas, inout_hotkeys, interact_state);
+    void GUI_Present(StateType& state) {
+        this->present.Present(*this, state);
     }
     void GUI_Update(const CanvasType& in_canvas) { this->present.UpdateSize(*this, in_canvas); }
 
@@ -104,7 +107,7 @@ private:
 
         ~Presentation(void);
 
-        void Present(Module& inout_mod, const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys, InteractType& interact_state);
+        void Present(Module& inout_mod, StateType& state);
 
         void UpdateSize(Module& mod, const CanvasType& in_canvas);
 

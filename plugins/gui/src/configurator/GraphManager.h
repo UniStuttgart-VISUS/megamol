@@ -40,7 +40,7 @@ public:
 
     virtual ~GraphManager(void);
 
-    bool AddGraph(std::string name);
+    bool AddGraph(void);
     bool DeleteGraph(ImGuiID graph_uid);
     const GraphManager::GraphsType& GetGraphs(void);
     const GraphPtrType GetGraph(ImGuiID graph_uid);
@@ -49,7 +49,7 @@ public:
     inline const ModuleStockVectorType& GetModulesStock(void) { return this->modules_stock; }
     inline const CallStockVectorType& GetCallsStock(void) { return this->calls_stock; }
 
-    bool LoadProjectCore(const std::string& name, megamol::core::CoreInstance* core_instance);
+    bool LoadProjectCore(megamol::core::CoreInstance* core_instance);
     bool AddProjectCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance);
 
     bool LoadAddProjectFile(ImGuiID graph_uid, const std::string& project_filename);
@@ -70,7 +70,9 @@ private:
 
     ModuleStockVectorType modules_stock;
     CallStockVectorType calls_stock;
-    
+
+    unsigned int graph_name_uid;
+
     /**
      * Defines GUI graph present.
      */
@@ -105,6 +107,8 @@ private:
     std::string writeLuaProjectConfPos(const ImVec2& pos);
 
     bool separateNameAndNamespace(const std::string& full_name, std::string& name_space, std::string& name);
+
+    inline const std::string generate_unique_graph_name(void) { return ("Project_" + std::to_string(++graph_name_uid)); }
 
     // ------------------------------------------------------------------------
 };

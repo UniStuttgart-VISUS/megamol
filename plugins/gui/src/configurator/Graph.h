@@ -31,11 +31,10 @@ namespace configurator {
 typedef std::vector<Module::StockModule> ModuleStockVectorType;
 typedef std::vector<Call::StockCall> CallStockVectorType;
 
+typedef std::vector<Group> GroupGraphVectorType;
+
 class Graph {
 public:
-    typedef std::vector<ModulePtrType> ModuleGraphVectorType;
-    typedef std::vector<CallPtrType> CallGraphVectorType;
-    typedef std::vector<GroupPtrType> GroupGraphVectorType;
 
     Graph(const std::string& graph_name);
 
@@ -47,9 +46,6 @@ public:
     bool AddCall(const CallStockVectorType& stock_calls, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
     bool DeleteDisconnectedCalls(void);
     bool DeleteCall(ImGuiID call_uid);
-
-    bool AddGroup(const std::string& group_name);
-    bool DeleteGroup(ImGuiID group_uid);
 
     const ModuleGraphVectorType& GetGraphModules(void) { return this->modules; }
     const CallGraphVectorType& GetGraphCalls(void) { return this->calls; }
@@ -67,8 +63,7 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     // Returns uid if graph is the currently active/drawn one.
-    ImGuiID GUI_Present(
-        float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys, bool& out_delete_graph, bool& show_parameter_sidebar) {
+    ImGuiID GUI_Present(float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys, bool& out_delete_graph, bool& show_parameter_sidebar) {
         return this->present.Present(*this, in_child_width, in_graph_font, inout_hotkeys, out_delete_graph, show_parameter_sidebar);
     }
 
@@ -81,16 +76,16 @@ private:
 
     ModuleGraphVectorType modules;
     CallGraphVectorType calls;
-
     GroupGraphVectorType groups;
 
-    // UIDs are unique within a graph
     const ImGuiID uid;
     std::string name;
     bool dirty_flag;
 
     // Global variable for unique id shared/accessible by all graphs.
     static ImGuiID generated_uid;
+
+    unsigned int group_name_uid;
 
     /**
      * Defines GUI graph present.
@@ -104,9 +99,9 @@ private:
         ImGuiID Present(Graph& inout_graph, float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys,
             bool& out_delete_graph, bool& show_parameter_sidebar);
 
-        ImGuiID GetSelectedCallSlot(void) const { return this->interact_state.callslot_selected_uid; }
-        ImGuiID GetDropCallSlot(void) const { return this->interact_state.callslot_dropped_uid; }
-        ImGuiID GetHoveredCallSlot(void) const { return this->interact_state.callslot_hovered_uid; }
+        ImGuiID GetSelectedCallSlot(void) const { return this->state.interact.callslot_selected_uid; }
+        ImGuiID GetDropCallSlot(void) const { return this->state.interact.callslot_dropped_uid; }
+        ImGuiID GetHoveredCallSlot(void) const { return this->state.interact.callslot_hovered_uid; }
 
         bool GetModuleLabelVisibility(void) const { return this->show_module_names; }
         bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
@@ -115,30 +110,26 @@ private:
         bool params_visible;
         bool params_readonly;
         bool params_expert;
-        CanvasType canvas;
+
+        StateType state;
 
     private:
         ImFont* font;
         GUIUtils utils;
 
         bool update;
-
         bool show_grid;
         bool show_call_names;
         bool show_slot_names;
         bool show_module_names;
-
-        InteractType interact_state;
-
         bool layout_current_graph;
         float child_split_width;
         bool reset_zooming;
-
         std::string param_name_space;
 
         void present_menu(Graph& inout_graph);
-        void present_canvas(Graph& inout_graph, float in_child_width, HotKeyArrayType& inout_hotkeys);
-        void present_parameters(Graph& inout_graph, float in_child_width, HotKeyArrayType& inout_hotkeys);
+        void present_canvas(Graph& inout_graph, float in_child_width);
+        void present_parameters(Graph& inout_graph, float in_child_width);
 
         void present_canvas_grid(void);
         void present_canvas_dragged_call(Graph& inout_graph);
@@ -149,8 +140,12 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    std::string generate_unique_module_name(const std::string& module_name);
+    bool add_group(const std::string& group_name);
+    bool delete_group(ImGuiID group_uid);
+    bool group_exists(const std::string& group_name);
 
+    inline const std::string generate_unique_group_name(void) { return ("Group_" + std::to_string(++group_name_uid)); }
+    std::string generate_unique_module_name(const std::string& module_name);
     ImGuiID generate_unique_id(void) { return (++this->generated_uid); }
 };
 

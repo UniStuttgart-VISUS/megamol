@@ -120,8 +120,7 @@ megamol::gui::configurator::Call::Presentation::Presentation(void)
 megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
 
 
-void megamol::gui::configurator::Call::Presentation::Present(
-    megamol::gui::configurator::Call& inout_call, const megamol::gui::CanvasType& in_canvas, megamol::gui::HotKeyArrayType& inout_hotkeys, megamol::gui::InteractType& interact_state) {
+void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::configurator::Call& inout_call, megamol::gui::StateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -141,8 +140,8 @@ void megamol::gui::configurator::Call::Presentation::Present(
 
             // Clip calls if lying ouside the canvas
             /// XXX Check is too expensive
-            // ImVec2 canvas_rect_min = in_canvas.position;
-            // ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
+            // ImVec2 canvas_rect_min = state.canvas.position;
+            // ImVec2 canvas_rect_max = state.canvas.position + state.canvas.size;
             // if (...) {
             //    return GUI_INVALID_ID;
             //}
@@ -164,11 +163,11 @@ void megamol::gui::configurator::Call::Presentation::Present(
             const ImU32 COLOR_CALL_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
             // LEVEL OF DETAIL depending on zooming
-            if (in_canvas.zooming < 0.25f) {
-                draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * in_canvas.zooming);
+            if (state.canvas.zooming < 0.25f) {
+                draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * state.canvas.zooming);
             } else {
                 draw_list->AddBezierCurve(p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2, COLOR_CALL_CURVE,
-                    CURVE_THICKNESS * in_canvas.zooming);
+                    CURVE_THICKNESS * state.canvas.zooming);
             }
 
             if (this->label_visible) {
@@ -193,23 +192,24 @@ void megamol::gui::configurator::Call::Presentation::Present(
                 // Context menu
                 if (ImGui::BeginPopupContextItem()) {
                     if (ImGui::MenuItem(
-                            "Delete", std::get<0>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
-                        std::get<1>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+                            "Delete", std::get<0>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
+                        std::get<1>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+                        // Force selection
                         active = true;
                     }
                     ImGui::EndPopup();
                 }
 
-                if ((mouse_clicked && !hovered) || (interact_state.call_selected_uid != inout_call.uid)) {
+                if ((mouse_clicked && !hovered) || (state.interact.call_selected_uid != inout_call.uid)) {
                     this->selected = false;
-                    if (interact_state.call_selected_uid == inout_call.uid) {
-                        interact_state.call_selected_uid = GUI_INVALID_ID;
+                    if (state.interact.call_selected_uid == inout_call.uid) {
+                        state.interact.call_selected_uid = GUI_INVALID_ID;
                     }
                 }
                 if (active) {
                     this->selected = true;
-                    interact_state.call_selected_uid = inout_call.uid;
-                    interact_state.module_selected_uid = GUI_INVALID_ID;
+                    state.interact.call_selected_uid = inout_call.uid;
+                    state.interact.module_selected_uid = GUI_INVALID_ID;
                 }
 
                 ImU32 call_bg_color = (hovered || this->selected) ? COLOR_CALL_HIGHTLIGHT : COLOR_CALL_BACKGROUND;
