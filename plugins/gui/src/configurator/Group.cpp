@@ -120,7 +120,7 @@ megamol::gui::configurator::Group::Presentation::Presentation(void)
     , size(ImVec2(0.0f, 0.0f))
     , utils()
     , name_label()
-    , collapsed_view(true)
+    , collapsed_view(false)
     , selected(false)
     , update(true) {
 
