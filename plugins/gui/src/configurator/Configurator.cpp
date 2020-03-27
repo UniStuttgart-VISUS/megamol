@@ -43,9 +43,9 @@ megamol::gui::configurator::Configurator::Configurator()
         megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false);
     this->state.font = nullptr;
     this->state.child_width = 0.0f;
-    this->state.graph_selected_uid = GUI_INVALID_ID;
-    this->state.delete_graph = false;
     this->state.show_parameter_sidebar = true;
+    this->state.graph_selected_uid = GUI_INVALID_ID;
+    this->state.graph_delete = false;     
 }
 
 
@@ -143,8 +143,17 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
         return;
     }
 
+    auto selected_graph_ptr = this->graph_manager.GetGraph(this->state.graph_selected_uid);
+    bool group_save = false;
+    ImGuiID group_selected_uid = GUI_INVALID_ID;
+    if (selected_graph_ptr != nullptr) {
+        group_save = selected_graph_ptr->GUI_SaveGroup();
+        group_selected_uid = selected_graph_ptr->GUI_GetSelectedGroup();
+    }
+
     bool confirmed, aborted;
-    bool popup_save_file = false;
+    bool popup_save_project_file = false;
+    bool popup_save_group_file = group_save;
     bool popup_load_file = false;
     bool popup_help = false;
 
@@ -156,7 +165,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
         this->state.show_parameter_sidebar = true; // !this->state.show_parameter_sidebar
     }
     if (std::get<1>(this->state.hotkeys[HotkeyIndex::SAVE_PROJECT])) {
-        popup_save_file = true;
+        popup_save_project_file = true;
     } 
 
     // Draw menu
@@ -202,8 +211,12 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 
             // Save currently active project to LUA file
             if (ImGui::MenuItem("Save Project", std::get<0>(this->state.hotkeys[HotkeyIndex::SAVE_PROJECT]).ToString().c_str(), false, (this->state.graph_selected_uid != GUI_INVALID_ID))) {
-                popup_save_file = true;
+                popup_save_project_file = true;
             }
+            // Save currently active group to LUA file
+            if (ImGui::MenuItem("Save Group", nullptr, false, (group_selected_uid != GUI_INVALID_ID))) {
+                popup_save_group_file = true;
+            }            
 
             ImGui::EndMenu();
         }
@@ -232,21 +245,30 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
         ImGui::EndMenuBar();
     } 
 
-    // Save/Load project pop-up
-    bool popup_save_failed = false;
-    bool popup_load_failed = false;
+    // Pop-ups-----------------------------------
+    bool popup_failed = false;
     if (this->file_utils.FileBrowserPopUp(
             FileUtils::FileBrowserFlag::LOAD, "Load Project", popup_load_file, this->project_filename)) {
-        popup_load_failed = !this->graph_manager.LoadAddProjectFile(add_project_graph_uid, this->project_filename);
+        popup_failed = !this->graph_manager.LoadAddProjectFile(add_project_graph_uid, this->project_filename);
         this->add_project_graph_uid = GUI_INVALID_ID;
     }
-    if (this->file_utils.FileBrowserPopUp(
-            FileUtils::FileBrowserFlag::SAVE, "Save Project", popup_save_file, this->project_filename)) {
-        popup_save_failed = !this->graph_manager.SaveProjectFile(this->state.graph_selected_uid, this->project_filename);
-    }
-    this->utils.MinimalPopUp("Failed to Save Project", popup_save_failed,
+    this->utils.MinimalPopUp("Failed to Load Project", popup_failed,
         "See console log output for more information.", "", confirmed, "Cancel", aborted);
-    this->utils.MinimalPopUp("Failed to Load Project", popup_load_failed,
+
+    popup_failed = false;
+    if (this->file_utils.FileBrowserPopUp(
+            FileUtils::FileBrowserFlag::SAVE, "Save Project", popup_save_project_file, this->project_filename)) {
+        popup_failed = !this->graph_manager.SaveProjectFile(this->state.graph_selected_uid, this->project_filename);
+    }
+    this->utils.MinimalPopUp("Failed to Save Project", popup_failed,
+        "See console log output for more information.", "", confirmed, "Cancel", aborted);
+
+    popup_failed = false;
+    if (this->file_utils.FileBrowserPopUp(
+            FileUtils::FileBrowserFlag::SAVE, "Save Group", popup_save_group_file, this->project_filename)) {
+        popup_failed = !this->graph_manager.SaveGroupFile(group_selected_uid, this->project_filename);
+    }
+    this->utils.MinimalPopUp("Failed to Save Group", popup_failed,
         "See console log output for more information.", "", confirmed, "Cancel", aborted);
 
     // HELP pop-up
@@ -303,7 +325,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
     CallSlotPtrType selected_call_slot_ptr;
     auto graph_ptr = this->graph_manager.GetGraph(this->state.graph_selected_uid);
     if (graph_ptr != nullptr) {
-        auto call_slot_id = graph_ptr->GUI_GetSelectedItem();
+        auto call_slot_id = graph_ptr->GUI_GetSelectedCallSlot();
         if (call_slot_id != GUI_INVALID_ID) {
             for (auto& mods : graph_ptr->GetGraphModules()) {
                 CallSlotPtrType call_slot_ptr = mods->GetCallSlot(call_slot_id);
@@ -398,10 +420,11 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
 
 void megamol::gui::configurator::Configurator::add_empty_project(void) {
 
-    if (this->graph_manager.AddGraph()) {
+    ImGuiID graph_uid = this->graph_manager.AddGraph();
+    if (graph_uid != GUI_INVALID_ID) {
 
         // Add initial GUIView and set as view instance
-        auto graph_ptr = this->graph_manager.GetGraphs().back();
+        auto graph_ptr = this->graph_manager.GetGraph(graph_uid);
         if (graph_ptr != nullptr) {
             std::string guiview_class_name = "GUIView";
             if (graph_ptr->AddModule(this->graph_manager.GetModulesStock(), guiview_class_name)) {

@@ -42,18 +42,14 @@ public:
 
     bool AddModule(const ModuleStockVectorType& stock_modules, const std::string& module_class_name);
     bool DeleteModule(ImGuiID module_uid);
+    const ModuleGraphVectorType& GetGraphModules(void) { return this->modules; }
 
     bool AddCall(const CallStockVectorType& stock_calls, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
-    bool DeleteDisconnectedCalls(void);
     bool DeleteCall(ImGuiID call_uid);
 
-    bool AddGroup(const std::string& group_name);
+    ImGuiID AddGroup(void);
     bool DeleteGroup(ImGuiID group_uid);
-    bool AddModuleGroup(const ModulePtrType& module_ptr);
-
-    const ModuleGraphVectorType& GetGraphModules(void) { return this->modules; }
-    const CallGraphVectorType& GetGraphCalls(void) { return this->calls; }
-    GroupGraphVectorType& GetGraphGroups(void) { return this->groups; }
+    bool AddGroupModule(const ModulePtrType& module_ptr);
 
     inline void SetName(const std::string& graph_name) { this->name = graph_name; }
     inline std::string& GetName(void) { return this->name; }
@@ -63,7 +59,7 @@ public:
 
     inline ImGuiID GetUID(void) const { return this->uid; }
 
-    bool MainViewPresent(void);
+    bool IsMainViewSet(void);
     
     bool UniqueModuleRename(const std::string& module_name);
 
@@ -72,11 +68,18 @@ public:
     // Returns uid if graph is the currently active/drawn one.
     void GUI_Present(GraphStateType& state) { this->present.Present(*this, state); }
 
-    inline ImGuiID GUI_GetSelectedItem(void) const { return this->present.GetSelectedItem(); }
+    inline ImGuiID GUI_GetSelectedGroup(void) const { return this->present.GetSelectedGroup(); }
+    inline ImGuiID GUI_GetSelectedCallSlot(void) const { return this->present.GetSelectedCallSlot(); }
     inline ImGuiID GUI_GetDropCallSlot(void) const { return this->present.GetDropCallSlot(); }
 
+    inline bool GUI_SaveGroup(void) const { return this->present.SaveGroup(); }
+
 private:
+
     // VARIABLES --------------------------------------------------------------
+
+    static ImGuiID generated_uid;
+    unsigned int group_name_uid;
 
     ModuleGraphVectorType modules;
     CallGraphVectorType calls;
@@ -85,11 +88,6 @@ private:
     const ImGuiID uid;
     std::string name;
     bool dirty_flag;
-
-    // Global variable for unique id shared/accessible by all graphs.
-    static ImGuiID generated_uid;
-
-    unsigned int group_name_uid;
 
     /**
      * Defines GUI graph present.
@@ -102,12 +100,15 @@ private:
 
         void Present(Graph& inout_graph, GraphStateType& state);
 
-        ImGuiID GetSelectedItem(void) const { return this->graphstate.interact.item_selected_uid; }
+        ImGuiID GetSelectedGroup(void) const { return this->graphstate.interact.group_selected_uid; }
+        ImGuiID GetSelectedCallSlot(void) const { return this->graphstate.interact.callslot_selected_uid; }
         ImGuiID GetDropCallSlot(void) const { return this->graphstate.interact.callslot_dropped_uid; }
 
         bool GetModuleLabelVisibility(void) const { return this->show_module_names; }
         bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
         bool GetCallLabelVisibility(void) const { return this->show_call_names; }
+
+        bool SaveGroup(void) const { return this->graphstate.interact.group_save; }
 
         void SetUpdate(void) { this->update = true; }
 
@@ -144,6 +145,12 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
+    const CallGraphVectorType& get_graph_calls(void) { return this->calls; }
+    GroupGraphVectorType& get_graph_groups(void) { return this->groups; }
+
+    bool delete_disconnected_calls(void);
+
+    ImGuiID add_group(const std::string& group_name);
     ImGuiID get_group_uid(const std::string& group_name);
 
     inline const std::string generate_unique_group_name(void) { return ("Group_" + std::to_string(++group_name_uid)); }

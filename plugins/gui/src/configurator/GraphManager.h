@@ -40,9 +40,8 @@ public:
 
     virtual ~GraphManager(void);
 
-    bool AddGraph(void);
+    ImGuiID AddGraph(void);
     bool DeleteGraph(ImGuiID graph_uid);
-    const GraphManager::GraphsType& GetGraphs(void);
     const GraphPtrType GetGraph(ImGuiID graph_uid);
 
     bool UpdateModulesCallsStock(const megamol::core::CoreInstance* core_instance);
@@ -54,7 +53,8 @@ public:
 
     bool LoadAddProjectFile(ImGuiID graph_uid, const std::string& project_filename);
 
-    bool SaveProjectFile(ImGuiID graph_id, const std::string& project_filename);
+    bool SaveProjectFile(ImGuiID graph_uid, const std::string& project_filename);
+    bool SaveGroupFile(ImGuiID group_uid, const std::string& project_filename);
 
     // GUI Presentation -------------------------------------------------------
 
@@ -83,12 +83,14 @@ private:
         void Present(GraphManager& inout_graph_manager, GraphStateType& state);
 
     private:
-        ImGuiID delete_graph_uid;
+        ImGuiID graph_delete_uid;
         GUIUtils utils;
 
     } present;
 
     // FUNCTIONS --------------------------------------------------------------
+
+    const GraphsType& get_graphs(void) { return this->graphs; }
 
     bool get_call_stock_data(
         Call::StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);

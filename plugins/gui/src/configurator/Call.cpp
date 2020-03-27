@@ -207,6 +207,8 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::confi
 
                     // Context menu
                     if (ImGui::BeginPopupContextItem()) {
+                        ImGui::Text("Call");
+                        ImGui::Separator();                     
                         if (ImGui::MenuItem("Delete", std::get<0>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
                             std::get<1>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
                             // Force selection
@@ -215,15 +217,18 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::confi
                         ImGui::EndPopup();
                     }
 
-                    if ((mouse_clicked && !hovered) || (state.interact.item_selected_uid != inout_call.uid)) {
+                    if ((mouse_clicked && !hovered) || (state.interact.call_selected_uid != inout_call.uid)) {
                         this->selected = false;
-                        if (state.interact.item_selected_uid == inout_call.uid) {
-                            state.interact.item_selected_uid = GUI_INVALID_ID;
+                        if (state.interact.call_selected_uid == inout_call.uid) {
+                            state.interact.call_selected_uid = GUI_INVALID_ID;
                         }
                     }
                     if (active) {
                         this->selected = true;
-                        state.interact.item_selected_uid = inout_call.uid;
+                        state.interact.call_selected_uid = inout_call.uid;
+                        state.interact.callslot_selected_uid = GUI_INVALID_ID;
+                        state.interact.module_selected_uid = GUI_INVALID_ID;
+                        state.interact.group_selected_uid = GUI_INVALID_ID;
                     }
 
                     ImU32 call_bg_color = (hovered || this->selected) ? COLOR_CALL_HIGHTLIGHT : COLOR_CALL_BACKGROUND;

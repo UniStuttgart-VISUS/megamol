@@ -34,6 +34,7 @@ public:
 
     bool AddModule(const ModulePtrType& module_ptr);
     bool DeleteModule(ImGuiID module_uid);
+    bool ContainsModule(ImGuiID module_uid);
 
     const ModuleGraphVectorType& GetGroupModules(void) { return this->modules; }
 
@@ -42,6 +43,7 @@ public:
     void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
 
     void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePositionSize(*this, in_canvas); }
+    bool GUI_ModulesVisible(void) { return this->present.ModulesVisible(); }
 
 private:
 
@@ -61,6 +63,7 @@ private:
         void Present(Group& inout_group, GraphItemsStateType& state);
 
         void UpdatePositionSize(Group& inout_group, const GraphCanvasType& in_canvas);
+        bool ModulesVisible(void) { return !this->collapsed_view; }
 
     private:
         const float BORDER;

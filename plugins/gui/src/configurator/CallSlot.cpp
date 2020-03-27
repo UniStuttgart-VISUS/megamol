@@ -309,12 +309,12 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
                 (canvas_rect_min.y < (slot_rect_max.y)) && (canvas_rect_max.y > (slot_rect_min.y)))) {
             if (mouse_clicked) {
                 this->selected = false;
-                if (state.interact.item_selected_uid == inout_module.uid) {
-                    state.interact.item_selected_uid = GUI_INVALID_ID;
+                if (state.interact.callslot_selected_uid == inout_module.uid) {
+                    state.interact.callslot_selected_uid = GUI_INVALID_ID;
                 }                
             }
             if (this->selected) {
-                state.interact.item_selected_uid = inout_module.uid;
+                state.interact.callslot_selected_uid = inout_module.uid;
             }
             return;
         }
@@ -357,19 +357,18 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
 
         // Context menu
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
+            ImGui::Text("Call Slot");
+            ImGui::Separator();     
             bool disabled = true;
             if (inout_call_slot.ParentModuleConnected()) {
                 disabled = !inout_call_slot.GetParentModule()->name_space.empty();
             }
-            if (ImGui::BeginMenu("Add Group Interface ", disabled)) {
-                /// TODO
-                // Loop over all exisiting groups
-                //if (ImGui::MenuItem("<group name>"")) {
-                //}     
-                ImGui::EndMenu();
+            if (ImGui::MenuItem("Add Group Interface ", nullptr, false, disabled)) {
+                state.interact.callslot_add_group_uid.first =  inout_call_slot.uid; 
+                state.interact.callslot_add_group_uid.second =  GUI_INVALID_ID; 
             }
             if (ImGui::MenuItem("Remove Group Interface", nullptr, false, disabled)) {
-                /// TODO
+                state.interact.callslot_remove_group_uid =  inout_call_slot.uid;  
             }                                
             ImGui::EndPopup();
         }
@@ -382,19 +381,22 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
         }
         this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
 
-        if (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.in_compat_slot_ptr, inout_call_slot) !=
+        if (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.callslot_compat_ptr, inout_call_slot) !=
             GUI_INVALID_ID) {
             slot_color = COLOR_SLOT_COMPATIBLE;
         }
-        if ((mouse_clicked && !hovered) || (state.interact.item_selected_uid != inout_call_slot.uid)) {
+        if ((mouse_clicked && !hovered) || (state.interact.callslot_selected_uid != inout_call_slot.uid)) {
             this->selected = false;
-            if (state.interact.item_selected_uid == inout_call_slot.uid) {
-                state.interact.item_selected_uid = GUI_INVALID_ID;
+            if (state.interact.callslot_selected_uid == inout_call_slot.uid) {
+                state.interact.callslot_selected_uid = GUI_INVALID_ID;
             }
         }
         if (active) {
             this->selected = true;
-            state.interact.item_selected_uid = inout_call_slot.uid;
+            state.interact.callslot_selected_uid = inout_call_slot.uid;
+            state.interact.call_selected_uid = GUI_INVALID_ID;
+            state.interact.module_selected_uid = GUI_INVALID_ID;
+            state.interact.group_selected_uid = GUI_INVALID_ID;
         }
         if (hovered || this->selected) {
             slot_color = slot_highlight_color;

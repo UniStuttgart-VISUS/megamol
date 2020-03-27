@@ -150,18 +150,17 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
     bool popup_rename = false;
 
     try {
+        // Condition for initialization position (if position is not set yet via tag in project file)
+        if ((this->position.x == FLT_MAX) && (this->position.y == FLT_MAX)) {
+            this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - state.canvas.offset) / state.canvas.zooming;
+        }
+        // Update size if current values are invalid
+        if (this->update_once || (this->size.x <= 0.0f) || (this->size.y <= 0.0f)) {
+            this->UpdateSize(inout_module, state.canvas);
+            this->update_once = false;
+        }
+
         if (this->visible) {
-
-            // Condition for initialization position (if position is not set yet via tag in project file)
-            if ((this->position.x == FLT_MAX) && (this->position.y == FLT_MAX)) {
-                this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - state.canvas.offset) / state.canvas.zooming;
-            }
-            // Update size if current values are invalid
-            if (this->update_once || (this->size.x <= 0.0f) || (this->size.y <= 0.0f)) {
-                this->UpdateSize(inout_module, state.canvas);
-                this->update_once = false;
-            }
-
             // Draw module --------------------------------------------------------
             ImVec2 module_size = this->size * state.canvas.zooming;
             ImVec2 module_rect_min = state.canvas.offset + this->position * state.canvas.zooming;
@@ -177,12 +176,12 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
                     (canvas_rect_min.y < module_rect_max.y) && (canvas_rect_max.y > module_rect_min.y))) {
                 if (mouse_clicked) {
                     this->selected = false;
-                    if (state.interact.item_selected_uid == inout_module.uid) {
-                        state.interact.item_selected_uid = GUI_INVALID_ID;
+                    if (state.interact.module_selected_uid == inout_module.uid) {
+                        state.interact.module_selected_uid = GUI_INVALID_ID;
                     }                
                 }
                 if (this->selected) {
-                    state.interact.item_selected_uid = inout_module.uid;
+                    state.interact.module_selected_uid = inout_module.uid;
                 }
                 return;
             }
@@ -206,7 +205,7 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             const ImU32 COLOR_MODULE_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
-        // Draw box
+            // Draw box
             ImGui::SetCursorScreenPos(module_rect_min);
             std::string label = "module_" + inout_module.name;
 
@@ -219,21 +218,23 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
                 ((state.interact.module_hovered_uid == GUI_INVALID_ID) || (state.interact.module_hovered_uid == inout_module.uid)));
             bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
 
-            if ((mouse_clicked && (!hovered || state.interact.callslot_hovered_uid != GUI_INVALID_ID)) || (state.interact.item_selected_uid != inout_module.uid)) {
+            if ((mouse_clicked && (!hovered || state.interact.callslot_hovered_uid != GUI_INVALID_ID)) || (state.interact.module_selected_uid != inout_module.uid)) {
                 this->selected = false;
-                if (state.interact.item_selected_uid == inout_module.uid) {
-                    state.interact.item_selected_uid = GUI_INVALID_ID;
+                if (state.interact.module_selected_uid == inout_module.uid) {
+                    state.interact.module_selected_uid = GUI_INVALID_ID;
                 }
             }     
             if (!hovered && (state.interact.module_hovered_uid == inout_module.uid)) {
                 state.interact.module_hovered_uid = GUI_INVALID_ID;
             }        
             if (hovered) {
-                state.interact.module_hovered_uid = inout_module.uid;
+                state.interact.module_hovered_uid = inout_module.uid;              
             }              
             if (state.interact.callslot_hovered_uid == GUI_INVALID_ID) {
                 // Context menu
                 if (ImGui::BeginPopupContextItem("invisible_button_context")) {
+                    ImGui::Text("Module");
+                    ImGui::Separator();               
                     if (ImGui::MenuItem("Delete", std::get<0>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
                         std::get<1>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
                         // Force selection
@@ -242,15 +243,24 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
                     if (ImGui::MenuItem("Rename")) {
                         popup_rename = true;
                     }
-                    if (ImGui::BeginMenu("Add Group", false)) {
-                        /// TODO
-                        // Loop over all exisiting groups or add to new one
-                        //if (ImGui::MenuItem("<group name>"")) {
-                        //}                       
+                    if (ImGui::BeginMenu("Add Group")) {
+                        if (ImGui::MenuItem("New")) {
+                            state.interact.module_add_group_uid.first =  inout_module.uid; 
+                            state.interact.module_add_group_uid.second =  GUI_INVALID_ID; 
+                        }
+                        if (!state.groups.empty()) {
+                            ImGui::Separator();
+                        }
+                        for (auto& group_pair : state.groups) {
+                            if (ImGui::MenuItem(group_pair.second.c_str())) {
+                                state.interact.module_add_group_uid.first = inout_module.uid;
+                                state.interact.module_add_group_uid.second = group_pair.first;
+                            } 
+                        }
                         ImGui::EndMenu();
                     }
-                    if (ImGui::MenuItem("Remove Group", nullptr, false, false)) {
-                        /// TODO
+                    if (ImGui::MenuItem("Remove Group")) {
+                        state.interact.module_remove_group_uid = inout_module.uid;
                     }                                
                     ImGui::EndPopup();
                 }
@@ -264,7 +274,10 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
 
                 if (active) {
                     this->selected = true;
-                    state.interact.item_selected_uid = inout_module.uid;
+                    state.interact.module_selected_uid = inout_module.uid;
+                    state.interact.callslot_selected_uid = GUI_INVALID_ID;
+                    state.interact.call_selected_uid = GUI_INVALID_ID;
+                    state.interact.group_selected_uid = GUI_INVALID_ID;                      
                 }
                 if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
                     this->position += (ImGui::GetIO().MouseDelta / state.canvas.zooming);
@@ -273,8 +286,8 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
             }
             
             ImU32 module_bg_color = (hovered || this->selected) ? COLOR_MODULE_HIGHTLIGHT : COLOR_MODULE_BACKGROUND;
-            draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 5.0f);
-            draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 5.0f);
+            draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 5.0f, ImDrawCornerFlags_All);
+            draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 5.0f, ImDrawCornerFlags_All, 1.0f);
 
             // Draw text
             if (this->label_visible) {
@@ -284,12 +297,12 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
                     line_offset = -0.5f * ImGui::GetTextLineHeightWithSpacing();
                 }
 
-                label = this->class_label;
+                label = this->name_label;
                 float name_width = this->utils.TextWidgetWidth(label);
                 ImVec2 text_pos_left_upper = (module_center + ImVec2(-(name_width / 2.0f), line_offset - ImGui::GetTextLineHeightWithSpacing()));
                 draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), label.c_str());
 
-                label = this->name_label;
+                label = this->class_label;
                 name_width = this->utils.TextWidgetWidth(label);
                 text_pos_left_upper = (module_center + ImVec2(-(name_width / 2.0f), line_offset));
                 draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), label.c_str());
@@ -337,7 +350,7 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
     if (this->label_visible) {
         this->class_label = "Class: " + inout_mod.class_name;
         float class_name_length = this->utils.TextWidgetWidth(this->class_label);
-        this->name_label = "Name: " + inout_mod.FullName();
+        this->name_label = "Name: " + inout_mod.name; // inout_mod.FullName();
         float name_length = this->utils.TextWidgetWidth(inout_mod.present.name_label);
         max_label_length = std::max(class_name_length, name_length);
     }

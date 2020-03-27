@@ -59,39 +59,53 @@ class CallSlot;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 }
 
+/* Data type holding current group id and group name pairs. */
+typedef std::pair<ImGuiID, ImGuiID> UIDPairType; // First: Graph Item UID - Second Group UID
+typedef std::pair<ImGuiID, std::string> GroupPairType;
+typedef std::vector<GroupPairType> GroupPairVectorType;
+
 /* Data type holding information of graph canvas. */
 typedef struct _canvas_ {
-    ImVec2 position;
-    ImVec2 size;
-    ImVec2 scrolling;
-    float zooming;
-    ImVec2 offset;
+    ImVec2 position;    // in
+    ImVec2 size;        // in
+    ImVec2 scrolling;   // in
+    float zooming;      // in
+    ImVec2 offset;      // in
 } GraphCanvasType;
 
-/* Data type holding information on graph item interaction */
+/* Data type holding information on graph item interaction. */
 typedef struct _interact_state_ {
-    ImGuiID item_selected_uid;
-    ImGuiID module_hovered_uid;
-    ImGuiID callslot_hovered_uid;
-    ImGuiID callslot_dropped_uid;
-    configurator::CallSlotPtrType in_compat_slot_ptr;
+    ImGuiID group_selected_uid;                         // in out
+    bool group_save;                                    // out
+    ImGuiID module_selected_uid;                        // in out
+    ImGuiID module_hovered_uid;                         // in out
+    UIDPairType module_add_group_uid;                   // out
+    ImGuiID module_remove_group_uid;                    // out
+    ImGuiID call_selected_uid;                          // in out
+    ImGuiID callslot_selected_uid;                      // in out    
+    ImGuiID callslot_hovered_uid;                       // in out
+    ImGuiID callslot_dropped_uid;                       // in out
+    UIDPairType callslot_add_group_uid;                 // in out
+    ImGuiID callslot_remove_group_uid;                  // in out
+    configurator::CallSlotPtrType callslot_compat_ptr;  // in 
 } GraphItemsInteractType;
 
-/* Data type holding shared state of graph items */
+/* Data type holding shared state of graph items. */
 typedef struct _graph_item_state_ {
-    GraphCanvasType canvas;
-    GraphItemsInteractType interact;
-    HotKeyArrayType hotkeys;
+    GraphCanvasType canvas;             // (see above)
+    GraphItemsInteractType interact;    // (see above)
+    HotKeyArrayType hotkeys;            // in out
+    GroupPairVectorType groups;               // in
 } GraphItemsStateType;
 
-/* Data type holding shared state of graphs */
+/* Data type holding shared state of graphs. */
 typedef struct _graph_state_ {
-    ImFont* font;
-    float child_width;
-    ImGuiID graph_selected_uid;
-    HotKeyArrayType hotkeys;
-    bool delete_graph;
-    bool show_parameter_sidebar;
+    ImFont* font;                   // in 
+    float child_width;              // in 
+    bool show_parameter_sidebar;    // in     
+    HotKeyArrayType hotkeys;        // in out    
+    ImGuiID graph_selected_uid;     // out
+    bool graph_delete;              // out
 } GraphStateType;
 
 /********** Class **********/

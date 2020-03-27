@@ -26,8 +26,13 @@ megamol::gui::configurator::Group::~Group() {
 
 bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_ptr) {
 
+    if (module_ptr == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError("Pointer to module is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;  
+    }
+
     // Check if module was alreday added to group
-    for (auto& mod :  this->modules) {
+    for (auto& mod : this->modules) {
         if (mod->uid == module_ptr->uid) {
             vislib::sys::Log::DefaultLog.WriteInfo("Module '%s' is already part of group '%s'.\n", mod->name.c_str(), this->name.c_str());
             return false; 
@@ -35,6 +40,7 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
     }
 
     this->modules.emplace_back(module_ptr);
+    module_ptr->GUI_SetVisibility(this->present.ModulesVisible());
     vislib::sys::Log::DefaultLog.WriteInfo("Added module '%s' to group '%s'.\n", module_ptr->name.c_str(), this->name.c_str() );                          
     return true;
 }
@@ -65,6 +71,17 @@ bool megamol::gui::configurator::Group::DeleteModule(ImGuiID module_uid) {
 }
 
 
+bool megamol::gui::configurator::Group::ContainsModule(ImGuiID module_uid) {
+
+    for (auto& mod :  this->modules) {
+        if (mod->uid == module_uid) {
+            return true; 
+        }
+    }
+    return false;
+}
+
+
 // GROUP PRESENTATION ####################################################
 
 megamol::gui::configurator::Group::Presentation::Presentation(void) 
@@ -73,7 +90,7 @@ megamol::gui::configurator::Group::Presentation::Presentation(void)
     , size(ImVec2(0.0f, 0.0f))
     , utils()
     , name_label()
-    , collapsed_view(false)
+    , collapsed_view(true)
     , selected(false)
     , update_once(true) {
 
@@ -97,10 +114,15 @@ void megamol::gui::configurator::Group::Presentation::Present(megamol::gui::conf
 
     bool popup_rename = false;
     
-    try {
+    try {      
         // Update size and position if current values are invalid or in expanded view
-        if (((this->position.x == FLT_MAX) && (this->position.y == FLT_MAX)) || !this->collapsed_view || this->update_once || (this->size.x <= 0.0f) || (this->size.y <= 0.0f)) {
+        if (this->update_once || !this->collapsed_view || (this->size.x <= 0.0f) || (this->size.y <= 0.0f)) {
             this->UpdatePositionSize(inout_group, state.canvas);
+            if (this->update_once) {
+                for (auto& mod : inout_group.GetGroupModules()) {
+                    mod->GUI_SetVisibility(!this->collapsed_view);
+                }
+            }
             this->update_once = false;
         }
 
@@ -139,6 +161,8 @@ void megamol::gui::configurator::Group::Presentation::Present(megamol::gui::conf
 
         // Context menu
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
+            ImGui::Text("Group");
+            ImGui::Separator();
             if (ImGui::MenuItem("Rename")) {
                 popup_rename = true;
             }
@@ -153,9 +177,10 @@ void megamol::gui::configurator::Group::Presentation::Present(megamol::gui::conf
                 }
                 this->UpdatePositionSize(inout_group, state.canvas);
             }              
-            if (ImGui::MenuItem("Save", nullptr, false, false)) {
-                /// TODO
-                // --confGroupInterface={<call_slot_names>}
+            if (ImGui::MenuItem("Save")) {
+                state.interact.group_save = true;
+                // Force selection
+                active = true;                 
             }          
             if (ImGui::MenuItem("Delete", std::get<0>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
                 std::get<1>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
@@ -165,15 +190,18 @@ void megamol::gui::configurator::Group::Presentation::Present(megamol::gui::conf
             ImGui::EndPopup();
         }     
 
-        if ((mouse_clicked && !hovered) || (state.interact.item_selected_uid != inout_group.uid)) {
+        if ((mouse_clicked && !hovered) || (state.interact.group_selected_uid != inout_group.uid)) {
             this->selected = false;
-            if (state.interact.item_selected_uid == inout_group.uid) {
-                state.interact.item_selected_uid = GUI_INVALID_ID;
+            if (state.interact.group_selected_uid == inout_group.uid) {
+                state.interact.group_selected_uid = GUI_INVALID_ID;
             }
         }     
         if (active) {
             this->selected = true;
-            state.interact.item_selected_uid = inout_group.uid;
+            state.interact.group_selected_uid = inout_group.uid;
+            state.interact.callslot_selected_uid = GUI_INVALID_ID;
+            state.interact.module_selected_uid = GUI_INVALID_ID;
+            state.interact.call_selected_uid = GUI_INVALID_ID;            
         }
         if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
             ImVec2 tmp_pos;
@@ -225,20 +253,25 @@ void megamol::gui::configurator::Group::Presentation::Present(megamol::gui::conf
 void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
     megamol::gui::configurator::Group& inout_group, const GraphCanvasType& in_canvas) {
 
+    this->name_label = "Group: " + inout_group.name;
+
     // POSITION
     float pos_minX = FLT_MAX;
     float pos_minY = FLT_MAX; 
     ImVec2 tmp_pos;
-    for (auto& mod : inout_group.GetGroupModules()) {
-        tmp_pos = mod->GUI_GetPosition();
-        pos_minX = std::min(tmp_pos.x, pos_minX);
-        pos_minY = std::min(tmp_pos.y, pos_minY);
+    if (inout_group.GetGroupModules().size() > 0) {
+        for (auto& mod : inout_group.GetGroupModules()) {
+            tmp_pos = mod->GUI_GetPosition();
+            pos_minX = std::min(tmp_pos.x, pos_minX);
+            pos_minY = std::min(tmp_pos.y, pos_minY);
+        }
+        pos_minX -= this->BORDER;
+        pos_minY -= (this->BORDER + (1.5f * ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming));
+        this->position = ImVec2(pos_minX, pos_minY);
     }
-    pos_minX -= this->BORDER;
-    pos_minY -= (this->BORDER + (1.5f * ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming));
-    this->position = ImVec2(pos_minX, pos_minY);
-
-    this->name_label = "Group: " + inout_group.name;
+    else {
+        this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - in_canvas.offset) / in_canvas.zooming;
+    }
 
     // SIZE
     float group_width = 0.0f;
