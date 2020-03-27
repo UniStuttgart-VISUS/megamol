@@ -15,8 +15,7 @@ using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::Group::Group(ImGuiID uid) : uid(uid), present() {
-
+megamol::gui::configurator::Group::Group(ImGuiID uid) : uid(uid), present(), modules(), interface_callslots() {
 }
 
 
@@ -31,27 +30,30 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
         return false;  
     }
 
-    // Check if module was alreday added to group
+    // Check if module is already part of the group
     for (auto& mod : this->modules) {
         if (mod->uid == module_ptr->uid) {
             vislib::sys::Log::DefaultLog.WriteInfo("Module '%s' is already part of group '%s'.\n", mod->name.c_str(), this->name.c_str());
-            return false; 
+            return false;
         }
+
     }
 
     this->modules.emplace_back(module_ptr);
     module_ptr->GUI_SetVisibility(this->present.ModulesVisible());
+    this->present.ApplyUpdate();
+
     vislib::sys::Log::DefaultLog.WriteInfo("Added module '%s' to group '%s'.\n", module_ptr->name.c_str(), this->name.c_str() );                          
     return true;
 }
 
 
-bool megamol::gui::configurator::Group::DeleteModule(ImGuiID module_uid) {
+bool megamol::gui::configurator::Group::RemoveModule(ImGuiID module_uid) {
 
     try {
         for (auto iter = this->modules.begin(); iter != this->modules.end(); iter++) {
             if ((*iter)->uid == module_uid) {
-                vislib::sys::Log::DefaultLog.WriteInfo("Deleted module '%s' from group '%s'.\n", (*iter)->name.c_str(), this->name.c_str());  
+                vislib::sys::Log::DefaultLog.WriteInfo("Removed module '%s' from group '%s'.\n", (*iter)->name.c_str(), this->name.c_str());  
                 (*iter).reset();                        
                 this->modules.erase(iter);
                 return true;
@@ -82,6 +84,34 @@ bool megamol::gui::configurator::Group::ContainsModule(ImGuiID module_uid) {
 }
 
 
+bool megamol::gui::configurator::Group::AddCallSlot(const CallSlotPtrType& callslot_ptr) {
+
+                      
+    return true;
+
+}
+
+
+bool megamol::gui::configurator::Group::RemoveCallSlot(ImGuiID module_uid) {
+
+
+    return false;
+}
+
+
+bool megamol::gui::configurator::Group::ContainsCallSlot(ImGuiID callslot_uid) {
+
+    for (auto& callslot_map : this->interface_callslots) {
+        for (auto& callslot : callslot_map.second) { 
+            if (callslot->uid == callslot_uid) {
+                return true; 
+            }
+        }
+    }
+    return false;
+}
+
+
 // GROUP PRESENTATION ####################################################
 
 megamol::gui::configurator::Group::Presentation::Presentation(void) 
@@ -92,7 +122,7 @@ megamol::gui::configurator::Group::Presentation::Presentation(void)
     , name_label()
     , collapsed_view(true)
     , selected(false)
-    , update_once(true) {
+    , update(true) {
 
 }
 
@@ -116,14 +146,14 @@ void megamol::gui::configurator::Group::Presentation::Present(megamol::gui::conf
     
     try {      
         // Update size and position if current values are invalid or in expanded view
-        if (this->update_once || !this->collapsed_view || (this->size.x <= 0.0f) || (this->size.y <= 0.0f)) {
+        if (this->update || !this->collapsed_view || (this->size.x <= 0.0f) || (this->size.y <= 0.0f)) {
             this->UpdatePositionSize(inout_group, state.canvas);
-            if (this->update_once) {
+            if (this->update) {
                 for (auto& mod : inout_group.GetGroupModules()) {
                     mod->GUI_SetVisibility(!this->collapsed_view);
                 }
             }
-            this->update_once = false;
+            this->update = false;
         }
 
         // Draw group --------------------------------------------------------
@@ -159,6 +189,13 @@ void megamol::gui::configurator::Group::Presentation::Present(megamol::gui::conf
         bool hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) && (state.interact.module_hovered_uid == GUI_INVALID_ID));
         bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
 
+        // Automatically delete empty group.
+        if (inout_group.GetGroupModules().empty()) {
+            std::get<1>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+            // Force selection
+            active = true; 
+        }
+
         // Context menu
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
             ImGui::Text("Group");
@@ -173,7 +210,7 @@ void megamol::gui::configurator::Group::Presentation::Present(megamol::gui::conf
             if (ImGui::MenuItem(view.c_str())) {
                 this->collapsed_view = !this->collapsed_view;
                 for (auto& mod : inout_group.GetGroupModules()) {
-                    mod->GUI_SetVisibility(!this->collapsed_view);
+                     mod->GUI_SetVisibility(!this->collapsed_view);
                 }
                 this->UpdatePositionSize(inout_group, state.canvas);
             }              
@@ -182,7 +219,7 @@ void megamol::gui::configurator::Group::Presentation::Present(megamol::gui::conf
                 // Force selection
                 active = true;                 
             }          
-            if (ImGui::MenuItem("Delete", std::get<0>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
+            if (ImGui::MenuItem("Remove", std::get<0>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
                 std::get<1>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
                 // Force selection
                 active = true; 

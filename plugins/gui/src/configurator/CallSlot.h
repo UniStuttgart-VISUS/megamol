@@ -28,6 +28,9 @@ typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
 
+typedef std::vector<CallSlotPtrType> CallSlotPtrVectorType;
+
+
 /**
  * Defines call slot data structure for graph.
  */

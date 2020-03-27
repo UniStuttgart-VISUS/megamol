@@ -30,8 +30,7 @@ typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
 
-
-typedef std::vector<ModulePtrType> ModuleGraphVectorType;
+typedef std::vector<ModulePtrType> ModulePtrVectorType;
 
 
 /**
@@ -97,7 +96,7 @@ public:
     bool GUI_GetVisibility(void) { return this->present.visible; }
 
 private:
-    std::map<CallSlot::CallSlotType, std::vector<CallSlotPtrType>> call_slots;
+    std::map<CallSlot::CallSlotType, CallSlotPtrVectorType> call_slots;
 
     /**
      * Defines GUI module presentation.
@@ -130,7 +129,7 @@ private:
         std::string name_label;
         GUIUtils utils;
         bool selected;
-        bool update_once;
+        bool update;
 
     } present;
 };

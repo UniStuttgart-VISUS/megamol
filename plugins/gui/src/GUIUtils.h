@@ -59,8 +59,10 @@ class CallSlot;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 }
 
-/* Data type holding current group id and group name pairs. */
-typedef std::pair<ImGuiID, ImGuiID> UIDPairType; // First: Graph Item UID - Second Group UID
+/* Data type holding a pair of uids. */
+typedef std::pair<ImGuiID, ImGuiID> UIDPairType; 
+
+/* Data type holding current group uid and group name pairs. */
 typedef std::pair<ImGuiID, std::string> GroupPairType;
 typedef std::vector<GroupPairType> GroupPairVectorType;
 

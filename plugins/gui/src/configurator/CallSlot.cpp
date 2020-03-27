@@ -364,8 +364,9 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
                 disabled = !inout_call_slot.GetParentModule()->name_space.empty();
             }
             if (ImGui::MenuItem("Add Group Interface ", nullptr, false, disabled)) {
-                state.interact.callslot_add_group_uid.first =  inout_call_slot.uid; 
-                state.interact.callslot_add_group_uid.second =  GUI_INVALID_ID; 
+                state.interact.callslot_add_group_uid.first = inout_call_slot.uid;
+                /// Menu item is only active when parent module is connected.
+                state.interact.callslot_add_group_uid.second = inout_call_slot.GetParentModule()->uid; 
             }
             if (ImGui::MenuItem("Remove Group Interface", nullptr, false, disabled)) {
                 state.interact.callslot_remove_group_uid =  inout_call_slot.uid;  

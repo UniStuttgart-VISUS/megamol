@@ -42,7 +42,7 @@ public:
 
     bool AddModule(const ModuleStockVectorType& stock_modules, const std::string& module_class_name);
     bool DeleteModule(ImGuiID module_uid);
-    const ModuleGraphVectorType& GetGraphModules(void) { return this->modules; }
+    const ModulePtrVectorType& GetGraphModules(void) { return this->modules; }
 
     bool AddCall(const CallStockVectorType& stock_calls, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
     bool DeleteCall(ImGuiID call_uid);
@@ -81,8 +81,8 @@ private:
     static ImGuiID generated_uid;
     unsigned int group_name_uid;
 
-    ModuleGraphVectorType modules;
-    CallGraphVectorType calls;
+    ModulePtrVectorType modules;
+    CallPtrVectorType calls;
     GroupGraphVectorType groups;
 
     const ImGuiID uid;
@@ -110,7 +110,7 @@ private:
 
         bool SaveGroup(void) const { return this->graphstate.interact.group_save; }
 
-        void SetUpdate(void) { this->update = true; }
+        void ApplyUpdate(void) { this->update = true; }
 
         bool params_visible;
         bool params_readonly;
@@ -145,7 +145,7 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    const CallGraphVectorType& get_graph_calls(void) { return this->calls; }
+    const CallPtrVectorType& get_graph_calls(void) { return this->calls; }
     GroupGraphVectorType& get_graph_groups(void) { return this->groups; }
 
     bool delete_disconnected_calls(void);

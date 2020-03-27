@@ -18,6 +18,7 @@ namespace megamol {
 namespace gui {
 namespace configurator {
 
+
 /**
  * Defines module data structure for graph.
  */
@@ -33,10 +34,16 @@ public:
     std::string name;
 
     bool AddModule(const ModulePtrType& module_ptr);
-    bool DeleteModule(ImGuiID module_uid);
+    bool RemoveModule(ImGuiID module_uid);
     bool ContainsModule(ImGuiID module_uid);
 
-    const ModuleGraphVectorType& GetGroupModules(void) { return this->modules; }
+    bool AddCallSlot(const CallSlotPtrType& callslot_ptr);
+    bool RemoveCallSlot(ImGuiID callslot_uid);
+    bool ContainsCallSlot(ImGuiID callslot_uid);
+
+    const ModulePtrVectorType& GetGroupModules(void) { return this->modules; }
+
+    bool Empty(void) { return (this->modules.size() == 0); }
 
     // GUI Presentation -------------------------------------------------------
 
@@ -49,7 +56,8 @@ private:
 
     // VARIABLES --------------------------------------------------------------
 
-    ModuleGraphVectorType modules;
+    ModulePtrVectorType modules;
+    std::map<CallSlot::CallSlotType, CallSlotPtrVectorType> interface_callslots;
 
     /**
      * Defines GUI group presentation.
@@ -65,6 +73,8 @@ private:
         void UpdatePositionSize(Group& inout_group, const GraphCanvasType& in_canvas);
         bool ModulesVisible(void) { return !this->collapsed_view; }
 
+        void ApplyUpdate(void) { this->update = true; }
+
     private:
         const float BORDER;
 
@@ -76,7 +86,7 @@ private:
         std::string name_label;
         bool collapsed_view;
         bool selected;
-        bool update_once;        
+        bool update;        
 
     } present;
 

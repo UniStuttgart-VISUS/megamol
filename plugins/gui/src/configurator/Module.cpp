@@ -129,7 +129,7 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
     , name_label()
     , utils()
     , selected(false)
-    , update_once(true) {}
+    , update(true) {}
 
 
 megamol::gui::configurator::Module::Presentation::~Presentation(void) {}
@@ -155,9 +155,9 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
             this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - state.canvas.offset) / state.canvas.zooming;
         }
         // Update size if current values are invalid
-        if (this->update_once || (this->size.x <= 0.0f) || (this->size.y <= 0.0f)) {
+        if (this->update || (this->size.x <= 0.0f) || (this->size.y <= 0.0f)) {
             this->UpdateSize(inout_module, state.canvas);
-            this->update_once = false;
+            this->update = false;
         }
 
         if (this->visible) {

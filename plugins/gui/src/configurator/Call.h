@@ -30,7 +30,7 @@ typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
 
 
-typedef std::vector<CallPtrType> CallGraphVectorType;
+typedef std::vector<CallPtrType> CallPtrVectorType;
 
 
 /**

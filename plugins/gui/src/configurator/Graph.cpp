@@ -101,10 +101,17 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
             if ((*iter)->uid == module_uid) {
                 (*iter)->RemoveAllCallSlots();
 
-                /// XXX Delete from group(s)
+                for (auto& group : this->groups) {
+                    if (group.ContainsModule(module_uid)) {
+                        group.RemoveModule(module_uid);
+                    }
+                    if (group.Empty()) {
+                        this->DeleteGroup(group.uid);
+                    }
+                }
 
-                // vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to module. [%s, %s, line %d]\n",
-                //     (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+                //vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to module. [%s, %s, line %d]\n",
+                //    (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 assert((*iter).use_count() == 1);
 
                 vislib::sys::Log::DefaultLog.WriteInfo("Deleted module: %s [%s, %s, line %d]\n",
@@ -253,7 +260,7 @@ bool megamol::gui::configurator::Graph::UniqueModuleRename(const std::string& mo
     for (auto& mod : this->modules) {
         if (module_name == mod->name) {
             mod->name = this->generate_unique_module_name(module_name);
-            this->present.SetUpdate();
+            this->present.ApplyUpdate();
             return true;
         }
     }
@@ -311,9 +318,9 @@ bool megamol::gui::configurator::Graph::DeleteGroup(ImGuiID group_uid) {
             }
             else {
                 for (auto& mod : group.GetGroupModules()) {
-                    mod->name_space.clear();
+                    mod->name_space.clear(); 
                 }
-                this->present.SetUpdate();
+                this->present.ApplyUpdate();
                 vislib::sys::Log::DefaultLog.WriteInfo("Deleted group '%s'.\n",group.name.c_str());  
                 found_group = true;
             }
@@ -569,7 +576,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::conf
         if (module_uid != GUI_INVALID_ID) {
             for (auto& group : inout_graph.get_graph_groups()) {
                 if (group.ContainsModule(module_uid)) {
-                    group.DeleteModule(module_uid);
+                    group.RemoveModule(module_uid);
                 }
             }
             this->graphstate.interact.module_remove_group_uid = GUI_INVALID_ID;
@@ -587,9 +594,11 @@ void megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::conf
         // Remove call slot from group interface  
         callslot_uid  = this->graphstate.interact.callslot_remove_group_uid;
         if (callslot_uid != GUI_INVALID_ID) {
-            /// TODO
-
-
+            for (auto& group : inout_graph.get_graph_groups()) {
+                if (group.ContainsCallSlot(callslot_uid)) {
+                    group.RemoveCallSlot(callslot_uid);
+                }
+            }
             this->graphstate.interact.callslot_remove_group_uid = GUI_INVALID_ID;
         }        
         // Process module/call/group deletion 
@@ -613,6 +622,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::conf
         this->utils.RenamePopUp("Rename Project", popup_rename, inout_graph.GetName());
 
         ImGui::PopID();
+
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
