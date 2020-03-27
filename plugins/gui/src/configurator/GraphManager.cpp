@@ -49,8 +49,11 @@ bool megamol::gui::configurator::GraphManager::DeleteGraph(ImGuiID graph_uid) {
             vislib::sys::Log::DefaultLog.WriteInfo("Deleted graph: %s [%s, %s, line %d]\n",
                 (*iter)->GetName().c_str(), __FILE__, __FUNCTION__, __LINE__);
 
-            //vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to graph. [%s, %s, line %d]\n",
-            //    (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+            if ((*iter).use_count() > 1) {
+                vislib::sys::Log::DefaultLog.WriteError("Unclean deletion. Found %i references pointing to graph. [%s, %s, line %d]\n",
+                    (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+            }
+
             assert((*iter).use_count() == 1);
             (*iter).reset();
             this->graphs.erase(iter);

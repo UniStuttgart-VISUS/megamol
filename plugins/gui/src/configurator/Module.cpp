@@ -60,11 +60,11 @@ bool megamol::gui::configurator::Module::RemoveAllCallSlots(void) {
                     call_slot_ptr->DisConnectCalls();
                     call_slot_ptr->DisConnectParentModule();
 
-                    // vislib::sys::Log::DefaultLog.WriteWarn(
-                    //      "Found %i references pointing to call slot. [%s, %s, line %d]\n", call_slot_ptr.use_count(),
-                    //      __FILE__, __FUNCTION__, __LINE__);
-                    assert(call_slot_ptr.use_count() == 1);
-
+                    if (call_slot_ptr.use_count() > 1) {
+                        vislib::sys::Log::DefaultLog.WriteError("Unclean deletion. Found %i references pointing to call slot. [%s, %s, line %d]\n",
+                            call_slot_ptr.use_count(), __FILE__, __FUNCTION__, __LINE__);
+                    }
+           
                     call_slot_ptr.reset();
                 }
             }

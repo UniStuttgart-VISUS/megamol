@@ -110,9 +110,10 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
                     }
                 }
 
-                //vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to module. [%s, %s, line %d]\n",
-                //    (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
-                assert((*iter).use_count() == 1);
+                if ((*iter).use_count() > 1) {
+                    vislib::sys::Log::DefaultLog.WriteError("Unclean deletion. Found %i references pointing to module. [%s, %s, line %d]\n",
+                        (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+                }
 
                 vislib::sys::Log::DefaultLog.WriteInfo("Deleted module: %s [%s, %s, line %d]\n",
                     (*iter)->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
@@ -228,9 +229,10 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
             if ((*iter)->uid == call_uid) {
                 (*iter)->DisConnectCallSlots();
 
-                // vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to call. [%s, %s, line %d]\n",
-                //     (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
-                assert((*iter).use_count() == 1);
+                if ((*iter).use_count() > 1) {
+                    vislib::sys::Log::DefaultLog.WriteError("Unclean deletion. Found %i references pointing to call. [%s, %s, line %d]\n",
+                        (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+                }
 
                 vislib::sys::Log::DefaultLog.WriteInfo("Deleted call: %s [%s, %s, line %d]\n",
                     (*iter)->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);

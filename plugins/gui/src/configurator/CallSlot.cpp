@@ -33,7 +33,7 @@ megamol::gui::configurator::CallSlot::~CallSlot() {
 
 bool megamol::gui::configurator::CallSlot::CallsConnected(void) const {
 
-    /// TEMP Check for unclean references
+    /// XXX Check for unclean references
     for (auto& call_ptr : this->connected_calls) {
         if (call_ptr == nullptr) {
             throw std::invalid_argument("Pointer to connected call is nullptr.");
@@ -124,7 +124,7 @@ bool megamol::gui::configurator::CallSlot::DisConnectCalls(void) {
 const std::vector<megamol::gui::configurator::CallPtrType>& megamol::gui::configurator::CallSlot::GetConnectedCalls(
     void) {
 
-    /// TEMP Check for unclean references
+    /// XXX Check for unclean references
     for (auto& call_ptr : this->connected_calls) {
         if (call_ptr == nullptr) {
             throw std::invalid_argument("Pointer to connected call is nullptr.");

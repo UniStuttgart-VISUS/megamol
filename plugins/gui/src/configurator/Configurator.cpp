@@ -239,7 +239,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 
         // Info text ----------------------------------------------------------
         ImGui::SameLine(260.0f);
-        std::string label = "This is a PROTOTYPE. Changes will NOT affect the currently loaded MegaMol project.";
+        std::string label = "Changes will not affect the currently loaded MegaMol project.";
         ImGui::TextColored(ImVec4(1.0f, 0.25f, 0.25f, 1.0f), label.c_str());
 
         ImGui::EndMenuBar();
