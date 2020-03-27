@@ -87,12 +87,14 @@ public:
     
     void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdateSize(*this, in_canvas); }
 
+    void GUI_SetVisibility(bool visible) { this->present.visible = visible; }
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
     void GUI_SetPresentation(Module::Presentations present) { this->present.presentations = present; }
     void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
     
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
+    bool GUI_GetVisibility(void) { return this->present.visible; }
 
 private:
     std::map<CallSlot::CallSlotType, std::vector<CallSlotPtrType>> call_slots;
@@ -117,6 +119,7 @@ private:
 
         Module::Presentations presentations;
         bool label_visible;
+        bool visible;
 
     private:
         // Relative position without considering canvas offset and zooming

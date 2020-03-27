@@ -122,6 +122,7 @@ megamol::gui::configurator::Module::GetCallSlots(void) {
 megamol::gui::configurator::Module::Presentation::Presentation(void)
     : presentations(Module::Presentations::DEFAULT)
     , label_visible(true)
+    , visible(true)
     , position(ImVec2(FLT_MAX, FLT_MAX))
     , size(ImVec2(0.0f, 0.0f))
     , class_label()
@@ -149,169 +150,174 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
     bool popup_rename = false;
 
     try {
-        // Condition for initialization position (if position is not set yet via tag in project file)
-        if ((this->position.x == FLT_MAX) && (this->position.y == FLT_MAX)) {
-            this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - state.canvas.offset) / state.canvas.zooming;
-        }
-        // Update size if current values are invalid
-        if (this->update_once || (this->size.x <= 0.0f) || (this->size.y <= 0.0f)) {
-            this->UpdateSize(inout_module, state.canvas);
-            this->update_once = false;
-        }
+        if (this->visible) {
 
-        // Draw module --------------------------------------------------------
-        ImVec2 module_size = this->size * state.canvas.zooming;
-        ImVec2 module_rect_min = state.canvas.offset + this->position * state.canvas.zooming;
-        ImVec2 module_rect_max = module_rect_min + module_size;
-        ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
+            // Condition for initialization position (if position is not set yet via tag in project file)
+            if ((this->position.x == FLT_MAX) && (this->position.y == FLT_MAX)) {
+                this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - state.canvas.offset) / state.canvas.zooming;
+            }
+            // Update size if current values are invalid
+            if (this->update_once || (this->size.x <= 0.0f) || (this->size.y <= 0.0f)) {
+                this->UpdateSize(inout_module, state.canvas);
+                this->update_once = false;
+            }
 
-        // Clip module if lying ouside the canvas 
-        /// XXX Is there a benefit since ImGui::PushClipRect is used?
-        /*
-        ImVec2 canvas_rect_min = state.canvas.position;
-        ImVec2 canvas_rect_max = state.canvas.position + state.canvas.size;
-        if (!((canvas_rect_min.x < module_rect_max.x) && (canvas_rect_max.x > module_rect_min.x) &&
-                (canvas_rect_min.y < module_rect_max.y) && (canvas_rect_max.y > module_rect_min.y))) {
-            if (mouse_clicked) {
+            // Draw module --------------------------------------------------------
+            ImVec2 module_size = this->size * state.canvas.zooming;
+            ImVec2 module_rect_min = state.canvas.offset + this->position * state.canvas.zooming;
+            ImVec2 module_rect_max = module_rect_min + module_size;
+            ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
+
+            // Clip module if lying ouside the canvas 
+            /// XXX Is there a benefit since ImGui::PushClipRect is used?
+            /*
+            ImVec2 canvas_rect_min = state.canvas.position;
+            ImVec2 canvas_rect_max = state.canvas.position + state.canvas.size;
+            if (!((canvas_rect_min.x < module_rect_max.x) && (canvas_rect_max.x > module_rect_min.x) &&
+                    (canvas_rect_min.y < module_rect_max.y) && (canvas_rect_max.y > module_rect_min.y))) {
+                if (mouse_clicked) {
+                    this->selected = false;
+                    if (state.interact.item_selected_uid == inout_module.uid) {
+                        state.interact.item_selected_uid = GUI_INVALID_ID;
+                    }                
+                }
+                if (this->selected) {
+                    state.interact.item_selected_uid = inout_module.uid;
+                }
+                return;
+            }
+            else {
+                ...
+            }
+            */
+        
+            ImGui::PushID(inout_module.uid);
+
+            // Colors
+            ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg]; // ImGuiCol_FrameBg ImGuiCol_Button
+            tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+            const ImU32 COLOR_MODULE_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
+            tmpcol = style.Colors[ImGuiCol_FrameBgActive]; // ImGuiCol_FrameBgActive ImGuiCol_ButtonActive
+            tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+            const ImU32 COLOR_MODULE_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
+            tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive]; // ImGuiCol_Border ImGuiCol_ScrollbarGrabActive
+            tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+            const ImU32 COLOR_MODULE_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
+        // Draw box
+            ImGui::SetCursorScreenPos(module_rect_min);
+            std::string label = "module_" + inout_module.name;
+
+            ImGui::SetItemAllowOverlap();
+            ImGui::InvisibleButton(label.c_str(), module_size);
+            ImGui::SetItemAllowOverlap();
+
+            bool active = ImGui::IsItemActive();
+            bool hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) && 
+                ((state.interact.module_hovered_uid == GUI_INVALID_ID) || (state.interact.module_hovered_uid == inout_module.uid)));
+            bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+
+            if ((mouse_clicked && (!hovered || state.interact.callslot_hovered_uid != GUI_INVALID_ID)) || (state.interact.item_selected_uid != inout_module.uid)) {
                 this->selected = false;
                 if (state.interact.item_selected_uid == inout_module.uid) {
                     state.interact.item_selected_uid = GUI_INVALID_ID;
-                }                
-            }
-            if (this->selected) {
-                state.interact.item_selected_uid = inout_module.uid;
-            }
-            return;
-        }
-        else {
-            ...
-        }
-        */
-       
-        ImGui::PushID(inout_module.uid);
-
-        // Colors
-        ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg]; // ImGuiCol_FrameBg ImGuiCol_Button
-        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-        const ImU32 COLOR_MODULE_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-        tmpcol = style.Colors[ImGuiCol_FrameBgActive]; // ImGuiCol_FrameBgActive ImGuiCol_ButtonActive
-        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-        const ImU32 COLOR_MODULE_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
-        tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive]; // ImGuiCol_Border ImGuiCol_ScrollbarGrabActive
-        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-        const ImU32 COLOR_MODULE_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-       // Draw box
-        ImGui::SetCursorScreenPos(module_rect_min);
-        std::string label = "module_" + inout_module.name;
-
-        ImGui::SetItemAllowOverlap();
-        ImGui::InvisibleButton(label.c_str(), module_size);
-        ImGui::SetItemAllowOverlap();
-
-        bool active = ImGui::IsItemActive();
-        bool hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) && 
-            ((state.interact.module_hovered_uid == GUI_INVALID_ID) || (state.interact.module_hovered_uid == inout_module.uid)));
-        bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
-
-        if ((mouse_clicked && (!hovered || state.interact.callslot_hovered_uid != GUI_INVALID_ID)) || (state.interact.item_selected_uid != inout_module.uid)) {
-            this->selected = false;
-            if (state.interact.item_selected_uid == inout_module.uid) {
-                state.interact.item_selected_uid = GUI_INVALID_ID;
-            }
-        }     
-        if (!hovered && (state.interact.module_hovered_uid == inout_module.uid)) {
-            state.interact.module_hovered_uid = GUI_INVALID_ID;
-        }              
-        if (state.interact.callslot_hovered_uid == GUI_INVALID_ID) {
-            // Context menu
-            if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-                if (ImGui::MenuItem(
-                        "Delete", std::get<0>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
-                    std::get<1>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-                    // Force selection
-                    active = true;
                 }
-                if (ImGui::MenuItem("Rename")) {
-                    popup_rename = true;
+            }     
+            if (!hovered && (state.interact.module_hovered_uid == inout_module.uid)) {
+                state.interact.module_hovered_uid = GUI_INVALID_ID;
+            }        
+            if (hovered) {
+                state.interact.module_hovered_uid = inout_module.uid;
+            }              
+            if (state.interact.callslot_hovered_uid == GUI_INVALID_ID) {
+                // Context menu
+                if (ImGui::BeginPopupContextItem("invisible_button_context")) {
+                    if (ImGui::MenuItem("Delete", std::get<0>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
+                        std::get<1>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+                        // Force selection
+                        active = true;
+                    }
+                    if (ImGui::MenuItem("Rename")) {
+                        popup_rename = true;
+                    }
+                    if (ImGui::BeginMenu("Add Group", false)) {
+                        /// TODO
+                        // Loop over all exisiting groups or add to new one
+                        //if (ImGui::MenuItem("<group name>"")) {
+                        //}                       
+                        ImGui::EndMenu();
+                    }
+                    if (ImGui::MenuItem("Remove Group", nullptr, false, false)) {
+                        /// TODO
+                    }                                
+                    ImGui::EndPopup();
                 }
-                if (ImGui::BeginMenu("Add Group", false)) {
-                    /// TODO
-                    // Loop over all exisiting groups or add to new one
-                    //if (ImGui::MenuItem("<group name>"")) {
-                    //}                       
-                    ImGui::EndMenu();
+
+                // Hover Tooltip
+                std::string hover_text = inout_module.description;
+                if (!this->label_visible) {
+                    hover_text = "[" + inout_module.name + "] " + hover_text;
                 }
-                if (ImGui::MenuItem("Remove Group", nullptr, false, false)) {
-                    /// TODO
-                }                                
-                ImGui::EndPopup();
+                this->utils.HoverToolTip(hover_text.c_str(), ImGui::GetID(label.c_str()), 0.5f, 5.0f);     
+
+                if (active) {
+                    this->selected = true;
+                    state.interact.item_selected_uid = inout_module.uid;
+                }
+                if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
+                    this->position += (ImGui::GetIO().MouseDelta / state.canvas.zooming);
+                    this->UpdateSize(inout_module, state.canvas);
+                } 
             }
+            
+            ImU32 module_bg_color = (hovered || this->selected) ? COLOR_MODULE_HIGHTLIGHT : COLOR_MODULE_BACKGROUND;
+            draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 5.0f);
+            draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 5.0f);
 
-            // Hover Tooltip
-            std::string hover_text = inout_module.description;
-            if (!this->label_visible) {
-                hover_text = "[" + inout_module.name + "] " + hover_text;
-            }
-            this->utils.HoverToolTip(hover_text.c_str(), ImGui::GetID(label.c_str()), 0.5f, 5.0f);     
+            // Draw text
+            if (this->label_visible) {
 
-            if (active) {
-                this->selected = true;
-                state.interact.item_selected_uid = inout_module.uid;
-            }
-            if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
-                this->position =
-                    ((module_rect_min - state.canvas.offset) + ImGui::GetIO().MouseDelta) / state.canvas.zooming;
-                this->UpdateSize(inout_module, state.canvas);
-            } 
-            state.interact.module_hovered_uid = inout_module.uid;
-        }
-         
-        ImU32 module_bg_color = (hovered || this->selected) ? COLOR_MODULE_HIGHTLIGHT : COLOR_MODULE_BACKGROUND;
-        draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 5.0f);
-        draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 5.0f);
+                float line_offset = 0.0f;
+                if (inout_module.is_view_instance) {
+                    line_offset = -0.5f * ImGui::GetTextLineHeightWithSpacing();
+                }
 
-        // Draw text
-        if (this->label_visible) {
-
-            float line_offset = 0.0f;
-            if (inout_module.is_view_instance) {
-                line_offset = -0.5f * ImGui::GetTextLineHeightWithSpacing();
-            }
-
-            label = this->class_label;
-            float name_width = this->utils.TextWidgetWidth(label);
-            ImVec2 text_pos_left_upper = (module_center + ImVec2(-(name_width / 2.0f), line_offset - ImGui::GetTextLineHeightWithSpacing()));
-            draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), label.c_str());
-
-            label = this->name_label;
-            name_width = this->utils.TextWidgetWidth(label);
-            text_pos_left_upper = (module_center + ImVec2(-(name_width / 2.0f), line_offset));
-            draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), label.c_str());
-
-            if (inout_module.is_view_instance) {
-                label = "[Main View]";
-                name_width = this->utils.TextWidgetWidth(label);
-                text_pos_left_upper = (module_center + ImVec2(-(name_width / 2.0f), line_offset + ImGui::GetTextLineHeightWithSpacing()));
+                label = this->class_label;
+                float name_width = this->utils.TextWidgetWidth(label);
+                ImVec2 text_pos_left_upper = (module_center + ImVec2(-(name_width / 2.0f), line_offset - ImGui::GetTextLineHeightWithSpacing()));
                 draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), label.c_str());
+
+                label = this->name_label;
+                name_width = this->utils.TextWidgetWidth(label);
+                text_pos_left_upper = (module_center + ImVec2(-(name_width / 2.0f), line_offset));
+                draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), label.c_str());
+
+                if (inout_module.is_view_instance) {
+                    label = "[Main View]";
+                    name_width = this->utils.TextWidgetWidth(label);
+                    text_pos_left_upper = (module_center + ImVec2(-(name_width / 2.0f), line_offset + ImGui::GetTextLineHeightWithSpacing()));
+                    draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), label.c_str());
+                }
             }
-        }
 
-        /// XXX Use ImGui::ArrowButton to show/hide parameters inside module box.
+            /// XXX Use ImGui::ArrowButton to show/hide parameters inside module box.
 
-        // Draw call slots ----------------------------------------------------
-        for (auto& slot_pair : inout_module.GetCallSlots()) {
-            for (auto& slot : slot_pair.second) {
-                slot->GUI_Present(state);
+            // Draw call slots ----------------------------------------------------
+            for (auto& slot_pair : inout_module.GetCallSlots()) {
+                for (auto& slot : slot_pair.second) {
+                    slot->GUI_Present(state);
+                }
             }
-        }
 
-        // Rename pop-up ------------------------------------------------------
-        if (this->utils.RenamePopUp("Rename Project", popup_rename, inout_module.name)) {
-            this->UpdateSize(inout_module, state.canvas);
-        }
+            // Rename pop-up ------------------------------------------------------
+            if (this->utils.RenamePopUp("Rename Project", popup_rename, inout_module.name)) {
+                this->UpdateSize(inout_module, state.canvas);
+            }
 
-        ImGui::PopID();
+            ImGui::PopID();
+        }
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(

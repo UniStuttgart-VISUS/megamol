@@ -326,9 +326,11 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
         ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg]; // ImGuiCol_FrameBg ImGuiCol_Button
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
         const ImU32 COLOR_SLOT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
         tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive]; // ImGuiCol_Border ImGuiCol_ScrollbarGrabActive
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);         
         const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
         const ImU32 COLOR_SLOT_CALLER = IM_COL32(0, 255, 192, 255);
         const ImU32 COLOR_SLOT_CALLEE = IM_COL32(192, 255, 64, 255);
         const ImU32 COLOR_SLOT_COMPATIBLE = IM_COL32(0, 192, 0, 255);
@@ -355,14 +357,18 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
 
         // Context menu
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-            if (ImGui::BeginMenu("Add Group Interface ", false)) {
+            bool disabled = true;
+            if (inout_call_slot.ParentModuleConnected()) {
+                disabled = !inout_call_slot.GetParentModule()->name_space.empty();
+            }
+            if (ImGui::BeginMenu("Add Group Interface ", disabled)) {
                 /// TODO
                 // Loop over all exisiting groups
                 //if (ImGui::MenuItem("<group name>"")) {
                 //}     
                 ImGui::EndMenu();
             }
-            if (ImGui::MenuItem("Remove Group Interface", nullptr, false, false)) {
+            if (ImGui::MenuItem("Remove Group Interface", nullptr, false, disabled)) {
                 /// TODO
             }                                
             ImGui::EndPopup();

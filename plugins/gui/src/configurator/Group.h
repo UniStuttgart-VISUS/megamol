@@ -41,6 +41,8 @@ public:
 
     void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
 
+    void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePositionSize(*this, in_canvas); }
+
 private:
 
     // VARIABLES --------------------------------------------------------------
@@ -58,16 +60,18 @@ private:
 
         void Present(Group& inout_group, GraphItemsStateType& state);
 
-        void UpdateSize(Group& inout_group, const GraphCanvasType& in_canvas);
+        void UpdatePositionSize(Group& inout_group, const GraphCanvasType& in_canvas);
 
     private:
+        const float BORDER;
+
         // Relative position without considering canvas offset and zooming
         ImVec2 position;
         // Relative size without considering zooming
         ImVec2 size;
         GUIUtils utils;
         std::string name_label;
-        bool minimized_view;
+        bool collapsed_view;
         bool selected;
         bool update_once;        
 

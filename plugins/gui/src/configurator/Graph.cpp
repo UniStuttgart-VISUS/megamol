@@ -222,8 +222,6 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
             if ((*iter)->uid == call_uid) {
                 (*iter)->DisConnectCallSlots();
 
-                /// XXX Delete from group(s)
-
                 // vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to call. [%s, %s, line %d]\n",
                 //     (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 assert((*iter).use_count() == 1);
@@ -251,7 +249,7 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
 }
 
 
-bool megamol::gui::configurator::Graph::RenameAssignedModuleName(const std::string& module_name) {
+bool megamol::gui::configurator::Graph::UniqueModuleRename(const std::string& module_name) {
 
     for (auto& mod : this->modules) {
         if (module_name == mod->name) {
@@ -264,15 +262,56 @@ bool megamol::gui::configurator::Graph::RenameAssignedModuleName(const std::stri
 }
 
 
-bool megamol::gui::configurator::Graph::add_group(const std::string& group_name) {
+bool megamol::gui::configurator::Graph::MainViewPresent(void) {
+
+    for (auto& mod : this->modules) {
+        if (mod->is_view_instance) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+bool megamol::gui::configurator::Graph::AddModuleGroup(const ModulePtrType& module_ptr) {
+
+    // Check module namespace for group membership
+    std::string name_space = module_ptr->name_space;
+
+    ImGuiID group_uid = this->get_group_uid(name_space);
+    if (group_uid == GUI_INVALID_ID) {
+        if (this->AddGroup(name_space)) {
+            group_uid = this->get_group_uid(name_space);
+        }
+    }
+    if (group_uid != GUI_INVALID_ID) {
+        for (auto& group : this->groups) {
+            if (group.uid == group_uid) {
+                return group.AddModule(module_ptr);
+            }
+        }
+    }
+    return false;
+}
+
+
+bool megamol::gui::configurator::Graph::AddGroup(const std::string& group_name) {
 
     try {
-        Group group(this->generate_unique_id());
-        group.name = this->generate_unique_group_name();
-        this->groups.emplace_back(group);
+        // Only create new group if group_name is not equal to empty global namespace
+        ///  XXX or if group name equals namespace of graph <= ???
+        if (!group_name.empty() && (group_name != this->name)) {
 
-        vislib::sys::Log::DefaultLog.WriteInfo("Added group '%s'. [%s, %s, line %d]\n",
-            group.name.c_str(), __FILE__, __FUNCTION__, __LINE__);  
+            Group group(this->generate_unique_id());
+            //group.name = this->generate_unique_group_name();
+            group.name = group_name;
+            this->groups.emplace_back(group);
+
+            vislib::sys::Log::DefaultLog.WriteInfo("Added group '%s'. [%s, %s, line %d]\n",
+                group.name.c_str(), __FILE__, __FUNCTION__, __LINE__);  
+
+            return true;
+        }
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -283,27 +322,30 @@ bool megamol::gui::configurator::Graph::add_group(const std::string& group_name)
         return false;
     }
 
-    return true;
+    return false;
 }
 
 
-bool megamol::gui::configurator::Graph::delete_group(ImGuiID group_uid) {
+bool megamol::gui::configurator::Graph::DeleteGroup(ImGuiID group_uid) {
 
+    bool found_group = false;
     try {
         auto tmp_groups = this->groups;
         this->groups.clear();
-        bool found_group = false;
+
         for (auto& group : tmp_groups) {
             if (group.uid != group_uid) {
                 this->groups.emplace_back(group);
             }
             else {
+                for (auto& mod : group.GetGroupModules()) {
+                    mod->name_space.clear();
+                }
+                this->present.SetUpdate();
+                vislib::sys::Log::DefaultLog.WriteInfo("Deleted group '%s'.\n",group.name.c_str());  
                 found_group = true;
             }
-        }
-        if (!found_group) {
-            vislib::sys::Log::DefaultLog.WriteWarn("Invalid group uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        }        
+        } 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -312,18 +354,23 @@ bool megamol::gui::configurator::Graph::delete_group(ImGuiID group_uid) {
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+
+    if (!found_group) {
+        vislib::sys::Log::DefaultLog.WriteWarn("Invalid group uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }           
     return true;
 }
 
 
-bool megamol::gui::configurator::Graph::group_exists(const std::string& group_name) {
+ImGuiID megamol::gui::configurator::Graph::get_group_uid(const std::string& group_name) {
 
     for (auto& group : this->groups) {
         if (group.name == group_name) {
-            return true;
+            return group.uid;
         }
     }
-    return false;
+    return GUI_INVALID_ID;
 }
 
 
@@ -601,6 +648,9 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
         for (auto& mod : inout_graph.GetGraphModules()) {
             mod->GUI_Update(this->graphstate.canvas);
         }
+        for (auto& group : inout_graph.GetGraphGroups()) {
+            group.GUI_Update(this->graphstate.canvas);
+        }        
         this->update = false;
     }
 
@@ -637,6 +687,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     // 2] GROUPS --------------------------------
     for (auto& group : inout_graph.GetGraphGroups()) {
         group.GUI_Present(this->graphstate);
+
     }
 
     // 3] MODULES and CALL SLOTS ----------------
@@ -658,7 +709,9 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     if (std::get<1>(this->graphstate.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM])) {
         if (this->graphstate.interact.item_selected_uid != GUI_INVALID_ID) {
             if (!inout_graph.DeleteModule(this->graphstate.interact.item_selected_uid)) {
-                inout_graph.DeleteCall(this->graphstate.interact.item_selected_uid);
+                if (!inout_graph.DeleteCall(this->graphstate.interact.item_selected_uid)) {   
+                    inout_graph.DeleteGroup(this->graphstate.interact.item_selected_uid);
+                }
             }
         }
     }

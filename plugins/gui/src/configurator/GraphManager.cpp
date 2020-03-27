@@ -246,7 +246,7 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
         const auto module_func = [&, this](megamol::core::Module* mod) {
             // Ensure unique module name is not yet assigned
             std::string module_name = std::string(mod->Name().PeekBuffer());
-            if (graph_ptr->RenameAssignedModuleName(module_name)) {
+            if (graph_ptr->UniqueModuleRename(module_name)) {
                 vislib::sys::Log::DefaultLog.WriteWarn(
                     "Renamed existing module '%s' while adding module with same name. "
                     "This is required for successful unambiguous parameter addressing which uses the module name. [%s, "
@@ -260,11 +260,12 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
             std::string full_name = std::string(mod->FullName().PeekBuffer());
             graph_module->name_space = full_name.substr(0, full_name.find(graph_module->name) - 2);
             graph_module->is_view_instance = false;
+            graph_ptr->AddModuleGroup(graph_module);
 
             if (view_instances.find(std::string(mod->FullName().PeekBuffer())) != view_instances.end()) {
                 // Instance Name
                 graph_ptr->SetName(view_instances[std::string(mod->FullName().PeekBuffer())]);
-                graph_module->is_view_instance = true;
+                graph_module->is_view_instance = (graph_ptr->MainViewPresent()) ? (false) : (true);
             }
 
             megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator se = mod->ChildList_End();
@@ -496,7 +497,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 }
 
                 // Ensure unique module name is not yet assigned
-                if (graph_ptr->RenameAssignedModuleName(view_name)) {
+                if (graph_ptr->UniqueModuleRename(view_name)) {
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "Project File '%s' line %i: Renamed existing module '%s' while adding module with same name. "
                         "This is required for successful unambiguous parameter addressing which uses the module name. "
@@ -513,9 +514,10 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 }
                 auto graph_module = graph_ptr->GetGraphModules().back();
                 graph_module->name = view_name;
-                graph_module->name_space = view_name_namespace;
-                graph_module->is_view_instance = true;
+                graph_module->name_space = (view_name_namespace.empty())?(view_instance):(view_name_namespace);
+                graph_module->is_view_instance = (graph_ptr->MainViewPresent()) ? (false) : (true);
                 graph_module->GUI_SetPosition(module_pos);
+                graph_ptr->AddModuleGroup(graph_module);
 
                 found_main_view = true;
             }
@@ -553,16 +555,14 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 ImVec2 module_pos = this->readLuaProjectConfPos(lines[i]);
 
                 /// DEBUG
-                // vislib::sys::Log::DefaultLog.WriteInfo(">>>> Class: '%s' NameSpace: '%s' Name: '%s' ConfPos: %f,
-                // %f.\n",
-                //     module_class_name.c_str(), module_name_space.c_str(), module_name.c_str(), module_pos.x,
-                //     module_pos.y);
+                // vislib::sys::Log::DefaultLog.WriteInfo(">>>> Class: '%s' NameSpace: '%s' Name: '%s' ConfPos: %f, %f.\n",
+                //     module_class_name.c_str(), module_name_namespace.c_str(), module_name.c_str(), module_pos.x, module_pos.y);
 
                 // Add module
                 if (graph_ptr != nullptr) {
 
                     // Ensure unique module name is not yet assigned
-                    if (graph_ptr->RenameAssignedModuleName(module_name)) {
+                    if (graph_ptr->UniqueModuleRename(module_name)) {
                         vislib::sys::Log::DefaultLog.WriteWarn(
                             "Project File '%s' line %i: Renamed existing module '%s' while adding module with same "
                             "name. "
@@ -582,6 +582,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                     graph_module->name_space = module_name_namespace;
                     graph_module->is_view_instance = false;
                     graph_module->GUI_SetPosition(module_pos);
+                    graph_ptr->AddModuleGroup(graph_module);
                 }
             }
         }
@@ -1275,6 +1276,11 @@ bool megamol::gui::configurator::GraphManager::separateNameAndNamespace(
                     "Invalid namespace in argument. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
+            // if (name_space.find("::") != std::string::npos) {
+            //      vislib::sys::Log::DefaultLog.WriteError(
+            //         "Invalid namespace in argument. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            //     return false;
+            // }
         }
     }
 

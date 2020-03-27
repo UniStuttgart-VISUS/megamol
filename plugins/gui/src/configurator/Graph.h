@@ -47,6 +47,10 @@ public:
     bool DeleteDisconnectedCalls(void);
     bool DeleteCall(ImGuiID call_uid);
 
+    bool AddGroup(const std::string& group_name);
+    bool DeleteGroup(ImGuiID group_uid);
+    bool AddModuleGroup(const ModulePtrType& module_ptr);
+
     const ModuleGraphVectorType& GetGraphModules(void) { return this->modules; }
     const CallGraphVectorType& GetGraphCalls(void) { return this->calls; }
     GroupGraphVectorType& GetGraphGroups(void) { return this->groups; }
@@ -59,7 +63,9 @@ public:
 
     inline ImGuiID GetUID(void) const { return this->uid; }
 
-    bool RenameAssignedModuleName(const std::string& module_name);
+    bool MainViewPresent(void);
+    
+    bool UniqueModuleRename(const std::string& module_name);
 
     // GUI Presentation -------------------------------------------------------
 
@@ -138,9 +144,7 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    bool add_group(const std::string& group_name);
-    bool delete_group(ImGuiID group_uid);
-    bool group_exists(const std::string& group_name);
+    ImGuiID get_group_uid(const std::string& group_name);
 
     inline const std::string generate_unique_group_name(void) { return ("Group_" + std::to_string(++group_name_uid)); }
     std::string generate_unique_module_name(const std::string& module_name);
