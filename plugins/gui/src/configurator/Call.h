@@ -65,9 +65,7 @@ public:
 
     // GUI Presentation -------------------------------------------------------
     
-    void GUI_Present(StateType& state) {
-        this->present.Present(*this, state);
-    }
+    void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
 
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
     void GUI_SetPresentation(Call::Presentations present) { this->present.presentations = present; }
@@ -84,7 +82,7 @@ private:
 
         ~Presentation(void);
 
-        void Present(Call& inout_call, StateType& state);
+        void Present(Call& inout_call, GraphItemsStateType& state);
 
         Call::Presentations presentations;
         bool label_visible;

@@ -120,7 +120,7 @@ megamol::gui::configurator::Call::Presentation::Presentation(void)
 megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
 
 
-void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::configurator::Call& inout_call, megamol::gui::StateType& state) {
+void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::configurator::Call& inout_call, megamol::gui::GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(

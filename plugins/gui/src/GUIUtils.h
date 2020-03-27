@@ -38,22 +38,6 @@
 namespace megamol {
 namespace gui {
 
-namespace configurator {
-
-// Forward declaration
-class Call;
-class CallSlot;
-class Module;
-class Parameter;
-
-// Pointer types to classes
-typedef std::shared_ptr<Parameter> ParamPtrType;
-typedef std::shared_ptr<Call> CallPtrType;
-typedef std::shared_ptr<CallSlot> CallSlotPtrType;
-typedef std::shared_ptr<Module> ModulePtrType;
-
-}
-
 /********** Defines **********/
 
 #define GUI_INVALID_ID (UINT_MAX)
@@ -63,12 +47,17 @@ typedef std::shared_ptr<Module> ModulePtrType;
 
 /********** Types **********/
 
-/** Hotkey Data Types for Configurator */
+/** Hotkey Data Types (for configurator) */
 typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyDataType;
-
 enum HotkeyIndex : size_t { MODULE_SEARCH = 0, PARAMETER_SEARCH = 1, DELETE_GRAPH_ITEM = 2, SAVE_PROJECT = 3, INDEX_COUNT = 4 };
-
 typedef std::array<HotkeyDataType, HotkeyIndex::INDEX_COUNT> HotKeyArrayType;
+
+namespace configurator {
+// Forward declaration
+class CallSlot;
+// Pointer types to classes
+typedef std::shared_ptr<CallSlot> CallSlotPtrType;
+}
 
 /* Data type holding information of graph canvas. */
 typedef struct _canvas_ {
@@ -77,23 +66,35 @@ typedef struct _canvas_ {
     ImVec2 scrolling;
     float zooming;
     ImVec2 offset;
-} CanvasType;
+} GraphCanvasType;
 
-/* Data type holding information on call slot interaction */
+/* Data type holding information on graph item interaction */
 typedef struct _interact_state_ {
     ImGuiID item_selected_uid;
     ImGuiID module_hovered_uid;
     ImGuiID callslot_hovered_uid;
     ImGuiID callslot_dropped_uid;
     configurator::CallSlotPtrType in_compat_slot_ptr;
-} InteractType;
+} GraphItemsInteractType;
 
-typedef struct _state_ {
-    CanvasType canvas;
-    InteractType interact;
+/* Data type holding shared state of graph items */
+typedef struct _graph_item_state_ {
+    GraphCanvasType canvas;
+    GraphItemsInteractType interact;
     HotKeyArrayType hotkeys;
-} StateType;
+} GraphItemsStateType;
 
+/* Data type holding shared state of graphs */
+typedef struct _graph_state_ {
+    ImFont* font;
+    float child_width;
+    ImGuiID graph_selected_uid;
+    HotKeyArrayType hotkeys;
+    bool delete_graph;
+    bool show_parameter_sidebar;
+} GraphStateType;
+
+/********** Class **********/
 
 /**
  * Utility class for GUIUtils-style widgets.

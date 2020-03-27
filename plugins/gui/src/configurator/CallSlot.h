@@ -74,10 +74,9 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    void GUI_Present(StateType& state) {
-        this->present.Present(*this, state);
-    }
-    void GUI_Update(const CanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
+    void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state);
+     }
+    void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
 
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     bool GUI_GetLabelVisibility(void) { return this->present.label_visible; }
@@ -98,9 +97,9 @@ private:
 
         ~Presentation(void);
 
-        void Present(CallSlot& inout_call_slot, StateType& state);
+        void Present(CallSlot& inout_call_slot, GraphItemsStateType& state);
 
-        void UpdatePosition(CallSlot& inout_call_slot, const CanvasType& in_canvas);
+        void UpdatePosition(CallSlot& inout_call_slot, const GraphCanvasType& in_canvas);
 
         ImVec2 GetPosition(void) { return this->position; }
 

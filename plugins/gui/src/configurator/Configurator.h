@@ -53,26 +53,23 @@ public:
     /*
      * Provide additional font for independent scaling of font used in graph.
      */
-    inline void SetGraphFont(ImFont* graph_font) { this->graph_font = graph_font; }
+    inline void SetGraphFont(ImFont* graph_font) { this->state.font = graph_font; }
 
 private:
     // VARIABLES --------------------------------------------------------------
-
-    HotKeyArrayType hotkeys;
 
     GraphManager graph_manager;
     megamol::gui::FileUtils file_utils;    
     megamol::gui::GUIUtils utils;
 
     int init_state;
-    std::string project_filename;
-    ImGuiID graph_uid;
+    float left_child_width;
     ImGuiID selected_list_module_uid;
-    ImFont* graph_font;
-    float child_split_width;
     ImGuiID add_project_graph_uid;
     bool show_module_list_sidebar;
-    bool show_parameter_sidebar;
+    std::string project_filename;
+
+    GraphStateType state;
 
     // FUNCTIONS --------------------------------------------------------------
 

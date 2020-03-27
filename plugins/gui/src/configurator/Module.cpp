@@ -134,7 +134,7 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
 megamol::gui::configurator::Module::Presentation::~Presentation(void) {}
 
 
-void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::configurator::Module& inout_module, megamol::gui::StateType& state) {
+void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::configurator::Module& inout_module, megamol::gui::GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -325,7 +325,7 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
 
 
 void megamol::gui::configurator::Module::Presentation::UpdateSize(
-    megamol::gui::configurator::Module& inout_mod, const CanvasType& in_canvas) {
+    megamol::gui::configurator::Module& inout_mod, const GraphCanvasType& in_canvas) {
 
     float max_label_length = 0.0f;
     if (this->label_visible) {

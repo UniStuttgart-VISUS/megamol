@@ -43,13 +43,14 @@ bool megamol::gui::configurator::GraphManager::DeleteGraph(ImGuiID graph_uid) {
     for (auto iter = this->graphs.begin(); iter != this->graphs.end(); iter++) {
         if ((*iter)->GetUID() == graph_uid) {
 
-            vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to graph. [%s, %s, line %d]\n",
-                (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteInfo("Deleted graph: %s [%s, %s, line %d]\n",
+                (*iter)->GetName().c_str(), __FILE__, __FUNCTION__, __LINE__);
+
+            //vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to graph. [%s, %s, line %d]\n",
+            //    (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
             assert((*iter).use_count() == 1);
-            (*iter) = nullptr;
+            (*iter).reset();
             this->graphs.erase(iter);
-            // vislib::sys::Log::DefaultLog.WriteInfo("Deleted graph: %s [%s, %s, line %d]\n",
-            //    (*iter)->GetName().c_str(), __FILE__, __FUNCTION__, __LINE__);
 
             return true;
         }
@@ -1296,22 +1297,18 @@ megamol::gui::configurator::GraphManager::Presentation::Presentation(void)
 megamol::gui::configurator::GraphManager::Presentation::~Presentation(void) {}
 
 
-ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
-    megamol::gui::configurator::GraphManager& inout_graph_manager, float in_child_width, ImFont* in_graph_font,
-    HotKeyArrayType& inout_hotkeys, bool& show_parameter_sidebar) {
-
-    ImGuiID retval = GUI_INVALID_ID;
+void megamol::gui::configurator::GraphManager::Presentation::Present(megamol::gui::configurator::GraphManager& inout_graph_manager, GraphStateType& state) {
 
     try {
         if (ImGui::GetCurrentContext() == nullptr) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
+            return;
         }
 
         const auto child_flags = ImGuiWindowFlags_None;
 
-        ImGui::BeginChild("graph_child_window", ImVec2(in_child_width, 0.0f), true, child_flags);
+        ImGui::BeginChild("graph_child_window", ImVec2(state.child_width, 0.0f), true, child_flags);
 
         // Assuming only one closed tab/graph per frame.
         bool popup_close_unsaved = false;
@@ -1323,18 +1320,15 @@ ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
         for (auto& graph : inout_graph_manager.GetGraphs()) {
 
             // Draw graph
-            bool delete_graph = false;
-            auto id = graph->GUI_Present(in_child_width, in_graph_font, inout_hotkeys, delete_graph, show_parameter_sidebar);
-            if (id != GUI_INVALID_ID) {
-                retval = id;
-            }
+            graph->GUI_Present(state);
 
             // Do not delete graph while looping through graphs list
-            if (delete_graph) {
-                this->delete_graph_uid = retval;
+            if (state.delete_graph) {
+                this->delete_graph_uid = state.graph_selected_uid;
                 if (graph->IsDirty()) {
                     popup_close_unsaved = true;
                 }
+                state.delete_graph = false;
             }
 
             // Catch call drop event and create new call
@@ -1381,11 +1375,10 @@ ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return GUI_INVALID_ID;
+        return;
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return GUI_INVALID_ID;
+        return;
     }
 
-    return retval;
 }

@@ -59,9 +59,7 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     // Returns uid of the currently active/drawn graph.
-    ImGuiID GUI_Present(float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys, bool& show_parameter_sidebar) {
-        return this->present.Present(*this, in_child_width, in_graph_font, inout_hotkeys, show_parameter_sidebar);
-    }
+    void GUI_Present(GraphStateType& state) { this->present.Present(*this, state); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -82,8 +80,7 @@ private:
 
         ~Presentation(void);
 
-        ImGuiID Present(GraphManager& inout_graph_manager, float in_child_width, ImFont* in_graph_font,
-            HotKeyArrayType& inout_hotkeys, bool& show_parameter_sidebar);
+        void Present(GraphManager& inout_graph_manager, GraphStateType& state);
 
     private:
         ImGuiID delete_graph_uid;
@@ -109,8 +106,6 @@ private:
     bool separateNameAndNamespace(const std::string& full_name, std::string& name_space, std::string& name);
 
     inline const std::string generate_unique_graph_name(void) { return ("Project_" + std::to_string(++graph_name_uid)); }
-
-    // ------------------------------------------------------------------------
 };
 
 } // namespace configurator

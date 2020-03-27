@@ -64,9 +64,7 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     // Returns uid if graph is the currently active/drawn one.
-    ImGuiID GUI_Present(float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys, bool& out_delete_graph, bool& show_parameter_sidebar) {
-        return this->present.Present(*this, in_child_width, in_graph_font, inout_hotkeys, out_delete_graph, show_parameter_sidebar);
-    }
+    void GUI_Present(GraphStateType& state) { this->present.Present(*this, state); }
 
     inline ImGuiID GUI_GetSelectedItem(void) const { return this->present.GetSelectedItem(); }
     inline ImGuiID GUI_GetDropCallSlot(void) const { return this->present.GetDropCallSlot(); }
@@ -96,11 +94,10 @@ private:
 
         ~Presentation(void);
 
-        ImGuiID Present(Graph& inout_graph, float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys,
-            bool& out_delete_graph, bool& show_parameter_sidebar);
+        void Present(Graph& inout_graph, GraphStateType& state);
 
-        ImGuiID GetSelectedItem(void) const { return this->state.interact.item_selected_uid; }
-        ImGuiID GetDropCallSlot(void) const { return this->state.interact.callslot_dropped_uid; }
+        ImGuiID GetSelectedItem(void) const { return this->graphstate.interact.item_selected_uid; }
+        ImGuiID GetDropCallSlot(void) const { return this->graphstate.interact.callslot_dropped_uid; }
 
         bool GetModuleLabelVisibility(void) const { return this->show_module_names; }
         bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
@@ -113,7 +110,6 @@ private:
         bool params_expert;
 
     private:
-        ImFont* font;
         GUIUtils utils;
 
         bool update;
@@ -127,11 +123,11 @@ private:
         std::string param_name_space;
 
         // State propagated and shared by all graph items.
-        StateType state;
+        GraphItemsStateType graphstate;
 
         void present_menu(Graph& inout_graph);
-        void present_canvas(Graph& inout_graph, float in_child_width);
-        void present_parameters(Graph& inout_graph, float in_child_width);
+        void present_canvas(Graph& inout_graph, float child_width);
+        void present_parameters(Graph& inout_graph, float child_width);
 
         void present_canvas_grid(void);
         void present_canvas_dragged_call(Graph& inout_graph);

@@ -39,9 +39,7 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    void GUI_Present(StateType& state) {
-        this->present.Present(*this, state);
-    }
+    void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
 
 private:
 
@@ -58,9 +56,9 @@ private:
 
         ~Presentation(void);
 
-        void Present(Group& inout_group, StateType& state);
+        void Present(Group& inout_group, GraphItemsStateType& state);
 
-        void UpdateSize(Group& inout_group, const CanvasType& in_canvas);
+        void UpdateSize(Group& inout_group, const GraphCanvasType& in_canvas);
 
     private:
         // Relative position without considering canvas offset and zooming

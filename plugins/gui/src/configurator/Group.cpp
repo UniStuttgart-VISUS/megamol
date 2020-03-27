@@ -82,7 +82,7 @@ megamol::gui::configurator::Group::Presentation::Presentation(void)
 megamol::gui::configurator::Group::Presentation::~Presentation(void) {}
 
 
-void megamol::gui::configurator::Group::Presentation::Present(megamol::gui::configurator::Group& inout_group, StateType& state) {
+void megamol::gui::configurator::Group::Presentation::Present(megamol::gui::configurator::Group& inout_group, GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -161,7 +161,7 @@ void megamol::gui::configurator::Group::Presentation::Present(megamol::gui::conf
             }                                        
             ImGui::EndPopup();
         }     
-        
+
         if ((mouse_clicked && !hovered) || (state.interact.item_selected_uid != inout_group.uid)) {
             this->selected = false;
             if (state.interact.item_selected_uid == inout_group.uid) {
@@ -213,7 +213,7 @@ void megamol::gui::configurator::Group::Presentation::Present(megamol::gui::conf
 
 
 void megamol::gui::configurator::Group::Presentation::UpdateSize(
-    megamol::gui::configurator::Group& inout_group, const CanvasType& in_canvas) {
+    megamol::gui::configurator::Group& inout_group, const GraphCanvasType& in_canvas) {
 
     float group_width = 0.0f;
     float group_height = 0.0f;

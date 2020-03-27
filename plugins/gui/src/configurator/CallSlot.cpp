@@ -255,7 +255,7 @@ megamol::gui::configurator::CallSlot::Presentation::Presentation(void)
 megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
 
-void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::configurator::CallSlot& inout_call_slot, megamol::gui::StateType& state) {
+void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::configurator::CallSlot& inout_call_slot, megamol::gui::GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -437,7 +437,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
 
 
 void megamol::gui::configurator::CallSlot::Presentation::UpdatePosition(
-    megamol::gui::configurator::CallSlot& inout_call_slot, const CanvasType& in_canvas) {
+    megamol::gui::configurator::CallSlot& inout_call_slot, const GraphCanvasType& in_canvas) {
 
     if (inout_call_slot.ParentModuleConnected()) {
         auto slot_count = inout_call_slot.GetParentModule()->GetCallSlots(inout_call_slot.type).size();
