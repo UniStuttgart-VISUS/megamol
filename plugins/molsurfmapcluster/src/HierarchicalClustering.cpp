@@ -64,6 +64,7 @@ HierarchicalClustering::HierarchicalClustering(
         node->id = this->leaves->size() + 1;
         node->level = 0;
         node->height = 0.0f;
+        node->features = new std::vector<double>();
 
         // Set Beziehungen
         node->parent = nullptr;
@@ -91,6 +92,107 @@ HierarchicalClustering::HierarchicalClustering(
     }
 
     // Cluster the Data
+    this->clusterthedata();
+}
+
+HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& pictures, image_calls::Image2DCall* call1,
+    image_calls::Image2DCall* call2, image_calls::Image2DCall* call3, int method, int mode, int linkage, int moments) {
+
+    // Initalize Variables
+    this->cluster = new std::vector<CLUSTERNODE*>();
+    this->root = new std::vector<CLUSTERNODE*>();
+    this->leaves = new std::vector<CLUSTERNODE*>();
+    this->distancemethod = method;
+    this->similaritymethod = method;
+    this->mode = mode;
+    this->linkagemethod = linkage;
+    this->momentsmethode = moments;
+
+    this->clusteringfinished = false;
+
+    std::vector<image_calls::Image2DCall*> calls = {call3, call2, call1};
+    size_t piccount = std::numeric_limits<size_t>::max();
+
+    bool first = true;
+
+    for (const auto call : calls) {
+        if (call == nullptr) continue;
+        pictures.clear();
+        pictures.shrink_to_fit(); // force to clear everything
+
+        // the wishlist is a nullptr, so we want all pictures
+        if (!(*call)(image_calls::Image2DCall::CallForSetWishlist)) {
+            vislib::sys::Log::DefaultLog.WriteError("ImageLoader function call failed");
+            return;
+        }
+        if (!(*call)(image_calls::Image2DCall::CallForWaitForData)) {
+            vislib::sys::Log::DefaultLog.WriteError("ImageLoader function call failed");
+            return;
+        }
+        if (!(*call)(image_calls::Image2DCall::CallForGetData)) {
+            vislib::sys::Log::DefaultLog.WriteError("ImageLoader function call failed");
+            return;
+        }
+        if (!(*call)(image_calls::Image2DCall::CallForWaitForData)) {
+            vislib::sys::Log::DefaultLog.WriteError("ImageLoader function call failed");
+            return;
+        }
+
+        // load the images into the vector
+        auto imcount = call->GetImagePtr()->size();
+        pictures.resize(imcount);
+        uint32_t id = 0;
+        for (auto& p : *call->GetImagePtr()) {
+            pictures[id].width = p.second.Width();
+            pictures[id].height = p.second.Height();
+            pictures[id].path = p.first;
+            pictures[id].pdbid = std::filesystem::path(p.first).stem().string();
+            pictures[id].render = false;
+            pictures[id].popup = false;
+            pictures[id].texture = nullptr;
+            pictures[id].image = &p.second;
+            this->loadValueImage(std::filesystem::path(p.first), pictures[id].valueImage);
+
+            if (first) {
+                CLUSTERNODE* node = new CLUSTERNODE();
+                // Set ID
+                node->id = this->leaves->size() + 1;
+                node->level = 0;
+                node->height = 0.0f;
+                node->features = new std::vector<double>();
+
+                // Set Beziehungen
+                node->parent = nullptr;
+                node->left = nullptr;
+                node->right = nullptr;
+
+                node->similiaritychildren = 1.0;
+
+                // Set Picture
+                PictureData* tmppicture = &(pictures[id]);
+                node->pic = tmppicture;
+
+                // Init dtsiance Matrix
+                node->distances = new std::vector<std::tuple<CLUSTERNODE*, double>>();
+
+                this->leaves->push_back(node);
+            }
+            ++id;
+        }
+
+        if (first) {
+            this->cluster->insert(this->cluster->end(), this->leaves->begin(), this->leaves->end());
+        }
+
+        // add features to the feature vectors
+        for (CLUSTERNODE* node : *this->cluster) {
+            if (this->momentsmethode == 1) HierarchicalClustering::calculateImageMomentsValue(node);
+            if (this->momentsmethode == 2) HierarchicalClustering::calculateColorMomentsValue(node);
+        }
+
+        first = false;
+    }
+
     this->clusterthedata();
 }
 
@@ -160,8 +262,6 @@ void HierarchicalClustering::calculateImageMomentsValue(CLUSTERNODE* node) {
         }
     }
 
-    delete node->features;
-    node->features = new std::vector<double>();
     std::vector<double> nu;
     for (int i = 0; i <= IMAGEORDER; i++) {
         for (int j = 0; j <= IMAGEORDER; j++) {
@@ -193,13 +293,13 @@ void HierarchicalClustering::calculateImageMomentsValue(CLUSTERNODE* node) {
                 (nu[2 * IMAGEORDER + 0] - nu[2]) * (nu[3 * IMAGEORDER + 0] + nu[1 * IMAGEORDER + 2]) *
                     (nu[3] + nu[2 * IMAGEORDER + 1]);
 
-    *node->features = {i1, 0.0, 0.0, i2, i4, i5, i6, i7, i8};
+    node->features->insert(node->features->end(), {i1, 0.0, 0.0, i2, i4, i5, i6, i7, i8});
     bla++;
     vislib::sys::Log::DefaultLog.WriteInfo("Calculated %u", bla);
 }
 
 void HierarchicalClustering::calculateColorMomentsValue(CLUSTERNODE* node) {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "\tAnalyzing %s", node->pic->path);
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "\tAnalyzing %s", node->pic->path.c_str());
 
     PictureData* pic = node->pic;
 
@@ -251,17 +351,8 @@ void HierarchicalClustering::calculateColorMomentsValue(CLUSTERNODE* node) {
     skewness[1] = cbrt((skewnesssum[1] / factor));
     skewness[2] = cbrt((skewnesssum[2] / factor));
 
-    delete node->features;
-    node->features = new std::vector<double>();
-    node->features->push_back(mean[0]);
-    node->features->push_back(mean[1]);
-    node->features->push_back(mean[2]);
-    node->features->push_back(deviation[0]);
-    node->features->push_back(deviation[1]);
-    node->features->push_back(deviation[2]);
-    node->features->push_back(skewness[0]);
-    node->features->push_back(skewness[1]);
-    node->features->push_back(skewness[2]);
+    node->features->insert(node->features->end(),
+        {mean[0], mean[1], mean[2], deviation[0], deviation[1], deviation[2], skewness[0], skewness[1], skewness[2]});
 
     bla++;
     vislib::sys::Log::DefaultLog.WriteInfo("Calculated %u", bla);
@@ -990,3 +1081,28 @@ double HierarchicalClustering::getMaxDistanceOfLeavesToRoot() {
 }
 
 void HierarchicalClustering::setDistanceMultiplier(float multiplier) { this->distancemultiplier = multiplier; }
+
+void HierarchicalClustering::loadValueImage(
+    const std::filesystem::path& originalPicture, std::vector<float>& outValueImage) {
+    auto newpath = originalPicture;
+    newpath = newpath.parent_path();
+    newpath.append(originalPicture.stem().string() + "_values.dat");
+    newpath = newpath.make_preferred();
+
+    auto filesize = std::filesystem::file_size(newpath);
+    std::ifstream file(newpath, std::ios::binary);
+    outValueImage.clear();
+    outValueImage.resize(filesize / sizeof(float));
+    if (file.is_open()) {
+        file.read(reinterpret_cast<char*>(&outValueImage[0]), filesize);
+        file.close();
+        auto minmax = std::minmax_element(outValueImage.begin(), outValueImage.end());
+        auto minele = std::abs(*minmax.first);
+        for (auto& v : outValueImage) {
+            v += minele;
+            v = std::abs(v); // paranoia
+        }
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError("The file \"%s\" could not be opened for reading", newpath.c_str());
+    }
+}

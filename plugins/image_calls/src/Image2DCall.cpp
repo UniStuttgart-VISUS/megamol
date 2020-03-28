@@ -32,7 +32,8 @@ const uint32_t Image2DCall::CallForDeleteData = 4;
 /*
  * Image2DCall::Image2DCall
  */
-Image2DCall::Image2DCall(void) : core::AbstractGetDataCall(), imagePtr(nullptr) {}
+Image2DCall::Image2DCall(void)
+    : core::AbstractGetDataCall(), availablePathsPtr(nullptr), imagePtr(nullptr), wishlistPtr(nullptr) {}
 
 /*
  * Image2DCall::GetImageCount

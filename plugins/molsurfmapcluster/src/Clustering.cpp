@@ -138,10 +138,14 @@ Clustering::~Clustering(void) { this->Release(); }
 /*
  * Clustering::clusterData
  */
-void Clustering::clusterData(image_calls::Image2DCall& cpp) {
+void Clustering::clusterData(image_calls::Image2DCall* cpp, image_calls::Image2DCall* cpp2, image_calls::Image2DCall* cpp3) {
 
-    this->picturecount = cpp.GetImageCount();
-    this->fillPictureDataVector(cpp);
+    // if the last two are null, the data is already present and we can load it
+    // otherwise, the data will be loaded during the HierarchicalClustering
+    if (cpp2 == nullptr && cpp3 == nullptr) {
+        this->picturecount = cpp->GetImageCount();
+        this->fillPictureDataVector(*cpp);
+    }
 
     // Clustering
     vislib::sys::Log::DefaultLog.WriteMsg(
@@ -150,10 +154,16 @@ void Clustering::clusterData(image_calls::Image2DCall& cpp) {
     int bla = mode > 4 ? 1 : 2;
     mode = mode > 4 ? mode - 4 : mode;
 
-    this->clustering = new HierarchicalClustering(this->picdata, this->picturecount,
-        mode, bla,
-        this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
-        this->momentsmethode.Param<core::param::EnumParam>()->Value());
+    if (cpp2 == nullptr && cpp3 == nullptr) {
+        this->clustering = new HierarchicalClustering(this->picdata, this->picturecount, mode, bla,
+            this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
+            this->momentsmethode.Param<core::param::EnumParam>()->Value());
+    } else {
+        this->clustering = new HierarchicalClustering(this->picdata, cpp, cpp2, cpp3, mode, bla,
+            this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
+            this->momentsmethode.Param<core::param::EnumParam>()->Value());
+        this->picturecount = this->picdata.size();
+    }
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Clustering finished", this->picturecount);
 }
 
@@ -197,6 +207,9 @@ bool Clustering::getDataCallback(core::Call& caller) {
     image_calls::Image2DCall* imin = this->inSlotImageLoader.CallAs<image_calls::Image2DCall>();
     bool imageloader = (imin == nullptr);
 
+    image_calls::Image2DCall* imin2 = this->inSlotImageLoader2.CallAs<image_calls::Image2DCall>();
+    image_calls::Image2DCall* imin3 = this->inSlotImageLoader3.CallAs<image_calls::Image2DCall>();
+
     CallClusteringLoader* cclIn = this->inSlotCLUSTERINGLoader.CallAs<CallClusteringLoader>();
     bool clusterloader = (cclIn == nullptr);
 
@@ -211,12 +224,18 @@ bool Clustering::getDataCallback(core::Call& caller) {
             return false;
         } else {
             if (!imageloader) {
-                if (!(*imin)(image_calls::Image2DCall::CallForWaitForData)) return false;
-                if (!(*imin)(image_calls::Image2DCall::CallForGetData)) return false;
-                if (!(*imin)(image_calls::Image2DCall::CallForWaitForData)) return false;
-                auto ptr = imin->GetImagePtr();
-                this->clusterData(*imin);
-                freshlyClustered = true;
+
+                if (imin2 == nullptr && imin3 == nullptr) {
+                    if (!(*imin)(image_calls::Image2DCall::CallForWaitForData)) return false;
+                    if (!(*imin)(image_calls::Image2DCall::CallForGetData)) return false;
+                    if (!(*imin)(image_calls::Image2DCall::CallForWaitForData)) return false;
+                    auto ptr = imin->GetImagePtr();
+                    this->clusterData(imin);
+                    freshlyClustered = true;
+                } else {
+                    this->clusterData(imin, imin2, imin3);
+                    freshlyClustered = true;
+                }
             }
 
             if (!clusterloader) {
@@ -377,6 +396,9 @@ bool Clustering::getExtentCallback(core::Call& caller) {
     image_calls::Image2DCall* cppIn = this->inSlotImageLoader.CallAs<image_calls::Image2DCall>();
     bool pngpicloader = (cppIn == nullptr);
 
+    image_calls::Image2DCall* imin2 = this->inSlotImageLoader2.CallAs<image_calls::Image2DCall>();
+    image_calls::Image2DCall* imin3 = this->inSlotImageLoader3.CallAs<image_calls::Image2DCall>();
+
     CallClusteringLoader* cclIn = this->inSlotCLUSTERINGLoader.CallAs<CallClusteringLoader>();
     bool clusterloader = (cclIn == nullptr);
 
@@ -385,6 +407,19 @@ bool Clustering::getExtentCallback(core::Call& caller) {
     } else {
         if (!pngpicloader) {
             if (!(*cppIn)(image_calls::Image2DCall::CallForGetMetaData)) return false;
+            
+            bool bothNull = true;
+            if (imin2 != nullptr) {
+                if (!(*imin2)(image_calls::Image2DCall::CallForGetMetaData)) return false;
+                bothNull = false;
+            }
+            if (imin3 != nullptr) {
+                if (!(*imin3)(image_calls::Image2DCall::CallForGetMetaData)) return false;
+                bothNull = false;
+            }
+            if (bothNull) {
+                if (!(*cppIn)(image_calls::Image2DCall::CallForSetWishlist)) return false;
+            }
         }
 
         if (!clusterloader) {

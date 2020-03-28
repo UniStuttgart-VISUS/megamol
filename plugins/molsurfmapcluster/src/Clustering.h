@@ -75,7 +75,7 @@ private:
     /**
      * Ensures that the data is loaded
      */
-    void clusterData(image_calls::Image2DCall&);
+    void clusterData(image_calls::Image2DCall*, image_calls::Image2DCall* = nullptr, image_calls::Image2DCall* = nullptr);
     void clusterData(CallClusteringLoader*);
 
     /**

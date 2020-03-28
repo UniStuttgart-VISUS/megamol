@@ -14,6 +14,7 @@
 
 #include <tuple>
 #include <vector>
+#include <filesystem>
 
 #include "PictureData.h"
 
@@ -53,10 +54,13 @@ public:
 
     /** Constructor */
     HierarchicalClustering(void);
-    HierarchicalClustering(std::vector<PictureData>&, SIZE_T,int = 2, int = 1, int = 1,
+    HierarchicalClustering(std::vector<PictureData>&, SIZE_T, int = 2, int = 1, int = 1,
         int = 1); // Standard Euclidian Distance, Avarage Linkage, Imge-Moments
-    HierarchicalClustering(
-        HierarchicalClustering::CLUSTERNODE*, SIZE_T, int = 2, int = 1, int = 1, int = 1);
+
+    HierarchicalClustering(std::vector<PictureData>&, image_calls::Image2DCall* = nullptr,
+        image_calls::Image2DCall* = nullptr, image_calls::Image2DCall* = nullptr, int = 2, int = 1, int = 1, int = 1);
+
+    HierarchicalClustering(HierarchicalClustering::CLUSTERNODE*, SIZE_T, int = 2, int = 1, int = 1, int = 1);
 
     /** Destructor */
     virtual ~HierarchicalClustering(void);
@@ -114,17 +118,20 @@ private:
 
     CLUSTERNODE* mergeCluster(CLUSTERNODE* cluster1, CLUSTERNODE* cluster2);
 
-    PictureData* findNearestPicture(std::vector<double>* features, std::vector<HierarchicalClustering::CLUSTERNODE*>* leftleaves,
+    PictureData* findNearestPicture(std::vector<double>* features,
+        std::vector<HierarchicalClustering::CLUSTERNODE*>* leftleaves,
         std::vector<HierarchicalClustering::CLUSTERNODE*>* rightleaves);
 
     HierarchicalClustering::CLUSTERNODE* getRootOfNode(HierarchicalClustering::CLUSTERNODE*);
 
     void calculatePCA(std::vector<HierarchicalClustering::CLUSTERNODE*>*);
 
+    void loadValueImage(const std::filesystem::path& originalPicture, std::vector<float>& outValueImage);
+
     static uint32_t bla;
 };
 
-} // namespace MolSurfMapCluster
+} // namespace molsurfmapcluster
 } // namespace megamol
 
 #endif
