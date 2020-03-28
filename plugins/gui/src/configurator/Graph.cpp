@@ -108,7 +108,7 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
                     if (group.Empty()) {
                         this->DeleteGroup(group.uid);
                     }
-                }
+                }   
 
                 if ((*iter).use_count() > 1) {
                     vislib::sys::Log::DefaultLog.WriteError("Unclean deletion. Found %i references pointing to module. [%s, %s, line %d]\n",

@@ -155,8 +155,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     bool popup_save_project_file = false;
     bool popup_save_group_file = group_save;
     bool popup_load_file = false;
-    bool popup_help = false;
-
+    
     // Check hotkeys
     if (std::get<1>(this->state.hotkeys[HotkeyIndex::MODULE_SEARCH])) {
         this->show_module_list_sidebar = true; // !this->show_module_list_sidebar
@@ -233,8 +232,22 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 
         ImGui::SameLine();
 
-        if (ImGui::MenuItem("Help")) {
-            popup_help = true;
+        if (ImGui::BeginMenu("Help")) {
+            const std::string docu_link = "https://github.com/UniStuttgart-VISUS/megamol/tree/master/plugins/gui#configurator";
+            if (ImGui::Button("Readme (Copy Link)")) {
+    #ifdef GUI_USE_GLFW
+                auto glfw_win = ::glfwGetCurrentContext();
+                ::glfwSetClipboardString(glfw_win, docu_link.c_str());
+    #elif _WIN32
+                ImGui::SetClipboardText(docu_link.c_str());
+    #else // LINUX
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                vislib::sys::Log::DefaultLog.WriteInfo("Readme Link:\n%s", docu_link.c_str());
+    #endif
+            }
+
+            ImGui::EndMenu();      
         }
 
         // Info text ----------------------------------------------------------
@@ -270,25 +283,6 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     }
     this->utils.MinimalPopUp("Failed to Save Group", popup_failed,
         "See console log output for more information.", "", confirmed, "Cancel", aborted);
-
-    // HELP pop-up
-    std::string info_text = "Add Module from Stock List\n"
-                            "    - [Double Left Click] on Module in Stock List\n"
-                            "    - [Richt Click] on Module in Stock List -> Context Menu: Add\n\n"
-                            "Delete Module/Call\n"
-                            "    - Select Module/Call with [Left Click] an press [Delete]\n"
-                            "    - [Richt Click] on Module/Call -> Context Menu: Delete\n\n"
-                            "Rename Project/Module\n"
-                            "    - [Richt Click] on Project Tab/Module -> Context Menu: Rename\n\n"
-                            "Collapse/Expand Splitter\n"
-                            "    - [Double Richt Click] on Splitter\n\n"
-                            "Create Call\n"
-                            "    - Drag and drop Call from Call Slot to other highlighted compatible Call Slot.\n\n"
-                            "Zoom Graph\n"
-                            "    - Mouse Wheel\n\n"
-                            "Scroll Graph\n"
-                            "    - Middle Mouse Button\n\n";
-    this->utils.MinimalPopUp("Additional Options", popup_help, info_text, "", confirmed, "Cancel", aborted);
 }
 
 

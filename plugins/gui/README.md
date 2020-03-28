@@ -97,11 +97,39 @@ The menu of the configurator window provides the following options:
 * `View`
     * `Modules Sidebar` (`Ctrl + Shift + m`) Show/Hide sidebar with module stock list.
     * `Parameter Sidebar` (`Ctrl + Shift + p`) Show/Hide sidebar with parameters of currently selected module.
-* `Help` Information on additionally available options.
+* `Help` Link to this Readme.
 
 **NOTE:**\
 Parameter values in lua command `mmSetParamValue` must have the value enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are not supported.
 
+#### Additional Options
+
+* Add Module from Stock List
+    * `Double Left Click` on Module in Stock List
+    * `Right Click` on Module in Stock List -> Context Menu: Add
+    
+* Delete Module/Call/Group
+    * Select with `Left Click` an press `Delete`
+    * `Right Click` Context Menu: Delete
+    
+* Rename Project/Module/Group
+    * `Right Click` Context Menu: Rename
+    
+* Collapse/Expand Splitter
+    * `Double Right Click` on Splitter
+    
+* Create Call
+    * Drag and Drop Call from one Call Slot to other highlighted compatible Call Slot.
+    
+* Zoom Graph
+    * `Mouse Wheel`
+    
+* Scroll Graph
+    * `Middle Mouse Button`
+    
+* **Module Grouping**
+    * ...                
+                            
 ![configurator demo picture](configurator.png)
 
 ---
