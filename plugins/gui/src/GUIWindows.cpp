@@ -103,6 +103,7 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceTime) {
 
     ImGui::SetCurrentContext(this->context);
+    this->core_instance->SetCurrentImGuiContext(this->context);
     if (this->context == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);

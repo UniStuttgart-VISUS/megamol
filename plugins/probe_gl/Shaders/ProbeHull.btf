@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="ProbeHull">
+    <include file="common"/>
+
+    <shader name="vertex">
+        <snippet type="version">450</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Main"             type="file">hull/dfr_hull_vertex.glsl</snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">450</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Main"             type="file">hull/dfr_hull_fragment.glsl</snippet>
+    </shader>
+
+    <shader name="tessellation_control">
+        <snippet type="version">450</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Main"             type="file">hull/dfr_hull_tessCtrl.glsl</snippet>
+    </shader>
+
+    <shader name="tessellation_evaluation">
+        <snippet type="version">450</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Main"             type="file">hull/dfr_hull_tessEval.glsl</snippet>
+    </shader>
+
+</btf>

@@ -53,6 +53,8 @@ protected:
     virtual bool getMetaDataCallback(core::Call& caller);
 
 private:
+    uint32_t m_version;
+
     /** The btf file name */
     core::param::ParamSlot m_btf_filename_slot;
 };

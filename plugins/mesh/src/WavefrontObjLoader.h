@@ -78,6 +78,8 @@ private:
         std::vector<tinyobj::material_t> materials;
     };
 
+    uint32_t m_version;
+
     /**
      * Representation of obj model as loaded by tinyobjloader
      */

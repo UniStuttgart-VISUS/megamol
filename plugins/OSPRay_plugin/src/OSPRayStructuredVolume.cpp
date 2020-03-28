@@ -92,6 +92,9 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     // fill material container
     this->processMaterial();
 
+    // get transformation parameter
+    //this->processTransformation();
+
     // read Data, calculate  shape parameters, fill data vectors
     auto os = dynamic_cast<CallOSPRayStructure*>(&call);
     auto cd = this->getDataSlot.CallAs<megamol::core::misc::VolumetricDataCall>();
@@ -100,7 +103,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     this->structureContainer.dataChanged = false;
     if (cd == nullptr) return false;
     if (cgtf == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("OSPRayStructuredVolume: no transferfunction connected.");
+        vislib::sys::Log::DefaultLog.WriteError("[OSPRayStructuredVolume] No transferfunction connected.");
         return false;
     }
 
@@ -113,7 +116,12 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     } else {
         cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
     }
-    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty() || cgtf->IsDirty()) {
+    
+    // do the callback to set the dirty flag
+    if (!(*cgtf)(0)) return false;
+    
+    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty() ||
+        cgtf->IsDirty()) {
         this->datahash = cd->DataHash();
         this->time = os->getTime();
         this->structureContainer.dataChanged = true;
@@ -313,7 +321,8 @@ bool OSPRayStructuredVolume::getExtends(megamol::core::Call& call) {
     if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
     if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
 
-    this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes>(cd->AccessBoundingBoxes());
+    this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes_2>();
+    this->extendContainer.boundingBox->SetBoundingBox(cd->AccessBoundingBoxes().ObjectSpaceBBox());
     this->extendContainer.timeFramesCount = cd->FrameCount();
     this->extendContainer.isValid = true;
 
