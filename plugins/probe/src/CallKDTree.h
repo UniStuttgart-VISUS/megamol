@@ -6,7 +6,7 @@
 
 #pragma once
 #include "mmcore/CallGeneric.h"
-#include "ExtractMesh.h"
+#include "kdtree.h"
 
 namespace megamol {
 namespace probe {
