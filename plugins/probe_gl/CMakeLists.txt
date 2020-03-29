@@ -14,6 +14,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_PROBE_PLUGIN BUILD_MESH_PLUGIN" CACHE INTERNAL "")
 
   # Collect source files
+  require_external(Eigen)
+  require_external(nanoflann)
   require_external(imgui)
   set_source_files_properties(${imgui_files} PROPERTIES GENERATED TRUE)
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
@@ -28,7 +30,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core probe mesh PUBLIC imgui)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core Eigen nanoflann probe mesh PUBLIC imgui)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
