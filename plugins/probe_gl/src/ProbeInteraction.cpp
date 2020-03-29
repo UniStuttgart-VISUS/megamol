@@ -19,6 +19,12 @@ megamol::probe_gl::ProbeInteraction::ProbeInteraction()
     , m_cursor_x_lastRightClick(0)
     , m_cursor_y_lastRightClick(0)
     , m_open_context_menu(false)
+    , m_open_showMenu_dropdown(false)
+    , m_open_probeMenu_dropdown(false)
+    , m_open_dataMenu_dropdown(false)
+    , m_show_probes(true)
+    , m_show_hull(true)
+    , m_show_glyphs(true)
     , m_interactions(new ProbeInteractionCollection())
     , last_active_probe_id(-1)
     , m_probe_fbo_slot("getProbeFBO", "")
@@ -262,8 +268,7 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
     if (m_open_context_menu)
     {
         bool my_tool_active = true;
-        float my_color[4] = {0.0, 0.0, 0.0, 0.0};
-
+ 
         auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
         if (ctx != nullptr) {
             ImGui::SetCurrentContext(ctx);
@@ -288,6 +293,80 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
             }
 
             ImGui::End();
+        }
+    }
+
+    // Add toolbar in Blender style
+    {
+        bool my_tool_active = true;
+
+        auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
+        if (ctx != nullptr) {
+            ImGui::SetCurrentContext(ctx);
+
+            ImGuiIO& io = ImGui::GetIO();
+            ImVec2 viewport = ImVec2(io.DisplaySize.x, io.DisplaySize.y);
+
+            ImGui::SetNextWindowPos(ImVec2(300, 20));
+            ImGui::Begin(
+                "ShowMenuButton", &my_tool_active, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
+            if (ImGui::Button("Show",ImVec2(75,20))) {
+                m_open_showMenu_dropdown = !m_open_showMenu_dropdown;
+            }
+            ImGui::End();
+
+            ImGui::SetNextWindowPos(ImVec2(400, 20));
+            ImGui::Begin("ProbeMenuButton", &my_tool_active,
+                ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
+            if (ImGui::Button("Probe", ImVec2(75, 20))) {
+                m_open_probeMenu_dropdown = !m_open_probeMenu_dropdown;
+            }
+            ImGui::End();
+
+            ImGui::SetNextWindowPos(ImVec2(500, 20));
+            ImGui::Begin("DataMenuButton", &my_tool_active,
+                ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
+            if (ImGui::Button("Data", ImVec2(75, 20))) {
+                m_open_dataMenu_dropdown = !m_open_dataMenu_dropdown;
+            }
+            ImGui::End();
+
+
+            if (m_open_showMenu_dropdown) {
+
+                ImGui::SetNextWindowPos(ImVec2(310, 50));
+
+                ImGui::Begin("ShowDropdown", &my_tool_active,
+                    ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
+
+                if (ImGui::Button("Probes", ImVec2(75, 20))) {
+                    m_open_showMenu_dropdown = false;
+                    m_show_probes = !m_show_probes;
+
+                    m_interactions->accessPendingManipulations().push_back(ProbeManipulation{
+                        InteractionType::TOGGLE_SHOW_PROBES, static_cast<uint32_t>(last_active_probe_id), 0, 0, 0});
+                }
+                ImGui::SameLine();
+                ImGui::Checkbox("", &m_show_probes);
+
+                if (ImGui::Button("Hull", ImVec2(75, 20))) {
+                    m_open_showMenu_dropdown = false;
+                    m_show_hull = !m_show_hull;
+                }
+                ImGui::SameLine();
+                ImGui::Checkbox("", &m_show_hull);
+
+                if (ImGui::Button("Glyphs", ImVec2(75, 20))) {
+                    m_open_showMenu_dropdown = false;
+                    m_show_glyphs = !m_show_glyphs;
+                }
+                ImGui::SameLine();
+                ImGui::Checkbox("", &m_show_glyphs);
+
+                ImGui::Separator();
+
+                ImGui::End();
+            }
         }
     }
 

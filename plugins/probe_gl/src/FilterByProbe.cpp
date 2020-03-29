@@ -212,7 +212,7 @@ bool FilterByProbe::Render(core::view::CallRender3D_2& call) {
 
 
                 } else {
-                    ++itr;
+                    //
                 }
             }
         }

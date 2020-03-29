@@ -365,7 +365,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
                     // rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
                 } else {
-                    ++itr;
+                    // what else is there to do?
                 }
             }
         }

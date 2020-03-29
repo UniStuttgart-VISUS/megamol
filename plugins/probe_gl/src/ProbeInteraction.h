@@ -110,6 +110,14 @@ private:
 
     bool m_open_context_menu;
 
+    bool m_open_showMenu_dropdown;
+    bool m_open_probeMenu_dropdown;
+    bool m_open_dataMenu_dropdown;
+
+    bool m_show_probes;
+    bool m_show_hull;
+    bool m_show_glyphs;
+
     /** Map storing the pressed state of all mouse buttons */
     std::map<core::view::MouseButton, bool> m_mouse_button_states = {
         {core::view::MouseButton::BUTTON_1, false},
