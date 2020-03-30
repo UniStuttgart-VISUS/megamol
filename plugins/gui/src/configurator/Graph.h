@@ -15,9 +15,9 @@
 
 #include "Call.h"
 #include "CallSlot.h"
+#include "Group.h"
 #include "Module.h"
 #include "Parameter.h"
-#include "Group.h"
 
 #ifdef GUI_USE_FILESYSTEM
 #    include "FileUtils.h"
@@ -35,7 +35,6 @@ typedef std::vector<Group> GroupGraphVectorType;
 
 class Graph {
 public:
-
     Graph(const std::string& graph_name);
 
     virtual ~Graph(void);
@@ -44,7 +43,7 @@ public:
     bool DeleteModule(ImGuiID module_uid);
     const ModulePtrVectorType& GetGraphModules(void) { return this->modules; }
     const ModulePtrType& GetModule(ImGuiID module_uid);
-    
+
     bool AddCall(const CallStockVectorType& stock_calls, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
     bool DeleteCall(ImGuiID call_uid);
 
@@ -61,7 +60,7 @@ public:
     inline ImGuiID GetUID(void) const { return this->uid; }
 
     bool IsMainViewSet(void);
-    
+
     bool UniqueModuleRename(const std::string& module_name);
 
     // GUI Presentation -------------------------------------------------------
@@ -76,7 +75,6 @@ public:
     inline bool GUI_SaveGroup(void) const { return this->present.SaveGroup(); }
 
 private:
-
     // VARIABLES --------------------------------------------------------------
 
     static ImGuiID generated_uid;
@@ -131,7 +129,7 @@ private:
         std::string param_name_space;
 
         // State propagated and shared by all graph items.
-        GraphItemsStateType graphstate;
+        megamol::gui::GraphItemsStateType graphstate;
 
         void present_menu(Graph& inout_graph);
         void present_canvas(Graph& inout_graph, float child_width);

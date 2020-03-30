@@ -18,7 +18,14 @@ ImGuiID megamol::gui::configurator::Graph::generated_uid = 0; /// must be greate
 
 
 megamol::gui::configurator::Graph::Graph(const std::string& graph_name)
-    : modules(), calls(), groups(), uid(this->generate_unique_id()), name(graph_name), dirty_flag(true), group_name_uid(0), present() {}
+    : modules()
+    , calls()
+    , groups()
+    , uid(this->generate_unique_id())
+    , name(graph_name)
+    , dirty_flag(true)
+    , group_name_uid(0)
+    , present() {}
 
 
 megamol::gui::configurator::Graph::~Graph(void) {}
@@ -73,7 +80,8 @@ ImGuiID megamol::gui::configurator::Graph::AddModule(
                 }
 
                 this->modules.emplace_back(mod_ptr);
-                vislib::sys::Log::DefaultLog.WriteInfo("Added module '%s' to project '%s'.\n", mod_ptr->class_name.c_str(), this->name.c_str());
+                vislib::sys::Log::DefaultLog.WriteInfo(
+                    "Added module '%s' to project '%s'.\n", mod_ptr->class_name.c_str(), this->name.c_str());
 
                 this->dirty_flag = true;
 
@@ -109,17 +117,19 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
                     if (group.Empty()) {
                         this->DeleteGroup(group.uid);
                     }
-                }   
-                
+                }
+
                 // Second remove call slots
                 (*iter)->RemoveAllCallSlots();
 
                 if ((*iter).use_count() > 1) {
-                    vislib::sys::Log::DefaultLog.WriteError("Unclean deletion. Found %i references pointing to module. [%s, %s, line %d]\n",
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "Unclean deletion. Found %i references pointing to module. [%s, %s, line %d]\n",
                         (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 }
 
-                vislib::sys::Log::DefaultLog.WriteInfo("Deleted module '%s' from  project '%s'.\n", (*iter)->class_name.c_str(), this->name.c_str());
+                vislib::sys::Log::DefaultLog.WriteInfo(
+                    "Deleted module '%s' from  project '%s'.\n", (*iter)->class_name.c_str(), this->name.c_str());
                 (*iter).reset();
                 this->modules.erase(iter);
 
@@ -138,21 +148,22 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
         return false;
     }
 
-    //vislib::sys::Log::DefaultLog.WriteWarn("Invalid module uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    // vislib::sys::Log::DefaultLog.WriteWarn("Invalid module uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+    // __LINE__);
     return false;
 }
 
 
 const ModulePtrType& megamol::gui::configurator::Graph::GetModule(ImGuiID module_uid) {
-    
+
     for (auto& mod : this->modules) {
         if (mod->uid == module_uid) {
             return mod;
         }
     }
-    return nullptr;    
+    return nullptr;
 }
-    
+
 
 bool megamol::gui::configurator::Graph::AddCall(
     const CallStockVectorType& stock_calls, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2) {
@@ -187,7 +198,8 @@ bool megamol::gui::configurator::Graph::AddCall(
             call_slot_2->ConnectCall(call_ptr)) {
 
             this->calls.emplace_back(call_ptr);
-            vislib::sys::Log::DefaultLog.WriteInfo("Added call '%s' to project '%s'.\n", call_ptr->class_name.c_str(), this->name.c_str());
+            vislib::sys::Log::DefaultLog.WriteInfo(
+                "Added call '%s' to project '%s'.\n", call_ptr->class_name.c_str(), this->name.c_str());
 
             this->dirty_flag = true;
         } else {
@@ -243,11 +255,13 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
                 (*iter)->DisConnectCallSlots();
 
                 if ((*iter).use_count() > 1) {
-                    vislib::sys::Log::DefaultLog.WriteError("Unclean deletion. Found %i references pointing to call. [%s, %s, line %d]\n",
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "Unclean deletion. Found %i references pointing to call. [%s, %s, line %d]\n",
                         (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 }
 
-                vislib::sys::Log::DefaultLog.WriteInfo("Deleted call '%s' from  project '%s'.\n", (*iter)->class_name.c_str(), this->name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                vislib::sys::Log::DefaultLog.WriteInfo("Deleted call '%s' from  project '%s'.\n",
+                    (*iter)->class_name.c_str(), this->name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 (*iter).reset();
                 this->calls.erase(iter);
 
@@ -264,7 +278,8 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
         return false;
     }
 
-    //vislib::sys::Log::DefaultLog.WriteWarn("Invalid call uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    // vislib::sys::Log::DefaultLog.WriteWarn("Invalid call uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+    // __LINE__);
     return false;
 }
 
@@ -295,7 +310,7 @@ bool megamol::gui::configurator::Graph::IsMainViewSet(void) {
 
 ImGuiID megamol::gui::configurator::Graph::AddGroup(void) {
 
-   return this->add_group(this->generate_unique_group_name());
+    return this->add_group(this->generate_unique_group_name());
 }
 
 
@@ -331,13 +346,13 @@ bool megamol::gui::configurator::Graph::DeleteGroup(ImGuiID group_uid) {
         for (auto& group : tmp_groups) {
             if (group.uid != group_uid) {
                 this->groups.emplace_back(group);
-            }
-            else {
+            } else {
                 this->present.ApplyUpdate();
-                vislib::sys::Log::DefaultLog.WriteInfo("Deleted group '%s' from  project '%s'.\n",group.name.c_str(), this->name.c_str());  
+                vislib::sys::Log::DefaultLog.WriteInfo(
+                    "Deleted group '%s' from  project '%s'.\n", group.name.c_str(), this->name.c_str());
                 found_group = true;
             }
-        } 
+        }
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -348,9 +363,10 @@ bool megamol::gui::configurator::Graph::DeleteGroup(ImGuiID group_uid) {
     }
 
     if (!found_group) {
-        vislib::sys::Log::DefaultLog.WriteWarn("Invalid group uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "Invalid group uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
-    }           
+    }
     return true;
 }
 
@@ -359,7 +375,7 @@ ImGuiID megamol::gui::configurator::Graph::add_group(const std::string& group_na
 
     try {
         // Only create new group if group_name is not equal to empty global namespace
-        ///  XXX or if group name equals namespace of graph 
+        ///  XXX or if group name equals namespace of graph
         if (!group_name.empty()) { /// XXX && (group_name != this->name)) {
 
             ImGuiID group_id = this->generate_unique_id();
@@ -367,7 +383,8 @@ ImGuiID megamol::gui::configurator::Graph::add_group(const std::string& group_na
             group.name = group_name;
             this->groups.emplace_back(group);
 
-            vislib::sys::Log::DefaultLog.WriteInfo("Added group '%s' to project '%s'.\n", group.name.c_str(), this->name.c_str());
+            vislib::sys::Log::DefaultLog.WriteInfo(
+                "Added group '%s' to project '%s'.\n", group.name.c_str(), this->name.c_str());
             return group_id;
         }
 
@@ -454,14 +471,15 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
 
     this->graphstate.groups.clear();
 
-    //this->graphstate.hotkeys are already initialzed
+    // this->graphstate.hotkeys are already initialzed
 }
 
 
 megamol::gui::configurator::Graph::Presentation::~Presentation(void) {}
 
 
-void megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::configurator::Graph& inout_graph, GraphStateType& state) {
+void megamol::gui::configurator::Graph::Presentation::Present(
+    megamol::gui::configurator::Graph& inout_graph, GraphStateType& state) {
 
     try {
         if (ImGui::GetCurrentContext() == nullptr) {
@@ -501,7 +519,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::conf
                 }
             }
         }
-        this->graphstate.interact.callslot_dropped_uid = GUI_INVALID_ID;        
+        this->graphstate.interact.callslot_dropped_uid = GUI_INVALID_ID;
 
         // Tab showing this graph ---------------
         ImGuiTabItemFlags tab_flags = ImGuiTabItemFlags_None;
@@ -523,34 +541,34 @@ void megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::conf
             if (this->layout_current_graph) {
                 this->layout_graph(inout_graph);
                 this->layout_current_graph = false;
-                this->update = true;                
+                this->update = true;
             }
 
             // Draw -----------------------------
             this->present_menu(inout_graph);
 
             float child_width_auto = 0.0f;
-            if (state.show_parameter_sidebar) { 
+            if (state.show_parameter_sidebar) {
                 this->utils.VerticalSplitter(
                     GUIUtils::FixedSplitterSide::RIGHT, child_width_auto, this->child_split_width);
             }
 
             if (state.font == nullptr) {
                 vislib::sys::Log::DefaultLog.WriteError(
-                    "Found no font for configurator. Provide font via GuiView::SetGraphFont(). [%s, %s, line %d]\n", __FILE__,
-                    __FUNCTION__, __LINE__);
+                    "Found no font for configurator. Provide font via GuiView::SetGraphFont(). [%s, %s, line %d]\n",
+                    __FILE__, __FUNCTION__, __LINE__);
                 return;
             }
             ImGui::PushFont(state.font);
             this->present_canvas(inout_graph, child_width_auto);
-            ImGui::PopFont();  
+            ImGui::PopFont();
 
-            if (state.show_parameter_sidebar) { 
+            if (state.show_parameter_sidebar) {
                 ImGui::SameLine();
                 this->present_parameters(inout_graph, this->child_split_width);
             }
 
-            state.graph_selected_uid = inout_graph.GetUID();  
+            state.graph_selected_uid = inout_graph.GetUID();
             ImGui::EndTabItem();
         }
 
@@ -574,7 +592,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::conf
                         if (group.uid == group_uid) {
                             group.AddModule(module_ptr);
                         }
-                    }    
+                    }
                 }
             }
             this->graphstate.interact.module_add_group_uid.first = GUI_INVALID_ID;
@@ -603,21 +621,21 @@ void megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::conf
                     }
                 }
             }
-            if (callslot_ptr != nullptr) {     
+            if (callslot_ptr != nullptr) {
                 ImGuiID module_uid = this->graphstate.interact.callslot_add_group_uid.second;
                 if (module_uid != GUI_INVALID_ID) {
                     for (auto& group : inout_graph.get_groups()) {
                         if (group.ContainsModule(module_uid)) {
                             group.AddCallSlot(callslot_ptr);
                         }
-                    }    
+                    }
                 }
             }
             this->graphstate.interact.callslot_add_group_uid.first = GUI_INVALID_ID;
             this->graphstate.interact.callslot_add_group_uid.second = GUI_INVALID_ID;
-        }         
-        // Remove call slot from group interface  
-        callslot_uid  = this->graphstate.interact.callslot_remove_group_uid;
+        }
+        // Remove call slot from group interface
+        callslot_uid = this->graphstate.interact.callslot_remove_group_uid;
         if (callslot_uid != GUI_INVALID_ID) {
             for (auto& group : inout_graph.get_groups()) {
                 if (group.ContainsCallSlot(callslot_uid)) {
@@ -625,9 +643,9 @@ void megamol::gui::configurator::Graph::Presentation::Present(megamol::gui::conf
                 }
             }
             this->graphstate.interact.callslot_remove_group_uid = GUI_INVALID_ID;
-        }        
-        // Process module/call/group deletion 
-        if (std::get<1>(this->graphstate.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM])) {
+        }
+        // Process module/call/group deletion
+        if (std::get<1>(this->graphstate.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM])) {
             if (this->graphstate.interact.module_selected_uid != GUI_INVALID_ID) {
                 inout_graph.DeleteModule(this->graphstate.interact.module_selected_uid);
             }
@@ -756,7 +774,8 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     ImGuiStyle& style = ImGui::GetStyle();
 
     // Colors
-    const ImU32 COLOR_CANVAS_BACKGROUND = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ChildBg]); // ImGuiCol_ScrollbarBg ImGuiCol_ScrollbarGrab ImGuiCol_Border
+    const ImU32 COLOR_CANVAS_BACKGROUND = ImGui::ColorConvertFloat4ToU32(
+        style.Colors[ImGuiCol_ChildBg]); // ImGuiCol_ScrollbarBg ImGuiCol_ScrollbarGrab ImGuiCol_Border
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, COLOR_CANVAS_BACKGROUND);
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
@@ -766,7 +785,8 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
 
     // Update canvas position
     ImVec2 new_position = ImGui::GetWindowPos();
-    if ((this->graphstate.canvas.position.x != new_position.x) || (this->graphstate.canvas.position.y != new_position.y)) {
+    if ((this->graphstate.canvas.position.x != new_position.x) ||
+        (this->graphstate.canvas.position.y != new_position.y)) {
         this->update = true;
     }
     this->graphstate.canvas.position = new_position;
@@ -777,11 +797,12 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     }
     this->graphstate.canvas.size = new_size;
     // Update canvas offset
-    ImVec2 new_offset = this->graphstate.canvas.position + (this->graphstate.canvas.scrolling * this->graphstate.canvas.zooming);
+    ImVec2 new_offset =
+        this->graphstate.canvas.position + (this->graphstate.canvas.scrolling * this->graphstate.canvas.zooming);
     if ((this->graphstate.canvas.offset.x != new_offset.x) || (this->graphstate.canvas.offset.y != new_offset.y)) {
         this->update = true;
     }
-    this->graphstate.canvas.offset = new_offset;  
+    this->graphstate.canvas.offset = new_offset;
 
     // Update module size and call slot positions
     if (this->update) {
@@ -790,11 +811,12 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
         }
         for (auto& group : inout_graph.get_groups()) {
             group.GUI_Update(this->graphstate.canvas);
-        }        
+        }
         this->update = false;
     }
 
-    ImGui::PushClipRect(this->graphstate.canvas.position, this->graphstate.canvas.position + this->graphstate.canvas.size, true);
+    ImGui::PushClipRect(
+        this->graphstate.canvas.position, this->graphstate.canvas.position + this->graphstate.canvas.size, true);
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
 
@@ -807,7 +829,6 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     // 2] GROUPS --------------------------------
     for (auto& group : inout_graph.get_groups()) {
         group.GUI_Present(this->graphstate);
-
     }
 
     // 3] MODULES and CALL SLOTS ----------------
@@ -821,7 +842,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     }
 
     // 5] Dragged CALL --------------------------
-    this->present_canvas_dragged_call(inout_graph);     
+    this->present_canvas_dragged_call(inout_graph);
 
     ImGui::PopClipRect();
 
@@ -832,7 +853,8 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
 
         // Scrolling (2 = Middle Mouse Button)
         if (ImGui::IsMouseDragging(2, 0.0f)) {
-            this->graphstate.canvas.scrolling = this->graphstate.canvas.scrolling + ImGui::GetIO().MouseDelta / this->graphstate.canvas.zooming;
+            this->graphstate.canvas.scrolling =
+                this->graphstate.canvas.scrolling + ImGui::GetIO().MouseDelta / this->graphstate.canvas.zooming;
             this->update = true;
         }
 
@@ -842,23 +864,25 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
             ImVec2 current_mouse_pos;
             if (this->reset_zooming) {
                 this->graphstate.canvas.zooming = 1.0f;
-                current_mouse_pos = this->graphstate.canvas.offset - (this->graphstate.canvas.position + this->graphstate.canvas.size * 0.5f);
-                this->reset_zooming= false;
-            }
-            else {
+                current_mouse_pos = this->graphstate.canvas.offset -
+                                    (this->graphstate.canvas.position + this->graphstate.canvas.size * 0.5f);
+                this->reset_zooming = false;
+            } else {
                 const float factor = this->graphstate.canvas.zooming / 10.0f;
                 this->graphstate.canvas.zooming = this->graphstate.canvas.zooming + (io.MouseWheel * factor);
                 current_mouse_pos = this->graphstate.canvas.offset - ImGui::GetMousePos();
             }
             // Limit zooming
-            this->graphstate.canvas.zooming = (this->graphstate.canvas.zooming <= 0.0f) ? 0.000001f : (this->graphstate.canvas.zooming);
+            this->graphstate.canvas.zooming =
+                (this->graphstate.canvas.zooming <= 0.0f) ? 0.000001f : (this->graphstate.canvas.zooming);
             // Compensate zooming shift of origin
-            ImVec2 scrolling_diff =
-                (this->graphstate.canvas.scrolling * last_zooming) - (this->graphstate.canvas.scrolling * this->graphstate.canvas.zooming);
+            ImVec2 scrolling_diff = (this->graphstate.canvas.scrolling * last_zooming) -
+                                    (this->graphstate.canvas.scrolling * this->graphstate.canvas.zooming);
             this->graphstate.canvas.scrolling += (scrolling_diff / this->graphstate.canvas.zooming);
             // Move origin away from mouse position
             ImVec2 new_mouse_position = (current_mouse_pos / last_zooming) * this->graphstate.canvas.zooming;
-            this->graphstate.canvas.scrolling += ((new_mouse_position - current_mouse_pos) / this->graphstate.canvas.zooming);
+            this->graphstate.canvas.scrolling +=
+                ((new_mouse_position - current_mouse_pos) / this->graphstate.canvas.zooming);
 
             this->update = true;
         }
@@ -872,28 +896,31 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
         this->update = true;
     }
     // Font scaling is applied next frame after ImGui::Begin()
-    // Font for graph should not be the currently used font of the gui.    
+    // Font for graph should not be the currently used font of the gui.
     ImGui::GetFont()->Scale = this->graphstate.canvas.zooming;
 }
 
 
-void megamol::gui::configurator::Graph::Presentation::present_parameters(megamol::gui::configurator::Graph& inout_graph, float child_width) {
+void megamol::gui::configurator::Graph::Presentation::present_parameters(
+    megamol::gui::configurator::Graph& inout_graph, float child_width) {
 
     ImGui::BeginGroup();
 
     float param_child_height = ImGui::GetFrameHeightWithSpacing() * 3.5f;
-    auto child_flags = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
+    auto child_flags =
+        ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
     ImGui::BeginChild("parameter_search_child", ImVec2(child_width, param_child_height), false, child_flags);
 
     ImGui::Text("Parameters");
     ImGui::Separator();
 
-    if (std::get<1>(this->graphstate.hotkeys[HotkeyIndex::PARAMETER_SEARCH])) {
+    if (std::get<1>(this->graphstate.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH])) {
         this->utils.SetSearchFocus(true);
     }
-    std::string help_text = "[" + std::get<0>(this->graphstate.hotkeys[HotkeyIndex::PARAMETER_SEARCH]).ToString() +
-                            "] Set keyboard focus to search input field.\n"
-                            "Case insensitive substring search in parameter names.";
+    std::string help_text =
+        "[" + std::get<0>(this->graphstate.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH]).ToString() +
+        "] Set keyboard focus to search input field.\n"
+        "Case insensitive substring search in parameter names.";
     this->utils.StringSearch("graph_parameter_search", help_text);
     auto search_string = this->utils.GetSearchString();
 
@@ -965,7 +992,8 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(megamol
         ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive), modptr->name.c_str());
 
         ImGui::EndChild();
-        auto child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NavFlattened;
+        auto child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar |
+                           ImGuiWindowFlags_NavFlattened;
         ImGui::BeginChild("parameter_list_child", ImVec2(child_width, 0.0f), true, child_flags);
 
         bool param_name_space_open = true;
@@ -1160,7 +1188,8 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
 
     // Calculate new positions of modules
     const float border_offset = GUI_CALL_SLOT_RADIUS * 4.0f;
-    ImVec2 init_position = ImVec2(-1.0f * this->graphstate.canvas.scrolling.x, -1.0f * this->graphstate.canvas.scrolling.y);
+    ImVec2 init_position =
+        ImVec2(-1.0f * this->graphstate.canvas.scrolling.x, -1.0f * this->graphstate.canvas.scrolling.y);
     ImVec2 pos = init_position;
     float max_call_width = 25.0f;
     float max_module_width = 0.0f;

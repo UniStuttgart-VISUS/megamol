@@ -250,12 +250,19 @@ ImGuiID megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(
 // CALL SLOT PRESENTATION ####################################################
 
 megamol::gui::configurator::CallSlot::Presentation::Presentation(void)
-    : presentations(CallSlot::Presentations::DEFAULT), label_visible(false), interface_view(false), position(), utils(), selected(false), update_once(true) {}
+    : presentations(CallSlot::Presentations::DEFAULT)
+    , label_visible(false)
+    , interface_view(false)
+    , position()
+    , utils()
+    , selected(false)
+    , update_once(true) {}
 
 megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
 
-void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::configurator::CallSlot& inout_call_slot, megamol::gui::GraphItemsStateType& state) {
+void megamol::gui::configurator::CallSlot::Presentation::Present(
+    megamol::gui::configurator::CallSlot& inout_call_slot, megamol::gui::GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -287,7 +294,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
             }
         }
 
-        // Clip call slots if lying ouside the canvas 
+        // Clip call slots if lying ouside the canvas
         /// XXX Is there a benefit since ImGui::PushClipRect is used?
         /*
         ImVec2 canvas_rect_min = state.canvas.position;
@@ -311,7 +318,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
                 this->selected = false;
                 if (state.interact.callslot_selected_uid == inout_module.uid) {
                     state.interact.callslot_selected_uid = GUI_INVALID_ID;
-                }                
+                }
             }
             if (this->selected) {
                 state.interact.callslot_selected_uid = inout_module.uid;
@@ -328,13 +335,13 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
         ImU32 COLOR_SLOT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
         tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive]; // ImGuiCol_Border ImGuiCol_ScrollbarGrabActive
-        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);         
+        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
         const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
         ImU32 COLOR_SLOT_CALLER = IM_COL32(0, 255, 192, 255);
         ImU32 COLOR_SLOT_CALLEE = IM_COL32(192, 255, 64, 255);
         const ImU32 COLOR_SLOT_COMPATIBLE = IM_COL32(0, 192, 0, 255);
-            
+
         // Group interface call slot presentation.
         if (this->interface_view) {
             COLOR_SLOT_BACKGROUND = IM_COL32(0, 255, 0, 255);
@@ -357,31 +364,36 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
         ImGui::SetItemAllowOverlap();
 
         bool active = ImGui::IsItemActive();
-        bool hovered = (ImGui::IsItemHovered() && ((state.interact.callslot_hovered_uid == GUI_INVALID_ID) || (state.interact.callslot_hovered_uid == inout_call_slot.uid)));
+        bool hovered = (ImGui::IsItemHovered() && ((state.interact.callslot_hovered_uid == GUI_INVALID_ID) ||
+                                                      (state.interact.callslot_hovered_uid == inout_call_slot.uid)));
         bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
 
         // Context menu
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
             ImGui::Text("Call Slot");
-            ImGui::Separator();     
+            ImGui::Separator();
             bool is_parent_group_member = false;
             if (inout_call_slot.ParentModuleConnected()) {
                 is_parent_group_member = !inout_call_slot.GetParentModule()->name_space.empty();
             }
-            /// Menu item is only active when parent module is part of a group and call slot is not yet part of the group.
-            if (ImGui::MenuItem("Add to Group Interface ", nullptr, false, (!this->interface_view && is_parent_group_member))) {
+            /// Menu item is only active when parent module is part of a group and call slot is not yet part of the
+            /// group.
+            if (ImGui::MenuItem(
+                    "Add to Group Interface ", nullptr, false, (!this->interface_view && is_parent_group_member))) {
                 state.interact.callslot_add_group_uid.first = inout_call_slot.uid;
-                state.interact.callslot_add_group_uid.second = inout_call_slot.GetParentModule()->uid; 
+                state.interact.callslot_add_group_uid.second = inout_call_slot.GetParentModule()->uid;
             }
-            /// Menu item is only active when parent module is part of a group and call slot is already part of the group.
-            if (ImGui::MenuItem("Remove Group Interface", nullptr, false, (this->interface_view && is_parent_group_member))) {
-                state.interact.callslot_remove_group_uid =  inout_call_slot.uid;  
-            }                                
+            /// Menu item is only active when parent module is part of a group and call slot is already part of the
+            /// group.
+            if (ImGui::MenuItem(
+                    "Remove Group Interface", nullptr, false, (this->interface_view && is_parent_group_member))) {
+                state.interact.callslot_remove_group_uid = inout_call_slot.uid;
+            }
             ImGui::EndPopup();
         }
 
         // Hover Tooltip
-        std::string slot_label = "[" + inout_call_slot.name + "]";        
+        std::string slot_label = "[" + inout_call_slot.name + "]";
         std::string tooltip = inout_call_slot.description;
         if (!this->label_visible) {
             tooltip = slot_label + " " + tooltip;
@@ -413,7 +425,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
         }
         if (!hovered && (state.interact.callslot_hovered_uid == inout_call_slot.uid)) {
             state.interact.callslot_hovered_uid = GUI_INVALID_ID;
-        }        
+        }
         if (ImGui::BeginDragDropTarget()) {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(GUI_DND_CALL_UID_TYPE)) {
                 ImGuiID* uid = (ImGuiID*)payload->Data;
@@ -437,7 +449,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
         if (this->label_visible) {
             draw_list->AddText(text_pos_left_upper, slot_highlight_color, inout_call_slot.name.c_str());
         }
-      
+
 
         ImGui::PopID();
 
@@ -459,7 +471,8 @@ void megamol::gui::configurator::CallSlot::Presentation::UpdatePosition(
         auto slot_count = inout_call_slot.GetParentModule()->GetCallSlots(inout_call_slot.type).size();
         size_t slot_idx = 0;
         for (size_t idx = 0; idx < slot_count; idx++) {
-            if (inout_call_slot.name == inout_call_slot.GetParentModule()->GetCallSlots(inout_call_slot.type)[idx]->name) {
+            if (inout_call_slot.name ==
+                inout_call_slot.GetParentModule()->GetCallSlots(inout_call_slot.type)[idx]->name) {
                 slot_idx = idx;
             }
         }

@@ -62,15 +62,15 @@ GUIWindows::GUIWindows()
     this->param_slots.push_back(&this->style_param);
     this->param_slots.push_back(&this->autostart_configurator);
 
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = HotkeyDataType(
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = megamol::gui::HotkeyDataType(
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
     this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] =
-        HotkeyDataType(megamol::core::view::KeyCode(
-                           megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL | core::view::Modifier::ALT),
+        megamol::gui::HotkeyDataType(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P,
+                                         core::view::Modifier::CTRL | core::view::Modifier::ALT),
             false);
     this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT] =
-        HotkeyDataType(megamol::core::view::KeyCode(
-                           megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::ALT),
+        megamol::gui::HotkeyDataType(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S,
+                                         core::view::Modifier::CTRL | core::view::Modifier::ALT),
             false);
 }
 
@@ -578,7 +578,8 @@ bool GUIWindows::createContext(void) {
     // viewport size).
     buf_win.win_store_config = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
-    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse;
+    buf_win.win_flags =
+        ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse;
     buf_win.win_callback = WindowManager::DrawCallbacks::CONFIGURATOR;
     // buf_win.win_size is set to current viewport later
     this->window_manager.AddWindowConfiguration("Configurator", buf_win);
@@ -590,10 +591,10 @@ bool GUIWindows::createContext(void) {
 
     // IO settings ------------------------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
-    io.IniSavingRate = 5.0f;          //  in seconds
-    io.IniFilename = nullptr;         // "imgui.ini"; - disabled, using own window settings profile
-    io.LogFilename = "imgui_log.txt"; // (set to nullptr to disable)
-    io.FontAllowUserScaling = false;  // disable font scaling using ctrl + mouse wheel
+    io.IniSavingRate = 5.0f;                              //  in seconds
+    io.IniFilename = nullptr;                             // "imgui.ini"; - disabled, using own window settings profile
+    io.LogFilename = "imgui_log.txt";                     // (set to nullptr to disable)
+    io.FontAllowUserScaling = false;                      // disable font scaling using ctrl + mouse wheel
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // allow keyboard navigation
 
     // Init global state -------------------------------------------------------
@@ -1650,7 +1651,8 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
                 this->widgtmap_text.emplace(param_id, utf8Str);
                 it = this->widgtmap_text.find(param_id);
             }
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f - ImGui::GetFrameHeight() - style.ItemSpacing.x);
+            ImGui::PushItemWidth(
+                ImGui::GetContentRegionAvail().x * 0.65f - ImGui::GetFrameHeight() - style.ItemSpacing.x);
             bool button_edit = this->file_utils.FileBrowserButton(it->second);
             ImGui::SameLine();
             ImGui::InputText(param_label.c_str(), &it->second, ImGuiInputTextFlags_None);

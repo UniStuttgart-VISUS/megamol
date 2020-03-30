@@ -497,7 +497,8 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                     this->widget_store = utf8Str;
                 }
                 ImGuiStyle& style = ImGui::GetStyle();
-                ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f - ImGui::GetFrameHeight() - style.ItemSpacing.x);
+                ImGui::PushItemWidth(
+                    ImGui::GetContentRegionAvail().x * 0.65f - ImGui::GetFrameHeight() - style.ItemSpacing.x);
                 bool button_edit = this->file_utils.FileBrowserButton(std::get<std::string>(this->widget_store));
                 ImGui::SameLine();
                 ImGui::InputText(

@@ -8,7 +8,6 @@
 #include "stdafx.h"
 #include "GUIUtils.h"
 
-#include "vislib/UTF8Encoder.h"
 
 #include <imgui_stdlib.h>
 #include <vector>
@@ -24,8 +23,7 @@ GUIUtils::GUIUtils(void)
     , search_focus(false)
     , search_string()
     , rename_string()
-    , splitter_last_width(0.0f) {
-}
+    , splitter_last_width(0.0f) {}
 
 
 void GUIUtils::HoverToolTip(const std::string& text, ImGuiID id, float time_start, float time_end) {

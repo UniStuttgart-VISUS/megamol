@@ -107,7 +107,9 @@ private:
 
     bool separateNameAndNamespace(const std::string& full_name, std::string& name_space, std::string& name);
 
-    inline const std::string generate_unique_graph_name(void) { return ("Project_" + std::to_string(++graph_name_uid)); }
+    inline const std::string generate_unique_graph_name(void) {
+        return ("Project_" + std::to_string(++graph_name_uid));
+    }
 };
 
 } // namespace configurator

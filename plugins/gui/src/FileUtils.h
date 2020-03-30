@@ -11,20 +11,20 @@
 #define MEGAMOL_GUI_FILEUTILS_INCLUDED
 
 #ifdef GUI_USE_FILESYSTEM
-#if defined(_HAS_CXX17) || ((defined(_MSC_VER) && (_MSC_VER > 1916))) // C++2017 or since VS2019
-#    include <filesystem>
-namespace fsns = std::filesystem;
-#else
-// WINDOWS
-#    ifdef _WIN32
+#    if defined(_HAS_CXX17) || ((defined(_MSC_VER) && (_MSC_VER > 1916))) // C++2017 or since VS2019
 #        include <filesystem>
-namespace fsns = std::experimental::filesystem;
+namespace fsns = std::filesystem;
 #    else
-// LINUX
-#        include <experimental/filesystem>
+// WINDOWS
+#        ifdef _WIN32
+#            include <filesystem>
 namespace fsns = std::experimental::filesystem;
+#        else
+// LINUX
+#            include <experimental/filesystem>
+namespace fsns = std::experimental::filesystem;
+#        endif
 #    endif
-#endif
 #endif // GUI_USE_FILESYSTEM
 
 #include "mmcore/CoreInstance.h"
@@ -55,8 +55,7 @@ public:
      * @param path  The file or directory path.
      * @param ext   The extension the given file should have.
      */
-    template <typename T> 
-    static bool FilesExistingExtension(const T& path_str, const std::string& ext);
+    template <typename T> static bool FilesExistingExtension(const T& path_str, const std::string& ext);
 
     /**
      * Check if file has specified file extension.
@@ -64,8 +63,7 @@ public:
      * @param path  The file or directory path.
      * @param ext   The extension the given file should have.
      */
-    template <typename T> 
-    static bool FileExtension(const T& path_str, const std::string& ext);
+    template <typename T> static bool FileExtension(const T& path_str, const std::string& ext);
 
     /**
      * Search recursively for file or path beginning at given directory.
@@ -108,7 +106,7 @@ public:
      */
     static bool ReadFile(const std::string& filename, std::string& out_content);
 
-    //Non-static functions ----------------------------------------------------
+    // Non-static functions ----------------------------------------------------
 
     /**
      * ImGui file browser pop-up.
@@ -116,7 +114,7 @@ public:
      * @param flag                Flag inidicating intention of file browser dialog.
      * @param label               File browser label.
      * @param open_popup          Flag once(!) indicates opening of pop-up.
-     * @param inout_filename      The file name of the file. 
+     * @param inout_filename      The file name of the file.
      *
      * @return True on success, false otherwise.
      */
@@ -130,7 +128,7 @@ public:
      *
      * @return True on success, false otherwise.
      */
-    bool FileBrowserButton(std::string& inout_filename);    
+    bool FileBrowserButton(std::string& inout_filename);
 
 private:
 #ifdef GUI_USE_FILESYSTEM
@@ -151,17 +149,17 @@ private:
     size_t additional_lines;
 
     // FUNCTIONS --------------------------------------------------------------
-    
+
     bool splitPath(const fsns::path& in_file_path, std::string& out_path, std::string& out_file);
     void validateDirectory(const std::string& path_str);
     void validateFile(const std::string& file_str, FileBrowserFlag flag);
 
-#endif // GUI_USE_FILESYSTEM    
+#endif // GUI_USE_FILESYSTEM
 };
 
 
 template <typename T> bool megamol::gui::FileUtils::FilesExistingExtension(const T& path_str, const std::string& ext) {
-#ifdef GUI_USE_FILESYSTEM    
+#ifdef GUI_USE_FILESYSTEM
     auto path = static_cast<fsns::path>(path_str);
     if (!fsns::exists(path) || !fsns::is_regular_file(path)) {
         return false;
@@ -169,23 +167,23 @@ template <typename T> bool megamol::gui::FileUtils::FilesExistingExtension(const
     return (path.extension().generic_u8string() == ext);
 #else
     return false;
-#endif // GUI_USE_FILESYSTEM    
+#endif // GUI_USE_FILESYSTEM
 }
 
 
 template <typename T> bool megamol::gui::FileUtils::FileExtension(const T& path_str, const std::string& ext) {
-#ifdef GUI_USE_FILESYSTEM    
+#ifdef GUI_USE_FILESYSTEM
     auto path = static_cast<fsns::path>(path_str);
     return (path.extension().generic_u8string() == ext);
 #else
     return false;
-#endif // GUI_USE_FILESYSTEM      
+#endif // GUI_USE_FILESYSTEM
 }
 
 
 template <typename T, typename S>
 std::string megamol::gui::FileUtils::SearchFileRecursive(const T& search_path_str, const S& search_file_str) {
-#ifdef GUI_USE_FILESYSTEM    
+#ifdef GUI_USE_FILESYSTEM
     auto search_path = static_cast<fsns::path>(search_path_str);
     auto file_path = static_cast<fsns::path>(search_file_str);
     std::string found_path;
@@ -198,7 +196,7 @@ std::string megamol::gui::FileUtils::SearchFileRecursive(const T& search_path_st
     return found_path;
 #else
     return std::string();
-#endif // GUI_USE_FILESYSTEM      
+#endif // GUI_USE_FILESYSTEM
 }
 
 

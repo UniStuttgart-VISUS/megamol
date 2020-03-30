@@ -59,7 +59,7 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     GraphManager graph_manager;
-    megamol::gui::FileUtils file_utils;    
+    megamol::gui::FileUtils file_utils;
     megamol::gui::GUIUtils utils;
 
     int init_state;
@@ -69,7 +69,7 @@ private:
     bool show_module_list_sidebar;
     std::string project_filename;
 
-    GraphStateType state;
+    megamol::gui::GraphStateType state;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -78,7 +78,6 @@ private:
     void draw_window_module_list(float width);
 
     void add_empty_project(void);
-
 };
 
 } // namespace configurator

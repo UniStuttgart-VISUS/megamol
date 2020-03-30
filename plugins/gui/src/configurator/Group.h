@@ -9,9 +9,9 @@
 #define MEGAMOL_GUI_GRAPH_GROUP_H_INCLUDED
 
 
-#include "Module.h"
 #include "CallSlot.h"
 #include "GUIUtils.h"
+#include "Module.h"
 
 
 namespace megamol {
@@ -24,7 +24,6 @@ namespace configurator {
  */
 class Group {
 public:
-  
     Group(ImGuiID uid);
     ~Group();
 
@@ -52,7 +51,6 @@ public:
     void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePositionSize(*this, in_canvas); }
 
 private:
-
     // VARIABLES --------------------------------------------------------------
 
     ModulePtrVectorType modules;
@@ -85,13 +83,11 @@ private:
         std::string name_label;
         bool collapsed_view;
         bool selected;
-        bool update;        
+        bool update;
 
     } present;
 
     // FUNCTIONS --------------------------------------------------------------
-
-
 };
 
 

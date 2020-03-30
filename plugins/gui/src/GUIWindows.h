@@ -35,9 +35,9 @@
 #include <iomanip>
 #include <sstream>
 
-#include "FileUtils.h"
 #include "CorporateGreyStyle.h"
 #include "CorporateWhiteStyle.h"
+#include "FileUtils.h"
 #include "TransferFunctionEditor.h"
 #include "WindowManager.h"
 #include "configurator/Configurator.h"
@@ -142,7 +142,7 @@ private:
         double last_instance_time; // Last instance time.
         bool hotkeys_check_once;   // WORKAROUND: Check multiple hotkey assignments once.
     };
-    
+
     /** The GUI hotkey array index mapping. */
     enum GuiHotkeyIndex : size_t { EXIT_PROGRAM = 0, PARAMETER_SEARCH = 1, SAVE_PROJECT = 2, INDEX_COUNT = 3 };
 
@@ -185,7 +185,7 @@ private:
     megamol::gui::GUIUtils utils;
 
     /** File utils providing stuff interacting with files */
-    megamol::gui::FileUtils file_utils;  
+    megamol::gui::FileUtils file_utils;
 
     /** The current local state of the gui. */
     StateBuffer state;

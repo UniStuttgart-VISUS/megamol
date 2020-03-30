@@ -120,7 +120,8 @@ megamol::gui::configurator::Call::Presentation::Presentation(void)
 megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
 
 
-void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::configurator::Call& inout_call, megamol::gui::GraphItemsStateType& state) {
+void megamol::gui::configurator::Call::Presentation::Present(
+    megamol::gui::configurator::Call& inout_call, megamol::gui::GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -137,9 +138,10 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::confi
             bool visible = true;
             if ((inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->ParentModuleConnected()) &&
                 (inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->ParentModuleConnected())) {
-                visible = (inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->GetParentModule()->GUI_GetGroupView() || 
-                          inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->GetParentModule()->GUI_GetGroupView());
-            }            
+                visible =
+                    (inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->GetParentModule()->GUI_GetGroupView() ||
+                        inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->GetParentModule()->GUI_GetGroupView());
+            }
 
             if (visible) {
 
@@ -164,23 +166,23 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::confi
                 const ImU32 COLOR_CALL_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
                 tmpcol = style.Colors[ImGuiCol_FrameBgActive]; // ImGuiCol_FrameBgActive ImGuiCol_ButtonActive
-                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);            
+                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
-                //tmpcol = style.Colors[ImGuiCol_ButtonActive];
-                //tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);            
+                // tmpcol = style.Colors[ImGuiCol_ButtonActive];
+                // tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
                 tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive]; // ImGuiCol_Border ImGuiCol_ScrollbarGrabActive
-                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);            
+                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
                 // LEVEL OF DETAIL depending on zooming
                 if (state.canvas.zooming < 0.25f) {
                     draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * state.canvas.zooming);
                 } else {
-                    draw_list->AddBezierCurve(p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2, COLOR_CALL_CURVE,
-                        CURVE_THICKNESS * state.canvas.zooming);
+                    draw_list->AddBezierCurve(p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2,
+                        COLOR_CALL_CURVE, CURVE_THICKNESS * state.canvas.zooming);
                 }
 
                 if (this->label_visible) {
@@ -208,9 +210,12 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::confi
                     // Context menu
                     if (ImGui::BeginPopupContextItem()) {
                         ImGui::Text("Call");
-                        ImGui::Separator();                     
-                        if (ImGui::MenuItem("Delete", std::get<0>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
-                            std::get<1>(state.hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+                        ImGui::Separator();
+                        if (ImGui::MenuItem(
+                                "Delete", std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM])
+                                              .ToString()
+                                              .c_str())) {
+                            std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
                             // Force selection
                             active = true;
                         }
@@ -236,8 +241,10 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::confi
                     draw_list->AddRect(call_rect_min, call_rect_max, COLOR_CALL_BORDER, 4.0f);
 
                     // Draw text
-                    ImVec2 text_pos_left_upper =(call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
-                    draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), inout_call.class_name.c_str());
+                    ImVec2 text_pos_left_upper =
+                        (call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
+                    draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]),
+                        inout_call.class_name.c_str());
                 }
 
                 ImGui::PopID();

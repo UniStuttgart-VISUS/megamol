@@ -26,8 +26,8 @@
 
 #include <variant>
 
-#include "GUIUtils.h"
 #include "FileUtils.h"
+#include "GUIUtils.h"
 #include "TransferFunctionEditor.h"
 
 // Used for platform independent clipboard (ImGui so far only provides windows implementation)
@@ -253,7 +253,7 @@ private:
 
         std::string help;
         megamol::gui::GUIUtils utils;
-        megamol::gui::FileUtils file_utils;  
+        megamol::gui::FileUtils file_utils;
         bool show_tf_editor;
         megamol::gui::TransferFunctionEditor tf_editor;
         std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
@@ -264,7 +264,7 @@ private:
 
         void present_prefix(Parameter& param);
         void present_value_DEFAULT(Parameter& param);
-        //void present_value_PIN_VALUE_TO_MOUSE(Parameter& param);
+        // void present_value_PIN_VALUE_TO_MOUSE(Parameter& param);
 
         void present_postfix(Parameter& param);
 

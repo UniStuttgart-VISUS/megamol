@@ -77,8 +77,7 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state);
-     }
+    void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
     void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
 
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
