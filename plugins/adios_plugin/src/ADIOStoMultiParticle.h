@@ -84,9 +84,9 @@ private:
 
     size_t stride = 0;
 
-    std::vector<unsigned long long int> plist_offset;
+    std::vector<uint64_t> plist_offset;
     std::vector<float> list_box;
-    std::vector<unsigned long long int> plist_count;
+    std::vector<uint64_t> plist_count;
 
 };
 
