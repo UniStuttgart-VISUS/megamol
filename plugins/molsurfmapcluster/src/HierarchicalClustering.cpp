@@ -176,6 +176,8 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
                 node->distances = new std::vector<std::tuple<CLUSTERNODE*, double>>();
 
                 this->leaves->push_back(node);
+            } else {
+                leaves->at(id)->pic = &(pictures[id]);
             }
             ++id;
         }
