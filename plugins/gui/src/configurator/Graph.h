@@ -72,7 +72,7 @@ public:
     inline ImGuiID GUI_GetSelectedCallSlot(void) const { return this->present.GetSelectedCallSlot(); }
     inline ImGuiID GUI_GetDropCallSlot(void) const { return this->present.GetDropCallSlot(); }
 
-    inline bool GUI_SaveGroup(void) const { return this->present.SaveGroup(); }
+    inline bool GUI_SaveGroup(void) { return this->present.SaveGroup(); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -107,7 +107,11 @@ private:
         bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
         bool GetCallLabelVisibility(void) const { return this->show_call_names; }
 
-        bool SaveGroup(void) const { return this->graphstate.interact.group_save; }
+        bool SaveGroup(void) { 
+            bool retval = this->graphstate.interact.group_save;
+            this->graphstate.interact.group_save = false;
+            return retval; 
+        }
 
         void ApplyUpdate(void) { this->update = true; }
 

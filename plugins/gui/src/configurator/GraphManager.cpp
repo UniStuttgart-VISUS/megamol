@@ -930,6 +930,9 @@ bool megamol::gui::configurator::GraphManager::SaveGroupFile(ImGuiID group_uid, 
 
     try {
 
+        vislib::sys::Log::DefaultLog.WriteWarn("Feature is WIP ... coming soon. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+            
         /// TODO
         // --confGroupInterface={<call_slot_names>}
 
