@@ -31,7 +31,6 @@ namespace configurator {
 typedef std::vector<Module::StockModule> ModuleStockVectorType;
 typedef std::vector<Call::StockCall> CallStockVectorType;
 
-typedef std::vector<Group> GroupGraphVectorType;
 
 class Graph {
 public:
@@ -82,7 +81,7 @@ private:
 
     ModulePtrVectorType modules;
     CallPtrVectorType calls;
-    GroupGraphVectorType groups;
+    GroupPtrVectorType groups;
 
     const ImGuiID uid;
     std::string name;
@@ -149,7 +148,7 @@ private:
     // FUNCTIONS --------------------------------------------------------------
 
     const CallPtrVectorType& get_graph_calls(void) { return this->calls; }
-    GroupGraphVectorType& get_groups(void) { return this->groups; }
+    const GroupPtrVectorType& get_groups(void) { return this->groups; }
 
     bool delete_disconnected_calls(void);
 

@@ -21,11 +21,10 @@ megamol::gui::configurator::Group::Group(ImGuiID uid) : uid(uid), present(), mod
 megamol::gui::configurator::Group::~Group() {
 
     // Reset modules
-    for (auto& mod : this->modules) {
-
-        mod->GUI_SetVisibility(true);
-        mod->name_space.clear();
-        mod.reset();
+    for (auto& module_ptr : this->modules) {
+        module_ptr->GUI_SetVisibility(true);
+        module_ptr->name_space.clear();
+        module_ptr.reset();
     }
     // Reset call slots
     for (auto& callslot_map : this->callslots) {
@@ -55,12 +54,12 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
     }
 
     this->modules.emplace_back(module_ptr);
-
+                
     module_ptr->name_space = this->name;
     module_ptr->GUI_SetVisibility(this->present.ModuleVisible());
     this->present.ApplyUpdate();
-
-    vislib::sys::Log::DefaultLog.WriteInfo(
+    
+        vislib::sys::Log::DefaultLog.WriteInfo(
         "Added module '%s' to group '%s'.\n", module_ptr->name.c_str(), this->name.c_str());
     return true;
 }
@@ -89,7 +88,7 @@ bool megamol::gui::configurator::Group::RemoveModule(ImGuiID module_uid) {
 
                 (*mod_iter)->GUI_SetVisibility(true);
                 (*mod_iter)->name_space.clear();
-
+                
                 vislib::sys::Log::DefaultLog.WriteInfo(
                     "Removed module '%s' from group '%s'.\n", (*mod_iter)->name.c_str(), this->name.c_str());
                 (*mod_iter).reset();
@@ -377,9 +376,9 @@ void megamol::gui::configurator::Group::Presentation::Present(
         }
         // Rename pop-up ------------------------------------------------------
         if (this->utils.RenamePopUp("Rename Group", popup_rename, inout_group.name)) {
-            for (auto& mod : inout_group.GetModules()) {
-                mod->name_space = inout_group.name;
-                mod->GUI_Update(state.canvas);
+            for (auto& module_ptr : inout_group.GetModules()) {
+                module_ptr->name_space = inout_group.name;
+                module_ptr->GUI_Update(state.canvas);
             }
             this->UpdatePositionSize(inout_group, state.canvas);
         }

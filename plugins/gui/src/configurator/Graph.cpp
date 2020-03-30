@@ -111,11 +111,11 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
 
                 // First reset module and call slot pointers in groups
                 for (auto& group : this->groups) {
-                    if (group.ContainsModule(module_uid)) {
-                        group.RemoveModule(module_uid);
+                    if (group->ContainsModule(module_uid)) {
+                        group->RemoveModule(module_uid);
                     }
-                    if (group.Empty()) {
-                        this->DeleteGroup(group.uid);
+                    if (group->Empty()) {
+                        this->DeleteGroup(group->uid);
                     }
                 }
 
@@ -220,32 +220,6 @@ bool megamol::gui::configurator::Graph::AddCall(
     return true;
 }
 
-bool megamol::gui::configurator::Graph::delete_disconnected_calls(void) {
-
-    try {
-        // Create separate uid list to avoid iterator conflict when operating on calls list while deleting.
-        std::vector<ImGuiID> call_uids;
-        for (auto& call : this->calls) {
-            if (!call->IsConnected()) {
-                call_uids.emplace_back(call->uid);
-            }
-        }
-        for (auto& id : call_uids) {
-            this->DeleteCall(id);
-            this->dirty_flag = true;
-        }
-    } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    return true;
-}
-
 
 bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
 
@@ -316,17 +290,23 @@ ImGuiID megamol::gui::configurator::Graph::AddGroup(void) {
 
 bool megamol::gui::configurator::Graph::AddGroupModule(const ModulePtrType& module_ptr) {
 
+    if (module_ptr == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Pointer to module is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    
     // Check module namespace for group membership
     std::string name_space = module_ptr->name_space;
-
+    
     ImGuiID group_uid = this->get_group_uid(name_space);
     if (group_uid == GUI_INVALID_ID) {
         group_uid = this->add_group(name_space);
     }
     if (group_uid != GUI_INVALID_ID) {
         for (auto& group : this->groups) {
-            if (group.uid == group_uid) {
-                return group.AddModule(module_ptr);
+            if (group->uid == group_uid) {
+                return group->AddModule(module_ptr);
             }
         }
     }
@@ -336,21 +316,24 @@ bool megamol::gui::configurator::Graph::AddGroupModule(const ModulePtrType& modu
 
 bool megamol::gui::configurator::Graph::DeleteGroup(ImGuiID group_uid) {
 
-    bool found_group = false;
     try {
-        // Group is deleted when local copy tmp_groups is detroyed.
-        auto tmp_groups = this->groups;
-        this->groups.clear();
 
-        // Re-adding only the groups which should not be deleted.
-        for (auto& group : tmp_groups) {
-            if (group.uid != group_uid) {
-                this->groups.emplace_back(group);
-            } else {
+        for (auto iter = this->groups.begin(); iter != this->groups.end(); iter++) {
+            if ((*iter)->uid == group_uid) {
+                
+                if ((*iter).use_count() > 1) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "Unclean deletion. Found %i references pointing to group-> [%s, %s, line %d]\n",
+                        (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+                }
+
+                vislib::sys::Log::DefaultLog.WriteInfo("Deleted group '%s' from  project '%s'.\n",
+                    (*iter)->name.c_str(), this->name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                (*iter).reset();
+                this->groups.erase(iter);
+                                
                 this->present.ApplyUpdate();
-                vislib::sys::Log::DefaultLog.WriteInfo(
-                    "Deleted group '%s' from  project '%s'.\n", group.name.c_str(), this->name.c_str());
-                found_group = true;
+                return true;
             }
         }
     } catch (std::exception e) {
@@ -362,14 +345,36 @@ bool megamol::gui::configurator::Graph::DeleteGroup(ImGuiID group_uid) {
         return false;
     }
 
-    if (!found_group) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "Invalid group uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    return true;
+    vislib::sys::Log::DefaultLog.WriteWarn("Invalid group uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    return false;
 }
 
+
+bool megamol::gui::configurator::Graph::delete_disconnected_calls(void) {
+
+    try {
+        // Create separate uid list to avoid iterator conflict when operating on calls list while deleting.
+        std::vector<ImGuiID> call_uids;
+        for (auto& call : this->calls) {
+            if (!call->IsConnected()) {
+                call_uids.emplace_back(call->uid);
+            }
+        }
+        for (auto& id : call_uids) {
+            this->DeleteCall(id);
+            this->dirty_flag = true;
+        }
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return true;
+}
 
 ImGuiID megamol::gui::configurator::Graph::add_group(const std::string& group_name) {
 
@@ -378,13 +383,16 @@ ImGuiID megamol::gui::configurator::Graph::add_group(const std::string& group_na
         ///  XXX or if group name equals namespace of graph
         if (!group_name.empty()) { /// XXX && (group_name != this->name)) {
 
+            if (this->get_group_uid(group_name) != GUI_INVALID_ID) {
+                vislib::sys::Log::DefaultLog.WriteWarn("Group name '%s' already exists..\n", group_name.c_str(), this->name.c_str());                
+            }
             ImGuiID group_id = this->generate_unique_id();
-            Group group(group_id);
-            group.name = group_name;
-            this->groups.emplace_back(group);
+            auto group_ptr = std::make_shared<Group>(group_id);
+            group_ptr->name = group_name;
+            this->groups.emplace_back(group_ptr);
 
             vislib::sys::Log::DefaultLog.WriteInfo(
-                "Added group '%s' to project '%s'.\n", group.name.c_str(), this->name.c_str());
+                "Added group '%s' to project '%s'.\n", group_name.c_str(), this->name.c_str());
             return group_id;
         }
 
@@ -404,8 +412,8 @@ ImGuiID megamol::gui::configurator::Graph::add_group(const std::string& group_na
 ImGuiID megamol::gui::configurator::Graph::get_group_uid(const std::string& group_name) {
 
     for (auto& group : this->groups) {
-        if (group.name == group_name) {
-            return group.uid;
+        if (group->name == group_name) {
+            return group->uid;
         }
     }
     return GUI_INVALID_ID;
@@ -499,7 +507,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         this->graphstate.hotkeys = state.hotkeys;
         this->graphstate.groups.clear();
         for (auto& group : inout_graph.get_groups()) {
-            std::pair<ImGuiID, std::string> group_pair(group.uid, group.name);
+            std::pair<ImGuiID, std::string> group_pair(group->uid, group->name);
             this->graphstate.groups.emplace_back(group_pair);
         }
         this->graphstate.interact.callslot_compat_ptr.reset();
@@ -589,8 +597,8 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 }
                 if (group_uid != GUI_INVALID_ID) {
                     for (auto& group : inout_graph.get_groups()) {
-                        if (group.uid == group_uid) {
-                            group.AddModule(module_ptr);
+                        if (group->uid == group_uid) {
+                            group->AddModule(module_ptr);
                         }
                     }
                 }
@@ -602,8 +610,8 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         module_uid = this->graphstate.interact.module_remove_group_uid;
         if (module_uid != GUI_INVALID_ID) {
             for (auto& group : inout_graph.get_groups()) {
-                if (group.ContainsModule(module_uid)) {
-                    group.RemoveModule(module_uid);
+                if (group->ContainsModule(module_uid)) {
+                    group->RemoveModule(module_uid);
                 }
             }
             this->graphstate.interact.module_remove_group_uid = GUI_INVALID_ID;
@@ -625,8 +633,8 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 ImGuiID module_uid = this->graphstate.interact.callslot_add_group_uid.second;
                 if (module_uid != GUI_INVALID_ID) {
                     for (auto& group : inout_graph.get_groups()) {
-                        if (group.ContainsModule(module_uid)) {
-                            group.AddCallSlot(callslot_ptr);
+                        if (group->ContainsModule(module_uid)) {
+                            group->AddCallSlot(callslot_ptr);
                         }
                     }
                 }
@@ -638,8 +646,8 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         callslot_uid = this->graphstate.interact.callslot_remove_group_uid;
         if (callslot_uid != GUI_INVALID_ID) {
             for (auto& group : inout_graph.get_groups()) {
-                if (group.ContainsCallSlot(callslot_uid)) {
-                    group.RemoveCallSlot(callslot_uid);
+                if (group->ContainsCallSlot(callslot_uid)) {
+                    group->RemoveCallSlot(callslot_uid);
                 }
             }
             this->graphstate.interact.callslot_remove_group_uid = GUI_INVALID_ID;
@@ -810,7 +818,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
             mod->GUI_Update(this->graphstate.canvas);
         }
         for (auto& group : inout_graph.get_groups()) {
-            group.GUI_Update(this->graphstate.canvas);
+            group->GUI_Update(this->graphstate.canvas);
         }
         this->update = false;
     }
@@ -828,7 +836,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
 
     // 2] GROUPS --------------------------------
     for (auto& group : inout_graph.get_groups()) {
-        group.GUI_Present(this->graphstate);
+        group->GUI_Present(this->graphstate);
     }
 
     // 3] MODULES and CALL SLOTS ----------------

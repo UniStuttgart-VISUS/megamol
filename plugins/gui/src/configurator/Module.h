@@ -28,8 +28,8 @@ class Parameter;
 typedef std::shared_ptr<Parameter> ParamPtrType;
 typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
-typedef std::shared_ptr<Module> ModulePtrType;
 
+typedef std::shared_ptr<Module> ModulePtrType;
 typedef std::vector<ModulePtrType> ModulePtrVectorType;
 
 

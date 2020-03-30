@@ -18,6 +18,13 @@ namespace megamol {
 namespace gui {
 namespace configurator {
 
+// Forward declaration
+class Group;
+
+// Pointer types to class
+typedef std::shared_ptr<Group> GroupPtrType;
+typedef std::vector<GroupPtrType> GroupPtrVectorType;
+
 
 /**
  * Defines module data structure for graph.

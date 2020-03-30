@@ -367,7 +367,7 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
     if (this->label_visible) {
         this->class_label = "Class: " + inout_mod.class_name;
         float class_name_length = this->utils.TextWidgetWidth(this->class_label);
-        this->name_label = "Name: " + inout_mod.name; // .name OR .FullName();
+        this->name_label = "Name: " + inout_mod.FullName(); // .name OR .FullName();
         float name_length = this->utils.TextWidgetWidth(inout_mod.present.name_label);
         max_label_length = std::max(class_name_length, name_length);
     }
