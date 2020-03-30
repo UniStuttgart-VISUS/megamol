@@ -84,6 +84,7 @@ public:
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     bool GUI_GetLabelVisibility(void) { return this->present.label_visible; }
 
+    void GUI_SetInterfaceView(bool interface_view) { this->present.interface_view = interface_view; }
     void GUI_SetPresentation(CallSlot::Presentations present) { this->present.presentations = present; }
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
 
@@ -108,6 +109,7 @@ private:
 
         CallSlot::Presentations presentations;
         bool label_visible;
+        bool interface_view;
 
     private:
         // Absolute position including canvas offset and zooming

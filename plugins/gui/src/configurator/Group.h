@@ -41,7 +41,7 @@ public:
     bool RemoveCallSlot(ImGuiID callslot_uid);
     bool ContainsCallSlot(ImGuiID callslot_uid);
 
-    const ModulePtrVectorType& GetGroupModules(void) { return this->modules; }
+    const ModulePtrVectorType& GetModules(void) { return this->modules; }
 
     bool Empty(void) { return (this->modules.size() == 0); }
 
@@ -50,14 +50,13 @@ public:
     void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
 
     void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePositionSize(*this, in_canvas); }
-    bool GUI_ModulesVisible(void) { return this->present.ModulesVisible(); }
 
 private:
 
     // VARIABLES --------------------------------------------------------------
 
     ModulePtrVectorType modules;
-    std::map<CallSlot::CallSlotType, CallSlotPtrVectorType> interface_callslots;
+    std::map<CallSlot::CallSlotType, CallSlotPtrVectorType> callslots;
 
     /**
      * Defines GUI group presentation.
@@ -71,7 +70,7 @@ private:
         void Present(Group& inout_group, GraphItemsStateType& state);
 
         void UpdatePositionSize(Group& inout_group, const GraphCanvasType& in_canvas);
-        bool ModulesVisible(void) { return !this->collapsed_view; }
+        bool ModuleVisible(void) { return !this->collapsed_view; }
 
         void ApplyUpdate(void) { this->update = true; }
 

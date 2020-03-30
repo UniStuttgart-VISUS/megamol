@@ -132,7 +132,7 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
     , update(true) {}
 
 
-megamol::gui::configurator::Module::Presentation::~Presentation(void) {}
+megamol::gui::configurator::Module::Presentation::~Presentation(void) { }
 
 
 void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::configurator::Module& inout_module, megamol::gui::GraphItemsStateType& state) {
@@ -159,8 +159,9 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
             this->UpdateSize(inout_module, state.canvas);
             this->update = false;
         }
-
+        
         if (this->visible) {
+            
             // Draw module --------------------------------------------------------
             ImVec2 module_size = this->size * state.canvas.zooming;
             ImVec2 module_rect_min = state.canvas.offset + this->position * state.canvas.zooming;
@@ -189,9 +190,9 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
                 ...
             }
             */
-        
+    
             ImGui::PushID(inout_module.uid);
-
+        
             // Colors
             ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg]; // ImGuiCol_FrameBg ImGuiCol_Button
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
@@ -243,7 +244,7 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
                     if (ImGui::MenuItem("Rename")) {
                         popup_rename = true;
                     }
-                    if (ImGui::BeginMenu("Add Group")) {
+                    if (ImGui::BeginMenu("Add to Group")) {
                         if (ImGui::MenuItem("New")) {
                             state.interact.module_add_group_uid.first =  inout_module.uid; 
                             state.interact.module_add_group_uid.second =  GUI_INVALID_ID; 
@@ -259,7 +260,7 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
                         }
                         ImGui::EndMenu();
                     }
-                    if (ImGui::MenuItem("Remove Group")) {
+                    if (ImGui::MenuItem("Remove from Group")) {
                         state.interact.module_remove_group_uid = inout_module.uid;
                     }                                
                     ImGui::EndPopup();
@@ -328,10 +329,10 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
             if (this->utils.RenamePopUp("Rename Project", popup_rename, inout_module.name)) {
                 this->UpdateSize(inout_module, state.canvas);
             }
-
+            
             ImGui::PopID();
         }
-
+        
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -350,7 +351,7 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
     if (this->label_visible) {
         this->class_label = "Class: " + inout_mod.class_name;
         float class_name_length = this->utils.TextWidgetWidth(this->class_label);
-        this->name_label = "Name: " + inout_mod.name; // inout_mod.FullName();
+        this->name_label = "Name: " + inout_mod.FullName(); // name FullName();
         float name_length = this->utils.TextWidgetWidth(inout_mod.present.name_label);
         max_label_length = std::max(class_name_length, name_length);
     }

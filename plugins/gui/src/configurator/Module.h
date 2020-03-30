@@ -93,7 +93,7 @@ public:
     
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
-    bool GUI_GetVisibility(void) { return this->present.visible; }
+    bool GUI_GetGroupView(void) { return this->present.visible; }
 
 private:
     std::map<CallSlot::CallSlotType, CallSlotPtrVectorType> call_slots;

@@ -250,7 +250,7 @@ ImGuiID megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(
 // CALL SLOT PRESENTATION ####################################################
 
 megamol::gui::configurator::CallSlot::Presentation::Presentation(void)
-    : presentations(CallSlot::Presentations::DEFAULT), label_visible(false), position(), utils(), selected(false), update_once(true) {}
+    : presentations(CallSlot::Presentations::DEFAULT), label_visible(false), interface_view(false), position(), utils(), selected(false), update_once(true) {}
 
 megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
@@ -325,15 +325,20 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
         // Colors
         ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg]; // ImGuiCol_FrameBg ImGuiCol_Button
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-        const ImU32 COLOR_SLOT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
+        ImU32 COLOR_SLOT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
         tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive]; // ImGuiCol_Border ImGuiCol_ScrollbarGrabActive
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);         
         const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
-        const ImU32 COLOR_SLOT_CALLER = IM_COL32(0, 255, 192, 255);
-        const ImU32 COLOR_SLOT_CALLEE = IM_COL32(192, 255, 64, 255);
+        ImU32 COLOR_SLOT_CALLER = IM_COL32(0, 255, 192, 255);
+        ImU32 COLOR_SLOT_CALLEE = IM_COL32(192, 255, 64, 255);
         const ImU32 COLOR_SLOT_COMPATIBLE = IM_COL32(0, 192, 0, 255);
+            
+        // Group interface call slot presentation.
+        if (this->interface_view) {
+            COLOR_SLOT_BACKGROUND = IM_COL32(0, 255, 0, 255);
+        }
 
         ImU32 slot_color = COLOR_SLOT_BACKGROUND;
 
@@ -359,16 +364,16 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
             ImGui::Text("Call Slot");
             ImGui::Separator();     
-            bool disabled = true;
+            bool enabled = false;
             if (inout_call_slot.ParentModuleConnected()) {
-                disabled = !inout_call_slot.GetParentModule()->name_space.empty();
+                enabled = !inout_call_slot.GetParentModule()->name_space.empty();
             }
-            if (ImGui::MenuItem("Add Group Interface ", nullptr, false, disabled)) {
+            if (ImGui::MenuItem("Add to Group Interface ", nullptr, false, (!this->interface_view && enabled))) {
                 state.interact.callslot_add_group_uid.first = inout_call_slot.uid;
                 /// Menu item is only active when parent module is connected.
                 state.interact.callslot_add_group_uid.second = inout_call_slot.GetParentModule()->uid; 
             }
-            if (ImGui::MenuItem("Remove Group Interface", nullptr, false, disabled)) {
+            if (ImGui::MenuItem("Remove Group Interface", nullptr, false, (this->interface_view && enabled))) {
                 state.interact.callslot_remove_group_uid =  inout_call_slot.uid;  
             }                                
             ImGui::EndPopup();
@@ -431,6 +436,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
         if (this->label_visible) {
             draw_list->AddText(text_pos_left_upper, slot_highlight_color, inout_call_slot.name.c_str());
         }
+      
 
         ImGui::PopID();
 

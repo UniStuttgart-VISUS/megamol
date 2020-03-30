@@ -137,8 +137,8 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::confi
             bool visible = true;
             if ((inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->ParentModuleConnected()) &&
                 (inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->ParentModuleConnected())) {
-                visible = (inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->GetParentModule()->GUI_GetVisibility() || 
-                          inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->GetParentModule()->GUI_GetVisibility());
+                visible = (inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->GetParentModule()->GUI_GetGroupView() || 
+                          inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->GetParentModule()->GUI_GetGroupView());
             }            
 
             if (visible) {

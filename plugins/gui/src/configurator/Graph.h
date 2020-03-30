@@ -146,7 +146,7 @@ private:
     // FUNCTIONS --------------------------------------------------------------
 
     const CallPtrVectorType& get_graph_calls(void) { return this->calls; }
-    GroupGraphVectorType& get_graph_groups(void) { return this->groups; }
+    GroupGraphVectorType& get_groups(void) { return this->groups; }
 
     bool delete_disconnected_calls(void);
 

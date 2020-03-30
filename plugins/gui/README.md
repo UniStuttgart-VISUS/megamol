@@ -80,10 +80,12 @@ In order to start the configurator automatically, you can use the project  `/exa
         
 See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a bug and feature tracker.
 
+**NOTE:**\
+Parameter values in lua command `mmSetParamValue` must have the value enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are not supported.
+
 #### Menu
 
-The menu of the configurator window provides the following options:
-(Assigned hotkeys are given in brackets.)
+The menu of the configurator window provides the following options.
 
 * `File`
     * `Load` 
@@ -94,15 +96,16 @@ The menu of the configurator window provides the following options:
         * `File` Add existing project from a file to currently selected project.
         * `Running` Add currently running project to currently selected project.
     * `Save Project` (`Ctrl + s`) Save the project of the currently selected tab to a file (lua).
+    
 * `View`
     * `Modules Sidebar` (`Ctrl + Shift + m`) Show/Hide sidebar with module stock list.
     * `Parameter Sidebar` (`Ctrl + Shift + p`) Show/Hide sidebar with parameters of currently selected module.
+    
 * `Help` Link to this Readme.
 
-**NOTE:**\
-Parameter values in lua command `mmSetParamValue` must have the value enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are not supported.
-
 #### Additional Options
+
+There are additional options available within the configurator, e.g. via the context menu.
 
 * Add Module from Stock List
     * `Double Left Click` on Module in Stock List
@@ -128,7 +131,17 @@ Parameter values in lua command `mmSetParamValue` must have the value enclosed i
     * `Middle Mouse Button`
     
 * **Module Grouping**
-    * ...                
+    * Groups: `Right Click` Context Menu  
+        * `Collapsed View` / `Expanded View`
+        * `Save`
+        * `Rename`        
+        * `Delete`
+    * Modules: `Right Click` Context Menu             
+        * `Add to Group`
+        * `Remove from Group`        
+    * Call Slots: `Right Click` Context Menu             
+        * `Add to Group Interface`
+        * `Remove from Group Interface`            
                             
 ![configurator demo picture](configurator.png)
 
