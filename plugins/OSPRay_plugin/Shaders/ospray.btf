@@ -51,7 +51,7 @@ void main()
     vec2  coord  = vec2((ws_pos.x+1)/2, (ws_pos.y+1)/2);
     gl_FragDepth = texture(depth, coord).r;
     //gl_FragDepth = 0.5;
-    //FragColor = texture(depth, coord);
+    //gl_FragColor = texture(depth, coord);
     //FragColor = vec4(FragColor.xyz, 1);
     gl_FragColor    = texture(tex, coord);
 }

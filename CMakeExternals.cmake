@@ -107,6 +107,16 @@ function(require_external NAME)
       GIT_TAG "v1.3.0"
       INCLUDE_DIR "include")
 
+  # tinygltf
+  elseif(NAME STREQUAL "tinygltf")
+    if(TARGET tinygltf)
+      return()
+    endif()
+
+    add_external_headeronly_project(tinygltf
+      GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
+      GIT_TAG "v2.2.0")
+
   # Built libraries #####################################################
 
   # adios2
@@ -144,6 +154,25 @@ function(require_external NAME)
 
     add_external_library(adios2
       LIBRARY ${ADIOS2_LIB})
+
+  # libigl
+  elseif(NAME STREQUAL "libigl")
+    if(TARGET libigl)
+      return()
+    endif()
+
+    if(WIN32)
+      set(LIBIGL_LIB "")
+    else()
+      include(GNUInstallDirs)
+      set(LIBIGL_LIB "")
+    endif()
+
+    add_external_headeronly_project(libigl
+        GIT_REPOSITORY https://github.com/libigl/libigl.git
+        GIT_TAG "v2.1.0"
+        INCLUDE_DIR "include")
+
 
   # bhtsne
   elseif(NAME STREQUAL "bhtsne")
@@ -245,7 +274,7 @@ function(require_external NAME)
   # imgui
   elseif(NAME STREQUAL "imgui")
     if(NOT TARGET imgui)
-
+      
       if(WIN32)
         set(IMGUI_LIB "lib/imgui.lib")
       else()

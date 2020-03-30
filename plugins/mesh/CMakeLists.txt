@@ -16,6 +16,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Add externals.
   require_external(quickhull)
   require_external(tinyobjloader)
+  require_external(tinygltf)
 
   # Collect source files
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
@@ -28,11 +29,10 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-                                                    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external>
                                                     "src")
   target_link_libraries(${PROJECT_NAME} 
     PRIVATE core 
-    PUBLIC quickhull tinyobjloader compositing_gl)
+    PUBLIC quickhull tinyobjloader tinygltf compositing_gl)
 
   if(MSVC)
       target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX)

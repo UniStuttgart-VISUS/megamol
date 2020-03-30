@@ -141,8 +141,8 @@ bool RenderMDIMesh::GetExtents(core::view::CallRender3D_2& call) {
 		return false;
 
     auto meta_data = rtc->getMetaData();
-    //meta_data.m_frame_ID = static_cast<int>(cr->LastFrameTime());
-    //rtc->setMetaData(meta_data);
+    meta_data.m_frame_ID = static_cast<int>(cr->Time());
+    rtc->setMetaData(meta_data);
 
 	if (!(*rtc)(1))
 		return false;
@@ -209,6 +209,11 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 		
 		render_task.draw_commands->bind();
 		render_task.mesh->bindVertexArray();
+
+        if(render_task.mesh->getPrimitiveType() == GL_PATCHES){
+            glPatchParameteri(GL_PATCH_VERTICES, 4);
+            //TODO add generic patch vertex count to render tasks....
+        }
 		
 		glMultiDrawElementsIndirect(render_task.mesh->getPrimitiveType(),
 			render_task.mesh->getIndexType(),
