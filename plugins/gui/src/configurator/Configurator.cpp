@@ -379,15 +379,18 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
 
             if (add_module) {
                 if (graph_ptr != nullptr) {
-                    graph_ptr->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
-                    // If there is a call slot selected, create call to compatible call slot of new module
-                    if (compat_filter && (selected_call_slot_ptr != nullptr)) {
-                        // Get call slots of last added module
-                        for (auto& call_slot_map : graph_ptr->GetGraphModules().back()->GetCallSlots()) {
-                            for (auto& call_slot : call_slot_map.second) {
-                                if (call_slot->name == compat_call_slot_name) {
-                                    if (graph_ptr->AddCall(
-                                            this->graph_manager.GetCallsStock(), selected_call_slot_ptr, call_slot)) {
+                    ImGuiID module_uid = graph_ptr->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
+                    auto module_ptr = graph_ptr->GetModule(module_uid); 
+                    if (module_ptr != nullptr) {
+                        // If there is a call slot selected, create call to compatible call slot of new module
+                        if (compat_filter && (selected_call_slot_ptr != nullptr)) {
+                            // Get call slots of last added module
+                            for (auto& call_slot_map : module_ptr->GetCallSlots()) {
+                                for (auto& call_slot : call_slot_map.second) {
+                                    if (call_slot->name == compat_call_slot_name) {
+                                        if (graph_ptr->AddCall(
+                                                this->graph_manager.GetCallsStock(), selected_call_slot_ptr, call_slot)) {
+                                        }
                                     }
                                 }
                             }
@@ -421,7 +424,9 @@ void megamol::gui::configurator::Configurator::add_empty_project(void) {
         auto graph_ptr = this->graph_manager.GetGraph(graph_uid);
         if (graph_ptr != nullptr) {
             std::string guiview_class_name = "GUIView";
-            if (graph_ptr->AddModule(this->graph_manager.GetModulesStock(), guiview_class_name)) {
+            ImGuiID module_uid = graph_ptr->AddModule(this->graph_manager.GetModulesStock(), guiview_class_name);
+            auto module_ptr = graph_ptr->GetModule(module_uid); 
+            if (module_ptr != nullptr) {
                 auto graph_module = graph_ptr->GetGraphModules().back();
                 graph_module->is_view_instance = true;
             } else {

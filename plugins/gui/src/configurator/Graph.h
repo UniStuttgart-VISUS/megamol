@@ -40,10 +40,11 @@ public:
 
     virtual ~Graph(void);
 
-    bool AddModule(const ModuleStockVectorType& stock_modules, const std::string& module_class_name);
+    ImGuiID AddModule(const ModuleStockVectorType& stock_modules, const std::string& module_class_name);
     bool DeleteModule(ImGuiID module_uid);
     const ModulePtrVectorType& GetGraphModules(void) { return this->modules; }
-
+    const ModulePtrType& GetModule(ImGuiID module_uid);
+    
     bool AddCall(const CallStockVectorType& stock_calls, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
     bool DeleteCall(ImGuiID call_uid);
 

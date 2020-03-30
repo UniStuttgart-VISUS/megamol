@@ -364,16 +364,17 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(megamol::gui::c
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
             ImGui::Text("Call Slot");
             ImGui::Separator();     
-            bool enabled = false;
+            bool is_parent_group_member = false;
             if (inout_call_slot.ParentModuleConnected()) {
-                enabled = !inout_call_slot.GetParentModule()->name_space.empty();
+                is_parent_group_member = !inout_call_slot.GetParentModule()->name_space.empty();
             }
-            if (ImGui::MenuItem("Add to Group Interface ", nullptr, false, (!this->interface_view && enabled))) {
+            /// Menu item is only active when parent module is part of a group and call slot is not yet part of the group.
+            if (ImGui::MenuItem("Add to Group Interface ", nullptr, false, (!this->interface_view && is_parent_group_member))) {
                 state.interact.callslot_add_group_uid.first = inout_call_slot.uid;
-                /// Menu item is only active when parent module is connected.
                 state.interact.callslot_add_group_uid.second = inout_call_slot.GetParentModule()->uid; 
             }
-            if (ImGui::MenuItem("Remove Group Interface", nullptr, false, (this->interface_view && enabled))) {
+            /// Menu item is only active when parent module is part of a group and call slot is already part of the group.
+            if (ImGui::MenuItem("Remove Group Interface", nullptr, false, (this->interface_view && is_parent_group_member))) {
                 state.interact.callslot_remove_group_uid =  inout_call_slot.uid;  
             }                                
             ImGui::EndPopup();

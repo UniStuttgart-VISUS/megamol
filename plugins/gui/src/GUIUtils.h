@@ -38,6 +38,8 @@
 namespace megamol {
 namespace gui {
 
+
+
 /********** Defines **********/
 
 #define GUI_INVALID_ID (UINT_MAX)
@@ -47,16 +49,16 @@ namespace gui {
 
 /********** Types **********/
 
-/** Hotkey Data Types (for configurator) */
+/** Hotkey Data Types (exclusively for configurator) */
 typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyDataType;
 enum HotkeyIndex : size_t { MODULE_SEARCH = 0, PARAMETER_SEARCH = 1, DELETE_GRAPH_ITEM = 2, SAVE_PROJECT = 3, INDEX_COUNT = 4 };
-typedef std::array<HotkeyDataType, HotkeyIndex::INDEX_COUNT> HotKeyArrayType;
+typedef std::array<megamol::gui::HotkeyDataType, megamol::gui::HotkeyIndex::INDEX_COUNT> HotkeyArrayType;
 
 namespace configurator {
 // Forward declaration
 class CallSlot;
 // Pointer types to classes
-typedef std::shared_ptr<CallSlot> CallSlotPtrType;
+typedef std::shared_ptr<megamol::gui::configurator::CallSlot> CallSlotPtrType;
 }
 
 /* Data type holding a pair of uids. */
@@ -64,7 +66,7 @@ typedef std::pair<ImGuiID, ImGuiID> UIDPairType;
 
 /* Data type holding current group uid and group name pairs. */
 typedef std::pair<ImGuiID, std::string> GroupPairType;
-typedef std::vector<GroupPairType> GroupPairVectorType;
+typedef std::vector<megamol::gui::GroupPairType> GroupPairVectorType;
 
 /* Data type holding information of graph canvas. */
 typedef struct _canvas_ {
@@ -77,37 +79,37 @@ typedef struct _canvas_ {
 
 /* Data type holding information on graph item interaction. */
 typedef struct _interact_state_ {
-    ImGuiID group_selected_uid;                         // in out
-    bool group_save;                                    // out
-    ImGuiID module_selected_uid;                        // in out
-    ImGuiID module_hovered_uid;                         // in out
-    UIDPairType module_add_group_uid;                   // out
-    ImGuiID module_remove_group_uid;                    // out
-    ImGuiID call_selected_uid;                          // in out
-    ImGuiID callslot_selected_uid;                      // in out    
-    ImGuiID callslot_hovered_uid;                       // in out
-    ImGuiID callslot_dropped_uid;                       // in out
-    UIDPairType callslot_add_group_uid;                 // in out
-    ImGuiID callslot_remove_group_uid;                  // in out
-    configurator::CallSlotPtrType callslot_compat_ptr;  // in 
+    ImGuiID group_selected_uid;                                         // in out
+    bool group_save;                                                    // out
+    ImGuiID module_selected_uid;                                        // in out
+    ImGuiID module_hovered_uid;                                         // in out
+    megamol::gui::UIDPairType module_add_group_uid;                     // out
+    ImGuiID module_remove_group_uid;                                    // out
+    ImGuiID call_selected_uid;                                          // in out
+    ImGuiID callslot_selected_uid;                                      // in out    
+    ImGuiID callslot_hovered_uid;                                       // in out
+    ImGuiID callslot_dropped_uid;                                       // in out
+    megamol::gui::UIDPairType callslot_add_group_uid;                   // in out
+    ImGuiID callslot_remove_group_uid;                                  // in out
+    megamol::gui::configurator::CallSlotPtrType callslot_compat_ptr;    // in 
 } GraphItemsInteractType;
 
 /* Data type holding shared state of graph items. */
 typedef struct _graph_item_state_ {
-    GraphCanvasType canvas;             // (see above)
-    GraphItemsInteractType interact;    // (see above)
-    HotKeyArrayType hotkeys;            // in out
-    GroupPairVectorType groups;               // in
+    megamol::gui::GraphCanvasType canvas;             // (see above)
+    megamol::gui::GraphItemsInteractType interact;    // (see above)
+    megamol::gui::HotkeyArrayType hotkeys;            // in out
+    megamol::gui::GroupPairVectorType groups;         // in
 } GraphItemsStateType;
 
 /* Data type holding shared state of graphs. */
 typedef struct _graph_state_ {
-    ImFont* font;                   // in 
-    float child_width;              // in 
-    bool show_parameter_sidebar;    // in     
-    HotKeyArrayType hotkeys;        // in out    
-    ImGuiID graph_selected_uid;     // out
-    bool graph_delete;              // out
+    ImFont* font;                           // in 
+    float child_width;                      // in 
+    bool show_parameter_sidebar;            // in     
+    megamol::gui::HotkeyArrayType hotkeys;  // in out    
+    ImGuiID graph_selected_uid;             // out
+    bool graph_delete;                      // out
 } GraphStateType;
 
 /********** Class **********/

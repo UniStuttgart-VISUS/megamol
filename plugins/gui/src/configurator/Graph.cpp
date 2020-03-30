@@ -24,13 +24,14 @@ megamol::gui::configurator::Graph::Graph(const std::string& graph_name)
 megamol::gui::configurator::Graph::~Graph(void) {}
 
 
-bool megamol::gui::configurator::Graph::AddModule(
+ImGuiID megamol::gui::configurator::Graph::AddModule(
     const ModuleStockVectorType& stock_modules, const std::string& module_class_name) {
 
     try {
         for (auto& mod : stock_modules) {
             if (module_class_name == mod.class_name) {
-                auto mod_ptr = std::make_shared<Module>(this->generate_unique_id());
+                ImGuiID mod_uid = this->generate_unique_id();
+                auto mod_ptr = std::make_shared<Module>(mod_uid);
                 mod_ptr->class_name = mod.class_name;
                 mod_ptr->description = mod.description;
                 mod_ptr->plugin_name = mod.plugin_name;
@@ -72,24 +73,25 @@ bool megamol::gui::configurator::Graph::AddModule(
                 }
 
                 this->modules.emplace_back(mod_ptr);
-                vislib::sys::Log::DefaultLog.WriteInfo("Added module '%s'.\n", mod_ptr->class_name.c_str());
+                vislib::sys::Log::DefaultLog.WriteInfo("Added module '%s' to project '%s'.\n", mod_ptr->class_name.c_str(), this->name.c_str());
 
                 this->dirty_flag = true;
-                return true;
+
+                return mod_uid;
             }
         }
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        return GUI_INVALID_ID;
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        return GUI_INVALID_ID;
     }
 
     vislib::sys::Log::DefaultLog.WriteError("Unable to find module in stock: %s [%s, %s, line %d]\n",
         module_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-    return false;
+    return GUI_INVALID_ID;
 }
 
 
@@ -99,7 +101,7 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
         for (auto iter = this->modules.begin(); iter != this->modules.end(); iter++) {
             if ((*iter)->uid == module_uid) {
 
-                // First reset pointers in groups
+                // First reset module and call slot pointers in groups
                 for (auto& group : this->groups) {
                     if (group.ContainsModule(module_uid)) {
                         group.RemoveModule(module_uid);
@@ -117,8 +119,7 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
                         (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 }
 
-                vislib::sys::Log::DefaultLog.WriteInfo("Deleted module: %s [%s, %s, line %d]\n",
-                    (*iter)->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                vislib::sys::Log::DefaultLog.WriteInfo("Deleted module '%s' from  project '%s'.\n", (*iter)->class_name.c_str(), this->name.c_str());
                 (*iter).reset();
                 this->modules.erase(iter);
 
@@ -141,6 +142,17 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
     return false;
 }
 
+
+const ModulePtrType& megamol::gui::configurator::Graph::GetModule(ImGuiID module_uid) {
+    
+    for (auto& mod : this->modules) {
+        if (mod->uid == module_uid) {
+            return mod;
+        }
+    }
+    return nullptr;    
+}
+    
 
 bool megamol::gui::configurator::Graph::AddCall(
     const CallStockVectorType& stock_calls, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2) {
@@ -175,7 +187,7 @@ bool megamol::gui::configurator::Graph::AddCall(
             call_slot_2->ConnectCall(call_ptr)) {
 
             this->calls.emplace_back(call_ptr);
-            vislib::sys::Log::DefaultLog.WriteInfo("Added call '%s'.\n", call_ptr->class_name.c_str());
+            vislib::sys::Log::DefaultLog.WriteInfo("Added call '%s' to project '%s'.\n", call_ptr->class_name.c_str(), this->name.c_str());
 
             this->dirty_flag = true;
         } else {
@@ -235,8 +247,7 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
                         (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 }
 
-                vislib::sys::Log::DefaultLog.WriteInfo("Deleted call: %s [%s, %s, line %d]\n",
-                    (*iter)->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                vislib::sys::Log::DefaultLog.WriteInfo("Deleted call '%s' from  project '%s'.\n", (*iter)->class_name.c_str(), this->name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 (*iter).reset();
                 this->calls.erase(iter);
 
@@ -323,7 +334,7 @@ bool megamol::gui::configurator::Graph::DeleteGroup(ImGuiID group_uid) {
             }
             else {
                 this->present.ApplyUpdate();
-                vislib::sys::Log::DefaultLog.WriteInfo("Deleted group '%s'.\n",group.name.c_str());  
+                vislib::sys::Log::DefaultLog.WriteInfo("Deleted group '%s' from  project '%s'.\n",group.name.c_str(), this->name.c_str());  
                 found_group = true;
             }
         } 
@@ -356,7 +367,7 @@ ImGuiID megamol::gui::configurator::Graph::add_group(const std::string& group_na
             group.name = group_name;
             this->groups.emplace_back(group);
 
-            vislib::sys::Log::DefaultLog.WriteInfo("Added group '%s'.\n", group.name.c_str());
+            vislib::sys::Log::DefaultLog.WriteInfo("Added group '%s' to project '%s'.\n", group.name.c_str(), this->name.c_str());
             return group_id;
         }
 

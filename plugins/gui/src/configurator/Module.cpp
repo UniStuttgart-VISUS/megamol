@@ -244,7 +244,8 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
                     if (ImGui::MenuItem("Rename")) {
                         popup_rename = true;
                     }
-                    if (ImGui::BeginMenu("Add to Group")) {
+                    bool is_group_member = !inout_module.name_space.empty();
+                    if (ImGui::BeginMenu("Add to Group", !is_group_member)) {
                         if (ImGui::MenuItem("New")) {
                             state.interact.module_add_group_uid.first =  inout_module.uid; 
                             state.interact.module_add_group_uid.second =  GUI_INVALID_ID; 
@@ -260,7 +261,7 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
                         }
                         ImGui::EndMenu();
                     }
-                    if (ImGui::MenuItem("Remove from Group")) {
+                    if (ImGui::MenuItem("Remove from Group", nullptr , false, is_group_member)) {
                         state.interact.module_remove_group_uid = inout_module.uid;
                     }                                
                     ImGui::EndPopup();
@@ -288,7 +289,8 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::con
             
             ImU32 module_bg_color = (hovered || this->selected) ? COLOR_MODULE_HIGHTLIGHT : COLOR_MODULE_BACKGROUND;
             draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 5.0f, ImDrawCornerFlags_All);
-            draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 5.0f, ImDrawCornerFlags_All, 1.0f);
+            float border = ((inout_module.is_view_instance) ? (4.0f):(1.0f)) * state.canvas.zooming;
+            draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 5.0f, ImDrawCornerFlags_All, border);
 
             // Draw text
             if (this->label_visible) {
@@ -351,7 +353,7 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
     if (this->label_visible) {
         this->class_label = "Class: " + inout_mod.class_name;
         float class_name_length = this->utils.TextWidgetWidth(this->class_label);
-        this->name_label = "Name: " + inout_mod.FullName(); // name FullName();
+        this->name_label = "Name: " + inout_mod.name; // .name OR .FullName();
         float name_length = this->utils.TextWidgetWidth(inout_mod.present.name_label);
         max_label_length = std::max(class_name_length, name_length);
     }

@@ -142,6 +142,9 @@ private:
         double last_instance_time; // Last instance time.
         bool hotkeys_check_once;   // WORKAROUND: Check multiple hotkey assignments once.
     };
+    
+    /** The GUI hotkey array index mapping. */
+    enum GuiHotkeyIndex : size_t { EXIT_PROGRAM = 0, PARAMETER_SEARCH = 1, SAVE_PROJECT = 2, INDEX_COUNT = 3 };
 
     // VARIABLES --------------------------------------------------------------
 
@@ -161,8 +164,7 @@ private:
     megamol::core::param::ParamSlot autostart_configurator;
 
     /** Hotkeys */
-    enum GuiHotkeyIndex : size_t { EXIT_PROGRAM = 0, PARAMETER_SEARCH = 1, SAVE_PROJECT = 2, INDEX_COUNT = 3 };
-    std::array<HotkeyDataType, GuiHotkeyIndex::INDEX_COUNT> hotkeys;
+    std::array<megamol::gui::HotkeyDataType, GuiHotkeyIndex::INDEX_COUNT> hotkeys;
 
     /** The ImGui context created and used by this GUIWindows */
     ImGuiContext* context;
@@ -177,7 +179,7 @@ private:
     TransferFunctionEditor tf_editor;
 
     /** The configurator. */
-    configurator::Configurator configurator;
+    megamol::gui::configurator::Configurator configurator;
 
     /** Utils being used all over the place */
     megamol::gui::GUIUtils utils;
