@@ -23,7 +23,7 @@
 //#define LOADED_MESSAGE
 
 namespace megamol {
-namespace imageviewer2 {
+namespace imageviewer {
 
 class ImageLoader : public core::Module {
 public:
@@ -177,7 +177,7 @@ private:
     std::condition_variable condvar;
 };
 
-} // namespace imageviewer2
+} // namespace imageviewer
 } // namespace megamol
 
 #endif // !MEGAMOLCORE_IMAGELOADER_H_INCLUDED

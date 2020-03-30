@@ -1,10 +1,10 @@
 /*
- * imageviewer2.h
+ * imageviewer.h
  * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef IMAGEVIEWER2_H_INCLUDED
-#define IMAGEVIEWER2_H_INCLUDED
+#ifndef imageviewer_H_INCLUDED
+#define imageviewer_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -17,27 +17,28 @@
 // that uses this DLL. This way any other project whose source files include this file see 
 // TRISOUPPLUGIN_API functions as being imported from a DLL, whereas this DLL sees symbols
 // defined with this macro as being exported.
-#ifdef IMAGEVIEWER2_EXPORTS
-#define IMAGEVIEWER2_API __declspec(dllexport)
+#ifdef imageviewer_EXPORTS
+#define imageviewer_API __declspec(dllexport)
 #else
-#define IMAGEVIEWER2_API __declspec(dllimport)
+#define imageviewer_API __declspec(dllimport)
 #endif
 #else /* _WIN32 */
-#define IMAGEVIEWER2_API
+#define imageviewer_API
 #endif /* _WIN32 */
 
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 
+#ifdef imageviewer_EXPORTS
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * Returns the version of the MegaMol™ plugin api used by this plugin.
+ * Returns the version of the MegaMolï¿½ plugin api used by this plugin.
  *
  * @return 200 -- (ver.: 2.00)
  */
-IMAGEVIEWER2_API int mmplgPluginAPIVersion(void);
+imageviewer_API int mmplgPluginAPIVersion(void);
 
 /**
  * Provides compatibility information
@@ -50,7 +51,7 @@ IMAGEVIEWER2_API int mmplgPluginAPIVersion(void);
  * @remarks Always use 'mmplgReleasePluginCompatibilityInfo' to release the
  *          memory of the returned struct.
  */
-IMAGEVIEWER2_API
+imageviewer_API
 ::megamol::core::utility::plugins::PluginCompatibilityInfo *
 mmplgGetPluginCompatibilityInfo(
     ::megamol::core::utility::plugins::ErrorCallback onError);
@@ -61,7 +62,7 @@ mmplgGetPluginCompatibilityInfo(
  *
  * @param ci The compatibility information struct to be released
  */
-IMAGEVIEWER2_API void mmplgReleasePluginCompatibilityInfo(
+imageviewer_API void mmplgReleasePluginCompatibilityInfo(
     ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci);
 
 /**
@@ -74,7 +75,7 @@ IMAGEVIEWER2_API void mmplgReleasePluginCompatibilityInfo(
  * @remarks Always use 'mmplgReleasePluginInstance' to release the memory of
  *          the returned object.
  */
-IMAGEVIEWER2_API
+imageviewer_API
 ::megamol::core::utility::plugins::AbstractPluginInstance*
 mmplgGetPluginInstance
     (::megamol::core::utility::plugins::ErrorCallback onError);
@@ -85,11 +86,12 @@ mmplgGetPluginInstance
  *
  * @param pi The plugin instance to be released
  */
-IMAGEVIEWER2_API void mmplgReleasePluginInstance(
+imageviewer_API void mmplgReleasePluginInstance(
     ::megamol::core::utility::plugins::AbstractPluginInstance* pi);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
+#endif
 
-#endif /* IMAGEVIEWER2_H_INCLUDED */
+#endif /* imageviewer_H_INCLUDED */

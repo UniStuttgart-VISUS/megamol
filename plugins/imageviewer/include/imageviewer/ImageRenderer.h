@@ -34,10 +34,10 @@
 using namespace megamol::core;
 
 namespace megamol {
-namespace imageviewer2 {
+namespace imageviewer {
 
 /**
- * Mesh-based renderer for bézier curve tubes
+ * Mesh-based renderer for bï¿½zier curve tubes
  */
 class ImageRenderer : public view::Renderer3DModule_2 {
 public:
@@ -249,7 +249,7 @@ private:
     size_t datahash;
 };
 
-} /* end namespace imageviewer2 */
+} /* end namespace imageviewer */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_IMAGEVIEWER_H_INCLUDED */

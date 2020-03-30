@@ -6,8 +6,8 @@
  */
 
 #include "stdafx.h"
-#include "imageviewer2/ImageLoader.h"
-#include "imageviewer2/JpegBitmapCodec.h"
+#include "imageviewer/ImageLoader.h"
+#include "imageviewer/JpegBitmapCodec.h"
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "vislib/graphics/BitmapCodecCollection.h"
 
@@ -21,7 +21,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::imageviewer2;
+using namespace megamol::imageviewer;
 
 #ifdef LOADED_MESSAGE
 uint32_t ImageLoader::loaded = 0;

@@ -6,13 +6,14 @@
  */
 
 #include "stdafx.h"
-#include "imageviewer2/ImageRenderer.h"
-#include "imageviewer2/JpegBitmapCodec.h"
+#include "imageviewer/ImageRenderer.h"
+#include "imageviewer/JpegBitmapCodec.h"
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "vislib/graphics/BitmapCodecCollection.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 //#define _USE_MATH_DEFINES
+#include <iterator>
 #include "image_calls/Image2DCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
@@ -25,7 +26,6 @@
 #include "mmcore/view/CallRender3D_2.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/SystemInformation.h"
-#include <iterator>
 //#include <cmath>
 
 using namespace megamol::core;
@@ -36,7 +36,7 @@ const unsigned int TILE_SIZE = 2 * 1024;
 /*
  * misc::ImageRenderer::ImageRenderer
  */
-imageviewer2::ImageRenderer::ImageRenderer(void)
+imageviewer::ImageRenderer::ImageRenderer(void)
     : Renderer3DModule_2()
     , leftFilenameSlot("leftImg", "The image file name")
     , rightFilenameSlot("rightImg", "The image file name")
@@ -125,13 +125,13 @@ imageviewer2::ImageRenderer::ImageRenderer(void)
 /*
  * misc::ImageRenderer::~ImageRenderer
  */
-imageviewer2::ImageRenderer::~ImageRenderer(void) { this->Release(); }
+imageviewer::ImageRenderer::~ImageRenderer(void) { this->Release(); }
 
 
 /*
  * misc::ImageRenderer::create
  */
-bool imageviewer2::ImageRenderer::create(void) {
+bool imageviewer::ImageRenderer::create(void) {
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::PngBitmapCodec());
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::JpegBitmapCodec());
 
@@ -181,9 +181,9 @@ bool imageviewer2::ImageRenderer::create(void) {
 
 
 /*
- * imageviewer2::ImageRenderer::GetExtents
+ * imageviewer::ImageRenderer::GetExtents
  */
-bool imageviewer2::ImageRenderer::GetExtents(view::CallRender3D_2& call) {
+bool imageviewer::ImageRenderer::GetExtents(view::CallRender3D_2& call) {
 
     view::Camera_2 cam;
     call.GetCamera(cam);
@@ -221,9 +221,9 @@ bool imageviewer2::ImageRenderer::GetExtents(view::CallRender3D_2& call) {
 
 
 /*
- * imageviewer2::ImageRenderer::release
+ * imageviewer::ImageRenderer::release
  */
-void imageviewer2::ImageRenderer::release(void) {
+void imageviewer::ImageRenderer::release(void) {
     //    this->image.Release();
     glDeleteBuffers(1, &theVertBuffer);
     glDeleteBuffers(1, &theTexCoordBuffer);
@@ -232,9 +232,9 @@ void imageviewer2::ImageRenderer::release(void) {
 
 
 /*
- * imageviewer2::ImageRenderer::assertImage
+ * imageviewer::ImageRenderer::assertImage
  */
-bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
+bool imageviewer::ImageRenderer::assertImage(bool rightEye) {
     static bool registered = false;
 
     bool beBlank = this->blankMachines.Contains(this->machineName);
@@ -346,8 +346,7 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
                         std::advance(it, selected);
                         this->width = (*it).second.Width();
                         this->height = (*it).second.Height();
-                        allFile =
-                            reinterpret_cast<uint8_t*>((*it).second.PeekDataAs<uint8_t>());
+                        allFile = reinterpret_cast<uint8_t*>((*it).second.PeekDataAs<uint8_t>());
                     }
 #ifdef WITH_MPI
                 }
@@ -458,7 +457,7 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
 }
 
 
-bool imageviewer2::ImageRenderer::initMPI() {
+bool imageviewer::ImageRenderer::initMPI() {
     bool retval = false;
 #ifdef WITH_MPI
     if (this->comm == MPI_COMM_NULL) {
@@ -494,9 +493,9 @@ bool imageviewer2::ImageRenderer::initMPI() {
 
 
 /*
- * imageviewer2::ImageRenderer::Render
+ * imageviewer::ImageRenderer::Render
  */
-bool imageviewer2::ImageRenderer::Render(view::CallRender3D_2& call) {
+bool imageviewer::ImageRenderer::Render(view::CallRender3D_2& call) {
 
     view::Camera_2 cam;
     call.GetCamera(cam);
@@ -593,9 +592,9 @@ bool imageviewer2::ImageRenderer::Render(view::CallRender3D_2& call) {
 
 
 /*
- * imageviewer2::ImageRenderer::onFilesPasted
+ * imageviewer::ImageRenderer::onFilesPasted
  */
-bool imageviewer2::ImageRenderer::onFilesPasted(param::ParamSlot& slot) {
+bool imageviewer::ImageRenderer::onFilesPasted(param::ParamSlot& slot) {
     vislib::TString str(this->pasteFilenamesSlot.Param<param::StringParam>()->Value());
     vislib::TString left, right;
     str.Replace(_T("\r"), _T(""));
@@ -607,9 +606,9 @@ bool imageviewer2::ImageRenderer::onFilesPasted(param::ParamSlot& slot) {
 
 
 /*
- * imageviewer2::ImageRenderer::interpretLine
+ * imageviewer::ImageRenderer::interpretLine
  */
-void imageviewer2::ImageRenderer::interpretLine(
+void imageviewer::ImageRenderer::interpretLine(
     const vislib::TString source, vislib::TString& left, vislib::TString& right) {
     vislib::TString line(source);
     line.Replace(_T("\n"), _T(""));
@@ -629,9 +628,9 @@ void imageviewer2::ImageRenderer::interpretLine(
 }
 
 /*
- * imageviewer2::ImageRenderer::onSlideshowPasted
+ * imageviewer::ImageRenderer::onSlideshowPasted
  */
-bool imageviewer2::ImageRenderer::onSlideshowPasted(param::ParamSlot& slot) {
+bool imageviewer::ImageRenderer::onSlideshowPasted(param::ParamSlot& slot) {
     vislib::TString left, right;
     this->leftFiles.Clear();
     this->rightFiles.Clear();
@@ -657,36 +656,36 @@ bool imageviewer2::ImageRenderer::onSlideshowPasted(param::ParamSlot& slot) {
 }
 
 /*
- * imageviewer2::ImageRenderer::onFirstPressed
+ * imageviewer::ImageRenderer::onFirstPressed
  */
-bool imageviewer2::ImageRenderer::onFirstPressed(param::ParamSlot& slot) {
+bool imageviewer::ImageRenderer::onFirstPressed(param::ParamSlot& slot) {
     this->currentSlot.Param<param::IntParam>()->SetValue(0);
     return true;
 }
 
 
 /*
- * imageviewer2::ImageRenderer::onPreviousPressed
+ * imageviewer::ImageRenderer::onPreviousPressed
  */
-bool imageviewer2::ImageRenderer::onPreviousPressed(param::ParamSlot& slot) {
+bool imageviewer::ImageRenderer::onPreviousPressed(param::ParamSlot& slot) {
     this->currentSlot.Param<param::IntParam>()->SetValue(this->currentSlot.Param<param::IntParam>()->Value() - 1);
     return true;
 }
 
 
 /*
- * imageviewer2::ImageRenderer::onNextPressed
+ * imageviewer::ImageRenderer::onNextPressed
  */
-bool imageviewer2::ImageRenderer::onNextPressed(param::ParamSlot& slot) {
+bool imageviewer::ImageRenderer::onNextPressed(param::ParamSlot& slot) {
     this->currentSlot.Param<param::IntParam>()->SetValue(this->currentSlot.Param<param::IntParam>()->Value() + 1);
     return true;
 }
 
 
 /*
- * imageviewer2::ImageRenderer::onLastPressed
+ * imageviewer::ImageRenderer::onLastPressed
  */
-bool imageviewer2::ImageRenderer::onLastPressed(param::ParamSlot& slot) {
+bool imageviewer::ImageRenderer::onLastPressed(param::ParamSlot& slot) {
     bool imgcConnected = false;
     auto imgc = this->callRequestImage.CallAs<image_calls::Image2DCall>();
     if (imgc != nullptr) {
@@ -699,9 +698,9 @@ bool imageviewer2::ImageRenderer::onLastPressed(param::ParamSlot& slot) {
 
 
 /*
- * imageviewer2::ImageRenderer::onCurrentSet
+ * imageviewer::ImageRenderer::onCurrentSet
  */
-bool imageviewer2::ImageRenderer::onCurrentSet(param::ParamSlot& slot) {
+bool imageviewer::ImageRenderer::onCurrentSet(param::ParamSlot& slot) {
     int s = slot.Param<param::IntParam>()->Value();
     bool imgcConnected = false;
     auto imgc = this->callRequestImage.CallAs<image_calls::Image2DCall>();
@@ -721,9 +720,9 @@ bool imageviewer2::ImageRenderer::onCurrentSet(param::ParamSlot& slot) {
 
 
 /*
- * imageviewer2::ImageRenderer::onBlankMachineSet
+ * imageviewer::ImageRenderer::onBlankMachineSet
  */
-bool imageviewer2::ImageRenderer::onBlankMachineSet(param::ParamSlot& slot) {
+bool imageviewer::ImageRenderer::onBlankMachineSet(param::ParamSlot& slot) {
     vislib::TString str(this->blankMachine.Param<param::StringParam>()->Value());
     vislib::TString::Size startPos = 0;
     vislib::TString::Size pos = str.Find(_T(";"), startPos);

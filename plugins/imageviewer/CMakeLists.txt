@@ -1,13 +1,13 @@
 #
-# MegaMol™ imageviewer2 Plugin
+# MegaMol™ imageviewer Plugin
 # Copyright 2017, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-string(TOUPPER imageviewer2 EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build imageviewer2 plugin" OFF)
+string(TOUPPER imageviewer EXPORT_NAME)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build imageviewer plugin" OFF)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
-  project(imageviewer2)
+  project(imageviewer)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
@@ -23,7 +23,9 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
+  target_include_directories(${PROJECT_NAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    "include" "src")
   target_link_libraries(${PROJECT_NAME} PRIVATE core image_calls)
 
   if(UNIX)
