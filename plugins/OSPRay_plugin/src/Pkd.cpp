@@ -14,9 +14,9 @@ ospray::PkdBuilder::PkdBuilder()
     : megamol::stdplugin::datatools::AbstractParticleManipulator("outData", "inData")
     , inDataHash(0)
     , outDataHash(0)
-    , numParticles(0)
-    , numInnerNodes(0) {
-    model = std::make_shared<ParticleModel>();
+    /*, numParticles(0)
+    , numInnerNodes(0)*/ {
+    //model = std::make_shared<ParticleModel>();
 }
 
 ospray::PkdBuilder::~PkdBuilder() { Release(); }
@@ -26,38 +26,55 @@ bool ospray::PkdBuilder::manipulateData(
 
     if ((inData.DataHash() != inDataHash) || (inData.FrameID() != frameID) || (inData.DataHash() == 0)) {
         inDataHash = inData.DataHash();
-        outDataHash++;
+        //outDataHash++;
         frameID = inData.FrameID();
+
+
+        // outData = inData;
+
+        outData.SetFrameID(frameID);
+        outData.SetDataHash(inDataHash);
+        outData.SetParticleListCount(inData.GetParticleListCount());
+        outData.AccessBoundingBoxes().SetObjectSpaceBBox(inData.AccessBoundingBoxes().ObjectSpaceBBox());
+        outData.AccessBoundingBoxes().SetObjectSpaceClipBox(inData.AccessBoundingBoxes().ObjectSpaceClipBox());
+
+        outData.SetUnlocker(inData.GetUnlocker());
+
+        models.resize(inData.GetParticleListCount());
+
+        for (unsigned int i = 0; i < inData.GetParticleListCount(); ++i) {
+            auto& parts = inData.AccessParticles(i);
+            auto& out = outData.AccessParticles(i);
+
+            // empty the model
+            // this->model->position.clear();
+            models[i].position.clear();
+
+            // put data the data into the model
+            // and build the pkd tree
+            // this->model->fill(parts);
+            models[i].fill(parts);
+            // this->build();
+            Pkd pkd;
+            pkd.model = &models[i];
+            pkd.build();
+
+            out.SetCount(parts.GetCount());
+            out.SetVertexData(
+                megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, &models[i].position[0].x, 16);
+            out.SetColourData(
+                megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, &models[i].position[0].w, 16);
+            out.SetGlobalRadius(parts.GetGlobalRadius());
+        }
     }
 
-    outData = inData;
     inData.SetUnlocker(nullptr, false);
-    outData.SetFrameID(frameID);
-    outData.SetDataHash(outDataHash);
-
-    for (unsigned int i = 0; i < inData.GetParticleListCount(); i++) {
-        auto& parts = inData.AccessParticles(i);
-        auto& out = outData.AccessParticles(i);
-
-        // empty the model
-        this->model->position.clear();
-
-        // put data the data into the model
-        // and build the pkd tree
-        this->model->fill(parts);
-        this->build();
-
-
-        out.SetVertexData(
-            megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, &this->model->position[0].x, 16);
-        out.SetColourData(megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, &this->model->position[0].w, 16);
-    }
 
     return true;
 }
 
 
-void ospray::PkdBuilder::setDim(size_t ID, int dim) const {
+void ospray::Pkd::setDim(size_t ID, int dim) const {
 #if DIM_FROM_DEPTH
     return;
 #else
@@ -67,7 +84,7 @@ void ospray::PkdBuilder::setDim(size_t ID, int dim) const {
 #endif
 }
 
-inline size_t ospray::PkdBuilder::maxDim(const ospcommon::vec3f& v) const {
+inline size_t ospray::Pkd::maxDim(const ospcommon::vec3f& v) const {
     const float maxVal = ospcommon::reduce_max(v);
     if (maxVal == v.x) {
         return 0;
@@ -82,7 +99,7 @@ inline size_t ospray::PkdBuilder::maxDim(const ospcommon::vec3f& v) const {
 }
 
 
-inline void ospray::PkdBuilder::swap(const size_t a, const size_t b) const {
+inline void ospray::Pkd::swap(const size_t a, const size_t b) const {
     std::swap(model->position[a], model->position[b]);
     for (size_t i = 0; i < model->attribute.size(); i++)
         std::swap(model->attribute[i]->value[a], model->attribute[i]->value[b]);
@@ -90,7 +107,7 @@ inline void ospray::PkdBuilder::swap(const size_t a, const size_t b) const {
 }
 
 
-void ospray::PkdBuilder::build() {
+void ospray::Pkd::build() {
     // PING;
     assert(this->model != NULL);
 
@@ -126,7 +143,7 @@ void ospray::PkdBuilder::build() {
 }
 
 
-void ospray::PkdBuilder::buildRec(const size_t nodeID, const ospcommon::box3f& bounds, const size_t depth) const {
+void ospray::Pkd::buildRec(const size_t nodeID, const ospcommon::box3f& bounds, const size_t depth) const {
     // if (depth < 4)
     // std::cout << "#osp:pkd: building subtree " << nodeID << std::endl;
     if (!hasLeftChild(nodeID))
