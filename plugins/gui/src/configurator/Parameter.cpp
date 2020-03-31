@@ -18,12 +18,15 @@ megamol::gui::configurator::Parameter::Parameter(
     ImGuiID uid, ParamType type, StroageType store, MinType min, MaxType max)
     : uid(uid)
     , type(type)
+    , full_name()
+    , description()
     , minval(min)
     , maxval(max)
     , storage(store)
     , value()
-    , present()
-    , default_value_mismatch(false) {
+    , default_value()
+    , default_value_mismatch(false) 
+    , present() {
 
     // Initialize variant types which should/can not be changed afterwards.
     // Default ctor of variants initializes std::monostate.

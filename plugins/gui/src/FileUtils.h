@@ -119,16 +119,16 @@ public:
      * @return True on success, false otherwise.
      */
 
-    bool FileBrowserPopUp(FileBrowserFlag flag, const std::string& label, bool open_popup, std::string& inout_filename);
+    bool FileBrowserPopUp(FileBrowserFlag flag, const std::string& label, bool open_popup, std::string& out_filename);
 
     /**
      * ImGui file browser button opening a file browser pop-up.
      *
-     * @param inout_filename      The file name of the file.
+     * @param out_filename      The file name of the file.
      *
      * @return True on success, false otherwise.
      */
-    bool FileBrowserButton(std::string& inout_filename);
+    bool FileBrowserButton(std::string& out_filename);
 
 private:
 #ifdef GUI_USE_FILESYSTEM

@@ -15,21 +15,27 @@ using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::Group::Group(ImGuiID uid) : uid(uid), present(), modules(), callslots() {}
+megamol::gui::configurator::Group::Group(ImGuiID uid) 
+    : uid(uid)
+    , name()
+    , modules()
+    , callslots()
+    , present(){
+}
 
 
 megamol::gui::configurator::Group::~Group() {
 
     // Reset modules
     for (auto& module_ptr : this->modules) {
-        module_ptr->GUI_SetVisibility(true);
-        module_ptr->name_space.clear();
+        module_ptr->GUI_SetGroupMembership(false);
+        module_ptr->GUI_SetGroupName("");
         module_ptr.reset();
     }
     // Reset call slots
     for (auto& callslot_map : this->callslots) {
         for (auto& callslot : callslot_map.second) {
-            callslot->GUI_SetInterfaceView(false);
+            callslot->GUI_SetGroupInterface(false);
             callslot.reset();
         }
     }
@@ -55,9 +61,10 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
 
     this->modules.emplace_back(module_ptr);
                 
-    module_ptr->name_space = this->name;
-    module_ptr->GUI_SetVisibility(this->present.ModuleVisible());
-    this->present.ApplyUpdate();
+    module_ptr->GUI_SetGroupMembership(true);
+    module_ptr->GUI_SetGroupVisibility(this->present.ModuleVisible());
+    module_ptr->GUI_SetGroupName(this->name);
+    this->present.ForceUpdate();
     
         vislib::sys::Log::DefaultLog.WriteInfo(
         "Added module '%s' to group '%s'.\n", module_ptr->name.c_str(), this->name.c_str());
@@ -86,8 +93,10 @@ bool megamol::gui::configurator::Group::RemoveModule(ImGuiID module_uid) {
                     this->RemoveCallSlot(callslot_uid);
                 }
 
-                (*mod_iter)->GUI_SetVisibility(true);
-                (*mod_iter)->name_space.clear();
+                (*mod_iter)->GUI_SetGroupMembership(false);
+                (*mod_iter)->GUI_SetGroupVisibility(false);
+                (*mod_iter)->GUI_SetGroupName("");
+                this->present.ForceUpdate();
                 
                 vislib::sys::Log::DefaultLog.WriteInfo(
                     "Removed module '%s' from group '%s'.\n", (*mod_iter)->name.c_str(), this->name.c_str());
@@ -156,9 +165,11 @@ bool megamol::gui::configurator::Group::AddCallSlot(const CallSlotPtrType& calls
     }
 
     if (add) {
+        callslot_ptr->GUI_SetGroupInterface(true);
+        /// XXX callslot_ptr->GUI_SetGroupPosition(ImVec2());
+        
         this->callslots[callslot_ptr->type].emplace_back(callslot_ptr);
-
-        callslot_ptr->GUI_SetInterfaceView(true);
+                
         vislib::sys::Log::DefaultLog.WriteInfo(
             "Added call slot '%s' to group '%s'.\n", callslot_ptr->name.c_str(), this->name.c_str());
     } else {
@@ -180,7 +191,7 @@ bool megamol::gui::configurator::Group::RemoveCallSlot(ImGuiID callslots_uid) {
                  callslot_iter++) {
                 if ((*callslot_iter)->uid == callslots_uid) {
 
-                    (*callslot_iter)->GUI_SetInterfaceView(false);
+                    (*callslot_iter)->GUI_SetGroupInterface(false);
 
                     vislib::sys::Log::DefaultLog.WriteInfo("Removed call slot '%s' from group interface '%s'.\n",
                         (*callslot_iter)->name.c_str(), this->name.c_str());
@@ -219,7 +230,7 @@ bool megamol::gui::configurator::Group::ContainsCallSlot(ImGuiID callslot_uid) {
 // GROUP PRESENTATION ####################################################
 
 megamol::gui::configurator::Group::Presentation::Presentation(void)
-    : BORDER(10.0f)
+    : GROUP_BORDER(10.0f)
     , position(ImVec2(FLT_MAX, FLT_MAX))
     , size(ImVec2(0.0f, 0.0f))
     , utils()
@@ -251,15 +262,14 @@ void megamol::gui::configurator::Group::Presentation::Present(
         // Update size and position if current values are invalid or in expanded view
         if (this->update || !this->collapsed_view || (this->size.x <= 0.0f) || (this->size.y <= 0.0f)) {
             this->UpdatePositionSize(inout_group, state.canvas);
-            if (this->update) {
-                for (auto& mod : inout_group.GetModules()) {
-                    mod->GUI_SetVisibility(!this->collapsed_view);
-                }
+            for (auto& mod : inout_group.GetModules()) {
+                mod->GUI_SetGroupVisibility(this->ModuleVisible());
             }
             this->update = false;
         }
 
         // Draw group --------------------------------------------------------
+        
         ImVec2 group_size = this->size * state.canvas.zooming;
         ImVec2 group_rect_min = state.canvas.offset + this->position * state.canvas.zooming;
         ImVec2 group_rect_max = group_rect_min + group_size;
@@ -280,7 +290,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
 
         tmpcol = style.Colors[ImGuiCol_ScrollbarGrabHovered]; // ImGuiCol_Border ImGuiCol_ScrollbarGrabActive
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-        const ImU32 COLOR_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
+        const ImU32 COLOR_GROUP_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
         // Draw box
         ImGui::SetCursorScreenPos(group_rect_min);
@@ -313,7 +323,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
             if (ImGui::MenuItem(view.c_str())) {
                 this->collapsed_view = !this->collapsed_view;
                 for (auto& mod : inout_group.GetModules()) {
-                    mod->GUI_SetVisibility(this->ModuleVisible());
+                    mod->GUI_SetGroupVisibility(this->ModuleVisible());
                 }
                 this->UpdatePositionSize(inout_group, state.canvas);
             }
@@ -360,7 +370,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
 
         ImU32 group_bg_color = this->selected ? COLOR_GROUP_HIGHTLIGHT : COLOR_GROUP_BACKGROUND;
         draw_list->AddRectFilled(group_rect_min, group_rect_max, group_bg_color, 0.0f);
-        draw_list->AddRect(group_rect_min, group_rect_max, COLOR_GROUP_BORDER, 0.0f);
+        draw_list->AddRect(group_rect_min, group_rect_max, COLOR_GROUP_GROUP_BORDER, 0.0f);
 
         // Draw text
         if (this->collapsed_view) {
@@ -370,14 +380,32 @@ void megamol::gui::configurator::Group::Presentation::Present(
             draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]),
                 this->name_label.c_str());
         } else {
-            ImVec2 text_pos_left_upper = group_rect_min + ImVec2(this->BORDER, this->BORDER) * state.canvas.zooming;
+            ImVec2 text_pos_left_upper = group_rect_min + ImVec2(this->GROUP_BORDER, this->GROUP_BORDER) * state.canvas.zooming;
             draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]),
                 this->name_label.c_str());
         }
+        
+        // Set group interface position of call slots --------------------------
+        
+        size_t caller_count = inout_group.callslots[CallSlot::CallSlotType::CALLER].size();
+        size_t callee_count = inout_group.callslots[CallSlot::CallSlotType::CALLEE].size();       
+        ImVec2 callslot_group_position;
+        for (auto& callslot_map : inout_group.callslots) {
+            for (auto& callslot : callslot_map.second) {
+                if (callslot_map.first == CallSlot::CallSlotType::CALLER) {
+                    //callslot_group_position = ;
+                }
+                else if (callslot_map.first == CallSlot::CallSlotType::CALLEE) {
+                    //callslot_group_position = ;
+                }
+                callslot->GUI_SetGroupPosition(callslot_group_position);
+            }
+        }
+        
         // Rename pop-up ------------------------------------------------------
         if (this->utils.RenamePopUp("Rename Group", popup_rename, inout_group.name)) {
             for (auto& module_ptr : inout_group.GetModules()) {
-                module_ptr->name_space = inout_group.name;
+                module_ptr->GUI_SetGroupName(inout_group.name);
                 module_ptr->GUI_Update(state.canvas);
             }
             this->UpdatePositionSize(inout_group, state.canvas);
@@ -411,8 +439,8 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
             pos_minX = std::min(tmp_pos.x, pos_minX);
             pos_minY = std::min(tmp_pos.y, pos_minY);
         }
-        pos_minX -= this->BORDER;
-        pos_minY -= (this->BORDER + (1.5f * ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming));
+        pos_minX -= this->GROUP_BORDER;
+        pos_minY -= (this->GROUP_BORDER + (1.5f * ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming));
         this->position = ImVec2(pos_minX, pos_minY);
     } else {
         this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - in_canvas.offset) / in_canvas.zooming;
@@ -437,8 +465,8 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
             pos_maxY = std::max(tmp_pos.y + tmp_size.y, pos_maxY);
         }
 
-        group_width = (pos_maxX + this->BORDER) - pos_minX;
-        group_height = (pos_maxY + this->BORDER) - pos_minY;
+        group_width = (pos_maxX + this->GROUP_BORDER) - pos_minX;
+        group_height = (pos_maxY + this->GROUP_BORDER) - pos_minY;
     }
     // Clamp to minimum size
     this->size = ImVec2(std::max(group_width, 75.0f), std::max(group_height, 25.0f));

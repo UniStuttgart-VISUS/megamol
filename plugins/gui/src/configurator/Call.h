@@ -38,14 +38,15 @@ typedef std::vector<CallPtrType> CallPtrVectorType;
  */
 class Call {
 public:
+
+    enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
+    
     struct StockCall {
         std::string class_name;
         std::string description;
         std::string plugin_name;
         std::vector<std::string> functions;
     };
-
-    enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
 
     Call(ImGuiID uid);
     ~Call();
@@ -73,7 +74,7 @@ public:
 private:
     std::map<CallSlot::CallSlotType, CallSlotPtrType> connected_call_slots;
 
-    /**
+    /** ************************************************************************
      * Defines GUI call presentation.
      */
     class Presentation {

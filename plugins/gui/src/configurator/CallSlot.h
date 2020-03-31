@@ -36,8 +36,10 @@ typedef std::vector<CallSlotPtrType> CallSlotPtrVectorType;
  */
 class CallSlot {
 public:
-    enum CallSlotType { CALLEE, CALLER };
 
+    enum CallSlotType { CALLEE, CALLER };     
+    enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
+    
     struct StockCallSlot {
         std::string name;
         std::string description;
@@ -45,8 +47,11 @@ public:
         CallSlot::CallSlotType type;
     };
 
-    enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
-
+    struct GroupState {
+        bool interface;
+        ImVec2 position;
+    };
+    
     CallSlot(ImGuiID uid);
     ~CallSlot();
 
@@ -55,7 +60,7 @@ public:
     // Init when adding call slot from stock
     std::string name;
     std::string description;
-    std::vector<size_t> compatible_call_idxs; // (Storing only indices of compatible calls for faster comparison.)
+    std::vector<size_t> compatible_call_idxs; /// (Storing only indices of compatible calls for faster comparison.)
     CallSlotType type;
 
     bool CallsConnected(void) const;
@@ -78,12 +83,15 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
+        
     void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
 
     ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     bool GUI_GetLabelVisibility(void) { return this->present.label_visible; }
 
-    void GUI_SetInterfaceView(bool interface_view) { this->present.interface_view = interface_view; }
+    void GUI_SetGroupInterface(bool interface) { this->present.group.interface = interface; }
+    void GUI_SetGroupPosition(ImVec2 position) { this->present.group.position = position; }
+    
     void GUI_SetPresentation(CallSlot::Presentations present) { this->present.presentations = present; }
     void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
 
@@ -91,32 +99,34 @@ private:
     ModulePtrType parent_module;
     std::vector<CallPtrType> connected_calls;
 
-    /**
+    /** ************************************************************************
      * Defines GUI call slot presentation.
      */
     class Presentation {
     public:
+                    
         Presentation(void);
 
         ~Presentation(void);
 
         void Present(CallSlot& inout_call_slot, GraphItemsStateType& state);
-
+        
         void UpdatePosition(CallSlot& inout_call_slot, const GraphCanvasType& in_canvas);
 
         ImVec2 GetPosition(void) { return this->position; }
 
+        GroupState group;
         CallSlot::Presentations presentations;
         bool label_visible;
-        bool interface_view;
 
     private:
         // Absolute position including canvas offset and zooming
         ImVec2 position;
+        
         GUIUtils utils;
         bool selected;
         bool update_once;
-
+        
     } present;
 };
 

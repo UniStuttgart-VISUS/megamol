@@ -28,7 +28,7 @@ ImGuiID megamol::gui::configurator::GraphManager::AddGraph(void) {
     try {
         Graph graph(this->generate_unique_graph_name());
         this->graphs.emplace_back(std::make_shared<Graph>(graph));
-        retval = this->graphs.back()->GetUID();
+        retval = this->graphs.back()->uid;
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -45,10 +45,10 @@ ImGuiID megamol::gui::configurator::GraphManager::AddGraph(void) {
 bool megamol::gui::configurator::GraphManager::DeleteGraph(ImGuiID graph_uid) {
 
     for (auto iter = this->graphs.begin(); iter != this->graphs.end(); iter++) {
-        if ((*iter)->GetUID() == graph_uid) {
+        if ((*iter)->uid == graph_uid) {
 
             vislib::sys::Log::DefaultLog.WriteInfo(
-                "Deleted graph: %s [%s, %s, line %d]\n", (*iter)->GetName().c_str(), __FILE__, __FUNCTION__, __LINE__);
+                "Deleted graph: %s [%s, %s, line %d]\n", (*iter)->name.c_str(), __FILE__, __FUNCTION__, __LINE__);
 
             if ((*iter).use_count() > 1) {
                 vislib::sys::Log::DefaultLog.WriteError(
@@ -71,7 +71,7 @@ bool megamol::gui::configurator::GraphManager::DeleteGraph(ImGuiID graph_uid) {
 const GraphManager::GraphPtrType megamol::gui::configurator::GraphManager::GetGraph(ImGuiID graph_uid) {
 
     for (auto iter = this->graphs.begin(); iter != this->graphs.end(); iter++) {
-        if ((*iter)->GetUID() == graph_uid) {
+        if ((*iter)->uid == graph_uid) {
             return (*iter);
         }
     }
@@ -203,7 +203,7 @@ bool megamol::gui::configurator::GraphManager::LoadProjectCore(megamol::core::Co
     bool retval = this->AddGraph();
     auto graph_ptr = this->get_graphs().back();
     if (retval && (graph_ptr != nullptr)) {
-        return this->AddProjectCore(graph_ptr->GetUID(), core_instance);
+        return this->AddProjectCore(graph_ptr->uid, core_instance);
     }
 
     vislib::sys::Log::DefaultLog.WriteError(
@@ -274,13 +274,13 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
             graph_ptr->AddModule(this->modules_stock, std::string(mod->ClassName()));
             auto graph_module = graph_ptr->GetGraphModules().back();
             graph_module->name = module_name;
-            graph_module->name_space = module_namespace;
             graph_module->is_view_instance = false;
-            graph_ptr->AddGroupModule(graph_module);
+            
+            graph_ptr->AddGroupModule(module_namespace, graph_module);
 
             if (view_instances.find(std::string(mod->FullName().PeekBuffer())) != view_instances.end()) {
                 // Instance Name
-                graph_ptr->SetName(view_instances[std::string(mod->FullName().PeekBuffer())]);
+                graph_ptr->name = view_instances[std::string(mod->FullName().PeekBuffer())];
                 graph_module->is_view_instance = (graph_ptr->IsMainViewSet()) ? (false) : (true);
             }
 
@@ -510,7 +510,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                             __LINE__);
                         return false;
                     }
-                    graph_ptr->SetName(view_instance);
+                    graph_ptr->name = view_instance;
                 }
 
                 // Ensure unique module name is not yet assigned
@@ -531,10 +531,10 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 }
                 auto graph_module = graph_ptr->GetGraphModules().back();
                 graph_module->name = view_name;
-                graph_module->name_space = view_namespace;
                 graph_module->is_view_instance = (graph_ptr->IsMainViewSet()) ? (false) : (true);
                 graph_module->GUI_SetPosition(module_pos);
-                graph_ptr->AddGroupModule(graph_module);
+
+                graph_ptr->AddGroupModule(view_namespace, graph_module);
 
                 found_main_view = true;
             }
@@ -600,10 +600,10 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                     }
                     auto graph_module = graph_ptr->GetGraphModules().back();
                     graph_module->name = module_name;
-                    graph_module->name_space = module_namespace;
                     graph_module->is_view_instance = false;
                     graph_module->GUI_SetPosition(module_pos);
-                    graph_ptr->AddGroupModule(graph_module);
+                    
+                    graph_ptr->AddGroupModule(module_namespace, graph_module);
                 }
             }
         }
@@ -824,7 +824,7 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_uid
     try {
         // Search for top most view
         for (auto& graph : this->graphs) {
-            if (graph->GetUID() == graph_uid) {
+            if (graph->uid == graph_uid) {
 
                 bool found_error = false;
                 bool found_instance = false;
@@ -856,7 +856,7 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_uid
                 if (found_error) return false;
 
                 for (auto& mod : graph->GetGraphModules()) {
-                    std::string instance_name = graph->GetName();
+                    std::string instance_name = graph->name;
                     if (mod->is_view_instance) {
                         confInstances << "mmCreateView(\"" << instance_name << "\",\"" << mod->class_name << "\",\""
                                       << mod->FullName() << "\") "
@@ -941,7 +941,7 @@ bool megamol::gui::configurator::GraphManager::SaveGroupFile(ImGuiID group_uid, 
         for (auto& graph : this->graphs) {
             graph->GetGroup(group_id);
             for (auto& group : graph->GetGroup) {
-            if (graph->GetUID() == graph_id) {
+            if (graph->uid == graph_id) {
 
                 bool found_error = false;
                 bool found_instance = false;
@@ -973,7 +973,7 @@ bool megamol::gui::configurator::GraphManager::SaveGroupFile(ImGuiID group_uid, 
                 if (found_error) return false;
 
                 for (auto& mod : graph->GetGraphModules()) {
-                    std::string instance_name = graph->GetName();
+                    std::string instance_name = graph->name;
                     if (mod->is_view_instance) {
                         confInstances << "mmCreateView(\"" << instance_name << "\",\"" << mod->class_name << "\",\""
                                       << mod->FullName() << "\") "

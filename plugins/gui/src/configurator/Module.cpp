@@ -17,11 +17,21 @@ using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::Module::Module(ImGuiID uid) : uid(uid), present() {
+megamol::gui::configurator::Module::Module(ImGuiID uid) 
+    : uid(uid)
+    , class_name()
+    , description()
+    , plugin_name()
+    , is_view(false)
+    , parameters()
+    , name()
+    , is_view_instance(false)
+    , call_slots()
+    , present() {
 
-    this->call_slots.clear();
     this->call_slots.emplace(
         megamol::gui::configurator::CallSlot::CallSlotType::CALLER, std::vector<CallSlotPtrType>());
+        
     this->call_slots.emplace(
         megamol::gui::configurator::CallSlot::CallSlotType::CALLEE, std::vector<CallSlotPtrType>());
 }
@@ -121,16 +131,21 @@ megamol::gui::configurator::Module::GetCallSlots(void) {
 // MODULE PRESENTATION ####################################################
 
 megamol::gui::configurator::Module::Presentation::Presentation(void)
-    : presentations(Module::Presentations::DEFAULT)
+    : group()
+    , presentations(Module::Presentations::DEFAULT)
     , label_visible(true)
-    , visible(true)
     , position(ImVec2(FLT_MAX, FLT_MAX))
     , size(ImVec2(0.0f, 0.0f))
+    , utils()    
     , class_label()
     , name_label()
-    , utils()
     , selected(false)
-    , update(true) {}
+    , update(true) { 
+           
+    this->group.member = false;
+    this->group.visible = false;
+    this->group.name = "";
+}
 
 
 megamol::gui::configurator::Module::Presentation::~Presentation(void) {}
@@ -163,7 +178,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
             this->update = false;
         }
 
-        if (this->visible) {
+        if (!this->group.member || (this->group.member && this->group.visible)) {
 
             // Draw module --------------------------------------------------------
             ImVec2 module_size = this->size * state.canvas.zooming;
@@ -207,12 +222,11 @@ void megamol::gui::configurator::Module::Presentation::Present(
 
             tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive]; // ImGuiCol_Border ImGuiCol_ScrollbarGrabActive
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-            const ImU32 COLOR_MODULE_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
+            const ImU32 COLOR_MODULE_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
-            // Draw box
+            // Draw button and box
             ImGui::SetCursorScreenPos(module_rect_min);
             std::string label = "module_" + inout_module.name;
-
             ImGui::SetItemAllowOverlap();
             ImGui::InvisibleButton(label.c_str(), module_size);
             ImGui::SetItemAllowOverlap();
@@ -252,8 +266,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                     if (ImGui::MenuItem("Rename")) {
                         popup_rename = true;
                     }
-                    bool is_group_member = !inout_module.name_space.empty();
-                    if (ImGui::BeginMenu("Add to Group", !is_group_member)) {
+                    if (ImGui::BeginMenu("Add to Group", !this->group.member)) {
                         if (ImGui::MenuItem("New")) {
                             state.interact.module_add_group_uid.first = inout_module.uid;
                             state.interact.module_add_group_uid.second = GUI_INVALID_ID;
@@ -269,7 +282,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                         }
                         ImGui::EndMenu();
                     }
-                    if (ImGui::MenuItem("Remove from Group", nullptr, false, is_group_member)) {
+                    if (ImGui::MenuItem("Remove from Group", nullptr, false, this->group.member)) {
                         state.interact.module_remove_group_uid = inout_module.uid;
                     }
                     ImGui::EndPopup();
@@ -299,7 +312,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
             draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 5.0f, ImDrawCornerFlags_All);
             float border = ((inout_module.is_view_instance) ? (4.0f) : (1.0f)) * state.canvas.zooming;
             draw_list->AddRect(
-                module_rect_min, module_rect_max, COLOR_MODULE_BORDER, 5.0f, ImDrawCornerFlags_All, border);
+                module_rect_min, module_rect_max, COLOR_MODULE_GROUP_BORDER, 5.0f, ImDrawCornerFlags_All, border);
 
             // Draw text
             if (this->label_visible) {

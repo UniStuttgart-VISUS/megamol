@@ -71,7 +71,7 @@ private:
 
     unsigned int graph_name_uid;
 
-    /**
+    /** ************************************************************************
      * Defines GUI graph present.
      */
     class Presentation {

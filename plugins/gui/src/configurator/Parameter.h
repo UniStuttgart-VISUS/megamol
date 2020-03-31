@@ -52,6 +52,7 @@ typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
 
+
 /**
  * Defines parameter data structure for graph.
  */
@@ -231,7 +232,7 @@ private:
     ValueType default_value;
     bool default_value_mismatch;
 
-    /**
+    /** ************************************************************************
      * Defines GUI parameter presentation.
      */
     class Presentation {

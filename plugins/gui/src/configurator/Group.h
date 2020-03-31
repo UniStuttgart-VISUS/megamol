@@ -42,14 +42,12 @@ public:
     bool AddModule(const ModulePtrType& module_ptr);
     bool RemoveModule(ImGuiID module_uid);
     bool ContainsModule(ImGuiID module_uid);
-
+    const ModulePtrVectorType& GetModules(void) { return this->modules; }
+    bool EmptyModules(void) { return (this->modules.size() == 0); }
+        
     bool AddCallSlot(const CallSlotPtrType& callslot_ptr);
     bool RemoveCallSlot(ImGuiID callslot_uid);
     bool ContainsCallSlot(ImGuiID callslot_uid);
-
-    const ModulePtrVectorType& GetModules(void) { return this->modules; }
-
-    bool Empty(void) { return (this->modules.size() == 0); }
 
     // GUI Presentation -------------------------------------------------------
 
@@ -58,12 +56,10 @@ public:
     void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePositionSize(*this, in_canvas); }
 
 private:
-    // VARIABLES --------------------------------------------------------------
-
     ModulePtrVectorType modules;
     std::map<CallSlot::CallSlotType, CallSlotPtrVectorType> callslots;
 
-    /**
+    /** ************************************************************************
      * Defines GUI group presentation.
      */
     class Presentation {
@@ -76,16 +72,16 @@ private:
 
         void UpdatePositionSize(Group& inout_group, const GraphCanvasType& in_canvas);
         bool ModuleVisible(void) { return !this->collapsed_view; }
-
-        void ApplyUpdate(void) { this->update = true; }
+        void ForceUpdate(void) { this->update = true; }
 
     private:
-        const float BORDER;
+        const float GROUP_BORDER;
 
         // Relative position without considering canvas offset and zooming
         ImVec2 position;
         // Relative size without considering zooming
         ImVec2 size;
+        
         GUIUtils utils;
         std::string name_label;
         bool collapsed_view;
@@ -94,7 +90,6 @@ private:
 
     } present;
 
-    // FUNCTIONS --------------------------------------------------------------
 };
 
 

@@ -148,7 +148,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     bool group_save = false;
     ImGuiID group_selected_uid = GUI_INVALID_ID;
     if (selected_graph_ptr != nullptr) {
-        group_save = selected_graph_ptr->GUI_SaveGroup();
+        group_save = selected_graph_ptr->GUI_GetGroupSave();
         group_selected_uid = selected_graph_ptr->GUI_GetSelectedGroup();
     }
 

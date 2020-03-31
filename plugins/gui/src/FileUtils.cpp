@@ -133,7 +133,7 @@ bool megamol::gui::FileUtils::ReadFile(const std::string& filename, std::string&
 }
 
 
-bool megamol::gui::FileUtils::FileBrowserButton(std::string& inout_filename) {
+bool megamol::gui::FileUtils::FileBrowserButton(std::string& out_filename) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -172,12 +172,12 @@ bool megamol::gui::FileUtils::FileBrowserButton(std::string& inout_filename) {
     ImGui::EndChild();
     ImGui::PopStyleColor();
 
-    return this->FileBrowserPopUp(FileBrowserFlag::SELECT, "Select File", popup_select_file, inout_filename);
+    return this->FileBrowserPopUp(FileBrowserFlag::SELECT, "Select File", popup_select_file, out_filename);
 }
 
 
 bool megamol::gui::FileUtils::FileBrowserPopUp(megamol::gui::FileUtils::FileBrowserFlag flag, const std::string& label,
-    bool open_popup, std::string& inout_filename) {
+    bool open_popup, std::string& out_filename) {
 
     bool retval = false;
 
@@ -188,7 +188,7 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(megamol::gui::FileUtils::FileBrow
         if (open_popup) {
 #ifdef GUI_USE_FILESYSTEM
             // Check given file name path
-            fsns::path tmp_file_path = static_cast<fsns::path>(inout_filename);
+            fsns::path tmp_file_path = static_cast<fsns::path>(out_filename);
             if (tmp_file_path.empty() || !fsns::exists(tmp_file_path)) {
                 tmp_file_path = fsns::current_path();
             }
@@ -389,7 +389,7 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(megamol::gui::FileUtils::FileBrow
                 }
                 fsns::path tmp_file_path =
                     static_cast<fsns::path>(this->file_path_str) / static_cast<fsns::path>(this->file_name_str);
-                inout_filename = tmp_file_path.generic_u8string();
+                out_filename = tmp_file_path.generic_u8string();
                 ImGui::CloseCurrentPopup();
                 retval = true;
             }

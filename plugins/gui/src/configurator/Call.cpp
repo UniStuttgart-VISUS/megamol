@@ -17,9 +17,15 @@ using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::Call::Call(ImGuiID uid) : uid(uid), present() {
+megamol::gui::configurator::Call::Call(ImGuiID uid) 
+    : uid(uid)
+    , class_name()
+    , description()
+    , plugin_name()
+    , functions()
+    , connected_call_slots()
+    , present() {
 
-    this->connected_call_slots.clear();
     this->connected_call_slots.emplace(CallSlot::CallSlotType::CALLER, nullptr);
     this->connected_call_slots.emplace(CallSlot::CallSlotType::CALLEE, nullptr);
 }
@@ -135,15 +141,18 @@ void megamol::gui::configurator::Call::Presentation::Present(
     try {
         if (inout_call.IsConnected()) {
 
-            bool visible = true;
+            bool group_visibility = true;
             if ((inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->ParentModuleConnected()) &&
                 (inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->ParentModuleConnected())) {
-                visible =
-                    (inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->GetParentModule()->GUI_GetGroupView() ||
-                        inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->GetParentModule()->GUI_GetGroupView());
+                    
+                auto caller_group_state = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->GetParentModule()->GUI_GetGroupState();
+                auto callee_group_state = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->GetParentModule()->GUI_GetGroupState();
+                    
+                group_visibility = (caller_group_state.member && caller_group_state.visible) ||
+                                   (callee_group_state.member && callee_group_state.visible);
             }
 
-            if (visible) {
+            if (group_visibility) {
 
                 const float CURVE_THICKNESS = 3.0f;
                 ImVec2 p1 = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->GUI_GetPosition();
@@ -175,7 +184,7 @@ void megamol::gui::configurator::Call::Presentation::Present(
 
                 tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive]; // ImGuiCol_Border ImGuiCol_ScrollbarGrabActive
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-                const ImU32 COLOR_CALL_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
+                const ImU32 COLOR_CALL_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
                 // LEVEL OF DETAIL depending on zooming
                 if (state.canvas.zooming < 0.25f) {
@@ -196,9 +205,9 @@ void megamol::gui::configurator::Call::Presentation::Present(
                     ImVec2 call_rect_min =
                         ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
                     ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
+                    
                     ImGui::SetCursorScreenPos(call_rect_min);
                     std::string label = "call_" + inout_call.class_name + std::to_string(inout_call.uid);
-
                     ImGui::SetItemAllowOverlap();
                     ImGui::InvisibleButton(label.c_str(), rect_size);
                     ImGui::SetItemAllowOverlap();
@@ -238,7 +247,7 @@ void megamol::gui::configurator::Call::Presentation::Present(
 
                     ImU32 call_bg_color = (hovered || this->selected) ? COLOR_CALL_HIGHTLIGHT : COLOR_CALL_BACKGROUND;
                     draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, 4.0f);
-                    draw_list->AddRect(call_rect_min, call_rect_max, COLOR_CALL_BORDER, 4.0f);
+                    draw_list->AddRect(call_rect_min, call_rect_max, COLOR_CALL_GROUP_BORDER, 4.0f);
 
                     // Draw text
                     ImVec2 text_pos_left_upper =
