@@ -53,7 +53,8 @@ public:
     ImGuiID AddGroup(const std::string& group_name = "");
     bool DeleteGroup(ImGuiID group_uid);
     bool AddGroupModule(const std::string& group_name, const ModulePtrType& module_ptr);
-
+    inline const GroupPtrVectorType& GetGroups(void) { return this->groups; }    
+    
     inline bool IsDirty(void) const { return this->dirty_flag; }
     inline void ResetDirty(void) { this->dirty_flag = false; }
 
@@ -147,11 +148,10 @@ private:
     // FUNCTIONS --------------------------------------------------------------
     
     bool delete_disconnected_calls(void);
-    const CallPtrVectorType& get_calls(void) { return this->calls; }
-    const GroupPtrVectorType& get_groups(void) { return this->groups; }    
+    inline const CallPtrVectorType& get_calls(void) { return this->calls; }
     inline const std::string generate_unique_group_name(void) { return ("Group_" + std::to_string(++group_name_uid)); }
     std::string generate_unique_module_name(const std::string& module_name);
-    ImGuiID generate_unique_id(void) { return (++this->generated_uid); }
+    inline ImGuiID generate_unique_id(void) { return (++this->generated_uid); }
 };
 
 } // namespace configurator

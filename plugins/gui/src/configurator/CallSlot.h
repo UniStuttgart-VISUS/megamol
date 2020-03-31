@@ -28,8 +28,10 @@ typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
 
+enum CallSlotType { CALLEE, CALLER };  
+    
 typedef std::vector<CallSlotPtrType> CallSlotPtrVectorType;
-
+typedef std::map<CallSlotType, CallSlotPtrVectorType> CallSlotPtrMapType;
 
 /**
  * Defines call slot data structure for graph.
@@ -37,14 +39,13 @@ typedef std::vector<CallSlotPtrType> CallSlotPtrVectorType;
 class CallSlot {
 public:
 
-    enum CallSlotType { CALLEE, CALLER };     
     enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
     
     struct StockCallSlot {
         std::string name;
         std::string description;
         std::vector<size_t> compatible_call_idxs;
-        CallSlot::CallSlotType type;
+        CallSlotType type;
     };
 
     struct GroupState {

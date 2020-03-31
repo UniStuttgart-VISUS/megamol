@@ -217,9 +217,11 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                 popup_save_project_file = true;
             }
             // Save currently active group to LUA file
+            /*
             if (ImGui::MenuItem("Save Group", nullptr, false, (group_selected_uid != GUI_INVALID_ID))) {
                 popup_save_group_file = true;
             }
+            */
 
             ImGui::EndMenu();
         }
@@ -407,12 +409,12 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                                                 const float offset = (GUI_CALL_SLOT_RADIUS * 4.0f);
                                                 float x_offset, y_offset;
                                                 // Callers have only one connected call
-                                                if (selected_call_slot_ptr->type == CallSlot::CallSlotType::CALLER) {
+                                                if (selected_call_slot_ptr->type == CallSlotType::CALLER) {
                                                     std::string call_name = selected_call_slot_ptr->GetConnectedCalls()[0]->class_name;
                                                     x_offset = (size.x + (1.5f * GUIUtils::TextWidgetWidth(call_name) + offset));
                                                     y_offset = size.y + offset;
                                                 }
-                                                else if (call_slot->type == CallSlot::CallSlotType::CALLER) {
+                                                else if (call_slot->type == CallSlotType::CALLER) {
                                                     auto size = selected_call_slot_ptr->GetParentModule()->GUI_GetSize();
                                                     std::string call_name = call_slot->GetConnectedCalls()[0]->class_name;
                                                     x_offset = -1.0f * (1.5f * GUIUtils::TextWidgetWidth(call_name) + offset);

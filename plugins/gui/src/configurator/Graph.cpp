@@ -184,11 +184,11 @@ bool megamol::gui::configurator::Graph::AddCall(
         call_ptr->functions = call_stock_data.functions;
         call_ptr->GUI_SetLabelVisibility(this->present.GetCallLabelVisibility());
 
-        if ((call_slot_1->type == CallSlot::CallSlotType::CALLER) && (call_slot_1->CallsConnected())) {
+        if ((call_slot_1->type == CallSlotType::CALLER) && (call_slot_1->CallsConnected())) {
             call_slot_1->DisConnectCalls();
             this->delete_disconnected_calls();
         }
-        if ((call_slot_2->type == CallSlot::CallSlotType::CALLER) && (call_slot_2->CallsConnected())) {
+        if ((call_slot_2->type == CallSlotType::CALLER) && (call_slot_2->CallsConnected())) {
             call_slot_2->DisConnectCalls();
             this->delete_disconnected_calls();
         }
@@ -505,7 +505,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         // State Reset --------------------------
         this->graphstate.hotkeys = state.hotkeys;
         this->graphstate.groups.clear();
-        for (auto& group : inout_graph.get_groups()) {
+        for (auto& group : inout_graph.GetGroups()) {
             std::pair<ImGuiID, std::string> group_pair(group->uid, group->name);
             this->graphstate.groups.emplace_back(group_pair);
         }
@@ -595,7 +595,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                     group_uid = inout_graph.AddGroup();
                 }
                 if (group_uid != GUI_INVALID_ID) {
-                    for (auto& group : inout_graph.get_groups()) {
+                    for (auto& group : inout_graph.GetGroups()) {
                         if (group->uid == group_uid) {
                             group->AddModule(module_ptr);
                         }
@@ -608,7 +608,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         // Remove module from group
         module_uid = this->graphstate.interact.module_remove_group_uid;
         if (module_uid != GUI_INVALID_ID) {
-            for (auto& group : inout_graph.get_groups()) {
+            for (auto& group : inout_graph.GetGroups()) {
                 if (group->ContainsModule(module_uid)) {
                     group->RemoveModule(module_uid);
                 }
@@ -631,7 +631,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
             if (callslot_ptr != nullptr) {
                 ImGuiID module_uid = this->graphstate.interact.callslot_add_group_uid.second;
                 if (module_uid != GUI_INVALID_ID) {
-                    for (auto& group : inout_graph.get_groups()) {
+                    for (auto& group : inout_graph.GetGroups()) {
                         if (group->ContainsModule(module_uid)) {
                             group->AddCallSlot(callslot_ptr);
                         }
@@ -644,7 +644,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         // Remove call slot from group interface
         callslot_uid = this->graphstate.interact.callslot_remove_group_uid;
         if (callslot_uid != GUI_INVALID_ID) {
-            for (auto& group : inout_graph.get_groups()) {
+            for (auto& group : inout_graph.GetGroups()) {
                 if (group->ContainsCallSlot(callslot_uid)) {
                     group->RemoveCallSlot(callslot_uid);
                 }
@@ -816,7 +816,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
         for (auto& mod : inout_graph.GetGraphModules()) {
             mod->GUI_Update(this->graphstate.canvas);
         }
-        for (auto& group : inout_graph.get_groups()) {
+        for (auto& group : inout_graph.GetGroups()) {
             group->GUI_Update(this->graphstate.canvas);
         }
         this->update = false;
@@ -832,7 +832,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     ImGui::PopStyleVar(2);
 
     // 2] GROUPS --------------------------------
-    for (auto& group : inout_graph.get_groups()) {
+    for (auto& group : inout_graph.GetGroups()) {
         group->GUI_Present(this->graphstate);
     }
 
@@ -1109,7 +1109,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_cal
                     ImVec2 p1 = selected_call_slot_ptr->GUI_GetPosition();
                     ImVec2 p2 = ImGui::GetMousePos();
                     if (glm::length(glm::vec2(p1.x, p1.y) - glm::vec2(p2.x, p2.y)) > GUI_CALL_SLOT_RADIUS) {
-                        if (selected_call_slot_ptr->type == CallSlot::CallSlotType::CALLEE) {
+                        if (selected_call_slot_ptr->type == CallSlotType::CALLEE) {
                             ImVec2 tmp = p1;
                             p1 = p2;
                             p2 = tmp;
@@ -1135,7 +1135,7 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
     layers.emplace_back();
     for (auto& mod : inout_graph.GetGraphModules()) {
         bool any_connected_callee = false;
-        for (auto& callee_slot : mod->GetCallSlots(CallSlot::CallSlotType::CALLEE)) {
+        for (auto& callee_slot : mod->GetCallSlots(CallSlotType::CALLEE)) {
             if (callee_slot->CallsConnected()) {
                 any_connected_callee = true;
             }
@@ -1153,10 +1153,10 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
         layers.emplace_back();
         // Loop through last filled layer
         for (auto& layer_mod : layers[layers.size() - 2]) {
-            for (auto& caller_slot : layer_mod->GetCallSlots(CallSlot::CallSlotType::CALLER)) {
+            for (auto& caller_slot : layer_mod->GetCallSlots(CallSlotType::CALLER)) {
                 if (caller_slot->CallsConnected()) {
                     for (auto& call : caller_slot->GetConnectedCalls()) {
-                        auto add_mod = call->GetCallSlot(CallSlot::CallSlotType::CALLEE)->GetParentModule();
+                        auto add_mod = call->GetCallSlot(CallSlotType::CALLEE)->GetParentModule();
 
                         // Add module only if not already present in current layer
                         bool module_already_added = false;
@@ -1209,7 +1209,7 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
         for (size_t i = 0; i < layer_mod_cnt; i++) {
             auto mod = layer[i];
             if (this->show_call_names) {
-                for (auto& caller_slot : mod->GetCallSlots(CallSlot::CallSlotType::CALLER)) {
+                for (auto& caller_slot : mod->GetCallSlots(CallSlotType::CALLER)) {
                     if (caller_slot->CallsConnected()) {
                         for (auto& call : caller_slot->GetConnectedCalls()) {
                             auto call_name_length = GUIUtils::TextWidgetWidth(call->class_name) * 1.5f;

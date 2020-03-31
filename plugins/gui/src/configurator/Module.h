@@ -47,7 +47,7 @@ public:
         std::string plugin_name;
         bool is_view;
         std::vector<Parameter::StockParameter> parameters;
-        std::map<CallSlot::CallSlotType, std::vector<CallSlot::StockCallSlot>> call_slots;
+        std::map<CallSlotType, std::vector<CallSlot::StockCallSlot>> call_slots;
     };
     
     struct GroupState {
@@ -75,8 +75,8 @@ public:
     bool AddCallSlot(CallSlotPtrType call_slot);
     bool RemoveAllCallSlots(void);
     const CallSlotPtrType GetCallSlot(ImGuiID call_slot_uid);
-    const std::vector<CallSlotPtrType>& GetCallSlots(CallSlot::CallSlotType type);
-    const std::map<CallSlot::CallSlotType, std::vector<CallSlotPtrType>>& GetCallSlots(void);
+    const CallSlotPtrVectorType& GetCallSlots(CallSlotType type);
+    const CallSlotPtrMapType& GetCallSlots(void);
 
     const inline std::string FullName(void) const {
         std::string fullname = "::" + this->name;
@@ -106,7 +106,7 @@ public:
     inline void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
         
 private:
-    std::map<CallSlot::CallSlotType, CallSlotPtrVectorType> call_slots;
+    CallSlotPtrMapType call_slots;
 
     /** ************************************************************************
      * Defines GUI module presentation.

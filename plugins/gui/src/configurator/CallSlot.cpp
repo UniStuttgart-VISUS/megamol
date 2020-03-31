@@ -56,7 +56,7 @@ bool megamol::gui::configurator::CallSlot::ConnectCall(megamol::gui::configurato
             "Pointer to given call is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    if (this->type == CallSlot::CallSlotType::CALLER) {
+    if (this->type == CallSlotType::CALLER) {
         if (this->connected_calls.size() > 0) {
             vislib::sys::Log::DefaultLog.WriteWarn(
                 "Caller slots can only be connected to one call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
@@ -302,10 +302,10 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         ImVec2 text_pos_left_upper = ImVec2(0.0f, 0.0f);
         if (this->label_visible) {
             text_pos_left_upper.y = slot_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
-            if (inout_call_slot.type == CallSlot::CallSlotType::CALLER) {
+            if (inout_call_slot.type == CallSlotType::CALLER) {
                 text_pos_left_upper.x =
                     slot_position.x - GUIUtils::TextWidgetWidth(inout_call_slot.name) - (1.5f * radius);
-            } else if (inout_call_slot.type == CallSlot::CallSlotType::CALLEE) {
+            } else if (inout_call_slot.type == CallSlotType::CALLEE) {
                 text_pos_left_upper.x = slot_position.x + (1.5f * radius);
             }
         }
@@ -319,7 +319,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         ImVec2 slot_rect_max = ImVec2(slot_position.x + radius, slot_position.y + radius);
         if (this->label_visible) {
             ImVec2 text_clip_pos = text_pos_left_upper;
-            if (inout_call_slot.type == CallSlot::CallSlotType::CALLEE) {
+            if (inout_call_slot.type == CallSlotType::CALLEE) {
                 text_clip_pos = ImVec2(
                     text_pos_left_upper.x + GUIUtils::TextWidgetWidth(inout_call_slot.name), text_pos_left_upper.y);
             }
@@ -355,15 +355,15 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         const ImU32 COLOR_SLOT_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
         ImU32 COLOR_SLOT_CALLER_HIGHLIGHT = IM_COL32(0, 255, 192, 255);
-        ImU32 COLOR_SLOT_CALLEE_HIGHLIGHT = IM_COL32(255, 192, 32, 255);
-        ImU32 COLOR_SLOT_COMPATIBLE = IM_COL32(0, 255, 32, 255);
+        ImU32 COLOR_SLOT_CALLEE_HIGHLIGHT = IM_COL32(192, 0, 255, 255);
+        ImU32 COLOR_SLOT_COMPATIBLE = IM_COL32(192, 255, 64, 255);
 
         ImU32 slot_color = COLOR_SLOT_BACKGROUND;
 
         ImU32 slot_highlight_color = COLOR_SLOT_BACKGROUND;
-        if (inout_call_slot.type == CallSlot::CallSlotType::CALLER) {
+        if (inout_call_slot.type == CallSlotType::CALLER) {
             slot_highlight_color = COLOR_SLOT_CALLER_HIGHLIGHT;
-        } else if (inout_call_slot.type == CallSlot::CallSlotType::CALLEE) {
+        } else if (inout_call_slot.type == CallSlotType::CALLEE) {
             slot_highlight_color = COLOR_SLOT_CALLEE_HIGHLIGHT;
         }
 
@@ -490,7 +490,7 @@ void megamol::gui::configurator::CallSlot::Presentation::UpdatePosition(
         }
         auto pos = in_canvas.offset + inout_call_slot.GetParentModule()->GUI_GetPosition() * in_canvas.zooming;
         auto size = inout_call_slot.GetParentModule()->GUI_GetSize() * in_canvas.zooming;
-        this->position = ImVec2(pos.x + ((inout_call_slot.type == CallSlot::CallSlotType::CALLER) ? (size.x) : (0.0f)),
+        this->position = ImVec2(pos.x + ((inout_call_slot.type == CallSlotType::CALLER) ? (size.x) : (0.0f)),
             pos.y + size.y * ((float)slot_idx + 1) / ((float)slot_count + 1));
     }
 }

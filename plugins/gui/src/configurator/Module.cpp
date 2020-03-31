@@ -30,10 +30,10 @@ megamol::gui::configurator::Module::Module(ImGuiID uid)
     , present() {
 
     this->call_slots.emplace(
-        megamol::gui::configurator::CallSlot::CallSlotType::CALLER, std::vector<CallSlotPtrType>());
+        megamol::gui::configurator::CallSlotType::CALLER, std::vector<CallSlotPtrType>());
         
     this->call_slots.emplace(
-        megamol::gui::configurator::CallSlot::CallSlotType::CALLEE, std::vector<CallSlotPtrType>());
+        megamol::gui::configurator::CallSlotType::CALLEE, std::vector<CallSlotPtrType>());
 }
 
 
@@ -110,7 +110,7 @@ const CallSlotPtrType megamol::gui::configurator::Module::GetCallSlot(ImGuiID ca
 
 
 const std::vector<megamol::gui::configurator::CallSlotPtrType>& megamol::gui::configurator::Module::GetCallSlots(
-    megamol::gui::configurator::CallSlot::CallSlotType type) {
+    megamol::gui::configurator::CallSlotType type) {
 
     // if (this->call_slots[type].empty()) {
     //    vislib::sys::Log::DefaultLog.WriteWarn(
@@ -120,7 +120,7 @@ const std::vector<megamol::gui::configurator::CallSlotPtrType>& megamol::gui::co
 }
 
 
-const std::map<megamol::gui::configurator::CallSlot::CallSlotType,
+const std::map<megamol::gui::configurator::CallSlotType,
     std::vector<megamol::gui::configurator::CallSlotPtrType>>&
 megamol::gui::configurator::Module::GetCallSlots(void) {
 
@@ -400,8 +400,8 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
 
     float module_width = (max_label_length + max_slot_name_length) + (3.0f * GUI_CALL_SLOT_RADIUS);
 
-    auto max_slot_count = std::max(inout_mod.GetCallSlots(CallSlot::CallSlotType::CALLEE).size(),
-        inout_mod.GetCallSlots(CallSlot::CallSlotType::CALLER).size());
+    auto max_slot_count = std::max(inout_mod.GetCallSlots(CallSlotType::CALLEE).size(),
+        inout_mod.GetCallSlots(CallSlotType::CALLER).size());
     float module_slot_height =
         (static_cast<float>(max_slot_count) * (GUI_CALL_SLOT_RADIUS * 2.0f) * 1.25f) + GUI_CALL_SLOT_RADIUS;
 

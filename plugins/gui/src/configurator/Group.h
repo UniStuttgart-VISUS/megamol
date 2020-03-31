@@ -49,6 +49,7 @@ public:
     bool AddCallSlot(const CallSlotPtrType& callslot_ptr);
     bool RemoveCallSlot(ImGuiID callslot_uid);
     bool ContainsCallSlot(ImGuiID callslot_uid);
+    inline const CallSlotPtrMapType& GetCallSlots(void) { return this->callslots; }
 
     // GUI Presentation -------------------------------------------------------
 
@@ -58,7 +59,7 @@ public:
 
 private:
     ModulePtrVectorType modules;
-    std::map<CallSlot::CallSlotType, CallSlotPtrVectorType> callslots;
+    CallSlotPtrMapType callslots;
 
     /** ************************************************************************
      * Defines GUI group presentation.

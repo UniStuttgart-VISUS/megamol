@@ -26,8 +26,8 @@ megamol::gui::configurator::Call::Call(ImGuiID uid)
     , connected_call_slots()
     , present() {
 
-    this->connected_call_slots.emplace(CallSlot::CallSlotType::CALLER, nullptr);
-    this->connected_call_slots.emplace(CallSlot::CallSlotType::CALLEE, nullptr);
+    this->connected_call_slots.emplace(CallSlotType::CALLER, nullptr);
+    this->connected_call_slots.emplace(CallSlotType::CALLEE, nullptr);
 }
 
 
@@ -108,7 +108,7 @@ bool megamol::gui::configurator::Call::DisConnectCallSlots(void) {
 
 
 const megamol::gui::configurator::CallSlotPtrType megamol::gui::configurator::Call::GetCallSlot(
-    megamol::gui::configurator::CallSlot::CallSlotType type) {
+    megamol::gui::configurator::CallSlotType type) {
 
     if (this->connected_call_slots[type] == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn(
@@ -142,10 +142,10 @@ void megamol::gui::configurator::Call::Presentation::Present(
         if (inout_call.IsConnected()) {
 
             bool visibility = true;
-            if ((inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->ParentModuleConnected()) &&
-                (inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->ParentModuleConnected())) {
-                auto caller_parent = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->GetParentModule();
-                auto callee_parent = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->GetParentModule();
+            if ((inout_call.GetCallSlot(CallSlotType::CALLER)->ParentModuleConnected()) &&
+                (inout_call.GetCallSlot(CallSlotType::CALLEE)->ParentModuleConnected())) {
+                auto caller_parent = inout_call.GetCallSlot(CallSlotType::CALLER)->GetParentModule();
+                auto callee_parent = inout_call.GetCallSlot(CallSlotType::CALLEE)->GetParentModule();
                 visibility = !((caller_parent->GUI_GetGroupMembership() == callee_parent->GUI_GetGroupMembership()) && 
                     (caller_parent->GUI_GetGroupMembership() != GUI_INVALID_ID) &&  
                     (callee_parent->GUI_GetGroupMembership() != GUI_INVALID_ID) && 
@@ -155,8 +155,8 @@ void megamol::gui::configurator::Call::Presentation::Present(
             if (visibility) {
 
                 const float CURVE_THICKNESS = 3.0f;
-                ImVec2 p1 = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->GUI_GetPosition();
-                ImVec2 p2 = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->GUI_GetPosition();
+                ImVec2 p1 = inout_call.GetCallSlot(CallSlotType::CALLER)->GUI_GetPosition();
+                ImVec2 p2 = inout_call.GetCallSlot(CallSlotType::CALLEE)->GUI_GetPosition();
 
                 // Clip calls if lying ouside the canvas
                 /// XXX Check is too expensive

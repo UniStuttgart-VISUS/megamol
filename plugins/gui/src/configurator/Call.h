@@ -62,7 +62,7 @@ public:
     bool IsConnected(void);
     bool ConnectCallSlots(CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
     bool DisConnectCallSlots(void);
-    const CallSlotPtrType GetCallSlot(CallSlot::CallSlotType type);
+    const CallSlotPtrType GetCallSlot(CallSlotType type);
 
     // GUI Presentation -------------------------------------------------------
 
@@ -72,7 +72,7 @@ public:
     inline void GUI_SetPresentation(Call::Presentations present) { this->present.presentations = present; }
 
 private:
-    std::map<CallSlot::CallSlotType, CallSlotPtrType> connected_call_slots;
+    std::map<CallSlotType, CallSlotPtrType> connected_call_slots;
 
     /** ************************************************************************
      * Defines GUI call presentation.

@@ -67,10 +67,10 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
     this->present.ForceUpdate();
     
     // Add connected call slots to group interface if connected module is not part of same group
-    for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlot::CallSlotType::CALLER)) {
+    for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
         if (callerslot_ptr->CallsConnected()) {
             for (auto& call : callerslot_ptr->GetConnectedCalls()) {
-                auto calleeslot_ptr = call->GetCallSlot(CallSlot::CallSlotType::CALLEE);
+                auto calleeslot_ptr = call->GetCallSlot(CallSlotType::CALLEE);
                 if (calleeslot_ptr->ParentModuleConnected()) {
                     ImGuiID parent_module_group_uid = calleeslot_ptr->GetParentModule()->GUI_GetGroupMembership();
                     if (parent_module_group_uid != this->uid) {
@@ -80,10 +80,10 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
             }
         }
     }
-    for (auto& calleeslot_ptr : module_ptr->GetCallSlots(CallSlot::CallSlotType::CALLEE)) {
+    for (auto& calleeslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLEE)) {
         if (calleeslot_ptr->CallsConnected()) {
             for (auto& call : calleeslot_ptr->GetConnectedCalls()) {
-                auto callerslot_ptr = call->GetCallSlot(CallSlot::CallSlotType::CALLER);
+                auto callerslot_ptr = call->GetCallSlot(CallSlotType::CALLER);
                 if (callerslot_ptr->ParentModuleConnected()) {
                     ImGuiID parent_module_group_uid = callerslot_ptr->GetParentModule()->GUI_GetGroupMembership();
                     if (parent_module_group_uid != this->uid) {
@@ -94,10 +94,10 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
         }
     }
     // Remove connected call slots of group interface if connected module is part of same group
-    for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlot::CallSlotType::CALLER)) {
+    for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
         if (callerslot_ptr->CallsConnected()) {
             for (auto& call : callerslot_ptr->GetConnectedCalls()) {
-                auto calleeslot_ptr = call->GetCallSlot(CallSlot::CallSlotType::CALLEE);
+                auto calleeslot_ptr = call->GetCallSlot(CallSlotType::CALLEE);
                 if (calleeslot_ptr->ParentModuleConnected()) {
                     ImGuiID parent_module_group_uid = calleeslot_ptr->GetParentModule()->GUI_GetGroupMembership();
                     if (parent_module_group_uid == this->uid) {
@@ -107,10 +107,10 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
             }
         }
     }
-    for (auto& calleeslot_ptr : module_ptr->GetCallSlots(CallSlot::CallSlotType::CALLEE)) {
+    for (auto& calleeslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLEE)) {
         if (calleeslot_ptr->CallsConnected()) {
             for (auto& call : calleeslot_ptr->GetConnectedCalls()) {
-                auto callerslot_ptr = call->GetCallSlot(CallSlot::CallSlotType::CALLER);
+                auto callerslot_ptr = call->GetCallSlot(CallSlotType::CALLER);
                 if (callerslot_ptr->ParentModuleConnected()) {
                     ImGuiID parent_module_group_uid = callerslot_ptr->GetParentModule()->GUI_GetGroupMembership();
                     if (parent_module_group_uid == this->uid) {
@@ -380,11 +380,13 @@ void megamol::gui::configurator::Group::Presentation::Present(
                 }
                 this->UpdatePositionSize(inout_group, state.canvas);
             }
+            /*
             if (ImGui::MenuItem("Save")) {
                 state.interact.group_save = true;
                 // Force selection
                 active = true;
             }
+            */
             if (ImGui::MenuItem("Rename")) {
                 popup_rename = true;
             }
@@ -485,8 +487,8 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
     // SIZE
     float group_width = 0.0f;
     float group_height = 0.0f;
-    size_t caller_count = inout_group.callslots[CallSlot::CallSlotType::CALLER].size();
-    size_t callee_count = inout_group.callslots[CallSlot::CallSlotType::CALLEE].size();  
+    size_t caller_count = inout_group.callslots[CallSlotType::CALLER].size();
+    size_t callee_count = inout_group.callslots[CallSlotType::CALLEE].size();  
     size_t max_slot_count = std::max(caller_count, callee_count);
     if (this->collapsed_view) {
         group_width = (1.5f * GUIUtils::TextWidgetWidth(this->name_label) / in_canvas.zooming) + (3.0f * GUI_CALL_SLOT_RADIUS);
@@ -518,11 +520,11 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
     ImVec2 callslot_group_position;
     for (auto& callslot_map : inout_group.callslots) {
         for (auto& callslot_ptr : callslot_map.second) {
-            if (callslot_map.first == CallSlot::CallSlotType::CALLER) {
+            if (callslot_map.first == CallSlotType::CALLER) {
                 callslot_group_position = ImVec2((pos.x +  size.x), (pos.y + size.y * ((float)caller_idx + 1) / ((float)caller_count + 1)));
                 caller_idx++;
             }
-            else if (callslot_map.first == CallSlot::CallSlotType::CALLEE) {
+            else if (callslot_map.first == CallSlotType::CALLEE) {
                 callslot_group_position = ImVec2(pos.x, (pos.y + size.y * ((float)callee_idx + 1) / ((float)callee_count + 1)));
                 callee_idx++;
             }           
