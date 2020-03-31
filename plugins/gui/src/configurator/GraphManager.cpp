@@ -407,6 +407,8 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
             }
             graph_ptr->AddCall(this->GetCallsStock(), call_slot_1, call_slot_2);
         }
+        
+        graph_ptr->GUI_SetLayoutGraph();
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -801,6 +803,8 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 }
             }
         }
+        
+        graph_ptr->GUI_SetLayoutGraph();
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(

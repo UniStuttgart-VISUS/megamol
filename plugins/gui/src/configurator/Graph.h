@@ -44,7 +44,7 @@ public:
 
     ImGuiID AddModule(const ModuleStockVectorType& stock_modules, const std::string& module_class_name);
     bool DeleteModule(ImGuiID module_uid);
-    const ModulePtrVectorType& GetGraphModules(void) { return this->modules; }
+    inline const ModulePtrVectorType& GetGraphModules(void) { return this->modules; }
     const ModulePtrType& GetModule(ImGuiID module_uid);
 
     bool AddCall(const CallStockVectorType& stock_calls, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
@@ -64,13 +64,14 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     // Returns uid if graph is the currently active/drawn one.
-    void GUI_Present(GraphStateType& state) { this->present.Present(*this, state); }
+    inline void GUI_Present(GraphStateType& state) { this->present.Present(*this, state); }
 
     inline ImGuiID GUI_GetSelectedGroup(void) const { return this->present.GetSelectedGroup(); }
     inline ImGuiID GUI_GetSelectedCallSlot(void) const { return this->present.GetSelectedCallSlot(); }
     inline ImGuiID GUI_GetDropCallSlot(void) const { return this->present.GetDropCallSlot(); }
-
     inline bool GUI_GetGroupSave(void) { return this->present.GetGroupSave(); }
+    
+    inline void GUI_SetLayoutGraph(void) { this->present.LayoutGraph(); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -110,6 +111,7 @@ private:
         }
 
         void ForceUpdate(void) { this->update = true; }
+        void LayoutGraph(void) { this->layout_current_graph = true; }
 
         bool params_visible;
         bool params_readonly;
@@ -145,7 +147,7 @@ private:
     // FUNCTIONS --------------------------------------------------------------
     
     bool delete_disconnected_calls(void);
-    const CallPtrVectorType& get_graph_calls(void) { return this->calls; }
+    const CallPtrVectorType& get_calls(void) { return this->calls; }
     const GroupPtrVectorType& get_groups(void) { return this->groups; }    
     inline const std::string generate_unique_group_name(void) { return ("Group_" + std::to_string(++group_name_uid)); }
     std::string generate_unique_module_name(const std::string& module_name);

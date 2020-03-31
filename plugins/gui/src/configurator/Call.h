@@ -66,10 +66,10 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
+    inline void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
 
-    void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
-    void GUI_SetPresentation(Call::Presentations present) { this->present.presentations = present; }
+    inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
+    inline void GUI_SetPresentation(Call::Presentations present) { this->present.presentations = present; }
 
 private:
     std::map<CallSlot::CallSlotType, CallSlotPtrType> connected_call_slots;

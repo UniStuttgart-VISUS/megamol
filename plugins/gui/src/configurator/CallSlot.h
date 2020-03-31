@@ -82,18 +82,19 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
+    inline void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
         
-    void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
+    inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
 
-    ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
-    bool GUI_GetLabelVisibility(void) { return this->present.label_visible; }
+    inline bool GUI_GetGroupInterface(void) { return this->present.group.interface; }
+    inline ImVec2 GUI_GetGroupPosition(void) { return this->present.group.position; }
+    inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(*this); }
+    inline bool GUI_GetLabelVisibility(void) { return this->present.label_visible; }
 
-    void GUI_SetGroupInterface(bool interface) { this->present.group.interface = interface; }
-    void GUI_SetGroupPosition(ImVec2 position) { this->present.group.position = position; }
-    
-    void GUI_SetPresentation(CallSlot::Presentations present) { this->present.presentations = present; }
-    void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
+    inline void GUI_SetGroupInterface(bool interface) { this->present.group.interface = interface; }
+    inline void GUI_SetGroupPosition(ImVec2 position) { this->present.group.position = position; }
+    inline void GUI_SetPresentation(CallSlot::Presentations present) { this->present.presentations = present; }
+    inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
 
 private:
     ModulePtrType parent_module;
@@ -113,7 +114,7 @@ private:
         
         void UpdatePosition(CallSlot& inout_call_slot, const GraphCanvasType& in_canvas);
 
-        ImVec2 GetPosition(void) { return this->position; }
+        ImVec2 GetPosition(CallSlot& inout_call_slot);
 
         GroupState group;
         CallSlot::Presentations presentations;

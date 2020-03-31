@@ -193,12 +193,27 @@ bool megamol::gui::configurator::Graph::AddCall(
             this->delete_disconnected_calls();
         }
 
-        if (call_ptr->ConnectCallSlots(call_slot_1, call_slot_2) && call_slot_1->ConnectCall(call_ptr) &&
-            call_slot_2->ConnectCall(call_ptr)) {
+        if (call_ptr->ConnectCallSlots(call_slot_1, call_slot_2) && call_slot_1->ConnectCall(call_ptr) && call_slot_2->ConnectCall(call_ptr)) {
 
             this->calls.emplace_back(call_ptr);
             vislib::sys::Log::DefaultLog.WriteInfo(
                 "Added call '%s' to project '%s'.\n", call_ptr->class_name.c_str(), this->name.c_str());
+
+            // Add connected call slots to interface of group of the parent module
+            if (call_slot_1->ParentModuleConnected() && call_slot_1->GetParentModule()->GUI_GetGroupMembership()) {
+                for (auto& group : this->groups) {
+                    if (group->ContainsModule(call_slot_1->GetParentModule()->uid)) {
+                        group->AddCallSlot(call_slot_1);
+                    }
+                }
+            }
+            if (call_slot_2->ParentModuleConnected() && call_slot_2->GetParentModule()->GUI_GetGroupMembership()) {
+                for (auto& group : this->groups) {
+                    if (group->ContainsModule(call_slot_2->GetParentModule()->uid)) {
+                        group->AddCallSlot(call_slot_2);
+                    }
+                }
+            }            
 
             this->dirty_flag = true;
         } else {
@@ -684,10 +699,10 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
         }
     }
     if (selected_mod_ptr == nullptr) {
-        this->utils.ReadOnlyWigetStyle(true);
+        GUIUtils::ReadOnlyWigetStyle(true);
         bool checked = false;
         ImGui::Checkbox("Main View", &checked);
-        this->utils.ReadOnlyWigetStyle(false);
+        GUIUtils::ReadOnlyWigetStyle(false);
     } else {
         if (ImGui::Checkbox("Main View", &selected_mod_ptr->is_view_instance)) {
             this->update = true;
@@ -723,7 +738,7 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
     ImGui::SameLine();
 
     if (ImGui::Checkbox("Call Names", &this->show_call_names)) {
-        for (auto& call : inout_graph.get_graph_calls()) {
+        for (auto& call : inout_graph.get_calls()) {
             call->GUI_SetLabelVisibility(this->show_call_names);
         }
         this->update = true;
@@ -828,7 +843,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     }
 
     // 4] CALLS ---------------------------------;
-    for (auto& call : inout_graph.get_graph_calls()) {
+    for (auto& call : inout_graph.get_calls()) {
         call->GUI_Present(this->graphstate);
     }
 
@@ -1199,7 +1214,7 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
                 for (auto& caller_slot : mod->GetCallSlots(CallSlot::CallSlotType::CALLER)) {
                     if (caller_slot->CallsConnected()) {
                         for (auto& call : caller_slot->GetConnectedCalls()) {
-                            auto call_name_length = this->utils.TextWidgetWidth(call->class_name) * 1.5f;
+                            auto call_name_length = GUIUtils::TextWidgetWidth(call->class_name) * 1.5f;
                             max_call_width =
                                 (call_name_length > max_call_width) ? (call_name_length) : (max_call_width);
                         }

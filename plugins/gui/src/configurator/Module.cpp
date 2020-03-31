@@ -323,21 +323,21 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 }
 
                 label = this->name_label;
-                float name_width = this->utils.TextWidgetWidth(label);
+                float name_width = GUIUtils::TextWidgetWidth(label);
                 ImVec2 text_pos_left_upper =
                     (module_center + ImVec2(-(name_width / 2.0f), line_offset - ImGui::GetTextLineHeightWithSpacing()));
                 draw_list->AddText(
                     text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), label.c_str());
 
                 label = this->class_label;
-                name_width = this->utils.TextWidgetWidth(label);
+                name_width = GUIUtils::TextWidgetWidth(label);
                 text_pos_left_upper = (module_center + ImVec2(-(name_width / 2.0f), line_offset));
                 draw_list->AddText(
                     text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), label.c_str());
 
                 if (inout_module.is_view_instance) {
                     label = "[Main View]";
-                    name_width = this->utils.TextWidgetWidth(label);
+                    name_width = GUIUtils::TextWidgetWidth(label);
                     text_pos_left_upper = (module_center + ImVec2(-(name_width / 2.0f),
                                                                line_offset + ImGui::GetTextLineHeightWithSpacing()));
                     draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]),
@@ -347,19 +347,19 @@ void megamol::gui::configurator::Module::Presentation::Present(
 
             /// XXX Use ImGui::ArrowButton to show/hide parameters inside module box.
 
-            // Draw call slots ----------------------------------------------------
-            for (auto& slot_pair : inout_module.GetCallSlots()) {
-                for (auto& slot : slot_pair.second) {
-                    slot->GUI_Present(state);
-                }
-            }
-
             // Rename pop-up ------------------------------------------------------
             if (this->utils.RenamePopUp("Rename Project", popup_rename, inout_module.name)) {
                 this->UpdateSize(inout_module, state.canvas);
             }
 
             ImGui::PopID();
+        }
+        
+        // Draw call slots ----------------------------------------------------
+        for (auto& slot_pair : inout_module.GetCallSlots()) {
+            for (auto& slot : slot_pair.second) {
+                slot->GUI_Present(state);
+            }
         }
 
     } catch (std::exception e) {
@@ -379,9 +379,9 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
     float max_label_length = 0.0f;
     if (this->label_visible) {
         this->class_label = "Class: " + inout_mod.class_name;
-        float class_name_length = this->utils.TextWidgetWidth(this->class_label);
+        float class_name_length = GUIUtils::TextWidgetWidth(this->class_label);
         this->name_label = "Name: " + inout_mod.FullName(); // .name OR .FullName();
-        float name_length = this->utils.TextWidgetWidth(inout_mod.present.name_label);
+        float name_length = GUIUtils::TextWidgetWidth(inout_mod.present.name_label);
         max_label_length = std::max(class_name_length, name_length);
     }
     max_label_length /= in_canvas.zooming;
@@ -390,7 +390,7 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
     for (auto& call_slot_type_list : inout_mod.GetCallSlots()) {
         for (auto& call_slot : call_slot_type_list.second) {
             if (call_slot->GUI_GetLabelVisibility()) {
-                max_slot_name_length = std::max(this->utils.TextWidgetWidth(call_slot->name), max_slot_name_length);
+                max_slot_name_length = std::max(GUIUtils::TextWidgetWidth(call_slot->name), max_slot_name_length);
             }
         }
     }

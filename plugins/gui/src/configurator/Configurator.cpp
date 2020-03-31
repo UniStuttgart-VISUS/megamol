@@ -399,8 +399,22 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                             for (auto& call_slot_map : module_ptr->GetCallSlots()) {
                                 for (auto& call_slot : call_slot_map.second) {
                                     if (call_slot->name == compat_call_slot_name) {
-                                        if (graph_ptr->AddCall(this->graph_manager.GetCallsStock(),
-                                                selected_call_slot_ptr, call_slot)) {
+                                        if (graph_ptr->AddCall(this->graph_manager.GetCallsStock(), selected_call_slot_ptr, call_slot)) {
+                                            if (selected_call_slot_ptr->ParentModuleConnected()) {
+                                                auto pos = selected_call_slot_ptr->GetParentModule()->GUI_GetPosition();
+                                                auto size = selected_call_slot_ptr->GetParentModule()->GUI_GetSize();
+                                                std::string call_name;
+                                                // Caller have only one connected call
+                                                if (selected_call_slot_ptr->type == CallSlot::CallSlotType::CALLER) {
+                                                    call_name = selected_call_slot_ptr->GetConnectedCalls()[0]->class_name;
+                                                }
+                                                else if (call_slot->type == CallSlot::CallSlotType::CALLER) {
+                                                    call_name = selected_call_slot_ptr->GetConnectedCalls()[0]->class_name;
+                                                }
+                                                ImVec2 new_module_pos = pos;
+                                                new_module_pos.y += (size.y + (1.5f * GUIUtils::TextWidgetWidth(call_name)));
+                                                module_ptr->GUI_SetPosition(new_module_pos);
+                                            }
                                         }
                                     }
                                 }

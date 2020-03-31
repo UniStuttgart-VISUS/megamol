@@ -212,12 +212,12 @@ public:
     /**
      * Returns width of text drawn as widget.
      */
-    float TextWidgetWidth(const std::string& text) const;
+    static float TextWidgetWidth(const std::string& text);
 
     /**
      * Set/Unset read only widget style.
      */
-    void ReadOnlyWigetStyle(bool set);
+    static void ReadOnlyWigetStyle(bool set);
 
 private:
     // VARIABLES --------------------------------------------------------------

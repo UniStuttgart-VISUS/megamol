@@ -88,21 +88,22 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
+    inline void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
 
-    void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdateSize(*this, in_canvas); }
+    inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdateSize(*this, in_canvas); }
 
-    const GroupState& GUI_GetGroupState(void) { return this->present.group; }
-    ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
-    ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
+    inline bool GUI_GetGroupMembership(void) { return this->present.group.member; }
+    inline bool GUI_GetGroupVisibility(void) { return this->present.group.visible; }
+    inline std::string GUI_GetGroupName(void) { return this->present.group.name; }
+    inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
+    inline ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
     
-    void GUI_SetGroupMembership(bool member) { this->present.group.member = member; }
-    void GUI_SetGroupVisibility(bool visible) { this->present.group.visible = visible; }
-    void GUI_SetGroupName(const std::string& name) { this->present.group.name = name; }
-    
-    void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
-    void GUI_SetPresentation(Module::Presentations present) { this->present.presentations = present; }
-    void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
+    inline void GUI_SetGroupMembership(bool member) { this->present.group.member = member; }
+    inline void GUI_SetGroupVisibility(bool visible) { this->present.group.visible = visible; }
+    inline void GUI_SetGroupName(const std::string& name) { this->present.group.name = name; }
+    inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
+    inline void GUI_SetPresentation(Module::Presentations present) { this->present.presentations = present; }
+    inline void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
         
 private:
     std::map<CallSlot::CallSlotType, CallSlotPtrVectorType> call_slots;
@@ -121,10 +122,10 @@ private:
 
         void UpdateSize(Module& inout_mod, const GraphCanvasType& in_canvas);
 
-        void SetPosition(ImVec2 pos) { this->position = pos; }
+        inline void SetPosition(ImVec2 pos) { this->position = pos; }
 
-        ImVec2 GetPosition(void) { return this->position; }
-        ImVec2 GetSize(void) { return this->size; }
+        inline ImVec2 GetPosition(void) { return this->position; }
+        inline ImVec2 GetSize(void) { return this->size; }
 
         GroupState group;
         Module::Presentations presentations;

@@ -391,7 +391,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f); // set general proportional item width
 
     if (this->read_only) {
-        this->utils.ReadOnlyWigetStyle(true);
+        GUIUtils::ReadOnlyWigetStyle(true);
     }
 
     std::string param_label = param.GetName();
@@ -624,7 +624,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
     std::visit(visitor, param.GetValue());
 
     if (this->read_only) {
-        this->utils.ReadOnlyWigetStyle(false);
+        GUIUtils::ReadOnlyWigetStyle(false);
     }
 
     ImGui::PopItemWidth();

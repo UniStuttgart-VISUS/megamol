@@ -160,7 +160,7 @@ bool megamol::gui::GUIUtils::RenamePopUp(const std::string& caption, bool open_p
 }
 
 
-float GUIUtils::TextWidgetWidth(const std::string& text) const {
+float GUIUtils::TextWidgetWidth(const std::string& text) {
     assert(ImGui::GetCurrentContext() != nullptr);
 
     ImVec2 pos = ImGui::GetCursorPos();

@@ -58,7 +58,6 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    // Returns uid of the currently active/drawn graph.
     void GUI_Present(GraphStateType& state) { this->present.Present(*this, state); }
 
 private:
