@@ -2,7 +2,7 @@
  * CallSlot.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+ * Alle Rechte vorbehalten. 
  */
 
 #include "stdafx.h"
@@ -283,8 +283,8 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         }
 
         std::string module_label;
-        bool is_parent_module_group_member = false;
-        bool is_parent_module_group_visible = false;
+        ImGuiID is_parent_module_group_member = GUI_INVALID_ID;
+        bool is_parent_module_group_visible = GUI_INVALID_ID;
         if (inout_call_slot.ParentModuleConnected()) {
             is_parent_module_group_member = inout_call_slot.GetParentModule()->GUI_GetGroupMembership();
             is_parent_module_group_visible = inout_call_slot.GetParentModule()->GUI_GetGroupVisibility();
@@ -292,7 +292,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         }
         
         // Slots are not drawn if ...
-        if (!this->group.interface && is_parent_module_group_member && !is_parent_module_group_visible) {
+        if (!this->group.interface && (is_parent_module_group_member != GUI_INVALID_ID) && !is_parent_module_group_visible) {
             return;
         }        
         
@@ -386,14 +386,14 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             /// Menu item is only active when parent module is part of a group and call slot is not yet part of the
             /// group.
             if (ImGui::MenuItem(
-                    "Add to Group Interface ", nullptr, false, (!this->group.interface && is_parent_module_group_member))) {
+                    "Add to Group Interface ", nullptr, false, (!this->group.interface && (is_parent_module_group_member != GUI_INVALID_ID)))) {
                 state.interact.callslot_add_group_uid.first = inout_call_slot.uid;
                 state.interact.callslot_add_group_uid.second = inout_call_slot.GetParentModule()->uid;
             }
             /// Menu item is only active when parent module is part of a group and call slot is already part of the
             /// group.
             if (ImGui::MenuItem(
-                    "Remove Group Interface", nullptr, false, (this->group.interface && is_parent_module_group_member))) {
+                    "Remove Group Interface", nullptr, false, (this->group.interface && (is_parent_module_group_member != GUI_INVALID_ID)))) {
                 state.interact.callslot_remove_group_uid = inout_call_slot.uid;
             }
             ImGui::EndPopup();
@@ -405,7 +405,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         if (!this->label_visible) {
             tooltip = slot_label + " " + tooltip;
         }
-        if (this->group.interface  && is_parent_module_group_member && !is_parent_module_group_visible) {
+        if (this->group.interface  && (is_parent_module_group_member != GUI_INVALID_ID) && !is_parent_module_group_visible) {
             tooltip = module_label + " " + tooltip;
         }
         
@@ -438,7 +438,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             state.interact.callslot_hovered_uid = GUI_INVALID_ID;
         }
         if (ImGui::BeginDragDropTarget()) {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(GUI_DND_CALL_UID_TYPE)) {
+            if (ImGui::AcceptDragDropPayload(GUI_DND_CALL_UID_TYPE) != nullptr) {
                 state.interact.callslot_dropped_uid = inout_call_slot.uid;
             }
             ImGui::EndDragDropTarget();
@@ -452,7 +452,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             }
         }
 
-        if (this->group.interface && is_parent_module_group_member && is_parent_module_group_visible) {
+        if (this->group.interface && (is_parent_module_group_member != GUI_INVALID_ID) && is_parent_module_group_visible) {
             draw_list->AddLine(this->position, slot_position, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]), (GUI_CALL_SLOT_RADIUS/3.0f) * state.canvas.zooming);
         }
         
@@ -498,7 +498,7 @@ void megamol::gui::configurator::CallSlot::Presentation::UpdatePosition(
 
 ImVec2 megamol::gui::configurator::CallSlot::Presentation::GetPosition(CallSlot& inout_call_slot) {
     
-    bool is_parent_module_group_member = false;
+    ImGuiID is_parent_module_group_member = GUI_INVALID_ID;
     bool is_parent_module_group_visible = false;
     if (inout_call_slot.ParentModuleConnected()) {
         is_parent_module_group_member = inout_call_slot.GetParentModule()->GUI_GetGroupMembership();
@@ -509,7 +509,7 @@ ImVec2 megamol::gui::configurator::CallSlot::Presentation::GetPosition(CallSlot&
     ImVec2 actual_position = this->position;
     if (this->group.interface) {
         actual_position = this->group.position;
-        if (is_parent_module_group_member && is_parent_module_group_visible) {
+        if ((is_parent_module_group_member != GUI_INVALID_ID) && is_parent_module_group_visible) {
             actual_position.y = this->position.y;
         }
     }

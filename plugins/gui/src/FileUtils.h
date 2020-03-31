@@ -2,7 +2,7 @@
  * FileUtils.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+ * Alle Rechte vorbehalten. 
  */
 /// There is a CMake exeption for the cluster "stampede2" running CentOS, which undefines GUI_USE_FILESYSTEM.
 

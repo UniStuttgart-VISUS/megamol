@@ -2,7 +2,7 @@
  * Parameter.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+ * Alle Rechte vorbehalten. 
  */
 
 #ifndef MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
@@ -224,6 +224,8 @@ public:
     inline void GUI_SetExpert(bool expert) { this->present.expert = expert; }
 
 private:
+    // VARIABLES --------------------------------------------------------------
+
     MinType minval;
     MaxType maxval;
     StroageType storage;
@@ -251,26 +253,21 @@ private:
 
     private:
         Presentations presentations;
-
         std::string help;
         megamol::gui::GUIUtils utils;
         megamol::gui::FileUtils file_utils;
         bool show_tf_editor;
         megamol::gui::TransferFunctionEditor tf_editor;
         std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
-
-        static bool popup_open;
-
         const std::string float_format;
+
+        static bool popup_open;        
 
         void present_prefix(Parameter& param);
         void present_value_DEFAULT(Parameter& param);
         // void present_value_PIN_VALUE_TO_MOUSE(Parameter& param);
-
         void present_postfix(Parameter& param);
-
         bool presentation_button(void);
-
         void transfer_function_edit(Parameter& param);
 
     } present;

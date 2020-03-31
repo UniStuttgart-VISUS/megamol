@@ -2,7 +2,7 @@
  * FileUtils.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+ * Alle Rechte vorbehalten. 
  */
 
 #include "stdafx.h"
@@ -18,13 +18,13 @@ megamol::gui::FileUtils::FileUtils(void)
     : utils()
     , file_name_str()
     , file_path_str()
-    , child_paths()
     , path_changed(false)
     , valid_directory(false)
     , valid_file(false)
     , valid_ending(false)
     , file_error()
     , file_warning()
+    , child_paths()    
     , additional_lines(0) {
 #else
 {
@@ -213,8 +213,6 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(megamol::gui::FileUtils::FileBrow
             bool apply = false;
             const auto error_color = ImVec4(0.9f, 0.0f, 0.0f, 1.0f);
             const auto warning_color = ImVec4(0.75f, 0.75f, 0.f, 1.0f);
-
-            ImGuiStyle& style = ImGui::GetStyle();
 
             // Path ---------------------------------------------------
             auto last_file_path_str = this->file_path_str;

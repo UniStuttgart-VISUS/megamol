@@ -2,7 +2,7 @@
  * Parameter.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+ * Alle Rechte vorbehalten. 
  */
 
 #include "stdafx.h"
@@ -258,15 +258,15 @@ bool megamol::gui::configurator::Parameter::SetValueString(const std::string& va
 bool megamol::gui::configurator::Parameter::Presentation::popup_open = false;
 
 megamol::gui::configurator::Parameter::Presentation::Presentation(void)
-    : presentations(Presentations::DEFAULT)
-    , read_only(false)
+    : read_only(false)
     , visible(true)
     , expert(false)
+    , presentations(Presentations::DEFAULT)    
     , help()
     , utils()
     , file_utils()
+    , show_tf_editor(false)    
     , tf_editor()
-    , show_tf_editor(false)
     , widget_store()
     , float_format("%.7f") {}
 
@@ -386,8 +386,6 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
 
     this->help.clear();
 
-    ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f); // set general proportional item width
 
     if (this->read_only) {
@@ -735,8 +733,6 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
         return;
     }
     auto value = std::get<std::string>(param.GetValue());
-
-    ImGuiStyle& style = ImGui::GetStyle();
 
     ImGui::BeginGroup();
 

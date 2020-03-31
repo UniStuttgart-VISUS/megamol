@@ -2,7 +2,7 @@
  * GUIWindows.cpp
  *
  * Copyright (C) 2018 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+ * Alle Rechte vorbehalten. 
  */
 
 /**
@@ -38,11 +38,11 @@ GUIWindows::GUIWindows()
     , file_utils()
     , state()
     , widgtmap_text()
+    , widgtmap_int()    
     , widgtmap_float()
-    , widgtmap_int()
     , widgtmap_vec2()
     , widgtmap_vec3()
-    , widgtmap_vec4() {
+    , widgtmap_vec4() {      
 
     core::param::EnumParam* styles = new core::param::EnumParam((int)(Styles::DarkColors));
     styles->SetTypePair(Styles::CorporateGray, "Corporate Gray");
@@ -797,8 +797,7 @@ void GUIWindows::drawConfiguratorCallback(const std::string& wn, WindowManager::
 
 
 void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
-    ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
+
     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.5f); // set general proportional item width
 
     // Options
@@ -1103,7 +1102,6 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
 
 void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
     ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
 
     // Leave some space in histogram for text of current value
     wc.buf_current_delay += io.DeltaTime;
@@ -1175,7 +1173,6 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
 
     ImGui::PlotLines("###msplot", value_ptr, buffer_size, 0, overlay.c_str(), 0.0f, plot_scale_factor,
         ImVec2(0.0f, 50.0f)); /// use hidden label
-    float item_width = ImGui::GetItemRectSize().x;
 
     if (wc.ms_show_options) {
         if (ImGui::InputFloat(
@@ -1229,7 +1226,6 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
 
 void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
     ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
 
     ImFont* font_current = ImGui::GetFont();
     if (ImGui::BeginCombo("Select available Font", font_current->GetDebugName())) {
@@ -1275,7 +1271,6 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
 
 
 void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfiguration& wc) {
-    ImGuiStyle& style = ImGui::GetStyle();
 
     bool open_popup_project = false;
     if (ImGui::BeginMenu("File")) {

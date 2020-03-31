@@ -2,7 +2,7 @@
  * Module.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+ * Alle Rechte vorbehalten. 
  */
 
 #ifndef MEGAMOL_GUI_GRAPH_MODULE_H_INCLUDED
@@ -51,7 +51,7 @@ public:
     };
     
     struct GroupState {
-        bool member;
+        ImGuiID member;
         bool visible;
         std::string name;
     };    
@@ -92,13 +92,13 @@ public:
 
     inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdateSize(*this, in_canvas); }
 
-    inline bool GUI_GetGroupMembership(void) { return this->present.group.member; }
+    inline ImGuiID GUI_GetGroupMembership(void) { return this->present.group.member; }
     inline bool GUI_GetGroupVisibility(void) { return this->present.group.visible; }
     inline std::string GUI_GetGroupName(void) { return this->present.group.name; }
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     inline ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
     
-    inline void GUI_SetGroupMembership(bool member) { this->present.group.member = member; }
+    inline void GUI_SetGroupMembership(ImGuiID member) { this->present.group.member = member; }
     inline void GUI_SetGroupVisibility(bool visible) { this->present.group.visible = visible; }
     inline void GUI_SetGroupName(const std::string& name) { this->present.group.name = name; }
     inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }

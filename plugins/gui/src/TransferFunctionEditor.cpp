@@ -2,7 +2,7 @@
  * TransferFunctionEditor.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+ * Alle Rechte vorbehalten. 
  */
 
 #include "stdafx.h"
@@ -150,18 +150,23 @@ std::array<std::tuple<std::string, PresetGenerator>, 12> PRESETS = {
 TransferFunctionEditor::TransferFunctionEditor(void)
     : utils()
     , activeParameter(nullptr)
+    , nodes()
     , range({0.0f, 1.0f})
     , mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , textureSize(256)
-    , textureId(0)
+
     , textureInvalid(true)
     , pendingChanges(true)
+    , texturePixels()
+    , textureId(0)
     , activeChannels{false, false, false, false}
     , currentNode(0)
     , currentChannel(0)
     , currentDragChange()
     , immediateMode(false)
-    , showOptions(true) {
+    , showOptions(true)
+    , widget_buffer() {
+
     // Init transfer function colors
     this->nodes.clear();
     std::array<float, TFP_VAL_CNT> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f};
@@ -230,7 +235,6 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
     assert(ImGui::GetCurrentContext() != nullptr);
     assert(this->nodes.size() > 1);
 
-    ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
     // Test if selected node is still in range
@@ -238,7 +242,6 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
         this->currentNode = 0;
     }
 
-    const float tfw_height = 28.0f;
     const float tfw_item_width = ImGui::GetContentRegionAvail().x * 0.75f;
     const float canvas_height = 150.0f;
     const float canvas_width = tfw_item_width;

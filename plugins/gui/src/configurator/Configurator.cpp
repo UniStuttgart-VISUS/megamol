@@ -2,7 +2,7 @@
  * Configurator.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+ * Alle Rechte vorbehalten. 
  */
 
 /**
@@ -24,14 +24,15 @@ using namespace megamol::gui::configurator;
 
 megamol::gui::configurator::Configurator::Configurator()
     : graph_manager()
+    , file_utils()
     , utils()
     , init_state(0)
     , left_child_width(250.0f)
-    , project_filename("")
     , selected_list_module_uid(GUI_INVALID_ID)
     , add_project_graph_uid(GUI_INVALID_ID)
-    , show_module_list_sidebar(true)
-    , file_utils() {
+    , show_module_list_sidebar(true)    
+    , project_filename("")    
+    , state() {           
 
     this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH] = megamol::gui::HotkeyDataType(
         core::view::KeyCode(core::view::Key::KEY_M, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false);
@@ -409,10 +410,10 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                                                     call_name = selected_call_slot_ptr->GetConnectedCalls()[0]->class_name;
                                                 }
                                                 else if (call_slot->type == CallSlot::CallSlotType::CALLER) {
-                                                    call_name = selected_call_slot_ptr->GetConnectedCalls()[0]->class_name;
+                                                    call_name = call_slot->GetConnectedCalls()[0]->class_name;
                                                 }
                                                 ImVec2 new_module_pos = pos;
-                                                new_module_pos.y += (size.y + (1.5f * GUIUtils::TextWidgetWidth(call_name)));
+                                                new_module_pos.x += (size.x + (1.5f * GUIUtils::TextWidgetWidth(call_name) + (GUI_CALL_SLOT_RADIUS * 4.0f)));
                                                 module_ptr->GUI_SetPosition(new_module_pos);
                                             }
                                         }

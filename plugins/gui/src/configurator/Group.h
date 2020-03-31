@@ -2,13 +2,14 @@
  * Group.h
  *
  * Copyright (C) 2020 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+ * Alle Rechte vorbehalten. 
  */
 
 #ifndef MEGAMOL_GUI_GRAPH_GROUP_H_INCLUDED
 #define MEGAMOL_GUI_GRAPH_GROUP_H_INCLUDED
 
 
+#include "Call.h"
 #include "CallSlot.h"
 #include "GUIUtils.h"
 #include "Module.h"

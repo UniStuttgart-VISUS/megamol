@@ -2,7 +2,7 @@
  * Call.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+ * Alle Rechte vorbehalten. 
  */
 
 #ifndef MEGAMOL_GUI_GRAPH_CALL_H_INCLUDED

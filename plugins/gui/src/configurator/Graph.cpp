@@ -2,7 +2,7 @@
  * Graph.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+ * Alle Rechte vorbehalten. 
  */
 
 #include "stdafx.h"
@@ -27,7 +27,7 @@ megamol::gui::configurator::Graph::Graph(const std::string& graph_name)
     , dirty_flag(true)
     , present() {
 }
-    
+
     
 megamol::gui::configurator::Graph::~Graph(void) {}
 
@@ -200,20 +200,22 @@ bool megamol::gui::configurator::Graph::AddCall(
                 "Added call '%s' to project '%s'.\n", call_ptr->class_name.c_str(), this->name.c_str());
 
             // Add connected call slots to interface of group of the parent module
-            if (call_slot_1->ParentModuleConnected() && call_slot_1->GetParentModule()->GUI_GetGroupMembership()) {
-                for (auto& group : this->groups) {
-                    if (group->ContainsModule(call_slot_1->GetParentModule()->uid)) {
-                        group->AddCallSlot(call_slot_1);
+            if (call_slot_1->ParentModuleConnected() && call_slot_2->ParentModuleConnected()) {
+                ImGuiID slot_1_parent_group_uid = call_slot_1->GetParentModule()->GUI_GetGroupMembership();
+                ImGuiID slot_2_parent_group_uid = call_slot_2->GetParentModule()->GUI_GetGroupMembership();
+                if (slot_1_parent_group_uid != slot_2_parent_group_uid) {
+                    for (auto& group : this->groups) {
+                        if (group->uid == slot_1_parent_group_uid) {
+                            group->AddCallSlot(call_slot_1);
+                        }
+                    }
+                    for (auto& group : this->groups) {
+                        if (group->uid == slot_2_parent_group_uid) {
+                            group->AddCallSlot(call_slot_2);
+                        }
                     }
                 }
-            }
-            if (call_slot_2->ParentModuleConnected() && call_slot_2->GetParentModule()->GUI_GetGroupMembership()) {
-                for (auto& group : this->groups) {
-                    if (group->ContainsModule(call_slot_2->GetParentModule()->uid)) {
-                        group->AddCallSlot(call_slot_2);
-                    }
-                }
-            }            
+            }    
 
             this->dirty_flag = true;
         } else {
@@ -440,7 +442,10 @@ std::string megamol::gui::configurator::Graph::generate_unique_module_name(const
 // GRAPH PRESENTATION ####################################################
 
 megamol::gui::configurator::Graph::Presentation::Presentation(void)
-    : utils()
+    : params_visible(true)
+    , params_readonly(false)
+    , params_expert(false)
+    , utils()
     , update(true)
     , show_grid(false)
     , show_call_names(true)
@@ -449,9 +454,6 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , layout_current_graph(false)
     , child_split_width(300.0f)
     , reset_zooming(true)
-    , params_visible(true)
-    , params_readonly(false)
-    , params_expert(false)
     , param_name_space()
     , graphstate() {
 
@@ -494,7 +496,6 @@ void megamol::gui::configurator::Graph::Presentation::Present(
             return;
         }
 
-        ImGuiIO& io = ImGui::GetIO();
         ImGuiID graph_uid = inout_graph.uid;
 
         bool popup_rename = false;
@@ -823,8 +824,6 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
 
     ImGui::PushClipRect(
         this->graphstate.canvas.position, this->graphstate.canvas.position + this->graphstate.canvas.size, true);
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    assert(draw_list != nullptr);
 
     // 1] GRID ----------------------------------
     if (this->show_grid) {
@@ -1127,9 +1126,8 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_cal
 
 bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui::configurator::Graph& inout_graph) {
 
-    // Really simple layouting sorting modules into differnet layers
-
-    ImGuiStyle& style = ImGui::GetStyle();
+    /// Really simple layouting sorting modules into differnet layers
+    
     std::vector<std::vector<ModulePtrType>> layers;
     layers.clear();
 

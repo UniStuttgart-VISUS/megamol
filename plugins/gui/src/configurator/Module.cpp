@@ -2,7 +2,7 @@
  * Module.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+ * Alle Rechte vorbehalten. 
  */
 
 #include "stdafx.h"
@@ -142,7 +142,7 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
     , selected(false)
     , update(true) { 
            
-    this->group.member = false;
+    this->group.member = GUI_INVALID_ID;
     this->group.visible = false;
     this->group.name = "";
 }
@@ -178,7 +178,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
             this->update = false;
         }
 
-        if (!this->group.member || (this->group.member && this->group.visible)) {
+        if ((this->group.member == GUI_INVALID_ID) || ((this->group.member != GUI_INVALID_ID) && this->group.visible)) {
 
             // Draw module --------------------------------------------------------
             ImVec2 module_size = this->size * state.canvas.zooming;
@@ -266,7 +266,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                     if (ImGui::MenuItem("Rename")) {
                         popup_rename = true;
                     }
-                    if (ImGui::BeginMenu("Add to Group", !this->group.member)) {
+                    if (ImGui::BeginMenu("Add to Group", (this->group.member == GUI_INVALID_ID))) {
                         if (ImGui::MenuItem("New")) {
                             state.interact.module_add_group_uid.first = inout_module.uid;
                             state.interact.module_add_group_uid.second = GUI_INVALID_ID;
@@ -282,7 +282,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                         }
                         ImGui::EndMenu();
                     }
-                    if (ImGui::MenuItem("Remove from Group", nullptr, false, this->group.member)) {
+                    if (ImGui::MenuItem("Remove from Group", nullptr, false, (this->group.member != GUI_INVALID_ID))) {
                         state.interact.module_remove_group_uid = inout_module.uid;
                     }
                     ImGui::EndPopup();
@@ -380,7 +380,7 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
     if (this->label_visible) {
         this->class_label = "Class: " + inout_mod.class_name;
         float class_name_length = GUIUtils::TextWidgetWidth(this->class_label);
-        this->name_label = "Name: " + inout_mod.FullName(); // .name OR .FullName();
+        this->name_label = "Name: " + inout_mod.name; // .name OR .FullName();
         float name_length = GUIUtils::TextWidgetWidth(inout_mod.present.name_label);
         max_label_length = std::max(class_name_length, name_length);
     }

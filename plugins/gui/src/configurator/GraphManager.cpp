@@ -2,7 +2,7 @@
  * GraphManager.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+ * Alle Rechte vorbehalten. 
  */
 
 #include "stdafx.h"
@@ -803,8 +803,6 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 }
             }
         }
-        
-        graph_ptr->GUI_SetLayoutGraph();
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(

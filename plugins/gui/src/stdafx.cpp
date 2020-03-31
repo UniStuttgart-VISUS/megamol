@@ -1,7 +1,7 @@
 /*
  * stdafx.cpp
  * Copyright (C) 2006-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+ * Alle Rechte vorbehalten. 
  */
 
 #include "stdafx.h"

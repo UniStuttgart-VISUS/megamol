@@ -2,7 +2,7 @@
  * PopUp.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+ * Alle Rechte vorbehalten. 
  */
 
 #include "stdafx.h"
@@ -253,8 +253,6 @@ bool megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::stri
 
 bool megamol::gui::GUIUtils::VerticalSplitter(FixedSplitterSide fixed_side, float& size_left, float& size_right) {
     assert(ImGui::GetCurrentContext() != nullptr);
-    ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
 
     const float thickness = 12.0f;
 
