@@ -101,7 +101,7 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
                 if (calleeslot_ptr->ParentModuleConnected()) {
                     ImGuiID parent_module_group_uid = calleeslot_ptr->GetParentModule()->GUI_GetGroupMembership();
                     if (parent_module_group_uid == this->uid) {
-                        this->RemoveCallSlot(callerslot_ptr->uid);
+                        this->RemoveCallSlot(calleeslot_ptr->uid);
                     }
                 }
             }
@@ -114,16 +114,13 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
                 if (callerslot_ptr->ParentModuleConnected()) {
                     ImGuiID parent_module_group_uid = callerslot_ptr->GetParentModule()->GUI_GetGroupMembership();
                     if (parent_module_group_uid == this->uid) {
-                        this->RemoveCallSlot(calleeslot_ptr->uid);
+                        this->RemoveCallSlot(callerslot_ptr->uid);
                     }
                 }
             }
         }
     }
-    
-    
-    
-    
+
     vislib::sys::Log::DefaultLog.WriteInfo("Added module '%s' to group '%s'.\n", module_ptr->name.c_str(), this->name.c_str());
     return true;
 }

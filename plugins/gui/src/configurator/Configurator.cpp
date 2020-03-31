@@ -401,19 +401,26 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                                 for (auto& call_slot : call_slot_map.second) {
                                     if (call_slot->name == compat_call_slot_name) {
                                         if (graph_ptr->AddCall(this->graph_manager.GetCallsStock(), selected_call_slot_ptr, call_slot)) {
+                                            // Caluculate nice position of newly added module
                                             if (selected_call_slot_ptr->ParentModuleConnected()) {
-                                                auto pos = selected_call_slot_ptr->GetParentModule()->GUI_GetPosition();
                                                 auto size = selected_call_slot_ptr->GetParentModule()->GUI_GetSize();
-                                                std::string call_name;
-                                                // Caller have only one connected call
+                                                const float offset = (GUI_CALL_SLOT_RADIUS * 4.0f);
+                                                float x_offset, y_offset;
+                                                // Callers have only one connected call
                                                 if (selected_call_slot_ptr->type == CallSlot::CallSlotType::CALLER) {
-                                                    call_name = selected_call_slot_ptr->GetConnectedCalls()[0]->class_name;
+                                                    std::string call_name = selected_call_slot_ptr->GetConnectedCalls()[0]->class_name;
+                                                    x_offset = (size.x + (1.5f * GUIUtils::TextWidgetWidth(call_name) + offset));
+                                                    y_offset = size.y + offset;
                                                 }
                                                 else if (call_slot->type == CallSlot::CallSlotType::CALLER) {
-                                                    call_name = call_slot->GetConnectedCalls()[0]->class_name;
+                                                    auto size = selected_call_slot_ptr->GetParentModule()->GUI_GetSize();
+                                                    std::string call_name = call_slot->GetConnectedCalls()[0]->class_name;
+                                                    x_offset = -1.0f * (1.5f * GUIUtils::TextWidgetWidth(call_name) + offset);
+                                                    y_offset = -1.0f * (size.y + offset);
                                                 }
-                                                ImVec2 new_module_pos = pos;
-                                                new_module_pos.x += (size.x + (1.5f * GUIUtils::TextWidgetWidth(call_name) + (GUI_CALL_SLOT_RADIUS * 4.0f)));
+                                                ImVec2 new_module_pos = selected_call_slot_ptr->GetParentModule()->GUI_GetPosition();
+                                                new_module_pos.x += x_offset;
+                                                new_module_pos.y += y_offset;
                                                 module_ptr->GUI_SetPosition(new_module_pos);
                                             }
                                         }
