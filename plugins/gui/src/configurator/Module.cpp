@@ -240,7 +240,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 (state.interact.callslot_hovered_uid == GUI_INVALID_ID) &&
                 ((state.interact.module_hovered_uid == GUI_INVALID_ID) || (state.interact.module_hovered_uid == inout_module.uid)));
                 
-        // Context menu
+            // Context menu
             if (state.interact.callslot_hovered_uid == GUI_INVALID_ID) {
                 if (ImGui::BeginPopupContextItem("invisible_button_context")) {
                     active = true; // Force selection
@@ -295,10 +295,10 @@ void megamol::gui::configurator::Module::Presentation::Present(
             ImU32 module_bg_color = (hovered || this->selected) ? COLOR_MODULE_HIGHTLIGHT : COLOR_MODULE_BACKGROUND;
             draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 5.0f, ImDrawCornerFlags_All);
 
-            // Text
+            // Text and Option Buttons
             float text_width;
             ImVec2 text_pos_left_upper;
-            const float item_size = ImGui::GetFrameHeightWithSpacing();          
+            const float line_height = ImGui::GetTextLineHeightWithSpacing();          
             if (this->label_visible) {
 
                 auto menu_color = (hovered || this->selected) ? (COLOR_HEADER_HIGHLIGHT): (COLOR_HEADER);
@@ -310,39 +310,36 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 draw_list->AddText(text_pos_left_upper, COLOR_TEXT, inout_module.class_name.c_str());
                                
                 text_width = GUIUtils::TextWidgetWidth(inout_module.name);
-                text_pos_left_upper = (module_center - ImVec2((text_width / 2.0f), (item_size / 2.0f)));
+                text_pos_left_upper = (module_center - ImVec2((text_width / 2.0f), 0.75f * line_height));
                 draw_list->AddText(text_pos_left_upper, COLOR_TEXT, inout_module.name.c_str());
-            }
-            
-            float item_y_offset = (item_size/2.0f);
-            if (!this->label_visible) {
-                item_y_offset = -1.0f * item_y_offset;
-            }
-            float item_x_offset = (item_size / 2.0f);  
-            if (inout_module.is_view) {
-                item_x_offset = item_size;
-            }
-            ImGui::SetCursorScreenPos(module_center + ImVec2(-item_x_offset, item_y_offset));
-            if (inout_module.is_view) {
-                if (ImGui::RadioButton("###main_view_switch", inout_module.is_view_instance)) {
-                    state.interact.module_mainview_uid = inout_module.uid;
-                    inout_module.is_view_instance = !inout_module.is_view_instance;
-                    active = true; // Force selection            
+                
+                float item_y_offset = (line_height / 2.0f);
+                float item_x_offset = (ImGui::GetFrameHeightWithSpacing() / 2.0f);  
+                if (inout_module.is_view) {
+                    item_x_offset = ImGui::GetFrameHeight() + 0.5f * style.ItemSpacing.x * state.canvas.zooming;
+                }
+                ImGui::SetCursorScreenPos(module_center + ImVec2(-item_x_offset, item_y_offset));
+                if (inout_module.is_view) {
+                    if (ImGui::RadioButton("###main_view_switch", inout_module.is_view_instance)) {
+                        state.interact.module_mainview_uid = inout_module.uid;
+                        inout_module.is_view_instance = !inout_module.is_view_instance;
+                        active = true; // Force selection            
+                    }
+                    if (hovered) {
+                        this->other_item_hovered = this->utils.HoverToolTip("Main View");
+                    }
+                    ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
+                }
+                if (ImGui::ArrowButton("###parameter_toggle", ImGuiDir_Up)) { // ImGuiDir_Down
+                      
+                    /// TODO show parameters ...
+                    
+                
+                    active = true; // Force selection      
                 }
                 if (hovered) {
-                    this->other_item_hovered = this->utils.HoverToolTip("Main View");
+                    this->other_item_hovered = this->other_item_hovered || this->utils.HoverToolTip("Parameters");
                 }
-                ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
-            }
-            if (ImGui::ArrowButton("###parameter_toggle", ImGuiDir_Up)) {
-                  
-                /// TODO show parameters ...
-                
-            
-                active = true; // Force selection      
-            }
-            if (hovered) {
-                this->other_item_hovered = this->other_item_hovered || this->utils.HoverToolTip("Parameters");
             }
             
             // Outline
@@ -408,17 +405,17 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
     megamol::gui::configurator::Module& inout_module, const GraphCanvasType& in_canvas) {
 
     ImGuiStyle& style = ImGui::GetStyle();
-    
+
     // WIDTH
     float max_label_length = 0.0f;
     if (this->label_visible) {
         float class_width = GUIUtils::TextWidgetWidth(inout_module.class_name);
         float name_length = GUIUtils::TextWidgetWidth(inout_module.name);
+        float button_width = ((this->label_visible)?(2.0f):(1.0f)) * ImGui::GetTextLineHeightWithSpacing() + style.ItemSpacing.x;
         max_label_length = std::max(class_width, name_length);
+        max_label_length = std::max(max_label_length, button_width);
     }
-    max_label_length = std::max(2.0f * ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x, max_label_length);
     max_label_length /= in_canvas.zooming;
-    
     float max_slot_name_length = 0.0f;
     for (auto& call_slot_type_list : inout_module.GetCallSlots()) {
         for (auto& call_slot : call_slot_type_list.second) {
@@ -427,25 +424,23 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
             }
         }
     }
-    if (max_slot_name_length != 0.0f) {
+    if (max_slot_name_length > 0.0f) {
         max_slot_name_length = (2.0f * max_slot_name_length / in_canvas.zooming) + (1.0f * GUI_CALL_SLOT_RADIUS);
     }
-
     float module_width = (max_label_length + max_slot_name_length) + (3.0f * GUI_CALL_SLOT_RADIUS);
 
     // HEIGHT
+    float line_height = (1.0f / in_canvas.zooming) * ImGui::GetTextLineHeightWithSpacing();
     auto max_slot_count = std::max(
         inout_module.GetCallSlots(CallSlotType::CALLEE).size(), inout_module.GetCallSlots(CallSlotType::CALLER).size());
-    float module_slot_height =
-        (static_cast<float>(max_slot_count) * (GUI_CALL_SLOT_RADIUS * 2.0f) * 1.25f) + GUI_CALL_SLOT_RADIUS;
-
-    
-    float module_height = std::max(module_slot_height, ((1.0f / in_canvas.zooming) * ImGui::GetFrameHeightWithSpacing() * ((this->label_visible)?(3.0f):(1.0f))));
+    float module_slot_height = line_height + (static_cast<float>(max_slot_count) * (GUI_CALL_SLOT_RADIUS * 2.0f) * 1.25f) + GUI_CALL_SLOT_RADIUS;
+    float text_button_height = (line_height * ((this->label_visible) ? (4.0f): (1.0f)));
+    float module_height = std::max(module_slot_height, text_button_height);
 
     // Clamp to minimum size
     this->size = ImVec2(std::max(module_width, 75.0f), std::max(module_height, 25.0f));
 
-    // Update all call slots
+    // UPDATE all Call Slots ---------------------
     for (auto& slot_pair : inout_module.GetCallSlots()) {
         for (auto& slot : slot_pair.second) {
             slot->GUI_Update(in_canvas);

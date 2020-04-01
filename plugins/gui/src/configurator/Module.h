@@ -94,6 +94,7 @@ public:
     inline ImGuiID GUI_GetGroupMembership(void) { return this->present.group.member; }
     inline bool GUI_GetGroupVisibility(void) { return this->present.group.visible; }
     inline std::string GUI_GetGroupName(void) { return this->present.group.name; }
+    inline bool GUI_GetLabelVisibility(void) { return this->present.label_visible; }
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     inline ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
 

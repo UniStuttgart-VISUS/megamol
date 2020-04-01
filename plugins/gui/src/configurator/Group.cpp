@@ -486,12 +486,13 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
     size_t caller_count = inout_group.callslots[CallSlotType::CALLER].size();
     size_t callee_count = inout_group.callslots[CallSlotType::CALLEE].size();
     size_t max_slot_count = std::max(caller_count, callee_count);
-    if (this->collapsed_view) {
-        group_width =
-            (1.5f * GUIUtils::TextWidgetWidth(this->name_label) / in_canvas.zooming) + (3.0f * GUI_CALL_SLOT_RADIUS);
-        group_height = std::max((3.0f * ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming),
-            ((static_cast<float>(max_slot_count) * (GUI_CALL_SLOT_RADIUS * 2.0f) * 1.25f) + GUI_CALL_SLOT_RADIUS));
-    } else {
+
+    group_width =
+        (1.5f * GUIUtils::TextWidgetWidth(this->name_label) / in_canvas.zooming) + (3.0f * GUI_CALL_SLOT_RADIUS);
+    group_height = std::max((3.0f * ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming),
+        ((static_cast<float>(max_slot_count) * (GUI_CALL_SLOT_RADIUS * 2.0f) * 1.25f) + GUI_CALL_SLOT_RADIUS));
+        
+    if (!this->collapsed_view) {
         float pos_maxX = -FLT_MAX;
         float pos_maxY = -FLT_MAX;
         ImVec2 tmp_pos;
@@ -503,8 +504,8 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
             pos_maxY = std::max(tmp_pos.y + tmp_size.y, pos_maxY);
         }
 
-        group_width = (pos_maxX + this->border) - pos_minX;
-        group_height = (pos_maxY + this->border) - pos_minY;
+        group_width = std::max(group_width, (pos_maxX + this->border) - pos_minX);
+        group_height = std::max(group_height, (pos_maxY + this->border) - pos_minY);
     }
     // Clamp to minimum size
     this->size = ImVec2(std::max(group_width, 75.0f), std::max(group_height, 25.0f));
