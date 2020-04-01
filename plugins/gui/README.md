@@ -133,7 +133,6 @@ There are additional options available within the configurator, e.g. via the con
 * **Module Grouping**
     * Groups: `Right Click` Context Menu  
         * `Collapsed View` / `Expanded View`
-        * `Save`
         * `Rename`        
         * `Delete`
     * Modules: `Right Click` Context Menu             
@@ -141,7 +140,10 @@ There are additional options available within the configurator, e.g. via the con
         * `Remove from Group`        
     * Call Slots: `Right Click` Context Menu             
         * `Add to Group Interface`
-        * `Remove from Group Interface`            
+        * `Remove from Group Interface` 
+    
+Module groups are stored in project files using the already available module namespace (which is currently unused in the core). 
+Group interface call slots are stored in the new tag `--confGroupInterface{...}` in the same line as the corresponding lua command for the module creation.
                             
 ![configurator demo picture](configurator.png)
 
