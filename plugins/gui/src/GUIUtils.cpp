@@ -26,9 +26,11 @@ GUIUtils::GUIUtils(void)
     , splitter_last_width(0.0f) {}
 
 
-void GUIUtils::HoverToolTip(const std::string& text, ImGuiID id, float time_start, float time_end) {
+bool GUIUtils::HoverToolTip(const std::string& text, ImGuiID id, float time_start, float time_end) {
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiIO& io = ImGui::GetIO();
+
+    bool retval = false;
 
     if (ImGui::IsItemHovered()) {
         bool show_tooltip = false;
@@ -52,23 +54,34 @@ void GUIUtils::HoverToolTip(const std::string& text, ImGuiID id, float time_star
             ImGui::Text(text.c_str());
             ImGui::PopTextWrapPos();
             ImGui::EndTooltip();
+            retval = true;
         }
     } else {
         if ((time_start > 0.0f) && (this->tooltip_id == id)) {
             this->tooltip_time = 0.0f;
         }
     }
+    
+    return retval;
 }
 
 
-void GUIUtils::HelpMarkerToolTip(const std::string& text, std::string label) {
+void GUIUtils::ResetHoverToolTip(void) {
+    
+    this->tooltip_time = 0.0f;
+    this->tooltip_id = GUI_INVALID_ID;
+}
+
+
+bool GUIUtils::HelpMarkerToolTip(const std::string& text, std::string label) {
     assert(ImGui::GetCurrentContext() != nullptr);
 
     if (!text.empty()) {
         ImGui::SameLine();
         ImGui::TextDisabled(label.c_str());
-        this->HoverToolTip(text);
+        return this->HoverToolTip(text);
     }
+    return false;
 }
 
 

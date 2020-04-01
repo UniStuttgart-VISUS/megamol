@@ -97,17 +97,17 @@ private:
 
         void Present(Graph& inout_graph, GraphStateType& state);
 
-        ImGuiID GetSelectedGroup(void) const { return this->graphstate.interact.group_selected_uid; }
-        ImGuiID GetSelectedCallSlot(void) const { return this->graphstate.interact.callslot_selected_uid; }
-        ImGuiID GetDropCallSlot(void) const { return this->graphstate.interact.callslot_dropped_uid; }
+        ImGuiID GetSelectedGroup(void) const { return this->graph_state.interact.group_selected_uid; }
+        ImGuiID GetSelectedCallSlot(void) const { return this->graph_state.interact.callslot_selected_uid; }
+        ImGuiID GetDropCallSlot(void) const { return this->graph_state.interact.callslot_dropped_uid; }
 
         bool GetModuleLabelVisibility(void) const { return this->show_module_names; }
         bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
         bool GetCallLabelVisibility(void) const { return this->show_call_names; }
 
         bool GetGroupSave(void) {
-            bool retval = this->graphstate.interact.group_save;
-            this->graphstate.interact.group_save = false;
+            bool retval = this->graph_state.interact.group_save;
+            this->graph_state.interact.group_save = false;
             return retval;
         }
 
@@ -130,9 +130,8 @@ private:
         float child_split_width;
         bool reset_zooming;
         std::string param_name_space;
-
         // State propagated and shared by all graph items.
-        megamol::gui::GraphItemsStateType graphstate;
+        megamol::gui::GraphItemsStateType graph_state;
 
         void present_menu(Graph& inout_graph);
         void present_canvas(Graph& inout_graph, float child_width);
@@ -140,6 +139,7 @@ private:
 
         void present_canvas_grid(void);
         void present_canvas_dragged_call(Graph& inout_graph);
+        void present_canvas_multiselection(Graph& inout_graph);
 
         bool layout_graph(Graph& inout_graph);
 

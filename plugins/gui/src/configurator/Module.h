@@ -116,9 +116,9 @@ private:
 
         ~Presentation(void);
 
-        void Present(Module& inout_mod, GraphItemsStateType& state);
+        void Present(Module& inout_module, GraphItemsStateType& state);
 
-        void UpdateSize(Module& inout_mod, const GraphCanvasType& in_canvas);
+        void UpdateSize(Module& inout_module, const GraphCanvasType& in_canvas);
 
         inline void SetPosition(ImVec2 pos) { this->position = pos; }
 
@@ -136,11 +136,10 @@ private:
         ImVec2 size;
 
         GUIUtils utils;
-        std::string class_label;
-        std::string name_label;
         bool selected;
         bool update;
-
+        bool other_item_hovered;
+        
     } present;
 };
 

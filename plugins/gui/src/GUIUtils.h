@@ -91,6 +91,7 @@ typedef struct _interact_state_ {
     bool group_save;                                                 // out
     ImGuiID module_selected_uid;                                     // in out
     ImGuiID module_hovered_uid;                                      // in out
+    ImGuiID module_mainview_uid;                                     // out
     megamol::gui::UIDPairType module_add_group_uid;                  // out
     ImGuiID module_remove_group_uid;                                 // out
     ImGuiID call_selected_uid;                                       // in out
@@ -141,7 +142,9 @@ public:
      * @param time_start  The time delay to wait until the tooltip is shown for a hovered imgui item.
      * @param time_end    The time delay to wait until the tooltip is hidden for a hovered imgui item.
      */
-    void HoverToolTip(const std::string& text, ImGuiID id = 0, float time_start = 0.0f, float time_end = 4.0f);
+    bool HoverToolTip(const std::string& text, ImGuiID id = 0, float time_start = 0.0f, float time_end = 4.0f);
+
+    void ResetHoverToolTip(void);
 
     /**
      * Show help marker text with tooltip on hover.
@@ -149,7 +152,7 @@ public:
      * @param text   The help tooltip text.
      * @param label  The visible text for which the tooltip is enabled.
      */
-    void HelpMarkerToolTip(const std::string& text, std::string label = "(?)");
+    bool HelpMarkerToolTip(const std::string& text, std::string label = "(?)");
 
 
     // Pu-up widgets -------------------------------------------------------

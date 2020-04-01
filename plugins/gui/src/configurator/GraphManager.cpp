@@ -26,9 +26,11 @@ ImGuiID megamol::gui::configurator::GraphManager::AddGraph(void) {
     ImGuiID retval = GUI_INVALID_ID;
 
     try {
-        Graph graph(this->generate_unique_graph_name());
-        this->graphs.emplace_back(std::make_shared<Graph>(graph));
-        retval = this->graphs.back()->uid;
+        GraphPtrType graph_ptr = std::make_shared<Graph>(this->generate_unique_graph_name());
+        if (graph_ptr != nullptr) {
+            this->graphs.emplace_back(graph_ptr);
+            retval = graph_ptr->uid;
+        }
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);

@@ -405,6 +405,8 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                                         if (graph_ptr->AddCall(this->graph_manager.GetCallsStock(),
                                                 selected_call_slot_ptr, call_slot)) {
                                             // Caluculate nice position of newly added module
+                                            /// This is not nice ...
+                                            /*
                                             /// Shifting module in y direction since actual GUI width of new module is
                                             /// not available yet (next frame)
                                             if (selected_call_slot_ptr->ParentModuleConnected()) {
@@ -423,6 +425,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                                                 module_pos.y += y_factor * (size.y + offset);
                                                 module_ptr->GUI_SetPosition(module_pos);
                                             }
+                                            */
                                         }
                                     }
                                 }
