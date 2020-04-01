@@ -443,8 +443,25 @@ bool megamol::gui::configurator::Graph::delete_disconnected_calls(void) {
 }
 
 
-std::string megamol::gui::configurator::Graph::generate_unique_module_name(const std::string& module_name) {
+const std::string megamol::gui::configurator::Graph::generate_unique_group_name(void) {
 
+    int new_name_id = 0;
+    std::string new_name_prefix = "Group_";
+    for (auto& group : this->groups) {
+        if (group->name.find(new_name_prefix) == 0) {
+            std::string int_postfix = group->name.substr(new_name_prefix.length());
+            try {
+                int last_id = std::stoi(int_postfix);
+                new_name_id = std::max(new_name_id, last_id);
+            } catch (...) {
+            }
+        }
+    }
+    return std::string(new_name_prefix + std::to_string(new_name_id + 1));
+}
+
+
+const std::string megamol::gui::configurator::Graph::generate_unique_module_name(const std::string& module_name) {
 
     int new_name_id = 0;
     std::string new_name_prefix = module_name + "_";

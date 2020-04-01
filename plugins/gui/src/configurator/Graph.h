@@ -150,8 +150,8 @@ private:
     
     bool delete_disconnected_calls(void);
     inline const CallPtrVectorType& get_calls(void) { return this->calls; }
-    inline const std::string generate_unique_group_name(void) { return ("Group_" + std::to_string(++group_name_uid)); }
-    std::string generate_unique_module_name(const std::string& module_name);
+    const std::string generate_unique_group_name(void);
+    const std::string generate_unique_module_name(const std::string& name);
     inline ImGuiID generate_unique_id(void) { return (++this->generated_uid); }
 };
 
