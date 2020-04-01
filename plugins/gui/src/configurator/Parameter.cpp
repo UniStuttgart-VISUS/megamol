@@ -637,80 +637,71 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_PIN_VALU
 
     std::string param_label = param.GetName();
 
-    std::string popup_label = "parameter_pin_value_mouse";
-    if (!this->popup_open) {
-        ImGui::OpenPopup(popup_label.c_str());
-        this->popup_open = true;
-    }
-    ImVec2 mouse_pos = ImGui::GetMousePos();
-    mouse_pos += ImVec2(15.0f, 15.0f);
-    ImGui::SetNextWindowPos(mouse_pos);
-    if (ImGui::BeginPopup(popup_label.c_str(), ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize)) {
+    ImGui::BeginTooltip();
+    
+    auto visitor = [&](auto&& arg) {
+        using T = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<T, bool>) {
 
-        auto visitor = [&](auto&& arg) {
-            using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<T, bool>) {
+        } else if constexpr (std::is_same_v<T, megamol::core::param::ColorParam::ColorType>) {
 
-            } else if constexpr (std::is_same_v<T, megamol::core::param::ColorParam::ColorType>) {
-
-            } else if constexpr (std::is_same_v<T, float>) {
-                ImGui::TextDisabled(param.GetValueString().c_str());
-            } else if constexpr (std::is_same_v<T, int>) {
-                switch (param.type) {
-                case (Parameter::ParamType::INT): {
-                    if (!std::holds_alternative<T>(this->widget_store)) {
-                        this->widget_store = arg;
-                    }
-                    ImGui::InputInt(
-                        param_label.c_str(), &std::get<int>(this->widget_store), ImGuiInputTextFlags_ReadOnly);
-
-                } break;
-                case (Parameter::ParamType::ENUM): {
-
-                } break;
-                default:
-                    break;
+        } else if constexpr (std::is_same_v<T, float>) {
+            ImGui::TextDisabled(param.GetValueString().c_str());
+        } else if constexpr (std::is_same_v<T, int>) {
+            switch (param.type) {
+            case (Parameter::ParamType::INT): {
+                if (!std::holds_alternative<T>(this->widget_store)) {
+                    this->widget_store = arg;
                 }
-            } else if constexpr (std::is_same_v<T, std::string>) {
-                switch (param.type) {
-                case (Parameter::ParamType::STRING): {
+                ImGui::InputInt(
+                    param_label.c_str(), &std::get<int>(this->widget_store), ImGuiInputTextFlags_ReadOnly);
 
-                } break;
-                case (Parameter::ParamType::TRANSFERFUNCTION): {
+            } break;
+            case (Parameter::ParamType::ENUM): {
 
-                } break;
-                case (Parameter::ParamType::FILEPATH): {
-
-                } break;
-                case (Parameter::ParamType::FLEXENUM): {
-
-                } break;
-                default:
-                    break;
-                }
-            } else if constexpr (std::is_same_v<T, vislib::math::Ternary>) {
-
-            } else if constexpr (std::is_same_v<T, glm::vec2>) {
-
-            } else if constexpr (std::is_same_v<T, glm::vec3>) {
-
-            } else if constexpr (std::is_same_v<T, glm::vec4>) {
-
-            } else if constexpr (std::is_same_v<T, std::monostate>) {
-                switch (param.type) {
-                case (Parameter::ParamType::BUTTON): {
-
-                } break;
-                default:
-                    break;
-                }
+            } break;
+            default:
+                break;
             }
-        };
+        } else if constexpr (std::is_same_v<T, std::string>) {
+            switch (param.type) {
+            case (Parameter::ParamType::STRING): {
 
-        std::visit(visitor, param.GetValue());
+            } break;
+            case (Parameter::ParamType::TRANSFERFUNCTION): {
 
-        ImGui::EndPopup();
-    }
+            } break;
+            case (Parameter::ParamType::FILEPATH): {
+
+            } break;
+            case (Parameter::ParamType::FLEXENUM): {
+
+            } break;
+            default:
+                break;
+            }
+        } else if constexpr (std::is_same_v<T, vislib::math::Ternary>) {
+
+        } else if constexpr (std::is_same_v<T, glm::vec2>) {
+
+        } else if constexpr (std::is_same_v<T, glm::vec3>) {
+
+        } else if constexpr (std::is_same_v<T, glm::vec4>) {
+
+        } else if constexpr (std::is_same_v<T, std::monostate>) {
+            switch (param.type) {
+            case (Parameter::ParamType::BUTTON): {
+
+            } break;
+            default:
+                break;
+            }
+        }
+    };
+
+    std::visit(visitor, param.GetValue());
+
+    ImGui::EndTooltip();
 }
 */
 

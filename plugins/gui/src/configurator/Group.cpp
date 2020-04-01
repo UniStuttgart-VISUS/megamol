@@ -503,7 +503,6 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
             pos_maxX = std::max(tmp_pos.x + tmp_size.x, pos_maxX);
             pos_maxY = std::max(tmp_pos.y + tmp_size.y, pos_maxY);
         }
-
         group_width = std::max(group_width, (pos_maxX + this->border) - pos_minX);
         group_height = std::max(group_height, (pos_maxY + this->border) - pos_minY);
     }

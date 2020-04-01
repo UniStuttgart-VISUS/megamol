@@ -139,7 +139,8 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
     , utils()
     , selected(false)
     , update(true)
-    , other_item_hovered(false) {
+    , other_item_hovered(false)
+    , show_params(false) {
 
     this->group.member = GUI_INVALID_ID;
     this->group.visible = false;
@@ -298,7 +299,8 @@ void megamol::gui::configurator::Module::Presentation::Present(
             // Text and Option Buttons
             float text_width;
             ImVec2 text_pos_left_upper;
-            const float line_height = ImGui::GetTextLineHeightWithSpacing();          
+            const float line_height = ImGui::GetTextLineHeightWithSpacing();   
+            ImVec2 param_child_pos;       
             if (this->label_visible) {
 
                 auto menu_color = (hovered || this->selected) ? (COLOR_HEADER_HIGHLIGHT): (COLOR_HEADER);
@@ -318,6 +320,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 if (inout_module.is_view) {
                     item_x_offset = ImGui::GetFrameHeight() + 0.5f * style.ItemSpacing.x * state.canvas.zooming;
                 }
+                
                 ImGui::SetCursorScreenPos(module_center + ImVec2(-item_x_offset, item_y_offset));
                 if (inout_module.is_view) {
                     if (ImGui::RadioButton("###main_view_switch", inout_module.is_view_instance)) {
@@ -330,16 +333,17 @@ void megamol::gui::configurator::Module::Presentation::Present(
                     }
                     ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
                 }
-                if (ImGui::ArrowButton("###parameter_toggle", ImGuiDir_Up)) { // ImGuiDir_Down
-                      
-                    /// TODO show parameters ...
-                    
                 
+                param_child_pos = ImGui::GetCursorScreenPos();
+                param_child_pos.y += ImGui::GetFrameHeightWithSpacing();
+                if (ImGui::ArrowButton("###parameter_toggle", ((this->show_params)? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+                    this->show_params = !this->show_params;
                     active = true; // Force selection      
                 }
                 if (hovered) {
                     this->other_item_hovered = this->other_item_hovered || this->utils.HoverToolTip("Parameters");
                 }
+
             }
             
             // Outline
@@ -374,12 +378,28 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 this->position += (ImGui::GetIO().MouseDelta / state.canvas.zooming);
                 this->UpdateSize(inout_module, state.canvas);
             }
-                
+                            
             // Rename pop-up 
             if (this->utils.RenamePopUp("Rename Project", popup_rename, inout_module.name)) {
                 this->UpdateSize(inout_module, state.canvas);
             }
             
+            // Paramter ToolTip
+            if (this->label_visible && this->show_params) {
+                ImGui::PushStyleColor(ImGuiCol_ChildBg, COLOR_MODULE_BACKGROUND);
+                ImGui::SetCursorScreenPos(param_child_pos);
+                
+                auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove;
+                ImGui::BeginChild("module_parameter_child", ImVec2(350.0f * state.canvas.zooming, 200.0f * state.canvas.zooming), true, child_flags);
+                
+                for (auto& param : inout_module.parameters) {
+                    param.GUI_Present();
+                }
+                
+                ImGui::EndChild();
+                ImGui::PopStyleColor();
+            }
+                        
             ImGui::PopID();
         }
 

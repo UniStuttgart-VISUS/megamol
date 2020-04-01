@@ -380,23 +380,21 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             ((state.interact.callslot_hovered_uid == GUI_INVALID_ID) || (state.interact.callslot_hovered_uid == inout_call_slot.uid)));
 
         // Context menu
-        if (state.interact.module_hovered_uid == GUI_INVALID_ID) {
-            if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-                active = true; // Force selection                
-                ImGui::Text("Call Slot");
-                ImGui::Separator();
-                /// Menu items is only active depending on group membership of  parent module 
-                if (ImGui::MenuItem("Add to Group Interface ", nullptr, false,
-                        (!this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID)))) {
-                    state.interact.callslot_add_group_uid.first = inout_call_slot.uid;
-                    state.interact.callslot_add_group_uid.second = inout_call_slot.GetParentModule()->uid;
-                }
-                if (ImGui::MenuItem("Remove Group Interface", nullptr, false,
-                        (this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID)))) {
-                    state.interact.callslot_remove_group_uid = inout_call_slot.uid;
-                }
-                ImGui::EndPopup();
+        if (ImGui::BeginPopupContextItem("invisible_button_context")) {
+            active = true; // Force selection                
+            ImGui::Text("Call Slot");
+            ImGui::Separator();
+            /// Menu items are active depending on group membership of parent module 
+            if (ImGui::MenuItem("Add to Group Interface ", nullptr, false,
+                    (!this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID)))) {
+                state.interact.callslot_add_group_uid.first = inout_call_slot.uid;
+                state.interact.callslot_add_group_uid.second = inout_call_slot.GetParentModule()->uid;
             }
+            if (ImGui::MenuItem("Remove Group Interface", nullptr, false,
+                    (this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID)))) {
+                state.interact.callslot_remove_group_uid = inout_call_slot.uid;
+            }
+            ImGui::EndPopup();
         }
         
         // Hover Tooltip

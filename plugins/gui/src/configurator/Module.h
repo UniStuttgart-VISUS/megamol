@@ -140,6 +140,7 @@ private:
         bool selected;
         bool update;
         bool other_item_hovered;
+        bool show_params;
         
     } present;
 };
