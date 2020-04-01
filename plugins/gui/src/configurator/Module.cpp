@@ -266,7 +266,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                     if (ImGui::MenuItem("Rename")) {
                         popup_rename = true;
                     }
-                    if (ImGui::BeginMenu("Add to Group", (this->group.member == GUI_INVALID_ID))) {
+                    if (ImGui::BeginMenu("Add to Group", true)) {
                         if (ImGui::MenuItem("New")) {
                             state.interact.module_add_group_uid.first = inout_module.uid;
                             state.interact.module_add_group_uid.second = GUI_INVALID_ID;

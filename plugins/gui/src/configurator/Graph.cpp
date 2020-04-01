@@ -631,15 +631,27 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 }
             }
             if (module_ptr != nullptr) {
-                ImGuiID group_uid = this->graphstate.interact.module_add_group_uid.second;
-                if (group_uid == GUI_INVALID_ID) {
-                    group_uid = inout_graph.AddGroup();
+                ImGuiID new_group_uid = this->graphstate.interact.module_add_group_uid.second;
+                
+                // Check if module should be removed from previous group first
+                ImGuiID module_group_member_uid = module_ptr->GUI_GetGroupMembership();
+                if (module_group_member_uid != GUI_INVALID_ID) {
+                    GroupPtrType group_ptr = inout_graph.GetGroup(module_group_member_uid);
+                    if (group_ptr != nullptr) {
+                        group_ptr->RemoveModule(module_ptr->uid);
+                        if (group_ptr->EmptyModules()) {
+                            inout_graph.DeleteGroup(group_ptr->uid);
+                        }                            
+                    }
                 }
-                if (group_uid != GUI_INVALID_ID) {
-                    for (auto& group : inout_graph.GetGroups()) {
-                        if (group->uid == group_uid) {
-                            group->AddModule(module_ptr);
-                        }
+                // Add module to new or alredy existing group
+                if (new_group_uid == GUI_INVALID_ID) {
+                    new_group_uid = inout_graph.AddGroup();
+                }
+                if (new_group_uid != GUI_INVALID_ID) {
+                    GroupPtrType group_ptr = inout_graph.GetGroup(new_group_uid);
+                    if (group_ptr != nullptr) {
+                        group_ptr->AddModule(module_ptr);
                     }
                 }
             }
@@ -649,9 +661,12 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         // Remove module from group
         module_uid = this->graphstate.interact.module_remove_group_uid;
         if (module_uid != GUI_INVALID_ID) {
-            for (auto& group : inout_graph.GetGroups()) {
-                if (group->ContainsModule(module_uid)) {
-                    group->RemoveModule(module_uid);
+            for (auto& group_ptr : inout_graph.GetGroups()) {
+                if (group_ptr->ContainsModule(module_uid)) {
+                    group_ptr->RemoveModule(module_uid);
+                    if (group_ptr->EmptyModules()) {
+                        inout_graph.DeleteGroup(group_ptr->uid);
+                    }                    
                 }
             }
             this->graphstate.interact.module_remove_group_uid = GUI_INVALID_ID;
