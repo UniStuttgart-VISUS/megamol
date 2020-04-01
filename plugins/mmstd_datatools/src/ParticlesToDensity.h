@@ -71,6 +71,8 @@ private:
 
     bool createVolumeCPU(megamol::core::moldyn::MultiParticleDataCall* c2);
 
+    void modifyBBox(megamol::core::moldyn::MultiParticleDataCall* c2);
+
     /**
      * Called when the extend information is requested by this module
      *
@@ -111,6 +113,8 @@ private:
     core::param::ParamSlot normalizeSlot;
 
     core::param::ParamSlot sigmaSlot;
+
+    core::param::ParamSlot surfaceSlot;
 
     std::vector<std::vector<float>> vol;
     std::vector<float> directions, colors, densities;

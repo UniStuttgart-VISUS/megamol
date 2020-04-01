@@ -45,12 +45,12 @@ public:
         std::vector<std::shared_ptr<glowl::Texture>> textures;
     };
 
-    void addMaterial(
+    size_t addMaterial(
         megamol::core::CoreInstance* mm_core_inst,
         std::string const& shader_btf_name,
         std::vector<std::shared_ptr<glowl::Texture>> const& textures = {});
 
-    void addMaterial(
+    size_t addMaterial(
         std::shared_ptr<Shader> const& shader, 
         std::vector<std::shared_ptr<glowl::Texture>> const& textures = {});
 

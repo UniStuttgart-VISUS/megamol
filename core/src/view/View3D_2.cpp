@@ -101,7 +101,8 @@ View3D_2::View3D_2(void)
     , cameraCenterOffsetParam("cam::centeroffset", "")
     , cameraHalfApertureRadiansParam("cam::halfapertureradians", "")
     , cameraHalfDisparityParam("cam::halfdisparity", "")
-    , valuesFromOutside(false) {
+    , valuesFromOutside(false)
+    , cameraControlOverrideActive(false) {
 
     using vislib::sys::KeyCode;
 
@@ -645,8 +646,10 @@ bool view::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modifier
     if (key == view::Key::KEY_LEFT_CONTROL || key == view::Key::KEY_RIGHT_CONTROL) {
         if (action == view::KeyAction::PRESS) {
             this->modkeys.set(view::Modifier::CTRL);
+            cameraControlOverrideActive = true;
         } else if (action == view::KeyAction::RELEASE) {
             this->modkeys.reset(view::Modifier::CTRL);
+            cameraControlOverrideActive = false;
         }
     }
 
@@ -696,15 +699,18 @@ bool view::View3D_2::OnChar(unsigned int codePoint) {
  * View3D_2::OnMouseButton
  */
 bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
-    auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
-    if (cr != nullptr) {
-        view::InputEvent evt;
-        evt.tag = view::InputEvent::Tag::MouseButton;
-        evt.mouseButtonData.button = button;
-        evt.mouseButtonData.action = action;
-        evt.mouseButtonData.mods = mods;
-        cr->SetInputEvent(evt);
-        if ((*cr)(CallRender3D_2::FnOnMouseButton)) return true;
+
+    if (!cameraControlOverrideActive) {
+        auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
+        if (cr != nullptr) {
+            view::InputEvent evt;
+            evt.tag = view::InputEvent::Tag::MouseButton;
+            evt.mouseButtonData.button = button;
+            evt.mouseButtonData.action = action;
+            evt.mouseButtonData.mods = mods;
+            cr->SetInputEvent(evt);
+            if ((*cr)(CallRender3D_2::FnOnMouseButton)) return true;
+        }
     }
 
     if (action == view::MouseButtonAction::PRESS) {

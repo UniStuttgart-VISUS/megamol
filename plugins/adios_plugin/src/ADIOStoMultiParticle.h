@@ -11,6 +11,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/moldyn/SimpleSphericalParticles.h"
+#include <variant>
 
 namespace megamol {
 namespace adios {

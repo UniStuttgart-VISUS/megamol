@@ -38,11 +38,11 @@ OSPRayMetallicPaintMaterial::~OSPRayMetallicPaintMaterial(void) {
 void OSPRayMetallicPaintMaterial::readParams() {
     materialContainer.materialType = materialTypeEnum::METALLICPAINT;
 
-    auto scolor = this->metallicShadeColor.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.metallicShadeColor.assign(scolor, scolor + 3);
+    auto scolor = this->metallicShadeColor.Param<core::param::Vector3fParam>();
+    materialContainer.metallicShadeColor = scolor->getArray();
 
-    auto gcolor = this->metallicGlitterColor.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.metallicGlitterColor.assign(gcolor, gcolor + 3);
+    auto gcolor = this->metallicGlitterColor.Param<core::param::Vector3fParam>();
+    materialContainer.metallicGlitterColor = gcolor->getArray();
 
     materialContainer.metallicGlitterSpread = this->metallicGlitterSpread.Param<core::param::FloatParam>()->Value();
 

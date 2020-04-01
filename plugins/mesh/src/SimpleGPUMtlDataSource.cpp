@@ -5,7 +5,8 @@
 #include "mmcore/param/FilePathParam.h"
 
 megamol::mesh::SimpleGPUMtlDataSource::SimpleGPUMtlDataSource()
-    : m_btf_filename_slot("BTF filename", "The name of the btf file to load") {
+    : m_version(0)
+    , m_btf_filename_slot("BTF filename", "The name of the btf file to load") {
     this->m_btf_filename_slot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->m_btf_filename_slot);
 }
@@ -23,7 +24,6 @@ bool megamol::mesh::SimpleGPUMtlDataSource::getDataCallback(core::Call& caller) 
     if (lhs_mtl_call->getData() == nullptr) {
         // no incoming material -> use your own material storage
         mtl_collection = this->m_gpu_materials;
-        lhs_mtl_call->setData(mtl_collection);
     } else {
         // incoming material -> use it (delete local?)
         mtl_collection = lhs_mtl_call->getData();
@@ -34,6 +34,8 @@ bool megamol::mesh::SimpleGPUMtlDataSource::getDataCallback(core::Call& caller) 
     if (this->m_btf_filename_slot.IsDirty()) {
         m_btf_filename_slot.ResetDirty();
 
+        ++m_version;
+
         auto vislib_filename = m_btf_filename_slot.Param<core::param::FilePathParam>()->Value();
         std::string filename(vislib_filename.PeekBuffer());
 
@@ -42,12 +44,15 @@ bool megamol::mesh::SimpleGPUMtlDataSource::getDataCallback(core::Call& caller) 
         mtl_collection->addMaterial(this->instance(), filename);
     }
 
-    // set update?
+    if (lhs_mtl_call->version() < m_version) {
+        lhs_mtl_call->setData(mtl_collection, m_version);
+    }
+
 
     // if there is a material connection to the right, pass on the material collection
     CallGPUMaterialData* rhs_mtl_call = this->m_mtl_callerSlot.CallAs<CallGPUMaterialData>();
     if (rhs_mtl_call != NULL) {
-        rhs_mtl_call->setData(mtl_collection);
+        rhs_mtl_call->setData(mtl_collection,0);
     }
 
     return true;

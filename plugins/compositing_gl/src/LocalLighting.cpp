@@ -9,6 +9,7 @@
 
 megamol::compositing::LocalLighting::LocalLighting() 
     : core::Module()
+    , m_version(0)
     , m_output_texture(nullptr)
     , m_point_lights_buffer(nullptr)
     , m_distant_lights_buffer(nullptr)
@@ -102,89 +103,96 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
     if (!(*call_depth)(0)) return false;
     if (!(*call_camera)(0)) return false;
 
-    if (lhs_tc->getData() == nullptr) {
-        lhs_tc->setData(m_output_texture);
-    }
+    // something has changed in the neath...
+    bool something_has_changed =
+        call_albedo->hasUpdate() || call_normal->hasUpdate() || call_depth->hasUpdate() || call_camera->hasUpdate();
 
-    // set output texture size to primary input texture
-    auto albedo_tx2D = call_albedo->getData();
-    auto normal_tx2D = call_normal->getData();
-    auto depth_tx2D = call_depth->getData();
-    std::array<float, 2> texture_res = {
-        static_cast<float>(albedo_tx2D->getWidth()), static_cast<float>(albedo_tx2D->getHeight())};
+    if (something_has_changed) {
+        ++m_version;
 
-    if (m_output_texture->getWidth() != std::get<0>(texture_res) ||
-        m_output_texture->getHeight() != std::get<1>(texture_res)) {
-        glowl::TextureLayout tx_layout(
-            GL_RGBA16F, std::get<0>(texture_res), std::get<1>(texture_res), 1, GL_RGBA, GL_HALF_FLOAT, 1);
-        m_output_texture->reload(tx_layout, nullptr);
-    }
+        // set output texture size to primary input texture
+        auto albedo_tx2D = call_albedo->getData();
+        auto normal_tx2D = call_normal->getData();
+        auto depth_tx2D = call_depth->getData();
+        std::array<float, 2> texture_res = {
+            static_cast<float>(albedo_tx2D->getWidth()), static_cast<float>(albedo_tx2D->getHeight())};
 
-    // obtain camera information
-    core::view::Camera_2 cam = call_camera->getData();
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type view_tmp, proj_tmp;
-    cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
-    glm::mat4 view_mx = view_tmp;
-    glm::mat4 proj_mx = proj_tmp;
+        if (m_output_texture->getWidth() != std::get<0>(texture_res) ||
+            m_output_texture->getHeight() != std::get<1>(texture_res)) {
+            glowl::TextureLayout tx_layout(
+                GL_RGBA16F, std::get<0>(texture_res), std::get<1>(texture_res), 1, GL_RGBA, GL_HALF_FLOAT, 1);
+            m_output_texture->reload(tx_layout, nullptr);
+        }
 
-    auto light_update = this->GetLights();
+        // obtain camera information
+        core::view::Camera_2 cam = call_camera->getData();
+        cam_type::snapshot_type snapshot;
+        cam_type::matrix_type view_tmp, proj_tmp;
+        cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
+        glm::mat4 view_mx = view_tmp;
+        glm::mat4 proj_mx = proj_tmp;
 
-    this->m_point_lights.clear();
-    this->m_distant_lights.clear();
-    for (const auto element : this->m_light_map) {
-        auto light = element.second;
-        if (light.lightType == core::view::light::POINTLIGHT) {
-            m_point_lights.push_back(
-                {light.pl_position[0], light.pl_position[1], light.pl_position[2], light.lightIntensity});
-        } else if (light.lightType == core::view::light::DISTANTLIGHT) {
-            if (light.dl_eye_direction) {
-                glm::vec3 camPos(snapshot.position.x(), snapshot.position.y(), snapshot.position.z());
-                camPos = glm::normalize(camPos);
-                m_distant_lights.push_back(
-                    {camPos.x, camPos.y, camPos.z, light.lightIntensity});
-            } else {
-                m_distant_lights.push_back(
-                    {light.dl_direction[0], light.dl_direction[1], light.dl_direction[2], light.lightIntensity});
+        auto light_update = this->GetLights();
+
+        this->m_point_lights.clear();
+        this->m_distant_lights.clear();
+        for (const auto element : this->m_light_map) {
+            auto light = element.second;
+            if (light.lightType == core::view::light::POINTLIGHT) {
+                m_point_lights.push_back(
+                    {light.pl_position[0], light.pl_position[1], light.pl_position[2], light.lightIntensity});
+            } else if (light.lightType == core::view::light::DISTANTLIGHT) {
+                if (light.dl_eye_direction) {
+                    glm::vec3 camPos(snapshot.view_vector.x(), snapshot.view_vector.y(), snapshot.view_vector.z());
+                    camPos = glm::normalize(-camPos);
+                    m_distant_lights.push_back(
+                        {camPos.x, camPos.y, camPos.z, light.lightIntensity});
+                } else {
+                    m_distant_lights.push_back(
+                        {light.dl_direction[0], light.dl_direction[1], light.dl_direction[2], light.lightIntensity});
+                }
             }
+        }
+
+        m_point_lights_buffer->rebuffer(m_point_lights);
+        m_distant_lights_buffer->rebuffer(m_distant_lights);
+
+        if (m_lighting_prgm != nullptr && m_point_lights_buffer != nullptr && m_distant_lights_buffer != nullptr) {
+            m_lighting_prgm->Enable();
+
+            m_point_lights_buffer->bind(1);
+            glUniform1i(m_lighting_prgm->ParameterLocation("point_light_cnt"), static_cast<GLint>(m_point_lights.size()));
+            m_distant_lights_buffer->bind(2);
+            glUniform1i(
+                m_lighting_prgm->ParameterLocation("distant_light_cnt"), static_cast<GLint>(m_distant_lights.size()));
+            glActiveTexture(GL_TEXTURE0);
+            albedo_tx2D->bindTexture();
+            glUniform1i(m_lighting_prgm->ParameterLocation("albedo_tx2D"), 0);
+
+            glActiveTexture(GL_TEXTURE1);
+            normal_tx2D->bindTexture();
+            glUniform1i(m_lighting_prgm->ParameterLocation("normal_tx2D"), 1);
+
+            glActiveTexture(GL_TEXTURE2);
+            depth_tx2D->bindTexture();
+            glUniform1i(m_lighting_prgm->ParameterLocation("depth_tx2D"), 2);
+
+            auto inv_view_mx = glm::inverse(view_mx);
+            auto inv_proj_mx = glm::inverse(proj_mx);
+            glUniformMatrix4fv(m_lighting_prgm->ParameterLocation("inv_view_mx"), 1, GL_FALSE, glm::value_ptr(inv_view_mx));
+            glUniformMatrix4fv(m_lighting_prgm->ParameterLocation("inv_proj_mx"), 1, GL_FALSE, glm::value_ptr(inv_proj_mx));
+
+            m_output_texture->bindImage(0, GL_WRITE_ONLY);
+
+            m_lighting_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
+                static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
+
+            m_lighting_prgm->Disable();
         }
     }
 
-    m_point_lights_buffer->rebuffer(m_point_lights);
-    m_distant_lights_buffer->rebuffer(m_distant_lights);
-
-    if (m_lighting_prgm != nullptr && m_point_lights_buffer != nullptr && m_distant_lights_buffer != nullptr) {
-        m_lighting_prgm->Enable();
-
-        m_point_lights_buffer->bind(1);
-        glUniform1i(m_lighting_prgm->ParameterLocation("point_light_cnt"), static_cast<GLint>(m_point_lights.size()));
-        m_distant_lights_buffer->bind(2);
-        glUniform1i(
-            m_lighting_prgm->ParameterLocation("distant_light_cnt"), static_cast<GLint>(m_distant_lights.size()));
-
-        glActiveTexture(GL_TEXTURE0);
-        albedo_tx2D->bindTexture();
-        glUniform1i(m_lighting_prgm->ParameterLocation("albedo_tx2D"), 0);
-
-        glActiveTexture(GL_TEXTURE1);
-        normal_tx2D->bindTexture();
-        glUniform1i(m_lighting_prgm->ParameterLocation("normal_tx2D"), 1);
-
-        glActiveTexture(GL_TEXTURE2);
-        depth_tx2D->bindTexture();
-        glUniform1i(m_lighting_prgm->ParameterLocation("depth_tx2D"), 2);
-
-        auto inv_view_mx = glm::inverse(view_mx);
-        auto inv_proj_mx = glm::inverse(proj_mx);
-        glUniformMatrix4fv(m_lighting_prgm->ParameterLocation("inv_view_mx"), 1, GL_FALSE, glm::value_ptr(inv_view_mx));
-        glUniformMatrix4fv(m_lighting_prgm->ParameterLocation("inv_proj_mx"), 1, GL_FALSE, glm::value_ptr(inv_proj_mx));
-
-        m_output_texture->bindImage(0, GL_WRITE_ONLY);
-
-        m_lighting_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
-            static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
-
-        m_lighting_prgm->Disable();
+    if (lhs_tc->version() < m_version) {
+        lhs_tc->setData(m_output_texture, m_version);
     }
 
     return true; 

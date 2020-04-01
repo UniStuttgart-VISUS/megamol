@@ -8,6 +8,7 @@
 #ifndef MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED
 #define MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED
 
+
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/view/TransferFunction.h"
 
@@ -19,7 +20,6 @@
 #include <string>
 #include <vector>
 
-#include <imgui.h>
 #include "GUIUtils.h"
 
 
@@ -42,7 +42,7 @@ public:
      *
      * @return True if string was successfully converted into transfer function data, false otherwise.
      */
-    void SetTransferFunction(const std::string& tfs);
+    void SetTransferFunction(const std::string& tfs, bool useActiveParameter = true);
 
     /**
      * Get current transfer function data.
@@ -64,7 +64,7 @@ public:
     /**
      * Draws the transfer function editor.
      */
-    bool DrawTransferFunctionEditor(void);
+    bool DrawTransferFunctionEditor(bool useActiveParameter = true);
 
 
 private:
@@ -103,6 +103,9 @@ private:
 
     /** Indicating modified transfer function. Recalculate texture data. */
     bool textureInvalid;
+
+    /** Indicates whether changes are already applied or not. */
+    bool pendingChanges;
 
     /** Current texture data. */
     std::vector<float> texturePixels;
