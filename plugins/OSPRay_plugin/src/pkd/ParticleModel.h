@@ -16,51 +16,11 @@ namespace ospray {
 /*! complete input data for a particle model */
 struct ParticleModel {
 
-
     ParticleModel() : radius(0) {}
 
-    //! a set of attributes, one float per particle (with min/max info and logical name)
-    struct Attribute {
-        Attribute(const std::string& name)
-            : name(name)
-            , minValue(+std::numeric_limits<float>::infinity())
-            , maxValue(-std::numeric_limits<float>::infinity()){};
-
-        std::string name;
-        float minValue, maxValue;
-        std::vector<float> value;
-    };
-    struct AtomType {
-        std::string name;
-        ospcommon::vec3f color;
-
-        AtomType(const std::string& name) : name(name), color(1, 0, 0) {}
-    };
-
-    //! list of all declared atom types
-    std::vector<AtomType*> atomType;
-    //! mapper that maps an atom type name to the ID in the 'atomType' vector
-    std::map<std::string, int32_t> atomTypeByName;
-
-    uint32_t getAtomTypeID(const std::string& name);
-
     std::vector<ospcommon::vec4f> position; //!< particle position + color encoded in 'w'
-    std::vector<int> type;                  //!< 'type' of particle (e.g., the atom type for atomistic models)
-    std::vector<Attribute*> attribute;
 
     void fill(megamol::core::moldyn::SimpleSphericalParticles parts);
-
-    //! get attributeset of given name; create a new one if not yet exists */
-    Attribute* getAttribute(const std::string& name);
-
-    //! return if attribute of this name exists
-    bool hasAttribute(const std::string& name);
-
-    //! add one attribute value to set of attributes of given name
-    void addAttribute(const std::string& attribName, float attribute);
-
-    //! helper function for parser error recovery: 'clamp' all attributes to largest non-empty attribute
-    void cullPartialData();
 
     //! return world bounding box of all particle *positions* (i.e., particles *ex* radius)
     ospcommon::box3f getBounds() const;
