@@ -63,7 +63,7 @@ bool ospray::PkdBuilder::manipulateData(
             out.SetVertexData(
                 megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, &models[i].position[0].x, 16);
             out.SetColourData(
-                megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, &models[i].position[0].w, 16);
+                megamol::core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA, &models[i].position[0].w, 16);
             out.SetGlobalRadius(parts.GetGlobalRadius());
         }
     }
@@ -101,9 +101,6 @@ inline size_t ospray::Pkd::maxDim(const ospcommon::vec3f& v) const {
 
 inline void ospray::Pkd::swap(const size_t a, const size_t b) const {
     std::swap(model->position[a], model->position[b]);
-    for (size_t i = 0; i < model->attribute.size(); i++)
-        std::swap(model->attribute[i]->value[a], model->attribute[i]->value[b]);
-    if (!model->type.empty()) std::swap(model->type[a], model->type[b]);
 }
 
 

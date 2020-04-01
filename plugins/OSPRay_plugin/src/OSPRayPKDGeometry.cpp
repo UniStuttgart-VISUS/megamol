@@ -102,7 +102,8 @@ bool OSPRayPKDGeometry::getDataCallback(megamol::core::Call& call) {
         ospCommit(bboxData);
 
         ospSet1f(geo.back(), "radius", parts.GetGlobalRadius());
-        ospSet1i(geo.back(), "colorType", colorType);
+        //ospSet1i(geo.back(), "colorType", colorType);
+        ospSet1i(geo.back(), "colorType", 2);
         ospSetData(geo.back(), "position", vertexData);
         // ospSetData(geo.back(), "bbox", bboxData);
         ospSetData(geo.back(), "bbox", nullptr);
