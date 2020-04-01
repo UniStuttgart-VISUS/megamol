@@ -388,9 +388,12 @@ void megamol::gui::configurator::Module::Presentation::Present(
             if (this->label_visible && this->show_params) {
                 ImGui::PushStyleColor(ImGuiCol_ChildBg, COLOR_MODULE_BACKGROUND);
                 ImGui::SetCursorScreenPos(param_child_pos);
+                auto param_count = inout_module.parameters.size();
+                float child_width = 300.0f;
+                float child_height = std::min(200.0f, ((1 + param_count) * ImGui::GetFrameHeightWithSpacing()));
                 
                 auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove;
-                ImGui::BeginChild("module_parameter_child", ImVec2(350.0f * state.canvas.zooming, 200.0f * state.canvas.zooming), true, child_flags);
+                ImGui::BeginChild("module_parameter_child", ImVec2(child_width * state.canvas.zooming, child_height * state.canvas.zooming), true, child_flags);
                 
                 for (auto& param : inout_module.parameters) {
                     param.GUI_Present();
