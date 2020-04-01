@@ -41,8 +41,8 @@ HierarchicalClustering::HierarchicalClustering() {}
 
 HierarchicalClustering::~HierarchicalClustering() {}
 
-HierarchicalClustering::HierarchicalClustering(
-    std::vector<PictureData>& pics, SIZE_T picturecount, int method, int mode, int linkage, int moments) {
+HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& pics, SIZE_T picturecount,
+    const std::map<std::string, std::vector<float>>& features, int method, int mode, int linkage, int moments) {
 
     // Initalize Variables
     this->cluster = new std::vector<CLUSTERNODE*>();
@@ -89,13 +89,22 @@ HierarchicalClustering::HierarchicalClustering(
     for (CLUSTERNODE* node : *this->cluster) {
         if (this->momentsmethode == 1) HierarchicalClustering::calculateImageMomentsValue(node);
         if (this->momentsmethode == 2) HierarchicalClustering::calculateColorMomentsValue(node);
+        if (this->momentsmethode == 3) {
+            if (features.count(node->pic->pdbid) > 0) {
+                const std::vector<float>& feat = features.at(node->pic->pdbid);
+                node->features->insert(node->features->end(), feat.begin(), feat.end());
+            }
+        }
     }
 
     // Cluster the Data
     this->clusterthedata();
 }
 
-HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& pictures, image_calls::Image2DCall* call1,
+HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& pictures,
+    const std::map<std::string, std::vector<float>>& features1,
+    const std::map<std::string, std::vector<float>>& features2,
+    const std::map<std::string, std::vector<float>>& features3, image_calls::Image2DCall* call1,
     image_calls::Image2DCall* call2, image_calls::Image2DCall* call3, int method, int mode, int linkage, int moments) {
 
     // Initalize Variables
@@ -110,39 +119,40 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
 
     this->clusteringfinished = false;
 
-    std::vector<image_calls::Image2DCall*> calls = {call3, call2, call1};
+    std::vector<std::pair<uint32_t, image_calls::Image2DCall*>> calls = {
+        std::make_pair(2u, call3), std::make_pair(1u, call2), std::make_pair(0u, call1)};
     size_t piccount = std::numeric_limits<size_t>::max();
 
     bool first = true;
 
     for (const auto call : calls) {
-        if (call == nullptr) continue;
+        if (call.second == nullptr) continue;
         pictures.clear();
         pictures.shrink_to_fit(); // force to clear everything
 
         // the wishlist is a nullptr, so we want all pictures
-        if (!(*call)(image_calls::Image2DCall::CallForSetWishlist)) {
+        if (!(*call.second)(image_calls::Image2DCall::CallForSetWishlist)) {
             vislib::sys::Log::DefaultLog.WriteError("ImageLoader function call failed");
             return;
         }
-        if (!(*call)(image_calls::Image2DCall::CallForWaitForData)) {
+        if (!(*call.second)(image_calls::Image2DCall::CallForWaitForData)) {
             vislib::sys::Log::DefaultLog.WriteError("ImageLoader function call failed");
             return;
         }
-        if (!(*call)(image_calls::Image2DCall::CallForGetData)) {
+        if (!(*call.second)(image_calls::Image2DCall::CallForGetData)) {
             vislib::sys::Log::DefaultLog.WriteError("ImageLoader function call failed");
             return;
         }
-        if (!(*call)(image_calls::Image2DCall::CallForWaitForData)) {
+        if (!(*call.second)(image_calls::Image2DCall::CallForWaitForData)) {
             vislib::sys::Log::DefaultLog.WriteError("ImageLoader function call failed");
             return;
         }
 
         // load the images into the vector
-        auto imcount = call->GetImagePtr()->size();
+        auto imcount = call.second->GetImagePtr()->size();
         pictures.resize(imcount);
         uint32_t id = 0;
-        for (auto& p : *call->GetImagePtr()) {
+        for (auto& p : *call.second->GetImagePtr()) {
             pictures[id].width = p.second.Width();
             pictures[id].height = p.second.Height();
             pictures[id].path = p.first;
@@ -190,6 +200,34 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
         for (CLUSTERNODE* node : *this->cluster) {
             if (this->momentsmethode == 1) HierarchicalClustering::calculateImageMomentsValue(node);
             if (this->momentsmethode == 2) HierarchicalClustering::calculateColorMomentsValue(node);
+            if (this->momentsmethode == 3) {
+                switch (call.first) {
+                case 0: {
+                    if (features1.count(node->pic->pdbid) > 0) {
+                        const std::vector<float>& feat = features1.at(node->pic->pdbid);
+                        node->features->insert(node->features->end(), feat.begin(), feat.end());
+                    }
+                }
+                case 1: {
+                    if (features2.count(node->pic->pdbid) > 0) {
+                        const std::vector<float>& feat = features2.at(node->pic->pdbid);
+                        node->features->insert(node->features->end(), feat.begin(), feat.end());
+                    }
+                }
+                case 2: {
+                    if (features3.count(node->pic->pdbid) > 0) {
+                        const std::vector<float>& feat = features3.at(node->pic->pdbid);
+                        node->features->insert(node->features->end(), feat.begin(), feat.end());
+                    }
+                }
+                default: {
+                    if (features1.count(node->pic->pdbid) > 0) {
+                        const std::vector<float>& feat = features1.at(node->pic->pdbid);
+                        node->features->insert(node->features->end(), feat.begin(), feat.end());
+                    }
+                }
+                }
+            }
         }
 
         first = false;
@@ -274,7 +312,8 @@ void HierarchicalClustering::calculateImageMomentsValue(CLUSTERNODE* node) {
     double i1 = nu[2 * IMAGEORDER + 0] + nu[2];
     double i2 = pow(nu[2 * IMAGEORDER + 0] - nu[2], 2) + 4.0 * pow(nu[1 * IMAGEORDER + 1], 2);
     // double i3 =
-    //    pow(nu[3 * IMAGEORDER + 0] - 3.0 * nu[1 * IMAGEORDER + 2], 2) + pow(3.0 * nu[2 * IMAGEORDER + 1] - nu[3], 2);
+    //    pow(nu[3 * IMAGEORDER + 0] - 3.0 * nu[1 * IMAGEORDER + 2], 2) + pow(3.0 * nu[2 * IMAGEORDER + 1] - nu[3],
+    //    2);
     double i4 = pow(nu[3 * IMAGEORDER + 0] + nu[1 * IMAGEORDER + 2], 2) + pow(nu[2 * IMAGEORDER + 1] + nu[3], 2);
     double i5 =
         (nu[3 * IMAGEORDER + 0] - 3.0 * nu[1 * IMAGEORDER + 2]) * (nu[3 * IMAGEORDER + 0] + nu[1 * IMAGEORDER + 2]) *

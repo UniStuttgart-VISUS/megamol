@@ -119,6 +119,8 @@ private:
 
     void loadValueImageForGivenPicture(const std::filesystem::path& originalPicture, std::vector<float>& outValueImage); 
 
+    bool loadFeatureVectorFromFile(const std::filesystem::path& filePath, std::map<std::string, std::vector<float>>& outFeatureMap);
+
     /** The slot for requesting data. */
     core::CalleeSlot outSlot;
 
@@ -153,11 +155,18 @@ private:
     core::param::ParamSlot linkagemodeparam;
     core::param::ParamSlot distancemultiplier;
     core::param::ParamSlot momentsmethode;
+    core::param::ParamSlot featuresSlot1Param;
+    core::param::ParamSlot featuresSlot2Param;
+    core::param::ParamSlot featuresSlot3Param;
     bool dumpdotfile;
     bool selectionmodechanged;
     bool linkagemodechanged;
     bool distancemultiplierchanged;
     bool momentschanged;
+
+    std::map<std::string, std::vector<float>> slot1Features;
+    std::map<std::string, std::vector<float>> slot2Features;
+    std::map<std::string, std::vector<float>> slot3Features;
 };
 
 enum ClusteringMode {
@@ -173,7 +182,7 @@ enum ClusteringMode {
 
 enum LinkageMode { CENTROIDE = 1, SINGLE = CENTROIDE + 1, AVARAGE = SINGLE + 1 };
 
-enum MomentsMethode { IMAGE = 1, COLOR = IMAGE + 1 };
+enum MomentsMethode { IMAGE = 1, COLOR = IMAGE + 1, AIFEATURES = COLOR + 1 };
 
 } // namespace MolSurfMapCluster
 } /* end namespace megamol */

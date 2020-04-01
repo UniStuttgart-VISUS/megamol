@@ -12,14 +12,22 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <array>
+#include <filesystem>
 #include <tuple>
 #include <vector>
-#include <filesystem>
 
 #include "PictureData.h"
 
 namespace megamol {
 namespace molsurfmapcluster {
+
+#pragma pack(push, 1)
+struct FeatureStruct {
+    std::array<char, 4> pdbId;
+    std::array<float, 1792> featureVec;
+};
+#pragma pack(pop)
 
 
 class HierarchicalClustering {
@@ -54,11 +62,14 @@ public:
 
     /** Constructor */
     HierarchicalClustering(void);
-    HierarchicalClustering(std::vector<PictureData>&, SIZE_T, int = 2, int = 1, int = 1,
+    HierarchicalClustering(std::vector<PictureData>&, SIZE_T, const std::map<std::string, std::vector<float>>&, int = 2,
+        int = 1, int = 1,
         int = 1); // Standard Euclidian Distance, Avarage Linkage, Imge-Moments
 
-    HierarchicalClustering(std::vector<PictureData>&, image_calls::Image2DCall* = nullptr,
-        image_calls::Image2DCall* = nullptr, image_calls::Image2DCall* = nullptr, int = 2, int = 1, int = 1, int = 1);
+    HierarchicalClustering(std::vector<PictureData>&, const std::map<std::string, std::vector<float>>&,
+        const std::map<std::string, std::vector<float>>&, const std::map<std::string, std::vector<float>>&,
+        image_calls::Image2DCall* = nullptr, image_calls::Image2DCall* = nullptr, image_calls::Image2DCall* = nullptr,
+        int = 2, int = 1, int = 1, int = 1);
 
     HierarchicalClustering(HierarchicalClustering::CLUSTERNODE*, SIZE_T, int = 2, int = 1, int = 1, int = 1);
 

@@ -45,7 +45,10 @@ Clustering::Clustering(void)
     , selectionmode("Mode for selection of similar nodes", "")
     , linkagemodeparam("Linkage Mode", "")
     , distancemultiplier("Distance Multiplier", "")
-    , momentsmethode("Moments Methode", "") {
+    , momentsmethode("Moments Methode", "")
+    , featuresSlot1Param("feat::featuresCall1", "Path to an additional feature vector file for input call 1")
+    , featuresSlot2Param("feat::featuresCall2", "Path to an additional feature vector file for input call 2")
+    , featuresSlot3Param("feat::featuresCall3", "Path to an additional feature vector file for input call 3") {
 
     // Callee-Slot
     this->outSlot.SetCallback(CallClustering::ClassName(), "GetData", &Clustering::getDataCallback);
@@ -106,14 +109,25 @@ Clustering::Clustering(void)
 
     core::param::EnumParam* cluster_moments_param = new core::param::EnumParam(static_cast<int>(MomentsMethode::IMAGE));
     MomentsMethode moments = MomentsMethode::IMAGE;
-    cluster_moments_param->SetTypePair(moments, "Image-Momenrs");
+    cluster_moments_param->SetTypePair(moments, "Image-Moments");
     moments = MomentsMethode::COLOR;
     cluster_moments_param->SetTypePair(moments, "Color-Moments");
+    moments = MomentsMethode::AIFEATURES;
+    cluster_moments_param->SetTypePair(moments, "AI-Features");
     this->momentsmethode << cluster_moments_param;
     this->MakeSlotAvailable(&this->momentsmethode);
 
     this->distancemultiplier.SetParameter(new megamol::core::param::FloatParam(0.75, 0.0, 1.0));
     this->MakeSlotAvailable(&this->distancemultiplier);
+
+    this->featuresSlot1Param.SetParameter(new megamol::core::param::FilePathParam(""));
+    this->MakeSlotAvailable(&this->featuresSlot1Param);
+
+    this->featuresSlot2Param.SetParameter(new megamol::core::param::FilePathParam(""));
+    this->MakeSlotAvailable(&this->featuresSlot2Param);
+
+    this->featuresSlot3Param.SetParameter(new megamol::core::param::FilePathParam(""));
+    this->MakeSlotAvailable(&this->featuresSlot3Param);
 
     // Other Default Varialbles
     this->lastHash = 0;
@@ -138,13 +152,28 @@ Clustering::~Clustering(void) { this->Release(); }
 /*
  * Clustering::clusterData
  */
-void Clustering::clusterData(image_calls::Image2DCall* cpp, image_calls::Image2DCall* cpp2, image_calls::Image2DCall* cpp3) {
+void Clustering::clusterData(
+    image_calls::Image2DCall* cpp, image_calls::Image2DCall* cpp2, image_calls::Image2DCall* cpp3) {
 
     // if the last two are null, the data is already present and we can load it
     // otherwise, the data will be loaded during the HierarchicalClustering
     if (cpp2 == nullptr && cpp3 == nullptr) {
         this->picturecount = cpp->GetImageCount();
         this->fillPictureDataVector(*cpp);
+    }
+
+    if (this->momentsmethode.Param<core::param::EnumParam>()->Value() == MomentsMethode::AIFEATURES) {
+        auto ps1 = this->featuresSlot1Param.Param<core::param::FilePathParam>()->Value();
+        auto ps2 = this->featuresSlot2Param.Param<core::param::FilePathParam>()->Value();
+        auto ps3 = this->featuresSlot3Param.Param<core::param::FilePathParam>()->Value();
+
+        std::filesystem::path path1(T2A(ps1).PeekBuffer());
+        std::filesystem::path path2(T2A(ps1).PeekBuffer());
+        std::filesystem::path path3(T2A(ps1).PeekBuffer());
+        
+        this->loadFeatureVectorFromFile(path1, this->slot1Features);
+        this->loadFeatureVectorFromFile(path2, this->slot2Features);
+        this->loadFeatureVectorFromFile(path3, this->slot3Features);
     }
 
     // Clustering
@@ -155,13 +184,14 @@ void Clustering::clusterData(image_calls::Image2DCall* cpp, image_calls::Image2D
     mode = mode > 4 ? mode - 4 : mode;
 
     if (cpp2 == nullptr && cpp3 == nullptr) {
-        this->clustering = new HierarchicalClustering(this->picdata, this->picturecount, mode, bla,
+        this->clustering = new HierarchicalClustering(this->picdata, this->picturecount, this->slot1Features, mode, bla,
             this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
             this->momentsmethode.Param<core::param::EnumParam>()->Value());
     } else {
-        this->clustering = new HierarchicalClustering(this->picdata, cpp, cpp2, cpp3, mode, bla,
-            this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
-            this->momentsmethode.Param<core::param::EnumParam>()->Value());
+        this->clustering =
+            new HierarchicalClustering(this->picdata, this->slot1Features, this->slot2Features, this->slot3Features,
+                cpp, cpp2, cpp3, mode, bla, this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
+                this->momentsmethode.Param<core::param::EnumParam>()->Value());
         this->picturecount = this->picdata.size();
     }
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Clustering finished", this->picturecount);
@@ -407,7 +437,7 @@ bool Clustering::getExtentCallback(core::Call& caller) {
     } else {
         if (!pngpicloader) {
             if (!(*cppIn)(image_calls::Image2DCall::CallForGetMetaData)) return false;
-            
+
             bool bothNull = true;
             if (imin2 != nullptr) {
                 if (!(*imin2)(image_calls::Image2DCall::CallForGetMetaData)) return false;
@@ -523,4 +553,26 @@ void Clustering::loadValueImageForGivenPicture(
     } else {
         vislib::sys::Log::DefaultLog.WriteError("The file \"%s\" could not be opened for reading", newpath.c_str());
     }
+}
+
+bool Clustering::loadFeatureVectorFromFile(
+    const std::filesystem::path& filePath, std::map<std::string, std::vector<float>>& outFeatureMap) {
+    auto fsize = std::filesystem::file_size(filePath);
+    auto numstructs = fsize / sizeof(FeatureStruct);
+    std::vector<FeatureStruct> readVec(numstructs);
+    std::ifstream file(filePath, std::ios::binary);
+    if (file.is_open()) {
+        file.read(reinterpret_cast<char*>(readVec.data()), fsize);
+        file.close();
+    } else {
+        return false;
+    }
+    outFeatureMap.clear();
+    for (const auto& el : readVec) {
+        std::string id;
+        id.append(el.pdbId.data(), 4);
+        std::vector<float> copy(el.featureVec.begin(), el.featureVec.end());
+        outFeatureMap.insert(std::make_pair(id, copy));
+    }
+    return true;
 }
