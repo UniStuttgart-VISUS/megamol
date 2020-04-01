@@ -2,7 +2,7 @@
  * GUIWindows.h
  *
  * Copyright (C) 2018 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 #ifndef MEGAMOL_GUI_GUIWINDOWS_H_INCLUDED

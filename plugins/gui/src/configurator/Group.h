@@ -2,7 +2,7 @@
  * Group.h
  *
  * Copyright (C) 2020 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 #ifndef MEGAMOL_GUI_GRAPH_GROUP_H_INCLUDED
@@ -45,7 +45,7 @@ public:
     bool ContainsModule(ImGuiID module_uid);
     inline const ModulePtrVectorType& GetModules(void) { return this->modules; }
     inline bool EmptyModules(void) { return (this->modules.size() == 0); }
-        
+
     bool AddCallSlot(const CallSlotPtrType& callslot_ptr);
     bool RemoveCallSlot(ImGuiID callslot_uid);
     bool ContainsCallSlot(ImGuiID callslot_uid);
@@ -83,7 +83,7 @@ private:
         ImVec2 position;
         // Relative size without considering zooming
         ImVec2 size;
-        
+
         GUIUtils utils;
         std::string name_label;
         bool collapsed_view;
@@ -91,7 +91,6 @@ private:
         bool update;
 
     } present;
-
 };
 
 

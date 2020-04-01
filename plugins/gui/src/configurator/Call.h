@@ -2,7 +2,7 @@
  * Call.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 #ifndef MEGAMOL_GUI_GRAPH_CALL_H_INCLUDED
@@ -38,9 +38,8 @@ typedef std::vector<CallPtrType> CallPtrVectorType;
  */
 class Call {
 public:
-
     enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
-    
+
     struct StockCall {
         std::string class_name;
         std::string description;

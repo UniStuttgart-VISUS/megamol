@@ -2,7 +2,7 @@
  * Graph.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
@@ -25,10 +25,9 @@ megamol::gui::configurator::Graph::Graph(const std::string& graph_name)
     , calls()
     , groups()
     , dirty_flag(true)
-    , present() {
-}
+    , present() {}
 
-    
+
 megamol::gui::configurator::Graph::~Graph(void) {}
 
 
@@ -165,7 +164,7 @@ const ModulePtrType& megamol::gui::configurator::Graph::GetModule(ImGuiID module
     } catch (std::invalid_argument e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-    }     
+    }
 }
 
 
@@ -198,7 +197,8 @@ bool megamol::gui::configurator::Graph::AddCall(
             this->delete_disconnected_calls();
         }
 
-        if (call_ptr->ConnectCallSlots(call_slot_1, call_slot_2) && call_slot_1->ConnectCall(call_ptr) && call_slot_2->ConnectCall(call_ptr)) {
+        if (call_ptr->ConnectCallSlots(call_slot_1, call_slot_2) && call_slot_1->ConnectCall(call_ptr) &&
+            call_slot_2->ConnectCall(call_ptr)) {
 
             this->calls.emplace_back(call_ptr);
             vislib::sys::Log::DefaultLog.WriteInfo(
@@ -220,7 +220,7 @@ bool megamol::gui::configurator::Graph::AddCall(
                         }
                     }
                 }
-            }    
+            }
 
             this->dirty_flag = true;
         } else {
@@ -289,7 +289,7 @@ ImGuiID megamol::gui::configurator::Graph::AddGroup(const std::string& group_nam
         vislib::sys::Log::DefaultLog.WriteInfo(
             "Added group '%s' to project '%s'.\n", group_ptr->name.c_str(), this->name.c_str());
         return group_id;
-       
+
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -308,7 +308,7 @@ bool megamol::gui::configurator::Graph::DeleteGroup(ImGuiID group_uid) {
     try {
         for (auto iter = this->groups.begin(); iter != this->groups.end(); iter++) {
             if ((*iter)->uid == group_uid) {
-                
+
                 if ((*iter).use_count() > 1) {
                     vislib::sys::Log::DefaultLog.WriteError(
                         "Unclean deletion. Found %i references pointing to group. [%s, %s, line %d]\n",
@@ -319,7 +319,7 @@ bool megamol::gui::configurator::Graph::DeleteGroup(ImGuiID group_uid) {
                     (*iter)->name.c_str(), this->name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 (*iter).reset();
                 this->groups.erase(iter);
-                                
+
                 this->present.ForceUpdate();
                 return true;
             }
@@ -338,8 +338,9 @@ bool megamol::gui::configurator::Graph::DeleteGroup(ImGuiID group_uid) {
 }
 
 
-ImGuiID megamol::gui::configurator::Graph::AddGroupModule(const std::string& group_name, const ModulePtrType& module_ptr) {
-    
+ImGuiID megamol::gui::configurator::Graph::AddGroupModule(
+    const std::string& group_name, const ModulePtrType& module_ptr) {
+
     try {
         // Only create new group if given name is not empty
         if (!group_name.empty()) {
@@ -371,7 +372,7 @@ ImGuiID megamol::gui::configurator::Graph::AddGroupModule(const std::string& gro
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     }
-    
+
     return GUI_INVALID_ID;
 }
 
@@ -384,11 +385,11 @@ const GroupPtrType& megamol::gui::configurator::Graph::GetGroup(ImGuiID group_ui
                 return group;
             }
         }
-        throw std::invalid_argument("Invalid Group UID.");  
+        throw std::invalid_argument("Invalid Group UID.");
     } catch (std::invalid_argument e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-    } 
+    }
 }
 
 
@@ -1167,7 +1168,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_cal
 bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui::configurator::Graph& inout_graph) {
 
     /// Really simple layouting sorting modules into differnet layers
-    
+
     std::vector<std::vector<ModulePtrType>> layers;
     layers.clear();
 

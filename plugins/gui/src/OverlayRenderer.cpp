@@ -2,7 +2,7 @@
  * OverlayRenderer.cpp
  *
  * Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
@@ -218,7 +218,8 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
             case (TranspCtrlIcon::ULTRA_FAST_REWIND):
                 filename = "transport_ctrl_ultra-fast-forward.png";
                 break;
-            default : break;
+            default:
+                break;
             }
             if (!this->loadTexture(filename, this->m_transpctrl_icons[i])) return false;
         }
@@ -596,7 +597,8 @@ void OverlayRenderer::drawScreenSpaceText(glm::mat4 ortho, megamol::core::utilit
     float z = -1.0f;
 
     switch (anchor) {
-    case(Anchor::ALIGN_LEFT_TOP): {} break;
+    case (Anchor::ALIGN_LEFT_TOP): {
+    } break;
     case (Anchor::ALIGN_LEFT_MIDDLE): {
         y = rectangle.top + (rectangle.bottom - rectangle.top) / 2.0f;
     } break;

@@ -2,7 +2,7 @@
  * Parameter.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
@@ -25,7 +25,7 @@ megamol::gui::configurator::Parameter::Parameter(
     , storage(store)
     , value()
     , default_value()
-    , default_value_mismatch(false) 
+    , default_value_mismatch(false)
     , present() {
 
     // Initialize variant types which should/can not be changed afterwards.
@@ -261,11 +261,11 @@ megamol::gui::configurator::Parameter::Presentation::Presentation(void)
     : read_only(false)
     , visible(true)
     , expert(false)
-    , presentations(Presentations::DEFAULT)    
+    , presentations(Presentations::DEFAULT)
     , help()
     , utils()
     , file_utils()
-    , show_tf_editor(false)    
+    , show_tf_editor(false)
     , tf_editor()
     , widget_store()
     , float_format("%.7f") {}

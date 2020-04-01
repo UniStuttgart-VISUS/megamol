@@ -2,7 +2,7 @@
  * OverlayRenderer.h
  *
  * Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 #ifndef MEGAMOL_GUI_OVERLAYRENDERER_H_INCLUDED
@@ -172,7 +172,7 @@ private:
     core::param::ParamSlot paramFontName;
     core::param::ParamSlot paramFontSize;
     core::param::ParamSlot paramFontColor;
-    
+
     /**********************************************************************
      * variables
      **********************************************************************/
@@ -219,7 +219,6 @@ private:
     bool onFontName(core::param::ParamSlot& slot);
     bool onParameterName(core::param::ParamSlot& slot);
     bool onTriggerRecalcRectangle(core::param::ParamSlot& slot);
-
 };
 
 } /* end namespace gui */

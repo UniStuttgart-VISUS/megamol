@@ -2,7 +2,7 @@
  * CallSlot.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 #ifndef MEGAMOL_GUI_GRAPH_CALLSLOT_H_INCLUDED
@@ -28,8 +28,8 @@ typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
 
-enum CallSlotType { CALLEE, CALLER };  
-    
+enum CallSlotType { CALLEE, CALLER };
+
 typedef std::vector<CallSlotPtrType> CallSlotPtrVectorType;
 typedef std::map<CallSlotType, CallSlotPtrVectorType> CallSlotPtrMapType;
 
@@ -38,9 +38,8 @@ typedef std::map<CallSlotType, CallSlotPtrVectorType> CallSlotPtrMapType;
  */
 class CallSlot {
 public:
-
     enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
-    
+
     struct StockCallSlot {
         std::string name;
         std::string description;
@@ -49,10 +48,10 @@ public:
     };
 
     struct GroupState {
-        bool interface;
+        bool is_interface;
         ImVec2 position;
     };
-    
+
     CallSlot(ImGuiID uid);
     ~CallSlot();
 
@@ -84,15 +83,15 @@ public:
     // GUI Presentation -------------------------------------------------------
 
     inline void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
-        
+
     inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
 
-    inline bool GUI_GetGroupInterface(void) { return this->present.group.interface; }
+    inline bool GUI_GetGroupInterface(void) { return this->present.group.is_interface; }
     inline ImVec2 GUI_GetGroupPosition(void) { return this->present.group.position; }
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(*this); }
     inline bool GUI_GetLabelVisibility(void) { return this->present.label_visible; }
 
-    inline void GUI_SetGroupInterface(bool interface) { this->present.group.interface = interface; }
+    inline void GUI_SetGroupInterface(bool is_interface) { this->present.group.is_interface = is_interface; }
     inline void GUI_SetGroupPosition(ImVec2 position) { this->present.group.position = position; }
     inline void GUI_SetPresentation(CallSlot::Presentations present) { this->present.presentations = present; }
     inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
@@ -106,13 +105,12 @@ private:
      */
     class Presentation {
     public:
-                    
         Presentation(void);
 
         ~Presentation(void);
 
         void Present(CallSlot& inout_call_slot, GraphItemsStateType& state);
-        
+
         void UpdatePosition(CallSlot& inout_call_slot, const GraphCanvasType& in_canvas);
 
         ImVec2 GetPosition(CallSlot& inout_call_slot);
@@ -124,11 +122,11 @@ private:
     private:
         // Absolute position including canvas offset and zooming
         ImVec2 position;
-        
+
         GUIUtils utils;
         bool selected;
         bool update_once;
-        
+
     } present;
 };
 

@@ -2,7 +2,7 @@
  * Configurator.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 /**
@@ -30,9 +30,9 @@ megamol::gui::configurator::Configurator::Configurator()
     , left_child_width(250.0f)
     , selected_list_module_uid(GUI_INVALID_ID)
     , add_project_graph_uid(GUI_INVALID_ID)
-    , show_module_list_sidebar(true)    
-    , project_filename("")    
-    , state() {           
+    , show_module_list_sidebar(true)
+    , project_filename("")
+    , state() {
 
     this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH] = megamol::gui::HotkeyDataType(
         core::view::KeyCode(core::view::Key::KEY_M, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false);
@@ -402,9 +402,11 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                             for (auto& call_slot_map : module_ptr->GetCallSlots()) {
                                 for (auto& call_slot : call_slot_map.second) {
                                     if (call_slot->name == compat_call_slot_name) {
-                                        if (graph_ptr->AddCall(this->graph_manager.GetCallsStock(), selected_call_slot_ptr, call_slot)) {
+                                        if (graph_ptr->AddCall(this->graph_manager.GetCallsStock(),
+                                                selected_call_slot_ptr, call_slot)) {
                                             // Caluculate nice position of newly added module
-                                            /// Shifting module in y direction since actual GUI width of new module is not available yet (next frame)
+                                            /// Shifting module in y direction since actual GUI width of new module is
+                                            /// not available yet (next frame)
                                             if (selected_call_slot_ptr->ParentModuleConnected()) {
                                                 const float offset = (GUI_CALL_SLOT_RADIUS * 4.0f);
                                                 auto size = selected_call_slot_ptr->GetParentModule()->GUI_GetSize();
@@ -413,14 +415,14 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                                                 if (call_slot->type == CallSlotType::CALLER) {
                                                     y_factor = -1.0f;
                                                 }
-                                                //else if (selected_call_slot_ptr->type == CallSlotType::CALLER) {
+                                                // else if (selected_call_slot_ptr->type == CallSlotType::CALLER) {
                                                 //    y_factor = 1.0f;
-                                                //}                                                
-                                                ImVec2 module_pos = selected_call_slot_ptr->GetParentModule()->GUI_GetPosition();
+                                                //}
+                                                ImVec2 module_pos =
+                                                    selected_call_slot_ptr->GetParentModule()->GUI_GetPosition();
                                                 module_pos.y += y_factor * (size.y + offset);
                                                 module_ptr->GUI_SetPosition(module_pos);
                                             }
-                                            
                                         }
                                     }
                                 }

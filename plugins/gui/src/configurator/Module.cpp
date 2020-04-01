@@ -2,7 +2,7 @@
  * Module.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
@@ -17,7 +17,7 @@ using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::Module::Module(ImGuiID uid) 
+megamol::gui::configurator::Module::Module(ImGuiID uid)
     : uid(uid)
     , class_name()
     , description()
@@ -29,11 +29,9 @@ megamol::gui::configurator::Module::Module(ImGuiID uid)
     , call_slots()
     , present() {
 
-    this->call_slots.emplace(
-        megamol::gui::configurator::CallSlotType::CALLER, std::vector<CallSlotPtrType>());
-        
-    this->call_slots.emplace(
-        megamol::gui::configurator::CallSlotType::CALLEE, std::vector<CallSlotPtrType>());
+    this->call_slots.emplace(megamol::gui::configurator::CallSlotType::CALLER, std::vector<CallSlotPtrType>());
+
+    this->call_slots.emplace(megamol::gui::configurator::CallSlotType::CALLEE, std::vector<CallSlotPtrType>());
 }
 
 
@@ -50,7 +48,9 @@ bool megamol::gui::configurator::Module::AddCallSlot(megamol::gui::configurator:
     auto type = call_slot->type;
     for (auto& call_slot_ptr : this->call_slots[type]) {
         if (call_slot_ptr == call_slot) {
-            vislib::sys::Log::DefaultLog.WriteError("Pointer to call slot already registered in modules call slot list. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Pointer to call slot already registered in modules call slot list. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
             return false;
         }
     }
@@ -121,8 +121,7 @@ const std::vector<megamol::gui::configurator::CallSlotPtrType>& megamol::gui::co
 }
 
 
-const std::map<megamol::gui::configurator::CallSlotType,
-    std::vector<megamol::gui::configurator::CallSlotPtrType>>&
+const std::map<megamol::gui::configurator::CallSlotType, std::vector<megamol::gui::configurator::CallSlotPtrType>>&
 megamol::gui::configurator::Module::GetCallSlots(void) {
 
     return this->call_slots;
@@ -137,12 +136,12 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
     , label_visible(true)
     , position(ImVec2(FLT_MAX, FLT_MAX))
     , size(ImVec2(0.0f, 0.0f))
-    , utils()    
+    , utils()
     , class_label()
     , name_label()
     , selected(false)
-    , update(true) { 
-           
+    , update(true) {
+
     this->group.member = GUI_INVALID_ID;
     this->group.visible = false;
     this->group.name = "";
@@ -355,7 +354,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
 
             ImGui::PopID();
         }
-        
+
         // Draw call slots ----------------------------------------------------
         for (auto& slot_pair : inout_module.GetCallSlots()) {
             for (auto& slot : slot_pair.second) {
@@ -401,8 +400,8 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
 
     float module_width = (max_label_length + max_slot_name_length) + (3.0f * GUI_CALL_SLOT_RADIUS);
 
-    auto max_slot_count = std::max(inout_mod.GetCallSlots(CallSlotType::CALLEE).size(),
-        inout_mod.GetCallSlots(CallSlotType::CALLER).size());
+    auto max_slot_count = std::max(
+        inout_mod.GetCallSlots(CallSlotType::CALLEE).size(), inout_mod.GetCallSlots(CallSlotType::CALLER).size());
     float module_slot_height =
         (static_cast<float>(max_slot_count) * (GUI_CALL_SLOT_RADIUS * 2.0f) * 1.25f) + GUI_CALL_SLOT_RADIUS;
 

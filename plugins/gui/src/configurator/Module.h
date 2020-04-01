@@ -2,7 +2,7 @@
  * Module.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 #ifndef MEGAMOL_GUI_GRAPH_MODULE_H_INCLUDED
@@ -38,9 +38,8 @@ typedef std::vector<ModulePtrType> ModulePtrVectorType;
  */
 class Module {
 public:
-
     enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
-    
+
     struct StockModule {
         std::string class_name;
         std::string description;
@@ -49,12 +48,12 @@ public:
         std::vector<Parameter::StockParameter> parameters;
         std::map<CallSlotType, std::vector<CallSlot::StockCallSlot>> call_slots;
     };
-    
+
     struct GroupState {
         ImGuiID member;
         bool visible;
         std::string name;
-    };    
+    };
 
     Module(ImGuiID uid);
     ~Module();
@@ -97,14 +96,14 @@ public:
     inline std::string GUI_GetGroupName(void) { return this->present.group.name; }
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     inline ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
-    
+
     inline void GUI_SetGroupMembership(ImGuiID member) { this->present.group.member = member; }
     inline void GUI_SetGroupVisibility(bool visible) { this->present.group.visible = visible; }
     inline void GUI_SetGroupName(const std::string& name) { this->present.group.name = name; }
     inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
     inline void GUI_SetPresentation(Module::Presentations present) { this->present.presentations = present; }
     inline void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
-        
+
 private:
     CallSlotPtrMapType call_slots;
 
@@ -113,7 +112,6 @@ private:
      */
     class Presentation {
     public:
-                
         Presentation(void);
 
         ~Presentation(void);
@@ -136,8 +134,8 @@ private:
         ImVec2 position;
         // Relative size without considering zooming
         ImVec2 size;
-        
-        GUIUtils utils;        
+
+        GUIUtils utils;
         std::string class_label;
         std::string name_label;
         bool selected;

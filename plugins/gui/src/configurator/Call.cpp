@@ -2,7 +2,7 @@
  * Call.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
@@ -17,14 +17,8 @@ using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::Call::Call(ImGuiID uid) 
-    : uid(uid)
-    , class_name()
-    , description()
-    , plugin_name()
-    , functions()
-    , connected_call_slots()
-    , present() {
+megamol::gui::configurator::Call::Call(ImGuiID uid)
+    : uid(uid), class_name(), description(), plugin_name(), functions(), connected_call_slots(), present() {
 
     this->connected_call_slots.emplace(CallSlotType::CALLER, nullptr);
     this->connected_call_slots.emplace(CallSlotType::CALLEE, nullptr);
@@ -146,10 +140,10 @@ void megamol::gui::configurator::Call::Presentation::Present(
                 (inout_call.GetCallSlot(CallSlotType::CALLEE)->ParentModuleConnected())) {
                 auto caller_parent = inout_call.GetCallSlot(CallSlotType::CALLER)->GetParentModule();
                 auto callee_parent = inout_call.GetCallSlot(CallSlotType::CALLEE)->GetParentModule();
-                visibility = !((caller_parent->GUI_GetGroupMembership() == callee_parent->GUI_GetGroupMembership()) && 
-                    (caller_parent->GUI_GetGroupMembership() != GUI_INVALID_ID) &&  
-                    (callee_parent->GUI_GetGroupMembership() != GUI_INVALID_ID) && 
-                    !caller_parent->GUI_GetGroupVisibility());
+                visibility = !((caller_parent->GUI_GetGroupMembership() == callee_parent->GUI_GetGroupMembership()) &&
+                               (caller_parent->GUI_GetGroupMembership() != GUI_INVALID_ID) &&
+                               (callee_parent->GUI_GetGroupMembership() != GUI_INVALID_ID) &&
+                               !caller_parent->GUI_GetGroupVisibility());
             }
 
             if (visibility) {
@@ -205,7 +199,7 @@ void megamol::gui::configurator::Call::Presentation::Present(
                     ImVec2 call_rect_min =
                         ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
                     ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
-                    
+
                     ImGui::SetCursorScreenPos(call_rect_min);
                     std::string label = "call_" + inout_call.class_name + std::to_string(inout_call.uid);
                     ImGui::SetItemAllowOverlap();

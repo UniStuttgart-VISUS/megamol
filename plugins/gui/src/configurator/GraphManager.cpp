@@ -2,7 +2,7 @@
  * GraphManager.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
@@ -275,7 +275,7 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
             auto graph_module = graph_ptr->GetModules().back();
             graph_module->name = module_name;
             graph_module->is_view_instance = false;
-            
+
             graph_ptr->AddGroupModule(module_namespace, graph_module);
 
             if (view_instances.find(std::string(mod->FullName().PeekBuffer())) != view_instances.end()) {
@@ -407,7 +407,7 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
             }
             graph_ptr->AddCall(this->GetCallsStock(), call_slot_1, call_slot_2);
         }
-        
+
         graph_ptr->GUI_SetLayoutGraph();
 
     } catch (std::exception e) {
@@ -539,8 +539,8 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
 
                 ImGuiID group_uid = graph_ptr->AddGroupModule(view_namespace, graph_module);
                 if ((group_uid == GUI_INVALID_ID) && (group_interface_callslots.size() > 0)) {
-                    vislib::sys::Log::DefaultLog.WriteWarn(
-                        "Project File '%s' line %i: Unable to create group for given group interface call slots. [%s, %s, line %d]\n",
+                    vislib::sys::Log::DefaultLog.WriteWarn("Project File '%s' line %i: Unable to create group for "
+                                                           "given group interface call slots. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), __FILE__, __FUNCTION__, __LINE__);
                 }
                 if (group_uid != GUI_INVALID_ID) {
@@ -593,7 +593,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 }
                 ImVec2 module_pos = this->readLuaProjectConfPos(lines[i]);
                 std::vector<std::string> group_interface_callslots = this->readLuaProjectConfGroupInterface(lines[i]);
-    
+
                 /// DEBUG
                 // vislib::sys::Log::DefaultLog.WriteInfo(">>>> Class: '%s' NameSpace: '%s' Name: '%s' ConfPos: %f,
                 // %f.\n",
@@ -624,11 +624,11 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                     graph_module->name = module_name;
                     graph_module->is_view_instance = false;
                     graph_module->GUI_SetPosition(module_pos);
-                    
+
                     ImGuiID group_uid = graph_ptr->AddGroupModule(module_namespace, graph_module);
                     if ((group_uid == GUI_INVALID_ID) && (group_interface_callslots.size() > 0)) {
-                        vislib::sys::Log::DefaultLog.WriteWarn(
-                            "Project File '%s' line %i: Unable to create group for given group interface call slots. [%s, %s, line %d]\n",
+                        vislib::sys::Log::DefaultLog.WriteWarn("Project File '%s' line %i: Unable to create group for "
+                                                               "given group interface call slots. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), __FILE__, __FUNCTION__, __LINE__);
                     }
                     if (group_uid != GUI_INVALID_ID) {
@@ -899,11 +899,14 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_uid
                 for (auto& mod : graph->GetModules()) {
                     std::string instance_name = graph->name;
                     if (mod->is_view_instance) {
-                        confInstances << "mmCreateView(\"" << instance_name << "\",\"" << mod->class_name << "\",\"" << mod->FullName() << "\") "
-                            << this->writeLuaProjectConfPos(mod->GUI_GetPosition()) << " " << this->writeLuaProjectConfGroupInterface(mod, graph) << "\n";
+                        confInstances << "mmCreateView(\"" << instance_name << "\",\"" << mod->class_name << "\",\""
+                                      << mod->FullName() << "\") "
+                                      << this->writeLuaProjectConfPos(mod->GUI_GetPosition()) << " "
+                                      << this->writeLuaProjectConfGroupInterface(mod, graph) << "\n";
                     } else {
                         confModules << "mmCreateModule(\"" << mod->class_name << "\",\"" << mod->FullName() << "\") "
-                            << this->writeLuaProjectConfPos(mod->GUI_GetPosition()) << " " << this->writeLuaProjectConfGroupInterface(mod, graph) << "\n";
+                                    << this->writeLuaProjectConfPos(mod->GUI_GetPosition()) << " "
+                                    << this->writeLuaProjectConfGroupInterface(mod, graph) << "\n";
                     }
 
                     for (auto& param_slot : mod->parameters) {
@@ -922,12 +925,11 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_uid
                     for (auto& caller_slot : mod->GetCallSlots(CallSlotType::CALLER)) {
                         for (auto& call : caller_slot->GetConnectedCalls()) {
                             if (call->IsConnected()) {
-                                confCalls
-                                    << "mmCreateCall(\"" << call->class_name << "\",\""
-                                    << call->GetCallSlot(CallSlotType::CALLER)->GetParentModule()->FullName()
-                                    << "::" << call->GetCallSlot(CallSlotType::CALLER)->name << "\",\""
-                                    << call->GetCallSlot(CallSlotType::CALLEE)->GetParentModule()->FullName()
-                                    << "::" << call->GetCallSlot(CallSlotType::CALLEE)->name << "\")\n";
+                                confCalls << "mmCreateCall(\"" << call->class_name << "\",\""
+                                          << call->GetCallSlot(CallSlotType::CALLER)->GetParentModule()->FullName()
+                                          << "::" << call->GetCallSlot(CallSlotType::CALLER)->name << "\",\""
+                                          << call->GetCallSlot(CallSlotType::CALLEE)->GetParentModule()->FullName()
+                                          << "::" << call->GetCallSlot(CallSlotType::CALLEE)->name << "\")\n";
                             }
                         }
                     }
@@ -970,7 +972,8 @@ bool megamol::gui::configurator::GraphManager::SaveGroupFile(ImGuiID group_uid, 
     try {
 
         /// TODO
-        vislib::sys::Log::DefaultLog.WriteWarn("Feature is WIP ... coming soon. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "Feature is WIP ... coming soon. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
 
     } catch (std::exception e) {
@@ -1362,10 +1365,11 @@ std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfPos(con
 }
 
 
-std::vector<std::string> megamol::gui::configurator::GraphManager::readLuaProjectConfGroupInterface(const std::string& line) {
+std::vector<std::string> megamol::gui::configurator::GraphManager::readLuaProjectConfGroupInterface(
+    const std::string& line) {
 
     std::vector<std::string> conf_group_interface;
-    
+
     std::string start_tag = "--confGroupInterface={";
     std::string delimiter = ",";
     std::string end_tag = "}";
@@ -1384,7 +1388,9 @@ std::vector<std::string> megamol::gui::configurator::GraphManager::readLuaProjec
                 delimiter_idx = callslots_line.find(delimiter);
             }
             if (callslots_line.empty()) {
-                vislib::sys::Log::DefaultLog.WriteError(" Error while reading group interface call slots. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                vislib::sys::Log::DefaultLog.WriteError(
+                    " Error while reading group interface call slots. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                    __LINE__);
             }
             conf_group_interface.emplace_back(callslots_line);
         } catch (std::exception e) {
@@ -1392,17 +1398,19 @@ std::vector<std::string> megamol::gui::configurator::GraphManager::readLuaProjec
                 "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return conf_group_interface;
         } catch (...) {
-            vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return conf_group_interface;
-        }            
+        }
     }
-        
+
     return conf_group_interface;
 }
 
 
-std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfGroupInterface(const ModulePtrType& module_ptr, const GraphPtrType& graph_ptr) {
-    
+std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfGroupInterface(
+    const ModulePtrType& module_ptr, const GraphPtrType& graph_ptr) {
+
     std::stringstream conf_group_interface;
 
     ImGuiID module_group_uid = module_ptr->GUI_GetGroupMembership();
@@ -1417,8 +1425,7 @@ std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfGroupIn
                                 if (first) {
                                     conf_group_interface << "--confGroupInterface={";
                                     first = false;
-                                }
-                                else {
+                                } else {
                                     conf_group_interface << ",";
                                 }
                                 conf_group_interface << callslot->name;
@@ -1432,7 +1439,7 @@ std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfGroupIn
             conf_group_interface << "}";
         }
     }
-    
+
     return conf_group_interface.str();
 }
 

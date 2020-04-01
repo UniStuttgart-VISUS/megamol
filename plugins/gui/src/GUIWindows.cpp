@@ -2,7 +2,7 @@
  * GUIWindows.cpp
  *
  * Copyright (C) 2018 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 /**
@@ -38,11 +38,11 @@ GUIWindows::GUIWindows()
     , file_utils()
     , state()
     , widgtmap_text()
-    , widgtmap_int()    
+    , widgtmap_int()
     , widgtmap_float()
     , widgtmap_vec2()
     , widgtmap_vec3()
-    , widgtmap_vec4() {      
+    , widgtmap_vec4() {
 
     core::param::EnumParam* styles = new core::param::EnumParam((int)(Styles::DarkColors));
     styles->SetTypePair(Styles::CorporateGray, "Corporate Gray");
@@ -868,10 +868,9 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                         this->GetCoreInstance()->EnumModulesNoLock(nullptr, view_func);
                         if (!viewname.empty()) {
                             if (wc.param_module_filter == WindowManager::FilterModes::INSTANCE) {
-                                // Considering modules depending on the INSTANCE NAME of the first view this module is connected to.
-                                std::string instname = "";
-                                if (viewname.find("::", 2) != std::string::npos) {
-                                    instname = viewname.substr(0, viewname.find("::", 2));
+                                // Considering modules depending on the INSTANCE NAME of the first view this module is
+    connected to. std::string instname = ""; if (viewname.find("::", 2) != std::string::npos) { instname =
+    viewname.substr(0, viewname.find("::", 2));
                                 }
                                 if (!instname.empty()) { /// Consider all modules if view is not assigned to any
                                                          /// instance
@@ -887,10 +886,9 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                                     this->GetCoreInstance()->EnumModulesNoLock(nullptr, func);
                                 }
                             } else { // (wc.param_module_filter == WindowManager::FilterModes::VIEW)
-                                // Considering modules depending on their connection to the first VIEW this module is connected to.
-                                const auto add_func = [&, this](core::Module* mod) {
-                                    std::string modname = mod->FullName().PeekBuffer();
-                                    wc.param_modules_list.emplace_back(modname);
+                                // Considering modules depending on their connection to the first VIEW this module is
+    connected to. const auto add_func = [&, this](core::Module* mod) { std::string modname =
+    mod->FullName().PeekBuffer(); wc.param_modules_list.emplace_back(modname);
                                 };
                                 this->GetCoreInstance()->EnumModulesNoLock(viewname, add_func);
                             }
@@ -917,7 +915,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
     }
     ImGui::Separator();
     */
-    
+
     // Create child window for sepearte scroll bar and keeping header always visible on top of parameter list
     ImGui::BeginChild("###ParameterList");
 

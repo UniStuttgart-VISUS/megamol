@@ -2,7 +2,7 @@
  * WindowManager.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
@@ -355,14 +355,14 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
-    //} catch (nlohmann::json::exception& e) {
-    //    vislib::sys::Log::DefaultLog.WriteError(
-    //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-    //    return false;
-    //} catch (nlohmann::json::parse_error& e) {
-    //    vislib::sys::Log::DefaultLog.WriteError(
-    //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-    //    return false;
+        //} catch (nlohmann::json::exception& e) {
+        //    vislib::sys::Log::DefaultLog.WriteError(
+        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        //    return false;
+        //} catch (nlohmann::json::parse_error& e) {
+        //    vislib::sys::Log::DefaultLog.WriteError(
+        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        //    return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
@@ -427,14 +427,14 @@ bool WindowManager::StateToJSON(std::string& json_string) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
-    //} catch (nlohmann::json::exception& e) {
-    //    vislib::sys::Log::DefaultLog.WriteError(
-    //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-    //    return false;
-    //} catch (nlohmann::json::parse_error& e) {
-    //    vislib::sys::Log::DefaultLog.WriteError(
-    //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-    //    return false;
+        //} catch (nlohmann::json::exception& e) {
+        //    vislib::sys::Log::DefaultLog.WriteError(
+        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        //    return false;
+        //} catch (nlohmann::json::parse_error& e) {
+        //    vislib::sys::Log::DefaultLog.WriteError(
+        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        //    return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);

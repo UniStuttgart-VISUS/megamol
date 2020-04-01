@@ -2,7 +2,7 @@
  * FileUtils.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
@@ -24,7 +24,7 @@ megamol::gui::FileUtils::FileUtils(void)
     , valid_ending(false)
     , file_error()
     , file_warning()
-    , child_paths()    
+    , child_paths()
     , additional_lines(0) {
 #else
 {

@@ -2,7 +2,7 @@
  * Graph.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 #ifndef MEGAMOL_GUI_GRAPH_GRAPH_H_INCLUDED
@@ -34,10 +34,9 @@ typedef std::vector<Call::StockCall> CallStockVectorType;
 
 class Graph {
 public:
-
     const ImGuiID uid;
     std::string name;
-    
+
     Graph(const std::string& graph_name);
 
     virtual ~Graph(void);
@@ -53,9 +52,9 @@ public:
     ImGuiID AddGroup(const std::string& group_name = "");
     bool DeleteGroup(ImGuiID group_uid);
     ImGuiID AddGroupModule(const std::string& group_name, const ModulePtrType& module_ptr);
-    inline const GroupPtrVectorType& GetGroups(void) { return this->groups; }    
+    inline const GroupPtrVectorType& GetGroups(void) { return this->groups; }
     const GroupPtrType& GetGroup(ImGuiID group_uid);
-    
+
     inline bool IsDirty(void) const { return this->dirty_flag; }
     inline void ResetDirty(void) { this->dirty_flag = false; }
 
@@ -72,7 +71,7 @@ public:
     inline ImGuiID GUI_GetSelectedCallSlot(void) const { return this->present.GetSelectedCallSlot(); }
     inline ImGuiID GUI_GetDropCallSlot(void) const { return this->present.GetDropCallSlot(); }
     inline bool GUI_GetGroupSave(void) { return this->present.GetGroupSave(); }
-    
+
     inline void GUI_SetLayoutGraph(void) { this->present.LayoutGraph(); }
 
 private:
@@ -106,10 +105,10 @@ private:
         bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
         bool GetCallLabelVisibility(void) const { return this->show_call_names; }
 
-        bool GetGroupSave(void) { 
+        bool GetGroupSave(void) {
             bool retval = this->graphstate.interact.group_save;
             this->graphstate.interact.group_save = false;
-            return retval; 
+            return retval;
         }
 
         void ForceUpdate(void) { this->update = true; }
@@ -147,7 +146,7 @@ private:
     } present;
 
     // FUNCTIONS --------------------------------------------------------------
-    
+
     bool delete_disconnected_calls(void);
     inline const CallPtrVectorType& get_calls(void) { return this->calls; }
     const std::string generate_unique_group_name(void);

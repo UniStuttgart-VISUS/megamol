@@ -2,7 +2,7 @@
  * Parameter.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 #ifndef MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
@@ -261,7 +261,7 @@ private:
         std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
         const std::string float_format;
 
-        static bool popup_open;        
+        static bool popup_open;
 
         void present_prefix(Parameter& param);
         void present_value_DEFAULT(Parameter& param);

@@ -2,7 +2,7 @@
  * Group.cpp
  *
  * Copyright (C) 2020 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
@@ -15,13 +15,7 @@ using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::Group::Group(ImGuiID uid) 
-    : uid(uid)
-    , name()
-    , modules()
-    , callslots()
-    , present(){
-}
+megamol::gui::configurator::Group::Group(ImGuiID uid) : uid(uid), name(), modules(), callslots(), present() {}
 
 
 megamol::gui::configurator::Group::~Group() {
@@ -60,12 +54,12 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
     }
 
     this->modules.emplace_back(module_ptr);
-                
+
     module_ptr->GUI_SetGroupMembership(this->uid);
     module_ptr->GUI_SetGroupVisibility(this->present.ModuleVisible());
     module_ptr->GUI_SetGroupName(this->name);
     this->present.ForceUpdate();
-    
+
     // Add connected call slots to group interface if connected module is not part of same group
     for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
         if (callerslot_ptr->CallsConnected()) {
@@ -121,7 +115,8 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
         }
     }
 
-    vislib::sys::Log::DefaultLog.WriteInfo("Added module '%s' to group '%s'.\n", module_ptr->name.c_str(), this->name.c_str());
+    vislib::sys::Log::DefaultLog.WriteInfo(
+        "Added module '%s' to group '%s'.\n", module_ptr->name.c_str(), this->name.c_str());
     return true;
 }
 
@@ -151,7 +146,7 @@ bool megamol::gui::configurator::Group::RemoveModule(ImGuiID module_uid) {
                 (*mod_iter)->GUI_SetGroupVisibility(false);
                 (*mod_iter)->GUI_SetGroupName("");
                 this->present.ForceUpdate();
-                
+
                 vislib::sys::Log::DefaultLog.WriteInfo(
                     "Removed module '%s' from group '%s'.\n", (*mod_iter)->name.c_str(), this->name.c_str());
                 (*mod_iter).reset();
@@ -220,9 +215,9 @@ bool megamol::gui::configurator::Group::AddCallSlot(const CallSlotPtrType& calls
 
     if (add) {
         callslot_ptr->GUI_SetGroupInterface(true);
-        
+
         this->callslots[callslot_ptr->type].emplace_back(callslot_ptr);
-                
+
         vislib::sys::Log::DefaultLog.WriteInfo(
             "Added call slot '%s' to group '%s'.\n", callslot_ptr->name.c_str(), this->name.c_str());
     } else {
@@ -322,7 +317,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
         }
 
         // Draw group --------------------------------------------------------
-        
+
         ImVec2 group_size = this->size * state.canvas.zooming;
         ImVec2 group_rect_min = state.canvas.offset + this->position * state.canvas.zooming;
         ImVec2 group_rect_max = group_rect_min + group_size;
@@ -435,11 +430,12 @@ void megamol::gui::configurator::Group::Presentation::Present(
             draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]),
                 this->name_label.c_str());
         } else {
-            ImVec2 text_pos_left_upper = group_rect_min + ImVec2(this->border, this->border/2.0f) * state.canvas.zooming;
+            ImVec2 text_pos_left_upper =
+                group_rect_min + ImVec2(this->border, this->border / 2.0f) * state.canvas.zooming;
             draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]),
                 this->name_label.c_str());
         }
-                
+
         // Rename pop-up ------------------------------------------------------
         if (this->utils.RenamePopUp("Rename Group", popup_rename, inout_group.name)) {
             for (auto& module_ptr : inout_group.GetModules()) {
@@ -488,11 +484,12 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
     float group_width = 0.0f;
     float group_height = 0.0f;
     size_t caller_count = inout_group.callslots[CallSlotType::CALLER].size();
-    size_t callee_count = inout_group.callslots[CallSlotType::CALLEE].size();  
+    size_t callee_count = inout_group.callslots[CallSlotType::CALLEE].size();
     size_t max_slot_count = std::max(caller_count, callee_count);
     if (this->collapsed_view) {
-        group_width = (1.5f * GUIUtils::TextWidgetWidth(this->name_label) / in_canvas.zooming) + (3.0f * GUI_CALL_SLOT_RADIUS);
-        group_height = std::max((3.0f * ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming), 
+        group_width =
+            (1.5f * GUIUtils::TextWidgetWidth(this->name_label) / in_canvas.zooming) + (3.0f * GUI_CALL_SLOT_RADIUS);
+        group_height = std::max((3.0f * ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming),
             ((static_cast<float>(max_slot_count) * (GUI_CALL_SLOT_RADIUS * 2.0f) * 1.25f) + GUI_CALL_SLOT_RADIUS));
     } else {
         float pos_maxX = -FLT_MAX;
@@ -511,23 +508,24 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
     }
     // Clamp to minimum size
     this->size = ImVec2(std::max(group_width, 75.0f), std::max(group_height, 25.0f));
-    
+
     // Set group interface position of call slots --------------------------
     ImVec2 pos = in_canvas.offset + this->position * in_canvas.zooming;
-    ImVec2 size = this->size * in_canvas.zooming;    
+    ImVec2 size = this->size * in_canvas.zooming;
     size_t caller_idx = 0;
     size_t callee_idx = 0;
     ImVec2 callslot_group_position;
     for (auto& callslot_map : inout_group.callslots) {
         for (auto& callslot_ptr : callslot_map.second) {
             if (callslot_map.first == CallSlotType::CALLER) {
-                callslot_group_position = ImVec2((pos.x +  size.x), (pos.y + size.y * ((float)caller_idx + 1) / ((float)caller_count + 1)));
+                callslot_group_position =
+                    ImVec2((pos.x + size.x), (pos.y + size.y * ((float)caller_idx + 1) / ((float)caller_count + 1)));
                 caller_idx++;
-            }
-            else if (callslot_map.first == CallSlotType::CALLEE) {
-                callslot_group_position = ImVec2(pos.x, (pos.y + size.y * ((float)callee_idx + 1) / ((float)callee_count + 1)));
+            } else if (callslot_map.first == CallSlotType::CALLEE) {
+                callslot_group_position =
+                    ImVec2(pos.x, (pos.y + size.y * ((float)callee_idx + 1) / ((float)callee_count + 1)));
                 callee_idx++;
-            }           
+            }
             callslot_ptr->GUI_SetGroupPosition(callslot_group_position);
         }
     }

@@ -2,7 +2,7 @@
  * GraphManager.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten. 
+ * Alle Rechte vorbehalten.
  */
 
 #ifndef MEGAMOL_GUI_GRAPH_GRAPHMANAGER_H_INCLUDED
@@ -102,10 +102,10 @@ private:
 
     ImVec2 readLuaProjectConfPos(const std::string& line);
     std::string writeLuaProjectConfPos(const ImVec2& pos);
-        
+
     std::vector<std::string> readLuaProjectConfGroupInterface(const std::string& line);
     std::string writeLuaProjectConfGroupInterface(const ModulePtrType& module_ptr, const GraphPtrType& graph_ptr);
-    
+
     bool separateNameAndNamespace(const std::string& full_name, std::string& name_space, std::string& name);
 
     inline const std::string generate_unique_graph_name(void) {
