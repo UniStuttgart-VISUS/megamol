@@ -50,7 +50,8 @@ bool megamol::gui::configurator::Module::AddCallSlot(megamol::gui::configurator:
     auto type = call_slot->type;
     for (auto& call_slot_ptr : this->call_slots[type]) {
         if (call_slot_ptr == call_slot) {
-            throw std::invalid_argument("Pointer to call slot already registered in modules call slot list.");
+            vislib::sys::Log::DefaultLog.WriteError("Pointer to call slot already registered in modules call slot list. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
         }
     }
     this->call_slots[type].emplace_back(call_slot);

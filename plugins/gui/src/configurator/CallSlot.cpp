@@ -39,12 +39,13 @@ megamol::gui::configurator::CallSlot::~CallSlot() {
 
 bool megamol::gui::configurator::CallSlot::CallsConnected(void) const {
 
-    // Check for unclean references
+    /// Check for unclean references
     for (auto& call_ptr : this->connected_calls) {
         if (call_ptr == nullptr) {
-            throw std::invalid_argument("Pointer to connected call is nullptr.");
+            vislib::sys::Log::DefaultLog.WriteError("Pointer to one of the connected calls is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
+    
     return (!this->connected_calls.empty());
 }
 
@@ -127,13 +128,12 @@ bool megamol::gui::configurator::CallSlot::DisConnectCalls(void) {
 }
 
 
-const std::vector<megamol::gui::configurator::CallPtrType>& megamol::gui::configurator::CallSlot::GetConnectedCalls(
-    void) {
-
-    // Check for unclean references
+const std::vector<megamol::gui::configurator::CallPtrType>& megamol::gui::configurator::CallSlot::GetConnectedCalls(void) {
+        
+    /// Check for unclean references
     for (auto& call_ptr : this->connected_calls) {
         if (call_ptr == nullptr) {
-            throw std::invalid_argument("Pointer to connected call is nullptr.");
+            vislib::sys::Log::DefaultLog.WriteError("Pointer to one of the connected calls is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
 

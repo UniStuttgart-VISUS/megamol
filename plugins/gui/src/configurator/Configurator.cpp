@@ -334,7 +334,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
     if (graph_ptr != nullptr) {
         auto call_slot_id = graph_ptr->GUI_GetSelectedCallSlot();
         if (call_slot_id != GUI_INVALID_ID) {
-            for (auto& mods : graph_ptr->GetGraphModules()) {
+            for (auto& mods : graph_ptr->GetModules()) {
                 CallSlotPtrType call_slot_ptr = mods->GetCallSlot(call_slot_id);
                 if (call_slot_ptr != nullptr) {
                     selected_call_slot_ptr = call_slot_ptr;
@@ -404,27 +404,23 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                                     if (call_slot->name == compat_call_slot_name) {
                                         if (graph_ptr->AddCall(this->graph_manager.GetCallsStock(), selected_call_slot_ptr, call_slot)) {
                                             // Caluculate nice position of newly added module
+                                            /// Shifting module in y direction since actual GUI width of new module is not available yet (next frame)
                                             if (selected_call_slot_ptr->ParentModuleConnected()) {
-                                                auto size = selected_call_slot_ptr->GetParentModule()->GUI_GetSize();
                                                 const float offset = (GUI_CALL_SLOT_RADIUS * 4.0f);
-                                                float x_offset, y_offset;
+                                                auto size = selected_call_slot_ptr->GetParentModule()->GUI_GetSize();
+                                                float y_factor = 1.0f;
                                                 // Callers have only one connected call
-                                                if (selected_call_slot_ptr->type == CallSlotType::CALLER) {
-                                                    std::string call_name = selected_call_slot_ptr->GetConnectedCalls()[0]->class_name;
-                                                    x_offset = (size.x + (1.5f * GUIUtils::TextWidgetWidth(call_name) + offset));
-                                                    y_offset = size.y + offset;
+                                                if (call_slot->type == CallSlotType::CALLER) {
+                                                    y_factor = -1.0f;
                                                 }
-                                                else if (call_slot->type == CallSlotType::CALLER) {
-                                                    auto size = selected_call_slot_ptr->GetParentModule()->GUI_GetSize();
-                                                    std::string call_name = call_slot->GetConnectedCalls()[0]->class_name;
-                                                    x_offset = -1.0f * (1.5f * GUIUtils::TextWidgetWidth(call_name) + offset);
-                                                    y_offset = -1.0f * (size.y + offset);
-                                                }
-                                                ImVec2 new_module_pos = selected_call_slot_ptr->GetParentModule()->GUI_GetPosition();
-                                                new_module_pos.x += x_offset;
-                                                new_module_pos.y += y_offset;
-                                                module_ptr->GUI_SetPosition(new_module_pos);
+                                                //else if (selected_call_slot_ptr->type == CallSlotType::CALLER) {
+                                                //    y_factor = 1.0f;
+                                                //}                                                
+                                                ImVec2 module_pos = selected_call_slot_ptr->GetParentModule()->GUI_GetPosition();
+                                                module_pos.y += y_factor * (size.y + offset);
+                                                module_ptr->GUI_SetPosition(module_pos);
                                             }
+                                            
                                         }
                                     }
                                 }
@@ -462,7 +458,7 @@ void megamol::gui::configurator::Configurator::add_empty_project(void) {
             ImGuiID module_uid = graph_ptr->AddModule(this->graph_manager.GetModulesStock(), guiview_class_name);
             auto module_ptr = graph_ptr->GetModule(module_uid);
             if (module_ptr != nullptr) {
-                auto graph_module = graph_ptr->GetGraphModules().back();
+                auto graph_module = graph_ptr->GetModules().back();
                 graph_module->is_view_instance = true;
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
