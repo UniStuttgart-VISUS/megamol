@@ -163,7 +163,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
     ImGuiStyle& style = ImGui::GetStyle();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
-
+    
     bool popup_rename = false;
 
     try {
@@ -294,7 +294,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                             
             // Background
             ImU32 module_bg_color = (hovered || this->selected) ? COLOR_MODULE_HIGHTLIGHT : COLOR_MODULE_BACKGROUND;
-            draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, 5.0f, ImDrawCornerFlags_All);
+            draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All);
 
             // Text and Option Buttons
             float text_width;
@@ -305,7 +305,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
 
                 auto menu_color = (hovered || this->selected) ? (COLOR_HEADER_HIGHLIGHT): (COLOR_HEADER);
                 ImVec2 header_rect_max = module_rect_min + ImVec2(module_size.x, ImGui::GetTextLineHeightWithSpacing());
-                draw_list->AddRectFilled(module_rect_min, header_rect_max, menu_color, 5.0f, (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
+                draw_list->AddRectFilled(module_rect_min, header_rect_max, menu_color, GUI_RECT_CORNER_RADIUS, (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
                 
                 text_width = GUIUtils::TextWidgetWidth(inout_module.class_name);
                 text_pos_left_upper = ImVec2(module_center.x - (text_width / 2.0f), module_rect_min.y + (style.ItemSpacing.y/2.0f));
@@ -349,7 +349,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
             // Outline
             float border = ((inout_module.is_view_instance) ? (4.0f) : (1.0f)) * state.canvas.zooming;
             draw_list->AddRect(
-                module_rect_min, module_rect_max, COLOR_MODULE_GROUP_BORDER, 5.0f, ImDrawCornerFlags_All, border);
+                module_rect_min, module_rect_max, COLOR_MODULE_GROUP_BORDER, GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All, border);
 
             // State
             if ((mouse_clicked && (!hovered || state.interact.callslot_hovered_uid != GUI_INVALID_ID)) ||
@@ -461,7 +461,7 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
     float module_height = std::max(module_slot_height, text_button_height);
 
     // Clamp to minimum size
-    this->size = ImVec2(std::max(module_width, 75.0f), std::max(module_height, 25.0f));
+    this->size = ImVec2(std::max(module_width, 1.0f), std::max(module_height, 1.0f));
 
     // UPDATE all Call Slots ---------------------
     for (auto& slot_pair : inout_module.GetCallSlots()) {

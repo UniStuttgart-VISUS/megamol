@@ -240,8 +240,8 @@ void megamol::gui::configurator::Call::Presentation::Present(
                     }
 
                     ImU32 call_bg_color = (hovered || this->selected) ? COLOR_CALL_HIGHTLIGHT : COLOR_CALL_BACKGROUND;
-                    draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, 4.0f);
-                    draw_list->AddRect(call_rect_min, call_rect_max, COLOR_CALL_GROUP_BORDER, 4.0f);
+                    draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, GUI_RECT_CORNER_RADIUS);
+                    draw_list->AddRect(call_rect_min, call_rect_max, COLOR_CALL_GROUP_BORDER, GUI_RECT_CORNER_RADIUS);
 
                     // Draw text
                     ImVec2 text_pos_left_upper =

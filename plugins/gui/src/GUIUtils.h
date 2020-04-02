@@ -46,6 +46,7 @@ namespace gui {
 
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_CALL_SLOT_RADIUS (8.0f)
+#define GUI_RECT_CORNER_RADIUS (0.0f)
 #define GUI_MAX_MULITLINE (7)
 #define GUI_DND_CALL_UID_TYPE ("DND_CALL")
 

@@ -80,12 +80,11 @@ In order to start the configurator automatically, you can use the project  `/exa
         
 See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a bug and feature tracker.
 
-**NOTE:**\
-Parameter values in lua command `mmSetParamValue` must have the value enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are not supported.
+**NOTES:**\
+* In order to crete a vaild project file which can be loaded successfully afterwards, it is necessary to define one view module as `main view`. A `mmain view`defines the entry point of the project.
+* Parameter values in lua command `mmSetParamValue` must have the value enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are not supported.
 
-#### Menu
-
-The menu of the configurator window provides the following options.
+#### Main Menu
 
 * `File`
     * `Load` 
@@ -96,55 +95,66 @@ The menu of the configurator window provides the following options.
         * `File` Add existing project from a file to currently selected project.
         * `Running` Add currently running project to currently selected project.
     * `Save Project` (`Ctrl + s`) Save the project of the currently selected tab to a file (lua).
-    
 * `View`
     * `Modules Sidebar` (`Ctrl + Shift + m`) Show/Hide sidebar with module stock list.
     * `Parameter Sidebar` (`Ctrl + Shift + p`) Show/Hide sidebar with parameters of currently selected module.
-    
 * `Help` Link to this Readme.
 
-#### Additional Options
+#### Project Menu
 
-There are additional options available within the configurator, e.g. via the context menu.
+* `Main View`
+* `Reset Scrolling` Reset scrolling.
+* `Reset Zooming` Reset zooming.
+* `Grid` Show/Hide grid.
+* `Call Names`Show/Hide call names.
+* `Module Names` Show/Hide module names and other decoration.
+* `Slot Names` Show/Hide slot names.
+* `Layout Graph` Simple layouting of project graph.
 
-* Add Module from Stock List
+#### Available Module Stock Sidebar
+
+* Search for Module (`Ctrl + Shift + m`)
+* Add Module from Stock List to Graph
     * `Double Left Click` on Module in Stock List
     * `Right Click` on Module in Stock List -> Context Menu: Add
     
-* Delete Module/Call/Group
-    * Select with `Left Click` an press `Delete`
-    * `Right Click` Context Menu: Delete
-    
-* Rename Project/Module/Group
-    * `Right Click` Context Menu: Rename
-    
-* Collapse/Expand Splitter
-    * `Double Right Click` on Splitter
-    
-* Create Call
+#### Module Parameter Sidebar
+
+* Search for Parameter (`Ctrl + Shift + p`)
+        
+#### Project Graph
+
+* Call Creation
     * Drag and Drop Call from one Call Slot to other highlighted compatible Call Slot.
-    
-* Zoom Graph
+* Sidebar Splitter Collapsing/Expansion
+    * `Double Right Click` on Splitter
+* Graph Zooming
     * `Mouse Wheel`
-    
-* Scroll Graph
+* Graph Scrolling
     * `Middle Mouse Button`
-    
-* **Module Grouping**
-    * Groups: `Right Click` Context Menu  
-        * `Collapsed View` / `Expanded View`
-        * `Rename`        
-        * `Delete`
-    * Modules: `Right Click` Context Menu             
-        * `Add to Group`
-        * `Remove from Group`        
-    * Call Slots: `Right Click` Context Menu             
-        * `Add to Group Interface`
-        * `Remove from Group Interface` 
-    
+* `Module`
+    * Main view button (`Radio Button`): One view modules per graph can be set as main view.
+    * 
+    * Context Menu (`Right Click`)
+        * Delete (Alternative: Select with `Left Click` an press `Delete`)
+        * Rename
+        * Add to Group
+        * Remove from Group
+* `Call` - Context Menu (`Right Click`)
+    * Delete (Alternative: Select with `Left Click` an press `Delete`)
+* `Slot` - Context Menu (`Right Click`)    
+    * Add to Group Interface
+    * Remove from Group Interface
+* `Group` - Context Menu (`Right Click`)
+    * Collapse View / Expand View
+    * Rename      
+    * Delete
+
+#### Module Grouping
+
 Module groups are stored in project files using the already available module namespace (which is currently unused in the core). 
-Group interface call slots are stored in the new tag `--confGroupInterface{...}` in the same line as the corresponding lua command for the module creation.
-                            
+Group interface call slots are stored in the new tag `--confGroupInterface{...}` in the same line as the corresponding lua command for the module creation.                           
+
 ![configurator demo picture](configurator.png)
 
 ---
