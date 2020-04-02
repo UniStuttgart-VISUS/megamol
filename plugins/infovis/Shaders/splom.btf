@@ -86,6 +86,16 @@
       <snippet type="file">splom_triangle.frag</snippet>
     </shader>
   </namespace>
+  <namespace name="pickIndicator">
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet type="file">splom_pick_indicator.vert</snippet>
+    </shader>
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet type="file">splom_pick_indicator.frag</snippet>
+    </shader>
+  </namespace>
   <namespace name="screen">
     <shader name="vert">
       <snippet type="version">430</snippet>
