@@ -70,16 +70,17 @@ bool megamol::gui::configurator::GraphManager::DeleteGraph(ImGuiID graph_uid) {
 }
 
 
-const GraphManager::GraphPtrType megamol::gui::configurator::GraphManager::GetGraph(ImGuiID graph_uid) {
+bool megamol::gui::configurator::GraphManager::GetGraph(ImGuiID graph_uid, megamol::gui::configurator::GraphPtrType& out_graph_ptr) {
 
-    for (auto iter = this->graphs.begin(); iter != this->graphs.end(); iter++) {
-        if ((*iter)->uid == graph_uid) {
-            return (*iter);
+    if (graph_uid != GUI_INVALID_ID) {
+        for (auto& graph_ptr : this->graphs) {
+            if (graph_ptr->uid == graph_uid) {
+                out_graph_ptr = graph_ptr;
+                return true;
+            }
         }
     }
-    // vislib::sys::Log::DefaultLog.WriteWarn(
-    //    "Invalid graph uid. Returning nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    return nullptr;
+    return false;
 }
 
 
@@ -218,8 +219,8 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
     ImGuiID graph_uid, megamol::core::CoreInstance* core_instance) {
 
     try {
-        auto graph_ptr = this->GetGraph(graph_uid);
-        if (graph_ptr == nullptr) {
+        GraphPtrType graph_ptr;
+        if (!this->GetGraph(graph_uid, graph_ptr)) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Unable to find graph for given uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
@@ -437,15 +438,12 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
     const std::string lua_call = "mmCreateCall";
 
     GraphPtrType graph_ptr;
-    if (graph_uid != GUI_INVALID_ID) {
-        graph_ptr = this->GetGraph(graph_uid);
-        if (graph_ptr == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "Unable to find graph for given uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
+    if (!this->GetGraph(graph_uid, graph_ptr)) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Unable to find graph for given uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
     }
-
+   
     try {
         std::stringstream content(projectstr);
         std::vector<std::string> lines;
@@ -1529,12 +1527,11 @@ void megamol::gui::configurator::GraphManager::Presentation::Present(
                     CallSlotPtrType drag_call_slot_ptr;
                     CallSlotPtrType drop_call_slot_ptr;
                     for (auto& mods : graph->GetModules()) {
-                        CallSlotPtrType call_slot_ptr = mods->GetCallSlot(drag_call_slot_uid);
-                        if (call_slot_ptr != nullptr) {
+                        CallSlotPtrType call_slot_ptr;
+                        if (mods->GetCallSlot(drag_call_slot_uid, call_slot_ptr)) {
                             drag_call_slot_ptr = call_slot_ptr;
                         }
-                        call_slot_ptr = mods->GetCallSlot(drop_call_slot_uid);
-                        if (call_slot_ptr != nullptr) {
+                        if (mods->GetCallSlot(drop_call_slot_uid, call_slot_ptr)) {
                             drop_call_slot_ptr = call_slot_ptr;
                         }
                     }

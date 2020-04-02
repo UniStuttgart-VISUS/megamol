@@ -94,19 +94,19 @@ bool megamol::gui::configurator::Module::RemoveAllCallSlots(void) {
 }
 
 
-const CallSlotPtrType megamol::gui::configurator::Module::GetCallSlot(ImGuiID call_slot_uid) {
+bool megamol::gui::configurator::Module::GetCallSlot(ImGuiID callslot_uid, megamol::gui::configurator::CallSlotPtrType& out_callslot_ptr) {
 
-    if (call_slot_uid != GUI_INVALID_ID) {
+    if (callslot_uid != GUI_INVALID_ID) {
         for (auto& call_slot_map : this->GetCallSlots()) {
-            for (auto& call_slot : call_slot_map.second) {
-                if (call_slot->uid == call_slot_uid) {
-                    return call_slot;
+            for (auto& callslot : call_slot_map.second) {
+                if (callslot->uid == callslot_uid) {
+                    out_callslot_ptr = callslot;
+                    return true;
                 }
             }
         }
     }
-
-    return nullptr;
+    return false;
 }
 
 
@@ -410,6 +410,9 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 
                 ImGui::EndChild();
                 ImGui::PopStyleColor();
+                if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+                    this->show_params = false;
+                }
             }
                         
             ImGui::PopID();

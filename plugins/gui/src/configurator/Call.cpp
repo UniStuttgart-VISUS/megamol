@@ -101,7 +101,7 @@ bool megamol::gui::configurator::Call::DisConnectCallSlots(void) {
 }
 
 
-const megamol::gui::configurator::CallSlotPtrType megamol::gui::configurator::Call::GetCallSlot(
+const megamol::gui::configurator::CallSlotPtrType& megamol::gui::configurator::Call::GetCallSlot(
     megamol::gui::configurator::CallSlotType type) {
 
     if (this->connected_call_slots[type] == nullptr) {

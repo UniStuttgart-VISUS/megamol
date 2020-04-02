@@ -73,7 +73,7 @@ public:
 
     bool AddCallSlot(CallSlotPtrType call_slot);
     bool RemoveAllCallSlots(void);
-    const CallSlotPtrType GetCallSlot(ImGuiID call_slot_uid);
+    bool GetCallSlot(ImGuiID callslot_uid, CallSlotPtrType& out_callslot_ptr);
     const CallSlotPtrVectorType& GetCallSlots(CallSlotType type);
     const CallSlotPtrMapType& GetCallSlots(void);
 

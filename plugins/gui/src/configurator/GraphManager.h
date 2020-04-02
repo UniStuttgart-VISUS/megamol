@@ -30,11 +30,11 @@ namespace megamol {
 namespace gui {
 namespace configurator {
 
+typedef std::shared_ptr<Graph> GraphPtrType;
+typedef std::vector<GraphPtrType> GraphsType;
 
 class GraphManager {
 public:
-    typedef std::shared_ptr<Graph> GraphPtrType;
-    typedef std::vector<GraphPtrType> GraphsType;
 
     GraphManager(void);
 
@@ -42,7 +42,7 @@ public:
 
     ImGuiID AddGraph(void);
     bool DeleteGraph(ImGuiID graph_uid);
-    const GraphPtrType GetGraph(ImGuiID graph_uid);
+    bool GetGraph(ImGuiID graph_uid, GraphPtrType& out_graph_ptr);
 
     bool UpdateModulesCallsStock(const megamol::core::CoreInstance* core_instance);
     inline const ModuleStockVectorType& GetModulesStock(void) { return this->modules_stock; }

@@ -152,7 +152,7 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
 }
 
 
-bool megamol::gui::configurator::Graph::GetModule(ImGuiID module_uid, ModulePtrType& out_module_ptr) {
+bool megamol::gui::configurator::Graph::GetModule(ImGuiID module_uid, megamol::gui::configurator::ModulePtrType& out_module_ptr) {
 
     if (module_uid != GUI_INVALID_ID) {
         for (auto& module_ptr : this->modules) {
@@ -375,7 +375,7 @@ ImGuiID megamol::gui::configurator::Graph::AddGroupModule(
 }
 
 
-bool megamol::gui::configurator::Graph::GetGroup(ImGuiID group_uid, GroupPtrType& out_group_ptr) {
+bool megamol::gui::configurator::Graph::GetGroup(ImGuiID group_uid, megamol::gui::configurator::GroupPtrType& out_group_ptr) {
 
     if (group_uid != GUI_INVALID_ID) {
         for (auto& group_ptr : this->groups) {
@@ -550,16 +550,16 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         this->graph_state.interact.callslot_compat_ptr.reset();
         if (this->graph_state.interact.callslot_selected_uid != GUI_INVALID_ID) {
             for (auto& mods : inout_graph.GetModules()) {
-                CallSlotPtrType call_slot_ptr = mods->GetCallSlot(this->graph_state.interact.callslot_selected_uid);
-                if (call_slot_ptr != nullptr) {
+                CallSlotPtrType call_slot_ptr;
+                if (mods->GetCallSlot(this->graph_state.interact.callslot_selected_uid, call_slot_ptr)) {
                     this->graph_state.interact.callslot_compat_ptr = call_slot_ptr;
                 }
             }
         }
         if (this->graph_state.interact.callslot_hovered_uid != GUI_INVALID_ID) {
             for (auto& mods : inout_graph.GetModules()) {
-                CallSlotPtrType call_slot_ptr = mods->GetCallSlot(this->graph_state.interact.callslot_hovered_uid);
-                if (call_slot_ptr != nullptr) {
+                CallSlotPtrType call_slot_ptr;
+                if (mods->GetCallSlot(this->graph_state.interact.callslot_hovered_uid, call_slot_ptr)) {
                     this->graph_state.interact.callslot_compat_ptr = call_slot_ptr;
                 }
             }
@@ -1154,8 +1154,8 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_cal
 
                 CallSlotPtrType selected_call_slot_ptr;
                 for (auto& mods : inout_graph.GetModules()) {
-                    CallSlotPtrType call_slot_ptr = mods->GetCallSlot(*selected_call_slot_uid_ptr);
-                    if (call_slot_ptr != nullptr) {
+                    CallSlotPtrType call_slot_ptr;
+                    if (mods->GetCallSlot(*selected_call_slot_uid_ptr, call_slot_ptr)) {
                         selected_call_slot_ptr = call_slot_ptr;
                     }
                 }

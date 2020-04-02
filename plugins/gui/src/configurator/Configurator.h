@@ -67,6 +67,9 @@ private:
     ImGuiID selected_list_module_uid;
     ImGuiID add_project_graph_uid;
     bool show_module_list_sidebar;
+    bool show_module_list_child;
+    ImVec2 module_list_popup_pos;
+    ImGuiID last_selected_callslot_uid;
     std::string project_filename;
 
     megamol::gui::GraphStateType state;
