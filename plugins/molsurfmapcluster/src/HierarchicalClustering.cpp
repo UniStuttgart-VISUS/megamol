@@ -996,7 +996,7 @@ void HierarchicalClustering::calculatePCA(std::vector<HierarchicalClustering::CL
     covarianceMatrix = covarianceMatrix / (float)(rowsCount - 1);
 
     // calculate Eigenvalues and Eigenvectors
-    Eigen::EigenSolver<Eigen::MatrixXd> eigSolver(covarianceMatrix);
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigSolver(covarianceMatrix);
 
     Eigen::VectorXd eigVal = eigSolver.eigenvalues().real();
     Eigen::MatrixXd eigVec = eigSolver.eigenvectors().real();
