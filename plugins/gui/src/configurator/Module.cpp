@@ -303,6 +303,10 @@ void megamol::gui::configurator::Module::Presentation::Present(
             ImVec2 param_child_pos;       
             if (this->label_visible) {
 
+                bool main_view_button = inout_module.is_view;
+                bool parameter_button = (inout_module.parameters.size() > 0);
+                bool any_button = (main_view_button || parameter_button);
+                
                 auto menu_color = (hovered || this->selected) ? (COLOR_HEADER_HIGHLIGHT): (COLOR_HEADER);
                 ImVec2 header_rect_max = module_rect_min + ImVec2(module_size.x, ImGui::GetTextLineHeightWithSpacing());
                 draw_list->AddRectFilled(module_rect_min, header_rect_max, menu_color, GUI_RECT_CORNER_RADIUS, (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
@@ -312,37 +316,39 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 draw_list->AddText(text_pos_left_upper, COLOR_TEXT, inout_module.class_name.c_str());
                                
                 text_width = GUIUtils::TextWidgetWidth(inout_module.name);
-                text_pos_left_upper = (module_center - ImVec2((text_width / 2.0f), 0.75f * line_height));
+                text_pos_left_upper = module_center - ImVec2((text_width / 2.0f), ((any_button)?(line_height * 0.6f):(0.0f)));
                 draw_list->AddText(text_pos_left_upper, COLOR_TEXT, inout_module.name.c_str());
                 
-                float item_y_offset = (line_height / 2.0f);
-                float item_x_offset = (ImGui::GetFrameHeightWithSpacing() / 2.0f);  
-                if (inout_module.is_view) {
-                    item_x_offset = ImGui::GetFrameHeight() + 0.5f * style.ItemSpacing.x * state.canvas.zooming;
-                }
-                
-                ImGui::SetCursorScreenPos(module_center + ImVec2(-item_x_offset, item_y_offset));
-                if (inout_module.is_view) {
-                    if (ImGui::RadioButton("###main_view_switch", inout_module.is_view_instance)) {
-                        state.interact.module_mainview_uid = inout_module.uid;
-                        inout_module.is_view_instance = !inout_module.is_view_instance;
-                        active = true; // Force selection            
+                if (any_button) {
+                    float item_y_offset = (line_height / 2.0f);
+                    float item_x_offset = (ImGui::GetFrameHeight() / 2.0f);  
+                    if (main_view_button && parameter_button) {
+                        item_x_offset = ImGui::GetFrameHeight() + (0.5f * style.ItemSpacing.x * state.canvas.zooming);
                     }
-                    if (hovered) {
-                        this->other_item_hovered = this->utils.HoverToolTip("Main View");
+                    ImGui::SetCursorScreenPos(module_center + ImVec2(-item_x_offset, item_y_offset));
+                    
+                    if (main_view_button) {
+                        if (ImGui::RadioButton("###main_view_switch", inout_module.is_view_instance)) {
+                            state.interact.module_mainview_uid = inout_module.uid;
+                            inout_module.is_view_instance = !inout_module.is_view_instance;
+                            active = true; // Force selection            
+                        }
+                        if (hovered) {
+                            this->other_item_hovered = this->utils.HoverToolTip("Main View");
+                        }
+                        ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
                     }
-                    ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
-                }
-                
-                if (inout_module.parameters.size() > 0) {
-                    param_child_pos = ImGui::GetCursorScreenPos();
-                    param_child_pos.y += ImGui::GetFrameHeight();
-                    if (ImGui::ArrowButton("###parameter_toggle", ((this->show_params)? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
-                        this->show_params = !this->show_params;
-                        active = true; // Force selection      
-                    }
-                    if (hovered) {
-                        this->other_item_hovered = this->other_item_hovered || this->utils.HoverToolTip("Parameters");
+                    
+                    if (parameter_button) {
+                        param_child_pos = ImGui::GetCursorScreenPos();
+                        param_child_pos.y += ImGui::GetFrameHeight();
+                        if (ImGui::ArrowButton("###parameter_toggle", ((this->show_params)? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+                            this->show_params = !this->show_params;
+                            active = true; // Force selection      
+                        }
+                        if (hovered) {
+                            this->other_item_hovered = this->other_item_hovered || this->utils.HoverToolTip("Parameters");
+                        }
                     }
                 }
             }
@@ -365,9 +371,13 @@ void megamol::gui::configurator::Module::Presentation::Present(
             }
             if (hovered) {
                 state.interact.module_hovered_uid = inout_module.uid;
-            }            
-            if (active) {
+            }  
+                      
+            // Call before "active" if-statement for one frame delayed check for last valid candidate for selection
+            if (state.interact.module_selected_uid == inout_module.uid) {
                 this->selected = true;
+            }
+            if (active) {
                 state.interact.module_selected_uid = inout_module.uid;
                 state.interact.callslot_selected_uid = GUI_INVALID_ID;
                 state.interact.call_selected_uid = GUI_INVALID_ID;
@@ -462,7 +472,7 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
     float module_height = std::max(module_slot_height, text_button_height);
 
     // Clamp to minimum size
-    this->size = ImVec2(std::max(module_width, 1.0f), std::max(module_height, 1.0f));
+    this->size = ImVec2(std::max(module_width, 100.0f), std::max(module_height, 50.0f));
 
     // UPDATE all Call Slots ---------------------
     for (auto& slot_pair : inout_module.GetCallSlots()) {

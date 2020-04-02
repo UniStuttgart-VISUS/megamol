@@ -231,6 +231,11 @@ void megamol::gui::configurator::Call::Presentation::Present(
                             state.interact.call_selected_uid = GUI_INVALID_ID;
                         }
                     }
+
+                    // Call before "active" if-statement for one frame delayed check for last valid candidate for selection
+                    if (state.interact.call_selected_uid == inout_call.uid) {
+                        this->selected = true;
+                    }
                     if (active) {
                         this->selected = true;
                         state.interact.call_selected_uid = inout_call.uid;

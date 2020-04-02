@@ -400,13 +400,18 @@ void megamol::gui::configurator::Group::Presentation::Present(
                 state.interact.group_selected_uid = GUI_INVALID_ID;
             }
         }
-        if (active) {
+        
+        // Call before "active" if-statement for one frame delayed check for last valid candidate for selection
+        if (state.interact.group_selected_uid == inout_group.uid) {
             this->selected = true;
+        }
+        if (active) {
             state.interact.group_selected_uid = inout_group.uid;
             state.interact.callslot_selected_uid = GUI_INVALID_ID;
             state.interact.module_selected_uid = GUI_INVALID_ID;
             state.interact.call_selected_uid = GUI_INVALID_ID;
         }
+        
         if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
             ImVec2 tmp_pos;
             for (auto& mod : inout_group.GetModules()) {
