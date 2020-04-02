@@ -971,7 +971,7 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
         ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
     ImGui::BeginChild("parameter_search_child", ImVec2(child_width, param_child_height), false, child_flags);
 
-    ImGui::Text("Parameters");
+    ImGui::TextUnformatted("Parameters");
     ImGui::Separator();
 
     if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH])) {
@@ -1047,7 +1047,7 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
         float param_child_height = ImGui::GetFrameHeightWithSpacing() * 1.0f;
         ImGui::BeginChild("parameter_info_child", ImVec2(child_width, param_child_height), false, child_flags);
 
-        ImGui::Text("Selected Module:");
+        ImGui::TextUnformatted("Selected Module:");
         ImGui::SameLine();
         ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive), modptr->name.c_str());
 

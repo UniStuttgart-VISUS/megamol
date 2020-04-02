@@ -51,7 +51,7 @@ bool GUIUtils::HoverToolTip(const std::string& text, ImGuiID id, float time_star
         if (show_tooltip) {
             ImGui::BeginTooltip();
             ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-            ImGui::Text(text.c_str());
+            ImGui::TextUnformatted(text.c_str());
             ImGui::PopTextWrapPos();
             ImGui::EndTooltip();
             retval = true;
@@ -104,7 +104,7 @@ bool megamol::gui::GUIUtils::MinimalPopUp(const std::string& caption, bool open_
         retval = true;
 
         if (!info_text.empty()) {
-            ImGui::Text(info_text.c_str());
+            ImGui::TextUnformatted(info_text.c_str());
         }
 
         if (!confirm_btn_text.empty()) {
@@ -178,7 +178,7 @@ float GUIUtils::TextWidgetWidth(const std::string& text) {
 
     ImVec2 pos = ImGui::GetCursorPos();
     ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
-    ImGui::Text(text.c_str());
+    ImGui::TextUnformatted(text.c_str());
     ImGui::PopStyleVar();
     ImGui::SetCursorPos(pos);
 
@@ -332,7 +332,7 @@ bool megamol::gui::GUIUtils::PointCircleButton(const std::string& label) {
         float text_x_offset_pos = edge_length + style.ItemInnerSpacing.x;
         ImGui::SetCursorScreenPos(widget_start_pos + ImVec2(text_x_offset_pos, 0.0f));
         ImGui::AlignTextToFramePadding();
-        ImGui::Text(label.c_str());
+        ImGui::TextUnformatted(label.c_str());
         ImGui::SetCursorScreenPos(widget_start_pos);
     }
 

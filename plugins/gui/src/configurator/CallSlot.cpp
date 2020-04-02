@@ -380,10 +380,10 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             ((state.interact.module_hovered_uid == GUI_INVALID_ID) || (state.interact.module_hovered_uid == parent_module_uid)) && 
             ((state.interact.callslot_hovered_uid == GUI_INVALID_ID) || (state.interact.callslot_hovered_uid == inout_call_slot.uid)));
 
-        // Context menu
+        // Context Menu
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
             active = true; // Force selection                
-            ImGui::Text("Call Slot");
+            ImGui::TextUnformatted("Call Slot");
             ImGui::Separator();
             /// Menu items are active depending on group membership of parent module 
             if (ImGui::MenuItem("Add to Group Interface ", nullptr, false,
@@ -418,15 +418,8 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             GUI_INVALID_ID) {
             slot_color = COLOR_SLOT_COMPATIBLE;
         }
-        if ((mouse_clicked && !hovered) || (state.interact.callslot_selected_uid != inout_call_slot.uid)) {
-            this->selected = false;
-            if (state.interact.callslot_selected_uid == inout_call_slot.uid) {
-                state.interact.callslot_selected_uid = GUI_INVALID_ID;
-            }
-        }
-
-        // Call before "active" if-statement for one frame delayed check for last valid candidate for selection
         if (state.interact.callslot_selected_uid == inout_call_slot.uid) {
+            /// Call before "active" if-statement for one frame delayed check for last valid candidate for selection
             this->selected = true;
         }
         if (active) {
@@ -436,7 +429,12 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             state.interact.module_selected_uid = GUI_INVALID_ID;
             state.interact.group_selected_uid = GUI_INVALID_ID;
         }
-        
+        if ((mouse_clicked && !hovered) || (state.interact.callslot_selected_uid != inout_call_slot.uid)) {
+            this->selected = false;
+            if (state.interact.callslot_selected_uid == inout_call_slot.uid) {
+                state.interact.callslot_selected_uid = GUI_INVALID_ID;
+            }
+        }        
         if (hovered || this->selected) {
             slot_color = slot_highlight_color;
         }
@@ -456,7 +454,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             auto dnd_flags = ImGuiDragDropFlags_AcceptNoDrawDefaultRect; // | ImGuiDragDropFlags_SourceNoPreviewTooltip;
             if (ImGui::BeginDragDropSource(dnd_flags)) {
                 ImGui::SetDragDropPayload(GUI_DND_CALL_UID_TYPE, &inout_call_slot.uid, sizeof(ImGuiID));
-                ImGui::Text(slot_label.c_str());
+                ImGui::TextUnformatted(slot_label.c_str());
                 ImGui::EndDragDropSource();
             }
         }

@@ -773,7 +773,7 @@ void GUIWindows::drawMainWindowCallback(const std::string& wn, WindowManager::Wi
     }
 
     // Parameters -------------------------------------------------------------
-    ImGui::Text("Parameters");
+    ImGui::TextUnformatted("Parameters");
     std::string color_param_help = "[Hover] Show Parameter Description Tooltip\n"
                                    "[Right-Click] Context Menu\n"
                                    "[Drag & Drop] Move Module to other Parameter Window\n"
@@ -1010,7 +1010,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                 if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
                     ImGui::SetDragDropPayload(
                         "DND_COPY_MODULE_PARAMETERS", label.c_str(), (label.size() * sizeof(char)));
-                    ImGui::Text(label.c_str());
+                    ImGui::TextUnformatted(label.c_str());
                     ImGui::EndDragDropSource();
                 }
             }
@@ -1214,7 +1214,7 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
 #endif
         }
         ImGui::SameLine();
-        ImGui::Text("Copy to Clipborad");
+        ImGui::TextUnformatted("Copy to Clipborad");
         std::string help = "Values are copied in chronological order (newest first)";
         this->utils.HelpMarkerToolTip(help);
     }
@@ -1239,7 +1239,7 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
     GUIUtils::Utf8Decode(wc.font_name);
 
     ImGui::Separator();
-    ImGui::Text("Load Font from File");
+    ImGui::TextUnformatted("Load Font from File");
     std::string help = "Same font can be loaded multiple times with different font size.";
     this->utils.HelpMarkerToolTip(help);
 
@@ -1346,7 +1346,7 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
         std::string webstr = std::string("Web: ") + webLink;
         std::string gitstr = std::string("Git-Hub: ") + gitLink;
 
-        ImGui::Text(about.c_str());
+        ImGui::TextUnformatted(about.c_str());
 
         ImGui::Separator();
         if (ImGui::Button("Copy E-Mail")) {
@@ -1362,7 +1362,7 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 #endif
         }
         ImGui::SameLine();
-        ImGui::Text(mailstr.c_str());
+        ImGui::TextUnformatted(mailstr.c_str());
 
 
         if (ImGui::Button("Copy Website")) {
@@ -1378,7 +1378,7 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 #endif
         }
         ImGui::SameLine();
-        ImGui::Text(webstr.c_str());
+        ImGui::TextUnformatted(webstr.c_str());
 
         if (ImGui::Button("Copy GitHub")) {
 #ifdef GUI_USE_GLFW
@@ -1393,12 +1393,12 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 #endif
         }
         ImGui::SameLine();
-        ImGui::Text(gitstr.c_str());
+        ImGui::TextUnformatted(gitstr.c_str());
 
         ImGui::Separator();
         about = "Copyright (C) 2009-2019 by Universitaet Stuttgart "
                 "(VIS).\nAll rights reserved.";
-        ImGui::Text(about.c_str());
+        ImGui::TextUnformatted(about.c_str());
 
         ImGui::Separator();
         if (ImGui::Button("Close")) {
@@ -1605,7 +1605,7 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
             ImGui::SameLine();
             ImGui::TextDisabled("|");
             ImGui::SameLine();
-            ImGui::Text(param_name.c_str());
+            ImGui::TextUnformatted(param_name.c_str());
         } else if (auto* p = slot.Param<core::param::StringParam>()) {
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             auto it = this->widgtmap_text.find(param_id);
@@ -1632,7 +1632,7 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
                 it->second = utf8Str;
             }
             ImGui::SameLine();
-            ImGui::Text(param_name.c_str());
+            ImGui::TextUnformatted(param_name.c_str());
             help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
         } else if (auto* p = slot.Param<core::param::FilePathParam>()) {
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
@@ -1688,7 +1688,7 @@ void GUIWindows::drawTransferFunctionEdit(
         ImGui::TextDisabled("{    (empty)    }");
     } else {
         // XXX: A gradient texture would be nice here (sharing some editor code?)
-        ImGui::Text("{ ............. }");
+        ImGui::TextUnformatted("{ ............. }");
     }
 
     bool isActive = (&p == this->tf_editor.GetActiveParameter());
@@ -1767,12 +1767,12 @@ void GUIWindows::drawParameterHotkey(const core::Module& mod, core::param::Param
 
             ImGui::Columns(2, "hotkey_columns", false);
 
-            ImGui::Text(label.c_str());
+            ImGui::TextUnformatted(label.c_str());
             this->utils.HoverToolTip(desc);
 
             ImGui::NextColumn();
 
-            ImGui::Text(keycode.c_str());
+            ImGui::TextUnformatted(keycode.c_str());
             this->utils.HoverToolTip(desc);
 
             // Reset colums

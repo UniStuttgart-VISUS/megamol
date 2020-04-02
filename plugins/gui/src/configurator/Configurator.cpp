@@ -103,7 +103,7 @@ bool megamol::gui::configurator::Configurator::Draw(
         }
         ImGuiWindowFlags popup_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove;
         if (ImGui::BeginPopupModal(popup_label.c_str(), &open, popup_flags)) {
-            ImGui::Text("Please wait...\nLoading available modules and calls for configurator.");
+            ImGui::TextUnformatted("Please wait...\nLoading available modules and calls for configurator.");
             ImGui::EndPopup();
         }
         this->init_state++;
@@ -306,7 +306,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
         ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
     ImGui::BeginChild("module_search_child_window", ImVec2(width, search_child_height), false, child_flags);
 
-    ImGui::Text("Available Modules");
+    ImGui::TextUnformatted("Available Modules");
     ImGui::Separator();
 
     if (std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {

@@ -362,7 +362,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
 
         // Context menu
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-            ImGui::Text("Group");
+            ImGui::TextUnformatted("Group");
             ImGui::Separator();
             std::string view = "Collapsed View";
             if (this->collapsed_view) {
@@ -393,16 +393,10 @@ void megamol::gui::configurator::Group::Presentation::Present(
             }
             ImGui::EndPopup();
         }
-
-        if ((mouse_clicked && !hovered) || (state.interact.group_selected_uid != inout_group.uid)) {
-            this->selected = false;
-            if (state.interact.group_selected_uid == inout_group.uid) {
-                state.interact.group_selected_uid = GUI_INVALID_ID;
-            }
-        }
         
-        // Call before "active" if-statement for one frame delayed check for last valid candidate for selection
+        // State
         if (state.interact.group_selected_uid == inout_group.uid) {
+            /// Call before "active" if-statement for one frame delayed check for last valid candidate for selection
             this->selected = true;
         }
         if (active) {
@@ -411,7 +405,12 @@ void megamol::gui::configurator::Group::Presentation::Present(
             state.interact.module_selected_uid = GUI_INVALID_ID;
             state.interact.call_selected_uid = GUI_INVALID_ID;
         }
-        
+        if ((mouse_clicked && !hovered) || (state.interact.group_selected_uid != inout_group.uid)) {
+            this->selected = false;
+            if (state.interact.group_selected_uid == inout_group.uid) {
+                state.interact.group_selected_uid = GUI_INVALID_ID;
+            }
+        }        
         if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
             ImVec2 tmp_pos;
             for (auto& mod : inout_group.GetModules()) {
@@ -423,7 +422,8 @@ void megamol::gui::configurator::Group::Presentation::Present(
             this->UpdatePositionSize(inout_group, state.canvas);
         }
 
-        ImU32 group_bg_color = this->selected ? COLOR_GROUP_HIGHTLIGHT : COLOR_GROUP_BACKGROUND;
+        // Background
+        ImU32 group_bg_color = (this->selected) ? (COLOR_GROUP_HIGHTLIGHT) : (COLOR_GROUP_BACKGROUND);
         draw_list->AddRectFilled(group_rect_min, group_rect_max, group_bg_color, 0.0f);
         draw_list->AddRect(group_rect_min, group_rect_max, COLOR_GROUP_BORDER, 0.0f);
 

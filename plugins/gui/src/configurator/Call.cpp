@@ -180,7 +180,8 @@ void megamol::gui::configurator::Call::Presentation::Present(
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
-                // LEVEL OF DETAIL depending on zooming
+                // Curve
+                /// Level of detal depending on zooming
                 if (state.canvas.zooming < 0.25f) {
                     draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * state.canvas.zooming);
                 } else {
@@ -189,11 +190,10 @@ void megamol::gui::configurator::Call::Presentation::Present(
                 }
 
                 if (this->label_visible) {
-
                     ImVec2 call_center = ImVec2(p1.x + (p2.x - p1.x) / 2.0f, p1.y + (p2.y - p1.y) / 2.0f);
                     auto call_name_width = this->utils.TextWidgetWidth(inout_call.class_name);
 
-                    // Draw box
+                    // Button
                     ImVec2 rect_size = ImVec2(call_name_width + (2.0f * style.ItemSpacing.x),
                         ImGui::GetFontSize() + (2.0f * style.ItemSpacing.y));
                     ImVec2 call_rect_min =
@@ -210,30 +210,23 @@ void megamol::gui::configurator::Call::Presentation::Present(
                     bool hovered = ImGui::IsItemHovered();
                     bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
 
-                    // Context menu
+                    // Context Menu
                     if (ImGui::BeginPopupContextItem()) {
-                        ImGui::Text("Call");
+                        ImGui::TextUnformatted("Call");
                         ImGui::Separator();
                         if (ImGui::MenuItem(
                                 "Delete", std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM])
                                               .ToString()
                                               .c_str())) {
                             std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-                            // Force selection
-                            active = true;
+                            active = true; // Force selection
                         }
                         ImGui::EndPopup();
                     }
 
-                    if ((mouse_clicked && !hovered) || (state.interact.call_selected_uid != inout_call.uid)) {
-                        this->selected = false;
-                        if (state.interact.call_selected_uid == inout_call.uid) {
-                            state.interact.call_selected_uid = GUI_INVALID_ID;
-                        }
-                    }
-
-                    // Call before "active" if-statement for one frame delayed check for last valid candidate for selection
+                    // State
                     if (state.interact.call_selected_uid == inout_call.uid) {
+                        /// Call before "active" if-statement for one frame delayed check for last valid candidate for selection
                         this->selected = true;
                     }
                     if (active) {
@@ -243,12 +236,19 @@ void megamol::gui::configurator::Call::Presentation::Present(
                         state.interact.module_selected_uid = GUI_INVALID_ID;
                         state.interact.group_selected_uid = GUI_INVALID_ID;
                     }
-
-                    ImU32 call_bg_color = (hovered || this->selected) ? COLOR_CALL_HIGHTLIGHT : COLOR_CALL_BACKGROUND;
+                    if ((mouse_clicked && !hovered) || (state.interact.call_selected_uid != inout_call.uid)) {
+                        this->selected = false;
+                        if (state.interact.call_selected_uid == inout_call.uid) {
+                            state.interact.call_selected_uid = GUI_INVALID_ID;
+                        }
+                    }                    
+                    
+                    // Background
+                    ImU32 call_bg_color = (this->selected) ? (COLOR_CALL_HIGHTLIGHT) : (COLOR_CALL_BACKGROUND);
                     draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, GUI_RECT_CORNER_RADIUS);
                     draw_list->AddRect(call_rect_min, call_rect_max, COLOR_CALL_GROUP_BORDER, GUI_RECT_CORNER_RADIUS);
 
-                    // Draw text
+                    // Text
                     ImVec2 text_pos_left_upper =
                         (call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
                     draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]),

@@ -287,7 +287,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
     ImGui::PopItemWidth();
 
     ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x);
-    ImGui::Text("Value Range");
+    ImGui::TextUnformatted("Value Range");
 
     // Value slider -------------------------------------------------------
     this->widget_buffer.range_value =
@@ -331,7 +331,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
     ImGui::SameLine(tfw_item_width * 0.725f);
     ImGui::Checkbox("Alpha", &this->activeChannels[3]);
     ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x);
-    ImGui::Text("Color Channels");
+    ImGui::TextUnformatted("Color Channels");
 
     // Color editor for selected node -------------------------------------
     float edit_col[4] = {this->nodes[this->currentNode][0], this->nodes[this->currentNode][1],
@@ -708,7 +708,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
         }
     }
     ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
-    ImGui::Text("Function Plot");
+    ImGui::TextUnformatted("Function Plot");
     this->utils.HelpMarkerToolTip(
         "First and last node are always present\nwith fixed value 0 and 1.\n[Left-Click] Select "
         "Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");

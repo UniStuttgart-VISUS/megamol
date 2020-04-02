@@ -225,8 +225,8 @@ void megamol::gui::configurator::Module::Presentation::Present(
             const ImU32 COLOR_MODULE_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
             const ImU32 COLOR_TEXT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
-            const ImU32 COLOR_HEADER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]); // ImGuiCol_ButtonActive ImGuiCol_MenuBarBg
-            const ImU32 COLOR_HEADER_HIGHLIGHT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBgHovered]);
+            const ImU32 COLOR_HEADER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBgHovered]); // ImGuiCol_MenuBarBg
+            const ImU32 COLOR_HEADER_HIGHLIGHT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
                 
             // Button
             ImGui::SetCursorScreenPos(module_rect_min);
@@ -245,7 +245,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
             if (state.interact.callslot_hovered_uid == GUI_INVALID_ID) {
                 if (ImGui::BeginPopupContextItem("invisible_button_context")) {
                     active = true; // Force selection
-                    ImGui::Text("Module");
+                    ImGui::TextUnformatted("Module");
                     ImGui::Separator();
                     if (ImGui::MenuItem(
                             "Delete", std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM])
@@ -293,7 +293,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
             this->other_item_hovered = false;
                             
             // Background
-            ImU32 module_bg_color = (hovered || this->selected) ? COLOR_MODULE_HIGHTLIGHT : COLOR_MODULE_BACKGROUND;
+            ImU32 module_bg_color = (this->selected) ? (COLOR_MODULE_HIGHTLIGHT) : (COLOR_MODULE_BACKGROUND);
             draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All);
 
             // Text and Option Buttons
@@ -307,7 +307,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 bool parameter_button = (inout_module.parameters.size() > 0);
                 bool any_button = (main_view_button || parameter_button);
                 
-                auto menu_color = (hovered || this->selected) ? (COLOR_HEADER_HIGHLIGHT): (COLOR_HEADER);
+                auto menu_color = (this->selected) ? (COLOR_HEADER_HIGHLIGHT): (COLOR_HEADER);
                 ImVec2 header_rect_max = module_rect_min + ImVec2(module_size.x, ImGui::GetTextLineHeightWithSpacing());
                 draw_list->AddRectFilled(module_rect_min, header_rect_max, menu_color, GUI_RECT_CORNER_RADIUS, (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
                 
@@ -355,26 +355,17 @@ void megamol::gui::configurator::Module::Presentation::Present(
             
             // Outline
             float border = ((inout_module.is_view_instance) ? (4.0f) : (1.0f)) * state.canvas.zooming;
-            draw_list->AddRect(
-                module_rect_min, module_rect_max, COLOR_MODULE_GROUP_BORDER, GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All, border);
+            draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_GROUP_BORDER, GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All, border);
 
             // State
-            if ((mouse_clicked && (!hovered || state.interact.callslot_hovered_uid != GUI_INVALID_ID)) ||
-                (state.interact.module_selected_uid != inout_module.uid)) {
-                this->selected = false;
-                if (state.interact.module_selected_uid == inout_module.uid) {
-                    state.interact.module_selected_uid = GUI_INVALID_ID;
-                }
-            }
             if (!hovered && (state.interact.module_hovered_uid == inout_module.uid)) {
                 state.interact.module_hovered_uid = GUI_INVALID_ID;
             }
             if (hovered) {
                 state.interact.module_hovered_uid = inout_module.uid;
             }  
-                      
-            // Call before "active" if-statement for one frame delayed check for last valid candidate for selection
             if (state.interact.module_selected_uid == inout_module.uid) {
+                /// Call before "active" if-statement for one frame delayed check for last valid candidate for selection
                 this->selected = true;
             }
             if (active) {
@@ -382,6 +373,13 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 state.interact.callslot_selected_uid = GUI_INVALID_ID;
                 state.interact.call_selected_uid = GUI_INVALID_ID;
                 state.interact.group_selected_uid = GUI_INVALID_ID;
+            }
+            if ((mouse_clicked && (!hovered || state.interact.callslot_hovered_uid != GUI_INVALID_ID)) ||
+                (state.interact.module_selected_uid != inout_module.uid)) {
+                this->selected = false;
+                if (state.interact.module_selected_uid == inout_module.uid) {
+                    state.interact.module_selected_uid = GUI_INVALID_ID;
+                }
             }
             
             // Dragging      

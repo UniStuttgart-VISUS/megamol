@@ -484,7 +484,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                     this->widget_store = utf8Str;
                 }
                 ImGui::SameLine();
-                ImGui::Text(param_label.c_str());
+                ImGui::TextUnformatted(param_label.c_str());
                 this->help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
             } break;
             case (Parameter::ParamType::TRANSFERFUNCTION): {
@@ -547,7 +547,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
             ImGui::SameLine();
             ImGui::TextDisabled("|");
             ImGui::SameLine();
-            ImGui::Text(param_label.c_str());
+            ImGui::TextUnformatted(param_label.c_str());
         } else if constexpr (std::is_same_v<T, glm::vec2>) {
             if (!std::holds_alternative<T>(this->widget_store)) {
                 this->widget_store = arg;
@@ -732,7 +732,7 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
         ImGui::TextDisabled("{    (empty)    }");
     } else {
         /// XXX: A gradient texture would be nice here (sharing some editor code?)
-        ImGui::Text("{ ............. }");
+        ImGui::TextUnformatted("{ ............. }");
     }
     ImGui::SameLine();
 
@@ -779,7 +779,7 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
     ImGui::SameLine();
 
     std::string label = param.full_name;
-    ImGui::Text(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
+    ImGui::TextUnformatted(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
 
     ImGui::EndGroup();
 
