@@ -80,9 +80,11 @@ In order to start the configurator automatically, you can use the project  `/exa
         
 See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a bug and feature tracker.
 
-**NOTES:**\
+**NOTES:**
 * In order to crete a vaild project file which can be loaded successfully afterwards, it is necessary to define one view module as `main view`. A `mmain view`defines the entry point of the project.
 * Parameter values in lua command `mmSetParamValue` must have the value enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are not supported.
+
+![configurator demo picture](configurator.png)
 
 #### Main Menu
 
@@ -133,8 +135,8 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
 * Graph Scrolling
     * `Middle Mouse Button`
 * `Module`
-    * Main view button (`Radio Button`): One view modules per graph can be set as main view.
-    * 
+    * Main View `Radio Button`: Toggle main view flag (only available for view modules).
+    * Parameter `Arrow Button`: Show/Hide parameters in small window sticked to module.
     * Context Menu (`Right Click`)
         * Delete (Alternative: Select with `Left Click` an press `Delete`)
         * Rename
@@ -154,8 +156,6 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
 
 Module groups are stored in project files using the already available module namespace (which is currently unused in the core). 
 Group interface call slots are stored in the new tag `--confGroupInterface{...}` in the same line as the corresponding lua command for the module creation.                           
-
-![configurator demo picture](configurator.png)
 
 ---
 

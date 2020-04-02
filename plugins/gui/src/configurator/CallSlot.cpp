@@ -250,7 +250,8 @@ megamol::gui::configurator::CallSlot::Presentation::Presentation(void)
     , position()
     , utils()
     , selected(false)
-    , update_once(true) {
+    , update_once(true)
+    , show_modulestock(false) {
 
     this->group.is_interface = false;
     this->group.position = ImVec2(FLT_MAX, FLT_MAX);
@@ -469,6 +470,27 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             draw_list->AddText(text_pos_left_upper, slot_highlight_color, inout_call_slot.name.c_str());
         }
 
+        // Module Stock List Child Window
+        /*
+        if () {
+            this->show_modulestock = true;
+        }
+        if (this->show_modulestock) {
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, COLOR_MODULE_BACKGROUND);
+            ImGui::SetCursorScreenPos(param_child_pos);
+            float child_width = 300.0f * state.canvas.zooming;
+            float child_height = 200.0f * state.canvas.zooming;
+            
+            auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_AlwaysVerticalScrollbar;
+            ImGui::BeginChild("callslot_module_list_child", ImVec2(child_width, child_height), true, child_flags);
+            
+
+            
+            ImGui::EndChild();
+            ImGui::PopStyleColor();
+        }
+        */
+            
         ImGui::PopID();
 
     } catch (std::exception e) {

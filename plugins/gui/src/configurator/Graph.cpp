@@ -152,20 +152,17 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
 }
 
 
-const ModulePtrType& megamol::gui::configurator::Graph::GetModule(ImGuiID module_uid) {
+bool megamol::gui::configurator::Graph::GetModule(ImGuiID module_uid, ModulePtrType& out_module_ptr) {
 
-    try {
-        for (auto& mod : this->modules) {
-            if (mod->uid == module_uid) {
-                return mod;
+    if (module_uid != GUI_INVALID_ID) {
+        for (auto& module_ptr : this->modules) {
+            if (module_ptr->uid == module_uid) {
+                out_module_ptr = module_ptr;
+                return true;
             }
         }
-        throw std::invalid_argument("Invalid Module UID.");
-    } catch (std::invalid_argument e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
     }
-    return nullptr; 
+    return false; 
 }
 
 
@@ -378,20 +375,17 @@ ImGuiID megamol::gui::configurator::Graph::AddGroupModule(
 }
 
 
-const GroupPtrType& megamol::gui::configurator::Graph::GetGroup(ImGuiID group_uid) {
+bool megamol::gui::configurator::Graph::GetGroup(ImGuiID group_uid, GroupPtrType& out_group_ptr) {
 
-    try {
-        for (auto& group : this->groups) {
-            if (group->uid == group_uid) {
-                return group;
+    if (group_uid != GUI_INVALID_ID) {
+        for (auto& group_ptr : this->groups) {
+            if (group_ptr->uid == group_uid) {
+                out_group_ptr = group_ptr;
+                return true;
             }
-        }
-        throw std::invalid_argument("Invalid Group UID.");
-    } catch (std::invalid_argument e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        } 
     }
-    return nullptr;    
+    return false;
 }
 
 
@@ -638,24 +632,20 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 
                 // Check if module should be removed from previous group first
                 ImGuiID module_group_member_uid = module_ptr->GUI_GetGroupMembership();
-                if (module_group_member_uid != GUI_INVALID_ID) {
-                    GroupPtrType group_ptr = inout_graph.GetGroup(module_group_member_uid);
-                    if (group_ptr != nullptr) {
-                        group_ptr->RemoveModule(module_ptr->uid);
-                        if (group_ptr->EmptyModules()) {
-                            inout_graph.DeleteGroup(group_ptr->uid);
-                        }                            
-                    }
+                GroupPtrType group_ptr;
+                if (inout_graph.GetGroup(module_group_member_uid, group_ptr)) {
+                    group_ptr->RemoveModule(module_ptr->uid);
+                    if (group_ptr->EmptyModules()) {
+                        inout_graph.DeleteGroup(group_ptr->uid);
+                    }                            
                 }
+                
                 // Add module to new or alredy existing group
                 if (new_group_uid == GUI_INVALID_ID) {
                     new_group_uid = inout_graph.AddGroup();
                 }
-                if (new_group_uid != GUI_INVALID_ID) {
-                    GroupPtrType group_ptr = inout_graph.GetGroup(new_group_uid);
-                    if (group_ptr != nullptr) {
-                        group_ptr->AddModule(module_ptr);
-                    }
+                if (inout_graph.GetGroup(new_group_uid, group_ptr)) {
+                    group_ptr->AddModule(module_ptr);
                 }
             }
             this->graph_state.interact.module_add_group_uid.first = GUI_INVALID_ID;
@@ -750,9 +740,8 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
     ImGui::BeginChild("graph_menu", ImVec2(0.0f, child_height), false, child_flags);
 
     // Main View Checkbox
-    ModulePtrType selected_mod_ptr = nullptr;
-    if (this->graph_state.interact.module_mainview_uid != GUI_INVALID_ID) {
-        selected_mod_ptr = inout_graph.GetModule(this->graph_state.interact.module_mainview_uid);
+    ModulePtrType selected_mod_ptr;
+    if (inout_graph.GetModule(this->graph_state.interact.module_mainview_uid, selected_mod_ptr)) {
         this->graph_state.interact.module_mainview_uid = GUI_INVALID_ID;
     }
     else if (this->graph_state.interact.module_selected_uid != GUI_INVALID_ID) {

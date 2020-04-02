@@ -545,20 +545,20 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                                                            "given group interface call slots. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), __FILE__, __FUNCTION__, __LINE__);
                 }
-                if (group_uid != GUI_INVALID_ID) {
-                    GroupPtrType group_ptr = graph_ptr->GetGroup(group_uid);
-                    if (group_ptr != nullptr) {
-                        for (auto& callslot_interface_name : group_interface_callslots) {
-                            for (auto& callslot_map : graph_module->GetCallSlots()) {
-                                for (auto& callslot : callslot_map.second) {
-                                    if (callslot->name == callslot_interface_name) {
-                                        group_ptr->AddCallSlot(callslot);
-                                    }
+
+                GroupPtrType group_ptr;
+                if (graph_ptr->GetGroup(group_uid, group_ptr)) {
+                    for (auto& callslot_interface_name : group_interface_callslots) {
+                        for (auto& callslot_map : graph_module->GetCallSlots()) {
+                            for (auto& callslot : callslot_map.second) {
+                                if (callslot->name == callslot_interface_name) {
+                                    group_ptr->AddCallSlot(callslot);
                                 }
                             }
                         }
                     }
                 }
+                
                 found_main_view = true;
             }
         }
@@ -633,15 +633,14 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                                                                "given group interface call slots. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), __FILE__, __FUNCTION__, __LINE__);
                     }
-                    if (group_uid != GUI_INVALID_ID) {
-                        GroupPtrType group_ptr = graph_ptr->GetGroup(group_uid);
-                        if (group_ptr != nullptr) {
-                            for (auto& callslot_interface_name : group_interface_callslots) {
-                                for (auto& callslot_map : graph_module->GetCallSlots()) {
-                                    for (auto& callslot : callslot_map.second) {
-                                        if (callslot->name == callslot_interface_name) {
-                                            group_ptr->AddCallSlot(callslot);
-                                        }
+                
+                    GroupPtrType group_ptr;
+                    if (graph_ptr->GetGroup(group_uid, group_ptr)) {
+                        for (auto& callslot_interface_name : group_interface_callslots) {
+                            for (auto& callslot_map : graph_module->GetCallSlots()) {
+                                for (auto& callslot : callslot_map.second) {
+                                    if (callslot->name == callslot_interface_name) {
+                                        group_ptr->AddCallSlot(callslot);
                                     }
                                 }
                             }

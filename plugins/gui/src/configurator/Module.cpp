@@ -334,16 +334,17 @@ void megamol::gui::configurator::Module::Presentation::Present(
                     ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
                 }
                 
-                param_child_pos = ImGui::GetCursorScreenPos();
-                param_child_pos.y += ImGui::GetFrameHeightWithSpacing();
-                if (ImGui::ArrowButton("###parameter_toggle", ((this->show_params)? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
-                    this->show_params = !this->show_params;
-                    active = true; // Force selection      
+                if (inout_module.parameters.size() > 0) {
+                    param_child_pos = ImGui::GetCursorScreenPos();
+                    param_child_pos.y += ImGui::GetFrameHeight();
+                    if (ImGui::ArrowButton("###parameter_toggle", ((this->show_params)? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+                        this->show_params = !this->show_params;
+                        active = true; // Force selection      
+                    }
+                    if (hovered) {
+                        this->other_item_hovered = this->other_item_hovered || this->utils.HoverToolTip("Parameters");
+                    }
                 }
-                if (hovered) {
-                    this->other_item_hovered = this->other_item_hovered || this->utils.HoverToolTip("Parameters");
-                }
-
             }
             
             // Outline
@@ -384,16 +385,16 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 this->UpdateSize(inout_module, state.canvas);
             }
             
-            // Paramter ToolTip
+            // Paramter Child Window
             if (this->label_visible && this->show_params) {
                 ImGui::PushStyleColor(ImGuiCol_ChildBg, COLOR_MODULE_BACKGROUND);
                 ImGui::SetCursorScreenPos(param_child_pos);
                 auto param_count = inout_module.parameters.size();
-                float child_width = 300.0f;
-                float child_height = std::min(200.0f, ((1 + param_count) * ImGui::GetFrameHeightWithSpacing()));
+                float child_width = 300.0f * state.canvas.zooming;
+                float child_height = std::min(200.0f * state.canvas.zooming, ((1 + param_count) * ImGui::GetFrameHeightWithSpacing()));
                 
-                auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove;
-                ImGui::BeginChild("module_parameter_child", ImVec2(child_width * state.canvas.zooming, child_height * state.canvas.zooming), true, child_flags);
+                auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_AlwaysVerticalScrollbar;
+                ImGui::BeginChild("module_parameter_child", ImVec2(child_width, child_height), true, child_flags);
                 
                 for (auto& param : inout_module.parameters) {
                     param.GUI_Present();

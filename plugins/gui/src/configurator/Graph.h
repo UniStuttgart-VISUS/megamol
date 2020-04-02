@@ -44,7 +44,7 @@ public:
     ImGuiID AddModule(const ModuleStockVectorType& stock_modules, const std::string& module_class_name);
     bool DeleteModule(ImGuiID module_uid);
     inline const ModulePtrVectorType& GetModules(void) { return this->modules; }
-    const ModulePtrType& GetModule(ImGuiID module_uid);
+    bool GetModule(ImGuiID module_uid, ModulePtrType& out_module_ptr);
 
     bool AddCall(const CallStockVectorType& stock_calls, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
     bool DeleteCall(ImGuiID call_uid);
@@ -53,7 +53,7 @@ public:
     bool DeleteGroup(ImGuiID group_uid);
     ImGuiID AddGroupModule(const std::string& group_name, const ModulePtrType& module_ptr);
     inline const GroupPtrVectorType& GetGroups(void) { return this->groups; }
-    const GroupPtrType& GetGroup(ImGuiID group_uid);
+    bool GetGroup(ImGuiID group_uid, GroupPtrType& out_group_ptr);
 
     inline bool IsDirty(void) const { return this->dirty_flag; }
     inline void ResetDirty(void) { this->dirty_flag = false; }

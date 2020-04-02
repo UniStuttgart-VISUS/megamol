@@ -126,6 +126,7 @@ private:
         GUIUtils utils;
         bool selected;
         bool update_once;
+        bool show_modulestock;
 
     } present;
 };
