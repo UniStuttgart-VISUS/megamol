@@ -66,7 +66,7 @@ bool ospray::PkdBuilder::manipulateData(
                 megamol::core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA, &models[i].position[0].w, 16);
             out.SetGlobalRadius(parts.GetGlobalRadius());
         }
-    }
+    }    
 
     inData.SetUnlocker(nullptr, false);
 
@@ -134,8 +134,8 @@ void ospray::Pkd::build() {
     // PRINT(numLevels);
 
     const ospcommon::box3f& bounds = model->getBounds();
-    std::cout << "#osp:pkd: bounds of model " << bounds << std::endl;
-    std::cout << "#osp:pkd: number of input particles " << numParticles << std::endl;
+    /*std::cout << "#osp:pkd: bounds of model " << bounds << std::endl;
+    std::cout << "#osp:pkd: number of input particles " << numParticles << std::endl;*/
     this->buildRec(0, bounds, 0);
 }
 

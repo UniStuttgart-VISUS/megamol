@@ -81,6 +81,9 @@ bool megamol::ospray::Grid::getDataCallback(core::Call& c) {
 
             auto ssps = separate(data_[plidx], grid, particles.GetGlobalRadius());
 
+            ssps.erase(
+                std::remove_if(ssps.begin(), ssps.end(), [](auto const& a) { return a.GetCount() == 0; }), ssps.end());
+
             output_.insert(output_.end(), ssps.cbegin(), ssps.cend());
         }
 
