@@ -482,31 +482,34 @@ bool SurfaceNets::getData(core::Call& call) {
     auto cd = this->_getDataCall.CallAs<core::misc::VolumetricDataCall>();
     if (cd == nullptr) return false;
 
-    // get data from adios
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
+
+    // get data from volumetric call
     if (cd->DataHash() != _old_datahash) {
-        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
         something_changed = true;
 
         auto mesh_meta_data = cm->getMetaData();
         mesh_meta_data.m_bboxs = cd->AccessBoundingBoxes();
         mesh_meta_data.m_frame_cnt = cd->GetAvailableFrames();
         cm->setMetaData(mesh_meta_data);
+    
+        _dims[0] = cd->GetResolution(0);
+        _dims[1] = cd->GetResolution(1);
+        _dims[2] = cd->GetResolution(2);
+        auto meta_data = cd->GetMetadata();
+        _volume_origin[0] = meta_data->Origin[0];
+        _volume_origin[1] = meta_data->Origin[1];
+        _volume_origin[2] = meta_data->Origin[2];
+        _spacing[0] = meta_data->SliceDists[0][0];
+        _spacing[1] = meta_data->SliceDists[1][0];
+        _spacing[2] = meta_data->SliceDists[2][0];
+        if (cd->GetScalarType() != core::misc::FLOATING_POINT) return false;
+        _data = reinterpret_cast<float*>(cd->GetData());
     }
 
-    _dims[0] = cd->GetResolution(0);
-    _dims[1] = cd->GetResolution(1);
-    _dims[2] = cd->GetResolution(2);
-    auto meta_data = cd->GetMetadata();
-    _volume_origin[0] = meta_data->Origin[0];
-    _volume_origin[1] = meta_data->Origin[1];
-    _volume_origin[2] = meta_data->Origin[2];
-    _spacing[0] = meta_data->SliceDists[0][0];
-    _spacing[1] = meta_data->SliceDists[1][0];
-    _spacing[2] = meta_data->SliceDists[2][0];
-    if (cd->GetScalarType() != core::misc::FLOATING_POINT) return false;
-    _data = reinterpret_cast<float*>(cd->GetData());
-
-    if (something_changed || _recalc) {
+    if (something_changed && _data) {
         this->calculateSurfaceNets2();
 
         _mesh_attribs.resize(2);
@@ -561,9 +564,10 @@ bool SurfaceNets::getMetaData(core::Call& call) {
 
     auto meta_data = cm->getMetaData();
 
-    // get metadata from adios
+    // get metadata for volumetric call
     cd->SetFrameID(meta_data.m_frame_ID);
     if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
 
     if (cd->DataHash() == _old_datahash && !_recalc) return true;
 
@@ -592,8 +596,11 @@ bool SurfaceNets::getNormalData(core::Call& call) {
     auto cd = this->_getDataCall.CallAs<core::misc::VolumetricDataCall>();
     if (cd == nullptr) return false;
 
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
+
     if (cd->DataHash() != _old_datahash) {
-        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
         something_changed = true;
     }
 
