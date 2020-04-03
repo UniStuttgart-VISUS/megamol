@@ -101,6 +101,9 @@ View3D_2::View3D_2(void)
     , cameraCenterOffsetParam("cam::centeroffset", "")
     , cameraHalfApertureRadiansParam("cam::halfapertureradians", "")
     , cameraHalfDisparityParam("cam::halfdisparity", "")
+    , cameraOvrUpParam("cam::ovr::up", "")
+    , cameraOvrLookatParam("cam::ovr::lookat", "")
+    , cameraOvrParam("cam::ovr::override", "")
     , valuesFromOutside(false) {
 
     using vislib::sys::KeyCode;
@@ -273,6 +276,16 @@ View3D_2::View3D_2(void)
     disparityparam->SetGUIVisible(camparamvisibility);
     this->cameraHalfDisparityParam.SetParameter(disparityparam);
     this->MakeSlotAvailable(&this->cameraHalfDisparityParam);
+
+    this->cameraOvrUpParam << new param::Vector3fParam(vislib::math::Vector<float, 3>());
+    this->MakeSlotAvailable(&this->cameraOvrUpParam);
+
+    this->cameraOvrLookatParam << new param::Vector3fParam(vislib::math::Vector<float, 3>());
+    this->MakeSlotAvailable(&this->cameraOvrLookatParam);
+
+    this->cameraOvrParam << new param::ButtonParam();
+    this->cameraOvrParam.SetUpdateCallback(&View3D_2::cameraOvrCallback);
+    this->MakeSlotAvailable(&this->cameraOvrParam);
 
     this->translateManipulator.set_target(this->cam);
     this->translateManipulator.enable();
@@ -732,7 +745,8 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
 
             if (!anyManipulatorActive) {
                 if (altPressed ^
-                    (this->arcballDefault && !ctrlPressed)) // Left mouse press + alt/arcDefault+noCtrl -> activate arcball manipluator
+                    (this->arcballDefault &&
+                        !ctrlPressed)) // Left mouse press + alt/arcDefault+noCtrl -> activate arcball manipluator
                 {
                     this->arcballManipulator.setActive(
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
@@ -740,9 +754,7 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
                 {
                     this->turntableManipulator.setActive(
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
-                }
-                else
-                {
+                } else {
                     this->rotateManipulator.setActive();
                 }
             }
@@ -868,7 +880,7 @@ bool view::View3D_2::OnMouseScroll(double dx, double dy) {
     if (abs(dy) > 0.0) {
 
         auto cam_pos = this->cam.eye_position();
-        auto rot_cntr = thecam::math::point<glm::vec4>(glm::vec4(this->rotCenter,0.0f));
+        auto rot_cntr = thecam::math::point<glm::vec4>(glm::vec4(this->rotCenter, 0.0f));
 
         cam_pos.w() = 0.0f;
 
@@ -1248,4 +1260,26 @@ bool View3D_2::adaptCameraValues(view::Camera_2& cam) {
         result = true;
     }
     return result;
+}
+
+
+bool View3D_2::cameraOvrCallback(param::ParamSlot& p) {
+    auto up_vis = this->cameraOvrUpParam.Param<param::Vector3fParam>()->Value();
+    auto lookat_vis = this->cameraOvrLookatParam.Param<param::Vector3fParam>()->Value();
+
+    glm::vec3 up(up_vis.X(), up_vis.Y(), up_vis.Z());
+    glm::vec3 lookat(lookat_vis.X(), lookat_vis.Y(), lookat_vis.Z());
+
+    auto front = glm::vec3(glm::vec4(lookat, 1.0) - static_cast<glm::vec4>(this->cam.eye_position()));
+
+    auto right = glm::cross(up, front);
+    up = glm::cross(right, front);
+
+    glm::mat3 view = glm::mat3(front, up, right);
+    auto orientation = glm::quat_cast(view);
+
+    this->cam.orientation(orientation);
+    this->rotCenter = lookat;
+
+    return true;
 }

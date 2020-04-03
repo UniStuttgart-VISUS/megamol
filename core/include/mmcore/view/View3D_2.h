@@ -370,6 +370,13 @@ protected:
     param::ParamSlot cameraHalfApertureRadiansParam;
     param::ParamSlot cameraHalfDisparityParam;
 
+    /** Camara override parameters */
+    param::ParamSlot cameraOvrUpParam;
+    param::ParamSlot cameraOvrLookatParam;
+    param::ParamSlot cameraOvrParam;
+
+    bool cameraOvrCallback(param::ParamSlot& p);
+
     /** The mouse x coordinate */
     float mouseX;
 
