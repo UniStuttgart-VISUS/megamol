@@ -30,7 +30,7 @@ megamol::gui::configurator::Configurator::Configurator()
     , left_child_width(250.0f)
     , selected_list_module_uid(GUI_INVALID_ID)
     , add_project_graph_uid(GUI_INVALID_ID)
-    , show_module_list_sidebar(true)
+    , show_module_list_sidebar(false)
     , show_module_list_child(false)
     , module_list_popup_pos()
     , last_selected_callslot_uid(GUI_INVALID_ID)
@@ -47,7 +47,7 @@ megamol::gui::configurator::Configurator::Configurator()
         megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL), false);
     this->state.font = nullptr;
     this->state.child_width = 0.0f;
-    this->state.show_parameter_sidebar = true;
+    this->state.show_parameter_sidebar = false;
     this->state.graph_selected_uid = GUI_INVALID_ID;
     this->state.graph_delete = false;
 }
@@ -132,42 +132,42 @@ bool megamol::gui::configurator::Configurator::Draw(
         }
         this->graph_manager.GUI_Present(this->state);
         
-        // Module Stock List in separate child window
-        bool callslot_double_click = false;
-        GraphPtrType selected_graph_ptr;
-        if (this->graph_manager.GetGraph(this->state.graph_selected_uid, selected_graph_ptr)) {
-            ImGuiID selected_callslot_uid = selected_graph_ptr->GUI_GetSelectedCallSlot();
-            if (selected_callslot_uid != GUI_INVALID_ID) {
-                if ((!this->show_module_list_child || (this->last_selected_callslot_uid != selected_callslot_uid)) && ImGui::IsMouseDoubleClicked(0)) {
+        // Module Stock List in separate child window if sidebar is invisible
+        if (!this->show_module_list_sidebar) {
+            bool callslot_double_click = false;
+            GraphPtrType selected_graph_ptr;
+            if (this->graph_manager.GetGraph(this->state.graph_selected_uid, selected_graph_ptr)) {
+                ImGuiID selected_callslot_uid = selected_graph_ptr->GUI_GetSelectedCallSlot();
+                if ((selected_callslot_uid != GUI_INVALID_ID) && ((!this->show_module_list_child) || (this->last_selected_callslot_uid != selected_callslot_uid)) && ImGui::IsMouseDoubleClicked(0)) {
                     callslot_double_click = true;
                     std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
+                    this->last_selected_callslot_uid = selected_callslot_uid;                    
                 }
-                this->last_selected_callslot_uid = selected_callslot_uid;
+            }
+            if (callslot_double_click || std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
+                this->show_module_list_child = true;
+                this->module_list_popup_pos = ImGui::GetMousePos();
+                ImGui::SetNextWindowPos(this->module_list_popup_pos);
+            }
+            if (this->show_module_list_child) {
+                ImGuiStyle& style = ImGui::GetStyle();
+                ImVec4 tmpcol = style.Colors[ImGuiCol_ChildBg]; 
+                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+                ImGui::PushStyleColor(ImGuiCol_ChildBg, tmpcol);
+                ImGui::SetCursorScreenPos(this->module_list_popup_pos);
+                float child_width = 250.0f;
+                float child_height = std::min(350.0f, (ImGui::GetContentRegionAvail().y - ImGui::GetWindowPos().y));
+                auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NavFlattened;
+                ImGui::BeginChild("module_list_child", ImVec2(child_width, child_height), true, child_flags);
+                if (ImGui::Button("Close") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+                    this->show_module_list_child = false;
+                }
+                ImGui::Separator();
+                this->draw_window_module_list(0.0f);
+                ImGui::EndChild();
+                ImGui::PopStyleColor();
             }
         }
-        if (callslot_double_click || (std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) && !this->show_module_list_sidebar)) {
-            this->show_module_list_child = true;
-            this->module_list_popup_pos = ImGui::GetMousePos();
-            ImGui::SetNextWindowPos(this->module_list_popup_pos);
-        }
-        if (this->show_module_list_child) {
-            ImGuiStyle& style = ImGui::GetStyle();
-            ImVec4 tmpcol = style.Colors[ImGuiCol_ChildBg]; 
-            tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-            ImGui::PushStyleColor(ImGuiCol_ChildBg, tmpcol);
-            ImGui::SetCursorScreenPos(this->module_list_popup_pos);
-            float child_width = 250.0f;
-            float child_height = std::min(350.0f, (ImGui::GetContentRegionAvail().y - ImGui::GetWindowPos().y));
-            auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NavFlattened;
-            ImGui::BeginChild("module_list_child", ImVec2(child_width, child_height), true, child_flags);
-            if (ImGui::Button("Close") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
-                this->show_module_list_child = false;
-            }
-            ImGui::Separator();
-            this->draw_window_module_list(0.0f);
-            ImGui::EndChild();
-            ImGui::PopStyleColor();
-        }        
     }
 
     // Reset hotkeys
@@ -416,6 +416,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
             }
 
             if (add_module) {
+                this->show_module_list_child = false;
                 if (graph_ptr != nullptr) {
                     ImGuiID module_uid = graph_ptr->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
                     ModulePtrType module_ptr;
