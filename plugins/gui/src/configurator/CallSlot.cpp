@@ -395,6 +395,11 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                     (this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID)))) {
                 state.interact.callslot_remove_group_uid = inout_call_slot.uid;
             }
+            /*
+            if (ImGui::MenuItem("Show Module Stock List Window", "'Double Left CLick'")) {
+                std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
+            } 
+            */      
             ImGui::EndPopup();
         }
         
@@ -425,7 +430,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         if (active) {
             state.interact.callslot_selected_uid = inout_call_slot.uid;
             state.interact.call_selected_uid = GUI_INVALID_ID;
-            state.interact.module_selected_uid = GUI_INVALID_ID;
+            state.interact.modules_selected_uids.clear();
             state.interact.group_selected_uid = GUI_INVALID_ID;
         }
         if ((mouse_clicked && !hovered) || (state.interact.callslot_selected_uid != inout_call_slot.uid)) {
@@ -453,7 +458,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             auto dnd_flags = ImGuiDragDropFlags_AcceptNoDrawDefaultRect; // | ImGuiDragDropFlags_SourceNoPreviewTooltip;
             if (ImGui::BeginDragDropSource(dnd_flags)) {
                 ImGui::SetDragDropPayload(GUI_DND_CALL_UID_TYPE, &inout_call_slot.uid, sizeof(ImGuiID));
-                ImGui::TextUnformatted(slot_label.c_str());
+                ImGui::TextUnformatted(inout_call_slot.name.c_str());
                 ImGui::EndDragDropSource();
             }
         }
@@ -472,27 +477,6 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         if (this->label_visible && !(this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID) && !is_parent_module_group_visible)) {
             draw_list->AddText(text_pos_left_upper, slot_highlight_color, inout_call_slot.name.c_str());
         }
-
-        // Module Stock List Child Window
-        /*
-        if () {
-            this->show_modulestock = true;
-        }
-        if (this->show_modulestock) {
-            ImGui::PushStyleColor(ImGuiCol_ChildBg, COLOR_MODULE_BACKGROUND);
-            ImGui::SetCursorScreenPos(param_child_pos);
-            float child_width = 300.0f * state.canvas.zooming;
-            float child_height = 200.0f * state.canvas.zooming;
-            
-            auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_AlwaysVerticalScrollbar;
-            ImGui::BeginChild("callslot_module_list_child", ImVec2(child_width, child_height), true, child_flags);
-            
-
-            
-            ImGui::EndChild();
-            ImGui::PopStyleColor();
-        }
-        */
             
         ImGui::PopID();
 

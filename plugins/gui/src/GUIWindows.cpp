@@ -639,9 +639,9 @@ bool GUIWindows::createContext(void) {
                 font_path = FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
                 if (!font_path.empty()) {
                     io.Fonts->AddFontFromFileTTF(font_path.c_str(), 12.0f, &config);
-                    /// Set as default.
+                    // Set as default ...
                     io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
-                    // Font for configurator
+                    // ... and as font for configurator.
                     configurator_font = font_path;
                 }
                 font_file = "SourceCodePro-Regular.ttf";
@@ -654,11 +654,11 @@ bool GUIWindows::createContext(void) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
-
-        // Add default font at last index for exclusive use in configurator graph.
+        // Configurator Graph Font: Add default font again at last index for exclusive use in configurator graph.
         if (configurator_font.empty()) {
-            io.Fonts->AddFontDefault(&config);
-        } else {
+           io.Fonts->AddFontDefault(&config);
+        } 
+        else {
             io.Fonts->AddFontFromFileTTF(configurator_font.c_str(), 12.0f, &config);
         }
     }

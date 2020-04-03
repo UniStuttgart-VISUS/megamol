@@ -71,7 +71,9 @@ typedef std::shared_ptr<megamol::gui::configurator::CallSlot> CallSlotPtrType;
 } // namespace configurator
 
 /* Data type holding a pair of uids. */
+typedef std::vector<ImGuiID> UIDVectorType;
 typedef std::pair<ImGuiID, ImGuiID> UIDPairType;
+typedef std::vector<UIDPairType> UIDPairVectorType;
 
 /* Data type holding current group uid and group name pairs. */
 typedef std::pair<ImGuiID, std::string> GroupPairType;
@@ -90,11 +92,11 @@ typedef struct _canvas_ {
 typedef struct _interact_state_ {
     ImGuiID group_selected_uid;                                      // in out
     bool group_save;                                                 // out
-    ImGuiID module_selected_uid;                                     // in out
+    UIDVectorType modules_selected_uids;                             // in out
     ImGuiID module_hovered_uid;                                      // in out
     ImGuiID module_mainview_uid;                                     // out
-    megamol::gui::UIDPairType module_add_group_uid;                  // out
-    ImGuiID module_remove_group_uid;                                 // out
+    UIDPairVectorType modules_add_group_uids;                        // out
+    UIDVectorType modules_remove_group_uids;                         // out
     ImGuiID call_selected_uid;                                       // in out
     ImGuiID callslot_selected_uid;                                   // in out
     ImGuiID callslot_hovered_uid;                                    // in out

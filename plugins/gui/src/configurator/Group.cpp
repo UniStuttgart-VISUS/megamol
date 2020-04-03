@@ -128,7 +128,7 @@ bool megamol::gui::configurator::Group::RemoveModule(ImGuiID module_uid) {
             if ((*mod_iter)->uid == module_uid) {
 
                 // Remove call slots belonging to module
-                std::vector<ImGuiID> callslot_uids;
+                UIDVectorType callslot_uids;
                 for (auto& callslot_map : this->callslots) {
                     for (auto& callslot_ptr : callslot_map.second) {
                         if (callslot_ptr->ParentModuleConnected()) {
@@ -402,7 +402,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
         if (active) {
             state.interact.group_selected_uid = inout_group.uid;
             state.interact.callslot_selected_uid = GUI_INVALID_ID;
-            state.interact.module_selected_uid = GUI_INVALID_ID;
+            state.interact.modules_selected_uids.clear();
             state.interact.call_selected_uid = GUI_INVALID_ID;
         }
         if ((mouse_clicked && !hovered) || (state.interact.group_selected_uid != inout_group.uid)) {

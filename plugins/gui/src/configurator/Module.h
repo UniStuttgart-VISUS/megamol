@@ -142,6 +142,25 @@ private:
         bool other_item_hovered;
         bool show_params;
         
+        inline bool found_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {
+            return (std::find(modules_uid_vector.begin(), modules_uid_vector.end(), module_uid) != modules_uid_vector.end());
+        }
+        
+        inline void erase_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {
+            for (auto iter = modules_uid_vector.begin(); iter != modules_uid_vector.end(); iter++) {
+                if ((*iter) == module_uid) {
+                    modules_uid_vector.erase(iter);
+                    return;
+                }
+            }
+        }
+        
+        inline void add_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {
+            if (!this->found_uid(modules_uid_vector, module_uid)) {
+                modules_uid_vector.emplace_back(module_uid);
+            }
+        }
+                    
     } present;
 };
 

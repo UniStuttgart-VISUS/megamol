@@ -152,6 +152,7 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
     * Context Menu (`Right Click`)    
         * Add to Group Interface
         * Remove from Group Interface
+        * Show Module Stock List Window
 * `Group` 
     * Context Menu (`Right Click`)
         * Collapse View / Expand View

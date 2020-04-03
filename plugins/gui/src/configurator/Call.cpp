@@ -232,7 +232,7 @@ void megamol::gui::configurator::Call::Presentation::Present(
                     if (active) {
                         state.interact.call_selected_uid = inout_call.uid;
                         state.interact.callslot_selected_uid = GUI_INVALID_ID;
-                        state.interact.module_selected_uid = GUI_INVALID_ID;
+                        state.interact.modules_selected_uids.clear();
                         state.interact.group_selected_uid = GUI_INVALID_ID;
                     }
                     if ((mouse_clicked && !hovered) || (state.interact.call_selected_uid != inout_call.uid)) {

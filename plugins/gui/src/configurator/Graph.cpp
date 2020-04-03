@@ -417,7 +417,7 @@ bool megamol::gui::configurator::Graph::delete_disconnected_calls(void) {
 
     try {
         // Create separate uid list to avoid iterator conflict when operating on calls list while deleting.
-        std::vector<ImGuiID> call_uids;
+        UIDVectorType call_uids;
         for (auto& call : this->calls) {
             if (!call->IsConnected()) {
                 call_uids.emplace_back(call->uid);
@@ -502,11 +502,11 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
 
     this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;
     this->graph_state.interact.group_save = false;
-    this->graph_state.interact.module_selected_uid = GUI_INVALID_ID;
+    this->graph_state.interact.modules_selected_uids.clear();
     this->graph_state.interact.module_hovered_uid = GUI_INVALID_ID;
     this->graph_state.interact.module_mainview_uid = GUI_INVALID_ID;
-    this->graph_state.interact.module_add_group_uid = UIDPairType(GUI_INVALID_ID, GUI_INVALID_ID);
-    this->graph_state.interact.module_remove_group_uid = GUI_INVALID_ID;
+    this->graph_state.interact.modules_add_group_uids.clear();
+    this->graph_state.interact.modules_remove_group_uids.clear();
     this->graph_state.interact.call_selected_uid = GUI_INVALID_ID;
     this->graph_state.interact.callslot_selected_uid = GUI_INVALID_ID;
     this->graph_state.interact.callslot_hovered_uid = GUI_INVALID_ID;
@@ -618,51 +618,67 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         }
 
         // State processing ---------------------
-        // Add module to group
-        ImGuiID module_uid = this->graph_state.interact.module_add_group_uid.first;
-        if (module_uid != GUI_INVALID_ID) {
-            ModulePtrType module_ptr = nullptr;
-            for (auto& mod : inout_graph.GetModules()) {
-                if (mod->uid == module_uid) {
-                    module_ptr = mod;
-                }
-            }
-            if (module_ptr != nullptr) {
-                ImGuiID new_group_uid = this->graph_state.interact.module_add_group_uid.second;
-                
-                // Check if module should be removed from previous group first
-                ImGuiID module_group_member_uid = module_ptr->GUI_GetGroupMembership();
-                GroupPtrType group_ptr;
-                if (inout_graph.GetGroup(module_group_member_uid, group_ptr)) {
-                    group_ptr->RemoveModule(module_ptr->uid);
-                    if (group_ptr->EmptyModules()) {
-                        inout_graph.DeleteGroup(group_ptr->uid);
-                    }                            
-                }
-                
-                // Add module to new or alredy existing group
-                if (new_group_uid == GUI_INVALID_ID) {
-                    new_group_uid = inout_graph.AddGroup();
-                }
-                if (inout_graph.GetGroup(new_group_uid, group_ptr)) {
-                    group_ptr->AddModule(module_ptr);
-                }
-            }
-            this->graph_state.interact.module_add_group_uid.first = GUI_INVALID_ID;
-            this->graph_state.interact.module_add_group_uid.second = GUI_INVALID_ID;
-        }
         // Remove module from group
-        module_uid = this->graph_state.interact.module_remove_group_uid;
-        if (module_uid != GUI_INVALID_ID) {
-            for (auto& group_ptr : inout_graph.GetGroups()) {
-                if (group_ptr->ContainsModule(module_uid)) {
-                    group_ptr->RemoveModule(module_uid);
-                    if (group_ptr->EmptyModules()) {
-                        inout_graph.DeleteGroup(group_ptr->uid);
+        if (!this->graph_state.interact.modules_remove_group_uids.empty()) {
+            for (auto& module_uid : this->graph_state.interact.modules_remove_group_uids) {
+                for (auto& group_ptr : inout_graph.GetGroups()) {
+                    if (group_ptr->ContainsModule(module_uid)) {
+                        group_ptr->RemoveModule(module_uid);
+                        if (group_ptr->EmptyModules()) {
+                            inout_graph.DeleteGroup(group_ptr->uid);
+                            break;
+                        }                    
+                    }
+                }
+            }
+            this->graph_state.interact.modules_remove_group_uids.clear();
+        }        
+        // Add module to group
+        if (!this->graph_state.interact.modules_add_group_uids.empty()) {
+            ModulePtrType module_ptr;
+            ImGuiID new_group_uid = GUI_INVALID_ID;
+            for (auto& uid_pair : this->graph_state.interact.modules_add_group_uids) {
+                module_ptr.reset();
+                for (auto& mod : inout_graph.GetModules()) {
+                    if (mod->uid == uid_pair.first) {
+                        module_ptr = mod;
+                    }
+                }
+                if (module_ptr != nullptr) {
+                                        
+                    // Add module to new or alredy existing group
+                    /// Create new group for multiple selected modules only once
+                    ImGuiID group_uid = GUI_INVALID_ID;
+                    if ((uid_pair.second == GUI_INVALID_ID) && (new_group_uid == GUI_INVALID_ID)) {
+                        new_group_uid = inout_graph.AddGroup();
+                    }
+                    if (uid_pair.second == GUI_INVALID_ID) {
+                        group_uid = new_group_uid;
+                    }
+                    else {
+                        group_uid = uid_pair.second;
+                    }           
+                              
+                    GroupPtrType add_group_ptr;
+                    if (inout_graph.GetGroup(group_uid, add_group_ptr)) {
+                        if (!add_group_ptr->ContainsModule(module_ptr->uid)) {
+                            ImGuiID module_group_member_uid = module_ptr->GUI_GetGroupMembership();
+                            GroupPtrType remove_group_ptr;
+                            if (inout_graph.GetGroup(module_group_member_uid, remove_group_ptr)) {
+                                // Remove module from previous associated group
+                                remove_group_ptr->RemoveModule(module_ptr->uid);
+                                if (remove_group_ptr->EmptyModules()) {
+                                    ImGuiID delete_group_uid = remove_group_ptr->uid;
+                                    remove_group_ptr.reset();
+                                    inout_graph.DeleteGroup(delete_group_uid);
+                                }                    
+                            }
+                            add_group_ptr->AddModule(module_ptr);
+                        }
                     }                    
                 }
             }
-            this->graph_state.interact.module_remove_group_uid = GUI_INVALID_ID;
+            this->graph_state.interact.modules_add_group_uids.clear();
         }
         // Add call slot to group interface
         ImGuiID callslot_uid = this->graph_state.interact.callslot_add_group_uid.first;
@@ -702,13 +718,16 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         }
         // Process module/call/group deletion
         if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM])) {
-            if (this->graph_state.interact.module_selected_uid != GUI_INVALID_ID) {
-                inout_graph.DeleteModule(this->graph_state.interact.module_selected_uid);
-                this->graph_state.interact.module_selected_uid = GUI_INVALID_ID;
+            if (!this->graph_state.interact.modules_selected_uids.empty()) {
+                for (auto& module_uid : this->graph_state.interact.modules_selected_uids) {
+                    inout_graph.DeleteModule(module_uid);
+                }
+                // Reset interact state for modules and call slots
+                this->graph_state.interact.modules_selected_uids.clear();
                 this->graph_state.interact.module_hovered_uid = GUI_INVALID_ID;
                 this->graph_state.interact.module_mainview_uid = GUI_INVALID_ID;
-                this->graph_state.interact.module_add_group_uid = UIDPairType(GUI_INVALID_ID, GUI_INVALID_ID);
-                this->graph_state.interact.module_remove_group_uid = GUI_INVALID_ID;
+                this->graph_state.interact.modules_add_group_uids.clear();
+                this->graph_state.interact.modules_remove_group_uids.clear();
                 this->graph_state.interact.callslot_selected_uid = GUI_INVALID_ID;
                 this->graph_state.interact.callslot_hovered_uid = GUI_INVALID_ID;
                 this->graph_state.interact.callslot_dropped_uid = GUI_INVALID_ID;
@@ -755,9 +774,9 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
     if (inout_graph.GetModule(this->graph_state.interact.module_mainview_uid, selected_mod_ptr)) {
         this->graph_state.interact.module_mainview_uid = GUI_INVALID_ID;
     }
-    else if (this->graph_state.interact.module_selected_uid != GUI_INVALID_ID) {
+    else if (this->graph_state.interact.modules_selected_uids.size() == 1) {
         for (auto& mod : inout_graph.GetModules()) {
-            if ((this->graph_state.interact.module_selected_uid == mod->uid) && (mod->is_view)) {
+            if ((this->graph_state.interact.modules_selected_uids[0] == mod->uid) && (mod->is_view)) {
                 selected_mod_ptr = mod;
             }
         }
@@ -772,9 +791,9 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
             selected_mod_ptr->is_view_instance = !selected_mod_ptr->is_view_instance;
         }
         if (selected_mod_ptr->is_view_instance) {
-            // Set all other modules to non main views
+            // Set all other (view) modules to non main views
             for (auto& mod : inout_graph.GetModules()) {
-                if (this->graph_state.interact.module_selected_uid != mod->uid) {
+                if (selected_mod_ptr->uid != mod->uid) {
                     mod->is_view_instance = false;
                 }
             }
@@ -1045,69 +1064,66 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
 
     ImGui::EndChild();
 
-    // Get pointer to currently selected module
-    ModulePtrType modptr;
-    if (this->graph_state.interact.module_selected_uid != GUI_INVALID_ID) {
-        for (auto& mod : inout_graph.GetModules()) {
-            if (mod->uid == this->graph_state.interact.module_selected_uid) {
-                modptr = mod;
-            }
-        }
-    }
-    if (modptr != nullptr) {
+    // Get pointer to currently selected module(s)
+    if (!this->graph_state.interact.modules_selected_uids.empty()) {
+        
         float param_child_height = ImGui::GetFrameHeightWithSpacing() * 1.0f;
         ImGui::BeginChild("parameter_info_child", ImVec2(child_width, param_child_height), false, child_flags);
+        
+        for (auto& module_uid : this->graph_state.interact.modules_selected_uids) {
+            ModulePtrType modptr;
+            if (inout_graph.GetModule(module_uid, modptr)) {
+                ImGui::TextUnformatted("Module:");
+                ImGui::SameLine();
+                ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive), modptr->name.c_str());
 
-        ImGui::TextUnformatted("Selected Module:");
-        ImGui::SameLine();
-        ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive), modptr->name.c_str());
+                ImGui::EndChild();
+                auto child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar |
+                                   ImGuiWindowFlags_NavFlattened;
+                ImGui::BeginChild("parameter_list_child", ImVec2(child_width, 0.0f), true, child_flags);
 
-        ImGui::EndChild();
-        auto child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar |
-                           ImGuiWindowFlags_NavFlattened;
-        ImGui::BeginChild("parameter_list_child", ImVec2(child_width, 0.0f), true, child_flags);
+                bool param_name_space_open = true;
+                unsigned int param_indent_stack = 0;
 
-        bool param_name_space_open = true;
-        unsigned int param_indent_stack = 0;
-
-        for (auto& param : modptr->parameters) {
-            // Filter module by given search string
-            bool search_filter = true;
-            if (!search_string.empty()) {
-                search_filter = this->utils.FindCaseInsensitiveSubstring(param.full_name, search_string);
-            }
-
-            // Add Collapsing header depending on parameter namespace
-            std::string current_param_namespace = param.GetNameSpace();
-            if (current_param_namespace != this->param_name_space) {
-                this->param_name_space = current_param_namespace;
-                while (param_indent_stack > 0) {
-                    param_indent_stack--;
-                    ImGui::Unindent();
-                }
-
-                ImGui::Separator();
-                if (!this->param_name_space.empty()) {
-                    ImGui::Indent();
-                    std::string label = this->param_name_space + "###" + param.full_name;
-                    // Open all namespace headers when parameter search is active
+                for (auto& param : modptr->parameters) {
+                    // Filter module by given search string
+                    bool search_filter = true;
                     if (!search_string.empty()) {
-                        auto headerId = ImGui::GetID(label.c_str());
-                        ImGui::GetStateStorage()->SetInt(headerId, 1);
+                        search_filter = this->utils.FindCaseInsensitiveSubstring(param.full_name, search_string);
                     }
-                    param_name_space_open = ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
-                    param_indent_stack++;
-                } else {
-                    param_name_space_open = true;
-                }
-            }
 
-            // Draw parameter
-            if (search_filter && param_name_space_open) {
-                param.GUI_Present();
+                    // Add Collapsing header depending on parameter namespace
+                    std::string current_param_namespace = param.GetNameSpace();
+                    if (current_param_namespace != this->param_name_space) {
+                        this->param_name_space = current_param_namespace;
+                        while (param_indent_stack > 0) {
+                            param_indent_stack--;
+                            ImGui::Unindent();
+                        }
+
+                        ImGui::Separator();
+                        if (!this->param_name_space.empty()) {
+                            ImGui::Indent();
+                            std::string label = this->param_name_space + "###" + param.full_name;
+                            // Open all namespace headers when parameter search is active
+                            if (!search_string.empty()) {
+                                auto headerId = ImGui::GetID(label.c_str());
+                                ImGui::GetStateStorage()->SetInt(headerId, 1);
+                            }
+                            param_name_space_open = ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
+                            param_indent_stack++;
+                        } else {
+                            param_name_space_open = true;
+                        }
+                    }
+
+                    // Draw parameter
+                    if (search_filter && param_name_space_open) {
+                        param.GUI_Present();
+                    }
+                }
             }
         }
-
         ImGui::EndChild();
     }
 

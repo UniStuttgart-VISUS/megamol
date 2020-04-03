@@ -438,11 +438,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
     const std::string lua_call = "mmCreateCall";
 
     GraphPtrType graph_ptr;
-    if (!this->GetGraph(graph_uid, graph_ptr)) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Unable to find graph for given uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
+    this->GetGraph(graph_uid, graph_ptr);
    
     try {
         std::stringstream content(projectstr);
@@ -499,15 +495,15 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 //     module_pos.x, module_pos.y);
 
                 // Create new graph
-                if (graph_uid == GUI_INVALID_ID) {
-                    if (!this->AddGraph()) {
+                if (graph_ptr == nullptr) {
+                    ImGuiID new_graph_uid = this->AddGraph();
+                    if (new_graph_uid == GUI_INVALID_ID) {
                         vislib::sys::Log::DefaultLog.WriteError(
                             "Project File '%s' line %i: Unable to create new graph '%s'. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), view_instance.c_str(), __FILE__, __FUNCTION__, __LINE__);
                         return false;
                     }
-                    graph_ptr = this->get_graphs().back();
-                    if (graph_ptr == nullptr) {
+                    if (!this->GetGraph(new_graph_uid, graph_ptr)) {
                         vislib::sys::Log::DefaultLog.WriteError(
                             "Unable to get pointer to last added graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                             __LINE__);

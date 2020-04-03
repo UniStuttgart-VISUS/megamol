@@ -195,17 +195,16 @@ void megamol::gui::configurator::Module::Presentation::Present(
                     (canvas_rect_min.y < module_rect_max.y) && (canvas_rect_max.y > module_rect_min.y))) {
                 if (mouse_clicked) {
                     this->selected = false;
-                    if (state.interact.module_selected_uid == inout_module.uid) {
-                        state.interact.module_selected_uid = GUI_INVALID_ID;
+                    if (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
+                        this->erase_uid(state.interact.modules_selected_uids, inout_module.uid);
                     }
                 }
                 if (this->selected) {
-                    state.interact.module_selected_uid = inout_module.uid;
+                    if (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
+                        state.interact.modules_selected_uids.emplace_back(inout_module.uid);
+                    }
                 }
                 return;
-            }
-            else {
-                ...
             }
             */
 
@@ -244,7 +243,8 @@ void megamol::gui::configurator::Module::Presentation::Present(
             // Context menu
             if (state.interact.callslot_hovered_uid == GUI_INVALID_ID) {
                 if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-                    active = true; // Force selection
+                    this->add_uid(state.interact.modules_selected_uids, inout_module.uid); // Force selection
+                    
                     ImGui::TextUnformatted("Module");
                     ImGui::Separator();
                     if (ImGui::MenuItem(
@@ -253,27 +253,35 @@ void megamol::gui::configurator::Module::Presentation::Present(
                                           .c_str())) {
                         std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
                     }
-                    if (ImGui::MenuItem("Rename")) {
+                    bool rename_valid = ((state.interact.modules_selected_uids.size() == 1) && (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)));
+                    if (ImGui::MenuItem("Rename", nullptr, false , rename_valid)) {
                         popup_rename = true;
                     }
                     if (ImGui::BeginMenu("Add to Group", true)) {
                         if (ImGui::MenuItem("New")) {
-                            state.interact.module_add_group_uid.first = inout_module.uid;
-                            state.interact.module_add_group_uid.second = GUI_INVALID_ID;
+                            state.interact.modules_add_group_uids.clear();
+                            for (auto& module_uid : state.interact.modules_selected_uids) {
+                                state.interact.modules_add_group_uids.emplace_back(UIDPairType(module_uid, GUI_INVALID_ID));
+                            }
                         }
                         if (!state.groups.empty()) {
                             ImGui::Separator();
                         }
                         for (auto& group_pair : state.groups) {
                             if (ImGui::MenuItem(group_pair.second.c_str())) {
-                                state.interact.module_add_group_uid.first = inout_module.uid;
-                                state.interact.module_add_group_uid.second = group_pair.first;
+                                state.interact.modules_add_group_uids.clear();
+                                for (auto& module_uid : state.interact.modules_selected_uids) {
+                                    state.interact.modules_add_group_uids.emplace_back(UIDPairType(module_uid, group_pair.first));
+                                }
                             }
                         }
                         ImGui::EndMenu();
                     }
                     if (ImGui::MenuItem("Remove from Group", nullptr, false, (this->group.member != GUI_INVALID_ID))) {
-                        state.interact.module_remove_group_uid = inout_module.uid;
+                        state.interact.modules_remove_group_uids.clear();
+                        for (auto& module_uid : state.interact.modules_selected_uids) {
+                            state.interact.modules_remove_group_uids.emplace_back(module_uid);
+                        }
                     }
                     ImGui::EndPopup();
                 }
@@ -331,7 +339,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                         if (ImGui::RadioButton("###main_view_switch", inout_module.is_view_instance)) {
                             state.interact.module_mainview_uid = inout_module.uid;
                             inout_module.is_view_instance = !inout_module.is_view_instance;
-                            active = true; // Force selection            
+                            this->add_uid(state.interact.modules_selected_uids, inout_module.uid); // Force selection            
                         }
                         if (hovered) {
                             this->other_item_hovered = this->utils.HoverToolTip("Main View");
@@ -344,7 +352,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                         param_child_pos.y += ImGui::GetFrameHeight();
                         if (ImGui::ArrowButton("###parameter_toggle", ((this->show_params)? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
                             this->show_params = !this->show_params;
-                            active = true; // Force selection      
+                            this->add_uid(state.interact.modules_selected_uids, inout_module.uid); // Force selection      
                         }
                         if (hovered) {
                             this->other_item_hovered = this->other_item_hovered || this->utils.HoverToolTip("Parameters");
@@ -364,21 +372,22 @@ void megamol::gui::configurator::Module::Presentation::Present(
             if (hovered) {
                 state.interact.module_hovered_uid = inout_module.uid;
             }  
-            if (state.interact.module_selected_uid == inout_module.uid) {
+            if (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
                 /// Call before "active" if-statement for one frame delayed check for last valid candidate for selection
                 this->selected = true;
             }
             if (active) {
-                state.interact.module_selected_uid = inout_module.uid;
+                state.interact.modules_selected_uids.clear();
+                state.interact.modules_selected_uids.emplace_back(inout_module.uid);
                 state.interact.callslot_selected_uid = GUI_INVALID_ID;
                 state.interact.call_selected_uid = GUI_INVALID_ID;
                 state.interact.group_selected_uid = GUI_INVALID_ID;
             }
             if ((mouse_clicked && (!hovered || state.interact.callslot_hovered_uid != GUI_INVALID_ID)) ||
-                (state.interact.module_selected_uid != inout_module.uid)) {
+                (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid))) {
                 this->selected = false;
-                if (state.interact.module_selected_uid == inout_module.uid) {
-                    state.interact.module_selected_uid = GUI_INVALID_ID;
+                if (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
+                    this->erase_uid(state.interact.modules_selected_uids, inout_module.uid);
                 }
             }
             
