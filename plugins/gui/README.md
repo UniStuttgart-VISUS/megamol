@@ -98,7 +98,7 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
         * `Running` Add currently running project to currently selected project.
     * `Save Project` (`Ctrl + s`) Save the project of the currently selected tab to a file (lua).
 * `View`
-    * `Modules Sidebar` (`Ctrl + Shift + m`) Show/Hide sidebar with module stock list.
+    * `Modules Sidebar`  Show/Hide sidebar with module stock list.
     * `Parameter Sidebar` (`Ctrl + Shift + p`) Show/Hide sidebar with parameters of currently selected module.
 * `Help` Link to this Readme.
 
@@ -126,6 +126,8 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
         
 #### Project Graph
 
+* Module Stock List Window at Mouse Position (Only ff module stock list sidebar is hidden).
+    * `Ctrl + Shift + m`
 * Call Creation
     * Drag and Drop Call from one Call Slot to other highlighted compatible Call Slot.
 * Sidebar Splitter Collapsing/Expansion
@@ -142,15 +144,19 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
         * Rename
         * Add to Group
         * Remove from Group
-* `Call` - Context Menu (`Right Click`)
-    * Delete (Alternative: Select with `Left Click` an press `Delete`)
-* `Slot` - Context Menu (`Right Click`)    
-    * Add to Group Interface
-    * Remove from Group Interface
-* `Group` - Context Menu (`Right Click`)
-    * Collapse View / Expand View
-    * Rename      
-    * Delete
+* `Call`
+    * Context Menu (`Right Click`)
+        * Delete (Alternative: Select with `Left Click` an press `Delete`)
+* `Slot` 
+    * `Double Left Click` If module stock list sidebar is hidden, show module stock list in window pinned to slot position.
+    * Context Menu (`Right Click`)    
+        * Add to Group Interface
+        * Remove from Group Interface
+* `Group` 
+    * Context Menu (`Right Click`)
+        * Collapse View / Expand View
+        * Rename      
+        * Delete
 
 #### Module Grouping
 

@@ -230,7 +230,6 @@ void megamol::gui::configurator::Call::Presentation::Present(
                         this->selected = true;
                     }
                     if (active) {
-                        this->selected = true;
                         state.interact.call_selected_uid = inout_call.uid;
                         state.interact.callslot_selected_uid = GUI_INVALID_ID;
                         state.interact.module_selected_uid = GUI_INVALID_ID;

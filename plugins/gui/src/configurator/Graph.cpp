@@ -704,6 +704,17 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM])) {
             if (this->graph_state.interact.module_selected_uid != GUI_INVALID_ID) {
                 inout_graph.DeleteModule(this->graph_state.interact.module_selected_uid);
+                this->graph_state.interact.module_selected_uid = GUI_INVALID_ID;
+                this->graph_state.interact.module_hovered_uid = GUI_INVALID_ID;
+                this->graph_state.interact.module_mainview_uid = GUI_INVALID_ID;
+                this->graph_state.interact.module_add_group_uid = UIDPairType(GUI_INVALID_ID, GUI_INVALID_ID);
+                this->graph_state.interact.module_remove_group_uid = GUI_INVALID_ID;
+                this->graph_state.interact.callslot_selected_uid = GUI_INVALID_ID;
+                this->graph_state.interact.callslot_hovered_uid = GUI_INVALID_ID;
+                this->graph_state.interact.callslot_dropped_uid = GUI_INVALID_ID;
+                this->graph_state.interact.callslot_add_group_uid = UIDPairType(GUI_INVALID_ID, GUI_INVALID_ID);
+                this->graph_state.interact.callslot_remove_group_uid = GUI_INVALID_ID;
+                this->graph_state.interact.callslot_compat_ptr = nullptr;
             }
             if (this->graph_state.interact.call_selected_uid != GUI_INVALID_ID) {
                 inout_graph.DeleteCall(this->graph_state.interact.call_selected_uid);

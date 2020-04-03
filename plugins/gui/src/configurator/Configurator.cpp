@@ -134,17 +134,15 @@ bool megamol::gui::configurator::Configurator::Draw(
         
         // Module Stock List in separate child window if sidebar is invisible
         if (!this->show_module_list_sidebar) {
-            bool callslot_double_click = false;
             GraphPtrType selected_graph_ptr;
             if (this->graph_manager.GetGraph(this->state.graph_selected_uid, selected_graph_ptr)) {
-                ImGuiID selected_callslot_uid = selected_graph_ptr->GUI_GetSelectedCallSlot();
+                ImGuiID selected_callslot_uid = selected_graph_ptr->GUI_GetSelectedCallSlot();               
                 if ((selected_callslot_uid != GUI_INVALID_ID) && ((!this->show_module_list_child) || (this->last_selected_callslot_uid != selected_callslot_uid)) && ImGui::IsMouseDoubleClicked(0)) {
-                    callslot_double_click = true;
                     std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
-                    this->last_selected_callslot_uid = selected_callslot_uid;                    
+                    this->last_selected_callslot_uid = selected_callslot_uid;
                 }
             }
-            if (callslot_double_click || std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
+            if (std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
                 this->show_module_list_child = true;
                 this->module_list_popup_pos = ImGui::GetMousePos();
                 ImGui::SetNextWindowPos(this->module_list_popup_pos);
@@ -257,9 +255,6 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                 this->show_module_list_sidebar = !this->show_module_list_sidebar;
                 this->show_module_list_child = false;
             }
-            ImGui::SameLine(0.0f, ImGui::GetFrameHeightWithSpacing());
-            std::string help = "If 'Modules Sidebar' is disabled, you can spawn the modules list using the module search hotkey.";
-            this->utils.HelpMarkerToolTip(help.c_str());
             if (ImGui::MenuItem("Parameter Sidebar", nullptr, this->state.show_parameter_sidebar)) {
                 this->state.show_parameter_sidebar = !this->state.show_parameter_sidebar;
             }
@@ -271,7 +266,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
         if (ImGui::BeginMenu("Help")) {
             const std::string docu_link =
                 "https://github.com/UniStuttgart-VISUS/megamol/tree/master/plugins/gui#configurator";
-            if (ImGui::Button("Readme (Copy Link)")) {
+            if (ImGui::Button("Readme on GitHub (Copy Link)")) {
 #ifdef GUI_USE_GLFW
                 auto glfw_win = ::glfwGetCurrentContext();
                 ::glfwSetClipboardString(glfw_win, docu_link.c_str());
