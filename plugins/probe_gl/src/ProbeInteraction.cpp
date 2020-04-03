@@ -53,10 +53,19 @@ megamol::probe_gl::ProbeInteraction::~ProbeInteraction() { this->Release(); }
 bool megamol::probe_gl::ProbeInteraction::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
 
-    if (button == core::view::MouseButton::BUTTON_LEFT && action == core::view::MouseButtonAction::PRESS) {
+    if (button == core::view::MouseButton::BUTTON_LEFT && action == core::view::MouseButtonAction::PRESS && mods.none()) {
         
         if (last_active_probe_id > 0)
         {
+            // clear current selection
+            for (auto probe_id : m_selected_probes) {
+                m_interactions->accessPendingManipulations().push_back(
+                    ProbeManipulation{InteractionType::DESELECT, static_cast<uint32_t>(probe_id), 0, 0, 0});
+            }
+            m_selected_probes.clear();
+
+            // create new selection
+            m_selected_probes.push_back(last_active_probe_id);
             m_interactions->accessPendingManipulations().push_back(
                 ProbeManipulation{InteractionType::SELECT, static_cast<uint32_t>(last_active_probe_id), 0, 0, 0});
 
@@ -65,6 +74,17 @@ bool megamol::probe_gl::ProbeInteraction::OnMouseButton(
 
         m_open_context_menu = false;
     } 
+    else if (button == core::view::MouseButton::BUTTON_LEFT && action == core::view::MouseButtonAction::PRESS && mods.test(core::view::Modifier::SHIFT))
+    {
+        if (last_active_probe_id > 0) {
+            // add to current selection
+            m_selected_probes.push_back(last_active_probe_id);
+            m_interactions->accessPendingManipulations().push_back(
+                ProbeManipulation{InteractionType::SELECT, static_cast<uint32_t>(last_active_probe_id), 0, 0, 0});
+
+            return true;
+        }
+    }
     else if (button == core::view::MouseButton::BUTTON_RIGHT)// && action == core::view::MouseButtonAction::PRESS)
     {
         m_mouse_button_states[button] =
@@ -362,6 +382,34 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
                 }
                 ImGui::SameLine();
                 ImGui::Checkbox("", &m_show_glyphs);
+
+                ImGui::Separator();
+
+                ImGui::End();
+            }
+
+            if (m_open_probeMenu_dropdown) {
+
+                ImGui::SetNextWindowPos(ImVec2(410, 50));
+
+                ImGui::Begin("ProbeDropdown", &my_tool_active,
+                    ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
+
+                if (ImGui::Button("Add Probe", ImVec2(75, 20))) {
+                    m_open_probeMenu_dropdown = false;
+
+                    //m_interactions->accessPendingManipulations().push_back(ProbeManipulation{
+                    //    InteractionType::TOGGLE_SHOW_PROBES, static_cast<uint32_t>(last_active_probe_id), 0, 0, 0});
+                }
+
+                if (ImGui::Button("Deselect All", ImVec2(75, 20))) {
+                    m_open_probeMenu_dropdown = false;
+
+                    //TODO for each selected probe, add deselect interaction
+
+                    // m_interactions->accessPendingManipulations().push_back(ProbeManipulation{
+                    //    InteractionType::TOGGLE_SHOW_PROBES, static_cast<uint32_t>(last_active_probe_id), 0, 0, 0});
+                }
 
                 ImGui::Separator();
 
