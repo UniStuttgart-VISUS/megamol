@@ -427,12 +427,12 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         if (state.interact.callslot_selected_uid == inout_call_slot.uid) {
             /// Call before "active" if-statement for one frame delayed check for last valid candidate for selection
             this->selected = true;
+            state.interact.call_selected_uid = GUI_INVALID_ID;
+            state.interact.modules_selected_uids.clear();
+            state.interact.group_selected_uid = GUI_INVALID_ID;            
         }
         if (active) {
             state.interact.callslot_selected_uid = inout_call_slot.uid;
-            state.interact.call_selected_uid = GUI_INVALID_ID;
-            state.interact.modules_selected_uids.clear();
-            state.interact.group_selected_uid = GUI_INVALID_ID;
         }
         if ((mouse_clicked && !hovered) || (state.interact.callslot_selected_uid != inout_call_slot.uid)) {
             this->selected = false;

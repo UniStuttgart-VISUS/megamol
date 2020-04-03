@@ -505,12 +505,15 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
 
     this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;
     this->graph_state.interact.group_save = false;
+    
     this->graph_state.interact.modules_selected_uids.clear();
     this->graph_state.interact.module_hovered_uid = GUI_INVALID_ID;
     this->graph_state.interact.module_mainview_uid = GUI_INVALID_ID;
     this->graph_state.interact.modules_add_group_uids.clear();
     this->graph_state.interact.modules_remove_group_uids.clear();
+    
     this->graph_state.interact.call_selected_uid = GUI_INVALID_ID;
+    
     this->graph_state.interact.callslot_selected_uid = GUI_INVALID_ID;
     this->graph_state.interact.callslot_hovered_uid = GUI_INVALID_ID;
     this->graph_state.interact.callslot_dropped_uid = GUI_INVALID_ID;
@@ -629,6 +632,9 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                         group_ptr->RemoveModule(module_uid);
                         if (group_ptr->EmptyModules()) {
                             inout_graph.DeleteGroup(group_ptr->uid);
+                            // Reset interact state for groups       
+                            this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;
+                            this->graph_state.interact.group_save = false;
                             break;
                         }                    
                     }
@@ -674,6 +680,9 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                                     ImGuiID delete_group_uid = remove_group_ptr->uid;
                                     remove_group_ptr.reset();
                                     inout_graph.DeleteGroup(delete_group_uid);
+                                    // Reset interact state for groups       
+                                    this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;
+                                    this->graph_state.interact.group_save = false;                                    
                                 }                    
                             }
                             add_group_ptr->AddModule(module_ptr);
@@ -740,9 +749,14 @@ void megamol::gui::configurator::Graph::Presentation::Present(
             }
             if (this->graph_state.interact.call_selected_uid != GUI_INVALID_ID) {
                 inout_graph.DeleteCall(this->graph_state.interact.call_selected_uid);
+                // Reset interact state for calls        
+                    this->graph_state.interact.call_selected_uid = GUI_INVALID_ID;        
             }
             if (this->graph_state.interact.group_selected_uid != GUI_INVALID_ID) {
                 inout_graph.DeleteGroup(this->graph_state.interact.group_selected_uid);
+                // Reset interact state for groups       
+                this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;
+                this->graph_state.interact.group_save = false;
             }
         }
         // Set delete flag if tab was closed
@@ -1249,12 +1263,15 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_multiselect
         ImVec2 module_size;
         this->graph_state.interact.modules_selected_uids.clear();
         for (auto& module_ptr : inout_graph.modules) {
-            module_size = module_ptr->GUI_GetSize() * this->graph_state.canvas.zooming;
-            inner_rect_min = this->graph_state.canvas.offset + module_ptr->GUI_GetPosition() * this->graph_state.canvas.zooming;
-            inner_rect_max = inner_rect_min + module_size;            
-            if (((outer_rect_min.x < inner_rect_max.x) && (outer_rect_max.x > inner_rect_min.x) &&
-                    (outer_rect_min.y < inner_rect_max.y) && (outer_rect_max.y > inner_rect_min.y))) {
-                this->graph_state.interact.modules_selected_uids.emplace_back(module_ptr->uid);
+            bool group_member = (module_ptr->GUI_GetGroupMembership() != GUI_INVALID_ID);
+            if (!group_member || (group_member && module_ptr->GUI_GetGroupVisibility())) {
+                module_size = module_ptr->GUI_GetSize() * this->graph_state.canvas.zooming;
+                inner_rect_min = this->graph_state.canvas.offset + module_ptr->GUI_GetPosition() * this->graph_state.canvas.zooming;
+                inner_rect_max = inner_rect_min + module_size;            
+                if (((outer_rect_min.x < inner_rect_max.x) && (outer_rect_max.x > inner_rect_min.x) &&
+                        (outer_rect_min.y < inner_rect_max.y) && (outer_rect_max.y > inner_rect_min.y))) {
+                    this->graph_state.interact.modules_selected_uids.emplace_back(module_ptr->uid);
+                }
             }
         }
         this->multi_select_done = false;

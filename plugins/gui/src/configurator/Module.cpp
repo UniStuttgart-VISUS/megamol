@@ -236,9 +236,8 @@ void megamol::gui::configurator::Module::Presentation::Present(
 
             bool active = ImGui::IsItemActive();
             bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];            
-            bool hovered = (ImGui::IsItemHovered() && 
-                (state.interact.callslot_hovered_uid == GUI_INVALID_ID) &&
-                ((state.interact.module_hovered_uid == GUI_INVALID_ID) || (state.interact.module_hovered_uid == inout_module.uid)));
+            bool hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID));
+                 //&& ((state.interact.module_hovered_uid == GUI_INVALID_ID) || (state.interact.module_hovered_uid == inout_module.uid)));
                 
             // Context menu
             if (state.interact.callslot_hovered_uid == GUI_INVALID_ID) {
@@ -390,15 +389,16 @@ void megamol::gui::configurator::Module::Presentation::Present(
             if (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
                 /// Call before "active" if-statement for one frame delayed check for last valid candidate for selection
                 this->selected = true;
+                state.interact.callslot_selected_uid = GUI_INVALID_ID;
+                state.interact.call_selected_uid = GUI_INVALID_ID;
+                state.interact.group_selected_uid = GUI_INVALID_ID;                
             }
             if (active && !this->selected) {
                 state.interact.modules_selected_uids.clear();
                 state.interact.modules_selected_uids.emplace_back(inout_module.uid);
-                state.interact.callslot_selected_uid = GUI_INVALID_ID;
-                state.interact.call_selected_uid = GUI_INVALID_ID;
-                state.interact.group_selected_uid = GUI_INVALID_ID;
             }
-            if ((mouse_clicked && (!hovered || state.interact.callslot_hovered_uid != GUI_INVALID_ID)) || (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid))) {
+            if ((mouse_clicked && (!hovered || state.interact.callslot_hovered_uid != GUI_INVALID_ID) && (state.interact.module_hovered_uid == GUI_INVALID_ID)) || 
+                (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid))) {
                 this->selected = false;
                 if (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
                     this->erase_uid(state.interact.modules_selected_uids, inout_module.uid);

@@ -349,8 +349,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
         ImGui::SetItemAllowOverlap();
 
         bool active = ImGui::IsItemActive();
-        bool hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) &&
-                        (state.interact.module_hovered_uid == GUI_INVALID_ID));
+        bool hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) && (state.interact.module_hovered_uid == GUI_INVALID_ID));
         bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
 
         // Automatically delete empty group.
@@ -396,12 +395,12 @@ void megamol::gui::configurator::Group::Presentation::Present(
         if (state.interact.group_selected_uid == inout_group.uid) {
             /// Call before "active" if-statement for one frame delayed check for last valid candidate for selection
             this->selected = true;
-        }
-        if (active) {
-            state.interact.group_selected_uid = inout_group.uid;
             state.interact.callslot_selected_uid = GUI_INVALID_ID;
             state.interact.modules_selected_uids.clear();
             state.interact.call_selected_uid = GUI_INVALID_ID;
+        }
+        if (active) {
+            state.interact.group_selected_uid = inout_group.uid;
         }
         if ((mouse_clicked && !hovered) || (state.interact.group_selected_uid != inout_group.uid)) {
             this->selected = false;
