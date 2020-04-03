@@ -43,6 +43,8 @@
 #include "vislib/sys/Log.h"
 #include "vislib/sys/sysfunctions.h"
 
+#include "glm/gtc/matrix_transform.hpp"
+
 using namespace megamol::core;
 using namespace megamol::core::view;
 
@@ -99,7 +101,7 @@ View3D_2::View3D_2(void)
     , cameraGateScalingParam("cam::gatescaling", "")
     , cameraFilmGateParam("cam::filmgate", "")
     , cameraCenterOffsetParam("cam::centeroffset", "")
-    , cameraHalfApertureRadiansParam("cam::halfapertureradians", "")
+    , cameraHalfApertureDegreesParam("cam::halfaperturedegrees", "")
     , cameraHalfDisparityParam("cam::halfdisparity", "")
     , cameraOvrUpParam("cam::ovr::up", "")
     , cameraOvrLookatParam("cam::ovr::lookat", "")
@@ -267,10 +269,10 @@ View3D_2::View3D_2(void)
     this->cameraCenterOffsetParam.SetParameter(centeroffsetparam);
     this->MakeSlotAvailable(&this->cameraCenterOffsetParam);
 
-    auto apertureparam = new param::FloatParam(1.0f, 0.0f);
+    auto apertureparam = new param::FloatParam(35.0f, 0.0f);
     apertureparam->SetGUIVisible(camparamvisibility);
-    this->cameraHalfApertureRadiansParam.SetParameter(apertureparam);
-    this->MakeSlotAvailable(&this->cameraHalfApertureRadiansParam);
+    this->cameraHalfApertureDegreesParam.SetParameter(apertureparam);
+    this->MakeSlotAvailable(&this->cameraHalfApertureDegreesParam);
 
     auto disparityparam = new param::FloatParam(1.0f, 0.0f);
     disparityparam->SetGUIVisible(camparamvisibility);
@@ -1182,7 +1184,8 @@ void View3D_2::setCameraValues(const view::Camera_2& cam) {
         vislib::math::Vector<float, 2>(cam.film_gate().width(), cam.film_gate().height()), true);
     this->cameraCenterOffsetParam.Param<param::Vector2fParam>()->SetValue(
         vislib::math::Vector<float, 2>(cam.centre_offset().x(), cam.centre_offset().y()), true);
-    this->cameraHalfApertureRadiansParam.Param<param::FloatParam>()->SetValue(cam.half_aperture_angle_radians(), true);
+    this->cameraHalfApertureDegreesParam.Param<param::FloatParam>()->SetValue(
+        cam.half_aperture_angle_radians() * 180.0f / M_PI, true);
     this->cameraHalfDisparityParam.Param<param::FloatParam>()->SetValue(cam.half_disparity(), true);
 }
 
@@ -1247,10 +1250,10 @@ bool View3D_2::adaptCameraValues(view::Camera_2& cam) {
         this->cameraCenterOffsetParam.ResetDirty();
         result = true;
     }
-    if (this->cameraHalfApertureRadiansParam.IsDirty()) {
-        auto val = this->cameraHalfApertureRadiansParam.Param<param::FloatParam>()->Value();
-        this->cam.half_aperture_angle_radians(val);
-        this->cameraHalfApertureRadiansParam.ResetDirty();
+    if (this->cameraHalfApertureDegreesParam.IsDirty()) {
+        auto val = this->cameraHalfApertureDegreesParam.Param<param::FloatParam>()->Value();
+        this->cam.half_aperture_angle_radians(val * M_PI / 180.0f);
+        this->cameraHalfApertureDegreesParam.ResetDirty();
         result = true;
     }
     if (this->cameraHalfDisparityParam.IsDirty()) {
@@ -1268,14 +1271,14 @@ bool View3D_2::cameraOvrCallback(param::ParamSlot& p) {
     auto lookat_vis = this->cameraOvrLookatParam.Param<param::Vector3fParam>()->Value();
 
     glm::vec3 up(up_vis.X(), up_vis.Y(), up_vis.Z());
+    up = glm::normalize(up);
     glm::vec3 lookat(lookat_vis.X(), lookat_vis.Y(), lookat_vis.Z());
 
-    auto front = glm::vec3(glm::vec4(lookat, 1.0) - static_cast<glm::vec4>(this->cam.eye_position()));
+    glm::mat3 view;
+    view[2] = -glm::normalize(lookat - glm::vec3(static_cast<glm::vec4>(this->cam.eye_position())));
+    view[0] = glm::normalize(glm::cross(up, view[2]));
+    view[1] = glm::normalize(glm::cross(view[2], view[0]));
 
-    auto right = glm::cross(up, front);
-    up = glm::cross(right, front);
-
-    glm::mat3 view = glm::mat3(front, up, right);
     auto orientation = glm::quat_cast(view);
 
     this->cam.orientation(orientation);

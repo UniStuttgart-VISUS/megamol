@@ -367,7 +367,7 @@ protected:
     param::ParamSlot cameraGateScalingParam;
     param::ParamSlot cameraFilmGateParam;
     param::ParamSlot cameraCenterOffsetParam;
-    param::ParamSlot cameraHalfApertureRadiansParam;
+    param::ParamSlot cameraHalfApertureDegreesParam;
     param::ParamSlot cameraHalfDisparityParam;
 
     /** Camara override parameters */
