@@ -382,7 +382,8 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
 
         // Context Menu
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-            active = true; // Force selection                
+            active = true; // Force selection      
+                 
             ImGui::TextUnformatted("Call Slot");
             ImGui::Separator();
             /// Menu items are active depending on group membership of parent module 

@@ -130,6 +130,9 @@ private:
         float child_split_width;
         bool reset_zooming;
         std::string param_name_space;
+        ImVec2 multi_select_start_pos;
+        ImVec2 multi_select_end_pos;
+        bool multi_select_done;
         // State propagated and shared by all graph items.
         megamol::gui::GraphItemsStateType graph_state;
 

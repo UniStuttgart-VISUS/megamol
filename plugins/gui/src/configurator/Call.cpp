@@ -212,6 +212,8 @@ void megamol::gui::configurator::Call::Presentation::Present(
 
                     // Context Menu
                     if (ImGui::BeginPopupContextItem()) {
+                        active = true; // Force selection 
+                        
                         ImGui::TextUnformatted("Call");
                         ImGui::Separator();
                         if (ImGui::MenuItem(
@@ -219,7 +221,7 @@ void megamol::gui::configurator::Call::Presentation::Present(
                                               .ToString()
                                               .c_str())) {
                             std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-                            active = true; // Force selection
+                            
                         }
                         ImGui::EndPopup();
                     }
@@ -229,7 +231,7 @@ void megamol::gui::configurator::Call::Presentation::Present(
                         /// Call before "active" if-statement for one frame delayed check for last valid candidate for selection
                         this->selected = true;
                     }
-                    if (active) {
+                    if (active && !this->selected) {
                         state.interact.call_selected_uid = inout_call.uid;
                         state.interact.callslot_selected_uid = GUI_INVALID_ID;
                         state.interact.modules_selected_uids.clear();

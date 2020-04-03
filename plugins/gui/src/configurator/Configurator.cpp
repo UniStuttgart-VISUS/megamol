@@ -30,7 +30,7 @@ megamol::gui::configurator::Configurator::Configurator()
     , left_child_width(250.0f)
     , selected_list_module_uid(GUI_INVALID_ID)
     , add_project_graph_uid(GUI_INVALID_ID)
-    , show_module_list_sidebar(false)
+    , show_module_list_sidebar(true)
     , show_module_list_child(false)
     , module_list_popup_pos()
     , last_selected_callslot_uid(GUI_INVALID_ID)
@@ -47,7 +47,7 @@ megamol::gui::configurator::Configurator::Configurator()
         megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL), false);
     this->state.font = nullptr;
     this->state.child_width = 0.0f;
-    this->state.show_parameter_sidebar = false;
+    this->state.show_parameter_sidebar = true;
     this->state.graph_selected_uid = GUI_INVALID_ID;
     this->state.graph_delete = false;
 }

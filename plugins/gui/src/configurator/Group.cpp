@@ -356,12 +356,13 @@ void megamol::gui::configurator::Group::Presentation::Present(
         // Automatically delete empty group.
         if (inout_group.GetModules().empty()) {
             std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-            // Force selection
-            active = true;
+            active = true; // Force selection 
         }
 
         // Context menu
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
+            active = true; // Force selection 
+            
             ImGui::TextUnformatted("Group");
             ImGui::Separator();
             std::string view = "Collapsed View";
@@ -378,8 +379,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
             /*
             if (ImGui::MenuItem("Save")) {
                 state.interact.group_save = true;
-                // Force selection
-                active = true;
+                active = true; // Force selection 
             }
             */
             if (ImGui::MenuItem("Rename")) {
@@ -388,8 +388,6 @@ void megamol::gui::configurator::Group::Presentation::Present(
             if (ImGui::MenuItem("Delete",
                     std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
                 std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-                // Force selection
-                active = true;
             }
             ImGui::EndPopup();
         }

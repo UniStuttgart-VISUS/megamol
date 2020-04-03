@@ -492,6 +492,9 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , child_split_width(300.0f)
     , reset_zooming(true)
     , param_name_space()
+    , multi_select_start_pos()
+    , multi_select_end_pos()
+    , multi_select_done(false)
     , graph_state() {
 
     this->graph_state.canvas.position = ImVec2(0.0f, 0.0f);
@@ -1028,8 +1031,8 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
             changed = true;
         }
         if (changed) {
-            for (auto& modptr : inout_graph.GetModules()) {
-                for (auto& param : modptr->parameters) {
+            for (auto& module_ptr : inout_graph.GetModules()) {
+                for (auto& param : module_ptr->parameters) {
                     param.GUI_SetExpert(this->params_expert);
                 }
             }
@@ -1043,8 +1046,8 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
 
         // Visibility
         if (ImGui::Checkbox("Visibility", &this->params_visible)) {
-            for (auto& modptr : inout_graph.GetModules()) {
-                for (auto& param : modptr->parameters) {
+            for (auto& module_ptr : inout_graph.GetModules()) {
+                for (auto& param : module_ptr->parameters) {
                     param.GUI_SetLabelVisibility(this->params_visible);
                 }
             }
@@ -1053,8 +1056,8 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
 
         // Read-only option
         if (ImGui::Checkbox("Read-Only", &this->params_readonly)) {
-            for (auto& modptr : inout_graph.GetModules()) {
-                for (auto& param : modptr->parameters) {
+            for (auto& module_ptr : inout_graph.GetModules()) {
+                for (auto& param : module_ptr->parameters) {
                     param.GUI_SetReadOnly(this->params_readonly);
                 }
             }
@@ -1066,65 +1069,72 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
 
     // Get pointer to currently selected module(s)
     if (!this->graph_state.interact.modules_selected_uids.empty()) {
-        
-        float param_child_height = ImGui::GetFrameHeightWithSpacing() * 1.0f;
-        ImGui::BeginChild("parameter_info_child", ImVec2(child_width, param_child_height), false, child_flags);
+        size_t selected_module_count = this->graph_state.interact.modules_selected_uids.size();
+        float info_child_height = ImGui::GetFrameHeightWithSpacing() * 1.0f;
+        float param_child_height = (ImGui::GetContentRegionAvail().y / static_cast<float>(selected_module_count)) - (info_child_height*1.5f);
         
         for (auto& module_uid : this->graph_state.interact.modules_selected_uids) {
-            ModulePtrType modptr;
-            if (inout_graph.GetModule(module_uid, modptr)) {
-                ImGui::TextUnformatted("Module:");
-                ImGui::SameLine();
-                ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive), modptr->name.c_str());
+            ModulePtrType module_ptr;
+            if (inout_graph.GetModule(module_uid, module_ptr)) {
+                if (module_ptr->parameters.size() > 0) {
+                    ImGui::PushID(module_ptr->uid);
+                    
+                    ImGui::BeginChild("parameter_info_child", ImVec2(child_width, info_child_height), false, child_flags);
+                    ImGui::TextUnformatted("Module:");
+                    ImGui::SameLine();
+                    ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive), module_ptr->name.c_str());
 
-                ImGui::EndChild();
-                auto child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar |
-                                   ImGuiWindowFlags_NavFlattened;
-                ImGui::BeginChild("parameter_list_child", ImVec2(child_width, 0.0f), true, child_flags);
+                    ImGui::EndChild();
+                    auto child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar |
+                                       ImGuiWindowFlags_NavFlattened;
+                    ImGui::BeginChild("parameter_list_child", ImVec2(child_width, param_child_height), true, child_flags);
 
-                bool param_name_space_open = true;
-                unsigned int param_indent_stack = 0;
+                    bool param_name_space_open = true;
+                    unsigned int param_indent_stack = 0;
 
-                for (auto& param : modptr->parameters) {
-                    // Filter module by given search string
-                    bool search_filter = true;
-                    if (!search_string.empty()) {
-                        search_filter = this->utils.FindCaseInsensitiveSubstring(param.full_name, search_string);
-                    }
-
-                    // Add Collapsing header depending on parameter namespace
-                    std::string current_param_namespace = param.GetNameSpace();
-                    if (current_param_namespace != this->param_name_space) {
-                        this->param_name_space = current_param_namespace;
-                        while (param_indent_stack > 0) {
-                            param_indent_stack--;
-                            ImGui::Unindent();
+                    for (auto& param : module_ptr->parameters) {
+                        // Filter module by given search string
+                        bool search_filter = true;
+                        if (!search_string.empty()) {
+                            search_filter = this->utils.FindCaseInsensitiveSubstring(param.full_name, search_string);
                         }
 
-                        ImGui::Separator();
-                        if (!this->param_name_space.empty()) {
-                            ImGui::Indent();
-                            std::string label = this->param_name_space + "###" + param.full_name;
-                            // Open all namespace headers when parameter search is active
-                            if (!search_string.empty()) {
-                                auto headerId = ImGui::GetID(label.c_str());
-                                ImGui::GetStateStorage()->SetInt(headerId, 1);
+                        // Add Collapsing header depending on parameter namespace
+                        std::string current_param_namespace = param.GetNameSpace();
+                        if (current_param_namespace != this->param_name_space) {
+                            this->param_name_space = current_param_namespace;
+                            while (param_indent_stack > 0) {
+                                param_indent_stack--;
+                                ImGui::Unindent();
                             }
-                            param_name_space_open = ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
-                            param_indent_stack++;
-                        } else {
-                            param_name_space_open = true;
+
+                            ImGui::Separator();
+                            if (!this->param_name_space.empty()) {
+                                ImGui::Indent();
+                                std::string label = this->param_name_space + "###" + param.full_name;
+                                // Open all namespace headers when parameter search is active
+                                if (!search_string.empty()) {
+                                    auto headerId = ImGui::GetID(label.c_str());
+                                    ImGui::GetStateStorage()->SetInt(headerId, 1);
+                                }
+                                param_name_space_open = ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
+                                param_indent_stack++;
+                            } else {
+                                param_name_space_open = true;
+                            }
+                        }
+
+                        // Draw parameter
+                        if (search_filter && param_name_space_open) {
+                            param.GUI_Present();
                         }
                     }
-
-                    // Draw parameter
-                    if (search_filter && param_name_space_open) {
-                        param.GUI_Present();
-                    }
+                    ImGui::EndChild();
+                    
+                    ImGui::PopID();
                 }
             }
         }
-        ImGui::EndChild();
     }
 
     ImGui::EndGroup();
@@ -1208,15 +1218,56 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_cal
 
 void megamol::gui::configurator::Graph::Presentation::present_canvas_multiselection(Graph& inout_graph) {
     
-    
-    
-    
+    bool no_graph_item_selected = ((this->graph_state.interact.callslot_selected_uid == GUI_INVALID_ID) && 
+            (this->graph_state.interact.call_selected_uid == GUI_INVALID_ID) && 
+            (this->graph_state.interact.modules_selected_uids.empty()) && 
+            (this->graph_state.interact.group_selected_uid == GUI_INVALID_ID));
+        
+    if (no_graph_item_selected && ImGui::IsMouseDragging(0)) {
+        
+        this->multi_select_end_pos = ImGui::GetMousePos();
+        this->multi_select_done = true;
+        
+        ImGuiStyle& style = ImGui::GetStyle();        
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        assert(draw_list != nullptr);
+
+        ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
+        tmpcol.w = 0.2f; // alpha
+        const ImU32 COLOR_MULTISELECT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
+        const ImU32 COLOR_MULTISELECT_BORDER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
+
+        draw_list->AddRectFilled(multi_select_start_pos, multi_select_end_pos, COLOR_MULTISELECT_BACKGROUND, GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All);
+
+        float border = 1.0f;
+        draw_list->AddRect(multi_select_start_pos, multi_select_end_pos, COLOR_MULTISELECT_BORDER, GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All, border);
+    }
+    else if (this->multi_select_done && ImGui::IsWindowHovered() && ImGui::IsMouseReleased(0)) {
+        ImVec2 outer_rect_min = ImVec2(std::min(this->multi_select_start_pos.x, this->multi_select_end_pos.x), std::min(this->multi_select_start_pos.y, this->multi_select_end_pos.y));
+        ImVec2 outer_rect_max = ImVec2(std::max(this->multi_select_start_pos.x, this->multi_select_end_pos.x), std::max(this->multi_select_start_pos.y, this->multi_select_end_pos.y));
+        ImVec2 inner_rect_min, inner_rect_max;
+        ImVec2 module_size;
+        this->graph_state.interact.modules_selected_uids.clear();
+        for (auto& module_ptr : inout_graph.modules) {
+            module_size = module_ptr->GUI_GetSize() * this->graph_state.canvas.zooming;
+            inner_rect_min = this->graph_state.canvas.offset + module_ptr->GUI_GetPosition() * this->graph_state.canvas.zooming;
+            inner_rect_max = inner_rect_min + module_size;            
+            if (((outer_rect_min.x < inner_rect_max.x) && (outer_rect_max.x > inner_rect_min.x) &&
+                    (outer_rect_min.y < inner_rect_max.y) && (outer_rect_max.y > inner_rect_min.y))) {
+                this->graph_state.interact.modules_selected_uids.emplace_back(module_ptr->uid);
+            }
+        }
+        this->multi_select_done = false;
+    }
+    else {
+        this->multi_select_start_pos = ImGui::GetMousePos();
+    }
 }        
         
 
 bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui::configurator::Graph& inout_graph) {
 
-    /// Really simple layouting sorting modules into differnet layers
+    /// Really simple layouting, sorting modules into differnet layers 'from left to right' following the calls.
 
     std::vector<std::vector<ModulePtrType>> layers;
     layers.clear();

@@ -243,7 +243,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
             // Context menu
             if (state.interact.callslot_hovered_uid == GUI_INVALID_ID) {
                 if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-                    this->add_uid(state.interact.modules_selected_uids, inout_module.uid); // Force selection
+                    active = true; // Force selection 
                     
                     ImGui::TextUnformatted("Module");
                     ImGui::Separator();
@@ -260,8 +260,13 @@ void megamol::gui::configurator::Module::Presentation::Present(
                     if (ImGui::BeginMenu("Add to Group", true)) {
                         if (ImGui::MenuItem("New")) {
                             state.interact.modules_add_group_uids.clear();
-                            for (auto& module_uid : state.interact.modules_selected_uids) {
-                                state.interact.modules_add_group_uids.emplace_back(UIDPairType(module_uid, GUI_INVALID_ID));
+                            if (this->selected) {
+                                for (auto& module_uid : state.interact.modules_selected_uids) {
+                                    state.interact.modules_add_group_uids.emplace_back(UIDPairType(module_uid, GUI_INVALID_ID));
+                                }
+                            }
+                            else {
+                                state.interact.modules_add_group_uids.emplace_back(UIDPairType(inout_module.uid, GUI_INVALID_ID));
                             }
                         }
                         if (!state.groups.empty()) {
@@ -270,8 +275,13 @@ void megamol::gui::configurator::Module::Presentation::Present(
                         for (auto& group_pair : state.groups) {
                             if (ImGui::MenuItem(group_pair.second.c_str())) {
                                 state.interact.modules_add_group_uids.clear();
-                                for (auto& module_uid : state.interact.modules_selected_uids) {
-                                    state.interact.modules_add_group_uids.emplace_back(UIDPairType(module_uid, group_pair.first));
+                                if (this->selected) {
+                                    for (auto& module_uid : state.interact.modules_selected_uids) {
+                                        state.interact.modules_add_group_uids.emplace_back(UIDPairType(module_uid, group_pair.first));
+                                    }
+                                }
+                                else {
+                                    state.interact.modules_add_group_uids.emplace_back(UIDPairType(inout_module.uid, group_pair.first));
                                 }
                             }
                         }
@@ -279,8 +289,13 @@ void megamol::gui::configurator::Module::Presentation::Present(
                     }
                     if (ImGui::MenuItem("Remove from Group", nullptr, false, (this->group.member != GUI_INVALID_ID))) {
                         state.interact.modules_remove_group_uids.clear();
-                        for (auto& module_uid : state.interact.modules_selected_uids) {
-                            state.interact.modules_remove_group_uids.emplace_back(module_uid);
+                         if (this->selected) {
+                            for (auto& module_uid : state.interact.modules_selected_uids) {
+                                state.interact.modules_remove_group_uids.emplace_back(module_uid);
+                            }
+                        }
+                        else {
+                            state.interact.modules_remove_group_uids.emplace_back(inout_module.uid);
                         }
                     }
                     ImGui::EndPopup();
@@ -339,7 +354,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                         if (ImGui::RadioButton("###main_view_switch", inout_module.is_view_instance)) {
                             state.interact.module_mainview_uid = inout_module.uid;
                             inout_module.is_view_instance = !inout_module.is_view_instance;
-                            this->add_uid(state.interact.modules_selected_uids, inout_module.uid); // Force selection            
+                            active = true; // Force selection     
                         }
                         if (hovered) {
                             this->other_item_hovered = this->utils.HoverToolTip("Main View");
@@ -352,7 +367,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                         param_child_pos.y += ImGui::GetFrameHeight();
                         if (ImGui::ArrowButton("###parameter_toggle", ((this->show_params)? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
                             this->show_params = !this->show_params;
-                            this->add_uid(state.interact.modules_selected_uids, inout_module.uid); // Force selection      
+                            active = true; // Force selection   
                         }
                         if (hovered) {
                             this->other_item_hovered = this->other_item_hovered || this->utils.HoverToolTip("Parameters");
@@ -376,15 +391,14 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 /// Call before "active" if-statement for one frame delayed check for last valid candidate for selection
                 this->selected = true;
             }
-            if (active) {
+            if (active && !this->selected) {
                 state.interact.modules_selected_uids.clear();
                 state.interact.modules_selected_uids.emplace_back(inout_module.uid);
                 state.interact.callslot_selected_uid = GUI_INVALID_ID;
                 state.interact.call_selected_uid = GUI_INVALID_ID;
                 state.interact.group_selected_uid = GUI_INVALID_ID;
             }
-            if ((mouse_clicked && (!hovered || state.interact.callslot_hovered_uid != GUI_INVALID_ID)) ||
-                (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid))) {
+            if ((mouse_clicked && (!hovered || state.interact.callslot_hovered_uid != GUI_INVALID_ID)) || (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid))) {
                 this->selected = false;
                 if (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
                     this->erase_uid(state.interact.modules_selected_uids, inout_module.uid);
