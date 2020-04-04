@@ -1070,45 +1070,19 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
     child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_AlwaysUseWindowPadding;
     ImGui::BeginChild("parameter_list_frame_child", ImVec2(child_width, 0.0f), false, child_flags);
     
-    // Get pointer to currently selected module(s)
     if (!this->graph_state.interact.modules_selected_uids.empty()) {
-        /*
-        size_t selected_module_count = this->graph_state.interact.modules_selected_uids.size();
-        float info_child_height = ImGui::GetFrameHeightWithSpacing() * 1.0f;
-        */
+        // Loop over all selected modules
         for (auto& module_uid : this->graph_state.interact.modules_selected_uids) {
             ModulePtrType module_ptr;
+            // Get pointer to currently selected module(s)
             if (inout_graph.GetModule(module_uid, module_ptr)) {
                 if (module_ptr->parameters.size() > 0) {
                     
                     ImGui::PushID(module_ptr->uid);
-                    
-                    /*
-                    ImGui::BeginChild("parameter_info_child", ImVec2(child_width, info_child_height), false, child_flags);
-                    ImGui::TextUnformatted("Module:");
-                    ImGui::SameLine();
-                    ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive), module_ptr->name.c_str());
-                    ImGui::EndChild();
-                    */
                     ImGui::CollapsingHeader(module_ptr->name.c_str(), nullptr, ImGuiTreeNodeFlags_Leaf);
-                    
-                    /*
-                    float param_height = 0.0f;
-                    for (auto& param : module_ptr->parameters) {
-                        param_height += param.GUI_GetHeight();
-                    }
-                    param_height += style.ScrollbarSize;
-                    //float param_count = static_cast<float>(module_ptr->parameters.size()); 
-                    //float param_child_height = ((2.0f + param_count) * ImGui::GetFrameHeightWithSpacing());
-                    float param_child_height = param_height; //(ImGui::GetContentRegionAvail().y / static_cast<float>(selected_module_count)) - (info_child_height*1.5f);
-        
-                    child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
-                    ImGui::BeginChild("parameter_list_child", ImVec2(0.0f, param_child_height), true, child_flags);
-                    */
-                    
+
                     bool param_name_space_open = true;
                     unsigned int param_indent_stack = 0;
-
                     for (auto& param : module_ptr->parameters) {
                         // Filter module by given search string
                         bool search_filter = true;
@@ -1125,7 +1099,6 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
                                 ImGui::Unindent();
                             }
 
-                            ImGui::Separator();
                             if (!this->param_name_space.empty()) {
                                 ImGui::Indent();
                                 std::string label = this->param_name_space + "###" + param.full_name;
@@ -1146,8 +1119,10 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
                             param.GUI_Present();
                         }
                     }
-                                
-                    ImGui::Spacing(); 
+                    
+                    // Vertical spacing using dummy
+                    ImGui::Dummy(ImVec2(1.0f, ImGui::GetFrameHeightWithSpacing()));
+                    
                     ImGui::PopID();
                 }
             }

@@ -161,6 +161,8 @@ void megamol::gui::configurator::Module::Presentation::Present(
     }
 
     ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiIO& io = ImGui::GetIO();
+    
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
     
@@ -394,8 +396,17 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 state.interact.group_selected_uid = GUI_INVALID_ID;                
             }
             if (active && !this->selected) {
-                state.interact.modules_selected_uids.clear();
-                state.interact.modules_selected_uids.emplace_back(inout_module.uid);
+                // Multi-Selection
+                if (io.KeyShift) {
+                    if (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
+                        state.interact.modules_selected_uids.emplace_back(inout_module.uid);
+                    }
+                }
+                else {
+                    // Single Selection
+                    state.interact.modules_selected_uids.clear();
+                    state.interact.modules_selected_uids.emplace_back(inout_module.uid);
+                }
             }
             if ((mouse_clicked && (!hovered || state.interact.callslot_hovered_uid != GUI_INVALID_ID) && (state.interact.module_hovered_uid == GUI_INVALID_ID)) || 
                 (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid))) {
