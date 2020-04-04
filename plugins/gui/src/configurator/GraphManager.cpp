@@ -1548,6 +1548,7 @@ void megamol::gui::configurator::GraphManager::Presentation::Present(
             } else if (confirmed || !popup_open) {
                 inout_graph_manager.DeleteGraph(graph_delete_uid);
                 this->graph_delete_uid = GUI_INVALID_ID;
+                state.graph_selected_uid = GUI_INVALID_ID;
             }
         }
 

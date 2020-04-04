@@ -420,11 +420,16 @@ void megamol::gui::configurator::Module::Presentation::Present(
             if (this->label_visible && this->show_params) {
                 ImGui::PushStyleColor(ImGuiCol_ChildBg, COLOR_MODULE_BACKGROUND);
                 ImGui::SetCursorScreenPos(param_child_pos);
-                auto param_count = inout_module.parameters.size();
-                float child_width = 300.0f * state.canvas.zooming;
-                float child_height = std::min(200.0f * state.canvas.zooming, ((1 + param_count) * ImGui::GetFrameHeightWithSpacing()));
                 
-                auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_AlwaysVerticalScrollbar;
+                float param_height = 0.0f;
+                for (auto& param : inout_module.parameters) {
+                    param_height += param.GUI_GetHeight();
+                }
+                param_height += style.ScrollbarSize;
+                float child_width = 325.0f * state.canvas.zooming;
+                float child_height = std::min((ImGui::GetContentRegionAvail().y), param_height);
+                
+                auto child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened;
                 ImGui::BeginChild("module_parameter_child", ImVec2(child_width, child_height), true, child_flags);
                 
                 for (auto& param : inout_module.parameters) {

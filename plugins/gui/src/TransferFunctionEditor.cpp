@@ -286,7 +286,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
     }
     ImGui::PopItemWidth();
 
-    ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x);
+    ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
     ImGui::TextUnformatted("Value Range");
 
     // Value slider -------------------------------------------------------
@@ -324,13 +324,14 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
 
     // Color channels -----------------------------------------------------
     ImGui::Checkbox("Red", &this->activeChannels[0]);
-    ImGui::SameLine(tfw_item_width * 0.26f);
+    ImGui::SameLine();
     ImGui::Checkbox("Green", &this->activeChannels[1]);
-    ImGui::SameLine(tfw_item_width * 0.49f);
+    ImGui::SameLine();
     ImGui::Checkbox("Blue", &this->activeChannels[2]);
-    ImGui::SameLine(tfw_item_width * 0.725f);
+    ImGui::SameLine();
     ImGui::Checkbox("Alpha", &this->activeChannels[3]);
-    ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x);
+    ImGui::SameLine();
+    ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x + ImGui::GetScrollX());
     ImGui::TextUnformatted("Color Channels");
 
     // Color editor for selected node -------------------------------------

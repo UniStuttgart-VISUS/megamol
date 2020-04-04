@@ -629,14 +629,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
             for (auto& module_uid : this->graph_state.interact.modules_remove_group_uids) {
                 for (auto& group_ptr : inout_graph.GetGroups()) {
                     if (group_ptr->ContainsModule(module_uid)) {
-                        group_ptr->RemoveModule(module_uid);
-                        if (group_ptr->EmptyModules()) {
-                            inout_graph.DeleteGroup(group_ptr->uid);
-                            // Reset interact state for groups       
-                            this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;
-                            this->graph_state.interact.group_save = false;
-                            break;
-                        }                    
+                        group_ptr->RemoveModule(module_uid);                 
                     }
                 }
             }
@@ -675,15 +668,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                             GroupPtrType remove_group_ptr;
                             if (inout_graph.GetGroup(module_group_member_uid, remove_group_ptr)) {
                                 // Remove module from previous associated group
-                                remove_group_ptr->RemoveModule(module_ptr->uid);
-                                if (remove_group_ptr->EmptyModules()) {
-                                    ImGuiID delete_group_uid = remove_group_ptr->uid;
-                                    remove_group_ptr.reset();
-                                    inout_graph.DeleteGroup(delete_group_uid);
-                                    // Reset interact state for groups       
-                                    this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;
-                                    this->graph_state.interact.group_save = false;                                    
-                                }                    
+                                remove_group_ptr->RemoveModule(module_ptr->uid);                  
                             }
                             add_group_ptr->AddModule(module_ptr);
                         }
@@ -1011,12 +996,13 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
 void megamol::gui::configurator::Graph::Presentation::present_parameters(
     megamol::gui::configurator::Graph& inout_graph, float child_width) {
 
+    ImGuiStyle& style = ImGui::GetStyle();
+    
     ImGui::BeginGroup();
 
-    float param_child_height = ImGui::GetFrameHeightWithSpacing() * 3.5f;
-    auto child_flags =
-        ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
-    ImGui::BeginChild("parameter_search_child", ImVec2(child_width, param_child_height), false, child_flags);
+    float search_child_height = ImGui::GetFrameHeightWithSpacing() * 3.5f;
+    auto child_flags = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
+    ImGui::BeginChild("parameter_search_child", ImVec2(child_width, search_child_height), false, child_flags);
 
     ImGui::TextUnformatted("Parameters");
     ImGui::Separator();
@@ -1080,29 +1066,46 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
     ImGui::Separator();
 
     ImGui::EndChild();
-
+    
+    child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_AlwaysUseWindowPadding;
+    ImGui::BeginChild("parameter_list_frame_child", ImVec2(child_width, 0.0f), false, child_flags);
+    
     // Get pointer to currently selected module(s)
     if (!this->graph_state.interact.modules_selected_uids.empty()) {
+        /*
         size_t selected_module_count = this->graph_state.interact.modules_selected_uids.size();
         float info_child_height = ImGui::GetFrameHeightWithSpacing() * 1.0f;
-        float param_child_height = (ImGui::GetContentRegionAvail().y / static_cast<float>(selected_module_count)) - (info_child_height*1.5f);
-        
+        */
         for (auto& module_uid : this->graph_state.interact.modules_selected_uids) {
             ModulePtrType module_ptr;
             if (inout_graph.GetModule(module_uid, module_ptr)) {
                 if (module_ptr->parameters.size() > 0) {
+                    
                     ImGui::PushID(module_ptr->uid);
                     
+                    /*
                     ImGui::BeginChild("parameter_info_child", ImVec2(child_width, info_child_height), false, child_flags);
                     ImGui::TextUnformatted("Module:");
                     ImGui::SameLine();
                     ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive), module_ptr->name.c_str());
-
                     ImGui::EndChild();
-                    auto child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar |
-                                       ImGuiWindowFlags_NavFlattened;
-                    ImGui::BeginChild("parameter_list_child", ImVec2(child_width, param_child_height), true, child_flags);
-
+                    */
+                    ImGui::CollapsingHeader(module_ptr->name.c_str(), nullptr, ImGuiTreeNodeFlags_Leaf);
+                    
+                    /*
+                    float param_height = 0.0f;
+                    for (auto& param : module_ptr->parameters) {
+                        param_height += param.GUI_GetHeight();
+                    }
+                    param_height += style.ScrollbarSize;
+                    //float param_count = static_cast<float>(module_ptr->parameters.size()); 
+                    //float param_child_height = ((2.0f + param_count) * ImGui::GetFrameHeightWithSpacing());
+                    float param_child_height = param_height; //(ImGui::GetContentRegionAvail().y / static_cast<float>(selected_module_count)) - (info_child_height*1.5f);
+        
+                    child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
+                    ImGui::BeginChild("parameter_list_child", ImVec2(0.0f, param_child_height), true, child_flags);
+                    */
+                    
                     bool param_name_space_open = true;
                     unsigned int param_indent_stack = 0;
 
@@ -1143,13 +1146,14 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
                             param.GUI_Present();
                         }
                     }
-                    ImGui::EndChild();
-                    
+                                
+                    ImGui::Spacing(); 
                     ImGui::PopID();
                 }
             }
         }
     }
+    ImGui::EndChild();
 
     ImGui::EndGroup();
 }

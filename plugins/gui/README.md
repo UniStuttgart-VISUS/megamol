@@ -99,7 +99,7 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
     * `Save Project` (`Ctrl + s`) Save the project of the currently selected tab to a file (lua).
 * `View`
     * `Modules Sidebar`  Show/Hide sidebar with module stock list.
-    * `Parameter Sidebar` (`Ctrl + Shift + p`) Show/Hide sidebar with parameters of currently selected module.
+    * `Parameter Sidebar` Show/Hide sidebar with parameters of currently selected module.
 * `Help` Link to this Readme.
 
 #### Project Menu
@@ -136,6 +136,9 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
     * `Mouse Wheel`
 * Graph Scrolling
     * `Middle Mouse Button`
+* Module Multi-Selection
+    * Drag & Drop with `Left Mouse Button`. Each module partially overlapped by the multi-selection frame will be selected.
+    * Hold `Shift` and click the modules you want to select.
 * `Module`
     * Main View `Radio Button`: Toggle main view flag (only available for view modules).
     * Parameter `Arrow Button`: Show/Hide parameters in small window sticked to module.

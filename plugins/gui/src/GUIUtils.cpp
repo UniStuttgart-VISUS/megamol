@@ -236,6 +236,7 @@ bool megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::stri
     // Set keyboard focus when hotkey is pressed
     if (this->search_focus) {
         ImGui::SetKeyboardFocusHere();
+        this->search_string = "";
         this->search_focus = false;
     }
 

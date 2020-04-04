@@ -222,6 +222,8 @@ public:
     inline void GUI_SetLabelVisibility(bool visible) { this->present.visible = visible; }
     inline void GUI_SetReadOnly(bool readonly) { this->present.read_only = readonly; }
     inline void GUI_SetExpert(bool expert) { this->present.expert = expert; }
+    
+    inline float GUI_GetHeight(void) { return this->present.GetHeight(*this); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -245,13 +247,15 @@ private:
 
         ~Presentation(void);
 
-        bool Present(Parameter& param);
+        bool Present(Parameter& inout_param);
 
+        float GetHeight(Parameter& inout_param);
+        
         bool read_only;
         bool visible;
         bool expert;
-
-    private:
+        
+    private:           
         Presentations presentations;
         std::string help;
         megamol::gui::GUIUtils utils;
@@ -260,15 +264,14 @@ private:
         megamol::gui::TransferFunctionEditor tf_editor;
         std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
         const std::string float_format;
-
-        static bool popup_open;
-
-        void present_prefix(Parameter& param);
-        void present_value_DEFAULT(Parameter& param);
+        float height;
+    
+        void present_prefix(void);
+        void present_value_DEFAULT(Parameter& inout_param);
         // void present_value_PIN_VALUE_TO_MOUSE(Parameter& param);
-        void present_postfix(Parameter& param);
+        void present_postfix(Parameter& inout_param);
         bool presentation_button(void);
-        void transfer_function_edit(Parameter& param);
+        void transfer_function_edit(Parameter& inout_param);
 
     } present;
 };
