@@ -52,6 +52,7 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
     , m_rendering_mode_slot("RenderingMode", "Glyph rendering mode")
     , m_tf_min(0.0f)
     , m_tf_max(1.0f)
+    , m_show_glyphs(true)
 {
 
     this->m_transfer_function_Slot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
@@ -133,21 +134,21 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
         auto probe_cnt = probes->getProbeCount();
 
-        std::vector<glowl::DrawElementsCommand> textured_gylph_draw_commands;
-        std::vector<glowl::DrawElementsCommand> vector_probe_gylph_draw_commands;
-        std::vector<glowl::DrawElementsCommand> scalar_probe_gylph_draw_commands;
-
         m_textured_glyph_data.clear();
         m_vector_probe_glyph_data.clear();
         m_scalar_probe_glyph_data.clear();
 
-        textured_gylph_draw_commands.reserve(probe_cnt);
+        m_textured_gylph_draw_commands.clear();
+        m_vector_probe_gylph_draw_commands.clear();
+        m_scalar_probe_gylph_draw_commands.clear();
+
+        m_textured_gylph_draw_commands.reserve(probe_cnt);
         m_textured_glyph_data.reserve(probe_cnt);
 
-        vector_probe_gylph_draw_commands.reserve(probe_cnt);
+        m_vector_probe_gylph_draw_commands.reserve(probe_cnt);
         m_vector_probe_glyph_data.reserve(probe_cnt);
 
-        scalar_probe_gylph_draw_commands.reserve(probe_cnt);
+        m_scalar_probe_gylph_draw_commands.reserve(probe_cnt);
         m_scalar_probe_glyph_data.reserve(probe_cnt);
 
         // draw command looks the same for all billboards because geometry is reused
@@ -176,11 +177,11 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                     float slice_idx = probe_idx % 2048;
                     gpu_mtl_storage->getMaterials()[0].textures[probe_idx / 2048]->makeResident();
 
-                    auto visitor = [&textured_gylph_draw_commands, draw_command, scale, texture_handle, slice_idx, probe_idx, this](auto&& arg) {
+                    auto visitor = [draw_command, scale, texture_handle, slice_idx, probe_idx, this](auto&& arg) {
                         using T = std::decay_t<decltype(arg)>;
 
                         auto glyph_data = createTexturedGlyphData(arg, probe_idx, texture_handle, slice_idx, scale);
-                        textured_gylph_draw_commands.push_back(draw_command);
+                        m_textured_gylph_draw_commands.push_back(draw_command);
                         this->m_textured_glyph_data.push_back(glyph_data);
                     };
 
@@ -235,14 +236,13 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
                 auto generic_probe = probes->getGenericProbe(probe_idx);
 
-                auto visitor = [&vector_probe_gylph_draw_commands, &scalar_probe_gylph_draw_commands, draw_command,
-                                   scale, probe_idx, texture_handle, this](auto&& arg) {
+                auto visitor = [draw_command,scale, probe_idx, texture_handle, this](auto&& arg) {
                     using T = std::decay_t<decltype(arg)>;
                     if constexpr (std::is_same_v<T, probe::FloatProbe>) {
 
                         auto glyph_data = createScalarProbeGlyphData(arg, probe_idx, scale);
                         glyph_data.tf_texture_handle = texture_handle;
-                        scalar_probe_gylph_draw_commands.push_back(draw_command);
+                        m_scalar_probe_gylph_draw_commands.push_back(draw_command);
                         this->m_scalar_probe_glyph_data.push_back(glyph_data);
 
                     } else if constexpr (std::is_same_v<T, probe::IntProbe>) {
@@ -253,7 +253,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                         glyph_data.tf_texture_handle = texture_handle;
                         glyph_data.tf_min = m_tf_min;
                         glyph_data.tf_max = m_tf_max;
-                        vector_probe_gylph_draw_commands.push_back(draw_command);
+                        m_vector_probe_gylph_draw_commands.push_back(draw_command);
                         this->m_vector_probe_glyph_data.push_back(glyph_data);
 
                     } else {
@@ -279,15 +279,15 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         
         auto const& textured_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
         rt_collection->addRenderTasks(
-            textured_shader, m_billboard_dummy_mesh, textured_gylph_draw_commands, m_textured_glyph_data);
+            textured_shader, m_billboard_dummy_mesh, m_textured_gylph_draw_commands, m_textured_glyph_data);
 
         auto const& scalar_shader = gpu_mtl_storage->getMaterials()[1].shader_program;
         rt_collection->addRenderTasks(
-            scalar_shader, m_billboard_dummy_mesh, scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
+            scalar_shader, m_billboard_dummy_mesh, m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
 
         auto const& vector_shader = gpu_mtl_storage->getMaterials()[2].shader_program;
         rt_collection->addRenderTasks(
-            vector_shader, m_billboard_dummy_mesh, vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
+            vector_shader, m_billboard_dummy_mesh, m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
     }
 
     // check for pending probe manipulations
@@ -353,7 +353,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                         ImGui::End();
                     }
 
-                } else if (itr->type == DEHIGHLIGHT) {
+                }
+                else if (itr->type == DEHIGHLIGHT) {
                     auto manipulation = *itr;
 
                     // std::array<GlyphVectorProbeData, 1> per_probe_data = {
@@ -364,6 +365,32 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                     auto manipulation = *itr;
 
                     // rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
+                } else if (itr->type == TOGGLE_SHOW_GLYPHS) {
+
+                    m_show_glyphs = !m_show_glyphs;
+
+                    if (m_show_glyphs) {
+                        mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
+                        if (mtlc == NULL) return false;
+
+                        auto gpu_mtl_storage = mtlc->getData();
+
+                        auto const& textured_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
+                        rt_collection->addRenderTasks(textured_shader, m_billboard_dummy_mesh,
+                            m_textured_gylph_draw_commands, m_textured_glyph_data);
+
+                        auto const& scalar_shader = gpu_mtl_storage->getMaterials()[1].shader_program;
+                        rt_collection->addRenderTasks(scalar_shader, m_billboard_dummy_mesh,
+                            m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
+
+                        auto const& vector_shader = gpu_mtl_storage->getMaterials()[2].shader_program;
+                        rt_collection->addRenderTasks(vector_shader, m_billboard_dummy_mesh,
+                            m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
+                    } else {
+                        // TODO this breaks chaining...
+                        rt_collection->clear();
+                    }
+
                 } else {
                     // what else is there to do?
                 }

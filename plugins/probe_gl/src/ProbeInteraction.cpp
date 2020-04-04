@@ -367,7 +367,12 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
                         InteractionType::TOGGLE_SHOW_PROBES, static_cast<uint32_t>(last_active_probe_id), 0, 0, 0});
                 }
                 ImGui::SameLine();
-                ImGui::Checkbox("", &m_show_probes);
+                ImGui::PushID(0);
+                if(ImGui::Checkbox("", &m_show_probes)){
+                    m_interactions->accessPendingManipulations().push_back(ProbeManipulation{
+                        InteractionType::TOGGLE_SHOW_PROBES, static_cast<uint32_t>(last_active_probe_id), 0, 0, 0});
+                }
+                ImGui::PopID();
 
                 if (ImGui::Button("Hull", ImVec2(75, 20))) {
                     m_open_showMenu_dropdown = false;
@@ -379,9 +384,17 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
                 if (ImGui::Button("Glyphs", ImVec2(75, 20))) {
                     m_open_showMenu_dropdown = false;
                     m_show_glyphs = !m_show_glyphs;
+
+                    m_interactions->accessPendingManipulations().push_back(ProbeManipulation{
+                        InteractionType::TOGGLE_SHOW_GLYPHS, static_cast<uint32_t>(last_active_probe_id), 0, 0, 0});
                 }
                 ImGui::SameLine();
-                ImGui::Checkbox("", &m_show_glyphs);
+                ImGui::PushID(2);
+                if (ImGui::Checkbox("", &m_show_glyphs)) {
+                    m_interactions->accessPendingManipulations().push_back(ProbeManipulation{
+                        InteractionType::TOGGLE_SHOW_GLYPHS, static_cast<uint32_t>(last_active_probe_id), 0, 0, 0});
+                }
+                ImGui::PopID();
 
                 ImGui::Separator();
 
