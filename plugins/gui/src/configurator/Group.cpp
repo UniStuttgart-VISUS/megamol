@@ -60,60 +60,7 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
     module_ptr->GUI_SetGroupName(this->name);
     this->present.ForceUpdate();
 
-    // Add connected call slots to group interface if connected module is not part of same group
-    for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
-        if (callerslot_ptr->CallsConnected()) {
-            for (auto& call : callerslot_ptr->GetConnectedCalls()) {
-                auto calleeslot_ptr = call->GetCallSlot(CallSlotType::CALLEE);
-                if (calleeslot_ptr->ParentModuleConnected()) {
-                    ImGuiID parent_module_group_uid = calleeslot_ptr->GetParentModule()->GUI_GetGroupMembership();
-                    if (parent_module_group_uid != this->uid) {
-                        this->AddCallSlot(callerslot_ptr);
-                    }
-                }
-            }
-        }
-    }
-    for (auto& calleeslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLEE)) {
-        if (calleeslot_ptr->CallsConnected()) {
-            for (auto& call : calleeslot_ptr->GetConnectedCalls()) {
-                auto callerslot_ptr = call->GetCallSlot(CallSlotType::CALLER);
-                if (callerslot_ptr->ParentModuleConnected()) {
-                    ImGuiID parent_module_group_uid = callerslot_ptr->GetParentModule()->GUI_GetGroupMembership();
-                    if (parent_module_group_uid != this->uid) {
-                        this->AddCallSlot(calleeslot_ptr);
-                    }
-                }
-            }
-        }
-    }
-    // Remove connected call slots of group interface if connected module is part of same group
-    for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
-        if (callerslot_ptr->CallsConnected()) {
-            for (auto& call : callerslot_ptr->GetConnectedCalls()) {
-                auto calleeslot_ptr = call->GetCallSlot(CallSlotType::CALLEE);
-                if (calleeslot_ptr->ParentModuleConnected()) {
-                    ImGuiID parent_module_group_uid = calleeslot_ptr->GetParentModule()->GUI_GetGroupMembership();
-                    if (parent_module_group_uid == this->uid) {
-                        this->RemoveCallSlot(calleeslot_ptr->uid);
-                    }
-                }
-            }
-        }
-    }
-    for (auto& calleeslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLEE)) {
-        if (calleeslot_ptr->CallsConnected()) {
-            for (auto& call : calleeslot_ptr->GetConnectedCalls()) {
-                auto callerslot_ptr = call->GetCallSlot(CallSlotType::CALLER);
-                if (callerslot_ptr->ParentModuleConnected()) {
-                    ImGuiID parent_module_group_uid = callerslot_ptr->GetParentModule()->GUI_GetGroupMembership();
-                    if (parent_module_group_uid == this->uid) {
-                        this->RemoveCallSlot(callerslot_ptr->uid);
-                    }
-                }
-            }
-        }
-    }
+    this->restore_callslot_interface_sate();
 
     vislib::sys::Log::DefaultLog.WriteInfo(
         "Added module '%s' to group '%s'.\n", module_ptr->name.c_str(), this->name.c_str());
@@ -146,11 +93,14 @@ bool megamol::gui::configurator::Group::RemoveModule(ImGuiID module_uid) {
                 (*mod_iter)->GUI_SetGroupVisibility(false);
                 (*mod_iter)->GUI_SetGroupName("");
                 this->present.ForceUpdate();
-
+                
                 vislib::sys::Log::DefaultLog.WriteInfo(
                     "Removed module '%s' from group '%s'.\n", (*mod_iter)->name.c_str(), this->name.c_str());
                 (*mod_iter).reset();
                 this->modules.erase(mod_iter);
+                
+                this->restore_callslot_interface_sate();
+                                
                 return true;
             }
         }
@@ -272,6 +222,72 @@ bool megamol::gui::configurator::Group::ContainsCallSlot(ImGuiID callslot_uid) {
         }
     }
     return false;
+}
+
+
+void megamol::gui::configurator::Group::restore_callslot_interface_sate(void) {
+    
+    for (auto& module_ptr : this->modules) {
+            
+        // Add connected call slots to group interface if connected module is not part of same group
+        /// Caller
+        for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
+            if (callerslot_ptr->CallsConnected()) {
+                for (auto& call : callerslot_ptr->GetConnectedCalls()) {
+                    auto calleeslot_ptr = call->GetCallSlot(CallSlotType::CALLEE);
+                    if (calleeslot_ptr->ParentModuleConnected()) {
+                        ImGuiID parent_module_group_uid = calleeslot_ptr->GetParentModule()->GUI_GetGroupMembership();
+                        if (parent_module_group_uid != this->uid) {
+                            this->AddCallSlot(callerslot_ptr);
+                        }
+                    }
+                }
+            }
+        }
+        /// Callee
+        for (auto& calleeslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLEE)) {
+            if (calleeslot_ptr->CallsConnected()) {
+                for (auto& call : calleeslot_ptr->GetConnectedCalls()) {
+                    auto callerslot_ptr = call->GetCallSlot(CallSlotType::CALLER);
+                    if (callerslot_ptr->ParentModuleConnected()) {
+                        ImGuiID parent_module_group_uid = callerslot_ptr->GetParentModule()->GUI_GetGroupMembership();
+                        if (parent_module_group_uid != this->uid) {
+                            this->AddCallSlot(calleeslot_ptr);
+                        }
+                    }
+                }
+            }
+        }
+        // Remove connected call slots of group interface if connected module is part of same group
+        /// Caller
+        for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
+            if (callerslot_ptr->CallsConnected()) {
+                for (auto& call : callerslot_ptr->GetConnectedCalls()) {
+                    auto calleeslot_ptr = call->GetCallSlot(CallSlotType::CALLEE);
+                    if (calleeslot_ptr->ParentModuleConnected()) {
+                        ImGuiID parent_module_group_uid = calleeslot_ptr->GetParentModule()->GUI_GetGroupMembership();
+                        if (parent_module_group_uid == this->uid) {
+                            this->RemoveCallSlot(calleeslot_ptr->uid);
+                        }
+                    }
+                }
+            }
+        }
+        /// Callee
+        for (auto& calleeslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLEE)) {
+            if (calleeslot_ptr->CallsConnected()) {
+                for (auto& call : calleeslot_ptr->GetConnectedCalls()) {
+                    auto callerslot_ptr = call->GetCallSlot(CallSlotType::CALLER);
+                    if (callerslot_ptr->ParentModuleConnected()) {
+                        ImGuiID parent_module_group_uid = callerslot_ptr->GetParentModule()->GUI_GetGroupMembership();
+                        if (parent_module_group_uid == this->uid) {
+                            this->RemoveCallSlot(callerslot_ptr->uid);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 
