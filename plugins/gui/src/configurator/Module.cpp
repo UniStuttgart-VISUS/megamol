@@ -396,7 +396,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 state.interact.group_selected_uid = GUI_INVALID_ID;                
             }
             if (active && !this->selected) {
-                // Multi-Selection
+                // Multiple Selection
                 if (io.KeyShift) {
                     if (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
                         state.interact.modules_selected_uids.emplace_back(inout_module.uid);
