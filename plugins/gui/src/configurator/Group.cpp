@@ -360,7 +360,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
 
         // Context menu
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-            state.interact.group_selected_uid = inout_group.uid; // Force selection (must be set in same frame)
+            active = true; // Force selection
             
             ImGui::TextUnformatted("Group");
             ImGui::Separator();

@@ -382,7 +382,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
 
         // Context Menu
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-            state.interact.callslot_selected_uid = inout_callslot.uid; // Force selection (must be set in same frame)
+            active = true; // Force selection 
                  
             ImGui::TextUnformatted("Call Slot");
             ImGui::Separator();

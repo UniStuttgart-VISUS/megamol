@@ -652,7 +652,6 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                               
                     GroupPtrType add_group_ptr;
                     if (inout_graph.GetGroup(group_uid, add_group_ptr)) {
-                        
                         // Remove module from previous associated group
                         ImGuiID module_group_member_uid = module_ptr->GUI_GetGroupMembership();
                         GroupPtrType remove_group_ptr;
@@ -675,13 +674,6 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                     if (remove_group_ptr->ContainsModule(module_uid)) {
                         remove_group_ptr->RemoveModule(module_uid);                 
                     }
-                    /*
-                    // Delete empty group
-                    if (remove_group_ptr->EmptyModules()) {
-                        ImGuiID remove_group_uid = remove_group_ptr->uid;
-                        inout_graph.DeleteGroup(remove_group_uid);
-                    }*/
-                    break;
                 }
             }
             this->graph_state.interact.modules_remove_group_uids.clear();

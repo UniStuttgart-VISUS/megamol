@@ -244,7 +244,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
             // Context menu
             if (state.interact.callslot_hovered_uid == GUI_INVALID_ID) {
                 if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-                    this->add_uid(state.interact.modules_selected_uids, inout_module.uid); // Force selection (must be set in same frame)
+                    active = true; // Force selection 
                     
                     ImGui::TextUnformatted("Module");
                     ImGui::Separator();
