@@ -57,11 +57,11 @@ The `OverlayRenderer` is a rendering module which implements a `megamol::core::v
 * `transport_ctrl::duration` (`3.0`): Duration transport ctrl icons are shown after value changes. Value of zero means showing transport ctrl icons permanently.
 * `transport_ctrl::fast_speed` (`5.0`): Define factor of default speed for fast transport ctrl icon threshold.
 * `transport_ctrl::value_scaling` (`10.0`): Define factor of default speed for ultra fast transport ctrl icon threshold.
-* `transport_ctrl::speed_parameter_name` (` `): The full parameter name for the animation speed, e.g. '::Project_1::View3D_21::anim::speed'.
-* `transport_ctrl::time_parameter_name` (` `): The full parameter name for the animation time, e.g. '::Project_1::View3D_21::anim::time'.
+* `transport_ctrl::speed_parameter_name` (` `): The full parameter name for the animation speed, e.g. *::Project_1::View3D_21::anim::speed*.
+* `transport_ctrl::time_parameter_name` (` `): The full parameter name for the animation time, e.g. *::Project_1::View3D_21::anim::time*.
 * `parameter::prefix` (` `): The parameter value prefix.
 * `parameter::sufix` (` `): The parameter value sufix.
-* `parameter::name` (` `): The full parameter name, e.g. '::Project_1::View3D_21::cam::position'. Supported parameter types: float, int, Vector2f/3f/4f.
+* `parameter::name` (` `): The full parameter name, e.g. *::Project_1::View3D_21::cam::position*. Supported parameter types: float, int, Vector2f/3f/4f.
 * `label::text` (` `): The displayed text.
 * `font::name` (`Roboto Sans`): The font name.
 * `font::size` (`20.0`): The font size.
@@ -113,20 +113,20 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
 * `Slot Names` Show/Hide slot names.
 * `Layout Graph` Simple layouting of project graph.
 
-#### 'Module Stock List' Sidebar
+#### *Module Stock List* Sidebar
 
 * Search for Module (`Ctrl + Shift + m`)
 * Add Module from Stock List to Graph
     * `Double Left Click` on Module in Stock List
     * `Right Click` on Module in Stock List / Context Menu: Add
     
-#### 'Module Parameters' Sidebar
+#### *Module Parameters* Sidebar
 
 * Search for Parameter (`Ctrl + Shift + p`)
         
 #### Project Graph
 
-* 'Module Stock List' Window at Mouse Position (Only available if 'Module Stock List' sidebar is hidden).
+* *Module Stock List* Window at Mouse Position (Only available if *Module Stock List* sidebar is hidden).
     * `Ctrl + Shift + m`
 * Call Creation
     * Drag and Drop Call from one Call Slot to other highlighted compatible Call Slot.
@@ -141,7 +141,7 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
     * Hold `Shift` + `Left Click` on modules you want to select.
 * `Module`
     * Main View `Radio Button`: Toggle main view flag (only available for view modules).
-    * Parameter `Arrow Button`: Show/Hide 'Module Parameters' in small window sticked to module.
+    * Parameter `Arrow Button`: Show/Hide *Module Parameters* in small window sticked to module.
     * Context Menu (`Right Click`)
         * Delete (Alternative: Select with `Left Click` an press `Delete`)
         * Rename
@@ -151,11 +151,11 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
     * Context Menu (`Right Click`)
         * Delete (Alternative: Select with `Left Click` an press `Delete`)
 * `Slot` 
-    * `Double Left Click` If 'Module Stock List' sidebar is hidden, show module stock list in window pinned to slot position.
+    * `Double Left Click` If *Module Stock List* sidebar is hidden, show *Module Stock List* in window pinned to slot position.
     * Context Menu (`Right Click`)    
         * Add to Group Interface
         * Remove from Group Interface
-        * Show Module Stock List Window
+        * Show *Module Stock List* Window
 * `Group` 
     * Context Menu (`Right Click`)
         * Collapse View / Expand View

@@ -154,6 +154,13 @@ private:
                 }
             }
         }
+        
+        inline void add_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {
+            if (!this->found_uid(modules_uid_vector, module_uid)) {
+                modules_uid_vector.emplace_back(module_uid);
+            }
+        }
+                    
                     
     } present;
 };

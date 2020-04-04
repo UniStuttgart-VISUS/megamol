@@ -623,18 +623,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
             ImGui::EndTabItem();
         }
 
-        // State processing ---------------------
-        // Remove module from group
-        if (!this->graph_state.interact.modules_remove_group_uids.empty()) {
-            for (auto& module_uid : this->graph_state.interact.modules_remove_group_uids) {
-                for (auto& group_ptr : inout_graph.GetGroups()) {
-                    if (group_ptr->ContainsModule(module_uid)) {
-                        group_ptr->RemoveModule(module_uid);                 
-                    }
-                }
-            }
-            this->graph_state.interact.modules_remove_group_uids.clear();
-        }        
+        // State processing ---------------------   
         // Add module to group
         if (!this->graph_state.interact.modules_add_group_uids.empty()) {
             ModulePtrType module_ptr;
@@ -663,20 +652,40 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                               
                     GroupPtrType add_group_ptr;
                     if (inout_graph.GetGroup(group_uid, add_group_ptr)) {
-                        if (!add_group_ptr->ContainsModule(module_ptr->uid)) {
-                            ImGuiID module_group_member_uid = module_ptr->GUI_GetGroupMembership();
-                            GroupPtrType remove_group_ptr;
-                            if (inout_graph.GetGroup(module_group_member_uid, remove_group_ptr)) {
-                                // Remove module from previous associated group
-                                remove_group_ptr->RemoveModule(module_ptr->uid);                  
+                        
+                        // Remove module from previous associated group
+                        ImGuiID module_group_member_uid = module_ptr->GUI_GetGroupMembership();
+                        GroupPtrType remove_group_ptr;
+                        if (inout_graph.GetGroup(module_group_member_uid, remove_group_ptr)) {
+                            if (remove_group_ptr->uid != add_group_ptr->uid) {
+                                remove_group_ptr->RemoveModule(module_ptr->uid);
                             }
-                            add_group_ptr->AddModule(module_ptr);
                         }
+                        // Add module to group
+                        add_group_ptr->AddModule(module_ptr);
                     }                    
                 }
             }
             this->graph_state.interact.modules_add_group_uids.clear();
         }
+        // Remove module from group
+        if (!this->graph_state.interact.modules_remove_group_uids.empty()) {
+            for (auto& module_uid : this->graph_state.interact.modules_remove_group_uids) {
+                for (auto& remove_group_ptr : inout_graph.GetGroups()) {
+                    if (remove_group_ptr->ContainsModule(module_uid)) {
+                        remove_group_ptr->RemoveModule(module_uid);                 
+                    }
+                    /*
+                    // Delete empty group
+                    if (remove_group_ptr->EmptyModules()) {
+                        ImGuiID remove_group_uid = remove_group_ptr->uid;
+                        inout_graph.DeleteGroup(remove_group_uid);
+                    }*/
+                    break;
+                }
+            }
+            this->graph_state.interact.modules_remove_group_uids.clear();
+        }             
         // Add call slot to group interface
         ImGuiID callslot_uid = this->graph_state.interact.callslot_add_group_uid.first;
         if (callslot_uid != GUI_INVALID_ID) {

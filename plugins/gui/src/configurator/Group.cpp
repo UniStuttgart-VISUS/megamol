@@ -355,12 +355,12 @@ void megamol::gui::configurator::Group::Presentation::Present(
         // Automatically delete empty group.
         if (inout_group.GetModules().empty()) {
             std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-            active = true; // Force selection 
+            state.interact.group_selected_uid = inout_group.uid; // Force selection (must be set in same frame)
         }
 
         // Context menu
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-            active = true; // Force selection 
+            state.interact.group_selected_uid = inout_group.uid; // Force selection (must be set in same frame)
             
             ImGui::TextUnformatted("Group");
             ImGui::Separator();
@@ -378,7 +378,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
             /*
             if (ImGui::MenuItem("Save")) {
                 state.interact.group_save = true;
-                active = true; // Force selection 
+                state.interact.group_selected_uid = inout_group.uid; // Force selection (must be set in same frame)
             }
             */
             if (ImGui::MenuItem("Rename")) {

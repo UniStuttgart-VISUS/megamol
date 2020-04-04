@@ -244,7 +244,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
             // Context menu
             if (state.interact.callslot_hovered_uid == GUI_INVALID_ID) {
                 if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-                    active = true; // Force selection 
+                    this->add_uid(state.interact.modules_selected_uids, inout_module.uid); // Force selection (must be set in same frame)
                     
                     ImGui::TextUnformatted("Module");
                     ImGui::Separator();
@@ -355,7 +355,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                         if (ImGui::RadioButton("###main_view_switch", inout_module.is_view_instance)) {
                             state.interact.module_mainview_uid = inout_module.uid;
                             inout_module.is_view_instance = !inout_module.is_view_instance;
-                            active = true; // Force selection     
+                            this->add_uid(state.interact.modules_selected_uids, inout_module.uid); // Force selection (must be set in same frame)     
                         }
                         if (hovered) {
                             this->other_item_hovered = this->utils.HoverToolTip("Main View");
@@ -368,7 +368,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                         param_child_pos.y += ImGui::GetFrameHeight();
                         if (ImGui::ArrowButton("###parameter_toggle", ((this->show_params)? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
                             this->show_params = !this->show_params;
-                            active = true; // Force selection   
+                            this->add_uid(state.interact.modules_selected_uids, inout_module.uid); // Force selection (must be set in same frame)
                         }
                         if (hovered) {
                             this->other_item_hovered = this->other_item_hovered || this->utils.HoverToolTip("Parameters");
@@ -400,9 +400,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
             if (active && !this->selected) {
                 // Multiple Selection
                 if (io.KeyShift) {
-                    if (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
-                        state.interact.modules_selected_uids.emplace_back(inout_module.uid);
-                    }
+                    this->add_uid(state.interact.modules_selected_uids, inout_module.uid);
                 }
                 else {
                     // Single Selection

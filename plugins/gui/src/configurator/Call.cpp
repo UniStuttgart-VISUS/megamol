@@ -212,7 +212,7 @@ void megamol::gui::configurator::Call::Presentation::Present(
 
                     // Context Menu
                     if (ImGui::BeginPopupContextItem()) {
-                        active = true; // Force selection 
+                        state.interact.call_selected_uid = inout_call.uid; // Force selection (must be set in same frame)
                         
                         ImGui::TextUnformatted("Call");
                         ImGui::Separator();
