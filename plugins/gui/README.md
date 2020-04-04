@@ -104,7 +104,7 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
 
 #### Project Menu
 
-* `Main View`
+* `Main View` Change main view state of currently selected view module.
 * `Reset Scrolling` Reset scrolling.
 * `Reset Zooming` Reset zooming.
 * `Grid` Show/Hide grid.
@@ -113,20 +113,20 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
 * `Slot Names` Show/Hide slot names.
 * `Layout Graph` Simple layouting of project graph.
 
-#### Available Module Stock Sidebar
+#### 'Module Stock List' Sidebar
 
 * Search for Module (`Ctrl + Shift + m`)
 * Add Module from Stock List to Graph
     * `Double Left Click` on Module in Stock List
-    * `Right Click` on Module in Stock List -> Context Menu: Add
+    * `Right Click` on Module in Stock List / Context Menu: Add
     
-#### Module Parameter Sidebar
+#### 'Module Parameters' Sidebar
 
 * Search for Parameter (`Ctrl + Shift + p`)
         
 #### Project Graph
 
-* Module Stock List Window at Mouse Position (Only ff module stock list sidebar is hidden).
+* 'Module Stock List' Window at Mouse Position (Only available if 'Module Stock List' sidebar is hidden).
     * `Ctrl + Shift + m`
 * Call Creation
     * Drag and Drop Call from one Call Slot to other highlighted compatible Call Slot.
@@ -141,7 +141,7 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
     * Hold `Shift` + `Left Click` on modules you want to select.
 * `Module`
     * Main View `Radio Button`: Toggle main view flag (only available for view modules).
-    * Parameter `Arrow Button`: Show/Hide parameters in small window sticked to module.
+    * Parameter `Arrow Button`: Show/Hide 'Module Parameters' in small window sticked to module.
     * Context Menu (`Right Click`)
         * Delete (Alternative: Select with `Left Click` an press `Delete`)
         * Rename
@@ -151,7 +151,7 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
     * Context Menu (`Right Click`)
         * Delete (Alternative: Select with `Left Click` an press `Delete`)
 * `Slot` 
-    * `Double Left Click` If module stock list sidebar is hidden, show module stock list in window pinned to slot position.
+    * `Double Left Click` If 'Module Stock List' sidebar is hidden, show module stock list in window pinned to slot position.
     * Context Menu (`Right Click`)    
         * Add to Group Interface
         * Remove from Group Interface
