@@ -789,17 +789,15 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
         ImGui::Checkbox("Main View", &checked);
         GUIUtils::ReadOnlyWigetStyle(false);
     } else {
-        if (ImGui::Checkbox("Main View", &selected_mod_ptr->is_view_instance)) {
-            selected_mod_ptr->is_view_instance = !selected_mod_ptr->is_view_instance;
-        }
+        ImGui::Checkbox("Main View", &selected_mod_ptr->is_view_instance);
+        // Set all other (view) modules to non main views
         if (selected_mod_ptr->is_view_instance) {
-            // Set all other (view) modules to non main views
             for (auto& mod : inout_graph.GetModules()) {
                 if (selected_mod_ptr->uid != mod->uid) {
                     mod->is_view_instance = false;
                 }
             }
-        }        
+        }
     }
     ImGui::SameLine();
 
