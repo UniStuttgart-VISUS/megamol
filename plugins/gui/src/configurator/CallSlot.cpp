@@ -419,11 +419,13 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             this->utils.ResetHoverToolTip();
         }
         
-        // State
+        // Comaptible Call highlight
         if (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.callslot_compat_ptr, inout_call_slot) !=
             GUI_INVALID_ID) {
             slot_color = COLOR_SLOT_COMPATIBLE;
         }
+        
+        // Selection
         if (state.interact.callslot_selected_uid == inout_call_slot.uid) {
             /// Call before "active" if-statement for one frame delayed check for last valid candidate for selection
             this->selected = true;
@@ -440,6 +442,8 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                 state.interact.callslot_selected_uid = GUI_INVALID_ID;
             }
         }        
+        
+        // Hovering
         if (hovered || this->selected) {
             slot_color = slot_highlight_color;
         }
@@ -449,6 +453,8 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         if (!hovered && (state.interact.callslot_hovered_uid == inout_call_slot.uid)) {
             state.interact.callslot_hovered_uid = GUI_INVALID_ID;
         }
+        
+        // Drag & Drop
         if (ImGui::BeginDragDropTarget()) {
             if (ImGui::AcceptDragDropPayload(GUI_DND_CALL_UID_TYPE) != nullptr) {
                 state.interact.callslot_dropped_uid = inout_call_slot.uid;

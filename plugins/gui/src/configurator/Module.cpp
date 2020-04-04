@@ -180,9 +180,9 @@ void megamol::gui::configurator::Module::Presentation::Present(
             this->update = false;
         }
 
+        // Draw module --------------------------------------------------------
         if ((this->group.member == GUI_INVALID_ID) || ((this->group.member != GUI_INVALID_ID) && this->group.visible)) {
 
-            // Draw module --------------------------------------------------------
             ImVec2 module_size = this->size * state.canvas.zooming;
             ImVec2 module_rect_min = state.canvas.offset + this->position * state.canvas.zooming;
             ImVec2 module_rect_max = module_rect_min + module_size;
@@ -238,8 +238,8 @@ void megamol::gui::configurator::Module::Presentation::Present(
 
             bool active = ImGui::IsItemActive();
             bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];            
-            bool hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID));
-                 //&& ((state.interact.module_hovered_uid == GUI_INVALID_ID) || (state.interact.module_hovered_uid == inout_module.uid)));
+            bool hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID)
+                && ((state.interact.module_hovered_uid == GUI_INVALID_ID) || (state.interact.module_hovered_uid == inout_module.uid)));
                 
             // Context menu
             if (state.interact.callslot_hovered_uid == GUI_INVALID_ID) {
@@ -381,13 +381,15 @@ void megamol::gui::configurator::Module::Presentation::Present(
             float border = ((inout_module.is_view_instance) ? (4.0f) : (1.0f)) * state.canvas.zooming;
             draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_GROUP_BORDER, GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All, border);
 
-            // State
+            // Hovering
             if (!hovered && (state.interact.module_hovered_uid == inout_module.uid)) {
                 state.interact.module_hovered_uid = GUI_INVALID_ID;
             }
             if (hovered) {
                 state.interact.module_hovered_uid = inout_module.uid;
             }  
+            
+            // Selection
             if (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
                 /// Call before "active" if-statement for one frame delayed check for last valid candidate for selection
                 this->selected = true;

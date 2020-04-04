@@ -226,7 +226,7 @@ void megamol::gui::configurator::Call::Presentation::Present(
                         ImGui::EndPopup();
                     }
 
-                    // State
+                    // Selection
                     if (state.interact.call_selected_uid == inout_call.uid) {
                         /// Call before "active" if-statement for one frame delayed check for last valid candidate for selection
                         this->selected = true;
