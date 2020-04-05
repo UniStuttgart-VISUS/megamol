@@ -222,7 +222,7 @@ public:
     inline void GUI_SetLabelVisibility(bool visible) { this->present.visible = visible; }
     inline void GUI_SetReadOnly(bool readonly) { this->present.read_only = readonly; }
     inline void GUI_SetExpert(bool expert) { this->present.expert = expert; }
-    
+
     inline float GUI_GetHeight(void) { return this->present.GetHeight(*this); }
 
 private:
@@ -250,12 +250,12 @@ private:
         bool Present(Parameter& inout_param);
 
         float GetHeight(Parameter& inout_param);
-        
+
         bool read_only;
         bool visible;
         bool expert;
-        
-    private:           
+
+    private:
         Presentations presentations;
         std::string help;
         megamol::gui::GUIUtils utils;
@@ -265,7 +265,7 @@ private:
         std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
         const std::string float_format;
         float height;
-    
+
         void present_prefix(void);
         void present_value_DEFAULT(Parameter& inout_param);
         // void present_value_PIN_VALUE_TO_MOUSE(Parameter& param);

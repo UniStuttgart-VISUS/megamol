@@ -656,9 +656,8 @@ bool GUIWindows::createContext(void) {
         }
         // Configurator Graph Font: Add default font again at last index for exclusive use in configurator graph.
         if (configurator_font.empty()) {
-           io.Fonts->AddFontDefault(&config);
-        } 
-        else {
+            io.Fonts->AddFontDefault(&config);
+        } else {
             io.Fonts->AddFontFromFileTTF(configurator_font.c_str(), 12.0f, &config);
         }
     }

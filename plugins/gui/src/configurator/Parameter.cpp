@@ -327,13 +327,12 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
 
 
 float megamol::gui::configurator::Parameter::Presentation::GetHeight(Parameter& inout_param) {
-    
+
     float height = (ImGui::GetFrameHeightWithSpacing() * 1.15f);
     if (inout_param.type == Parameter::ParamType::TRANSFERFUNCTION) {
         if (this->show_tf_editor) {
             height = (ImGui::GetFrameHeightWithSpacing() * 18.5f);
-        }
-        else {
+        } else {
             height = (ImGui::GetFrameHeightWithSpacing() * 1.5f);
         }
     }
@@ -653,7 +652,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_PIN_VALU
     std::string param_label = inout_param.GetName();
 
     ImGui::BeginTooltip();
-    
+
     auto visitor = [&](auto&& arg) {
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_same_v<T, bool>) {

@@ -61,13 +61,13 @@ bool GUIUtils::HoverToolTip(const std::string& text, ImGuiID id, float time_star
             this->tooltip_time = 0.0f;
         }
     }
-    
+
     return retval;
 }
 
 
 void GUIUtils::ResetHoverToolTip(void) {
-    
+
     this->tooltip_time = 0.0f;
     this->tooltip_id = GUI_INVALID_ID;
 }

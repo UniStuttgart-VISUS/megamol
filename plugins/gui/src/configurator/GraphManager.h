@@ -35,7 +35,6 @@ typedef std::vector<GraphPtrType> GraphsType;
 
 class GraphManager {
 public:
-
     GraphManager(void);
 
     virtual ~GraphManager(void);
