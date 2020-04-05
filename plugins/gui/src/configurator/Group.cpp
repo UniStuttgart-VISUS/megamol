@@ -93,14 +93,14 @@ bool megamol::gui::configurator::Group::RemoveModule(ImGuiID module_uid) {
                 (*mod_iter)->GUI_SetGroupVisibility(false);
                 (*mod_iter)->GUI_SetGroupName("");
                 this->present.ForceUpdate();
-                
+
                 vislib::sys::Log::DefaultLog.WriteInfo(
                     "Removed module '%s' from group '%s'.\n", (*mod_iter)->name.c_str(), this->name.c_str());
                 (*mod_iter).reset();
                 this->modules.erase(mod_iter);
-                
+
                 this->restore_callslot_interface_sate();
-                                
+
                 return true;
             }
         }
@@ -226,9 +226,9 @@ bool megamol::gui::configurator::Group::ContainsCallSlot(ImGuiID callslot_uid) {
 
 
 void megamol::gui::configurator::Group::restore_callslot_interface_sate(void) {
-    
+
     for (auto& module_ptr : this->modules) {
-            
+
         // Add connected call slots to group interface if connected module is not part of same group
         /// Caller
         for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
@@ -365,7 +365,8 @@ void megamol::gui::configurator::Group::Presentation::Present(
         ImGui::SetItemAllowOverlap();
 
         bool active = ImGui::IsItemActive();
-        bool hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) && (state.interact.module_hovered_uid == GUI_INVALID_ID));
+        bool hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) &&
+                        (state.interact.module_hovered_uid == GUI_INVALID_ID));
         bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
 
         // Automatically delete empty group.
@@ -377,7 +378,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
         // Context menu
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
             active = true; // Force selection
-            
+
             ImGui::TextUnformatted("Group");
             ImGui::Separator();
             std::string view = "Collapsed View";
@@ -406,7 +407,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
             }
             ImGui::EndPopup();
         }
-        
+
         // Selection
         if (state.interact.group_selected_uid == inout_group.uid) {
             /// Call before "active" if-statement for one frame delayed check for last valid candidate for selection
@@ -423,9 +424,9 @@ void megamol::gui::configurator::Group::Presentation::Present(
             if (state.interact.group_selected_uid == inout_group.uid) {
                 state.interact.group_selected_uid = GUI_INVALID_ID;
             }
-        } 
-        
-        // Dragging  
+        }
+
+        // Dragging
         if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
             ImVec2 tmp_pos;
             for (auto& mod : inout_group.GetModules()) {
@@ -511,7 +512,7 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
         (1.5f * GUIUtils::TextWidgetWidth(this->name_label) / in_canvas.zooming) + (3.0f * GUI_CALL_SLOT_RADIUS);
     group_height = std::max((3.0f * ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming),
         ((static_cast<float>(max_slot_count) * (GUI_CALL_SLOT_RADIUS * 2.0f) * 1.25f) + GUI_CALL_SLOT_RADIUS));
-        
+
     if (!this->collapsed_view) {
         float pos_maxX = -FLT_MAX;
         float pos_maxY = -FLT_MAX;

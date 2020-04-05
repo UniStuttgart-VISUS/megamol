@@ -120,7 +120,7 @@ bool megamol::gui::configurator::Configurator::Draw(
         this->init_state++;
     } else {
         // 3] Render configurator gui content
-    
+
         // Child Windows
         this->draw_window_menu(core_instance);
         this->state.child_width = 0.0f;
@@ -131,13 +131,15 @@ bool megamol::gui::configurator::Configurator::Draw(
             ImGui::SameLine();
         }
         this->graph_manager.GUI_Present(this->state);
-        
+
         // Module Stock List in separate child window if sidebar is invisible
         if (!this->show_module_list_sidebar) {
             GraphPtrType selected_graph_ptr;
             if (this->graph_manager.GetGraph(this->state.graph_selected_uid, selected_graph_ptr)) {
-                ImGuiID selected_callslot_uid = selected_graph_ptr->GUI_GetSelectedCallSlot();               
-                if ((selected_callslot_uid != GUI_INVALID_ID) && ((!this->show_module_list_child) || (this->last_selected_callslot_uid != selected_callslot_uid)) && ImGui::IsMouseDoubleClicked(0)) {
+                ImGuiID selected_callslot_uid = selected_graph_ptr->GUI_GetSelectedCallSlot();
+                if ((selected_callslot_uid != GUI_INVALID_ID) &&
+                    ((!this->show_module_list_child) || (this->last_selected_callslot_uid != selected_callslot_uid)) &&
+                    ImGui::IsMouseDoubleClicked(0)) {
                     std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
                     this->last_selected_callslot_uid = selected_callslot_uid;
                 }
@@ -149,7 +151,7 @@ bool megamol::gui::configurator::Configurator::Draw(
             }
             if (this->show_module_list_child) {
                 ImGuiStyle& style = ImGui::GetStyle();
-                ImVec4 tmpcol = style.Colors[ImGuiCol_ChildBg]; 
+                ImVec4 tmpcol = style.Colors[ImGuiCol_ChildBg];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 ImGui::PushStyleColor(ImGuiCol_ChildBg, tmpcol);
                 ImGui::SetCursorScreenPos(this->module_list_popup_pos);
@@ -192,7 +194,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
         group_save = selected_graph_ptr->GUI_GetGroupSave();
         group_selected_uid = selected_graph_ptr->GUI_GetSelectedGroup();
     }
-    
+
     bool confirmed, aborted;
     bool popup_save_project_file = false;
     bool popup_save_group_file = group_save;
@@ -202,7 +204,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     if (std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT])) {
         popup_save_project_file = true;
     }
-        
+
     // Menu
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
@@ -350,7 +352,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
     std::string compat_call_slot_name;
     CallSlotPtrType selected_call_slot_ptr;
     GraphPtrType graph_ptr;
-    if (this->graph_manager.GetGraph(this->state.graph_selected_uid, graph_ptr) ) {
+    if (this->graph_manager.GetGraph(this->state.graph_selected_uid, graph_ptr)) {
         auto call_slot_id = graph_ptr->GUI_GetSelectedCallSlot();
         if (call_slot_id != GUI_INVALID_ID) {
             for (auto& mods : graph_ptr->GetModules()) {
@@ -425,14 +427,20 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                                         if (graph_ptr->AddCall(this->graph_manager.GetCallsStock(),
                                                 selected_call_slot_ptr, call_slot)) {
                                             // Caluculate nice position of newly added module
-                                            /// XXX Currently only for modules connected to caller and lying right of existing module 
-                                            if (selected_call_slot_ptr->ParentModuleConnected() && (selected_call_slot_ptr->type == CallSlotType::CALLER)) {
-                                                float text_width = GUIUtils::TextWidgetWidth(selected_call_slot_ptr->name);
-                                                ImVec2 module_size = selected_call_slot_ptr->GetParentModule()->GUI_GetSize();
-                                                ImVec2 module_pos = selected_call_slot_ptr->GetParentModule()->GUI_GetPosition();
-                                                module_pos.x += (module_size.x + (text_width*1.5f) + 2.0f * (GUI_CALL_SLOT_RADIUS * 4.0f));
+                                            /// XXX Currently only for modules connected to caller and lying right of
+                                            /// existing module
+                                            if (selected_call_slot_ptr->ParentModuleConnected() &&
+                                                (selected_call_slot_ptr->type == CallSlotType::CALLER)) {
+                                                float text_width =
+                                                    GUIUtils::TextWidgetWidth(selected_call_slot_ptr->name);
+                                                ImVec2 module_size =
+                                                    selected_call_slot_ptr->GetParentModule()->GUI_GetSize();
+                                                ImVec2 module_pos =
+                                                    selected_call_slot_ptr->GetParentModule()->GUI_GetPosition();
+                                                module_pos.x += (module_size.x + (text_width * 1.5f) +
+                                                                 2.0f * (GUI_CALL_SLOT_RADIUS * 4.0f));
                                                 module_ptr->GUI_SetPosition(module_pos);
-                                            } 
+                                            }
                                         }
                                     }
                                 }

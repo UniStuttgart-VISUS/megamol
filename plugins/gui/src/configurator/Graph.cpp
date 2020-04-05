@@ -152,7 +152,8 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
 }
 
 
-bool megamol::gui::configurator::Graph::GetModule(ImGuiID module_uid, megamol::gui::configurator::ModulePtrType& out_module_ptr) {
+bool megamol::gui::configurator::Graph::GetModule(
+    ImGuiID module_uid, megamol::gui::configurator::ModulePtrType& out_module_ptr) {
 
     if (module_uid != GUI_INVALID_ID) {
         for (auto& module_ptr : this->modules) {
@@ -162,7 +163,7 @@ bool megamol::gui::configurator::Graph::GetModule(ImGuiID module_uid, megamol::g
             }
         }
     }
-    return false; 
+    return false;
 }
 
 
@@ -375,7 +376,8 @@ ImGuiID megamol::gui::configurator::Graph::AddGroupModule(
 }
 
 
-bool megamol::gui::configurator::Graph::GetGroup(ImGuiID group_uid, megamol::gui::configurator::GroupPtrType& out_group_ptr) {
+bool megamol::gui::configurator::Graph::GetGroup(
+    ImGuiID group_uid, megamol::gui::configurator::GroupPtrType& out_group_ptr) {
 
     if (group_uid != GUI_INVALID_ID) {
         for (auto& group_ptr : this->groups) {
@@ -383,7 +385,7 @@ bool megamol::gui::configurator::Graph::GetGroup(ImGuiID group_uid, megamol::gui
                 out_group_ptr = group_ptr;
                 return true;
             }
-        } 
+        }
     }
     return false;
 }
@@ -505,15 +507,15 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
 
     this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;
     this->graph_state.interact.group_save = false;
-    
+
     this->graph_state.interact.modules_selected_uids.clear();
     this->graph_state.interact.module_hovered_uid = GUI_INVALID_ID;
     this->graph_state.interact.module_mainview_uid = GUI_INVALID_ID;
     this->graph_state.interact.modules_add_group_uids.clear();
     this->graph_state.interact.modules_remove_group_uids.clear();
-    
+
     this->graph_state.interact.call_selected_uid = GUI_INVALID_ID;
-    
+
     this->graph_state.interact.callslot_selected_uid = GUI_INVALID_ID;
     this->graph_state.interact.callslot_hovered_uid = GUI_INVALID_ID;
     this->graph_state.interact.callslot_dropped_uid = GUI_INVALID_ID;
@@ -623,7 +625,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
             ImGui::EndTabItem();
         }
 
-        // State processing ---------------------   
+        // State processing ---------------------
         // Add module to group
         if (!this->graph_state.interact.modules_add_group_uids.empty()) {
             ModulePtrType module_ptr;
@@ -636,7 +638,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                     }
                 }
                 if (module_ptr != nullptr) {
-                                        
+
                     // Add module to new or alredy existing group
                     /// Create new group for multiple selected modules only once
                     ImGuiID group_uid = GUI_INVALID_ID;
@@ -645,11 +647,10 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                     }
                     if (uid_pair.second == GUI_INVALID_ID) {
                         group_uid = new_group_uid;
-                    }
-                    else {
+                    } else {
                         group_uid = uid_pair.second;
-                    }           
-                              
+                    }
+
                     GroupPtrType add_group_ptr;
                     if (inout_graph.GetGroup(group_uid, add_group_ptr)) {
                         // Remove module from previous associated group
@@ -662,7 +663,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                         }
                         // Add module to group
                         add_group_ptr->AddModule(module_ptr);
-                    }                    
+                    }
                 }
             }
             this->graph_state.interact.modules_add_group_uids.clear();
@@ -672,12 +673,12 @@ void megamol::gui::configurator::Graph::Presentation::Present(
             for (auto& module_uid : this->graph_state.interact.modules_remove_group_uids) {
                 for (auto& remove_group_ptr : inout_graph.GetGroups()) {
                     if (remove_group_ptr->ContainsModule(module_uid)) {
-                        remove_group_ptr->RemoveModule(module_uid);                 
+                        remove_group_ptr->RemoveModule(module_uid);
                     }
                 }
             }
             this->graph_state.interact.modules_remove_group_uids.clear();
-        }             
+        }
         // Add call slot to group interface
         ImGuiID callslot_uid = this->graph_state.interact.callslot_add_group_uid.first;
         if (callslot_uid != GUI_INVALID_ID) {
@@ -735,12 +736,12 @@ void megamol::gui::configurator::Graph::Presentation::Present(
             }
             if (this->graph_state.interact.call_selected_uid != GUI_INVALID_ID) {
                 inout_graph.DeleteCall(this->graph_state.interact.call_selected_uid);
-                // Reset interact state for calls        
-                    this->graph_state.interact.call_selected_uid = GUI_INVALID_ID;        
+                // Reset interact state for calls
+                this->graph_state.interact.call_selected_uid = GUI_INVALID_ID;
             }
             if (this->graph_state.interact.group_selected_uid != GUI_INVALID_ID) {
                 inout_graph.DeleteGroup(this->graph_state.interact.group_selected_uid);
-                // Reset interact state for groups       
+                // Reset interact state for groups
                 this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;
                 this->graph_state.interact.group_save = false;
             }
@@ -776,8 +777,7 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
     ModulePtrType selected_mod_ptr;
     if (inout_graph.GetModule(this->graph_state.interact.module_mainview_uid, selected_mod_ptr)) {
         this->graph_state.interact.module_mainview_uid = GUI_INVALID_ID;
-    }
-    else if (this->graph_state.interact.modules_selected_uids.size() == 1) {
+    } else if (this->graph_state.interact.modules_selected_uids.size() == 1) {
         for (auto& mod : inout_graph.GetModules()) {
             if ((this->graph_state.interact.modules_selected_uids[0] == mod->uid) && (mod->is_view)) {
                 selected_mod_ptr = mod;
@@ -994,11 +994,12 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
 
 void megamol::gui::configurator::Graph::Presentation::present_parameters(
     megamol::gui::configurator::Graph& inout_graph, float child_width) {
-    
+
     ImGui::BeginGroup();
 
     float search_child_height = ImGui::GetFrameHeightWithSpacing() * 3.5f;
-    auto child_flags = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
+    auto child_flags =
+        ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
     ImGui::BeginChild("parameter_search_child", ImVec2(child_width, search_child_height), false, child_flags);
 
     ImGui::TextUnformatted("Parameters");
@@ -1063,10 +1064,11 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
     ImGui::Separator();
 
     ImGui::EndChild();
-    
-    child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_AlwaysUseWindowPadding;
+
+    child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NavFlattened |
+                  ImGuiWindowFlags_AlwaysUseWindowPadding;
     ImGui::BeginChild("parameter_list_frame_child", ImVec2(child_width, 0.0f), false, child_flags);
-    
+
     if (!this->graph_state.interact.modules_selected_uids.empty()) {
         // Loop over all selected modules
         for (auto& module_uid : this->graph_state.interact.modules_selected_uids) {
@@ -1074,24 +1076,26 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
             // Get pointer to currently selected module(s)
             if (inout_graph.GetModule(module_uid, module_ptr)) {
                 if (module_ptr->parameters.size() > 0) {
-                    
+
                     ImGui::PushID(module_ptr->uid);
-                    
-                    // Set default state of header 
+
+                    // Set default state of header
                     auto headerId = ImGui::GetID(module_ptr->name.c_str());
                     auto headerState = ImGui::GetStateStorage()->GetInt(headerId, 1); // 0=close 1=open
                     ImGui::GetStateStorage()->SetInt(headerId, headerState);
-                
+
                     if (ImGui::CollapsingHeader(module_ptr->name.c_str(), nullptr, ImGuiTreeNodeFlags_None)) {
-                        this->utils.HoverToolTip(module_ptr->description, ImGui::GetID(module_ptr->name.c_str()), 0.75f, 5.0f);
-             
+                        this->utils.HoverToolTip(
+                            module_ptr->description, ImGui::GetID(module_ptr->name.c_str()), 0.75f, 5.0f);
+
                         bool param_name_space_open = true;
                         unsigned int param_indent_stack = 0;
                         for (auto& param : module_ptr->parameters) {
                             // Filter module by given search string
                             bool search_filter = true;
                             if (!search_string.empty()) {
-                                search_filter = this->utils.FindCaseInsensitiveSubstring(param.full_name, search_string);
+                                search_filter =
+                                    this->utils.FindCaseInsensitiveSubstring(param.full_name, search_string);
                             }
 
                             // Add Collapsing header depending on parameter namespace
@@ -1111,7 +1115,8 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
                                         auto headerId = ImGui::GetID(label.c_str());
                                         ImGui::GetStateStorage()->SetInt(headerId, 1);
                                     }
-                                    param_name_space_open = ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
+                                    param_name_space_open =
+                                        ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
                                     param_indent_stack++;
                                 } else {
                                     param_name_space_open = true;
@@ -1123,7 +1128,7 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
                                 param.GUI_Present();
                             }
                         }
-                        
+
                         // Vertical spacing using dummy
                         ImGui::Dummy(ImVec2(1.0f, ImGui::GetFrameHeightWithSpacing()));
                     }
@@ -1214,18 +1219,18 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_cal
 
 
 void megamol::gui::configurator::Graph::Presentation::present_canvas_multiselection(Graph& inout_graph) {
-    
-    bool no_graph_item_selected = ((this->graph_state.interact.callslot_selected_uid == GUI_INVALID_ID) && 
-            (this->graph_state.interact.call_selected_uid == GUI_INVALID_ID) && 
-            (this->graph_state.interact.modules_selected_uids.empty()) && 
-            (this->graph_state.interact.group_selected_uid == GUI_INVALID_ID));
-        
+
+    bool no_graph_item_selected = ((this->graph_state.interact.callslot_selected_uid == GUI_INVALID_ID) &&
+                                   (this->graph_state.interact.call_selected_uid == GUI_INVALID_ID) &&
+                                   (this->graph_state.interact.modules_selected_uids.empty()) &&
+                                   (this->graph_state.interact.group_selected_uid == GUI_INVALID_ID));
+
     if (no_graph_item_selected && ImGui::IsMouseDragging(0)) {
-        
+
         this->multiselect_end_pos = ImGui::GetMousePos();
         this->multiselect_done = true;
-        
-        ImGuiStyle& style = ImGui::GetStyle();        
+
+        ImGuiStyle& style = ImGui::GetStyle();
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         assert(draw_list != nullptr);
 
@@ -1234,14 +1239,17 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_multiselect
         const ImU32 COLOR_MULTISELECT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
         const ImU32 COLOR_MULTISELECT_BORDER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
 
-        draw_list->AddRectFilled(multiselect_start_pos, multiselect_end_pos, COLOR_MULTISELECT_BACKGROUND, GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All);
+        draw_list->AddRectFilled(multiselect_start_pos, multiselect_end_pos, COLOR_MULTISELECT_BACKGROUND,
+            GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All);
 
         float border = 1.0f;
-        draw_list->AddRect(multiselect_start_pos, multiselect_end_pos, COLOR_MULTISELECT_BORDER, GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All, border);
-    }
-    else if (this->multiselect_done && ImGui::IsWindowHovered() && ImGui::IsMouseReleased(0)) {
-        ImVec2 outer_rect_min = ImVec2(std::min(this->multiselect_start_pos.x, this->multiselect_end_pos.x), std::min(this->multiselect_start_pos.y, this->multiselect_end_pos.y));
-        ImVec2 outer_rect_max = ImVec2(std::max(this->multiselect_start_pos.x, this->multiselect_end_pos.x), std::max(this->multiselect_start_pos.y, this->multiselect_end_pos.y));
+        draw_list->AddRect(multiselect_start_pos, multiselect_end_pos, COLOR_MULTISELECT_BORDER, GUI_RECT_CORNER_RADIUS,
+            ImDrawCornerFlags_All, border);
+    } else if (this->multiselect_done && ImGui::IsWindowHovered() && ImGui::IsMouseReleased(0)) {
+        ImVec2 outer_rect_min = ImVec2(std::min(this->multiselect_start_pos.x, this->multiselect_end_pos.x),
+            std::min(this->multiselect_start_pos.y, this->multiselect_end_pos.y));
+        ImVec2 outer_rect_max = ImVec2(std::max(this->multiselect_start_pos.x, this->multiselect_end_pos.x),
+            std::max(this->multiselect_start_pos.y, this->multiselect_end_pos.y));
         ImVec2 inner_rect_min, inner_rect_max;
         ImVec2 module_size;
         this->graph_state.interact.modules_selected_uids.clear();
@@ -1249,8 +1257,9 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_multiselect
             bool group_member = (module_ptr->GUI_GetGroupMembership() != GUI_INVALID_ID);
             if (!group_member || (group_member && module_ptr->GUI_GetGroupVisibility())) {
                 module_size = module_ptr->GUI_GetSize() * this->graph_state.canvas.zooming;
-                inner_rect_min = this->graph_state.canvas.offset + module_ptr->GUI_GetPosition() * this->graph_state.canvas.zooming;
-                inner_rect_max = inner_rect_min + module_size;            
+                inner_rect_min =
+                    this->graph_state.canvas.offset + module_ptr->GUI_GetPosition() * this->graph_state.canvas.zooming;
+                inner_rect_max = inner_rect_min + module_size;
                 if (((outer_rect_min.x < inner_rect_max.x) && (outer_rect_max.x > inner_rect_min.x) &&
                         (outer_rect_min.y < inner_rect_max.y) && (outer_rect_max.y > inner_rect_min.y))) {
                     this->graph_state.interact.modules_selected_uids.emplace_back(module_ptr->uid);
@@ -1258,12 +1267,11 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_multiselect
             }
         }
         this->multiselect_done = false;
-    }
-    else {
+    } else {
         this->multiselect_start_pos = ImGui::GetMousePos();
     }
-}        
-        
+}
+
 
 bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui::configurator::Graph& inout_graph) {
 

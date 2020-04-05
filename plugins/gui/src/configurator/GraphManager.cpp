@@ -70,7 +70,8 @@ bool megamol::gui::configurator::GraphManager::DeleteGraph(ImGuiID graph_uid) {
 }
 
 
-bool megamol::gui::configurator::GraphManager::GetGraph(ImGuiID graph_uid, megamol::gui::configurator::GraphPtrType& out_graph_ptr) {
+bool megamol::gui::configurator::GraphManager::GetGraph(
+    ImGuiID graph_uid, megamol::gui::configurator::GraphPtrType& out_graph_ptr) {
 
     if (graph_uid != GUI_INVALID_ID) {
         for (auto& graph_ptr : this->graphs) {
@@ -439,7 +440,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
 
     GraphPtrType graph_ptr;
     this->GetGraph(graph_uid, graph_ptr);
-   
+
     try {
         std::stringstream content(projectstr);
         std::vector<std::string> lines;
@@ -552,7 +553,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                         }
                     }
                 }
-                
+
                 found_main_view = true;
             }
         }
@@ -627,7 +628,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                                                                "given group interface call slots. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), __FILE__, __FUNCTION__, __LINE__);
                     }
-                
+
                     GroupPtrType group_ptr;
                     if (graph_ptr->GetGroup(group_uid, group_ptr)) {
                         for (auto& callslot_interface_name : group_interface_callslots) {

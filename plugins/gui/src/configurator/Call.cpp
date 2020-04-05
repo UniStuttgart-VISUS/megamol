@@ -213,7 +213,7 @@ void megamol::gui::configurator::Call::Presentation::Present(
                     // Context Menu
                     if (ImGui::BeginPopupContextItem()) {
                         active = true; // Force selection
-                        
+
                         ImGui::TextUnformatted("Call");
                         ImGui::Separator();
                         if (ImGui::MenuItem(
@@ -221,18 +221,18 @@ void megamol::gui::configurator::Call::Presentation::Present(
                                               .ToString()
                                               .c_str())) {
                             std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-                            
                         }
                         ImGui::EndPopup();
                     }
 
                     // Selection
                     if (state.interact.call_selected_uid == inout_call.uid) {
-                        /// Call before "active" if-statement for one frame delayed check for last valid candidate for selection
+                        /// Call before "active" if-statement for one frame delayed check for last valid candidate for
+                        /// selection
                         this->selected = true;
                         state.interact.callslot_selected_uid = GUI_INVALID_ID;
                         state.interact.modules_selected_uids.clear();
-                        state.interact.group_selected_uid = GUI_INVALID_ID;                        
+                        state.interact.group_selected_uid = GUI_INVALID_ID;
                     }
                     if (active) {
                         state.interact.call_selected_uid = inout_call.uid;
@@ -242,8 +242,8 @@ void megamol::gui::configurator::Call::Presentation::Present(
                         if (state.interact.call_selected_uid == inout_call.uid) {
                             state.interact.call_selected_uid = GUI_INVALID_ID;
                         }
-                    }                    
-                    
+                    }
+
                     // Background
                     ImU32 call_bg_color = (this->selected) ? (COLOR_CALL_HIGHTLIGHT) : (COLOR_CALL_BACKGROUND);
                     draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, GUI_RECT_CORNER_RADIUS);

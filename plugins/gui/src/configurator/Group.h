@@ -50,7 +50,7 @@ public:
     bool RemoveCallSlot(ImGuiID callslot_uid);
     bool ContainsCallSlot(ImGuiID callslot_uid);
     inline const CallSlotPtrMapType& GetCallSlots(void) { return this->callslots; }
-    
+
     // GUI Presentation -------------------------------------------------------
 
     inline void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
@@ -93,9 +93,9 @@ private:
         bool update;
 
     } present;
-    
+
     // FUNCTIONS --------------------------------------------------------------
-    
+
     void restore_callslot_interface_sate(void);
 };
 
