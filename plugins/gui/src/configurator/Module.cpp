@@ -170,12 +170,12 @@ void megamol::gui::configurator::Module::Presentation::Present(
     bool popup_rename = false;
 
     try {
-        // Condition for initialization position (if position is not set yet via tag in project file)
+        // Init position (e.g. if position is not set yet via tag in project file)
         if ((this->position.x == FLT_MAX) && (this->position.y == FLT_MAX)) {
             this->position =
                 ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - state.canvas.offset) / state.canvas.zooming;
         }
-        // Update size if current values are invalid
+        // Update size 
         if (this->update || (this->size.x <= 0.0f) || (this->size.y <= 0.0f)) {
             this->UpdateSize(inout_module, state.canvas);
             this->update = false;
@@ -184,6 +184,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
         // Draw module --------------------------------------------------------
         if ((this->group.member == GUI_INVALID_ID) || ((this->group.member != GUI_INVALID_ID) && this->group.visible)) {
 
+            // Get current module information
             ImVec2 module_size = this->size * state.canvas.zooming;
             ImVec2 module_rect_min = state.canvas.offset + this->position * state.canvas.zooming;
             ImVec2 module_rect_max = module_rect_min + module_size;
@@ -320,12 +321,12 @@ void megamol::gui::configurator::Module::Presentation::Present(
             }
             this->other_item_hovered = false;
 
-            // Background
+            // Draw Background
             ImU32 module_bg_color = (this->selected) ? (COLOR_MODULE_HIGHTLIGHT) : (COLOR_MODULE_BACKGROUND);
             draw_list->AddRectFilled(
                 module_rect_min, module_rect_max, module_bg_color, GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All);
 
-            // Text and Option Buttons
+            // Draw Text and Option Buttons
             float text_width;
             ImVec2 text_pos_left_upper;
             const float line_height = ImGui::GetTextLineHeightWithSpacing();
@@ -389,7 +390,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 }
             }
 
-            // Outline
+            // Draw Outline
             float border = ((inout_module.is_view_instance) ? (4.0f) : (1.0f)) * state.canvas.zooming;
             draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_GROUP_BORDER, GUI_RECT_CORNER_RADIUS,
                 ImDrawCornerFlags_All, border);
@@ -415,7 +416,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 if (io.KeyShift) {
                     this->add_uid(state.interact.modules_selected_uids, inout_module.uid);
                 } else {
-                    // Single Selection
+                // Single Selection
                     state.interact.modules_selected_uids.clear();
                     state.interact.modules_selected_uids.emplace_back(inout_module.uid);
                 }
@@ -440,7 +441,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 this->UpdateSize(inout_module, state.canvas);
             }
 
-            // Paramter Child Window
+            // Parameter Child Window
             if (this->label_visible && this->show_params) {
                 ImGui::PushStyleColor(ImGuiCol_ChildBg, COLOR_MODULE_BACKGROUND);
                 ImGui::SetCursorScreenPos(param_child_pos);

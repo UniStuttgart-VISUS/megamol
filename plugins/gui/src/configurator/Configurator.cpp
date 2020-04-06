@@ -53,7 +53,14 @@ megamol::gui::configurator::Configurator::Configurator()
 }
 
 
-Configurator::~Configurator() {}
+Configurator::~Configurator() {
+    
+    // Disable file drag and drop if glfw is available
+#ifdef GUI_USE_GLFW
+    auto glfw_win = ::glfwGetCurrentContext();
+    ::glfwSetDropCallback(glfw_win, nullptr);
+#endif
+}
 
 
 bool megamol::gui::configurator::Configurator::CheckHotkeys(void) {
@@ -94,7 +101,7 @@ bool megamol::gui::configurator::Configurator::Draw(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-
+    
     // Draw
     if (this->init_state < 2) {
         // 1] Show pop-up before calling UpdateAvailableModulesCallsOnce of graph.
@@ -109,6 +116,14 @@ bool megamol::gui::configurator::Configurator::Draw(
             ImGui::TextUnformatted("Please wait...\nLoading available modules and calls for configurator.");
             ImGui::EndPopup();
         }
+        
+        // Enable file drag and drop if glfw is available once
+#ifdef GUI_USE_GLFW
+        auto glfw_win = ::glfwGetCurrentContext();
+        ::glfwSetDropCallback(glfw_win, this->file_drop_callback);
+        vislib::sys::Log::DefaultLog.WriteInfo("Enabled GLFW file drop callback processed in configurator.\n");
+#endif
+
         this->init_state++;
 
     } else if (this->init_state == 2) {
@@ -117,6 +132,7 @@ bool megamol::gui::configurator::Configurator::Draw(
         // Load once inital project
         this->graph_manager.LoadProjectCore(core_instance);
         /// this->add_empty_project();
+        
         this->init_state++;
     } else {
         // 3] Render configurator gui content
@@ -132,42 +148,42 @@ bool megamol::gui::configurator::Configurator::Draw(
         }
         this->graph_manager.GUI_Present(this->state);
 
-        // Module Stock List in separate child window if sidebar is invisible
-        if (!this->show_module_list_sidebar) {
-            GraphPtrType selected_graph_ptr;
-            if (this->graph_manager.GetGraph(this->state.graph_selected_uid, selected_graph_ptr)) {
-                ImGuiID selected_callslot_uid = selected_graph_ptr->GUI_GetSelectedCallSlot();
-                if ((selected_callslot_uid != GUI_INVALID_ID) &&
-                    ((!this->show_module_list_child) || (this->last_selected_callslot_uid != selected_callslot_uid)) &&
-                    ImGui::IsMouseDoubleClicked(0)) {
-                    std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
-                    this->last_selected_callslot_uid = selected_callslot_uid;
-                }
-            }
-            if (std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
-                this->show_module_list_child = true;
-                this->module_list_popup_pos = ImGui::GetMousePos();
-                ImGui::SetNextWindowPos(this->module_list_popup_pos);
-            }
-            if (this->show_module_list_child) {
-                ImGuiStyle& style = ImGui::GetStyle();
-                ImVec4 tmpcol = style.Colors[ImGuiCol_ChildBg];
-                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-                ImGui::PushStyleColor(ImGuiCol_ChildBg, tmpcol);
-                ImGui::SetCursorScreenPos(this->module_list_popup_pos);
-                float child_width = 250.0f;
-                float child_height = std::min(350.0f, (ImGui::GetContentRegionAvail().y - ImGui::GetWindowPos().y));
-                auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NavFlattened;
-                ImGui::BeginChild("module_list_child", ImVec2(child_width, child_height), true, child_flags);
-                if (ImGui::Button("Close") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
-                    this->show_module_list_child = false;
-                }
-                ImGui::Separator();
-                this->draw_window_module_list(0.0f);
-                ImGui::EndChild();
-                ImGui::PopStyleColor();
+        // Module Stock List in separate child window
+        GraphPtrType selected_graph_ptr;
+        if (this->graph_manager.GetGraph(this->state.graph_selected_uid, selected_graph_ptr)) {
+            ImGuiID selected_callslot_uid = selected_graph_ptr->GUI_GetSelectedCallSlot();
+            bool double_click_anywhere = (ImGui::IsMouseDoubleClicked(0) && !this->show_module_list_child);
+            bool double_click_callslot = (ImGui::IsMouseDoubleClicked(0) && (selected_callslot_uid != GUI_INVALID_ID) && 
+                ((!this->show_module_list_child) || (this->last_selected_callslot_uid != selected_callslot_uid)));
+            if (double_click_anywhere || double_click_callslot) {
+                std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
+                this->last_selected_callslot_uid = selected_callslot_uid;
             }
         }
+        if (std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
+            this->show_module_list_child = true;
+            this->module_list_popup_pos = ImGui::GetMousePos();
+            ImGui::SetNextWindowPos(this->module_list_popup_pos);
+        }
+        if (this->show_module_list_child) {
+            ImGuiStyle& style = ImGui::GetStyle();
+            ImVec4 tmpcol = style.Colors[ImGuiCol_ChildBg];
+            tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, tmpcol);
+            ImGui::SetCursorScreenPos(this->module_list_popup_pos);
+            float child_width = 250.0f;
+            float child_height = std::min(350.0f, (ImGui::GetContentRegionAvail().y - ImGui::GetWindowPos().y));
+            auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NavFlattened;
+            ImGui::BeginChild("module_list_child", ImVec2(child_width, child_height), true, child_flags);
+            if (ImGui::Button("Close") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+                this->show_module_list_child = false;
+            }
+            ImGui::Separator();
+            this->draw_window_module_list(0.0f);
+            ImGui::EndChild();
+            ImGui::PopStyleColor();
+        }
+       
     }
 
     // Reset hotkeys
@@ -493,3 +509,15 @@ void megamol::gui::configurator::Configurator::add_empty_project(void) {
             "Unable to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 }
+
+
+#ifdef GUI_USE_GLFW
+void megamol::gui::configurator::Configurator::file_drop_callback(::GLFWwindow* window, int count, const char** paths) {
+    
+    int i;
+    for (i = 0;  i < count;  i++) {
+        vislib::sys::Log::DefaultLog.WriteInfo(">>> Received Drop File Path: %s \n", paths[i]);
+    }
+
+}
+#endif

@@ -137,7 +137,7 @@ private:
         megamol::gui::GraphItemsStateType graph_state;
 
         void present_menu(Graph& inout_graph);
-        void present_canvas(Graph& inout_graph, float child_width);
+        void present_canvas(Graph& inout_graph, float child_width, float default_font_scale);
         void present_parameters(Graph& inout_graph, float child_width);
 
         void present_canvas_grid(void);

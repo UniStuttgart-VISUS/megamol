@@ -622,6 +622,7 @@ bool GUIWindows::createContext(void) {
 
     // Load initial fonts only once for all imgui contexts --------------------
     if (!other_context) {
+        const float default_font_size = 12.0f;
         ImFontConfig config;
         config.OversampleH = 4;
         config.OversampleV = 4;
@@ -639,7 +640,7 @@ bool GUIWindows::createContext(void) {
                 font_file = "Roboto-Regular.ttf";
                 font_path = FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
                 if (!font_path.empty()) {
-                    io.Fonts->AddFontFromFileTTF(font_path.c_str(), 12.0f, &config);
+                    io.Fonts->AddFontFromFileTTF(font_path.c_str(), default_font_size, &config);
                     // Set as default ...
                     io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
                     // ... and as font for configurator.
@@ -648,7 +649,7 @@ bool GUIWindows::createContext(void) {
                 font_file = "SourceCodePro-Regular.ttf";
                 font_path = FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
                 if (!font_path.empty()) {
-                    io.Fonts->AddFontFromFileTTF(font_path.c_str(), 13.0f, &config);
+                    io.Fonts->AddFontFromFileTTF(font_path.c_str(), default_font_size, &config);
                 }
             }
         } else {
@@ -659,11 +660,11 @@ bool GUIWindows::createContext(void) {
         if (configurator_font.empty()) {
             io.Fonts->AddFontDefault(&config);
         } else {
-            io.Fonts->AddFontFromFileTTF(configurator_font.c_str(), 12.0f, &config);
-        }
+            io.Fonts->AddFontFromFileTTF(configurator_font.c_str(), default_font_size, &config);
+        }        
+        // Use last tadded font for graph text in configurator
+        this->configurator.SetGraphFont(io.Fonts->Fonts[io.Fonts->Fonts.Size - 1]);
     }
-    // Use last tadded font for graph text in configurator
-    this->configurator.SetGraphFont(io.Fonts->Fonts[io.Fonts->Fonts.Size - 1]);
 
     // ImGui Key Map
     io.KeyMap[ImGuiKey_Tab] = static_cast<int>(core::view::Key::KEY_TAB);
@@ -828,7 +829,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
         this->utils.StringSearch("guiwindow_parameter_earch", help_test);
     }
 
-    /// XXX Disabled since core instance and module name of GUIView is no more available ...
+    /// XXX Disabled since core instance and module name of GUIView is currently no more available ...
     /*
     // Module filtering (only for main parameter view)
     if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {

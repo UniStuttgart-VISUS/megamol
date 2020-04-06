@@ -21,6 +21,11 @@
 #include "GraphManager.h"
 #include "WindowManager.h"
 
+// Used for platform independent file drag and drop (ImGui does not support this feature so far)
+#ifdef GUI_USE_GLFW
+#    include "GLFW/glfw3.h"
+#endif
+
 
 namespace megamol {
 namespace gui {
@@ -81,6 +86,10 @@ private:
     void draw_window_module_list(float width);
 
     void add_empty_project(void);
+    
+#ifdef GUI_USE_GLFW    
+    static void file_drop_callback(::GLFWwindow* window, int count, const char** paths);
+#endif
 };
 
 } // namespace configurator

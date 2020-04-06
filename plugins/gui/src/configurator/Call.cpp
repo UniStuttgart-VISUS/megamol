@@ -172,15 +172,13 @@ void megamol::gui::configurator::Call::Presentation::Present(
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
-                // tmpcol = style.Colors[ImGuiCol_ButtonActive];
-                // tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
                 tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive]; // ImGuiCol_Border ImGuiCol_ScrollbarGrabActive
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
-                // Curve
+                // Draw Curve
                 /// Level of detal depending on zooming
                 if (state.canvas.zooming < 0.25f) {
                     draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * state.canvas.zooming);
@@ -212,7 +210,7 @@ void megamol::gui::configurator::Call::Presentation::Present(
 
                     // Context Menu
                     if (ImGui::BeginPopupContextItem()) {
-                        active = true; // Force selection
+                        active = true; // Force selection (next frame)
 
                         ImGui::TextUnformatted("Call");
                         ImGui::Separator();
@@ -244,12 +242,12 @@ void megamol::gui::configurator::Call::Presentation::Present(
                         }
                     }
 
-                    // Background
+                    // Draw Background
                     ImU32 call_bg_color = (this->selected) ? (COLOR_CALL_HIGHTLIGHT) : (COLOR_CALL_BACKGROUND);
                     draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, GUI_RECT_CORNER_RADIUS);
                     draw_list->AddRect(call_rect_min, call_rect_max, COLOR_CALL_GROUP_BORDER, GUI_RECT_CORNER_RADIUS);
 
-                    // Text
+                    // Draw Text
                     ImVec2 text_pos_left_upper =
                         (call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
                     draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]),

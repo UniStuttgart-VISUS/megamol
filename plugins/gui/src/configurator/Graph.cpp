@@ -548,7 +548,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
 
         ImGui::PushID(graph_uid);
 
-        // State Reset --------------------------
+        // State Init/Reset ----------------------
         this->graph_state.hotkeys = state.hotkeys;
         this->graph_state.groups.clear();
         for (auto& group : inout_graph.GetGroups()) {
@@ -612,8 +612,9 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                     __FILE__, __FUNCTION__, __LINE__);
                 return;
             }
+            float default_font_scale = 1.0f; //ImGui::GetFont()->Scale;
             ImGui::PushFont(state.font);
-            this->present_canvas(inout_graph, child_width_auto);
+            this->present_canvas(inout_graph, child_width_auto, default_font_scale);
             ImGui::PopFont();
 
             if (state.show_parameter_sidebar) {
@@ -750,6 +751,8 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         if (!open) {
             state.graph_delete = true;
         }
+        // Propoagate unhandeled hotkeys back to configurator state
+        state.hotkeys = this->graph_state.hotkeys;
 
         // Rename pop-up
         this->utils.RenamePopUp("Rename Project", popup_rename, inout_graph.name);
@@ -858,7 +861,7 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
 
 
 void megamol::gui::configurator::Graph::Presentation::present_canvas(
-    megamol::gui::configurator::Graph& inout_graph, float child_width) {
+    megamol::gui::configurator::Graph& inout_graph, float child_width, float default_font_scale) {
 
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
@@ -983,12 +986,12 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     ImGui::PopStyleColor();
 
     // Update when scaling of font has changed due to project tab switching
-    if (ImGui::GetFont()->Scale != this->graph_state.canvas.zooming) {
+    if (ImGui::GetFont()->Scale != (this->graph_state.canvas.zooming / default_font_scale)) {
         this->update = true;
     }
     // Font scaling is applied next frame after ImGui::Begin()
     // Font for graph should not be the currently used font of the gui.
-    ImGui::GetFont()->Scale = this->graph_state.canvas.zooming;
+    ImGui::GetFont()->Scale = (this->graph_state.canvas.zooming / default_font_scale);
 }
 
 

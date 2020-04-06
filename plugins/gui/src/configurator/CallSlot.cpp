@@ -275,11 +275,13 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
 
     try {
 
+        // Apply update of position first
         if (this->update_once) {
             this->UpdatePosition(inout_callslot, state.canvas);
             this->update_once = false;
         }
 
+        // Get some information
         std::string module_label;
         ImGuiID is_parent_module_group_member = GUI_INVALID_ID;
         bool is_parent_module_group_visible = GUI_INVALID_ID;
@@ -290,17 +292,9 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             module_label = "[" + inout_callslot.GetParentModule()->name + "]";
             parent_module_uid = inout_callslot.GetParentModule()->uid;
         }
-
-        // Check for slot invisibility
-        if (!this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID) &&
-            !is_parent_module_group_visible) {
-            return;
-        }
-
         ImVec2 slot_position = this->GetPosition(inout_callslot);
         float radius = GUI_CALL_SLOT_RADIUS * state.canvas.zooming;
         std::string slot_label = "[" + inout_callslot.name + "]";
-
         ImVec2 text_pos_left_upper = ImVec2(0.0f, 0.0f);
         if (this->label_visible) {
             text_pos_left_upper.y = slot_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
@@ -310,6 +304,12 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             } else if (inout_callslot.type == CallSlotType::CALLEE) {
                 text_pos_left_upper.x = slot_position.x + (1.5f * radius);
             }
+        }
+        
+        // Check for slot invisibility
+        if (!this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID) &&
+            !is_parent_module_group_visible) {
+            return;
         }
 
         // Clip call slots if lying ouside the canvas
@@ -369,6 +369,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             slot_highlight_color = COLOR_SLOT_CALLEE_HIGHLIGHT;
         }
 
+        // Button
         ImGui::SetCursorScreenPos(slot_position - ImVec2(radius, radius));
         std::string label = "slot_" + inout_callslot.name + std::to_string(inout_callslot.uid);
         ImGui::SetItemAllowOverlap();
@@ -385,7 +386,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
 
         // Context Menu
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-            active = true; // Force selection
+            active = true; // Force selection (next frame)
 
             ImGui::TextUnformatted("Call Slot");
             ImGui::Separator();
@@ -399,11 +400,9 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                     (this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID)))) {
                 state.interact.callslot_remove_group_uid = inout_callslot.uid;
             }
-            /*
             if (ImGui::MenuItem("Show Module Stock List Window", "'Double Left CLick'")) {
                 std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
             }
-            */
             ImGui::EndPopup();
         }
 
@@ -421,7 +420,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             this->utils.ResetHoverToolTip();
         }
 
-        // Comaptible Call highlight
+        // Compatible Call Highlight
         if (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.callslot_compat_ptr, inout_callslot) !=
             GUI_INVALID_ID) {
             slot_color = COLOR_SLOT_COMPATIBLE;
@@ -472,15 +471,16 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             }
         }
 
-        // Slot
+        // Draw Slot
         if (this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID) &&
             is_parent_module_group_visible) {
             draw_list->AddLine(this->position, slot_position,
                 ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]),
                 (GUI_CALL_SLOT_RADIUS / 3.0f) * state.canvas.zooming);
         }
-        draw_list->AddCircleFilled(slot_position, radius, slot_color);
-        draw_list->AddCircle(slot_position, radius, COLOR_SLOT_GROUP_BORDER);
+        const float segment_numer = 20.0f;
+        draw_list->AddCircleFilled(slot_position, radius, slot_color, segment_numer);
+        draw_list->AddCircle(slot_position, radius, COLOR_SLOT_GROUP_BORDER, segment_numer);
 
         // Text
         if (this->label_visible && !(this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID) &&
