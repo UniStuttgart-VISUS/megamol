@@ -76,8 +76,9 @@ private:
     ImVec2 module_list_popup_pos;
     ImGuiID last_selected_callslot_uid;
     std::string project_filename;
-
     megamol::gui::GraphStateType state;
+    
+    static std::vector<std::string> dropped_files;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -88,8 +89,12 @@ private:
     void add_empty_project(void);
     
 #ifdef GUI_USE_GLFW    
-    static void file_drop_callback(::GLFWwindow* window, int count, const char** paths);
+    /// NB: Successfully testet using Windows10 and (X)Ubuntu with "Nautilus" file browser as drag source of the files.
+    ///     Failed using (X)Ubuntu with "Thunar" file browser.
+    ///     GLFW: File drop is currently unimplemented for "Wayland" (e.g. Fedora using GNOME)
+    static void file_drop_callback(::GLFWwindow* window, int count, const char* paths[]);
 #endif
+
 };
 
 } // namespace configurator

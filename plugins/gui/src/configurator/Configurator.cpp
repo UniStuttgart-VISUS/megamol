@@ -22,6 +22,9 @@ using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
+std::vector<std::string> megamol::gui::configurator::Configurator::dropped_files;
+
+
 megamol::gui::configurator::Configurator::Configurator()
     : graph_manager()
     , file_utils()
@@ -104,7 +107,9 @@ bool megamol::gui::configurator::Configurator::Draw(
     
     // Draw
     if (this->init_state < 2) {
-        // 1] Show pop-up before calling UpdateAvailableModulesCallsOnce of graph.
+        /// 1] /// (two frames!)
+        
+        //Show pop-up before calling UpdateAvailableModulesCallsOnce of graph.
         /// Rendering of pop-up requires two complete Draw calls!
         bool open = true;
         std::string popup_label = "Loading";
@@ -117,25 +122,29 @@ bool megamol::gui::configurator::Configurator::Draw(
             ImGui::EndPopup();
         }
         
-        // Enable file drag and drop if glfw is available once
+        this->init_state++;
+
+    } else if (this->init_state == 2) {
+        /// 2] /// (one frame!)
+        
+        //Load available modules and calls and currently loaded project from core once(!)
+        this->graph_manager.UpdateModulesCallsStock(core_instance);
+        
+        // Load once inital project
+        this->graph_manager.LoadProjectCore(core_instance);
+        ///or: this->add_empty_project();
+        
+        // Enable file drag and drop if glfw is available once(!)
 #ifdef GUI_USE_GLFW
         auto glfw_win = ::glfwGetCurrentContext();
         ::glfwSetDropCallback(glfw_win, this->file_drop_callback);
         vislib::sys::Log::DefaultLog.WriteInfo("Enabled GLFW file drop callback processed in configurator.\n");
 #endif
-
-        this->init_state++;
-
-    } else if (this->init_state == 2) {
-        // 2] Load available modules and calls and currently loaded project from core once(!)
-        this->graph_manager.UpdateModulesCallsStock(core_instance);
-        // Load once inital project
-        this->graph_manager.LoadProjectCore(core_instance);
-        /// this->add_empty_project();
         
         this->init_state++;
     } else {
-        // 3] Render configurator gui content
+        /// 3] ///
+        // Render configurator gui content
 
         // Child Windows
         this->draw_window_menu(core_instance);
@@ -219,6 +228,14 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     // Hotkeys
     if (std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT])) {
         popup_save_project_file = true;
+    }
+    
+    // Process dropped files
+    if (!megamol::gui::configurator::Configurator::dropped_files.empty()) {
+        for (auto& dropped_file : megamol::gui::configurator::Configurator::dropped_files) {
+            this->graph_manager.LoadAddProjectFile(this->state.graph_selected_uid, dropped_file);
+        }
+        megamol::gui::configurator::Configurator::dropped_files.clear();
     }
 
     // Menu
@@ -477,6 +494,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
     }
 
     ImGui::EndChild();
+    
     ImGui::EndGroup();
 }
 
@@ -512,11 +530,11 @@ void megamol::gui::configurator::Configurator::add_empty_project(void) {
 
 
 #ifdef GUI_USE_GLFW
-void megamol::gui::configurator::Configurator::file_drop_callback(::GLFWwindow* window, int count, const char** paths) {
-    
+void megamol::gui::configurator::Configurator::file_drop_callback(::GLFWwindow* window, int count, const char* paths[]) {
+                
     int i;
     for (i = 0;  i < count;  i++) {
-        vislib::sys::Log::DefaultLog.WriteInfo(">>> Received Drop File Path: %s \n", paths[i]);
+        megamol::gui::configurator::Configurator::dropped_files.emplace_back(std::string(paths[i]));
     }
 
 }
