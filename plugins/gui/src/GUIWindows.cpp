@@ -144,7 +144,7 @@ bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceT
     if (!this->state.font_file.empty()) {
         ImFontConfig config;
         config.OversampleH = 4;
-        config.OversampleV = 1;
+        config.OversampleV = 4;
         config.GlyphRanges = this->state.font_utf8_ranges.data();
 
         GUIUtils::Utf8Encode(this->state.font_file);
@@ -623,7 +623,8 @@ bool GUIWindows::createContext(void) {
     // Load initial fonts only once for all imgui contexts --------------------
     if (!other_context) {
         ImFontConfig config;
-        config.OversampleH = 6;
+        config.OversampleH = 4;
+        config.OversampleV = 4;
         config.GlyphRanges = this->state.font_utf8_ranges.data();
         // Add default font for gui.
         io.Fonts->AddFontDefault(&config);
