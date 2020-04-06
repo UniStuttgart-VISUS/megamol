@@ -57,7 +57,11 @@ private:
 
     uint32_t m_version;
 
+    std::vector<glowl::DrawElementsCommand> m_draw_commands;
+
     std::vector<PerProbeDrawData> m_probe_draw_data;
+
+    bool m_show_probes;
 
     core::CallerSlot m_probes_slot;
 

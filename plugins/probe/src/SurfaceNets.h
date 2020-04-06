@@ -82,7 +82,7 @@ private:
     uint32_t _version = 0;
 
     size_t _old_datahash;
-    bool _recalc = true;
+    bool _recalc = false;
 
     std::array<uint32_t, 3> _dims;
     std::array<float, 3> _spacing;

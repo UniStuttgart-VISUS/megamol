@@ -24,19 +24,19 @@ namespace megamol {
 namespace mesh {
 
 class MESH_API Call3DInteraction
-    : public core::CallGeneric<std::shared_ptr<ThreeDimensionalInteractionCollection>, core::EmptyMetaData> {
+    : public core::GenericVersionedCall<std::shared_ptr<ThreeDimensionalInteractionCollection>, core::EmptyMetaData> {
 public:
     inline Call3DInteraction()
-        : CallGeneric<std::shared_ptr<ThreeDimensionalInteractionCollection>, core::EmptyMetaData>() {}
+        : GenericVersionedCall<std::shared_ptr<ThreeDimensionalInteractionCollection>, core::EmptyMetaData>() {}
     ~Call3DInteraction() = default;
 
     static const char* ClassName(void) { return "Call3DInteraction"; }
     static const char* Description(void) { return "Call that transports..."; }
 };
 
-class MESH_API CallGlTFData : public core::CallGeneric<std::shared_ptr<tinygltf::Model>, core::EmptyMetaData> {
+class MESH_API CallGlTFData : public core::GenericVersionedCall<std::shared_ptr<tinygltf::Model>, core::EmptyMetaData> {
 public:
-    inline CallGlTFData() : CallGeneric<std::shared_ptr<tinygltf::Model>, core::EmptyMetaData>() {}
+    inline CallGlTFData() : GenericVersionedCall<std::shared_ptr<tinygltf::Model>, core::EmptyMetaData>() {}
     ~CallGlTFData() = default;
 
     static const char* ClassName(void) { return "CallGlTFData"; }
@@ -44,18 +44,19 @@ public:
 };
 
 class MESH_API CallGPUMaterialData
-    : public core::CallGeneric<std::shared_ptr<GPUMaterialCollecton>, core::EmptyMetaData> {
+    : public core::GenericVersionedCall<std::shared_ptr<GPUMaterialCollecton>, core::EmptyMetaData> {
 public:
-    CallGPUMaterialData() : CallGeneric<std::shared_ptr<GPUMaterialCollecton>, core::EmptyMetaData>() {}
+    CallGPUMaterialData() : GenericVersionedCall<std::shared_ptr<GPUMaterialCollecton>, core::EmptyMetaData>() {}
     ~CallGPUMaterialData() = default;
 
     static const char* ClassName(void) { return "CallGPUMaterialData"; }
     static const char* Description(void) { return "Call that gives access to material data stored on the GPU."; }
 };
 
-class MESH_API CallGPUMeshData : public core::CallGeneric<std::shared_ptr<GPUMeshCollection>, core::Spatial3DMetaData> {
+class MESH_API CallGPUMeshData
+    : public core::GenericVersionedCall<std::shared_ptr<GPUMeshCollection>, core::Spatial3DMetaData> {
 public:
-    CallGPUMeshData() : CallGeneric<std::shared_ptr<GPUMeshCollection>, core::Spatial3DMetaData>() {}
+    CallGPUMeshData() : GenericVersionedCall<std::shared_ptr<GPUMeshCollection>, core::Spatial3DMetaData>() {}
     ~CallGPUMeshData() = default;
 
     static const char* ClassName(void) { return "CallGPUMeshData"; }
@@ -65,18 +66,19 @@ public:
 };
 
 class MESH_API CallGPURenderTaskData
-    : public core::CallGeneric<std::shared_ptr<GPURenderTaskCollection>, core::Spatial3DMetaData> {
+    : public core::GenericVersionedCall<std::shared_ptr<GPURenderTaskCollection>, core::Spatial3DMetaData> {
 public:
-    CallGPURenderTaskData() : CallGeneric<std::shared_ptr<GPURenderTaskCollection>, core::Spatial3DMetaData>() {}
+    CallGPURenderTaskData()
+        : GenericVersionedCall<std::shared_ptr<GPURenderTaskCollection>, core::Spatial3DMetaData>() {}
     ~CallGPURenderTaskData(){};
 
     static const char* ClassName(void) { return "CallGPURenderTaskData"; }
     static const char* Description(void) { return "Call that gives access to render tasks."; }
 };
 
-class MESH_API CallMesh : public core::CallGeneric<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData> {
+class MESH_API CallMesh : public core::GenericVersionedCall<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData> {
 public:
-    CallMesh() : CallGeneric<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData>() {}
+    CallMesh() : GenericVersionedCall<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData>() {}
     ~CallMesh(){};
 
     static const char* ClassName(void) { return "CallMesh"; }
@@ -84,9 +86,9 @@ public:
 };
 
 class MESH_API CallImage
-    : public core::CallGeneric<std::shared_ptr<ImageDataAccessCollection>, core::EmptyMetaData> {
+    : public core::GenericVersionedCall<std::shared_ptr<ImageDataAccessCollection>, core::EmptyMetaData> {
 public:
-    CallImage() : CallGeneric<std::shared_ptr<ImageDataAccessCollection>, core::EmptyMetaData>() {}
+    CallImage() : GenericVersionedCall<std::shared_ptr<ImageDataAccessCollection>, core::EmptyMetaData>() {}
     ~CallImage(){};
 
     static const char* ClassName(void) { return "CallImage"; }

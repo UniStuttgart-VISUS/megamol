@@ -119,9 +119,15 @@ private:
         GLuint64 tf_texture_handle;
     };
 
+    bool m_show_glyphs;
+
     std::vector<TexturedGlyphData>    m_textured_glyph_data;
     std::vector<GlyphVectorProbeData> m_vector_probe_glyph_data;
     std::vector<GlyphScalarProbeData> m_scalar_probe_glyph_data;
+
+    std::vector<glowl::DrawElementsCommand> m_textured_gylph_draw_commands;
+    std::vector<glowl::DrawElementsCommand> m_vector_probe_gylph_draw_commands;
+    std::vector<glowl::DrawElementsCommand> m_scalar_probe_gylph_draw_commands;
 
     template <typename ProbeType>
     TexturedGlyphData createTexturedGlyphData(

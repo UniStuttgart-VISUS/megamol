@@ -32,6 +32,8 @@ struct BaseProbe {
     /** "sample to" offset from position */
     float m_end;
     // std::vector<size_t>m_sample_idxs; ///< indices of samples relevant to this
+    /** sample radius used by this probe */
+    float m_sample_radius;
 
     // virtual void probe() = 0;
 };

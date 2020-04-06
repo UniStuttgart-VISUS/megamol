@@ -106,7 +106,7 @@ void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::Po
 
         FloatProbe probe;
 
-        auto visitor = [&probe, i, this](auto&& arg) {
+        auto visitor = [&probe, i, samples_per_probe, sample_radius_factor, this](auto&& arg) {
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::Vec4Probe>) {
 
@@ -116,6 +116,10 @@ void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::Po
                 probe.m_direction = arg.m_direction;
                 probe.m_begin = arg.m_begin;
                 probe.m_end = arg.m_end;
+
+                auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
+                auto radius = sample_step * sample_radius_factor;
+                probe.m_sample_radius = radius;
 
                 _probes->setProbe(i, probe);
 
@@ -130,10 +134,10 @@ void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::Po
         auto generic_probe = _probes->getGenericProbe(i);
         std::visit(visitor, generic_probe);
 
-        std::shared_ptr<FloatProbe::SamplingResult> samples = probe.getSamplingResult();
-
         auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
         auto radius = sample_step * sample_radius_factor;
+
+        std::shared_ptr<FloatProbe::SamplingResult> samples = probe.getSamplingResult();
 
         float min_value = std::numeric_limits<float>::max();
         float max_value = -std::numeric_limits<float>::max();
@@ -190,7 +194,7 @@ inline void SampleAlongPobes::doVectorSamling(
 
         Vec4Probe probe;
 
-        auto visitor = [&probe,i,this](auto&& arg) {
+        auto visitor = [&probe, i, samples_per_probe, sample_radius_factor, this](auto&& arg) {
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::FloatProbe>) {
 
@@ -201,10 +205,20 @@ inline void SampleAlongPobes::doVectorSamling(
                 probe.m_begin = arg.m_begin;
                 probe.m_end = arg.m_end;
 
+                auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
+                auto radius = sample_step * sample_radius_factor;
+                probe.m_sample_radius = radius;
+
                 _probes->setProbe(i, probe);
 
             } else if constexpr (std::is_same_v<T, probe::Vec4Probe>) {
                 probe = arg;
+
+                auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
+                auto radius = sample_step * sample_radius_factor;
+                probe.m_sample_radius = radius;
+
+                _probes->setProbe(i, probe);
 
             } else {
                 // unknown/incompatible probe type, throw error? do nothing?
@@ -214,10 +228,10 @@ inline void SampleAlongPobes::doVectorSamling(
         auto generic_probe = _probes->getGenericProbe(i);
         std::visit(visitor, generic_probe);
 
-        std::shared_ptr<Vec4Probe::SamplingResult> samples = probe.getSamplingResult();
-
         auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
         auto radius = sample_step * sample_radius_factor;
+
+        std::shared_ptr<Vec4Probe::SamplingResult> samples = probe.getSamplingResult();
 
         float min_value = std::numeric_limits<float>::max();
         float max_value = -std::numeric_limits<float>::max();

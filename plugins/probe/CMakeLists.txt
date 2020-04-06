@@ -4,7 +4,7 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 string(TOUPPER probe EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build probe" ON)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build probe" OFF)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(probe)

@@ -106,9 +106,38 @@ private:
 
     double m_cursor_x, m_cursor_y;
 
+    double m_cursor_x_lastRightClick, m_cursor_y_lastRightClick;
+
+    bool m_open_context_menu;
+
+    bool m_open_showMenu_dropdown;
+    bool m_open_probeMenu_dropdown;
+    bool m_open_dataMenu_dropdown;
+
+    bool m_show_probes;
+    bool m_show_hull;
+    bool m_show_glyphs;
+
+    /** Map storing the pressed state of all mouse buttons */
+    std::map<core::view::MouseButton, bool> m_mouse_button_states = {
+        {core::view::MouseButton::BUTTON_1, false},
+        {core::view::MouseButton::BUTTON_2, false},
+        {core::view::MouseButton::BUTTON_3, false},
+        {core::view::MouseButton::BUTTON_4, false},
+        {core::view::MouseButton::BUTTON_5, false}, 
+        {core::view::MouseButton::BUTTON_6, false},
+        {core::view::MouseButton::BUTTON_7, false},
+        {core::view::MouseButton::BUTTON_8, false},
+        {core::view::MouseButton::BUTTON_LEFT, false},
+        {core::view::MouseButton::BUTTON_MIDDLE, false}, 
+        {core::view::MouseButton::BUTTON_RIGHT, false}
+    };
+
     std::shared_ptr<ProbeInteractionCollection> m_interactions;
 
     int64_t last_active_probe_id;
+
+    std::vector<int64_t> m_selected_probes;
 
     megamol::core::CallerSlot m_probe_fbo_slot;
     megamol::core::CallerSlot m_hull_fbo_slot;

@@ -201,9 +201,11 @@ bool ConstructKDTree::getData(core::Call& call) {
         this->_full_data_tree = std::make_shared<pcl::KdTreeFLANN<pcl::PointXYZ>>();
         this->_full_data_tree->setInputCloud(_inputCloud, nullptr);
         this->_version++;
-        ct->setData(this->_full_data_tree, this->_version);
         _old_datahash = cd->getDataHash();
     }
+
+    ct->setData(this->_full_data_tree, this->_version);
+
     return true;
 }
 

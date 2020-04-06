@@ -10,6 +10,7 @@
 
 megamol::probe_gl::ProbeRenderTasks::ProbeRenderTasks()
     : m_version(0)
+    , m_show_probes(true)
     , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
     , m_probe_manipulation_slot("GetProbeManipulation", "") {
     this->m_probes_slot.SetCompatibleCall<probe::CallProbesDescription>();
@@ -41,15 +42,21 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
     // something has changed in the neath
     bool something_has_changed = mtlc->hasUpdate() || mc->hasUpdate() || pc->hasUpdate();
 
+    auto gpu_mtl_storage = mtlc->getData();
+    auto gpu_mesh_storage = mc->getData();
+    auto probes = pc->getData();
+
     // no incoming render task collection -> use your own collection
     std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection;
-    if (lhs_rtc->getData() == nullptr) rt_collection = this->m_gpu_render_tasks;
-    else rt_collection = lhs_rtc->getData();
+    if (lhs_rtc->getData() == nullptr)
+        rt_collection = this->m_gpu_render_tasks;
+    else
+        rt_collection = lhs_rtc->getData();
 
     // if there is a render task connection to the right, pass on the render task collection
     mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
-        rhs_rtc->setData(rt_collection,0);
+        rhs_rtc->setData(rt_collection, 0);
         if (!(*rhs_rtc)(0)) return false;
     }
 
@@ -64,20 +71,20 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
     if (something_has_changed) {
         ++m_version;
 
-        auto gpu_mtl_storage = mtlc->getData();
-        auto gpu_mesh_storage = mc->getData();
-        auto probes = pc->getData();
+        // TODO this breaks chaining...
+        rt_collection->clear();
 
         auto probe_cnt = probes->getProbeCount();
 
         m_probe_draw_data.clear();
         m_probe_draw_data.resize(probe_cnt);
 
-        std::vector<glowl::DrawElementsCommand> draw_commands(probe_cnt);
+        m_draw_commands.clear();
+        m_draw_commands.resize(probe_cnt);
 
         for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
             try {
-                //auto probe = probes->getProbe<probe::FloatProbe>(probe_idx);
+                // auto probe = probes->getProbe<probe::FloatProbe>(probe_idx);
 
                 auto generic_probe = probes->getGenericProbe(probe_idx);
 
@@ -117,7 +124,7 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                 auto const& gpu_sub_mesh = gpu_mesh_storage->getSubMeshData().front();
                 auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes().front().mesh;
 
-                draw_commands[probe_idx] = gpu_sub_mesh.sub_mesh_draw_command;
+                m_draw_commands[probe_idx] = gpu_sub_mesh.sub_mesh_draw_command;
 
                 const glm::vec3 from(0.0f, 0.0f, 1.0f);
                 const glm::vec3 to(direction[0], direction[1], direction[2]);
@@ -125,12 +132,10 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                 float angle = -acos(glm::dot(to, from) / (glm::length(to) * glm::length(from)));
                 m_probe_draw_data[probe_idx].object_transform = glm::rotate(angle, v);
 
-                auto scaling = glm::scale(glm::vec3(0.5f, 0.5f, end - begin));
+                auto scaling = glm::scale(glm::vec3(2.0f, 2.0f, end - begin));
 
-                auto probe_start_point = glm::vec3(
-                    position[0] + direction[0] * begin,
-                    position[1] + direction[1] * begin,
-                    position[2] + direction[2] * begin);
+                auto probe_start_point = glm::vec3(position[0] + direction[0] * begin,
+                    position[1] + direction[1] * begin, position[2] + direction[2] * begin);
                 auto translation = glm::translate(glm::mat4(), probe_start_point);
                 m_probe_draw_data[probe_idx].object_transform =
                     translation * m_probe_draw_data[probe_idx].object_transform * scaling;
@@ -143,7 +148,10 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
         auto const& gpu_sub_mesh = gpu_mesh_storage->getSubMeshData().front();
         auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes().front().mesh;
         auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
-        rt_collection->addRenderTasks(shader, gpu_batch_mesh, draw_commands, m_probe_draw_data);
+
+        if (m_show_probes) {
+            rt_collection->addRenderTasks(shader, gpu_batch_mesh, m_draw_commands, m_probe_draw_data);
+        }
     }
 
     lhs_rtc->setData(rt_collection, m_version);
@@ -158,47 +166,56 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
             auto& pending_manips = interaction_collection->accessPendingManipulations();
 
-            if (pc->hasUpdate())
-            {
+            if (pc->hasUpdate()) {
                 if (!(*pc)(0)) return false;
             }
             auto probes = pc->getData();
 
             for (auto itr = pending_manips.begin(); itr != pending_manips.end(); ++itr) {
-                if (itr->type == HIGHLIGHT) 
-                {
+                if (itr->type == HIGHLIGHT) {
                     // TODO remove from list and apply hightlight to render task
                     auto manipulation = *itr;
-                    //itr = pending_manips.erase(itr);
+                    // itr = pending_manips.erase(itr);
 
                     std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[manipulation.obj_id]};
                     per_probe_data[0].highlighted = 1;
 
-                    rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
-                }
-                else if (itr->type == DEHIGHLIGHT)
-                {
+                    if (m_show_probes) {
+                        rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
+                    }
+                } else if (itr->type == DEHIGHLIGHT) {
                     // TODO remove from list and apply hightlight to render task
                     auto manipulation = *itr;
-                    //itr = pending_manips.erase(itr);
+                    // itr = pending_manips.erase(itr);
 
-                    std::array<PerProbeDrawData,1> per_probe_data = { m_probe_draw_data[manipulation.obj_id] };
+                    std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[manipulation.obj_id]};
 
-                    rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
-                } 
-                else if (itr->type == SELECT) 
-                {
+                    if (m_show_probes) {
+                        rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
+                    }
+                } else if (itr->type == SELECT) {
                     // TODO remove from list and apply hightlight to render task
                     auto manipulation = *itr;
-                    //itr = pending_manips.erase(itr);
+                    // itr = pending_manips.erase(itr);
 
                     m_probe_draw_data[manipulation.obj_id].highlighted = 2;
                     std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[manipulation.obj_id]};
 
-                    rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
-                }
-                else {
-                    ++itr;
+                    if (m_show_probes) {
+                        rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
+                    }
+                } else if (itr->type == TOGGLE_SHOW_PROBES) {
+                    m_show_probes = !m_show_probes;
+
+                    if (m_show_probes) {
+                        auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes().front().mesh;
+                        auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+                        rt_collection->addRenderTasks(shader, gpu_batch_mesh, m_draw_commands, m_probe_draw_data);
+                    } else {
+                        // TODO this breaks chaining...
+                        rt_collection->clear();
+                    }
+                } else {
                 }
             }
         }
