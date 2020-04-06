@@ -56,14 +56,7 @@ megamol::gui::configurator::Configurator::Configurator()
 }
 
 
-Configurator::~Configurator() {
-    
-    // Disable file drag and drop if glfw is available
-#ifdef GUI_USE_GLFW
-    auto glfw_win = ::glfwGetCurrentContext();
-    ::glfwSetDropCallback(glfw_win, nullptr);
-#endif
-}
+Configurator::~Configurator() {}
 
 
 bool megamol::gui::configurator::Configurator::CheckHotkeys(void) {
@@ -107,7 +100,7 @@ bool megamol::gui::configurator::Configurator::Draw(
     
     // Draw
     if (this->init_state < 2) {
-        /// 1] /// (two frames!)
+        /// Step 1] (two frames!)
         
         //Show pop-up before calling UpdateAvailableModulesCallsOnce of graph.
         /// Rendering of pop-up requires two complete Draw calls!
@@ -125,7 +118,7 @@ bool megamol::gui::configurator::Configurator::Draw(
         this->init_state++;
 
     } else if (this->init_state == 2) {
-        /// 2] /// (one frame!)
+        /// Step 2] (one frame)
         
         //Load available modules and calls and currently loaded project from core once(!)
         this->graph_manager.UpdateModulesCallsStock(core_instance);
@@ -133,17 +126,16 @@ bool megamol::gui::configurator::Configurator::Draw(
         // Load once inital project
         this->graph_manager.LoadProjectCore(core_instance);
         ///or: this->add_empty_project();
-        
-        // Enable file drag and drop if glfw is available once(!)
+                
+        // Enable drag and drop of files for configurator (if glfw is available here)
 #ifdef GUI_USE_GLFW
         auto glfw_win = ::glfwGetCurrentContext();
         ::glfwSetDropCallback(glfw_win, this->file_drop_callback);
-        vislib::sys::Log::DefaultLog.WriteInfo("Enabled GLFW file drop callback processed in configurator.\n");
 #endif
-        
+                
         this->init_state++;
     } else {
-        /// 3] ///
+        /// Step 3]
         // Render configurator gui content
 
         // Child Windows
@@ -192,7 +184,6 @@ bool megamol::gui::configurator::Configurator::Draw(
             ImGui::EndChild();
             ImGui::PopStyleColor();
         }
-       
     }
 
     // Reset hotkeys
@@ -230,10 +221,17 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
         popup_save_project_file = true;
     }
     
-    // Process dropped files
+    // Clear dropped file list, when configurator window is opened, after it was closed.
+    if (ImGui::IsWindowAppearing()) {
+        megamol::gui::configurator::Configurator::dropped_files.clear();
+    }
+    // Process dropped files ...
     if (!megamol::gui::configurator::Configurator::dropped_files.empty()) {
-        for (auto& dropped_file : megamol::gui::configurator::Configurator::dropped_files) {
-            this->graph_manager.LoadAddProjectFile(this->state.graph_selected_uid, dropped_file);
+        // ... only if configurator is focused.
+        if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
+            for (auto& dropped_file : megamol::gui::configurator::Configurator::dropped_files) {
+                this->graph_manager.LoadAddProjectFile(this->state.graph_selected_uid, dropped_file);
+            }
         }
         megamol::gui::configurator::Configurator::dropped_files.clear();
     }

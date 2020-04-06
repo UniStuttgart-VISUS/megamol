@@ -126,8 +126,11 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
         
 #### Project Graph
 
-* *Module Stock List* Window at Mouse Position (Only available if *Module Stock List* sidebar is hidden).
+* Load or add project file by dragging a file in a file browser and dropping it anywhere inside the configurator window.
+    Note: Successfully testet using Windows10 and (X)Ubuntu with "Nautilus" file browser as drag source of the files. Failed using (X)Ubuntu with "Thunar" file browser. File drop is currently unimplemented in glfw for "Wayland" (e.g. Fedora using GNOME).
+* Spawn *Module Stock List* in pop-up window at mouse position
     * `Ctrl + Shift + m`
+    * `Double Left Click`
 * Call Creation
     * Drag and Drop Call from one Call Slot to other highlighted compatible Call Slot.
 * Sidebar Splitter Collapsing/Expansion
@@ -151,11 +154,11 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
     * Context Menu (`Right Click`)
         * Delete (Alternative: Select with `Left Click` an press `Delete`)
 * `Slot` 
-    * `Double Left Click` If *Module Stock List* sidebar is hidden, show *Module Stock List* in window pinned to slot position.
+    * `Double Left Click` Show *Module Stock List* in pop-up window.
     * Context Menu (`Right Click`)    
         * Add to Group Interface
         * Remove from Group Interface
-        * Show *Module Stock List* Window
+        * Show *Module Stock List* in pop-up window.
 * `Group` 
     * Context Menu (`Right Click`)
         * Collapse View / Expand View
