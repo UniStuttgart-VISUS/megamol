@@ -126,9 +126,9 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
         
 #### Project Graph
 
-* Load/Add Project File\
-    Drag file in a file browser and drop it anywhere if the configurator is the currently focused window.\
-    Note: Successfully testet using Windows10 and (X)Ubuntu with "Nautilus" file browser as drag source of the files. Failed using (X)Ubuntu with "Thunar" file browser. File drop is currently unimplemented in glfw for "Wayland" (e.g. Fedora using GNOME).
+* Drop File to Load/Add Project\
+    * Drag file in a file browser and drop it inside the MegaMol window. The configurator windows must be open and focused.\
+        Note: Successfully testet using Windows10 and (X)Ubuntu with "Nautilus" file browser as drag source of the files. Failed using (X)Ubuntu with "Thunar" file browser. File drop is currently unimplemented in glfw for "Wayland" (e.g. Fedora using GNOME).
 * Spawn *Module Stock List* in pop-up window at mouse position
     * `Ctrl + Shift + m`
     * `Double Left Click`
