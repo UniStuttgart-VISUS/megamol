@@ -497,6 +497,7 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , multiselect_start_pos()
     , multiselect_end_pos()
     , multiselect_done(false)
+    , canvas_hovered(false)
     , graph_state() {
 
     this->graph_state.canvas.position = ImVec2(0.0f, 0.0f);
@@ -590,13 +591,6 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 ImGui::EndPopup();
             }
 
-            // Apply graph layout
-            if (this->layout_current_graph) {
-                this->layout_graph(inout_graph);
-                this->layout_current_graph = false;
-                this->update = true;
-            }
-
             // Draw -----------------------------
             this->present_menu(inout_graph);
 
@@ -612,15 +606,21 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                     __FILE__, __FUNCTION__, __LINE__);
                 return;
             }
-            float default_font_scale = 1.0f; //ImGui::GetFont()->Scale;
             ImGui::PushFont(state.font);
-            this->present_canvas(inout_graph, child_width_auto, default_font_scale);
+            this->present_canvas(inout_graph, child_width_auto);
             ImGui::PopFont();
 
             if (state.show_parameter_sidebar) {
                 ImGui::SameLine();
                 this->present_parameters(inout_graph, this->child_split_width);
             }
+            
+            // Apply graph layout
+            if (this->layout_current_graph) {
+                this->layout_graph(inout_graph);
+                this->layout_current_graph = false;
+                this->update = true;
+            }            
 
             state.graph_selected_uid = inout_graph.uid;
             ImGui::EndTabItem();
@@ -861,7 +861,7 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
 
 
 void megamol::gui::configurator::Graph::Presentation::present_canvas(
-    megamol::gui::configurator::Graph& inout_graph, float child_width, float default_font_scale) {
+    megamol::gui::configurator::Graph& inout_graph, float child_width) {
 
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
@@ -876,6 +876,8 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
     ImGui::BeginChild("region", ImVec2(child_width, 0.0f), true, child_flags);
 
+    this->canvas_hovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
+        
     // Update canvas position
     ImVec2 new_position = ImGui::GetWindowPos();
     if ((this->graph_state.canvas.position.x != new_position.x) ||
@@ -986,12 +988,12 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     ImGui::PopStyleColor();
 
     // Update when scaling of font has changed due to project tab switching
-    if (ImGui::GetFont()->Scale != (this->graph_state.canvas.zooming / default_font_scale)) {
+    if (ImGui::GetFont()->Scale != (this->graph_state.canvas.zooming)) {
         this->update = true;
     }
     // Font scaling is applied next frame after ImGui::Begin()
     // Font for graph should not be the currently used font of the gui.
-    ImGui::GetFont()->Scale = (this->graph_state.canvas.zooming / default_font_scale);
+    ImGui::GetFont()->Scale = (this->graph_state.canvas.zooming);
 }
 
 
@@ -1343,9 +1345,7 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
     }
 
     // Calculate new positions of modules
-    const float border_offset = GUI_CALL_SLOT_RADIUS * 4.0f;
-    ImVec2 init_position =
-        ImVec2(-1.0f * this->graph_state.canvas.scrolling.x, -1.0f * this->graph_state.canvas.scrolling.y);
+    ImVec2 init_position = megamol::gui::configurator::Module::GUI_GetInitModulePosition(this->graph_state.canvas);
     ImVec2 pos = init_position;
     float max_call_width = 25.0f;
     float max_module_width = 0.0f;
@@ -1355,9 +1355,7 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
             max_call_width = 0.0f;
         }
         max_module_width = 0.0f;
-        layer_mod_cnt = layer.size();
-        pos.x += border_offset;
-        pos.y = init_position.y + border_offset;
+        layer_mod_cnt = layer.size();    
         for (size_t i = 0; i < layer_mod_cnt; i++) {
             auto mod = layer[i];
             if (this->show_call_names) {
@@ -1373,11 +1371,15 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
             }
             mod->GUI_SetPosition(pos);
             auto mod_size = mod->GUI_GetSize();
-            pos.y += mod_size.y + border_offset;
+            pos.y += mod_size.y + GUI_GRAPH_BORDER;
             max_module_width = (mod_size.x > max_module_width) ? (mod_size.x) : (max_module_width);
         }
-        pos.x += (max_module_width + max_call_width + border_offset);
+        pos.x += (max_module_width + max_call_width + GUI_GRAPH_BORDER);
+        
+        pos.x += GUI_GRAPH_BORDER;
+        pos.y = init_position.y + GUI_GRAPH_BORDER;         
     }
 
     return true;
 }
+  

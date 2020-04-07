@@ -71,6 +71,7 @@ public:
     inline ImGuiID GUI_GetSelectedCallSlot(void) const { return this->present.GetSelectedCallSlot(); }
     inline ImGuiID GUI_GetDropCallSlot(void) const { return this->present.GetDropCallSlot(); }
     inline bool GUI_GetGroupSave(void) { return this->present.GetGroupSave(); }
+    inline bool GUI_GetCanvasHoverd(void) const { return this->present.GetCanvasHoverd(); }
 
     inline void GUI_SetLayoutGraph(void) { this->present.LayoutGraph(); }
 
@@ -104,6 +105,7 @@ private:
         bool GetModuleLabelVisibility(void) const { return this->show_module_names; }
         bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
         bool GetCallLabelVisibility(void) const { return this->show_call_names; }
+        bool GetCanvasHoverd(void) const { return this->canvas_hovered; }
 
         bool GetGroupSave(void) {
             bool retval = this->graph_state.interact.group_save;
@@ -133,11 +135,12 @@ private:
         ImVec2 multiselect_start_pos;
         ImVec2 multiselect_end_pos;
         bool multiselect_done;
+        bool canvas_hovered;
         // State propagated and shared by all graph items.
         megamol::gui::GraphItemsStateType graph_state;
 
         void present_menu(Graph& inout_graph);
-        void present_canvas(Graph& inout_graph, float child_width, float default_font_scale);
+        void present_canvas(Graph& inout_graph, float child_width);
         void present_parameters(Graph& inout_graph, float child_width);
 
         void present_canvas_grid(void);

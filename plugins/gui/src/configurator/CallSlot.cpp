@@ -513,15 +513,15 @@ void megamol::gui::configurator::CallSlot::Presentation::UpdatePosition(
             }
         }
 
-        float y_offset = 0.0f;
+        float line_height = 0.0f;
         if (inout_callslot.GetParentModule()->GUI_GetLabelVisibility()) {
-            y_offset = ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming;
+            line_height = ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming;
         }
         auto module_pos = inout_callslot.GetParentModule()->GUI_GetPosition();
-        module_pos.y += y_offset;
+        module_pos.y += line_height;
         ImVec2 pos = in_canvas.offset + module_pos * in_canvas.zooming;
         auto module_size = inout_callslot.GetParentModule()->GUI_GetSize();
-        module_size.y -= y_offset;
+        module_size.y -= line_height;
         ImVec2 size = module_size * in_canvas.zooming;
         this->position = ImVec2(pos.x + ((inout_callslot.type == CallSlotType::CALLER) ? (size.x) : (0.0f)),
             pos.y + size.y * ((float)slot_idx + 1) / ((float)slot_count + 1));

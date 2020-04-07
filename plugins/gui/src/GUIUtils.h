@@ -9,15 +9,10 @@
 #define MEGAMOL_GUI_GUIUTILS_INCLUDED
 
 
-#include "mmcore/view/Input.h"
-
-#include "vislib/UTF8Encoder.h"
-#include "vislib/sys/Log.h"
-
-#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-#include <imgui.h>
-
 #define IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+
+#include <imgui.h>
 #include <imgui_internal.h>
 
 #include "imgui_impl_opengl3.h"
@@ -37,6 +32,11 @@
 #include <utility>
 #include <vector>
 
+#include "mmcore/view/Input.h"
+
+#include "vislib/UTF8Encoder.h"
+#include "vislib/sys/Log.h"
+
 
 namespace megamol {
 namespace gui {
@@ -49,6 +49,7 @@ namespace gui {
 #define GUI_RECT_CORNER_RADIUS (0.0f)
 #define GUI_MAX_MULITLINE (7)
 #define GUI_DND_CALL_UID_TYPE ("DND_CALL")
+#define GUI_GRAPH_BORDER (GUI_CALL_SLOT_RADIUS * 4.0f)
 
 /********** Types **********/
 

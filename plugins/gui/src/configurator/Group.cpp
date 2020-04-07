@@ -294,7 +294,7 @@ void megamol::gui::configurator::Group::restore_callslot_interface_sate(void) {
 // GROUP PRESENTATION ####################################################
 
 megamol::gui::configurator::Group::Presentation::Presentation(void)
-    : border(GUI_CALL_SLOT_RADIUS * 3.0f)
+    : border(GUI_CALL_SLOT_RADIUS * 2.0f)
     , position(ImVec2(FLT_MAX, FLT_MAX))
     , size(ImVec2(0.0f, 0.0f))
     , utils()
@@ -338,7 +338,9 @@ void megamol::gui::configurator::Group::Presentation::Present(
         ImVec2 group_rect_min = state.canvas.offset + this->position * state.canvas.zooming;
         ImVec2 group_rect_max = group_rect_min + group_size;
         ImVec2 group_center = group_rect_min + ImVec2(group_size.x / 2.0f, group_size.y / 2.0f);
-
+        ImVec2 header_size = ImVec2(group_size.x, ImGui::GetTextLineHeightWithSpacing());
+        ImVec2 header_rect_max = group_rect_min + header_size;
+        
         ImGui::PushID(inout_group.uid);
 
         // Colors
@@ -356,12 +358,20 @@ void megamol::gui::configurator::Group::Presentation::Present(
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
         const ImU32 COLOR_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
+        const ImU32 COLOR_TEXT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
+        tmpcol = style.Colors[ImGuiCol_FrameBgHovered]; 
+        tmpcol.y = 0.75f;
+        const ImU32 COLOR_HEADER =ImGui::ColorConvertFloat4ToU32(tmpcol);
+        tmpcol = style.Colors[ImGuiCol_ButtonActive];
+        tmpcol.y = 0.75f; 
+        const ImU32 COLOR_HEADER_HIGHLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
+            
         // Draw box
         ImGui::SetCursorScreenPos(group_rect_min);
         std::string label = "group_" + inout_group.name;
 
         ImGui::SetItemAllowOverlap();
-        ImGui::InvisibleButton(label.c_str(), group_size);
+        ImGui::InvisibleButton(label.c_str(), header_size);
         ImGui::SetItemAllowOverlap();
 
         bool active = ImGui::IsItemActive();
@@ -444,19 +454,16 @@ void megamol::gui::configurator::Group::Presentation::Present(
         draw_list->AddRect(group_rect_min, group_rect_max, COLOR_GROUP_BORDER, 0.0f);
 
         // Draw text
-        if (this->collapsed_view) {
-            float name_width = GUIUtils::TextWidgetWidth(this->name_label);
-            ImVec2 text_pos_left_upper =
-                (group_center + ImVec2(-(name_width / 2.0f), -0.5f * ImGui::GetTextLineHeightWithSpacing()));
-            draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]),
-                this->name_label.c_str());
-        } else {
-            ImVec2 text_pos_left_upper =
-                group_rect_min + ImVec2(this->border, this->border / 2.0f) * state.canvas.zooming;
-            draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]),
-                this->name_label.c_str());
+        float name_width = GUIUtils::TextWidgetWidth(this->name_label);
+        ImVec2 text_pos_left_upper = ImVec2((group_center.x - (name_width / 2.0f)), (group_rect_min.y + (style.ItemSpacing.y / 2.0f)));        
+        if (!this->collapsed_view) {
+            text_pos_left_upper = ImVec2((group_rect_min.x + style.ItemSpacing.x), (group_rect_min.y + (style.ItemSpacing.y / 2.0f)));
         }
+        auto header_color = (this->selected) ? (COLOR_HEADER_HIGHLIGHT) : (COLOR_HEADER);
+        draw_list->AddRectFilled(group_rect_min, header_rect_max, header_color, GUI_RECT_CORNER_RADIUS, (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
 
+        draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->name_label.c_str());
+                
         // Rename pop-up ------------------------------------------------------
         if (this->utils.RenamePopUp("Rename Group", popup_rename, inout_group.name)) {
             for (auto& module_ptr : inout_group.GetModules()) {
@@ -482,8 +489,9 @@ void megamol::gui::configurator::Group::Presentation::Present(
 void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
     megamol::gui::configurator::Group& inout_group, const GraphCanvasType& in_canvas) {
 
-    this->name_label = "Group: " + inout_group.name;
-
+    this->name_label = "[Group] " + inout_group.name;
+    float line_height = ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming;
+    
     // POSITION
     float pos_minX = FLT_MAX;
     float pos_minY = FLT_MAX;
@@ -495,10 +503,10 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
             pos_minY = std::min(tmp_pos.y, pos_minY);
         }
         pos_minX -= this->border;
-        pos_minY -= (this->border + (ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming));
+        pos_minY -= (this->border + line_height);
         this->position = ImVec2(pos_minX, pos_minY);
     } else {
-        this->position = ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - in_canvas.offset) / in_canvas.zooming;
+        this->position = megamol::gui::configurator::Module::GUI_GetInitModulePosition(in_canvas);
     }
 
     // SIZE
@@ -510,8 +518,7 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
 
     group_width =
         (1.5f * GUIUtils::TextWidgetWidth(this->name_label) / in_canvas.zooming) + (3.0f * GUI_CALL_SLOT_RADIUS);
-    group_height = std::max((3.0f * ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming),
-        ((static_cast<float>(max_slot_count) * (GUI_CALL_SLOT_RADIUS * 2.0f) * 1.25f) + GUI_CALL_SLOT_RADIUS));
+    group_height = std::max((3.0f * line_height), (line_height + (static_cast<float>(max_slot_count) * (GUI_CALL_SLOT_RADIUS * 2.0f) * 1.5f) + GUI_CALL_SLOT_RADIUS));
 
     if (!this->collapsed_view) {
         float pos_maxX = -FLT_MAX;
@@ -532,10 +539,14 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
 
     // Set group interface position of call slots --------------------------
     ImVec2 pos = in_canvas.offset + this->position * in_canvas.zooming;
+    pos.y += line_height;
     ImVec2 size = this->size * in_canvas.zooming;
+    size.y -= line_height;    
+    
     size_t caller_idx = 0;
     size_t callee_idx = 0;
     ImVec2 callslot_group_position;
+
     for (auto& callslot_map : inout_group.callslots) {
         for (auto& callslot_ptr : callslot_map.second) {
             if (callslot_map.first == CallSlotType::CALLER) {

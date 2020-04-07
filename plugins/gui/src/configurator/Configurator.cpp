@@ -153,7 +153,7 @@ bool megamol::gui::configurator::Configurator::Draw(
         GraphPtrType selected_graph_ptr;
         if (this->graph_manager.GetGraph(this->state.graph_selected_uid, selected_graph_ptr)) {
             ImGuiID selected_callslot_uid = selected_graph_ptr->GUI_GetSelectedCallSlot();
-            bool double_click_anywhere = (ImGui::IsMouseDoubleClicked(0) && !this->show_module_list_child);
+            bool double_click_anywhere = (ImGui::IsMouseDoubleClicked(0) && !this->show_module_list_child && selected_graph_ptr->GUI_GetCanvasHoverd());
             bool double_click_callslot = (ImGui::IsMouseDoubleClicked(0) && (selected_callslot_uid != GUI_INVALID_ID) && 
                 ((!this->show_module_list_child) || (this->last_selected_callslot_uid != selected_callslot_uid)));
             if (double_click_anywhere || double_click_callslot) {
@@ -444,7 +444,6 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
             }
 
             if (add_module) {
-                this->show_module_list_child = false;
                 if (graph_ptr != nullptr) {
                     ImGuiID module_uid = graph_ptr->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
                     ModulePtrType module_ptr;
@@ -455,29 +454,13 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                             for (auto& call_slot_map : module_ptr->GetCallSlots()) {
                                 for (auto& call_slot : call_slot_map.second) {
                                     if (call_slot->name == compat_call_slot_name) {
-                                        if (graph_ptr->AddCall(this->graph_manager.GetCallsStock(),
-                                                selected_call_slot_ptr, call_slot)) {
-                                            // Caluculate nice position of newly added module
-                                            /// XXX Currently only for modules connected to caller and lying right of
-                                            /// existing module
-                                            if (selected_call_slot_ptr->ParentModuleConnected() &&
-                                                (selected_call_slot_ptr->type == CallSlotType::CALLER)) {
-                                                float text_width =
-                                                    GUIUtils::TextWidgetWidth(selected_call_slot_ptr->name);
-                                                ImVec2 module_size =
-                                                    selected_call_slot_ptr->GetParentModule()->GUI_GetSize();
-                                                ImVec2 module_pos =
-                                                    selected_call_slot_ptr->GetParentModule()->GUI_GetPosition();
-                                                module_pos.x += (module_size.x + (text_width * 1.5f) +
-                                                                 2.0f * (GUI_CALL_SLOT_RADIUS * 4.0f));
-                                                module_ptr->GUI_SetPosition(module_pos);
-                                            }
-                                        }
+                                        graph_ptr->AddCall(this->graph_manager.GetCallsStock(), selected_call_slot_ptr, call_slot);
                                     }
                                 }
                             }
                         }
                     }
+                    this->show_module_list_child = false;                    
                 } else {
                     vislib::sys::Log::DefaultLog.WriteError(
                         "No project loaded. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);

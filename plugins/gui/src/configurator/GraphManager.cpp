@@ -207,7 +207,11 @@ bool megamol::gui::configurator::GraphManager::LoadProjectCore(megamol::core::Co
     bool retval = this->AddGraph();
     auto graph_ptr = this->get_graphs().back();
     if (retval && (graph_ptr != nullptr)) {
-        return this->AddProjectCore(graph_ptr->uid, core_instance);
+        if (this->AddProjectCore(graph_ptr->uid, core_instance)) {
+            // Layout project loaded from core
+            graph_ptr->GUI_SetLayoutGraph();
+            return true;
+        }
     }
 
     vislib::sys::Log::DefaultLog.WriteError(
@@ -442,6 +446,8 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
     this->GetGraph(graph_uid, graph_ptr);
 
     try {
+        bool found_conf_pos = false;
+
         std::stringstream content(projectstr);
         std::vector<std::string> lines;
 
@@ -487,6 +493,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                     return false;
                 }
                 ImVec2 module_pos = this->readLuaProjectConfPos(lines[i]);
+                if ((module_pos.x != FLT_MAX) &&  (module_pos.x != FLT_MAX)) found_conf_pos = true;
                 std::vector<std::string> group_interface_callslots = this->readLuaProjectConfGroupInterface(lines[i]);
 
                 /// DEBUG
@@ -589,6 +596,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                     return false;
                 }
                 ImVec2 module_pos = this->readLuaProjectConfPos(lines[i]);
+                if ((module_pos.x != FLT_MAX) &&  (module_pos.x != FLT_MAX)) found_conf_pos = true;
                 std::vector<std::string> group_interface_callslots = this->readLuaProjectConfGroupInterface(lines[i]);
 
                 /// DEBUG
@@ -838,6 +846,11 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 }
             }
         }
+        
+        // Layout graph if no confPos tags could be detected.
+        if (!found_conf_pos) {
+            graph_ptr->GUI_SetLayoutGraph();
+        }
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -907,8 +920,7 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_uid
 
                     for (auto& param_slot : mod->parameters) {
                         // Only write parameters with other values than the default
-                        if (param_slot
-                                .DefaultValueMismatch()) { // && (param_slot.type != Parameter::ParamType::BUTTON)) {
+                        if (param_slot.DefaultValueMismatch()) {
                             // Encode to UTF-8 string
                             vislib::StringA valueString;
                             vislib::UTF8Encoder::Encode(
@@ -1316,7 +1328,7 @@ bool megamol::gui::configurator::GraphManager::readLuaProjectCommandArguments(
 
 ImVec2 megamol::gui::configurator::GraphManager::readLuaProjectConfPos(const std::string& line) {
 
-    ImVec2 conf_pos;
+    ImVec2 conf_pos(FLT_MAX, FLT_MAX);
 
     std::string x_start_tag = "--confPos={X=";
     std::string y_start_tag = ",Y=";

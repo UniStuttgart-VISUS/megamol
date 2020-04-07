@@ -118,7 +118,7 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
 * Search for Module (`Ctrl + Shift + m`)
 * Add Module from Stock List to Graph
     * `Double Left Click` on Module in Stock List
-    * `Right Click` on Module in Stock List / Context Menu: Add
+    * `Right Click` on Module in Stock List - Context Menu: Add
     
 #### *Module Parameters* Sidebar
 
@@ -126,7 +126,8 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
         
 #### Project Graph
 
-* Load or add project file by dragging a file in a file browser and dropping it anywhere inside the configurator window.
+* Load/Add Project File
+    Drag file in a file browser and drop it anywhere if the configurator is the currently focused window.
     Note: Successfully testet using Windows10 and (X)Ubuntu with "Nautilus" file browser as drag source of the files. Failed using (X)Ubuntu with "Thunar" file browser. File drop is currently unimplemented in glfw for "Wayland" (e.g. Fedora using GNOME).
 * Spawn *Module Stock List* in pop-up window at mouse position
     * `Ctrl + Shift + m`
@@ -158,7 +159,7 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
     * Context Menu (`Right Click`)    
         * Add to Group Interface
         * Remove from Group Interface
-        * Show *Module Stock List* in pop-up window.
+        * Show *Module Stock List* in pop-up window at mouse position.
 * `Group` 
     * Context Menu (`Right Click`)
         * Collapse View / Expand View

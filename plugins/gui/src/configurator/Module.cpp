@@ -170,15 +170,66 @@ void megamol::gui::configurator::Module::Presentation::Present(
     bool popup_rename = false;
 
     try {
-        // Init position (e.g. if position is not set yet via tag in project file)
-        if ((this->position.x == FLT_MAX) && (this->position.y == FLT_MAX)) {
-            this->position =
-                ImVec2(10.0f, 10.0f) + (ImGui::GetWindowPos() - state.canvas.offset) / state.canvas.zooming;
-        }
+        
         // Update size 
         if (this->update || (this->size.x <= 0.0f) || (this->size.y <= 0.0f)) {
             this->UpdateSize(inout_module, state.canvas);
             this->update = false;
+        }
+                
+        // Init position of newly created module (check after size update)
+        /// There are the following possibilities to create a module:
+        /// 1) Load from file: Either all modules have the confPos tag or non of the modules have initial positions.
+        /// 2) Load from running project: No inital position.
+        /// 3) Add module from stock list 'stand alone' (no call is created): No inital position.
+        /// 4) Add module from stock list while compatible call slot is selected and a new call is created between modules: No inital position.
+        if ((this->position.x == FLT_MAX) && (this->position.y == FLT_MAX)) {
+            
+            unsigned int connected_callslot_count = 0;
+            for (auto& callslot_map : inout_module.GetCallSlots()) {
+                for (auto callslot_ptr : callslot_map.second) {
+                    if (callslot_ptr->CallsConnected()) {
+                        connected_callslot_count++;
+                    }
+                }
+            }
+            bool one_callslot_connected = (connected_callslot_count == 1);
+            
+            // Position for modules added while compatible call slot is selected and a new call is created between modules
+            if (one_callslot_connected) {
+                for (auto& callslot_map : inout_module.GetCallSlots()) {
+                    for (auto callslot_ptr : callslot_map.second) {
+                        if (callslot_ptr->CallsConnected()) {
+                            CallSlotPtrType connected_callslot_ptr ;
+                            if (callslot_map.first == CallSlotType::CALLER) {
+                                connected_callslot_ptr = callslot_ptr->GetConnectedCalls()[0]->GetCallSlot(CallSlotType::CALLEE);
+                            }
+                            else if (callslot_map.first == CallSlotType::CALLEE) {
+                                connected_callslot_ptr = callslot_ptr->GetConnectedCalls()[0]->GetCallSlot(CallSlotType::CALLER);
+                            }
+                            if ((connected_callslot_ptr != nullptr) && (connected_callslot_ptr->ParentModuleConnected())) {
+                                float call_name_width = GUIUtils::TextWidgetWidth(callslot_ptr->GetConnectedCalls()[0]->class_name);
+                                ImVec2 module_size = connected_callslot_ptr->GetParentModule()->GUI_GetSize();
+                                ImVec2 module_pos = connected_callslot_ptr->GetParentModule()->GUI_GetPosition();
+                                float call_width = (2.0f * GUI_GRAPH_BORDER + call_name_width * 1.5f);
+                                if (callslot_map.first == CallSlotType::CALLER) {
+                                    // Left of connected module     
+                                    this->position = module_pos - ImVec2((call_width + this->size.x), 0.0f);
+                                }
+                                else if (callslot_map.first == CallSlotType::CALLEE) {
+                                    // Right of connected module
+                                    this->position = module_pos + ImVec2((call_width + this->size.x), 0.0f);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            else {
+                // See layout border_offset in Graph::Presentation::layout_graph
+                this->position = this->GetInitModulePosition(state.canvas);
+            }
         }
 
         // Draw module --------------------------------------------------------
@@ -337,9 +388,9 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 bool parameter_button = (inout_module.parameters.size() > 0);
                 bool any_button = (main_view_button || parameter_button);
 
-                auto menu_color = (this->selected) ? (COLOR_HEADER_HIGHLIGHT) : (COLOR_HEADER);
+                auto header_color = (this->selected) ? (COLOR_HEADER_HIGHLIGHT) : (COLOR_HEADER);
                 ImVec2 header_rect_max = module_rect_min + ImVec2(module_size.x, ImGui::GetTextLineHeightWithSpacing());
-                draw_list->AddRectFilled(module_rect_min, header_rect_max, menu_color, GUI_RECT_CORNER_RADIUS,
+                draw_list->AddRectFilled(module_rect_min, header_rect_max, header_color, GUI_RECT_CORNER_RADIUS,
                     (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
 
                 text_width = GUIUtils::TextWidgetWidth(inout_module.class_name);
@@ -491,6 +542,12 @@ void megamol::gui::configurator::Module::Presentation::Present(
 }
 
 
+ImVec2 megamol::gui::configurator::Module::Presentation::GetInitModulePosition(const GraphCanvasType& canvas) {
+    
+    return ImVec2((GUI_GRAPH_BORDER), (GUI_GRAPH_BORDER) + ImGui::GetTextLineHeightWithSpacing()) + (canvas.position - canvas.offset) / canvas.zooming;
+}
+
+
 void megamol::gui::configurator::Module::Presentation::UpdateSize(
     megamol::gui::configurator::Module& inout_module, const GraphCanvasType& in_canvas) {
 
@@ -521,11 +578,11 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
     float module_width = (max_label_length + max_slot_name_length) + (3.0f * GUI_CALL_SLOT_RADIUS);
 
     // HEIGHT
-    float line_height = (1.0f / in_canvas.zooming) * ImGui::GetTextLineHeightWithSpacing();
+    float line_height = (ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming);
     auto max_slot_count = std::max(
         inout_module.GetCallSlots(CallSlotType::CALLEE).size(), inout_module.GetCallSlots(CallSlotType::CALLER).size());
     float module_slot_height = line_height +
-                               (static_cast<float>(max_slot_count) * (GUI_CALL_SLOT_RADIUS * 2.0f) * 1.25f) +
+                               (static_cast<float>(max_slot_count) * (GUI_CALL_SLOT_RADIUS * 2.0f) * 1.5f) +
                                GUI_CALL_SLOT_RADIUS;
     float text_button_height = (line_height * ((this->label_visible) ? (4.0f) : (1.0f)));
     float module_height = std::max(module_slot_height, text_button_height);
