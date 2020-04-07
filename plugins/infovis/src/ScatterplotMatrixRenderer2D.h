@@ -169,6 +169,8 @@ private:
 
     void drawPickIndicator();
 
+    void drawMouseLabels();
+
     void unbindScreen();
 
     void bindAndClearScreen();
@@ -206,6 +208,8 @@ private:
     core::param::ParamSlot resetSelectionParam;
 
     core::param::ParamSlot drawPickIndicatorParam;
+
+    core::param::ParamSlot drawMouseLabelsParam;
 
     core::param::ParamSlot triangulationSmoothnessParam;
 
