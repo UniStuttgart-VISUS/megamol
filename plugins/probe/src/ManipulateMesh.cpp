@@ -53,9 +53,9 @@ bool ManipulateMesh::InterfaceIsDirty() { return this->_numFacesSlot.IsDirty(); 
 bool ManipulateMesh::performMeshOperation() {
 
     int full_iterations = 1;
-    int iterations_per_triangle = 4;
-    double initial_delta_t = 1e-5;
-    float samples_per_area = 0.1f;
+    int iterations_per_triangle = 1;
+    double initial_delta_t = 1e-3;
+    float samples_per_area = 10.0f;
 
     if (!_mu) {
         _mu = std::make_shared<MeshUtility>();
@@ -73,8 +73,6 @@ bool ManipulateMesh::performMeshOperation() {
         auto area = _mu->calcTriangleArea(idx);
         total_area += area;
         auto num_points = static_cast<uint32_t>(area * samples_per_area);
-        if (num_points < 4)
-            num_points = 10;
         total_points += num_points;
 
         _neighborMap[idx] = _mu->getNeighboringTriangles(idx);
@@ -106,8 +104,8 @@ bool ManipulateMesh::performMeshOperation() {
 
     for (int full_it = 0; full_it < full_iterations; ++full_it) {
         //#pragma omp parallel for
-        //for (uint32_t idx = 0; idx < _numFaces; ++idx) {
-            uint32_t idx = 0;
+        for (uint32_t idx = 0; idx < _numFaces; ++idx) {
+            //uint32_t idx = 0;
             // transform samples points, so we can perform relaxation in 2D
             Eigen::MatrixXd patch_vertices;
             Eigen::MatrixXi patch_indices;
@@ -173,27 +171,23 @@ bool ManipulateMesh::performMeshOperation() {
                 before_movement_buffer.resizeLike(transformed_patch_samples);
                 // sum up forces
                 // for every (not fixed) particle
-#    pragma omp parallel for
+//#    pragma omp parallel for
                 for (int k = 0; k < transformed_patch_samples.rows(); ++k) {
                     glm::vec2 current_particle = {transformed_patch_samples(k, 0), transformed_patch_samples(k, 1)};
                     // interaction with fixed samples
                     for (int l = 0; l < transformed_fixed_points.rows(); ++l) {
                         glm::vec2 current_partner = {transformed_fixed_points(l, 0), transformed_fixed_points(l, 1)};
                         glm::vec2 dif = current_partner - current_particle;
-                        if (glm::abs(dif.x) < 1e-4) dif.x = glm::sign(dif.x) * 1e-4;
-                        if (glm::abs(dif.y) < 1e-4) dif.y = glm::sign(dif.y) * 1e-4;
-                        force.x += -1 * glm::sign(dif.x) * coulomb_force(dif.x);
-                        force.y += -1 * glm::sign(dif.y) * coulomb_force(dif.y);
+                        auto amount_force = coulomb_force(glm::length(dif));
+                        force += amount_force * glm::normalize(dif);
                     }
                     // interaction with not fixed samples
                     for (int h = 0; h < transformed_patch_samples.rows(); ++h) {
                         if (h != k) {
                             glm::vec2 current_partner = {transformed_patch_samples(h, 0), transformed_patch_samples(h, 1)};
                             glm::vec2 dif = current_partner - current_particle;
-                            if (glm::abs(dif.x) < 1e-4) dif.x = glm::sign(dif.x) * 1e-4;
-                            if (glm::abs(dif.y) < 1e-4) dif.y = glm::sign(dif.y) * 1e-4;
-                            force.x += -1 * glm::sign(dif.x) * coulomb_force(dif.x);
-                            force.y += -1 * glm::sign(dif.y) * coulomb_force(dif.y);
+                            auto amount_force = coulomb_force(glm::length(dif));
+                            force += amount_force * glm::normalize(dif);
                         }
                     }
                     // buffer new positions
@@ -202,16 +196,12 @@ bool ManipulateMesh::performMeshOperation() {
                     before_movement_buffer(k, 1) = 2 * transformed_patch_samples(k, 1) -
                                                    old_transfromed_patch_samples(k, 1) + force.y * std::pow(delta_t, 2);
                     before_movement_buffer(k, 2) = transformed_patch_samples(k, 2);
+
+                    // Check if new positions are still inside the triangle
+
                 } // end for patch samples
 
-                // TODO: check if new positions are still inside the triangle
-                auto dif = before_movement_buffer - transformed_patch_samples;
-                for (int b = 0; b < dif.rows(); ++b) {
-                    for (int c = 0; c < dif.cols(); ++c) {
-                        if (std::abs(dif(b,c)) > 10 )
-                            auto blub = 3;
-                    }
-                }
+
 
                 // save old positions
                 old_transfromed_patch_samples = transformed_patch_samples;
@@ -226,27 +216,27 @@ bool ManipulateMesh::performMeshOperation() {
             _pointsPerFace[idx] = patch_samples;
 
             // debug patch
-            _mu->fillMeshFaces(patch_indices, this->_mesh_faces);
-            _mu->fillMeshVertices(patch_vertices, this->_mesh_vertices);
+            //_mu->fillMeshFaces(patch_indices, this->_mesh_faces);
+            //_mu->fillMeshVertices(patch_vertices, this->_mesh_vertices);
 
-            for (int i = 0; i < _pointsPerFace[idx].rows(); ++i) {
-                for (int j = 0; j < 3; ++j) {
-                    _points.emplace_back(_pointsPerFace[idx](i,j));
-                }
-            }
+            //for (int i = 0; i < _pointsPerFace[idx].rows(); ++i) {
+            //    for (int j = 0; j < 3; ++j) {
+            //        _points.emplace_back(_pointsPerFace[idx](i,j));
+            //    }
+            //}
 
-        //} // end for every triangle
+        } // end for every triangle
     }     // end full_iterations
 
     // fill debug points
-    //_points.reserve(total_points * 3);
-    //for (uint32_t idx = 0; idx < _numFaces; ++idx) {
-    //    for (int i = 0; i < _pointsPerFace[idx].rows(); ++i) {
-    //        for (int j = 0; j < 3; ++j) {
-    //            _points.emplace_back(_pointsPerFace[idx](i, j));
-    //        }
-    //    }
-    //}
+    _points.reserve(total_points * 3);
+    for (uint32_t idx = 0; idx < _numFaces; ++idx) {
+        for (int i = 0; i < _pointsPerFace[idx].rows(); ++i) {
+            for (int j = 0; j < 3; ++j) {
+                _points.emplace_back(_pointsPerFace[idx](i, j));
+            }
+        }
+    }
 
 
     //_mu->fillMeshFaces(patch_indices, this->_mesh_faces);

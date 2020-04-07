@@ -131,15 +131,13 @@ public:
         }
 
         Eigen::Matrix<int, 3, 2> other_indices;
-        other_indices << 1, 0, 0, 2, 2, 1;
-
-        Eigen::Matrix3i index_sequence;
-        index_sequence << 0, 1, 2, 1, 0, 0, 2, 2, 1;
+        //other_indices << 1, 0, 0, 2, 2, 1;
+        other_indices << 1, 2, 0, 2, 0, 1;
 
         auto vertices = this->getTriangleVertices(idx);
 
         std::array<glm::vec3, 3> edges = {
-            vertices[2] - vertices[0], vertices[1] - vertices[0], vertices[2] - vertices[1]};
+            vertices[1] - vertices[0], vertices[2] - vertices[1], vertices[0] - vertices[2]};
         std::array<float, 3> edge_lengths = {
             glm::length(edges[0]),
             glm::length(edges[1]),
@@ -148,11 +146,11 @@ public:
             std::distance(edge_lengths.begin(), std::max_element(edge_lengths.begin(), edge_lengths.end()));
         
 
-        float proj_on_longest_edge = glm::dot(edges[longest_edge], edges[other_indices(longest_edge,0)]);
-        auto to_cut = edges[other_indices(longest_edge, 0)] * std::abs(proj_on_longest_edge);
-        auto e = to_cut + vertices[index_sequence(longest_edge,0)];
-        auto e_o1 = e - vertices[index_sequence(longest_edge, 1)];
-        auto e_o2 = e - vertices[index_sequence(longest_edge, 2)];
+        float proj_on_longest_edge = glm::dot(glm::normalize(edges[longest_edge]), glm::normalize(edges[other_indices(longest_edge,0)]));
+        auto to_cut = edges[longest_edge] * std::abs(proj_on_longest_edge);
+        auto e = to_cut + vertices[longest_edge];
+        auto e_o1 = e - vertices[other_indices(longest_edge, 0)];
+        auto e_o2 = e - vertices[other_indices(longest_edge,1)];
 
         auto area = (glm::length(to_cut) * glm::length(e_o1)) / 2.0f + (glm::length(e_o1) * glm::length(e_o2)) / 2.0f;
 
