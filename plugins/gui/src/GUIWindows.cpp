@@ -42,7 +42,8 @@ GUIWindows::GUIWindows()
     , widgtmap_float()
     , widgtmap_vec2()
     , widgtmap_vec3()
-    , widgtmap_vec4() {
+    , widgtmap_vec4()
+    , graph_fonts_reserved(0) {
 
     core::param::EnumParam* styles = new core::param::EnumParam((int)(Styles::DarkColors));
     styles->SetTypePair(Styles::CorporateGray, "Corporate Gray");
@@ -156,8 +157,8 @@ bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceT
     }
 
     // Loading new font from state (set in loaded FONT window configuration)
-    if (this->state.font_index >= 0) {
-        if (this->state.font_index < io.Fonts->Fonts.Size) {
+    if (this->state.font_index >= this->graph_fonts_reserved) {
+        if (this->state.font_index < static_cast<unsigned int>(io.Fonts->Fonts.Size)) {
             io.FontDefault = io.Fonts->Fonts[this->state.font_index];
         }
         this->state.font_index = GUI_INVALID_ID;
@@ -200,15 +201,14 @@ bool GUIWindows::PostDraw(void) {
         if (wc.buf_font_reset) {
             if (!wc.font_name.empty()) {
                 this->state.font_index = GUI_INVALID_ID;
-                for (int n = 0; n < io.Fonts->Fonts.Size; n++) {
-
+                for (unsigned int n = this->graph_fonts_reserved; n < static_cast<unsigned int>(io.Fonts->Fonts.Size); n++) {
                     std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
                     GUIUtils::Utf8Decode(font_name);
                     if (font_name == wc.font_name) {
                         this->state.font_index = n;
                     }
                 }
-                if (this->state.font_index < 0) {
+                if (this->state.font_index == GUI_INVALID_ID) {
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "Could not find font '%s' for loaded state. [%s, %s, line %d]\n", wc.font_name.c_str(),
                         __FILE__, __FUNCTION__, __LINE__);
@@ -627,43 +627,52 @@ bool GUIWindows::createContext(void) {
         config.OversampleH = 4;
         config.OversampleV = 4;
         config.GlyphRanges = this->state.font_utf8_ranges.data();
-        // Add default font for gui.
-        io.Fonts->AddFontDefault(&config);
-        std::string configurator_font = "";
+        std::string configurator_font;
+        std::string default_font;
         // Add other known fonts
-        std::string font_file, font_path;
+        std::vector<std::string> font_paths;
         if (this->core_instance != nullptr) {
             const vislib::Array<vislib::StringW>& search_paths =
                 this->core_instance->Configuration().ResourceDirectories();
             for (size_t i = 0; i < search_paths.Count(); ++i) {
                 std::wstring search_path(search_paths[i].PeekBuffer());
-                font_file = "Roboto-Regular.ttf";
-                font_path = FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
+                std::string font_path = FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, "Roboto-Regular.ttf");
                 if (!font_path.empty()) {
-                    io.Fonts->AddFontFromFileTTF(font_path.c_str(), default_font_size, &config);
-                    // Set as default ...
-                    io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
-                    // ... and as font for configurator.
+                    font_paths.emplace_back(font_path);
                     configurator_font = font_path;
+                    default_font = font_path;
                 }
-                font_file = "SourceCodePro-Regular.ttf";
-                font_path = FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
+                font_path = FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, "SourceCodePro-Regular.ttf");
                 if (!font_path.empty()) {
-                    io.Fonts->AddFontFromFileTTF(font_path.c_str(), default_font_size, &config);
+                    font_paths.emplace_back(font_path);
                 }
             }
         } else {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
-        // Configurator Graph Font: Add default font again at last index for exclusive use in configurator graph.
+        // Configurator Graph Font: Add default font at first indices for exclusive use in configurator graph.
+        /// (Workaraound: Using different font sizes for different graph zooming factors to improve font readability when zooming.)
+        const auto graph_font_scalings = this->configurator.GetGraphFontScalings();
+        this->graph_fonts_reserved = graph_font_scalings.size();
         if (configurator_font.empty()) {
-            io.Fonts->AddFontDefault(&config);
+            for (unsigned int i = 0; i < this->graph_fonts_reserved; i++) {
+                io.Fonts->AddFontDefault(&config);                
+            }
         } else {
-            io.Fonts->AddFontFromFileTTF(configurator_font.c_str(), default_font_size, &config);
-        }        
-        // Use last tadded font for graph text in configurator
-        this->configurator.SetGraphFont(io.Fonts->Fonts[io.Fonts->Fonts.Size - 1]);
+            for (unsigned int i = 0; i < this->graph_fonts_reserved; i++) {
+                io.Fonts->AddFontFromFileTTF(configurator_font.c_str(), default_font_size*graph_font_scalings[i], &config);
+            }        
+        } 
+        // Add other fonts for gui.
+        io.Fonts->AddFontDefault(&config);
+        io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];        
+        for (auto& font_path : font_paths) {
+            io.Fonts->AddFontFromFileTTF(font_path.c_str(), default_font_size, &config);
+            if (default_font == font_path) {
+                io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
+            }
+        }
     }
 
     // ImGui Key Map

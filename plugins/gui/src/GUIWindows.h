@@ -134,7 +134,7 @@ private:
     struct StateBuffer {
         std::string font_file;                 // Apply changed font file name.
         float font_size;                       // Apply changed font size.
-        int font_index;                        // Apply cahnged font by index.
+        unsigned int font_index;               // Apply cahnged font by index.
         std::vector<ImWchar> font_utf8_ranges; // Additional UTF-8 glyph ranges for all ImGui fonts.
         bool win_save_state;                   // Flag indicating that window state should be written to parameter.
         float win_save_delay;      // Flag indicating how long to wait for saving window state since last user action.
@@ -197,6 +197,9 @@ private:
     std::map<std::string, vislib::math::Vector<float, 2>> widgtmap_vec2;
     std::map<std::string, vislib::math::Vector<float, 3>> widgtmap_vec3;
     std::map<std::string, vislib::math::Vector<float, 4>> widgtmap_vec4;
+    
+    /** Numer of fonts reserved for the configurator graph canvas. */
+    unsigned int graph_fonts_reserved;
 
     // FUNCTIONS --------------------------------------------------------------
 

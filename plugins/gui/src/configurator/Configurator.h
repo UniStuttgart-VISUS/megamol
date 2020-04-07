@@ -44,29 +44,30 @@ public:
     virtual ~Configurator();
 
     /**
-     * Draw configurator window.
-     */
-    bool Draw(WindowManager::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance);
-
-    /**
      * Checks if any hotkeys are pressed.
      *
      * @return true when any hotkey is pressed.
      */
     bool CheckHotkeys(void);
-
-    /*
-     * Provide additional font for independent scaling of font used in graph.
+    
+    /**
+     * Draw configurator window.
      */
-    inline void SetGraphFont(ImFont* graph_font) { this->state.font = graph_font; }
+    bool Draw(WindowManager::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance);
+    
+    /**
+     * Returns required font scalings for graph canvas
+     */
+    inline const FontScalingArrayType& GetGraphFontScalings(void) const { return this->state.font_scalings; }
 
 private:
     // VARIABLES --------------------------------------------------------------
 
+    static std::vector<std::string> dropped_files;
+    
     GraphManager graph_manager;
     megamol::gui::FileUtils file_utils;
     megamol::gui::GUIUtils utils;
-
     int init_state;
     float left_child_width;
     ImGuiID selected_list_module_uid;
@@ -78,8 +79,6 @@ private:
     std::string project_filename;
     megamol::gui::GraphStateType state;
     
-    static std::vector<std::string> dropped_files;
-
     // FUNCTIONS --------------------------------------------------------------
 
     void draw_window_menu(megamol::core::CoreInstance* core_instance);

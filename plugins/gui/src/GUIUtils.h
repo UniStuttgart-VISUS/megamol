@@ -80,6 +80,8 @@ typedef std::vector<UIDPairType> UIDPairVectorType;
 typedef std::pair<ImGuiID, std::string> GroupPairType;
 typedef std::vector<megamol::gui::GroupPairType> GroupPairVectorType;
 
+typedef std::array<float, 4> FontScalingArrayType;
+
 /* Data type holding information of graph canvas. */
 typedef struct _canvas_ {
     ImVec2 position;  // in
@@ -117,7 +119,7 @@ typedef struct _graph_item_state_ {
 
 /* Data type holding shared state of graphs. */
 typedef struct _graph_state_ {
-    ImFont* font;                          // in
+    FontScalingArrayType font_scalings;    // in
     float child_width;                     // in
     bool show_parameter_sidebar;           // in
     megamol::gui::HotkeyArrayType hotkeys; // in out

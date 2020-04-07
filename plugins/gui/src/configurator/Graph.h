@@ -136,6 +136,7 @@ private:
         ImVec2 multiselect_end_pos;
         bool multiselect_done;
         bool canvas_hovered;
+        float current_font_scaling;
         // State propagated and shared by all graph items.
         megamol::gui::GraphItemsStateType graph_state;
 

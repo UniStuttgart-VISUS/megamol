@@ -48,7 +48,7 @@ megamol::gui::configurator::Configurator::Configurator()
         megamol::gui::HotkeyDataType(core::view::KeyCode(core::view::Key::KEY_DELETE), false);
     this->state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT] = megamol::gui::HotkeyDataType(
         megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL), false);
-    this->state.font = nullptr;
+    this->state.font_scalings = {0.85f, 0.95f, 1.0f, 1.5f, 2.5f};
     this->state.child_width = 0.0f;
     this->state.show_parameter_sidebar = false;
     this->state.graph_selected_uid = GUI_INVALID_ID;

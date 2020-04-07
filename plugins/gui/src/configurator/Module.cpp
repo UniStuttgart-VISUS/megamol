@@ -184,7 +184,6 @@ void megamol::gui::configurator::Module::Presentation::Present(
         /// 3) Add module from stock list 'stand alone' (no call is created): No inital position.
         /// 4) Add module from stock list while compatible call slot is selected and a new call is created between modules: No inital position.
         if ((this->position.x == FLT_MAX) && (this->position.y == FLT_MAX)) {
-            
             unsigned int connected_callslot_count = 0;
             for (auto& callslot_map : inout_module.GetCallSlots()) {
                 for (auto callslot_ptr : callslot_map.second) {
@@ -194,7 +193,6 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 }
             }
             bool one_callslot_connected = (connected_callslot_count == 1);
-            
             // Position for modules added while compatible call slot is selected and a new call is created between modules
             if (one_callslot_connected) {
                 for (auto& callslot_map : inout_module.GetCallSlots()) {
@@ -218,7 +216,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                                 }
                                 else if (callslot_map.first == CallSlotType::CALLEE) {
                                     // Right of connected module
-                                    this->position = module_pos + ImVec2((call_width + this->size.x), 0.0f);
+                                    this->position = module_pos + ImVec2((call_width + module_size.x), 0.0f);
                                 }
                             }
                             break;

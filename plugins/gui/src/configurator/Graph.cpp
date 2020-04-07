@@ -498,6 +498,7 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , multiselect_end_pos()
     , multiselect_done(false)
     , canvas_hovered(false)
+    , current_font_scaling(1.0f)
     , graph_state() {
 
     this->graph_state.canvas.position = ImVec2(0.0f, 0.0f);
@@ -542,11 +543,9 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return;
         }
+        ImGuiIO& io = ImGui::GetIO();
 
         ImGuiID graph_uid = inout_graph.uid;
-
-        bool popup_rename = false;
-
         ImGui::PushID(graph_uid);
 
         // State Init/Reset ----------------------
@@ -576,6 +575,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         this->graph_state.interact.callslot_dropped_uid = GUI_INVALID_ID;
 
         // Tab showing this graph ---------------
+        bool popup_rename = false;
         ImGuiTabItemFlags tab_flags = ImGuiTabItemFlags_None;
         if (inout_graph.IsDirty()) {
             tab_flags |= ImGuiTabItemFlags_UnsavedDocument;
@@ -600,15 +600,49 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                     GUIUtils::FixedSplitterSide::RIGHT, child_width_auto, this->child_split_width);
             }
 
-            if (state.font == nullptr) {
-                vislib::sys::Log::DefaultLog.WriteError(
-                    "Found no font for configurator. Provide font via GuiView::SetGraphFont(). [%s, %s, line %d]\n",
-                    __FILE__, __FUNCTION__, __LINE__);
-                return;
+            // Load font for canvas
+            ImFont* font_ptr = nullptr;
+            unsigned int scalings_count = static_cast<unsigned int>(state.font_scalings.size());
+            if (scalings_count == 0) {
+                throw std::invalid_argument("Array for graph fonts is empty.");
             }
-            ImGui::PushFont(state.font);
-            this->present_canvas(inout_graph, child_width_auto);
-            ImGui::PopFont();
+            else if (scalings_count == 1) {
+                font_ptr = io.Fonts->Fonts[0];
+                this->current_font_scaling = state.font_scalings[0];
+            }
+            else {
+                for (unsigned int i = 0; i < scalings_count; i++){
+                    bool apply = false;
+                    if (i == 0) {
+                        if (this->graph_state.canvas.zooming <= state.font_scalings[i]) {
+                            apply = true;
+                        }
+                    }
+                    else if (i == (scalings_count-1)) {
+                        if (this->graph_state.canvas.zooming >= state.font_scalings[i]) {
+                            apply = true;
+                        }
+                    }
+                    else {
+                        if ((state.font_scalings[i-1] < this->graph_state.canvas.zooming) && (this->graph_state.canvas.zooming < state.font_scalings[i+1])) {
+                            apply = true;
+                        }
+                    }
+                    if (apply) {
+                        font_ptr = io.Fonts->Fonts[i];
+                        this->current_font_scaling = state.font_scalings[i];
+                        break;
+                    }
+                }
+            }
+            if (font_ptr != nullptr) {
+                ImGui::PushFont(font_ptr);
+                this->present_canvas(inout_graph, child_width_auto);
+                ImGui::PopFont();
+            }
+            else {
+                throw std::invalid_argument("Pointer to font is nullptr.");
+            }
 
             if (state.show_parameter_sidebar) {
                 ImGui::SameLine();
@@ -987,13 +1021,15 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     ImGui::EndChild();
     ImGui::PopStyleColor();
 
+    // FONT scaling
+    float font_scaling = this->graph_state.canvas.zooming / this->current_font_scaling;
     // Update when scaling of font has changed due to project tab switching
-    if (ImGui::GetFont()->Scale != (this->graph_state.canvas.zooming)) {
+    if (ImGui::GetFont()->Scale != font_scaling) {
         this->update = true;
     }
     // Font scaling is applied next frame after ImGui::Begin()
     // Font for graph should not be the currently used font of the gui.
-    ImGui::GetFont()->Scale = (this->graph_state.canvas.zooming);
+    ImGui::GetFont()->Scale = font_scaling;
 }
 
 
