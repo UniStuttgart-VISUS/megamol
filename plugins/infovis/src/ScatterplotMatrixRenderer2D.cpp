@@ -437,6 +437,8 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
     const size_t colCount = this->floatTable->GetColumnsCount();
 
     if (this->dataHash != this->floatTable->DataHash()) {
+        this->screenValid = false;
+
         // Update dynamic parameters.
         this->valueSelectorParam.Param<core::param::FlexEnumParam>()->ClearValues();
         this->labelSelectorParam.Param<core::param::FlexEnumParam>()->ClearValues();
