@@ -80,7 +80,7 @@ typedef std::vector<UIDPairType> UIDPairVectorType;
 typedef std::pair<ImGuiID, std::string> GroupPairType;
 typedef std::vector<megamol::gui::GroupPairType> GroupPairVectorType;
 
-typedef std::array<float, 4> FontScalingArrayType;
+typedef std::array<float, 5> FontScalingArrayType;
 
 /* Data type holding information of graph canvas. */
 typedef struct _canvas_ {
