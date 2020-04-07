@@ -1026,7 +1026,8 @@ void ScatterplotMatrixRenderer2D::drawMouseLabels() {
         return;
     }
 
-    this->axisFont.ClearBatchDrawCache();
+    auto oldMode = this->axisFont.GetBatchDrawMode();
+    this->axisFont.SetBatchDrawMode(false);
 
     // Labels
     std::string labelX = columnInfos[cellIdX].Name();
@@ -1045,7 +1046,7 @@ void ScatterplotMatrixRenderer2D::drawMouseLabels() {
 
     this->axisFont.ResetRotation();
 
-    this->axisFont.BatchDrawString();
+    this->axisFont.SetBatchDrawMode(oldMode);
 }
 
 void ScatterplotMatrixRenderer2D::bindAndClearScreen() {
