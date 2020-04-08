@@ -143,11 +143,12 @@ bool megamol::gui::configurator::Group::InterfaceAddCallSlot(const CallSlotPtrTy
     }
 
     // Only add if parent module is already part of the group.
-    bool parent_module_member = false;
+    bool parent_module_group_member = false;
     if (callslot_ptr->ParentModuleConnected()) {
-        for (auto mod_iter = this->modules.begin(); mod_iter != this->modules.end(); mod_iter++) {
-            if (callslot_ptr->GetParentModule()->uid == (*mod_iter)->uid) {
-                parent_module_member = true;
+        ImGuiID parent_module_uid = callslot_ptr->GetParentModule()->uid;
+        for (auto& module_ptr : this->modules) {
+            if (parent_module_uid == module_ptr->uid) {
+                parent_module_group_member = true;
             }
         }
     } else {
@@ -155,22 +156,20 @@ bool megamol::gui::configurator::Group::InterfaceAddCallSlot(const CallSlotPtrTy
             "Call slot has no parent module connected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-
-    if (parent_module_member) {
+    
+    if (parent_module_group_member) {
         bool successfully_added = false;
-        
         // Try to add call slot to interface slot already containing compatible call slots ...
-        bool added_exisiting = false;
         for (auto& interfaceslot_ptr : this->interfaceslots[callslot_ptr->type]) {
             // ("Contain Check" is already done above)
             if (interfaceslot_ptr->IsCallSlotCompatible(callslot_ptr)) {
                 successfully_added = interfaceslot_ptr->AddCallSlot(callslot_ptr);
             }
         }
-        
+
         // ... or create new interface slot for this call slot.
         if (!successfully_added) {
-            this->interfaceslots[callslot_ptr->type].emplace_back(InterfaceSlotPtrType());
+            this->interfaceslots[callslot_ptr->type].emplace_back(std::make_shared<InterfaceSlot>());
             successfully_added = this->interfaceslots[callslot_ptr->type].back()->AddCallSlot(callslot_ptr);
         }
         
@@ -237,7 +236,6 @@ bool megamol::gui::configurator::Group::InterfaceContainsCallSlot(ImGuiID callsl
 
 void megamol::gui::configurator::Group::restore_callslot_interface_state(void) {
 
-/*
     for (auto& module_ptr : this->modules) {
 
         // Add connected call slots to group interface if connected module is not part of same group
@@ -299,7 +297,6 @@ void megamol::gui::configurator::Group::restore_callslot_interface_state(void) {
             }
         }
     }
-*/
 
 }
 
@@ -525,12 +522,12 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
         this->position = megamol::gui::configurator::Module::GUI_GetInitModulePosition(in_canvas);
     }
 
-/*
+
     // SIZE
     float group_width = 0.0f;
     float group_height = 0.0f;
-    size_t caller_count = inout_group.callslots[CallSlotType::CALLER].size();
-    size_t callee_count = inout_group.callslots[CallSlotType::CALLEE].size();
+    size_t caller_count = inout_group.interfaceslots[CallSlotType::CALLER].size();
+    size_t callee_count = inout_group.interfaceslots[CallSlotType::CALLEE].size();
     size_t max_slot_count = std::max(caller_count, callee_count);
 
     group_width =
@@ -555,7 +552,7 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
     }
     // Clamp to minimum size
     this->size = ImVec2(std::max(group_width, 75.0f), std::max(group_height, 25.0f));
-*/
+
 
     // Set group interface position of call slots --------------------------
     /*
