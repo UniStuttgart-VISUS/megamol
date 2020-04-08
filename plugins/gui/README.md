@@ -81,8 +81,8 @@ In order to start the configurator automatically, you can use the project  `/exa
 See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a bug and feature tracker.
 
 **NOTES:**
-* In order to crete a vaild project file which can be loaded successfully afterwards, it is necessary to define one view module as `main view`. A `mmain view`defines the entry point of the project.
-* Parameter values in lua command `mmSetParamValue` must have the value enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are not supported.
+* In order to create a vaild project file which can be loaded successfully afterwards, it is necessary to define one view module as `main view`. A `main view` defines the entry point of the project.
+* Parameter values in the lua command `mmSetParamValue` must have the value enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are not supported.
 
 ![configurator demo picture](configurator.png)
 
@@ -128,7 +128,7 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
 
 * Drop File to Load/Add Project
     * Drag file in a file browser and drop it inside the MegaMol window. The configurator windows must be open and focused.\
-        **Note:** Successfully testet using Windows10 and (X)Ubuntu with "Nautilus" file browser as drag source of the files. Failed using (X)Ubuntu with "Thunar" file browser. File drop is currently unimplemented in glfw for "Wayland" (e.g. Fedora using GNOME).
+        **Note:** Successfully testet using Windows10 and (X)Ubuntu with "Nautilus" file browser as drag source of the files. Failed using (X)Ubuntu with "Thunar" file browser. File drop is currently unimplemented in glfw for "Wayland" (e.g. Fedora).
 * Spawn *Module Stock List* in pop-up window at mouse position
     * `Ctrl + Shift + m`
     * `Double Left Click`
@@ -154,13 +154,13 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
 * `Call`
     * Context Menu (`Right Click`)
         * Delete (Alternative: Select with `Left Click` an press `Delete`)
-* `Slot` 
+* Call `Slot` 
     * `Double Left Click` Show *Module Stock List* in pop-up window.
     * Context Menu (`Right Click`)    
         * Add to Group Interface
         * Remove from Group Interface
         * Show *Module Stock List* in pop-up window at mouse position.
-* `Group` 
+* `Group`(-Header)
     * Context Menu (`Right Click`)
         * Collapse View / Expand View
         * Rename      
