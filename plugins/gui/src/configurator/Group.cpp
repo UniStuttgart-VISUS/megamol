@@ -127,6 +127,8 @@ bool megamol::gui::configurator::Group::ContainsModule(ImGuiID module_uid) {
 
 bool megamol::gui::configurator::Group::InterfaceAddCallSlot(const CallSlotPtrType& callslot_ptr) {
 
+    bool successfully_added = false;
+
     if (callslot_ptr == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -158,7 +160,6 @@ bool megamol::gui::configurator::Group::InterfaceAddCallSlot(const CallSlotPtrTy
     }
     
     if (parent_module_group_member) {
-        bool successfully_added = false;
         // Try to add call slot to interface slot already containing compatible call slots ...
         for (auto& interfaceslot_ptr : this->interfaceslots[callslot_ptr->type]) {
             // ("Contain Check" is already done above)
@@ -172,24 +173,13 @@ bool megamol::gui::configurator::Group::InterfaceAddCallSlot(const CallSlotPtrTy
             this->interfaceslots[callslot_ptr->type].emplace_back(std::make_shared<InterfaceSlot>());
             successfully_added = this->interfaceslots[callslot_ptr->type].back()->AddCallSlot(callslot_ptr);
         }
-        
-        if (successfully_added) {
-            vislib::sys::Log::DefaultLog.WriteInfo(
-                "Added call slot '%s' to interface slot of group '%s'.\n", callslot_ptr->name.c_str(), this->name.c_str());
-            return true;
-        }
-        else {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "Unable to add call slot '%s' to interface slot of group '%s'.[%s, %s, line %d]\n", callslot_ptr->name.c_str(), this->name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
     } else {
         vislib::sys::Log::DefaultLog.WriteError(
             "Parent module of call slot to add to group interface is not part of any group. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
             __LINE__);
         return false;
     }
-    return false;
+    return successfully_added;
 }
 
 
@@ -199,6 +189,7 @@ bool megamol::gui::configurator::Group::InterfaceRemoveCallSlot(ImGuiID callslot
         for (auto& interfaceslot_map : this->interfaceslots) {
             for (auto iter = interfaceslot_map.second.begin(); iter != interfaceslot_map.second.end(); iter++) {
                 if ((*iter)->ContainsCallSlot(callslots_uid)) {
+                    
                     (*iter)->RemoveCallSlot(callslots_uid);
                     // Delete empty interface slots
                     if ((*iter)->IsEmpty()) {
