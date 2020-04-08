@@ -97,12 +97,12 @@ bool megamol::gui::configurator::Configurator::Draw(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    
+
     // Draw
     if (this->init_state < 2) {
         /// Step 1] (two frames!)
-        
-        //Show pop-up before calling UpdateAvailableModulesCallsOnce of graph.
+
+        // Show pop-up before calling UpdateAvailableModulesCallsOnce of graph.
         /// Rendering of pop-up requires two complete Draw calls!
         bool open = true;
         std::string popup_label = "Loading";
@@ -114,25 +114,25 @@ bool megamol::gui::configurator::Configurator::Draw(
             ImGui::TextUnformatted("Please wait...\nLoading available modules and calls for configurator.");
             ImGui::EndPopup();
         }
-        
+
         this->init_state++;
 
     } else if (this->init_state == 2) {
         /// Step 2] (one frame)
-        
-        //Load available modules and calls and currently loaded project from core once(!)
+
+        // Load available modules and calls and currently loaded project from core once(!)
         this->graph_manager.UpdateModulesCallsStock(core_instance);
-        
+
         // Load once inital project
         this->graph_manager.LoadProjectCore(core_instance);
-        ///or: this->add_empty_project();
-                
+        /// or: this->add_empty_project();
+
         // Enable drag and drop of files for configurator (if glfw is available here)
 #ifdef GUI_USE_GLFW
         auto glfw_win = ::glfwGetCurrentContext();
         ::glfwSetDropCallback(glfw_win, this->file_drop_callback);
 #endif
-                
+
         this->init_state++;
     } else {
         /// Step 3]
@@ -153,9 +153,11 @@ bool megamol::gui::configurator::Configurator::Draw(
         GraphPtrType selected_graph_ptr;
         if (this->graph_manager.GetGraph(this->state.graph_selected_uid, selected_graph_ptr)) {
             ImGuiID selected_callslot_uid = selected_graph_ptr->GUI_GetSelectedCallSlot();
-            bool double_click_anywhere = (ImGui::IsMouseDoubleClicked(0) && !this->show_module_list_child && selected_graph_ptr->GUI_GetCanvasHoverd());
-            bool double_click_callslot = (ImGui::IsMouseDoubleClicked(0) && (selected_callslot_uid != GUI_INVALID_ID) && 
-                ((!this->show_module_list_child) || (this->last_selected_callslot_uid != selected_callslot_uid)));
+            bool double_click_anywhere = (ImGui::IsMouseDoubleClicked(0) && !this->show_module_list_child &&
+                                          selected_graph_ptr->GUI_GetCanvasHoverd());
+            bool double_click_callslot =
+                (ImGui::IsMouseDoubleClicked(0) && (selected_callslot_uid != GUI_INVALID_ID) &&
+                    ((!this->show_module_list_child) || (this->last_selected_callslot_uid != selected_callslot_uid)));
             if (double_click_anywhere || double_click_callslot) {
                 std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
                 this->last_selected_callslot_uid = selected_callslot_uid;
@@ -220,7 +222,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     if (std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT])) {
         popup_save_project_file = true;
     }
-    
+
     // Clear dropped file list, when configurator window is opened, after it was closed.
     if (ImGui::IsWindowAppearing()) {
         megamol::gui::configurator::Configurator::dropped_files.clear();
@@ -454,13 +456,14 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                             for (auto& call_slot_map : module_ptr->GetCallSlots()) {
                                 for (auto& call_slot : call_slot_map.second) {
                                     if (call_slot->name == compat_call_slot_name) {
-                                        graph_ptr->AddCall(this->graph_manager.GetCallsStock(), selected_call_slot_ptr, call_slot);
+                                        graph_ptr->AddCall(
+                                            this->graph_manager.GetCallsStock(), selected_call_slot_ptr, call_slot);
                                     }
                                 }
                             }
                         }
                     }
-                    this->show_module_list_child = false;                    
+                    this->show_module_list_child = false;
                 } else {
                     vislib::sys::Log::DefaultLog.WriteError(
                         "No project loaded. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -475,7 +478,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
     }
 
     ImGui::EndChild();
-    
+
     ImGui::EndGroup();
 }
 
@@ -511,12 +514,12 @@ void megamol::gui::configurator::Configurator::add_empty_project(void) {
 
 
 #ifdef GUI_USE_GLFW
-void megamol::gui::configurator::Configurator::file_drop_callback(::GLFWwindow* window, int count, const char* paths[]) {
-                
+void megamol::gui::configurator::Configurator::file_drop_callback(
+    ::GLFWwindow* window, int count, const char* paths[]) {
+
     int i;
-    for (i = 0;  i < count;  i++) {
+    for (i = 0; i < count; i++) {
         megamol::gui::configurator::Configurator::dropped_files.emplace_back(std::string(paths[i]));
     }
-
 }
 #endif

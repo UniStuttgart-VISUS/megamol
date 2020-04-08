@@ -305,7 +305,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                 text_pos_left_upper.x = slot_position.x + (1.5f * radius);
             }
         }
-        
+
         // Check for slot invisibility
         if (!this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID) &&
             !is_parent_module_group_visible) {

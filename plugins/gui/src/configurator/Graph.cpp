@@ -605,26 +605,23 @@ void megamol::gui::configurator::Graph::Presentation::Present(
             unsigned int scalings_count = static_cast<unsigned int>(state.font_scalings.size());
             if (scalings_count == 0) {
                 throw std::invalid_argument("Array for graph fonts is empty.");
-            }
-            else if (scalings_count == 1) {
+            } else if (scalings_count == 1) {
                 font_ptr = io.Fonts->Fonts[0];
                 this->current_font_scaling = state.font_scalings[0];
-            }
-            else {
-                for (unsigned int i = 0; i < scalings_count; i++){
+            } else {
+                for (unsigned int i = 0; i < scalings_count; i++) {
                     bool apply = false;
                     if (i == 0) {
                         if (this->graph_state.canvas.zooming <= state.font_scalings[i]) {
                             apply = true;
                         }
-                    }
-                    else if (i == (scalings_count-1)) {
+                    } else if (i == (scalings_count - 1)) {
                         if (this->graph_state.canvas.zooming >= state.font_scalings[i]) {
                             apply = true;
                         }
-                    }
-                    else {
-                        if ((state.font_scalings[i-1] < this->graph_state.canvas.zooming) && (this->graph_state.canvas.zooming < state.font_scalings[i+1])) {
+                    } else {
+                        if ((state.font_scalings[i - 1] < this->graph_state.canvas.zooming) &&
+                            (this->graph_state.canvas.zooming < state.font_scalings[i + 1])) {
                             apply = true;
                         }
                     }
@@ -639,8 +636,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 ImGui::PushFont(font_ptr);
                 this->present_canvas(inout_graph, child_width_auto);
                 ImGui::PopFont();
-            }
-            else {
+            } else {
                 throw std::invalid_argument("Pointer to font is nullptr.");
             }
 
@@ -648,13 +644,13 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 ImGui::SameLine();
                 this->present_parameters(inout_graph, this->child_split_width);
             }
-            
+
             // Apply graph layout
             if (this->layout_current_graph) {
                 this->layout_graph(inout_graph);
                 this->layout_current_graph = false;
                 this->update = true;
-            }            
+            }
 
             state.graph_selected_uid = inout_graph.uid;
             ImGui::EndTabItem();
@@ -911,7 +907,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     ImGui::BeginChild("region", ImVec2(child_width, 0.0f), true, child_flags);
 
     this->canvas_hovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
-        
+
     // Update canvas position
     ImVec2 new_position = ImGui::GetWindowPos();
     if ((this->graph_state.canvas.position.x != new_position.x) ||
@@ -1391,7 +1387,7 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
             max_call_width = 0.0f;
         }
         max_module_width = 0.0f;
-        layer_mod_cnt = layer.size();    
+        layer_mod_cnt = layer.size();
         for (size_t i = 0; i < layer_mod_cnt; i++) {
             auto mod = layer[i];
             if (this->show_call_names) {
@@ -1411,11 +1407,10 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
             max_module_width = (mod_size.x > max_module_width) ? (mod_size.x) : (max_module_width);
         }
         pos.x += (max_module_width + max_call_width + GUI_GRAPH_BORDER);
-        
+
         pos.x += GUI_GRAPH_BORDER;
-        pos.y = init_position.y + GUI_GRAPH_BORDER;         
+        pos.y = init_position.y + GUI_GRAPH_BORDER;
     }
 
     return true;
 }
-  

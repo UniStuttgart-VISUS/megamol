@@ -105,7 +105,9 @@ public:
     inline void GUI_SetPresentation(Module::Presentations present) { this->present.presentations = present; }
     inline void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
 
-    static ImVec2 GUI_GetInitModulePosition(const GraphCanvasType& canvas) { return Module::Presentation::GetInitModulePosition(canvas); }
+    static ImVec2 GUI_GetInitModulePosition(const GraphCanvasType& canvas) {
+        return Module::Presentation::GetInitModulePosition(canvas);
+    }
 
 private:
     CallSlotPtrMapType call_slots;
@@ -127,9 +129,9 @@ private:
 
         inline ImVec2 GetPosition(void) { return this->position; }
         inline ImVec2 GetSize(void) { return this->size; }
-        
+
         static ImVec2 GetInitModulePosition(const GraphCanvasType& canvas);
-        
+
         GroupState group;
         Module::Presentations presentations;
         bool label_visible;
@@ -165,7 +167,7 @@ private:
                 modules_uid_vector.emplace_back(module_uid);
             }
         }
-        
+
     } present;
 };
 

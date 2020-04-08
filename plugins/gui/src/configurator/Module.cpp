@@ -170,19 +170,20 @@ void megamol::gui::configurator::Module::Presentation::Present(
     bool popup_rename = false;
 
     try {
-        
-        // Update size 
+
+        // Update size
         if (this->update || (this->size.x <= 0.0f) || (this->size.y <= 0.0f)) {
             this->UpdateSize(inout_module, state.canvas);
             this->update = false;
         }
-                
+
         // Init position of newly created module (check after size update)
         /// There are the following possibilities to create a module:
         /// 1) Load from file: Either all modules have the confPos tag or non of the modules have initial positions.
         /// 2) Load from running project: No inital position.
         /// 3) Add module from stock list 'stand alone' (no call is created): No inital position.
-        /// 4) Add module from stock list while compatible call slot is selected and a new call is created between modules: No inital position.
+        /// 4) Add module from stock list while compatible call slot is selected and a new call is created between
+        /// modules: No inital position.
         if ((this->position.x == FLT_MAX) && (this->position.y == FLT_MAX)) {
             unsigned int connected_callslot_count = 0;
             for (auto& callslot_map : inout_module.GetCallSlots()) {
@@ -193,28 +194,31 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 }
             }
             bool one_callslot_connected = (connected_callslot_count == 1);
-            // Position for modules added while compatible call slot is selected and a new call is created between modules
+            // Position for modules added while compatible call slot is selected and a new call is created between
+            // modules
             if (one_callslot_connected) {
                 for (auto& callslot_map : inout_module.GetCallSlots()) {
                     for (auto callslot_ptr : callslot_map.second) {
                         if (callslot_ptr->CallsConnected()) {
-                            CallSlotPtrType connected_callslot_ptr ;
+                            CallSlotPtrType connected_callslot_ptr;
                             if (callslot_map.first == CallSlotType::CALLER) {
-                                connected_callslot_ptr = callslot_ptr->GetConnectedCalls()[0]->GetCallSlot(CallSlotType::CALLEE);
+                                connected_callslot_ptr =
+                                    callslot_ptr->GetConnectedCalls()[0]->GetCallSlot(CallSlotType::CALLEE);
+                            } else if (callslot_map.first == CallSlotType::CALLEE) {
+                                connected_callslot_ptr =
+                                    callslot_ptr->GetConnectedCalls()[0]->GetCallSlot(CallSlotType::CALLER);
                             }
-                            else if (callslot_map.first == CallSlotType::CALLEE) {
-                                connected_callslot_ptr = callslot_ptr->GetConnectedCalls()[0]->GetCallSlot(CallSlotType::CALLER);
-                            }
-                            if ((connected_callslot_ptr != nullptr) && (connected_callslot_ptr->ParentModuleConnected())) {
-                                float call_name_width = GUIUtils::TextWidgetWidth(callslot_ptr->GetConnectedCalls()[0]->class_name);
+                            if ((connected_callslot_ptr != nullptr) &&
+                                (connected_callslot_ptr->ParentModuleConnected())) {
+                                float call_name_width =
+                                    GUIUtils::TextWidgetWidth(callslot_ptr->GetConnectedCalls()[0]->class_name);
                                 ImVec2 module_size = connected_callslot_ptr->GetParentModule()->GUI_GetSize();
                                 ImVec2 module_pos = connected_callslot_ptr->GetParentModule()->GUI_GetPosition();
                                 float call_width = (2.0f * GUI_GRAPH_BORDER + call_name_width * 1.5f);
                                 if (callslot_map.first == CallSlotType::CALLER) {
-                                    // Left of connected module     
+                                    // Left of connected module
                                     this->position = module_pos - ImVec2((call_width + this->size.x), 0.0f);
-                                }
-                                else if (callslot_map.first == CallSlotType::CALLEE) {
+                                } else if (callslot_map.first == CallSlotType::CALLEE) {
                                     // Right of connected module
                                     this->position = module_pos + ImVec2((call_width + module_size.x), 0.0f);
                                 }
@@ -223,8 +227,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 // See layout border_offset in Graph::Presentation::layout_graph
                 this->position = this->GetInitModulePosition(state.canvas);
             }
@@ -465,7 +468,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 if (io.KeyShift) {
                     this->add_uid(state.interact.modules_selected_uids, inout_module.uid);
                 } else {
-                // Single Selection
+                    // Single Selection
                     state.interact.modules_selected_uids.clear();
                     state.interact.modules_selected_uids.emplace_back(inout_module.uid);
                 }
@@ -541,8 +544,9 @@ void megamol::gui::configurator::Module::Presentation::Present(
 
 
 ImVec2 megamol::gui::configurator::Module::Presentation::GetInitModulePosition(const GraphCanvasType& canvas) {
-    
-    return ImVec2((GUI_GRAPH_BORDER), (GUI_GRAPH_BORDER) + ImGui::GetTextLineHeightWithSpacing()) + (canvas.position - canvas.offset) / canvas.zooming;
+
+    return ImVec2((GUI_GRAPH_BORDER), (GUI_GRAPH_BORDER) + ImGui::GetTextLineHeightWithSpacing()) +
+           (canvas.position - canvas.offset) / canvas.zooming;
 }
 
 

@@ -201,7 +201,8 @@ bool GUIWindows::PostDraw(void) {
         if (wc.buf_font_reset) {
             if (!wc.font_name.empty()) {
                 this->state.font_index = GUI_INVALID_ID;
-                for (unsigned int n = this->graph_fonts_reserved; n < static_cast<unsigned int>(io.Fonts->Fonts.Size); n++) {
+                for (unsigned int n = this->graph_fonts_reserved; n < static_cast<unsigned int>(io.Fonts->Fonts.Size);
+                     n++) {
                     std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
                     GUIUtils::Utf8Decode(font_name);
                     if (font_name == wc.font_name) {
@@ -636,13 +637,15 @@ bool GUIWindows::createContext(void) {
                 this->core_instance->Configuration().ResourceDirectories();
             for (size_t i = 0; i < search_paths.Count(); ++i) {
                 std::wstring search_path(search_paths[i].PeekBuffer());
-                std::string font_path = FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, "Roboto-Regular.ttf");
+                std::string font_path =
+                    FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, "Roboto-Regular.ttf");
                 if (!font_path.empty()) {
                     font_paths.emplace_back(font_path);
                     configurator_font = font_path;
                     default_font = font_path;
                 }
-                font_path = FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, "SourceCodePro-Regular.ttf");
+                font_path =
+                    FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, "SourceCodePro-Regular.ttf");
                 if (!font_path.empty()) {
                     font_paths.emplace_back(font_path);
                 }
@@ -652,21 +655,23 @@ bool GUIWindows::createContext(void) {
                 "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
         // Configurator Graph Font: Add default font at first indices for exclusive use in configurator graph.
-        /// (Workaraound: Using different font sizes for different graph zooming factors to improve font readability when zooming.)
+        /// (Workaraound: Using different font sizes for different graph zooming factors to improve font readability
+        /// when zooming.)
         const auto graph_font_scalings = this->configurator.GetGraphFontScalings();
         this->graph_fonts_reserved = graph_font_scalings.size();
         if (configurator_font.empty()) {
             for (unsigned int i = 0; i < this->graph_fonts_reserved; i++) {
-                io.Fonts->AddFontDefault(&config);                
+                io.Fonts->AddFontDefault(&config);
             }
         } else {
             for (unsigned int i = 0; i < this->graph_fonts_reserved; i++) {
-                io.Fonts->AddFontFromFileTTF(configurator_font.c_str(), default_font_size*graph_font_scalings[i], &config);
-            }        
-        } 
+                io.Fonts->AddFontFromFileTTF(
+                    configurator_font.c_str(), default_font_size * graph_font_scalings[i], &config);
+            }
+        }
         // Add other fonts for gui.
         io.Fonts->AddFontDefault(&config);
-        io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];        
+        io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
         for (auto& font_path : font_paths) {
             io.Fonts->AddFontFromFileTTF(font_path.c_str(), default_font_size, &config);
             if (default_font == font_path) {

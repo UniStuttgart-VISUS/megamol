@@ -493,7 +493,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                     return false;
                 }
                 ImVec2 module_pos = this->readLuaProjectConfPos(lines[i]);
-                if ((module_pos.x != FLT_MAX) &&  (module_pos.x != FLT_MAX)) found_conf_pos = true;
+                if ((module_pos.x != FLT_MAX) && (module_pos.x != FLT_MAX)) found_conf_pos = true;
                 std::vector<std::string> group_interface_callslots = this->readLuaProjectConfGroupInterface(lines[i]);
 
                 /// DEBUG
@@ -596,7 +596,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                     return false;
                 }
                 ImVec2 module_pos = this->readLuaProjectConfPos(lines[i]);
-                if ((module_pos.x != FLT_MAX) &&  (module_pos.x != FLT_MAX)) found_conf_pos = true;
+                if ((module_pos.x != FLT_MAX) && (module_pos.x != FLT_MAX)) found_conf_pos = true;
                 std::vector<std::string> group_interface_callslots = this->readLuaProjectConfGroupInterface(lines[i]);
 
                 /// DEBUG
@@ -846,7 +846,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 }
             }
         }
-        
+
         // Layout graph if no confPos tags could be detected.
         if (!found_conf_pos) {
             graph_ptr->GUI_SetLayoutGraph();
