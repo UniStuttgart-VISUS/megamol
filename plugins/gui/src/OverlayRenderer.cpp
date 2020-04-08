@@ -218,6 +218,8 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
             case (TranspCtrlIcon::ULTRA_FAST_REWIND):
                 filename = "transport_ctrl_ultra-fast-forward.png";
                 break;
+            default:
+                break;
             }
             if (!this->loadTexture(filename, this->m_transpctrl_icons[i])) return false;
         }
@@ -274,7 +276,7 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
     bool found_valid_param_type = false;
 
     if (&slot == &this->paramTimeParameter) {
-        if (auto* float_param = parameter_ptr.DynamicCast<param::FloatParam>()) {
+        if (parameter_ptr.DynamicCast<param::FloatParam>() != nullptr) {
             found_valid_param_type = true;
         }
         this->m_time_parameter_ptr = nullptr;
@@ -285,7 +287,7 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
                 "No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     } else if (&slot == &this->paramSpeedParameter) {
-        if (auto* float_param = parameter_ptr.DynamicCast<param::FloatParam>()) {
+        if (parameter_ptr.DynamicCast<param::FloatParam>() != nullptr) {
             found_valid_param_type = true;
         }
         this->m_speed_parameter_ptr = nullptr;
@@ -296,15 +298,15 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
                 "No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     } else if (&slot == &this->paramParameterName) {
-        if (auto* float_param = parameter_ptr.DynamicCast<param::FloatParam>()) {
+        if (parameter_ptr.DynamicCast<param::FloatParam>() != nullptr) {
             found_valid_param_type = true;
-        } else if (auto* int_param = parameter_ptr.DynamicCast<param::IntParam>()) {
+        } else if (parameter_ptr.DynamicCast<param::IntParam>() != nullptr) {
             found_valid_param_type = true;
-        } else if (auto* vec2_param = parameter_ptr.DynamicCast<param::Vector2fParam>()) {
+        } else if (parameter_ptr.DynamicCast<param::Vector2fParam>() != nullptr) {
             found_valid_param_type = true;
-        } else if (auto* vec3_param = parameter_ptr.DynamicCast<param::Vector3fParam>()) {
+        } else if (parameter_ptr.DynamicCast<param::Vector3fParam>() != nullptr) {
             found_valid_param_type = true;
-        } else if (auto* vec4_param = parameter_ptr.DynamicCast<param::Vector4fParam>()) {
+        } else if (parameter_ptr.DynamicCast<param::Vector4fParam>() != nullptr) {
             found_valid_param_type = true;
         }
         this->m_parameter_ptr = nullptr;
@@ -595,7 +597,8 @@ void OverlayRenderer::drawScreenSpaceText(glm::mat4 ortho, megamol::core::utilit
     float z = -1.0f;
 
     switch (anchor) {
-    // case(Anchor::ALIGN_LEFT_TOP): {} break;
+    case (Anchor::ALIGN_LEFT_TOP): {
+    } break;
     case (Anchor::ALIGN_LEFT_MIDDLE): {
         y = rectangle.top + (rectangle.bottom - rectangle.top) / 2.0f;
     } break;

@@ -107,6 +107,16 @@ function(require_external NAME)
       GIT_TAG "v1.3.0"
       INCLUDE_DIR "include")
 
+  # tinygltf
+  elseif(NAME STREQUAL "tinygltf")
+    if(TARGET tinygltf)
+      return()
+    endif()
+
+    add_external_headeronly_project(tinygltf
+      GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
+      GIT_TAG "v2.2.0")
+
   # Built libraries #####################################################
 
   # adios2

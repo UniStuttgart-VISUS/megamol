@@ -9,12 +9,6 @@
 #define MEGAMOL_GUI_GRAPH_CALLSLOT_H_INCLUDED
 
 
-#include "vislib/sys/Log.h"
-
-#include <map>
-#include <memory>
-#include <vector>
-
 #include "GUIUtils.h"
 
 
@@ -22,40 +16,41 @@ namespace megamol {
 namespace gui {
 namespace configurator {
 
-
 // Forward declaration
 class Call;
 class CallSlot;
 class Module;
+class Parameter;
 
 // Pointer types to classes
+typedef std::shared_ptr<Parameter> ParamPtrType;
 typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
+
+enum CallSlotType { CALLEE, CALLER };
+
+typedef std::vector<CallSlotPtrType> CallSlotPtrVectorType;
+typedef std::map<CallSlotType, CallSlotPtrVectorType> CallSlotPtrMapType;
 
 /**
  * Defines call slot data structure for graph.
  */
 class CallSlot {
 public:
-    enum CallSlotType { CALLEE, CALLER };
+    enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
 
     struct StockCallSlot {
         std::string name;
         std::string description;
         std::vector<size_t> compatible_call_idxs;
-        CallSlot::CallSlotType type;
+        CallSlotType type;
     };
 
-    enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
-
-    /* Data type holding information on call slot interaction */
-    typedef struct _call_slot_interact_ {
-        ImGuiID out_selected_uid;
-        ImGuiID out_hovered_uid;
-        ImGuiID out_dropped_uid;
-        CallSlotPtrType in_compat_slot_ptr;
-    } InteractType;
+    struct GroupState {
+        bool is_interface;
+        ImVec2 position;
+    };
 
     CallSlot(ImGuiID uid);
     ~CallSlot();
@@ -65,7 +60,7 @@ public:
     // Init when adding call slot from stock
     std::string name;
     std::string description;
-    std::vector<size_t> compatible_call_idxs; // (Storing only indices of compatible calls for faster comparison.)
+    std::vector<size_t> compatible_call_idxs; /// (Storing only indices of compatible calls for faster comparison.)
     CallSlotType type;
 
     bool CallsConnected(void) const;
@@ -87,22 +82,25 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    // Returns uid if the call slot is selected.
-    ImGuiID GUI_Present(const CanvasType& in_canvas, CallSlot::InteractType& inout_slot_interact) {
-        return this->present.Present(*this, in_canvas, inout_slot_interact);
-    }
+    inline void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
 
-    ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
-    bool GUI_GetLabelVisibility(void) { return this->present.label_visible; }
+    inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
 
-    void GUI_SetPresentation(CallSlot::Presentations present) { this->present.presentations = present; }
-    void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
+    inline bool GUI_GetGroupInterface(void) { return this->present.group.is_interface; }
+    inline ImVec2 GUI_GetGroupPosition(void) { return this->present.group.position; }
+    inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(*this); }
+    inline bool GUI_GetLabelVisibility(void) { return this->present.label_visible; }
+
+    inline void GUI_SetGroupInterface(bool is_interface) { this->present.group.is_interface = is_interface; }
+    inline void GUI_SetGroupPosition(ImVec2 position) { this->present.group.position = position; }
+    inline void GUI_SetPresentation(CallSlot::Presentations present) { this->present.presentations = present; }
+    inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
 
 private:
     ModulePtrType parent_module;
     std::vector<CallPtrType> connected_calls;
 
-    /**
+    /** ************************************************************************
      * Defines GUI call slot presentation.
      */
     class Presentation {
@@ -111,21 +109,24 @@ private:
 
         ~Presentation(void);
 
-        ImGuiID Present(
-            CallSlot& inout_call_slot, const CanvasType& in_canvas, CallSlot::InteractType& inout_slot_interact);
+        void Present(CallSlot& inout_call_slot, GraphItemsStateType& state);
 
-        ImVec2 GetPosition(void) { return this->position; }
+        void UpdatePosition(CallSlot& inout_call_slot, const GraphCanvasType& in_canvas);
 
-        void UpdatePosition(CallSlot& call_slot, ImVec2 canvas_offset, float canvas_zooming);
+        ImVec2 GetPosition(CallSlot& inout_call_slot);
 
+        GroupState group;
         CallSlot::Presentations presentations;
         bool label_visible;
 
     private:
         // Absolute position including canvas offset and zooming
         ImVec2 position;
+
         GUIUtils utils;
         bool selected;
+        bool update_once;
+        bool show_modulestock;
 
     } present;
 };

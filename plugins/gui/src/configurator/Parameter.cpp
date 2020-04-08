@@ -18,12 +18,15 @@ megamol::gui::configurator::Parameter::Parameter(
     ImGuiID uid, ParamType type, StroageType store, MinType min, MaxType max)
     : uid(uid)
     , type(type)
+    , full_name()
+    , description()
     , minval(min)
     , maxval(max)
     , storage(store)
     , value()
-    , present()
-    , default_value_mismatch(false) {
+    , default_value()
+    , default_value_mismatch(false)
+    , present() {
 
     // Initialize variant types which should/can not be changed afterwards.
     // Default ctor of variants initializes std::monostate.
@@ -252,25 +255,26 @@ bool megamol::gui::configurator::Parameter::SetValueString(const std::string& va
 
 // PARAMETER PRESENTATION ####################################################
 
-bool megamol::gui::configurator::Parameter::Presentation::popup_open = false;
 
 megamol::gui::configurator::Parameter::Presentation::Presentation(void)
-    : presentations(Presentations::DEFAULT)
-    , read_only(false)
+    : read_only(false)
     , visible(true)
     , expert(false)
+    , presentations(Presentations::DEFAULT)
     , help()
     , utils()
-    , tf_editor()
+    , file_utils()
     , show_tf_editor(false)
+    , tf_editor()
     , widget_store()
-    , float_format("%.7f") {}
+    , float_format("%.7f")
+    , height(0.0f) {}
 
 
 megamol::gui::configurator::Parameter::Presentation::~Presentation(void) {}
 
 
-bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::configurator::Parameter& param) {
+bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::configurator::Parameter& inout_param) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -282,30 +286,29 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
         // (Show all parameters in expert mode)
         if (this->visible || this->expert) {
             ImGui::BeginGroup();
-            ImGui::PushID(param.uid);
+            ImGui::PushID(inout_param.uid);
 
             if (this->expert) {
-                this->present_prefix(param);
+                this->present_prefix();
                 ImGui::SameLine();
             }
 
             switch (this->presentations) {
             case (Presentations::DEFAULT): {
-                this->present_value_DEFAULT(param);
+                this->present_value_DEFAULT(inout_param);
             } break;
-            case (Presentations::PIN_VALUE_TO_MOUSE): {
-                this->present_value_DEFAULT(param);
-
-                ImGui::PopID();
-                this->present_value_PIN_VALUE_TO_MOUSE(param);
-                ImGui::PushID(param.uid);
-            } break;
+            // case (Presentations::PIN_VALUE_TO_MOUSE): {
+            //     this->present_value_DEFAULT(inout_param);
+            //     ImGui::PopID();
+            //     this->present_value_PIN_VALUE_TO_MOUSE(inout_param);
+            //     ImGui::PushID(inout_param.uid);
+            // } break;
             default:
                 break;
             }
 
             ImGui::SameLine();
-            this->present_postfix(param);
+            this->present_postfix(inout_param);
 
             ImGui::PopID();
             ImGui::EndGroup();
@@ -323,6 +326,20 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
 }
 
 
+float megamol::gui::configurator::Parameter::Presentation::GetHeight(Parameter& inout_param) {
+
+    float height = (ImGui::GetFrameHeightWithSpacing() * 1.15f);
+    if (inout_param.type == Parameter::ParamType::TRANSFERFUNCTION) {
+        if (this->show_tf_editor) {
+            height = (ImGui::GetFrameHeightWithSpacing() * 18.5f);
+        } else {
+            height = (ImGui::GetFrameHeightWithSpacing() * 1.5f);
+        }
+    }
+    return height;
+}
+
+
 bool megamol::gui::configurator::Parameter::Presentation::presentation_button(void) {
 
     bool retval = false;
@@ -335,9 +352,9 @@ bool megamol::gui::configurator::Parameter::Presentation::presentation_button(vo
             case (Presentations::DEFAULT):
                 presentation_str = "Default";
                 break;
-            case (Presentations::PIN_VALUE_TO_MOUSE):
-                presentation_str = "Pin Value to Mouse";
-                break;
+            // case (Presentations::PIN_VALUE_TO_MOUSE):
+            //     presentation_str = "Pin Value to Mouse";
+            //     break;
             default:
                 break;
             }
@@ -355,7 +372,7 @@ bool megamol::gui::configurator::Parameter::Presentation::presentation_button(vo
 }
 
 
-void megamol::gui::configurator::Parameter::Presentation::present_prefix(megamol::gui::configurator::Parameter& param) {
+void megamol::gui::configurator::Parameter::Presentation::present_prefix(void) {
 
     // Visibility
     if (ImGui::RadioButton("###visible", !this->visible)) {
@@ -379,30 +396,28 @@ void megamol::gui::configurator::Parameter::Presentation::present_prefix(megamol
 
 
 void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
-    megamol::gui::configurator::Parameter& param) {
+    megamol::gui::configurator::Parameter& inout_param) {
 
     this->help.clear();
 
-    ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f); // set general proportional item width
 
     if (this->read_only) {
-        this->utils.ReadOnlyWigetStyle(true);
+        GUIUtils::ReadOnlyWigetStyle(true);
     }
 
-    std::string param_label = param.GetName();
+    std::string param_label = inout_param.GetName();
 
     auto visitor = [&](auto&& arg) {
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_same_v<T, bool>) {
             if (ImGui::Checkbox(param_label.c_str(), &arg)) {
-                param.SetValue(arg);
+                inout_param.SetValue(arg);
             }
         } else if constexpr (std::is_same_v<T, megamol::core::param::ColorParam::ColorType>) {
             auto color_flags = ImGuiColorEditFlags_AlphaPreview; // | ImGuiColorEditFlags_Float;
             if (ImGui::ColorEdit4(param_label.c_str(), (float*)arg.data(), color_flags)) {
-                param.SetValue(arg);
+                inout_param.SetValue(arg);
             }
             this->help = "[Click] on the colored square to open a color picker.\n"
                          "[CTRL+Click] on individual component to input value.\n"
@@ -414,14 +429,14 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
             ImGui::InputFloat(param_label.c_str(), &std::get<float>(this->widget_store), 1.0f, 10.0f,
                 this->float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                this->widget_store = std::max(param.GetMinValue<float>(),
-                    std::min(std::get<float>(this->widget_store), param.GetMaxValue<float>()));
-                param.SetValue(std::get<float>(this->widget_store));
+                this->widget_store = std::max(inout_param.GetMinValue<float>(),
+                    std::min(std::get<float>(this->widget_store), inout_param.GetMaxValue<float>()));
+                inout_param.SetValue(std::get<float>(this->widget_store));
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 this->widget_store = arg;
             }
         } else if constexpr (std::is_same_v<T, int>) {
-            switch (param.type) {
+            switch (inout_param.type) {
             case (Parameter::ParamType::INT): {
                 if (!std::holds_alternative<T>(this->widget_store)) {
                     this->widget_store = arg;
@@ -429,21 +444,21 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                 ImGui::InputInt(
                     param_label.c_str(), &std::get<int>(this->widget_store), 1, 10, ImGuiInputTextFlags_None);
                 if (ImGui::IsItemDeactivatedAfterEdit()) {
-                    this->widget_store = std::max(param.GetMinValue<int>(),
-                        std::min(std::get<int>(this->widget_store), param.GetMaxValue<int>()));
-                    param.SetValue(std::get<int>(this->widget_store));
+                    this->widget_store = std::max(inout_param.GetMinValue<int>(),
+                        std::min(std::get<int>(this->widget_store), inout_param.GetMaxValue<int>()));
+                    inout_param.SetValue(std::get<int>(this->widget_store));
                 } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                     this->widget_store = arg;
                 }
             } break;
             case (Parameter::ParamType::ENUM): {
                 /// XXX: no UTF8 fanciness required here?
-                auto map = param.GetStorage<EnumStorageType>();
+                auto map = inout_param.GetStorage<EnumStorageType>();
                 if (ImGui::BeginCombo(param_label.c_str(), map[arg].c_str())) {
                     for (auto& pair : map) {
                         bool isSelected = (pair.first == arg);
                         if (ImGui::Selectable(pair.second.c_str(), isSelected)) {
-                            param.SetValue(pair.first);
+                            inout_param.SetValue(pair.first);
                         }
                         if (isSelected) {
                             ImGui::SetItemDefaultFocus();
@@ -456,12 +471,12 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                 break;
             }
         } else if constexpr (std::is_same_v<T, std::string>) {
-            switch (param.type) {
+            switch (inout_param.type) {
             case (Parameter::ParamType::STRING): {
                 if (!std::holds_alternative<T>(this->widget_store)) {
                     /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
                     std::string utf8Str = arg;
-                    this->utils.Utf8Encode(utf8Str);
+                    GUIUtils::Utf8Encode(utf8Str);
                     this->widget_store = utf8Str;
                 }
                 // Determine multi line count of string
@@ -475,45 +490,51 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                     ImGuiInputTextFlags_CtrlEnterForNewLine);
                 if (ImGui::IsItemDeactivatedAfterEdit()) {
                     std::string utf8Str = std::get<std::string>(this->widget_store);
-                    this->utils.Utf8Decode(utf8Str);
-                    param.SetValue(utf8Str);
+                    GUIUtils::Utf8Decode(utf8Str);
+                    inout_param.SetValue(utf8Str);
                 } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                     std::string utf8Str = arg;
-                    this->utils.Utf8Encode(utf8Str);
+                    GUIUtils::Utf8Encode(utf8Str);
                     this->widget_store = utf8Str;
                 }
                 ImGui::SameLine();
-                ImGui::Text(param_label.c_str());
+                ImGui::TextUnformatted(param_label.c_str());
                 this->help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
             } break;
             case (Parameter::ParamType::TRANSFERFUNCTION): {
-                this->transfer_function_edit(param);
+                this->transfer_function_edit(inout_param);
             } break;
             case (Parameter::ParamType::FILEPATH): {
                 if (!std::holds_alternative<T>(this->widget_store)) {
                     /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
                     std::string utf8Str = arg;
-                    this->utils.Utf8Encode(utf8Str);
+                    GUIUtils::Utf8Encode(utf8Str);
                     this->widget_store = utf8Str;
                 }
+                ImGuiStyle& style = ImGui::GetStyle();
+                ImGui::PushItemWidth(
+                    ImGui::GetContentRegionAvail().x * 0.65f - ImGui::GetFrameHeight() - style.ItemSpacing.x);
+                bool button_edit = this->file_utils.FileBrowserButton(std::get<std::string>(this->widget_store));
+                ImGui::SameLine();
                 ImGui::InputText(
                     param_label.c_str(), &std::get<std::string>(this->widget_store), ImGuiInputTextFlags_None);
-                if (ImGui::IsItemDeactivatedAfterEdit()) {
-                    this->utils.Utf8Decode(std::get<std::string>(this->widget_store));
-                    param.SetValue(std::get<std::string>(this->widget_store));
+                if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
+                    GUIUtils::Utf8Decode(std::get<std::string>(this->widget_store));
+                    inout_param.SetValue(std::get<std::string>(this->widget_store));
                 } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                     std::string utf8Str = arg;
-                    this->utils.Utf8Encode(utf8Str);
+                    GUIUtils::Utf8Encode(utf8Str);
                     this->widget_store = utf8Str;
                 }
+                ImGui::PopItemWidth();
             } break;
             case (Parameter::ParamType::FLEXENUM): {
                 /// XXX: no UTF8 fanciness required here?
                 if (ImGui::BeginCombo(param_label.c_str(), arg.c_str())) {
-                    for (auto valueOption : param.GetStorage<megamol::core::param::FlexEnumParam::Storage_t>()) {
+                    for (auto valueOption : inout_param.GetStorage<megamol::core::param::FlexEnumParam::Storage_t>()) {
                         bool isSelected = (valueOption == arg);
                         if (ImGui::Selectable(valueOption.c_str(), isSelected)) {
-                            param.SetValue(valueOption);
+                            inout_param.SetValue(valueOption);
                         }
                         if (isSelected) {
                             ImGui::SetItemDefaultFocus();
@@ -527,20 +548,20 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
             }
         } else if constexpr (std::is_same_v<T, vislib::math::Ternary>) {
             if (ImGui::RadioButton("True", arg.IsTrue())) {
-                param.SetValue(vislib::math::Ternary::TRI_TRUE);
+                inout_param.SetValue(vislib::math::Ternary::TRI_TRUE);
             }
             ImGui::SameLine();
             if (ImGui::RadioButton("False", arg.IsFalse())) {
-                param.SetValue(vislib::math::Ternary::TRI_FALSE);
+                inout_param.SetValue(vislib::math::Ternary::TRI_FALSE);
             }
             ImGui::SameLine();
             if (ImGui::RadioButton("Unknown", arg.IsUnknown())) {
-                param.SetValue(vislib::math::Ternary::TRI_UNKNOWN);
+                inout_param.SetValue(vislib::math::Ternary::TRI_UNKNOWN);
             }
             ImGui::SameLine();
             ImGui::TextDisabled("|");
             ImGui::SameLine();
-            ImGui::Text(param_label.c_str());
+            ImGui::TextUnformatted(param_label.c_str());
         } else if constexpr (std::is_same_v<T, glm::vec2>) {
             if (!std::holds_alternative<T>(this->widget_store)) {
                 this->widget_store = arg;
@@ -548,12 +569,12 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
             ImGui::InputFloat2(param_label.c_str(), glm::value_ptr(std::get<glm::vec2>(this->widget_store)),
                 this->float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                auto max = param.GetMaxValue<glm::vec2>();
-                auto min = param.GetMinValue<glm::vec2>();
+                auto max = inout_param.GetMaxValue<glm::vec2>();
+                auto min = inout_param.GetMinValue<glm::vec2>();
                 auto x = std::max(min.x, std::min(std::get<glm::vec2>(this->widget_store).x, max.x));
                 auto y = std::max(min.y, std::min(std::get<glm::vec2>(this->widget_store).y, max.y));
                 this->widget_store = glm::vec2(x, y);
-                param.SetValue(std::get<glm::vec2>(this->widget_store));
+                inout_param.SetValue(std::get<glm::vec2>(this->widget_store));
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 this->widget_store = arg;
             }
@@ -564,13 +585,13 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
             ImGui::InputFloat3(param_label.c_str(), glm::value_ptr(std::get<glm::vec3>(this->widget_store)),
                 this->float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                auto max = param.GetMaxValue<glm::vec3>();
-                auto min = param.GetMinValue<glm::vec3>();
+                auto max = inout_param.GetMaxValue<glm::vec3>();
+                auto min = inout_param.GetMinValue<glm::vec3>();
                 auto x = std::max(min.x, std::min(std::get<glm::vec3>(this->widget_store).x, max.x));
                 auto y = std::max(min.y, std::min(std::get<glm::vec3>(this->widget_store).y, max.y));
                 auto z = std::max(min.z, std::min(std::get<glm::vec3>(this->widget_store).z, max.z));
                 this->widget_store = glm::vec3(x, y, z);
-                param.SetValue(std::get<glm::vec3>(this->widget_store));
+                inout_param.SetValue(std::get<glm::vec3>(this->widget_store));
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 this->widget_store = arg;
             }
@@ -581,29 +602,29 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
             ImGui::InputFloat4(param_label.c_str(), glm::value_ptr(std::get<glm::vec4>(this->widget_store)),
                 this->float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                auto max = param.GetMaxValue<glm::vec4>();
-                auto min = param.GetMinValue<glm::vec4>();
+                auto max = inout_param.GetMaxValue<glm::vec4>();
+                auto min = inout_param.GetMinValue<glm::vec4>();
                 auto x = std::max(min.x, std::min(std::get<glm::vec4>(this->widget_store).x, max.x));
                 auto y = std::max(min.y, std::min(std::get<glm::vec4>(this->widget_store).y, max.y));
                 auto z = std::max(min.z, std::min(std::get<glm::vec4>(this->widget_store).z, max.z));
                 auto w = std::max(min.w, std::min(std::get<glm::vec4>(this->widget_store).w, max.w));
                 this->widget_store = glm::vec4(x, y, z, w);
-                param.SetValue(std::get<glm::vec4>(this->widget_store));
+                inout_param.SetValue(std::get<glm::vec4>(this->widget_store));
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 this->widget_store = arg;
             }
         } else if constexpr (std::is_same_v<T, std::monostate>) {
-            switch (param.type) {
+            switch (inout_param.type) {
             case (Parameter::ParamType::BUTTON): {
                 std::string hotkey = "";
-                auto keycode = param.GetStorage<megamol::core::view::KeyCode>();
+                auto keycode = inout_param.GetStorage<megamol::core::view::KeyCode>();
                 std::string button_hotkey = keycode.ToString();
                 if (!button_hotkey.empty()) {
                     hotkey = " (" + button_hotkey + ")";
                 }
                 param_label += hotkey;
                 if (ImGui::Button(param_label.c_str())) {
-                    // param.setDirty();
+                    // inout_param.setDirty();
                 }
             } break;
             default:
@@ -612,122 +633,111 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
         }
     };
 
-    std::visit(visitor, param.GetValue());
+    std::visit(visitor, inout_param.GetValue());
 
     if (this->read_only) {
-        this->utils.ReadOnlyWigetStyle(false);
+        GUIUtils::ReadOnlyWigetStyle(false);
     }
 
     ImGui::PopItemWidth();
 }
 
-
+/*
 void megamol::gui::configurator::Parameter::Presentation::present_value_PIN_VALUE_TO_MOUSE(
-    megamol::gui::configurator::Parameter& param) {
+    megamol::gui::configurator::Parameter& inout_param) {
 
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
-    std::string param_label = param.GetName();
+    std::string param_label = inout_param.GetName();
 
-    std::string popup_label = "parameter_pin_value_mouse";
-    if (!this->popup_open) {
-        ImGui::OpenPopup(popup_label.c_str());
-        this->popup_open = true;
-    }
-    ImVec2 mouse_pos = ImGui::GetMousePos();
-    mouse_pos += ImVec2(15.0f, 15.0f);
-    ImGui::SetNextWindowPos(mouse_pos);
-    if (ImGui::BeginPopup(popup_label.c_str(), ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize)) {
+    ImGui::BeginTooltip();
 
-        auto visitor = [&](auto&& arg) {
-            using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<T, bool>) {
+    auto visitor = [&](auto&& arg) {
+        using T = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<T, bool>) {
 
-            } else if constexpr (std::is_same_v<T, megamol::core::param::ColorParam::ColorType>) {
+        } else if constexpr (std::is_same_v<T, megamol::core::param::ColorParam::ColorType>) {
 
-            } else if constexpr (std::is_same_v<T, float>) {
-                ImGui::TextDisabled(param.GetValueString().c_str());
-            } else if constexpr (std::is_same_v<T, int>) {
-                switch (param.type) {
-                case (Parameter::ParamType::INT): {
-                    if (!std::holds_alternative<T>(this->widget_store)) {
-                        this->widget_store = arg;
-                    }
-                    ImGui::InputInt(
-                        param_label.c_str(), &std::get<int>(this->widget_store), ImGuiInputTextFlags_ReadOnly);
-
-                } break;
-                case (Parameter::ParamType::ENUM): {
-
-                } break;
-                default:
-                    break;
+        } else if constexpr (std::is_same_v<T, float>) {
+            ImGui::TextDisabled(inout_param.GetValueString().c_str());
+        } else if constexpr (std::is_same_v<T, int>) {
+            switch (inout_param.type) {
+            case (Parameter::ParamType::INT): {
+                if (!std::holds_alternative<T>(this->widget_store)) {
+                    this->widget_store = arg;
                 }
-            } else if constexpr (std::is_same_v<T, std::string>) {
-                switch (param.type) {
-                case (Parameter::ParamType::STRING): {
+                ImGui::InputInt(
+                    param_label.c_str(), &std::get<int>(this->widget_store), ImGuiInputTextFlags_ReadOnly);
 
-                } break;
-                case (Parameter::ParamType::TRANSFERFUNCTION): {
+            } break;
+            case (Parameter::ParamType::ENUM): {
 
-                } break;
-                case (Parameter::ParamType::FILEPATH): {
-
-                } break;
-                case (Parameter::ParamType::FLEXENUM): {
-
-                } break;
-                default:
-                    break;
-                }
-            } else if constexpr (std::is_same_v<T, vislib::math::Ternary>) {
-
-            } else if constexpr (std::is_same_v<T, glm::vec2>) {
-
-            } else if constexpr (std::is_same_v<T, glm::vec3>) {
-
-            } else if constexpr (std::is_same_v<T, glm::vec4>) {
-
-            } else if constexpr (std::is_same_v<T, std::monostate>) {
-                switch (param.type) {
-                case (Parameter::ParamType::BUTTON): {
-
-                } break;
-                default:
-                    break;
-                }
+            } break;
+            default:
+                break;
             }
-        };
+        } else if constexpr (std::is_same_v<T, std::string>) {
+            switch (inout_param.type) {
+            case (Parameter::ParamType::STRING): {
 
-        std::visit(visitor, param.GetValue());
+            } break;
+            case (Parameter::ParamType::TRANSFERFUNCTION): {
 
-        ImGui::EndPopup();
-    }
+            } break;
+            case (Parameter::ParamType::FILEPATH): {
+
+            } break;
+            case (Parameter::ParamType::FLEXENUM): {
+
+            } break;
+            default:
+                break;
+            }
+        } else if constexpr (std::is_same_v<T, vislib::math::Ternary>) {
+
+        } else if constexpr (std::is_same_v<T, glm::vec2>) {
+
+        } else if constexpr (std::is_same_v<T, glm::vec3>) {
+
+        } else if constexpr (std::is_same_v<T, glm::vec4>) {
+
+        } else if constexpr (std::is_same_v<T, std::monostate>) {
+            switch (inout_param.type) {
+            case (Parameter::ParamType::BUTTON): {
+
+            } break;
+            default:
+                break;
+            }
+        }
+    };
+
+    std::visit(visitor, inout_param.GetValue());
+
+    ImGui::EndTooltip();
 }
-
+*/
 
 void megamol::gui::configurator::Parameter::Presentation::present_postfix(
-    megamol::gui::configurator::Parameter& param) {
+    megamol::gui::configurator::Parameter& inout_param) {
 
-    this->utils.HoverToolTip(param.description, ImGui::GetItemID(), 0.5f);
+    this->utils.HoverToolTip(inout_param.description, ImGui::GetItemID(), 0.5f);
     this->utils.HelpMarkerToolTip(this->help);
 }
 
 
 void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit(
-    megamol::gui::configurator::Parameter& param) {
+    megamol::gui::configurator::Parameter& inout_param) {
 
-    if ((param.type != Parameter::ParamType::TRANSFERFUNCTION) ||
-        (!std::holds_alternative<std::string>(param.GetValue()))) {
+    if ((inout_param.type != Parameter::ParamType::TRANSFERFUNCTION) ||
+        (!std::holds_alternative<std::string>(inout_param.GetValue()))) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Transfer Function Editor is called for incompatible parameter type. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
         return;
     }
-    auto value = std::get<std::string>(param.GetValue());
-
-    ImGuiStyle& style = ImGui::GetStyle();
+    auto value = std::get<std::string>(inout_param.GetValue());
 
     ImGui::BeginGroup();
 
@@ -736,7 +746,7 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
         ImGui::TextDisabled("{    (empty)    }");
     } else {
         /// XXX: A gradient texture would be nice here (sharing some editor code?)
-        ImGui::Text("{ ............. }");
+        ImGui::TextUnformatted("{ ............. }");
     }
     ImGui::SameLine();
 
@@ -770,9 +780,9 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
     if (ImGui::Button("Paste")) {
 #ifdef GUI_USE_GLFW
         auto glfw_win = ::glfwGetCurrentContext();
-        param.SetValue(std::string(::glfwGetClipboardString(glfw_win)));
+        inout_param.SetValue(std::string(::glfwGetClipboardString(glfw_win)));
 #elif _WIN32
-        param.SetValue(std::string(ImGui::GetClipboardText()));
+        inout_param.SetValue(std::string(ImGui::GetClipboardText()));
 #else // LINUX
         vislib::sys::Log::DefaultLog.WriteWarn(
             "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -782,8 +792,8 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
 
     ImGui::SameLine();
 
-    std::string label = param.full_name;
-    ImGui::Text(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
+    std::string label = inout_param.full_name;
+    ImGui::TextUnformatted(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
 
     ImGui::EndGroup();
 
@@ -797,10 +807,9 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
         if (this->tf_editor.DrawTransferFunctionEditor(false)) {
             std::string value;
             if (this->tf_editor.GetTransferFunction(value)) {
-                param.SetValue(value);
+                inout_param.SetValue(value);
             }
         }
+        ImGui::Separator();
     }
-
-    ImGui::Separator();
 }

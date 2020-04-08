@@ -204,16 +204,16 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                         } else if (var.second["Type"] == "uint64_t") {
                             auto fc = std::make_shared<UInt64Container>(UInt64Container());
                             fc->singleValue = singleValue;
-                            std::vector<unsigned long long int>& tmp_vec = fc->getVec();
+                            std::vector<uint64_t>& tmp_vec = fc->getVec();
 
-                            adios2::Variable<unsigned long long int> advar =
-                                io->InquireVariable<unsigned long long int>(var.first);
+                            adios2::Variable<uint64_t> advar =
+                                io->InquireVariable<uint64_t>(var.first);
                             auto info = reader->BlocksInfo(advar, cad->getFrameIDtoLoad());
                             fc->shape = info[0].Count;
                             std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
                             tmp_vec.resize(num);
 
-                            reader->Get<unsigned long long int>(advar, tmp_vec);
+                            reader->Get<uint64_t>(advar, tmp_vec);
                             dataMap[var.first] = std::move(fc);
                         } else if (var.second["Type"] == "unsigned char") {
                             auto fc = std::make_shared<UCharContainer>(UCharContainer());

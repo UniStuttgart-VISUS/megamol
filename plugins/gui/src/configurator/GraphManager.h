@@ -22,6 +22,7 @@
 #include <map>
 #include <vector>
 
+#include "FileUtils.h"
 #include "Graph.h"
 
 
@@ -29,38 +30,34 @@ namespace megamol {
 namespace gui {
 namespace configurator {
 
+typedef std::shared_ptr<Graph> GraphPtrType;
+typedef std::vector<GraphPtrType> GraphsType;
 
 class GraphManager {
 public:
-    typedef std::shared_ptr<Graph> GraphPtrType;
-    typedef std::vector<GraphPtrType> GraphsType;
-
     GraphManager(void);
 
     virtual ~GraphManager(void);
 
-    bool AddGraph(std::string name);
+    ImGuiID AddGraph(void);
     bool DeleteGraph(ImGuiID graph_uid);
-    const GraphManager::GraphsType& GetGraphs(void);
-    const GraphPtrType GetGraph(ImGuiID graph_uid);
+    bool GetGraph(ImGuiID graph_uid, GraphPtrType& out_graph_ptr);
 
     bool UpdateModulesCallsStock(const megamol::core::CoreInstance* core_instance);
     inline const ModuleStockVectorType& GetModulesStock(void) { return this->modules_stock; }
     inline const CallStockVectorType& GetCallsStock(void) { return this->calls_stock; }
 
-    bool LoadProjectCore(const std::string& name, megamol::core::CoreInstance* core_instance);
+    bool LoadProjectCore(megamol::core::CoreInstance* core_instance);
     bool AddProjectCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance);
 
     bool LoadAddProjectFile(ImGuiID graph_uid, const std::string& project_filename);
 
-    bool SaveProjectFile(ImGuiID graph_id, const std::string& project_filename);
+    bool SaveProjectFile(ImGuiID graph_uid, const std::string& project_filename);
+    bool SaveGroupFile(ImGuiID group_uid, const std::string& project_filename);
 
     // GUI Presentation -------------------------------------------------------
 
-    // Returns uid of the currently active/drawn graph.
-    ImGuiID GUI_Present(float in_child_width, ImFont* in_graph_font, HotKeyArrayType& inout_hotkeys) {
-        return this->present.Present(*this, in_child_width, in_graph_font, inout_hotkeys);
-    }
+    void GUI_Present(GraphStateType& state) { this->present.Present(*this, state); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -70,7 +67,9 @@ private:
     ModuleStockVectorType modules_stock;
     CallStockVectorType calls_stock;
 
-    /**
+    unsigned int graph_name_uid;
+
+    /** ************************************************************************
      * Defines GUI graph present.
      */
     class Presentation {
@@ -79,16 +78,17 @@ private:
 
         ~Presentation(void);
 
-        ImGuiID Present(GraphManager& inout_graph_manager, float in_child_width, ImFont* in_graph_font,
-            HotKeyArrayType& inout_hotkeys);
+        void Present(GraphManager& inout_graph_manager, GraphStateType& state);
 
     private:
-        ImGuiID delete_graph_uid;
+        ImGuiID graph_delete_uid;
         GUIUtils utils;
 
     } present;
 
     // FUNCTIONS --------------------------------------------------------------
+
+    const GraphsType& get_graphs(void) { return this->graphs; }
 
     bool get_call_stock_data(
         Call::StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);
@@ -100,12 +100,16 @@ private:
     bool readLuaProjectCommandArguments(const std::string& line, size_t arg_count, std::vector<std::string>& out_args);
 
     ImVec2 readLuaProjectConfPos(const std::string& line);
-
     std::string writeLuaProjectConfPos(const ImVec2& pos);
 
-    bool separateNameAndPrefix(const std::string& full_name, std::string& name_space, std::string& name);
+    std::vector<std::string> readLuaProjectConfGroupInterface(const std::string& line);
+    std::string writeLuaProjectConfGroupInterface(const ModulePtrType& module_ptr, const GraphPtrType& graph_ptr);
 
-    // ------------------------------------------------------------------------
+    bool separateNameAndNamespace(const std::string& full_name, std::string& name_space, std::string& name);
+
+    inline const std::string generate_unique_graph_name(void) {
+        return ("Project_" + std::to_string(++graph_name_uid));
+    }
 };
 
 } // namespace configurator
