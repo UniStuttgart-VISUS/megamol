@@ -13,6 +13,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mesh/MeshCalls.h"
 #include "ProbeCollection.h"
+#include "probe/MeshUtilities.h"
 
 namespace megamol {
 namespace probe {
@@ -61,7 +62,7 @@ protected:
     core::param::ParamSlot m_method_slot;
 
     core::param::ParamSlot m_probes_per_unit_slot;
-    
+ 
 private:
     bool getData(core::Call& call);
 
@@ -70,8 +71,8 @@ private:
     void dartSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
         std::vector<std::array<float, 4>>& output, mesh::MeshDataAccessCollection::IndexData indexData,
         float distanceIndicator);
-    void forceDirectedSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
-        std::vector<std::array<float, 4>>& output);
+    void forceDirectedSampling(
+        const const mesh::MeshDataAccessCollection::Mesh& mesh, std::vector<std::array<float, 4>>& output);
     void vertexSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
         std::vector<std::array<float, 4>>& output);
     void vertexNormalSampling(
@@ -85,6 +86,12 @@ private:
     std::shared_ptr<mesh::MeshDataAccessCollection> m_mesh;
     std::shared_ptr<mesh::MeshDataAccessCollection> m_centerline;
     std::array<float, 3> m_whd;
+
+    // force directed stuff
+    std::shared_ptr<MeshUtility> _mu;
+    std::vector<Eigen::MatrixXd> _pointsPerFace;
+    std::map<uint32_t, std::vector<uint32_t>> _neighborMap;
+    uint32_t _numFaces = 0;
 
 };
 

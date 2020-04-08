@@ -4,6 +4,7 @@
  * Alle Rechte vorbehalten.
  */
 
+#pragma once
 #include <random>
 #include "glm/glm.hpp"
 #include "igl/boundary_loop.h"
@@ -15,6 +16,8 @@
 
 namespace megamol {
 namespace probe {
+
+inline float coulomb_force(float r) { return (1.0f / pow(r, 2)); }
 
 // stackoverflow.com/questions/2550229/how-to-keep-only-duplicates-efficiently
 template <class I, class P> I remove_unique(I first, I last, P pred = P()) {
@@ -74,21 +77,21 @@ template <typename Derived> struct MeshAdaptor {
 
 class MeshUtility {
 public:
-    void inputData(std::shared_ptr<const mesh::MeshDataAccessCollection::Mesh> mesh_ptr) {
+    void inputData(const mesh::MeshDataAccessCollection::Mesh& mesh_ptr) {
 
         this->_mesh = mesh_ptr;
-        for (int i = 0; i < this->_mesh->attributes.size(); ++i) {
-            if (this->_mesh->attributes[i].semantic ==
+        for (int i = 0; i < this->_mesh.attributes.size(); ++i) {
+            if (this->_mesh.attributes[i].semantic ==
                 mesh::MeshDataAccessCollection::AttributeSemanticType::POSITION) {
                 this->_pos_attribute_idx = i;
-                _va_ptr = &this->_mesh->attributes[i];
-            } else if (this->_mesh->attributes[i].semantic ==
+                _va_ptr = &this->_mesh.attributes[i];
+            } else if (this->_mesh.attributes[i].semantic ==
                        mesh::MeshDataAccessCollection::AttributeSemanticType::NORMAL) {
                 this->_normal_attribute_idx = i;
             }
         }
 
-        _mesh_indices = this->_mesh->indices;
+        _mesh_indices = this->_mesh.indices;
 
         this->convertToEigenMatrices();
         this->createOrthonormalBasis();
@@ -523,7 +526,7 @@ private:
     }
 
     void buildKDTree(const mesh::MeshDataAccessCollection::VertexAttribute* pos_attr) {
-        if (this->_mesh->attributes[_pos_attribute_idx].data == nullptr) {
+        if (this->_mesh.attributes[_pos_attribute_idx].data == nullptr) {
             vislib::sys::Log::DefaultLog.WriteError("[MeshUtility] Cannot construct KD Tree. No mesh set.");
             return;
         }
@@ -537,11 +540,11 @@ private:
 #pragma omp parallel for
         for (int i = 0; i < _vertices.rows(); ++i) {
             _vertices(i, 0) =
-                static_cast<double>(vert_data[this->_mesh->attributes[_pos_attribute_idx].component_cnt * i + 0]);
+                static_cast<double>(vert_data[this->_mesh.attributes[_pos_attribute_idx].component_cnt * i + 0]);
             _vertices(i, 1) =
-                static_cast<double>(vert_data[this->_mesh->attributes[_pos_attribute_idx].component_cnt * i + 1]);
+                static_cast<double>(vert_data[this->_mesh.attributes[_pos_attribute_idx].component_cnt * i + 1]);
             _vertices(i, 2) =
-                static_cast<double>(vert_data[this->_mesh->attributes[_pos_attribute_idx].component_cnt * i + 2]);
+                static_cast<double>(vert_data[this->_mesh.attributes[_pos_attribute_idx].component_cnt * i + 2]);
         }
     }
 
@@ -549,11 +552,11 @@ private:
 #pragma omp parallel for
         for (int i = 0; i < _normals.rows(); ++i) {
             _normals(i, 0) =
-                static_cast<double>(vert_data[this->_mesh->attributes[_normal_attribute_idx].component_cnt * i + 0]);
+                static_cast<double>(vert_data[this->_mesh.attributes[_normal_attribute_idx].component_cnt * i + 0]);
             _normals(i, 1) =
-                static_cast<double>(vert_data[this->_mesh->attributes[_normal_attribute_idx].component_cnt * i + 1]);
+                static_cast<double>(vert_data[this->_mesh.attributes[_normal_attribute_idx].component_cnt * i + 1]);
             _normals(i, 2) =
-                static_cast<double>(vert_data[this->_mesh->attributes[_normal_attribute_idx].component_cnt * i + 2]);
+                static_cast<double>(vert_data[this->_mesh.attributes[_normal_attribute_idx].component_cnt * i + 2]);
         }
     }
 
@@ -567,13 +570,13 @@ private:
     }
 
     bool convertToEigenMatrices() {
-        _vertices.resize(this->_mesh->attributes[_pos_attribute_idx].byte_size /
-                             (this->_mesh->attributes[_pos_attribute_idx].component_cnt *
+        _vertices.resize(this->_mesh.attributes[_pos_attribute_idx].byte_size /
+                             (this->_mesh.attributes[_pos_attribute_idx].component_cnt *
                                  mesh::MeshDataAccessCollection::getByteSize(
-                                     this->_mesh->attributes[_pos_attribute_idx].component_type)),
-            this->_mesh->attributes[_pos_attribute_idx].component_cnt);
+                                     this->_mesh.attributes[_pos_attribute_idx].component_type)),
+            this->_mesh.attributes[_pos_attribute_idx].component_cnt);
 
-        const auto indices = this->_mesh->indices;
+        const auto indices = this->_mesh.indices;
         _faces.resize(indices.byte_size / (3 * mesh::MeshDataAccessCollection::getByteSize(indices.type)), 3);
 
         switch (indices.type) {
@@ -591,13 +594,13 @@ private:
         } break;
         }
 
-        switch (this->_mesh->attributes[_pos_attribute_idx].component_type) {
+        switch (this->_mesh.attributes[_pos_attribute_idx].component_type) {
         case mesh::MeshDataAccessCollection::FLOAT: {
-            auto vert_data = reinterpret_cast<float*>(this->_mesh->attributes[_pos_attribute_idx].data);
+            auto vert_data = reinterpret_cast<float*>(this->_mesh.attributes[_pos_attribute_idx].data);
             this->fillVertexMatrix(vert_data);
         } break;
         case mesh::MeshDataAccessCollection::DOUBLE: {
-            auto vert_data = reinterpret_cast<double*>(this->_mesh->attributes[_pos_attribute_idx].data);
+            auto vert_data = reinterpret_cast<double*>(this->_mesh.attributes[_pos_attribute_idx].data);
             this->fillVertexMatrix(vert_data);
         } break;
         }
@@ -614,19 +617,19 @@ private:
 
         // get normals if there are some
         if (this->_normal_attribute_idx != -1) {
-            _normals.resize(this->_mesh->attributes[_normal_attribute_idx].byte_size /
-                                (this->_mesh->attributes[_normal_attribute_idx].component_cnt *
+            _normals.resize(this->_mesh.attributes[_normal_attribute_idx].byte_size /
+                                (this->_mesh.attributes[_normal_attribute_idx].component_cnt *
                                     mesh::MeshDataAccessCollection::getByteSize(
-                                        this->_mesh->attributes[_normal_attribute_idx].component_type)),
-                this->_mesh->attributes[_normal_attribute_idx].component_cnt);
+                                        this->_mesh.attributes[_normal_attribute_idx].component_type)),
+                this->_mesh.attributes[_normal_attribute_idx].component_cnt);
 
-            switch (this->_mesh->attributes[_normal_attribute_idx].component_type) {
+            switch (this->_mesh.attributes[_normal_attribute_idx].component_type) {
             case mesh::MeshDataAccessCollection::FLOAT: {
-                auto normal_data = reinterpret_cast<float*>(this->_mesh->attributes[_pos_attribute_idx].data);
+                auto normal_data = reinterpret_cast<float*>(this->_mesh.attributes[_pos_attribute_idx].data);
                 this->fillNormalMatrix(normal_data);
             } break;
             case mesh::MeshDataAccessCollection::DOUBLE: {
-                auto normal_data = reinterpret_cast<double*>(this->_mesh->attributes[_pos_attribute_idx].data);
+                auto normal_data = reinterpret_cast<double*>(this->_mesh.attributes[_pos_attribute_idx].data);
                 this->fillNormalMatrix(normal_data);
             } break;
             }
@@ -678,7 +681,7 @@ private:
 
     std::vector<int> _std_faces;
 
-    std::shared_ptr<const mesh::MeshDataAccessCollection::Mesh> _mesh;
+    mesh::MeshDataAccessCollection::Mesh _mesh;
     std::shared_ptr<NanoFlannIndex> _kd_tree;
     const mesh::MeshDataAccessCollection::VertexAttribute* _va_ptr;
 };

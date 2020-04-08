@@ -59,7 +59,7 @@ protected:
 private:
     bool InterfaceIsDirty();
 
-    bool performMeshOperation();
+    bool performMeshOperation(const mesh::MeshDataAccessCollection::Mesh&);
     bool convertToMesh();
 
     bool getMetaData(core::Call& call);
@@ -79,8 +79,6 @@ private:
     bool _recalc = true;
 
     mesh::MeshDataAccessCollection::VertexAttribute _pos_attribute;
-
-    std::shared_ptr<const mesh::MeshDataAccessCollection::Mesh> _mesh_constptr;
 
     std::shared_ptr<MeshUtility> _mu;
     core::BoundingBoxes_2 _bbox;
