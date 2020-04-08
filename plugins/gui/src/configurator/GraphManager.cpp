@@ -554,7 +554,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                         for (auto& callslot_map : graph_module->GetCallSlots()) {
                             for (auto& callslot : callslot_map.second) {
                                 if (callslot->name == callslot_interface_name) {
-                                    group_ptr->AddCallSlot(callslot);
+                                    group_ptr->InterfaceAddCallSlot(callslot);
                                 }
                             }
                         }
@@ -643,7 +643,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                             for (auto& callslot_map : graph_module->GetCallSlots()) {
                                 for (auto& callslot : callslot_map.second) {
                                     if (callslot->name == callslot_interface_name) {
-                                        group_ptr->AddCallSlot(callslot);
+                                        group_ptr->InterfaceAddCallSlot(callslot);
                                     }
                                 }
                             }
@@ -872,10 +872,10 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_uid
     GraphPtrType found_graph = nullptr;
 
     try {
-        // Search for top most view
         for (auto& graph : this->graphs) {
             if (graph->uid == graph_uid) {
 
+                // Some pre-checks
                 bool found_error = false;
                 bool found_instance = false;
                 for (auto& mod_1 : graph->GetModules()) {
@@ -905,6 +905,7 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_uid
                 }
                 if (found_error) return false;
 
+                // Serialze graph to string
                 for (auto& mod : graph->GetModules()) {
                     std::string instance_name = graph->name;
                     if (mod->is_view_instance) {
@@ -1420,23 +1421,26 @@ std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfGroupIn
     const ModulePtrType& module_ptr, const GraphPtrType& graph_ptr) {
 
     std::stringstream conf_group_interface;
-
+    
     ImGuiID module_group_uid = module_ptr->GUI_GetGroupMembership();
     if (module_group_uid != GUI_INVALID_ID) {
         bool first = true;
         for (auto& group : graph_ptr->GetGroups()) {
             if (group->uid == module_group_uid) {
-                for (auto& callslot_map : group->GetCallSlots()) {
-                    for (auto& callslot : callslot_map.second) {
-                        if (callslot->ParentModuleConnected()) {
-                            if (callslot->GetParentModule()->uid == module_ptr->uid) {
-                                if (first) {
-                                    conf_group_interface << "--confGroupInterface={";
-                                    first = false;
-                                } else {
-                                    conf_group_interface << ",";
+                
+                for (auto& interfaceslot_map : group->GetInterfaceCallSlots()) {
+                    for (auto& interfaceslot_ptr : interfaceslot_map.second) {
+                        for (auto callslot_ptr : interfaceslot_ptr->GetCallSlots()) {
+                            if (callslot_ptr->ParentModuleConnected()) {
+                                if (callslot_ptr->GetParentModule()->uid == module_ptr->uid) {
+                                    if (first) {
+                                        conf_group_interface << "--confGroupInterface={";
+                                        first = false;
+                                    } else {
+                                        conf_group_interface << ",";
+                                    }
+                                    conf_group_interface << callslot_ptr->name;
                                 }
-                                conf_group_interface << callslot->name;
                             }
                         }
                     }
@@ -1447,7 +1451,6 @@ std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfGroupIn
             conf_group_interface << "}";
         }
     }
-
     return conf_group_interface.str();
 }
 

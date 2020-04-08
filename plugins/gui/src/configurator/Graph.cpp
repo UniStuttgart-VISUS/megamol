@@ -210,12 +210,12 @@ bool megamol::gui::configurator::Graph::AddCall(
                 if (slot_1_parent_group_uid != slot_2_parent_group_uid) {
                     for (auto& group : this->groups) {
                         if (group->uid == slot_1_parent_group_uid) {
-                            group->AddCallSlot(call_slot_1);
+                            group->InterfaceAddCallSlot(call_slot_1);
                         }
                     }
                     for (auto& group : this->groups) {
                         if (group->uid == slot_2_parent_group_uid) {
-                            group->AddCallSlot(call_slot_2);
+                            group->InterfaceAddCallSlot(call_slot_2);
                         }
                     }
                 }
@@ -728,7 +728,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 if (module_uid != GUI_INVALID_ID) {
                     for (auto& group : inout_graph.GetGroups()) {
                         if (group->ContainsModule(module_uid)) {
-                            group->AddCallSlot(callslot_ptr);
+                            group->InterfaceAddCallSlot(callslot_ptr);
                         }
                     }
                 }
@@ -740,8 +740,8 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         callslot_uid = this->graph_state.interact.callslot_remove_group_uid;
         if (callslot_uid != GUI_INVALID_ID) {
             for (auto& group : inout_graph.GetGroups()) {
-                if (group->ContainsCallSlot(callslot_uid)) {
-                    group->RemoveCallSlot(callslot_uid);
+                if (group->InterfaceContainsCallSlot(callslot_uid)) {
+                    group->InterfaceRemoveCallSlot(callslot_uid);
                 }
             }
             this->graph_state.interact.callslot_remove_group_uid = GUI_INVALID_ID;
@@ -1292,7 +1292,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_multiselect
         this->graph_state.interact.modules_selected_uids.clear();
         for (auto& module_ptr : inout_graph.modules) {
             bool group_member = (module_ptr->GUI_GetGroupMembership() != GUI_INVALID_ID);
-            if (!group_member || (group_member && module_ptr->GUI_GetGroupVisibility())) {
+            if (!group_member || (group_member && module_ptr->GUI_IsVisibleInGroup())) {
                 module_size = module_ptr->GUI_GetSize() * this->graph_state.canvas.zooming;
                 inner_rect_min =
                     this->graph_state.canvas.offset + module_ptr->GUI_GetPosition() * this->graph_state.canvas.zooming;

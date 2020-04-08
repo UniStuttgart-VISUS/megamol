@@ -7,9 +7,10 @@
 
 #include "stdafx.h"
 
+#include "Module.h"
+
 #include "Call.h"
 #include "CallSlot.h"
-#include "Module.h"
 
 
 using namespace megamol;
@@ -233,9 +234,10 @@ void megamol::gui::configurator::Module::Presentation::Present(
             }
         }
 
-        // Draw module --------------------------------------------------------
+        // Check if module is visible
         if ((this->group.member == GUI_INVALID_ID) || ((this->group.member != GUI_INVALID_ID) && this->group.visible)) {
-
+            // Draw module --------------------------------------------------------
+            
             // Get current module information
             ImVec2 module_size = this->size * state.canvas.zooming;
             ImVec2 module_rect_min = state.canvas.offset + this->position * state.canvas.zooming;
@@ -522,16 +524,15 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 }
             }
 
+            // Draw call slots ----------------------------------------------------
+            for (auto& slot_pair : inout_module.GetCallSlots()) {
+                for (auto& slot : slot_pair.second) {
+                    slot->GUI_Present(state);
+                }
+            }
+            
             ImGui::PopID();
         }
-
-        // Draw call slots ----------------------------------------------------
-        for (auto& slot_pair : inout_module.GetCallSlots()) {
-            for (auto& slot : slot_pair.second) {
-                slot->GUI_Present(state);
-            }
-        }
-
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -569,7 +570,7 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
     float max_slot_name_length = 0.0f;
     for (auto& call_slot_type_list : inout_module.GetCallSlots()) {
         for (auto& call_slot : call_slot_type_list.second) {
-            if (call_slot->GUI_GetLabelVisibility()) {
+            if (call_slot->GUI_IsLabelVisible()) {
                 max_slot_name_length = std::max(GUIUtils::TextWidgetWidth(call_slot->name), max_slot_name_length);
             }
         }

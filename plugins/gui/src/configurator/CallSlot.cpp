@@ -7,8 +7,9 @@
 
 #include "stdafx.h"
 
-#include "Call.h"
 #include "CallSlot.h"
+
+#include "Call.h"
 #include "Module.h"
 
 
@@ -254,7 +255,8 @@ megamol::gui::configurator::CallSlot::Presentation::Presentation(void)
     , show_modulestock(false) {
 
     this->group.is_interface = false;
-    this->group.position = ImVec2(FLT_MAX, FLT_MAX);
+    this->group.interface_position = ImVec2(FLT_MAX, FLT_MAX);
+
 }
 
 
@@ -270,6 +272,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         return;
     }
     ImGuiStyle& style = ImGui::GetStyle();
+    
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
 
@@ -288,11 +291,11 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         ImGuiID parent_module_uid = GUI_INVALID_ID;
         if (inout_callslot.ParentModuleConnected()) {
             is_parent_module_group_member = inout_callslot.GetParentModule()->GUI_GetGroupMembership();
-            is_parent_module_group_visible = inout_callslot.GetParentModule()->GUI_GetGroupVisibility();
+            is_parent_module_group_visible = inout_callslot.GetParentModule()->GUI_IsVisibleInGroup();
             module_label = "[" + inout_callslot.GetParentModule()->name + "]";
             parent_module_uid = inout_callslot.GetParentModule()->uid;
         }
-        ImVec2 slot_position = this->GetPosition(inout_callslot);
+        ImVec2 slot_position = this->position;
         float radius = GUI_CALL_SLOT_RADIUS * state.canvas.zooming;
         std::string slot_label = "[" + inout_callslot.name + "]";
         ImVec2 text_pos_left_upper = ImVec2(0.0f, 0.0f);
@@ -304,12 +307,6 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             } else if (inout_callslot.type == CallSlotType::CALLEE) {
                 text_pos_left_upper.x = slot_position.x + (1.5f * radius);
             }
-        }
-
-        // Check for slot invisibility
-        if (!this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID) &&
-            !is_parent_module_group_visible) {
-            return;
         }
 
         // Clip call slots if lying ouside the canvas
@@ -396,13 +393,14 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                 state.interact.callslot_add_group_uid.first = inout_callslot.uid;
                 state.interact.callslot_add_group_uid.second = inout_callslot.GetParentModule()->uid;
             }
-            if (ImGui::MenuItem("Remove Group Interface", nullptr, false,
+            if (ImGui::MenuItem("Remove from Group Interface", nullptr, false,
                     (this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID)))) {
                 state.interact.callslot_remove_group_uid = inout_callslot.uid;
             }
-            if (ImGui::MenuItem("Show Module Stock List Window", "'Double Left CLick'")) {
-                std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
-            }
+            /// XXX Disabled
+            //if (ImGui::MenuItem("Show Module Stock List Window", "'Double Left CLick'")) {
+            //    std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
+            //}
             ImGui::EndPopup();
         }
 
@@ -472,19 +470,12 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         }
 
         // Draw Slot
-        if (this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID) &&
-            is_parent_module_group_visible) {
-            draw_list->AddLine(this->position, slot_position,
-                ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]),
-                (GUI_CALL_SLOT_RADIUS / 3.0f) * state.canvas.zooming);
-        }
         const float segment_numer = 20.0f;
         draw_list->AddCircleFilled(slot_position, radius, slot_color, segment_numer);
         draw_list->AddCircle(slot_position, radius, COLOR_SLOT_GROUP_BORDER, segment_numer);
 
         // Text
-        if (this->label_visible && !(this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID) &&
-                                       !is_parent_module_group_visible)) {
+        if (this->label_visible) {
             draw_list->AddText(text_pos_left_upper, slot_highlight_color, inout_callslot.name.c_str());
         }
 
@@ -514,7 +505,7 @@ void megamol::gui::configurator::CallSlot::Presentation::UpdatePosition(
         }
 
         float line_height = 0.0f;
-        if (inout_callslot.GetParentModule()->GUI_GetLabelVisibility()) {
+        if (inout_callslot.GetParentModule()->GUI_IsLabelVisible()) {
             line_height = ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming;
         }
         auto module_pos = inout_callslot.GetParentModule()->GUI_GetPosition();
@@ -528,23 +519,3 @@ void megamol::gui::configurator::CallSlot::Presentation::UpdatePosition(
     }
 }
 
-
-ImVec2 megamol::gui::configurator::CallSlot::Presentation::GetPosition(CallSlot& inout_callslot) {
-
-    ImGuiID is_parent_module_group_member = GUI_INVALID_ID;
-    bool is_parent_module_group_visible = false;
-    if (inout_callslot.ParentModuleConnected()) {
-        is_parent_module_group_member = inout_callslot.GetParentModule()->GUI_GetGroupMembership();
-        is_parent_module_group_visible = inout_callslot.GetParentModule()->GUI_GetGroupVisibility();
-    }
-
-    // Actual position to use
-    ImVec2 actual_position = this->position;
-    if (this->group.is_interface) {
-        actual_position = this->group.position;
-        if ((is_parent_module_group_member != GUI_INVALID_ID) && is_parent_module_group_visible) {
-            actual_position.y = this->position.y;
-        }
-    }
-    return actual_position;
-}

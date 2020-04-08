@@ -9,8 +9,8 @@
 #define MEGAMOL_GUI_GRAPH_CALL_H_INCLUDED
 
 
-#include "CallSlot.h"
 #include "GUIUtils.h"
+#include "CallSlot.h"
 
 
 namespace megamol {
@@ -28,7 +28,6 @@ typedef std::shared_ptr<Parameter> ParamPtrType;
 typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
-
 
 typedef std::vector<CallPtrType> CallPtrVectorType;
 

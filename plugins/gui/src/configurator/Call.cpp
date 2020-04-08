@@ -8,6 +8,7 @@
 #include "stdafx.h"
 
 #include "Call.h"
+
 #include "CallSlot.h"
 #include "Module.h"
 
@@ -143,7 +144,7 @@ void megamol::gui::configurator::Call::Presentation::Present(
                 visibility = !((caller_parent->GUI_GetGroupMembership() == callee_parent->GUI_GetGroupMembership()) &&
                                (caller_parent->GUI_GetGroupMembership() != GUI_INVALID_ID) &&
                                (callee_parent->GUI_GetGroupMembership() != GUI_INVALID_ID) &&
-                               !caller_parent->GUI_GetGroupVisibility());
+                               !caller_parent->GUI_IsVisibleInGroup());
             }
 
             if (visibility) {
