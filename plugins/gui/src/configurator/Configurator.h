@@ -17,8 +17,14 @@
 #include <map>
 #include <math.h> // fmodf
 
+#include "FileUtils.h"
 #include "GraphManager.h"
 #include "WindowManager.h"
+
+// Used for platform independent file drag and drop (ImGui does not support this feature so far)
+#ifdef GUI_USE_GLFW
+#    include "GLFW/glfw3.h"
+#endif
 
 
 namespace megamol {
@@ -38,39 +44,40 @@ public:
     virtual ~Configurator();
 
     /**
-     * Draw configurator window.
-     */
-    bool Draw(WindowManager::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance);
-
-    /**
      * Checks if any hotkeys are pressed.
      *
      * @return true when any hotkey is pressed.
      */
     bool CheckHotkeys(void);
 
-    /*
-     * Provide additional font for independent scaling of font used in graph.
+    /**
+     * Draw configurator window.
      */
-    inline void SetGraphFont(ImFont* graph_font) { this->graph_font = graph_font; }
+    bool Draw(WindowManager::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance);
+
+    /**
+     * Returns required font scalings for graph canvas
+     */
+    inline const FontScalingArrayType& GetGraphFontScalings(void) const { return this->state.font_scalings; }
 
 private:
     // VARIABLES --------------------------------------------------------------
 
-    HotKeyArrayType hotkeys;
+    static std::vector<std::string> dropped_files;
 
     GraphManager graph_manager;
-    GUIUtils utils;
-
-    int window_state;
-    std::string project_filename;
-    ImGuiID graph_uid;
+    megamol::gui::FileUtils file_utils;
+    megamol::gui::GUIUtils utils;
+    int init_state;
+    float left_child_width;
     ImGuiID selected_list_module_uid;
-    ImFont* graph_font;
-    float child_split_width;
     ImGuiID add_project_graph_uid;
-
-    unsigned int project_uid;
+    bool show_module_list_sidebar;
+    bool show_module_list_child;
+    ImVec2 module_list_popup_pos;
+    ImGuiID last_selected_callslot_uid;
+    std::string project_filename;
+    megamol::gui::GraphStateType state;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -80,8 +87,12 @@ private:
 
     void add_empty_project(void);
 
-    inline const std::string get_unique_project_name(void) { return ("Project_" + std::to_string(++project_uid)); }
-    // ------------------------------------------------------------------------
+#ifdef GUI_USE_GLFW
+    /// NB: Successfully testet using Windows10 and (X)Ubuntu with "Nautilus" file browser as drag source of the files.
+    ///     Failed using (X)Ubuntu with "Thunar" file browser.
+    ///     GLFW: File drop is currently unimplemented for "Wayland" (e.g. Fedora using GNOME)
+    static void file_drop_callback(::GLFWwindow* window, int count, const char* paths[]);
+#endif
 };
 
 } // namespace configurator

@@ -8,11 +8,13 @@
 #ifndef MEGAMOL_GUI_GUIUTILS_INCLUDED
 #define MEGAMOL_GUI_GUIUTILS_INCLUDED
 
-#include "mmcore/view/Input.h"
+
+#define IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
 #include <imgui.h>
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
+
 #include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
 
@@ -21,15 +23,19 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <algorithm> // search
-#include <cctype>    // toupper
+#include <array>
+#include <cctype> // toupper
+#include <map>
+#include <memory>
 #include <string>
 #include <tuple>
 #include <utility>
+#include <vector>
 
-/// CMake exeption for the cluster "stampede2" running CentOS. (C++ filesystem support is not working?)
-#ifdef GUI_USE_FILESYSTEM
-#    include "FileUtils.h"
-#endif // GUI_USE_FILESYSTEM
+#include "mmcore/view/Input.h"
+
+#include "vislib/UTF8Encoder.h"
+#include "vislib/sys/Log.h"
 
 
 namespace megamol {
@@ -40,29 +46,88 @@ namespace gui {
 
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_CALL_SLOT_RADIUS (8.0f)
+#define GUI_RECT_CORNER_RADIUS (0.0f)
 #define GUI_MAX_MULITLINE (7)
 #define GUI_DND_CALL_UID_TYPE ("DND_CALL")
-
+#define GUI_GRAPH_BORDER (GUI_CALL_SLOT_RADIUS * 4.0f)
 
 /********** Types **********/
 
-/** Hotkey Data Types for Configurator */
+/** Hotkey Data Types (exclusively for configurator) */
 typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyDataType;
+enum HotkeyIndex : size_t {
+    MODULE_SEARCH = 0,
+    PARAMETER_SEARCH = 1,
+    DELETE_GRAPH_ITEM = 2,
+    SAVE_PROJECT = 3,
+    INDEX_COUNT = 4
+};
+typedef std::array<megamol::gui::HotkeyDataType, megamol::gui::HotkeyIndex::INDEX_COUNT> HotkeyArrayType;
 
-enum HotkeyIndex : size_t { MODULE_SEARCH = 0, PARAMETER_SEARCH = 1, DELETE_GRAPH_ITEM = 2, INDEX_COUNT = 3 };
+namespace configurator {
+// Forward declaration
+class CallSlot;
+// Pointer types to classes
+typedef std::shared_ptr<megamol::gui::configurator::CallSlot> CallSlotPtrType;
+} // namespace configurator
 
-typedef std::array<HotkeyDataType, HotkeyIndex::INDEX_COUNT> HotKeyArrayType;
+/* Data type holding a pair of uids. */
+typedef std::vector<ImGuiID> UIDVectorType;
+typedef std::pair<ImGuiID, ImGuiID> UIDPairType;
+typedef std::vector<UIDPairType> UIDPairVectorType;
+
+/* Data type holding current group uid and group name pairs. */
+typedef std::pair<ImGuiID, std::string> GroupPairType;
+typedef std::vector<megamol::gui::GroupPairType> GroupPairVectorType;
+
+typedef std::array<float, 5> FontScalingArrayType;
 
 /* Data type holding information of graph canvas. */
 typedef struct _canvas_ {
-    ImVec2 position;
-    ImVec2 size;
-    ImVec2 scrolling;
-    float zooming;
-    ImVec2 offset;
-    bool updated;
-} CanvasType;
+    ImVec2 position;  // in
+    ImVec2 size;      // in
+    ImVec2 scrolling; // in
+    float zooming;    // in
+    ImVec2 offset;    // in
+} GraphCanvasType;
 
+/* Data type holding information on graph item interaction. */
+typedef struct _interact_state_ {
+    ImGuiID group_selected_uid;                                      // in out
+    bool group_save;                                                 // out
+    UIDVectorType modules_selected_uids;                             // in out
+    ImGuiID module_hovered_uid;                                      // in out
+    ImGuiID module_mainview_uid;                                     // out
+    UIDPairVectorType modules_add_group_uids;                        // out
+    UIDVectorType modules_remove_group_uids;                         // out
+    ImGuiID call_selected_uid;                                       // in out
+    ImGuiID callslot_selected_uid;                                   // in out
+    ImGuiID callslot_hovered_uid;                                    // in out
+    ImGuiID callslot_dropped_uid;                                    // in out
+    megamol::gui::UIDPairType callslot_add_group_uid;                // in out
+    ImGuiID callslot_remove_group_uid;                               // in out
+    megamol::gui::configurator::CallSlotPtrType callslot_compat_ptr; // in
+} GraphItemsInteractType;
+
+/* Data type holding shared state of graph items. */
+typedef struct _graph_item_state_ {
+    megamol::gui::GraphCanvasType canvas;          // (see above)
+    megamol::gui::GraphItemsInteractType interact; // (see above)
+    megamol::gui::HotkeyArrayType hotkeys;         // in out
+    megamol::gui::GroupPairVectorType groups;      // in
+} GraphItemsStateType;
+
+/* Data type holding shared state of graphs. */
+typedef struct _graph_state_ {
+    FontScalingArrayType font_scalings;    // in
+    float child_width;                     // in
+    bool show_parameter_sidebar;           // in
+    megamol::gui::HotkeyArrayType hotkeys; // in out
+    ImGuiID graph_selected_uid;            // out
+    bool graph_delete;                     // out
+} GraphStateType;
+
+/********** Class **********/
 
 /**
  * Utility class for GUIUtils-style widgets.
@@ -83,7 +148,9 @@ public:
      * @param time_start  The time delay to wait until the tooltip is shown for a hovered imgui item.
      * @param time_end    The time delay to wait until the tooltip is hidden for a hovered imgui item.
      */
-    void HoverToolTip(const std::string& text, ImGuiID id = 0, float time_start = 0.0f, float time_end = 4.0f);
+    bool HoverToolTip(const std::string& text, ImGuiID id = 0, float time_start = 0.0f, float time_end = 4.0f);
+
+    void ResetHoverToolTip(void);
 
     /**
      * Show help marker text with tooltip on hover.
@@ -91,7 +158,7 @@ public:
      * @param text   The help tooltip text.
      * @param label  The visible text for which the tooltip is enabled.
      */
-    void HelpMarkerToolTip(const std::string& text, std::string label = "(?)");
+    bool HelpMarkerToolTip(const std::string& text, std::string label = "(?)");
 
 
     // Pu-up widgets -------------------------------------------------------
@@ -100,14 +167,6 @@ public:
         const std::string& confirm_btn_text, bool& confirmed, const std::string& abort_btn_text, bool& aborted);
 
     bool RenamePopUp(const std::string& caption, bool open_popup, std::string& rename);
-
-
-#ifdef GUI_USE_FILESYSTEM
-
-    enum FileBrowserFlag { SAVE, LOAD };
-    bool FileBrowserPopUp(FileBrowserFlag flag, const std::string& label, bool open_popup, std::string& inout_filename);
-
-#endif // GUI_USE_FILESYSTEM
 
 
     // Misc widgets -------------------------------------------------------
@@ -119,23 +178,23 @@ public:
     enum FixedSplitterSide { LEFT, RIGHT };
     bool VerticalSplitter(FixedSplitterSide fixed_side, float& size_left, float& size_right);
 
-
     /** "Point in Circle" Button */
-    void PointCircleButton(const std::string& label = "");
+    bool PointCircleButton(const std::string& label = "");
 
-    // UTF8 String En-/Decoding -----------------------------------------------
+
+    // Static UTF8 String En-/Decoding ----------------------------------------
 
     /** Decode string from UTF-8. */
-    bool Utf8Decode(std::string& str) const;
+    static bool Utf8Decode(std::string& str);
 
     /** Encode string into UTF-8. */
-    bool Utf8Encode(std::string& str) const;
+    static bool Utf8Encode(std::string& str);
 
 
     // String search widget ---------------------------------------------------
 
     /** Show string serach widget. */
-    void StringSearch(const std::string& label, const std::string& help);
+    bool StringSearch(const std::string& label, const std::string& help);
 
     /**
      * Returns true if search string is found in source as a case insensitive substring.
@@ -162,14 +221,16 @@ public:
     /**
      * Returns width of text drawn as widget.
      */
-    float TextWidgetWidth(const std::string& text) const;
+    static float TextWidgetWidth(const std::string& text);
 
     /**
      * Set/Unset read only widget style.
      */
-    void ReadOnlyWigetStyle(bool set);
+    static void ReadOnlyWigetStyle(bool set);
 
 private:
+    // VARIABLES --------------------------------------------------------------
+
     /** Current tooltip hover time. */
     float tooltip_time;
 
@@ -187,27 +248,6 @@ private:
 
     /** Splitter width for restoring after collapsing.  */
     float splitter_last_width;
-
-#ifdef GUI_USE_FILESYSTEM
-
-    std::string file_name_str;
-    std::string file_path_str;
-    bool path_changed;
-    bool valid_directory;
-    bool valid_file;
-    bool valid_ending;
-    std::string file_error;
-    std::string file_warning;
-    // Keeps child path and flag whether child is director or not
-    typedef std::pair<fsns::path, bool> ChildDataType;
-    std::vector<ChildDataType> child_paths;
-    size_t additional_lines;
-
-    bool splitPath(const fsns::path& in_file_path, std::string& out_path, std::string& out_file);
-    void validateDirectory(const std::string& path_str);
-    void validateFile(const std::string& file_str, GUIUtils::FileBrowserFlag flag);
-
-#endif // GUI_USE_FILESYSTEM
 };
 
 

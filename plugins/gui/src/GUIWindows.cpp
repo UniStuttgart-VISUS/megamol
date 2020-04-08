@@ -35,13 +35,15 @@ GUIWindows::GUIWindows()
     , tf_editor()
     , configurator()
     , utils()
+    , file_utils()
     , state()
     , widgtmap_text()
-    , widgtmap_float()
     , widgtmap_int()
+    , widgtmap_float()
     , widgtmap_vec2()
     , widgtmap_vec3()
-    , widgtmap_vec4() {
+    , widgtmap_vec4()
+    , graph_fonts_reserved(0) {
 
     core::param::EnumParam* styles = new core::param::EnumParam((int)(Styles::DarkColors));
     styles->SetTypePair(Styles::CorporateGray, "Corporate Gray");
@@ -61,15 +63,15 @@ GUIWindows::GUIWindows()
     this->param_slots.push_back(&this->style_param);
     this->param_slots.push_back(&this->autostart_configurator);
 
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = HotkeyDataType(
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = megamol::gui::HotkeyDataType(
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
     this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] =
-        HotkeyDataType(megamol::core::view::KeyCode(
-                           megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL | core::view::Modifier::ALT),
+        megamol::gui::HotkeyDataType(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P,
+                                         core::view::Modifier::CTRL | core::view::Modifier::ALT),
             false);
     this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT] =
-        HotkeyDataType(megamol::core::view::KeyCode(
-                           megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::ALT),
+        megamol::gui::HotkeyDataType(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S,
+                                         core::view::Modifier::CTRL | core::view::Modifier::ALT),
             false);
 }
 
@@ -143,10 +145,10 @@ bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceT
     if (!this->state.font_file.empty()) {
         ImFontConfig config;
         config.OversampleH = 4;
-        config.OversampleV = 1;
+        config.OversampleV = 4;
         config.GlyphRanges = this->state.font_utf8_ranges.data();
 
-        this->utils.Utf8Encode(this->state.font_file);
+        GUIUtils::Utf8Encode(this->state.font_file);
         io.Fonts->AddFontFromFileTTF(this->state.font_file.c_str(), this->state.font_size, &config);
         ImGui_ImplOpenGL3_CreateFontsTexture();
         /// Load last added font
@@ -155,8 +157,8 @@ bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceT
     }
 
     // Loading new font from state (set in loaded FONT window configuration)
-    if (this->state.font_index >= 0) {
-        if (this->state.font_index < io.Fonts->Fonts.Size) {
+    if (this->state.font_index >= this->graph_fonts_reserved) {
+        if (this->state.font_index < static_cast<unsigned int>(io.Fonts->Fonts.Size)) {
             io.FontDefault = io.Fonts->Fonts[this->state.font_index];
         }
         this->state.font_index = GUI_INVALID_ID;
@@ -199,15 +201,15 @@ bool GUIWindows::PostDraw(void) {
         if (wc.buf_font_reset) {
             if (!wc.font_name.empty()) {
                 this->state.font_index = GUI_INVALID_ID;
-                for (int n = 0; n < io.Fonts->Fonts.Size; n++) {
-
+                for (unsigned int n = this->graph_fonts_reserved; n < static_cast<unsigned int>(io.Fonts->Fonts.Size);
+                     n++) {
                     std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
-                    this->utils.Utf8Decode(font_name);
+                    GUIUtils::Utf8Decode(font_name);
                     if (font_name == wc.font_name) {
                         this->state.font_index = n;
                     }
                 }
-                if (this->state.font_index < 0) {
+                if (this->state.font_index == GUI_INVALID_ID) {
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "Could not find font '%s' for loaded state. [%s, %s, line %d]\n", wc.font_name.c_str(),
                         __FILE__, __FUNCTION__, __LINE__);
@@ -584,16 +586,17 @@ bool GUIWindows::createContext(void) {
     this->window_manager.AddWindowConfiguration("Configurator", buf_win);
 
     // Style settings ---------------------------------------------------------
-    ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB |
+    ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_DisplayRGB |
                                ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_AlphaBar |
                                ImGuiColorEditFlags_AlphaPreview);
 
     // IO settings ------------------------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
-    io.IniSavingRate = 5.0f;          //  in seconds
-    io.IniFilename = nullptr;         // "imgui.ini"; - disabled, using own window settings profile
-    io.LogFilename = "imgui_log.txt"; // (set to nullptr to disable)
-    io.FontAllowUserScaling = true;
+    io.IniSavingRate = 5.0f;                              //  in seconds
+    io.IniFilename = nullptr;                             // "imgui.ini"; - disabled, using own window settings profile
+    io.LogFilename = "imgui_log.txt";                     // (set to nullptr to disable)
+    io.FontAllowUserScaling = false;                      // disable font scaling using ctrl + mouse wheel
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // allow keyboard navigation
 
     // Init global state -------------------------------------------------------
     this->state.font_file = "";
@@ -620,49 +623,62 @@ bool GUIWindows::createContext(void) {
 
     // Load initial fonts only once for all imgui contexts --------------------
     if (!other_context) {
+        const float default_font_size = 12.0f;
         ImFontConfig config;
-        config.OversampleH = 6;
+        config.OversampleH = 4;
+        config.OversampleV = 4;
         config.GlyphRanges = this->state.font_utf8_ranges.data();
-        // Add default font for gui.
-        io.Fonts->AddFontDefault(&config);
-        std::string configurator_font = "";
-#ifdef GUI_USE_FILESYSTEM
+        std::string configurator_font;
+        std::string default_font;
         // Add other known fonts
-        std::string font_file, font_path;
+        std::vector<std::string> font_paths;
         if (this->core_instance != nullptr) {
             const vislib::Array<vislib::StringW>& search_paths =
                 this->core_instance->Configuration().ResourceDirectories();
             for (size_t i = 0; i < search_paths.Count(); ++i) {
                 std::wstring search_path(search_paths[i].PeekBuffer());
-                font_file = "Roboto-Regular.ttf";
-                font_path = file::SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
+                std::string font_path =
+                    FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, "Roboto-Regular.ttf");
                 if (!font_path.empty()) {
-                    io.Fonts->AddFontFromFileTTF(font_path.c_str(), 12.0f, &config);
-                    /// Set as default.
-                    io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
-                }
-                font_file = "SourceCodePro-Regular.ttf";
-                font_path = file::SearchFileRecursive<std::wstring, std::string>(search_path, font_file);
-                if (!font_path.empty()) {
-                    io.Fonts->AddFontFromFileTTF(font_path.c_str(), 13.0f, &config);
+                    font_paths.emplace_back(font_path);
                     configurator_font = font_path;
+                    default_font = font_path;
+                }
+                font_path =
+                    FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, "SourceCodePro-Regular.ttf");
+                if (!font_path.empty()) {
+                    font_paths.emplace_back(font_path);
                 }
             }
         } else {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
-#endif // GUI_USE_FILESYSTEM
-
-        // Add default font at index 0 for exclusive use in configurator graph.
+        // Configurator Graph Font: Add default font at first indices for exclusive use in configurator graph.
+        /// (Workaraound: Using different font sizes for different graph zooming factors to improve font readability
+        /// when zooming.)
+        const auto graph_font_scalings = this->configurator.GetGraphFontScalings();
+        this->graph_fonts_reserved = graph_font_scalings.size();
         if (configurator_font.empty()) {
-            io.Fonts->AddFontDefault(&config);
+            for (unsigned int i = 0; i < this->graph_fonts_reserved; i++) {
+                io.Fonts->AddFontDefault(&config);
+            }
         } else {
-            io.Fonts->AddFontFromFileTTF(configurator_font.c_str(), 15.0f, &config);
+            for (unsigned int i = 0; i < this->graph_fonts_reserved; i++) {
+                io.Fonts->AddFontFromFileTTF(
+                    configurator_font.c_str(), default_font_size * graph_font_scalings[i], &config);
+            }
+        }
+        // Add other fonts for gui.
+        io.Fonts->AddFontDefault(&config);
+        io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
+        for (auto& font_path : font_paths) {
+            io.Fonts->AddFontFromFileTTF(font_path.c_str(), default_font_size, &config);
+            if (default_font == font_path) {
+                io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
+            }
         }
     }
-    // Use las tadded font for graph text in configurator
-    this->configurator.SetGraphFont(io.Fonts->Fonts[io.Fonts->Fonts.Size - 1]);
 
     // ImGui Key Map
     io.KeyMap[ImGuiKey_Tab] = static_cast<int>(core::view::Key::KEY_TAB);
@@ -772,7 +788,7 @@ void GUIWindows::drawMainWindowCallback(const std::string& wn, WindowManager::Wi
     }
 
     // Parameters -------------------------------------------------------------
-    ImGui::Text("Parameters");
+    ImGui::TextUnformatted("Parameters");
     std::string color_param_help = "[Hover] Show Parameter Description Tooltip\n"
                                    "[Right-Click] Context Menu\n"
                                    "[Drag & Drop] Move Module to other Parameter Window\n"
@@ -797,8 +813,7 @@ void GUIWindows::drawConfiguratorCallback(const std::string& wn, WindowManager::
 
 
 void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
-    ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
+
     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.5f); // set general proportional item width
 
     // Options
@@ -828,98 +843,94 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
         this->utils.StringSearch("guiwindow_parameter_earch", help_test);
     }
 
-    /// XXX Disabled Feature
+    /// XXX Disabled since core instance and module name of GUIView is currently no more available ...
+    /*
     // Module filtering (only for main parameter view)
-    // if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
-    //     std::map<int, std::string> opts;
-    //     opts[static_cast<int>(WindowManager::FilterModes::ALL)] = "All";
-    //     opts[static_cast<int>(WindowManager::FilterModes::INSTANCE)] = "Instance";
-    //     opts[static_cast<int>(WindowManager::FilterModes::VIEW)] = "View";
-    //     unsigned int opts_cnt = (unsigned int)opts.size();
-    //     if (ImGui::BeginCombo("Filter Modules", opts[(int)wc.param_module_filter].c_str())) {
-    //         for (unsigned int i = 0; i < opts_cnt; ++i) {
-    //             if (ImGui::Selectable(opts[i].c_str(), (static_cast<int>(wc.param_module_filter) == i))) {
-    //                 wc.param_module_filter = static_cast<WindowManager::FilterModes>(i);
-    //                 wc.param_modules_list.clear();
-    //                 if ((wc.param_module_filter == WindowManager::FilterModes::INSTANCE) ||
-    //                     (wc.param_module_filter == WindowManager::FilterModes::VIEW)) {
-    //                     // Goal is to find view module with shortest call connection path to this module.
-    //                     // Since enumeration of modules goes bottom up, result for first abstract view is
-    //                     // stored and following hits are ignored.
-    //                     std::string viewname;
-    //                     std::string thisname = this->FullName().PeekBuffer();
-    //                     const auto view_func = [&, this](core::Module* viewmod) {
-    //                         auto v = dynamic_cast<core::view::AbstractView*>(viewmod);
-    //                         if (v != nullptr) {
-    //                             std::string vname = v->FullName().PeekBuffer();
-    //                             bool found = false;
-    //                             const auto find_func = [&, this](core::Module* guimod) {
-    //                                 std::string modname = guimod->FullName().PeekBuffer();
-    //                                 if (thisname == modname) {
-    //                                     found = true;
-    //                                 }
-    //                             };
-    //                             this->GetCoreInstance()->EnumModulesNoLock(viewmod, find_func);
-    //                             if (found && viewname.empty()) {
-    //                                 viewname = vname;
-    //                             }
-    //                         }
-    //                     };
-    //                     this->GetCoreInstance()->EnumModulesNoLock(nullptr, view_func);
-    //                     if (!viewname.empty()) {
-    //                         if (wc.param_module_filter == WindowManager::FilterModes::INSTANCE) {
-    //                             // Considering modules depending on the INSTANCE NAME of the first view this module
-    //                             is
-    //                             // connected to.
-    //                             std::string instname = "";
-    //                             if (viewname.find("::", 2) != std::string::npos) {
-    //                                 instname = viewname.substr(0, viewname.find("::", 2));
-    //                             }
-    //                             if (!instname.empty()) { /// Consider all modules if view is not assigned to any
-    //                                                      /// instance
-    //                                 const auto func = [&, this](core::Module* mod) {
-    //                                     std::string modname = mod->FullName().PeekBuffer();
-    //                                     bool foundInstanceName = (modname.find(instname) != std::string::npos);
-    //                                     // Modules with no namespace are always taken into account ...
-    //                                     bool noInstanceNamePresent = (modname.find("::", 2) == std::string::npos);
-    //                                     if (foundInstanceName || noInstanceNamePresent) {
-    //                                         wc.param_modules_list.emplace_back(modname);
-    //                                     }
-    //                                 };
-    //                                 this->GetCoreInstance()->EnumModulesNoLock(nullptr, func);
-    //                             }
-    //                         } else { // (wc.param_module_filter == WindowManager::FilterModes::VIEW)
-    //                             // Considering modules depending on their connection to the first VIEW this module is
-    //                             // connected to.
-    //                             const auto add_func = [&, this](core::Module* mod) {
-    //                                 std::string modname = mod->FullName().PeekBuffer();
-    //                                 wc.param_modules_list.emplace_back(modname);
-    //                             };
-    //                             this->GetCoreInstance()->EnumModulesNoLock(viewname, add_func);
-    //                         }
-    //                     } else {
-    //                         vislib::sys::Log::DefaultLog.WriteWarn(
-    //                             "Could not find abstract view "
-    //                             "module this gui is connected to. [%s, %s, line %d]\n",
-    //                             __FILE__, __FUNCTION__, __LINE__);
-    //                     }
-    //                 }
-    //             }
-    //             std::string hover = "Show all Modules."; // == WindowManager::FilterModes::ALL
-    //             if (i == static_cast<int>(WindowManager::FilterModes::INSTANCE)) {
-    //                 hover = "Show Modules with same Instance Name as current View and Modules with no Instance
-    //                 Name.";
-    //             } else if (i == static_cast<int>(WindowManager::FilterModes::VIEW)) {
-    //                 hover = "Show Modules subsequently connected to the View Module the Gui Module is connected to.";
-    //             }
-    //             this->utils.HoverToolTip(hover);
-    //         }
-    //         ImGui::EndCombo();
-    //     }
-    //     this->utils.HelpMarkerToolTip("Selected filter is not refreshed on graph changes.\n"
-    //                                   "Select filter again to trigger refresh.");
-    // }
-    // ImGui::Separator();
+    if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
+        std::map<int, std::string> opts;
+        opts[static_cast<int>(WindowManager::FilterModes::ALL)] = "All";
+        opts[static_cast<int>(WindowManager::FilterModes::INSTANCE)] = "Instance";
+        opts[static_cast<int>(WindowManager::FilterModes::VIEW)] = "View";
+        unsigned int opts_cnt = (unsigned int)opts.size();
+        if (ImGui::BeginCombo("Filter Modules", opts[(int)wc.param_module_filter].c_str())) {
+            for (unsigned int i = 0; i < opts_cnt; ++i) {
+                if (ImGui::Selectable(opts[i].c_str(), (static_cast<int>(wc.param_module_filter) == i))) {
+                    wc.param_module_filter = static_cast<WindowManager::FilterModes>(i);
+                    wc.param_modules_list.clear();
+                    if ((wc.param_module_filter == WindowManager::FilterModes::INSTANCE) ||
+                        (wc.param_module_filter == WindowManager::FilterModes::VIEW)) {
+                        // Goal is to find view module with shortest call connection path to this module.
+                        // Since enumeration of modules goes bottom up, result for first abstract view is
+                        // stored and following hits are ignored.
+                        std::string viewname;
+                        std::string thisname = this->FullName().PeekBuffer();
+                        const auto view_func = [&, this](core::Module* viewmod) {
+                            auto v = dynamic_cast<core::view::AbstractView*>(viewmod);
+                            if (v != nullptr) {
+                                std::string vname = v->FullName().PeekBuffer();
+                                bool found = false;
+                                const auto find_func = [&, this](core::Module* guimod) {
+                                    std::string modname = guimod->FullName().PeekBuffer();
+                                    if (thisname == modname) {
+                                        found = true;
+                                    }
+                                };
+                                this->GetCoreInstance()->EnumModulesNoLock(viewmod, find_func);
+                                if (found && viewname.empty()) {
+                                    viewname = vname;
+                                }
+                            }
+                        };
+                        this->GetCoreInstance()->EnumModulesNoLock(nullptr, view_func);
+                        if (!viewname.empty()) {
+                            if (wc.param_module_filter == WindowManager::FilterModes::INSTANCE) {
+                                // Considering modules depending on the INSTANCE NAME of the first view this module is
+    connected to. std::string instname = ""; if (viewname.find("::", 2) != std::string::npos) { instname =
+    viewname.substr(0, viewname.find("::", 2));
+                                }
+                                if (!instname.empty()) { /// Consider all modules if view is not assigned to any
+                                                         /// instance
+                                    const auto func = [&, this](core::Module* mod) {
+                                        std::string modname = mod->FullName().PeekBuffer();
+                                        bool foundInstanceName = (modname.find(instname) != std::string::npos);
+                                        // Modules with no namespace are always taken into account ...
+                                        bool noInstanceNamePresent = (modname.find("::", 2) == std::string::npos);
+                                        if (foundInstanceName || noInstanceNamePresent) {
+                                            wc.param_modules_list.emplace_back(modname);
+                                        }
+                                    };
+                                    this->GetCoreInstance()->EnumModulesNoLock(nullptr, func);
+                                }
+                            } else { // (wc.param_module_filter == WindowManager::FilterModes::VIEW)
+                                // Considering modules depending on their connection to the first VIEW this module is
+    connected to. const auto add_func = [&, this](core::Module* mod) { std::string modname =
+    mod->FullName().PeekBuffer(); wc.param_modules_list.emplace_back(modname);
+                                };
+                                this->GetCoreInstance()->EnumModulesNoLock(viewname, add_func);
+                            }
+                        } else {
+                            vislib::sys::Log::DefaultLog.WriteWarn(
+                                "Could not find abstract view "
+                                "module this gui is connected to. [%s, %s, line %d]\n",
+                                __FILE__, __FUNCTION__, __LINE__);
+                        }
+                    }
+                }
+                std::string hover = "Show all Modules."; // == WindowManager::FilterModes::ALL
+                if (i == static_cast<int>(WindowManager::FilterModes::INSTANCE)) {
+                    hover = "Show Modules with same Instance Name as current View and Modules with no Instance Name.";
+                } else if (i == static_cast<int>(WindowManager::FilterModes::VIEW)) {
+                    hover = "Show Modules subsequently connected to the View Module the Gui Module is connected to.";
+                }
+                this->utils.HoverToolTip(hover);
+            }
+            ImGui::EndCombo();
+        }
+        this->utils.HelpMarkerToolTip("Selected filter is not refreshed on graph changes.\n"
+                                      "Select filter again to trigger refresh.");
+    }
+    ImGui::Separator();
+    */
 
     // Create child window for sepearte scroll bar and keeping header always visible on top of parameter list
     ImGui::BeginChild("###ParameterList");
@@ -1014,7 +1025,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                 if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
                     ImGui::SetDragDropPayload(
                         "DND_COPY_MODULE_PARAMETERS", label.c_str(), (label.size() * sizeof(char)));
-                    ImGui::Text(label.c_str());
+                    ImGui::TextUnformatted(label.c_str());
                     ImGui::EndDragDropSource();
                 }
             }
@@ -1103,7 +1114,6 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
 
 void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
     ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
 
     // Leave some space in histogram for text of current value
     wc.buf_current_delay += io.DeltaTime;
@@ -1175,7 +1185,6 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
 
     ImGui::PlotLines("###msplot", value_ptr, buffer_size, 0, overlay.c_str(), 0.0f, plot_scale_factor,
         ImVec2(0.0f, 50.0f)); /// use hidden label
-    float item_width = ImGui::GetItemRectSize().x;
 
     if (wc.ms_show_options) {
         if (ImGui::InputFloat(
@@ -1220,7 +1229,7 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
 #endif
         }
         ImGui::SameLine();
-        ImGui::Text("Copy to Clipborad");
+        ImGui::TextUnformatted("Copy to Clipborad");
         std::string help = "Values are copied in chronological order (newest first)";
         this->utils.HelpMarkerToolTip(help);
     }
@@ -1229,7 +1238,6 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
 
 void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
     ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
 
     ImFont* font_current = ImGui::GetFont();
     if (ImGui::BeginCombo("Select available Font", font_current->GetDebugName())) {
@@ -1243,11 +1251,10 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
 
     // Saving current font to window configuration.
     wc.font_name = std::string(font_current->GetDebugName());
-    this->utils.Utf8Decode(wc.font_name);
+    GUIUtils::Utf8Decode(wc.font_name);
 
-#ifdef GUI_USE_FILESYSTEM
     ImGui::Separator();
-    ImGui::Text("Load Font from File");
+    ImGui::TextUnformatted("Load Font from File");
     std::string help = "Same font can be loaded multiple times with different font size.";
     this->utils.HelpMarkerToolTip(help);
 
@@ -1260,11 +1267,11 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
 
     label = "Font File Name (.ttf)";
     /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-    this->utils.Utf8Encode(wc.buf_font_file);
+    GUIUtils::Utf8Encode(wc.buf_font_file);
     ImGui::InputText(label.c_str(), &wc.buf_font_file, ImGuiInputTextFlags_AutoSelectAll);
-    this->utils.Utf8Decode(wc.buf_font_file);
+    GUIUtils::Utf8Decode(wc.buf_font_file);
     // Validate font file before offering load button
-    if (file::FilesExistingExtension<std::string>(wc.buf_font_file, std::string(".ttf"))) {
+    if (FileUtils::FilesExistingExtension<std::string>(wc.buf_font_file, std::string(".ttf"))) {
         if (ImGui::Button("Add Font")) {
             this->state.font_file = wc.buf_font_file;
             this->state.font_size = wc.buf_font_size;
@@ -1272,28 +1279,18 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
     } else {
         ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Please enter valid font file name.");
     }
-#endif // GUI_USE_FILESYSTEM
 }
 
 
 void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfiguration& wc) {
-    ImGuiStyle& style = ImGui::GetStyle();
 
     bool open_popup_project = false;
     if (ImGui::BeginMenu("File")) {
-#ifdef GUI_USE_FILESYSTEM
         // Load/save parameter values to LUA file
         if (ImGui::MenuItem("Save Project",
                 std::get<0>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]).ToString().c_str())) {
             open_popup_project = true;
         }
-        /// Not supported so far
-        // if (ImGui::MenuItem("Load Project")) {
-        //    // TODO:  Load parameter file
-        //    std::string projectFilename;
-        //    this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
-        //}
-#endif // GUI_USE_FILESYSTEM
 
         if (ImGui::MenuItem("Exit", "ALT + 'F4'")) {
             // Exit program
@@ -1364,7 +1361,7 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
         std::string webstr = std::string("Web: ") + webLink;
         std::string gitstr = std::string("Git-Hub: ") + gitLink;
 
-        ImGui::Text(about.c_str());
+        ImGui::TextUnformatted(about.c_str());
 
         ImGui::Separator();
         if (ImGui::Button("Copy E-Mail")) {
@@ -1380,7 +1377,7 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 #endif
         }
         ImGui::SameLine();
-        ImGui::Text(mailstr.c_str());
+        ImGui::TextUnformatted(mailstr.c_str());
 
 
         if (ImGui::Button("Copy Website")) {
@@ -1396,7 +1393,7 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 #endif
         }
         ImGui::SameLine();
-        ImGui::Text(webstr.c_str());
+        ImGui::TextUnformatted(webstr.c_str());
 
         if (ImGui::Button("Copy GitHub")) {
 #ifdef GUI_USE_GLFW
@@ -1411,12 +1408,12 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 #endif
         }
         ImGui::SameLine();
-        ImGui::Text(gitstr.c_str());
+        ImGui::TextUnformatted(gitstr.c_str());
 
         ImGui::Separator();
         about = "Copyright (C) 2009-2019 by Universitaet Stuttgart "
                 "(VIS).\nAll rights reserved.";
-        ImGui::Text(about.c_str());
+        ImGui::TextUnformatted(about.c_str());
 
         ImGui::Separator();
         if (ImGui::Button("Close")) {
@@ -1426,22 +1423,20 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
         ImGui::EndPopup();
     }
 
-    // SAVE PROJECT pop-up
-#ifdef GUI_USE_FILESYSTEM
+    // Save project pop-up
     open_popup_project = (open_popup_project || std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]));
     if (open_popup_project) {
         std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]) = false;
     }
-    if (this->utils.FileBrowserPopUp(
-            GUIUtils::FileBrowserFlag::SAVE, "Save Project", open_popup_project, wc.main_project_file)) {
+    if (this->file_utils.FileBrowserPopUp(
+            FileUtils::FileBrowserFlag::SAVE, "Save Project", open_popup_project, wc.main_project_file)) {
         // Serialize current state to parameter.
         std::string state;
         this->window_manager.StateToJSON(state);
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
         // Serialize project to file
-        file::SaveProjectFile(wc.main_project_file, this->core_instance);
+        FileUtils::SaveProjectFile(wc.main_project_file, this->core_instance);
     }
-#endif // GUI_USE_FILESYSTEM
 }
 
 
@@ -1454,7 +1449,7 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
         // Set different style if parameter is read-only
         bool readOnly = param->IsGUIReadOnly();
         if (readOnly) {
-            this->utils.ReadOnlyWigetStyle(true);
+            GUIUtils::ReadOnlyWigetStyle(true);
         }
 
         std::string param_name = slot.Name().PeekBuffer();
@@ -1467,6 +1462,9 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
         std::string param_label = param_name + param_label_hidden;
         std::string param_desc = slot.Description().PeekBuffer();
         std::string float_format = "%.7f";
+
+        ImGui::PushID(param_label.c_str());
+        ImGui::BeginGroup();
 
         if (auto* p = slot.template Param<core::param::BoolParam>()) {
             auto value = p->Value();
@@ -1622,13 +1620,13 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
             ImGui::SameLine();
             ImGui::TextDisabled("|");
             ImGui::SameLine();
-            ImGui::Text(param_name.c_str());
+            ImGui::TextUnformatted(param_name.c_str());
         } else if (auto* p = slot.Param<core::param::StringParam>()) {
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             auto it = this->widgtmap_text.find(param_id);
             if (it == this->widgtmap_text.end()) {
                 std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                this->utils.Utf8Encode(utf8Str);
+                GUIUtils::Utf8Encode(utf8Str);
                 this->widgtmap_text.emplace(param_id, utf8Str);
                 it = this->widgtmap_text.find(param_id);
             }
@@ -1641,43 +1639,51 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
                 param_label_hidden.c_str(), &it->second, ml_dim, ImGuiInputTextFlags_CtrlEnterForNewLine);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 std::string utf8Str = it->second;
-                this->utils.Utf8Decode(utf8Str);
+                GUIUtils::Utf8Decode(utf8Str);
                 p->SetValue(vislib::StringA(utf8Str.c_str()));
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                this->utils.Utf8Encode(utf8Str);
+                GUIUtils::Utf8Encode(utf8Str);
                 it->second = utf8Str;
             }
             ImGui::SameLine();
-            ImGui::Text(param_name.c_str());
+            ImGui::TextUnformatted(param_name.c_str());
             help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
         } else if (auto* p = slot.Param<core::param::FilePathParam>()) {
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             auto it = this->widgtmap_text.find(param_id);
             if (it == this->widgtmap_text.end()) {
                 std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                this->utils.Utf8Encode(utf8Str);
+                GUIUtils::Utf8Encode(utf8Str);
                 this->widgtmap_text.emplace(param_id, utf8Str);
                 it = this->widgtmap_text.find(param_id);
             }
+            ImGui::PushItemWidth(
+                ImGui::GetContentRegionAvail().x * 0.65f - ImGui::GetFrameHeight() - style.ItemSpacing.x);
+            bool button_edit = this->file_utils.FileBrowserButton(it->second);
+            ImGui::SameLine();
             ImGui::InputText(param_label.c_str(), &it->second, ImGuiInputTextFlags_None);
-            if (ImGui::IsItemDeactivatedAfterEdit()) {
-                this->utils.Utf8Decode(it->second);
+            if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
+                GUIUtils::Utf8Decode(it->second);
                 p->SetValue(vislib::StringA(it->second.c_str()));
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                this->utils.Utf8Encode(utf8Str);
+                GUIUtils::Utf8Encode(utf8Str);
                 it->second = utf8Str;
             }
+            ImGui::PopItemWidth();
         } else {
             vislib::sys::Log::DefaultLog.WriteWarn(
                 "Unknown Parameter Type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return;
         }
 
+        ImGui::EndGroup();
+        ImGui::PopID();
+
         // Reset to default style
         if (param->IsGUIReadOnly()) {
-            this->utils.ReadOnlyWigetStyle(false);
+            GUIUtils::ReadOnlyWigetStyle(false);
         }
 
         this->utils.HoverToolTip(param_desc, ImGui::GetID(param_label.c_str()), 0.5f);
@@ -1697,7 +1703,7 @@ void GUIWindows::drawTransferFunctionEdit(
         ImGui::TextDisabled("{    (empty)    }");
     } else {
         // XXX: A gradient texture would be nice here (sharing some editor code?)
-        ImGui::Text("{ ............. }");
+        ImGui::TextUnformatted("{ ............. }");
     }
 
     bool isActive = (&p == this->tf_editor.GetActiveParameter());
@@ -1776,12 +1782,12 @@ void GUIWindows::drawParameterHotkey(const core::Module& mod, core::param::Param
 
             ImGui::Columns(2, "hotkey_columns", false);
 
-            ImGui::Text(label.c_str());
+            ImGui::TextUnformatted(label.c_str());
             this->utils.HoverToolTip(desc);
 
             ImGui::NextColumn();
 
-            ImGui::Text(keycode.c_str());
+            ImGui::TextUnformatted(keycode.c_str());
             this->utils.HoverToolTip(desc);
 
             // Reset colums

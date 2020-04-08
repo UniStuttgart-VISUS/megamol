@@ -160,7 +160,7 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
 
 bool GUIView::OnChar(unsigned int codePoint) {
 
-    bool input_consumed = this->gui.OnChar(codePoint);
+    this->gui.OnChar(codePoint);
 
     auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
     if (crv) {
