@@ -49,9 +49,9 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    inline void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
+    inline void GUI_Present(GraphItemsStateType& state, bool collapsed_view) { this->present.Present(*this, state, collapsed_view); }
 
-    inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
+    inline void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(*this, pos); }
 
 private:
 
@@ -66,11 +66,9 @@ private:
 
         ~Presentation(void);
 
-        void Present(InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state);
+        void Present(InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state, bool collapsed_view);
 
-        void UpdatePosition(InterfaceSlot& inout_interfaceslot, const GraphCanvasType& in_canvas);
-
-        ImVec2 GetPosition(InterfaceSlot& inout_interfaceslot);
+        void SetPosition(InterfaceSlot& inout_interfaceslot, ImVec2 pos);
 
     private:
         // Absolute position including canvas offset and zooming

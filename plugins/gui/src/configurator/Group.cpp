@@ -171,6 +171,8 @@ bool megamol::gui::configurator::Group::InterfaceAddCallSlot(const CallSlotPtrTy
         // ... or create new interface slot for this call slot.
         if (!successfully_added) {
             this->interfaceslots[callslot_ptr->type].emplace_back(std::make_shared<InterfaceSlot>());
+            vislib::sys::Log::DefaultLog.WriteInfo("Added interface slot to group '%s'.\n", this->name.c_str());
+                        
             successfully_added = this->interfaceslots[callslot_ptr->type].back()->AddCallSlot(callslot_ptr);
         }
     } else {
@@ -195,6 +197,7 @@ bool megamol::gui::configurator::Group::InterfaceRemoveCallSlot(ImGuiID callslot
                     if ((*iter)->IsEmpty()) {
                         (*iter).reset();
                         interfaceslot_map.second.erase(iter);
+                        vislib::sys::Log::DefaultLog.WriteInfo("Removed interface slot from group '%s'.\n", this->name.c_str());
                     }
                     return true;
                 }
@@ -288,7 +291,6 @@ void megamol::gui::configurator::Group::restore_callslot_interface_state(void) {
             }
         }
     }
-
 }
 
 
@@ -468,7 +470,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
 
         draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->name_label.c_str());
 
-        // Rename pop-up ------------------------------------------------------
+        // Rename pop-up
         if (this->utils.RenamePopUp("Rename Group", popup_rename, inout_group.name)) {
             for (auto& module_ptr : inout_group.GetModules()) {
                 module_ptr->GUI_SetGroupName(inout_group.name);
@@ -476,6 +478,13 @@ void megamol::gui::configurator::Group::Presentation::Present(
             }
             this->UpdatePositionSize(inout_group, state.canvas);
         }
+        
+        // Draw interface slots ----------------------------------------------------
+        for (auto& interfaceslots_map : inout_group.GetInterfaceCallSlots()) {
+            for (auto& interfaceslot_ptr : interfaceslots_map.second) {
+                interfaceslot_ptr->GUI_Present(state, this->collapsed_view);
+            }
+        }        
 
         ImGui::PopID();
 

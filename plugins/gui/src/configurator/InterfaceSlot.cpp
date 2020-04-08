@@ -133,7 +133,7 @@ megamol::gui::configurator::InterfaceSlot::Presentation::~Presentation(void) {}
 
 
 void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
-    megamol::gui::configurator::InterfaceSlot& inout_interfaceslot, megamol::gui::GraphItemsStateType& state) {
+    megamol::gui::configurator::InterfaceSlot& inout_interfaceslot, megamol::gui::GraphItemsStateType& state, bool collapsed_view) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -147,12 +147,11 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
 
     try {
 
-        //ImGui::PushID(inout_interfaceslot.uid);
+        // Compatible Call Highlight
+        //if (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.callslot_compat_ptr, inout_callslot) != GUI_INVALID_ID) {
+        //    slot_color = COLOR_SLOT_COMPATIBLE;
+        //}
 
-
-
-
-        //ImGui::PopID();
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -165,14 +164,10 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
 }
 
 
-void megamol::gui::configurator::InterfaceSlot::Presentation::UpdatePosition(
-    megamol::gui::configurator::InterfaceSlot& inout_interfaceslot, const GraphCanvasType& in_canvas) {
-
-
-}
-
-
-ImVec2 megamol::gui::configurator::InterfaceSlot::Presentation::GetPosition(InterfaceSlot& inout_interfaceslot) {
-
-
+void megamol::gui::configurator::InterfaceSlot::Presentation::SetPosition(InterfaceSlot& inout_interfaceslot, ImVec2 pos) {
+    
+    this->position = pos;
+    for (auto& callslots_ptr : inout_interfaceslot.callslots) {
+        callslots_ptr->GUI_SetGroupInterfacePosition(this->position);
+    }
 }

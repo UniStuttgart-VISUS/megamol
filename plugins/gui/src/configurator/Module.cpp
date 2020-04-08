@@ -525,9 +525,9 @@ void megamol::gui::configurator::Module::Presentation::Present(
             }
 
             // Draw call slots ----------------------------------------------------
-            for (auto& slot_pair : inout_module.GetCallSlots()) {
-                for (auto& slot : slot_pair.second) {
-                    slot->GUI_Present(state);
+            for (auto& callslots_map : inout_module.GetCallSlots()) {
+                for (auto& callslot_ptr : callslots_map.second) {
+                    callslot_ptr->GUI_Present(state);
                 }
             }
             
