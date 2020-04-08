@@ -8,6 +8,9 @@
 #ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLESELECTIONTX_H_INCLUDED
 #define MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLESELECTIONTX_H_INCLUDED
 
+#include <condition_variable>
+#include <thread>
+
 #include <zmq.hpp>
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
@@ -56,6 +59,8 @@ protected:
 
     bool validateCalls();
 
+    void selectionSender();
+
 private:
     core::CallerSlot tableInSlot;
     core::CallerSlot flagStorageReadInSlot;
@@ -64,8 +69,13 @@ private:
     core::CalleeSlot flagStorageReadOutSlot;
     core::CalleeSlot flagStorageWriteOutSlot;
 
-    zmq::context_t* context_;
-    zmq::socket_t* socket_;
+    std::thread senderThread_;
+    std::unique_ptr<zmq::context_t> context_;
+    std::vector<uint64_t> selected_;
+    std::mutex selectedMutex_;
+    std::condition_variable condVar_;
+    bool senderThreadQuit_;
+    bool senderThreadNotified_;
 };
 
 } /* end namespace table */

@@ -21,6 +21,8 @@ TableSelectionTx::TableSelectionTx()
     , flagStorageWriteInSlot("writeFlagStorageIn", "Flag storage write input")
     , flagStorageReadOutSlot("readFlagStorageOut", "Flag storage read output")
     , flagStorageWriteOutSlot("writeFlagStorageOut", "Flag storage write output")
+    , senderThreadQuit_(false)
+    , senderThreadNotified_(false)
 {
     this->tableInSlot.SetCompatibleCall<TableDataCallDescription>();
     this->MakeSlotAvailable(&this->tableInSlot);
@@ -45,17 +47,25 @@ TableSelectionTx::~TableSelectionTx() {
 }
 
 bool TableSelectionTx::create() {
-    context_ = new zmq::context_t{1};
+    context_ = std::make_unique<zmq::context_t>(1);
 
-    socket_ = new zmq::socket_t{*context_, ZMQ_REQ};
-    socket_->connect("tcp://localhost:10001");
+    senderThreadQuit_ = false;
+    if (!senderThread_.joinable()) {
+        senderThread_ = std::thread(&TableSelectionTx::selectionSender, this);
+    }
 
     return true;
 }
 
 void TableSelectionTx::release() {
-    delete socket_;
-    delete context_;
+    senderThreadQuit_ = true;
+    senderThreadNotified_ = true;
+    condVar_.notify_one();
+    context_->close();
+    context_.reset();
+    if (senderThread_.joinable()) {
+        senderThread_.join();
+    }
 }
 
 bool TableSelectionTx::readDataCallback(core::Call& call) {
@@ -123,27 +133,25 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
     core::FlagStorage::FlagItemType testMask = core::FlagStorage::ENABLED | core::FlagStorage::FILTERED;
     core::FlagStorage::FlagItemType passMask = core::FlagStorage::ENABLED;
 
-    std::vector<uint64_t> selected;
+    std::unique_lock<std::mutex> lock(selectedMutex_);
+    selected_.clear();
     for (size_t i = 0; i < numberOfRows; ++i) {
         if ((flagsData[i] & testMask) == passMask) {
             uint32_t time = static_cast<uint32_t>(tableInData[numberOfCols * i + 0]); // 0 = id of time column
             uint32_t number = static_cast<uint32_t>(tableInData[numberOfCols * i + 1]); // 1 = id of number column
             uint64_t name = (static_cast<uint64_t>(time) << 32u) + static_cast<uint64_t>(number);
             if (flagsData[i] & core::FlagStorage::SELECTED) {
-                selected.push_back(name);
+                selected_.push_back(name);
             } else {
                 // not selected
             }
         }
     }
+    senderThreadNotified_ = true;
+    condVar_.notify_one();
+    lock.unlock();
 
     delete[] flagsData;
-
-    zmq::message_t request{selected.cbegin(), selected.cend()};
-    socket_->send(request, zmq::send_flags::none);
-
-    zmq::message_t reply{};
-    socket_->recv(reply, zmq::recv_flags::none);
 
     return true;
 }
@@ -174,4 +182,33 @@ bool TableSelectionTx::validateCalls() {
     }
 
     return true;
+}
+
+void TableSelectionTx::selectionSender() {
+    zmq::socket_t socket{*context_, ZMQ_REQ};
+    socket.setsockopt(ZMQ_LINGER, 0);
+    socket.connect("tcp://localhost:10001");
+
+    std::unique_lock<std::mutex> lock(selectedMutex_);
+    while (!senderThreadQuit_) {
+        while (!senderThreadNotified_ && !senderThreadQuit_) {
+            condVar_.wait(lock);
+        }
+        while (senderThreadNotified_ && !senderThreadQuit_) {
+            senderThreadNotified_ = false;
+            try {
+                zmq::message_t request{selected_.cbegin(), selected_.cend()};
+                lock.unlock();
+                socket.send(request, zmq::send_flags::none);
+
+                zmq::message_t reply{};
+                socket.recv(reply, zmq::recv_flags::none);
+            } catch (const zmq::error_t& e) {
+                if (e.num() != ETERM) {
+                    std::cerr << e.what() << std::endl;
+                }
+            }
+            lock.lock();
+        }
+    }
 }
