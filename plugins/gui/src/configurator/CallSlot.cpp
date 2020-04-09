@@ -376,10 +376,8 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         bool button_active = ImGui::IsItemActive();
         bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
         bool button_hovered = (ImGui::IsItemHovered() &&
-                        ((state.interact.module_hovered_uid == GUI_INVALID_ID) ||
-                            (state.interact.module_hovered_uid == parent_module_uid)) &&
-                        ((state.interact.callslot_hovered_uid == GUI_INVALID_ID) ||
-                            (state.interact.callslot_hovered_uid == inout_callslot.uid)));
+                        ((state.interact.module_hovered_uid == GUI_INVALID_ID) || (state.interact.module_hovered_uid == parent_module_uid)) &&
+                        ((state.interact.callslot_hovered_uid == GUI_INVALID_ID) || (state.interact.callslot_hovered_uid == inout_callslot.uid)));
 
         // Context Menu
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
