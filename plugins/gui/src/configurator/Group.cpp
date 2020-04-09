@@ -22,19 +22,24 @@ megamol::gui::configurator::Group::Group(ImGuiID uid) : uid(uid), name(), module
 megamol::gui::configurator::Group::~Group() {
 
     // Reset group varaibles of modules
+    std::vector<ImGuiID> module_uids;
     for (auto& module_ptr : this->modules) {
-        
-        module_ptr->GUI_SetGroupMembership(GUI_INVALID_ID);
-        module_ptr->GUI_SetGroupName("");
+        module_uids.emplace_back(module_ptr->uid);
+    }
+    for (auto& module_uid : module_uids) {
+        this->RemoveModule(module_uid);
     }
     // Reset group varaibles of call slots
+    std::vector<ImGuiID> callslots_uids;
     for (auto& interfaceslot_map : this->interfaceslots) {
         for (auto interfaceslot_ptr : interfaceslot_map.second) {
             for (auto callslot_ptr : interfaceslot_ptr->GetCallSlots()) {
-                
-                callslot_ptr->GUI_SetGroupInterface(nullptr);
+                callslots_uids.emplace_back(callslot_ptr->uid);
             }
         }
+    }
+    for (auto& callslots_uid : callslots_uids) {
+        this->InterfaceRemoveCallSlot(callslots_uid);
     }
 }
 

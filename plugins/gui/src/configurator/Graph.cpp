@@ -208,14 +208,18 @@ bool megamol::gui::configurator::Graph::AddCall(
                 ImGuiID slot_1_parent_group_uid = call_slot_1->GetParentModule()->GUI_GetGroupMembership();
                 ImGuiID slot_2_parent_group_uid = call_slot_2->GetParentModule()->GUI_GetGroupMembership();
                 if (slot_1_parent_group_uid != slot_2_parent_group_uid) {
-                    for (auto& group : this->groups) {
-                        if (group->uid == slot_1_parent_group_uid) {
-                            group->InterfaceAddCallSlot(call_slot_1);
+                    if ((slot_1_parent_group_uid != GUI_INVALID_ID) && !(call_slot_1->GUI_IsGroupInterface())) {
+                        for (auto& group : this->groups) {
+                            if (group->uid == slot_1_parent_group_uid) {
+                                group->InterfaceAddCallSlot(call_slot_1);
+                            }
                         }
                     }
-                    for (auto& group : this->groups) {
-                        if (group->uid == slot_2_parent_group_uid) {
-                            group->InterfaceAddCallSlot(call_slot_2);
+                    if ((slot_2_parent_group_uid != GUI_INVALID_ID) && !(call_slot_2->GUI_IsGroupInterface())) {
+                        for (auto& group : this->groups) {
+                            if (group->uid == slot_2_parent_group_uid) {
+                                group->InterfaceAddCallSlot(call_slot_2);
+                            }
                         }
                     }
                 }
@@ -246,8 +250,29 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
     try {
         for (auto iter = this->calls.begin(); iter != this->calls.end(); iter++) {
             if ((*iter)->uid == call_uid) {
-                (*iter)->DisConnectCallSlots();
 
+                // Remove connected call slots from group interface
+                auto call_slot_1 = (*iter)->GetCallSlot(CallSlotType::CALLER);
+                auto call_slot_2 = (*iter)->GetCallSlot(CallSlotType::CALLEE);
+                if (call_slot_1->GUI_IsGroupInterface()) {
+                    for (auto& group : this->groups) {
+                        if (group->InterfaceContainsCallSlot(call_slot_1->uid)) {
+                            group->InterfaceRemoveCallSlot(call_slot_1->uid);
+                        }
+                    }
+                
+                }
+                if (call_slot_2->GUI_IsGroupInterface()) {
+                    for (auto& group : this->groups) {
+                        if (group->InterfaceContainsCallSlot(call_slot_2->uid)) {
+                            group->InterfaceRemoveCallSlot(call_slot_2->uid);
+                        }
+                    }
+                
+                }
+                
+                (*iter)->DisConnectCallSlots();
+            
                 if ((*iter).use_count() > 1) {
                     vislib::sys::Log::DefaultLog.WriteError(
                         "Unclean deletion. Found %i references pointing to call. [%s, %s, line %d]\n",
