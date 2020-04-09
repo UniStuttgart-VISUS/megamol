@@ -14,7 +14,6 @@
 #include <vector>
 
 #include "Call.h"
-#include "CallSlot.h"
 #include "Group.h"
 #include "Module.h"
 #include "Parameter.h"
@@ -79,6 +78,7 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     static ImGuiID generated_uid;
+    
     unsigned int group_name_uid;
 
     ModulePtrVectorType modules;

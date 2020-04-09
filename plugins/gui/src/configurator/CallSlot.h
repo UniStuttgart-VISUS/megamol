@@ -49,7 +49,7 @@ public:
 
     struct GroupState {
         bool is_interface;
-        ImVec2 position;
+        ImVec2 interface_position;
     };
 
     CallSlot(ImGuiID uid);
@@ -86,13 +86,13 @@ public:
 
     inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
 
-    inline bool GUI_GetGroupInterface(void) { return this->present.group.is_interface; }
-    inline ImVec2 GUI_GetGroupPosition(void) { return this->present.group.position; }
-    inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(*this); }
-    inline bool GUI_GetLabelVisibility(void) { return this->present.label_visible; }
+    inline bool GUI_IsGroupInterface(void) { return this->present.group.is_interface; }
+    inline bool GUI_IsLabelVisible(void) { return this->present.label_visible; }    
+    inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
+    inline ImVec2 GUI_GetGroupInterfacePosition(void) { return this->present.group.interface_position; }
 
     inline void GUI_SetGroupInterface(bool is_interface) { this->present.group.is_interface = is_interface; }
-    inline void GUI_SetGroupPosition(ImVec2 position) { this->present.group.position = position; }
+    inline void GUI_SetGroupInterfacePosition(ImVec2 position) { this->present.group.interface_position = position; }
     inline void GUI_SetPresentation(CallSlot::Presentations present) { this->present.presentations = present; }
     inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
 
@@ -113,7 +113,7 @@ private:
 
         void UpdatePosition(CallSlot& inout_call_slot, const GraphCanvasType& in_canvas);
 
-        ImVec2 GetPosition(CallSlot& inout_call_slot);
+        ImVec2 GetPosition(void) { return this->position; }
 
         GroupState group;
         CallSlot::Presentations presentations;

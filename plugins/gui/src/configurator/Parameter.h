@@ -26,8 +26,8 @@
 
 #include <variant>
 
-#include "FileUtils.h"
 #include "GUIUtils.h"
+#include "FileUtils.h"
 #include "TransferFunctionEditor.h"
 
 // Used for platform independent clipboard (ImGui so far only provides windows implementation)

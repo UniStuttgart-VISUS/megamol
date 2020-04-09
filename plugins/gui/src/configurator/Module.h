@@ -9,8 +9,8 @@
 #define MEGAMOL_GUI_GRAPH_MODULE_H_INCLUDED
 
 
-#include "CallSlot.h"
 #include "GUIUtils.h"
+#include "CallSlot.h"
 #include "Parameter.h"
 
 
@@ -91,10 +91,10 @@ public:
 
     inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdateSize(*this, in_canvas); }
 
-    inline ImGuiID GUI_GetGroupMembership(void) { return this->present.group.member; }
-    inline bool GUI_GetGroupVisibility(void) { return this->present.group.visible; }
+    inline bool GUI_IsVisibleInGroup(void) { return this->present.group.visible; }
+    inline bool GUI_IsLabelVisible(void) { return this->present.label_visible; }
+    inline ImGuiID GUI_GetGroupMembership(void) { return this->present.group.member; }        
     inline std::string GUI_GetGroupName(void) { return this->present.group.name; }
-    inline bool GUI_GetLabelVisibility(void) { return this->present.label_visible; }
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     inline ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
 

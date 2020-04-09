@@ -10,9 +10,8 @@
 
 
 #include "Call.h"
-#include "CallSlot.h"
-#include "GUIUtils.h"
 #include "Module.h"
+#include "InterfaceSlot.h"
 
 
 namespace megamol {
@@ -46,10 +45,10 @@ public:
     inline const ModulePtrVectorType& GetModules(void) { return this->modules; }
     inline bool EmptyModules(void) { return (this->modules.size() == 0); }
 
-    bool AddCallSlot(const CallSlotPtrType& callslot_ptr);
-    bool RemoveCallSlot(ImGuiID callslot_uid);
-    bool ContainsCallSlot(ImGuiID callslot_uid);
-    inline const CallSlotPtrMapType& GetCallSlots(void) { return this->callslots; }
+    bool InterfaceAddCallSlot(const CallSlotPtrType& callslot_ptr);
+    bool InterfaceRemoveCallSlot(ImGuiID callslot_uid);
+    bool InterfaceContainsCallSlot(ImGuiID callslot_uid);
+    inline const InterfaceSlotPtrMapType& GetInterfaceCallSlots(void) { return this->interfaceslots; }
 
     // GUI Presentation -------------------------------------------------------
 
@@ -60,8 +59,8 @@ public:
 private:
     // VARIABLES --------------------------------------------------------------
 
-    ModulePtrVectorType modules;
-    CallSlotPtrMapType callslots;
+    ModulePtrVectorType modules;   
+    InterfaceSlotPtrMapType interfaceslots;
 
     /** ************************************************************************
      * Defines GUI group presentation.
@@ -75,7 +74,7 @@ private:
         void Present(Group& inout_group, GraphItemsStateType& state);
 
         void UpdatePositionSize(Group& inout_group, const GraphCanvasType& in_canvas);
-        inline bool ModuleVisible(void) { return !this->collapsed_view; }
+        inline bool ModulesVisible(void) { return !this->collapsed_view; }
         inline void ForceUpdate(void) { this->update = true; }
 
     private:
@@ -96,7 +95,7 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    void restore_callslot_interface_sate(void);
+    void restore_callslot_interface_state(void);
 };
 
 
