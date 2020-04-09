@@ -381,10 +381,10 @@ void megamol::gui::configurator::Group::Presentation::Present(
         ImGui::InvisibleButton(label.c_str(), header_size);
         ImGui::SetItemAllowOverlap();
 
-        bool active = ImGui::IsItemActive();
-        bool hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) &&
+        bool button_active = ImGui::IsItemActive();
+        bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];        
+        bool button_hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) &&
                         (state.interact.module_hovered_uid == GUI_INVALID_ID));
-        bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
 
         // Automatically delete empty group.
         if (inout_group.GetModules().empty()) {
@@ -394,7 +394,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
 
         // Context menu
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-            active = true; // Force selection
+            button_active = true; // Force selection
 
             ImGui::TextUnformatted("Group");
             ImGui::Separator();
@@ -425,36 +425,6 @@ void megamol::gui::configurator::Group::Presentation::Present(
             ImGui::EndPopup();
         }
 
-        // Selection
-        if (state.interact.group_selected_uid == inout_group.uid) {
-            /// Call before "active" if-statement for one frame delayed check for last valid candidate for selection
-            this->selected = true;
-            state.interact.callslot_selected_uid = GUI_INVALID_ID;
-            state.interact.modules_selected_uids.clear();
-            state.interact.call_selected_uid = GUI_INVALID_ID;
-        }
-        if (active) {
-            state.interact.group_selected_uid = inout_group.uid;
-        }
-        if ((mouse_clicked && !hovered) || (state.interact.group_selected_uid != inout_group.uid)) {
-            this->selected = false;
-            if (state.interact.group_selected_uid == inout_group.uid) {
-                state.interact.group_selected_uid = GUI_INVALID_ID;
-            }
-        }
-
-        // Dragging
-        if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
-            ImVec2 tmp_pos;
-            for (auto& mod : inout_group.GetModules()) {
-                tmp_pos = mod->GUI_GetPosition();
-                tmp_pos += (ImGui::GetIO().MouseDelta / state.canvas.zooming);
-                mod->GUI_SetPosition(tmp_pos);
-                mod->GUI_Update(state.canvas);
-            }
-            this->UpdatePositionSize(inout_group, state.canvas);
-        }
-
         // Background
         ImU32 group_bg_color = (this->selected) ? (COLOR_GROUP_HIGHTLIGHT) : (COLOR_GROUP_BACKGROUND);
         draw_list->AddRectFilled(group_rect_min, group_rect_max, group_bg_color, 0.0f);
@@ -483,6 +453,34 @@ void megamol::gui::configurator::Group::Presentation::Present(
             this->UpdatePositionSize(inout_group, state.canvas);
         }
         
+        // Selection
+        if (button_active) {
+            state.interact.group_selected_uid = inout_group.uid;
+            this->selected = true;
+            state.interact.callslot_selected_uid = GUI_INVALID_ID;
+            state.interact.modules_selected_uids.clear();
+            state.interact.call_selected_uid = GUI_INVALID_ID;            
+        }
+        // Deselection
+        if ((mouse_clicked_anywhere && !button_hovered) || (state.interact.group_selected_uid != inout_group.uid)) {
+            this->selected = false;
+            if (state.interact.group_selected_uid == inout_group.uid) {
+                state.interact.group_selected_uid = GUI_INVALID_ID;
+            }
+        }
+
+        // Dragging
+        if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
+            ImVec2 tmp_pos;
+            for (auto& mod : inout_group.GetModules()) {
+                tmp_pos = mod->GUI_GetPosition();
+                tmp_pos += (ImGui::GetIO().MouseDelta / state.canvas.zooming);
+                mod->GUI_SetPosition(tmp_pos);
+                mod->GUI_Update(state.canvas);
+            }
+            this->UpdatePositionSize(inout_group, state.canvas);
+        }
+                
         // Draw interface slots ----------------------------------------------------
         for (auto& interfaceslots_map : inout_group.GetInterfaceCallSlots()) {
             for (auto& interfaceslot_ptr : interfaceslots_map.second) {

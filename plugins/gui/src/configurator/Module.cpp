@@ -251,7 +251,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
             ImVec2 canvas_rect_max = state.canvas.position + state.canvas.size;
             if (!((canvas_rect_min.x < module_rect_max.x) && (canvas_rect_max.x > module_rect_min.x) &&
                     (canvas_rect_min.y < module_rect_max.y) && (canvas_rect_max.y > module_rect_min.y))) {
-                if (mouse_clicked) {
+                if (mouse_clicked_anywhere) {
                     this->selected = false;
                     if (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
                         this->erase_uid(state.interact.modules_selected_uids, inout_module.uid);
@@ -293,16 +293,17 @@ void megamol::gui::configurator::Module::Presentation::Present(
             ImGui::InvisibleButton(label.c_str(), module_size);
             ImGui::SetItemAllowOverlap();
 
-            bool active = ImGui::IsItemActive();
-            bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
-            bool hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) &&
+            bool multiselect_hotkey = io.KeyShift;
+            bool button_active = ImGui::IsItemActive();
+            bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+            bool button_hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) &&
                             ((state.interact.module_hovered_uid == GUI_INVALID_ID) ||
                                 (state.interact.module_hovered_uid == inout_module.uid)));
 
             // Context menu
             if (state.interact.callslot_hovered_uid == GUI_INVALID_ID) {
                 if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-                    active = true; // Force selection
+                    button_active = true; // Force selection
 
                     ImGui::TextUnformatted("Module");
                     ImGui::Separator();
@@ -364,7 +365,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
             }
 
             // Hover Tooltip
-            if (hovered && !this->other_item_hovered) {
+            if (button_hovered && !this->other_item_hovered) {
                 std::string hover_text = inout_module.description;
                 if (!this->label_visible) {
                     hover_text = "[" + inout_module.name + "] " + hover_text;
@@ -421,7 +422,8 @@ void megamol::gui::configurator::Module::Presentation::Present(
                             this->add_uid(state.interact.modules_selected_uids,
                                 inout_module.uid); // Force selection (must be set in same frame)
                         }
-                        if (hovered) {
+                        ImGui::SetItemAllowOverlap();
+                        if (button_hovered) {
                             this->other_item_hovered = this->utils.HoverToolTip("Main View");
                         }
                         ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
@@ -436,7 +438,8 @@ void megamol::gui::configurator::Module::Presentation::Present(
                             this->add_uid(state.interact.modules_selected_uids,
                                 inout_module.uid); // Force selection (must be set in same frame)
                         }
-                        if (hovered) {
+                        ImGui::SetItemAllowOverlap();
+                        if (button_hovered) {
                             this->other_item_hovered =
                                 this->other_item_hovered || this->utils.HoverToolTip("Parameters");
                         }
@@ -450,40 +453,45 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 ImDrawCornerFlags_All, border);
 
             // Hovering
-            if (!hovered && (state.interact.module_hovered_uid == inout_module.uid)) {
-                state.interact.module_hovered_uid = GUI_INVALID_ID;
-            }
-            if (hovered) {
+            if (button_hovered) {
                 state.interact.module_hovered_uid = inout_module.uid;
             }
+            if (!button_hovered && (state.interact.module_hovered_uid == inout_module.uid)) {
+                state.interact.module_hovered_uid = GUI_INVALID_ID;
+            }            
 
             // Selection
-            if (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
-                /// Call before "active" if-statement for one frame delayed check for last valid candidate for selection
-                this->selected = true;
-                state.interact.callslot_selected_uid = GUI_INVALID_ID;
-                state.interact.call_selected_uid = GUI_INVALID_ID;
-                state.interact.group_selected_uid = GUI_INVALID_ID;
-            }
-            if (active && !this->selected) {
-                // Multiple Selection
-                if (io.KeyShift) {
+            if (button_active && !this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
+                if (multiselect_hotkey) {
+                    // Multiple Selection
                     this->add_uid(state.interact.modules_selected_uids, inout_module.uid);
-                } else {
+                }
+                else {
                     // Single Selection
                     state.interact.modules_selected_uids.clear();
                     state.interact.modules_selected_uids.emplace_back(inout_module.uid);
                 }
             }
-            if ((mouse_clicked && (!hovered || state.interact.callslot_hovered_uid != GUI_INVALID_ID) &&
-                    (state.interact.module_hovered_uid == GUI_INVALID_ID)) ||
-                (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid))) {
+            // Recognise selection set from 'outside'
+            if (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
+                this->selected = true;
+                state.interact.callslot_selected_uid = GUI_INVALID_ID;
+                state.interact.call_selected_uid = GUI_INVALID_ID;
+                state.interact.group_selected_uid = GUI_INVALID_ID;   
+            }
+    
+            // Deselection
+            if ((!multiselect_hotkey && mouse_clicked_anywhere && (!button_hovered || state.interact.callslot_hovered_uid != GUI_INVALID_ID) && (state.interact.module_hovered_uid == GUI_INVALID_ID)) ||
+                (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) 
+                /// XXX || (button_active && previous_selected && this->selected && multiselect_hotkey)
+                ) {
+                    
                 this->selected = false;
                 if (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
                     this->erase_uid(state.interact.modules_selected_uids, inout_module.uid);
                 }
             }
-
+            
             // Dragging
             if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
                 this->position += (ImGui::GetIO().MouseDelta / state.canvas.zooming);
@@ -531,7 +539,8 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 }
             }
             
-            ImGui::PopID();
+            ImGui::PopID();            
+
         }
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(

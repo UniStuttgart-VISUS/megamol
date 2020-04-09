@@ -1413,13 +1413,14 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
         }
         max_module_width = 0.0f;
         layer_mod_cnt = layer.size();
+        pos.y = init_position.y;
         for (size_t i = 0; i < layer_mod_cnt; i++) {
             auto mod = layer[i];
             if (this->show_call_names) {
                 for (auto& caller_slot : mod->GetCallSlots(CallSlotType::CALLER)) {
                     if (caller_slot->CallsConnected()) {
                         for (auto& call : caller_slot->GetConnectedCalls()) {
-                            auto call_name_length = GUIUtils::TextWidgetWidth(call->class_name) * 1.5f;
+                            auto call_name_length = GUIUtils::TextWidgetWidth(call->class_name);
                             max_call_width =
                                 (call_name_length > max_call_width) ? (call_name_length) : (max_call_width);
                         }
@@ -1428,13 +1429,10 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
             }
             mod->GUI_SetPosition(pos);
             auto mod_size = mod->GUI_GetSize();
-            pos.y += mod_size.y + GUI_GRAPH_BORDER;
+            pos.y += mod_size.y + 2.0f*GUI_GRAPH_BORDER;
             max_module_width = (mod_size.x > max_module_width) ? (mod_size.x) : (max_module_width);
         }
-        pos.x += (max_module_width + max_call_width + GUI_GRAPH_BORDER);
-
-        pos.x += GUI_GRAPH_BORDER;
-        pos.y = init_position.y + GUI_GRAPH_BORDER;
+        pos.x += (max_module_width + max_call_width + 2.0f*GUI_GRAPH_BORDER);
     }
 
     return true;

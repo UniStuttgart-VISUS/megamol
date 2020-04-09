@@ -204,13 +204,13 @@ void megamol::gui::configurator::Call::Presentation::Present(
                 ImGui::InvisibleButton(label.c_str(), rect_size);
                 ImGui::SetItemAllowOverlap();
 
-                bool active = ImGui::IsItemActive();
-                bool hovered = ImGui::IsItemHovered();
-                bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+                bool button_active = ImGui::IsItemActive();
+                bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];                
+                bool button_hovered = ImGui::IsItemHovered();
 
                 // Context Menu
                 if (ImGui::BeginPopupContextItem()) {
-                    active = true; // Force selection (next frame)
+                    button_active = true; // Force selection (next frame)
 
                     ImGui::TextUnformatted("Call");
                     ImGui::Separator();
@@ -223,25 +223,6 @@ void megamol::gui::configurator::Call::Presentation::Present(
                     ImGui::EndPopup();
                 }
 
-                // Selection
-                if (state.interact.call_selected_uid == inout_call.uid) {
-                    /// Call before "active" if-statement for one frame delayed check for last valid candidate for
-                    /// selection
-                    this->selected = true;
-                    state.interact.callslot_selected_uid = GUI_INVALID_ID;
-                    state.interact.modules_selected_uids.clear();
-                    state.interact.group_selected_uid = GUI_INVALID_ID;
-                }
-                if (active) {
-                    state.interact.call_selected_uid = inout_call.uid;
-                }
-                if ((mouse_clicked && !hovered) || (state.interact.call_selected_uid != inout_call.uid)) {
-                    this->selected = false;
-                    if (state.interact.call_selected_uid == inout_call.uid) {
-                        state.interact.call_selected_uid = GUI_INVALID_ID;
-                    }
-                }
-
                 // Draw Background
                 ImU32 call_bg_color = (this->selected) ? (COLOR_CALL_HIGHTLIGHT) : (COLOR_CALL_BACKGROUND);
                 draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, GUI_RECT_CORNER_RADIUS);
@@ -252,6 +233,22 @@ void megamol::gui::configurator::Call::Presentation::Present(
                     (call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
                 draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]),
                     inout_call.class_name.c_str());
+                    
+                // Selection
+                if (button_active) {
+                    state.interact.call_selected_uid = inout_call.uid;
+                    this->selected = true;
+                    state.interact.callslot_selected_uid = GUI_INVALID_ID;
+                    state.interact.modules_selected_uids.clear();
+                    state.interact.group_selected_uid = GUI_INVALID_ID;                    
+                }
+                // Deselection
+                if ((mouse_clicked_anywhere && !button_hovered) || (state.interact.call_selected_uid != inout_call.uid)) {
+                    this->selected = false;
+                    if (state.interact.call_selected_uid == inout_call.uid) {
+                        state.interact.call_selected_uid = GUI_INVALID_ID;
+                    }
+                }                    
             }
 
             ImGui::PopID();
