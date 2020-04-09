@@ -142,7 +142,8 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
     , selected(false)
     , update(true)
     , other_item_hovered(false)
-    , show_params(false) {
+    , show_params(false)
+    , last_active(false) {
 
     this->group.member = GUI_INVALID_ID;
     this->group.visible = false;
@@ -293,12 +294,13 @@ void megamol::gui::configurator::Module::Presentation::Present(
             ImGui::InvisibleButton(label.c_str(), module_size);
             ImGui::SetItemAllowOverlap();
 
-            bool multiselect_hotkey = io.KeyShift;
-            bool button_active = ImGui::IsItemActive();
+            // Process button activation only once when changed
+            bool button_active = (ImGui::IsItemActive() && !this->last_active);
+            this->last_active = ImGui::IsItemActive();
+            bool multiselect_hotkey = io.KeyShift;            
             bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
             bool button_hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) &&
-                            ((state.interact.module_hovered_uid == GUI_INVALID_ID) ||
-                                (state.interact.module_hovered_uid == inout_module.uid)));
+                            ((state.interact.module_hovered_uid == GUI_INVALID_ID) || (state.interact.module_hovered_uid == inout_module.uid)));
 
             // Context menu
             if (state.interact.callslot_hovered_uid == GUI_INVALID_ID) {
@@ -459,39 +461,36 @@ void megamol::gui::configurator::Module::Presentation::Present(
             if (!button_hovered && (state.interact.module_hovered_uid == inout_module.uid)) {
                 state.interact.module_hovered_uid = GUI_INVALID_ID;
             }            
-
-            // Selection
-            if (button_active && !this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
-                if (multiselect_hotkey) {
+                                    
+            // Actually apply selection and deselection one frame delayed 
+            if (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
+                this->selected = true;
+                state.interact.callslot_selected_uid = GUI_INVALID_ID;
+                state.interact.call_selected_uid = GUI_INVALID_ID;
+                state.interact.group_selected_uid = GUI_INVALID_ID;  
+            }         
+            if (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
+                this->selected = false;
+            }
+            // Selection 
+            if (button_active) {
+                if (multiselect_hotkey && button_hovered) {
                     // Multiple Selection
                     this->add_uid(state.interact.modules_selected_uids, inout_module.uid);
                 }
-                else {
+                else if (!this->selected) {
                     // Single Selection
                     state.interact.modules_selected_uids.clear();
                     state.interact.modules_selected_uids.emplace_back(inout_module.uid);
                 }
             }
-            // Recognise selection set from 'outside'
-            if (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
-                this->selected = true;
-                state.interact.callslot_selected_uid = GUI_INVALID_ID;
-                state.interact.call_selected_uid = GUI_INVALID_ID;
-                state.interact.group_selected_uid = GUI_INVALID_ID;   
-            }
-    
             // Deselection
-            if ((!multiselect_hotkey && mouse_clicked_anywhere && (!button_hovered || state.interact.callslot_hovered_uid != GUI_INVALID_ID) && (state.interact.module_hovered_uid == GUI_INVALID_ID)) ||
-                (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) 
-                /// XXX || (button_active && previous_selected && this->selected && multiselect_hotkey)
-                ) {
-                    
-                this->selected = false;
-                if (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
-                    this->erase_uid(state.interact.modules_selected_uids, inout_module.uid);
-                }
+            if (this->selected && 
+                    ((mouse_clicked_anywhere && ((state.interact.module_hovered_uid == GUI_INVALID_ID) || (state.interact.callslot_hovered_uid != GUI_INVALID_ID))) ||
+                    (button_active && multiselect_hotkey && button_hovered))) {
+                this->erase_uid(state.interact.modules_selected_uids, inout_module.uid);
             }
-            
+
             // Dragging
             if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
                 this->position += (ImGui::GetIO().MouseDelta / state.canvas.zooming);

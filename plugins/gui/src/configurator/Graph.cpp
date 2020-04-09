@@ -254,21 +254,25 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
                 // Remove connected call slots from group interface
                 auto call_slot_1 = (*iter)->GetCallSlot(CallSlotType::CALLER);
                 auto call_slot_2 = (*iter)->GetCallSlot(CallSlotType::CALLEE);
-                if (call_slot_1->GUI_IsGroupInterface()) {
-                    for (auto& group : this->groups) {
-                        if (group->InterfaceContainsCallSlot(call_slot_1->uid)) {
-                            group->InterfaceRemoveCallSlot(call_slot_1->uid);
+                if (call_slot_1 != nullptr) {
+                    if (call_slot_1->GUI_IsGroupInterface()) {
+                        for (auto& group : this->groups) {
+                            if (group->InterfaceContainsCallSlot(call_slot_1->uid)) {
+                                group->InterfaceRemoveCallSlot(call_slot_1->uid);
+                            }
                         }
+                    
                     }
-                
                 }
-                if (call_slot_2->GUI_IsGroupInterface()) {
-                    for (auto& group : this->groups) {
-                        if (group->InterfaceContainsCallSlot(call_slot_2->uid)) {
-                            group->InterfaceRemoveCallSlot(call_slot_2->uid);
+                if (call_slot_2 != nullptr) {
+                    if (call_slot_2->GUI_IsGroupInterface()) {
+                        for (auto& group : this->groups) {
+                            if (group->InterfaceContainsCallSlot(call_slot_2->uid)) {
+                                group->InterfaceRemoveCallSlot(call_slot_2->uid);
+                            }
                         }
+                    
                     }
-                
                 }
                 
                 (*iter)->DisConnectCallSlots();

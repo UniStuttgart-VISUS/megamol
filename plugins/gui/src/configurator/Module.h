@@ -151,6 +151,7 @@ private:
         bool update;
         bool other_item_hovered;
         bool show_params;
+        bool last_active;
 
         inline bool found_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {
             return (std::find(modules_uid_vector.begin(), modules_uid_vector.end(), module_uid) !=
