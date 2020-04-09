@@ -8,6 +8,7 @@
 #include "stdafx.h"
 
 #include "InterfaceSlot.h"
+#include "CallSlot.h"
 
 
 using namespace megamol;
@@ -33,7 +34,7 @@ bool megamol::gui::configurator::InterfaceSlot::AddCallSlot(CallSlotPtrType call
         if (!(this->ContainsCallSlot(callslot_ptr->uid)) && (this->IsCallSlotCompatible(callslot_ptr))) {
             this->callslots.emplace_back(callslot_ptr);
             
-            callslot_ptr->GUI_SetGroupInterface(true);
+            callslot_ptr->GUI_SetGroupInterface(std::make_shared<InterfaceSlot>(*this));
 
             vislib::sys::Log::DefaultLog.WriteInfo(
                 "Added call slot '%s' to interface slot of group.\n", callslot_ptr->name.c_str());
@@ -60,7 +61,7 @@ bool megamol::gui::configurator::InterfaceSlot::RemoveCallSlot(ImGuiID callslot_
         for (auto iter = this->callslots.begin(); iter != this->callslots.end(); iter++) {
             if ((*iter)->uid == callslot_uid) {
                 
-                (*iter)->GUI_SetGroupInterface(false);
+                (*iter)->GUI_SetGroupInterface(nullptr);
 
                 vislib::sys::Log::DefaultLog.WriteInfo(
                     "Removed call slot '%s' from interface slot of group.\n", (*iter)->name.c_str());
@@ -119,6 +120,13 @@ bool megamol::gui::configurator::InterfaceSlot::IsCallSlotCompatible(CallSlotPtr
 }
 
 
+bool megamol::gui::configurator::InterfaceSlot::IsEmpty(void) { 
+    
+    return (callslots.size() == 0); 
+}
+    
+
+
 // GROUP INTERFACE SLOT PRESENTATION ###########################################
 
 megamol::gui::configurator::InterfaceSlot::Presentation::Presentation(void)
@@ -167,7 +175,4 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
 void megamol::gui::configurator::InterfaceSlot::Presentation::SetPosition(InterfaceSlot& inout_interfaceslot, ImVec2 pos) {
     
     this->position = pos;
-    for (auto& callslots_ptr : inout_interfaceslot.callslots) {
-        callslots_ptr->GUI_SetGroupInterfacePosition(this->position);
-    }
 }

@@ -19,18 +19,21 @@ namespace gui {
 namespace configurator {
 
 // Forward declaration
+class Module;
+
+///
 class Call;
 class CallSlot;
-class Module;
 class Parameter;
 
 // Pointer types to classes
+typedef std::shared_ptr<Module> ModulePtrType;
+typedef std::vector<ModulePtrType> ModulePtrVectorType;
+
+///
 typedef std::shared_ptr<Parameter> ParamPtrType;
 typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
-
-typedef std::shared_ptr<Module> ModulePtrType;
-typedef std::vector<ModulePtrType> ModulePtrVectorType;
 
 
 /**
@@ -47,12 +50,6 @@ public:
         bool is_view;
         std::vector<Parameter::StockParameter> parameters;
         std::map<CallSlotType, std::vector<CallSlot::StockCallSlot>> call_slots;
-    };
-
-    struct GroupState {
-        ImGuiID member;
-        bool visible;
-        std::string name;
     };
 
     Module(ImGuiID uid);
@@ -117,6 +114,13 @@ private:
      */
     class Presentation {
     public:
+        
+        struct GroupState {
+            ImGuiID member;
+            bool visible;
+            std::string name;
+        };
+    
         Presentation(void);
 
         ~Presentation(void);

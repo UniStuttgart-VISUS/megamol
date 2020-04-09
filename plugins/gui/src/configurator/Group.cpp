@@ -32,8 +32,7 @@ megamol::gui::configurator::Group::~Group() {
         for (auto interfaceslot_ptr : interfaceslot_map.second) {
             for (auto callslot_ptr : interfaceslot_ptr->GetCallSlots()) {
                 
-                callslot_ptr->GUI_SetGroupInterface(false);
-                callslot_ptr->GUI_SetGroupInterfacePosition(ImVec2(FLT_MAX, FLT_MAX));
+                callslot_ptr->GUI_SetGroupInterface(nullptr);
             }
         }
     }

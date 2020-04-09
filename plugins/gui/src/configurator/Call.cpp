@@ -152,11 +152,11 @@ void megamol::gui::configurator::Call::Presentation::Present(
             }
             ImVec2 caller_position = callerslot_ptr->GUI_GetPosition();
             if (callerslot_ptr->GUI_IsGroupInterface()) {
-                caller_position = callerslot_ptr->GUI_GetGroupInterfacePosition();
+                /// XXX caller_position = callerslot_ptr->GUI_GetGroupInterfacePosition();
             }
             ImVec2 callee_position = calleeslot_ptr->GUI_GetPosition();
             if (calleeslot_ptr->GUI_IsGroupInterface()) {
-                callee_position = calleeslot_ptr->GUI_GetGroupInterfacePosition();
+                /// XXX callee_position = calleeslot_ptr->GUI_GetGroupInterfacePosition();
             }
             
             ImGui::PushID(inout_call.uid);

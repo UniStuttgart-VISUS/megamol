@@ -20,6 +20,14 @@ namespace configurator {
 // Forward declaration
 class InterfaceSlot;
 
+///
+class CallSlot;
+#ifndef _CALL_SLOT_TYPE_
+    enum CallSlotType { CALLEE, CALLER };
+    #define _CALL_SLOT_TYPE_
+#endif
+typedef std::vector<CallSlotPtrType> CallSlotPtrVectorType;
+
 // Pointer types to classes
 typedef std::shared_ptr<InterfaceSlot> InterfaceSlotPtrType;
 typedef std::vector<InterfaceSlotPtrType> InterfaceSlotPtrVectorType;
@@ -43,7 +51,7 @@ public:
     
     bool IsCallSlotCompatible(CallSlotPtrType callslot_ptr);
     
-    bool IsEmpty(void) { return (callslots.size() == 0); }
+    bool IsEmpty(void);
     
     const CallSlotPtrVectorType& GetCallSlots(void) { return this->callslots; }
 

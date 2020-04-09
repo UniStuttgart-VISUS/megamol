@@ -41,13 +41,17 @@ namespace gui {
 namespace configurator {
 
 // Forward declaration
+class Parameter;
+
+///
 class Call;
 class CallSlot;
 class Module;
-class Parameter;
 
 // Pointer types to classes
 typedef std::shared_ptr<Parameter> ParamPtrType;
+
+///
 typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;

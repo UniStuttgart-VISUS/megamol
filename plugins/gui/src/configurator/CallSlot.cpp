@@ -11,6 +11,7 @@
 
 #include "Call.h"
 #include "Module.h"
+#include "InterfaceSlot.h"
 
 
 using namespace megamol;
@@ -254,9 +255,7 @@ megamol::gui::configurator::CallSlot::Presentation::Presentation(void)
     , update_once(true)
     , show_modulestock(false) {
 
-    this->group.is_interface = false;
-    this->group.interface_position = ImVec2(FLT_MAX, FLT_MAX);
-
+    this->group.interface_ptr.reset();
 }
 
 
@@ -308,6 +307,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                 text_pos_left_upper.x = slot_position.x + (1.5f * radius);
             }
         }
+        bool is_group_interface = (this->group.interface_ptr != nullptr);
 
         // Clip call slots if lying ouside the canvas
         /// XXX Is there a benefit since ImGui::PushClipRect is used?
@@ -389,12 +389,12 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             ImGui::Separator();
             /// Menu items are active depending on group membership of parent module
             if (ImGui::MenuItem("Add to Group Interface ", nullptr, false,
-                    (!this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID)))) {
+                    (!is_group_interface && (is_parent_module_group_member != GUI_INVALID_ID)))) {
                 state.interact.callslot_add_group_uid.first = inout_callslot.uid;
                 state.interact.callslot_add_group_uid.second = inout_callslot.GetParentModule()->uid;
             }
             if (ImGui::MenuItem("Remove from Group Interface", nullptr, false,
-                    (this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID)))) {
+                    (is_group_interface && (is_parent_module_group_member != GUI_INVALID_ID)))) {
                 state.interact.callslot_remove_group_uid = inout_callslot.uid;
             }
             /// XXX Disabled
@@ -407,7 +407,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         // Hover Tooltip
         if (hovered) {
             std::string tooltip = inout_callslot.description;
-            if (this->group.is_interface && (is_parent_module_group_member != GUI_INVALID_ID) &&
+            if (is_group_interface && (is_parent_module_group_member != GUI_INVALID_ID) &&
                 !is_parent_module_group_visible) {
                 tooltip = module_label + " > " + slot_label + " " + inout_callslot.description;
             } else if (!this->label_visible) {
