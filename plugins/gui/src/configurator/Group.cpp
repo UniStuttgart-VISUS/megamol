@@ -324,6 +324,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
     }
 
     ImGuiStyle& style = ImGui::GetStyle();
+    
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
 
@@ -350,6 +351,86 @@ void megamol::gui::configurator::Group::Presentation::Present(
 
         ImGui::PushID(inout_group.uid);
 
+
+        // Button
+        ImGui::SetCursorScreenPos(group_rect_min);
+        std::string label = "group_" + inout_group.name;
+        ImGui::SetItemAllowOverlap();
+        ImGui::InvisibleButton(label.c_str(), header_size);
+        ImGui::SetItemAllowOverlap();
+
+        bool button_active = ImGui::IsItemActive();
+        bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];        
+        bool button_hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) &&
+                        (state.interact.module_hovered_uid == GUI_INVALID_ID));
+
+        // Automatically delete empty group
+        if (inout_group.GetModules().empty()) {
+            std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+            button_active = true; // Force selection 
+        }
+        
+        // Context menu
+        if (ImGui::BeginPopupContextItem("invisible_button_context")) {
+            button_active = true; // Force selection
+
+            ImGui::TextUnformatted("Group");
+            ImGui::Separator();
+            std::string view = "Collapsed View";
+            if (this->collapsed_view) {
+                view = "Expanded View";
+            }
+            if (ImGui::MenuItem(view.c_str())) {
+                this->collapsed_view = !this->collapsed_view;
+                for (auto& mod : inout_group.GetModules()) {
+                    mod->GUI_SetGroupVisibility(this->ModulesVisible());
+                }
+                this->UpdatePositionSize(inout_group, state.canvas);
+            }
+            /// XXX Disabled
+            //if (ImGui::MenuItem("Save")) {
+            //    state.interact.group_save = true;
+            //    button_active = true; // Force selection 
+            //}
+            if (ImGui::MenuItem("Rename")) {
+                popup_rename = true;
+            }
+            if (ImGui::MenuItem("Delete",
+                    std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
+                std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+            }
+            ImGui::EndPopup();
+        }
+        
+        // Selection
+        if (button_active) {
+            state.interact.group_selected_uid = inout_group.uid;
+            this->selected = true;
+            state.interact.callslot_selected_uid = GUI_INVALID_ID;
+            state.interact.modules_selected_uids.clear();
+            state.interact.call_selected_uid = GUI_INVALID_ID;            
+        }
+        
+        // Deselection
+        if ((mouse_clicked_anywhere && !button_hovered) || (state.interact.group_selected_uid != inout_group.uid)) {
+            this->selected = false;
+            if (state.interact.group_selected_uid == inout_group.uid) {
+                state.interact.group_selected_uid = GUI_INVALID_ID;
+            }
+        }
+
+        // Dragging
+        if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
+            ImVec2 tmp_pos;
+            for (auto& mod : inout_group.GetModules()) {
+                tmp_pos = mod->GUI_GetPosition();
+                tmp_pos += (ImGui::GetIO().MouseDelta / state.canvas.zooming);
+                mod->GUI_SetPosition(tmp_pos);
+                mod->GUI_Update(state.canvas);
+            }
+            this->UpdatePositionSize(inout_group, state.canvas);
+        }
+        
         // Colors
         ImVec4 tmpcol = style.Colors[ImGuiCol_ScrollbarBg]; // ImGuiCol_ScrollbarGrab ImGuiCol_FrameBg ImGuiCol_Button
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
@@ -373,58 +454,6 @@ void megamol::gui::configurator::Group::Presentation::Present(
         tmpcol.y = 0.75f;
         const ImU32 COLOR_HEADER_HIGHLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
-        // Draw box
-        ImGui::SetCursorScreenPos(group_rect_min);
-        std::string label = "group_" + inout_group.name;
-
-        ImGui::SetItemAllowOverlap();
-        ImGui::InvisibleButton(label.c_str(), header_size);
-        ImGui::SetItemAllowOverlap();
-
-        bool button_active = ImGui::IsItemActive();
-        bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];        
-        bool button_hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) &&
-                        (state.interact.module_hovered_uid == GUI_INVALID_ID));
-
-        // Automatically delete empty group.
-        if (inout_group.GetModules().empty()) {
-            std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-            state.interact.group_selected_uid = inout_group.uid; // Force selection (must be set in same frame)
-        }
-
-        // Context menu
-        if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-            button_active = true; // Force selection
-
-            ImGui::TextUnformatted("Group");
-            ImGui::Separator();
-            std::string view = "Collapsed View";
-            if (this->collapsed_view) {
-                view = "Expanded View";
-            }
-            if (ImGui::MenuItem(view.c_str())) {
-                this->collapsed_view = !this->collapsed_view;
-                for (auto& mod : inout_group.GetModules()) {
-                    mod->GUI_SetGroupVisibility(this->ModulesVisible());
-                }
-                this->UpdatePositionSize(inout_group, state.canvas);
-            }
-            /*
-            if (ImGui::MenuItem("Save")) {
-                state.interact.group_save = true;
-                state.interact.group_selected_uid = inout_group.uid; // Force selection (must be set in same frame)
-            }
-            */
-            if (ImGui::MenuItem("Rename")) {
-                popup_rename = true;
-            }
-            if (ImGui::MenuItem("Delete",
-                    std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
-                std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-            }
-            ImGui::EndPopup();
-        }
-
         // Background
         ImU32 group_bg_color = (this->selected) ? (COLOR_GROUP_HIGHTLIGHT) : (COLOR_GROUP_BACKGROUND);
         draw_list->AddRectFilled(group_rect_min, group_rect_max, group_bg_color, 0.0f);
@@ -441,9 +470,8 @@ void megamol::gui::configurator::Group::Presentation::Present(
         auto header_color = (this->selected) ? (COLOR_HEADER_HIGHLIGHT) : (COLOR_HEADER);
         draw_list->AddRectFilled(group_rect_min, header_rect_max, header_color, GUI_RECT_CORNER_RADIUS,
             (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
-
         draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->name_label.c_str());
-
+        
         // Rename pop-up
         if (this->utils.RenamePopUp("Rename Group", popup_rename, inout_group.name)) {
             for (auto& module_ptr : inout_group.GetModules()) {
@@ -451,35 +479,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
                 module_ptr->GUI_Update(state.canvas);
             }
             this->UpdatePositionSize(inout_group, state.canvas);
-        }
-        
-        // Selection
-        if (button_active) {
-            state.interact.group_selected_uid = inout_group.uid;
-            this->selected = true;
-            state.interact.callslot_selected_uid = GUI_INVALID_ID;
-            state.interact.modules_selected_uids.clear();
-            state.interact.call_selected_uid = GUI_INVALID_ID;            
-        }
-        // Deselection
-        if ((mouse_clicked_anywhere && !button_hovered) || (state.interact.group_selected_uid != inout_group.uid)) {
-            this->selected = false;
-            if (state.interact.group_selected_uid == inout_group.uid) {
-                state.interact.group_selected_uid = GUI_INVALID_ID;
-            }
-        }
-
-        // Dragging
-        if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
-            ImVec2 tmp_pos;
-            for (auto& mod : inout_group.GetModules()) {
-                tmp_pos = mod->GUI_GetPosition();
-                tmp_pos += (ImGui::GetIO().MouseDelta / state.canvas.zooming);
-                mod->GUI_SetPosition(tmp_pos);
-                mod->GUI_Update(state.canvas);
-            }
-            this->UpdatePositionSize(inout_group, state.canvas);
-        }
+        }        
                 
         // Draw interface slots ----------------------------------------------------
         for (auto& interfaceslots_map : inout_group.GetInterfaceCallSlots()) {

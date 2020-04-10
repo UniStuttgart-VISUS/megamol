@@ -148,6 +148,8 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
+    
+    ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
     
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
