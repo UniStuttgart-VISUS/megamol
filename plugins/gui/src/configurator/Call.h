@@ -90,7 +90,6 @@ private:
         bool label_visible;
 
     private:
-        GUIUtils utils;
         bool selected;
 
     } present;

@@ -253,9 +253,8 @@ void megamol::gui::configurator::Module::Presentation::Present(
             this->last_active = ImGui::IsItemActive();
             bool multiselect_hotkey = io.KeyShift;            
             bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
-            bool button_hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) && 
-                ((state.interact.module_hovered_uid == GUI_INVALID_ID) || (state.interact.module_hovered_uid == inout_module.uid)));
-                
+            bool button_hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID));
+            bool module_hovered = (button_hovered && ((state.interact.module_hovered_uid == GUI_INVALID_ID) || (state.interact.module_hovered_uid == inout_module.uid)));
 
             // Context menu
             if (state.interact.callslot_hovered_uid == GUI_INVALID_ID) {
@@ -317,17 +316,21 @@ void megamol::gui::configurator::Module::Presentation::Present(
                             state.interact.modules_remove_group_uids.emplace_back(inout_module.uid);
                         }
                     }
+                    ImGui::Separator();
+                    ImGui::TextDisabled("Description");
+                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 13.0f);
+                    ImGui::TextUnformatted(inout_module.description.c_str());
+                    ImGui::PopTextWrapPos(); 
+                                
                     ImGui::EndPopup();
                 }
             }
 
             // Hover Tooltip
             if (this->selected && !this->other_item_hovered) {
-                std::string hover_text = inout_module.description;
                 if (!this->label_visible) {
-                    hover_text = "[" + inout_module.name + "] " + hover_text;
+                    this->utils.HoverToolTip(inout_module.name.c_str(), ImGui::GetID(label.c_str()), 0.5f, 5.0f);                    
                 }
-                this->utils.HoverToolTip(hover_text.c_str(), ImGui::GetID(label.c_str()), 0.75f, 5.0f);
                 if (!button_hovered) {
                     this->utils.ResetHoverToolTip();
                 }
@@ -335,10 +338,10 @@ void megamol::gui::configurator::Module::Presentation::Present(
             this->other_item_hovered = false;
             
             // Hovering
-            if (button_hovered) {
+            if (module_hovered) {
                 state.interact.module_hovered_uid = inout_module.uid;
             }
-            if (!button_hovered && (state.interact.module_hovered_uid == inout_module.uid)) {
+            if (!module_hovered && (state.interact.module_hovered_uid == inout_module.uid)) {
                 state.interact.module_hovered_uid = GUI_INVALID_ID;
             }            
                                     

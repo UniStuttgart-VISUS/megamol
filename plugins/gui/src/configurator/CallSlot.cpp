@@ -285,19 +285,14 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         }
 
         // Get some information
-        std::string module_label;
         ImGuiID is_parent_module_group_member = GUI_INVALID_ID;
-        bool is_parent_module_group_visible = GUI_INVALID_ID;
         ImGuiID parent_module_uid = GUI_INVALID_ID;
         if (inout_callslot.ParentModuleConnected()) {
             is_parent_module_group_member = inout_callslot.GetParentModule()->GUI_GetGroupMembership();
-            is_parent_module_group_visible = inout_callslot.GetParentModule()->GUI_IsVisibleInGroup();
-            module_label = "[" + inout_callslot.GetParentModule()->name + "]";
             parent_module_uid = inout_callslot.GetParentModule()->uid;
         }
         ImVec2 slot_position = this->position;
         float radius = GUI_CALL_SLOT_RADIUS * state.canvas.zooming;
-        std::string slot_label = "[" + inout_callslot.name + "]";
         ImVec2 text_pos_left_upper = ImVec2(0.0f, 0.0f);
         if (this->label_visible) {
             text_pos_left_upper.y = slot_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
@@ -341,19 +336,20 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                     (is_group_interface && (is_parent_module_group_member != GUI_INVALID_ID)))) {
                 state.interact.callslot_remove_group_uid = inout_callslot.uid;
             }
+            ImGui::Separator();
+            ImGui::TextDisabled("Description");
+            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 13.0f);
+            ImGui::TextUnformatted(inout_callslot.description.c_str());
+            ImGui::PopTextWrapPos(); 
+                  
             ImGui::EndPopup();
         }
 
         // Hover Tooltip
         if (button_hovered) {
-            std::string tooltip = inout_callslot.description;
-            if (is_group_interface && (is_parent_module_group_member != GUI_INVALID_ID) &&
-                !is_parent_module_group_visible) {
-                tooltip = module_label + " > " + slot_label + " " + inout_callslot.description;
-            } else if (!this->label_visible) {
-                tooltip = slot_label + " " + inout_callslot.description;
+            if (!this->label_visible) {
+                this->utils.HoverToolTip(inout_callslot.name, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
             }
-            this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.75f, 5.0f);
         } else {
             this->utils.ResetHoverToolTip();
         }
