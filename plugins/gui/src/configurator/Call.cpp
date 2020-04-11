@@ -224,21 +224,25 @@ void megamol::gui::configurator::Call::Presentation::Present(
                     }
                 }          
 
-                // Selection
-                if (button_active) {
-                    state.interact.call_selected_uid = inout_call.uid;
+                // Actually apply selection and deselection one frame delayed 
+                if (state.interact.call_selected_uid == inout_call.uid) {
                     this->selected = true;
                     state.interact.callslot_selected_uid = GUI_INVALID_ID;
                     state.interact.modules_selected_uids.clear();
-                    state.interact.group_selected_uid = GUI_INVALID_ID;                    
+                    state.interact.group_selected_uid = GUI_INVALID_ID;   
+                }         
+                if (state.interact.call_selected_uid != inout_call.uid) {
+                    this->selected = false;
+                }
+        
+                // Selection
+                if (button_active) {
+                    state.interact.call_selected_uid = inout_call.uid;
                 }
                 
                 // Deselection
                 if ((mouse_clicked_anywhere && !button_hovered) || (state.interact.call_selected_uid != inout_call.uid)) {
-                    this->selected = false;
-                    if (state.interact.call_selected_uid == inout_call.uid) {
-                        state.interact.call_selected_uid = GUI_INVALID_ID;
-                    }
+                    state.interact.call_selected_uid = GUI_INVALID_ID;
                 }   
                 
                 // Draw Background

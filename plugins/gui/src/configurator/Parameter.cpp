@@ -326,14 +326,15 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
 }
 
 
-float megamol::gui::configurator::Parameter::Presentation::GetHeight(Parameter& inout_param) {
+float megamol::gui::configurator::Parameter::Presentation::GetHeight(Parameter& inout_param, const GraphCanvasType& in_canvas) {
 
-    float height = (ImGui::GetFrameHeightWithSpacing() * 1.15f);
+
+    float height = (ImGui::GetFrameHeightWithSpacing() * (1.15f));
     if (inout_param.type == Parameter::ParamType::TRANSFERFUNCTION) {
         if (this->show_tf_editor) {
-            height = (ImGui::GetFrameHeightWithSpacing() * 18.5f);
+            height = (ImGui::GetFrameHeightWithSpacing() * (10.0f) + (150.0f + 30.0f));
         } else {
-            height = (ImGui::GetFrameHeightWithSpacing() * 1.5f);
+            height = (ImGui::GetFrameHeightWithSpacing() * (1.5f));
         }
     }
     return height;

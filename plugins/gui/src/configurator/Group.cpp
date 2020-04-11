@@ -402,21 +402,25 @@ void megamol::gui::configurator::Group::Presentation::Present(
             ImGui::EndPopup();
         }
         
-        // Selection
-        if (button_active) {
-            state.interact.group_selected_uid = inout_group.uid;
+        // Actually apply selection and deselection one frame delayed 
+        if (state.interact.group_selected_uid == inout_group.uid) {
             this->selected = true;
             state.interact.callslot_selected_uid = GUI_INVALID_ID;
             state.interact.modules_selected_uids.clear();
-            state.interact.call_selected_uid = GUI_INVALID_ID;            
+            state.interact.call_selected_uid = GUI_INVALID_ID;   
+        }         
+        if (state.interact.group_selected_uid != inout_group.uid) {
+            this->selected = false;
+        }
+                
+        // Selection
+        if (button_active) {
+            state.interact.group_selected_uid = inout_group.uid;
         }
         
         // Deselection
         if ((mouse_clicked_anywhere && !button_hovered) || (state.interact.group_selected_uid != inout_group.uid)) {
-            this->selected = false;
-            if (state.interact.group_selected_uid == inout_group.uid) {
-                state.interact.group_selected_uid = GUI_INVALID_ID;
-            }
+            state.interact.group_selected_uid = GUI_INVALID_ID;
         }
 
         // Dragging

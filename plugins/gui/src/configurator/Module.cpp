@@ -483,12 +483,12 @@ void megamol::gui::configurator::Module::Presentation::Present(
 
                 float param_height = 0.0f;
                 for (auto& param : inout_module.parameters) {
-                    param_height += param.GUI_GetHeight();
+                    param_height += param.GUI_GetHeight(state.canvas);
                 }               
                 param_height += style.ScrollbarSize;
+                float avail_height = (state.canvas.position.y + state.canvas.size.y) - ImGui::GetCursorScreenPos().y;
+                float child_height = std::min(avail_height, param_height);
                 float child_width = 325.0f * state.canvas.zooming;
-                float child_height = std::min((ImGui::GetContentRegionAvail().y), param_height);
-
                 auto child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar |
                                    ImGuiWindowFlags_AlwaysHorizontalScrollbar | ImGuiWindowFlags_NoMove |
                                    ImGuiWindowFlags_NavFlattened;
