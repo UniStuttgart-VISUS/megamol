@@ -354,7 +354,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
             }
             
             // Selection 
-            if (button_active) {
+            if (!this->selected && button_active) {
                 if (multiselect_hotkey) {
                     // Multiple Selection
                     this->add_uid(state.interact.modules_selected_uids, inout_module.uid);
@@ -483,7 +483,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
 
                 float param_height = 0.0f;
                 for (auto& param : inout_module.parameters) {
-                    param_height += param.GUI_GetHeight(state.canvas);
+                    param_height += param.GUI_GetHeight();
                 }               
                 param_height += style.ScrollbarSize;
                 float avail_height = (state.canvas.position.y + state.canvas.size.y) - ImGui::GetCursorScreenPos().y;

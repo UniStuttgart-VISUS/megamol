@@ -223,25 +223,19 @@ void megamol::gui::configurator::Call::Presentation::Present(
                         this->utils.ResetHoverToolTip();
                     }
                 }          
-
-                // Actually apply selection and deselection one frame delayed 
-                if (state.interact.call_selected_uid == inout_call.uid) {
-                    this->selected = true;
-                    state.interact.callslot_selected_uid = GUI_INVALID_ID;
-                    state.interact.modules_selected_uids.clear();
-                    state.interact.group_selected_uid = GUI_INVALID_ID;   
-                }         
-                if (state.interact.call_selected_uid != inout_call.uid) {
-                    this->selected = false;
-                }
         
                 // Selection
-                if (button_active) {
+                if (!this->selected && button_active) {                 
                     state.interact.call_selected_uid = inout_call.uid;
+                    this->selected = true;                    
+                    state.interact.callslot_selected_uid = GUI_INVALID_ID;
+                    state.interact.modules_selected_uids.clear();
+                    state.interact.group_selected_uid = GUI_INVALID_ID;                     
                 }
                 
                 // Deselection
-                if ((mouse_clicked_anywhere && !button_hovered) || (state.interact.call_selected_uid != inout_call.uid)) {
+                if (this->selected && ((mouse_clicked_anywhere && !button_hovered) || (state.interact.call_selected_uid != inout_call.uid))) {
+                    this->selected = false;
                     state.interact.call_selected_uid = GUI_INVALID_ID;
                 }   
                 

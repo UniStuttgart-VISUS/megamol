@@ -28,8 +28,8 @@ The menu of the main window of the `GUIView` provides the following options:
 
 *Use `Shift` for resetting the window to fit the currrent viewport.
 
-**NOTE:**\
-Hotkeys use the key mapping of the US keyboard layout. Other keyboard layouts are currently not considerd or recognised. Consider possible transposed `z` and `y` which are used in `undo` and `redo` hotkeys on text input.
+**NOTE**
+* Hotkeys use the key mapping of the US keyboard layout. Other keyboard layouts are currently not considerd or recognised. Consider possible transposed `z` and `y` which are used in `undo` and `redo` hotkeys on text input.
 
 #### Parameters
 
@@ -80,7 +80,7 @@ In order to start the configurator automatically, you can use the project  `/exa
         
 See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a bug and feature tracker.
 
-**NOTES:**
+**NOTE**
 * In order to create a vaild project file which can be loaded successfully afterwards, it is necessary to define one view module as `main view`. A `main view` defines the entry point of the project.
 * Parameter values in the lua command `mmSetParamValue` must have the value enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are not supported.
 
@@ -128,7 +128,7 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
 
 * Drop File to Load/Add Project
     * Drag file in a file browser and drop it inside the MegaMol window. The configurator windows must be open and focused.\
-        **Note:** Successfully testet using Windows10 and (X)Ubuntu with "Nautilus" file browser as drag source of the files. Failed using (X)Ubuntu with "Thunar" file browser. File drop is currently unimplemented in glfw for "Wayland" (e.g. Fedora).
+        **NOTE** Successfully testet using Windows10 and (X)Ubuntu with "Nautilus" file browser as drag source of the files. Failed using (X)Ubuntu with "Thunar" file browser. File drop is currently unimplemented in glfw for "Wayland" (e.g. Fedora).
 * Spawn *Module Stock List* in pop-up window at mouse position
     * `Ctrl + Shift + m`
     * `Double Left Click`

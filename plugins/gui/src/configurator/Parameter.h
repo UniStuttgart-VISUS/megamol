@@ -227,7 +227,7 @@ public:
     inline void GUI_SetReadOnly(bool readonly) { this->present.read_only = readonly; }
     inline void GUI_SetExpert(bool expert) { this->present.expert = expert; }
 
-    inline float GUI_GetHeight(const GraphCanvasType& in_canvas) { return this->present.GetHeight(*this, in_canvas); }
+    inline float GUI_GetHeight(void) { return this->present.GetHeight(*this); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -253,7 +253,7 @@ private:
 
         bool Present(Parameter& inout_param);
 
-        float GetHeight(Parameter& inout_param, const GraphCanvasType& in_canvas);
+        float GetHeight(Parameter& inout_param);
 
         bool read_only;
         bool visible;

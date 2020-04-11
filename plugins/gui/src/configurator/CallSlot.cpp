@@ -359,15 +359,15 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         }
 
         // Selection
-        if (button_active) {
+        if (!this->selected && button_active) {        
             state.interact.callslot_selected_uid = inout_callslot.uid;
-            this->selected = true;
+            this->selected = true;                
             state.interact.call_selected_uid = GUI_INVALID_ID;
             state.interact.modules_selected_uids.clear();
             state.interact.group_selected_uid = GUI_INVALID_ID;            
         }
         // Deselection
-        if ((mouse_clicked_anywhere && !button_hovered) || (state.interact.callslot_selected_uid != inout_callslot.uid)) {
+        if (this->selected && ((mouse_clicked_anywhere && !button_hovered) || (state.interact.callslot_selected_uid != inout_callslot.uid))) {
             this->selected = false;
             if (state.interact.callslot_selected_uid == inout_callslot.uid) {
                 state.interact.callslot_selected_uid = GUI_INVALID_ID;
