@@ -368,12 +368,12 @@ public:
 
     bool pointInTriangle(const uint32_t idx, glm::vec3 p) {
 
-        auto triangle = this->getTriangleVertices(idx);
+        auto vertices = this->getTriangleVertices(idx);
 
         // Compute vectors
-        auto v0 = triangle[2] - triangle[0];
-        auto v1 = triangle[1] - triangle[0];
-        auto v2 = p - triangle[0];
+        auto v0 = vertices[2] - vertices[0];
+        auto v1 = vertices[1] - vertices[0];
+        auto v2 = p - vertices[0];
 
         // Compute dot products
         auto dot00 = glm::dot(v0, v0);
@@ -416,6 +416,26 @@ public:
         bool res = (u > 0) && (v > 0) && (u + v < 1);
         if (res) return true;
         return false;
+    }
+
+    bool pointInTriangle(const std::array<glm::vec2, 3>& vertices, glm::vec2 p) {
+
+        const auto signed_area = 0.5 * (-vertices[1].y * vertices[2].x + vertices[0].y * (-vertices[1].x + vertices[2].x) + vertices[0].x * (vertices[1].y - vertices[2].y) + vertices[1].x * vertices[2].y);
+
+        const auto s = 1 / (2 * signed_area) * (vertices[0].y * vertices[2].x - vertices[0].x * vertices[2].y + (vertices[2].y - vertices[0].y) * p.x + (vertices[0].x - vertices[2].x) * p.y);
+        const auto t = 1 / (2 * signed_area) * (vertices[0].x * vertices[1].y - vertices[0].y * vertices[1].x + (vertices[0].y - vertices[1].y) * p.x + (vertices[1].x - vertices[0].x) * p.y);
+
+        return (s > 0 && t > 0 && 1 - s - t > 0);
+
+        //const auto d1 = this->sign(p, vertices[0], vertices[1]);
+        //const auto d2 = this->sign(p, vertices[1], vertices[2]);
+        //const auto d3 = this->sign(p, vertices[2], vertices[0]);
+
+        //const auto has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+        //const auto has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+        //return !(has_neg && has_pos);
+
     }
 
     bool getPatch(uint32_t idx, Eigen::MatrixXd& out_verts, Eigen::MatrixXi& out_indices,
@@ -636,6 +656,10 @@ private:
         }
 
         return true;
+    }
+
+    float sign(const glm::vec2 p1, const glm::vec2 p2, const glm::vec2 p3) {
+        return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
     }
 
     bool createOrthonormalBasis() {

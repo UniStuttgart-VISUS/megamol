@@ -14,6 +14,7 @@
 #include "mesh/MeshCalls.h"
 #include "ProbeCollection.h"
 #include "probe/MeshUtilities.h"
+#include "adios_plugin/CallADIOSData.h"
 
 namespace megamol {
 namespace probe {
@@ -57,7 +58,11 @@ protected:
 
     core::CallerSlot m_centerline_slot;
 
+    core::CallerSlot m_load_probe_positions_slot;
+
     core::CalleeSlot m_probe_slot;
+
+    core::CalleeSlot m_probe_positions_slot;
 
     core::param::ParamSlot m_method_slot;
 
@@ -68,19 +73,19 @@ private:
 
     bool getMetaData(core::Call& call);
 
-    void dartSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
-        std::vector<std::array<float, 4>>& output, mesh::MeshDataAccessCollection::IndexData indexData,
+    void dartSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices, mesh::MeshDataAccessCollection::IndexData indexData,
         float distanceIndicator);
     void forceDirectedSampling(
-        const const mesh::MeshDataAccessCollection::Mesh& mesh, std::vector<std::array<float, 4>>& output);
-    void vertexSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
-        std::vector<std::array<float, 4>>& output);
+        const const mesh::MeshDataAccessCollection::Mesh& mesh);
+    void vertexSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices);
     void vertexNormalSampling(
         mesh::MeshDataAccessCollection::VertexAttribute& vertices,
         mesh::MeshDataAccessCollection::VertexAttribute& normals);
     bool placeProbes(uint32_t lei);
-    bool placeByCenterline(uint32_t lei, std::vector<std::array<float, 4>>& probePositions,
-                           mesh::MeshDataAccessCollection::VertexAttribute& centerline);
+    bool placeByCenterline(uint32_t lei, mesh::MeshDataAccessCollection::VertexAttribute& centerline);
+    bool getADIOSData(core::Call &call);
+    bool getADIOSMetaData(core::Call &call);
+    bool loadFromFile();
 
     std::shared_ptr<ProbeCollection> m_probes;
     std::shared_ptr<mesh::MeshDataAccessCollection> m_mesh;
@@ -92,6 +97,8 @@ private:
     std::vector<Eigen::MatrixXd> _pointsPerFace;
     std::map<uint32_t, std::vector<uint32_t>> _neighborMap;
     uint32_t _numFaces = 0;
+    std::vector<std::array<float, 4>> _probePositions;
+    adios::adiosDataMap dataMap;
 
 };
 
