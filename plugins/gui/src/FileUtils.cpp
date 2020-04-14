@@ -199,7 +199,7 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(megamol::gui::FileUtils::FileBrow
 
             ImGui::OpenPopup(popup_name.c_str());
             // Set initial window size of pop up
-            ImGui::SetNextWindowSize(ImVec2(600.0f, 300.0f));
+            ImGui::SetNextWindowSize(ImVec2(400.0f, 500.0f));
 #else
             vislib::sys::Log::DefaultLog.WriteWarn(
                 "Filesystem functionality is not available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);

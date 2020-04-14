@@ -19,21 +19,21 @@ using namespace megamol::gui::configurator;
 
 
 megamol::gui::configurator::Call::Call(ImGuiID uid)
-    : uid(uid), class_name(), description(), plugin_name(), functions(), connected_call_slots(), present() {
+    : uid(uid), class_name(), description(), plugin_name(), functions(), connected_callslots(), present() {
 
-    this->connected_call_slots.emplace(CallSlotType::CALLER, nullptr);
-    this->connected_call_slots.emplace(CallSlotType::CALLEE, nullptr);
+    this->connected_callslots.emplace(CallSlotType::CALLER, nullptr);
+    this->connected_callslots.emplace(CallSlotType::CALLEE, nullptr);
 }
 
 
-megamol::gui::configurator::Call::~Call() { this->DisConnectCallSlots(); }
+megamol::gui::configurator::Call::~Call() { this->DisconnectCallSlots(); }
 
 
 bool megamol::gui::configurator::Call::IsConnected(void) {
 
     unsigned int not_connected = 0;
-    for (auto& call_slot_map : this->connected_call_slots) {
-        if (call_slot_map.second != nullptr) {
+    for (auto& callslot_map : this->connected_callslots) {
+        if (callslot_map.second != nullptr) {
             not_connected++;
         }
     }
@@ -47,47 +47,47 @@ bool megamol::gui::configurator::Call::IsConnected(void) {
 
 
 bool megamol::gui::configurator::Call::ConnectCallSlots(
-    megamol::gui::configurator::CallSlotPtrType call_slot_1, megamol::gui::configurator::CallSlotPtrType call_slot_2) {
+    megamol::gui::configurator::CallSlotPtrType callslot_1, megamol::gui::configurator::CallSlotPtrType callslot_2) {
 
-    if ((call_slot_1 == nullptr) || (call_slot_2 == nullptr)) {
+    if ((callslot_1 == nullptr) || (callslot_2 == nullptr)) {
         vislib::sys::Log::DefaultLog.WriteWarn(
             "Pointer to given call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    if (call_slot_1->type == call_slot_2->type) {
+    if (callslot_1->type == callslot_2->type) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Call slots must have different type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    if (call_slot_1->GetParentModule() == call_slot_2->GetParentModule()) {
+    if (callslot_1->GetParentModule() == callslot_2->GetParentModule()) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Call slots must have different parent module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    if ((this->connected_call_slots[call_slot_1->type] != nullptr) ||
-        (this->connected_call_slots[call_slot_2->type] != nullptr)) {
+    if ((this->connected_callslots[callslot_1->type] != nullptr) ||
+        (this->connected_callslots[callslot_2->type] != nullptr)) {
         vislib::sys::Log::DefaultLog.WriteWarn(
             "Call is already connected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
-    this->connected_call_slots[call_slot_1->type] = call_slot_1;
-    this->connected_call_slots[call_slot_2->type] = call_slot_2;
+    this->connected_callslots[callslot_1->type] = callslot_1;
+    this->connected_callslots[callslot_2->type] = callslot_2;
 
     return true;
 }
 
 
-bool megamol::gui::configurator::Call::DisConnectCallSlots(void) {
+bool megamol::gui::configurator::Call::DisconnectCallSlots(void) {
 
     try {
-        for (auto& call_slot_map : this->connected_call_slots) {
-            if (call_slot_map.second == nullptr) {
+        for (auto& callslot_map : this->connected_callslots) {
+            if (callslot_map.second == nullptr) {
                 // vislib::sys::Log::DefaultLog.WriteWarn(
                 //    "Call slot is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             } else {
-                call_slot_map.second->DisConnectCall(this->uid, true);
-                call_slot_map.second.reset();
+                callslot_map.second->DisconnectCall(this->uid, true);
+                callslot_map.second.reset();
             }
         }
     } catch (std::exception e) {
@@ -105,11 +105,11 @@ bool megamol::gui::configurator::Call::DisConnectCallSlots(void) {
 const megamol::gui::configurator::CallSlotPtrType& megamol::gui::configurator::Call::GetCallSlot(
     megamol::gui::configurator::CallSlotType type) {
 
-    // if (this->connected_call_slots[type] == nullptr) {
+    // if (this->connected_callslots[type] == nullptr) {
     //    vislib::sys::Log::DefaultLog.WriteWarn(
     //        "Returned pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     //}
-    return this->connected_call_slots[type];
+    return this->connected_callslots[type];
 }
 
 
@@ -147,8 +147,8 @@ void megamol::gui::configurator::Call::Presentation::Present(
             bool visible = ((callerslot_ptr->GUI_IsVisible() || callerslot_ptr->GUI_IsGroupInterface()) &&
                             (calleeslot_ptr->GUI_IsVisible() || calleeslot_ptr->GUI_IsGroupInterface()));
             /*
-            if ((callerslot_ptr->ParentModuleConnected()) &&
-                (calleeslot_ptr->ParentModuleConnected())) {
+            if ((callerslot_ptr->IsParentModuleConnected()) &&
+                (calleeslot_ptr->IsParentModuleConnected())) {
                 auto caller_parent = callerslot_ptr->GetParentModule();
                 auto callee_parent = calleeslot_ptr->GetParentModule();
 
@@ -249,6 +249,7 @@ void megamol::gui::configurator::Call::Presentation::Present(
                         state.interact.callslot_selected_uid = GUI_INVALID_ID;
                         state.interact.modules_selected_uids.clear();
                         state.interact.group_selected_uid = GUI_INVALID_ID;
+                        state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
                     }
 
                     // Deselection

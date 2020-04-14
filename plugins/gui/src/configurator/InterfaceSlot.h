@@ -39,10 +39,12 @@ typedef std::map<CallSlotType, InterfaceSlotPtrVectorType> InterfaceSlotPtrMapTy
  */
 class InterfaceSlot {
 public:
-    InterfaceSlot();
+    InterfaceSlot(ImGuiID uid);
     ~InterfaceSlot();
-
-    bool AddCallSlot(const CallSlotPtrType& callslot_ptr, const InterfaceSlotPtrType& parent_interface_ptr);
+    
+    const ImGuiID uid; 
+    
+    bool AddCallSlot(const CallSlotPtrType& callslot_ptr, const InterfaceSlotPtrType& parent_interfaceslot_ptr);
     
     bool RemoveCallSlot(ImGuiID callslot_uid);
 

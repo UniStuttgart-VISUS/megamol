@@ -61,8 +61,8 @@ public:
     std::vector<std::string> functions;
 
     bool IsConnected(void);
-    bool ConnectCallSlots(CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
-    bool DisConnectCallSlots(void);
+    bool ConnectCallSlots(CallSlotPtrType callslot_1, CallSlotPtrType callslot_2);
+    bool DisconnectCallSlots(void);
     const CallSlotPtrType& GetCallSlot(CallSlotType type);
 
     // GUI Presentation -------------------------------------------------------
@@ -73,7 +73,7 @@ public:
     inline void GUI_SetPresentation(Call::Presentations present) { this->present.presentations = present; }
 
 private:
-    std::map<CallSlotType, CallSlotPtrType> connected_call_slots;
+    std::map<CallSlotType, CallSlotPtrType> connected_callslots;
 
     /** ************************************************************************
      * Defines GUI call presentation.

@@ -233,9 +233,9 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
         // Temporary data structure holding call connection data
         struct CallData {
             std::string caller_module_full_name;
-            std::string caller_module_call_slot_name;
+            std::string caller_module_callslot_name;
             std::string callee_module_full_name;
-            std::string callee_module_call_slot_name;
+            std::string callee_module_callslot_name;
         };
         std::vector<CallData> call_data;
 
@@ -378,10 +378,10 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
 
                         cd.caller_module_full_name =
                             std::string(call->PeekCallerSlot()->Parent()->FullName().PeekBuffer());
-                        cd.caller_module_call_slot_name = std::string(call->PeekCallerSlot()->Name().PeekBuffer());
+                        cd.caller_module_callslot_name = std::string(call->PeekCallerSlot()->Name().PeekBuffer());
                         cd.callee_module_full_name =
                             std::string(call->PeekCalleeSlot()->Parent()->FullName().PeekBuffer());
-                        cd.callee_module_call_slot_name = std::string(call->PeekCalleeSlot()->Name().PeekBuffer());
+                        cd.callee_module_callslot_name = std::string(call->PeekCalleeSlot()->Name().PeekBuffer());
 
                         call_data.emplace_back(cd);
                     }
@@ -392,27 +392,27 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
 
         // Create calls
         for (auto& cd : call_data) {
-            CallSlotPtrType call_slot_1 = nullptr;
+            CallSlotPtrType callslot_1 = nullptr;
             for (auto& mod : graph_ptr->GetModules()) {
                 if (mod->FullName() == cd.caller_module_full_name) {
-                    for (auto& call_slot : mod->GetCallSlots(CallSlotType::CALLER)) {
-                        if (call_slot->name == cd.caller_module_call_slot_name) {
-                            call_slot_1 = call_slot;
+                    for (auto& callslot : mod->GetCallSlots(CallSlotType::CALLER)) {
+                        if (callslot->name == cd.caller_module_callslot_name) {
+                            callslot_1 = callslot;
                         }
                     }
                 }
             }
-            CallSlotPtrType call_slot_2 = nullptr;
+            CallSlotPtrType callslot_2 = nullptr;
             for (auto& mod : graph_ptr->GetModules()) {
                 if (mod->FullName() == cd.callee_module_full_name) {
-                    for (auto& call_slot : mod->GetCallSlots(CallSlotType::CALLEE)) {
-                        if (call_slot->name == cd.callee_module_call_slot_name) {
-                            call_slot_2 = call_slot;
+                    for (auto& callslot : mod->GetCallSlots(CallSlotType::CALLEE)) {
+                        if (callslot->name == cd.callee_module_callslot_name) {
+                            callslot_2 = callslot;
                         }
                     }
                 }
             }
-            graph_ptr->AddCall(this->GetCallsStock(), call_slot_1, call_slot_2);
+            graph_ptr->AddCall(this->GetCallsStock(), callslot_1, callslot_2);
         }
 
         graph_ptr->GUI_SetLayoutGraph();
@@ -493,7 +493,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 }
                 ImVec2 module_pos = this->readLuaProjectConfPos(lines[i]);
                 if ((module_pos.x != FLT_MAX) && (module_pos.x != FLT_MAX)) found_conf_pos = true;
-                std::vector<std::string> group_interface_callslots = this->readLuaProjectConfGroupInterface(lines[i]);
+                std::vector<std::string> group_interfaceslot_callslots = this->readLuaProjectConfGroupInterface(lines[i]);
 
                 /// DEBUG
                 // vislib::sys::Log::DefaultLog.WriteInfo(
@@ -541,25 +541,22 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 graph_module->GUI_SetPosition(module_pos);
 
                 ImGuiID group_uid = graph_ptr->AddGroupModule(view_namespace, graph_module);
-                if ((group_uid == GUI_INVALID_ID) && (group_interface_callslots.size() > 0)) {
+                if ((group_uid == GUI_INVALID_ID) && (group_interfaceslot_callslots.size() > 0)) {
                     vislib::sys::Log::DefaultLog.WriteWarn("Project File '%s' line %i: Unable to create group for "
                                                            "given group interface call slots. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), __FILE__, __FUNCTION__, __LINE__);
                 }
 
-                GroupPtrType group_ptr;
-                if (graph_ptr->GetGroup(group_uid, group_ptr)) {
-                    for (auto& callslot_interface_name : group_interface_callslots) {
-                        for (auto& callslot_map : graph_module->GetCallSlots()) {
-                            for (auto& callslot : callslot_map.second) {
-                                if (callslot->name == callslot_interface_name) {
-                                    group_ptr->InterfaceAddCallSlot(callslot);
-                                }
+                for (auto& callslot_interfaceslot_name : group_interfaceslot_callslots) {
+                    for (auto& callslot_map : graph_module->GetCallSlots()) {
+                        for (auto& callslot : callslot_map.second) {
+                            if (callslot->name == callslot_interfaceslot_name) {
+                                graph_ptr->AddGroupInterfaceCallSlot(group_uid, callslot);
                             }
                         }
                     }
                 }
-
+                
                 found_main_view = true;
             }
         }
@@ -596,7 +593,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 }
                 ImVec2 module_pos = this->readLuaProjectConfPos(lines[i]);
                 if ((module_pos.x != FLT_MAX) && (module_pos.x != FLT_MAX)) found_conf_pos = true;
-                std::vector<std::string> group_interface_callslots = this->readLuaProjectConfGroupInterface(lines[i]);
+                std::vector<std::string> group_interfaceslot_callslots = this->readLuaProjectConfGroupInterface(lines[i]);
 
                 /// DEBUG
                 // vislib::sys::Log::DefaultLog.WriteInfo(">>>> Class: '%s' NameSpace: '%s' Name: '%s' ConfPos: %f,
@@ -630,20 +627,17 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                     graph_module->GUI_SetPosition(module_pos);
 
                     ImGuiID group_uid = graph_ptr->AddGroupModule(module_namespace, graph_module);
-                    if ((group_uid == GUI_INVALID_ID) && (group_interface_callslots.size() > 0)) {
+                    if ((group_uid == GUI_INVALID_ID) && (group_interfaceslot_callslots.size() > 0)) {
                         vislib::sys::Log::DefaultLog.WriteWarn("Project File '%s' line %i: Unable to create group for "
                                                                "given group interface call slots. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), __FILE__, __FUNCTION__, __LINE__);
                     }
 
-                    GroupPtrType group_ptr;
-                    if (graph_ptr->GetGroup(group_uid, group_ptr)) {
-                        for (auto& callslot_interface_name : group_interface_callslots) {
-                            for (auto& callslot_map : graph_module->GetCallSlots()) {
-                                for (auto& callslot : callslot_map.second) {
-                                    if (callslot->name == callslot_interface_name) {
-                                        group_ptr->InterfaceAddCallSlot(callslot);
-                                    }
+                    for (auto& callslot_interfaceslot_name : group_interfaceslot_callslots) {
+                        for (auto& callslot_map : graph_module->GetCallSlots()) {
+                            for (auto& callslot : callslot_map.second) {
+                                if (callslot->name == callslot_interfaceslot_name) {
+                                    graph_ptr->AddGroupInterfaceCallSlot(group_uid, callslot);
                                 }
                             }
                         }
@@ -705,10 +699,10 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                         // Caller
                         module_name_idx = caller_slot_full_name.find(module_full_name);
                         if (module_name_idx != std::string::npos) {
-                            for (auto& call_slot_map : mod->GetCallSlots()) {
-                                for (auto& call_slot : call_slot_map.second) {
-                                    if (caller_slot_name == call_slot->name) {
-                                        caller_slot = call_slot;
+                            for (auto& callslot_map : mod->GetCallSlots()) {
+                                for (auto& callslot : callslot_map.second) {
+                                    if (caller_slot_name == callslot->name) {
+                                        caller_slot = callslot;
                                     }
                                 }
                             }
@@ -716,10 +710,10 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                         // Callee
                         module_name_idx = callee_slot_full_name.find(module_full_name);
                         if (module_name_idx != std::string::npos) {
-                            for (auto& call_slot_map : mod->GetCallSlots()) {
-                                for (auto& call_slot : call_slot_map.second) {
-                                    if (callee_slot_name == call_slot->name) {
-                                        callee_slot = call_slot;
+                            for (auto& callslot_map : mod->GetCallSlots()) {
+                                for (auto& callslot : callslot_map.second) {
+                                    if (callee_slot_name == callslot->name) {
+                                        callee_slot = callslot;
                                     }
                                 }
                             }
@@ -1011,9 +1005,9 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
     mod.description = std::string(mod_desc->Description());
     mod.is_view = false;
     mod.parameters.clear();
-    mod.call_slots.clear();
-    mod.call_slots.emplace(CallSlotType::CALLER, std::vector<CallSlot::StockCallSlot>());
-    mod.call_slots.emplace(CallSlotType::CALLEE, std::vector<CallSlot::StockCallSlot>());
+    mod.callslots.clear();
+    mod.callslots.emplace(CallSlotType::CALLER, std::vector<CallSlot::StockCallSlot>());
+    mod.callslots.emplace(CallSlotType::CALLEE, std::vector<CallSlot::StockCallSlot>());
 
     if (this->calls_stock.empty()) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -1158,7 +1152,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
                 }
             }
 
-            mod.call_slots[csd.type].emplace_back(csd);
+            mod.callslots[csd.type].emplace_back(csd);
         }
 
         // CalleeSlots
@@ -1220,7 +1214,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
                 }
             }
 
-            mod.call_slots[csd.type].emplace_back(csd);
+            mod.callslots[csd.type].emplace_back(csd);
         }
 
         paramSlots.clear();
@@ -1427,10 +1421,10 @@ std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfGroupIn
         for (auto& group : graph_ptr->GetGroups()) {
             if (group->uid == module_group_uid) {
 
-                for (auto& interfaceslot_map : group->GetInterfaceCallSlots()) {
+                for (auto& interfaceslot_map : group->GetInterfaceSlots()) {
                     for (auto& interfaceslot_ptr : interfaceslot_map.second) {
                         for (auto& callslot_ptr : interfaceslot_ptr->GetCallSlots()) {
-                            if (callslot_ptr->ParentModuleConnected()) {
+                            if (callslot_ptr->IsParentModuleConnected()) {
                                 if (callslot_ptr->GetParentModule()->uid == module_ptr->uid) {
                                     if (first) {
                                         conf_group_interface << "--confGroupInterface={";
@@ -1529,23 +1523,25 @@ void megamol::gui::configurator::GraphManager::Presentation::Present(
 
             // Catch call drop event and create new call
             if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
-                if (payload->IsDataType(GUI_DND_CALL_UID_TYPE) && payload->IsDelivery()) {
-                    ImGuiID* dragged_call_slot_uid_ptr = (ImGuiID*)payload->Data;
+                if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE) && payload->IsDelivery()) {
+                    ImGuiID* dragged_callslot_uid_ptr = (ImGuiID*)payload->Data;
 
-                    auto drag_call_slot_uid = (*dragged_call_slot_uid_ptr);
-                    auto drop_call_slot_uid = graph->GUI_GetDropCallSlot();
-                    CallSlotPtrType drag_call_slot_ptr;
-                    CallSlotPtrType drop_call_slot_ptr;
+                    auto drag_callslot_uid = (*dragged_callslot_uid_ptr);
+                    auto drop_callslot_uid = graph->GUI_GetDropCallSlot();
+                    CallSlotPtrType drag_callslot_ptr;
+                    CallSlotPtrType drop_callslot_ptr;
                     for (auto& mods : graph->GetModules()) {
-                        CallSlotPtrType call_slot_ptr;
-                        if (mods->GetCallSlot(drag_call_slot_uid, call_slot_ptr)) {
-                            drag_call_slot_ptr = call_slot_ptr;
+                        CallSlotPtrType callslot_ptr;
+                        if (mods->GetCallSlot(drag_callslot_uid, callslot_ptr)) {
+                            /// XXX +Interface
+                            drag_callslot_ptr = callslot_ptr;
                         }
-                        if (mods->GetCallSlot(drop_call_slot_uid, call_slot_ptr)) {
-                            drop_call_slot_ptr = call_slot_ptr;
+                        if (mods->GetCallSlot(drop_callslot_uid, callslot_ptr)) {
+                            /// XXX +Interface
+                            drop_callslot_ptr = callslot_ptr;
                         }
                     }
-                    graph->AddCall(inout_graph_manager.calls_stock, drag_call_slot_ptr, drop_call_slot_ptr);
+                    graph->AddCall(inout_graph_manager.calls_stock, drag_callslot_ptr, drop_callslot_ptr);
                 }
             }
         }

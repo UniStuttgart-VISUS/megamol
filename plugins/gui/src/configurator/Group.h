@@ -45,10 +45,11 @@ public:
     inline const ModulePtrVectorType& GetModules(void) { return this->modules; }
     inline bool Empty(void) { return (this->modules.empty()); }
 
-    bool InterfaceAddCallSlot(const CallSlotPtrType& callslot_ptr);
+    bool InterfaceAddCallSlot(const CallSlotPtrType& callslot_ptr, ImGuiID interfaceslot_uid);
     bool InterfaceRemoveCallSlot(ImGuiID callslot_uid);
     bool InterfaceContainsCallSlot(ImGuiID callslot_uid);
-    inline const InterfaceSlotPtrMapType& GetInterfaceCallSlots(void) { return this->interfaceslots; }
+    bool GetInterfaceSlot(ImGuiID interfaceslot_uid, InterfaceSlotPtrType& interfaceslot_ptr);
+    inline const InterfaceSlotPtrMapType& GetInterfaceSlots(void) { return this->interfaceslots; }
 
     // GUI Presentation -------------------------------------------------------
 
@@ -93,9 +94,6 @@ private:
 
     } present;
 
-    // FUNCTIONS --------------------------------------------------------------
-
-    void restore_callslot_interface_state(void);
 };
 
 

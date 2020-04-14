@@ -49,7 +49,7 @@ public:
         std::string plugin_name;
         bool is_view;
         std::vector<Parameter::StockParameter> parameters;
-        std::map<CallSlotType, std::vector<CallSlot::StockCallSlot>> call_slots;
+        std::map<CallSlotType, std::vector<CallSlot::StockCallSlot>> callslots;
     };
 
     Module(ImGuiID uid);
@@ -68,7 +68,7 @@ public:
     std::string name;
     bool is_view_instance;
 
-    bool AddCallSlot(CallSlotPtrType call_slot);
+    bool AddCallSlot(CallSlotPtrType callslot);
     bool RemoveAllCallSlots(void);
     bool GetCallSlot(ImGuiID callslot_uid, CallSlotPtrType& out_callslot_ptr);
     const CallSlotPtrVectorType& GetCallSlots(CallSlotType type);
@@ -107,7 +107,7 @@ public:
     }
 
 private:
-    CallSlotPtrMapType call_slots;
+    CallSlotPtrMapType callslots;
 
     /** ************************************************************************
      * Defines GUI module presentation.

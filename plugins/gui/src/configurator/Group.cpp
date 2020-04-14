@@ -60,8 +60,6 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
     module_ptr->GUI_SetGroupName(this->name);
     this->present.ForceUpdate();
 
-    this->restore_callslot_interface_state();
-
     vislib::sys::Log::DefaultLog.WriteInfo(
         "Added module '%s' to group '%s'.\n", module_ptr->name.c_str(), this->name.c_str());
     return true;
@@ -91,8 +89,6 @@ bool megamol::gui::configurator::Group::RemoveModule(ImGuiID module_uid) {
                 (*mod_iter).reset();
                 this->modules.erase(mod_iter);
 
-                this->restore_callslot_interface_state();
-
                 return true;
             }
         }
@@ -121,7 +117,7 @@ bool megamol::gui::configurator::Group::ContainsModule(ImGuiID module_uid) {
 }
 
 
-bool megamol::gui::configurator::Group::InterfaceAddCallSlot(const CallSlotPtrType& callslot_ptr) {
+bool megamol::gui::configurator::Group::InterfaceAddCallSlot(const CallSlotPtrType& callslot_ptr, ImGuiID interfaceslot_uid) {
 
     bool successfully_added = false;
 
@@ -142,7 +138,7 @@ bool megamol::gui::configurator::Group::InterfaceAddCallSlot(const CallSlotPtrTy
 
     // Only add if parent module is already part of the group.
     bool parent_module_group_member = false;
-    if (callslot_ptr->ParentModuleConnected()) {
+    if (callslot_ptr->IsParentModuleConnected()) {
         ImGuiID parent_module_uid = callslot_ptr->GetParentModule()->uid;
         for (auto& module_ptr : this->modules) {
             if (parent_module_uid == module_ptr->uid) {
@@ -156,20 +152,26 @@ bool megamol::gui::configurator::Group::InterfaceAddCallSlot(const CallSlotPtrTy
     }
 
     if (parent_module_group_member) {
+        /// XXX
         // Try to add call slot to interface slot already containing compatible call slots ...
+        /*
         for (auto& interfaceslot_ptr : this->interfaceslots[callslot_ptr->type]) {
             // ("Contain Check" is already done above)
             if (interfaceslot_ptr->IsCallSlotCompatible(callslot_ptr)) {
                 successfully_added = interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr);
             }
         }
-
+        */
         // ... or create new interface slot for this call slot.
+        
         if (!successfully_added) {
-            this->interfaceslots[callslot_ptr->type].emplace_back(std::make_shared<InterfaceSlot>());
+            this->interfaceslots[callslot_ptr->type].emplace_back(std::make_shared<InterfaceSlot>(interfaceslot_uid));
             vislib::sys::Log::DefaultLog.WriteInfo("Added interface slot to group '%s'.\n", this->name.c_str());
-
-            successfully_added = this->interfaceslots[callslot_ptr->type].back()->AddCallSlot(callslot_ptr);
+            
+            InterfaceSlotPtrType interfaceslot_ptr = this->interfaceslots[callslot_ptr->type].back();
+            if (interfaceslot_ptr != nullptr) {
+                successfully_added = interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr);
+            }
         }
     } else {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -232,76 +234,27 @@ bool megamol::gui::configurator::Group::InterfaceContainsCallSlot(ImGuiID callsl
 }
 
 
-void megamol::gui::configurator::Group::restore_callslot_interface_state(void) {
+bool megamol::gui::configurator::Group::GetInterfaceSlot(ImGuiID interfaceslot_uid, InterfaceSlotPtrType& interfaceslot_ptr) {
 
-    for (auto& module_ptr : this->modules) {
-
-        // Add connected call slots to group interface if connected module is not part of same group
-        /// Caller
-        for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
-            if (callerslot_ptr->CallsConnected()) {
-                for (auto& call : callerslot_ptr->GetConnectedCalls()) {
-                    auto calleeslot_ptr = call->GetCallSlot(CallSlotType::CALLEE);
-                    if (calleeslot_ptr->ParentModuleConnected()) {
-                        ImGuiID parent_module_group_uid = calleeslot_ptr->GetParentModule()->GUI_GetGroupMembership();
-                        if (parent_module_group_uid != this->uid) {
-                            this->InterfaceAddCallSlot(callerslot_ptr);
-                        }
-                    }
-                }
-            }
-        }
-        /// Callee
-        for (auto& calleeslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLEE)) {
-            if (calleeslot_ptr->CallsConnected()) {
-                for (auto& call : calleeslot_ptr->GetConnectedCalls()) {
-                    auto callerslot_ptr = call->GetCallSlot(CallSlotType::CALLER);
-                    if (callerslot_ptr->ParentModuleConnected()) {
-                        ImGuiID parent_module_group_uid = callerslot_ptr->GetParentModule()->GUI_GetGroupMembership();
-                        if (parent_module_group_uid != this->uid) {
-                            this->InterfaceAddCallSlot(calleeslot_ptr);
-                        }
-                    }
-                }
-            }
-        }
-        // Remove connected call slots of group interface if connected module is part of same group
-        /// Caller
-        for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
-            if (callerslot_ptr->CallsConnected()) {
-                for (auto& call : callerslot_ptr->GetConnectedCalls()) {
-                    auto calleeslot_ptr = call->GetCallSlot(CallSlotType::CALLEE);
-                    if (calleeslot_ptr->ParentModuleConnected()) {
-                        ImGuiID parent_module_group_uid = calleeslot_ptr->GetParentModule()->GUI_GetGroupMembership();
-                        if (parent_module_group_uid == this->uid) {
-                            this->InterfaceRemoveCallSlot(calleeslot_ptr->uid);
-                        }
-                    }
-                }
-            }
-        }
-        /// Callee
-        for (auto& calleeslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLEE)) {
-            if (calleeslot_ptr->CallsConnected()) {
-                for (auto& call : calleeslot_ptr->GetConnectedCalls()) {
-                    auto callerslot_ptr = call->GetCallSlot(CallSlotType::CALLER);
-                    if (callerslot_ptr->ParentModuleConnected()) {
-                        ImGuiID parent_module_group_uid = callerslot_ptr->GetParentModule()->GUI_GetGroupMembership();
-                        if (parent_module_group_uid == this->uid) {
-                            this->InterfaceRemoveCallSlot(callerslot_ptr->uid);
-                        }
-                    }
+    if (interfaceslot_uid != GUI_INVALID_ID) {
+        for (auto& interfaceslots_map : this->interfaceslots) {
+            for (auto& interfaceslot : interfaceslots_map.second) {
+                if (interfaceslot->uid == interfaceslot_uid) {
+                    interfaceslot_ptr = interfaceslot;
+                    return true;
                 }
             }
         }
     }
+    return false;
 }
-
+    
+    
 
 // GROUP PRESENTATION ####################################################
 
 megamol::gui::configurator::Group::Presentation::Presentation(void)
-    : border(GUI_SLOT_RADIUS * 2.0f)
+    : border(GUI_SLOT_RADIUS * 4.0f)
     , position(ImVec2(FLT_MAX, FLT_MAX))
     , size(ImVec2(0.0f, 0.0f))
     , utils()
@@ -408,6 +361,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
             state.interact.callslot_selected_uid = GUI_INVALID_ID;
             state.interact.modules_selected_uids.clear();
             state.interact.call_selected_uid = GUI_INVALID_ID;
+            state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
         }
 
         // Selection
@@ -485,7 +439,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
         }
 
         // Draw interface slots ----------------------------------------------------
-        for (auto& interfaceslots_map : inout_group.GetInterfaceCallSlots()) {
+        for (auto& interfaceslots_map : inout_group.GetInterfaceSlots()) {
             for (auto& interfaceslot_ptr : interfaceslots_map.second) {
                 interfaceslot_ptr->GUI_Present(state, this->collapsed_view);
             }

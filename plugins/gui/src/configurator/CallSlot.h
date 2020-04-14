@@ -69,20 +69,20 @@ public:
 
     bool CallsConnected(void) const;
     bool ConnectCall(CallPtrType call);
-    bool DisConnectCall(ImGuiID call_uid, bool called_by_call);
-    bool DisConnectCalls(void);
+    bool DisconnectCall(ImGuiID call_uid, bool called_by_call);
+    bool DisconnectCalls(void);
     const std::vector<CallPtrType>& GetConnectedCalls(void);
 
-    bool ParentModuleConnected(void) const;
+    bool IsParentModuleConnected(void) const;
     bool ConnectParentModule(ModulePtrType parent_module);
-    bool DisConnectParentModule(void);
-    const ModulePtrType GetParentModule(void);
+    bool DisconnectParentModule(void);
+    const ModulePtrType& GetParentModule(void);
 
-    static ImGuiID CheckCompatibleAvailableCallIndex(const CallSlotPtrType call_slot_ptr, CallSlot& call_slot);
+    static ImGuiID CheckCompatibleAvailableCallIndex(const CallSlotPtrType callslot_ptr, CallSlot& callslot);
 
-    static ImGuiID GetCompatibleCallIndex(const CallSlotPtrType call_slot_1, const CallSlotPtrType call_slot_2);
+    static ImGuiID GetCompatibleCallIndex(const CallSlotPtrType callslot_1, const CallSlotPtrType callslot_2);
     static ImGuiID GetCompatibleCallIndex(
-        const CallSlotPtrType call_slot, const CallSlot::StockCallSlot& stock_call_slot);
+        const CallSlotPtrType callslot, const CallSlot::StockCallSlot& stock_callslot);
 
     // GUI Presentation -------------------------------------------------------
 
@@ -91,14 +91,14 @@ public:
     inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
 
     inline bool GUI_IsVisible(void) { return this->present.IsVisible(); }
-    inline bool GUI_IsGroupInterface(void) { return (this->present.group.interface_ptr != nullptr); }
+    inline bool GUI_IsGroupInterface(void) { return (this->present.group.interfaceslot_ptr != nullptr); }
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     inline bool GUI_IsLabelVisible(void) { return this->present.label_visible; }
-    inline const InterfaceSlotPtrType& GUI_GetGroupInterface(void) { return this->present.group.interface_ptr; }
+    inline const InterfaceSlotPtrType& GUI_GetGroupInterface(void) { return this->present.group.interfaceslot_ptr; }
 
     inline void GUI_SetVisibility(bool is_visible) { this->present.SetVisibility(is_visible); }
-    inline void GUI_SetGroupInterface(const InterfaceSlotPtrType& interface_ptr) {
-        this->present.group.interface_ptr = interface_ptr;
+    inline void GUI_SetGroupInterface(const InterfaceSlotPtrType& interfaceslot_ptr) {
+        this->present.group.interfaceslot_ptr = interfaceslot_ptr;
     }
     inline void GUI_SetPresentation(CallSlot::Presentations present) { this->present.presentations = present; }
     inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
@@ -113,16 +113,16 @@ private:
     class Presentation {
     public:
         struct GroupState {
-            InterfaceSlotPtrType interface_ptr;
+            InterfaceSlotPtrType interfaceslot_ptr;
         };
 
         Presentation(void);
 
         ~Presentation(void);
 
-        void Present(CallSlot& inout_call_slot, GraphItemsStateType& state);
+        void Present(CallSlot& inout_callslot, GraphItemsStateType& state);
 
-        void UpdatePosition(CallSlot& inout_call_slot, const GraphCanvasType& in_canvas);
+        void UpdatePosition(CallSlot& inout_callslot, const GraphCanvasType& in_canvas);
 
         ImVec2 GetPosition(void) { return this->position; }
         bool IsVisible(void) { return this->visible; }

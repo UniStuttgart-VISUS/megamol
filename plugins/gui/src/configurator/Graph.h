@@ -45,15 +45,16 @@ public:
     inline const ModulePtrVectorType& GetModules(void) { return this->modules; }
     bool GetModule(ImGuiID module_uid, ModulePtrType& out_module_ptr);
 
-    bool AddCall(const CallStockVectorType& stock_calls, CallSlotPtrType call_slot_1, CallSlotPtrType call_slot_2);
+    bool AddCall(const CallStockVectorType& stock_calls, CallSlotPtrType callslot_1, CallSlotPtrType callslot_2);
     bool DeleteCall(ImGuiID call_uid);
 
     ImGuiID AddGroup(const std::string& group_name = "");
     bool DeleteGroup(ImGuiID group_uid);
-    ImGuiID AddGroupModule(const std::string& group_name, const ModulePtrType& module_ptr);
     inline const GroupPtrVectorType& GetGroups(void) { return this->groups; }
-    bool GetGroup(ImGuiID group_uid, GroupPtrType& out_group_ptr);
-
+    
+    ImGuiID AddGroupModule(const std::string& group_name, const ModulePtrType& module_ptr);
+    bool AddGroupInterfaceCallSlot(ImGuiID group_uid, const CallSlotPtrType& callslot_ptr);
+        
     inline bool IsDirty(void) const { return this->dirty_flag; }
     inline void ResetDirty(void) { this->dirty_flag = false; }
 
@@ -63,7 +64,6 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    // Returns uid if graph is the currently active/drawn one.
     inline void GUI_Present(GraphStateType& state) { this->present.Present(*this, state); }
 
     inline ImGuiID GUI_GetSelectedGroup(void) const { return this->present.GetSelectedGroup(); }
@@ -154,8 +154,10 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
+    void restore_callslots_interfaceslot_state(ImGuiID group_uid);
     bool delete_disconnected_calls(void);
     inline const CallPtrVectorType& get_calls(void) { return this->calls; }
+    bool get_group(ImGuiID group_uid, GroupPtrType& out_group_ptr);
     const std::string generate_unique_group_name(void);
     const std::string generate_unique_module_name(const std::string& name);
     inline ImGuiID generate_unique_id(void) { return (++this->generated_uid); }

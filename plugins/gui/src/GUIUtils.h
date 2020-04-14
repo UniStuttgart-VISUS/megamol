@@ -49,7 +49,7 @@ namespace gui {
 #define GUI_LINE_THICKNESS (3.0f)
 #define GUI_RECT_CORNER_RADIUS (0.0f)
 #define GUI_MAX_MULITLINE (7)
-#define GUI_DND_CALL_UID_TYPE ("DND_CALL")
+#define GUI_DND_CALLSLOT_UID_TYPE ("DND_CALL")
 #define GUI_GRAPH_BORDER (GUI_SLOT_RADIUS * 4.0f)
 
 /********** Types **********/
@@ -108,6 +108,8 @@ typedef struct _interact_state_ {
     megamol::gui::UIDPairType callslot_add_group_uid;                // in out
     ImGuiID callslot_remove_group_uid;                               // in out
     megamol::gui::configurator::CallSlotPtrType callslot_compat_ptr; // in
+    ImGuiID interfaceslot_selected_uid;                              // in out
+    ImGuiID interfaceslot_hovered_uid;                               // in out    
 } GraphItemsInteractType;
 
 /* Data type holding shared state of graph items. */

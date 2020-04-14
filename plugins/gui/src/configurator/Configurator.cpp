@@ -382,16 +382,17 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
     bool search_filter = true;
     bool compat_filter = true;
 
-    std::string compat_call_slot_name;
-    CallSlotPtrType selected_call_slot_ptr;
+    std::string compat_callslot_name;
+    CallSlotPtrType selected_callslot_ptr;
     GraphPtrType graph_ptr;
     if (this->graph_manager.GetGraph(this->state.graph_selected_uid, graph_ptr)) {
-        auto call_slot_id = graph_ptr->GUI_GetSelectedCallSlot();
-        if (call_slot_id != GUI_INVALID_ID) {
+        auto callslot_id = graph_ptr->GUI_GetSelectedCallSlot();
+        if (callslot_id != GUI_INVALID_ID) {
             for (auto& mods : graph_ptr->GetModules()) {
-                CallSlotPtrType call_slot_ptr;
-                if (mods->GetCallSlot(call_slot_id, call_slot_ptr)) {
-                    selected_call_slot_ptr = call_slot_ptr;
+                CallSlotPtrType callslot_ptr;
+                if (mods->GetCallSlot(callslot_id, callslot_ptr)) {
+                    /// XXX +Interface
+                    selected_callslot_ptr = callslot_ptr;
                 }
             }
         }
@@ -408,13 +409,13 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
 
         // Filter module by compatible call slots
         compat_filter = true;
-        if (selected_call_slot_ptr != nullptr) {
+        if (selected_callslot_ptr != nullptr) {
             compat_filter = false;
-            for (auto& stock_call_slot_map : mod.call_slots) {
-                for (auto& stock_call_slot : stock_call_slot_map.second) {
-                    ImGuiID cpcidx = CallSlot::GetCompatibleCallIndex(selected_call_slot_ptr, stock_call_slot);
+            for (auto& stock_callslot_map : mod.callslots) {
+                for (auto& stock_callslot : stock_callslot_map.second) {
+                    ImGuiID cpcidx = CallSlot::GetCompatibleCallIndex(selected_callslot_ptr, stock_callslot);
                     if (cpcidx != GUI_INVALID_ID) {
-                        compat_call_slot_name = stock_call_slot.name;
+                        compat_callslot_name = stock_callslot.name;
                         compat_filter = true;
                     }
                 }
@@ -451,13 +452,13 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                     ModulePtrType module_ptr;
                     if (graph_ptr->GetModule(module_uid, module_ptr)) {
                         // If there is a call slot selected, create call to compatible call slot of new module
-                        if (compat_filter && (selected_call_slot_ptr != nullptr)) {
+                        if (compat_filter && (selected_callslot_ptr != nullptr)) {
                             // Get call slots of last added module
-                            for (auto& call_slot_map : module_ptr->GetCallSlots()) {
-                                for (auto& call_slot : call_slot_map.second) {
-                                    if (call_slot->name == compat_call_slot_name) {
+                            for (auto& callslot_map : module_ptr->GetCallSlots()) {
+                                for (auto& callslot : callslot_map.second) {
+                                    if (callslot->name == compat_callslot_name) {
                                         graph_ptr->AddCall(
-                                            this->graph_manager.GetCallsStock(), selected_call_slot_ptr, call_slot);
+                                            this->graph_manager.GetCallsStock(), selected_callslot_ptr, callslot);
                                     }
                                 }
                             }
