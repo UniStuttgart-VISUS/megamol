@@ -7,8 +7,8 @@
 
 #include "stdafx.h"
 
-#include "InterfaceSlot.h"
 #include "CallSlot.h"
+#include "InterfaceSlot.h"
 
 
 using namespace megamol;
@@ -20,7 +20,7 @@ megamol::gui::configurator::InterfaceSlot::InterfaceSlot() {}
 
 
 megamol::gui::configurator::InterfaceSlot::~InterfaceSlot(void) {
-    
+
     // Remove all call slots from interface slot
     std::vector<ImGuiID> callslots_uids;
     for (auto& callslot_ptr : callslots) {
@@ -29,7 +29,7 @@ megamol::gui::configurator::InterfaceSlot::~InterfaceSlot(void) {
     for (auto& callslots_uid : callslots_uids) {
         this->RemoveCallSlot(callslots_uid);
     }
-    this->callslots.clear();    
+    this->callslots.clear();
 }
 
 
@@ -64,20 +64,21 @@ bool megamol::gui::configurator::InterfaceSlot::AddCallSlot(const CallSlotPtrTyp
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
-    } 
-    
+    }
+
     vislib::sys::Log::DefaultLog.WriteError(
-        "Unable to add call slot '%s' to interface slot of group. [%s, %s, line %d]\n", callslot_ptr->name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        "Unable to add call slot '%s' to interface slot of group. [%s, %s, line %d]\n", callslot_ptr->name.c_str(),
+        __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
 
 
 bool megamol::gui::configurator::InterfaceSlot::RemoveCallSlot(ImGuiID callslot_uid) {
-    
+
     try {
         for (auto iter = this->callslots.begin(); iter != this->callslots.end(); iter++) {
             if ((*iter)->uid == callslot_uid) {
-                
+
                 (*iter)->GUI_SetGroupInterface(nullptr);
 
                 vislib::sys::Log::DefaultLog.WriteInfo(
@@ -101,13 +102,13 @@ bool megamol::gui::configurator::InterfaceSlot::RemoveCallSlot(ImGuiID callslot_
 
 
 bool megamol::gui::configurator::InterfaceSlot::ContainsCallSlot(ImGuiID callslot_uid) {
-    
+
     for (auto& callslot : this->callslots) {
         if (callslot_uid == callslot->uid) {
             return true;
         }
     }
-    return false;        
+    return false;
 }
 
 
@@ -118,15 +119,16 @@ bool megamol::gui::configurator::InterfaceSlot::IsCallSlotCompatible(const CallS
             "Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    
+
     // Check for compatibility (with all available call slots...)
     size_t compatible = 0;
     for (auto& callslot : this->callslots) {
-        if ((callslot_ptr->type == callslot->type) && (callslot_ptr->compatible_call_idxs == callslot->compatible_call_idxs)) {
+        if ((callslot_ptr->type == callslot->type) &&
+            (callslot_ptr->compatible_call_idxs == callslot->compatible_call_idxs)) {
             compatible++;
         }
     }
-    
+
     bool retval = (compatible == this->callslots.size());
 
     if ((compatible > 0) && (compatible != this->callslots.size())) {
@@ -137,53 +139,47 @@ bool megamol::gui::configurator::InterfaceSlot::IsCallSlotCompatible(const CallS
 }
 
 
-bool megamol::gui::configurator::InterfaceSlot::IsEmpty(void) { 
-    
-    return (this->callslots.empty()); 
-}
-    
+bool megamol::gui::configurator::InterfaceSlot::IsEmpty(void) { return (this->callslots.empty()); }
 
 
 // GROUP INTERFACE SLOT PRESENTATION ###########################################
 
 megamol::gui::configurator::InterfaceSlot::Presentation::Presentation(void)
-    : position(ImVec2(FLT_MAX, FLT_MAX))
-    , utils()
-    , selected(false){
-
-}
+    : position(ImVec2(FLT_MAX, FLT_MAX)), utils(), selected(false) {}
 
 
 megamol::gui::configurator::InterfaceSlot::Presentation::~Presentation(void) {}
 
 
 void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
-    megamol::gui::configurator::InterfaceSlot& inout_interfaceslot, megamol::gui::GraphItemsStateType& state, bool collapsed_view) {
+    megamol::gui::configurator::InterfaceSlot& inout_interfaceslot, megamol::gui::GraphItemsStateType& state,
+    bool collapsed_view) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
-    
+
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
-    
+
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
 
-    try { 
-        
+    try {
+
         CallSlotType type = inout_interfaceslot.GetCallSlots().front()->type;
-        bool compatible = (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.callslot_compat_ptr, (*inout_interfaceslot.GetCallSlots().front())) != GUI_INVALID_ID);
+        bool compatible = (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.callslot_compat_ptr,
+                               (*inout_interfaceslot.GetCallSlots().front())) != GUI_INVALID_ID);
         // Generate UID sting (interface slot otherwise does not need one ...)
         std::string interface_uid_str;
         for (auto& callslot_ptr : inout_interfaceslot.GetCallSlots()) {
             interface_uid_str += std::to_string(callslot_ptr->uid);
         }
-        
-        float radius = GUI_SLOT_RADIUS * state.canvas.zooming;  
-                
+
+        float radius = GUI_SLOT_RADIUS * state.canvas.zooming;
+
         // Button
         ImGui::SetCursorScreenPos(this->position - ImVec2(radius, radius));
         std::string label = "interface_slot" + interface_uid_str;
@@ -193,8 +189,8 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
 
         bool button_active = ImGui::IsItemActive();
         bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
-        bool button_hovered = (ImGui::IsItemHovered() &&
-                        (state.interact.module_hovered_uid == GUI_INVALID_ID) && (state.interact.callslot_hovered_uid == GUI_INVALID_ID));
+        bool button_hovered = (ImGui::IsItemHovered() && (state.interact.module_hovered_uid == GUI_INVALID_ID) &&
+                               (state.interact.callslot_hovered_uid == GUI_INVALID_ID));
 
         // Hover Tooltip
         if (button_hovered) {
@@ -206,13 +202,13 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
         } else {
             this->utils.ResetHoverToolTip();
         }
-        
+
         // Colors
-        ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg]; 
+        ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
         const ImU32 COLOR_INTERFACE_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
-        tmpcol = style.Colors[ImGuiCol_ScrollbarGrab]; 
+        tmpcol = style.Colors[ImGuiCol_ScrollbarGrab];
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
         const ImU32 COLOR_INTERFACE_LINE = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
@@ -221,8 +217,8 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
         tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive];
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
         const ImU32 COLOR_INTERFACE_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
-        
-        tmpcol = style.Colors[ImGuiCol_FrameBg]; 
+
+        tmpcol = style.Colors[ImGuiCol_FrameBg];
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
         const ImU32 COLOR_SLOT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
@@ -231,11 +227,11 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
         const ImU32 COLOR_SLOT_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
         ImU32 COLOR_SLOT_CALLER_HIGHLIGHT = IM_COL32(0, 255, 192, 255);
-        
+
         ImU32 COLOR_SLOT_CALLEE_HIGHLIGHT = IM_COL32(192, 0, 255, 255);
-        
+
         ImU32 COLOR_SLOT_COMPATIBLE = IM_COL32(192, 255, 64, 255);
-                              
+
         // Color modification
         ImU32 slot_highlight_color = COLOR_SLOT_BACKGROUND;
         if (type == CallSlotType::CALLER) {
@@ -259,7 +255,8 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
         // Draw Curves
         if (!collapsed_view) {
             for (auto& callslot_ptr : inout_interfaceslot.GetCallSlots()) {
-                draw_list->AddLine(this->position, callslot_ptr->GUI_GetPosition(), COLOR_INTERFACE_LINE, GUI_LINE_THICKNESS * state.canvas.zooming);
+                draw_list->AddLine(this->position, callslot_ptr->GUI_GetPosition(), COLOR_INTERFACE_LINE,
+                    GUI_LINE_THICKNESS * state.canvas.zooming);
             }
         }
 

@@ -78,7 +78,7 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     static ImGuiID generated_uid;
-    
+
     unsigned int group_name_uid;
 
     ModulePtrVectorType modules;

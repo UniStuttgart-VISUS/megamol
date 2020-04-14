@@ -28,8 +28,8 @@ class InterfaceSlot;
 
 // Pointer types to classes
 #ifndef _CALL_SLOT_TYPE_
-    enum CallSlotType { CALLEE, CALLER };
-    #define _CALL_SLOT_TYPE_
+enum CallSlotType { CALLEE, CALLER };
+#    define _CALL_SLOT_TYPE_
 #endif
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::vector<CallSlotPtrType> CallSlotPtrVectorType;
@@ -93,11 +93,13 @@ public:
     inline bool GUI_IsVisible(void) { return this->present.IsVisible(); }
     inline bool GUI_IsGroupInterface(void) { return (this->present.group.interface_ptr != nullptr); }
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
-    inline bool GUI_IsLabelVisible(void) { return this->present.label_visible; }    
+    inline bool GUI_IsLabelVisible(void) { return this->present.label_visible; }
     inline const InterfaceSlotPtrType& GUI_GetGroupInterface(void) { return this->present.group.interface_ptr; }
 
     inline void GUI_SetVisibility(bool is_visible) { this->present.SetVisibility(is_visible); }
-    inline void GUI_SetGroupInterface(const InterfaceSlotPtrType& interface_ptr) { this->present.group.interface_ptr = interface_ptr; }
+    inline void GUI_SetGroupInterface(const InterfaceSlotPtrType& interface_ptr) {
+        this->present.group.interface_ptr = interface_ptr;
+    }
     inline void GUI_SetPresentation(CallSlot::Presentations present) { this->present.presentations = present; }
     inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
 
@@ -113,7 +115,7 @@ private:
         struct GroupState {
             InterfaceSlotPtrType interface_ptr;
         };
-    
+
         Presentation(void);
 
         ~Presentation(void);
@@ -129,7 +131,7 @@ private:
 
         GroupState group;
         CallSlot::Presentations presentations;
-        bool label_visible;        
+        bool label_visible;
 
     private:
         // Absolute position including canvas offset and zooming

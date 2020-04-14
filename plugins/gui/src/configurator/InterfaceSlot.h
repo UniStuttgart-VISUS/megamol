@@ -23,8 +23,8 @@ class InterfaceSlot;
 ///
 class CallSlot;
 #ifndef _CALL_SLOT_TYPE_
-    enum CallSlotType { CALLEE, CALLER };
-    #define _CALL_SLOT_TYPE_
+enum CallSlotType { CALLEE, CALLER };
+#    define _CALL_SLOT_TYPE_
 #endif
 typedef std::vector<CallSlotPtrType> CallSlotPtrVectorType;
 
@@ -39,32 +39,32 @@ typedef std::map<CallSlotType, InterfaceSlotPtrVectorType> InterfaceSlotPtrMapTy
  */
 class InterfaceSlot {
 public:
-
     InterfaceSlot();
     ~InterfaceSlot();
 
     bool AddCallSlot(const CallSlotPtrType& callslot_ptr, const InterfaceSlotPtrType& parent_interface_ptr);
     
     bool RemoveCallSlot(ImGuiID callslot_uid);
-    
+
     bool ContainsCallSlot(ImGuiID callslot_uid);
     
     bool IsCallSlotCompatible(const CallSlotPtrType& callslot_ptr);
     
     bool IsEmpty(void);
-    
+
     CallSlotPtrVectorType& GetCallSlots(void) { return this->callslots; }
 
     // GUI Presentation -------------------------------------------------------
 
-    inline void GUI_Present(GraphItemsStateType& state, bool collapsed_view) { this->present.Present(*this, state, collapsed_view); }
+    inline void GUI_Present(GraphItemsStateType& state, bool collapsed_view) {
+        this->present.Present(*this, state, collapsed_view);
+    }
 
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
 
     inline void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
 
 private:
-
     CallSlotPtrVectorType callslots;
 
     /** ************************************************************************

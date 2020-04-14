@@ -9,8 +9,8 @@
 #define MEGAMOL_GUI_GRAPH_MODULE_H_INCLUDED
 
 
-#include "GUIUtils.h"
 #include "CallSlot.h"
+#include "GUIUtils.h"
 #include "Parameter.h"
 
 
@@ -90,7 +90,7 @@ public:
 
     inline bool GUI_IsVisibleInGroup(void) { return this->present.group.visible; }
     inline bool GUI_IsLabelVisible(void) { return this->present.label_visible; }
-    inline ImGuiID GUI_GetGroupMembership(void) { return this->present.group.member; }        
+    inline ImGuiID GUI_GetGroupMembership(void) { return this->present.group.member; }
     inline std::string GUI_GetGroupName(void) { return this->present.group.name; }
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     inline ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
@@ -114,13 +114,12 @@ private:
      */
     class Presentation {
     public:
-        
         struct GroupState {
             ImGuiID member;
             bool visible;
             std::string name;
         };
-    
+
         Presentation(void);
 
         ~Presentation(void);
