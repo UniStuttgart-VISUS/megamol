@@ -475,6 +475,33 @@ double HierarchicalClustering::distance(std::vector<double>* X, std::vector<doub
     return distance;
 }
 
+double HierarchicalClustering::nodeDistance(
+    HierarchicalClustering::CLUSTERNODE* node1, HierarchicalClustering::CLUSTERNODE* node2, int distanceMode) {
+    double distance = 0.0;
+    double leftval = 0.0;
+    double rightval = 0.0;
+
+    // TODO
+
+    if (node1 != nullptr) {
+        if (node1->left == nullptr && node1->right == nullptr) {
+            leftval = this->distance(node1->left->features, node1->right->features, distanceMode); // this line is bullshit
+        }
+
+        //leftval = this->distance
+    }
+
+    if (node1 == nullptr && node2 == nullptr) {
+        
+    }
+
+    if (node1 != nullptr || node2 != nullptr) {
+        
+    }
+
+    return distance;
+}
+
 HierarchicalClustering::CLUSTERNODE* HierarchicalClustering::mergeCluster(
     CLUSTERNODE* cluster1, CLUSTERNODE* cluster2) {
 
@@ -979,6 +1006,18 @@ void HierarchicalClustering::calculatePCA(std::vector<HierarchicalClustering::CL
     int rowsCount = X->size();
     int columnCount = (*X)[0]->features->size();
     Eigen::MatrixXd data = Eigen::MatrixXd(rowsCount, columnCount);
+
+    if (this->momentsmethode == 3) { // for ai features, just write something and exit
+        for (int row = 0; row < rowsCount; row++) {
+            CLUSTERNODE* node = (*X)[row];
+            std::vector<double>* pca = new std::vector<double>();
+            for (int column = 0; column < columnCount; column++) {
+                pca->push_back(0.5);
+            }
+            node->pca2d = pca;
+        }
+        return;
+    }
 
     for (int row = 0; row < rowsCount; row++) {
         std::vector<double>* rowVector = (*X)[row]->features;

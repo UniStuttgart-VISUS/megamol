@@ -103,6 +103,7 @@ public:
     std::vector<CLUSTERNODE*>* getClusterNodesOfNode(CLUSTERNODE*);
     CLUSTERNODE* getClusterRootOfNode(CLUSTERNODE* node);
     double distance(std::vector<double>*, std::vector<double>*, int = 2);
+    double nodeDistance(HierarchicalClustering::CLUSTERNODE*, HierarchicalClustering::CLUSTERNODE*, int = 2);
 
     double getMaxDistanceOfLeavesToRoot();
 
