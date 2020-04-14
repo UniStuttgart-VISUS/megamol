@@ -10,8 +10,8 @@
 
 
 #include "Call.h"
-#include "Module.h"
 #include "InterfaceSlot.h"
+#include "Module.h"
 
 
 namespace megamol {
@@ -59,7 +59,7 @@ public:
 private:
     // VARIABLES --------------------------------------------------------------
 
-    ModulePtrVectorType modules;   
+    ModulePtrVectorType modules;
     InterfaceSlotPtrMapType interfaceslots;
 
     /** ************************************************************************

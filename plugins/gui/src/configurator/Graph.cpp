@@ -261,7 +261,6 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
                                 group->InterfaceRemoveCallSlot(call_slot_1->uid);
                             }
                         }
-                    
                     }
                 }
                 if (call_slot_2 != nullptr) {
@@ -271,12 +270,11 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
                                 group->InterfaceRemoveCallSlot(call_slot_2->uid);
                             }
                         }
-                    
                     }
                 }
-                
+
                 (*iter)->DisConnectCallSlots();
-            
+
                 if ((*iter).use_count() > 1) {
                     vislib::sys::Log::DefaultLog.WriteError(
                         "Unclean deletion. Found %i references pointing to call. [%s, %s, line %d]\n",
@@ -1218,7 +1216,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_grid(void) 
 
     // Color
     const ImU32 COLOR_GRID = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
-    
+
     const float GRID_SIZE = 64.0f * this->graph_state.canvas.zooming;
     ImVec2 relative_offset = this->graph_state.canvas.offset - this->graph_state.canvas.position;
 
@@ -1434,10 +1432,10 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
             }
             mod->GUI_SetPosition(pos);
             auto mod_size = mod->GUI_GetSize();
-            pos.y += mod_size.y + 2.0f*GUI_GRAPH_BORDER;
+            pos.y += mod_size.y + 2.0f * GUI_GRAPH_BORDER;
             max_module_width = (mod_size.x > max_module_width) ? (mod_size.x) : (max_module_width);
         }
-        pos.x += (max_module_width + max_call_width + 2.0f*GUI_GRAPH_BORDER);
+        pos.x += (max_module_width + max_call_width + 2.0f * GUI_GRAPH_BORDER);
     }
 
     return true;

@@ -9,8 +9,8 @@
 #define MEGAMOL_GUI_GRAPH_CALL_H_INCLUDED
 
 
-#include "GUIUtils.h"
 #include "CallSlot.h"
+#include "GUIUtils.h"
 
 
 namespace megamol {

@@ -1420,13 +1420,13 @@ std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfGroupIn
     const ModulePtrType& module_ptr, const GraphPtrType& graph_ptr) {
 
     std::stringstream conf_group_interface;
-    
+
     ImGuiID module_group_uid = module_ptr->GUI_GetGroupMembership();
     if (module_group_uid != GUI_INVALID_ID) {
         bool first = true;
         for (auto& group : graph_ptr->GetGroups()) {
             if (group->uid == module_group_uid) {
-                
+
                 for (auto& interfaceslot_map : group->GetInterfaceCallSlots()) {
                     for (auto& interfaceslot_ptr : interfaceslot_map.second) {
                         for (auto& callslot_ptr : interfaceslot_ptr->GetCallSlots()) {
