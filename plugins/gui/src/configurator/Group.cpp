@@ -161,7 +161,7 @@ bool megamol::gui::configurator::Group::InterfaceAddCallSlot(const CallSlotPtrTy
         for (auto& interfaceslot_ptr : this->interfaceslots[callslot_ptr->type]) {
             // ("Contain Check" is already done above)
             if (interfaceslot_ptr->IsCallSlotCompatible(callslot_ptr)) {
-                successfully_added = interfaceslot_ptr->AddCallSlot(callslot_ptr);
+                successfully_added = interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr);
             }
         }
 
@@ -169,8 +169,11 @@ bool megamol::gui::configurator::Group::InterfaceAddCallSlot(const CallSlotPtrTy
         if (!successfully_added) {
             this->interfaceslots[callslot_ptr->type].emplace_back(std::make_shared<InterfaceSlot>());
             vislib::sys::Log::DefaultLog.WriteInfo("Added interface slot to group '%s'.\n", this->name.c_str());
-                        
-            successfully_added = this->interfaceslots[callslot_ptr->type].back()->AddCallSlot(callslot_ptr);
+            
+            InterfaceSlotPtrType interface_ptr = this->interfaceslots[callslot_ptr->type].back();
+            if (interface_ptr != nullptr) {
+                successfully_added = interface_ptr->AddCallSlot(callslot_ptr, interface_ptr);
+            }
         }
     } else {
         vislib::sys::Log::DefaultLog.WriteError(

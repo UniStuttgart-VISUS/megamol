@@ -43,13 +43,13 @@ public:
     InterfaceSlot();
     ~InterfaceSlot();
 
-    bool AddCallSlot(CallSlotPtrType callslot_ptr);
+    bool AddCallSlot(const CallSlotPtrType& callslot_ptr, const InterfaceSlotPtrType& parent_interface_ptr);
     
     bool RemoveCallSlot(ImGuiID callslot_uid);
     
     bool ContainsCallSlot(ImGuiID callslot_uid);
     
-    bool IsCallSlotCompatible(CallSlotPtrType callslot_ptr);
+    bool IsCallSlotCompatible(const CallSlotPtrType& callslot_ptr);
     
     bool IsEmpty(void);
     

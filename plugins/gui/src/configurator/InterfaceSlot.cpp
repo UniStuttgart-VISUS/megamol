@@ -33,7 +33,7 @@ megamol::gui::configurator::InterfaceSlot::~InterfaceSlot(void) {
 }
 
 
-bool megamol::gui::configurator::InterfaceSlot::AddCallSlot(CallSlotPtrType callslot_ptr) {
+bool megamol::gui::configurator::InterfaceSlot::AddCallSlot(const CallSlotPtrType& callslot_ptr, const InterfaceSlotPtrType& parent_interface_ptr) {
     
     try {
         if (callslot_ptr == nullptr) {
@@ -42,19 +42,20 @@ bool megamol::gui::configurator::InterfaceSlot::AddCallSlot(CallSlotPtrType call
             return false;
         }
         
+        if (parent_interface_ptr == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Pointer to interface slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }        
+        
         if (!(this->ContainsCallSlot(callslot_ptr->uid)) && (this->IsCallSlotCompatible(callslot_ptr))) {
             this->callslots.emplace_back(callslot_ptr);
             
-            InterfaceSlotPtrType interface_ptr = std::make_shared<InterfaceSlot>(*this);
-            if (interface_ptr != nullptr) {
-                callslot_ptr->GUI_SetGroupInterface(interface_ptr);
+            callslot_ptr->GUI_SetGroupInterface(parent_interface_ptr);
 
-                vislib::sys::Log::DefaultLog.WriteInfo(
-                    "Added call slot '%s' to interface slot of group.\n", callslot_ptr->name.c_str());
-                return true;   
-            }
-                vislib::sys::Log::DefaultLog.WriteError"Unable to create pointer to interface slot of group. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                                
+            vislib::sys::Log::DefaultLog.WriteInfo(
+                "Added call slot '%s' to interface slot of group.\n", callslot_ptr->name.c_str());
+            return true;   
         }
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -110,7 +111,7 @@ bool megamol::gui::configurator::InterfaceSlot::ContainsCallSlot(ImGuiID callslo
 }
 
 
-bool megamol::gui::configurator::InterfaceSlot::IsCallSlotCompatible(CallSlotPtrType callslot_ptr) {
+bool megamol::gui::configurator::InterfaceSlot::IsCallSlotCompatible(const CallSlotPtrType& callslot_ptr) {
     
     if (callslot_ptr == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -271,5 +272,3 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
         return;
     }
 }
-
-
