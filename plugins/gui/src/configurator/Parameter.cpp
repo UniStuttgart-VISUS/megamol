@@ -532,7 +532,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
             case (Parameter::ParamType::FLEXENUM): {
                 /// XXX: no UTF8 fanciness required here?
                 if (ImGui::BeginCombo(param_label.c_str(), arg.c_str())) {
-                    for (auto valueOption : inout_param.GetStorage<megamol::core::param::FlexEnumParam::Storage_t>()) {
+                    for (auto& valueOption : inout_param.GetStorage<megamol::core::param::FlexEnumParam::Storage_t>()) {
                         bool isSelected = (valueOption == arg);
                         if (ImGui::Selectable(valueOption.c_str(), isSelected)) {
                             inout_param.SetValue(valueOption);

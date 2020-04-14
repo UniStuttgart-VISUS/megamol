@@ -90,10 +90,13 @@ public:
 
     inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
 
+    inline bool GUI_IsVisible(void) { return this->present.IsVisible(); }
     inline bool GUI_IsGroupInterface(void) { return (this->present.group.interface_ptr != nullptr); }
-    inline bool GUI_IsLabelVisible(void) { return this->present.label_visible; }    
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
+    inline bool GUI_IsLabelVisible(void) { return this->present.label_visible; }    
+    inline const InterfaceSlotPtrType& GUI_GetGroupInterface(void) { return this->present.group.interface_ptr; }
 
+    inline void GUI_SetVisibility(bool is_visible) { this->present.SetVisibility(is_visible); }
     inline void GUI_SetGroupInterface(const InterfaceSlotPtrType& interface_ptr) { this->present.group.interface_ptr = interface_ptr; }
     inline void GUI_SetPresentation(CallSlot::Presentations present) { this->present.presentations = present; }
     inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
@@ -120,16 +123,20 @@ private:
         void UpdatePosition(CallSlot& inout_call_slot, const GraphCanvasType& in_canvas);
 
         ImVec2 GetPosition(void) { return this->position; }
+        bool IsVisible(void) { return this->visible; }
+
+        void SetVisibility(bool is_visible) { this->visible = is_visible; }
 
         GroupState group;
         CallSlot::Presentations presentations;
-        bool label_visible;
+        bool label_visible;        
 
     private:
         // Absolute position including canvas offset and zooming
         ImVec2 position;
 
         GUIUtils utils;
+        bool visible;
         bool selected;
         bool update_once;
         bool show_modulestock;

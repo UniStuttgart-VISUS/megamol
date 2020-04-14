@@ -58,7 +58,6 @@ bool megamol::gui::configurator::GraphManager::DeleteGraph(ImGuiID graph_uid) {
                     __FILE__, __FUNCTION__, __LINE__);
             }
 
-            assert((*iter).use_count() == 1);
             (*iter).reset();
             this->graphs.erase(iter);
 
@@ -396,7 +395,7 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
             CallSlotPtrType call_slot_1 = nullptr;
             for (auto& mod : graph_ptr->GetModules()) {
                 if (mod->FullName() == cd.caller_module_full_name) {
-                    for (auto call_slot : mod->GetCallSlots(CallSlotType::CALLER)) {
+                    for (auto& call_slot : mod->GetCallSlots(CallSlotType::CALLER)) {
                         if (call_slot->name == cd.caller_module_call_slot_name) {
                             call_slot_1 = call_slot;
                         }
@@ -406,7 +405,7 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
             CallSlotPtrType call_slot_2 = nullptr;
             for (auto& mod : graph_ptr->GetModules()) {
                 if (mod->FullName() == cd.callee_module_full_name) {
-                    for (auto call_slot : mod->GetCallSlots(CallSlotType::CALLEE)) {
+                    for (auto& call_slot : mod->GetCallSlots(CallSlotType::CALLEE)) {
                         if (call_slot->name == cd.callee_module_call_slot_name) {
                             call_slot_2 = call_slot;
                         }
@@ -1430,7 +1429,7 @@ std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfGroupIn
                 
                 for (auto& interfaceslot_map : group->GetInterfaceCallSlots()) {
                     for (auto& interfaceslot_ptr : interfaceslot_map.second) {
-                        for (auto callslot_ptr : interfaceslot_ptr->GetCallSlots()) {
+                        for (auto& callslot_ptr : interfaceslot_ptr->GetCallSlots()) {
                             if (callslot_ptr->ParentModuleConnected()) {
                                 if (callslot_ptr->GetParentModule()->uid == module_ptr->uid) {
                                     if (first) {

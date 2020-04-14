@@ -370,7 +370,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
 
     // Presets -------------------------------------------------
     if (ImGui::BeginCombo("Load Preset", std::get<0>(PRESETS[0]).c_str())) {
-        for (auto preset : PRESETS) {
+        for (auto& preset : PRESETS) {
             if (ImGui::Selectable(std::get<0>(preset).c_str())) {
                 std::get<1>(preset)(this->nodes, this->textureSize);
                 this->textureInvalid = true;

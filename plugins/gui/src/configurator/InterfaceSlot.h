@@ -53,13 +53,15 @@ public:
     
     bool IsEmpty(void);
     
-    const CallSlotPtrVectorType& GetCallSlots(void) { return this->callslots; }
+    CallSlotPtrVectorType& GetCallSlots(void) { return this->callslots; }
 
     // GUI Presentation -------------------------------------------------------
 
     inline void GUI_Present(GraphItemsStateType& state, bool collapsed_view) { this->present.Present(*this, state, collapsed_view); }
 
-    inline void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(*this, pos); }
+    inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
+
+    inline void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
 
 private:
 
@@ -76,7 +78,9 @@ private:
 
         void Present(InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state, bool collapsed_view);
 
-        void SetPosition(InterfaceSlot& inout_interfaceslot, ImVec2 pos);
+        inline ImVec2 GetPosition(void) { return this->position; }
+
+        void SetPosition(ImVec2 pos) { this->position = pos; }
 
     private:
         // Absolute position including canvas offset and zooming

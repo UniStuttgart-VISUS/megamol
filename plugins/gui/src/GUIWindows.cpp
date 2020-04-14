@@ -1515,7 +1515,7 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
             /// XXX: no UTF8 fanciness required here?
             auto value = p->Value();
             if (ImGui::BeginCombo(param_label.c_str(), value.c_str())) {
-                for (auto valueOption : p->getStorage()) {
+                for (auto& valueOption : p->getStorage()) {
                     bool isSelected = (valueOption == value);
                     if (ImGui::Selectable(valueOption.c_str(), isSelected)) {
                         p->SetValue(valueOption);
@@ -1849,7 +1849,7 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
 
                         // check in hotkey map
                         bool found = false;
-                        for (auto kc : hotkeylist) {
+                        for (auto& kc : hotkeylist) {
                             if ((kc.key == hotkey.key) && (kc.mods.equals(hotkey.mods))) {
                                 found = true;
                             }

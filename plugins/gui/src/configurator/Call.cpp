@@ -105,10 +105,10 @@ bool megamol::gui::configurator::Call::DisConnectCallSlots(void) {
 const megamol::gui::configurator::CallSlotPtrType& megamol::gui::configurator::Call::GetCallSlot(
     megamol::gui::configurator::CallSlotType type) {
 
-    if (this->connected_call_slots[type] == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "Returned pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
+    //if (this->connected_call_slots[type] == nullptr) {
+    //    vislib::sys::Log::DefaultLog.WriteWarn(
+    //        "Returned pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //}
     return this->connected_call_slots[type];
 }
 
@@ -136,64 +136,65 @@ void megamol::gui::configurator::Call::Presentation::Present(
     assert(draw_list != nullptr);
 
     try {
-        if (inout_call.IsConnected()) {                       
-            const float CURVE_THICKNESS = 3.0f;
-
+        if (inout_call.IsConnected()) {   
+                                                            
             auto callerslot_ptr = inout_call.GetCallSlot(CallSlotType::CALLER);
             auto calleeslot_ptr = inout_call.GetCallSlot(CallSlotType::CALLEE);
             if ((callerslot_ptr == nullptr) || (calleeslot_ptr == nullptr)) {
                 return;
             }
-                
-            bool visibility = true;                
+                                                
+            bool visible = ((callerslot_ptr->GUI_IsVisible() || callerslot_ptr->GUI_IsGroupInterface()) && (calleeslot_ptr->GUI_IsVisible() || calleeslot_ptr->GUI_IsGroupInterface()));
+            /*
             if ((callerslot_ptr->ParentModuleConnected()) &&
                 (calleeslot_ptr->ParentModuleConnected())) {
                 auto caller_parent = callerslot_ptr->GetParentModule();
                 auto callee_parent = calleeslot_ptr->GetParentModule();
+                
                 visibility = ((caller_parent->GUI_GetGroupMembership() == callee_parent->GUI_GetGroupMembership()) &&
                               ((caller_parent->GUI_GetGroupMembership() == GUI_INVALID_ID) || 
                                 ((caller_parent->GUI_GetGroupMembership() != GUI_INVALID_ID) && caller_parent->GUI_IsVisibleInGroup())) && 
                               ((callee_parent->GUI_GetGroupMembership() == GUI_INVALID_ID) || 
                                 ((callee_parent->GUI_GetGroupMembership() != GUI_INVALID_ID) && callee_parent->GUI_IsVisibleInGroup())));
             }
-
-            if (visibility) {
+            */
+            if (visible) {
 
                 ImVec2 caller_position = callerslot_ptr->GUI_GetPosition();
                 if (callerslot_ptr->GUI_IsGroupInterface()) {
-                    /// TODO caller_position = callerslot_ptr->GUI_GetGroupInterfacePosition();
+                    caller_position = callerslot_ptr->GUI_GetGroupInterface()->GUI_GetPosition();
                 }
                 ImVec2 callee_position = calleeslot_ptr->GUI_GetPosition();
                 if (calleeslot_ptr->GUI_IsGroupInterface()) {
-                    /// TODO callee_position = calleeslot_ptr->GUI_GetGroupInterfacePosition();
+                    callee_position = calleeslot_ptr->GUI_GetGroupInterface()->GUI_GetPosition();
                 }
                 ImVec2 p1 = caller_position;
                 ImVec2 p2 = callee_position;
-                            
+                                        
                 ImGui::PushID(inout_call.uid);
-
+            
                 // Colors
-                ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg]; // ImGuiCol_FrameBg ImGuiCol_Button
+                ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
-                tmpcol = style.Colors[ImGuiCol_FrameBgActive]; // ImGuiCol_FrameBgActive ImGuiCol_ButtonActive
+                tmpcol = style.Colors[ImGuiCol_FrameBgActive];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
                 const ImU32 COLOR_CALL_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
-                tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive]; // ImGuiCol_Border ImGuiCol_ScrollbarGrabActive
+                tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
                 // Draw Curve
                 /// Draw simple line if zooming is too small for nice bezier curves         
                 if (state.canvas.zooming < 0.25f) {
-                    draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * state.canvas.zooming);
+                    draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, GUI_LINE_THICKNESS * state.canvas.zooming);
                 } else {
                     draw_list->AddBezierCurve(p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2,
-                        COLOR_CALL_CURVE, CURVE_THICKNESS * state.canvas.zooming);
+                        COLOR_CALL_CURVE, GUI_LINE_THICKNESS * state.canvas.zooming);
                 }
 
                 if (this->label_visible) {
@@ -215,10 +216,11 @@ void megamol::gui::configurator::Call::Presentation::Present(
                     bool button_active = ImGui::IsItemActive();
                     bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];                
                     bool button_hovered = ImGui::IsItemHovered();
+                    bool force_selection = false;
 
                     // Context Menu
                     if (ImGui::BeginPopupContextItem()) {
-                        button_active = true; // Force selection
+                        force_selection = true;
 
                         ImGui::TextUnformatted("Call");
                         ImGui::Separator();
@@ -237,8 +239,8 @@ void megamol::gui::configurator::Call::Presentation::Present(
                         ImGui::EndPopup();
                     }
             
-                    // Selection
-                    if (!this->selected && button_active) {                 
+                    // Selection 
+                    if (!this->selected && (force_selection || button_active)) { 
                         state.interact.call_selected_uid = inout_call.uid;
                         this->selected = true;                    
                         state.interact.callslot_selected_uid = GUI_INVALID_ID;

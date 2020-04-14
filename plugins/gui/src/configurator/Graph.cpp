@@ -113,7 +113,7 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
                     if (group->ContainsModule(module_uid)) {
                         group->RemoveModule(module_uid);
                     }
-                    if (group->EmptyModules()) {
+                    if (group->Empty()) {
                         this->DeleteGroup(group->uid);
                     }
                 }
@@ -1216,9 +1216,10 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_grid(void) 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
 
+    // Color
     const ImU32 COLOR_GRID = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
+    
     const float GRID_SIZE = 64.0f * this->graph_state.canvas.zooming;
-
     ImVec2 relative_offset = this->graph_state.canvas.offset - this->graph_state.canvas.position;
 
     for (float x = fmodf(relative_offset.x, GRID_SIZE); x < this->graph_state.canvas.size.x; x += GRID_SIZE) {
@@ -1244,8 +1245,8 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_cal
             ImDrawList* draw_list = ImGui::GetWindowDrawList();
             assert(draw_list != nullptr);
 
+            // Color
             const auto COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Button]);
-            const float CURVE_THICKNESS = 3.0f;
 
             ImVec2 current_pos = ImGui::GetMousePos();
             bool mouse_inside_canvas = false;
@@ -1268,14 +1269,14 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_cal
                 if (selected_call_slot_ptr != nullptr) {
                     ImVec2 p1 = selected_call_slot_ptr->GUI_GetPosition();
                     ImVec2 p2 = ImGui::GetMousePos();
-                    if (glm::length(glm::vec2(p1.x, p1.y) - glm::vec2(p2.x, p2.y)) > GUI_CALL_SLOT_RADIUS) {
+                    if (glm::length(glm::vec2(p1.x, p1.y) - glm::vec2(p2.x, p2.y)) > GUI_SLOT_RADIUS) {
                         if (selected_call_slot_ptr->type == CallSlotType::CALLEE) {
                             ImVec2 tmp = p1;
                             p1 = p2;
                             p2 = tmp;
                         }
                         draw_list->AddBezierCurve(p1, p1 + ImVec2(+50, 0), p2 + ImVec2(-50, 0), p2, COLOR_CALL_CURVE,
-                            CURVE_THICKNESS * this->graph_state.canvas.zooming);
+                            GUI_LINE_THICKNESS * this->graph_state.canvas.zooming);
                     }
                 }
             }
