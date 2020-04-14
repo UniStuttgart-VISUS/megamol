@@ -21,22 +21,19 @@ megamol::gui::configurator::Group::Group(ImGuiID uid) : uid(uid), name(), module
 
 megamol::gui::configurator::Group::~Group() {
 
-    // Reset group varaibles of modules
+    // Remove all modules from group
+    std::vector<ImGuiID> module_uids;
     for (auto& module_ptr : this->modules) {
-        
-        module_ptr->GUI_SetGroupMembership(GUI_INVALID_ID);
-        module_ptr->GUI_SetGroupName("");
+        module_uids.emplace_back(module_ptr->uid);
     }
-    // Reset group varaibles of call slots
-    for (auto& interfaceslot_map : this->interfaceslots) {
-        for (auto interfaceslot_ptr : interfaceslot_map.second) {
-            for (auto callslot_ptr : interfaceslot_ptr->GetCallSlots()) {
-                
-                callslot_ptr->GUI_SetGroupInterface(false);
-                callslot_ptr->GUI_SetGroupInterfacePosition(ImVec2(FLT_MAX, FLT_MAX));
-            }
-        }
+    for (auto& module_uid : module_uids) {
+        this->RemoveModule(module_uid);
     }
+    this->modules.clear();
+    
+    // Remove all interface slots from group (should already be empty)
+    this->interfaceslots[CallSlotType::CALLER].clear();
+    this->interfaceslots[CallSlotType::CALLEE].clear();
 }
 
 
@@ -191,10 +188,17 @@ bool megamol::gui::configurator::Group::InterfaceRemoveCallSlot(ImGuiID callslot
         for (auto& interfaceslot_map : this->interfaceslots) {
             for (auto iter = interfaceslot_map.second.begin(); iter != interfaceslot_map.second.end(); iter++) {
                 if ((*iter)->ContainsCallSlot(callslots_uid)) {
-                    
                     (*iter)->RemoveCallSlot(callslots_uid);
+                    
                     // Delete empty interface slots
                     if ((*iter)->IsEmpty()) {
+                        
+                        if ((*iter).use_count() > 1) {
+                            vislib::sys::Log::DefaultLog.WriteError(
+                                "Unclean deletion. Found %i references pointing to interface slot. [%s, %s, line %d]\n",
+                                (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+                        }
+                        
                         (*iter).reset();
                         interfaceslot_map.second.erase(iter);
                         vislib::sys::Log::DefaultLog.WriteInfo("Removed interface slot from group '%s'.\n", this->name.c_str());
@@ -297,7 +301,7 @@ void megamol::gui::configurator::Group::restore_callslot_interface_state(void) {
 // GROUP PRESENTATION ####################################################
 
 megamol::gui::configurator::Group::Presentation::Presentation(void)
-    : border(GUI_CALL_SLOT_RADIUS * 2.0f)
+    : border(GUI_SLOT_RADIUS * 2.0f)
     , position(ImVec2(FLT_MAX, FLT_MAX))
     , size(ImVec2(0.0f, 0.0f))
     , utils()
@@ -320,6 +324,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
     }
 
     ImGuiStyle& style = ImGui::GetStyle();
+    
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
 
@@ -346,51 +351,28 @@ void megamol::gui::configurator::Group::Presentation::Present(
 
         ImGui::PushID(inout_group.uid);
 
-        // Colors
-        ImVec4 tmpcol = style.Colors[ImGuiCol_ScrollbarBg]; // ImGuiCol_ScrollbarGrab ImGuiCol_FrameBg ImGuiCol_Button
-        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-        const ImU32 COLOR_GROUP_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-        tmpcol =
-            style
-                .Colors[ImGuiCol_FrameBg]; // ImGuiCol_ScrollbarGrabHovered ImGuiCol_FrameBgActive ImGuiCol_ButtonActive
-        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-        const ImU32 COLOR_GROUP_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-        tmpcol = style.Colors[ImGuiCol_ScrollbarGrabHovered]; // ImGuiCol_Border ImGuiCol_ScrollbarGrabActive
-        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-        const ImU32 COLOR_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-        const ImU32 COLOR_TEXT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
-        tmpcol = style.Colors[ImGuiCol_FrameBgHovered];
-        tmpcol.y = 0.75f;
-        const ImU32 COLOR_HEADER = ImGui::ColorConvertFloat4ToU32(tmpcol);
-        tmpcol = style.Colors[ImGuiCol_ButtonActive];
-        tmpcol.y = 0.75f;
-        const ImU32 COLOR_HEADER_HIGHLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-        // Draw box
+        // Button
         ImGui::SetCursorScreenPos(group_rect_min);
         std::string label = "group_" + inout_group.name;
-
         ImGui::SetItemAllowOverlap();
         ImGui::InvisibleButton(label.c_str(), header_size);
         ImGui::SetItemAllowOverlap();
 
-        bool active = ImGui::IsItemActive();
-        bool hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) &&
+        bool button_active = ImGui::IsItemActive();
+        bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];        
+        bool button_hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) &&
                         (state.interact.module_hovered_uid == GUI_INVALID_ID));
-        bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
-
-        // Automatically delete empty group.
+        bool force_selection = false;
+            
+        // Automatically delete empty group
         if (inout_group.GetModules().empty()) {
             std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-            state.interact.group_selected_uid = inout_group.uid; // Force selection (must be set in same frame)
+            force_selection = true;
         }
-
+            
         // Context menu
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-            active = true; // Force selection
+            force_selection = true;
 
             ImGui::TextUnformatted("Group");
             ImGui::Separator();
@@ -405,12 +387,10 @@ void megamol::gui::configurator::Group::Presentation::Present(
                 }
                 this->UpdatePositionSize(inout_group, state.canvas);
             }
-            /*
-            if (ImGui::MenuItem("Save")) {
-                state.interact.group_save = true;
-                state.interact.group_selected_uid = inout_group.uid; // Force selection (must be set in same frame)
-            }
-            */
+            /// XXX Disabled
+            //if (ImGui::MenuItem("Save")) {
+            //    state.interact.group_save = true;
+            //} 
             if (ImGui::MenuItem("Rename")) {
                 popup_rename = true;
             }
@@ -420,23 +400,25 @@ void megamol::gui::configurator::Group::Presentation::Present(
             }
             ImGui::EndPopup();
         }
-
-        // Selection
-        if (state.interact.group_selected_uid == inout_group.uid) {
-            /// Call before "active" if-statement for one frame delayed check for last valid candidate for selection
-            this->selected = true;
+        
+        // Actually apply selection and deselection one frame delayed 
+        if (force_selection || (state.interact.group_selected_uid == inout_group.uid)) {
+            state.interact.group_selected_uid = inout_group.uid;
+            this->selected = true;              
             state.interact.callslot_selected_uid = GUI_INVALID_ID;
             state.interact.modules_selected_uids.clear();
-            state.interact.call_selected_uid = GUI_INVALID_ID;
+            state.interact.call_selected_uid = GUI_INVALID_ID;   
+        }         
+        
+        // Selection
+        if (!this->selected && button_active) {          
+            state.interact.group_selected_uid = inout_group.uid;            
         }
-        if (active) {
-            state.interact.group_selected_uid = inout_group.uid;
-        }
-        if ((mouse_clicked && !hovered) || (state.interact.group_selected_uid != inout_group.uid)) {
-            this->selected = false;
-            if (state.interact.group_selected_uid == inout_group.uid) {
-                state.interact.group_selected_uid = GUI_INVALID_ID;
-            }
+        
+        // Deselection
+        if (this->selected && ((mouse_clicked_anywhere && !button_hovered) || (state.interact.group_selected_uid != inout_group.uid))) {
+            this->selected = false;            
+            state.interact.group_selected_uid = GUI_INVALID_ID;
         }
 
         // Dragging
@@ -450,6 +432,29 @@ void megamol::gui::configurator::Group::Presentation::Present(
             }
             this->UpdatePositionSize(inout_group, state.canvas);
         }
+        
+        // Colors
+        ImVec4 tmpcol = style.Colors[ImGuiCol_ScrollbarBg];
+        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+        const ImU32 COLOR_GROUP_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
+        tmpcol = style.Colors[ImGuiCol_FrameBg]; 
+        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+        const ImU32 COLOR_GROUP_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
+        tmpcol = style.Colors[ImGuiCol_ScrollbarGrabHovered];
+        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+        const ImU32 COLOR_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
+        const ImU32 COLOR_TEXT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
+        
+        tmpcol = style.Colors[ImGuiCol_FrameBgHovered];
+        tmpcol.y = 0.75f;
+        const ImU32 COLOR_HEADER = ImGui::ColorConvertFloat4ToU32(tmpcol);
+        
+        tmpcol = style.Colors[ImGuiCol_ButtonActive];
+        tmpcol.y = 0.75f;
+        const ImU32 COLOR_HEADER_HIGHLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
         // Background
         ImU32 group_bg_color = (this->selected) ? (COLOR_GROUP_HIGHTLIGHT) : (COLOR_GROUP_BACKGROUND);
@@ -467,9 +472,8 @@ void megamol::gui::configurator::Group::Presentation::Present(
         auto header_color = (this->selected) ? (COLOR_HEADER_HIGHLIGHT) : (COLOR_HEADER);
         draw_list->AddRectFilled(group_rect_min, header_rect_max, header_color, GUI_RECT_CORNER_RADIUS,
             (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
-
         draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->name_label.c_str());
-
+        
         // Rename pop-up
         if (this->utils.RenamePopUp("Rename Group", popup_rename, inout_group.name)) {
             for (auto& module_ptr : inout_group.GetModules()) {
@@ -477,8 +481,8 @@ void megamol::gui::configurator::Group::Presentation::Present(
                 module_ptr->GUI_Update(state.canvas);
             }
             this->UpdatePositionSize(inout_group, state.canvas);
-        }
-        
+        }        
+                
         // Draw interface slots ----------------------------------------------------
         for (auto& interfaceslots_map : inout_group.GetInterfaceCallSlots()) {
             for (auto& interfaceslot_ptr : interfaceslots_map.second) {
@@ -531,10 +535,10 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
     size_t max_slot_count = std::max(caller_count, callee_count);
 
     group_width =
-        (1.5f * GUIUtils::TextWidgetWidth(this->name_label) / in_canvas.zooming) + (3.0f * GUI_CALL_SLOT_RADIUS);
+        (1.5f * GUIUtils::TextWidgetWidth(this->name_label) / in_canvas.zooming) + (3.0f * GUI_SLOT_RADIUS);
     group_height = std::max((3.0f * line_height),
-        (line_height + (static_cast<float>(max_slot_count) * (GUI_CALL_SLOT_RADIUS * 2.0f) * 1.5f) +
-            GUI_CALL_SLOT_RADIUS));
+        (line_height + (static_cast<float>(max_slot_count) * (GUI_SLOT_RADIUS * 2.0f) * 1.5f) +
+            GUI_SLOT_RADIUS));
 
     if (!this->collapsed_view) {
         float pos_maxX = -FLT_MAX;
@@ -555,29 +559,28 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
 
 
     // Set group interface position of call slots --------------------------
-    /*
+    
     ImVec2 pos = in_canvas.offset + this->position * in_canvas.zooming;
-    pos.y += line_height;
+    pos.y += (line_height* in_canvas.zooming);
     ImVec2 size = this->size * in_canvas.zooming;
-    size.y -= line_height;
+    size.y -= (line_height* in_canvas.zooming);
 
     size_t caller_idx = 0;
     size_t callee_idx = 0;
     ImVec2 callslot_group_position;
 
-    for (auto& callslot_map : inout_group.callslots) {
-        for (auto& callslot_ptr : callslot_map.second) {
-            if (callslot_map.first == CallSlotType::CALLER) {
+    for (auto& interfaceslots_map : inout_group.interfaceslots) {
+        for (auto& interfaceslot_ptr : interfaceslots_map.second) {
+            if (interfaceslots_map.first == CallSlotType::CALLER) {
                 callslot_group_position =
                     ImVec2((pos.x + size.x), (pos.y + size.y * ((float)caller_idx + 1) / ((float)caller_count + 1)));
                 caller_idx++;
-            } else if (callslot_map.first == CallSlotType::CALLEE) {
+            } else if (interfaceslots_map.first == CallSlotType::CALLEE) {
                 callslot_group_position =
                     ImVec2(pos.x, (pos.y + size.y * ((float)callee_idx + 1) / ((float)callee_count + 1)));
                 callee_idx++;
             }
-            callslot_ptr->GUI_SetGroupPosition(callslot_group_position);
+            interfaceslot_ptr->GUI_SetPosition(callslot_group_position);
         }
     }
-    */
 }

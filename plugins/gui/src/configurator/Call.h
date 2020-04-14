@@ -19,17 +19,20 @@ namespace configurator {
 
 // Forward declaration
 class Call;
+
+///
 class CallSlot;
 class Module;
 class Parameter;
 
 // Pointer types to classes
-typedef std::shared_ptr<Parameter> ParamPtrType;
 typedef std::shared_ptr<Call> CallPtrType;
+typedef std::vector<CallPtrType> CallPtrVectorType;
+
+///
+typedef std::shared_ptr<Parameter> ParamPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
-
-typedef std::vector<CallPtrType> CallPtrVectorType;
 
 
 /**
@@ -87,7 +90,6 @@ private:
         bool label_visible;
 
     private:
-        GUIUtils utils;
         bool selected;
 
     } present;

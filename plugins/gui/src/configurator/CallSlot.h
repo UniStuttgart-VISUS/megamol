@@ -10,6 +10,7 @@
 
 
 #include "GUIUtils.h"
+#include "InterfaceSlot.h"
 
 
 namespace megamol {
@@ -17,21 +18,29 @@ namespace gui {
 namespace configurator {
 
 // Forward declaration
-class Call;
 class CallSlot;
+
+///
+class Call;
 class Module;
 class Parameter;
+class InterfaceSlot;
 
 // Pointer types to classes
-typedef std::shared_ptr<Parameter> ParamPtrType;
-typedef std::shared_ptr<Call> CallPtrType;
+#ifndef _CALL_SLOT_TYPE_
+    enum CallSlotType { CALLEE, CALLER };
+    #define _CALL_SLOT_TYPE_
+#endif
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
-typedef std::shared_ptr<Module> ModulePtrType;
-
-enum CallSlotType { CALLEE, CALLER };
-
 typedef std::vector<CallSlotPtrType> CallSlotPtrVectorType;
 typedef std::map<CallSlotType, CallSlotPtrVectorType> CallSlotPtrMapType;
+
+///
+typedef std::shared_ptr<Parameter> ParamPtrType;
+typedef std::shared_ptr<Call> CallPtrType;
+typedef std::shared_ptr<Module> ModulePtrType;
+typedef std::shared_ptr<InterfaceSlot> InterfaceSlotPtrType;
+
 
 /**
  * Defines call slot data structure for graph.
@@ -45,11 +54,6 @@ public:
         std::string description;
         std::vector<size_t> compatible_call_idxs;
         CallSlotType type;
-    };
-
-    struct GroupState {
-        bool is_interface;
-        ImVec2 interface_position;
     };
 
     CallSlot(ImGuiID uid);
@@ -86,13 +90,14 @@ public:
 
     inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
 
-    inline bool GUI_IsGroupInterface(void) { return this->present.group.is_interface; }
-    inline bool GUI_IsLabelVisible(void) { return this->present.label_visible; }    
+    inline bool GUI_IsVisible(void) { return this->present.IsVisible(); }
+    inline bool GUI_IsGroupInterface(void) { return (this->present.group.interface_ptr != nullptr); }
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
-    inline ImVec2 GUI_GetGroupInterfacePosition(void) { return this->present.group.interface_position; }
+    inline bool GUI_IsLabelVisible(void) { return this->present.label_visible; }    
+    inline const InterfaceSlotPtrType& GUI_GetGroupInterface(void) { return this->present.group.interface_ptr; }
 
-    inline void GUI_SetGroupInterface(bool is_interface) { this->present.group.is_interface = is_interface; }
-    inline void GUI_SetGroupInterfacePosition(ImVec2 position) { this->present.group.interface_position = position; }
+    inline void GUI_SetVisibility(bool is_visible) { this->present.SetVisibility(is_visible); }
+    inline void GUI_SetGroupInterface(const InterfaceSlotPtrType& interface_ptr) { this->present.group.interface_ptr = interface_ptr; }
     inline void GUI_SetPresentation(CallSlot::Presentations present) { this->present.presentations = present; }
     inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
 
@@ -105,6 +110,10 @@ private:
      */
     class Presentation {
     public:
+        struct GroupState {
+            InterfaceSlotPtrType interface_ptr;
+        };
+    
         Presentation(void);
 
         ~Presentation(void);
@@ -114,16 +123,20 @@ private:
         void UpdatePosition(CallSlot& inout_call_slot, const GraphCanvasType& in_canvas);
 
         ImVec2 GetPosition(void) { return this->position; }
+        bool IsVisible(void) { return this->visible; }
+
+        void SetVisibility(bool is_visible) { this->visible = is_visible; }
 
         GroupState group;
         CallSlot::Presentations presentations;
-        bool label_visible;
+        bool label_visible;        
 
     private:
         // Absolute position including canvas offset and zooming
         ImVec2 position;
 
         GUIUtils utils;
+        bool visible;
         bool selected;
         bool update_once;
         bool show_modulestock;

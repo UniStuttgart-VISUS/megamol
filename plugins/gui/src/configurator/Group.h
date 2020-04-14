@@ -43,7 +43,7 @@ public:
     bool RemoveModule(ImGuiID module_uid);
     bool ContainsModule(ImGuiID module_uid);
     inline const ModulePtrVectorType& GetModules(void) { return this->modules; }
-    inline bool EmptyModules(void) { return (this->modules.size() == 0); }
+    inline bool Empty(void) { return (this->modules.empty()); }
 
     bool InterfaceAddCallSlot(const CallSlotPtrType& callslot_ptr);
     bool InterfaceRemoveCallSlot(ImGuiID callslot_uid);

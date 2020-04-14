@@ -22,7 +22,7 @@ GUIView::GUIView()
     this->render_view_slot.SetCompatibleCall<core::view::CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->render_view_slot);
 
-    for (auto slot : this->gui.GetParams()) {
+    for (auto& slot : this->gui.GetParams()) {
         this->MakeSlotAvailable(slot);
     }
 }

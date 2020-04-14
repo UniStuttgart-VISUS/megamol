@@ -113,7 +113,7 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
                     if (group->ContainsModule(module_uid)) {
                         group->RemoveModule(module_uid);
                     }
-                    if (group->EmptyModules()) {
+                    if (group->Empty()) {
                         this->DeleteGroup(group->uid);
                     }
                 }
@@ -208,14 +208,18 @@ bool megamol::gui::configurator::Graph::AddCall(
                 ImGuiID slot_1_parent_group_uid = call_slot_1->GetParentModule()->GUI_GetGroupMembership();
                 ImGuiID slot_2_parent_group_uid = call_slot_2->GetParentModule()->GUI_GetGroupMembership();
                 if (slot_1_parent_group_uid != slot_2_parent_group_uid) {
-                    for (auto& group : this->groups) {
-                        if (group->uid == slot_1_parent_group_uid) {
-                            group->InterfaceAddCallSlot(call_slot_1);
+                    if ((slot_1_parent_group_uid != GUI_INVALID_ID) && !(call_slot_1->GUI_IsGroupInterface())) {
+                        for (auto& group : this->groups) {
+                            if (group->uid == slot_1_parent_group_uid) {
+                                group->InterfaceAddCallSlot(call_slot_1);
+                            }
                         }
                     }
-                    for (auto& group : this->groups) {
-                        if (group->uid == slot_2_parent_group_uid) {
-                            group->InterfaceAddCallSlot(call_slot_2);
+                    if ((slot_2_parent_group_uid != GUI_INVALID_ID) && !(call_slot_2->GUI_IsGroupInterface())) {
+                        for (auto& group : this->groups) {
+                            if (group->uid == slot_2_parent_group_uid) {
+                                group->InterfaceAddCallSlot(call_slot_2);
+                            }
                         }
                     }
                 }
@@ -246,8 +250,33 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
     try {
         for (auto iter = this->calls.begin(); iter != this->calls.end(); iter++) {
             if ((*iter)->uid == call_uid) {
-                (*iter)->DisConnectCallSlots();
 
+                // Remove connected call slots from group interface
+                auto call_slot_1 = (*iter)->GetCallSlot(CallSlotType::CALLER);
+                auto call_slot_2 = (*iter)->GetCallSlot(CallSlotType::CALLEE);
+                if (call_slot_1 != nullptr) {
+                    if (call_slot_1->GUI_IsGroupInterface()) {
+                        for (auto& group : this->groups) {
+                            if (group->InterfaceContainsCallSlot(call_slot_1->uid)) {
+                                group->InterfaceRemoveCallSlot(call_slot_1->uid);
+                            }
+                        }
+                    
+                    }
+                }
+                if (call_slot_2 != nullptr) {
+                    if (call_slot_2->GUI_IsGroupInterface()) {
+                        for (auto& group : this->groups) {
+                            if (group->InterfaceContainsCallSlot(call_slot_2->uid)) {
+                                group->InterfaceRemoveCallSlot(call_slot_2->uid);
+                            }
+                        }
+                    
+                    }
+                }
+                
+                (*iter)->DisConnectCallSlots();
+            
                 if ((*iter).use_count() > 1) {
                     vislib::sys::Log::DefaultLog.WriteError(
                         "Unclean deletion. Found %i references pointing to call. [%s, %s, line %d]\n",
@@ -1187,9 +1216,10 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_grid(void) 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
 
+    // Color
     const ImU32 COLOR_GRID = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
+    
     const float GRID_SIZE = 64.0f * this->graph_state.canvas.zooming;
-
     ImVec2 relative_offset = this->graph_state.canvas.offset - this->graph_state.canvas.position;
 
     for (float x = fmodf(relative_offset.x, GRID_SIZE); x < this->graph_state.canvas.size.x; x += GRID_SIZE) {
@@ -1215,8 +1245,8 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_cal
             ImDrawList* draw_list = ImGui::GetWindowDrawList();
             assert(draw_list != nullptr);
 
+            // Color
             const auto COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Button]);
-            const float CURVE_THICKNESS = 3.0f;
 
             ImVec2 current_pos = ImGui::GetMousePos();
             bool mouse_inside_canvas = false;
@@ -1239,14 +1269,14 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_cal
                 if (selected_call_slot_ptr != nullptr) {
                     ImVec2 p1 = selected_call_slot_ptr->GUI_GetPosition();
                     ImVec2 p2 = ImGui::GetMousePos();
-                    if (glm::length(glm::vec2(p1.x, p1.y) - glm::vec2(p2.x, p2.y)) > GUI_CALL_SLOT_RADIUS) {
+                    if (glm::length(glm::vec2(p1.x, p1.y) - glm::vec2(p2.x, p2.y)) > GUI_SLOT_RADIUS) {
                         if (selected_call_slot_ptr->type == CallSlotType::CALLEE) {
                             ImVec2 tmp = p1;
                             p1 = p2;
                             p2 = tmp;
                         }
                         draw_list->AddBezierCurve(p1, p1 + ImVec2(+50, 0), p2 + ImVec2(-50, 0), p2, COLOR_CALL_CURVE,
-                            CURVE_THICKNESS * this->graph_state.canvas.zooming);
+                            GUI_LINE_THICKNESS * this->graph_state.canvas.zooming);
                     }
                 }
             }
@@ -1388,13 +1418,14 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
         }
         max_module_width = 0.0f;
         layer_mod_cnt = layer.size();
+        pos.y = init_position.y;
         for (size_t i = 0; i < layer_mod_cnt; i++) {
             auto mod = layer[i];
             if (this->show_call_names) {
                 for (auto& caller_slot : mod->GetCallSlots(CallSlotType::CALLER)) {
                     if (caller_slot->CallsConnected()) {
                         for (auto& call : caller_slot->GetConnectedCalls()) {
-                            auto call_name_length = GUIUtils::TextWidgetWidth(call->class_name) * 1.5f;
+                            auto call_name_length = GUIUtils::TextWidgetWidth(call->class_name);
                             max_call_width =
                                 (call_name_length > max_call_width) ? (call_name_length) : (max_call_width);
                         }
@@ -1403,13 +1434,10 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
             }
             mod->GUI_SetPosition(pos);
             auto mod_size = mod->GUI_GetSize();
-            pos.y += mod_size.y + GUI_GRAPH_BORDER;
+            pos.y += mod_size.y + 2.0f*GUI_GRAPH_BORDER;
             max_module_width = (mod_size.x > max_module_width) ? (mod_size.x) : (max_module_width);
         }
-        pos.x += (max_module_width + max_call_width + GUI_GRAPH_BORDER);
-
-        pos.x += GUI_GRAPH_BORDER;
-        pos.y = init_position.y + GUI_GRAPH_BORDER;
+        pos.x += (max_module_width + max_call_width + 2.0f*GUI_GRAPH_BORDER);
     }
 
     return true;

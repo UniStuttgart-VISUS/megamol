@@ -328,12 +328,13 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
 
 float megamol::gui::configurator::Parameter::Presentation::GetHeight(Parameter& inout_param) {
 
-    float height = (ImGui::GetFrameHeightWithSpacing() * 1.15f);
+
+    float height = (ImGui::GetFrameHeightWithSpacing() * (1.15f));
     if (inout_param.type == Parameter::ParamType::TRANSFERFUNCTION) {
         if (this->show_tf_editor) {
-            height = (ImGui::GetFrameHeightWithSpacing() * 18.5f);
+            height = (ImGui::GetFrameHeightWithSpacing() * (10.0f) + (150.0f + 30.0f));
         } else {
-            height = (ImGui::GetFrameHeightWithSpacing() * 1.5f);
+            height = (ImGui::GetFrameHeightWithSpacing() * (1.5f));
         }
     }
     return height;
@@ -531,7 +532,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
             case (Parameter::ParamType::FLEXENUM): {
                 /// XXX: no UTF8 fanciness required here?
                 if (ImGui::BeginCombo(param_label.c_str(), arg.c_str())) {
-                    for (auto valueOption : inout_param.GetStorage<megamol::core::param::FlexEnumParam::Storage_t>()) {
+                    for (auto& valueOption : inout_param.GetStorage<megamol::core::param::FlexEnumParam::Storage_t>()) {
                         bool isSelected = (valueOption == arg);
                         if (ImGui::Selectable(valueOption.c_str(), isSelected)) {
                             inout_param.SetValue(valueOption);
