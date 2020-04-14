@@ -37,6 +37,7 @@
 
 #include "CorporateGreyStyle.h"
 #include "CorporateWhiteStyle.h"
+#include "FileUtils.h"
 #include "TransferFunctionEditor.h"
 #include "WindowManager.h"
 #include "configurator/Configurator.h"
@@ -133,7 +134,7 @@ private:
     struct StateBuffer {
         std::string font_file;                 // Apply changed font file name.
         float font_size;                       // Apply changed font size.
-        int font_index;                        // Apply cahnged font by index.
+        unsigned int font_index;               // Apply cahnged font by index.
         std::vector<ImWchar> font_utf8_ranges; // Additional UTF-8 glyph ranges for all ImGui fonts.
         bool win_save_state;                   // Flag indicating that window state should be written to parameter.
         float win_save_delay;      // Flag indicating how long to wait for saving window state since last user action.
@@ -141,6 +142,9 @@ private:
         double last_instance_time; // Last instance time.
         bool hotkeys_check_once;   // WORKAROUND: Check multiple hotkey assignments once.
     };
+
+    /** The GUI hotkey array index mapping. */
+    enum GuiHotkeyIndex : size_t { EXIT_PROGRAM = 0, PARAMETER_SEARCH = 1, SAVE_PROJECT = 2, INDEX_COUNT = 3 };
 
     // VARIABLES --------------------------------------------------------------
 
@@ -160,8 +164,7 @@ private:
     megamol::core::param::ParamSlot autostart_configurator;
 
     /** Hotkeys */
-    enum GuiHotkeyIndex : size_t { EXIT_PROGRAM = 0, PARAMETER_SEARCH = 1, SAVE_PROJECT = 2, INDEX_COUNT = 3 };
-    std::array<HotkeyDataType, GuiHotkeyIndex::INDEX_COUNT> hotkeys;
+    std::array<megamol::gui::HotkeyDataType, GuiHotkeyIndex::INDEX_COUNT> hotkeys;
 
     /** The ImGui context created and used by this GUIWindows */
     ImGuiContext* context;
@@ -176,10 +179,13 @@ private:
     TransferFunctionEditor tf_editor;
 
     /** The configurator. */
-    configurator::Configurator configurator;
+    megamol::gui::configurator::Configurator configurator;
 
     /** Utils being used all over the place */
-    GUIUtils utils;
+    megamol::gui::GUIUtils utils;
+
+    /** File utils providing stuff interacting with files */
+    megamol::gui::FileUtils file_utils;
 
     /** The current local state of the gui. */
     StateBuffer state;
@@ -191,6 +197,9 @@ private:
     std::map<std::string, vislib::math::Vector<float, 2>> widgtmap_vec2;
     std::map<std::string, vislib::math::Vector<float, 3>> widgtmap_vec3;
     std::map<std::string, vislib::math::Vector<float, 4>> widgtmap_vec4;
+
+    /** Numer of fonts reserved for the configurator graph canvas. */
+    unsigned int graph_fonts_reserved;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -305,8 +314,6 @@ private:
      * Shutdown megmol program.
      */
     void shutdown(void);
-
-    // ------------------------------------------------------------------------
 };
 
 } // namespace gui
