@@ -152,6 +152,7 @@ bool megamol::gui::configurator::Group::InterfaceAddCallSlot(const CallSlotPtrTy
     }
 
     if (parent_module_group_member) {
+        
         /// XXX
         // Try to add call slot to interface slot already containing compatible call slots ...
         /*
@@ -171,6 +172,7 @@ bool megamol::gui::configurator::Group::InterfaceAddCallSlot(const CallSlotPtrTy
             InterfaceSlotPtrType interfaceslot_ptr = this->interfaceslots[callslot_ptr->type].back();
             if (interfaceslot_ptr != nullptr) {
                 successfully_added = interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr);
+                interfaceslot_ptr->GUI_SetGroupView(this->present.IsViewCollapsed());
             }
         }
     } else {
@@ -335,8 +337,13 @@ void megamol::gui::configurator::Group::Presentation::Present(
             }
             if (ImGui::MenuItem(view.c_str())) {
                 this->collapsed_view = !this->collapsed_view;
-                for (auto& mod : inout_group.GetModules()) {
-                    mod->GUI_SetGroupVisibility(this->ModulesVisible());
+                for (auto& module_ptr : inout_group.GetModules()) {
+                    module_ptr->GUI_SetGroupVisibility(this->ModulesVisible());
+                }
+                for (auto& interfaceslots_map : inout_group.interfaceslots) {
+                    for (auto& interfaceslot_ptr : interfaceslots_map.second) {
+                        interfaceslot_ptr->GUI_SetGroupView(this->collapsed_view);
+                    }
                 }
                 this->UpdatePositionSize(inout_group, state.canvas);
             }
@@ -441,7 +448,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
         // Draw interface slots ----------------------------------------------------
         for (auto& interfaceslots_map : inout_group.GetInterfaceSlots()) {
             for (auto& interfaceslot_ptr : interfaceslots_map.second) {
-                interfaceslot_ptr->GUI_Present(state, this->collapsed_view);
+                interfaceslot_ptr->GUI_Present(state);
             }
         }
 

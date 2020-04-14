@@ -1541,7 +1541,9 @@ void megamol::gui::configurator::GraphManager::Presentation::Present(
                             drop_callslot_ptr = callslot_ptr;
                         }
                     }
-                    graph->AddCall(inout_graph_manager.calls_stock, drag_callslot_ptr, drop_callslot_ptr);
+                    if ((drag_callslot_ptr != nullptr) && (drop_callslot_ptr != nullptr)) {
+                        graph->AddCall(inout_graph_manager.calls_stock, drag_callslot_ptr, drop_callslot_ptr);
+                    }
                 }
             }
         }

@@ -252,7 +252,9 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
         for (auto iter = this->calls.begin(); iter != this->calls.end(); iter++) {
             if ((*iter)->uid == call_uid) {
 
+                /// XXX
                 // Remove connected call slots from group interface
+                /*
                 auto callslot_1 = (*iter)->GetCallSlot(CallSlotType::CALLER);
                 auto callslot_2 = (*iter)->GetCallSlot(CallSlotType::CALLEE);
                 if (callslot_1 != nullptr) {
@@ -273,7 +275,8 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
                         }
                     }
                 }
-
+                */
+                
                 (*iter)->DisconnectCallSlots();
 
                 if ((*iter).use_count() > 1) {
@@ -855,7 +858,19 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         if (callslot_uid != GUI_INVALID_ID) {
             for (auto& group : inout_graph.GetGroups()) {
                 if (group->InterfaceContainsCallSlot(callslot_uid)) {
-                    group->InterfaceRemoveCallSlot(callslot_uid);
+                    if (group->InterfaceRemoveCallSlot(callslot_uid)) {
+                        // Remove connected calls
+                        for (auto& module_ptr : inout_graph.GetModules()) {
+                            CallSlotPtrType callslot_ptr;
+                            if (module_ptr->GetCallSlot(callslot_uid, callslot_ptr)) {
+                                for (auto& call : callslot_ptr->GetConnectedCalls()) {
+                                    inout_graph.DeleteCall(call->uid);
+                                }
+                            }
+                        }
+                        // Reset interact state for calls
+                        this->graph_state.interact.call_selected_uid = GUI_INVALID_ID;                        
+                    }
                 }
             }
             this->graph_state.interact.callslot_remove_group_uid = GUI_INVALID_ID;

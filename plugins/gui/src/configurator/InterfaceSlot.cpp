@@ -148,15 +148,14 @@ bool megamol::gui::configurator::InterfaceSlot::IsEmpty(void) { return (this->ca
 // GROUP INTERFACE SLOT PRESENTATION ###########################################
 
 megamol::gui::configurator::InterfaceSlot::Presentation::Presentation(void)
-    : position(ImVec2(FLT_MAX, FLT_MAX)), utils(), selected(false) {}
+    : group(), position(ImVec2(FLT_MAX, FLT_MAX)), utils(), selected(false) {}
 
 
 megamol::gui::configurator::InterfaceSlot::Presentation::~Presentation(void) {}
 
 
 void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
-    megamol::gui::configurator::InterfaceSlot& inout_interfaceslot, megamol::gui::GraphItemsStateType& state,
-    bool collapsed_view) {
+    megamol::gui::configurator::InterfaceSlot& inout_interfaceslot, megamol::gui::GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -173,28 +172,14 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
 
         ImGui::PushID(inout_interfaceslot.uid);
         
-        auto any_callslot_ptr = inout_interfaceslot.GetCallSlots().front();
+        auto only_callslot_ptr = inout_interfaceslot.GetCallSlots().front();
+        ImVec2 actual_position = this->GetPosition(inout_interfaceslot);
+        CallSlotType type = only_callslot_ptr->type;
         float radius = GUI_SLOT_RADIUS * state.canvas.zooming;
         bool compatible = (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.callslot_compat_ptr,
-                               (*any_callslot_ptr)) != GUI_INVALID_ID);
-        CallSlotType type = any_callslot_ptr->type;
-
-        // Button
-        ImGui::SetCursorScreenPos(this->position - ImVec2(radius, radius));
-        std::string label = "interfaceslot_slot_" + std::to_string(inout_interfaceslot.uid);
-        ImGui::SetItemAllowOverlap();
-        ImGui::InvisibleButton(label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
-        ImGui::SetItemAllowOverlap();
-
-        bool button_active = ImGui::IsItemActive();
-        bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
-        bool button_hovered = (ImGui::IsItemHovered() &&
-                               (state.interact.module_hovered_uid == GUI_INVALID_ID) &&
-                               (state.interact.callslot_hovered_uid == GUI_INVALID_ID) &&
-                               ((state.interact.interfaceslot_hovered_uid == GUI_INVALID_ID) || (state.interact.interfaceslot_hovered_uid == inout_interfaceslot.uid)));
-
+                               (*only_callslot_ptr)) != GUI_INVALID_ID);
         std::string tooltip;
-        if (!collapsed_view) {
+        if (!this->group.collapsed_view) {
             for (auto& callslot_ptr : inout_interfaceslot.GetCallSlots()) {
                 tooltip += (callslot_ptr->name + "\n");
             }
@@ -207,7 +192,35 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
                 tooltip += (callslot_ptr->name + "\n");
             }
         }
-            
+        
+        // Button
+        ImGui::SetCursorScreenPos(actual_position - ImVec2(radius, radius));
+        std::string label = "interfaceslot_slot_" + std::to_string(inout_interfaceslot.uid);
+        ImGui::SetItemAllowOverlap();
+        ImGui::InvisibleButton(label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
+        ImGui::SetItemAllowOverlap();
+
+        bool button_active = ImGui::IsItemActive();
+        bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+        bool button_hovered = (ImGui::IsItemHovered() &&
+                               (state.interact.module_hovered_uid == GUI_INVALID_ID) &&
+                               (state.interact.callslot_hovered_uid == GUI_INVALID_ID) &&
+                               ((state.interact.interfaceslot_hovered_uid == GUI_INVALID_ID) || (state.interact.interfaceslot_hovered_uid == inout_interfaceslot.uid)));
+        bool force_selection = false;
+        
+        // Context Menu
+        if (ImGui::BeginPopupContextItem("invisible_button_context")) {
+            force_selection = true;
+
+            ImGui::TextUnformatted("Interface Slot");
+            ImGui::Separator();
+            if (ImGui::MenuItem("Remove from Group Interface")) {
+                state.interact.callslot_remove_group_uid = only_callslot_ptr->uid;
+            }
+
+            ImGui::EndPopup();
+        }
+                    
         // Hover Tooltip
         if (button_hovered) {
             this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
@@ -216,7 +229,7 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
         }
         
         // Selection
-        if (!this->selected && button_active) {
+        if (!this->selected && (button_active || force_selection)) {
             state.interact.interfaceslot_selected_uid = inout_interfaceslot.uid;
             this->selected = true;
             state.interact.callslot_selected_uid = GUI_INVALID_ID;
@@ -292,13 +305,13 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
 
         // Draw Slot
         const float segment_numer = 20.0f;
-        draw_list->AddCircleFilled(this->position, radius, slot_color, segment_numer);
-        draw_list->AddCircle(this->position, radius, COLOR_INTERFACE_BORDER, segment_numer);
+        draw_list->AddCircleFilled(actual_position, radius, slot_color, segment_numer);
+        draw_list->AddCircle(actual_position, radius, COLOR_INTERFACE_BORDER, segment_numer);
 
         // Draw Curves
-        if (!collapsed_view) {
+        if (!this->group.collapsed_view) {
             for (auto& callslot_ptr : inout_interfaceslot.GetCallSlots()) {
-                draw_list->AddLine(this->position, callslot_ptr->GUI_GetPosition(), COLOR_INTERFACE_LINE,
+                draw_list->AddLine(actual_position, callslot_ptr->GUI_GetPosition(), COLOR_INTERFACE_LINE,
                     GUI_LINE_THICKNESS * state.canvas.zooming);
             }
         }
@@ -314,3 +327,16 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
         return;
     }
 }
+
+
+ImVec2 megamol::gui::configurator::InterfaceSlot::Presentation::GetPosition(InterfaceSlot& inout_interfaceslot) { 
+    
+    auto only_callslot_ptr = inout_interfaceslot.GetCallSlots().front();
+    ImVec2 ret_position = this->position;
+    if (!this->group.collapsed_view) {
+        ret_position.x = this->position.x;
+        ret_position.y = only_callslot_ptr->GUI_GetPosition().y;
+    }
+    return ret_position;
+}
+

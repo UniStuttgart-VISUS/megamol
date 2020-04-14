@@ -58,13 +58,14 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    inline void GUI_Present(GraphItemsStateType& state, bool collapsed_view) {
-        this->present.Present(*this, state, collapsed_view);
+    inline void GUI_Present(GraphItemsStateType& state) {
+        this->present.Present(*this, state);
     }
 
-    inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
+    inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(*this); }
 
     inline void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
+    inline void GUI_SetGroupView(bool collapsed_view) { this->present.group.collapsed_view = collapsed_view; }
 
 private:
     CallSlotPtrVectorType callslots;
@@ -74,16 +75,22 @@ private:
      */
     class Presentation {
     public:
+        struct GroupState {
+            bool collapsed_view;
+        };
+            
         Presentation(void);
 
         ~Presentation(void);
 
-        void Present(InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state, bool collapsed_view);
+        void Present(InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state);
 
-        inline ImVec2 GetPosition(void) { return this->position; }
+        ImVec2 GetPosition(InterfaceSlot& inout_interfaceslot);
 
         void SetPosition(ImVec2 pos) { this->position = pos; }
 
+        GroupState group;
+        
     private:
         // Absolute position including canvas offset and zooming
         ImVec2 position;

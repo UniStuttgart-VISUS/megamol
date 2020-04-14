@@ -327,15 +327,10 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
 
             ImGui::TextUnformatted("Call Slot");
             ImGui::Separator();
-            /// Menu items are active depending on group membership of parent module
             bool menu_enabled = (!is_group_interface && (is_parent_module_group_member != GUI_INVALID_ID));
             if (ImGui::MenuItem("Add to Group Interface ", nullptr, false, menu_enabled)) {
                 state.interact.callslot_add_group_uid.first = inout_callslot.uid;
                 state.interact.callslot_add_group_uid.second = inout_callslot.GetParentModule()->uid;
-            }
-            menu_enabled = (is_group_interface && (is_parent_module_group_member != GUI_INVALID_ID)) && !inout_callslot.CallsConnected();
-            if (ImGui::MenuItem("Remove from Group Interface", nullptr, false, menu_enabled)) {
-                state.interact.callslot_remove_group_uid = inout_callslot.uid;
             }
             ImGui::Separator();
             ImGui::TextDisabled("Description");

@@ -75,6 +75,8 @@ private:
         void Present(Group& inout_group, GraphItemsStateType& state);
 
         void UpdatePositionSize(Group& inout_group, const GraphCanvasType& in_canvas);
+        
+        inline bool IsViewCollapsed(void) { return this->collapsed_view; }
         inline bool ModulesVisible(void) { return !this->collapsed_view; }
         inline void ForceUpdate(void) { this->update = true; }
 
