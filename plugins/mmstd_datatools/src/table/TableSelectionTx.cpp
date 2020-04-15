@@ -119,7 +119,8 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
     size_t numberOfRows = tableInCall->GetRowsCount();
     size_t numberOfCols = tableInCall->GetColumnsCount();
 
-    if (numberOfFlags != numberOfRows) {
+    // validateFlagCount() only increases the buffer
+    if (numberOfFlags < numberOfRows) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "TableSelectionTx: invalid table/flag storage size!");
         return false;
     }
