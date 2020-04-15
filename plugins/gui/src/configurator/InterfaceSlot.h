@@ -41,26 +41,24 @@ class InterfaceSlot {
 public:
     InterfaceSlot(ImGuiID uid);
     ~InterfaceSlot();
-    
-    const ImGuiID uid; 
-    
+
+    const ImGuiID uid;
+
     bool AddCallSlot(const CallSlotPtrType& callslot_ptr, const InterfaceSlotPtrType& parent_interfaceslot_ptr);
-    
+
     bool RemoveCallSlot(ImGuiID callslot_uid);
 
     bool ContainsCallSlot(ImGuiID callslot_uid);
-    
+
     bool IsCallSlotCompatible(const CallSlotPtrType& callslot_ptr);
-    
+
     bool IsEmpty(void);
 
     CallSlotPtrVectorType& GetCallSlots(void) { return this->callslots; }
 
     // GUI Presentation -------------------------------------------------------
 
-    inline void GUI_Present(GraphItemsStateType& state) {
-        this->present.Present(*this, state);
-    }
+    inline void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
 
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(*this); }
 
@@ -78,7 +76,7 @@ private:
         struct GroupState {
             bool collapsed_view;
         };
-            
+
         Presentation(void);
 
         ~Presentation(void);
@@ -90,7 +88,7 @@ private:
         void SetPosition(ImVec2 pos) { this->position = pos; }
 
         GroupState group;
-        
+
     private:
         // Absolute position including canvas offset and zooming
         ImVec2 position;

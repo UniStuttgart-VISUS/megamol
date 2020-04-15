@@ -425,9 +425,10 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
     bool apply_changes = false;
 
     // Return true for current changes being applied
-    ImGui::PushStyleColor(ImGuiCol_Button, this->pendingChanges ? GUI_COLOR_BUTTON_MODIFIED : style.Colors[ImGuiCol_Button]);
     ImGui::PushStyleColor(
-        ImGuiCol_ButtonHovered, this->pendingChanges ? GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT : style.Colors[ImGuiCol_ButtonHovered]);
+        ImGuiCol_Button, this->pendingChanges ? GUI_COLOR_BUTTON_MODIFIED : style.Colors[ImGuiCol_Button]);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+        this->pendingChanges ? GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT : style.Colors[ImGuiCol_ButtonHovered]);
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
     if (ImGui::Button("Apply")) {
         apply_changes = true;

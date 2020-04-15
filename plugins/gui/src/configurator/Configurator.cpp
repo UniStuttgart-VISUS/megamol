@@ -318,9 +318,9 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 
         /// XXX Disabled
         // Info text ----------------------------------------------------------
-        //ImGui::SameLine(260.0f);
-        //std::string label = "Changes will not affect the currently loaded MegaMol project.";
-        //ImGui::TextColored(GUI_COLOR_TEXT_WARN, label.c_str());
+        // ImGui::SameLine(260.0f);
+        // std::string label = "Changes will not affect the currently loaded MegaMol project.";
+        // ImGui::TextColored(GUI_COLOR_TEXT_WARN, label.c_str());
 
         ImGui::EndMenuBar();
     }

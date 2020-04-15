@@ -51,10 +51,10 @@ public:
     ImGuiID AddGroup(const std::string& group_name = "");
     bool DeleteGroup(ImGuiID group_uid);
     inline const GroupPtrVectorType& GetGroups(void) { return this->groups; }
-    
+
     ImGuiID AddGroupModule(const std::string& group_name, const ModulePtrType& module_ptr);
     bool AddGroupInterfaceCallSlot(ImGuiID group_uid, const CallSlotPtrType& callslot_ptr);
-        
+
     inline bool IsDirty(void) const { return this->dirty_flag; }
     inline void ResetDirty(void) { this->dirty_flag = false; }
 

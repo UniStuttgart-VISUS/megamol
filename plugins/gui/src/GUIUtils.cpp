@@ -318,7 +318,7 @@ bool megamol::gui::GUIUtils::VerticalSplitter(FixedSplitterSide fixed_side, floa
 }
 
 
-bool megamol::gui::GUIUtils::PointCircleButton(const std::string& label, bool dirty ) {
+bool megamol::gui::GUIUtils::PointCircleButton(const std::string& label, bool dirty) {
 
     bool retval = false;
 

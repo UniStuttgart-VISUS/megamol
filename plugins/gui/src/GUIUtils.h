@@ -60,7 +60,7 @@ namespace gui {
 #define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 1.0f, 0.75f, 1.0f))
 #define GUI_COLOR_SLOT_CALLEE (ImVec4(0.75f, 0.0f, 1.0f, 1.0f))
 #define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.75f, 1.0f, 0.25f, 1.0f))
-            
+
 
 /********** Types **********/
 
@@ -119,7 +119,7 @@ typedef struct _interact_state_ {
     ImGuiID callslot_remove_group_uid;                               // in out
     megamol::gui::configurator::CallSlotPtrType callslot_compat_ptr; // in
     ImGuiID interfaceslot_selected_uid;                              // in out
-    ImGuiID interfaceslot_hovered_uid;                               // in out    
+    ImGuiID interfaceslot_hovered_uid;                               // in out
 } GraphItemsInteractType;
 
 /* Data type holding shared state of graph items. */

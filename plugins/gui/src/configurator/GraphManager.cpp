@@ -493,7 +493,8 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 }
                 ImVec2 module_pos = this->readLuaProjectConfPos(lines[i]);
                 if ((module_pos.x != FLT_MAX) && (module_pos.x != FLT_MAX)) found_conf_pos = true;
-                std::vector<std::string> group_interfaceslot_callslots = this->readLuaProjectConfGroupInterface(lines[i]);
+                std::vector<std::string> group_interfaceslot_callslots =
+                    this->readLuaProjectConfGroupInterface(lines[i]);
 
                 /// DEBUG
                 // vislib::sys::Log::DefaultLog.WriteInfo(
@@ -556,7 +557,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                         }
                     }
                 }
-                
+
                 found_main_view = true;
             }
         }
@@ -593,7 +594,8 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 }
                 ImVec2 module_pos = this->readLuaProjectConfPos(lines[i]);
                 if ((module_pos.x != FLT_MAX) && (module_pos.x != FLT_MAX)) found_conf_pos = true;
-                std::vector<std::string> group_interfaceslot_callslots = this->readLuaProjectConfGroupInterface(lines[i]);
+                std::vector<std::string> group_interfaceslot_callslots =
+                    this->readLuaProjectConfGroupInterface(lines[i]);
 
                 /// DEBUG
                 // vislib::sys::Log::DefaultLog.WriteInfo(">>>> Class: '%s' NameSpace: '%s' Name: '%s' ConfPos: %f,

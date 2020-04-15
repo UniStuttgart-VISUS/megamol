@@ -187,8 +187,7 @@ ImGuiID megamol::gui::configurator::CallSlot::CheckCompatibleAvailableCallIndex(
     const megamol::gui::configurator::CallSlotPtrType callslot_ptr, megamol::gui::configurator::CallSlot& callslot) {
 
     if (callslot_ptr != nullptr) {
-        if (callslot_ptr->GetParentModule() != callslot.GetParentModule() &&
-            (callslot_ptr->type != callslot.type)) {
+        if (callslot_ptr->GetParentModule() != callslot.GetParentModule() && (callslot_ptr->type != callslot.type)) {
             // Return first found compatible call index
             for (auto& selected_comp_callslot : callslot_ptr->compatible_call_idxs) {
                 for (auto& current_comp_callslots : callslot.compatible_call_idxs) {
@@ -207,8 +206,7 @@ ImGuiID megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(
     const CallSlotPtrType callslot_1, const CallSlotPtrType callslot_2) {
 
     if ((callslot_1 != nullptr) && (callslot_2 != nullptr)) {
-        if (callslot_1->GetParentModule() != callslot_2->GetParentModule() &&
-            (callslot_1->type != callslot_2->type)) {
+        if (callslot_1->GetParentModule() != callslot_2->GetParentModule() && (callslot_1->type != callslot_2->type)) {
             // Return first found compatible call index
             for (auto& comp_call_idx_1 : callslot_1->compatible_call_idxs) {
                 for (auto& comp_call_idx_2 : callslot_2->compatible_call_idxs) {
@@ -282,10 +280,10 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             this->UpdatePosition(inout_callslot, state.canvas);
             this->update_once = false;
         }
-        
+
         // Get some information
-        ImVec2 slot_position = this->position;        
-        float radius = GUI_SLOT_RADIUS * state.canvas.zooming;                        
+        ImVec2 slot_position = this->position;
+        float radius = GUI_SLOT_RADIUS * state.canvas.zooming;
         bool is_group_interface = (this->group.interfaceslot_ptr != nullptr);
         ImGuiID is_parent_module_group_member = GUI_INVALID_ID;
         ImGuiID parent_module_uid = GUI_INVALID_ID;
@@ -304,7 +302,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             }
         }
         bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
-            
+
         // Clip call slots if lying ouside the canvas
         /// Is there a benefit since ImGui::PushClipRect is used?
         ImVec2 canvas_rect_min = state.canvas.position;
@@ -325,8 +323,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                     state.interact.callslot_selected_uid = GUI_INVALID_ID;
                 }
             }
-        }
-        else {
+        } else {
 
             ImGui::PushID(inout_callslot.uid);
 
@@ -339,8 +336,10 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
 
             bool button_active = ImGui::IsItemActive();
             bool button_hovered = (ImGui::IsItemHovered() &&
-                                  ((state.interact.module_hovered_uid == GUI_INVALID_ID) || (state.interact.module_hovered_uid == parent_module_uid)) &&
-                                  ((state.interact.callslot_hovered_uid == GUI_INVALID_ID) || (state.interact.callslot_hovered_uid == inout_callslot.uid)));
+                                   ((state.interact.module_hovered_uid == GUI_INVALID_ID) ||
+                                       (state.interact.module_hovered_uid == parent_module_uid)) &&
+                                   ((state.interact.callslot_hovered_uid == GUI_INVALID_ID) ||
+                                       (state.interact.callslot_hovered_uid == inout_callslot.uid)));
             bool force_selection = false;
 
             // Context Menu

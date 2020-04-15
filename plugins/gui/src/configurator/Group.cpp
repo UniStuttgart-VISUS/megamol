@@ -117,7 +117,8 @@ bool megamol::gui::configurator::Group::ContainsModule(ImGuiID module_uid) {
 }
 
 
-bool megamol::gui::configurator::Group::InterfaceAddCallSlot(const CallSlotPtrType& callslot_ptr, ImGuiID interfaceslot_uid) {
+bool megamol::gui::configurator::Group::InterfaceAddCallSlot(
+    const CallSlotPtrType& callslot_ptr, ImGuiID interfaceslot_uid) {
 
     bool successfully_added = false;
 
@@ -152,7 +153,7 @@ bool megamol::gui::configurator::Group::InterfaceAddCallSlot(const CallSlotPtrTy
     }
 
     if (parent_module_group_member) {
-        
+
         /// XXX
         // Try to add call slot to interface slot already containing compatible call slots ...
         /*
@@ -164,11 +165,11 @@ bool megamol::gui::configurator::Group::InterfaceAddCallSlot(const CallSlotPtrTy
         }
         */
         // ... or create new interface slot for this call slot.
-        
+
         if (!successfully_added) {
             this->interfaceslots[callslot_ptr->type].emplace_back(std::make_shared<InterfaceSlot>(interfaceslot_uid));
             vislib::sys::Log::DefaultLog.WriteInfo("Added interface slot to group '%s'.\n", this->name.c_str());
-            
+
             InterfaceSlotPtrType interfaceslot_ptr = this->interfaceslots[callslot_ptr->type].back();
             if (interfaceslot_ptr != nullptr) {
                 successfully_added = interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr);
@@ -236,7 +237,8 @@ bool megamol::gui::configurator::Group::InterfaceContainsCallSlot(ImGuiID callsl
 }
 
 
-bool megamol::gui::configurator::Group::GetInterfaceSlot(ImGuiID interfaceslot_uid, InterfaceSlotPtrType& interfaceslot_ptr) {
+bool megamol::gui::configurator::Group::GetInterfaceSlot(
+    ImGuiID interfaceslot_uid, InterfaceSlotPtrType& interfaceslot_ptr) {
 
     if (interfaceslot_uid != GUI_INVALID_ID) {
         for (auto& interfaceslots_map : this->interfaceslots) {
@@ -250,8 +252,7 @@ bool megamol::gui::configurator::Group::GetInterfaceSlot(ImGuiID interfaceslot_u
     }
     return false;
 }
-    
-    
+
 
 // GROUP PRESENTATION ####################################################
 
