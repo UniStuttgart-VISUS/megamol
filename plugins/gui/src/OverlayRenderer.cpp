@@ -356,29 +356,29 @@ void OverlayRenderer::setParameterGUIVisibility(void) {
     bool label_mode = (mode == Mode::LABEL);
 
     // Texture Mode
-    this->paramFileName.Param<param::FilePathParam>()->SetGUIVisible(texture_mode);
-    this->paramRelativeWidth.Param<param::FloatParam>()->SetGUIVisible(texture_mode || transpctrl_mode);
+    this->paramFileName.Parameter()->SetGUIVisible(texture_mode);
+    this->paramRelativeWidth.Parameter()->SetGUIVisible(texture_mode || transpctrl_mode);
 
     // TranspCtrl Icons Mode
-    this->paramIconColor.Param<param::ColorParam>()->SetGUIVisible(transpctrl_mode);
-    this->paramDuration.Param<param::FloatParam>()->SetGUIVisible(transpctrl_mode);
-    this->paramFastSpeed.Param<param::FloatParam>()->SetGUIVisible(transpctrl_mode);
-    this->paramUltraFastSpeed.Param<param::FloatParam>()->SetGUIVisible(transpctrl_mode);
-    this->paramSpeedParameter.Param<param::StringParam>()->SetGUIVisible(transpctrl_mode);
-    this->paramTimeParameter.Param<param::StringParam>()->SetGUIVisible(transpctrl_mode);
+    this->paramIconColor.Parameter()->SetGUIVisible(transpctrl_mode);
+    this->paramDuration.Parameter()->SetGUIVisible(transpctrl_mode);
+    this->paramFastSpeed.Parameter()->SetGUIVisible(transpctrl_mode);
+    this->paramUltraFastSpeed.Parameter()->SetGUIVisible(transpctrl_mode);
+    this->paramSpeedParameter.Parameter()->SetGUIVisible(transpctrl_mode);
+    this->paramTimeParameter.Parameter()->SetGUIVisible(transpctrl_mode);
 
     // Parameter Mode
-    this->paramPrefix.Param<param::StringParam>()->SetGUIVisible(parameter_mode);
-    this->paramSufix.Param<param::StringParam>()->SetGUIVisible(parameter_mode);
-    this->paramParameterName.Param<param::StringParam>()->SetGUIVisible(parameter_mode);
+    this->paramPrefix.Parameter()->SetGUIVisible(parameter_mode);
+    this->paramSufix.Parameter()->SetGUIVisible(parameter_mode);
+    this->paramParameterName.Parameter()->SetGUIVisible(parameter_mode);
 
     // Label Mode
-    this->paramText.Param<param::StringParam>()->SetGUIVisible(label_mode);
+    this->paramText.Parameter()->SetGUIVisible(label_mode);
 
     // Font Settings
-    this->paramFontName.Param<param::EnumParam>()->SetGUIVisible(label_mode || parameter_mode);
-    this->paramFontSize.Param<param::FloatParam>()->SetGUIVisible(label_mode || parameter_mode);
-    this->paramFontColor.Param<param::ColorParam>()->SetGUIVisible(label_mode || parameter_mode);
+    this->paramFontName.Parameter()->SetGUIVisible(label_mode || parameter_mode);
+    this->paramFontSize.Parameter()->SetGUIVisible(label_mode || parameter_mode);
+    this->paramFontColor.Parameter()->SetGUIVisible(label_mode || parameter_mode);
 }
 
 

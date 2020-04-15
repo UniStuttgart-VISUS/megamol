@@ -245,7 +245,7 @@ private:
      */
     class Presentation {
     public:
-        enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
+        enum Presentations : size_t { DEFAULT = 0, PIN_VALUE_TO_MOUSE = 1, __COUNT__ = 2 };
 
         Presentation(void);
 
@@ -272,7 +272,7 @@ private:
 
         void present_prefix(void);
         void present_value_DEFAULT(Parameter& inout_param);
-        // void present_value_PIN_VALUE_TO_MOUSE(Parameter& param);
+        void present_value_PIN_VALUE_TO_MOUSE(Parameter& param);
         void present_postfix(Parameter& inout_param);
         bool presentation_button(void);
         void transfer_function_edit(Parameter& inout_param);

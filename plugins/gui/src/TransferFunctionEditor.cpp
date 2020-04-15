@@ -228,7 +228,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
         if (this->activeParameter == nullptr) {
             const char* message = "Changes have no effect.\n"
                                   "Please set a transfer function parameter.\n";
-            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), message);
+            ImGui::TextColored(GUI_COLOR_TEXT_WARN, message);
         }
     }
 
@@ -425,11 +425,9 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
     bool apply_changes = false;
 
     // Return true for current changes being applied
-    const auto err_btn_color = ImVec4(0.6f, 0.0f, 0.0f, 1.0f);
-    const auto er_btn_hov_color = ImVec4(0.9f, 0.0f, 0.0f, 1.0f);
-    ImGui::PushStyleColor(ImGuiCol_Button, this->pendingChanges ? err_btn_color : style.Colors[ImGuiCol_Button]);
+    ImGui::PushStyleColor(ImGuiCol_Button, this->pendingChanges ? GUI_COLOR_BUTTON_MODIFIED : style.Colors[ImGuiCol_Button]);
     ImGui::PushStyleColor(
-        ImGuiCol_ButtonHovered, this->pendingChanges ? er_btn_hov_color : style.Colors[ImGuiCol_ButtonHovered]);
+        ImGuiCol_ButtonHovered, this->pendingChanges ? GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT : style.Colors[ImGuiCol_ButtonHovered]);
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
     if (ImGui::Button("Apply")) {
         apply_changes = true;

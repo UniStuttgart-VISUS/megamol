@@ -280,10 +280,6 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
         const ImU32 COLOR_INTERFACE_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
-        ImU32 COLOR_SLOT_CALLER_HIGHLIGHT = IM_COL32(0, 255, 192, 255);
-        ImU32 COLOR_SLOT_CALLEE_HIGHLIGHT = IM_COL32(192, 0, 255, 255);
-        ImU32 COLOR_SLOT_COMPATIBLE = IM_COL32(192, 255, 64, 255);
-
         tmpcol = style.Colors[ImGuiCol_ScrollbarGrab];
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
         const ImU32 COLOR_INTERFACE_LINE = ImGui::ColorConvertFloat4ToU32(tmpcol);
@@ -291,13 +287,13 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
         // Color modification
         ImU32 slot_highlight_color = COLOR_INTERFACE_BACKGROUND;
         if (type == CallSlotType::CALLER) {
-            slot_highlight_color = COLOR_SLOT_CALLER_HIGHLIGHT;
+            slot_highlight_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLER);
         } else if (type == CallSlotType::CALLEE) {
-            slot_highlight_color = COLOR_SLOT_CALLEE_HIGHLIGHT;
+            slot_highlight_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLEE);
         }
         ImU32 slot_color = COLOR_INTERFACE_BACKGROUND;
         if (compatible) {
-            slot_color = COLOR_SLOT_COMPATIBLE;
+            slot_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_COMPATIBLE);
         }
         if (button_hovered || this->selected) {
             slot_color = slot_highlight_color;

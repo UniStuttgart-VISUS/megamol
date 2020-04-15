@@ -52,6 +52,16 @@ namespace gui {
 #define GUI_DND_CALLSLOT_UID_TYPE ("DND_CALL")
 #define GUI_GRAPH_BORDER (GUI_SLOT_RADIUS * 4.0f)
 
+// Global Colors
+#define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.0f, 0.0f, 1.0f))
+#define GUI_COLOR_TEXT_WARN (ImVec4(0.75f, 0.75f, 0.f, 1.0f))
+#define GUI_COLOR_BUTTON_MODIFIED (ImVec4(0.6f, 0.0f, 0.0f, 1.0f))
+#define GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT (ImVec4(0.9f, 0.0f, 0.0f, 1.0f))
+#define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 1.0f, 0.75f, 1.0f))
+#define GUI_COLOR_SLOT_CALLEE (ImVec4(0.75f, 0.0f, 1.0f, 1.0f))
+#define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.75f, 1.0f, 0.25f, 1.0f))
+            
+
 /********** Types **********/
 
 /** Hotkey Data Types (exclusively for configurator) */
@@ -130,6 +140,7 @@ typedef struct _graph_state_ {
     bool graph_delete;                     // out
 } GraphStateType;
 
+
 /********** Class **********/
 
 /**
@@ -182,7 +193,7 @@ public:
     bool VerticalSplitter(FixedSplitterSide fixed_side, float& size_left, float& size_right);
 
     /** "Point in Circle" Button */
-    bool PointCircleButton(const std::string& label = "");
+    bool PointCircleButton(const std::string& label = "", bool dirty = false);
 
 
     // Static UTF8 String En-/Decoding ----------------------------------------

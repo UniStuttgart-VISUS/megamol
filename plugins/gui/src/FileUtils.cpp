@@ -211,8 +211,6 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(megamol::gui::FileUtils::FileBrow
         if (ImGui::BeginPopupModal(popup_name.c_str(), &open, ImGuiWindowFlags_None)) {
 
             bool apply = false;
-            const auto error_color = ImVec4(0.9f, 0.0f, 0.0f, 1.0f);
-            const auto warning_color = ImVec4(0.75f, 0.75f, 0.f, 1.0f);
 
             // Path ---------------------------------------------------
             auto last_file_path_str = this->file_path_str;
@@ -234,7 +232,7 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(megamol::gui::FileUtils::FileBrow
             }
             // Error message when path is no valid directory
             if (!this->valid_directory) {
-                ImGui::TextColored(error_color, "Invalid Directory");
+                ImGui::TextColored(GUI_COLOR_TEXT_ERROR, "Invalid Directory");
             }
 
             // Search -------------------------------
@@ -345,10 +343,10 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(megamol::gui::FileUtils::FileBrow
                 this->validateFile(this->file_name_str, flag);
             }
             if (!this->file_warning.empty()) {
-                ImGui::TextColored(warning_color, this->file_warning.c_str());
+                ImGui::TextColored(GUI_COLOR_TEXT_WARN, this->file_warning.c_str());
             }
             if (!this->file_error.empty()) {
-                ImGui::TextColored(error_color, this->file_error.c_str());
+                ImGui::TextColored(GUI_COLOR_TEXT_ERROR, this->file_error.c_str());
             }
 
             // Buttons ------------------------------
@@ -360,18 +358,9 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(megamol::gui::FileUtils::FileBrow
             } else if (flag == FileUtils::FileBrowserFlag::SELECT) {
                 label = "Select";
             }
-            // const auto err_btn_color = ImVec4(0.6f, 0.0f, 0.0f, 1.0f);
-            // const auto er_btn_hov_color = ImVec4(0.9f, 0.0f, 0.0f, 1.0f);
-            // ImGui::PushStyleColor(ImGuiCol_Button,
-            //     !(this->valid_directory && this->valid_file) ? err_btn_color : style.Colors[ImGuiCol_Button]);
-            // ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-            //     !(this->valid_directory && this->valid_file) ? er_btn_hov_color :
-            //     style.Colors[ImGuiCol_ButtonHovered]);
-            // ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
             if (ImGui::Button(label.c_str())) {
                 apply = true;
             }
-            // ImGui::PopStyleColor(3);
 
             ImGui::SameLine();
 

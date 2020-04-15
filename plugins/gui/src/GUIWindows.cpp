@@ -55,6 +55,7 @@ GUIWindows::GUIWindows()
     styles = nullptr;
 
     this->state_param << new core::param::StringParam("");
+    this->state_param.Parameter()->SetGUIVisible(false); /// Only visble in expert mode
 
     this->autostart_configurator << new core::param::BoolParam(false);
 
@@ -102,6 +103,12 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 
 
 bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceTime) {
+
+    if (this->impl == Implementation::NONE) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Found no initialized ImGui implementation. First call CreateContext_XXX() once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
 
     ImGui::SetCurrentContext(this->context);
     this->core_instance->SetCurrentImGuiContext(this->context);
@@ -180,6 +187,12 @@ bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceT
 
 bool GUIWindows::PostDraw(void) {
 
+    if (this->impl == Implementation::NONE) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Found no initialized ImGui implementation. First call CreateContext_XXX() once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    
     if (ImGui::GetCurrentContext() != this->context) {
         vislib::sys::Log::DefaultLog.WriteWarn(
             "Unknown ImGui context ... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -606,6 +619,7 @@ bool GUIWindows::createContext(void) {
     this->state.win_save_delay = 0.0f;
     this->state.win_delete = "";
     this->state.last_instance_time = 0.0f;
+    this->state.params_expert = false;
     this->state.hotkeys_check_once = true;
     // Adding additional utf-8 glyph ranges
     /// (there is no error if glyph has no representation in font atlas)
@@ -821,11 +835,34 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
     if (ImGui::Button("Expand All")) {
         overrideState = 1; /// open
     }
+    
     ImGui::SameLine();
+    
     if (ImGui::Button("Collapse All")) {
         overrideState = 0; /// close
     }
+
+    // Mode
+    ImGui::BeginGroup();
+    this->utils.PointCircleButton("Mode");
+    if (ImGui::BeginPopupContextItem("gui_param_mode_button_context", 0)) { // 0 = left mouse button
+        if (ImGui::MenuItem("Basic", nullptr, (this->state.params_expert == false))) {
+            this->state.params_expert = false;
+        }
+        if (ImGui::MenuItem("Expert", nullptr, (this->state.params_expert == true))) {
+            this->state.params_expert = true;
+        }
+        ImGui::EndPopup();
+    }
+    ImGui::EndGroup();
+    std::string mode_help = "Expert Mode: \n"
+        "- Shows all Parameters\n"
+        "- Enables Button providing Presentation Options";
+    this->utils.HelpMarkerToolTip(mode_help);    
+    
     ImGui::SameLine();
+
+    // Toggel Hotkeys
     bool show_only_hotkeys = wc.param_show_hotkeys;
     ImGui::Checkbox("Show Hotkeys", &show_only_hotkeys);
     wc.param_show_hotkeys = show_only_hotkeys;
@@ -842,7 +879,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
             "Case insensitive substring search in\nparameter names.\nGlobally in all parameter views.\n";
         this->utils.StringSearch("guiwindow_parameter_earch", help_test);
     }
-
+    
     /// XXX Disabled since core instance and module name of GUIView is currently no more available ...
     /*
     // Module filtering (only for main parameter view)
@@ -929,13 +966,14 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
         this->utils.HelpMarkerToolTip("Selected filter is not refreshed on graph changes.\n"
                                       "Select filter again to trigger refresh.");
     }
-    ImGui::Separator();
     */
+    
+    ImGui::Separator();
 
     // Create child window for sepearte scroll bar and keeping header always visible on top of parameter list
     ImGui::BeginChild("###ParameterList");
 
-    // Listing parameters
+    // Listing modules and their parameters
     const core::Module* current_mod = nullptr;
     bool current_mod_open = false;
     const size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
@@ -1037,8 +1075,11 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                 if (!currentSearchString.empty()) {
                     showSearchedParameter = this->utils.FindCaseInsensitiveSubstring(param_name, currentSearchString);
                 }
-                if (!param.IsNull() && param->IsGUIVisible() && showSearchedParameter) {
-                    // Check for changed parameter namespace
+                
+                bool param_visible = (param->IsGUIVisible() || this->state.params_expert) && showSearchedParameter;
+                if (!param.IsNull() && param_visible) {
+                    
+                    // Parameter namespace header
                     auto pos = param_name.find("::");
                     std::string current_param_namespace = "";
                     if (pos != std::string::npos) {
@@ -1054,7 +1095,6 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                         if (!param_namespace.empty()) {
                             ImGui::Indent();
                             std::string label = param_namespace + "###" + param_namespace + "__" + param_name;
-                            // Open all namespace headers when parameter search is active
                             if (!currentSearchString.empty()) {
                                 auto headerId = ImGui::GetID(label.c_str());
                                 ImGui::GetStateStorage()->SetInt(headerId, 1);
@@ -1277,7 +1317,7 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
             this->state.font_size = wc.buf_font_size;
         }
     } else {
-        ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Please enter valid font file name.");
+        ImGui::TextColored(GUI_COLOR_TEXT_ERROR, "Please enter valid font file name.");
     }
 }
 
@@ -1446,6 +1486,7 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
 
     auto param = slot.Parameter();
     if (!param.IsNull()) {
+        
         // Set different style if parameter is read-only
         bool readOnly = param->IsGUIReadOnly();
         if (readOnly) {
@@ -1465,7 +1506,34 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
 
         ImGui::PushID(param_label.c_str());
         ImGui::BeginGroup();
-
+        
+        if (this->state.params_expert) {
+            bool default_present = (slot.Parameter()->GetGUIPresentation() == megamol::core::param::AbstractParam::Presentation::DEFAULT);
+            this->utils.PointCircleButton("", !default_present);
+            if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) { // 0 = left mouse button
+                for (size_t i = 0; i < megamol::core::param::AbstractParam::Presentation::__COUNT__; i++) {
+                    std::string param_present_str;
+                    auto param_present = static_cast<megamol::core::param::AbstractParam::Presentation>(i);
+                    switch (param_present) {
+                    case (megamol::core::param::AbstractParam::Presentation::DEFAULT):
+                        param_present_str = "Default";
+                        break;
+                     case (megamol::core::param::AbstractParam::Presentation::PIN_VALUE_TO_MOUSE):
+                         param_present_str = "Pin Value to Mouse";
+                         break;
+                    default:
+                        break;
+                    }
+                    if (param_present_str.empty()) break;
+                    if (ImGui::MenuItem(param_present_str.c_str(), nullptr, (param_present == slot.Parameter()->GetGUIPresentation()))) {
+                        slot.Parameter()->SetGUIPresentation(param_present);
+                    }
+                }
+                ImGui::EndPopup();
+            }
+            ImGui::SameLine();
+        }
+            
         if (auto* p = slot.template Param<core::param::BoolParam>()) {
             auto value = p->Value();
             if (ImGui::Checkbox(param_label.c_str(), &value)) {

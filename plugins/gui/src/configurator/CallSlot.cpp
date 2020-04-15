@@ -282,8 +282,10 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             this->UpdatePosition(inout_callslot, state.canvas);
             this->update_once = false;
         }
-
+        
         // Get some information
+        ImVec2 slot_position = this->position;        
+        float radius = GUI_SLOT_RADIUS * state.canvas.zooming;                        
         bool is_group_interface = (this->group.interfaceslot_ptr != nullptr);
         ImGuiID is_parent_module_group_member = GUI_INVALID_ID;
         ImGuiID parent_module_uid = GUI_INVALID_ID;
@@ -291,8 +293,6 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             is_parent_module_group_member = inout_callslot.GetParentModule()->GUI_GetGroupMembership();
             parent_module_uid = inout_callslot.GetParentModule()->uid;
         }
-        ImVec2 slot_position = this->position;
-        float radius = GUI_SLOT_RADIUS * state.canvas.zooming;
         ImVec2 text_pos_left_upper = ImVec2(0.0f, 0.0f);
         if (this->label_visible) {
             text_pos_left_upper.y = slot_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
@@ -303,147 +303,166 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                 text_pos_left_upper.x = slot_position.x + (1.5f * radius);
             }
         }
-
-
-        ImGui::PushID(inout_callslot.uid);
-
-        // Button
-        ImGui::SetCursorScreenPos(slot_position - ImVec2(radius, radius));
-        std::string label = "slot_" + inout_callslot.name + std::to_string(inout_callslot.uid);
-        ImGui::SetItemAllowOverlap();
-        ImGui::InvisibleButton(label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
-        ImGui::SetItemAllowOverlap();
-
-        bool button_active = ImGui::IsItemActive();
         bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
-        bool button_hovered = (ImGui::IsItemHovered() &&
-                              ((state.interact.module_hovered_uid == GUI_INVALID_ID) || (state.interact.module_hovered_uid == parent_module_uid)) &&
-                              ((state.interact.callslot_hovered_uid == GUI_INVALID_ID) || (state.interact.callslot_hovered_uid == inout_callslot.uid)));
-        bool force_selection = false;
-
-        // Context Menu
-        if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-            force_selection = true;
-
-            ImGui::TextUnformatted("Call Slot");
-            ImGui::Separator();
-            bool menu_enabled = (!is_group_interface && (is_parent_module_group_member != GUI_INVALID_ID));
-            if (ImGui::MenuItem("Add to Group Interface ", nullptr, false, menu_enabled)) {
-                state.interact.callslot_add_group_uid.first = inout_callslot.uid;
-                state.interact.callslot_add_group_uid.second = inout_callslot.GetParentModule()->uid;
-            }
-            ImGui::Separator();
-            ImGui::TextDisabled("Description");
-            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 13.0f);
-            ImGui::TextUnformatted(inout_callslot.description.c_str());
-            ImGui::PopTextWrapPos();
-
-            ImGui::EndPopup();
-        }
-
-        // Hover Tooltip
-        if (button_hovered) {
-            if (!this->label_visible) {
-                this->utils.HoverToolTip(inout_callslot.name, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
-            }
-        } else {
-            this->utils.ResetHoverToolTip();
-        }
-
-        // Selection
-        if (!is_group_interface && !this->selected && (force_selection || button_active)) {
-            state.interact.callslot_selected_uid = inout_callslot.uid;
-            this->selected = true;
-            state.interact.call_selected_uid = GUI_INVALID_ID;
-            state.interact.modules_selected_uids.clear();
-            state.interact.group_selected_uid = GUI_INVALID_ID;
-            state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
-        }
-        // Deselection
-        if (is_group_interface ||
-            (this->selected && ((mouse_clicked_anywhere && !button_hovered) ||
-                                   (state.interact.callslot_selected_uid != inout_callslot.uid)))) {
-            this->selected = false;
-            if (state.interact.callslot_selected_uid == inout_callslot.uid) {
-                state.interact.callslot_selected_uid = GUI_INVALID_ID;
-            }
-        }
-
-        // Hovering
-        if (button_hovered) {
-            state.interact.callslot_hovered_uid = inout_callslot.uid;
-        }
-        if (!button_hovered && (state.interact.callslot_hovered_uid == inout_callslot.uid)) {
-            state.interact.callslot_hovered_uid = GUI_INVALID_ID;
-        }
-
-        // Drag & Drop
-        if (!is_group_interface) {
-            if (ImGui::BeginDragDropTarget()) {
-                if (ImGui::AcceptDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE) != nullptr) {
-                    state.interact.callslot_dropped_uid = inout_callslot.uid;
-                }
-                ImGui::EndDragDropTarget();
-            }
-            if (this->selected) {
-                auto dnd_flags =
-                    ImGuiDragDropFlags_AcceptNoDrawDefaultRect; // | ImGuiDragDropFlags_SourceNoPreviewTooltip;
-                if (ImGui::BeginDragDropSource(dnd_flags)) {
-                    ImGui::SetDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE, &inout_callslot.uid, sizeof(ImGuiID));
-                    ImGui::TextUnformatted(inout_callslot.name.c_str());
-                    ImGui::EndDragDropSource();
-                }
-            }
-        }
-
-        // Colors
-        ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
-        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-        const ImU32 COLOR_SLOT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-        tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive];
-        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-        const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-        tmpcol = style.Colors[ImGuiCol_ScrollbarGrab];
-        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-        const ImU32 COLOR_SLOT_INTERFACE = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-        ImU32 COLOR_SLOT_CALLER_HIGHLIGHT = IM_COL32(0, 255, 192, 255);
-        ImU32 COLOR_SLOT_CALLEE_HIGHLIGHT = IM_COL32(192, 0, 255, 255);
-        ImU32 COLOR_SLOT_COMPATIBLE = IM_COL32(192, 255, 64, 255);
-
-        // Color modification
-        ImU32 slot_color = COLOR_SLOT_BACKGROUND;
-        ImU32 slot_highlight_color = COLOR_SLOT_BACKGROUND;
-        if (inout_callslot.type == CallSlotType::CALLER) {
-            slot_highlight_color = COLOR_SLOT_CALLER_HIGHLIGHT;
-        } else if (inout_callslot.type == CallSlotType::CALLEE) {
-            slot_highlight_color = COLOR_SLOT_CALLEE_HIGHLIGHT;
-        }
-        if (!is_group_interface) {
-            if (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.callslot_compat_ptr, inout_callslot) !=
-                GUI_INVALID_ID) {
-                slot_color = COLOR_SLOT_COMPATIBLE;
-            }
-            if (button_hovered || this->selected) {
-                slot_color = slot_highlight_color;
-            }
-        } else {
-            slot_color = COLOR_SLOT_INTERFACE;
-        }
-
-        // Draw Slot
-        const float segment_numer = 20.0f;
-        draw_list->AddCircleFilled(slot_position, radius, slot_color, segment_numer);
-        draw_list->AddCircle(slot_position, radius, COLOR_SLOT_BORDER, segment_numer);
-
-        // Text
+            
+        // Clip call slots if lying ouside the canvas
+        /// Is there a benefit since ImGui::PushClipRect is used?
+        ImVec2 canvas_rect_min = state.canvas.position;
+        ImVec2 canvas_rect_max = state.canvas.position + state.canvas.size;
+        ImVec2 slot_rect_min = ImVec2(slot_position.x - radius, slot_position.y - radius);
+        ImVec2 slot_rect_max = ImVec2(slot_position.x + radius, slot_position.y + radius);
         if (this->label_visible) {
-            draw_list->AddText(text_pos_left_upper, slot_highlight_color, inout_callslot.name.c_str());
+            if (text_pos_left_upper.x < slot_rect_min.x) slot_rect_min.x = text_pos_left_upper.x;
+            if (text_pos_left_upper.x > slot_rect_max.x) slot_rect_max.x = text_pos_left_upper.x;
+            if (text_pos_left_upper.y < slot_rect_min.y) slot_rect_min.y = text_pos_left_upper.y;
+            if (text_pos_left_upper.y > slot_rect_max.y) slot_rect_max.y = text_pos_left_upper.y;
         }
+        if (!((canvas_rect_min.x < (slot_rect_max.x)) && (canvas_rect_max.x > (slot_rect_min.x)) &&
+                (canvas_rect_min.y < (slot_rect_max.y)) && (canvas_rect_max.y > (slot_rect_min.y)))) {
+            if (mouse_clicked_anywhere) {
+                this->selected = false;
+                if (state.interact.callslot_selected_uid == inout_callslot.uid) {
+                    state.interact.callslot_selected_uid = GUI_INVALID_ID;
+                }
+            }
+        }
+        else {
 
-        ImGui::PopID();
+            ImGui::PushID(inout_callslot.uid);
+
+            // Button
+            ImGui::SetCursorScreenPos(slot_position - ImVec2(radius, radius));
+            std::string label = "slot_" + inout_callslot.name + std::to_string(inout_callslot.uid);
+            ImGui::SetItemAllowOverlap();
+            ImGui::InvisibleButton(label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
+            ImGui::SetItemAllowOverlap();
+
+            bool button_active = ImGui::IsItemActive();
+            bool button_hovered = (ImGui::IsItemHovered() &&
+                                  ((state.interact.module_hovered_uid == GUI_INVALID_ID) || (state.interact.module_hovered_uid == parent_module_uid)) &&
+                                  ((state.interact.callslot_hovered_uid == GUI_INVALID_ID) || (state.interact.callslot_hovered_uid == inout_callslot.uid)));
+            bool force_selection = false;
+
+            // Context Menu
+            if (ImGui::BeginPopupContextItem("invisible_button_context")) {
+                force_selection = true;
+
+                ImGui::TextUnformatted("Call Slot");
+                ImGui::Separator();
+                bool menu_enabled = (!is_group_interface && (is_parent_module_group_member != GUI_INVALID_ID));
+                if (ImGui::MenuItem("Add to Group Interface ", nullptr, false, menu_enabled)) {
+                    state.interact.callslot_add_group_uid.first = inout_callslot.uid;
+                    state.interact.callslot_add_group_uid.second = inout_callslot.GetParentModule()->uid;
+                }
+                ImGui::Separator();
+                ImGui::TextDisabled("Description");
+                ImGui::PushTextWrapPos(ImGui::GetFontSize() * 13.0f);
+                ImGui::TextUnformatted(inout_callslot.description.c_str());
+                ImGui::PopTextWrapPos();
+
+                ImGui::EndPopup();
+            }
+
+            // Hover Tooltip
+            if (button_hovered) {
+                if (!this->label_visible) {
+                    this->utils.HoverToolTip(inout_callslot.name, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
+                }
+            } else {
+                this->utils.ResetHoverToolTip();
+            }
+
+            // Selection
+            if (!is_group_interface && !this->selected && (force_selection || button_active)) {
+                state.interact.callslot_selected_uid = inout_callslot.uid;
+                this->selected = true;
+                state.interact.call_selected_uid = GUI_INVALID_ID;
+                state.interact.modules_selected_uids.clear();
+                state.interact.group_selected_uid = GUI_INVALID_ID;
+                state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
+            }
+            // Deselection
+            if (is_group_interface ||
+                (this->selected && ((mouse_clicked_anywhere && !button_hovered) ||
+                                       (state.interact.callslot_selected_uid != inout_callslot.uid)))) {
+                this->selected = false;
+                if (state.interact.callslot_selected_uid == inout_callslot.uid) {
+                    state.interact.callslot_selected_uid = GUI_INVALID_ID;
+                }
+            }
+
+            // Hovering
+            if (button_hovered) {
+                state.interact.callslot_hovered_uid = inout_callslot.uid;
+            }
+            if (!button_hovered && (state.interact.callslot_hovered_uid == inout_callslot.uid)) {
+                state.interact.callslot_hovered_uid = GUI_INVALID_ID;
+            }
+
+            // Drag & Drop
+            if (!is_group_interface) {
+                if (ImGui::BeginDragDropTarget()) {
+                    if (ImGui::AcceptDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE) != nullptr) {
+                        state.interact.callslot_dropped_uid = inout_callslot.uid;
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+                if (this->selected) {
+                    auto dnd_flags =
+                        ImGuiDragDropFlags_AcceptNoDrawDefaultRect; // | ImGuiDragDropFlags_SourceNoPreviewTooltip;
+                    if (ImGui::BeginDragDropSource(dnd_flags)) {
+                        ImGui::SetDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE, &inout_callslot.uid, sizeof(ImGuiID));
+                        ImGui::TextUnformatted(inout_callslot.name.c_str());
+                        ImGui::EndDragDropSource();
+                    }
+                }
+            }
+
+            // Colors
+            ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
+            tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+            const ImU32 COLOR_SLOT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
+            tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive];
+            tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+            const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
+            tmpcol = style.Colors[ImGuiCol_ScrollbarGrab];
+            tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+            const ImU32 COLOR_SLOT_INTERFACE = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
+            // Color modification
+            ImU32 slot_color = COLOR_SLOT_BACKGROUND;
+            ImU32 slot_highlight_color = COLOR_SLOT_BACKGROUND;
+            if (inout_callslot.type == CallSlotType::CALLER) {
+                slot_highlight_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLER);
+            } else if (inout_callslot.type == CallSlotType::CALLEE) {
+                slot_highlight_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLEE);
+            }
+            if (!is_group_interface) {
+                if (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.callslot_compat_ptr, inout_callslot) !=
+                    GUI_INVALID_ID) {
+                    slot_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_COMPATIBLE);
+                }
+                if (button_hovered || this->selected) {
+                    slot_color = slot_highlight_color;
+                }
+            } else {
+                slot_color = COLOR_SLOT_INTERFACE;
+            }
+
+            // Draw Slot
+            const float segment_numer = 20.0f;
+            draw_list->AddCircleFilled(slot_position, radius, slot_color, segment_numer);
+            draw_list->AddCircle(slot_position, radius, COLOR_SLOT_BORDER, segment_numer);
+
+            // Text
+            if (this->label_visible) {
+                draw_list->AddText(text_pos_left_upper, slot_highlight_color, inout_callslot.name.c_str());
+            }
+
+            ImGui::PopID();
+        }
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(

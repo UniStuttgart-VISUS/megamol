@@ -123,6 +123,29 @@ namespace param {
         */
         inline void SetGUIReadOnly(const bool read_only) {
             this->gui_read_only = read_only;
+        }     
+        
+        /** 
+         *  GUI presentations of parameter.
+         */
+        enum Presentation : size_t { DEFAULT = 0, PIN_VALUE_TO_MOUSE = 1, __COUNT__ = 2 };
+        
+        /**
+        * Set presentation in GUI.
+        *
+        * @param presentation Presentation of parameter in GUI.
+        */
+        inline void SetGUIPresentation(const Presentation presentation) {
+            this->gui_presentation = presentation;
+        }
+        
+        /**
+        * Answer presentation in GUI.
+        *
+        * @return GUI presentation.
+        */
+        inline Presentation GetGUIPresentation() const {
+            return this->gui_presentation;
         }
 
     protected:
@@ -160,6 +183,11 @@ namespace param {
         * Make parameter read-only in the GUI.
         */
         bool gui_read_only;
+        
+        /**
+        * Presentation of parameter in the GUI.
+        */
+        Presentation gui_presentation;
 
     };
 

@@ -347,15 +347,15 @@ bool megamol::gui::configurator::Parameter::Presentation::presentation_button(vo
 
     this->utils.PointCircleButton();
     if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) { // 0 = left mouse button
-        for (int i = 0; i < static_cast<int>(Presentations::_COUNT_); i++) {
+        for (int i = 0; i < static_cast<int>(Presentations::__COUNT__); i++) {
             std::string presentation_str;
             switch (static_cast<Presentations>(i)) {
             case (Presentations::DEFAULT):
                 presentation_str = "Default";
                 break;
-            // case (Presentations::PIN_VALUE_TO_MOUSE):
-            //     presentation_str = "Pin Value to Mouse";
-            //     break;
+             case (Presentations::PIN_VALUE_TO_MOUSE):
+                 presentation_str = "Pin Value to Mouse";
+                 break;
             default:
                 break;
             }
@@ -643,7 +643,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
     ImGui::PopItemWidth();
 }
 
-/*
+
 void megamol::gui::configurator::Parameter::Presentation::present_value_PIN_VALUE_TO_MOUSE(
     megamol::gui::configurator::Parameter& inout_param) {
 
@@ -652,6 +652,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_PIN_VALU
 
     std::string param_label = inout_param.GetName();
 
+/*
     ImGui::BeginTooltip();
 
     auto visitor = [&](auto&& arg) {
@@ -717,8 +718,9 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_PIN_VALU
     std::visit(visitor, inout_param.GetValue());
 
     ImGui::EndTooltip();
-}
 */
+}
+
 
 void megamol::gui::configurator::Parameter::Presentation::present_postfix(
     megamol::gui::configurator::Parameter& inout_param) {
