@@ -143,7 +143,8 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
     , update(true)
     , other_item_hovered(false)
     , show_params(false)
-    , last_active(false) {
+    , last_active(false)
+    , place_at_mouse_pos(false) {
 
     this->group.member = GUI_INVALID_ID;
     this->group.visible = false;
@@ -180,7 +181,11 @@ void megamol::gui::configurator::Module::Presentation::Present(
         }
 
         // Init position of newly created module (check after size update)
-        if ((this->position.x == FLT_MAX) && (this->position.y == FLT_MAX)) {
+        if (this->place_at_mouse_pos) {
+            this->position =  (ImGui::GetMousePos() - state.canvas.offset) / state.canvas.zooming;
+            this->place_at_mouse_pos = false;
+        }
+        else if ((this->position.x == FLT_MAX) && (this->position.y == FLT_MAX)) {
             unsigned int connected_callslot_count = 0;
             for (auto& callslot_map : inout_module.GetCallSlots()) {
                 for (auto& callslot_ptr : callslot_map.second) {
@@ -281,8 +286,9 @@ void megamol::gui::configurator::Module::Presentation::Present(
                                                              (state.interact.module_hovered_uid == inout_module.uid)));
                 bool force_selection = false;
 
-                // Context menu
                 if (state.interact.callslot_hovered_uid == GUI_INVALID_ID) {
+                    
+                    // Context menu
                     if (ImGui::BeginPopupContextItem("invisible_button_context")) {
                         force_selection = true;
 
@@ -350,64 +356,64 @@ void megamol::gui::configurator::Module::Presentation::Present(
 
                         ImGui::EndPopup();
                     }
-                }
-
-                // Hover Tooltip
-                if (this->selected && !this->other_item_hovered) {
-                    if (!this->label_visible) {
-                        this->utils.HoverToolTip(inout_module.name.c_str(), ImGui::GetID(label.c_str()), 0.5f, 5.0f);
+                    
+                    // Hover Tooltip
+                    if (this->selected && !this->other_item_hovered) {
+                        if (!this->label_visible) {
+                            this->utils.HoverToolTip(inout_module.name.c_str(), ImGui::GetID(label.c_str()), 0.5f, 5.0f);
+                        }
+                        if (!button_hovered) {
+                            this->utils.ResetHoverToolTip();
+                        }
                     }
-                    if (!button_hovered) {
-                        this->utils.ResetHoverToolTip();
+                    this->other_item_hovered = false;
+
+                    // Hovering
+                    if (module_hovered) {
+                        state.interact.module_hovered_uid = inout_module.uid;
                     }
-                }
-                this->other_item_hovered = false;
+                    if (!module_hovered && (state.interact.module_hovered_uid == inout_module.uid)) {
+                        state.interact.module_hovered_uid = GUI_INVALID_ID;
+                    }
 
-                // Hovering
-                if (module_hovered) {
-                    state.interact.module_hovered_uid = inout_module.uid;
-                }
-                if (!module_hovered && (state.interact.module_hovered_uid == inout_module.uid)) {
-                    state.interact.module_hovered_uid = GUI_INVALID_ID;
-                }
-
-                // Actually apply selection and deselection one frame delayed
-                if (force_selection || this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
-                    this->add_uid(state.interact.modules_selected_uids, inout_module.uid);
-                    this->selected = true;
-                    state.interact.callslot_selected_uid = GUI_INVALID_ID;
-                    state.interact.call_selected_uid = GUI_INVALID_ID;
-                    state.interact.group_selected_uid = GUI_INVALID_ID;
-                    state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
-                }
-                if (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
-                    this->selected = false;
-                }
-
-                // Selection
-                if (!this->selected && button_active) {
-                    if (multiselect_hotkey) {
-                        // Multiple Selection
+                    // Actually apply selection and deselection one frame delayed
+                    if (force_selection || this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
                         this->add_uid(state.interact.modules_selected_uids, inout_module.uid);
-                    } else if (!this->selected) {
-                        // Single Selection
-                        state.interact.modules_selected_uids.clear();
-                        state.interact.modules_selected_uids.emplace_back(inout_module.uid);
+                        this->selected = true;
+                        state.interact.callslot_selected_uid = GUI_INVALID_ID;
+                        state.interact.call_selected_uid = GUI_INVALID_ID;
+                        state.interact.group_selected_uid = GUI_INVALID_ID;
+                        state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
                     }
-                }
+                    if (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
+                        this->selected = false;
+                    }
 
-                // Deselection
-                if (this->selected &&
-                    ((mouse_clicked_anywhere && ((state.interact.module_hovered_uid == GUI_INVALID_ID) ||
-                                                    (state.interact.callslot_hovered_uid != GUI_INVALID_ID))) ||
-                        (button_active && multiselect_hotkey))) {
-                    this->erase_uid(state.interact.modules_selected_uids, inout_module.uid);
-                }
+                    // Selection
+                    if (!this->selected && button_active) {
+                        if (multiselect_hotkey) {
+                            // Multiple Selection
+                            this->add_uid(state.interact.modules_selected_uids, inout_module.uid);
+                        } else if (!this->selected) {
+                            // Single Selection
+                            state.interact.modules_selected_uids.clear();
+                            state.interact.modules_selected_uids.emplace_back(inout_module.uid);
+                        }
+                    }
 
-                // Dragging
-                if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
-                    this->position += (ImGui::GetIO().MouseDelta / state.canvas.zooming);
-                    this->UpdateSize(inout_module, state.canvas);
+                    // Deselection
+                    if (this->selected &&
+                        ((mouse_clicked_anywhere && ((state.interact.module_hovered_uid == GUI_INVALID_ID) ||
+                                                        (state.interact.callslot_hovered_uid != GUI_INVALID_ID))) ||
+                            (button_active && multiselect_hotkey))) {
+                        this->erase_uid(state.interact.modules_selected_uids, inout_module.uid);
+                    }
+
+                    // Dragging
+                    if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
+                        this->position += (ImGui::GetIO().MouseDelta / state.canvas.zooming);
+                        this->UpdateSize(inout_module, state.canvas);
+                    }                    
                 }
 
                 // Colors
@@ -565,8 +571,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
 
 ImVec2 megamol::gui::configurator::Module::Presentation::GetInitModulePosition(const GraphCanvasType& canvas) {
 
-    return ImVec2(2.0f * (GUI_GRAPH_BORDER), 2.0f * (GUI_GRAPH_BORDER) + ImGui::GetTextLineHeightWithSpacing()) +
-           (canvas.position - canvas.offset) / canvas.zooming;
+    return ((ImVec2(2.0f * (GUI_GRAPH_BORDER), 2.0f * (GUI_GRAPH_BORDER) + ImGui::GetTextLineHeightWithSpacing()) + (canvas.position - canvas.offset)) / canvas.zooming);
 }
 
 

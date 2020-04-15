@@ -489,7 +489,6 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
         this->position = megamol::gui::configurator::Module::GUI_GetInitModulePosition(in_canvas);
     }
 
-
     // SIZE
     float group_width = 0.0f;
     float group_height = 0.0f;

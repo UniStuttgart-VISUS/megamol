@@ -291,9 +291,9 @@ bool GUIWindows::PostDraw(void) {
                     if (parameter->GetGUIPresentation() == megamol::core::param::AbstractParam::Presentation::PIN_VALUE_TO_MOUSE) {
                         ImGui::BeginTooltip();
                         std::string label = std::string(slot.Name().PeekBuffer());
-                        ImGui::TextUnformatted(label.c_str());
+                        ImGui::TextDisabled(label.c_str());
                         ImGui::SameLine();
-                        ImGui::TextDisabled(parameter->ValueString().PeekBuffer());
+                        ImGui::TextUnformatted(parameter->ValueString().PeekBuffer());
                         ImGui::EndTooltip();
                     }
                 }
@@ -952,8 +952,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                                 std::string instname = ""; 
                                 auto instance_idx = viewname.rfind("::");
                                 if (instance_idx != std::string::npos) { 
-                                    instname = viewname.substr(0, instance_idx);
-                                    std::cout << ">>>>>>>> " << instname << std::endl;
+                                    instname = viewname.substr(0, instance_idx+2);
                                 }
                                 if (!instname.empty()) { /// Consider all modules if view is not assigned to any instance
                                     const auto func = [&, this](core::Module* mod) {
@@ -1018,7 +1017,12 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
             if (current_mod != &mod) {
                 current_mod = &mod;
                 std::string label = mod.FullName().PeekBuffer();
-
+                
+                if (current_mod_open) {
+                    // Vertical spacing 
+                    ImGui::Dummy(ImVec2(1.0f, ImGui::GetFrameHeightWithSpacing()));
+                }
+                                
                 // Reset parameter namespace stuff
                 param_namespace = "";
                 param_namespace_open = true;
@@ -1044,6 +1048,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                     ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_PopupBg));
                 }
                 ImGui::GetStateStorage()->SetInt(headerId, headerState);
+
                 current_mod_open = ImGui::CollapsingHeader(label.c_str(), nullptr);
                 if (!currentSearchString.empty()) {
                     ImGui::PopStyleColor();
@@ -1120,7 +1125,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                             param_indent_stack--;
                             ImGui::Unindent();
                         }
-                        ImGui::Separator();
+                        ///ImGui::Separator();
                         if (!param_namespace.empty()) {
                             ImGui::Indent();
                             std::string label = param_namespace + "###" + param_namespace + "__" + param_name;

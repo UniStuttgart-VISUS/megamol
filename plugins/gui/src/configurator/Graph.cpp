@@ -1277,7 +1277,7 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
                                     param_indent_stack--;
                                     ImGui::Unindent();
                                 }
-
+                                ///ImGui::Separator();
                                 if (!this->param_name_space.empty()) {
                                     ImGui::Indent();
                                     std::string label = this->param_name_space + "###" + parameter.full_name;
@@ -1299,9 +1299,8 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
                                 parameter.GUI_Present();
                             }
                         }
-
-                        // Vertical spacing using dummy
-                        ImGui::Dummy(ImVec2(1.0f, ImGui::GetFrameHeightWithSpacing()));
+                        // Vertical spacing
+                        ImGui::Dummy(ImVec2(1.0f, ImGui::GetFrameHeightWithSpacing()));  
                     }
                     ImGui::PopID();
                 }

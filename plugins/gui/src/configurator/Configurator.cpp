@@ -464,6 +464,10 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                                 }
                             }
                         }
+                        else if (this->show_module_list_child) {
+                            // Place new module at mouse pos if added via separate module list child window.
+                            module_ptr->GUI_PlaceAtMousePosition();
+                        }
                     }
                     this->show_module_list_child = false;
                 } else {

@@ -644,17 +644,12 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
 void megamol::gui::configurator::Parameter::Presentation::present_value_PIN_VALUE_TO_MOUSE(
     megamol::gui::configurator::Parameter& inout_parameter) {
 
-    ///ImGuiIO& io = ImGui::GetIO();
-    ///ImGuiStyle& style = ImGui::GetStyle();
-
-    std::string param_label = inout_parameter.GetName();
-
     ImGui::BeginTooltip();
 
     std::string label = inout_parameter.GetName();
-    ImGui::TextUnformatted(label.c_str());
+    ImGui::TextDisabled(label.c_str());
     ImGui::SameLine();
-    ImGui::TextDisabled(inout_parameter.GetValueString().c_str());
+    ImGui::TextUnformatted(inout_parameter.GetValueString().c_str());
 
     ImGui::EndTooltip();
 }

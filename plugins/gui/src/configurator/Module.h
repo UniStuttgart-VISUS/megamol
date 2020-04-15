@@ -95,6 +95,7 @@ public:
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     inline ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
 
+    inline void GUI_PlaceAtMousePosition(void) { this->present.PlaceAtMousePosition(); }
     inline void GUI_SetGroupMembership(ImGuiID member) { this->present.group.member = member; }
     inline void GUI_SetGroupVisibility(bool visible) { this->present.group.visible = visible; }
     inline void GUI_SetGroupName(const std::string& name) { this->present.group.name = name; }
@@ -128,13 +129,13 @@ private:
 
         void UpdateSize(Module& inout_module, const GraphCanvasType& in_canvas);
 
-        inline void SetPosition(ImVec2 pos) { this->position = pos; }
-
         inline ImVec2 GetPosition(void) { return this->position; }
         inline ImVec2 GetSize(void) { return this->size; }
-
         static ImVec2 GetInitModulePosition(const GraphCanvasType& canvas);
 
+        void PlaceAtMousePosition(void) { this->place_at_mouse_pos = true; }
+        inline void SetPosition(ImVec2 pos) { this->position = pos; }
+        
         GroupState group;
         Module::Presentations presentations;
         bool label_visible;
@@ -151,6 +152,7 @@ private:
         bool other_item_hovered;
         bool show_params;
         bool last_active;
+        bool place_at_mouse_pos;
 
         inline bool found_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {
             return (std::find(modules_uid_vector.begin(), modules_uid_vector.end(), module_uid) !=
