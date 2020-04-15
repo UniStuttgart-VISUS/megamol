@@ -300,16 +300,16 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
                 const auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
                 if (param_slot != nullptr) {
                     std::string param_full_name = std::string(param_slot->Name().PeekBuffer());
-                    for (auto& param : graph_module->parameters) {
-                        if (param.full_name == param_full_name) {
+                    for (auto& parameter : graph_module->parameters) {
+                        if (parameter.full_name == param_full_name) {
                             if (auto* p_ptr = param_slot->Param<core::param::ButtonParam>()) {
-                                param.SetStorage(p_ptr->GetKeyCode());
+                                parameter.SetStorage(p_ptr->GetKeyCode());
                             } else if (auto* p_ptr = param_slot->Param<core::param::BoolParam>()) {
-                                param.SetValue(p_ptr->Value());
+                                parameter.SetValue(p_ptr->Value());
                             } else if (auto* p_ptr = param_slot->Param<core::param::ColorParam>()) {
-                                param.SetValue(p_ptr->Value());
+                                parameter.SetValue(p_ptr->Value());
                             } else if (auto* p_ptr = param_slot->Param<core::param::EnumParam>()) {
-                                param.SetValue(p_ptr->Value());
+                                parameter.SetValue(p_ptr->Value());
                                 Parameter::EnumStorageType map;
                                 auto param_map = p_ptr->getMap();
                                 auto iter = param_map.GetConstIterator();
@@ -317,47 +317,47 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
                                     auto pair = iter.Next();
                                     map.emplace(pair.Key(), std::string(pair.Value().PeekBuffer()));
                                 }
-                                param.SetStorage(map);
+                                parameter.SetStorage(map);
                             } else if (auto* p_ptr = param_slot->Param<core::param::FilePathParam>()) {
-                                param.SetValue(std::string(p_ptr->Value().PeekBuffer()));
+                                parameter.SetValue(std::string(p_ptr->Value().PeekBuffer()));
                             } else if (auto* p_ptr = param_slot->Param<core::param::FlexEnumParam>()) {
-                                param.SetValue(p_ptr->Value());
-                                param.SetStorage(p_ptr->getStorage());
+                                parameter.SetValue(p_ptr->Value());
+                                parameter.SetStorage(p_ptr->getStorage());
                             } else if (auto* p_ptr = param_slot->Param<core::param::FloatParam>()) {
-                                param.SetValue(p_ptr->Value());
-                                param.SetMinValue(p_ptr->MinValue());
-                                param.SetMaxValue(p_ptr->MaxValue());
+                                parameter.SetValue(p_ptr->Value());
+                                parameter.SetMinValue(p_ptr->MinValue());
+                                parameter.SetMaxValue(p_ptr->MaxValue());
                             } else if (auto* p_ptr = param_slot->Param<core::param::IntParam>()) {
-                                param.SetValue(p_ptr->Value());
-                                param.SetMinValue(p_ptr->MinValue());
-                                param.SetMaxValue(p_ptr->MaxValue());
+                                parameter.SetValue(p_ptr->Value());
+                                parameter.SetMinValue(p_ptr->MinValue());
+                                parameter.SetMaxValue(p_ptr->MaxValue());
                             } else if (auto* p_ptr = param_slot->Param<core::param::StringParam>()) {
-                                param.SetValue(std::string(p_ptr->Value().PeekBuffer()));
+                                parameter.SetValue(std::string(p_ptr->Value().PeekBuffer()));
                             } else if (auto* p_ptr = param_slot->Param<core::param::TernaryParam>()) {
-                                param.SetValue(p_ptr->Value());
+                                parameter.SetValue(p_ptr->Value());
                             } else if (auto* p_ptr = param_slot->Param<core::param::TransferFunctionParam>()) {
-                                param.SetValue(p_ptr->Value());
+                                parameter.SetValue(p_ptr->Value());
                             } else if (auto* p_ptr = param_slot->Param<core::param::Vector2fParam>()) {
                                 auto val = p_ptr->Value();
-                                param.SetValue(glm::vec2(val.X(), val.Y()));
+                                parameter.SetValue(glm::vec2(val.X(), val.Y()));
                                 auto min = p_ptr->MinValue();
-                                param.SetMinValue(glm::vec2(min.X(), min.Y()));
+                                parameter.SetMinValue(glm::vec2(min.X(), min.Y()));
                                 auto max = p_ptr->MaxValue();
-                                param.SetMaxValue(glm::vec2(max.X(), max.Y()));
+                                parameter.SetMaxValue(glm::vec2(max.X(), max.Y()));
                             } else if (auto* p_ptr = param_slot->Param<core::param::Vector3fParam>()) {
                                 auto val = p_ptr->Value();
-                                param.SetValue(glm::vec3(val.X(), val.Y(), val.Z()));
+                                parameter.SetValue(glm::vec3(val.X(), val.Y(), val.Z()));
                                 auto min = p_ptr->MinValue();
-                                param.SetMinValue(glm::vec3(min.X(), min.Y(), min.Z()));
+                                parameter.SetMinValue(glm::vec3(min.X(), min.Y(), min.Z()));
                                 auto max = p_ptr->MaxValue();
-                                param.SetMaxValue(glm::vec3(max.X(), max.Y(), max.Z()));
+                                parameter.SetMaxValue(glm::vec3(max.X(), max.Y(), max.Z()));
                             } else if (auto* p_ptr = param_slot->Param<core::param::Vector4fParam>()) {
                                 auto val = p_ptr->Value();
-                                param.SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()));
+                                parameter.SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()));
                                 auto min = p_ptr->MinValue();
-                                param.SetMinValue(glm::vec4(min.X(), min.Y(), min.Z(), min.W()));
+                                parameter.SetMinValue(glm::vec4(min.X(), min.Y(), min.Z(), min.W()));
                                 auto max = p_ptr->MaxValue();
-                                param.SetMaxValue(glm::vec4(max.X(), max.Y(), max.Z(), max.W()));
+                                parameter.SetMaxValue(glm::vec4(max.X(), max.Y(), max.Z(), max.W()));
                             } else {
                                 vislib::sys::Log::DefaultLog.WriteError(
                                     "Found unknown parameter type. Please extend parameter types for the configurator. "
@@ -831,9 +831,9 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                         if (module_name_idx != std::string::npos) {
                             std::string param_full_name =
                                 param_slot_full_name.substr(module_name_idx + module_full_name.size());
-                            for (auto& param : mod->parameters) {
-                                if (param.full_name == param_full_name) {
-                                    param.SetValueString(value_str);
+                            for (auto& parameter : mod->parameters) {
+                                if (parameter.full_name == param_full_name) {
+                                    parameter.SetValueString(value_str);
                                 }
                             }
                         }

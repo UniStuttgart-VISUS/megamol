@@ -73,10 +73,11 @@ public:
     /**
      * Setup and enable ImGui context for subsequent use.
      *
-     * @param viewport      The currently available viewport.
-     * @param instanceTime  The current instance time.
+     * @param module_fullname   The full name of the parent module incorporating this GUI (needed for module filtering).
+     * @param viewport          The currently available viewport.
+     * @param instanceTime      The current instance time.
      */
-    bool PreDraw(vislib::math::Rectangle<int> viewport, double instanceTime);
+    bool PreDraw(const std::string& module_fullname, vislib::math::Rectangle<int> viewport, double instanceTime);
 
 
     /**
@@ -190,7 +191,10 @@ private:
 
     /** The current local state of the gui. */
     StateBuffer state;
-
+    
+    /** The full name of the parent module incorporating this GUI. */
+    std::string parent_module_fullname;
+    
     /** Input Widget Buffers. */
     std::map<std::string, std::string> widgtmap_text;
     std::map<std::string, int> widgtmap_int;

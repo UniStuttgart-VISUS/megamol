@@ -1201,8 +1201,8 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
         }
         if (changed) {
             for (auto& module_ptr : inout_graph.GetModules()) {
-                for (auto& param : module_ptr->parameters) {
-                    param.GUI_SetExpert(this->params_expert);
+                for (auto& parameter : module_ptr->parameters) {
+                    parameter.GUI_SetExpert(this->params_expert);
                 }
             }
         }
@@ -1216,8 +1216,8 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
         // Visibility
         if (ImGui::Checkbox("Visibility", &this->params_visible)) {
             for (auto& module_ptr : inout_graph.GetModules()) {
-                for (auto& param : module_ptr->parameters) {
-                    param.GUI_SetLabelVisibility(this->params_visible);
+                for (auto& parameter : module_ptr->parameters) {
+                    parameter.GUI_SetLabelVisibility(this->params_visible);
                 }
             }
         }
@@ -1226,8 +1226,8 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
         // Read-only option
         if (ImGui::Checkbox("Read-Only", &this->params_readonly)) {
             for (auto& module_ptr : inout_graph.GetModules()) {
-                for (auto& param : module_ptr->parameters) {
-                    param.GUI_SetReadOnly(this->params_readonly);
+                for (auto& parameter : module_ptr->parameters) {
+                    parameter.GUI_SetReadOnly(this->params_readonly);
                 }
             }
         }
@@ -1261,16 +1261,16 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
 
                         bool param_name_space_open = true;
                         unsigned int param_indent_stack = 0;
-                        for (auto& param : module_ptr->parameters) {
+                        for (auto& parameter : module_ptr->parameters) {
                             // Filter module by given search string
                             bool search_filter = true;
                             if (!search_string.empty()) {
                                 search_filter =
-                                    this->utils.FindCaseInsensitiveSubstring(param.full_name, search_string);
+                                    this->utils.FindCaseInsensitiveSubstring(parameter.full_name, search_string);
                             }
 
                             // Add Collapsing header depending on parameter namespace
-                            std::string current_param_namespace = param.GetNameSpace();
+                            std::string current_param_namespace = parameter.GetNameSpace();
                             if (current_param_namespace != this->param_name_space) {
                                 this->param_name_space = current_param_namespace;
                                 while (param_indent_stack > 0) {
@@ -1280,7 +1280,7 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
 
                                 if (!this->param_name_space.empty()) {
                                     ImGui::Indent();
-                                    std::string label = this->param_name_space + "###" + param.full_name;
+                                    std::string label = this->param_name_space + "###" + parameter.full_name;
                                     // Open all namespace headers when parameter search is active
                                     if (!search_string.empty()) {
                                         auto headerId = ImGui::GetID(label.c_str());
@@ -1296,7 +1296,7 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
 
                             // Draw parameter
                             if (search_filter && param_name_space_open) {
-                                param.GUI_Present();
+                                parameter.GUI_Present();
                             }
                         }
 

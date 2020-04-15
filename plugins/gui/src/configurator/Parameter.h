@@ -271,11 +271,11 @@ private:
         float height;
 
         void present_prefix(void);
-        void present_value_DEFAULT(Parameter& inout_param);
-        void present_value_PIN_VALUE_TO_MOUSE(Parameter& param);
-        void present_postfix(Parameter& inout_param);
+        void present_value_DEFAULT(Parameter& inout_parameter);
+        void present_value_PIN_VALUE_TO_MOUSE(Parameter& inout_parameter);
+        void present_postfix(Parameter& inout_parameter);
         bool presentation_button(void);
-        void transfer_function_edit(Parameter& inout_param);
+        void transfer_function_edit(Parameter& inout_parameter);
 
     } present;
 };

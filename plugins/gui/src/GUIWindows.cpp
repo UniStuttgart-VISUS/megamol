@@ -37,6 +37,7 @@ GUIWindows::GUIWindows()
     , utils()
     , file_utils()
     , state()
+    , parent_module_fullname()
     , widgtmap_text()
     , widgtmap_int()
     , widgtmap_float()
@@ -102,8 +103,8 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 }
 
 
-bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceTime) {
-
+bool GUIWindows::PreDraw(const std::string& module_fullname, vislib::math::Rectangle<int> viewport, double instanceTime) {
+    
     if (this->impl == Implementation::NONE) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Found no initialized ImGui implementation. First call CreateContext_XXX() once. [%s, %s, line %d]\n",
@@ -127,6 +128,8 @@ bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceT
     this->validateParameter();
 
     this->checkMultipleHotkeyAssignement();
+    
+    this->parent_module_fullname = module_fullname;
 
     auto viewportWidth = viewport.Width();
     auto viewportHeight = viewport.Height();
@@ -881,7 +884,8 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
         ImGui::EndPopup();
     }
     ImGui::EndGroup();
-    std::string mode_help = "Expert Mode enables Buttons for additional Presentation Options.";
+    std::string mode_help = "Expert mode enables buttons for additional parameter presentation options.\n"
+        "Note: Changes are NOT (yet) stored in project files.";
     this->utils.HelpMarkerToolTip(mode_help);
 
     ImGui::SameLine();
@@ -904,10 +908,8 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
         this->utils.StringSearch("guiwindow_parameter_earch", help_test);
     }
 
-    /// XXX Disabled since core instance and module name of GUIView is currently no more available ...
-    /*
     // Module filtering (only for main parameter view)
-    if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
+    if ((this->core_instance != nullptr) && (wc.win_callback == WindowManager::DrawCallbacks::MAIN)) {
         std::map<int, std::string> opts;
         opts[static_cast<int>(WindowManager::FilterModes::ALL)] = "All";
         opts[static_cast<int>(WindowManager::FilterModes::INSTANCE)] = "Instance";
@@ -920,54 +922,58 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                     wc.param_modules_list.clear();
                     if ((wc.param_module_filter == WindowManager::FilterModes::INSTANCE) ||
                         (wc.param_module_filter == WindowManager::FilterModes::VIEW)) {
-                        // Goal is to find view module with shortest call connection path to this module.
+                        std::string viewname;
+                        // The goal is to find view module with shortest call connection path to this module.
                         // Since enumeration of modules goes bottom up, result for first abstract view is
                         // stored and following hits are ignored.
-                        std::string viewname;
-                        std::string thisname = this->FullName().PeekBuffer();
-                        const auto view_func = [&, this](core::Module* viewmod) {
-                            auto v = dynamic_cast<core::view::AbstractView*>(viewmod);
-                            if (v != nullptr) {
-                                std::string vname = v->FullName().PeekBuffer();
-                                bool found = false;
-                                const auto find_func = [&, this](core::Module* guimod) {
-                                    std::string modname = guimod->FullName().PeekBuffer();
-                                    if (thisname == modname) {
-                                        found = true;
+                        if (!this->parent_module_fullname.empty()) {
+                            const auto view_func = [&, this](core::Module* viewmod) {
+                                auto v = dynamic_cast<core::view::AbstractView*>(viewmod);
+                                if (v != nullptr) {
+                                    std::string vname = v->FullName().PeekBuffer();
+                                    bool found = false;
+                                    const auto find_func = [&, this](core::Module* guimod) {
+                                        std::string modname = guimod->FullName().PeekBuffer();
+                                        if (this->parent_module_fullname == modname) {
+                                            found = true;
+                                        }
+                                    };
+                                    this->core_instance->EnumModulesNoLock(viewmod, find_func);
+                                    if (found && viewname.empty()) {
+                                        viewname = vname;
                                     }
-                                };
-                                this->GetCoreInstance()->EnumModulesNoLock(viewmod, find_func);
-                                if (found && viewname.empty()) {
-                                    viewname = vname;
                                 }
-                            }
-                        };
-                        this->GetCoreInstance()->EnumModulesNoLock(nullptr, view_func);
+                            };
+                            this->core_instance->EnumModulesNoLock(nullptr, view_func);                            
+                        }
                         if (!viewname.empty()) {
                             if (wc.param_module_filter == WindowManager::FilterModes::INSTANCE) {
-                                // Considering modules depending on the INSTANCE NAME of the first view this module is
-    connected to. std::string instname = ""; if (viewname.find("::", 2) != std::string::npos) { instname =
-    viewname.substr(0, viewname.find("::", 2));
+                                // Considering modules depending on the INSTANCE NAME of the first view this module is connected to. 
+                                std::string instname = ""; 
+                                auto instance_idx = viewname.rfind("::");
+                                if (instance_idx != std::string::npos) { 
+                                    instname = viewname.substr(0, instance_idx);
+                                    std::cout << ">>>>>>>> " << instname << std::endl;
                                 }
-                                if (!instname.empty()) { /// Consider all modules if view is not assigned to any
-                                                         /// instance
+                                if (!instname.empty()) { /// Consider all modules if view is not assigned to any instance
                                     const auto func = [&, this](core::Module* mod) {
                                         std::string modname = mod->FullName().PeekBuffer();
                                         bool foundInstanceName = (modname.find(instname) != std::string::npos);
-                                        // Modules with no namespace are always taken into account ...
-                                        bool noInstanceNamePresent = (modname.find("::", 2) == std::string::npos);
+                                        // xxx Modules with no namespace are always taken into account ...
+                                        bool noInstanceNamePresent = false; ///(modname.find("::", 2) == std::string::npos);
                                         if (foundInstanceName || noInstanceNamePresent) {
                                             wc.param_modules_list.emplace_back(modname);
                                         }
                                     };
-                                    this->GetCoreInstance()->EnumModulesNoLock(nullptr, func);
+                                    this->core_instance->EnumModulesNoLock(nullptr, func);
                                 }
-                            } else { // (wc.param_module_filter == WindowManager::FilterModes::VIEW)
-                                // Considering modules depending on their connection to the first VIEW this module is
-    connected to. const auto add_func = [&, this](core::Module* mod) { std::string modname =
-    mod->FullName().PeekBuffer(); wc.param_modules_list.emplace_back(modname);
+                            } else { /// (wc.param_module_filter == WindowManager::FilterModes::VIEW)
+                                // Considering modules depending on their connection to the VIEW MODULE this GUI is incorporated.
+                                const auto add_func = [&, this](core::Module* mod) { 
+                                    std::string modname = mod->FullName().PeekBuffer(); 
+                                    wc.param_modules_list.emplace_back(modname);
                                 };
-                                this->GetCoreInstance()->EnumModulesNoLock(viewname, add_func);
+                                this->core_instance->EnumModulesNoLock(viewname, add_func);
                             }
                         } else {
                             vislib::sys::Log::DefaultLog.WriteWarn(
@@ -990,7 +996,6 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
         this->utils.HelpMarkerToolTip("Selected filter is not refreshed on graph changes.\n"
                                       "Select filter again to trigger refresh.");
     }
-    */
 
     ImGui::Separator();
 

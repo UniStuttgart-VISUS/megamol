@@ -517,8 +517,8 @@ void megamol::gui::configurator::Module::Presentation::Present(
                     ImGui::SetCursorScreenPos(param_child_pos);
 
                     float param_height = 0.0f;
-                    for (auto& param : inout_module.parameters) {
-                        param_height += param.GUI_GetHeight();
+                    for (auto& parameter : inout_module.parameters) {
+                        param_height += parameter.GUI_GetHeight();
                     }
                     param_height += style.ScrollbarSize;
                     float avail_height =
@@ -530,8 +530,8 @@ void megamol::gui::configurator::Module::Presentation::Present(
                                        ImGuiWindowFlags_NavFlattened;
                     ImGui::BeginChild("module_parameter_child", ImVec2(child_width, child_height), true, child_flags);
 
-                    for (auto& param : inout_module.parameters) {
-                        param.GUI_Present();
+                    for (auto& parameter : inout_module.parameters) {
+                        parameter.GUI_Present();
                     }
 
                     ImGui::EndChild();
