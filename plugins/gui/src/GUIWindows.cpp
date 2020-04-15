@@ -276,8 +276,32 @@ bool GUIWindows::PostDraw(void) {
         }
     };
     this->window_manager.EnumWindows(func);
-
-    // Render the current ImGui frame -----------------------------------------
+    
+    // Draw global parameter presentation --------------------------------------
+    if (this->core_instance != nullptr) {
+        this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
+            auto parameter = slot.Parameter();
+            if (!parameter.IsNull()) {
+                auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
+                                  ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
+                if (!ImGui::IsWindowHovered(hoverFlags)) {
+                    if (parameter->GetGUIPresentation() == megamol::core::param::AbstractParam::Presentation::PIN_VALUE_TO_MOUSE) {
+                        ImGui::BeginTooltip();
+                        std::string label = std::string(slot.Name().PeekBuffer());
+                        ImGui::TextUnformatted(label.c_str());
+                        ImGui::SameLine();
+                        ImGui::TextDisabled(parameter->ValueString().PeekBuffer());
+                        ImGui::EndTooltip();
+                    }
+                }
+            }
+        });
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
+            
+    // Render the current ImGui frame ------------------------------------------
     glViewport(0, 0, static_cast<GLsizei>(viewport.x), static_cast<GLsizei>(viewport.y));
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -414,8 +438,8 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
             }
 
             if (consider_module) {
-                auto param = slot.Parameter();
-                if (!param.IsNull()) {
+                auto parameter = slot.Parameter();
+                if (!parameter.IsNull()) {
                     if (auto* p = slot.template Param<core::param::ButtonParam>()) {
                         auto keyCode = p->GetKeyCode();
 
@@ -857,9 +881,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
         ImGui::EndPopup();
     }
     ImGui::EndGroup();
-    std::string mode_help = "Expert Mode: \n"
-                            "- Shows all Parameters\n"
-                            "- Enables Button providing Presentation Options";
+    std::string mode_help = "Expert Mode enables Buttons for additional Presentation Options.";
     this->utils.HelpMarkerToolTip(mode_help);
 
     ImGui::SameLine();
@@ -1071,15 +1093,15 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
             }
 
             if (current_mod_open) {
-                auto param = slot.Parameter();
+                auto parameter = slot.Parameter();
                 std::string param_name = slot.Name().PeekBuffer();
                 bool showSearchedParameter = true;
                 if (!currentSearchString.empty()) {
                     showSearchedParameter = this->utils.FindCaseInsensitiveSubstring(param_name, currentSearchString);
                 }
 
-                bool param_visible = (param->IsGUIVisible() || this->state.params_expert) && showSearchedParameter;
-                if (!param.IsNull() && param_visible) {
+                bool param_visible = ((parameter->IsGUIVisible() || this->state.params_expert) && showSearchedParameter);
+                if (!parameter.IsNull() && param_visible) {
 
                     // Parameter namespace header
                     auto pos = param_name.find("::");
@@ -1483,17 +1505,12 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 
 
 void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& slot) {
+    
     ImGuiStyle& style = ImGui::GetStyle();
     std::string help;
 
-    auto param = slot.Parameter();
-    if (!param.IsNull()) {
-
-        // Set different style if parameter is read-only
-        bool readOnly = param->IsGUIReadOnly();
-        if (readOnly) {
-            GUIUtils::ReadOnlyWigetStyle(true);
-        }
+    auto parameter = slot.Parameter();
+    if (!parameter.IsNull()) {
 
         std::string param_name = slot.Name().PeekBuffer();
         std::string param_id = std::string(mod.FullName().PeekBuffer()) + "::" + param_name;
@@ -1506,13 +1523,34 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
         std::string param_desc = slot.Description().PeekBuffer();
         std::string float_format = "%.7f";
 
-        ImGui::PushID(param_label.c_str());
         ImGui::BeginGroup();
-
+        
+        // Expert Options
+        ImGui::PushID(param_label.c_str()); 
         if (this->state.params_expert) {
+            // Visibility
+            bool param_visible = parameter->IsGUIVisible();
+            if (ImGui::RadioButton("###visible", param_visible)) {
+                parameter->SetGUIVisible(!param_visible);
+            }
+            this->utils.HoverToolTip("Visibility");
+
+            ImGui::SameLine();
+
+            // Read-only option
+            bool param_readonly = parameter->IsGUIReadOnly();
+            if (ImGui::Checkbox("###readonly", &param_readonly)) {
+                parameter->SetGUIReadOnly(param_readonly);
+            }
+            this->utils.HoverToolTip("Read-Only");
+    
+            ImGui::SameLine();
+    
+            // Presentation
             bool default_present =
-                (slot.Parameter()->GetGUIPresentation() == megamol::core::param::AbstractParam::Presentation::DEFAULT);
+                (slot.Parameter()->GetGUIPresentation() == megamol::core::param::AbstractParam::Presentation::DEFAULT);              
             this->utils.PointCircleButton("", !default_present);
+            this->utils.HoverToolTip("Presentation");
             if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) { // 0 = left mouse button
                 for (size_t i = 0; i < megamol::core::param::AbstractParam::Presentation::__COUNT__; i++) {
                     std::string param_present_str;
@@ -1537,7 +1575,17 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
             }
             ImGui::SameLine();
         }
-
+        ImGui::PopID();
+        
+        // Parameter
+        ImGui::PushID(param_label.c_str());
+        
+        // Set different style if parameter is read-only
+        bool readOnly = parameter->IsGUIReadOnly();
+        if (readOnly) {
+            GUIUtils::ReadOnlyWigetStyle(true);
+        }
+        
         if (auto* p = slot.template Param<core::param::BoolParam>()) {
             auto value = p->Value();
             if (ImGui::Checkbox(param_label.c_str(), &value)) {
@@ -1749,17 +1797,17 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
                 "Unknown Parameter Type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return;
         }
-
-        ImGui::EndGroup();
-        ImGui::PopID();
-
-        // Reset to default style
-        if (param->IsGUIReadOnly()) {
+        
+        // Reset to default style (use saved state)
+        if (readOnly) {
             GUIUtils::ReadOnlyWigetStyle(false);
-        }
+        }        
+        ImGui::PopID();
 
         this->utils.HoverToolTip(param_desc, ImGui::GetID(param_label.c_str()), 0.5f);
         this->utils.HelpMarkerToolTip(help);
+        
+        ImGui::EndGroup();
     }
 }
 
@@ -1845,8 +1893,8 @@ void GUIWindows::drawTransferFunctionEdit(
 
 
 void GUIWindows::drawParameterHotkey(const core::Module& mod, core::param::ParamSlot& slot) {
-    auto param = slot.Parameter();
-    if (!param.IsNull()) {
+    auto parameter = slot.Parameter();
+    if (!parameter.IsNull()) {
         if (auto* p = slot.template Param<core::param::ButtonParam>()) {
             std::string label = slot.Name().PeekBuffer();
             std::string desc = slot.Description().PeekBuffer();
@@ -1909,8 +1957,8 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
 
         if (this->core_instance != nullptr) {
             this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
-                auto param = slot.Parameter();
-                if (!param.IsNull()) {
+                auto parameter = slot.Parameter();
+                if (!parameter.IsNull()) {
                     if (auto* p = slot.template Param<core::param::ButtonParam>()) {
                         auto hotkey = p->GetKeyCode();
 

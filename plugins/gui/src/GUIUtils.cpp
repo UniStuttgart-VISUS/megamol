@@ -78,6 +78,7 @@ bool GUIUtils::HelpMarkerToolTip(const std::string& text, std::string label) {
 
     if (!text.empty()) {
         ImGui::SameLine();
+        //ImGui::AlignTextToFramePadding();
         ImGui::TextDisabled(label.c_str());
         return this->HoverToolTip(text);
     }

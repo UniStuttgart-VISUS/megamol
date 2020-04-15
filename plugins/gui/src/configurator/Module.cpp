@@ -240,6 +240,8 @@ void megamol::gui::configurator::Module::Presentation::Present(
 
         if (visible) {
 
+            ImGui::PushID(inout_module.uid);
+
             // Get current module information
             ImVec2 module_size = this->size * state.canvas.zooming;
             ImVec2 module_rect_min = state.canvas.offset + this->position * state.canvas.zooming;
@@ -252,8 +254,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
             /// Is there a benefit since ImGui::PushClipRect is used?
             ImVec2 canvas_rect_min = state.canvas.position;
             ImVec2 canvas_rect_max = state.canvas.position + state.canvas.size;
-            if (!((canvas_rect_min.x < module_rect_max.x) && (canvas_rect_max.x > module_rect_min.x) &&
-                    (canvas_rect_min.y < module_rect_max.y) && (canvas_rect_max.y > module_rect_min.y))) {
+            if (!((canvas_rect_min.x < module_rect_max.x) && (canvas_rect_max.x > module_rect_min.x) && (canvas_rect_min.y < module_rect_max.y) && (canvas_rect_max.y > module_rect_min.y))) {
                 if (mouse_clicked_anywhere) {
                     this->selected = false;
                     if (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
@@ -262,8 +263,6 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 }
             } else {
                 // Draw module --------------------------------------------------------
-
-                ImGui::PushID(inout_module.uid);
 
                 // Button
                 ImGui::SetCursorScreenPos(module_rect_min);

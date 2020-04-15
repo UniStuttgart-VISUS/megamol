@@ -293,25 +293,21 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
                 ImGui::SameLine();
             }
 
-            switch (this->presentations) {
-            case (Presentations::DEFAULT): {
-                this->present_value_DEFAULT(inout_param);
-            } break;
-            // case (Presentations::PIN_VALUE_TO_MOUSE): {
-            //     this->present_value_DEFAULT(inout_param);
-            //     ImGui::PopID();
-            //     this->present_value_PIN_VALUE_TO_MOUSE(inout_param);
-            //     ImGui::PushID(inout_param.uid);
-            // } break;
-            default:
-                break;
-            }
-
+            this->present_value_DEFAULT(inout_param);
             ImGui::SameLine();
             this->present_postfix(inout_param);
 
             ImGui::PopID();
             ImGui::EndGroup();
+            
+            /// XXX
+            switch (this->presentations) {
+            case (Presentations::PIN_VALUE_TO_MOUSE): {
+                this->present_value_PIN_VALUE_TO_MOUSE(inout_param);
+            } break;
+            default:
+                break;
+            }            
         }
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -345,11 +341,12 @@ bool megamol::gui::configurator::Parameter::Presentation::presentation_button(vo
 
     bool retval = false;
 
-    this->utils.PointCircleButton();
+    this->utils.PointCircleButton("", (this->presentations != Presentations::DEFAULT));
     if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) { // 0 = left mouse button
-        for (int i = 0; i < static_cast<int>(Presentations::__COUNT__); i++) {
+        for (size_t i = 0; i < static_cast<size_t>(Presentations::__COUNT__); i++) {
             std::string presentation_str;
-            switch (static_cast<Presentations>(i)) {
+            auto presentation_i = static_cast<Presentations>(i);
+            switch (presentation_i) {
             case (Presentations::DEFAULT):
                 presentation_str = "Default";
                 break;
@@ -359,11 +356,11 @@ bool megamol::gui::configurator::Parameter::Presentation::presentation_button(vo
             default:
                 break;
             }
-            if (presentation_str.empty()) break;
-            auto presentation_i = static_cast<Presentations>(i);
-            if (ImGui::MenuItem(presentation_str.c_str(), nullptr, (presentation_i == this->presentations))) {
+            if (!presentation_str.empty()) {
+                if (ImGui::MenuItem(presentation_str.c_str(), nullptr, (presentation_i == this->presentations))) {
                 this->presentations = presentation_i;
                 retval = true;
+                }
             }
         }
         ImGui::EndPopup();
@@ -376,7 +373,7 @@ bool megamol::gui::configurator::Parameter::Presentation::presentation_button(vo
 void megamol::gui::configurator::Parameter::Presentation::present_prefix(void) {
 
     // Visibility
-    if (ImGui::RadioButton("###visible", !this->visible)) {
+    if (ImGui::RadioButton("###visible", this->visible)) {
         this->visible = !this->visible;
     }
     this->utils.HoverToolTip("Visibility", ImGui::GetItemID(), 0.5f);
@@ -391,7 +388,6 @@ void megamol::gui::configurator::Parameter::Presentation::present_prefix(void) {
 
     // Presentation
     this->presentation_button();
-
     this->utils.HoverToolTip("Presentation", ImGui::GetItemID(), 0.5f);
 }
 
@@ -401,7 +397,8 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
 
     this->help.clear();
 
-    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f); // set general proportional item width
+    // set general proportional item width
+    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f);
 
     if (this->read_only) {
         GUIUtils::ReadOnlyWigetStyle(true);
@@ -647,78 +644,19 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
 void megamol::gui::configurator::Parameter::Presentation::present_value_PIN_VALUE_TO_MOUSE(
     megamol::gui::configurator::Parameter& inout_param) {
 
-    ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
+    ///ImGuiIO& io = ImGui::GetIO();
+    ///ImGuiStyle& style = ImGui::GetStyle();
 
     std::string param_label = inout_param.GetName();
 
-    /*
-        ImGui::BeginTooltip();
+    ImGui::BeginTooltip();
 
-        auto visitor = [&](auto&& arg) {
-            using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<T, bool>) {
+    std::string label = inout_param.GetName();
+    ImGui::TextUnformatted(label.c_str());
+    ImGui::SameLine();
+    ImGui::TextDisabled(inout_param.GetValueString().c_str());
 
-            } else if constexpr (std::is_same_v<T, megamol::core::param::ColorParam::ColorType>) {
-
-            } else if constexpr (std::is_same_v<T, float>) {
-                ImGui::TextDisabled(inout_param.GetValueString().c_str());
-            } else if constexpr (std::is_same_v<T, int>) {
-                switch (inout_param.type) {
-                case (Parameter::ParamType::INT): {
-                    if (!std::holds_alternative<T>(this->widget_store)) {
-                        this->widget_store = arg;
-                    }
-                    ImGui::InputInt(
-                        param_label.c_str(), &std::get<int>(this->widget_store), ImGuiInputTextFlags_ReadOnly);
-
-                } break;
-                case (Parameter::ParamType::ENUM): {
-
-                } break;
-                default:
-                    break;
-                }
-            } else if constexpr (std::is_same_v<T, std::string>) {
-                switch (inout_param.type) {
-                case (Parameter::ParamType::STRING): {
-
-                } break;
-                case (Parameter::ParamType::TRANSFERFUNCTION): {
-
-                } break;
-                case (Parameter::ParamType::FILEPATH): {
-
-                } break;
-                case (Parameter::ParamType::FLEXENUM): {
-
-                } break;
-                default:
-                    break;
-                }
-            } else if constexpr (std::is_same_v<T, vislib::math::Ternary>) {
-
-            } else if constexpr (std::is_same_v<T, glm::vec2>) {
-
-            } else if constexpr (std::is_same_v<T, glm::vec3>) {
-
-            } else if constexpr (std::is_same_v<T, glm::vec4>) {
-
-            } else if constexpr (std::is_same_v<T, std::monostate>) {
-                switch (inout_param.type) {
-                case (Parameter::ParamType::BUTTON): {
-
-                } break;
-                default:
-                    break;
-                }
-            }
-        };
-
-        std::visit(visitor, inout_param.GetValue());
-
-        ImGui::EndTooltip();
-    */
+    ImGui::EndTooltip();
 }
 
 
