@@ -19,11 +19,11 @@ The menu of the main window of the `GUIView` provides the following options:
     * `Save Project` (`Ctrl + Alt + s`) Save the current project to a file (lua).
     * `Exit` (`Alt + F4`) End the program.
 * `Windows` 
-    * `Configurator` (`(Shift +) F8`*) Show/Hide the configurator window.
-    * `Font Settings` (`(Shift +) F9`*) Show/Hide the font settings window.
-    * `Main Windows` (`(Shift +) F10`*) Show/Hide the main window.
-    * `Performance Metrics` (`(Shift +) F11`*) Show/Hide the performance metrics window showing the fps or ms.
-    * `Transfer Function Editor` (`(Shift +) F12`*)Show/Hide the transfer function editor.
+    * `Configurator` (`(Shift +)* F8`) Show/Hide the configurator window.
+    * `Font Settings` (`(Shift +)* F9`) Show/Hide the font settings window.
+    * `Main Windows` (`(Shift +)* F10`) Show/Hide the main window.
+    * `Performance Metrics` (`(Shift +)* F11`) Show/Hide the performance metrics window showing the fps or ms.
+    * `Transfer Function Editor` (`(Shift +)* F12`)Show/Hide the transfer function editor.
 * `Help`: Some information and links concerning the currently running MegaMol.
 
 *Use `Shift` for resetting the window to fit the currrent viewport.
@@ -72,17 +72,17 @@ The `OverlayRenderer` is a rendering module which implements a `megamol::core::v
 ## Configurator
 
 The configurator is part of the GUI and can be opened via the GUI menu: `Windows`/`Configurator`.\
-Any changes applied in the configurator will not effect the currently loaded MegaMol project.\
+**Any changes applied in the configurator will not effect the currently loaded MegaMol project.**\
 In order to start the configurator automatically, you can use the project  `/examples/configurator.lua`:
 
         mmCreateView("configurator","GUIView","::gui")
         mmSetParamValue("::gui::autostart_configurator",[=[true]=])
         
-See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a bug and feature tracker.
+See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for current work in progress.
 
 **NOTE**
 * In order to create a vaild project file which can be loaded successfully afterwards, it is necessary to define one view module as `main view`. A `main view` defines the entry point of the project.
-* Parameter values in the lua command `mmSetParamValue` must have the value enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are not supported.
+* Parameter values in the lua command `mmSetParamValue` must have the value enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are not supported any more.
 
 ![configurator demo picture](configurator.png)
 
@@ -142,8 +142,8 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
 * Graph Scrolling
     * `Middle Mouse Button`
 * Module Multiselection
-    * Drag & Drop with `Left Mouse Button` (starting outide any graph element). Each module partially overlapped by the multiselection frame will be selected.
-    * Hold `Shift` + `Left Click` on modules you want to select.
+    * Drag & Drop with `Left Mouse Button` (start outside of any module). Each module partially overlapped by the multiselection frame will be selected.
+    * Hold `Shift` + `Left Click` on modules you additionally want to select/deselect to current selection.
 * `Module`
     * Main View `Radio Button`: Toggle main view flag (only available for view modules).
     * Parameter `Arrow Button`: Show/Hide *Module Parameters* in small window sticked to module.
@@ -170,7 +170,7 @@ See issue [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for a
 #### Module Grouping
 
 Module groups are stored in project files using the already available module namespace (which is currently unused in the core). 
-Group interface call slots are stored in the new tag `--confGroupInterface{...}` in the same line as the corresponding lua command for the module creation.                           
+Group interface slots are stored in the new tag `--confGroupInterface{...}` in the same line as the corresponding lua command for the module creation.                           
 
 ---
 

@@ -333,13 +333,13 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             ImGui::InvisibleButton(label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
             ImGui::SetItemAllowOverlap();
 
+            bool force_selection = false;
             bool button_active = ImGui::IsItemActive();
             bool button_hovered = (ImGui::IsItemHovered() &&
                                    ((state.interact.module_hovered_uid == GUI_INVALID_ID) ||
                                        (state.interact.module_hovered_uid == parent_module_uid)) &&
                                    ((state.interact.callslot_hovered_uid == GUI_INVALID_ID) ||
                                        (state.interact.callslot_hovered_uid == inout_callslot.uid)));
-            bool force_selection = false;
 
             // Context Menu
             if (ImGui::BeginPopupContextItem("invisible_button_context")) {
@@ -420,17 +420,20 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             const ImU32 COLOR_SLOT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
+            
+            tmpcol.w = 0.6f;
+            const ImU32 COLOR_SLOT_INTERFACE_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
+            
             tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive];
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-            tmpcol = style.Colors[ImGuiCol_ScrollbarGrab];
-            tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-            const ImU32 COLOR_SLOT_INTERFACE = ImGui::ColorConvertFloat4ToU32(tmpcol);
+            
+            tmpcol.w = 0.6f;
+            const ImU32 COLOR_SLOT_INTERFACE_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);            
 
             // Color modification
-            ImU32 slot_color = COLOR_SLOT_BACKGROUND;
+            ImU32 slot_border_color = COLOR_SLOT_BORDER;
+            ImU32 slot_background_color = COLOR_SLOT_BACKGROUND;
             ImU32 slot_highlight_color = COLOR_SLOT_BACKGROUND;
             if (inout_callslot.type == CallSlotType::CALLER) {
                 slot_highlight_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLER);
@@ -440,19 +443,20 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             if (!is_group_interface) {
                 if (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.callslot_compat_ptr, inout_callslot) !=
                     GUI_INVALID_ID) {
-                    slot_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_COMPATIBLE);
+                    slot_background_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_COMPATIBLE);
                 }
                 if (button_hovered || this->selected) {
-                    slot_color = slot_highlight_color;
+                    slot_background_color = slot_highlight_color;
                 }
             } else {
-                slot_color = COLOR_SLOT_INTERFACE;
+                slot_background_color = COLOR_SLOT_INTERFACE_BACKGROUND;
+                slot_border_color = COLOR_SLOT_INTERFACE_BORDER;
             }
 
             // Draw Slot
             const float segment_numer = 20.0f;
-            draw_list->AddCircleFilled(slot_position, radius, slot_color, segment_numer);
-            draw_list->AddCircle(slot_position, radius, COLOR_SLOT_BORDER, segment_numer);
+            draw_list->AddCircleFilled(slot_position, radius, slot_background_color, segment_numer);
+            draw_list->AddCircle(slot_position, radius, slot_border_color, segment_numer);
 
             // Text
             if (this->label_visible) {

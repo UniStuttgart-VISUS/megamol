@@ -268,7 +268,26 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
                 ImGui::EndDragDropSource();
             }
         }
-
+        
+        // Drag & Drop
+        /*
+        if (ImGui::BeginDragDropTarget()) {
+            if (ImGui::AcceptDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE) != nullptr) {
+                state.interact.callslot_dropped_uid = only_callslot_ptr->uid;
+            }
+            ImGui::EndDragDropTarget();
+        }
+        if (this->selected) {
+            auto dnd_flags =
+                ImGuiDragDropFlags_AcceptNoDrawDefaultRect; // | ImGuiDragDropFlags_SourceNoPreviewTooltip;
+            if (ImGui::BeginDragDropSource(dnd_flags)) {
+                ImGui::SetDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE, &only_callslot_ptr->uid, sizeof(ImGuiID));
+                ImGui::TextUnformatted(only_callslot_ptr->name.c_str());
+                ImGui::EndDragDropSource();
+            }
+        }
+        */
+        
         // Colors
         ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
