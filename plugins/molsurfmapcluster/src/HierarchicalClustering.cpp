@@ -478,25 +478,39 @@ double HierarchicalClustering::distance(std::vector<double>* X, std::vector<doub
 double HierarchicalClustering::nodeDistance(
     HierarchicalClustering::CLUSTERNODE* node1, HierarchicalClustering::CLUSTERNODE* node2, int distanceMode) {
     double distance = 0.0;
-    double leftval = 0.0;
-    double rightval = 0.0;
 
-    // TODO
-
-    if (node1 != nullptr) {
-        if (node1->left == nullptr && node1->right == nullptr) {
-            leftval = this->distance(node1->left->features, node1->right->features, distanceMode); // this line is bullshit
+    if (node1 != nullptr && node2 != nullptr) {
+        
+        // we only have to check one direction as both directions are set != null at the same times
+        if (node1->left == nullptr && node2->left == nullptr) { // case 2
+            if (this->mode == DISTANCEMODE) {
+                distance = this->distance(node1->features, node2->features, distanceMode);
+            }
+            if (this->mode == SIMILARITYMODE) {
+                distance = this->similarity(node1->features, node2->features, distanceMode);
+            }
         }
-
-        //leftval = this->distance
-    }
-
-    if (node1 == nullptr && node2 == nullptr) {
-        
-    }
-
-    if (node1 != nullptr || node2 != nullptr) {
-        
+        if (node1->left == nullptr && node2->left != nullptr) { // case 3
+            double leftdist = this->nodeDistance(node1, node2->left, distanceMode);
+            double rightdist = this->nodeDistance(node1, node2->right, distanceMode);
+            distance = 0.5 * (leftdist + rightdist);
+        }
+        if (node1->left != nullptr && node2->left == nullptr) { // case 4
+            double leftdist = this->nodeDistance(node2, node1->left, distanceMode);
+            double rightdist = this->nodeDistance(node2, node1->right, distanceMode);
+            distance = 0.5 * (leftdist + rightdist);
+        }
+        if (node1->left != nullptr && node2->left != nullptr) { // case 5
+            double d1 = this->nodeDistance(node1->left, node2->left, distanceMode);
+            double d2 = this->nodeDistance(node1->left, node2->right, distanceMode);
+            double d3 = this->nodeDistance(node1->right, node2->left, distanceMode);
+            double d4 = this->nodeDistance(node1->right, node2->right, distanceMode);
+            distance = 0.25 * (d1 + d2 + d3 + d4);
+        }
+        if (node1 == node2) { // case 1
+            // intentionally empty as distance is zero
+            distance = 0.0;
+        }
     }
 
     return distance;
@@ -531,7 +545,7 @@ HierarchicalClustering::CLUSTERNODE* HierarchicalClustering::mergeCluster(
     newnode->level = (*this->cluster)[this->cluster->size() - 1]->level + 1;
     newnode->left = cluster1;
     newnode->right = cluster2;
-    newnode->similiaritychildren = this->similarity(cluster1->features, cluster2->features, this->similaritymethod);
+    newnode->similiaritychildren = this->nodeDistance(cluster1, cluster2, this->similaritymethod);
     newnode->parent = nullptr;
     newnode->features = new std::vector<double>(cluster1->features->size(), 0.0);
     newnode->distances = new std::vector<std::tuple<CLUSTERNODE*, double>>();
@@ -575,10 +589,10 @@ HierarchicalClustering::CLUSTERNODE* HierarchicalClustering::mergeCluster(
             // Centroide Linkage
             if (this->mode == DISTANCEMODE) {
                 newnode->distances->push_back(
-                    std::make_tuple(node, this->distance(newnode->features, node->features, distancemethod)));
+                    std::make_tuple(node, this->nodeDistance(newnode, node, distancemethod)));
             } else if (this->mode == SIMILARITYMODE) {
                 newnode->distances->push_back(
-                    std::make_tuple(node, this->similarity(newnode->features, node->features, similaritymethod)));
+                    std::make_tuple(node, this->nodeDistance(newnode, node, similaritymethod)));
             }
             break;
         case 2:
@@ -590,7 +604,7 @@ HierarchicalClustering::CLUSTERNODE* HierarchicalClustering::mergeCluster(
                 // Find nearest Leaf ==> min distance
                 for (CLUSTERNODE* leafnew : *leavesnew) {
                     for (CLUSTERNODE* leaf : *leaves) {
-                        double distance = this->distance(leafnew->features, leaf->features, distancemethod);
+                        double distance = this->nodeDistance(leafnew, leaf, distancemethod);
                         if (distance < mindistance) {
                             mindistance = distance;
                         }
@@ -603,7 +617,7 @@ HierarchicalClustering::CLUSTERNODE* HierarchicalClustering::mergeCluster(
                 // Find nearest Leaf ==> min distance
                 for (CLUSTERNODE* leafnew : *leavesnew) {
                     for (CLUSTERNODE* leaf : *leaves) {
-                        double distance = this->similarity(leafnew->features, leaf->features, similaritymethod);
+                        double distance = this->nodeDistance(leafnew, leaf, similaritymethod);
                         if (distance > maxdistance) {
                             maxdistance = distance;
                         }
@@ -619,7 +633,7 @@ HierarchicalClustering::CLUSTERNODE* HierarchicalClustering::mergeCluster(
                 double sum = 0;
                 for (CLUSTERNODE* leafnew : *leavesnew) {
                     for (CLUSTERNODE* leaf : *leaves) {
-                        sum += this->distance(leafnew->features, leaf->features, distancemethod);
+                        sum += this->nodeDistance(leafnew, leaf, distancemethod);
                     }
                 }
                 double distance = sum / (leaves->size() * leavesnew->size());
@@ -629,7 +643,7 @@ HierarchicalClustering::CLUSTERNODE* HierarchicalClustering::mergeCluster(
                 double sum = 0;
                 for (CLUSTERNODE* leafnew : *leavesnew) {
                     for (CLUSTERNODE* leaf : *leaves) {
-                        sum += this->similarity(leafnew->features, leaf->features, similaritymethod);
+                        sum += this->nodeDistance(leafnew, leaf, similaritymethod);
                     }
                 }
                 double distance = sum / (leaves->size() * leavesnew->size());
@@ -641,9 +655,9 @@ HierarchicalClustering::CLUSTERNODE* HierarchicalClustering::mergeCluster(
 
     float dist = 0.0f;
     if (this->mode == DISTANCEMODE) {
-        dist = this->distance(cluster1->features, cluster2->features, distancemethod);
+        dist = this->nodeDistance(cluster1, cluster2, distancemethod);
     } else if (this->mode == SIMILARITYMODE) {
-        dist = this->similarity(cluster1->features, cluster2->features, similaritymethod);
+        dist = this->nodeDistance(cluster1, cluster2, similaritymethod);
     }
     newnode->height = dist / 2.0f;
 
@@ -806,7 +820,7 @@ void HierarchicalClustering::clusterthedata() {
         for (CLUSTERNODE* node1 : *this->cluster) {
             for (CLUSTERNODE* node2 : *this->cluster) {
                 node1->distances->push_back(
-                    std::make_tuple(node2, this->distance(node1->features, node2->features, this->distancemethod)));
+                    std::make_tuple(node2, this->nodeDistance(node1, node2, this->distancemethod)));
             }
         }
 
@@ -814,7 +828,7 @@ void HierarchicalClustering::clusterthedata() {
         for (CLUSTERNODE* node1 : *this->cluster) {
             for (CLUSTERNODE* node2 : *this->cluster) {
                 node1->distances->push_back(
-                    std::make_tuple(node2, this->similarity(node1->features, node2->features, this->similaritymethod)));
+                    std::make_tuple(node2, this->nodeDistance(node1, node2, this->similaritymethod)));
             }
         }
     }
@@ -1094,7 +1108,7 @@ std::vector<HierarchicalClustering::CLUSTERNODE*>* HierarchicalClustering::getCl
     auto tmpleaves = this->getLeavesOfNode(node);
     for (CLUSTERNODE* node1 : *tmpleaves) {
         for (CLUSTERNODE* node2 : *tmpleaves) {
-            double dist = this->distance(node1->features, node2->features);
+            double dist = this->nodeDistance(node1, node2);
             if (dist > this->maxdistance) {
                 this->maxdistance = dist;
             }
@@ -1112,7 +1126,7 @@ std::vector<HierarchicalClustering::CLUSTERNODE*>* HierarchicalClustering::getCl
             auto leaves = this->getLeavesOfNode(tmp);
             for (HierarchicalClustering::CLUSTERNODE* node1 : *leaves) {
                 for (HierarchicalClustering::CLUSTERNODE* node2 : *leaves) {
-                    double tmpdist = this->distance(node1->features, node2->features);
+                    double tmpdist = this->nodeDistance(node1, node2);
                     if (tmpdist > dist) {
                         dist = tmpdist;
                     }
@@ -1162,8 +1176,9 @@ bool HierarchicalClustering::parentIs(
 double HierarchicalClustering::getMaxDistanceOfLeavesToRoot() {
     double max = DBL_MAX * -1;
     for (CLUSTERNODE* node1 : *this->leaves) {
-        if (max < this->distance(node1->features, this->getRoot()->features))
-            max = this->distance(node1->features, this->getRoot()->features);
+        double dist = this->nodeDistance(node1, this->getRoot()); 
+        if (max < dist)
+            max = dist;
     }
     return max;
 }
