@@ -117,6 +117,7 @@ public:
         >
         StroageType;
 
+    // Should be the same as in megamol::core::param::AbstractParam.h line 131
     enum Presentations : size_t { DEFAULT = 0, PIN_VALUE_TO_MOUSE = 1, __COUNT__ = 2 };
         
     struct StockParameter {

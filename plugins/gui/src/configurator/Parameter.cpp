@@ -257,10 +257,10 @@ bool megamol::gui::configurator::Parameter::SetValueString(const std::string& va
 
 
 megamol::gui::configurator::Parameter::Presentation::Presentation(void)
-    : read_only(false)
+    : presentation(Presentations::DEFAULT)
+    , read_only(false)
     , visible(true)
     , expert(false)
-    , presentation(Presentations::DEFAULT)
     , help()
     , utils()
     , file_utils()

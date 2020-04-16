@@ -687,6 +687,10 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 }
                 ImGui::EndPopup();
             }
+            
+            // Hover ToolTip
+            std::string tooltip = inout_graph.GetFilename();
+            this->utils.HoverToolTip(tooltip, ImGui::GetID(graph_label.c_str()), 0.75f, 5.0f);
 
             // Draw -----------------------------
             this->present_menu(inout_graph);

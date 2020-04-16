@@ -302,6 +302,16 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
                     std::string param_full_name = std::string(param_slot->Name().PeekBuffer());
                     for (auto& parameter : graph_module->parameters) {
                         if (parameter.full_name == param_full_name) {
+                            
+                            // Set gui state of parameter
+                            auto parameter_ptr = param_slot->Parameter();
+                            if (parameter_ptr != nullptr) {
+                                parameter.GUI_SetVisibility(parameter_ptr->IsGUIVisible());
+                                parameter.GUI_SetReadOnly(parameter_ptr->IsGUIReadOnly());
+                                auto core_param_presentation = static_cast<size_t>(parameter_ptr->GetGUIPresentation());
+                                parameter.GUI_SetPresentation(static_cast<Parameter::Presentations>(core_param_presentation));
+                            }                
+                            
                             if (auto* p_ptr = param_slot->Param<core::param::ButtonParam>()) {
                                 parameter.SetStorage(p_ptr->GetKeyCode());
                             } else if (auto* p_ptr = param_slot->Param<core::param::BoolParam>()) {
@@ -845,6 +855,13 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
         if (!found_conf_pos) {
             graph_ptr->GUI_SetLayoutGraph();
         }
+        // Save filename to graph
+        graph_ptr->SetFilename(project_filename);
+        
+        
+        /// XXX Check for GUIView module(s) and load parameter gui state from "state" parameter!
+        
+        /// XXX Check for GUIView module(s) and load configurator state from "configurator::state" parameter!
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -960,6 +977,8 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_uid
 
     if (found_graph != nullptr) {
         found_graph->ResetDirty();
+        // Save filename to graph
+        found_graph->SetFilename(project_filename);
     }
 
     return FileUtils::WriteFile(project_filename, projectstr);

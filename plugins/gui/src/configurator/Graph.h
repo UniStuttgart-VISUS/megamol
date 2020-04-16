@@ -52,6 +52,9 @@ public:
     bool IsMainViewSet(void);
 
     bool UniqueModuleRename(const std::string& module_name);
+    
+    const std::string GetFilename(void) { return this->filename; }
+    void SetFilename(const std::string& filename) { this->filename = filename; }
 
     // GUI Presentation -------------------------------------------------------
 
@@ -77,6 +80,7 @@ private:
     GroupPtrVectorType groups;
 
     bool dirty_flag;
+    std::string filename;
 
     /** ************************************************************************
      * Defines GUI graph present.

@@ -528,14 +528,9 @@ void megamol::gui::configurator::Configurator::add_empty_project(void) {
 
 
 bool megamol::gui::configurator::Configurator::configurator_state_from_json(const std::string& json_string) {
-/*
+
     try {
-        if (this->core_instance == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        
+        const std::string header = "Configurator";
         bool found = false;
         bool valid = true;
 
@@ -547,65 +542,21 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json(cons
             return false;
         }
         
-        const std::string header = "Parameter_GUI_States";
-        
         for (auto& h : json.items()) {
             if (h.key() == header) {
                 found = true;
                 for (auto& w : h.value().items()) {
                     std::string json_param_name = w.key();
+                    auto config_state = w.value();
                     
-                    auto gui_state = w.value();
                     
-                    // gui_visibility
-                    bool gui_visibility;                    
-                    if (gui_state.at("gui_visibility").is_boolean()) {
-                        gui_state.at("gui_visibility").get_to(gui_visibility);
-                    } else {
-                        vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'gui_visibility' as boolean.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-                    
-                    // gui_read-only
-                    bool gui_read_only;                                      
-                    if (gui_state.at("gui_read-only").is_boolean()) {
-                        gui_state.at("gui_read-only").get_to(gui_read_only);
-                    } else {
-                        vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'gui_read-only' as boolean.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }                    
-                    
-                    // gui_presentation_mode
-                    megamol::core::param::AbstractParam::Presentation gui_presentation_mode;
-                    if (gui_state.at("gui_presentation_mode").is_number_integer()) {
-                        gui_presentation_mode = static_cast<megamol::core::param::AbstractParam::Presentation>(gui_state.at("gui_presentation_mode").get<int>());
-                    } else {
-                        vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'gui_presentation_mode' as integer.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-                    
-                    if (valid) {
-                        this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
-                            auto parameter = slot.Parameter();
-                            if (!parameter.IsNull()) {
-                                std::string param_name = std::string(slot.Name().PeekBuffer());
-                                if (json_param_name == param_name) {
-                                    parameter->SetGUIVisible(gui_visibility);
-                                    parameter->SetGUIReadOnly(gui_read_only);
-                                    parameter->SetGUIPresentation(gui_presentation_mode);
-                                }
-                            }
-                        });
-                    }
+                    /// TODO ...
                 }
             }
         }
         
         if (!found) {
-            vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteWarn("Could not find configurator state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }        
 
@@ -637,37 +588,27 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json(cons
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-*/
+
     return true;
 }
 
 
 bool megamol::gui::configurator::Configurator::configurator_state_to_json(std::string& json_string) {
 
-/*
     try {
         
-        if (this->core_instance == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-                
-        const std::string header = "Parameter_GUI_States";                
+        const std::string header = "Configurator";                
         nlohmann::json json;
         
         json_string.clear();
         
-        this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
-            auto parameter = slot.Parameter();
-            if (!parameter.IsNull()) {
-                std::string param_name = std::string(slot.Name().PeekBuffer());
-
-                json[header][param_name]["gui_visibility"] = parameter->IsGUIVisible();
-                json[header][param_name]["gui_read-only"] = parameter->IsGUIReadOnly();
-                json[header][param_name]["gui_presentation_mode"] = static_cast<int>(parameter->GetGUIPresentation());
-            }
-        });
+        /// TODO
+        /// - module_positions: ImVec2 (replacing --confPos)
+        /// - group_interface_slots group - slots{,,}(replacing --confGroupInterface)
+        /// - state of module_list_sidebar: bool - visible/hidden
+        /// - state of parameter_sidebar: bool - visible/hidden
+        /// - last opened_projects: string - filename of graphs
+        
 
         json_string = json.dump(2); // Dump with indent of 2 spaces and new lines.
 
@@ -699,7 +640,7 @@ bool megamol::gui::configurator::Configurator::configurator_state_to_json(std::s
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-*/
+
     return true;
 }
 

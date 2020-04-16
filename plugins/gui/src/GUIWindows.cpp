@@ -288,7 +288,7 @@ bool GUIWindows::PostDraw(void) {
                 auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
                                   ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
                 if (!ImGui::IsWindowHovered(hoverFlags)) {
-                    if (parameter->GetGUIPresentation() == megamol::core::param::AbstractParam::Presentation::PIN_VALUE_TO_MOUSE) {
+                    if (parameter->GetGUIPresentation() == megamol::core::param::AbstractParam::Presentations::PIN_VALUE_TO_MOUSE) {
                         ImGui::BeginTooltip();
                         std::string label = std::string(slot.Name().PeekBuffer());
                         ImGui::TextDisabled(label.c_str());
@@ -1553,18 +1553,18 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
     
             // Presentation
             bool default_present =
-                (slot.Parameter()->GetGUIPresentation() == megamol::core::param::AbstractParam::Presentation::DEFAULT);              
+                (slot.Parameter()->GetGUIPresentation() == megamol::core::param::AbstractParam::Presentations::DEFAULT);              
             this->utils.PointCircleButton("", !default_present);
             this->utils.HoverToolTip("Presentation");
             if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) { // 0 = left mouse button
-                for (size_t i = 0; i < megamol::core::param::AbstractParam::Presentation::__COUNT__; i++) {
+                for (size_t i = 0; i < megamol::core::param::AbstractParam::Presentations::__COUNT__; i++) {
                     std::string param_present_str;
-                    auto param_present = static_cast<megamol::core::param::AbstractParam::Presentation>(i);
+                    auto param_present = static_cast<megamol::core::param::AbstractParam::Presentations>(i);
                     switch (param_present) {
-                    case (megamol::core::param::AbstractParam::Presentation::DEFAULT):
+                    case (megamol::core::param::AbstractParam::Presentations::DEFAULT):
                         param_present_str = "Default";
                         break;
-                    case (megamol::core::param::AbstractParam::Presentation::PIN_VALUE_TO_MOUSE):
+                    case (megamol::core::param::AbstractParam::Presentations::PIN_VALUE_TO_MOUSE):
                         param_present_str = "Pin Value to Mouse";
                         break;
                     default:
@@ -2126,9 +2126,9 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json(const std::string&
                     }                    
                     
                     // gui_presentation_mode
-                    megamol::core::param::AbstractParam::Presentation gui_presentation_mode;
+                    megamol::core::param::AbstractParam::Presentations gui_presentation_mode;
                     if (gui_state.at("gui_presentation_mode").is_number_integer()) {
-                        gui_presentation_mode = static_cast<megamol::core::param::AbstractParam::Presentation>(gui_state.at("gui_presentation_mode").get<int>());
+                        gui_presentation_mode = static_cast<megamol::core::param::AbstractParam::Presentations>(gui_state.at("gui_presentation_mode").get<int>());
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
                             "JSON state: Failed to read 'gui_presentation_mode' as integer.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);

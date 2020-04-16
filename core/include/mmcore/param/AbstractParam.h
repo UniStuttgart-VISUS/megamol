@@ -128,14 +128,14 @@ namespace param {
         /** 
          *  GUI presentations of parameter.
          */
-        enum Presentation : size_t { DEFAULT = 0, PIN_VALUE_TO_MOUSE = 1, __COUNT__ = 2 };
+        enum Presentations : size_t { DEFAULT = 0, PIN_VALUE_TO_MOUSE = 1, __COUNT__ = 2 };
         
         /**
         * Set presentation in GUI.
         *
         * @param presentation Presentation of parameter in GUI.
         */
-        inline void SetGUIPresentation(const Presentation presentation) {
+        inline void SetGUIPresentation(const Presentations presentation) {
             this->gui_presentation = presentation;
         }
         
@@ -144,7 +144,7 @@ namespace param {
         *
         * @return GUI presentation.
         */
-        inline Presentation GetGUIPresentation() const {
+        inline Presentations GetGUIPresentation() const {
             return this->gui_presentation;
         }
 
@@ -187,7 +187,7 @@ namespace param {
         /**
         * Presentation of parameter in the GUI.
         */
-        Presentation gui_presentation;
+        Presentations gui_presentation;
 
     };
 
