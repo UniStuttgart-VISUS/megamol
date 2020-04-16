@@ -124,6 +124,12 @@ megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
 void megamol::gui::configurator::Call::Presentation::UpdateState(
     megamol::gui::configurator::Call& inout_call, megamol::gui::GraphItemsStateType& state) {
         
+    if (ImGui::GetCurrentContext() == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
+            
     ImGuiStyle& style = ImGui::GetStyle();
             
     try {
@@ -217,6 +223,10 @@ void megamol::gui::configurator::Call::Presentation::Present(
     assert(draw_list != nullptr);
 
     try {
+        bool active = (state.interact.button_active_uid == inout_call.uid);
+        bool hovered = (state.interact.button_hovered_uid == inout_call.uid);
+        bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+                            
         if (inout_call.IsConnected()) {
             auto callerslot_ptr = inout_call.GetCallSlot(CallSlotType::CALLER);
             auto calleeslot_ptr = inout_call.GetCallSlot(CallSlotType::CALLEE);
@@ -265,13 +275,11 @@ void megamol::gui::configurator::Call::Presentation::Present(
                 }
 
                 if (this->label_visible) {
-                    bool active = (state.interact.button_active_uid == inout_call.uid);
-                    bool hovered = (state.interact.button_hovered_uid == inout_call.uid);
-                    bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+                   
                     // Selection
                     if (!this->selected && active) {
+                        state.interact.call_selected_uid = inout_call.uid;                         
                         this->selected = true;
-                        state.interact.call_selected_uid = inout_call.uid;                        
                         state.interact.callslot_selected_uid = GUI_INVALID_ID;
                         state.interact.modules_selected_uids.clear();
                         state.interact.group_selected_uid = GUI_INVALID_ID;
@@ -280,7 +288,9 @@ void megamol::gui::configurator::Call::Presentation::Present(
                     // Deselection
                     if (this->selected && ((mouse_clicked_anywhere && !hovered) || (state.interact.call_selected_uid != inout_call.uid))) {
                         this->selected = false;
-                        state.interact.call_selected_uid = GUI_INVALID_ID;
+                        if (state.interact.call_selected_uid == inout_call.uid) {
+                            state.interact.call_selected_uid = GUI_INVALID_ID;
+                        }
                     }
                                         
                     ImVec2 call_center = ImVec2(p1.x + (p2.x - p1.x) / 2.0f, p1.y + (p2.y - p1.y) / 2.0f);

@@ -261,25 +261,12 @@ megamol::gui::configurator::Group::Presentation::~Presentation(void) {}
 void megamol::gui::configurator::Group::Presentation::UpdateState(
     megamol::gui::configurator::Group& inout_group, GraphItemsStateType& state) {
         
-        
-}
-
-
-void megamol::gui::configurator::Group::Presentation::Present(
-    megamol::gui::configurator::Group& inout_group, GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
-
-    ImGuiStyle& style = ImGui::GetStyle();
-
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    assert(draw_list != nullptr);
-
-    bool popup_rename = false;
 
     try {
         // Update size and position if current values are invalid or in expanded view
@@ -291,46 +278,35 @@ void megamol::gui::configurator::Group::Presentation::Present(
             this->update = false;
         }
 
-        // Draw group --------------------------------------------------------
+        // Update group --------------------------------------------------------
 
         ImVec2 group_size = this->size * state.canvas.zooming;
         ImVec2 group_rect_min = state.canvas.offset + this->position * state.canvas.zooming;
-        ImVec2 group_rect_max = group_rect_min + group_size;
-        ImVec2 group_center = group_rect_min + ImVec2(group_size.x / 2.0f, group_size.y / 2.0f);
-        ImVec2 header_size = ImVec2(group_size.x, ImGui::GetTextLineHeightWithSpacing());
-        ImVec2 header_rect_max = group_rect_min + header_size;
-
+        
         ImGui::PushID(inout_group.uid);
 
         // Button
-        std::string label;
-    
         ImGui::SetCursorScreenPos(group_rect_min);
-        label = "group_background_" + inout_group.name;
+        std::string label = "group_background_" + inout_group.name;
         ImGui::SetItemAllowOverlap();
-        ImGui::InvisibleButton(label.c_str(), group_size);
-        bool backround_button_active = ImGui::IsItemActive();            
-        
-        ImGui::SetCursorScreenPos(group_rect_min);
-        label = "group_" + inout_group.name;
-        ImGui::SetItemAllowOverlap();
-        ImGui::InvisibleButton(label.c_str(), header_size);
-        ImGui::SetItemAllowOverlap();
-
-        bool button_active = ImGui::IsItemActive();
-        bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
-        bool button_hovered = ImGui::IsItemHovered();
-        bool force_selection = false;
+        ImGui::InvisibleButton(label.c_str(), group_size);        
+        if (ImGui::IsItemActive()) {
+            state.interact.button_active_uid = inout_group.uid;
+        }
+        if (ImGui::IsItemHovered()) {
+            state.interact.button_hovered_uid = inout_group.uid;
+        }
 
         // Automatically delete empty group
         if (inout_group.GetModules().empty()) {
             std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-            force_selection = true;
+            state.interact.button_active_uid = inout_group.uid;
         }
 
         // Context menu
+        bool popup_rename = false;        
         if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-            force_selection = true;
+            state.interact.button_active_uid = inout_group.uid;
 
             ImGui::TextUnformatted("Group");
             ImGui::Separator();
@@ -364,8 +340,67 @@ void megamol::gui::configurator::Group::Presentation::Present(
             ImGui::EndPopup();
         }
 
+        // Rename pop-up
+        if (this->utils.RenamePopUp("Rename Group", popup_rename, inout_group.name)) {
+            for (auto& module_ptr : inout_group.GetModules()) {
+                module_ptr->GUI_SetGroupName(inout_group.name);
+                module_ptr->GUI_Update(state.canvas);
+            }
+            this->UpdatePositionSize(inout_group, state.canvas);
+        }
+
+        // Update state of interface slots -------------------------------------
+        for (auto& interfaceslots_map : inout_group.GetInterfaceSlots()) {
+            for (auto& interfaceslot_ptr : interfaceslots_map.second) {
+                interfaceslot_ptr->GUI_UpdateState(state);
+            }
+        }
+
+        ImGui::PopID();
+
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
+}
+
+
+void megamol::gui::configurator::Group::Presentation::Present(
+    megamol::gui::configurator::Group& inout_group, GraphItemsStateType& state) {
+
+    if (ImGui::GetCurrentContext() == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
+
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
+
+    try {
+        bool active = (state.interact.button_active_uid == inout_group.uid);
+        bool hovered = (state.interact.button_hovered_uid == inout_group.uid);
+        bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+                
+        // Draw group --------------------------------------------------------
+
+        ImVec2 group_size = this->size * state.canvas.zooming;
+        ImVec2 group_rect_min = state.canvas.offset + this->position * state.canvas.zooming;
+        ImVec2 group_rect_max = group_rect_min + group_size;
+        ImVec2 group_center = group_rect_min + ImVec2(group_size.x / 2.0f, group_size.y / 2.0f);
+        ImVec2 header_size = ImVec2(group_size.x, ImGui::GetTextLineHeightWithSpacing());
+        ImVec2 header_rect_max = group_rect_min + header_size;
+
+        ImGui::PushID(inout_group.uid);
+
         // Selection
-        if (!this->selected && (button_active || force_selection)) {
+        if (!this->selected && active) {
             state.interact.group_selected_uid = inout_group.uid;
             this->selected = true;
             state.interact.callslot_selected_uid = GUI_INVALID_ID;
@@ -375,10 +410,11 @@ void megamol::gui::configurator::Group::Presentation::Present(
         }
 
         // Deselection
-        if (this->selected &&
-            ((mouse_clicked_anywhere && !button_hovered) || (state.interact.group_selected_uid != inout_group.uid))) {
+        if (this->selected && ((mouse_clicked_anywhere && !hovered) || (state.interact.group_selected_uid != inout_group.uid))) {
             this->selected = false;
-            state.interact.group_selected_uid = GUI_INVALID_ID;
+            if (state.interact.group_selected_uid == inout_group.uid) {
+                state.interact.group_selected_uid = GUI_INVALID_ID;
+            }
         }
 
         // Dragging
@@ -433,15 +469,6 @@ void megamol::gui::configurator::Group::Presentation::Present(
         draw_list->AddRectFilled(group_rect_min, header_rect_max, header_color, GUI_RECT_CORNER_RADIUS,
             (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
         draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->name_label.c_str());
-
-        // Rename pop-up
-        if (this->utils.RenamePopUp("Rename Group", popup_rename, inout_group.name)) {
-            for (auto& module_ptr : inout_group.GetModules()) {
-                module_ptr->GUI_SetGroupName(inout_group.name);
-                module_ptr->GUI_Update(state.canvas);
-            }
-            this->UpdatePositionSize(inout_group, state.canvas);
-        }
 
         // Draw interface slots ----------------------------------------------------
         for (auto& interfaceslots_map : inout_group.GetInterfaceSlots()) {

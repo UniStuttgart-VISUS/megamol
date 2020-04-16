@@ -156,7 +156,57 @@ megamol::gui::configurator::InterfaceSlot::Presentation::~Presentation(void) {}
 void megamol::gui::configurator::InterfaceSlot::Presentation::UpdateState(
     megamol::gui::configurator::InterfaceSlot& inout_interfaceslot, megamol::gui::GraphItemsStateType& state) {
         
-        
+
+    if (ImGui::GetCurrentContext() == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
+
+    try {
+
+        ImGui::PushID(inout_interfaceslot.uid);
+
+        auto only_callslot_ptr = inout_interfaceslot.GetCallSlots().front();
+        ImVec2 actual_position = this->GetPosition(inout_interfaceslot);
+        float radius = GUI_SLOT_RADIUS * state.canvas.zooming;
+
+        // Button
+        ImGui::SetCursorScreenPos(actual_position - ImVec2(radius, radius));
+        std::string label = "interfaceslot_slot_" + std::to_string(inout_interfaceslot.uid);
+        ImGui::SetItemAllowOverlap();
+        ImGui::InvisibleButton(label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
+        ImGui::SetItemAllowOverlap();
+        if (ImGui::IsItemActive()) {
+            state.interact.button_active_uid = inout_interfaceslot.uid;
+        }
+        if (ImGui::IsItemHovered()) {
+            state.interact.button_hovered_uid = inout_interfaceslot.uid;
+        }
+
+        // Context Menu
+        if (ImGui::BeginPopupContextItem("invisible_button_context")) {
+            state.interact.button_active_uid = inout_interfaceslot.uid;
+
+            ImGui::TextUnformatted("Interface Slot");
+            ImGui::Separator();
+            if (ImGui::MenuItem("Remove from Group Interface")) {
+                state.interact.callslot_remove_group_uid = only_callslot_ptr->uid;
+            }
+
+            ImGui::EndPopup();
+        }
+
+        ImGui::PopID();
+
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
 }
 
 
@@ -175,7 +225,10 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
     assert(draw_list != nullptr);
 
     try {
-
+        bool active = (state.interact.button_active_uid == inout_interfaceslot.uid);
+        bool hovered = (state.interact.button_hovered_uid == inout_interfaceslot.uid);
+        bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+        
         ImGui::PushID(inout_interfaceslot.uid);
 
         auto only_callslot_ptr = inout_interfaceslot.GetCallSlots().front();
@@ -198,40 +251,16 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
             }
         }
 
-        // Button
-        ImGui::SetCursorScreenPos(actual_position - ImVec2(radius, radius));
-        std::string label = "interfaceslot_slot_" + std::to_string(inout_interfaceslot.uid);
-        ImGui::SetItemAllowOverlap();
-        ImGui::InvisibleButton(label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
-        ImGui::SetItemAllowOverlap();
-
-        bool button_active = ImGui::IsItemActive();
-        bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
-        bool button_hovered = ImGui::IsItemHovered();
-        bool force_selection = false;
-
-        // Context Menu
-        if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-            force_selection = true;
-
-            ImGui::TextUnformatted("Interface Slot");
-            ImGui::Separator();
-            if (ImGui::MenuItem("Remove from Group Interface")) {
-                state.interact.callslot_remove_group_uid = only_callslot_ptr->uid;
-            }
-
-            ImGui::EndPopup();
-        }
-
         // Hover Tooltip
-        if (button_hovered) {
+        if (hovered) {
+            std::string label = "interfaceslot_slot_" + std::to_string(inout_interfaceslot.uid);            
             this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
         } else {
             this->utils.ResetHoverToolTip();
         }
 
         // Selection
-        if (!this->selected && (button_active || force_selection)) {
+        if (!this->selected && active) {
             state.interact.interfaceslot_selected_uid = inout_interfaceslot.uid;
             this->selected = true;
             state.interact.callslot_selected_uid = GUI_INVALID_ID;
@@ -240,27 +269,10 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
             state.interact.group_selected_uid = GUI_INVALID_ID;
         }
         // Deselection
-        if (this->selected && ((mouse_clicked_anywhere && !button_hovered) ||
-                                  (state.interact.interfaceslot_selected_uid != inout_interfaceslot.uid))) {
+        if (this->selected && ((mouse_clicked_anywhere && !hovered) || (state.interact.interfaceslot_selected_uid != inout_interfaceslot.uid))) {
             this->selected = false;
             if (state.interact.interfaceslot_selected_uid == inout_interfaceslot.uid) {
                 state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
-            }
-        }
-
-        // Drag & Drop
-        if (ImGui::BeginDragDropTarget()) {
-            if (ImGui::AcceptDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE) != nullptr) {
-                state.interact.callslot_dropped_uid = inout_interfaceslot.uid;
-            }
-            ImGui::EndDragDropTarget();
-        }
-        if (this->selected) {
-            auto dnd_flags = ImGuiDragDropFlags_AcceptNoDrawDefaultRect; // | ImGuiDragDropFlags_SourceNoPreviewTooltip;
-            if (ImGui::BeginDragDropSource(dnd_flags)) {
-                ImGui::SetDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE, &inout_interfaceslot.uid, sizeof(ImGuiID));
-                ImGui::TextUnformatted(tooltip.c_str());
-                ImGui::EndDragDropSource();
             }
         }
         
@@ -307,7 +319,7 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
         if (compatible) {
             slot_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_COMPATIBLE);
         }
-        if (button_hovered || this->selected) {
+        if (hovered || this->selected) {
             slot_color = slot_highlight_color;
         }
 
