@@ -9,7 +9,7 @@
 #define MEGAMOL_GUI_GRAPH_INTERFACESLOT_H_INCLUDED
 
 
-#include "CallSlot.h"
+#include "GUIUtils.h"
 
 
 namespace megamol {
@@ -19,8 +19,6 @@ namespace configurator {
 
 // Forward declaration
 class InterfaceSlot;
-
-///
 class CallSlot;
 #ifndef _CALL_SLOT_TYPE_
 enum CallSlotType { CALLEE, CALLER };

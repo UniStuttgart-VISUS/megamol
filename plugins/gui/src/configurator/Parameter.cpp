@@ -260,7 +260,7 @@ megamol::gui::configurator::Parameter::Presentation::Presentation(void)
     : read_only(false)
     , visible(true)
     , expert(false)
-    , presentations(Presentations::DEFAULT)
+    , presentation(Presentations::DEFAULT)
     , help()
     , utils()
     , file_utils()
@@ -283,7 +283,6 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
     }
 
     try {
-        // (Show all parameters in expert mode)
         if (this->visible || this->expert) {
             ImGui::BeginGroup();
             ImGui::PushID(inout_parameter.uid);
@@ -300,8 +299,8 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
             ImGui::PopID();
             ImGui::EndGroup();
             
-            /// XXX
-            switch (this->presentations) {
+            // Additional alternative parameter presentations
+            switch (this->presentation) {
             case (Presentations::PIN_VALUE_TO_MOUSE): {
                 this->present_value_PIN_VALUE_TO_MOUSE(inout_parameter);
             } break;
@@ -341,7 +340,7 @@ bool megamol::gui::configurator::Parameter::Presentation::presentation_button(vo
 
     bool retval = false;
 
-    this->utils.PointCircleButton("", (this->presentations != Presentations::DEFAULT));
+    this->utils.PointCircleButton("", (this->presentation != Presentations::DEFAULT));
     if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) { // 0 = left mouse button
         for (size_t i = 0; i < static_cast<size_t>(Presentations::__COUNT__); i++) {
             std::string presentation_str;
@@ -357,8 +356,8 @@ bool megamol::gui::configurator::Parameter::Presentation::presentation_button(vo
                 break;
             }
             if (!presentation_str.empty()) {
-                if (ImGui::MenuItem(presentation_str.c_str(), nullptr, (presentation_i == this->presentations))) {
-                this->presentations = presentation_i;
+                if (ImGui::MenuItem(presentation_str.c_str(), nullptr, (presentation_i == this->presentation))) {
+                this->presentation = presentation_i;
                 retval = true;
                 }
             }

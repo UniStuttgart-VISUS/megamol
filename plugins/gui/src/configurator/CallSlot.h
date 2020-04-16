@@ -10,7 +10,6 @@
 
 
 #include "GUIUtils.h"
-#include "InterfaceSlot.h"
 
 
 namespace megamol {
@@ -19,12 +18,15 @@ namespace configurator {
 
 // Forward declaration
 class CallSlot;
-
-///
 class Call;
 class Module;
 class Parameter;
 class InterfaceSlot;
+typedef std::shared_ptr<Parameter> ParamPtrType;
+typedef std::shared_ptr<Call> CallPtrType;
+typedef std::shared_ptr<Module> ModulePtrType;
+typedef std::shared_ptr<InterfaceSlot> InterfaceSlotPtrType;
+
 
 // Pointer types to classes
 #ifndef _CALL_SLOT_TYPE_
@@ -34,12 +36,6 @@ enum CallSlotType { CALLEE, CALLER };
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::vector<CallSlotPtrType> CallSlotPtrVectorType;
 typedef std::map<CallSlotType, CallSlotPtrVectorType> CallSlotPtrMapType;
-
-///
-typedef std::shared_ptr<Parameter> ParamPtrType;
-typedef std::shared_ptr<Call> CallPtrType;
-typedef std::shared_ptr<Module> ModulePtrType;
-typedef std::shared_ptr<InterfaceSlot> InterfaceSlotPtrType;
 
 
 /**
@@ -64,7 +60,7 @@ public:
     // Init when adding call slot from stock
     std::string name;
     std::string description;
-    std::vector<size_t> compatible_call_idxs; /// (Storing only indices of compatible calls for faster comparison.)
+    std::vector<size_t> compatible_call_idxs; // Storing only indices of compatible calls for faster comparison.
     CallSlotType type;
 
     bool CallsConnected(void) const;

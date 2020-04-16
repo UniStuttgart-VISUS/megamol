@@ -432,7 +432,7 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
     auto mode = this->paramMode.Param<param::EnumParam>()->Value();
     switch (mode) {
     case (Mode::TEXTURE): {
-        auto overwrite_color = glm::vec4(0.0f); /// Ignored when alpha = 0. Using texture color.
+        auto overwrite_color = glm::vec4(0.0f); // Ignored when alpha = 0. Using texture color.
         this->drawScreenSpaceBillboard(
             ortho, this->m_current_rectangle, this->m_texture, this->m_shader, overwrite_color);
     } break;

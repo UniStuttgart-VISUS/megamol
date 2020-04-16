@@ -6,11 +6,11 @@
  */
 
 #include "stdafx.h"
-
 #include "Call.h"
 
 #include "CallSlot.h"
 #include "Module.h"
+#include "InterfaceSlot.h"
 
 
 using namespace megamol;
@@ -192,7 +192,7 @@ void megamol::gui::configurator::Call::Presentation::Present(
                 const ImU32 COLOR_CALL_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
                 // Draw Curve
-                /// Draw simple line if zooming is too small for nice bezier curves
+                /// Draw simple line if zooming is too small for nice bezier curves.
                 if (state.canvas.zooming < 0.25f) {
                     draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, GUI_LINE_THICKNESS * state.canvas.zooming);
                 } else {

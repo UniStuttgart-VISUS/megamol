@@ -14,7 +14,7 @@ using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-ImGuiID megamol::gui::configurator::Graph::generated_uid = 0; /// must be greater than or equal to zero
+ImGuiID megamol::gui::configurator::Graph::generated_uid = 0; // must be greater than or equal to zero
 
 
 megamol::gui::configurator::Graph::Graph(const std::string& graph_name)
@@ -51,11 +51,14 @@ ImGuiID megamol::gui::configurator::Graph::AddModule(
                     Parameter param_slot(this->generate_unique_id(), p.type, p.storage, p.minval, p.maxval);
                     param_slot.full_name = p.full_name;
                     param_slot.description = p.description;
-                    param_slot.SetValueString(p.default_value, true);
-                    param_slot.GUI_SetLabelVisibility(this->present.params_visible);
-                    param_slot.GUI_SetReadOnly(this->present.params_readonly);
+                    param_slot.SetValueString(p.default_value, true);                  
+                    param_slot.GUI_SetVisibility(p.gui_visibility);
+                    param_slot.GUI_SetReadOnly(p.gui_read_only);
+                    param_slot.GUI_SetPresentation(p.gui_presentation);
+                    // Apply current global configurator parameter gui settings 
+                    // Do not apply global read-only and visibility.
                     param_slot.GUI_SetExpert(this->present.params_expert);
-
+                    
                     mod_ptr->parameters.emplace_back(param_slot);
                 }
 
@@ -252,31 +255,6 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
         for (auto iter = this->calls.begin(); iter != this->calls.end(); iter++) {
             if ((*iter)->uid == call_uid) {
 
-                /// XXX
-                // Remove connected call slots from group interface
-                /*
-                auto callslot_1 = (*iter)->GetCallSlot(CallSlotType::CALLER);
-                auto callslot_2 = (*iter)->GetCallSlot(CallSlotType::CALLEE);
-                if (callslot_1 != nullptr) {
-                    if (callslot_1->GUI_IsGroupInterface()) {
-                        for (auto& group_ptr : this->groups) {
-                            if (group_ptr->InterfaceContainsCallSlot(callslot_1->uid)) {
-                                group_ptr->InterfaceRemoveCallSlot(callslot_1->uid);
-                            }
-                        }
-                    }
-                }
-                if (callslot_2 != nullptr) {
-                    if (callslot_2->GUI_IsGroupInterface()) {
-                        for (auto& group_ptr : this->groups) {
-                            if (group_ptr->InterfaceContainsCallSlot(callslot_2->uid)) {
-                                group_ptr->InterfaceRemoveCallSlot(callslot_2->uid);
-                            }
-                        }
-                    }
-                }
-                */
-
                 (*iter)->DisconnectCallSlots();
 
                 if ((*iter).use_count() > 1) {
@@ -449,7 +427,7 @@ void megamol::gui::configurator::Graph::restore_callslots_interfaceslot_state(Im
     if (this->get_group(group_uid, group_ptr)) {
         for (auto& module_ptr : group_ptr->GetModules()) {
             // Add connected call slots to group interface if connected module is not part of same group
-            /// Caller
+            // CALLER
             for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
                 if (callerslot_ptr->CallsConnected()) {
                     for (auto& call : callerslot_ptr->GetConnectedCalls()) {
@@ -464,7 +442,7 @@ void megamol::gui::configurator::Graph::restore_callslots_interfaceslot_state(Im
                     }
                 }
             }
-            /// Callee
+            // CALLEE
             for (auto& calleeslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLEE)) {
                 if (calleeslot_ptr->CallsConnected()) {
                     for (auto& call : calleeslot_ptr->GetConnectedCalls()) {
@@ -480,7 +458,7 @@ void megamol::gui::configurator::Graph::restore_callslots_interfaceslot_state(Im
                 }
             }
             // Remove connected call slots of group interface if connected module is part of same group
-            /// Caller
+            // CALLER
             for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
                 if (callerslot_ptr->CallsConnected()) {
                     for (auto& call : callerslot_ptr->GetConnectedCalls()) {
@@ -495,7 +473,7 @@ void megamol::gui::configurator::Graph::restore_callslots_interfaceslot_state(Im
                     }
                 }
             }
-            /// Callee
+            // CALLEE
             for (auto& calleeslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLEE)) {
                 if (calleeslot_ptr->CallsConnected()) {
                     for (auto& call : calleeslot_ptr->GetConnectedCalls()) {
@@ -790,7 +768,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 if (module_ptr != nullptr) {
 
                     // Add module to new or alredy existing group
-                    /// Create new group for multiple selected modules only once
+                    // Create new group for multiple selected modules only once!
                     ImGuiID group_uid = GUI_INVALID_ID;
                     if ((uid_pair.second == GUI_INVALID_ID) && (new_group_uid == GUI_INVALID_ID)) {
                         new_group_uid = inout_graph.AddGroup();
@@ -1107,8 +1085,8 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     ImGui::PopClipRect();
 
     // Zooming and Scaling ----------------------
-    /// Must be checked inside canvas child window.
-    /// Check at the end for being applied in next frame when font scaling matches zooming.
+    // Must be checked inside this canvas child window!
+    // Check at the end of drawing for being applied in next frame when font scaling matches zooming.
     if ((ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) || this->reset_zooming) {
 
         // Scrolling (2 = Middle Mouse Button)
@@ -1217,7 +1195,7 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
         if (ImGui::Checkbox("Visibility", &this->params_visible)) {
             for (auto& module_ptr : inout_graph.GetModules()) {
                 for (auto& parameter : module_ptr->parameters) {
-                    parameter.GUI_SetLabelVisibility(this->params_visible);
+                    parameter.GUI_SetVisibility(this->params_visible);
                 }
             }
         }
@@ -1446,8 +1424,6 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_multiselect
 
 
 bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui::configurator::Graph& inout_graph) {
-
-    /// Really simple layouting, sorting modules into differnet layers 'from left to right' following the calls.
 
     std::vector<std::vector<ModulePtrType>> layers;
     layers.clear();

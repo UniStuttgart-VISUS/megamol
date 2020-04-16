@@ -9,11 +9,9 @@
 #define MEGAMOL_GUI_GRAPH_GRAPH_H_INCLUDED
 
 
-#include "FileUtils.h"
 #include "Call.h"
 #include "Group.h"
 #include "Module.h"
-#include "Parameter.h"
 
 
 namespace megamol {
@@ -107,6 +105,11 @@ private:
         }
 
         void ForceUpdate(void) { this->update = true; }
+        
+        /**
+         * Really simple module layouting. 
+         * Sort modules into differnet layers 'from left to right' following the calls.
+         */        
         void LayoutGraph(void) { this->layout_current_graph = true; }
 
         bool params_visible;

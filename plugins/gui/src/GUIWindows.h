@@ -331,7 +331,7 @@ private:
      *
      * @return True on success, false otherwise.
      */
-    bool parameter_state_from_json(const std::string& json_string);
+    bool parameters_gui_state_from_json(const std::string& json_string);
 
     /**
      * Serializes the parameters gui state.
@@ -340,7 +340,7 @@ private:
      *
      * @return True on success, false otherwise.
      */
-    bool parameter_state_to_json(std::string& json_string);    
+    bool parameters_gui_state_to_json(std::string& json_string);    
 };
 
 } // namespace gui

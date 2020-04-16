@@ -10,7 +10,6 @@
 
 
 #include "CallSlot.h"
-#include "GUIUtils.h"
 #include "Parameter.h"
 
 
@@ -20,20 +19,17 @@ namespace configurator {
 
 // Forward declaration
 class Module;
-
-///
 class Call;
 class CallSlot;
 class Parameter;
+typedef std::shared_ptr<Parameter> ParamPtrType;
+typedef std::shared_ptr<Call> CallPtrType;
+typedef std::shared_ptr<CallSlot> CallSlotPtrType;
+
 
 // Pointer types to classes
 typedef std::shared_ptr<Module> ModulePtrType;
 typedef std::vector<ModulePtrType> ModulePtrVectorType;
-
-///
-typedef std::shared_ptr<Parameter> ParamPtrType;
-typedef std::shared_ptr<Call> CallPtrType;
-typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 
 
 /**

@@ -26,7 +26,9 @@ std::vector<std::string> megamol::gui::configurator::Configurator::dropped_files
 
 
 megamol::gui::configurator::Configurator::Configurator()
-    : graph_manager()
+    : param_slots()
+    , state_param("configurator::state", "State of the configurator.")
+    , graph_manager()
     , file_utils()
     , utils()
     , init_state(0)
@@ -38,21 +40,27 @@ megamol::gui::configurator::Configurator::Configurator()
     , module_list_popup_pos()
     , last_selected_callslot_uid(GUI_INVALID_ID)
     , project_filename("")
-    , state() {
+    , graph_state() {
 
-    this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH] = megamol::gui::HotkeyDataType(
+    this->state_param << new core::param::StringParam("");
+    this->state_param.Parameter()->SetGUIVisible(false);
+    
+    this->param_slots.clear();
+    this->param_slots.push_back(&this->state_param);
+        
+    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH] = megamol::gui::HotkeyDataType(
         core::view::KeyCode(core::view::Key::KEY_M, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false);
-    this->state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH] = megamol::gui::HotkeyDataType(
+    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH] = megamol::gui::HotkeyDataType(
         core::view::KeyCode(core::view::Key::KEY_P, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false);
-    this->state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM] =
+    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM] =
         megamol::gui::HotkeyDataType(core::view::KeyCode(core::view::Key::KEY_DELETE), false);
-    this->state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT] = megamol::gui::HotkeyDataType(
+    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT] = megamol::gui::HotkeyDataType(
         megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL), false);
-    this->state.font_scalings = {0.85f, 0.95f, 1.0f, 1.5f, 2.5f};
-    this->state.child_width = 0.0f;
-    this->state.show_parameter_sidebar = false;
-    this->state.graph_selected_uid = GUI_INVALID_ID;
-    this->state.graph_delete = false;
+    this->graph_state.font_scalings = {0.85f, 0.95f, 1.0f, 1.5f, 2.5f};
+    this->graph_state.child_width = 0.0f;
+    this->graph_state.show_parameter_sidebar = false;
+    this->graph_state.graph_selected_uid = GUI_INVALID_ID;
+    this->graph_state.graph_delete = false;
 }
 
 
@@ -69,7 +77,7 @@ bool megamol::gui::configurator::Configurator::CheckHotkeys(void) {
     ImGuiIO& io = ImGui::GetIO();
 
     bool hotkey_pressed = false;
-    for (auto& h : this->state.hotkeys) {
+    for (auto& h : this->graph_state.hotkeys) {
         auto key = std::get<0>(h).key;
         auto mods = std::get<0>(h).mods;
         if (ImGui::IsKeyDown(static_cast<int>(key)) && (mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
@@ -140,18 +148,18 @@ bool megamol::gui::configurator::Configurator::Draw(
 
         // Child Windows
         this->draw_window_menu(core_instance);
-        this->state.child_width = 0.0f;
+        this->graph_state.child_width = 0.0f;
         if (this->show_module_list_sidebar) {
             this->utils.VerticalSplitter(
-                GUIUtils::FixedSplitterSide::LEFT, this->left_child_width, this->state.child_width);
+                GUIUtils::FixedSplitterSide::LEFT, this->left_child_width, this->graph_state.child_width);
             this->draw_window_module_list(this->left_child_width);
             ImGui::SameLine();
         }
-        this->graph_manager.GUI_Present(this->state);
+        this->graph_manager.GUI_Present(this->graph_state);
 
         // Module Stock List in separate child window
         GraphPtrType selected_graph_ptr;
-        if (this->graph_manager.GetGraph(this->state.graph_selected_uid, selected_graph_ptr)) {
+        if (this->graph_manager.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
             ImGuiID selected_callslot_uid = selected_graph_ptr->GUI_GetSelectedCallSlot();
             bool double_click_anywhere = (ImGui::IsMouseDoubleClicked(0) && !this->show_module_list_child &&
                                           selected_graph_ptr->GUI_GetCanvasHoverd());
@@ -159,11 +167,11 @@ bool megamol::gui::configurator::Configurator::Draw(
                 (ImGui::IsMouseDoubleClicked(0) && (selected_callslot_uid != GUI_INVALID_ID) &&
                     ((!this->show_module_list_child) || (this->last_selected_callslot_uid != selected_callslot_uid)));
             if (double_click_anywhere || double_click_callslot) {
-                std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
+                std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
                 this->last_selected_callslot_uid = selected_callslot_uid;
             }
         }
-        if (std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
+        if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
             this->show_module_list_child = true;
             this->module_list_popup_pos = ImGui::GetMousePos();
             ImGui::SetNextWindowPos(this->module_list_popup_pos);
@@ -189,7 +197,7 @@ bool megamol::gui::configurator::Configurator::Draw(
     }
 
     // Reset hotkeys
-    for (auto& h : this->state.hotkeys) {
+    for (auto& h : this->graph_state.hotkeys) {
         std::get<1>(h) = false;
     }
 
@@ -208,7 +216,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     bool group_save = false;
     ImGuiID group_selected_uid = GUI_INVALID_ID;
     GraphPtrType selected_graph_ptr;
-    if (this->graph_manager.GetGraph(this->state.graph_selected_uid, selected_graph_ptr)) {
+    if (this->graph_manager.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
         group_save = selected_graph_ptr->GUI_GetGroupSave();
         group_selected_uid = selected_graph_ptr->GUI_GetSelectedGroup();
     }
@@ -219,7 +227,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     bool popup_load_file = false;
 
     // Hotkeys
-    if (std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT])) {
+    if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT])) {
         popup_save_project_file = true;
     }
 
@@ -232,7 +240,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
         // ... only if configurator is focused.
         if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
             for (auto& dropped_file : megamol::gui::configurator::Configurator::dropped_files) {
-                this->graph_manager.LoadAddProjectFile(this->state.graph_selected_uid, dropped_file);
+                this->graph_manager.LoadAddProjectFile(this->graph_state.graph_selected_uid, dropped_file);
             }
         }
         megamol::gui::configurator::Configurator::dropped_files.clear();
@@ -259,12 +267,12 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 
             if (ImGui::BeginMenu("Add Project")) {
                 // Add project from LUA file to current project
-                if (ImGui::MenuItem("File", nullptr, false, (this->state.graph_selected_uid != GUI_INVALID_ID))) {
-                    this->add_project_graph_uid = this->state.graph_selected_uid;
+                if (ImGui::MenuItem("File", nullptr, false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
+                    this->add_project_graph_uid = this->graph_state.graph_selected_uid;
                     popup_load_file = true;
                 }
-                if (ImGui::MenuItem("Running", nullptr, false, (this->state.graph_selected_uid != GUI_INVALID_ID))) {
-                    this->graph_manager.AddProjectCore(this->state.graph_selected_uid, core_instance);
+                if (ImGui::MenuItem("Running", nullptr, false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
+                    this->graph_manager.AddProjectCore(this->graph_state.graph_selected_uid, core_instance);
                     // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
                 }
                 ImGui::EndMenu();
@@ -272,8 +280,8 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 
             // Save currently active project to LUA file
             if (ImGui::MenuItem("Save Project",
-                    std::get<0>(this->state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT]).ToString().c_str(), false,
-                    (this->state.graph_selected_uid != GUI_INVALID_ID))) {
+                    std::get<0>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT]).ToString().c_str(), false,
+                    (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
                 popup_save_project_file = true;
             }
             // Save currently active group to LUA file
@@ -290,8 +298,8 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                 this->show_module_list_sidebar = !this->show_module_list_sidebar;
                 this->show_module_list_child = false;
             }
-            if (ImGui::MenuItem("Parameter Sidebar", nullptr, this->state.show_parameter_sidebar)) {
-                this->state.show_parameter_sidebar = !this->state.show_parameter_sidebar;
+            if (ImGui::MenuItem("Parameter Sidebar", nullptr, this->graph_state.show_parameter_sidebar)) {
+                this->graph_state.show_parameter_sidebar = !this->graph_state.show_parameter_sidebar;
             }
             ImGui::EndMenu();
         }
@@ -316,7 +324,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
             ImGui::EndMenu();
         }
 
-        /// XXX Disabled
+        /// XXX Not necessary any more
         // Info text ----------------------------------------------------------
         // ImGui::SameLine(260.0f);
         // std::string label = "Changes will not affect the currently loaded MegaMol project.";
@@ -338,7 +346,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     popup_failed = false;
     if (this->file_utils.FileBrowserPopUp(
             FileUtils::FileBrowserFlag::SAVE, "Save Project", popup_save_project_file, this->project_filename)) {
-        popup_failed = !this->graph_manager.SaveProjectFile(this->state.graph_selected_uid, this->project_filename);
+        popup_failed = !this->graph_manager.SaveProjectFile(this->graph_state.graph_selected_uid, this->project_filename);
     }
     this->utils.MinimalPopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
@@ -365,11 +373,11 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
     ImGui::TextUnformatted("Available Modules");
     ImGui::Separator();
 
-    if (std::get<1>(this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
+    if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
         this->utils.SetSearchFocus(true);
     }
     std::string help_text = "[" +
-                            std::get<0>(this->state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]).ToString() +
+                            std::get<0>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]).ToString() +
                             "] Set keyboard focus to search input field.\n"
                             "Case insensitive substring search in module names.";
     this->utils.StringSearch("configurator_module_search", help_text);
@@ -386,7 +394,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
     std::string compat_callslot_name;
     CallSlotPtrType selected_callslot_ptr;
     GraphPtrType graph_ptr;
-    if (this->graph_manager.GetGraph(this->state.graph_selected_uid, graph_ptr)) {
+    if (this->graph_manager.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
         auto callslot_id = graph_ptr->GUI_GetSelectedCallSlot();
         if (callslot_id != GUI_INVALID_ID) {
             for (auto& mods : graph_ptr->GetModules()) {
@@ -516,6 +524,183 @@ void megamol::gui::configurator::Configurator::add_empty_project(void) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Unable to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
+}
+
+
+bool megamol::gui::configurator::Configurator::configurator_state_from_json(const std::string& json_string) {
+/*
+    try {
+        if (this->core_instance == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        
+        bool found = false;
+        bool valid = true;
+
+        nlohmann::json json;
+        json = nlohmann::json::parse(json_string);
+
+        if (!json.is_object()) {
+            vislib::sys::Log::DefaultLog.WriteError("State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        
+        const std::string header = "Parameter_GUI_States";
+        
+        for (auto& h : json.items()) {
+            if (h.key() == header) {
+                found = true;
+                for (auto& w : h.value().items()) {
+                    std::string json_param_name = w.key();
+                    
+                    auto gui_state = w.value();
+                    
+                    // gui_visibility
+                    bool gui_visibility;                    
+                    if (gui_state.at("gui_visibility").is_boolean()) {
+                        gui_state.at("gui_visibility").get_to(gui_visibility);
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "JSON state: Failed to read 'gui_visibility' as boolean.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                        valid = false;
+                    }
+                    
+                    // gui_read-only
+                    bool gui_read_only;                                      
+                    if (gui_state.at("gui_read-only").is_boolean()) {
+                        gui_state.at("gui_read-only").get_to(gui_read_only);
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "JSON state: Failed to read 'gui_read-only' as boolean.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                        valid = false;
+                    }                    
+                    
+                    // gui_presentation_mode
+                    megamol::core::param::AbstractParam::Presentation gui_presentation_mode;
+                    if (gui_state.at("gui_presentation_mode").is_number_integer()) {
+                        gui_presentation_mode = static_cast<megamol::core::param::AbstractParam::Presentation>(gui_state.at("gui_presentation_mode").get<int>());
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "JSON state: Failed to read 'gui_presentation_mode' as integer.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                        valid = false;
+                    }
+                    
+                    if (valid) {
+                        this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
+                            auto parameter = slot.Parameter();
+                            if (!parameter.IsNull()) {
+                                std::string param_name = std::string(slot.Name().PeekBuffer());
+                                if (json_param_name == param_name) {
+                                    parameter->SetGUIVisible(gui_visibility);
+                                    parameter->SetGUIReadOnly(gui_read_only);
+                                    parameter->SetGUIPresentation(gui_presentation_mode);
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+        }
+        
+        if (!found) {
+            vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }        
+
+    } catch (nlohmann::json::type_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+        //} catch (nlohmann::json::exception& e) {
+        //    vislib::sys::Log::DefaultLog.WriteError(
+        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        //    return false;
+        //} catch (nlohmann::json::parse_error& e) {
+        //    vislib::sys::Log::DefaultLog.WriteError(
+        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        //    return false;
+    } catch (nlohmann::json::invalid_iterator& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::out_of_range& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::other_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+*/
+    return true;
+}
+
+
+bool megamol::gui::configurator::Configurator::configurator_state_to_json(std::string& json_string) {
+
+/*
+    try {
+        
+        if (this->core_instance == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+                
+        const std::string header = "Parameter_GUI_States";                
+        nlohmann::json json;
+        
+        json_string.clear();
+        
+        this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
+            auto parameter = slot.Parameter();
+            if (!parameter.IsNull()) {
+                std::string param_name = std::string(slot.Name().PeekBuffer());
+
+                json[header][param_name]["gui_visibility"] = parameter->IsGUIVisible();
+                json[header][param_name]["gui_read-only"] = parameter->IsGUIReadOnly();
+                json[header][param_name]["gui_presentation_mode"] = static_cast<int>(parameter->GetGUIPresentation());
+            }
+        });
+
+        json_string = json.dump(2); // Dump with indent of 2 spaces and new lines.
+
+    } catch (nlohmann::json::type_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+        //} catch (nlohmann::json::exception& e) {
+        //    vislib::sys::Log::DefaultLog.WriteError(
+        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        //    return false;
+        //} catch (nlohmann::json::parse_error& e) {
+        //    vislib::sys::Log::DefaultLog.WriteError(
+        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        //    return false;
+    } catch (nlohmann::json::invalid_iterator& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::out_of_range& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::other_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+*/
+    return true;
 }
 
 

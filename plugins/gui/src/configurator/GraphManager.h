@@ -9,17 +9,14 @@
 #define MEGAMOL_GUI_GRAPH_GRAPHMANAGER_H_INCLUDED
 
 
+#include "Graph.h"
+
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 
 #include "utility/plugins/PluginManager.h"
-
-#include "vislib/UTF8Encoder.h"
-
-#include "FileUtils.h"
-#include "Graph.h"
 
 
 namespace megamol {

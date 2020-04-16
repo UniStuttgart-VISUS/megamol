@@ -111,7 +111,7 @@ public:
      * @param id    The callback function that should be matched to callback id.
      */
     inline bool RegisterDrawWindowCallback(DrawCallbacks cbid, GuiCallbackFunc cb) {
-        /// Overwrites existing entry with same WindowDrawCallback id.
+        // Overwrites existing entry with same WindowDrawCallback id.
         this->callbacks[cbid] = cb;
         return true;
     }

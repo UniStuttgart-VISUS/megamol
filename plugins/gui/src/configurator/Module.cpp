@@ -6,7 +6,6 @@
  */
 
 #include "stdafx.h"
-
 #include "Module.h"
 
 #include "Call.h"
@@ -276,7 +275,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                 ImGui::InvisibleButton(label.c_str(), module_size);
                 ImGui::SetItemAllowOverlap();
 
-                /// Process button activation only once when changed
+                // Process button activation only once when changed (required for multiselection using SHIFT)
                 bool button_active = (ImGui::IsItemActive() && !this->last_active);
                 this->last_active = ImGui::IsItemActive();
                 bool multiselect_hotkey = io.KeyShift;

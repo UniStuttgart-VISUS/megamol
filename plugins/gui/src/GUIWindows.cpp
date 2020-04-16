@@ -56,7 +56,7 @@ GUIWindows::GUIWindows()
     styles = nullptr;
 
     this->state_param << new core::param::StringParam("");
-    this->state_param.Parameter()->SetGUIVisible(false); /// Only visble in expert mode
+    this->state_param.Parameter()->SetGUIVisible(false); 
 
     this->autostart_configurator << new core::param::BoolParam(false);
 
@@ -64,6 +64,9 @@ GUIWindows::GUIWindows()
     this->param_slots.push_back(&this->state_param);
     this->param_slots.push_back(&this->style_param);
     this->param_slots.push_back(&this->autostart_configurator);
+    for (auto& configurator_param : this->configurator.GetParams()) {
+        this->param_slots.push_back(configurator_param);
+    }
 
     this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = megamol::gui::HotkeyDataType(
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
@@ -159,7 +162,7 @@ bool GUIWindows::PreDraw(const std::string& module_fullname, vislib::math::Recta
         GUIUtils::Utf8Encode(this->state.font_file);
         io.Fonts->AddFontFromFileTTF(this->state.font_file.c_str(), this->state.font_size, &config);
         ImGui_ImplOpenGL3_CreateFontsTexture();
-        /// Load last added font
+        // Load last added font
         io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
         this->state.font_file.clear();
     }
@@ -584,7 +587,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoTitleBar;
     buf_win.win_callback = WindowManager::DrawCallbacks::MAIN;
     buf_win.win_position = ImVec2(0.0f, 0.0f);
-    buf_win.win_size = ImVec2(250.0f, 600.0f);
+    buf_win.win_size = ImVec2(400.0f, 600.0f);
     buf_win.win_reset_size = buf_win.win_size;
     this->window_manager.AddWindowConfiguration("Main Window", buf_win);
 
@@ -648,7 +651,7 @@ bool GUIWindows::createContext(void) {
     this->state.params_expert = false;
     this->state.hotkeys_check_once = true;
     // Adding additional utf-8 glyph ranges
-    /// (there is no error if glyph has no representation in font atlas)
+    // (there is no error if glyph has no representation in font atlas)
     this->state.font_utf8_ranges.clear();
     this->state.font_utf8_ranges.emplace_back(0x0020);
     this->state.font_utf8_ranges.emplace_back(0x03FF); // Basic Latin + Latin Supplement + Greek Alphabet
@@ -694,9 +697,8 @@ bool GUIWindows::createContext(void) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
-        // Configurator Graph Font: Add default font at first indices for exclusive use in configurator graph.
-        /// (Workaraound: Using different font sizes for different graph zooming factors to improve font readability
-        /// when zooming.)
+        // Configurator Graph Font: Add default font at first n indices for exclusive use in configurator graph.
+        /// Workaround: Using different font sizes for different graph zooming factors to improve font readability when zooming.
         const auto graph_font_scalings = this->configurator.GetGraphFontScalings();
         this->graph_fonts_reserved = graph_font_scalings.size();
         if (configurator_font.empty()) {
@@ -792,7 +794,7 @@ void GUIWindows::validateParameter() {
     if (this->state_param.IsDirty()) {
         std::string state = std::string(this->state_param.Param<core::param::StringParam>()->Value().PeekBuffer());
         this->window_manager.StateFromJSON(state);
-        this->parameter_state_from_json(state);
+        this->parameters_gui_state_from_json(state);
         this->state_param.ResetDirty();
     } else if (this->state.win_save_state &&
                (this->state.win_save_delay > 2.0f)) { // Delayed saving after triggering saving state (in seconds).
@@ -856,15 +858,15 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.5f); // set general proportional item width
 
     // Options
-    ImGuiID overrideState = GUI_INVALID_ID; /// invalid
+    ImGuiID overrideState = GUI_INVALID_ID; 
     if (ImGui::Button("Expand All")) {
-        overrideState = 1; /// open
+        overrideState = 1; // open
     }
 
     ImGui::SameLine();
 
     if (ImGui::Button("Collapse All")) {
-        overrideState = 0; /// close
+        overrideState = 0; // close
     }
 
     // Mode
@@ -950,19 +952,18 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                                 if (instance_idx != std::string::npos) { 
                                     instname = viewname.substr(0, instance_idx+2);
                                 }
-                                if (!instname.empty()) { /// Consider all modules if view is not assigned to any instance
+                                if (!instname.empty()) { // Consider all modules if view is not assigned to any instance
                                     const auto func = [&, this](core::Module* mod) {
                                         std::string modname = mod->FullName().PeekBuffer();
                                         bool foundInstanceName = (modname.find(instname) != std::string::npos);
-                                        // xxx Modules with no namespace are always taken into account ...
-                                        bool noInstanceNamePresent = false; ///(modname.find("::", 2) == std::string::npos);
+                                        bool noInstanceNamePresent = false; /// Always consider modules with no namspace (modname.find("::", 2) == std::string::npos);
                                         if (foundInstanceName || noInstanceNamePresent) {
                                             wc.param_modules_list.emplace_back(modname);
                                         }
                                     };
                                     this->core_instance->EnumModulesNoLock(nullptr, func);
                                 }
-                            } else { /// (wc.param_module_filter == WindowManager::FilterModes::VIEW)
+                            } else { // (wc.param_module_filter == WindowManager::FilterModes::VIEW)
                                 // Considering modules depending on their connection to the VIEW MODULE this GUI is incorporated.
                                 const auto add_func = [&, this](core::Module* mod) { 
                                     std::string modname = mod->FullName().PeekBuffer(); 
@@ -1254,7 +1255,7 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
     }
 
     ImGui::PlotLines("###msplot", value_ptr, buffer_size, 0, overlay.c_str(), 0.0f, plot_scale_factor,
-        ImVec2(0.0f, 50.0f)); /// use hidden label
+        ImVec2(0.0f, 50.0f)); 
 
     if (wc.ms_show_options) {
         if (ImGui::InputFloat(
@@ -1332,7 +1333,7 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
     ImGui::InputFloat(label.c_str(), &wc.buf_font_size, 1.0f, 10.0f, "%.2f", ImGuiInputTextFlags_None);
     // Validate font size
     if (wc.buf_font_size <= 0.0f) {
-        wc.buf_font_size = 5.0f; /// min valid font size
+        wc.buf_font_size = 5.0f; // minimum valid font size
     }
 
     label = "Font File Name (.ttf)";
@@ -2026,7 +2027,7 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
     try {
         std::string window_state;
         std::string param_state;
-        if (this->window_manager.StateToJSON(window_state) && this->parameter_state_to_json(param_state)) {
+        if (this->window_manager.StateToJSON(window_state) && this->parameters_gui_state_to_json(param_state)) {
                 
             nlohmann::json window_json;
             window_json = nlohmann::json::parse(window_state);
@@ -2074,7 +2075,7 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
 }
      
 
-bool megamol::gui::GUIWindows::parameter_state_from_json(const std::string& json_string) {
+bool megamol::gui::GUIWindows::parameters_gui_state_from_json(const std::string& json_string) {
     
     try {
         if (this->core_instance == nullptr) {
@@ -2189,7 +2190,7 @@ bool megamol::gui::GUIWindows::parameter_state_from_json(const std::string& json
 }
 
 
-bool megamol::gui::GUIWindows::parameter_state_to_json(std::string& json_string) {
+bool megamol::gui::GUIWindows::parameters_gui_state_to_json(std::string& json_string) {
 
     try {
         

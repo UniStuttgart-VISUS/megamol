@@ -9,6 +9,10 @@
 #define MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
 
 
+#include "FileUtils.h"
+#include "GUIUtils.h"
+#include "TransferFunctionEditor.h"
+
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -24,10 +28,6 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 
-#include "FileUtils.h"
-#include "GUIUtils.h"
-#include "TransferFunctionEditor.h"
-
 #include <variant>
 
 // Used for platform independent clipboard (ImGui so far only provides windows implementation)
@@ -42,19 +42,16 @@ namespace configurator {
 
 // Forward declaration
 class Parameter;
-
-///
 class Call;
 class CallSlot;
 class Module;
-
-// Pointer types to classes
-typedef std::shared_ptr<Parameter> ParamPtrType;
-
-///
 typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
+
+
+// Pointer types to classes
+typedef std::shared_ptr<Parameter> ParamPtrType;
 
 
 /**
@@ -120,6 +117,8 @@ public:
         >
         StroageType;
 
+    enum Presentations : size_t { DEFAULT = 0, PIN_VALUE_TO_MOUSE = 1, __COUNT__ = 2 };
+        
     struct StockParameter {
         std::string full_name;
         std::string description;
@@ -128,6 +127,9 @@ public:
         MinType minval;
         MaxType maxval;
         StroageType storage;
+        bool gui_visibility;
+        bool gui_read_only;
+        Parameter::Presentations gui_presentation;
     };
 
     Parameter(ImGuiID uid, ParamType type, StroageType store, MinType min, MaxType max);
@@ -223,8 +225,9 @@ public:
 
     inline bool GUI_Present(void) { return this->present.Present(*this); }
 
-    inline void GUI_SetLabelVisibility(bool visible) { this->present.visible = visible; }
+    inline void GUI_SetVisibility(bool visible) { this->present.visible = visible; }
     inline void GUI_SetReadOnly(bool readonly) { this->present.read_only = readonly; }
+    inline void GUI_SetPresentation(Parameter::Presentations presentation) { this->present.presentation = presentation; }
     inline void GUI_SetExpert(bool expert) { this->present.expert = expert; }
 
     inline float GUI_GetHeight(void) { return this->present.GetHeight(*this); }
@@ -245,7 +248,6 @@ private:
      */
     class Presentation {
     public:
-        enum Presentations : size_t { DEFAULT = 0, PIN_VALUE_TO_MOUSE = 1, __COUNT__ = 2 };
 
         Presentation(void);
 
@@ -255,12 +257,13 @@ private:
 
         float GetHeight(Parameter& inout_param);
 
+        Presentations presentation;
         bool read_only;
         bool visible;
         bool expert;
 
     private:
-        Presentations presentations;
+
         std::string help;
         megamol::gui::GUIUtils utils;
         megamol::gui::FileUtils file_utils;

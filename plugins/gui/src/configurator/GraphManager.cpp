@@ -817,7 +817,6 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 std::string value_str = param_line.substr(value_start_idx + start_delimieter.size(),
                     (param_line.find(end_delimieter)) - value_start_idx - end_delimieter.size());
 
-
                 /// DEBUG
                 // vislib::sys::Log::DefaultLog.WriteInfo(">>>> '%s'\n", value_str.c_str());
 
@@ -974,8 +973,8 @@ bool megamol::gui::configurator::GraphManager::SaveGroupFile(ImGuiID group_uid, 
     bool found_group = false;
 
     try {
-
-        /// TODO
+        /// TODO implement ...
+        
         vislib::sys::Log::DefaultLog.WriteWarn(
             "Feature is WIP ... coming soon. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -1002,7 +1001,6 @@ bool megamol::gui::configurator::GraphManager::SaveGroupFile(ImGuiID group_uid, 
 bool megamol::gui::configurator::GraphManager::get_module_stock_data(
     Module::StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc) {
 
-    /// mod.plugin_name is not available in mod_desc (set from AbstractAssemblyInstance or AbstractPluginInstance).
     mod.class_name = std::string(mod_desc->ClassName());
     mod.description = std::string(mod_desc->Description());
     mod.is_view = false;
@@ -1010,6 +1008,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
     mod.callslots.clear();
     mod.callslots.emplace(CallSlotType::CALLER, std::vector<CallSlot::StockCallSlot>());
     mod.callslots.emplace(CallSlotType::CALLEE, std::vector<CallSlot::StockCallSlot>());
+    /// XXX mod.plugin_name is not (yet) available in mod_desc (set from AbstractAssemblyInstance or AbstractPluginInstance).
 
     if (this->calls_stock.empty()) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -1020,7 +1019,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
 
     try {
         // SLOTS ------------------------------------------------------------------
-        /// (Following code is adapted from megamol::core::job::job::PluginsStateFileGeneratorJob.cpp)
+        // (Following code is adapted from megamol::core::job::job::PluginsStateFileGeneratorJob.cpp)
 
         megamol::core::Module::ptr_type new_mod(mod_desc->CreateModule(nullptr));
         if (new_mod == nullptr) {
@@ -1053,9 +1052,22 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
         // Param Slots
         for (std::shared_ptr<core::param::ParamSlot> param_slot : paramSlots) {
 
+            if (param_slot == nullptr) {
+                break;
+            }
+
             Parameter::StockParameter psd;
             psd.full_name = std::string(param_slot->Name().PeekBuffer());
             psd.description = std::string(param_slot->Description().PeekBuffer());
+            
+            // Set gui state of parameter
+            auto parameter_ptr = param_slot->Parameter();
+            if (parameter_ptr != nullptr) {
+                psd.gui_visibility = parameter_ptr->IsGUIVisible();
+                psd.gui_read_only = parameter_ptr->IsGUIReadOnly();
+                auto core_param_presentation = static_cast<size_t>(parameter_ptr->GetGUIPresentation());
+                psd.gui_presentation = static_cast<Parameter::Presentations>(core_param_presentation);
+            }
 
             // Set parameter type
             if (auto* p_ptr = param_slot->Param<core::param::ButtonParam>()) {
@@ -1243,14 +1255,14 @@ bool megamol::gui::configurator::GraphManager::get_call_stock_data(
     Call::StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc) {
 
     try {
-        /// call.plugin_name is not available in call_desc (set from AbstractAssemblyInstance or
-        /// AbstractPluginInstance).
         call.class_name = std::string(call_desc->ClassName());
         call.description = std::string(call_desc->Description());
         call.functions.clear();
         for (unsigned int i = 0; i < call_desc->FunctionCount(); ++i) {
             call.functions.emplace_back(call_desc->FunctionName(i));
         }
+        /// XXX call.plugin_name is not (yet) available in call_desc (set from AbstractAssemblyInstance or AbstractPluginInstance).
+        
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);

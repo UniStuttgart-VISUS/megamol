@@ -153,32 +153,20 @@ bool megamol::gui::configurator::Group::InterfaceAddCallSlot(
     }
 
     if (parent_module_group_member) {
+        
+        this->interfaceslots[callslot_ptr->type].emplace_back(std::make_shared<InterfaceSlot>(interfaceslot_uid));
 
-        /// XXX
-        // Try to add call slot to interface slot already containing compatible call slots ...
-        /*
-        for (auto& interfaceslot_ptr : this->interfaceslots[callslot_ptr->type]) {
-            // ("Contain Check" is already done above)
-            if (interfaceslot_ptr->IsCallSlotCompatible(callslot_ptr)) {
-                successfully_added = interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr);
-            }
+        vislib::sys::Log::DefaultLog.WriteInfo("Added interface slot to group '%s'.\n", this->name.c_str());
+        
+        InterfaceSlotPtrType interfaceslot_ptr = this->interfaceslots[callslot_ptr->type].back();
+        if (interfaceslot_ptr != nullptr) {
+            successfully_added = interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr);
+            interfaceslot_ptr->GUI_SetGroupView(this->present.IsViewCollapsed());
         }
-        */
-        // ... or create new interface slot for this call slot.
 
-        if (!successfully_added) {
-            this->interfaceslots[callslot_ptr->type].emplace_back(std::make_shared<InterfaceSlot>(interfaceslot_uid));
-            vislib::sys::Log::DefaultLog.WriteInfo("Added interface slot to group '%s'.\n", this->name.c_str());
-
-            InterfaceSlotPtrType interfaceslot_ptr = this->interfaceslots[callslot_ptr->type].back();
-            if (interfaceslot_ptr != nullptr) {
-                successfully_added = interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr);
-                interfaceslot_ptr->GUI_SetGroupView(this->present.IsViewCollapsed());
-            }
-        }
     } else {
         vislib::sys::Log::DefaultLog.WriteError(
-            "Parent module of call slot to add to group interface is not part of any group. [%s, %s, line %d]\n",
+            "Parent module of call slot which should be added to group interface is not part of any group. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -348,7 +336,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
                 }
                 this->UpdatePositionSize(inout_group, state.canvas);
             }
-            /// XXX Disabled
+            /// XXX Not yet implemented
             // if (ImGui::MenuItem("Save")) {
             //    state.interact.group_save = true;
             //}
