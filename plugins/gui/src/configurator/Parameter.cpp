@@ -255,7 +255,6 @@ bool megamol::gui::configurator::Parameter::SetValueString(const std::string& va
 
 // PARAMETER PRESENTATION ####################################################
 
-
 megamol::gui::configurator::Parameter::Presentation::Presentation(void)
     : presentation(Presentations::DEFAULT)
     , read_only(false)

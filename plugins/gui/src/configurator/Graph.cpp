@@ -682,16 +682,24 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         if (ImGui::BeginTabItem(graph_label.c_str(), &open, tab_flags)) {
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
+                ImGui::TextUnformatted("Project");
+                ImGui::Separator();
+                        
                 if (ImGui::MenuItem("Rename")) {
                     popup_rename = true;
                 }
+                
+                if (!inout_graph.GetFilename().empty()) {
+                    ImGui::Separator();
+                    ImGui::TextDisabled("Filename");
+                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 13.0f);
+                    ImGui::TextUnformatted(inout_graph.GetFilename().c_str());
+                    ImGui::PopTextWrapPos();
+                }
+                
                 ImGui::EndPopup();
             }
             
-            // Hover ToolTip
-            std::string tooltip = inout_graph.GetFilename();
-            this->utils.HoverToolTip(tooltip, ImGui::GetID(graph_label.c_str()), 0.75f, 5.0f);
-
             // Draw -----------------------------
             this->present_menu(inout_graph);
 
@@ -849,10 +857,14 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                         // Remove connected calls
                         for (auto& module_ptr : inout_graph.GetModules()) {
                             CallSlotPtrType callslot_ptr;
+                            std::vector<ImGuiID> call_uids;
                             if (module_ptr->GetCallSlot(callslot_uid, callslot_ptr)) {
                                 for (auto& call : callslot_ptr->GetConnectedCalls()) {
-                                    inout_graph.DeleteCall(call->uid);
+                                    call_uids.emplace_back(call->uid);
                                 }
+                            }
+                            for (auto& call_uid : call_uids) {
+                                inout_graph.DeleteCall(call_uid);
                             }
                         }
                         // Reset interact state for calls

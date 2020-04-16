@@ -79,7 +79,6 @@ private:
     bool show_module_list_child;
     ImVec2 module_list_popup_pos;
     ImGuiID last_selected_callslot_uid;
-    std::string project_filename;
     megamol::gui::GraphStateType graph_state;
 
     // FUNCTIONS --------------------------------------------------------------

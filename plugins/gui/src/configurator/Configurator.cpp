@@ -39,7 +39,6 @@ megamol::gui::configurator::Configurator::Configurator()
     , show_module_list_child(false)
     , module_list_popup_pos()
     , last_selected_callslot_uid(GUI_INVALID_ID)
-    , project_filename("")
     , graph_state() {
 
     this->state_param << new core::param::StringParam("");
@@ -284,6 +283,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                     (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
                 popup_save_project_file = true;
             }
+            /// XXX Not implemented yet
             // Save currently active group to LUA file
             /*
             if (ImGui::MenuItem("Save Group", nullptr, false, (group_selected_uid != GUI_INVALID_ID))) {
@@ -335,29 +335,47 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 
     // Pop-ups-----------------------------------
     bool popup_failed = false;
+    std::string project_filename;
+    GraphPtrType graph_ptr;
+    if (this->graph_manager.GetGraph(add_project_graph_uid, graph_ptr)) {
+        project_filename = graph_ptr->GetFilename();
+    }
     if (this->file_utils.FileBrowserPopUp(
-            FileUtils::FileBrowserFlag::LOAD, "Load Project", popup_load_file, this->project_filename)) {
-        popup_failed = !this->graph_manager.LoadAddProjectFile(add_project_graph_uid, this->project_filename);
+            FileUtils::FileBrowserFlag::LOAD, "Load Project", popup_load_file, project_filename)) {
+        popup_failed = !this->graph_manager.LoadAddProjectFile(add_project_graph_uid, project_filename);
         this->add_project_graph_uid = GUI_INVALID_ID;
     }
     this->utils.MinimalPopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
 
     popup_failed = false;
+    project_filename.clear();
+    graph_ptr.reset();
+    if (this->graph_manager.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
+        project_filename = graph_ptr->GetFilename();
+    }
     if (this->file_utils.FileBrowserPopUp(
-            FileUtils::FileBrowserFlag::SAVE, "Save Project", popup_save_project_file, this->project_filename)) {
-        popup_failed = !this->graph_manager.SaveProjectFile(this->graph_state.graph_selected_uid, this->project_filename);
+            FileUtils::FileBrowserFlag::SAVE, "Save Project", popup_save_project_file, project_filename)) {
+        popup_failed = !this->graph_manager.SaveProjectFile(this->graph_state.graph_selected_uid, project_filename);
     }
     this->utils.MinimalPopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
 
+    /// XXX Not implemented yet
+    /*
     popup_failed = false;
+    project_filename.clear();
+    graph_ptr.reset();
+    if (this->graph_manager.GetGraph(group_selected_uid, graph_ptr)) {
+        project_filename = graph_ptr->GetFilename();
+    }
     if (this->file_utils.FileBrowserPopUp(
-            FileUtils::FileBrowserFlag::SAVE, "Save Group", popup_save_group_file, this->project_filename)) {
-        popup_failed = !this->graph_manager.SaveGroupFile(group_selected_uid, this->project_filename);
+            FileUtils::FileBrowserFlag::SAVE, "Save Group", popup_save_group_file, project_filename)) {
+        popup_failed = !this->graph_manager.SaveGroupFile(group_selected_uid, project_filename);
     }
     this->utils.MinimalPopUp("Failed to Save Group", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
+    */
 }
 
 
@@ -603,11 +621,11 @@ bool megamol::gui::configurator::Configurator::configurator_state_to_json(std::s
         json_string.clear();
         
         /// TODO
-        /// - module_positions: ImVec2 (replacing --confPos)
-        /// - group_interface_slots group - slots{,,}(replacing --confGroupInterface)
-        /// - state of module_list_sidebar: bool - visible/hidden
-        /// - state of parameter_sidebar: bool - visible/hidden
-        /// - last opened_projects: string - filename of graphs
+        /// - module_positions:             name - ImVec2          (replacing --confPos)
+        /// - group_interface_slots:        group name - slots{,,} (replacing --confGroupInterface)
+        /// - state of module_list_sidebar: bool                   (visible/hidden)
+        /// - state of parameter_sidebar:   bool                   (visible/hidden)
+        /// - last opened_projects:         string                 (filename of graphs)
         
 
         json_string = json.dump(2); // Dump with indent of 2 spaces and new lines.

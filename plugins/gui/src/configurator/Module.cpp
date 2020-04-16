@@ -293,6 +293,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
 
                         ImGui::TextUnformatted("Module");
                         ImGui::Separator();
+                        
                         if (ImGui::MenuItem(
                                 "Delete", std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM])
                                               .ToString()
