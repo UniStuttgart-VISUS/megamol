@@ -605,7 +605,7 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
         }
         
         if (!found) {
-            vislib::sys::Log::DefaultLog.WriteWarn("Could not find configurator state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            ///vislib::sys::Log::DefaultLog.WriteWarn("Could not find configurator state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }        
 

@@ -2119,7 +2119,7 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
         }
         
         if (!found) {
-            vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            ///vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }        
 

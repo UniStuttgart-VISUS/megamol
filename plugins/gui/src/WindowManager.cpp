@@ -355,7 +355,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
             }
         }
         else { // !found
-            vislib::sys::Log::DefaultLog.WriteWarn("Could not find window configuration state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            ///vislib::sys::Log::DefaultLog.WriteWarn("Could not find window configuration state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 

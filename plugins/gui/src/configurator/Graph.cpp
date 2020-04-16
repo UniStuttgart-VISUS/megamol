@@ -450,7 +450,7 @@ bool megamol::gui::configurator::Graph::StateFromJsonString(const std::string& i
         }
         
         if (!found) {
-            vislib::sys::Log::DefaultLog.WriteWarn("Could not find configurator state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            ///vislib::sys::Log::DefaultLog.WriteWarn("Could not find configurator state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }        
 
@@ -1170,17 +1170,17 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     
     // 1] GROUPS --------------------------------
     for (auto& group_ptr : inout_graph.GetGroups()) {
-        group_ptr->GUI_UpdateState(this->graph_state);
+        group_ptr->GUI_Present(PresentPhase::UPDATE, this->graph_state);
     }
 
     // 2] MODULES and CALL SLOTS ----------------
     for (auto& module_ptr : inout_graph.GetModules()) {
-        module_ptr->GUI_UpdateState(this->graph_state);
+        module_ptr->GUI_Present(PresentPhase::UPDATE, this->graph_state);
     }
 
     // 3] CALLS ---------------------------------;
     for (auto& call_ptr : inout_graph.get_calls()) {
-        call_ptr->GUI_UpdateState(this->graph_state);
+        call_ptr->GUI_Present(PresentPhase::UPDATE, this->graph_state);
     }
 
     // DRAW GRAPH ELEMENTS and apply gui state ---------------------------------
@@ -1196,17 +1196,17 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
 
     // 2] GROUPS --------------------------------
     for (auto& group_ptr : inout_graph.GetGroups()) {
-        group_ptr->GUI_Present(this->graph_state);
+        group_ptr->GUI_Present(PresentPhase::DRAW, this->graph_state);
     }
 
     // 3] MODULES and CALL SLOTS ----------------
     for (auto& module_ptr : inout_graph.GetModules()) {
-        module_ptr->GUI_Present(this->graph_state);
+        module_ptr->GUI_Present(PresentPhase::DRAW, this->graph_state);
     }
 
     // 4] CALLS ---------------------------------;
     for (auto& call_ptr : inout_graph.get_calls()) {
-        call_ptr->GUI_Present(this->graph_state);
+        call_ptr->GUI_Present(PresentPhase::DRAW, this->graph_state);
     }
 
     // 5] Multiselection

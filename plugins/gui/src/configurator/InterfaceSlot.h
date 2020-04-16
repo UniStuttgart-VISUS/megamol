@@ -56,8 +56,7 @@ public:
 
     // GUI Presentation -------------------------------------------------------
     
-    inline void GUI_UpdateState(GraphItemsStateType& state) { this->present.UpdateState(*this, state); }
-    inline void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
+    inline void GUI_Present(PresentPhase phase, GraphItemsStateType& state) { this->present.Present(phase, *this, state); }
 
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(*this); }
 
@@ -80,8 +79,7 @@ private:
 
         ~Presentation(void);
 
-        void UpdateState(InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state);
-        void Present(InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state);
+        void Present(PresentPhase phase, InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state);
 
         ImVec2 GetPosition(InterfaceSlot& inout_interfaceslot);
 

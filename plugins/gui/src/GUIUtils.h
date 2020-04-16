@@ -81,11 +81,14 @@ enum HotkeyIndex : size_t {
 typedef std::array<megamol::gui::HotkeyDataType, megamol::gui::HotkeyIndex::INDEX_COUNT> HotkeyArrayType;
 
 namespace configurator {
+    
 // Forward declaration
 class CallSlot;
-// Pointer types to classes
 typedef std::shared_ptr<megamol::gui::configurator::CallSlot> CallSlotPtrType;
+
 } // namespace configurator
+
+typedef std::array<float, 5> FontScalingArrayType;
 
 /* Data type holding a pair of uids. */
 typedef std::vector<ImGuiID> UIDVectorType;
@@ -96,7 +99,7 @@ typedef std::vector<UIDPairType> UIDPairVectorType;
 typedef std::pair<ImGuiID, std::string> GroupPairType;
 typedef std::vector<megamol::gui::GroupPairType> GroupPairVectorType;
 
-typedef std::array<float, 5> FontScalingArrayType;
+enum PresentPhase { UPDATE, DRAW };
 
 /* Data type holding information of graph canvas. */
 typedef struct _canvas_ {
