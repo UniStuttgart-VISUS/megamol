@@ -87,6 +87,19 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
 
             hWnd = ::glfwCreateWindow(w, h, title, nullptr, share);
             vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", w, h);
+            int actualw = 0, actualh = 0;
+            glfwGetWindowSize(hWnd, &actualw, &actualh);
+            if (actualw != w || actualh != h) {
+                //vislib::sys::Log::DefaultLog.WriteError("Console::Window: Created window does not have requested size! w: %d, h: %d\n", actualw, actualh);
+                glfwSetWindowSizeLimits(hWnd, w, h, w, h);
+                glfwSetWindowSize(hWnd, w, h);
+                glfwGetWindowSize(hWnd, &actualw, &actualh);
+                if (actualw != w || actualh != h) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "Console::Window: Created window does not have requested size even after changed limits! w: %d, h: %d\n", actualw,
+                        actualh);
+                }
+            }
             if (hWnd != nullptr) {
                 if (placement.pos) ::glfwSetWindowPos(hWnd, placement.x, placement.y);
             }
