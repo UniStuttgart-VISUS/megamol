@@ -140,7 +140,6 @@ private:
         float win_save_delay;      // Flag indicating how long to wait for saving window state since last user action.
         std::string win_delete;    // Name of the window to delete.
         double last_instance_time; // Last instance time.
-        bool params_expert;        // Flag toggling between Expert and Basic parameter mode.
         bool hotkeys_check_once;   // WORKAROUND: Check multiple hotkey assignments once.
     };
 
@@ -222,68 +221,31 @@ private:
      */
     void validateParameter();
 
-    /**
-     * Callback for drawing the parameter window.
-     *
-     * @param window_name    The label of the calling window.
-     * @param window_config  The configuration of the calling window.
-     */
+
+    // Window Draw Callbacks
     void drawMainWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
-
-    /**
-     * Draws parameters and options.
-     *
-     * @param window_name    The label of the calling window.
-     * @param window_config  The configuration of the calling window.
-     */
     void drawParametersCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
-
-    /**
-     * Draws fps overlay window.
-     *
-     * @param window_name    The label of the calling window.
-     * @param window_config  The configuration of the calling window.
-     */
     void drawFpsWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
-
-    /**
-     * Callback for drawing font selection window.
-     *
-     * @param window_name    The label of the calling window.
-     * @param window_config  The configuration of the calling window.
-     */
     void drawFontWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
-
-    /**
-     * Callback for drawing the demo window.
-     *
-     * @param window_name    The label of the calling window.
-     * @param window_config  The configuration of the calling window.
-     */
     void drawTFWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
-
-    /**
-     * Callback for drawing the configurator.
-     *
-     * @param window_name    The label of the calling window.
-     * @param window_config  The configuration of the calling window.
-     */
     void drawConfiguratorCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
 
     /**
      * Draws the menu bar.
      *
-     * @param window_config  The configuration of the calling window.
+     * @param wn   The label of the calling window.
+     * @param wc  The configuration of the calling window.
      */
     void drawMenu(const std::string& wn, WindowManager::WindowConfiguration& wc);
 
     /**
      * Draws one parameter.
      *
+     * @param wc    The configuration of the calling window.* 
      * @param mod   Module the paramter belongs to.
      * @param slot  The current parameter slot.
      */
-    void drawParameter(const core::Module& mod, core::param::ParamSlot& slot);
+    void drawParameter(WindowManager::WindowConfiguration& wc, const core::Module& mod, core::param::ParamSlot& slot);
 
     /**
      * Transfer function edit widget.
@@ -331,16 +293,16 @@ private:
      *
      * @return True on success, false otherwise.
      */
-    bool parameters_gui_state_from_json(const std::string& json_string);
+    bool parameters_gui_state_from_json_string(const std::string& in_json_string);
 
     /**
      * Serializes the parameters gui state.
      *
-     * @param json  The string to serialize to.
+     * @param json  The json to serialize to.
      *
      * @return True on success, false otherwise.
      */
-    bool parameters_gui_state_to_json(std::string& json_string);    
+    bool parameters_gui_state_to_json(nlohmann::json& out_json);    
 };
 
 } // namespace gui

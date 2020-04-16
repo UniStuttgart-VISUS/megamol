@@ -258,6 +258,13 @@ megamol::gui::configurator::Group::Presentation::Presentation(void)
 megamol::gui::configurator::Group::Presentation::~Presentation(void) {}
 
 
+void megamol::gui::configurator::Group::Presentation::UpdateState(
+    megamol::gui::configurator::Group& inout_group, GraphItemsStateType& state) {
+        
+        
+}
+
+
 void megamol::gui::configurator::Group::Presentation::Present(
     megamol::gui::configurator::Group& inout_group, GraphItemsStateType& state) {
 
@@ -296,16 +303,23 @@ void megamol::gui::configurator::Group::Presentation::Present(
         ImGui::PushID(inout_group.uid);
 
         // Button
+        std::string label;
+    
         ImGui::SetCursorScreenPos(group_rect_min);
-        std::string label = "group_" + inout_group.name;
+        label = "group_background_" + inout_group.name;
+        ImGui::SetItemAllowOverlap();
+        ImGui::InvisibleButton(label.c_str(), group_size);
+        bool backround_button_active = ImGui::IsItemActive();            
+        
+        ImGui::SetCursorScreenPos(group_rect_min);
+        label = "group_" + inout_group.name;
         ImGui::SetItemAllowOverlap();
         ImGui::InvisibleButton(label.c_str(), header_size);
         ImGui::SetItemAllowOverlap();
 
         bool button_active = ImGui::IsItemActive();
         bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
-        bool button_hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) &&
-                               (state.interact.module_hovered_uid == GUI_INVALID_ID));
+        bool button_hovered = ImGui::IsItemHovered();
         bool force_selection = false;
 
         // Automatically delete empty group
@@ -350,19 +364,14 @@ void megamol::gui::configurator::Group::Presentation::Present(
             ImGui::EndPopup();
         }
 
-        // Actually apply selection and deselection one frame delayed
-        if (force_selection || (state.interact.group_selected_uid == inout_group.uid)) {
+        // Selection
+        if (!this->selected && (button_active || force_selection)) {
             state.interact.group_selected_uid = inout_group.uid;
             this->selected = true;
             state.interact.callslot_selected_uid = GUI_INVALID_ID;
             state.interact.modules_selected_uids.clear();
             state.interact.call_selected_uid = GUI_INVALID_ID;
             state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
-        }
-
-        // Selection
-        if (!this->selected && button_active) {
-            state.interact.group_selected_uid = inout_group.uid;
         }
 
         // Deselection

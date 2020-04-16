@@ -35,7 +35,8 @@ public:
     ImGuiID AddGraph(void);
     bool DeleteGraph(ImGuiID graph_uid);
     bool GetGraph(ImGuiID graph_uid, GraphPtrType& out_graph_ptr);
-
+    const GraphsType& GetGraphs(void) { return this->graphs; }
+    
     bool UpdateModulesCallsStock(const megamol::core::CoreInstance* core_instance);
     inline const ModuleStockVectorType& GetModulesStock(void) { return this->modules_stock; }
     inline const CallStockVectorType& GetCallsStock(void) { return this->calls_stock; }
@@ -81,8 +82,6 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    const GraphsType& get_graphs(void) { return this->graphs; }
-
     bool get_call_stock_data(
         Call::StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);
 
@@ -90,16 +89,15 @@ private:
         Module::StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
 
     // Can be used for mmCreateView, mmCreateModule and mmCreateCall lua commands
-    bool readLuaProjectCommandArguments(const std::string& line, size_t arg_count, std::vector<std::string>& out_args);
+    bool read_project_command_arguments(const std::string& line, size_t arg_count, std::vector<std::string>& out_args);
+    ImVec2 project_read_confpos(const std::string& line);
+    std::string project_write_confpos(const ImVec2& pos);
+    std::vector<std::string> project_read_confgroupinterface(const std::string& line);
+    std::string project_write_confgroupinterface(const ModulePtrType& module_ptr, const GraphPtrType& graph_ptr);
+    bool project_separate_name_and_namespace(const std::string& full_name, std::string& name_space, std::string& name);
 
-    ImVec2 readLuaProjectConfPos(const std::string& line);
-    std::string writeLuaProjectConfPos(const ImVec2& pos);
-
-    std::vector<std::string> readLuaProjectConfGroupInterface(const std::string& line);
-    std::string writeLuaProjectConfGroupInterface(const ModulePtrType& module_ptr, const GraphPtrType& graph_ptr);
-
-    bool separateNameAndNamespace(const std::string& full_name, std::string& name_space, std::string& name);
-
+    bool parameters_gui_state_from_json_string(const GraphPtrType& graph_ptr, const std::string& in_json_string);
+    
     inline const std::string generate_unique_graph_name(void) {
         return ("Project_" + std::to_string(++graph_name_uid));
     }

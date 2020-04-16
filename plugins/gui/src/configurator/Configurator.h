@@ -89,24 +89,12 @@ private:
 
     void add_empty_project(void);
     
-    /**
-     * Deserializes the configurator state.
-     *
-     * @param json  The string to deserialize from.
-     *
-     * @return True on success, false otherwise.
-     */
-    bool configurator_state_from_json(const std::string& json_string);
+    void save_state_to_parameter(void);
     
-    /**
-     * Serializes the configurator state.
-     *
-     * @param json  The string to serialize to.
-     *
-     * @return True on success, false otherwise.
-     */
-    bool configurator_state_to_json(std::string& json_string);      
+    bool configurator_state_from_json_string(const std::string& json_string);
     
+    bool configurator_state_to_json(nlohmann::json& out_json);   
+        
 #ifdef GUI_USE_GLFW
     /**
      * NB: Successfully testet using Windows10 and (X)Ubuntu with "Nautilus" file browser as drag source of the files.

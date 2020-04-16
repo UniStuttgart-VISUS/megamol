@@ -648,7 +648,6 @@ bool GUIWindows::createContext(void) {
     this->state.win_save_delay = 0.0f;
     this->state.win_delete = "";
     this->state.last_instance_time = 0.0f;
-    this->state.params_expert = false;
     this->state.hotkeys_check_once = true;
     // Adding additional utf-8 glyph ranges
     // (there is no error if glyph has no representation in font atlas)
@@ -793,8 +792,8 @@ void GUIWindows::validateParameter() {
     this->state.win_save_delay += io.DeltaTime;
     if (this->state_param.IsDirty()) {
         std::string state = std::string(this->state_param.Param<core::param::StringParam>()->Value().PeekBuffer());
-        this->window_manager.StateFromJSON(state);
-        this->parameters_gui_state_from_json(state);
+        this->window_manager.StateFromJsonString(state);
+        this->parameters_gui_state_from_json_string(state);
         this->state_param.ResetDirty();
     } else if (this->state.win_save_state &&
                (this->state.win_save_delay > 2.0f)) { // Delayed saving after triggering saving state (in seconds).
@@ -873,11 +872,11 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
     ImGui::BeginGroup();
     this->utils.PointCircleButton("Mode");
     if (ImGui::BeginPopupContextItem("gui_param_mode_button_context", 0)) { // 0 = left mouse button
-        if (ImGui::MenuItem("Basic", nullptr, (this->state.params_expert == false))) {
-            this->state.params_expert = false;
+        if (ImGui::MenuItem("Basic", nullptr, (wc.param_expert_mode == false))) {
+            wc.param_expert_mode = false;
         }
-        if (ImGui::MenuItem("Expert", nullptr, (this->state.params_expert == true))) {
-            this->state.params_expert = true;
+        if (ImGui::MenuItem("Expert", nullptr, (wc.param_expert_mode == true))) {
+            wc.param_expert_mode = true;
         }
         ImGui::EndPopup();
     }
@@ -1107,7 +1106,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                     showSearchedParameter = this->utils.FindCaseInsensitiveSubstring(param_name, currentSearchString);
                 }
 
-                bool param_visible = ((parameter->IsGUIVisible() || this->state.params_expert) && showSearchedParameter);
+                bool param_visible = ((parameter->IsGUIVisible() || wc.param_expert_mode) && showSearchedParameter);
                 if (!parameter.IsNull() && param_visible) {
 
                     // Parameter namespace header
@@ -1143,7 +1142,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                         if (wc.param_show_hotkeys) {
                             this->drawParameterHotkey(mod, slot);
                         } else {
-                            this->drawParameter(mod, slot);
+                            this->drawParameter(wc, mod, slot);
                         }
                     }
                 }
@@ -1509,7 +1508,7 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 }
 
 
-void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& slot) {
+void GUIWindows::drawParameter(WindowManager::WindowConfiguration& wc, const core::Module& mod, core::param::ParamSlot& slot) {
     
     ImGuiStyle& style = ImGui::GetStyle();
     std::string help;
@@ -1532,7 +1531,7 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
         
         // Expert Options
         ImGui::PushID(param_label.c_str()); 
-        if (this->state.params_expert) {
+        if (wc.param_expert_mode) {
             // Visibility
             bool param_visible = parameter->IsGUIVisible();
             if (ImGui::RadioButton("###visible", param_visible)) {
@@ -2023,59 +2022,26 @@ void megamol::gui::GUIWindows::shutdown(void) {
 
 
 void megamol::gui::GUIWindows::save_state_to_parameter(void) {
-     
-    try {
-        std::string window_state;
-        std::string param_state;
-        if (this->window_manager.StateToJSON(window_state) && this->parameters_gui_state_to_json(param_state)) {
-                
-            nlohmann::json window_json;
-            window_json = nlohmann::json::parse(window_state);
-            
-            nlohmann::json parameter_json;
-            parameter_json = nlohmann::json::parse(param_state); 
-                   
-            // Merge both JSON states
-            window_json.update(parameter_json);
-                   
-            std::string state;               
-            state = window_json.dump(2); 
-            
-            this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
-        }
+
+    nlohmann::json window_json;
+    nlohmann::json parameter_json;
     
-    } catch (nlohmann::json::type_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return;
-        //} catch (nlohmann::json::exception& e) {
-        //    vislib::sys::Log::DefaultLog.WriteError(
-        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        //    return false;
-        //} catch (nlohmann::json::parse_error& e) {
-        //    vislib::sys::Log::DefaultLog.WriteError(
-        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        //    return false;
-    } catch (nlohmann::json::invalid_iterator& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return;
-    } catch (nlohmann::json::out_of_range& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return;
-    } catch (nlohmann::json::other_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return;
-    }    
+    if (this->window_manager.StateToJSON(window_json) && this->parameters_gui_state_to_json(parameter_json)) {
+                               
+        // Merge both JSON states
+        window_json.update(parameter_json);
+        
+        std::string state;               
+        state = window_json.dump(2); 
+        
+        this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
+    }
 }
      
 
-bool megamol::gui::GUIWindows::parameters_gui_state_from_json(const std::string& json_string) {
+bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::string& in_json_string) {
+    
+    /// Should correspond to megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_string()
     
     try {
         if (this->core_instance == nullptr) {
@@ -2088,22 +2054,22 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json(const std::string&
         bool valid = true;
 
         nlohmann::json json;
-        json = nlohmann::json::parse(json_string);
+        json = nlohmann::json::parse(in_json_string);
 
         if (!json.is_object()) {
             vislib::sys::Log::DefaultLog.WriteError("State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         
-        const std::string header = "Parameter_GUI_States";
+        const std::string header = "Parameters_GUIState";
         
         for (auto& h : json.items()) {
             if (h.key() == header) {
                 found = true;
                 for (auto& w : h.value().items()) {
                     std::string json_param_name = w.key();
-                    
                     auto gui_state = w.value();
+                    valid = true;
                     
                     // gui_visibility
                     bool gui_visibility;                    
@@ -2161,14 +2127,6 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json(const std::string&
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
-        //} catch (nlohmann::json::exception& e) {
-        //    vislib::sys::Log::DefaultLog.WriteError(
-        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        //    return false;
-        //} catch (nlohmann::json::parse_error& e) {
-        //    vislib::sys::Log::DefaultLog.WriteError(
-        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        //    return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
@@ -2190,46 +2148,33 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json(const std::string&
 }
 
 
-bool megamol::gui::GUIWindows::parameters_gui_state_to_json(std::string& json_string) {
+bool megamol::gui::GUIWindows::parameters_gui_state_to_json(nlohmann::json& out_json) {
 
     try {
-        
         if (this->core_instance == nullptr) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
                 
-        const std::string header = "Parameter_GUI_States";                
-        nlohmann::json json;
-        
-        json_string.clear();
+        const std::string header = "Parameters_GUIState";                
+        out_json.clear();
         
         this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
             auto parameter = slot.Parameter();
             if (!parameter.IsNull()) {
                 std::string param_name = std::string(slot.Name().PeekBuffer());
 
-                json[header][param_name]["gui_visibility"] = parameter->IsGUIVisible();
-                json[header][param_name]["gui_read-only"] = parameter->IsGUIReadOnly();
-                json[header][param_name]["gui_presentation_mode"] = static_cast<int>(parameter->GetGUIPresentation());
+                out_json[header][param_name]["gui_visibility"] = parameter->IsGUIVisible();
+                out_json[header][param_name]["gui_read-only"] = parameter->IsGUIReadOnly();
+                out_json[header][param_name]["gui_presentation_mode"] = static_cast<int>(parameter->GetGUIPresentation());
             }
         });
-
-        json_string = json.dump(2); // Dump with indent of 2 spaces and new lines.
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
-        //} catch (nlohmann::json::exception& e) {
-        //    vislib::sys::Log::DefaultLog.WriteError(
-        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        //    return false;
-        //} catch (nlohmann::json::parse_error& e) {
-        //    vislib::sys::Log::DefaultLog.WriteError(
-        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        //    return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);

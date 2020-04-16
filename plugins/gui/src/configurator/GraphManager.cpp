@@ -204,7 +204,7 @@ bool megamol::gui::configurator::GraphManager::LoadProjectCore(megamol::core::Co
 
     // Create new graph
     bool retval = this->AddGraph();
-    auto graph_ptr = this->get_graphs().back();
+    auto graph_ptr = this->GetGraphs().back();
     if (retval && (graph_ptr != nullptr)) {
         if (this->AddProjectCore(graph_ptr->uid, core_instance)) {
             // Layout project loaded from core
@@ -259,7 +259,7 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
             std::string full_name = std::string(mod->FullName().PeekBuffer());
             std::string module_name;
             std::string module_namespace;
-            if (!this->separateNameAndNamespace(full_name, module_namespace, module_name)) {
+            if (!this->project_separate_name_and_namespace(full_name, module_namespace, module_name)) {
                 vislib::sys::Log::DefaultLog.WriteError("Core Project: Invalid module name '%s'. [%s, %s, line %d]\n",
                     full_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
             }
@@ -482,7 +482,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
 
                 size_t arg_count = 3;
                 std::vector<std::string> args;
-                if (!this->readLuaProjectCommandArguments(lines[i], arg_count, args)) {
+                if (!this->read_project_command_arguments(lines[i], arg_count, args)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Error parsing lua command '%s' "
                                                             "requiring %i arguments. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), lua_view.c_str(), arg_count, __FILE__, __FUNCTION__,
@@ -495,16 +495,16 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 std::string view_full_name = args[2];
                 std::string view_namespace;
                 std::string view_name;
-                if (!this->separateNameAndNamespace(view_full_name, view_namespace, view_name)) {
+                if (!this->project_separate_name_and_namespace(view_full_name, view_namespace, view_name)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Invalid view name argument "
                                                             "(3rd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), lua_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return false;
                 }
-                ImVec2 module_pos = this->readLuaProjectConfPos(lines[i]);
+                ImVec2 module_pos = this->project_read_confpos(lines[i]);
                 if ((module_pos.x != FLT_MAX) && (module_pos.x != FLT_MAX)) found_conf_pos = true;
                 std::vector<std::string> group_interfaceslot_callslots =
-                    this->readLuaProjectConfGroupInterface(lines[i]);
+                    this->project_read_confgroupinterface(lines[i]);
 
                 /// DEBUG
                 // vislib::sys::Log::DefaultLog.WriteInfo(
@@ -584,7 +584,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
 
                 size_t arg_count = 2;
                 std::vector<std::string> args;
-                if (!this->readLuaProjectCommandArguments(lines[i], arg_count, args)) {
+                if (!this->read_project_command_arguments(lines[i], arg_count, args)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Error parsing lua command '%s' "
                                                             "requiring %i arguments. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), lua_module.c_str(), arg_count, __FILE__, __FUNCTION__,
@@ -596,16 +596,16 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 std::string module_full_name = args[1];
                 std::string module_namespace;
                 std::string module_name;
-                if (!this->separateNameAndNamespace(module_full_name, module_namespace, module_name)) {
+                if (!this->project_separate_name_and_namespace(module_full_name, module_namespace, module_name)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Invalid module name argument "
                                                             "(2nd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), lua_module.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return false;
                 }
-                ImVec2 module_pos = this->readLuaProjectConfPos(lines[i]);
+                ImVec2 module_pos = this->project_read_confpos(lines[i]);
                 if ((module_pos.x != FLT_MAX) && (module_pos.x != FLT_MAX)) found_conf_pos = true;
                 std::vector<std::string> group_interfaceslot_callslots =
-                    this->readLuaProjectConfGroupInterface(lines[i]);
+                    this->project_read_confgroupinterface(lines[i]);
 
                 /// DEBUG
                 // vislib::sys::Log::DefaultLog.WriteInfo(">>>> Class: '%s' NameSpace: '%s' Name: '%s' ConfPos: %f,
@@ -665,7 +665,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
 
                 size_t arg_count = 3;
                 std::vector<std::string> args;
-                if (!this->readLuaProjectCommandArguments(lines[i], arg_count, args)) {
+                if (!this->read_project_command_arguments(lines[i], arg_count, args)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Error parsing lua command '%s' "
                                                             "requiring %i arguments. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), lua_call.c_str(), arg_count, __FILE__, __FUNCTION__,
@@ -679,7 +679,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
 
                 std::string caller_slot_name;
                 std::string caller_slot_namespace;
-                if (!this->separateNameAndNamespace(caller_slot_full_name, caller_slot_namespace, caller_slot_name)) {
+                if (!this->project_separate_name_and_namespace(caller_slot_full_name, caller_slot_namespace, caller_slot_name)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Invalid caller slot name "
                                                             "argument (2nd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), lua_call.c_str(), __FILE__, __FUNCTION__, __LINE__);
@@ -687,7 +687,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
 
                 std::string callee_slot_name;
                 std::string callee_slot_namespace;
-                if (!this->separateNameAndNamespace(callee_slot_full_name, callee_slot_namespace, callee_slot_name)) {
+                if (!this->project_separate_name_and_namespace(callee_slot_full_name, callee_slot_namespace, callee_slot_name)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Invalid callee slot name "
                                                             "argument (3nd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), lua_call.c_str(), __FILE__, __FUNCTION__, __LINE__);
@@ -834,13 +834,13 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 if (graph_ptr != nullptr) {
                     std::string module_full_name;
                     size_t module_name_idx = std::string::npos;
-                    for (auto& mod : graph_ptr->GetModules()) {
-                        module_full_name = mod->FullName() + "::";
+                    for (auto& module_ptr : graph_ptr->GetModules()) {
+                        module_full_name = module_ptr->FullName() + "::";
                         module_name_idx = param_slot_full_name.find(module_full_name);
                         if (module_name_idx != std::string::npos) {
                             std::string param_full_name =
                                 param_slot_full_name.substr(module_name_idx + module_full_name.size());
-                            for (auto& parameter : mod->parameters) {
+                            for (auto& parameter : module_ptr->parameters) {
                                 if (parameter.full_name == param_full_name) {
                                     parameter.SetValueString(value_str);
                                 }
@@ -858,10 +858,21 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
         // Save filename to graph
         graph_ptr->SetFilename(project_filename);
         
-        
-        /// XXX Check for GUIView module(s) and load parameter gui state from "state" parameter!
-        
-        /// XXX Check for GUIView module(s) and load configurator state from "configurator::state" parameter!
+        /// XXX Check for GUIView module(s) and load parameter gui state from "state" parameter
+        std::string guiview_name = "GUIView"; 
+        std::string stateparam_name = "state"; 
+        if (graph_ptr != nullptr) {
+            for (auto& module_ptr : graph_ptr->GetModules()) {
+                if (module_ptr->class_name == guiview_name) {
+                    for (auto& parameter : module_ptr->parameters) {
+                        if (parameter.GetName() == stateparam_name) {
+                            std::string state = std::get<std::string>(parameter.GetValue());
+                            this->parameters_gui_state_from_json_string(graph_ptr, state);
+                        }
+                    }
+                }
+            }
+        }
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -922,12 +933,12 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_uid
                     if (mod->is_view_instance) {
                         confInstances << "mmCreateView(\"" << instance_name << "\",\"" << mod->class_name << "\",\""
                                       << mod->FullName() << "\") "
-                                      << this->writeLuaProjectConfPos(mod->GUI_GetPosition()) << " "
-                                      << this->writeLuaProjectConfGroupInterface(mod, graph) << "\n";
+                                      << this->project_write_confpos(mod->GUI_GetPosition()) << " "
+                                      << this->project_write_confgroupinterface(mod, graph) << "\n";
                     } else {
                         confModules << "mmCreateModule(\"" << mod->class_name << "\",\"" << mod->FullName() << "\") "
-                                    << this->writeLuaProjectConfPos(mod->GUI_GetPosition()) << " "
-                                    << this->writeLuaProjectConfGroupInterface(mod, graph) << "\n";
+                                    << this->project_write_confpos(mod->GUI_GetPosition()) << " "
+                                    << this->project_write_confgroupinterface(mod, graph) << "\n";
                     }
 
                     for (auto& param_slot : mod->parameters) {
@@ -1294,7 +1305,7 @@ bool megamol::gui::configurator::GraphManager::get_call_stock_data(
 }
 
 
-bool megamol::gui::configurator::GraphManager::readLuaProjectCommandArguments(
+bool megamol::gui::configurator::GraphManager::read_project_command_arguments(
     const std::string& line, size_t arg_count, std::vector<std::string>& out_args) {
 
     // (Leaving current line in original state)
@@ -1353,7 +1364,7 @@ bool megamol::gui::configurator::GraphManager::readLuaProjectCommandArguments(
 }
 
 
-ImVec2 megamol::gui::configurator::GraphManager::readLuaProjectConfPos(const std::string& line) {
+ImVec2 megamol::gui::configurator::GraphManager::project_read_confpos(const std::string& line) {
 
     ImVec2 conf_pos(FLT_MAX, FLT_MAX);
 
@@ -1391,7 +1402,7 @@ ImVec2 megamol::gui::configurator::GraphManager::readLuaProjectConfPos(const std
 }
 
 
-std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfPos(const ImVec2& pos) {
+std::string megamol::gui::configurator::GraphManager::project_write_confpos(const ImVec2& pos) {
 
     std::stringstream conf_pos;
     /// XXX Should values be integers for compatibility with old configurator?
@@ -1400,7 +1411,7 @@ std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfPos(con
 }
 
 
-std::vector<std::string> megamol::gui::configurator::GraphManager::readLuaProjectConfGroupInterface(
+std::vector<std::string> megamol::gui::configurator::GraphManager::project_read_confgroupinterface(
     const std::string& line) {
 
     std::vector<std::string> conf_group_interface;
@@ -1443,7 +1454,7 @@ std::vector<std::string> megamol::gui::configurator::GraphManager::readLuaProjec
 }
 
 
-std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfGroupInterface(
+std::string megamol::gui::configurator::GraphManager::project_write_confgroupinterface(
     const ModulePtrType& module_ptr, const GraphPtrType& graph_ptr) {
 
     std::stringstream conf_group_interface;
@@ -1481,7 +1492,7 @@ std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfGroupIn
 }
 
 
-bool megamol::gui::configurator::GraphManager::separateNameAndNamespace(
+bool megamol::gui::configurator::GraphManager::project_separate_name_and_namespace(
     const std::string& full_name, std::string& name_space, std::string& name) {
 
     name = full_name;
@@ -1504,6 +1515,113 @@ bool megamol::gui::configurator::GraphManager::separateNameAndNamespace(
     if (name.empty()) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Invalid name in argument. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return true;
+}
+
+
+bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_string(const GraphPtrType& graph_ptr, const std::string& in_json_string) {
+    
+    /// Should correspond to megamol::gui::GUIWindows::parameters_gui_state_from_json_string()
+        
+    try {
+        if (graph_ptr == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Pointer to graph is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+                
+        bool found = false;
+        bool valid = true;
+
+        nlohmann::json json;
+        json = nlohmann::json::parse(in_json_string);
+
+        if (!json.is_object()) {
+            vislib::sys::Log::DefaultLog.WriteError("State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        
+        const std::string header = "GUIState_Parameters";
+        
+        for (auto& h : json.items()) {
+            if (h.key() == header) {
+                found = true;
+                for (auto& w : h.value().items()) {
+                    std::string json_param_name = w.key();
+                    auto gui_state = w.value();
+                    valid = true;
+                    
+                    // gui_visibility
+                    bool gui_visibility;                    
+                    if (gui_state.at("gui_visibility").is_boolean()) {
+                        gui_state.at("gui_visibility").get_to(gui_visibility);
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "JSON state: Failed to read 'gui_visibility' as boolean.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                        valid = false;
+                    }
+                    
+                    // gui_read-only
+                    bool gui_read_only;                                      
+                    if (gui_state.at("gui_read-only").is_boolean()) {
+                        gui_state.at("gui_read-only").get_to(gui_read_only);
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "JSON state: Failed to read 'gui_read-only' as boolean.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                        valid = false;
+                    }                    
+                    
+                    // gui_presentation_mode
+                    Parameter::Presentations gui_presentation_mode;
+                    if (gui_state.at("gui_presentation_mode").is_number_integer()) {
+                        gui_presentation_mode = static_cast<Parameter::Presentations>(gui_state.at("gui_presentation_mode").get<int>());
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "JSON state: Failed to read 'gui_presentation_mode' as integer.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                        valid = false;
+                    }
+                    
+                    if (valid) {
+                        for (auto& module_ptr : graph_ptr->GetModules()) {
+                            for (auto& parameter : module_ptr->parameters) {
+                                if (parameter.full_name == json_param_name) {
+                                    parameter.GUI_SetVisibility(gui_visibility);
+                                    parameter.GUI_SetReadOnly(gui_read_only);
+                                    parameter.GUI_SetPresentation(gui_presentation_mode);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (!found) {
+            vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }  
+
+    } catch (nlohmann::json::type_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::invalid_iterator& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::out_of_range& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::other_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -1540,7 +1658,7 @@ void megamol::gui::configurator::GraphManager::Presentation::Present(
         ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
         ImGui::BeginTabBar("Graphs", tab_bar_flags);
 
-        for (auto& graph : inout_graph_manager.get_graphs()) {
+        for (auto& graph : inout_graph_manager.GetGraphs()) {
 
             // Draw graph
             graph->GUI_Present(state);

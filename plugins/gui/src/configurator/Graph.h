@@ -56,6 +56,9 @@ public:
     const std::string GetFilename(void) { return this->filename; }
     void SetFilename(const std::string& filename) { this->filename = filename; }
 
+    bool StateFromJsonString(const std::string& json_string);
+    bool StateToJSON(nlohmann::json& out_json);  
+    
     // GUI Presentation -------------------------------------------------------
 
     inline void GUI_Present(GraphStateType& state) { this->present.Present(*this, state); }
@@ -118,7 +121,7 @@ private:
 
         bool params_visible;
         bool params_readonly;
-        bool params_expert;
+        bool param_expert_mode;
 
     private:
         GUIUtils utils;

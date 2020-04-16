@@ -94,7 +94,7 @@ bool WindowManager::DeleteWindowConfiguration(const std::string& window_name) {
 }
 
 
-bool WindowManager::StateFromJSON(const std::string& json_string) {
+bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
 
     try {
         bool found = false;
@@ -102,7 +102,7 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
         std::map<std::string, WindowConfiguration> tmp_windows;
 
         nlohmann::json json;
-        json = nlohmann::json::parse(json_string);
+        json = nlohmann::json::parse(in_json_string);
 
         if (!json.is_object()) {
             vislib::sys::Log::DefaultLog.WriteError("State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -283,6 +283,15 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
                             "JSON state: Failed to read 'param_module_filter' as integer.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
+                    // expert_mode
+                    if (config_values.at("param_expert_mode").is_boolean()) {
+                        config_values.at("param_expert_mode").get_to(tmp_config.param_expert_mode);
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "JSON state: Failed to read 'param_expert_mode' as boolean.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                        valid = false;
+                    }                   
+                     
                     // FpsMsConfig --------------------------------------------
                     // show_options
                     if (config_values.at("ms_show_options").is_boolean()) {
@@ -369,14 +378,6 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
-        //} catch (nlohmann::json::exception& e) {
-        //    vislib::sys::Log::DefaultLog.WriteError(
-        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        //    return false;
-        //} catch (nlohmann::json::parse_error& e) {
-        //    vislib::sys::Log::DefaultLog.WriteError(
-        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        //    return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
@@ -398,11 +399,10 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
 }
 
 
-bool WindowManager::StateToJSON(std::string& json_string) {
-    json_string = "";
+bool WindowManager::StateToJSON(nlohmann::json& out_json) {
 
     try {
-        nlohmann::json json;
+        out_json.clear();
         
         const std::string header = "Window_Configurations";
         
@@ -410,47 +410,38 @@ bool WindowManager::StateToJSON(std::string& json_string) {
             if (w.second.win_store_config) {
                 std::string window_name = w.first;
                 WindowConfiguration window_config = w.second;
-                json[header][window_name]["win_show"] = window_config.win_show;
-                json[header][window_name]["win_flags"] = static_cast<int>(window_config.win_flags);
-                json[header][window_name]["win_callback"] = static_cast<int>(window_config.win_callback);
-                json[header][window_name]["win_hotkey"] = {
+                out_json[header][window_name]["win_show"] = window_config.win_show;
+                out_json[header][window_name]["win_flags"] = static_cast<int>(window_config.win_flags);
+                out_json[header][window_name]["win_callback"] = static_cast<int>(window_config.win_callback);
+                out_json[header][window_name]["win_hotkey"] = {
                     static_cast<int>(window_config.win_hotkey.key), window_config.win_hotkey.mods.toInt()};
-                json[header][window_name]["win_position"] = {window_config.win_position.x, window_config.win_position.y};
-                json[header][window_name]["win_size"] = {window_config.win_size.x, window_config.win_size.y};
-                json[header][window_name]["win_soft_reset"] = window_config.win_soft_reset;
-                json[header][window_name]["win_reset_size"] = {window_config.win_reset_size.x, window_config.win_reset_size.y};
+                out_json[header][window_name]["win_position"] = {window_config.win_position.x, window_config.win_position.y};
+                out_json[header][window_name]["win_size"] = {window_config.win_size.x, window_config.win_size.y};
+                out_json[header][window_name]["win_soft_reset"] = window_config.win_soft_reset;
+                out_json[header][window_name]["win_reset_size"] = {window_config.win_reset_size.x, window_config.win_reset_size.y};
 
                 this->utils.Utf8Encode(window_config.main_project_file);
-                json[header][window_name]["main_project_file"] = window_config.main_project_file;
+                out_json[header][window_name]["main_project_file"] = window_config.main_project_file;
 
-                json[header][window_name]["param_show_hotkeys"] = window_config.param_show_hotkeys;
-                json[header][window_name]["param_modules_list"] = window_config.param_modules_list;
-                json[header][window_name]["param_module_filter"] = static_cast<int>(window_config.param_module_filter);
+                out_json[header][window_name]["param_show_hotkeys"] = window_config.param_show_hotkeys;
+                out_json[header][window_name]["param_modules_list"] = window_config.param_modules_list;
+                out_json[header][window_name]["param_module_filter"] = static_cast<int>(window_config.param_module_filter);
+                out_json[header][window_name]["param_expert_mode"] = window_config.param_expert_mode;
 
-                json[header][window_name]["ms_show_options"] = window_config.ms_show_options;
-                json[header][window_name]["ms_max_history_count"] = window_config.ms_max_history_count;
-                json[header][window_name]["ms_refresh_rate"] = window_config.ms_refresh_rate;
-                json[header][window_name]["ms_mode"] = static_cast<int>(window_config.ms_mode);
+                out_json[header][window_name]["ms_show_options"] = window_config.ms_show_options;
+                out_json[header][window_name]["ms_max_history_count"] = window_config.ms_max_history_count;
+                out_json[header][window_name]["ms_refresh_rate"] = window_config.ms_refresh_rate;
+                out_json[header][window_name]["ms_mode"] = static_cast<int>(window_config.ms_mode);
 
                 this->utils.Utf8Encode(window_config.font_name);
-                json[header][window_name]["font_name"] = window_config.font_name;
+                out_json[header][window_name]["font_name"] = window_config.font_name;
             }
         }
-
-        json_string = json.dump(2); // Dump with indent of 2 spaces and new lines.
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
-        //} catch (nlohmann::json::exception& e) {
-        //    vislib::sys::Log::DefaultLog.WriteError(
-        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        //    return false;
-        //} catch (nlohmann::json::parse_error& e) {
-        //    vislib::sys::Log::DefaultLog.WriteError(
-        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        //    return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);

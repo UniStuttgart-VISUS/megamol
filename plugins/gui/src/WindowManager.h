@@ -48,6 +48,7 @@ public:
         bool param_show_hotkeys;                     // flag to toggle showing only parameter hotkeys
         std::vector<std::string> param_modules_list; // modules to show in a parameter window (show all if empty)
         FilterModes param_module_filter;             // module filter
+        bool param_expert_mode;                      // Flag toggling between Expert and Basic parameter mode.        
         // ---------- FPS/MS specific configuration ----------
         bool ms_show_options;          // show/hide fps/ms options.
         int ms_max_history_count;      // maximum count of values in value array
@@ -188,17 +189,17 @@ public:
      *
      * @return True on success, false otherwise.
      */
-    bool StateFromJSON(const std::string& json_string);
+    bool StateFromJsonString(const std::string& in_json_string);
 
 
     /**
      * Serializes the current window configurations.
      *
-     * @param json  The string to serialize to.
+     * @param json  The json to serialize to.
      *
      * @return True on success, false otherwise.
      */
-    bool StateToJSON(std::string& json_string);
+    bool StateToJSON(nlohmann::json& out_json);
 
 private:
     /**

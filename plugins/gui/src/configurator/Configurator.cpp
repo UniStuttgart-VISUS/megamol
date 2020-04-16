@@ -105,6 +105,13 @@ bool megamol::gui::configurator::Configurator::Draw(
         return false;
     }
 
+    // Check for parameter changes
+    if (this->state_param.IsDirty()) {
+        std::string state = std::string(this->state_param.Param<core::param::StringParam>()->Value().PeekBuffer());
+        this->configurator_state_from_json_string(state);
+        this->state_param.ResetDirty();
+    }
+
     // Draw
     if (this->init_state < 2) {
         /// Step 1] (two frames!)
@@ -283,7 +290,6 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                     (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
                 popup_save_project_file = true;
             }
-            /// XXX Not implemented yet
             // Save currently active group to LUA file
             /*
             if (ImGui::MenuItem("Save Group", nullptr, false, (group_selected_uid != GUI_INVALID_ID))) {
@@ -356,6 +362,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     }
     if (this->file_utils.FileBrowserPopUp(
             FileUtils::FileBrowserFlag::SAVE, "Save Project", popup_save_project_file, project_filename)) {
+        this->save_state_to_parameter();
         popup_failed = !this->graph_manager.SaveProjectFile(this->graph_state.graph_selected_uid, project_filename);
     }
     this->utils.MinimalPopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
@@ -545,15 +552,26 @@ void megamol::gui::configurator::Configurator::add_empty_project(void) {
 }
 
 
-bool megamol::gui::configurator::Configurator::configurator_state_from_json(const std::string& json_string) {
+void megamol::gui::configurator::Configurator::save_state_to_parameter(void) {
+    
+    // Save current state of configurator to state parameter
+    nlohmann::json configurator_json;
+    if (this->configurator_state_to_json(configurator_json)) {
+        std::string state;               
+        state = configurator_json.dump(2); 
+        this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
+    }
+}
+
+
+bool megamol::gui::configurator::Configurator::configurator_state_from_json_string(const std::string& in_json_string) {
 
     try {
         const std::string header = "Configurator";
         bool found = false;
-        bool valid = true;
 
         nlohmann::json json;
-        json = nlohmann::json::parse(json_string);
+        json = nlohmann::json::parse(in_json_string);
 
         if (!json.is_object()) {
             vislib::sys::Log::DefaultLog.WriteError("State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -563,12 +581,25 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json(cons
         for (auto& h : json.items()) {
             if (h.key() == header) {
                 found = true;
+                auto config_state = h.value();
+                
+                // module_list_sidebar
+                if (config_state.at("module_list_sidebar").is_boolean()) {
+                    config_state.at("module_list_sidebar").get_to(this->show_module_list_sidebar);
+                } else {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "JSON state: Failed to read 'module_list_sidebar' as boolean.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                }
+                                    
                 for (auto& w : h.value().items()) {
                     std::string json_param_name = w.key();
-                    auto config_state = w.value();
+                    auto graph_state = w.value();
+                    
+
+                    
+                    /// TODO
                     
                     
-                    /// TODO ...
                 }
             }
         }
@@ -582,14 +613,6 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json(cons
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
-        //} catch (nlohmann::json::exception& e) {
-        //    vislib::sys::Log::DefaultLog.WriteError(
-        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        //    return false;
-        //} catch (nlohmann::json::parse_error& e) {
-        //    vislib::sys::Log::DefaultLog.WriteError(
-        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        //    return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
@@ -611,37 +634,25 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json(cons
 }
 
 
-bool megamol::gui::configurator::Configurator::configurator_state_to_json(std::string& json_string) {
+bool megamol::gui::configurator::Configurator::configurator_state_to_json(nlohmann::json& out_json) {
 
     try {
+        const std::string header = "Configurator";                       
+        out_json.clear();
         
-        const std::string header = "Configurator";                
-        nlohmann::json json;
-        
-        json_string.clear();
-        
-        /// TODO
-        /// - module_positions:             name - ImVec2          (replacing --confPos)
-        /// - group_interface_slots:        group name - slots{,,} (replacing --confGroupInterface)
-        /// - state of module_list_sidebar: bool                   (visible/hidden)
-        /// - state of parameter_sidebar:   bool                   (visible/hidden)
-        /// - last opened_projects:         string                 (filename of graphs)
-        
-
-        json_string = json.dump(2); // Dump with indent of 2 spaces and new lines.
+        out_json[header]["module_list_sidebar"] = this->show_module_list_sidebar;
+        /*
+        for (auto& graph_ptr : this->graph_manager.GetGraphs()) {
+            nlohmann::json graph_json;
+            graph_ptr->StateToJSON(graph_json);
+            out_json[header].update(graph_json);
+        }
+        * */
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
-        //} catch (nlohmann::json::exception& e) {
-        //    vislib::sys::Log::DefaultLog.WriteError(
-        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        //    return false;
-        //} catch (nlohmann::json::parse_error& e) {
-        //    vislib::sys::Log::DefaultLog.WriteError(
-        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        //    return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);

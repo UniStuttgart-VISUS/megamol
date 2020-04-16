@@ -57,7 +57,7 @@ ImGuiID megamol::gui::configurator::Graph::AddModule(
                     param_slot.GUI_SetPresentation(p.gui_presentation);
                     // Apply current global configurator parameter gui settings 
                     // Do not apply global read-only and visibility.
-                    param_slot.GUI_SetExpert(this->present.params_expert);
+                    param_slot.GUI_SetExpert(this->present.param_expert_mode);
                     
                     mod_ptr->parameters.emplace_back(param_slot);
                 }
@@ -421,6 +421,105 @@ bool megamol::gui::configurator::Graph::IsMainViewSet(void) {
 }
 
 
+bool megamol::gui::configurator::Graph::StateFromJsonString(const std::string& in_json_string) {
+    
+        try {
+        const std::string header = "Graphs";
+        bool found = false;
+        bool valid = true;
+
+        nlohmann::json json;
+        json = nlohmann::json::parse(in_json_string);
+
+        if (!json.is_object()) {
+            vislib::sys::Log::DefaultLog.WriteError("State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        
+        for (auto& h : json.items()) {
+            if (h.key() == header) {
+                found = true;
+                for (auto& w : h.value().items()) {
+                    std::string json_param_name = w.key();
+                    auto config_state = w.value();
+                    
+                    
+                    /// TODO ...
+                }
+            }
+        }
+        
+        if (!found) {
+            vislib::sys::Log::DefaultLog.WriteWarn("Could not find configurator state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }        
+
+    } catch (nlohmann::json::type_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::invalid_iterator& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::out_of_range& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::other_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return true;
+}
+
+
+bool megamol::gui::configurator::Graph::StateToJSON(nlohmann::json& out_json) {
+    
+    try {
+        const std::string header = "Graphs";                       
+        out_json.clear();
+        
+        /// TODO
+        /// - module_positions:             name - ImVec2          (replacing --confPos)
+        /// - group_interface_slots:        group name - slots{,,} (replacing --confGroupInterface)
+        /// - state of module_list_sidebar: bool                   (visible/hidden)
+        /// - state of parameter_sidebar:   bool                   (visible/hidden)
+        /// - last opened_projects:         string                 (filename of graphs)
+        
+        //out_json[header]["module_list_sidebar"] = this->show_module_list_sidebar;
+
+
+    } catch (nlohmann::json::type_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::invalid_iterator& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::out_of_range& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::other_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return true;
+}
+
+
 void megamol::gui::configurator::Graph::restore_callslots_interfaceslot_state(ImGuiID group_uid) {
 
     GroupPtrType group_ptr;
@@ -576,7 +675,7 @@ const std::string megamol::gui::configurator::Graph::generate_unique_module_name
 megamol::gui::configurator::Graph::Presentation::Presentation(void)
     : params_visible(true)
     , params_readonly(false)
-    , params_expert(false)
+    , param_expert_mode(false)
     , utils()
     , update(true)
     , show_grid(false)
@@ -599,12 +698,12 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     this->graph_state.canvas.scrolling = ImVec2(0.0f, 0.0f);
     this->graph_state.canvas.zooming = 1.0f;
     this->graph_state.canvas.offset = ImVec2(0.0f, 0.0f);
-
+        
     this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;
-    this->graph_state.interact.group_save = false;
-
+    
+    this->graph_state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
+    
     this->graph_state.interact.modules_selected_uids.clear();
-    this->graph_state.interact.module_hovered_uid = GUI_INVALID_ID;
     this->graph_state.interact.module_mainview_uid = GUI_INVALID_ID;
     this->graph_state.interact.modules_add_group_uids.clear();
     this->graph_state.interact.modules_remove_group_uids.clear();
@@ -617,9 +716,6 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     this->graph_state.interact.callslot_add_group_uid = UIDPairType(GUI_INVALID_ID, GUI_INVALID_ID);
     this->graph_state.interact.callslot_remove_group_uid = GUI_INVALID_ID;
     this->graph_state.interact.callslot_compat_ptr = nullptr;
-
-    this->graph_state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
-    this->graph_state.interact.interfaceslot_hovered_uid = GUI_INVALID_ID;
 
     this->graph_state.groups.clear();
 
@@ -882,7 +978,6 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 }
                 // Reset interact state for modules and call slots
                 this->graph_state.interact.modules_selected_uids.clear();
-                this->graph_state.interact.module_hovered_uid = GUI_INVALID_ID;
                 this->graph_state.interact.module_mainview_uid = GUI_INVALID_ID;
                 this->graph_state.interact.modules_add_group_uids.clear();
                 this->graph_state.interact.modules_remove_group_uids.clear();
@@ -902,7 +997,6 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 inout_graph.DeleteGroup(this->graph_state.interact.group_selected_uid);
                 // Reset interact state for groups
                 this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;
-                this->graph_state.interact.group_save = false;
             }
         }
         // Set delete flag if tab was closed
@@ -1035,6 +1129,8 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     ImGui::BeginChild("region", ImVec2(child_width, 0.0f), true, child_flags);
 
     this->canvas_hovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
+    
+    // UPDATE CANVAS -----------------------------------------------------------
 
     // Update canvas position
     ImVec2 new_position = ImGui::GetWindowPos();
@@ -1067,6 +1163,27 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
         }
         this->update = false;
     }
+
+    // UPDATE GUI STATE of graph elements --------------------------------------
+    this->graph_state.interact.button_active_uid = GUI_INVALID_ID;
+    this->graph_state.interact.button_hovered_uid = GUI_INVALID_ID;
+    
+    // 1] GROUPS --------------------------------
+    for (auto& group_ptr : inout_graph.GetGroups()) {
+        group_ptr->GUI_UpdateState(this->graph_state);
+    }
+
+    // 2] MODULES and CALL SLOTS ----------------
+    for (auto& module_ptr : inout_graph.GetModules()) {
+        module_ptr->GUI_UpdateState(this->graph_state);
+    }
+
+    // 3] CALLS ---------------------------------;
+    for (auto& call_ptr : inout_graph.get_calls()) {
+        call_ptr->GUI_UpdateState(this->graph_state);
+    }
+
+    // DRAW GRAPH ELEMENTS and apply gui state ---------------------------------
 
     ImGui::PushClipRect(
         this->graph_state.canvas.position, this->graph_state.canvas.position + this->graph_state.canvas.size, true);
@@ -1185,18 +1302,18 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
     this->utils.PointCircleButton("Mode");
     if (ImGui::BeginPopupContextItem("param_mode_button_context", 0)) { // 0 = left mouse button
         bool changed = false;
-        if (ImGui::MenuItem("Basic", nullptr, (this->params_expert == false))) {
-            this->params_expert = false;
+        if (ImGui::MenuItem("Basic", nullptr, (this->param_expert_mode == false))) {
+            this->param_expert_mode = false;
             changed = true;
         }
-        if (ImGui::MenuItem("Expert", nullptr, (this->params_expert == true))) {
-            this->params_expert = true;
+        if (ImGui::MenuItem("Expert", nullptr, (this->param_expert_mode == true))) {
+            this->param_expert_mode = true;
             changed = true;
         }
         if (changed) {
             for (auto& module_ptr : inout_graph.GetModules()) {
                 for (auto& parameter : module_ptr->parameters) {
-                    parameter.GUI_SetExpert(this->params_expert);
+                    parameter.GUI_SetExpert(this->param_expert_mode);
                 }
             }
         }
@@ -1204,7 +1321,7 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
     }
     ImGui::EndGroup();
 
-    if (this->params_expert) {
+    if (this->param_expert_mode) {
         ImGui::SameLine();
 
         // Visibility

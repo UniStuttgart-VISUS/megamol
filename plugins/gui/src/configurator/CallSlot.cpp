@@ -258,6 +258,13 @@ megamol::gui::configurator::CallSlot::Presentation::Presentation(void)
 megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
 
+void megamol::gui::configurator::CallSlot::Presentation::UpdateState(
+    megamol::gui::configurator::CallSlot& inout_callslot, megamol::gui::GraphItemsStateType& state) {
+        
+        
+}
+
+
 void megamol::gui::configurator::CallSlot::Presentation::Present(
     megamol::gui::configurator::CallSlot& inout_callslot, megamol::gui::GraphItemsStateType& state) {
 
@@ -334,11 +341,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
 
             bool force_selection = false;
             bool button_active = ImGui::IsItemActive();
-            bool button_hovered = (ImGui::IsItemHovered() &&
-                                   ((state.interact.module_hovered_uid == GUI_INVALID_ID) ||
-                                       (state.interact.module_hovered_uid == parent_module_uid)) &&
-                                   ((state.interact.callslot_hovered_uid == GUI_INVALID_ID) ||
-                                       (state.interact.callslot_hovered_uid == inout_callslot.uid)));
+            bool button_hovered = ImGui::IsItemHovered();
 
             // Context Menu
             if (ImGui::BeginPopupContextItem("invisible_button_context")) {

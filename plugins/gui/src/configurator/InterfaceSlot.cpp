@@ -153,6 +153,13 @@ megamol::gui::configurator::InterfaceSlot::Presentation::Presentation(void)
 megamol::gui::configurator::InterfaceSlot::Presentation::~Presentation(void) {}
 
 
+void megamol::gui::configurator::InterfaceSlot::Presentation::UpdateState(
+    megamol::gui::configurator::InterfaceSlot& inout_interfaceslot, megamol::gui::GraphItemsStateType& state) {
+        
+        
+}
+
+
 void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
     megamol::gui::configurator::InterfaceSlot& inout_interfaceslot, megamol::gui::GraphItemsStateType& state) {
 
@@ -200,10 +207,7 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
 
         bool button_active = ImGui::IsItemActive();
         bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
-        bool button_hovered = (ImGui::IsItemHovered() && (state.interact.module_hovered_uid == GUI_INVALID_ID) &&
-                               (state.interact.callslot_hovered_uid == GUI_INVALID_ID) &&
-                               ((state.interact.interfaceslot_hovered_uid == GUI_INVALID_ID) ||
-                                   (state.interact.interfaceslot_hovered_uid == inout_interfaceslot.uid)));
+        bool button_hovered = ImGui::IsItemHovered();
         bool force_selection = false;
 
         // Context Menu
@@ -242,14 +246,6 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
             if (state.interact.interfaceslot_selected_uid == inout_interfaceslot.uid) {
                 state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
             }
-        }
-
-        // Hovering
-        if (button_hovered) {
-            state.interact.interfaceslot_hovered_uid = inout_interfaceslot.uid;
-        }
-        if (!button_hovered && (state.interact.interfaceslot_hovered_uid == inout_interfaceslot.uid)) {
-            state.interact.interfaceslot_hovered_uid = GUI_INVALID_ID;
         }
 
         // Drag & Drop

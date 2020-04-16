@@ -82,6 +82,7 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
+    inline void GUI_UpdateState(GraphItemsStateType& state) { this->present.UpdateState(*this, state); }
     inline void GUI_Present(GraphItemsStateType& state) { this->present.Present(*this, state); }
 
     inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
@@ -116,6 +117,7 @@ private:
 
         ~Presentation(void);
 
+        void UpdateState(CallSlot& inout_callslot, GraphItemsStateType& state);
         void Present(CallSlot& inout_callslot, GraphItemsStateType& state);
 
         void UpdatePosition(CallSlot& inout_callslot, const GraphCanvasType& in_canvas);
