@@ -9,16 +9,6 @@
 #define MEGAMOL_GUI_WINDOWMANAGER_INCLUDED
 
 
-#include "mmcore/view/Input.h"
-
-#include "vislib/sys/Log.h"
-
-#include <list>
-#include <map>
-#include <string>
-
-#include "json.hpp"
-
 #include "GUIUtils.h"
 
 
@@ -132,7 +122,7 @@ public:
      * @param window_name  The name of the calling window.
      */
     inline GuiCallbackFunc WindowCallback(DrawCallbacks cbid) {
-        // Creates new entry if no callback for cbid is registered (default ctory)
+        // Creates new entry if no callback for cbid is registered (default ctor)
         return this->callbacks[cbid];
     }
 

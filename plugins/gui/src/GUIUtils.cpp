@@ -9,10 +9,6 @@
 #include "GUIUtils.h"
 
 
-#include <imgui_stdlib.h>
-#include <vector>
-
-
 using namespace megamol;
 using namespace megamol::gui;
 

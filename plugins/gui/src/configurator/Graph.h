@@ -8,19 +8,12 @@
 #ifndef MEGAMOL_GUI_GRAPH_GRAPH_H_INCLUDED
 #define MEGAMOL_GUI_GRAPH_GRAPH_H_INCLUDED
 
-#include "vislib/sys/Log.h"
 
-#include <map>
-#include <vector>
-
+#include "FileUtils.h"
 #include "Call.h"
 #include "Group.h"
 #include "Module.h"
 #include "Parameter.h"
-
-#ifdef GUI_USE_FILESYSTEM
-#    include "FileUtils.h"
-#endif // GUI_USE_FILESYSTEM
 
 
 namespace megamol {

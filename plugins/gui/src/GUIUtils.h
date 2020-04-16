@@ -12,6 +12,7 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
+
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -22,9 +23,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "json.hpp"
+
 #include <algorithm> // search
 #include <array>
 #include <cctype> // toupper
+#include <cmath> // fmodf
+#include <list>
 #include <map>
 #include <memory>
 #include <string>

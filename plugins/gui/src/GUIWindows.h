@@ -9,6 +9,13 @@
 #define MEGAMOL_GUI_GUIWINDOWS_H_INCLUDED
 
 
+#include "CorporateGreyStyle.h"
+#include "CorporateWhiteStyle.h"
+#include "FileUtils.h"
+#include "TransferFunctionEditor.h"
+#include "WindowManager.h"
+#include "configurator/Configurator.h"
+
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/ParamSlot.h"
 
@@ -31,16 +38,8 @@
 
 #include "vislib/math/Rectangle.h"
 
-#include <algorithm>
 #include <iomanip>
 #include <sstream>
-
-#include "CorporateGreyStyle.h"
-#include "CorporateWhiteStyle.h"
-#include "FileUtils.h"
-#include "TransferFunctionEditor.h"
-#include "WindowManager.h"
-#include "configurator/Configurator.h"
 
 // Used for platform independent clipboard (ImGui so far only provides windows implementation)
 #ifdef GUI_USE_GLFW
@@ -314,11 +313,34 @@ private:
      * Check if given hotkey is pressed.
      */
     bool hotkeyPressed(megamol::core::view::KeyCode keycode);
-
+    
     /**
      * Shutdown megmol program.
      */
     void shutdown(void);
+    
+    /**
+     * Saves current state to parameter.
+     */
+     void save_state_to_parameter(void);
+    
+    /**
+     * Deserializes the parameters gui state.
+     *
+     * @param json  The string to deserialize from.
+     *
+     * @return True on success, false otherwise.
+     */
+    bool parameter_state_from_json(const std::string& json_string);
+
+    /**
+     * Serializes the parameters gui state.
+     *
+     * @param json  The string to serialize to.
+     *
+     * @return True on success, false otherwise.
+     */
+    bool parameter_state_to_json(std::string& json_string);    
 };
 
 } // namespace gui

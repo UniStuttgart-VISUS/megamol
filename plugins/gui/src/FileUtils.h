@@ -27,13 +27,12 @@ namespace fsns = std::experimental::filesystem;
 #    endif
 #endif // GUI_USE_FILESYSTEM
 
+#include "GUIUtils.h"
+
 #include "mmcore/CoreInstance.h"
 
 #include <fstream>
 #include <iostream>
-#include <string>
-
-#include "GUIUtils.h"
 
 
 namespace megamol {

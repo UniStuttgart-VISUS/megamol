@@ -9,18 +9,15 @@
 #define MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED
 
 
+#include "GUIUtils.h"
+#include "ColorPalettes.h"
+
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/view/TransferFunction.h"
-
-#include "vislib/sys/Log.h"
 
 #include <cmath>
 #include <iomanip>
 #include <sstream>
-#include <string>
-#include <vector>
-
-#include "GUIUtils.h"
 
 
 namespace megamol {

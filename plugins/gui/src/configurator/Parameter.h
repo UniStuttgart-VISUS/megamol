@@ -24,11 +24,11 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 
-#include <variant>
-
 #include "FileUtils.h"
 #include "GUIUtils.h"
 #include "TransferFunctionEditor.h"
+
+#include <variant>
 
 // Used for platform independent clipboard (ImGui so far only provides windows implementation)
 #ifdef GUI_USE_GLFW

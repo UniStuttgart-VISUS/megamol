@@ -8,13 +8,13 @@
 #ifndef MEGAMOL_GUI_GUIVIEW_H_INCLUDED
 #define MEGAMOL_GUI_GUIVIEW_H_INCLUDED
 
+
+#include "GUIWindows.h"
+
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderView.h"
 
-#include "vislib/sys/Log.h"
-
-#include "GUIWindows.h"
 
 
 namespace megamol {

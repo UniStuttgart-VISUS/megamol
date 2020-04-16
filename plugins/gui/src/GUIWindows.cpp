@@ -124,11 +124,8 @@ bool GUIWindows::PreDraw(const std::string& module_fullname, vislib::math::Recta
         this->shutdown();
         return true;
     }
-
     this->validateParameter();
-
     this->checkMultipleHotkeyAssignement();
-    
     this->parent_module_fullname = module_fullname;
 
     auto viewportWidth = viewport.Width();
@@ -793,14 +790,13 @@ void GUIWindows::validateParameter() {
     ImGuiIO& io = ImGui::GetIO();
     this->state.win_save_delay += io.DeltaTime;
     if (this->state_param.IsDirty()) {
-        auto state = this->state_param.Param<core::param::StringParam>()->Value();
-        this->window_manager.StateFromJSON(std::string(state));
+        std::string state = std::string(this->state_param.Param<core::param::StringParam>()->Value().PeekBuffer());
+        this->window_manager.StateFromJSON(state);
+        this->parameter_state_from_json(state);
         this->state_param.ResetDirty();
     } else if (this->state.win_save_state &&
                (this->state.win_save_delay > 2.0f)) { // Delayed saving after triggering saving state (in seconds).
-        std::string state;
-        this->window_manager.StateToJSON(state);
-        this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
+        this->save_state_to_parameter();
         this->state.win_save_state = false;
     }
 
@@ -1505,9 +1501,7 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
     if (this->file_utils.FileBrowserPopUp(
             FileUtils::FileBrowserFlag::SAVE, "Save Project", open_popup_project, wc.main_project_file)) {
         // Serialize current state to parameter.
-        std::string state;
-        this->window_manager.StateToJSON(state);
-        this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
+        this->save_state_to_parameter();
         // Serialize project to file
         FileUtils::SaveProjectFile(wc.main_project_file, this->core_instance);
     }
@@ -2015,7 +2009,7 @@ bool megamol::gui::GUIWindows::hotkeyPressed(megamol::core::view::KeyCode keycod
 }
 
 
-void GUIWindows::shutdown(void) {
+void megamol::gui::GUIWindows::shutdown(void) {
 
     if (this->core_instance != nullptr) {
         vislib::sys::Log::DefaultLog.WriteInfo("GUIWindows: Triggering MegaMol instance shutdown.");
@@ -2024,4 +2018,233 @@ void GUIWindows::shutdown(void) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
+}
+
+
+void megamol::gui::GUIWindows::save_state_to_parameter(void) {
+     
+    try {
+        std::string window_state;
+        std::string param_state;
+        if (this->window_manager.StateToJSON(window_state) && this->parameter_state_to_json(param_state)) {
+                
+            nlohmann::json window_json;
+            window_json = nlohmann::json::parse(window_state);
+            
+            nlohmann::json parameter_json;
+            parameter_json = nlohmann::json::parse(param_state); 
+                   
+            // Merge both JSON states
+            window_json.update(parameter_json);
+                   
+            std::string state;               
+            state = window_json.dump(2); 
+            
+            this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
+        }
+    
+    } catch (nlohmann::json::type_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return;
+        //} catch (nlohmann::json::exception& e) {
+        //    vislib::sys::Log::DefaultLog.WriteError(
+        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        //    return false;
+        //} catch (nlohmann::json::parse_error& e) {
+        //    vislib::sys::Log::DefaultLog.WriteError(
+        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        //    return false;
+    } catch (nlohmann::json::invalid_iterator& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return;
+    } catch (nlohmann::json::out_of_range& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return;
+    } catch (nlohmann::json::other_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }    
+}
+     
+
+bool megamol::gui::GUIWindows::parameter_state_from_json(const std::string& json_string) {
+    
+    try {
+        if (this->core_instance == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        
+        bool found = false;
+        bool valid = true;
+
+        nlohmann::json json;
+        json = nlohmann::json::parse(json_string);
+
+        if (!json.is_object()) {
+            vislib::sys::Log::DefaultLog.WriteError("State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        
+        const std::string header = "Parameter_GUI_States";
+        
+        for (auto& h : json.items()) {
+            if (h.key() == header) {
+                found = true;
+                for (auto& w : h.value().items()) {
+                    std::string json_param_name = w.key();
+                    
+                    auto gui_state = w.value();
+                    
+                    // gui_visibility
+                    bool gui_visibility;                    
+                    if (gui_state.at("gui_visibility").is_boolean()) {
+                        gui_state.at("gui_visibility").get_to(gui_visibility);
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "JSON state: Failed to read 'gui_visibility' as boolean.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                        valid = false;
+                    }
+                    
+                    // gui_read-only
+                    bool gui_read_only;                                      
+                    if (gui_state.at("gui_read-only").is_boolean()) {
+                        gui_state.at("gui_read-only").get_to(gui_read_only);
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "JSON state: Failed to read 'gui_read-only' as boolean.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                        valid = false;
+                    }                    
+                    
+                    // gui_presentation_mode
+                    megamol::core::param::AbstractParam::Presentation gui_presentation_mode;
+                    if (gui_state.at("gui_presentation_mode").is_number_integer()) {
+                        gui_presentation_mode = static_cast<megamol::core::param::AbstractParam::Presentation>(gui_state.at("gui_presentation_mode").get<int>());
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "JSON state: Failed to read 'gui_presentation_mode' as integer.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                        valid = false;
+                    }
+                    
+                    if (valid) {
+                        this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
+                            auto parameter = slot.Parameter();
+                            if (!parameter.IsNull()) {
+                                std::string param_name = std::string(slot.Name().PeekBuffer());
+                                if (json_param_name == param_name) {
+                                    parameter->SetGUIVisible(gui_visibility);
+                                    parameter->SetGUIReadOnly(gui_read_only);
+                                    parameter->SetGUIPresentation(gui_presentation_mode);
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+        }
+        
+        if (!found) {
+            vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }        
+
+    } catch (nlohmann::json::type_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+        //} catch (nlohmann::json::exception& e) {
+        //    vislib::sys::Log::DefaultLog.WriteError(
+        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        //    return false;
+        //} catch (nlohmann::json::parse_error& e) {
+        //    vislib::sys::Log::DefaultLog.WriteError(
+        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        //    return false;
+    } catch (nlohmann::json::invalid_iterator& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::out_of_range& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::other_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return true;
+}
+
+
+bool megamol::gui::GUIWindows::parameter_state_to_json(std::string& json_string) {
+
+    try {
+        
+        if (this->core_instance == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+                
+        const std::string header = "Parameter_GUI_States";                
+        nlohmann::json json;
+        
+        json_string.clear();
+        
+        this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
+            auto parameter = slot.Parameter();
+            if (!parameter.IsNull()) {
+                std::string param_name = std::string(slot.Name().PeekBuffer());
+
+                json[header][param_name]["gui_visibility"] = parameter->IsGUIVisible();
+                json[header][param_name]["gui_read-only"] = parameter->IsGUIReadOnly();
+                json[header][param_name]["gui_presentation_mode"] = static_cast<int>(parameter->GetGUIPresentation());
+            }
+        });
+
+        json_string = json.dump(2); // Dump with indent of 2 spaces and new lines.
+
+    } catch (nlohmann::json::type_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+        //} catch (nlohmann::json::exception& e) {
+        //    vislib::sys::Log::DefaultLog.WriteError(
+        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        //    return false;
+        //} catch (nlohmann::json::parse_error& e) {
+        //    vislib::sys::Log::DefaultLog.WriteError(
+        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        //    return false;
+    } catch (nlohmann::json::invalid_iterator& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::out_of_range& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::other_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return true;
 }

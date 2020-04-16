@@ -10,18 +10,12 @@
 
 
 #include "mmcore/CoreInstance.h"
-#include "mmcore/view//Input.h"
-
-#include "vislib/sys/Log.h"
-
-#include <map>
-#include <math.h> // fmodf
 
 #include "FileUtils.h"
 #include "GraphManager.h"
 #include "WindowManager.h"
 
-// Used for platform independent file drag and drop (ImGui does not support this feature so far)
+// Used for platform independent clipboard (ImGui so far only provides windows implementation)
 #ifdef GUI_USE_GLFW
 #    include "GLFW/glfw3.h"
 #endif

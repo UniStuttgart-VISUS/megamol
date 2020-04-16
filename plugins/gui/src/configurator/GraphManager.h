@@ -17,10 +17,6 @@
 #include "utility/plugins/PluginManager.h"
 
 #include "vislib/UTF8Encoder.h"
-#include "vislib/sys/Log.h"
-
-#include <map>
-#include <vector>
 
 #include "FileUtils.h"
 #include "Graph.h"
