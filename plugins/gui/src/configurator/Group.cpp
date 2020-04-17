@@ -75,7 +75,7 @@ bool megamol::gui::configurator::Group::RemoveModule(ImGuiID module_uid) {
                 // Remove call slots belonging to this module which are part of interface slots of this group.
                 for (auto& callslot_map : (*mod_iter)->GetCallSlots()) {
                     for (auto& callslot_ptr : callslot_map.second) {
-                        this->InterfaceRemoveCallSlot(callslot_ptr->uid);
+                        this->InterfaceSlot_RemoveCallSlot(callslot_ptr->uid);
                     }
                 }
 
@@ -117,7 +117,7 @@ bool megamol::gui::configurator::Group::ContainsModule(ImGuiID module_uid) {
 }
 
 
-bool megamol::gui::configurator::Group::InterfaceAddCallSlot(
+bool megamol::gui::configurator::Group::InterfaceSlot_AddCallSlot(
     const CallSlotPtrType& callslot_ptr, ImGuiID interfaceslot_uid) {
 
     bool successfully_added = false;
@@ -174,27 +174,16 @@ bool megamol::gui::configurator::Group::InterfaceAddCallSlot(
 }
 
 
-bool megamol::gui::configurator::Group::InterfaceRemoveCallSlot(ImGuiID callslots_uid) {
+bool megamol::gui::configurator::Group::InterfaceSlot_RemoveCallSlot(ImGuiID callslots_uid) {
 
     try {
         for (auto& interfaceslot_map : this->interfaceslots) {
-            for (auto iter = interfaceslot_map.second.begin(); iter != interfaceslot_map.second.end(); iter++) {
-                if ((*iter)->ContainsCallSlot(callslots_uid)) {
-                    (*iter)->RemoveCallSlot(callslots_uid);
-
+            for (auto& interfaceslot_ptr : interfaceslot_map.second) {
+                if (interfaceslot_ptr->ContainsCallSlot(callslots_uid)) {
+                    interfaceslot_ptr->RemoveCallSlot(callslots_uid);
                     // Delete empty interface slots
-                    if ((*iter)->IsEmpty()) {
-
-                        if ((*iter).use_count() > 1) {
-                            vislib::sys::Log::DefaultLog.WriteError(
-                                "Unclean deletion. Found %i references pointing to interface slot. [%s, %s, line %d]\n",
-                                (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
-                        }
-
-                        (*iter).reset();
-                        interfaceslot_map.second.erase(iter);
-                        vislib::sys::Log::DefaultLog.WriteInfo(
-                            "Removed interface slot from group '%s'.\n", this->name.c_str());
+                    if (interfaceslot_ptr->IsEmpty()) {
+                       this->DeleteInterfaceSlot(interfaceslot_ptr->uid);
                     }
                     return true;
                 }
@@ -212,7 +201,7 @@ bool megamol::gui::configurator::Group::InterfaceRemoveCallSlot(ImGuiID callslot
 }
 
 
-bool megamol::gui::configurator::Group::InterfaceContainsCallSlot(ImGuiID callslot_uid) {
+bool megamol::gui::configurator::Group::InterfaceSlot_ContainsCallSlot(ImGuiID callslot_uid) {
 
     for (auto& interfaceslots_map : this->interfaceslots) {
         for (auto& interfaceslot_ptr : interfaceslots_map.second) {
@@ -241,6 +230,57 @@ bool megamol::gui::configurator::Group::GetInterfaceSlot(
     return false;
 }
 
+
+bool megamol::gui::configurator::Group::DeleteInterfaceSlot(ImGuiID interfaceslot_uid) {
+    
+    if (interfaceslot_uid != GUI_INVALID_ID) {
+        for (auto& interfaceslot_map : this->interfaceslots) {
+            for (auto iter = interfaceslot_map.second.begin(); iter != interfaceslot_map.second.end(); iter++) {
+                if ((*iter)->uid == interfaceslot_uid) {
+
+                    // Remove all call slots from interface slot
+                    std::vector<ImGuiID> callslots_uids;
+                    for (auto& callslot_ptr : (*iter)->GetCallSlots()) {
+                        callslots_uids.emplace_back(callslot_ptr->uid);
+                    }
+                    for (auto& callslot_uid : callslots_uids) {
+                        (*iter)->RemoveCallSlot(callslot_uid);
+                    }
+    
+                    if ((*iter).use_count() > 1) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "Unclean deletion. Found %i references pointing to interface slot. [%s, %s, line %d]\n",
+                        (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+                    }
+
+                    (*iter).reset();
+                    interfaceslot_map.second.erase(iter);
+                    vislib::sys::Log::DefaultLog.WriteInfo(
+                        "Removed interface slot from group '%s'.\n", this->name.c_str());
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+
+bool megamol::gui::configurator::Group::ContainsInterfaceSlot(ImGuiID interfaceslot_uid) {
+    
+    if (interfaceslot_uid != GUI_INVALID_ID) {
+        for (auto& interfaceslots_map : this->interfaceslots) {
+            for (auto& interfaceslot : interfaceslots_map.second) {
+                if (interfaceslot->uid == interfaceslot_uid) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+    
+    
 
 // GROUP PRESENTATION ####################################################
 

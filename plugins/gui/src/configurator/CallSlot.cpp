@@ -344,7 +344,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                     ImGui::TextUnformatted("Call Slot");
                     ImGui::Separator();
                     bool menu_enabled = (!is_group_interface && (is_parent_module_group_member != GUI_INVALID_ID));
-                    if (ImGui::MenuItem("Add to Group Interface ", nullptr, false, menu_enabled)) {
+                    if (ImGui::MenuItem("Add new Interface Slot ", nullptr, false, menu_enabled)) {
                         state.interact.callslot_add_group_uid.first = inout_callslot.uid;
                         state.interact.callslot_add_group_uid.second = inout_callslot.GetParentModule()->uid;
                     }
@@ -358,23 +358,22 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                 }
                 
                 // Drag & Drop
-                if (!is_group_interface) {
-                    if (ImGui::BeginDragDropTarget()) {
-                        if (ImGui::AcceptDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE) != nullptr) {
-                            state.interact.callslot_dropped_uid = inout_callslot.uid;
-                        }
-                        ImGui::EndDragDropTarget();
+                if (ImGui::BeginDragDropTarget()) {
+                    if (ImGui::AcceptDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE) != nullptr) {
+                        state.interact.callslot_dropped_uid = inout_callslot.uid;
                     }
-                    if (this->selected) {
-                        auto dnd_flags =
-                            ImGuiDragDropFlags_AcceptNoDrawDefaultRect; // | ImGuiDragDropFlags_SourceNoPreviewTooltip;
-                        if (ImGui::BeginDragDropSource(dnd_flags)) {
-                            ImGui::SetDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE, &inout_callslot.uid, sizeof(ImGuiID));
-                            ImGui::TextUnformatted(inout_callslot.name.c_str());
-                            ImGui::EndDragDropSource();
-                        }
+                    ImGui::EndDragDropTarget();
+                }
+                if (this->selected) {
+                    auto dnd_flags =
+                        ImGuiDragDropFlags_AcceptNoDrawDefaultRect; // | ImGuiDragDropFlags_SourceNoPreviewTooltip;
+                    if (ImGui::BeginDragDropSource(dnd_flags)) {
+                        ImGui::SetDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE, &inout_callslot.uid, sizeof(ImGuiID));
+                        ImGui::TextUnformatted(inout_callslot.name.c_str());
+                        ImGui::EndDragDropSource();
                     }
-                }  
+                }
+                
                 // Hover Tooltip
                 if ((state.interact.callslot_hovered_uid == inout_callslot.uid) && !this->label_visible) {
                     this->utils.HoverToolTip(inout_callslot.name, ImGui::GetID(label.c_str()), 0.5f, 5.0f);                    

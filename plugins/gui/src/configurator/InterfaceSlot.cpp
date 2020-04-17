@@ -212,26 +212,18 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
 
                 ImGui::TextUnformatted("Interface Slot");
                 ImGui::Separator();
-                if (ImGui::MenuItem("Remove from Group Interface")) {
-                    state.interact.callslot_remove_group_uid = only_callslot_ptr->uid;
+                if (ImGui::MenuItem("Delete",
+                        std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
+                    std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
                 }
 
                 ImGui::EndPopup();
-            }
-            
-            // Hover Tooltip
-            if (state.interact.interfaceslot_hovered_uid == inout_interfaceslot.uid) {
-                this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);                    
-            }
-            else {
-                this->utils.ResetHoverToolTip();
-            }            
+            }         
                     
             // Drag & Drop
-            /*
             if (ImGui::BeginDragDropTarget()) {
                 if (ImGui::AcceptDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE) != nullptr) {
-                    state.interact.callslot_dropped_uid = only_callslot_ptr->uid;
+                    state.interact.callslot_dropped_uid = inout_interfaceslot.uid;
                 }
                 ImGui::EndDragDropTarget();
             }
@@ -239,12 +231,19 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
                 auto dnd_flags =
                     ImGuiDragDropFlags_AcceptNoDrawDefaultRect; // | ImGuiDragDropFlags_SourceNoPreviewTooltip;
                 if (ImGui::BeginDragDropSource(dnd_flags)) {
-                    ImGui::SetDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE, &only_callslot_ptr->uid, sizeof(ImGuiID));
+                    ImGui::SetDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE, &inout_interfaceslot.uid, sizeof(ImGuiID));
                     ImGui::TextUnformatted(only_callslot_ptr->name.c_str());
                     ImGui::EndDragDropSource();
                 }
+            }     
+            
+            // Hover Tooltip
+            if (state.interact.interfaceslot_hovered_uid == inout_interfaceslot.uid) {
+                this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);                    
             }
-            */            
+            else {
+                this->utils.ResetHoverToolTip();
+            }  
         }
         else if (phase == PresentPhase::RENDERING) {
             
