@@ -144,7 +144,7 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
     , last_active(false)
     , place_at_mouse_pos(false) {
 
-    this->group.member = GUI_INVALID_ID;
+    this->group.uid = GUI_INVALID_ID;
     this->group.visible = false;
     this->group.name = "";
 }
@@ -230,7 +230,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
 
         // Check if module and call slots are visible
         bool visible =
-            (this->group.member == GUI_INVALID_ID) || ((this->group.member != GUI_INVALID_ID) && this->group.visible);
+            (this->group.uid == GUI_INVALID_ID) || ((this->group.uid != GUI_INVALID_ID) && this->group.visible);
         for (auto& callslots_map : inout_module.GetCallSlots()) {
             for (auto& callslot_ptr : callslots_map.second) {
                 callslot_ptr->GUI_SetVisibility(visible);
@@ -329,7 +329,7 @@ void megamol::gui::configurator::Module::Presentation::Present(
                             ImGui::EndMenu();
                         }
                         if (ImGui::MenuItem(
-                                "Remove from Group", nullptr, false, (this->group.member != GUI_INVALID_ID))) {
+                                "Remove from Group", nullptr, false, (this->group.uid != GUI_INVALID_ID))) {
                             state.interact.modules_remove_group_uids.clear();
                             if (this->selected) {
                                 for (auto& module_uid : state.interact.modules_selected_uids) {

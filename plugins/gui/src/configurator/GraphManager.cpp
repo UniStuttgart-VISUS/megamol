@@ -1459,7 +1459,7 @@ std::string megamol::gui::configurator::GraphManager::project_write_confgroupint
 
     std::stringstream conf_group_interface;
 
-    ImGuiID module_group_uid = module_ptr->GUI_GetGroupMembership();
+    ImGuiID module_group_uid = module_ptr->GUI_GetGroupUID();
     if (module_group_uid != GUI_INVALID_ID) {
         bool first = true;
         for (auto& group : graph_ptr->GetGroups()) {

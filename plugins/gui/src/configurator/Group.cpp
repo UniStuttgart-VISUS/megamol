@@ -55,7 +55,7 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
 
     this->modules.emplace_back(module_ptr);
 
-    module_ptr->GUI_SetGroupMembership(this->uid);
+    module_ptr->GUI_SetGroupUID(this->uid);
     module_ptr->GUI_SetGroupVisibility(this->present.ModulesVisible());
     module_ptr->GUI_SetGroupName(this->name);
     this->present.ForceUpdate();
@@ -79,7 +79,7 @@ bool megamol::gui::configurator::Group::RemoveModule(ImGuiID module_uid) {
                     }
                 }
 
-                (*mod_iter)->GUI_SetGroupMembership(GUI_INVALID_ID);
+                (*mod_iter)->GUI_SetGroupUID(GUI_INVALID_ID);
                 (*mod_iter)->GUI_SetGroupVisibility(false);
                 (*mod_iter)->GUI_SetGroupName("");
                 this->present.ForceUpdate();
@@ -138,12 +138,12 @@ bool megamol::gui::configurator::Group::InterfaceSlot_AddCallSlot(
     }
 
     // Only add if parent module is already part of the group.
-    bool parent_module_group_member = false;
+    bool parent_module_group_uid = false;
     if (callslot_ptr->IsParentModuleConnected()) {
         ImGuiID parent_module_uid = callslot_ptr->GetParentModule()->uid;
         for (auto& module_ptr : this->modules) {
             if (parent_module_uid == module_ptr->uid) {
-                parent_module_group_member = true;
+                parent_module_group_uid = true;
             }
         }
     } else {
@@ -152,7 +152,7 @@ bool megamol::gui::configurator::Group::InterfaceSlot_AddCallSlot(
         return false;
     }
 
-    if (parent_module_group_member) {
+    if (parent_module_group_uid) {
         
         this->interfaceslots[callslot_ptr->type].emplace_back(std::make_shared<InterfaceSlot>(interfaceslot_uid));
 

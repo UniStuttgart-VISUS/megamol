@@ -147,12 +147,20 @@ void megamol::gui::configurator::Call::Presentation::Present(
             if (visible) {
 
                 ImVec2 caller_position = callerslot_ptr->GUI_GetPosition();
-                if (callerslot_ptr->GUI_IsGroupInterface()) {
-                    caller_position = callerslot_ptr->GUI_GetGroupInterface()->GUI_GetPosition();
-                }
                 ImVec2 callee_position = calleeslot_ptr->GUI_GetPosition();
-                if (calleeslot_ptr->GUI_IsGroupInterface()) {
-                    callee_position = calleeslot_ptr->GUI_GetGroupInterface()->GUI_GetPosition();
+                bool connect_interface_slot = true;
+                if (callerslot_ptr->IsParentModuleConnected() && calleeslot_ptr->IsParentModuleConnected()) {
+                    if (callerslot_ptr->GetParentModule()->GUI_GetGroupUID() == calleeslot_ptr->GetParentModule()->GUI_GetGroupUID()) {
+                        connect_interface_slot = false;
+                    }
+                }
+                if (connect_interface_slot) {
+                    if (callerslot_ptr->GUI_IsGroupInterface()) {
+                        caller_position = callerslot_ptr->GUI_GetGroupInterface()->GUI_GetPosition();
+                    }
+                    if (calleeslot_ptr->GUI_IsGroupInterface()) {
+                        callee_position = calleeslot_ptr->GUI_GetGroupInterface()->GUI_GetPosition();
+                    }
                 }
                 ImVec2 p1 = caller_position;
                 ImVec2 p2 = callee_position;

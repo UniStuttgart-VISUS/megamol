@@ -282,9 +282,9 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
         ImVec2 slot_position = this->position;
         float radius = GUI_SLOT_RADIUS * state.canvas.zooming;
         bool is_group_interface = (this->group.interfaceslot_ptr != nullptr);
-        ImGuiID is_parent_module_group_member = GUI_INVALID_ID;
+        ImGuiID is_parent_module_group_uid = GUI_INVALID_ID;
         if (inout_callslot.IsParentModuleConnected()) {
-            is_parent_module_group_member = inout_callslot.GetParentModule()->GUI_GetGroupMembership();
+            is_parent_module_group_uid = inout_callslot.GetParentModule()->GUI_GetGroupUID();
         }
         ImVec2 text_pos_left_upper = ImVec2(0.0f, 0.0f);
         if (this->label_visible) {
@@ -343,7 +343,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
 
                     ImGui::TextUnformatted("Call Slot");
                     ImGui::Separator();
-                    bool menu_enabled = (!is_group_interface && (is_parent_module_group_member != GUI_INVALID_ID));
+                    bool menu_enabled = (!is_group_interface && (is_parent_module_group_uid != GUI_INVALID_ID));
                     if (ImGui::MenuItem("Add new Interface Slot ", nullptr, false, menu_enabled)) {
                         state.interact.callslot_add_group_uid.first = inout_callslot.uid;
                         state.interact.callslot_add_group_uid.second = inout_callslot.GetParentModule()->uid;
@@ -388,7 +388,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                 bool hovered = (state.interact.button_hovered_uid == inout_callslot.uid);
                         
                 // Selection
-                if (!is_group_interface && !this->selected && active) {
+                if (!this->selected && active) {
                     state.interact.callslot_selected_uid = inout_callslot.uid;
                     this->selected = true;
                     state.interact.call_selected_uid = GUI_INVALID_ID;
@@ -397,8 +397,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                     state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
                 }
                 // Deselection
-                else if (is_group_interface ||
-                    (this->selected && ((mouse_clicked_anywhere && !hovered) || (state.interact.callslot_selected_uid != inout_callslot.uid)))) {
+                else if ((this->selected && ((mouse_clicked_anywhere && !hovered) || (state.interact.callslot_selected_uid != inout_callslot.uid)))) {
                     this->selected = false;
                     if (state.interact.callslot_selected_uid == inout_callslot.uid) {
                         state.interact.callslot_selected_uid = GUI_INVALID_ID;
@@ -414,50 +413,44 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                 }
                                 
                 // Colors
+                float alpha = (is_group_interface)? (0.6f):(1.0f);
+                
                 ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
-                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, alpha);
                 const ImU32 COLOR_SLOT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-                
-                tmpcol.w = 0.6f;
-                const ImU32 COLOR_SLOT_INTERFACE_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-                
+                                
                 tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive];
-                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-                const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
-                
-                tmpcol.w = 0.6f;
-                const ImU32 COLOR_SLOT_INTERFACE_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);            
-
-                // Color modification
-                ImU32 slot_border_color = COLOR_SLOT_BORDER;
-                ImU32 slot_background_color = COLOR_SLOT_BACKGROUND;
-                ImU32 slot_highlight_color = COLOR_SLOT_BACKGROUND;
-                if (inout_callslot.type == CallSlotType::CALLER) {
-                    slot_highlight_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLER);
-                } else if (inout_callslot.type == CallSlotType::CALLEE) {
-                    slot_highlight_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLEE);
-                }
-                if (!is_group_interface) {
-                    if (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.callslot_compat_ptr, inout_callslot) !=
-                        GUI_INVALID_ID) {
-                        slot_background_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_COMPATIBLE);
-                    }
-                    if (hovered || this->selected) {
-                        slot_background_color = slot_highlight_color;
-                    }
-                } else {
-                    slot_background_color = COLOR_SLOT_INTERFACE_BACKGROUND;
-                    slot_border_color = COLOR_SLOT_INTERFACE_BORDER;
-                }
+                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, alpha);
+                const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);    
 
                 // Draw Slot
+                ImU32 slot_border_color = COLOR_SLOT_BORDER;
+                ImU32 slot_background_color = COLOR_SLOT_BACKGROUND;
+                if (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.callslot_compat_ptr, inout_callslot) !=
+                    GUI_INVALID_ID) {
+                    tmpcol = GUI_COLOR_SLOT_COMPATIBLE;
+                    tmpcol.w = alpha;
+                    slot_background_color = ImGui::ColorConvertFloat4ToU32(tmpcol);
+                }
+                if (hovered || this->selected) {
+                    tmpcol = GUI_COLOR_SLOT_CALLER;
+                    if (inout_callslot.type == CallSlotType::CALLEE) {
+                        tmpcol = GUI_COLOR_SLOT_CALLEE;
+                    }   
+                    tmpcol.w = alpha;
+                    slot_background_color = ImGui::ColorConvertFloat4ToU32(tmpcol);
+                }
                 const float segment_numer = 20.0f;
                 draw_list->AddCircleFilled(slot_position, radius, slot_background_color, segment_numer);
                 draw_list->AddCircle(slot_position, radius, slot_border_color, segment_numer);
 
                 // Text
+                ImU32 slot_text_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLER);
+                if (inout_callslot.type == CallSlotType::CALLEE) {
+                    slot_text_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLEE);
+                }                
                 if (this->label_visible) {
-                    draw_list->AddText(text_pos_left_upper, slot_highlight_color, inout_callslot.name.c_str());
+                    draw_list->AddText(text_pos_left_upper, slot_text_color, inout_callslot.name.c_str());
                 }
             }
             ImGui::PopID();

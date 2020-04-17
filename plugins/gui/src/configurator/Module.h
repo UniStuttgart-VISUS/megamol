@@ -86,13 +86,13 @@ public:
 
     inline bool GUI_IsVisibleInGroup(void) { return this->present.group.visible; }
     inline bool GUI_IsLabelVisible(void) { return this->present.label_visible; }
-    inline ImGuiID GUI_GetGroupMembership(void) { return this->present.group.member; }
+    inline ImGuiID GUI_GetGroupUID(void) { return this->present.group.uid; }
     inline std::string GUI_GetGroupName(void) { return this->present.group.name; }
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     inline ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
 
     inline void GUI_PlaceAtMousePosition(void) { this->present.PlaceAtMousePosition(); }
-    inline void GUI_SetGroupMembership(ImGuiID member) { this->present.group.member = member; }
+    inline void GUI_SetGroupUID(ImGuiID uid) { this->present.group.uid = uid; }
     inline void GUI_SetGroupVisibility(bool visible) { this->present.group.visible = visible; }
     inline void GUI_SetGroupName(const std::string& name) { this->present.group.name = name; }
     inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
@@ -112,7 +112,7 @@ private:
     class Presentation {
     public:
         struct GroupState {
-            ImGuiID member;
+            ImGuiID uid;
             bool visible;
             std::string name;
         };
