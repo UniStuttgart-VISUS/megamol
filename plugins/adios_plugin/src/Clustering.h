@@ -1,23 +1,23 @@
 #pragma once
 
-#include <memory>
-
-#include "mmcore/Module.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "CallADIOSData.h"
+#include "clustering/ann_interface.h"
+
+#include "clustering/DBSCAN2.h"
+
+#include "mmstd_datatools/table/TableDataCall.h"
 
 namespace megamol {
 namespace adios {
 
 class Clustering : public core::Module {
 public:
-    enum Algorithm {
-        DBSCAN
-    };
+    enum Algorithm { DBSCAN };
 
     /** Return module class name */
     static const char* ClassName(void) { return "Clustering"; }
@@ -47,6 +47,24 @@ private:
 
     bool changeAlgCallback(core::param::ParamSlot& p);
 
+    void fillDataVec(stdplugin::datatools::clustering::clusters_t const& clusters, float const* table, size_t num_rows,
+        size_t num_columns) {
+        data_.resize(num_rows * (num_columns + 1));
+        for (size_t row = 0; row < num_rows; ++row) {
+            data_[row * (num_columns + 1)] = clusters[row];
+            for (size_t col = 0; col < num_columns; ++col) {
+                data_[(col + 1) + row * (num_columns + 1)] = table[col + row * num_columns];
+            }
+        }
+    }
+
+    bool isDirty() { return min_pts_slot_.IsDirty() || sigma_slot_.IsDirty(); }
+
+    void resetDirty() {
+        min_pts_slot_.ResetDirty();
+        sigma_slot_.ResetDirty();
+    }
+
     core::CalleeSlot data_out_slot_;
     core::CallerSlot data_in_slot_;
 
@@ -55,7 +73,10 @@ private:
     core::param::ParamSlot min_pts_slot_;
     core::param::ParamSlot sigma_slot_;
 
-    std::shared_ptr<adiosDataMap> data_map_;
+    std::vector<float> data_;
+    std::vector<stdplugin::datatools::table::TableDataCall::ColumnInfo> infos_;
+    size_t out_num_rows_;
+    size_t out_num_cols_;
 
     size_t data_hash_;
 }; // class Clustering

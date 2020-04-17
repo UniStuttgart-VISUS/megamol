@@ -21,6 +21,7 @@
 
 #include "DFT.h"
 #include "SignalPeaks.h"
+#include "Clustering.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -56,6 +57,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::adios::TableToADIOS>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::DFT>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::SignalPeaks>();
+            this->module_descriptions.RegisterAutoDescription<megamol::adios::Clustering>();
 
             // register calls here:
 
