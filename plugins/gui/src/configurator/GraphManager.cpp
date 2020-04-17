@@ -1688,26 +1688,46 @@ void megamol::gui::configurator::GraphManager::Presentation::Present(
             // Catch call drop event and create new call
             if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
                 if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE) && payload->IsDelivery()) {
-                    ImGuiID* dragged_callslot_uid_ptr = (ImGuiID*)payload->Data;
+                    ImGuiID* dragged_slot_uid_ptr = (ImGuiID*)payload->Data;
 
-                    auto drag_callslot_uid = (*dragged_callslot_uid_ptr);
-                    auto drop_callslot_uid = graph->GUI_GetDropCallSlot();
+                    auto drag_slot_uid = (*dragged_slot_uid_ptr);
+                    auto drop_slot_uid = graph->GUI_GetDropSlot();
+                    
                     CallSlotPtrType drag_callslot_ptr;
                     CallSlotPtrType drop_callslot_ptr;
-                    for (auto& mods : graph->GetModules()) {
+                    for (auto& module_ptr : graph->GetModules()) {
                         CallSlotPtrType callslot_ptr;
-                        if (mods->GetCallSlot(drag_callslot_uid, callslot_ptr)) {
-                            /// XXX +Interface
+                        if (module_ptr->GetCallSlot(drag_slot_uid, callslot_ptr)) {
                             drag_callslot_ptr = callslot_ptr;
                         }
-                        if (mods->GetCallSlot(drop_callslot_uid, callslot_ptr)) {
-                            /// XXX +Interface
+                        if (module_ptr->GetCallSlot(drop_slot_uid, callslot_ptr)) {
+
                             drop_callslot_ptr = callslot_ptr;
                         }
                     }
+                    
+                    InterfaceSlotPtrType drag_interfaceslot_ptr;
+                    InterfaceSlotPtrType drop_interfaceslot_ptr;
+                    for (auto& group_ptr : graph->GetGroups()) {
+                        InterfaceSlotPtrType interfaceslot_ptr;
+                        if (group_ptr->GetInterfaceSlot(drag_slot_uid, interfaceslot_ptr)) {
+                            drag_interfaceslot_ptr = interfaceslot_ptr;
+                        }
+                        if (group_ptr->GetInterfaceSlot(drop_slot_uid, interfaceslot_ptr)) {
+                            drop_interfaceslot_ptr = interfaceslot_ptr;
+                        }
+                    }
+                    
+                    // CallSlot -> CallSlot
                     if ((drag_callslot_ptr != nullptr) && (drop_callslot_ptr != nullptr)) {
                         graph->AddCall(inout_graph_manager.calls_stock, drag_callslot_ptr, drop_callslot_ptr);
                     }
+                    // CallSlot -> InterfaceSlot
+                    
+                    // InterfaceSlot -> CallSlot
+                    
+                    // InterfaceSlot -> InterfaceSlot
+                    
                 }
             }
         }

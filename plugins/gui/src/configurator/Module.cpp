@@ -531,6 +531,11 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
                                            ImGuiWindowFlags_NavFlattened;
                         ImGui::BeginChild(
                             "module_parameter_child", ImVec2(child_width, child_height), true, child_flags);
+        
+                        // Close parameter window when clicked outside
+                        if (mouse_clicked_anywhere && !ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+                            this->show_params = false;
+                        }
 
                         for (auto& parameter : inout_module.parameters) {
                             parameter.GUI_Present();

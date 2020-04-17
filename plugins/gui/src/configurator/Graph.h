@@ -65,7 +65,8 @@ public:
 
     inline ImGuiID GUI_GetSelectedGroup(void) const { return this->present.GetSelectedGroup(); }
     inline ImGuiID GUI_GetSelectedCallSlot(void) const { return this->present.GetSelectedCallSlot(); }
-    inline ImGuiID GUI_GetDropCallSlot(void) const { return this->present.GetDropCallSlot(); }
+    inline ImGuiID GUI_GetSelectedInterfaceSlot(void) const { return this->present.GetSelectedInterfaceSlot(); }
+    inline ImGuiID GUI_GetDropSlot(void) const { return this->present.GetDropSlot(); }
     inline bool GUI_GetGroupSave(void) { return this->present.GetGroupSave(); }
     inline bool GUI_GetCanvasHoverd(void) const { return this->present.GetCanvasHoverd(); }
 
@@ -98,7 +99,8 @@ private:
 
         ImGuiID GetSelectedGroup(void) const { return this->graph_state.interact.group_selected_uid; }
         ImGuiID GetSelectedCallSlot(void) const { return this->graph_state.interact.callslot_selected_uid; }
-        ImGuiID GetDropCallSlot(void) const { return this->graph_state.interact.callslot_dropped_uid; }
+        ImGuiID GetSelectedInterfaceSlot(void) const { return this->graph_state.interact.interfaceslot_selected_uid; }
+        ImGuiID GetDropSlot(void) const { return this->graph_state.interact.slot_dropped_uid; }
 
         bool GetModuleLabelVisibility(void) const { return this->show_module_names; }
         bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }

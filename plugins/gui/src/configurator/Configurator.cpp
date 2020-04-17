@@ -423,11 +423,22 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
     if (this->graph_manager.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
         auto callslot_id = graph_ptr->GUI_GetSelectedCallSlot();
         if (callslot_id != GUI_INVALID_ID) {
-            for (auto& mods : graph_ptr->GetModules()) {
+            for (auto& module_ptr : graph_ptr->GetModules()) {
                 CallSlotPtrType callslot_ptr;
-                if (mods->GetCallSlot(callslot_id, callslot_ptr)) {
-                    /// XXX +Interface
+                if (module_ptr->GetCallSlot(callslot_id, callslot_ptr)) {
                     selected_callslot_ptr = callslot_ptr;
+                }
+            }
+        }
+        auto interfaceslot_id = graph_ptr->GUI_GetSelectedInterfaceSlot();
+        if (interfaceslot_id != GUI_INVALID_ID) {
+            for (auto& group_ptr : graph_ptr->GetGroups()) {
+                InterfaceSlotPtrType interfaceslot_ptr;
+                if (group_ptr->GetInterfaceSlot(interfaceslot_id, interfaceslot_ptr)) {
+                    CallSlotPtrType callslot_ptr;
+                    if (interfaceslot_ptr->GetCompatibleCallSlot(callslot_ptr)) {
+                        selected_callslot_ptr = callslot_ptr;
+                    }
                 }
             }
         }

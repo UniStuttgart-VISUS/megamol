@@ -43,16 +43,13 @@ public:
     const ImGuiID uid;
 
     bool AddCallSlot(const CallSlotPtrType& callslot_ptr, const InterfaceSlotPtrType& parent_interfaceslot_ptr);
-
     bool RemoveCallSlot(ImGuiID callslot_uid);
-
     bool ContainsCallSlot(ImGuiID callslot_uid);
-
     bool IsCallSlotCompatible(const CallSlotPtrType& callslot_ptr);
-
+    bool GetCompatibleCallSlot(CallSlotPtrType& out_callslot_ptr);
+    CallSlotPtrVectorType& GetCallSlots(void) { return this->callslots; }    
+    CallSlotType GetType(void);
     bool IsEmpty(void);
-
-    CallSlotPtrVectorType& GetCallSlots(void) { return this->callslots; }
 
     // GUI Presentation -------------------------------------------------------
 

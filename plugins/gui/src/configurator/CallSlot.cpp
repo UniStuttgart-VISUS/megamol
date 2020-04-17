@@ -361,7 +361,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                 // Drag & Drop
                 if (ImGui::BeginDragDropTarget()) {
                     if (ImGui::AcceptDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE) != nullptr) {
-                        state.interact.callslot_dropped_uid = inout_callslot.uid;
+                        state.interact.slot_dropped_uid = inout_callslot.uid;
                     }
                     ImGui::EndDragDropTarget();
                 }
