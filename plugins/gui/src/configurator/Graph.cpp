@@ -702,6 +702,7 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;
     
     this->graph_state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
+    this->graph_state.interact.interfaceslot_hovered_uid = GUI_INVALID_ID;
     
     this->graph_state.interact.modules_selected_uids.clear();
     this->graph_state.interact.module_mainview_uid = GUI_INVALID_ID;
@@ -997,6 +998,8 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 inout_graph.DeleteGroup(this->graph_state.interact.group_selected_uid);
                 // Reset interact state for groups
                 this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;
+                this->graph_state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
+                this->graph_state.interact.interfaceslot_hovered_uid = GUI_INVALID_ID;                
             }
         }
         // Set delete flag if tab was closed
@@ -1473,9 +1476,9 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_cal
             if (mouse_inside_canvas) {
 
                 CallSlotPtrType selected_callslot_ptr;
-                for (auto& mods : inout_graph.GetModules()) {
+                for (auto& module_ptr : inout_graph.GetModules()) {
                     CallSlotPtrType callslot_ptr;
-                    if (mods->GetCallSlot(*selected_callslot_uid_ptr, callslot_ptr)) {
+                    if (module_ptr->GetCallSlot(*selected_callslot_uid_ptr, callslot_ptr)) {
                         /// XXX +Interface
                         selected_callslot_ptr = callslot_ptr;
                     }

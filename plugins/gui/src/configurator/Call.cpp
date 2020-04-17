@@ -195,11 +195,12 @@ void megamol::gui::configurator::Call::Presentation::Present(
                         ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
                     ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
 
+                    std::string label = "call_" + std::to_string(inout_call.uid);
+                        
                     if (phase == PresentPhase::INTERACTION) {
                         
                         // Button
                         ImGui::SetCursorScreenPos(call_rect_min);
-                        std::string label = "call_" + inout_call.class_name + std::to_string(inout_call.uid);
                         ImGui::SetItemAllowOverlap();
                         ImGui::InvisibleButton(label.c_str(), rect_size);
                         ImGui::SetItemAllowOverlap();

@@ -260,7 +260,7 @@ megamol::gui::configurator::Group::Presentation::~Presentation(void) {}
 
 void megamol::gui::configurator::Group::Presentation::Present(
     PresentPhase phase, megamol::gui::configurator::Group& inout_group, GraphItemsStateType& state) {
-/*
+
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -271,8 +271,6 @@ void megamol::gui::configurator::Group::Presentation::Present(
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
-
-    bool popup_rename = false;
 
     try {
         // Update size and position if current values are invalid or in expanded view
@@ -293,155 +291,170 @@ void megamol::gui::configurator::Group::Presentation::Present(
         ImVec2 header_size = ImVec2(group_size.x, ImGui::GetTextLineHeightWithSpacing());
         ImVec2 header_rect_max = group_rect_min + header_size;
 
+        std::string label = "group_" + std::to_string(inout_group.uid);
+            
         ImGui::PushID(inout_group.uid);
 
-        // Button
-        ImGui::SetCursorScreenPos(group_rect_min);
-        std::string label = "group_" + inout_group.name;
-        ImGui::SetItemAllowOverlap();
-        ImGui::InvisibleButton(label.c_str(), header_size);
-        ImGui::SetItemAllowOverlap();
-
-        bool button_active = ImGui::IsItemActive();
-        bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
-        bool button_hovered = (ImGui::IsItemHovered() && (state.interact.callslot_hovered_uid == GUI_INVALID_ID) &&
-                               (state.interact.module_hovered_uid == GUI_INVALID_ID));
-        bool force_selection = false;
-
-        // Automatically delete empty group
-        if (inout_group.GetModules().empty()) {
-            std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-            force_selection = true;
-        }
-
-        // Context menu
-        if (ImGui::BeginPopupContextItem("invisible_button_context")) {
-            force_selection = true;
-
-            ImGui::TextUnformatted("Group");
-            ImGui::Separator();
-            std::string view = "Collapsed View";
-            if (this->collapsed_view) {
-                view = "Expanded View";
+        if (phase == PresentPhase::INTERACTION) {   
+            
+            // Button
+            ImGui::SetCursorScreenPos(group_rect_min);
+            ImGui::SetItemAllowOverlap();
+            ImGui::InvisibleButton(label.c_str(), group_size);
+            ImGui::SetItemAllowOverlap();
+            if (ImGui::IsItemActive()) {
+                state.interact.button_active_uid = inout_group.uid;
             }
-            if (ImGui::MenuItem(view.c_str())) {
-                this->collapsed_view = !this->collapsed_view;
-                for (auto& module_ptr : inout_group.GetModules()) {
-                    module_ptr->GUI_SetGroupVisibility(this->ModulesVisible());
+            if (ImGui::IsItemHovered()) {
+                state.interact.button_hovered_uid = inout_group.uid;
+            }
+
+            // Context menu
+            bool popup_rename = false;        
+            if (ImGui::BeginPopupContextItem("invisible_button_context")) {
+                state.interact.button_active_uid = inout_group.uid;
+
+                ImGui::TextUnformatted("Group");
+                ImGui::Separator();
+                std::string view = "Collapsed View";
+                if (this->collapsed_view) {
+                    view = "Expanded View";
                 }
-                for (auto& interfaceslots_map : inout_group.interfaceslots) {
-                    for (auto& interfaceslot_ptr : interfaceslots_map.second) {
-                        interfaceslot_ptr->GUI_SetGroupView(this->collapsed_view);
+                if (ImGui::MenuItem(view.c_str())) {
+                    this->collapsed_view = !this->collapsed_view;
+                    for (auto& module_ptr : inout_group.GetModules()) {
+                        module_ptr->GUI_SetGroupVisibility(this->ModulesVisible());
                     }
+                    for (auto& interfaceslots_map : inout_group.interfaceslots) {
+                        for (auto& interfaceslot_ptr : interfaceslots_map.second) {
+                            interfaceslot_ptr->GUI_SetGroupView(this->collapsed_view);
+                        }
+                    }
+                    this->UpdatePositionSize(inout_group, state.canvas);
+                }
+                /// XXX Not yet implemented
+                // if (ImGui::MenuItem("Save")) {
+                //    state.interact.group_save = true;
+                //}
+                if (ImGui::MenuItem("Rename")) {
+                    popup_rename = true;
+                }
+                if (ImGui::MenuItem("Delete",
+                        std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
+                    std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+                }
+                ImGui::EndPopup();
+            }
+            
+            // Automatically delete empty group
+            if (inout_group.GetModules().empty()) {
+                std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+                state.interact.button_active_uid = inout_group.uid;
+            } 
+            
+            // Rename pop-up
+            if (this->utils.RenamePopUp("Rename Group", popup_rename, inout_group.name)) {
+                for (auto& module_ptr : inout_group.GetModules()) {
+                    module_ptr->GUI_SetGroupName(inout_group.name);
+                    module_ptr->GUI_Update(state.canvas);
+                }
+                this->UpdatePositionSize(inout_group, state.canvas);
+            }            
+        }
+        else if (phase == PresentPhase::RENDERING) {
+            
+            bool active = (state.interact.button_active_uid == inout_group.uid);
+            bool hovered = (state.interact.button_hovered_uid == inout_group.uid);
+            bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+                        
+            // Reduce activation to header
+            bool mouse_inside_header = false;
+            ImVec2 mouse = ImGui::GetMousePos();
+            if ((mouse.x >= group_rect_min.x) && (mouse.y >= group_rect_min.y) && (mouse.x <= header_rect_max.x) && (mouse.y <= header_rect_max.y)) {
+                mouse_inside_header = true;
+            }
+            if (active && !mouse_inside_header) {
+                active = false;
+            }
+                        
+            // Selection
+            if (!this->selected && active) {
+                state.interact.group_selected_uid = inout_group.uid;
+                this->selected = true;
+                state.interact.callslot_selected_uid = GUI_INVALID_ID;
+                state.interact.modules_selected_uids.clear();
+                state.interact.call_selected_uid = GUI_INVALID_ID;
+                state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;            
+            }
+
+            // Deselection
+            if (this->selected && ((mouse_clicked_anywhere && !hovered) || (state.interact.group_selected_uid != inout_group.uid))) {
+                this->selected = false;
+                state.interact.group_selected_uid = GUI_INVALID_ID;
+            }
+
+            // Dragging
+            if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0) && mouse_inside_header) {
+                ImVec2 tmp_pos;
+                for (auto& mod : inout_group.GetModules()) {
+                    tmp_pos = mod->GUI_GetPosition();
+                    tmp_pos += (ImGui::GetIO().MouseDelta / state.canvas.zooming);
+                    mod->GUI_SetPosition(tmp_pos);
+                    mod->GUI_Update(state.canvas);
                 }
                 this->UpdatePositionSize(inout_group, state.canvas);
             }
-            /// XXX Not yet implemented
-            // if (ImGui::MenuItem("Save")) {
-            //    state.interact.group_save = true;
-            //}
-            if (ImGui::MenuItem("Rename")) {
-                popup_rename = true;
+
+            // Colors
+            ImVec4 tmpcol = style.Colors[ImGuiCol_ScrollbarBg];
+            tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+            const ImU32 COLOR_GROUP_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
+            tmpcol = style.Colors[ImGuiCol_FrameBg];
+            tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+            const ImU32 COLOR_GROUP_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
+            tmpcol = style.Colors[ImGuiCol_ScrollbarGrabHovered];
+            tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+            const ImU32 COLOR_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
+            const ImU32 COLOR_TEXT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
+
+            tmpcol = style.Colors[ImGuiCol_FrameBgHovered];
+            tmpcol.y = 0.75f;
+            const ImU32 COLOR_HEADER = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
+            tmpcol = style.Colors[ImGuiCol_ButtonActive];
+            tmpcol.y = 0.75f;
+            const ImU32 COLOR_HEADER_HIGHLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
+            // Background
+            ImU32 group_bg_color = (this->selected) ? (COLOR_GROUP_HIGHTLIGHT) : (COLOR_GROUP_BACKGROUND);
+            draw_list->AddRectFilled(group_rect_min, group_rect_max, group_bg_color, 0.0f);
+            draw_list->AddRect(group_rect_min, group_rect_max, COLOR_GROUP_BORDER, 0.0f);
+
+            // Draw text
+            float name_width = GUIUtils::TextWidgetWidth(this->name_label);
+            ImVec2 text_pos_left_upper =
+                ImVec2((group_center.x - (name_width / 2.0f)), (group_rect_min.y + (style.ItemSpacing.y / 2.0f)));
+            if (!this->collapsed_view) {
+                text_pos_left_upper =
+                    ImVec2((group_rect_min.x + style.ItemSpacing.x), (group_rect_min.y + (style.ItemSpacing.y / 2.0f)));
             }
-            if (ImGui::MenuItem("Delete",
-                    std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
-                std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-            }
-            ImGui::EndPopup();
+            auto header_color = (this->selected) ? (COLOR_HEADER_HIGHLIGHT) : (COLOR_HEADER);
+            draw_list->AddRectFilled(group_rect_min, header_rect_max, header_color, GUI_RECT_CORNER_RADIUS,
+                (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
+            draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->name_label.c_str());
         }
-
-        // Actually apply selection and deselection one frame delayed
-        if (force_selection || (state.interact.group_selected_uid == inout_group.uid)) {
-            state.interact.group_selected_uid = inout_group.uid;
-            this->selected = true;
-            state.interact.callslot_selected_uid = GUI_INVALID_ID;
-            state.interact.modules_selected_uids.clear();
-            state.interact.call_selected_uid = GUI_INVALID_ID;
-            state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
-        }
-
-        // Selection
-        if (!this->selected && button_active) {
-            state.interact.group_selected_uid = inout_group.uid;
-        }
-
-        // Deselection
-        if (this->selected &&
-            ((mouse_clicked_anywhere && !button_hovered) || (state.interact.group_selected_uid != inout_group.uid))) {
-            this->selected = false;
-            state.interact.group_selected_uid = GUI_INVALID_ID;
-        }
-
-        // Dragging
-        if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
-            ImVec2 tmp_pos;
-            for (auto& mod : inout_group.GetModules()) {
-                tmp_pos = mod->GUI_GetPosition();
-                tmp_pos += (ImGui::GetIO().MouseDelta / state.canvas.zooming);
-                mod->GUI_SetPosition(tmp_pos);
-                mod->GUI_Update(state.canvas);
-            }
-            this->UpdatePositionSize(inout_group, state.canvas);
-        }
-
-        // Colors
-        ImVec4 tmpcol = style.Colors[ImGuiCol_ScrollbarBg];
-        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-        const ImU32 COLOR_GROUP_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-        tmpcol = style.Colors[ImGuiCol_FrameBg];
-        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-        const ImU32 COLOR_GROUP_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-        tmpcol = style.Colors[ImGuiCol_ScrollbarGrabHovered];
-        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-        const ImU32 COLOR_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-        const ImU32 COLOR_TEXT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
-
-        tmpcol = style.Colors[ImGuiCol_FrameBgHovered];
-        tmpcol.y = 0.75f;
-        const ImU32 COLOR_HEADER = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-        tmpcol = style.Colors[ImGuiCol_ButtonActive];
-        tmpcol.y = 0.75f;
-        const ImU32 COLOR_HEADER_HIGHLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-        // Background
-        ImU32 group_bg_color = (this->selected) ? (COLOR_GROUP_HIGHTLIGHT) : (COLOR_GROUP_BACKGROUND);
-        draw_list->AddRectFilled(group_rect_min, group_rect_max, group_bg_color, 0.0f);
-        draw_list->AddRect(group_rect_min, group_rect_max, COLOR_GROUP_BORDER, 0.0f);
-
-        // Draw text
-        float name_width = GUIUtils::TextWidgetWidth(this->name_label);
-        ImVec2 text_pos_left_upper =
-            ImVec2((group_center.x - (name_width / 2.0f)), (group_rect_min.y + (style.ItemSpacing.y / 2.0f)));
-        if (!this->collapsed_view) {
-            text_pos_left_upper =
-                ImVec2((group_rect_min.x + style.ItemSpacing.x), (group_rect_min.y + (style.ItemSpacing.y / 2.0f)));
-        }
-        auto header_color = (this->selected) ? (COLOR_HEADER_HIGHLIGHT) : (COLOR_HEADER);
-        draw_list->AddRectFilled(group_rect_min, header_rect_max, header_color, GUI_RECT_CORNER_RADIUS,
-            (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
-        draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->name_label.c_str());
-
-        // Rename pop-up
-        if (this->utils.RenamePopUp("Rename Group", popup_rename, inout_group.name)) {
-            for (auto& module_ptr : inout_group.GetModules()) {
-                module_ptr->GUI_SetGroupName(inout_group.name);
-                module_ptr->GUI_Update(state.canvas);
-            }
-            this->UpdatePositionSize(inout_group, state.canvas);
-        }
-
-        // Draw interface slots ----------------------------------------------------
+        
+        ImGui::PopID();
+        
+        // INTERFACE SLOTS -----------------------------------------------------
         for (auto& interfaceslots_map : inout_group.GetInterfaceSlots()) {
             for (auto& interfaceslot_ptr : interfaceslots_map.second) {
                 interfaceslot_ptr->GUI_Present(phase, state);
             }
-        }
-
-        ImGui::PopID();
+        }        
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -451,7 +464,6 @@ void megamol::gui::configurator::Group::Presentation::Present(
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
-*/
 }
 
 

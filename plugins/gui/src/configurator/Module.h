@@ -145,7 +145,6 @@ private:
         GUIUtils utils;
         bool selected;
         bool update;
-        bool other_item_hovered;
         bool show_params;
         bool place_at_mouse_pos;
 
