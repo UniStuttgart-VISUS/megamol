@@ -1794,13 +1794,12 @@ void megamol::gui::configurator::GraphManager::Presentation::Present(
                         }
                     }
                     
-                    // CallSlot -> CallSlot
+                    // CallSlot <-> CallSlot
                     if ((drag_callslot_ptr != nullptr) && (drop_callslot_ptr != nullptr)) {
                         graph->AddCall(inout_graph_manager.calls_stock, drag_callslot_ptr, drop_callslot_ptr);
                     }
-                    
                     // InterfaceSlot <-> CallSlot
-                    if (((drag_interfaceslot_ptr != nullptr) && (drop_callslot_ptr != nullptr)) || 
+                    else if (((drag_interfaceslot_ptr != nullptr) && (drop_callslot_ptr != nullptr)) || 
                         ((drag_callslot_ptr != nullptr) && (drop_interfaceslot_ptr != nullptr))) {
                             
                          InterfaceSlotPtrType interface_ptr = (drag_interfaceslot_ptr != nullptr) ? (drag_interfaceslot_ptr) : (drop_interfaceslot_ptr);
@@ -1825,29 +1824,29 @@ void megamol::gui::configurator::GraphManager::Presentation::Present(
                                         if (interface_callslots_ptr->uid != callslot_ptr->uid) {
                                             for (auto& call_ptr : interface_callslots_ptr->GetConnectedCalls()) {
                                                 connect_callslot_ptr = call_ptr->GetCallSlot(compatible_callslot_type);
-                                                break;
                                             }
                                         }
                                     }
                                     if (connect_callslot_ptr != nullptr) {
-                                        graph->AddCall(inout_graph_manager.calls_stock, callslot_ptr, connect_callslot_ptr);
+                                        if (!graph->AddCall(inout_graph_manager.calls_stock, callslot_ptr, connect_callslot_ptr)) {
+                                            interface_ptr->RemoveCallSlot(callslot_ptr->uid);
+                                        }
                                     }
                                 }
                             }
                             else if (interfaceslot_group_uid != callslot_group_uid) {
-                                std::cout << ">>>>> interfaceslot_group_uid != callslot_group_uid" << std::endl;
+                                std::cout << "DEBUG >>>>> InterfaceSlot <-> CallSlot" << std::endl;
                             
+                                /// XXX TODO
                             }
                         }
                     }
-
-                    // InterfaceSlot -> InterfaceSlot
-                    if ((drag_interfaceslot_ptr != nullptr) && (drop_interfaceslot_ptr != nullptr)) {
-
+                    // InterfaceSlot <-> InterfaceSlot
+                    else if ((drag_interfaceslot_ptr != nullptr) && (drop_interfaceslot_ptr != nullptr)) {
+                        std::cout << "DEBUG >>>>> InterfaceSlot -> InterfaceSlot" << std::endl;
                         
+                        /// XXX TODO
                     }
-                    /// XXX TODO
-                    
                 }
             }
         }

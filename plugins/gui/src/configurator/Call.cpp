@@ -86,12 +86,7 @@ bool megamol::gui::configurator::Call::DisconnectCallSlots(void) {
                 // vislib::sys::Log::DefaultLog.WriteWarn(
                 //    "Call slot is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             } else {
-                
-                // Remove call slots from interface slot
-                if (callslot_map.second->GUI_IsGroupInterface()) {
-                    auto interface_ptr = callslot_map.second->GUI_GetGroupInterface();
-                    interface_ptr->RemoveCallSlot(callslot_map.second->uid);
-                }           
+
                 callslot_map.second->DisconnectCall(this->uid, true);
                 callslot_map.second.reset();
             }
@@ -191,8 +186,8 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
                 const ImU32 COLOR_CALL_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
                 if (phase == megamol::gui::PresentPhase::RENDERING) {
-
-                    // Draw Curve
+                    
+                    // Draw Curve                 
                     /// Draw simple line if zooming is too small for nice bezier curves.
                     if (state.canvas.zooming < 0.25f) {
                         draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, GUI_LINE_THICKNESS * state.canvas.zooming);

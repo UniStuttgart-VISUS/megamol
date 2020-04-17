@@ -192,12 +192,24 @@ bool megamol::gui::configurator::Graph::AddCall(
         call_ptr->GUI_SetLabelVisibility(this->present.GetCallLabelVisibility());
 
         if ((callslot_1->type == CallSlotType::CALLER) && (callslot_1->CallsConnected())) {
-            callslot_1->DisconnectCalls();
-            this->delete_disconnected_calls();
+            
+            std::vector<ImGuiID> calls_uids;
+            for (auto& call : callslot_1->GetConnectedCalls()) {
+                calls_uids.emplace_back(call->uid);
+            }
+            for (auto& call_uid : calls_uids) {
+                this->DeleteCall(call_uid);
+            }
         }
         if ((callslot_2->type == CallSlotType::CALLER) && (callslot_2->CallsConnected())) {
-            callslot_2->DisconnectCalls();
-            this->delete_disconnected_calls();
+            
+            std::vector<ImGuiID> calls_uids;
+            for (auto& call : callslot_2->GetConnectedCalls()) {
+                calls_uids.emplace_back(call->uid);
+            }
+            for (auto& call_uid : calls_uids) {
+                this->DeleteCall(call_uid);
+            }
         }
 
         if (call_ptr->ConnectCallSlots(callslot_1, callslot_2) && callslot_1->ConnectCall(call_ptr) &&
@@ -1547,6 +1559,12 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_cal
                 
                 if (found_valid_slot) {
                     ImVec2 p2 = ImGui::GetMousePos();
+                    
+                    if (p2.x < p1.x) {
+                        ImVec2 tmp = p1;
+                        p1 = p2;
+                        p2 = tmp;
+                    }
                     if (glm::length(glm::vec2(p1.x, p1.y) - glm::vec2(p2.x, p2.y)) > GUI_SLOT_RADIUS) {
                         if (type == CallSlotType::CALLEE) {
                             ImVec2 tmp = p1;
