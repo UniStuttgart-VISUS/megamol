@@ -1819,17 +1819,18 @@ void megamol::gui::configurator::GraphManager::Presentation::Present(
                                 if (interface_ptr->AddCallSlot(callslot_ptr, interface_ptr)) {
                                     CallSlotType compatible_callslot_type = (interface_ptr->GetCallSlotType() == CallSlotType::CALLEE) ? (CallSlotType::CALLER): (CallSlotType::CALLEE);
                                     // Add calls to all call slots the call slots of the interface are connected to.
-                                    CallSlotPtrVectorType callslot_vec;
+                                    /// XXX One is sufficient since all call slots are connected to the same call slot.
+                                    CallSlotPtrType connect_callslot_ptr;
                                     for (auto& interface_callslots_ptr : interface_ptr->GetCallSlots()) {
                                         if (interface_callslots_ptr->uid != callslot_ptr->uid) {
                                             for (auto& call_ptr : interface_callslots_ptr->GetConnectedCalls()) {
-                                                auto call_callslot_ptr = call_ptr->GetCallSlot(compatible_callslot_type);
-                                                callslot_vec.emplace_back(call_callslot_ptr);
+                                                connect_callslot_ptr = call_ptr->GetCallSlot(compatible_callslot_type);
+                                                break;
                                             }
                                         }
                                     }
-                                    for (auto vec_callslot_ptr: callslot_vec) {
-                                        graph->AddCall(inout_graph_manager.calls_stock, callslot_ptr, vec_callslot_ptr);
+                                    if (connect_callslot_ptr != nullptr) {
+                                        graph->AddCall(inout_graph_manager.calls_stock, callslot_ptr, connect_callslot_ptr);
                                     }
                                 }
                             }
