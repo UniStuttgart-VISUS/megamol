@@ -153,13 +153,13 @@ bool megamol::gui::configurator::Group::InterfaceSlot_AddCallSlot(
     }
 
     if (parent_module_group_uid) {
-
-        this->interfaceslots[callslot_ptr->type].emplace_back(std::make_shared<InterfaceSlot>(interfaceslot_uid));
-
-        vislib::sys::Log::DefaultLog.WriteInfo("Added interface slot to group '%s'.\n", this->name.c_str());
-
-        InterfaceSlotPtrType interfaceslot_ptr = this->interfaceslots[callslot_ptr->type].back();
-        if (interfaceslot_ptr != nullptr) {
+        
+        InterfaceSlotPtr interfaceslot_ptr = std::make_shared<InterfaceSlot>(interfaceslot_uid);
+        if (interfaceslot_ptr != nullptr) {        
+            interfaceslot_ptr->GUI_SetGroupUID(this->uid);
+            this->interfaceslots[callslot_ptr->type].emplace_back(interfaceslot_ptr);
+            vislib::sys::Log::DefaultLog.WriteInfo("Added interface slot to group '%s'.\n", this->name.c_str()); 
+                
             successfully_added = interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr);
             interfaceslot_ptr->GUI_SetGroupView(this->present.IsViewCollapsed());
         }

@@ -168,7 +168,12 @@ bool megamol::gui::configurator::InterfaceSlot::IsEmpty(void) { return (this->ca
 // GROUP INTERFACE SLOT PRESENTATION ###########################################
 
 megamol::gui::configurator::InterfaceSlot::Presentation::Presentation(void)
-    : group(), position(ImVec2(FLT_MAX, FLT_MAX)), utils(), selected(false) {}
+    : group(), position(ImVec2(FLT_MAX, FLT_MAX)), utils(), selected(false) {
+        
+    this->group.uid = GUI_INVALID_ID;
+    this->group.collapsed_view = false;
+    this->group.collapsed_view = false;
+}
 
 
 megamol::gui::configurator::InterfaceSlot::Presentation::~Presentation(void) {}
