@@ -853,22 +853,21 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 }
             }
         }
+        
+        // Save filename to graph
+        graph_ptr->SetFilename(project_filename);        
 
         // Layout graph if no confPos tags could be detected.
         if (!found_conf_pos) {
             graph_ptr->GUI_SetLayoutGraph();
         }
-        // Save filename to graph
-        graph_ptr->SetFilename(project_filename);
 
-        /// XXX Check for GUIView module(s) and load parameter gui state from "state" parameter
-        std::string guiview_name = "GUIView";
-        std::string stateparam_name = "state";
+        /// XXX Checking for GUIView module(s) and load parameter gui state from their "state" parameter.
         if (graph_ptr != nullptr) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
-                if (module_ptr->class_name == guiview_name) {
+                if (module_ptr->class_name == GUI_MODULE_CLASS_NAME) {
                     for (auto& parameter : module_ptr->parameters) {
-                        if (parameter.GetName() == stateparam_name) {
+                        if (parameter.GetName() == GUI_MODULE_STATE_PARAM_NAME) {
                             std::string state = std::get<std::string>(parameter.GetValue());
                             this->parameters_gui_state_from_json_string(graph_ptr, state);
                         }
@@ -899,6 +898,8 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_uid
     try {
         for (auto& graph : this->graphs) {
             if (graph->uid == graph_uid) {
+                
+                bool stored_parameter_gui_state = false;
 
                 // Some pre-checks
                 bool found_error = false;
@@ -937,11 +938,27 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_uid
                         confInstances << "mmCreateView(\"" << instance_name << "\",\"" << mod->class_name << "\",\""
                                       << mod->FullName() << "\") "
                                       << this->project_write_confpos(mod->GUI_GetPosition()) << " "
-                                      << this->project_write_confgroupinterface(mod, graph) << "\n";
+                                      << this->project_write_confgroupinterface(mod, graph) << "\n"; 
+                        /*
+                        if () {
+                            // Store parameter gui state to guiview state parameter
+                            /// XXX
+                            stored_parameter_gui_state = this->parameters_gui_state_to_json();
+                            - remove previous  gui parameter state from alredy present state
+                        }
+                        */
+                        
+                        
                     } else {
                         confModules << "mmCreateModule(\"" << mod->class_name << "\",\"" << mod->FullName() << "\") "
                                     << this->project_write_confpos(mod->GUI_GetPosition()) << " "
                                     << this->project_write_confgroupinterface(mod, graph) << "\n";
+                                    
+                        /* 
+                         if (!stored_parameter_gui_state && ) {
+                         
+                         }
+                         */
                     }
 
                     for (auto& param_slot : mod->parameters) {
@@ -973,6 +990,17 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_uid
                              confParams.str() + "\n";
                 found_graph = graph;
             }
+            
+            if (found_graph != nullptr) {
+                found_graph->ResetDirty();
+                found_graph->SetFilename(project_filename);
+                return FileUtils::WriteFile(project_filename, projectstr);
+            }           
+            else {
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "Invalid graph uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                return false;
+            }
         }
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -983,19 +1011,7 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_uid
         return false;
     }
 
-    if (found_graph == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "Invalid graph uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    if (found_graph != nullptr) {
-        found_graph->ResetDirty();
-        // Save filename to graph
-        found_graph->SetFilename(project_filename);
-    }
-
-    return FileUtils::WriteFile(project_filename, projectstr);
+    return false;
 }
 
 
@@ -1011,6 +1027,8 @@ bool megamol::gui::configurator::GraphManager::SaveGroupFile(ImGuiID group_uid, 
         vislib::sys::Log::DefaultLog.WriteWarn(
             "Feature is WIP ... coming soon. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
+        
+        //return FileUtils::WriteFile(project_filename, projectstr);
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -1027,7 +1045,7 @@ bool megamol::gui::configurator::GraphManager::SaveGroupFile(ImGuiID group_uid, 
         return false;
     }
 
-    return FileUtils::WriteFile(project_filename, projectstr);
+    return false;
 }
 
 
@@ -1041,7 +1059,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
     mod.callslots.clear();
     mod.callslots.emplace(CallSlotType::CALLER, std::vector<CallSlot::StockCallSlot>());
     mod.callslots.emplace(CallSlotType::CALLEE, std::vector<CallSlot::StockCallSlot>());
-    /// XXX mod.plugin_name is not (yet) available in mod_desc (set from AbstractAssemblyInstance or
+    /// mod.plugin_name is not (yet) available in mod_desc (set from AbstractAssemblyInstance or
     /// AbstractPluginInstance).
 
     if (this->calls_stock.empty()) {
@@ -1052,8 +1070,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
     }
 
     try {
-        // SLOTS ------------------------------------------------------------------
-        // (Following code is adapted from megamol::core::job::job::PluginsStateFileGeneratorJob.cpp)
+        /// Following code is adapted from megamol::core::job::job::PluginsStateFileGeneratorJob.cpp
 
         megamol::core::Module::ptr_type new_mod(mod_desc->CreateModule(nullptr));
         if (new_mod == nullptr) {
@@ -1295,7 +1312,7 @@ bool megamol::gui::configurator::GraphManager::get_call_stock_data(
         for (unsigned int i = 0; i < call_desc->FunctionCount(); ++i) {
             call.functions.emplace_back(call_desc->FunctionName(i));
         }
-        /// XXX call.plugin_name is not (yet) available in call_desc (set from AbstractAssemblyInstance or
+        /// call.plugin_name is not (yet) available in call_desc (set from AbstractAssemblyInstance or
         /// AbstractPluginInstance).
 
     } catch (std::exception e) {
@@ -1313,6 +1330,8 @@ bool megamol::gui::configurator::GraphManager::get_call_stock_data(
 bool megamol::gui::configurator::GraphManager::read_project_command_arguments(
     const std::string& line, size_t arg_count, std::vector<std::string>& out_args) {
 
+    /// Can be used for mmCreateView, mmCreateModule and mmCreateCall lua commands
+    
     // (Leaving current line in original state)
     std::string args_str = line;
     out_args.clear();
@@ -1530,12 +1549,16 @@ bool megamol::gui::configurator::GraphManager::project_separate_name_and_namespa
 bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_string(
     const GraphPtrType& graph_ptr, const std::string& in_json_string) {
 
-    /// Should correspond to megamol::gui::GUIWindows::parameters_gui_state_from_json_string()
+    /// Implementation should be duplicate to megamol::gui::GUIWindows::parameters_gui_state_from_json_string()
 
     try {
         if (graph_ptr == nullptr) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Pointer to graph is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        
+        if (in_json_string.empty()) {
             return false;
         }
 
@@ -1642,6 +1665,59 @@ bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_st
 }
 
 
+bool megamol::gui::configurator::GraphManager::parameters_gui_state_to_json(const GraphPtrType& graph_ptr, nlohmann::json& out_json) {
+
+    /// Implementation should be duplicate to megamol::gui::GUIWindows::parameters_gui_state_to_json()
+    
+    try {
+        if (graph_ptr == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Pointer to graph is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+
+        const std::string header = "GUIState_Parameters";
+        out_json.clear();
+        /*
+        this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
+            auto parameter = slot.Parameter();
+            if (!parameter.IsNull()) {
+                std::string param_name = std::string(slot.Name().PeekBuffer());
+
+                out_json[header][param_name]["gui_visibility"] = parameter->IsGUIVisible();
+                out_json[header][param_name]["gui_read-only"] = parameter->IsGUIReadOnly();
+                out_json[header][param_name]["gui_presentation_mode"] =
+                    static_cast<int>(parameter->GetGUIPresentation());
+            }
+        });
+        */
+
+    } catch (nlohmann::json::type_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::invalid_iterator& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::out_of_range& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::other_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return true;
+}
+
+
 // GRAPH MANAGET PRESENTATION ####################################################
 
 megamol::gui::configurator::GraphManager::Presentation::Presentation(void)
@@ -1685,7 +1761,7 @@ void megamol::gui::configurator::GraphManager::Presentation::Present(
                 state.graph_delete = false;
             }
 
-            // Catch call drop event and create new call
+            // Catch call drop event and create new call(s) ...
             if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
                 if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE) && payload->IsDelivery()) {
                     ImGuiID* dragged_slot_uid_ptr = (ImGuiID*)payload->Data;
@@ -1722,11 +1798,25 @@ void megamol::gui::configurator::GraphManager::Presentation::Present(
                     if ((drag_callslot_ptr != nullptr) && (drop_callslot_ptr != nullptr)) {
                         graph->AddCall(inout_graph_manager.calls_stock, drag_callslot_ptr, drop_callslot_ptr);
                     }
-                    // CallSlot -> InterfaceSlot
-                    
                     // InterfaceSlot -> CallSlot
-                    
+                    if ((drag_interfaceslot_ptr != nullptr) && (drop_callslot_ptr != nullptr)) {
+                        std::cout << "DEBUG >>>> CallSlot -> InterfaceSlot" << std::endl;
+ 
+ 
+                    }
+                    // CallSlot -> InterfaceSlot
+                    if ((drag_callslot_ptr != nullptr) && (drop_interfaceslot_ptr != nullptr)) {
+                        std::cout << "DEBUG >>>> InterfaceSlot -> CallSlot" << std::endl;
+                        
+                        
+                    }
                     // InterfaceSlot -> InterfaceSlot
+                    if ((drag_interfaceslot_ptr != nullptr) && (drop_interfaceslot_ptr != nullptr)) {
+                        std::cout << "DEBUG >>>> InterfaceSlot -> InterfaceSlot" << std::endl;
+                        
+                        
+                    }
+                    /// XXX TODO
                     
                 }
             }

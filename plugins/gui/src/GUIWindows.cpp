@@ -2050,7 +2050,7 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
 
 bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::string& in_json_string) {
 
-    /// Should correspond to megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_string()
+    /// Implementation should be duplicate to megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_string()
 
     try {
         if (this->core_instance == nullptr) {
@@ -2166,6 +2166,8 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
 
 bool megamol::gui::GUIWindows::parameters_gui_state_to_json(nlohmann::json& out_json) {
 
+    /// Implementation should be duplicate to megamol::gui::configurator::GraphManager::parameters_gui_state_to_json()
+    
     try {
         if (this->core_instance == nullptr) {
             vislib::sys::Log::DefaultLog.WriteError(

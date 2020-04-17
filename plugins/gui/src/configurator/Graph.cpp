@@ -752,9 +752,15 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         
         this->graph_state.interact.callslot_compat_ptr.reset();
         bool found_compatible_callslot = false;
-        //  Prioritise hovered slots
+        //  Prioritise hovered slots but only if there is no drag and drop
         bool callslot_hovered = (this->graph_state.interact.callslot_hovered_uid != GUI_INVALID_ID);
         bool interfaceslot_hovered = (this->graph_state.interact.interfaceslot_hovered_uid != GUI_INVALID_ID);
+        if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
+            if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE)) {
+                callslot_hovered = false;
+                interfaceslot_hovered = false;
+            }
+        }
         ImGuiID slot_uid = (callslot_hovered) ? (this->graph_state.interact.callslot_hovered_uid) : 
             ((interfaceslot_hovered) ? (GUI_INVALID_ID) : (this->graph_state.interact.callslot_selected_uid));
         if (slot_uid != GUI_INVALID_ID) {
@@ -1488,10 +1494,13 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_dragged_cal
     if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
         if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE)) {
             ImGuiID* selected_slot_uid_ptr = (ImGuiID*)payload->Data;
+            if (selected_slot_uid_ptr == nullptr) {
+                vislib::sys::Log::DefaultLog.WriteError("Pointer to drag and drop payload data is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                return;
+            }
 
             ImGuiStyle& style = ImGui::GetStyle();
             ImDrawList* draw_list = ImGui::GetWindowDrawList();
-            assert(draw_list != nullptr);
 
             // Color
             const auto COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Button]);

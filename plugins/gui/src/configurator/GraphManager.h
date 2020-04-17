@@ -88,7 +88,6 @@ private:
     bool get_module_stock_data(
         Module::StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
 
-    // Can be used for mmCreateView, mmCreateModule and mmCreateCall lua commands
     bool read_project_command_arguments(const std::string& line, size_t arg_count, std::vector<std::string>& out_args);
     ImVec2 project_read_confpos(const std::string& line);
     std::string project_write_confpos(const ImVec2& pos);
@@ -97,7 +96,8 @@ private:
     bool project_separate_name_and_namespace(const std::string& full_name, std::string& name_space, std::string& name);
 
     bool parameters_gui_state_from_json_string(const GraphPtrType& graph_ptr, const std::string& in_json_string);
-
+    bool parameters_gui_state_to_json(const GraphPtrType& graph_ptr, nlohmann::json& out_json);
+    
     inline const std::string generate_unique_graph_name(void) {
         return ("Project_" + std::to_string(++graph_name_uid));
     }

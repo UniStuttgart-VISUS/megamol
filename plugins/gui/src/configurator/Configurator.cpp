@@ -226,10 +226,10 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
         group_save = selected_graph_ptr->GUI_GetGroupSave();
         group_selected_uid = selected_graph_ptr->GUI_GetSelectedGroup();
     }
-
+    bool popup_save_group_file = group_save;
+    
     bool confirmed, aborted;
     bool popup_save_project_file = false;
-    bool popup_save_group_file = group_save;
     bool popup_load_file = false;
 
     // Hotkeys
@@ -291,6 +291,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                     false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
                 popup_save_project_file = true;
             }
+            /// XXX Not implemented yet
             // Save currently active group to LUA file
             /*
             if (ImGui::MenuItem("Save Group", nullptr, false, (group_selected_uid != GUI_INVALID_ID))) {

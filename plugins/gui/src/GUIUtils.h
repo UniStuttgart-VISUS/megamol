@@ -56,6 +56,9 @@ namespace gui {
 #define GUI_MAX_MULITLINE (7)
 #define GUI_DND_CALLSLOT_UID_TYPE ("DND_CALL")
 #define GUI_GRAPH_BORDER (GUI_SLOT_RADIUS * 4.0f)
+#define GUI_MULTISELECT_MODIFIER (ImGui::GetIO().KeyShift)
+#define GUI_MODULE_CLASS_NAME ("GUIView")
+#define GUI_MODULE_STATE_PARAM_NAME ("state")
 
 // Global Colors
 #define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.0f, 0.0f, 1.0f))
@@ -65,7 +68,6 @@ namespace gui {
 #define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 1.0f, 0.75f, 1.0f))
 #define GUI_COLOR_SLOT_CALLEE (ImVec4(0.75f, 0.0f, 1.0f, 1.0f))
 #define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.75f, 1.0f, 0.25f, 1.0f))
-#define GUI_MULTISELECT_MODIFIER (ImGui::GetIO().KeyShift)
 
 /********** Types **********/
 

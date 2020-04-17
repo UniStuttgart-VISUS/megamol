@@ -502,11 +502,6 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
                         }
                     }
 
-                    // Hover Tooltip
-                    // if (!other_item_hovered && !this->label_visible) {
-                    //    this->utils.HoverToolTip(inout_module.name.c_str(), ImGui::GetID(label.c_str()), 0.5f, 5.0f);
-                    //}
-
                     // Draw Outline
                     float border = ((inout_module.is_view_instance) ? (4.0f) : (1.0f)) * state.canvas.zooming;
                     draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, GUI_RECT_CORNER_RADIUS,
