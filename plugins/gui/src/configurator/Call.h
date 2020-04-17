@@ -94,6 +94,7 @@ private:
 
     private:
         bool selected;
+        GUIUtils utils;
 
     } present;
 };

@@ -1798,22 +1798,51 @@ void megamol::gui::configurator::GraphManager::Presentation::Present(
                     if ((drag_callslot_ptr != nullptr) && (drop_callslot_ptr != nullptr)) {
                         graph->AddCall(inout_graph_manager.calls_stock, drag_callslot_ptr, drop_callslot_ptr);
                     }
-                    // InterfaceSlot -> CallSlot
-                    if ((drag_interfaceslot_ptr != nullptr) && (drop_callslot_ptr != nullptr)) {
-                        std::cout << "DEBUG >>>> CallSlot -> InterfaceSlot" << std::endl;
- 
- 
+                    
+                    // InterfaceSlot <-> CallSlot
+                    if (((drag_interfaceslot_ptr != nullptr) && (drop_callslot_ptr != nullptr)) || 
+                        ((drag_callslot_ptr != nullptr) && (drop_interfaceslot_ptr != nullptr))) {
+                            
+                         InterfaceSlotPtrType interface_ptr = (drag_interfaceslot_ptr != nullptr) ? (drag_interfaceslot_ptr) : (drop_interfaceslot_ptr);
+                         CallSlotPtrType callslot_ptr = (drop_callslot_ptr != nullptr) ? (drop_callslot_ptr) : (drag_callslot_ptr);
+                         
+                        ImGuiID interfaceslot_group_uid = interface_ptr->GUI_GetGroupUID();                         
+                        ImGuiID callslot_group_uid = GUI_INVALID_ID;
+                        if (callslot_ptr->IsParentModuleConnected()) {
+                            callslot_group_uid = callslot_ptr->GetParentModule()->GUI_GetGroupUID();
+                        }
+
+                        // Add call slot to interface slot if they are in the same group and if they are compatible.
+                        if (!callslot_ptr->GUI_IsGroupInterface()) {
+                            
+                            if ((interfaceslot_group_uid == callslot_group_uid) && interface_ptr->IsCallSlotCompatible((*callslot_ptr))) {
+                                if (interface_ptr->AddCallSlot(callslot_ptr, interface_ptr)) {
+                                    CallSlotType compatible_callslot_type = (interface_ptr->GetCallSlotType() == CallSlotType::CALLEE) ? (CallSlotType::CALLER): (CallSlotType::CALLEE);
+                                    // Add calls to all call slots the call slots of the interface are connected to.
+                                    CallSlotPtrVectorType callslot_vec;
+                                    for (auto& interface_callslots_ptr : interface_ptr->GetCallSlots()) {
+                                        if (interface_callslots_ptr->uid != callslot_ptr->uid) {
+                                            for (auto& call_ptr : interface_callslots_ptr->GetConnectedCalls()) {
+                                                auto call_callslot_ptr = call_ptr->GetCallSlot(compatible_callslot_type);
+                                                callslot_vec.emplace_back(call_callslot_ptr);
+                                            }
+                                        }
+                                    }
+                                    for (auto vec_callslot_ptr: callslot_vec) {
+                                        graph->AddCall(inout_graph_manager.calls_stock, callslot_ptr, vec_callslot_ptr);
+                                    }
+                                }
+                            }
+                            else if (interfaceslot_group_uid != callslot_group_uid) {
+                                std::cout << ">>>>> interfaceslot_group_uid != callslot_group_uid" << std::endl;
+                            
+                            }
+                        }
                     }
-                    // CallSlot -> InterfaceSlot
-                    if ((drag_callslot_ptr != nullptr) && (drop_interfaceslot_ptr != nullptr)) {
-                        std::cout << "DEBUG >>>> InterfaceSlot -> CallSlot" << std::endl;
-                        
-                        
-                    }
+
                     // InterfaceSlot -> InterfaceSlot
                     if ((drag_interfaceslot_ptr != nullptr) && (drop_interfaceslot_ptr != nullptr)) {
-                        std::cout << "DEBUG >>>> InterfaceSlot -> InterfaceSlot" << std::endl;
-                        
+
                         
                     }
                     /// XXX TODO

@@ -50,7 +50,7 @@ bool megamol::gui::configurator::InterfaceSlot::AddCallSlot(
             return false;
         }
 
-        if (!(this->ContainsCallSlot(callslot_ptr->uid)) && (this->IsCallSlotCompatible(callslot_ptr))) {
+        if (!(this->ContainsCallSlot(callslot_ptr->uid)) && (this->IsCallSlotCompatible((*callslot_ptr)))) {
             this->callslots.emplace_back(callslot_ptr);
 
             callslot_ptr->GUI_SetGroupInterface(parent_interfaceslot_ptr);
@@ -114,19 +114,13 @@ bool megamol::gui::configurator::InterfaceSlot::ContainsCallSlot(ImGuiID callslo
 }
 
 
-bool megamol::gui::configurator::InterfaceSlot::IsCallSlotCompatible(const CallSlotPtrType& callslot_ptr) {
-
-    if (callslot_ptr == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
+bool megamol::gui::configurator::InterfaceSlot::IsCallSlotCompatible(const CallSlot& callslot) {
 
     // Check for compatibility (with all available call slots...)
     size_t compatible = 0;
-    for (auto& callslot : this->callslots) {
-        if ((callslot_ptr->type == callslot->type) &&
-            (callslot_ptr->compatible_call_idxs == callslot->compatible_call_idxs)) {
+    for (auto& callslot_ptr : this->callslots) {
+        if ((callslot.type == callslot_ptr->type) &&
+            (callslot.compatible_call_idxs == callslot_ptr->compatible_call_idxs)) {
             compatible++;
         }
     }
@@ -152,7 +146,7 @@ bool megamol::gui::configurator::InterfaceSlot::GetCompatibleCallSlot(CallSlotPt
 }
 
 
-CallSlotType megamol::gui::configurator::InterfaceSlot::GetType(void) {
+CallSlotType megamol::gui::configurator::InterfaceSlot::GetCallSlotType(void) {
     
     CallSlotType ret_type = CallSlotType::CALLER;
     if (!this->callslots.empty()) {
@@ -195,12 +189,15 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
 
     try {
         ImVec2 actual_position = this->GetPosition(inout_interfaceslot);
-        CallSlotType type = inout_interfaceslot.GetType();
+        CallSlotType type = inout_interfaceslot.GetCallSlotType();
         float radius = GUI_SLOT_RADIUS * state.canvas.zooming;
         bool compatible = false;
-        CallSlotPtrType callslot_ptr;
-        if (inout_interfaceslot.GetCompatibleCallSlot(callslot_ptr)) {
-            compatible = (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.callslot_compat_ptr, (*callslot_ptr)) != GUI_INVALID_ID);
+        if (state.interact.callslot_compat_ptr != nullptr) {
+            CallSlotPtrType callslot_ptr;
+            if (inout_interfaceslot.GetCompatibleCallSlot(callslot_ptr)) {
+                compatible = (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.callslot_compat_ptr, (*callslot_ptr)) != GUI_INVALID_ID);
+            }
+            compatible = compatible || inout_interfaceslot.IsCallSlotCompatible((*state.interact.callslot_compat_ptr));
         }
         std::string tooltip;
         if (!this->group.collapsed_view) {
@@ -322,7 +319,7 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
 
             // Color modification
             ImU32 slot_highlight_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLER);;
-            if (inout_interfaceslot.GetType() == CallSlotType::CALLEE) {
+            if (inout_interfaceslot.GetCallSlotType() == CallSlotType::CALLEE) {
                 slot_highlight_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLEE);
             }
             ImU32 slot_color = COLOR_INTERFACE_BACKGROUND;

@@ -76,6 +76,7 @@ bool megamol::gui::configurator::CallSlot::DisconnectCall(ImGuiID call_uid, bool
                     if (!called_by_call) {
                         (*call_iter)->DisconnectCallSlots();
                     }
+                    
                     (*call_iter).reset();
                     this->connected_calls.erase(call_iter);
                     return true;
@@ -359,19 +360,21 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                 }
 
                 // Drag & Drop
-                if (ImGui::BeginDragDropTarget()) {
-                    if (ImGui::AcceptDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE) != nullptr) {
-                        state.interact.slot_dropped_uid = inout_callslot.uid;
+                if (!is_group_interface) {
+                    if (ImGui::BeginDragDropTarget()) {
+                        if (ImGui::AcceptDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE) != nullptr) {
+                            state.interact.slot_dropped_uid = inout_callslot.uid;
+                        }
+                        ImGui::EndDragDropTarget();
                     }
-                    ImGui::EndDragDropTarget();
-                }
-                if (this->selected) {
-                    auto dnd_flags =
-                        ImGuiDragDropFlags_AcceptNoDrawDefaultRect; // | ImGuiDragDropFlags_SourceNoPreviewTooltip;
-                    if (ImGui::BeginDragDropSource(dnd_flags)) {
-                        ImGui::SetDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE, &inout_callslot.uid, sizeof(ImGuiID));
-                        ImGui::TextUnformatted(inout_callslot.name.c_str());
-                        ImGui::EndDragDropSource();
+                    if (this->selected) {
+                        auto dnd_flags =
+                            ImGuiDragDropFlags_AcceptNoDrawDefaultRect; // | ImGuiDragDropFlags_SourceNoPreviewTooltip;
+                        if (ImGui::BeginDragDropSource(dnd_flags)) {
+                            ImGui::SetDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE, &inout_callslot.uid, sizeof(ImGuiID));
+                            ImGui::TextUnformatted(inout_callslot.name.c_str());
+                            ImGui::EndDragDropSource();
+                        }
                     }
                 }
 
@@ -426,11 +429,19 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                 // Draw Slot
                 ImU32 slot_border_color = COLOR_SLOT_BORDER;
                 ImU32 slot_background_color = COLOR_SLOT_BACKGROUND;
-                if (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.callslot_compat_ptr, inout_callslot) !=
-                    GUI_INVALID_ID) {
-                    tmpcol = GUI_COLOR_SLOT_COMPATIBLE;
-                    tmpcol.w = alpha;
-                    slot_background_color = ImGui::ColorConvertFloat4ToU32(tmpcol);
+                if (!is_group_interface) {
+                    bool compatible = false;
+                    if (state.interact.callslot_compat_ptr != nullptr) {
+                        compatible = (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.callslot_compat_ptr, inout_callslot) != GUI_INVALID_ID);
+                    }
+                    if (state.interact.interfaceslot_compat_ptr != nullptr) {
+                        compatible = compatible || state.interact.interfaceslot_compat_ptr->IsCallSlotCompatible(inout_callslot);
+                    }
+                    if (compatible) {
+                        tmpcol = GUI_COLOR_SLOT_COMPATIBLE;
+                        tmpcol.w = alpha;
+                        slot_background_color = ImGui::ColorConvertFloat4ToU32(tmpcol);
+                    }
                 }
                 if (hovered || this->selected) {
                     tmpcol = GUI_COLOR_SLOT_CALLER;

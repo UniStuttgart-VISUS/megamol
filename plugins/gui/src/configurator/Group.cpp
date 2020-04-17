@@ -154,7 +154,7 @@ bool megamol::gui::configurator::Group::InterfaceSlot_AddCallSlot(
 
     if (parent_module_group_uid) {
         
-        InterfaceSlotPtr interfaceslot_ptr = std::make_shared<InterfaceSlot>(interfaceslot_uid);
+        InterfaceSlotPtrType interfaceslot_ptr = std::make_shared<InterfaceSlot>(interfaceslot_uid);
         if (interfaceslot_ptr != nullptr) {        
             interfaceslot_ptr->GUI_SetGroupUID(this->uid);
             this->interfaceslots[callslot_ptr->type].emplace_back(interfaceslot_ptr);

@@ -86,7 +86,9 @@ namespace configurator {
 
 // Forward declaration
 class CallSlot;
+class InterfaceSlot;
 typedef std::shared_ptr<megamol::gui::configurator::CallSlot> CallSlotPtrType;
+typedef std::shared_ptr<megamol::gui::configurator::InterfaceSlot> InterfaceSlotPtrType;
 
 } // namespace configurator
 
@@ -125,13 +127,15 @@ typedef struct _interact_state_ {
     UIDPairVectorType modules_add_group_uids;                        // out
     UIDVectorType modules_remove_group_uids;                         // out
     ImGuiID call_selected_uid;                                       // in out
+    ImGuiID call_hovered_uid;                                        // in out
     ImGuiID callslot_selected_uid;                                   // in out
     ImGuiID callslot_hovered_uid;                                    // in out
-    megamol::gui::UIDPairType callslot_add_group_uid;                // in out
-    megamol::gui::configurator::CallSlotPtrType callslot_compat_ptr; // in
+    UIDPairType callslot_add_group_uid;                              // in out
+    configurator::CallSlotPtrType callslot_compat_ptr;               // in
     ImGuiID interfaceslot_selected_uid;                              // in out
     ImGuiID interfaceslot_hovered_uid;                               // in out
-    ImGuiID slot_dropped_uid;                                        // in out    
+    ImGuiID slot_dropped_uid;                                        // in out   
+    configurator::InterfaceSlotPtrType interfaceslot_compat_ptr;     // in
 } GraphItemsInteractType;
 
 /* Data type holding shared state of graph items. */

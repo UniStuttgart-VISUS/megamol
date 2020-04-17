@@ -45,10 +45,10 @@ public:
     bool AddCallSlot(const CallSlotPtrType& callslot_ptr, const InterfaceSlotPtrType& parent_interfaceslot_ptr);
     bool RemoveCallSlot(ImGuiID callslot_uid);
     bool ContainsCallSlot(ImGuiID callslot_uid);
-    bool IsCallSlotCompatible(const CallSlotPtrType& callslot_ptr);
+    bool IsCallSlotCompatible(const CallSlot& callslot);
     bool GetCompatibleCallSlot(CallSlotPtrType& out_callslot_ptr);
     CallSlotPtrVectorType& GetCallSlots(void) { return this->callslots; }    
-    CallSlotType GetType(void);
+    CallSlotType GetCallSlotType(void);
     bool IsEmpty(void);
 
     // GUI Presentation -------------------------------------------------------
