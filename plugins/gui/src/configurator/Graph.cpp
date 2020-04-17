@@ -700,11 +700,13 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     this->graph_state.canvas.offset = ImVec2(0.0f, 0.0f);
         
     this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;
+    this->graph_state.interact.group_hovered_uid = GUI_INVALID_ID;
     
     this->graph_state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
     this->graph_state.interact.interfaceslot_hovered_uid = GUI_INVALID_ID;
     
     this->graph_state.interact.modules_selected_uids.clear();
+    this->graph_state.interact.module_hovered_uid = GUI_INVALID_ID;
     this->graph_state.interact.module_mainview_uid = GUI_INVALID_ID;
     this->graph_state.interact.modules_add_group_uids.clear();
     this->graph_state.interact.modules_remove_group_uids.clear();
@@ -979,6 +981,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 }
                 // Reset interact state for modules and call slots
                 this->graph_state.interact.modules_selected_uids.clear();
+                this->graph_state.interact.module_hovered_uid = GUI_INVALID_ID;                
                 this->graph_state.interact.module_mainview_uid = GUI_INVALID_ID;
                 this->graph_state.interact.modules_add_group_uids.clear();
                 this->graph_state.interact.modules_remove_group_uids.clear();
@@ -998,6 +1001,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 inout_graph.DeleteGroup(this->graph_state.interact.group_selected_uid);
                 // Reset interact state for groups
                 this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;
+                this->graph_state.interact.group_hovered_uid = GUI_INVALID_ID;                
                 this->graph_state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
                 this->graph_state.interact.interfaceslot_hovered_uid = GUI_INVALID_ID;                
             }

@@ -251,6 +251,7 @@ megamol::gui::configurator::Group::Presentation::Presentation(void)
     , utils()
     , name_label()
     , collapsed_view(false)
+    , allow_context(false)
     , selected(false)
     , update(true) {}
 
@@ -290,14 +291,13 @@ void megamol::gui::configurator::Group::Presentation::Present(
         ImVec2 group_center = group_rect_min + ImVec2(group_size.x / 2.0f, group_size.y / 2.0f);
         ImVec2 header_size = ImVec2(group_size.x, ImGui::GetTextLineHeightWithSpacing());
         ImVec2 header_rect_max = group_rect_min + header_size;
-
-        std::string label = "group_" + std::to_string(inout_group.uid);
             
         ImGui::PushID(inout_group.uid);
 
         if (phase == PresentPhase::INTERACTION) {   
             
-            // Button
+            // Header Button
+            std::string label = "group_" + std::to_string(inout_group.uid);
             ImGui::SetCursorScreenPos(group_rect_min);
             ImGui::SetItemAllowOverlap();
             ImGui::InvisibleButton(label.c_str(), group_size);
@@ -308,10 +308,17 @@ void megamol::gui::configurator::Group::Presentation::Present(
             if (ImGui::IsItemHovered()) {
                 state.interact.button_hovered_uid = inout_group.uid;
             }
+                   
+            ImVec2 mouse = ImGui::GetMousePos();
+            if ((state.interact.group_hovered_uid == inout_group.uid) && 
+                    ((mouse.x >= group_rect_min.x) && (mouse.y >= group_rect_min.y) && (mouse.x <= header_rect_max.x) && (mouse.y <= header_rect_max.y))) {
+                this->allow_context = true;
+            }
 
             // Context menu
             bool popup_rename = false;        
-            if (ImGui::BeginPopupContextItem("invisible_button_context")) {
+            if (this->allow_context && ImGui::BeginPopupContextItem("invisible_button_context")) {
+                
                 state.interact.button_active_uid = inout_group.uid;
 
                 ImGui::TextUnformatted("Group");
@@ -345,7 +352,10 @@ void megamol::gui::configurator::Group::Presentation::Present(
                 }
                 ImGui::EndPopup();
             }
-            
+            else {
+                this->allow_context = false;
+            }
+                    
             // Automatically delete empty group
             if (inout_group.GetModules().empty()) {
                 std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
@@ -359,25 +369,34 @@ void megamol::gui::configurator::Group::Presentation::Present(
                     module_ptr->GUI_Update(state.canvas);
                 }
                 this->UpdatePositionSize(inout_group, state.canvas);
-            }            
+            }
         }
         else if (phase == PresentPhase::RENDERING) {
             
             bool active = (state.interact.button_active_uid == inout_group.uid);
             bool hovered = (state.interact.button_hovered_uid == inout_group.uid);
             bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
-                        
-            // Reduce activation to header
+                      
+            // Hovering
+            if (hovered) {
+                state.interact.group_hovered_uid = inout_group.uid;
+            }
+            if (!hovered && (state.interact.group_hovered_uid == inout_group.uid)) {
+                state.interact.group_hovered_uid = GUI_INVALID_ID;
+            }    
+            
+            // Limit activation and hovering to header
             bool mouse_inside_header = false;
             ImVec2 mouse = ImGui::GetMousePos();
             if ((mouse.x >= group_rect_min.x) && (mouse.y >= group_rect_min.y) && (mouse.x <= header_rect_max.x) && (mouse.y <= header_rect_max.y)) {
                 mouse_inside_header = true;
             }
-            if (active && !mouse_inside_header) {
+            if (!mouse_inside_header) {
                 active = false;
+                hovered = false;
             }
-                        
-            // Selection
+            
+            // Selection     
             if (!this->selected && active) {
                 state.interact.group_selected_uid = inout_group.uid;
                 this->selected = true;
@@ -386,15 +405,16 @@ void megamol::gui::configurator::Group::Presentation::Present(
                 state.interact.call_selected_uid = GUI_INVALID_ID;
                 state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;            
             }
-
             // Deselection
-            if (this->selected && ((mouse_clicked_anywhere && !hovered) || (state.interact.group_selected_uid != inout_group.uid))) {
+            else if (this->selected && ((mouse_clicked_anywhere && !hovered) || (active && GUI_MULTISELECT_MODIFIER) || (state.interact.group_selected_uid != inout_group.uid))) {
                 this->selected = false;
-                state.interact.group_selected_uid = GUI_INVALID_ID;
+                if (state.interact.group_selected_uid == inout_group.uid) {
+                    state.interact.group_selected_uid = GUI_INVALID_ID;
+                }
             }
-
+            
             // Dragging
-            if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0) && mouse_inside_header) {
+            if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
                 ImVec2 tmp_pos;
                 for (auto& mod : inout_group.GetModules()) {
                     tmp_pos = mod->GUI_GetPosition();

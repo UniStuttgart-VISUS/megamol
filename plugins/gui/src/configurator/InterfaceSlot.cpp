@@ -218,44 +218,14 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
 
                 ImGui::EndPopup();
             }
-        }
-        else if (phase == PresentPhase::RENDERING) {
-            
-            bool active = (state.interact.button_active_uid == inout_interfaceslot.uid);
-            bool hovered = (state.interact.button_hovered_uid == inout_interfaceslot.uid);
-            bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
-
-            // Selection
-            if (!this->selected && active) {
-                state.interact.interfaceslot_selected_uid = inout_interfaceslot.uid;
-                this->selected = true;
-                state.interact.callslot_selected_uid = GUI_INVALID_ID;
-                state.interact.call_selected_uid = GUI_INVALID_ID;
-                state.interact.modules_selected_uids.clear();
-                state.interact.group_selected_uid = GUI_INVALID_ID;
-            }
-            // Deselection
-            if (this->selected && ((mouse_clicked_anywhere && !hovered) || (state.interact.interfaceslot_selected_uid != inout_interfaceslot.uid))) {
-                this->selected = false;
-                if (state.interact.interfaceslot_selected_uid == inout_interfaceslot.uid) {
-                    state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
-                }
-            }
-
-            // Hovering
-            if (hovered) {
-                state.interact.interfaceslot_hovered_uid = inout_interfaceslot.uid;
-            }
-            if (!hovered && (state.interact.interfaceslot_hovered_uid == inout_interfaceslot.uid)) {
-                state.interact.interfaceslot_hovered_uid = GUI_INVALID_ID;
-            }
             
             // Hover Tooltip
-            if (hovered) {
-                this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
-            } else {
-                this->utils.ResetHoverToolTip();
+            if (state.interact.interfaceslot_hovered_uid == inout_interfaceslot.uid) {
+                this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);                    
             }
+            else {
+                this->utils.ResetHoverToolTip();
+            }            
                     
             // Drag & Drop
             /*
@@ -274,7 +244,38 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
                     ImGui::EndDragDropSource();
                 }
             }
-            */
+            */            
+        }
+        else if (phase == PresentPhase::RENDERING) {
+            
+            bool active = (state.interact.button_active_uid == inout_interfaceslot.uid);
+            bool hovered = (state.interact.button_hovered_uid == inout_interfaceslot.uid);
+            bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+
+            // Selection
+            if (!this->selected && active) {
+                state.interact.interfaceslot_selected_uid = inout_interfaceslot.uid;
+                this->selected = true;
+                state.interact.callslot_selected_uid = GUI_INVALID_ID;
+                state.interact.call_selected_uid = GUI_INVALID_ID;
+                state.interact.modules_selected_uids.clear();
+                state.interact.group_selected_uid = GUI_INVALID_ID;
+            }
+            // Deselection
+            else if (this->selected && ((mouse_clicked_anywhere && !hovered) || (state.interact.interfaceslot_selected_uid != inout_interfaceslot.uid))) {
+                this->selected = false;
+                if (state.interact.interfaceslot_selected_uid == inout_interfaceslot.uid) {
+                    state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
+                }
+            }
+
+            // Hovering
+            if (hovered) {
+                state.interact.interfaceslot_hovered_uid = inout_interfaceslot.uid;
+            }
+            if (!hovered && (state.interact.interfaceslot_hovered_uid == inout_interfaceslot.uid)) {
+                state.interact.interfaceslot_hovered_uid = GUI_INVALID_ID;
+            }
             
             // Colors
             ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];

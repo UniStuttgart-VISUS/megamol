@@ -141,6 +141,7 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
     , selected(false)
     , update(true)
     , show_params(false)
+    , last_active(false)
     , place_at_mouse_pos(false) {
 
     this->group.member = GUI_INVALID_ID;
@@ -162,7 +163,6 @@ void megamol::gui::configurator::Module::Presentation::Present(
     }
 
     ImGuiStyle& style = ImGui::GetStyle();
-    ImGuiIO& io = ImGui::GetIO();
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
@@ -348,26 +348,36 @@ void megamol::gui::configurator::Module::Presentation::Present(
                         ImGui::EndPopup();
                     }
                     
+                    // Hover Tooltip
+                    if ((state.interact.module_hovered_uid == inout_module.uid) && !this->label_visible) {
+                        this->utils.HoverToolTip(inout_module.name, ImGui::GetID(label.c_str()), 0.5f, 5.0f);                    
+                    }
+                    else {
+                        this->utils.ResetHoverToolTip();
+                    }
+                                        
                     // Rename pop-up
                     if (this->utils.RenamePopUp("Rename Project", popup_rename, inout_module.name)) {
                         this->UpdateSize(inout_module, state.canvas);
-                    }                    
+                    } 
                 }
                 else if (phase == PresentPhase::RENDERING) {
                     
-                    bool active = (state.interact.button_active_uid == inout_module.uid);
+                    bool active = ((state.interact.button_active_uid == inout_module.uid) && !this->last_active);
+                    this->last_active = (state.interact.button_active_uid == inout_module.uid);
                     bool hovered = (state.interact.button_hovered_uid == inout_module.uid);
-                    bool multiselect_hotkey = io.KeyShift;
                 
                     // Selection
-                    if (!this->selected && active) {
-                        if (multiselect_hotkey) {
-                            // Multiple Selection
-                            this->add_uid(state.interact.modules_selected_uids, inout_module.uid);
-                        } else {
-                            // Single Selection
-                            state.interact.modules_selected_uids.clear();
-                            state.interact.modules_selected_uids.emplace_back(inout_module.uid);
+                    if (!this->selected && (active || this->found_uid(state.interact.modules_selected_uids, inout_module.uid))) {
+                        if (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
+                            if (GUI_MULTISELECT_MODIFIER) {
+                                // Multiple Selection
+                                this->add_uid(state.interact.modules_selected_uids, inout_module.uid);
+                            } else {
+                                // Single Selection
+                                state.interact.modules_selected_uids.clear();
+                                state.interact.modules_selected_uids.emplace_back(inout_module.uid);
+                            }
                         }
                         this->selected = true;
                         state.interact.callslot_selected_uid = GUI_INVALID_ID;
@@ -375,10 +385,9 @@ void megamol::gui::configurator::Module::Presentation::Present(
                         state.interact.group_selected_uid = GUI_INVALID_ID;
                         state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;                        
                     }
-
                     // Deselection
-                    if (this->selected && 
-                        ((mouse_clicked_anywhere && !hovered) || (active && multiselect_hotkey) || (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid)))) {
+                    else if (this->selected && ((mouse_clicked_anywhere && (state.interact.module_hovered_uid == GUI_INVALID_ID) && !GUI_MULTISELECT_MODIFIER) 
+                            || (active && GUI_MULTISELECT_MODIFIER) || (!this->found_uid(state.interact.modules_selected_uids, inout_module.uid)))) {
                         this->selected = false;                                
                         this->erase_uid(state.interact.modules_selected_uids, inout_module.uid);
                     }
@@ -387,7 +396,15 @@ void megamol::gui::configurator::Module::Presentation::Present(
                     if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
                         this->position += (ImGui::GetIO().MouseDelta / state.canvas.zooming);
                         this->UpdateSize(inout_module, state.canvas);
-                    }                    
+                    }  
+
+                    // Hovering
+                    if (hovered) {
+                        state.interact.module_hovered_uid = inout_module.uid;
+                    }
+                    if (!hovered && (state.interact.module_hovered_uid == inout_module.uid)) {
+                        state.interact.module_hovered_uid = GUI_INVALID_ID;
+                    }                                    
 
                     // Colors
                     ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];

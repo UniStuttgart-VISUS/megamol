@@ -356,45 +356,6 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
 
                     ImGui::EndPopup();
                 }
-            }
-            else if (phase == PresentPhase::RENDERING) {
-
-                bool active = (state.interact.button_active_uid == inout_callslot.uid);
-                bool hovered = (state.interact.button_hovered_uid == inout_callslot.uid);
-                        
-                // Selection
-                if (!is_group_interface && !this->selected && active) {
-                    state.interact.callslot_selected_uid = inout_callslot.uid;
-                    this->selected = true;
-                    state.interact.call_selected_uid = GUI_INVALID_ID;
-                    state.interact.modules_selected_uids.clear();
-                    state.interact.group_selected_uid = GUI_INVALID_ID;
-                    state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
-                }
-                // Deselection
-                if (is_group_interface ||
-                    (this->selected && ((mouse_clicked_anywhere && !hovered) || (state.interact.callslot_selected_uid != inout_callslot.uid)))) {
-                    this->selected = false;
-                    if (state.interact.callslot_selected_uid == inout_callslot.uid) {
-                        state.interact.callslot_selected_uid = GUI_INVALID_ID;
-                    }
-                }
-
-                // Hovering
-                if (hovered) {
-                    state.interact.callslot_hovered_uid = inout_callslot.uid;
-                }
-                if (!hovered && (state.interact.callslot_hovered_uid == inout_callslot.uid)) {
-                    state.interact.callslot_hovered_uid = GUI_INVALID_ID;
-                }
-                
-                // Hover Tooltip
-                if (hovered && !this->label_visible) {
-                    this->utils.HoverToolTip(inout_callslot.name, ImGui::GetID(label.c_str()), 0.5f, 5.0f);                    
-                }
-                else {
-                    this->utils.ResetHoverToolTip();
-                }
                 
                 // Drag & Drop
                 if (!is_group_interface) {
@@ -413,8 +374,46 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                             ImGui::EndDragDropSource();
                         }
                     }
+                }  
+                // Hover Tooltip
+                if ((state.interact.callslot_hovered_uid == inout_callslot.uid) && !this->label_visible) {
+                    this->utils.HoverToolTip(inout_callslot.name, ImGui::GetID(label.c_str()), 0.5f, 5.0f);                    
+                }
+                else {
+                    this->utils.ResetHoverToolTip();
+                }
+            }
+            else if (phase == PresentPhase::RENDERING) {
+
+                bool active = (state.interact.button_active_uid == inout_callslot.uid);
+                bool hovered = (state.interact.button_hovered_uid == inout_callslot.uid);
+                        
+                // Selection
+                if (!is_group_interface && !this->selected && active) {
+                    state.interact.callslot_selected_uid = inout_callslot.uid;
+                    this->selected = true;
+                    state.interact.call_selected_uid = GUI_INVALID_ID;
+                    state.interact.modules_selected_uids.clear();
+                    state.interact.group_selected_uid = GUI_INVALID_ID;
+                    state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
+                }
+                // Deselection
+                else if (is_group_interface ||
+                    (this->selected && ((mouse_clicked_anywhere && !hovered) || (state.interact.callslot_selected_uid != inout_callslot.uid)))) {
+                    this->selected = false;
+                    if (state.interact.callslot_selected_uid == inout_callslot.uid) {
+                        state.interact.callslot_selected_uid = GUI_INVALID_ID;
+                    }
                 }
 
+                // Hovering
+                if (hovered) {
+                    state.interact.callslot_hovered_uid = inout_callslot.uid;
+                }
+                if (!hovered && (state.interact.callslot_hovered_uid == inout_callslot.uid)) {
+                    state.interact.callslot_hovered_uid = GUI_INVALID_ID;
+                }
+                                
                 // Colors
                 ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);

@@ -146,6 +146,7 @@ private:
         bool selected;
         bool update;
         bool show_params;
+        bool last_active;
         bool place_at_mouse_pos;
 
         inline bool found_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {

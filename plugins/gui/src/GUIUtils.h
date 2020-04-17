@@ -65,7 +65,7 @@ namespace gui {
 #define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 1.0f, 0.75f, 1.0f))
 #define GUI_COLOR_SLOT_CALLEE (ImVec4(0.75f, 0.0f, 1.0f, 1.0f))
 #define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.75f, 1.0f, 0.25f, 1.0f))
-
+#define GUI_MULTISELECT_MODIFIER (ImGui::GetIO().KeyShift)
 
 /********** Types **********/
 
@@ -115,8 +115,10 @@ typedef struct _interact_state_ {
     ImGuiID button_active_uid;                                       // in out
     ImGuiID button_hovered_uid;                                      // in out
     ImGuiID group_selected_uid;                                      // in out
+    ImGuiID group_hovered_uid;                                       // in out    
     bool group_save;                                                 // out
     UIDVectorType modules_selected_uids;                             // in out
+    ImGuiID module_hovered_uid;                                      // in out    
     ImGuiID module_mainview_uid;                                     // out
     UIDPairVectorType modules_add_group_uids;                        // out
     UIDVectorType modules_remove_group_uids;                         // out

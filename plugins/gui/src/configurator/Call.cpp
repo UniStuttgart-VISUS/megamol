@@ -247,9 +247,8 @@ void megamol::gui::configurator::Call::Presentation::Present(
                             state.interact.group_selected_uid = GUI_INVALID_ID;
                             state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
                         }
-
                         // Deselection
-                        if (this->selected && ((mouse_clicked_anywhere && !hovered) || (state.interact.call_selected_uid != inout_call.uid))) {
+                        else if (this->selected && ((mouse_clicked_anywhere && !hovered) || (state.interact.call_selected_uid != inout_call.uid))) {
                             this->selected = false;
                             if (state.interact.call_selected_uid == inout_call.uid) {
                                 state.interact.call_selected_uid = GUI_INVALID_ID;

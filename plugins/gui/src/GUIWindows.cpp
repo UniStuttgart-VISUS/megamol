@@ -2061,7 +2061,7 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
             return false;
         }
         
-        const std::string header = "Parameters_GUIState";
+        const std::string header = "GUIState_Parameters";
         
         for (auto& h : json.items()) {
             if (h.key() == header) {
@@ -2157,7 +2157,7 @@ bool megamol::gui::GUIWindows::parameters_gui_state_to_json(nlohmann::json& out_
             return false;
         }
                 
-        const std::string header = "Parameters_GUIState";                
+        const std::string header = "GUIState_Parameters";                
         out_json.clear();
         
         this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
