@@ -47,7 +47,8 @@ public:
     bool ContainsCallSlot(ImGuiID callslot_uid);
     bool IsCallSlotCompatible(const CallSlot& callslot);
     bool GetCompatibleCallSlot(CallSlotPtrType& out_callslot_ptr);
-    CallSlotPtrVectorType& GetCallSlots(void) { return this->callslots; }    
+    CallSlotPtrVectorType& GetCallSlots(void) { return this->callslots; }
+    bool IsConnected(void);
     CallSlotType GetCallSlotType(void);
     bool IsEmpty(void);
 

@@ -1811,14 +1811,13 @@ void megamol::gui::configurator::GraphManager::Presentation::Present(
                             callslot_group_uid = callslot_ptr->GetParentModule()->GUI_GetGroupUID();
                         }
 
-                        // Add call slot to interface slot if they are in the same group and if they are compatible.
                         if (!callslot_ptr->GUI_IsGroupInterface()) {
-                            
+                    
                             if ((interfaceslot_group_uid == callslot_group_uid) && interface_ptr->IsCallSlotCompatible((*callslot_ptr))) {
                                 if (interface_ptr->AddCallSlot(callslot_ptr, interface_ptr)) {
                                     CallSlotType compatible_callslot_type = (interface_ptr->GetCallSlotType() == CallSlotType::CALLEE) ? (CallSlotType::CALLER): (CallSlotType::CALLEE);
                                     // Add calls to all call slots the call slots of the interface are connected to.
-                                    /// XXX One is sufficient since all call slots are connected to the same call slot.
+                                    /// XXX ?! One is sufficient since all call slots are connected to the same call slot.
                                     CallSlotPtrType connect_callslot_ptr;
                                     for (auto& interface_callslots_ptr : interface_ptr->GetCallSlots()) {
                                         if (interface_callslots_ptr->uid != callslot_ptr->uid) {
@@ -1835,17 +1834,25 @@ void megamol::gui::configurator::GraphManager::Presentation::Present(
                                 }
                             }
                             else if (interfaceslot_group_uid != callslot_group_uid) {
-                                std::cout << "DEBUG >>>>> InterfaceSlot <-> CallSlot" << std::endl;
-                            
-                                /// XXX TODO
+                                for (auto& interface_callslots_ptr : interface_ptr->GetCallSlots()) {
+                                    graph->AddCall(inout_graph_manager.calls_stock, callslot_ptr, interface_callslots_ptr);
+                                }
                             }
                         }
                     }
                     // InterfaceSlot <-> InterfaceSlot
                     else if ((drag_interfaceslot_ptr != nullptr) && (drop_interfaceslot_ptr != nullptr)) {
-                        std::cout << "DEBUG >>>>> InterfaceSlot -> InterfaceSlot" << std::endl;
                         
-                        /// XXX TODO
+                        ImGuiID drag_interfaceslot_group_uid = drag_interfaceslot_ptr->GUI_GetGroupUID(); 
+                        ImGuiID drop_interfaceslot_group_uid = drop_interfaceslot_ptr->GUI_GetGroupUID(); 
+                                              
+                        if (drag_interfaceslot_group_uid != drop_interfaceslot_group_uid) {
+                            for (auto& drag_interface_callslots_ptr : drag_interfaceslot_ptr->GetCallSlots()) {
+                                for (auto& drop_interface_callslots_ptr : drop_interfaceslot_ptr->GetCallSlots()) {
+                                    graph->AddCall(inout_graph_manager.calls_stock, drag_interface_callslots_ptr, drop_interface_callslots_ptr);
+                                }
+                            }
+                        }
                     }
                 }
             }

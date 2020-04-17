@@ -49,7 +49,7 @@ bool megamol::gui::configurator::InterfaceSlot::AddCallSlot(
                 "Pointer to interface slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-
+        
         if (!(this->ContainsCallSlot(callslot_ptr->uid)) && (this->IsCallSlotCompatible((*callslot_ptr)))) {
             this->callslots.emplace_back(callslot_ptr);
 
@@ -116,6 +116,13 @@ bool megamol::gui::configurator::InterfaceSlot::ContainsCallSlot(ImGuiID callslo
 
 bool megamol::gui::configurator::InterfaceSlot::IsCallSlotCompatible(const CallSlot& callslot) {
 
+    // Callee interface slots can only have one call slot
+    if (this->callslots.size() > 0) {
+        if ((this->GetCallSlotType() == CallSlotType::CALLEE)) {
+            return false;
+        }    
+    }
+
     // Check for compatibility (with all available call slots...)
     size_t compatible = 0;
     for (auto& callslot_ptr : this->callslots) {
@@ -124,7 +131,6 @@ bool megamol::gui::configurator::InterfaceSlot::IsCallSlotCompatible(const CallS
             compatible++;
         }
     }
-
     bool retval = (compatible == this->callslots.size());
 
     if ((compatible > 0) && (compatible != this->callslots.size())) {
@@ -142,6 +148,17 @@ bool megamol::gui::configurator::InterfaceSlot::GetCompatibleCallSlot(CallSlotPt
         out_callslot_ptr = this->callslots[0];
         return true;
     }   
+    return false;
+}
+
+
+bool megamol::gui::configurator::InterfaceSlot::IsConnected(void) {
+    
+    for (auto& callslot_ptr : this->callslots) {
+        if (callslot_ptr->CallsConnected()) {
+            return true;
+        }
+    }
     return false;
 }
 
@@ -189,7 +206,6 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
 
     try {
         ImVec2 actual_position = this->GetPosition(inout_interfaceslot);
-        CallSlotType type = inout_interfaceslot.GetCallSlotType();
         float radius = GUI_SLOT_RADIUS * state.canvas.zooming;
         bool compatible = false;
         if (state.interact.callslot_compat_ptr != nullptr) {
@@ -238,7 +254,7 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
                 ImGui::TextUnformatted("Interface Slot");
                 ImGui::Separator();
                 if (ImGui::MenuItem("Delete",
-                        std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
+                        std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str(), false, !inout_interfaceslot.IsConnected())) {
                     std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
                 }
 

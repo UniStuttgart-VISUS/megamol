@@ -360,21 +360,19 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                 }
 
                 // Drag & Drop
-                if (!is_group_interface) {
-                    if (ImGui::BeginDragDropTarget()) {
-                        if (ImGui::AcceptDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE) != nullptr) {
-                            state.interact.slot_dropped_uid = inout_callslot.uid;
-                        }
-                        ImGui::EndDragDropTarget();
+                if (ImGui::BeginDragDropTarget()) {
+                    if (ImGui::AcceptDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE) != nullptr) {
+                        state.interact.slot_dropped_uid = inout_callslot.uid;
                     }
-                    if (this->selected) {
-                        auto dnd_flags =
-                            ImGuiDragDropFlags_AcceptNoDrawDefaultRect; // | ImGuiDragDropFlags_SourceNoPreviewTooltip;
-                        if (ImGui::BeginDragDropSource(dnd_flags)) {
-                            ImGui::SetDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE, &inout_callslot.uid, sizeof(ImGuiID));
-                            ImGui::TextUnformatted(inout_callslot.name.c_str());
-                            ImGui::EndDragDropSource();
-                        }
+                    ImGui::EndDragDropTarget();
+                }
+                if (!is_group_interface && this->selected) {
+                    auto dnd_flags =
+                        ImGuiDragDropFlags_AcceptNoDrawDefaultRect; // | ImGuiDragDropFlags_SourceNoPreviewTooltip;
+                    if (ImGui::BeginDragDropSource(dnd_flags)) {
+                        ImGui::SetDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE, &inout_callslot.uid, sizeof(ImGuiID));
+                        ImGui::TextUnformatted(inout_callslot.name.c_str());
+                        ImGui::EndDragDropSource();
                     }
                 }
 

@@ -238,7 +238,7 @@ bool megamol::gui::configurator::Group::DeleteInterfaceSlot(ImGuiID interfaceslo
             for (auto iter = interfaceslot_map.second.begin(); iter != interfaceslot_map.second.end(); iter++) {
                 if ((*iter)->uid == interfaceslot_uid) {
 
-                    // Remove all call slots from interface slot
+                    // Remove all call slots from interface slot  
                     std::vector<ImGuiID> callslots_uids;
                     for (auto& callslot_ptr : (*iter)->GetCallSlots()) {
                         callslots_uids.emplace_back(callslot_ptr->uid);
