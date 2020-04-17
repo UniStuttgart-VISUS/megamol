@@ -119,7 +119,7 @@ public:
 
     // Should be the same as in megamol::core::param::AbstractParam.h line 131
     enum Presentations : size_t { DEFAULT = 0, PIN_VALUE_TO_MOUSE = 1, __COUNT__ = 2 };
-        
+
     struct StockParameter {
         std::string full_name;
         std::string description;
@@ -228,7 +228,9 @@ public:
 
     inline void GUI_SetVisibility(bool visible) { this->present.visible = visible; }
     inline void GUI_SetReadOnly(bool readonly) { this->present.read_only = readonly; }
-    inline void GUI_SetPresentation(Parameter::Presentations presentation) { this->present.presentation = presentation; }
+    inline void GUI_SetPresentation(Parameter::Presentations presentation) {
+        this->present.presentation = presentation;
+    }
     inline void GUI_SetExpert(bool expert) { this->present.expert = expert; }
 
     inline float GUI_GetHeight(void) { return this->present.GetHeight(*this); }
@@ -249,7 +251,6 @@ private:
      */
     class Presentation {
     public:
-
         Presentation(void);
 
         ~Presentation(void);
@@ -264,7 +265,6 @@ private:
         bool expert;
 
     private:
-
         std::string help;
         megamol::gui::GUIUtils utils;
         megamol::gui::FileUtils file_utils;

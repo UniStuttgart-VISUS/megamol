@@ -153,11 +153,11 @@ bool megamol::gui::configurator::Group::InterfaceSlot_AddCallSlot(
     }
 
     if (parent_module_group_uid) {
-        
+
         this->interfaceslots[callslot_ptr->type].emplace_back(std::make_shared<InterfaceSlot>(interfaceslot_uid));
 
         vislib::sys::Log::DefaultLog.WriteInfo("Added interface slot to group '%s'.\n", this->name.c_str());
-        
+
         InterfaceSlotPtrType interfaceslot_ptr = this->interfaceslots[callslot_ptr->type].back();
         if (interfaceslot_ptr != nullptr) {
             successfully_added = interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr);
@@ -165,8 +165,8 @@ bool megamol::gui::configurator::Group::InterfaceSlot_AddCallSlot(
         }
 
     } else {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Parent module of call slot which should be added to group interface is not part of any group. [%s, %s, line %d]\n",
+        vislib::sys::Log::DefaultLog.WriteError("Parent module of call slot which should be added to group interface "
+                                                "is not part of any group. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -183,7 +183,7 @@ bool megamol::gui::configurator::Group::InterfaceSlot_RemoveCallSlot(ImGuiID cal
                     interfaceslot_ptr->RemoveCallSlot(callslots_uid);
                     // Delete empty interface slots
                     if (interfaceslot_ptr->IsEmpty()) {
-                       this->DeleteInterfaceSlot(interfaceslot_ptr->uid);
+                        this->DeleteInterfaceSlot(interfaceslot_ptr->uid);
                     }
                     return true;
                 }
@@ -232,7 +232,7 @@ bool megamol::gui::configurator::Group::GetInterfaceSlot(
 
 
 bool megamol::gui::configurator::Group::DeleteInterfaceSlot(ImGuiID interfaceslot_uid) {
-    
+
     if (interfaceslot_uid != GUI_INVALID_ID) {
         for (auto& interfaceslot_map : this->interfaceslots) {
             for (auto iter = interfaceslot_map.second.begin(); iter != interfaceslot_map.second.end(); iter++) {
@@ -246,11 +246,11 @@ bool megamol::gui::configurator::Group::DeleteInterfaceSlot(ImGuiID interfaceslo
                     for (auto& callslot_uid : callslots_uids) {
                         (*iter)->RemoveCallSlot(callslot_uid);
                     }
-    
+
                     if ((*iter).use_count() > 1) {
-                    vislib::sys::Log::DefaultLog.WriteError(
-                        "Unclean deletion. Found %i references pointing to interface slot. [%s, %s, line %d]\n",
-                        (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "Unclean deletion. Found %i references pointing to interface slot. [%s, %s, line %d]\n",
+                            (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                     }
 
                     (*iter).reset();
@@ -267,7 +267,7 @@ bool megamol::gui::configurator::Group::DeleteInterfaceSlot(ImGuiID interfaceslo
 
 
 bool megamol::gui::configurator::Group::ContainsInterfaceSlot(ImGuiID interfaceslot_uid) {
-    
+
     if (interfaceslot_uid != GUI_INVALID_ID) {
         for (auto& interfaceslots_map : this->interfaceslots) {
             for (auto& interfaceslot : interfaceslots_map.second) {
@@ -279,8 +279,7 @@ bool megamol::gui::configurator::Group::ContainsInterfaceSlot(ImGuiID interfaces
     }
     return false;
 }
-    
-    
+
 
 // GROUP PRESENTATION ####################################################
 
@@ -300,7 +299,7 @@ megamol::gui::configurator::Group::Presentation::~Presentation(void) {}
 
 
 void megamol::gui::configurator::Group::Presentation::Present(
-    PresentPhase phase, megamol::gui::configurator::Group& inout_group, GraphItemsStateType& state) {
+    megamol::gui::PresentPhase phase, megamol::gui::configurator::Group& inout_group, GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -331,11 +330,11 @@ void megamol::gui::configurator::Group::Presentation::Present(
         ImVec2 group_center = group_rect_min + ImVec2(group_size.x / 2.0f, group_size.y / 2.0f);
         ImVec2 header_size = ImVec2(group_size.x, ImGui::GetTextLineHeightWithSpacing());
         ImVec2 header_rect_max = group_rect_min + header_size;
-            
+
         ImGui::PushID(inout_group.uid);
 
-        if (phase == PresentPhase::INTERACTION) {   
-            
+        if (phase == megamol::gui::PresentPhase::INTERACTION) {
+
             // Header Button
             std::string label = "group_" + std::to_string(inout_group.uid);
             ImGui::SetCursorScreenPos(group_rect_min);
@@ -348,17 +347,18 @@ void megamol::gui::configurator::Group::Presentation::Present(
             if (ImGui::IsItemHovered()) {
                 state.interact.button_hovered_uid = inout_group.uid;
             }
-                   
+
             ImVec2 mouse = ImGui::GetMousePos();
-            if ((state.interact.group_hovered_uid == inout_group.uid) && 
-                    ((mouse.x >= group_rect_min.x) && (mouse.y >= group_rect_min.y) && (mouse.x <= header_rect_max.x) && (mouse.y <= header_rect_max.y))) {
+            if ((state.interact.group_hovered_uid == inout_group.uid) &&
+                ((mouse.x >= group_rect_min.x) && (mouse.y >= group_rect_min.y) && (mouse.x <= header_rect_max.x) &&
+                    (mouse.y <= header_rect_max.y))) {
                 this->allow_context = true;
             }
 
             // Context menu
-            bool popup_rename = false;        
+            bool popup_rename = false;
             if (this->allow_context && ImGui::BeginPopupContextItem("invisible_button_context")) {
-                
+
                 state.interact.button_active_uid = inout_group.uid;
 
                 ImGui::TextUnformatted("Group");
@@ -391,17 +391,16 @@ void megamol::gui::configurator::Group::Presentation::Present(
                     std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
                 }
                 ImGui::EndPopup();
-            }
-            else {
+            } else {
                 this->allow_context = false;
             }
-                    
+
             // Automatically delete empty group
             if (inout_group.GetModules().empty()) {
                 std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
                 state.interact.button_active_uid = inout_group.uid;
-            } 
-            
+            }
+
             // Rename pop-up
             if (this->utils.RenamePopUp("Rename Group", popup_rename, inout_group.name)) {
                 for (auto& module_ptr : inout_group.GetModules()) {
@@ -410,49 +409,50 @@ void megamol::gui::configurator::Group::Presentation::Present(
                 }
                 this->UpdatePositionSize(inout_group, state.canvas);
             }
-        }
-        else if (phase == PresentPhase::RENDERING) {
-            
+        } else if (phase == megamol::gui::PresentPhase::RENDERING) {
+
             bool active = (state.interact.button_active_uid == inout_group.uid);
             bool hovered = (state.interact.button_hovered_uid == inout_group.uid);
             bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
-                      
+
             // Hovering
             if (hovered) {
                 state.interact.group_hovered_uid = inout_group.uid;
             }
             if (!hovered && (state.interact.group_hovered_uid == inout_group.uid)) {
                 state.interact.group_hovered_uid = GUI_INVALID_ID;
-            }    
-            
+            }
+
             // Limit activation and hovering to header
             bool mouse_inside_header = false;
             ImVec2 mouse = ImGui::GetMousePos();
-            if ((mouse.x >= group_rect_min.x) && (mouse.y >= group_rect_min.y) && (mouse.x <= header_rect_max.x) && (mouse.y <= header_rect_max.y)) {
+            if ((mouse.x >= group_rect_min.x) && (mouse.y >= group_rect_min.y) && (mouse.x <= header_rect_max.x) &&
+                (mouse.y <= header_rect_max.y)) {
                 mouse_inside_header = true;
             }
             if (!mouse_inside_header) {
                 active = false;
                 hovered = false;
             }
-            
-            // Selection     
+
+            // Selection
             if (!this->selected && active) {
                 state.interact.group_selected_uid = inout_group.uid;
                 this->selected = true;
                 state.interact.callslot_selected_uid = GUI_INVALID_ID;
                 state.interact.modules_selected_uids.clear();
                 state.interact.call_selected_uid = GUI_INVALID_ID;
-                state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;            
+                state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
             }
             // Deselection
-            else if (this->selected && ((mouse_clicked_anywhere && !hovered) || (active && GUI_MULTISELECT_MODIFIER) || (state.interact.group_selected_uid != inout_group.uid))) {
+            else if (this->selected && ((mouse_clicked_anywhere && !hovered) || (active && GUI_MULTISELECT_MODIFIER) ||
+                                           (state.interact.group_selected_uid != inout_group.uid))) {
                 this->selected = false;
                 if (state.interact.group_selected_uid == inout_group.uid) {
                     state.interact.group_selected_uid = GUI_INVALID_ID;
                 }
             }
-            
+
             // Dragging
             if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
                 ImVec2 tmp_pos;
@@ -506,15 +506,15 @@ void megamol::gui::configurator::Group::Presentation::Present(
                 (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
             draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->name_label.c_str());
         }
-        
+
         ImGui::PopID();
-        
+
         // INTERFACE SLOTS -----------------------------------------------------
         for (auto& interfaceslots_map : inout_group.GetInterfaceSlots()) {
             for (auto& interfaceslot_ptr : interfaceslots_map.second) {
                 interfaceslot_ptr->GUI_Present(phase, state);
             }
-        }        
+        }
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(

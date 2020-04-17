@@ -9,7 +9,6 @@
 #include "TransferFunctionEditor.h"
 
 
-
 using namespace megamol;
 using namespace megamol::gui;
 using namespace megamol::core;
@@ -182,7 +181,8 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool us
 
     if (useActiveParameter) {
         if (activeParameter == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteWarn("Missing active parameter to edit. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteWarn(
+                "Missing active parameter to edit. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return;
         }
     }
@@ -190,7 +190,8 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool us
     bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
         tfs, this->nodes, this->mode, this->textureSize, this->range);
     if (!ok) {
-        vislib::sys::Log::DefaultLog.WriteWarn("Could parse transfer function. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "Could parse transfer function. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 

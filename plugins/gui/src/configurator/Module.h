@@ -80,7 +80,9 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    inline void GUI_Present(PresentPhase phase, GraphItemsStateType& state) { this->present.Present(phase, *this, state); }
+    inline void GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
+        this->present.Present(phase, *this, state);
+    }
 
     inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdateSize(*this, in_canvas); }
 
@@ -121,7 +123,7 @@ private:
 
         ~Presentation(void);
 
-        void Present(PresentPhase phase, Module& inout_module, GraphItemsStateType& state);
+        void Present(megamol::gui::PresentPhase phase, Module& inout_module, GraphItemsStateType& state);
 
         void UpdateSize(Module& inout_module, const GraphCanvasType& in_canvas);
 
@@ -131,7 +133,7 @@ private:
 
         void PlaceAtMousePosition(void) { this->place_at_mouse_pos = true; }
         inline void SetPosition(ImVec2 pos) { this->position = pos; }
-        
+
         GroupState group;
         Module::Presentations presentations;
         bool label_visible;

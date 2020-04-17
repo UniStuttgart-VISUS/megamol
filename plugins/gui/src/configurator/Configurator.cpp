@@ -43,10 +43,10 @@ megamol::gui::configurator::Configurator::Configurator()
 
     this->state_param << new core::param::StringParam("");
     this->state_param.Parameter()->SetGUIVisible(false);
-    
+
     this->param_slots.clear();
     this->param_slots.push_back(&this->state_param);
-        
+
     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH] = megamol::gui::HotkeyDataType(
         core::view::KeyCode(core::view::Key::KEY_M, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false);
     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH] = megamol::gui::HotkeyDataType(
@@ -277,7 +277,8 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                     this->add_project_graph_uid = this->graph_state.graph_selected_uid;
                     popup_load_file = true;
                 }
-                if (ImGui::MenuItem("Running", nullptr, false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
+                if (ImGui::MenuItem(
+                        "Running", nullptr, false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
                     this->graph_manager.AddProjectCore(this->graph_state.graph_selected_uid, core_instance);
                     // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
                 }
@@ -286,8 +287,8 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 
             // Save currently active project to LUA file
             if (ImGui::MenuItem("Save Project",
-                    std::get<0>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT]).ToString().c_str(), false,
-                    (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
+                    std::get<0>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT]).ToString().c_str(),
+                    false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
                 popup_save_project_file = true;
             }
             // Save currently active group to LUA file
@@ -401,10 +402,10 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
     if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
         this->utils.SetSearchFocus(true);
     }
-    std::string help_text = "[" +
-                            std::get<0>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]).ToString() +
-                            "] Set keyboard focus to search input field.\n"
-                            "Case insensitive substring search in module names.";
+    std::string help_text =
+        "[" + std::get<0>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]).ToString() +
+        "] Set keyboard focus to search input field.\n"
+        "Case insensitive substring search in module names.";
     this->utils.StringSearch("configurator_module_search", help_text);
     auto search_string = this->utils.GetSearchString();
 
@@ -496,8 +497,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                                     }
                                 }
                             }
-                        }
-                        else if (this->show_module_list_child) {
+                        } else if (this->show_module_list_child) {
                             // Place new module at mouse pos if added via separate module list child window.
                             module_ptr->GUI_PlaceAtMousePosition();
                         }
@@ -553,12 +553,12 @@ void megamol::gui::configurator::Configurator::add_empty_project(void) {
 
 
 void megamol::gui::configurator::Configurator::save_state_to_parameter(void) {
-    
+
     // Save current state of configurator to state parameter
     nlohmann::json configurator_json;
     if (this->configurator_state_to_json(configurator_json)) {
-        std::string state;               
-        state = configurator_json.dump(2); 
+        std::string state;
+        state = configurator_json.dump(2);
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
     }
 }
@@ -574,40 +574,40 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
         json = nlohmann::json::parse(in_json_string);
 
         if (!json.is_object()) {
-            vislib::sys::Log::DefaultLog.WriteError("State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteError(
+                "State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-        
+
         for (auto& h : json.items()) {
             if (h.key() == header) {
                 found = true;
                 auto config_state = h.value();
-                
+
                 // module_list_sidebar
                 if (config_state.at("module_list_sidebar").is_boolean()) {
                     config_state.at("module_list_sidebar").get_to(this->show_module_list_sidebar);
                 } else {
                     vislib::sys::Log::DefaultLog.WriteError(
-                        "JSON state: Failed to read 'module_list_sidebar' as boolean.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                        "JSON state: Failed to read 'module_list_sidebar' as boolean.[%s, %s, line %d]\n", __FILE__,
+                        __FUNCTION__, __LINE__);
                 }
-                                    
+
                 for (auto& w : h.value().items()) {
                     std::string json_param_name = w.key();
                     auto graph_state = w.value();
-                    
 
-                    
+
                     /// TODO
-                    
-                    
                 }
             }
         }
-        
+
         if (!found) {
-            ///vislib::sys::Log::DefaultLog.WriteWarn("Could not find configurator state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find configurator state in JSON. [%s, %s, line %d]\n",
+            /// __FILE__, __FUNCTION__, __LINE__);
             return false;
-        }        
+        }
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -626,7 +626,8 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -637,9 +638,9 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
 bool megamol::gui::configurator::Configurator::configurator_state_to_json(nlohmann::json& out_json) {
 
     try {
-        const std::string header = "Configurator";                       
+        const std::string header = "Configurator";
         out_json.clear();
-        
+
         out_json[header]["module_list_sidebar"] = this->show_module_list_sidebar;
         /*
         for (auto& graph_ptr : this->graph_manager.GetGraphs()) {
@@ -666,7 +667,8 @@ bool megamol::gui::configurator::Configurator::configurator_state_to_json(nlohma
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 

@@ -55,8 +55,10 @@ public:
     CallSlotPtrVectorType& GetCallSlots(void) { return this->callslots; }
 
     // GUI Presentation -------------------------------------------------------
-    
-    inline void GUI_Present(PresentPhase phase, GraphItemsStateType& state) { this->present.Present(phase, *this, state); }
+
+    inline void GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
+        this->present.Present(phase, *this, state);
+    }
 
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(*this); }
 
@@ -79,7 +81,7 @@ private:
 
         ~Presentation(void);
 
-        void Present(PresentPhase phase, InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state);
+        void Present(megamol::gui::PresentPhase phase, InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state);
 
         ImVec2 GetPosition(InterfaceSlot& inout_interfaceslot);
 

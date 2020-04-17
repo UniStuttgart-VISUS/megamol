@@ -59,13 +59,13 @@ public:
      * Return list of parameter slots provided by this class. Make available in module which uses this class.
      */
     inline const std::vector<megamol::core::param::ParamSlot*> GetParams(void) const { return this->param_slots; }
-    
+
 private:
     // VARIABLES --------------------------------------------------------------
 
     std::vector<megamol::core::param::ParamSlot*> param_slots;
     megamol::core::param::ParamSlot state_param;
-    
+
     static std::vector<std::string> dropped_files;
 
     GraphManager graph_manager;
@@ -88,13 +88,13 @@ private:
     void draw_window_module_list(float width);
 
     void add_empty_project(void);
-    
+
     void save_state_to_parameter(void);
-    
+
     bool configurator_state_from_json_string(const std::string& json_string);
-    
-    bool configurator_state_to_json(nlohmann::json& out_json);   
-        
+
+    bool configurator_state_to_json(nlohmann::json& out_json);
+
 #ifdef GUI_USE_GLFW
     /**
      * NB: Successfully testet using Windows10 and (X)Ubuntu with "Nautilus" file browser as drag source of the files.

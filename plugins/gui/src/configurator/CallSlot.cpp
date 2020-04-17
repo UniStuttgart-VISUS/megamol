@@ -9,8 +9,8 @@
 #include "CallSlot.h"
 
 #include "Call.h"
-#include "Module.h"
 #include "InterfaceSlot.h"
+#include "Module.h"
 
 
 using namespace megamol;
@@ -257,8 +257,8 @@ megamol::gui::configurator::CallSlot::Presentation::Presentation(void)
 
 megamol::gui::configurator::CallSlot::Presentation::~Presentation(void) {}
 
-void megamol::gui::configurator::CallSlot::Presentation::Present(
-    PresentPhase phase, megamol::gui::configurator::CallSlot& inout_callslot, megamol::gui::GraphItemsStateType& state) {
+void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase phase,
+    megamol::gui::configurator::CallSlot& inout_callslot, megamol::gui::GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -296,7 +296,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                 text_pos_left_upper.x = slot_position.x + (1.5f * radius);
             }
         }
-        
+
         bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
 
         // Clip call slots if lying ouside the canvas
@@ -311,7 +311,8 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             if (text_pos_left_upper.y < slot_rect_min.y) slot_rect_min.y = text_pos_left_upper.y;
             if (text_pos_left_upper.y > slot_rect_max.y) slot_rect_max.y = text_pos_left_upper.y;
         }
-        if (!((canvas_rect_min.x < (slot_rect_max.x)) && (canvas_rect_max.x > (slot_rect_min.x)) && (canvas_rect_min.y < (slot_rect_max.y)) && (canvas_rect_max.y > (slot_rect_min.y)))) {
+        if (!((canvas_rect_min.x < (slot_rect_max.x)) && (canvas_rect_max.x > (slot_rect_min.x)) &&
+                (canvas_rect_min.y < (slot_rect_max.y)) && (canvas_rect_max.y > (slot_rect_min.y)))) {
             if (mouse_clicked_anywhere) {
                 this->selected = false;
                 if (state.interact.callslot_selected_uid == inout_callslot.uid) {
@@ -320,11 +321,11 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
             }
         } else {
             std::string label = "callslot_" + std::to_string(inout_callslot.uid);
-            
+
             ImGui::PushID(inout_callslot.uid);
 
-            if (phase == PresentPhase::INTERACTION) {
-                
+            if (phase == megamol::gui::PresentPhase::INTERACTION) {
+
                 // Button
                 ImGui::SetCursorScreenPos(slot_position - ImVec2(radius, radius));
                 ImGui::SetItemAllowOverlap();
@@ -356,7 +357,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
 
                     ImGui::EndPopup();
                 }
-                
+
                 // Drag & Drop
                 if (ImGui::BeginDragDropTarget()) {
                     if (ImGui::AcceptDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE) != nullptr) {
@@ -373,20 +374,18 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                         ImGui::EndDragDropSource();
                     }
                 }
-                
+
                 // Hover Tooltip
                 if ((state.interact.callslot_hovered_uid == inout_callslot.uid) && !this->label_visible) {
-                    this->utils.HoverToolTip(inout_callslot.name, ImGui::GetID(label.c_str()), 0.5f, 5.0f);                    
-                }
-                else {
+                    this->utils.HoverToolTip(inout_callslot.name, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
+                } else {
                     this->utils.ResetHoverToolTip();
                 }
-            }
-            else if (phase == PresentPhase::RENDERING) {
+            } else if (phase == megamol::gui::PresentPhase::RENDERING) {
 
                 bool active = (state.interact.button_active_uid == inout_callslot.uid);
                 bool hovered = (state.interact.button_hovered_uid == inout_callslot.uid);
-                        
+
                 // Selection
                 if (!this->selected && active) {
                     state.interact.callslot_selected_uid = inout_callslot.uid;
@@ -397,7 +396,8 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                     state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
                 }
                 // Deselection
-                else if ((this->selected && ((mouse_clicked_anywhere && !hovered) || (state.interact.callslot_selected_uid != inout_callslot.uid)))) {
+                else if ((this->selected && ((mouse_clicked_anywhere && !hovered) ||
+                                                (state.interact.callslot_selected_uid != inout_callslot.uid)))) {
                     this->selected = false;
                     if (state.interact.callslot_selected_uid == inout_callslot.uid) {
                         state.interact.callslot_selected_uid = GUI_INVALID_ID;
@@ -411,17 +411,17 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                 if (!hovered && (state.interact.callslot_hovered_uid == inout_callslot.uid)) {
                     state.interact.callslot_hovered_uid = GUI_INVALID_ID;
                 }
-                                
+
                 // Colors
-                float alpha = (is_group_interface)? (0.6f):(1.0f);
-                
+                float alpha = (is_group_interface) ? (0.6f) : (1.0f);
+
                 ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, alpha);
                 const ImU32 COLOR_SLOT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-                                
+
                 tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, alpha);
-                const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);    
+                const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
                 // Draw Slot
                 ImU32 slot_border_color = COLOR_SLOT_BORDER;
@@ -436,7 +436,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                     tmpcol = GUI_COLOR_SLOT_CALLER;
                     if (inout_callslot.type == CallSlotType::CALLEE) {
                         tmpcol = GUI_COLOR_SLOT_CALLEE;
-                    }   
+                    }
                     tmpcol.w = alpha;
                     slot_background_color = ImGui::ColorConvertFloat4ToU32(tmpcol);
                 }
@@ -448,7 +448,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(
                 ImU32 slot_text_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLER);
                 if (inout_callslot.type == CallSlotType::CALLEE) {
                     slot_text_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLEE);
-                }                
+                }
                 if (this->label_visible) {
                     draw_list->AddText(text_pos_left_upper, slot_text_color, inout_callslot.name.c_str());
                 }

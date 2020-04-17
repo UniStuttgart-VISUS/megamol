@@ -9,8 +9,8 @@
 #define MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED
 
 
-#include "GUIUtils.h"
 #include "ColorPalettes.h"
+#include "GUIUtils.h"
 
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/view/TransferFunction.h"

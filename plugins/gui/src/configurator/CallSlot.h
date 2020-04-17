@@ -82,7 +82,9 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    inline void GUI_Present(PresentPhase phase, GraphItemsStateType& state) { this->present.Present(phase, *this, state); }
+    inline void GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
+        this->present.Present(phase, *this, state);
+    }
 
     inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
 
@@ -116,7 +118,7 @@ private:
 
         ~Presentation(void);
 
-        void Present(PresentPhase phase, CallSlot& inout_callslot, GraphItemsStateType& state);
+        void Present(megamol::gui::PresentPhase phase, CallSlot& inout_callslot, GraphItemsStateType& state);
 
         void UpdatePosition(CallSlot& inout_callslot, const GraphCanvasType& in_canvas);
 

@@ -68,7 +68,9 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    inline void GUI_Present(PresentPhase phase, GraphItemsStateType& state) { this->present.Present(phase, *this, state); }
+    inline void GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
+        this->present.Present(phase, *this, state);
+    }
 
     inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
     inline void GUI_SetPresentation(Call::Presentations present) { this->present.presentations = present; }
@@ -85,7 +87,7 @@ private:
 
         ~Presentation(void);
 
-        void Present(PresentPhase phase, Call& inout_call, GraphItemsStateType& state);
+        void Present(megamol::gui::PresentPhase phase, Call& inout_call, GraphItemsStateType& state);
 
         Call::Presentations presentations;
         bool label_visible;

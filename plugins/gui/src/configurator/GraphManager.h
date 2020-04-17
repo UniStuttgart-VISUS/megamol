@@ -36,7 +36,7 @@ public:
     bool DeleteGraph(ImGuiID graph_uid);
     bool GetGraph(ImGuiID graph_uid, GraphPtrType& out_graph_ptr);
     const GraphsType& GetGraphs(void) { return this->graphs; }
-    
+
     bool UpdateModulesCallsStock(const megamol::core::CoreInstance* core_instance);
     inline const ModuleStockVectorType& GetModulesStock(void) { return this->modules_stock; }
     inline const CallStockVectorType& GetCallsStock(void) { return this->calls_stock; }
@@ -97,7 +97,7 @@ private:
     bool project_separate_name_and_namespace(const std::string& full_name, std::string& name_space, std::string& name);
 
     bool parameters_gui_state_from_json_string(const GraphPtrType& graph_ptr, const std::string& in_json_string);
-    
+
     inline const std::string generate_unique_graph_name(void) {
         return ("Project_" + std::to_string(++graph_name_uid));
     }

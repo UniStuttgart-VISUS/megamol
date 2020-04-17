@@ -153,8 +153,8 @@ megamol::gui::configurator::InterfaceSlot::Presentation::Presentation(void)
 megamol::gui::configurator::InterfaceSlot::Presentation::~Presentation(void) {}
 
 
-void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
-    PresentPhase phase, megamol::gui::configurator::InterfaceSlot& inout_interfaceslot, megamol::gui::GraphItemsStateType& state) {
+void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPhase phase,
+    megamol::gui::configurator::InterfaceSlot& inout_interfaceslot, megamol::gui::GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -187,12 +187,12 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
                 tooltip += (callslot_ptr->name + "\n");
             }
         }
-        
+
         std::string label = "interfaceslot_" + std::to_string(inout_interfaceslot.uid);
-                    
+
         ImGui::PushID(inout_interfaceslot.uid);
-                
-        if (phase == PresentPhase::INTERACTION) {        
+
+        if (phase == megamol::gui::PresentPhase::INTERACTION) {
 
             // Button
             ImGui::SetCursorScreenPos(actual_position - ImVec2(radius, radius));
@@ -218,8 +218,8 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
                 }
 
                 ImGui::EndPopup();
-            }         
-                    
+            }
+
             // Drag & Drop
             if (ImGui::BeginDragDropTarget()) {
                 if (ImGui::AcceptDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE) != nullptr) {
@@ -235,18 +235,16 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
                     ImGui::TextUnformatted(only_callslot_ptr->name.c_str());
                     ImGui::EndDragDropSource();
                 }
-            }     
-            
+            }
+
             // Hover Tooltip
             if (state.interact.interfaceslot_hovered_uid == inout_interfaceslot.uid) {
-                this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);                    
-            }
-            else {
+                this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
+            } else {
                 this->utils.ResetHoverToolTip();
-            }  
-        }
-        else if (phase == PresentPhase::RENDERING) {
-            
+            }
+        } else if (phase == megamol::gui::PresentPhase::RENDERING) {
+
             bool active = (state.interact.button_active_uid == inout_interfaceslot.uid);
             bool hovered = (state.interact.button_hovered_uid == inout_interfaceslot.uid);
             bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
@@ -261,7 +259,8 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
                 state.interact.group_selected_uid = GUI_INVALID_ID;
             }
             // Deselection
-            else if (this->selected && ((mouse_clicked_anywhere && !hovered) || (state.interact.interfaceslot_selected_uid != inout_interfaceslot.uid))) {
+            else if (this->selected && ((mouse_clicked_anywhere && !hovered) ||
+                                           (state.interact.interfaceslot_selected_uid != inout_interfaceslot.uid))) {
                 this->selected = false;
                 if (state.interact.interfaceslot_selected_uid == inout_interfaceslot.uid) {
                     state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
@@ -275,7 +274,7 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(
             if (!hovered && (state.interact.interfaceslot_hovered_uid == inout_interfaceslot.uid)) {
                 state.interact.interfaceslot_hovered_uid = GUI_INVALID_ID;
             }
-            
+
             // Colors
             ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);

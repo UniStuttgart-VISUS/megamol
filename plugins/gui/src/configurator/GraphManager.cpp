@@ -302,16 +302,17 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
                     std::string param_full_name = std::string(param_slot->Name().PeekBuffer());
                     for (auto& parameter : graph_module->parameters) {
                         if (parameter.full_name == param_full_name) {
-                            
+
                             // Set gui state of parameter
                             auto parameter_ptr = param_slot->Parameter();
                             if (parameter_ptr != nullptr) {
                                 parameter.GUI_SetVisibility(parameter_ptr->IsGUIVisible());
                                 parameter.GUI_SetReadOnly(parameter_ptr->IsGUIReadOnly());
                                 auto core_param_presentation = static_cast<size_t>(parameter_ptr->GetGUIPresentation());
-                                parameter.GUI_SetPresentation(static_cast<Parameter::Presentations>(core_param_presentation));
-                            }                
-                            
+                                parameter.GUI_SetPresentation(
+                                    static_cast<Parameter::Presentations>(core_param_presentation));
+                            }
+
                             if (auto* p_ptr = param_slot->Param<core::param::ButtonParam>()) {
                                 parameter.SetStorage(p_ptr->GetKeyCode());
                             } else if (auto* p_ptr = param_slot->Param<core::param::BoolParam>()) {
@@ -679,7 +680,8 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
 
                 std::string caller_slot_name;
                 std::string caller_slot_namespace;
-                if (!this->project_separate_name_and_namespace(caller_slot_full_name, caller_slot_namespace, caller_slot_name)) {
+                if (!this->project_separate_name_and_namespace(
+                        caller_slot_full_name, caller_slot_namespace, caller_slot_name)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Invalid caller slot name "
                                                             "argument (2nd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), lua_call.c_str(), __FILE__, __FUNCTION__, __LINE__);
@@ -687,7 +689,8 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
 
                 std::string callee_slot_name;
                 std::string callee_slot_namespace;
-                if (!this->project_separate_name_and_namespace(callee_slot_full_name, callee_slot_namespace, callee_slot_name)) {
+                if (!this->project_separate_name_and_namespace(
+                        callee_slot_full_name, callee_slot_namespace, callee_slot_name)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Invalid callee slot name "
                                                             "argument (3nd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), lua_call.c_str(), __FILE__, __FUNCTION__, __LINE__);
@@ -857,10 +860,10 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
         }
         // Save filename to graph
         graph_ptr->SetFilename(project_filename);
-        
+
         /// XXX Check for GUIView module(s) and load parameter gui state from "state" parameter
-        std::string guiview_name = "GUIView"; 
-        std::string stateparam_name = "state"; 
+        std::string guiview_name = "GUIView";
+        std::string stateparam_name = "state";
         if (graph_ptr != nullptr) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 if (module_ptr->class_name == guiview_name) {
@@ -1004,7 +1007,7 @@ bool megamol::gui::configurator::GraphManager::SaveGroupFile(ImGuiID group_uid, 
 
     try {
         /// TODO implement ...
-        
+
         vislib::sys::Log::DefaultLog.WriteWarn(
             "Feature is WIP ... coming soon. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -1038,7 +1041,8 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
     mod.callslots.clear();
     mod.callslots.emplace(CallSlotType::CALLER, std::vector<CallSlot::StockCallSlot>());
     mod.callslots.emplace(CallSlotType::CALLEE, std::vector<CallSlot::StockCallSlot>());
-    /// XXX mod.plugin_name is not (yet) available in mod_desc (set from AbstractAssemblyInstance or AbstractPluginInstance).
+    /// XXX mod.plugin_name is not (yet) available in mod_desc (set from AbstractAssemblyInstance or
+    /// AbstractPluginInstance).
 
     if (this->calls_stock.empty()) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -1089,7 +1093,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
             Parameter::StockParameter psd;
             psd.full_name = std::string(param_slot->Name().PeekBuffer());
             psd.description = std::string(param_slot->Description().PeekBuffer());
-            
+
             // Set gui state of parameter
             auto parameter_ptr = param_slot->Parameter();
             if (parameter_ptr != nullptr) {
@@ -1291,8 +1295,9 @@ bool megamol::gui::configurator::GraphManager::get_call_stock_data(
         for (unsigned int i = 0; i < call_desc->FunctionCount(); ++i) {
             call.functions.emplace_back(call_desc->FunctionName(i));
         }
-        /// XXX call.plugin_name is not (yet) available in call_desc (set from AbstractAssemblyInstance or AbstractPluginInstance).
-        
+        /// XXX call.plugin_name is not (yet) available in call_desc (set from AbstractAssemblyInstance or
+        /// AbstractPluginInstance).
+
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -1522,17 +1527,18 @@ bool megamol::gui::configurator::GraphManager::project_separate_name_and_namespa
 }
 
 
-bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_string(const GraphPtrType& graph_ptr, const std::string& in_json_string) {
-    
+bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_string(
+    const GraphPtrType& graph_ptr, const std::string& in_json_string) {
+
     /// Should correspond to megamol::gui::GUIWindows::parameters_gui_state_from_json_string()
-        
+
     try {
         if (graph_ptr == nullptr) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Pointer to graph is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-                
+
         bool found = false;
         bool valid = true;
 
@@ -1540,12 +1546,13 @@ bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_st
         json = nlohmann::json::parse(in_json_string);
 
         if (!json.is_object()) {
-            vislib::sys::Log::DefaultLog.WriteError("State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteError(
+                "State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-        
+
         const std::string header = "GUIState_Parameters";
-        
+
         for (auto& h : json.items()) {
             if (h.key() == header) {
                 found = true;
@@ -1553,37 +1560,41 @@ bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_st
                     std::string json_param_name = w.key();
                     auto gui_state = w.value();
                     valid = true;
-                    
+
                     // gui_visibility
-                    bool gui_visibility;                    
+                    bool gui_visibility;
                     if (gui_state.at("gui_visibility").is_boolean()) {
                         gui_state.at("gui_visibility").get_to(gui_visibility);
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'gui_visibility' as boolean.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                            "JSON state: Failed to read 'gui_visibility' as boolean.[%s, %s, line %d]\n", __FILE__,
+                            __FUNCTION__, __LINE__);
                         valid = false;
                     }
-                    
+
                     // gui_read-only
-                    bool gui_read_only;                                      
+                    bool gui_read_only;
                     if (gui_state.at("gui_read-only").is_boolean()) {
                         gui_state.at("gui_read-only").get_to(gui_read_only);
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'gui_read-only' as boolean.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                            "JSON state: Failed to read 'gui_read-only' as boolean.[%s, %s, line %d]\n", __FILE__,
+                            __FUNCTION__, __LINE__);
                         valid = false;
-                    }                    
-                    
+                    }
+
                     // gui_presentation_mode
                     Parameter::Presentations gui_presentation_mode;
                     if (gui_state.at("gui_presentation_mode").is_number_integer()) {
-                        gui_presentation_mode = static_cast<Parameter::Presentations>(gui_state.at("gui_presentation_mode").get<int>());
+                        gui_presentation_mode =
+                            static_cast<Parameter::Presentations>(gui_state.at("gui_presentation_mode").get<int>());
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'gui_presentation_mode' as integer.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                            "JSON state: Failed to read 'gui_presentation_mode' as integer.[%s, %s, line %d]\n",
+                            __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
-                    
+
                     if (valid) {
                         for (auto& module_ptr : graph_ptr->GetModules()) {
                             for (auto& parameter : module_ptr->parameters) {
@@ -1598,11 +1609,12 @@ bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_st
                 }
             }
         }
-        
+
         if (!found) {
-            ///vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON. [%s, %s, line
+            /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
-        }  
+        }
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -1621,7 +1633,8 @@ bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_st
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 

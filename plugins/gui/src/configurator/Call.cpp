@@ -9,8 +9,8 @@
 #include "Call.h"
 
 #include "CallSlot.h"
-#include "Module.h"
 #include "InterfaceSlot.h"
+#include "Module.h"
 
 
 using namespace megamol;
@@ -121,8 +121,8 @@ megamol::gui::configurator::Call::Presentation::Presentation(void)
 megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
 
 
-void megamol::gui::configurator::Call::Presentation::Present(
-    PresentPhase phase, megamol::gui::configurator::Call& inout_call, megamol::gui::GraphItemsStateType& state) {
+void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::PresentPhase phase,
+    megamol::gui::configurator::Call& inout_call, megamol::gui::GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -150,7 +150,8 @@ void megamol::gui::configurator::Call::Presentation::Present(
                 ImVec2 callee_position = calleeslot_ptr->GUI_GetPosition();
                 bool connect_interface_slot = true;
                 if (callerslot_ptr->IsParentModuleConnected() && calleeslot_ptr->IsParentModuleConnected()) {
-                    if (callerslot_ptr->GetParentModule()->GUI_GetGroupUID() == calleeslot_ptr->GetParentModule()->GUI_GetGroupUID()) {
+                    if (callerslot_ptr->GetParentModule()->GUI_GetGroupUID() ==
+                        calleeslot_ptr->GetParentModule()->GUI_GetGroupUID()) {
                         connect_interface_slot = false;
                     }
                 }
@@ -181,9 +182,9 @@ void megamol::gui::configurator::Call::Presentation::Present(
                 tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
-                    
-                if (phase == PresentPhase::RENDERING) {
-                    
+
+                if (phase == megamol::gui::PresentPhase::RENDERING) {
+
                     // Draw Curve
                     /// Draw simple line if zooming is too small for nice bezier curves.
                     if (state.canvas.zooming < 0.25f) {
@@ -193,7 +194,7 @@ void megamol::gui::configurator::Call::Presentation::Present(
                             COLOR_CALL_CURVE, GUI_LINE_THICKNESS * state.canvas.zooming);
                     }
                 }
-                
+
                 if (this->label_visible) {
                     ImVec2 call_center = ImVec2(p1.x + (p2.x - p1.x) / 2.0f, p1.y + (p2.y - p1.y) / 2.0f);
                     auto call_name_width = GUIUtils::TextWidgetWidth(inout_call.class_name);
@@ -204,9 +205,9 @@ void megamol::gui::configurator::Call::Presentation::Present(
                     ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
 
                     std::string label = "call_" + std::to_string(inout_call.uid);
-                        
-                    if (phase == PresentPhase::INTERACTION) {
-                        
+
+                    if (phase == megamol::gui::PresentPhase::INTERACTION) {
+
                         // Button
                         ImGui::SetCursorScreenPos(call_rect_min);
                         ImGui::SetItemAllowOverlap();
@@ -239,9 +240,8 @@ void megamol::gui::configurator::Call::Presentation::Present(
 
                             ImGui::EndPopup();
                         }
-                    }
-                    else if (phase == PresentPhase::RENDERING) {
-                        
+                    } else if (phase == megamol::gui::PresentPhase::RENDERING) {
+
                         bool active = (state.interact.button_active_uid == inout_call.uid);
                         bool hovered = (state.interact.button_hovered_uid == inout_call.uid);
                         bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
@@ -256,7 +256,8 @@ void megamol::gui::configurator::Call::Presentation::Present(
                             state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
                         }
                         // Deselection
-                        else if (this->selected && ((mouse_clicked_anywhere && !hovered) || (state.interact.call_selected_uid != inout_call.uid))) {
+                        else if (this->selected && ((mouse_clicked_anywhere && !hovered) ||
+                                                       (state.interact.call_selected_uid != inout_call.uid))) {
                             this->selected = false;
                             if (state.interact.call_selected_uid == inout_call.uid) {
                                 state.interact.call_selected_uid = GUI_INVALID_ID;
@@ -266,13 +267,14 @@ void megamol::gui::configurator::Call::Presentation::Present(
                         // Draw Background
                         ImU32 call_bg_color = (this->selected) ? (COLOR_CALL_HIGHTLIGHT) : (COLOR_CALL_BACKGROUND);
                         draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, GUI_RECT_CORNER_RADIUS);
-                        draw_list->AddRect(call_rect_min, call_rect_max, COLOR_CALL_GROUP_BORDER, GUI_RECT_CORNER_RADIUS);
+                        draw_list->AddRect(
+                            call_rect_min, call_rect_max, COLOR_CALL_GROUP_BORDER, GUI_RECT_CORNER_RADIUS);
 
                         // Draw Text
                         ImVec2 text_pos_left_upper =
                             (call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
-                        draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]),
-                            inout_call.class_name.c_str());
+                        draw_list->AddText(text_pos_left_upper,
+                            ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), inout_call.class_name.c_str());
                     }
                 }
 

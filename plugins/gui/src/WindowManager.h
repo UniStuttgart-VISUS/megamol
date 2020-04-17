@@ -48,7 +48,7 @@ public:
         bool param_show_hotkeys;                     // flag to toggle showing only parameter hotkeys
         std::vector<std::string> param_modules_list; // modules to show in a parameter window (show all if empty)
         FilterModes param_module_filter;             // module filter
-        bool param_expert_mode;                      // Flag toggling between Expert and Basic parameter mode.        
+        bool param_expert_mode;                      // Flag toggling between Expert and Basic parameter mode.
         // ---------- FPS/MS specific configuration ----------
         bool ms_show_options;          // show/hide fps/ms options.
         int ms_max_history_count;      // maximum count of values in value array

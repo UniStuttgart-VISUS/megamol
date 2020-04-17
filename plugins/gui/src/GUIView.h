@@ -16,7 +16,6 @@
 #include "mmcore/view/CallRenderView.h"
 
 
-
 namespace megamol {
 namespace gui {
 

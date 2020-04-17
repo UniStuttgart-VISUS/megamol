@@ -56,7 +56,7 @@ GUIWindows::GUIWindows()
     styles = nullptr;
 
     this->state_param << new core::param::StringParam("");
-    this->state_param.Parameter()->SetGUIVisible(false); 
+    this->state_param.Parameter()->SetGUIVisible(false);
 
     this->autostart_configurator << new core::param::BoolParam(false);
 
@@ -106,8 +106,9 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 }
 
 
-bool GUIWindows::PreDraw(const std::string& module_fullname, vislib::math::Rectangle<int> viewport, double instanceTime) {
-    
+bool GUIWindows::PreDraw(
+    const std::string& module_fullname, vislib::math::Rectangle<int> viewport, double instanceTime) {
+
     if (this->impl == Implementation::NONE) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Found no initialized ImGui implementation. First call CreateContext_XXX() once. [%s, %s, line %d]\n",
@@ -279,16 +280,18 @@ bool GUIWindows::PostDraw(void) {
         }
     };
     this->window_manager.EnumWindows(func);
-    
+
     // Draw global parameter presentation --------------------------------------
     if (this->core_instance != nullptr) {
         this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
             auto parameter = slot.Parameter();
             if (!parameter.IsNull()) {
                 auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
-                                  ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
+                                  ImGuiHoveredFlags_AllowWhenBlockedByPopup |
+                                  ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
                 if (!ImGui::IsWindowHovered(hoverFlags)) {
-                    if (parameter->GetGUIPresentation() == megamol::core::param::AbstractParam::Presentations::PIN_VALUE_TO_MOUSE) {
+                    if (parameter->GetGUIPresentation() ==
+                        megamol::core::param::AbstractParam::Presentations::PIN_VALUE_TO_MOUSE) {
                         ImGui::BeginTooltip();
                         std::string label = std::string(slot.Name().PeekBuffer());
                         ImGui::TextDisabled(label.c_str());
@@ -303,7 +306,7 @@ bool GUIWindows::PostDraw(void) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
-            
+
     // Render the current ImGui frame ------------------------------------------
     glViewport(0, 0, static_cast<GLsizei>(viewport.x), static_cast<GLsizei>(viewport.y));
     ImGui::Render();
@@ -697,7 +700,8 @@ bool GUIWindows::createContext(void) {
                 "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
         // Configurator Graph Font: Add default font at first n indices for exclusive use in configurator graph.
-        /// Workaround: Using different font sizes for different graph zooming factors to improve font readability when zooming.
+        /// Workaround: Using different font sizes for different graph zooming factors to improve font readability when
+        /// zooming.
         const auto graph_font_scalings = this->configurator.GetGraphFontScalings();
         this->graph_fonts_reserved = graph_font_scalings.size();
         if (configurator_font.empty()) {
@@ -857,7 +861,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.5f); // set general proportional item width
 
     // Options
-    ImGuiID overrideState = GUI_INVALID_ID; 
+    ImGuiID overrideState = GUI_INVALID_ID;
     if (ImGui::Button("Expand All")) {
         overrideState = 1; // open
     }
@@ -882,7 +886,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
     }
     ImGui::EndGroup();
     std::string mode_help = "Expert mode enables buttons for additional parameter presentation options.\n"
-        "Note: Changes are NOT (yet) stored in project files.";
+                            "Note: Changes are NOT (yet) stored in project files.";
     this->utils.HelpMarkerToolTip(mode_help);
 
     ImGui::SameLine();
@@ -941,21 +945,24 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                                     }
                                 }
                             };
-                            this->core_instance->EnumModulesNoLock(nullptr, view_func);                            
+                            this->core_instance->EnumModulesNoLock(nullptr, view_func);
                         }
                         if (!viewname.empty()) {
                             if (wc.param_module_filter == WindowManager::FilterModes::INSTANCE) {
-                                // Considering modules depending on the INSTANCE NAME of the first view this module is connected to. 
-                                std::string instname = ""; 
+                                // Considering modules depending on the INSTANCE NAME of the first view this module is
+                                // connected to.
+                                std::string instname = "";
                                 auto instance_idx = viewname.rfind("::");
-                                if (instance_idx != std::string::npos) { 
-                                    instname = viewname.substr(0, instance_idx+2);
+                                if (instance_idx != std::string::npos) {
+                                    instname = viewname.substr(0, instance_idx + 2);
                                 }
                                 if (!instname.empty()) { // Consider all modules if view is not assigned to any instance
                                     const auto func = [&, this](core::Module* mod) {
                                         std::string modname = mod->FullName().PeekBuffer();
                                         bool foundInstanceName = (modname.find(instname) != std::string::npos);
-                                        bool noInstanceNamePresent = false; /// Always consider modules with no namspace (modname.find("::", 2) == std::string::npos);
+                                        bool noInstanceNamePresent =
+                                            false; /// Always consider modules with no namspace (modname.find("::", 2)
+                                                   /// == std::string::npos);
                                         if (foundInstanceName || noInstanceNamePresent) {
                                             wc.param_modules_list.emplace_back(modname);
                                         }
@@ -963,9 +970,10 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                                     this->core_instance->EnumModulesNoLock(nullptr, func);
                                 }
                             } else { // (wc.param_module_filter == WindowManager::FilterModes::VIEW)
-                                // Considering modules depending on their connection to the VIEW MODULE this GUI is incorporated.
-                                const auto add_func = [&, this](core::Module* mod) { 
-                                    std::string modname = mod->FullName().PeekBuffer(); 
+                                // Considering modules depending on their connection to the VIEW MODULE this GUI is
+                                // incorporated.
+                                const auto add_func = [&, this](core::Module* mod) {
+                                    std::string modname = mod->FullName().PeekBuffer();
                                     wc.param_modules_list.emplace_back(modname);
                                 };
                                 this->core_instance->EnumModulesNoLock(viewname, add_func);
@@ -1013,12 +1021,12 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
             if (current_mod != &mod) {
                 current_mod = &mod;
                 std::string label = mod.FullName().PeekBuffer();
-                
+
                 if (current_mod_open) {
-                    // Vertical spacing 
+                    // Vertical spacing
                     ImGui::Dummy(ImVec2(1.0f, ImGui::GetFrameHeightWithSpacing()));
                 }
-                                
+
                 // Reset parameter namespace stuff
                 param_namespace = "";
                 param_namespace_open = true;
@@ -1121,7 +1129,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                             param_indent_stack--;
                             ImGui::Unindent();
                         }
-                        ///ImGui::Separator();
+                        /// ImGui::Separator();
                         if (!param_namespace.empty()) {
                             ImGui::Indent();
                             std::string label = param_namespace + "###" + param_namespace + "__" + param_name;
@@ -1253,8 +1261,8 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
         plot_scale_factor *= wc.buf_plot_ms_scaling;
     }
 
-    ImGui::PlotLines("###msplot", value_ptr, buffer_size, 0, overlay.c_str(), 0.0f, plot_scale_factor,
-        ImVec2(0.0f, 50.0f)); 
+    ImGui::PlotLines(
+        "###msplot", value_ptr, buffer_size, 0, overlay.c_str(), 0.0f, plot_scale_factor, ImVec2(0.0f, 50.0f));
 
     if (wc.ms_show_options) {
         if (ImGui::InputFloat(
@@ -1508,8 +1516,9 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 }
 
 
-void GUIWindows::drawParameter(WindowManager::WindowConfiguration& wc, const core::Module& mod, core::param::ParamSlot& slot) {
-    
+void GUIWindows::drawParameter(
+    WindowManager::WindowConfiguration& wc, const core::Module& mod, core::param::ParamSlot& slot) {
+
     ImGuiStyle& style = ImGui::GetStyle();
     std::string help;
 
@@ -1528,9 +1537,9 @@ void GUIWindows::drawParameter(WindowManager::WindowConfiguration& wc, const cor
         std::string float_format = "%.7f";
 
         ImGui::BeginGroup();
-        
+
         // Expert Options
-        ImGui::PushID(param_label.c_str()); 
+        ImGui::PushID(param_label.c_str());
         if (wc.param_expert_mode) {
             // Visibility
             bool param_visible = parameter->IsGUIVisible();
@@ -1547,12 +1556,12 @@ void GUIWindows::drawParameter(WindowManager::WindowConfiguration& wc, const cor
                 parameter->SetGUIReadOnly(param_readonly);
             }
             this->utils.HoverToolTip("Read-Only");
-    
+
             ImGui::SameLine();
-    
+
             // Presentation
             bool default_present =
-                (slot.Parameter()->GetGUIPresentation() == megamol::core::param::AbstractParam::Presentations::DEFAULT);              
+                (slot.Parameter()->GetGUIPresentation() == megamol::core::param::AbstractParam::Presentations::DEFAULT);
             this->utils.PointCircleButton("", !default_present);
             this->utils.HoverToolTip("Presentation");
             if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) { // 0 = left mouse button
@@ -1580,16 +1589,16 @@ void GUIWindows::drawParameter(WindowManager::WindowConfiguration& wc, const cor
             ImGui::SameLine();
         }
         ImGui::PopID();
-        
+
         // Parameter
         ImGui::PushID(param_label.c_str());
-        
+
         // Set different style if parameter is read-only
         bool readOnly = parameter->IsGUIReadOnly();
         if (readOnly) {
             GUIUtils::ReadOnlyWigetStyle(true);
         }
-        
+
         if (auto* p = slot.template Param<core::param::BoolParam>()) {
             auto value = p->Value();
             if (ImGui::Checkbox(param_label.c_str(), &value)) {
@@ -1801,16 +1810,16 @@ void GUIWindows::drawParameter(WindowManager::WindowConfiguration& wc, const cor
                 "Unknown Parameter Type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return;
         }
-        
+
         // Reset to default style (use saved state)
         if (readOnly) {
             GUIUtils::ReadOnlyWigetStyle(false);
-        }        
+        }
         ImGui::PopID();
 
         this->utils.HoverToolTip(param_desc, ImGui::GetID(param_label.c_str()), 0.5f);
         this->utils.HelpMarkerToolTip(help);
-        
+
         ImGui::EndGroup();
     }
 }
@@ -2025,31 +2034,31 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
 
     nlohmann::json window_json;
     nlohmann::json parameter_json;
-    
+
     if (this->window_manager.StateToJSON(window_json) && this->parameters_gui_state_to_json(parameter_json)) {
-                               
+
         // Merge both JSON states
         window_json.update(parameter_json);
-        
-        std::string state;               
-        state = window_json.dump(2); 
-        
+
+        std::string state;
+        state = window_json.dump(2);
+
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
     }
 }
-     
+
 
 bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::string& in_json_string) {
-    
+
     /// Should correspond to megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_string()
-    
+
     try {
         if (this->core_instance == nullptr) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-        
+
         bool found = false;
         bool valid = true;
 
@@ -2057,12 +2066,13 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
         json = nlohmann::json::parse(in_json_string);
 
         if (!json.is_object()) {
-            vislib::sys::Log::DefaultLog.WriteError("State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteError(
+                "State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-        
+
         const std::string header = "GUIState_Parameters";
-        
+
         for (auto& h : json.items()) {
             if (h.key() == header) {
                 found = true;
@@ -2070,37 +2080,41 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
                     std::string json_param_name = w.key();
                     auto gui_state = w.value();
                     valid = true;
-                    
+
                     // gui_visibility
-                    bool gui_visibility;                    
+                    bool gui_visibility;
                     if (gui_state.at("gui_visibility").is_boolean()) {
                         gui_state.at("gui_visibility").get_to(gui_visibility);
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'gui_visibility' as boolean.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                            "JSON state: Failed to read 'gui_visibility' as boolean.[%s, %s, line %d]\n", __FILE__,
+                            __FUNCTION__, __LINE__);
                         valid = false;
                     }
-                    
+
                     // gui_read-only
-                    bool gui_read_only;                                      
+                    bool gui_read_only;
                     if (gui_state.at("gui_read-only").is_boolean()) {
                         gui_state.at("gui_read-only").get_to(gui_read_only);
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'gui_read-only' as boolean.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                            "JSON state: Failed to read 'gui_read-only' as boolean.[%s, %s, line %d]\n", __FILE__,
+                            __FUNCTION__, __LINE__);
                         valid = false;
-                    }                    
-                    
+                    }
+
                     // gui_presentation_mode
                     megamol::core::param::AbstractParam::Presentations gui_presentation_mode;
                     if (gui_state.at("gui_presentation_mode").is_number_integer()) {
-                        gui_presentation_mode = static_cast<megamol::core::param::AbstractParam::Presentations>(gui_state.at("gui_presentation_mode").get<int>());
+                        gui_presentation_mode = static_cast<megamol::core::param::AbstractParam::Presentations>(
+                            gui_state.at("gui_presentation_mode").get<int>());
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'gui_presentation_mode' as integer.[%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                            "JSON state: Failed to read 'gui_presentation_mode' as integer.[%s, %s, line %d]\n",
+                            __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
-                    
+
                     if (valid) {
                         this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
                             auto parameter = slot.Parameter();
@@ -2117,11 +2131,12 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
                 }
             }
         }
-        
+
         if (!found) {
-            ///vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON. [%s, %s, line
+            /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
-        }        
+        }
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -2140,7 +2155,8 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -2156,10 +2172,10 @@ bool megamol::gui::GUIWindows::parameters_gui_state_to_json(nlohmann::json& out_
                 "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-                
-        const std::string header = "GUIState_Parameters";                
+
+        const std::string header = "GUIState_Parameters";
         out_json.clear();
-        
+
         this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
             auto parameter = slot.Parameter();
             if (!parameter.IsNull()) {
@@ -2167,7 +2183,8 @@ bool megamol::gui::GUIWindows::parameters_gui_state_to_json(nlohmann::json& out_
 
                 out_json[header][param_name]["gui_visibility"] = parameter->IsGUIVisible();
                 out_json[header][param_name]["gui_read-only"] = parameter->IsGUIReadOnly();
-                out_json[header][param_name]["gui_presentation_mode"] = static_cast<int>(parameter->GetGUIPresentation());
+                out_json[header][param_name]["gui_presentation_mode"] =
+                    static_cast<int>(parameter->GetGUIPresentation());
             }
         });
 
@@ -2188,7 +2205,8 @@ bool megamol::gui::GUIWindows::parameters_gui_state_to_json(nlohmann::json& out_
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 

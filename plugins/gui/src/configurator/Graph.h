@@ -52,13 +52,13 @@ public:
     bool IsMainViewSet(void);
 
     bool UniqueModuleRename(const std::string& module_name);
-    
+
     const std::string GetFilename(void) { return this->filename; }
     void SetFilename(const std::string& filename) { this->filename = filename; }
 
     bool StateFromJsonString(const std::string& json_string);
-    bool StateToJSON(nlohmann::json& out_json);  
-    
+    bool StateToJSON(nlohmann::json& out_json);
+
     // GUI Presentation -------------------------------------------------------
 
     inline void GUI_Present(GraphStateType& state) { this->present.Present(*this, state); }
@@ -112,11 +112,11 @@ private:
         }
 
         void ForceUpdate(void) { this->update = true; }
-        
+
         /**
-         * Really simple module layouting. 
+         * Really simple module layouting.
          * Sort modules into differnet layers 'from left to right' following the calls.
-         */        
+         */
         void LayoutGraph(void) { this->layout_current_graph = true; }
 
         bool params_visible;

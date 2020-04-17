@@ -189,10 +189,10 @@ private:
 
     /** The current local state of the gui. */
     StateBuffer state;
-    
+
     /** The full name of the parent module incorporating this GUI. */
     std::string parent_module_fullname;
-    
+
     /** Input Widget Buffers. */
     std::map<std::string, std::string> widgtmap_text;
     std::map<std::string, int> widgtmap_int;
@@ -241,7 +241,7 @@ private:
     /**
      * Draws one parameter.
      *
-     * @param wc    The configuration of the calling window.* 
+     * @param wc    The configuration of the calling window.*
      * @param mod   Module the paramter belongs to.
      * @param slot  The current parameter slot.
      */
@@ -275,17 +275,17 @@ private:
      * Check if given hotkey is pressed.
      */
     bool hotkeyPressed(megamol::core::view::KeyCode keycode);
-    
+
     /**
      * Shutdown megmol program.
      */
     void shutdown(void);
-    
+
     /**
      * Saves current state to parameter.
      */
-     void save_state_to_parameter(void);
-    
+    void save_state_to_parameter(void);
+
     /**
      * Deserializes the parameters gui state.
      *
@@ -302,7 +302,7 @@ private:
      *
      * @return True on success, false otherwise.
      */
-    bool parameters_gui_state_to_json(nlohmann::json& out_json);    
+    bool parameters_gui_state_to_json(nlohmann::json& out_json);
 };
 
 } // namespace gui

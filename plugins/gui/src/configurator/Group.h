@@ -52,11 +52,13 @@ public:
     inline const InterfaceSlotPtrMapType& GetInterfaceSlots(void) { return this->interfaceslots; }
     bool DeleteInterfaceSlot(ImGuiID interfaceslot_uid);
     bool ContainsInterfaceSlot(ImGuiID interfaceslot_uid);
-    
+
     // GUI Presentation -------------------------------------------------------
 
-    inline void GUI_Present(PresentPhase phase, GraphItemsStateType& state) { this->present.Present(phase, *this, state); }
-    
+    inline void GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
+        this->present.Present(phase, *this, state);
+    }
+
     inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePositionSize(*this, in_canvas); }
 
 private:
@@ -74,7 +76,7 @@ private:
 
         ~Presentation(void);
 
-        void Present(PresentPhase phase, Group& inout_group, GraphItemsStateType& state);
+        void Present(megamol::gui::PresentPhase phase, Group& inout_group, GraphItemsStateType& state);
 
         void UpdatePositionSize(Group& inout_group, const GraphCanvasType& in_canvas);
 

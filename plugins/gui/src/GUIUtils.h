@@ -28,7 +28,7 @@
 #include <algorithm> // search
 #include <array>
 #include <cctype> // toupper
-#include <cmath> // fmodf
+#include <cmath>  // fmodf
 #include <list>
 #include <map>
 #include <memory>
@@ -81,7 +81,7 @@ enum HotkeyIndex : size_t {
 typedef std::array<megamol::gui::HotkeyDataType, megamol::gui::HotkeyIndex::INDEX_COUNT> HotkeyArrayType;
 
 namespace configurator {
-    
+
 // Forward declaration
 class CallSlot;
 typedef std::shared_ptr<megamol::gui::configurator::CallSlot> CallSlotPtrType;
@@ -115,10 +115,10 @@ typedef struct _interact_state_ {
     ImGuiID button_active_uid;                                       // in out
     ImGuiID button_hovered_uid;                                      // in out
     ImGuiID group_selected_uid;                                      // in out
-    ImGuiID group_hovered_uid;                                       // in out    
+    ImGuiID group_hovered_uid;                                       // in out
     bool group_save;                                                 // out
     UIDVectorType modules_selected_uids;                             // in out
-    ImGuiID module_hovered_uid;                                      // in out    
+    ImGuiID module_hovered_uid;                                      // in out
     ImGuiID module_mainview_uid;                                     // out
     UIDPairVectorType modules_add_group_uids;                        // out
     UIDVectorType modules_remove_group_uids;                         // out

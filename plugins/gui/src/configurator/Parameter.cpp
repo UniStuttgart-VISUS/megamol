@@ -273,7 +273,8 @@ megamol::gui::configurator::Parameter::Presentation::Presentation(void)
 megamol::gui::configurator::Parameter::Presentation::~Presentation(void) {}
 
 
-bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::configurator::Parameter& inout_parameter) {
+bool megamol::gui::configurator::Parameter::Presentation::Present(
+    megamol::gui::configurator::Parameter& inout_parameter) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -297,7 +298,7 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
 
             ImGui::PopID();
             ImGui::EndGroup();
-            
+
             // Additional alternative parameter presentations
             switch (this->presentation) {
             case (Presentations::PIN_VALUE_TO_MOUSE): {
@@ -305,7 +306,7 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
             } break;
             default:
                 break;
-            }            
+            }
         }
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -356,8 +357,8 @@ bool megamol::gui::configurator::Parameter::Presentation::presentation_button(vo
             }
             if (!presentation_str.empty()) {
                 if (ImGui::MenuItem(presentation_str.c_str(), nullptr, (presentation_i == this->presentation))) {
-                this->presentation = presentation_i;
-                retval = true;
+                    this->presentation = presentation_i;
+                    retval = true;
                 }
             }
         }
@@ -527,7 +528,8 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
             case (Parameter::ParamType::FLEXENUM): {
                 /// XXX: no UTF8 fanciness required here?
                 if (ImGui::BeginCombo(param_label.c_str(), arg.c_str())) {
-                    for (auto& valueOption : inout_parameter.GetStorage<megamol::core::param::FlexEnumParam::Storage_t>()) {
+                    for (auto& valueOption :
+                        inout_parameter.GetStorage<megamol::core::param::FlexEnumParam::Storage_t>()) {
                         bool isSelected = (valueOption == arg);
                         if (ImGui::Selectable(valueOption.c_str(), isSelected)) {
                             inout_parameter.SetValue(valueOption);
@@ -645,7 +647,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_PIN_VALU
     auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
     if (!ImGui::IsWindowHovered(hoverFlags)) {
-                    
+
         ImGui::BeginTooltip();
 
         std::string label = inout_parameter.GetName();
