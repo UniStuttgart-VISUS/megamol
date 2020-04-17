@@ -174,7 +174,7 @@ void megamol::gui::configurator::Call::Presentation::Present(
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
                     
-                if (phase == PresentPhase::DRAW) {
+                if (phase == PresentPhase::RENDERING) {
                     
                     // Draw Curve
                     /// Draw simple line if zooming is too small for nice bezier curves.
@@ -195,7 +195,7 @@ void megamol::gui::configurator::Call::Presentation::Present(
                         ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
                     ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
 
-                    if (phase == PresentPhase::UPDATE) {
+                    if (phase == PresentPhase::INTERACTION) {
                         
                         // Button
                         ImGui::SetCursorScreenPos(call_rect_min);
@@ -231,7 +231,7 @@ void megamol::gui::configurator::Call::Presentation::Present(
                             ImGui::EndPopup();
                         }
                     }
-                    else if (phase == PresentPhase::DRAW) {
+                    else if (phase == PresentPhase::RENDERING) {
                         
                         bool active = (state.interact.button_active_uid == inout_call.uid);
                         bool hovered = (state.interact.button_hovered_uid == inout_call.uid);

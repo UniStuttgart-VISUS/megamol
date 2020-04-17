@@ -99,7 +99,7 @@ typedef std::vector<UIDPairType> UIDPairVectorType;
 typedef std::pair<ImGuiID, std::string> GroupPairType;
 typedef std::vector<megamol::gui::GroupPairType> GroupPairVectorType;
 
-enum PresentPhase { UPDATE, DRAW };
+enum PresentPhase { INTERACTION, RENDERING };
 
 /* Data type holding information of graph canvas. */
 typedef struct _canvas_ {

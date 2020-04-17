@@ -1164,55 +1164,54 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
         this->update = false;
     }
 
-    // UPDATE GUI STATE of graph elements --------------------------------------
+
+    ImGui::PushClipRect(
+        this->graph_state.canvas.position, this->graph_state.canvas.position + this->graph_state.canvas.size, true);
+
+    // GRID --------------------------------------
+    if (this->show_grid) {
+        this->present_canvas_grid();
+    }
+    ImGui::PopStyleVar(2);
+    
+    /// Phase 1: Interaction ---------------------------------------------------
+    // Update button states of all graph elements
     this->graph_state.interact.button_active_uid = GUI_INVALID_ID;
     this->graph_state.interact.button_hovered_uid = GUI_INVALID_ID;
     
     // 1] GROUPS --------------------------------
     for (auto& group_ptr : inout_graph.GetGroups()) {
-        group_ptr->GUI_Present(PresentPhase::UPDATE, this->graph_state);
+        group_ptr->GUI_Present(PresentPhase::INTERACTION, this->graph_state);
     }
-
     // 2] MODULES and CALL SLOTS ----------------
     for (auto& module_ptr : inout_graph.GetModules()) {
-        module_ptr->GUI_Present(PresentPhase::UPDATE, this->graph_state);
+        module_ptr->GUI_Present(PresentPhase::INTERACTION, this->graph_state);
     }
-
     // 3] CALLS ---------------------------------;
     for (auto& call_ptr : inout_graph.get_calls()) {
-        call_ptr->GUI_Present(PresentPhase::UPDATE, this->graph_state);
+        call_ptr->GUI_Present(PresentPhase::INTERACTION, this->graph_state);
     }
 
-    // DRAW GRAPH ELEMENTS and apply gui state ---------------------------------
+    /// Phase 2: Rendering -----------------------------------------------------
+    // Render graph elements using collected button state
 
-    ImGui::PushClipRect(
-        this->graph_state.canvas.position, this->graph_state.canvas.position + this->graph_state.canvas.size, true);
-
-    // 1] GRID ----------------------------------
-    if (this->show_grid) {
-        this->present_canvas_grid();
-    }
-    ImGui::PopStyleVar(2);
-
-    // 2] GROUPS --------------------------------
+    // 1] GROUPS and INTERFACE SLOTS --------------
     for (auto& group_ptr : inout_graph.GetGroups()) {
-        group_ptr->GUI_Present(PresentPhase::DRAW, this->graph_state);
+        group_ptr->GUI_Present(PresentPhase::RENDERING, this->graph_state);
     }
-
-    // 3] MODULES and CALL SLOTS ----------------
+    // 2] MODULES and CALL SLOTS ----------------
     for (auto& module_ptr : inout_graph.GetModules()) {
-        module_ptr->GUI_Present(PresentPhase::DRAW, this->graph_state);
+        module_ptr->GUI_Present(PresentPhase::RENDERING, this->graph_state);
     }
-
-    // 4] CALLS ---------------------------------;
+    // 3] CALLS ---------------------------------;
     for (auto& call_ptr : inout_graph.get_calls()) {
-        call_ptr->GUI_Present(PresentPhase::DRAW, this->graph_state);
+        call_ptr->GUI_Present(PresentPhase::RENDERING, this->graph_state);
     }
 
-    // 5] Multiselection
+    // Multiselection ----------------------------
     this->present_canvas_multiselection(inout_graph);
 
-    // 5] Dragged CALL --------------------------
+    // Dragged CALL ------------------------------
     this->present_canvas_dragged_call(inout_graph);
 
     ImGui::PopClipRect();
