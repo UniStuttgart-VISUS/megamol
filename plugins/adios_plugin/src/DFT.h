@@ -5,9 +5,9 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-#include "CallADIOSData.h"
-
 #include "fftw3.h"
+
+#include "mmstd_datatools/table/TableDataCall.h"
 
 namespace megamol {
 namespace adios {
@@ -97,10 +97,24 @@ private:
     bool getDataCallback(core::Call& c);
     bool getHeaderCallback(core::Call& c);
 
+    void fillInfoVector(stdplugin::datatools::table::TableDataCall::ColumnInfo const* infos, size_t num_columns) {
+        for (size_t col = 0; col < num_columns; ++col) {
+            infos_[col * 2 + 0] = infos[col];
+            infos_[col * 2 + 0].SetName(infos_[col * 2 + 0].Name() + "_re");
+            infos_[col * 2 + 1] = infos[col];
+            infos_[col * 2 + 1].SetName(infos_[col * 2 + 1].Name() + "_im");
+        }
+    }
+
     core::CalleeSlot data_out_slot_;
     core::CallerSlot data_in_slot_;
 
     std::shared_ptr<adiosDataMap> data_map_;
+
+    std::vector<float> data_;
+    std::vector<stdplugin::datatools::table::TableDataCall::ColumnInfo> infos_;
+    size_t out_num_rows_;
+    size_t out_num_columns_;
 
     size_t data_hash_;
 

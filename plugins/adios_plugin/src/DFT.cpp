@@ -4,15 +4,18 @@
 #include <memory>
 #include <vector>
 
-#include "CallADIOSData.h"
 
-
-megamol::adios::DFT::DFT() : data_out_slot_("dataOut", "Output"), data_in_slot_("dataIn", "Input"), data_hash_(std::numeric_limits<size_t>::max()) {
-    data_out_slot_.SetCallback(CallADIOSData::ClassName(), CallADIOSData::FunctionName(0), &DFT::getDataCallback);
-    data_out_slot_.SetCallback(CallADIOSData::ClassName(), CallADIOSData::FunctionName(1), &DFT::getHeaderCallback);
+megamol::adios::DFT::DFT()
+    : data_out_slot_("dataOut", "Output")
+    , data_in_slot_("dataIn", "Input")
+    , data_hash_(std::numeric_limits<size_t>::max()) {
+    data_out_slot_.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
+        stdplugin::datatools::table::TableDataCall::FunctionName(0), &DFT::getDataCallback);
+    data_out_slot_.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
+        stdplugin::datatools::table::TableDataCall::FunctionName(1), &DFT::getHeaderCallback);
     MakeSlotAvailable(&data_out_slot_);
 
-    data_in_slot_.SetCompatibleCall<CallADIOSDataDescription>();
+    data_in_slot_.SetCompatibleCall<stdplugin::datatools::table::TableDataCallDescription>();
     MakeSlotAvailable(&data_in_slot_);
 }
 
@@ -27,82 +30,82 @@ void megamol::adios::DFT::release() {}
 
 
 bool megamol::adios::DFT::getDataCallback(core::Call& c) {
-    auto out_data = dynamic_cast<CallADIOSData*>(&c);
+    auto out_data = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&c);
     if (out_data == nullptr) return false;
 
-    auto in_data = data_in_slot_.CallAs<CallADIOSData>();
+    auto in_data = data_in_slot_.CallAs<stdplugin::datatools::table::TableDataCall>();
     if (in_data == nullptr) return false;
 
     if (!(*in_data)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("DFT: Error during GetHeader");
+        vislib::sys::Log::DefaultLog.WriteError("DFT: Error during GetHash");
         return false;
     }
 
-    if (data_hash_ != in_data->getDataHash()) {
-        data_hash_ = in_data->getDataHash();
+    if (data_hash_ != in_data->DataHash()) {
+        data_hash_ = in_data->DataHash();
 
-        data_map_->clear();
-
-        auto avail_vars = in_data->getAvailableVars();
-
-        // iterate through all attributes
-        for (auto const& el : avail_vars) {
-            in_data->inquire(el);
-        }
+        data_.clear();
+        infos_.clear();
 
         if (!(*in_data)(0)) {
             vislib::sys::Log::DefaultLog.WriteError("DFT: Error during GetData");
             return false;
         }
 
-        std::vector<std::vector<float>> data(avail_vars.size());
-        // std::vector<FFTWArrayC> fft_data;
+        auto const num_columns = in_data->GetColumnsCount();
+        auto const num_rows = in_data->GetRowsCount();
 
-        // bool is_same_size = true;
-        for (size_t i = 0; i < avail_vars.size(); ++i) {
-            data[i] = in_data->getData(avail_vars[i])->GetAsFloat();
+        auto const in_data_ptr = in_data->GetData();
 
-            auto tmp = FFTWArrayR(data[i].size());
-            std::copy(data[i].cbegin(), data[i].cend(), static_cast<float*>(tmp));
-            auto out = FFTWArrayC(data[i].size() / 2 + 1);
-            FFTWPlan1D(data[i].size(), tmp, out, FFTW_ESTIMATE).Execute();
-            // fft_data.push_back(out);
+        out_num_columns_ = num_columns * 2;
+        out_num_rows_ = num_rows / 2 + 1;
 
-            auto fCon = std::make_shared<FloatContainer>();
-            auto& fVec = fCon->getVec();
-            fVec.resize((data[i].size() / 2 + 1) * 2);
-            for (size_t j = 0; j < data[i].size() / 2 + 1; ++j) {
-                fVec[j * 2 + 0] = out[j][0];
-                fVec[j * 2 + 1] = out[j][1];
+        data_.resize(out_num_columns_ * out_num_rows_);
+        infos_.resize(out_num_columns_);
+
+        for (size_t col = 0; col < num_columns; ++col) {
+
+            auto tmp = FFTWArrayR(num_rows);
+            for (size_t row = 0; row < num_rows; ++row) {
+                tmp[row] = in_data->GetData(col, row);
             }
 
-            data_map_->operator[](avail_vars[i]) = std::move(fCon);
+            auto out = FFTWArrayC(out_num_rows_);
+            FFTWPlan1D(num_rows, tmp, out, FFTW_ESTIMATE).Execute();
+
+            for (size_t row = 0; row < out_num_rows_; ++row) {
+                data_[(col * 2 + 0) + row * out_num_columns_] = out[row][0];
+                data_[(col * 2 + 1) + row * out_num_columns_] = out[row][1];
+            }
         }
+
+        fillInfoVector(in_data->GetColumnsInfos(), num_columns);
     }
 
-    out_data->setData(data_map_);
+    out_data->Set(out_num_columns_, out_num_rows_, infos_.data(), data_.data());
 
-    out_data->setDataHash(data_hash_);
+    out_data->SetDataHash(data_hash_);
 
     return true;
 }
 
 
 bool megamol::adios::DFT::getHeaderCallback(core::Call& c) {
-    auto out_data = dynamic_cast<CallADIOSData*>(&c);
+    auto out_data = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&c);
     if (out_data == nullptr) return false;
 
-    auto in_data = data_in_slot_.CallAs<CallADIOSData>();
+    auto in_data = data_in_slot_.CallAs<stdplugin::datatools::table::TableDataCall>();
     if (in_data == nullptr) return false;
 
+    in_data->SetFrameID(out_data->GetFrameID());
     if (!(*in_data)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("DFT: Error during GetHeader");
+        vislib::sys::Log::DefaultLog.WriteError("Clustering: Error during GetHash");
         return false;
     }
 
-    out_data->setAvailableVars(in_data->getAvailableVars());
+    out_data->SetFrameCount(in_data->GetFrameCount());
 
-    out_data->setFrameCount(in_data->getFrameCount());
+    out_data->SetFrameID(in_data->GetFrameID());
 
     return true;
 }
