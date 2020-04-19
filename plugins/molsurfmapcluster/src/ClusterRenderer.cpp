@@ -676,9 +676,9 @@ bool ClusterRenderer::GetPositionExtents(Call& call) {
 bool ClusterRenderer::GetPositionData(Call& call) {
     CallClusterPosition* ccp = dynamic_cast<CallClusterPosition*>(&call);
     if (ccp == nullptr) return false;
+    ccp->setPosition(this->root);
+    ccp->setClusterColors(this->colors);
     if (this->newposition) {
-        ccp->setPosition(this->root);
-        ccp->setClusterColors(this->colors);
         this->newposition = false;
         this->DataHashPosition += this->hashoffset;
     }

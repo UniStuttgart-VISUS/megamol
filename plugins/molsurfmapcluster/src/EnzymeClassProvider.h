@@ -52,6 +52,14 @@ public:
     static std::vector<std::array<int, 4>> RetrieveClassesForPdbId(
         std::string pdbId, const core::CoreInstance& coreInstance);
 
+    /** 
+     * Converts a given enzyme class to the string representing it
+     *
+     * @param enzymeClass Array containing the four class definitions
+     * @return String representing the given enzyme class
+     */
+    static std::string ConvertEnzymeClassToString(const std::array<int, 4>& enzymeClass);
+
 private:
     /**
      * Loads the enzyme class map from the file in the resources folder

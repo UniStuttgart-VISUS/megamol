@@ -49,6 +49,9 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
     , failColorParam("color::failColor", "color used for failed comparisons")
     , windowHeightParam("window::height", "height of the displayed window")
     , windowWidthParam("window::width", "width of the displayed window")
+    , addBrendaParam("addparam::brendaClass", "Additionally display the brenda class below each leaf node")
+    , addMapParam("addparam::map", "Additionally display the map below each leaf node")
+    , addIdParam("addparam::pdbId", "Additionally display the pdb id below each leaf node")
     , theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
     , texVa(0) {
 
@@ -97,6 +100,15 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
     this->windowWidthParam.SetParameter(new param::IntParam(VIEWPORT_WIDTH, 1000, 20000));
     this->MakeSlotAvailable(&this->windowWidthParam);
 
+    this->addBrendaParam.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->addBrendaParam);
+
+    this->addIdParam.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->addIdParam);
+
+    this->addMapParam.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->addMapParam);
+
     // Variablen
     this->lastHashClustering = 0;
     this->lastHashPosition = 0;
@@ -110,7 +122,6 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
     this->hashoffset = 0;
     this->colorhash = 0;
 
-    this->actionavailable = true;
     this->dbscanclustercolor = false;
 
     this->popup = nullptr;
@@ -282,9 +293,9 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
     } else {
         posLeft = drawTree(node->left, mvp, minheight, minwidth, spacey, spacex, colors);
         posRight = drawTree(node->right, mvp, minheight, minwidth, spacey, spacex, colors);
-        posx = (posLeft + posRight) / 2;       
+        posx = (posLeft + posRight) / 2;
     }
-    //posy = minheight + (node->level * spacey);
+    // posy = minheight + (node->level * spacey);
     posy = minheight + myheight * totalheight;
 
     // Select Color
@@ -363,11 +374,11 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
 
     if (node->level != 0) {
         // Connect the Nodes
-        //double posLeftY = minheight + (node->left->level * spacey);
-        //double posRightY = minheight + (node->right->level * spacey);
+        // double posLeftY = minheight + (node->left->level * spacey);
+        // double posRightY = minheight + (node->right->level * spacey);
         double posLeftY = minheight + (node->left->height / maxheight) * totalheight;
         double posRightY = minheight + (node->right->height / maxheight) * totalheight;
-        
+
         glLineWidth(2);
         std::vector<glm::vec4> data(6);
         data[0] = glm::vec4(posRight, posy, 0.0f, 1.0f);
@@ -379,6 +390,44 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
         this->geometrySSBO->rebuffer(data);
         glUniformMatrix4fv(this->passthroughShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
         glDrawArrays(GL_LINES, 0, 6);
+    } else {
+
+        float top = 0.0f;
+        float width = spacex * 0.95f;
+        float height = 0.5 * width;
+        float xp = posx - width * 0.5f;
+        float yp = posy - height * 0.55f;
+
+        // draw stuff like the pdb id and brenda class
+        if (this->addMapParam.Param<param::BoolParam>()->Value()) {
+        }
+
+        if (this->addIdParam.Param<param::BoolParam>()->Value()) {
+            auto stringToDraw = node->pic->pdbid.c_str();
+            auto lineWidth = theFont.LineWidth(height, stringToDraw);
+
+            std::array<float, 4> color = {1.0f, 1.0f, 1.0f, 1.0f};
+            this->theFont.DrawString(color.data(), posx, yp, height, false, stringToDraw,
+                core::utility::AbstractFont::Alignment::ALIGN_CENTER_MIDDLE);
+            
+            yp -= height * 1.05f;
+        }
+
+        if (this->addBrendaParam.Param<param::BoolParam>()->Value()) {
+            auto pdbid = node->pic->pdbid;
+            auto classes = EnzymeClassProvider::RetrieveClassesForPdbId(pdbid, *this->GetCoreInstance());
+            std::array<float, 4> color = {1.0f, 1.0f, 1.0f, 1.0f};
+            auto curheight = height * 0.5f;
+            for (const auto c : classes) {
+                auto text = EnzymeClassProvider::ConvertEnzymeClassToString(c);
+                auto lineWidth = theFont.LineWidth(curheight, text.c_str());
+
+                this->theFont.DrawString(color.data(), posx, yp, curheight, false, text.c_str(),
+                    core::utility::AbstractFont::Alignment::ALIGN_CENTER_MIDDLE);
+
+                yp -= curheight * 1.05f;
+            }
+        }
     }
 
     this->passthroughShader.Disable();
@@ -424,6 +473,7 @@ bool ClusterHierarchieRenderer::Render(view::CallRender2D& call) {
         this->clustering = ccc->getClustering();
         this->lastHashClustering = ccc->DataHash();
         this->root = this->clustering->getRoot();
+        this->hashoffset++;
     }
 
     if (ccp->DataHash() != this->lastHashPosition && !this->newposition) {
@@ -469,91 +519,84 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
     this->mouseAction = action;
     this->mouseButton = button;
 
-    if (actionavailable) {
-        // Wenn mouse-click auf cluster => change position ...
-        // Check position
-        if (!shiftmod) {
+    // Wenn mouse-click auf cluster => change position ...
+    // Check position
+    if (!shiftmod) {
 
-            this->counter = 0;
+        this->counter = 0;
 
-            double height = this->viewport.GetY() * 0.9;
-            double width = this->viewport.GetX() * 0.9;
+        double height = this->viewport.GetY() * 0.9;
+        double width = this->viewport.GetX() * 0.9;
 
-            double minheight = this->viewport.GetY() * 0.05;
-            double minwidth = this->viewport.GetX() * 0.05;
+        double minheight = this->viewport.GetY() * 0.05;
+        double minwidth = this->viewport.GetX() * 0.05;
 
-            double spacey = height / (this->root->level);
-            double spacex = width / (this->clustering->getLeaves()->size() - 1);
+        double spacey = height / (this->root->level);
+        double spacex = width / (this->clustering->getLeaves()->size() - 1);
 
-            double distanceX = 30.0 / (windowMeasurements.Width() * 2.0 * this->zoomFactor);
-            double distanceY = 30.0 / (windowMeasurements.Height() * 2.0 * this->zoomFactor);
+        double distanceX = 30.0 / (windowMeasurements.Width() * 2.0 * this->zoomFactor);
+        double distanceY = 30.0 / (windowMeasurements.Height() * 2.0 * this->zoomFactor);
 
-            if (checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex, distanceX,
-                    distanceY) == -1) {
-                this->position = this->popup;
-            }
+        if (checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex, distanceX,
+                distanceY) == -1) {
+            this->position = this->popup;
+        }
 
-            // Todo Clusterparent neu berechnen wenn nicht gesetzt...
-            auto parent = this->root;
-            bool change = false;
-            while (this->position->clusterparent == nullptr) {
-                change = false;
-                auto tmpcluster = this->clustering->getClusterNodesOfNode(parent);
-                for (HierarchicalClustering::CLUSTERNODE* node : *tmpcluster) {
-                    if (this->position == node) {
-                        this->position->clusterparent = parent;
-                        change = true;
-                        break;
-                    } else if (this->clustering->parentIs(this->position, node)) {
-                        parent = node;
-                        change = true;
-                        break;
-                    }
-                }
-
-                if (!change) {
+        // Todo Clusterparent neu berechnen wenn nicht gesetzt...
+        auto parent = this->root;
+        bool change = false;
+        while (this->position->clusterparent == nullptr) {
+            change = false;
+            auto tmpcluster = this->clustering->getClusterNodesOfNode(parent);
+            for (HierarchicalClustering::CLUSTERNODE* node : *tmpcluster) {
+                if (this->position == node) {
                     this->position->clusterparent = parent;
+                    change = true;
+                    break;
+                } else if (this->clustering->parentIs(this->position, node)) {
+                    parent = node;
+                    change = true;
+                    break;
                 }
             }
-        } else {
-            this->counter = 0;
 
-            double height = this->viewport.GetY() * 0.9;
-            double width = this->viewport.GetX() * 0.9;
-
-            double minheight = this->viewport.GetY() * 0.05;
-            double minwidth = this->viewport.GetX() * 0.05;
-
-            double spacey = height / (this->root->level);
-            double spacex = width / (this->clustering->getLeaves()->size() - 1);
-
-            double distanceX = 30.0 / (windowMeasurements.Width() * 2.0 * this->zoomFactor);
-            double distanceY = 30.0 / (windowMeasurements.Height() * 2.0 * this->zoomFactor);
-
-            if (checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex, distanceX,
-                    distanceY) == -1) {
-                auto pdbid = this->popup->pic->pdbid;
-                auto clusterids = DBScanClusteringProvider::RetrieveClustersForPdbId(pdbid, *this->GetCoreInstance());
-                this->dbscancluster.clear();
-                for (const auto& id : clusterids) {
-                    if (id >= 0) {
-                        auto ids = DBScanClusteringProvider::RetrievePDBIdsForCluster(id, *this->GetCoreInstance());
-                        for (const auto val : ids) {
-                            this->dbscancluster.insert(val);
-                        }
-                    }
-                }
-                this->dbscanclustercolor = true;
-            } else {
-                this->dbscancluster.clear();
-                this->dbscanclustercolor = false;
+            if (!change) {
+                this->position->clusterparent = parent;
             }
         }
     } else {
-        if (action == MouseButtonAction::RELEASE) {
-            actionavailable = true;
+        this->counter = 0;
+
+        double height = this->viewport.GetY() * 0.9;
+        double width = this->viewport.GetX() * 0.9;
+
+        double minheight = this->viewport.GetY() * 0.05;
+        double minwidth = this->viewport.GetX() * 0.05;
+
+        double spacey = height / (this->root->level);
+        double spacex = width / (this->clustering->getLeaves()->size() - 1);
+
+        double distanceX = 30.0 / (windowMeasurements.Width() * 2.0 * this->zoomFactor);
+        double distanceY = 30.0 / (windowMeasurements.Height() * 2.0 * this->zoomFactor);
+
+        if (checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex, distanceX,
+                distanceY) == -1) {
+            auto pdbid = this->popup->pic->pdbid;
+            auto clusterids = DBScanClusteringProvider::RetrieveClustersForPdbId(pdbid, *this->GetCoreInstance());
+            this->dbscancluster.clear();
+            for (const auto& id : clusterids) {
+                if (id >= 0) {
+                    auto ids = DBScanClusteringProvider::RetrievePDBIdsForCluster(id, *this->GetCoreInstance());
+                    for (const auto val : ids) {
+                        this->dbscancluster.insert(val);
+                    }
+                }
+            }
+            this->dbscanclustercolor = true;
+        } else {
+            this->dbscancluster.clear();
+            this->dbscanclustercolor = false;
         }
-        return true;
     }
 
     return false;
@@ -662,9 +705,7 @@ void ClusterHierarchieRenderer::renderPopup(glm::mat4 mvp) {
                 std::string text = "";
                 uint32_t idx = 0;
                 for (const auto& v : classes) {
-                    text += (v[0] != -1 ? std::to_string(v[0]) : "") + (v[1] != -1 ? "." + std::to_string(v[1]) : "") +
-                            (v[2] != -1 ? "." + std::to_string(v[2]) : "") +
-                            (v[3] != -1 ? "." + std::to_string(v[3]) : "");
+                    text += EnzymeClassProvider::ConvertEnzymeClassToString(v);
                     if (idx < numClasses - 1) {
                         text += "\n";
                     }
@@ -681,6 +722,10 @@ void ClusterHierarchieRenderer::renderPopup(glm::mat4 mvp) {
     }
 }
 
+void ClusterHierarchieRenderer::renderMap(glm::mat4 mvp, glm::vec2 lowerleft, glm::vec2 upperright, PictureData* data) {
+
+}
+
 double ClusterHierarchieRenderer::checkposition(HierarchicalClustering::CLUSTERNODE* node, float x, float y,
     double minheight, double minwidth, double spacey, double spacex, double distanceX, double distanceY) {
 
@@ -695,7 +740,7 @@ double ClusterHierarchieRenderer::checkposition(HierarchicalClustering::CLUSTERN
     // draw child node
     if (node->level == 0) {
         posx = minwidth + (counter * spacex);
-        //posy = minheight + (node->level * spacey);
+        // posy = minheight + (node->level * spacey);
         posy = minheight + (node->height / maxheight) * totalheight;
         this->counter++;
 
@@ -716,7 +761,7 @@ double ClusterHierarchieRenderer::checkposition(HierarchicalClustering::CLUSTERN
             // Check position => if found return -1;
 
             posx = (posLeft + posRight) / 2;
-            //posy = minheight + (node->level * spacey);
+            // posy = minheight + (node->level * spacey);
             posy = minheight + (node->height / maxheight) * totalheight;
 
             if (x > posx - distanceX && x < posx + distanceY && y > posy - distanceX && y < posy + distanceY) {
@@ -737,8 +782,8 @@ bool ClusterHierarchieRenderer::GetPositionExtents(Call& call) {
     if (ccp->getPosition() != this->position) {
         this->hashoffset++;
         this->newposition = true;
-        ccp->SetDataHash(this->DataHashPosition + this->hashoffset);
     }
+    ccp->SetDataHash(this->DataHashPosition + this->hashoffset);
     return true;
 }
 
@@ -746,11 +791,11 @@ bool ClusterHierarchieRenderer::GetPositionData(Call& call) {
     CallClusterPosition* ccp = dynamic_cast<CallClusterPosition*>(&call);
     if (ccp == nullptr) return false;
     if (this->newposition) {
-        ccp->setPosition(this->position);
-        ccp->setClusterColors(nullptr);
         this->newposition = false;
         this->DataHashPosition += this->hashoffset;
     }
+    ccp->setPosition(this->position);
+    ccp->setClusterColors(nullptr);
     return true;
 }
 

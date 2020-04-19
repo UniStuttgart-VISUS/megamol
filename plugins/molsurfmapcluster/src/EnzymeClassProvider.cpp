@@ -71,6 +71,18 @@ std::vector<std::array<int, 4>> EnzymeClassProvider::RetrieveClassesForPdbId(
 }
 
 /*
+ * EnzymeClassProvider::ConvertEnzymeClassToString
+ */
+std::string EnzymeClassProvider::ConvertEnzymeClassToString(const std::array<int, 4>& enzymeClass) {
+    std::string result = "";
+    result += enzymeClass[0] != -1 ? std::to_string(enzymeClass[0]) : "";
+    result += enzymeClass[1] != -1 ? "." + std::to_string(enzymeClass[1]) : "";
+    result += enzymeClass[2] != -1 ? "." + std::to_string(enzymeClass[2]) : "";
+    result += enzymeClass[3] != -1 ? "." + std::to_string(enzymeClass[3]) : "";
+    return result;
+}
+
+/*
  * EnzymeClassProvider::loadMapFromFile
  */
 void EnzymeClassProvider::loadMapFromFile(const core::CoreInstance& coreInstance) {

@@ -381,6 +381,7 @@ bool Clustering::getDataCallback(core::Call& caller) {
 
     if (this->distancemultiplierchanged) {
         float value = this->distancemultiplier.Param<core::param::FloatParam>()->Value();
+        this->distancemultiplierchanged = false;
         this->clustering->setDistanceMultiplier(value);
     }
 
@@ -397,6 +398,9 @@ bool Clustering::getDataCallback(core::Call& caller) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Changed to Color-Moments");
             clustering->setMoments(2);
             break;
+        case 3:
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Changed to AI Features");
+            clustering->setMoments(3);
         }
 
         // Reanalyse Pictures

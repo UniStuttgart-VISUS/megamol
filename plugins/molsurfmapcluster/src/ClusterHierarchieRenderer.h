@@ -109,6 +109,10 @@ private:
     core::param::ParamSlot fontSizeParam;
     core::param::ParamSlot useDistanceColors;
 
+    core::param::ParamSlot addMapParam;
+    core::param::ParamSlot addIdParam;
+    core::param::ParamSlot addBrendaParam;
+
     core::param::ParamSlot minColorParam;
     core::param::ParamSlot midColorParam;
     core::param::ParamSlot maxColorParam;
@@ -171,8 +175,6 @@ private:
     core::view::MouseButton mouseButton;
     core::view::MouseButtonAction mouseAction;
 
-    bool actionavailable;
-
 
     /*** INPUT ********************************************************/
 
@@ -183,6 +185,7 @@ private:
     double drawTree(HierarchicalClustering::CLUSTERNODE*, glm::mat4, double, double, double, double,
         std::vector<std::tuple<HierarchicalClustering::CLUSTERNODE*, ClusterRenderer::RGBCOLOR*>*>*);
     void renderPopup(glm::mat4);
+    void renderMap(glm::mat4 mvp, glm::vec2 lowerleft, glm::vec2 upperright, PictureData* data);
     double checkposition(HierarchicalClustering::CLUSTERNODE*, float, float, double, double, double, double, double = 5.0, double = 5.0);
     float enzymeClassDistance(const std::array<int, 4>& arr1, const std::array<int, 4>& arr2);
 
