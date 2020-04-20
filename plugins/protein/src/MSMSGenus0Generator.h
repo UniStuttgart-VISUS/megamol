@@ -74,7 +74,11 @@ protected:
     vislib::math::Cuboid<float> bbox;
 
     /** The data update hash */
-    SIZE_T datahash;
+    //SIZE_T datahash;
+
+    SIZE_T last_datahash;
+    SIZE_T hash_offset;
+    bool reloadMolecule;
 
     /**
      * Loads the specified file

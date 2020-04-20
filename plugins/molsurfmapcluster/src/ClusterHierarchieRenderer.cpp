@@ -10,6 +10,7 @@
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/Renderer2DModule.h"
@@ -409,7 +410,7 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
             std::array<float, 4> color = {1.0f, 1.0f, 1.0f, 1.0f};
             this->theFont.DrawString(color.data(), posx, yp, height, false, stringToDraw,
                 core::utility::AbstractFont::Alignment::ALIGN_CENTER_MIDDLE);
-            
+
             yp -= height * 1.05f;
         }
 
@@ -565,6 +566,7 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
             }
         }
     } else {
+
         this->counter = 0;
 
         double height = this->viewport.GetY() * 0.9;
@@ -582,6 +584,8 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
         if (checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex, distanceX,
                 distanceY) == -1) {
             auto pdbid = this->popup->pic->pdbid;
+//#define OLD_BEHAVIOR
+#ifdef OLD_BEHAVIOR
             auto clusterids = DBScanClusteringProvider::RetrieveClustersForPdbId(pdbid, *this->GetCoreInstance());
             this->dbscancluster.clear();
             for (const auto& id : clusterids) {
@@ -593,9 +597,46 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
                 }
             }
             this->dbscanclustercolor = true;
+#else
+            if (action == core::view::MouseButtonAction::PRESS) {
+
+                auto ci = this->GetCoreInstance();
+                auto istart = ci->ModuleGraphRoot()->ChildList_Begin();
+                auto iend = ci->ModuleGraphRoot()->ChildList_End();
+                std::string instname = "inst";
+                for (auto it = istart; it != iend; ++it) {
+                    core::AbstractNamedObject::ptr_type ptr = *it;
+                    if (ptr != nullptr) instname = ptr->Name();
+                }
+
+                auto left =
+                    ci->FindParameter((std::string("::") + instname + std::string("::left::pdbFilename")).c_str());
+                auto right =
+                    ci->FindParameter((std::string("::") + instname + std::string("::right::pdbFilename")).c_str());
+                vislib::SmartPtr<core::param::AbstractParam> curparam = nullptr;
+
+                if (button == core::view::MouseButton::BUTTON_LEFT) {
+                    curparam = left;
+                } else if (button == core::view::MouseButton::BUTTON_RIGHT) {
+                    curparam = right;
+                }
+
+                if (!curparam.IsNull()) {
+                    std::string pathstring = T2A(curparam->ValueString()).PeekBuffer();
+                    std::filesystem::path path = pathstring;
+                    path.replace_filename(pdbid + ".pdb");
+                    vislib::TString pstring(path.c_str());
+                    bool res = curparam->ParseValue(pstring);
+                    if (!res) std::cout << "Could not change parameter" << std::endl;
+                }
+            }
+#endif
         } else {
+#ifdef OLD_BEHAVIOR
             this->dbscancluster.clear();
             this->dbscanclustercolor = false;
+#else
+#endif
         }
     }
 

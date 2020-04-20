@@ -37,7 +37,9 @@ using namespace megamol::protein;
 MSMSGenus0Generator::MSMSGenus0Generator(void)
     : core::Module()
     , bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
-    , datahash(0)
+    , last_datahash(0)
+    , hash_offset(0)
+    , reloadMolecule(false)
     , getDataSlot("getdata", "The slot publishing the loaded data")
     , molDataSlot("moldata", "The slot requesting molecular data")
     , bsDataSlot("getBindingSites", "The slot requesting binding site data")
@@ -169,7 +171,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
     uint32_t maxSteps = static_cast<uint32_t>(this->msmsMaxTryNumParam.Param<param::IntParam>()->Value());
 
     // load data on demand
-    if (this->filenameSlot.IsDirty()) {
+    if (this->filenameSlot.IsDirty() || this->reloadMolecule) {
         this->filenameSlot.ResetDirty();
 
         uint32_t genus = 1;
@@ -243,7 +245,9 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
             if (this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() ||
                 this->colorWeightParam.IsDirty() || this->minGradColorParam.IsDirty() ||
                 this->midGradColorParam.IsDirty() || this->maxGradColorParam.IsDirty() ||
-                this->prevTime != int(ctmd->FrameID())) {
+                this->prevTime != int(ctmd->FrameID()) || this->reloadMolecule) {
+
+                this->reloadMolecule = false;
 
                 Color::ColoringMode currentColoringMode0 =
                     static_cast<Color::ColoringMode>(this->coloringModeParam0.Param<param::EnumParam>()->Value());
@@ -520,7 +524,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                 // setVertexData clears all attributes, so we have to add a new one
                 this->obj[ctmd->FrameID()]->AddVertexAttribPointer(atomIndex);
                 this->obj[ctmd->FrameID()]->AddVertexAttribPointer(values);
-                this->datahash++;
+                this->hash_offset++;
 
                 this->coloringModeParam0.ResetDirty();
                 this->coloringModeParam1.ResetDirty();
@@ -533,7 +537,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
     }
 
     if (this->obj[ctmd->FrameID()]->GetVertexCount() > 0) {
-        ctmd->SetDataHash(this->datahash);
+        ctmd->SetDataHash(this->last_datahash + hash_offset);
         ctmd->SetObjects(1, this->obj[ctmd->FrameID()]);
         if (!twoColors) {
             ctmd->SetColorBounds(this->lowval, this->highval, minCol, midCol, maxCol);
@@ -578,7 +582,6 @@ bool MSMSGenus0Generator::getExtentCallback(core::Call& caller) {
         if (genus > 0) return false;
     }
 
-    ctmd->SetDataHash(this->datahash);
     if (this->filenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty()) {
         MolecularDataCall* mol = this->molDataSlot.CallAs<MolecularDataCall>();
         if (mol) {
@@ -586,9 +589,14 @@ bool MSMSGenus0Generator::getExtentCallback(core::Call& caller) {
             if ((*mol)(MolecularDataCall::CallForGetExtent)) {
                 frameCnt = mol->FrameCount();
                 this->bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
+                if (this->last_datahash != mol->DataHash()) {
+                    this->last_datahash = mol->DataHash();
+                    this->reloadMolecule = true;
+                }
             }
         }
     }
+    ctmd->SetDataHash(this->last_datahash + hash_offset);
     ctmd->SetExtent(frameCnt, this->bbox.Left(), this->bbox.Bottom(), this->bbox.Back(), this->bbox.Right(),
         this->bbox.Top(), this->bbox.Front());
     if (this->obj.Count() != frameCnt) {
@@ -756,7 +764,7 @@ bool MSMSGenus0Generator::load(const vislib::TString& filename, float probe_radi
             j++;
         }
 
-        this->datahash++;
+        this->hash_offset++;
         Log::DefaultLog.WriteInfo(
             "Finished loading MSMS files %s and %s.", vertFilename.PeekBuffer(), faceFilename.PeekBuffer());
 
