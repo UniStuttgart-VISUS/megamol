@@ -1090,11 +1090,11 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                         if (inout_graph.get_group(module_group_uid, remove_group_ptr)) {
                             if (remove_group_ptr->uid != add_group_ptr->uid) {
                                 remove_group_ptr->RemoveModule(module_ptr->uid);
+                                inout_graph.restore_callslots_interfaceslot_state(remove_group_ptr->uid);                                 
                             }
                         }
                         // Add module to group
                         add_group_ptr->AddModule(module_ptr);
-                        inout_graph.restore_callslots_interfaceslot_state(remove_group_ptr->uid); 
                         inout_graph.restore_callslots_interfaceslot_state(add_group_ptr->uid);
                     }
                 }
