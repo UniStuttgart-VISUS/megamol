@@ -2048,9 +2048,8 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
 }
 
 
+/// ! Implementation should be duplicate to Configurator-Version megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_string()
 bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::string& in_json_string) {
-
-    /// Implementation should be duplicate to megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_string()
 
     try {
         if (this->core_instance == nullptr) {
@@ -2061,20 +2060,16 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
 
         bool found = false;
         bool valid = true;
-
         nlohmann::json json;
         json = nlohmann::json::parse(in_json_string);
-
         if (!json.is_object()) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-
-        const std::string header = "GUIState_Parameters";
-
+        
         for (auto& h : json.items()) {
-            if (h.key() == header) {
+            if (h.key() == GUI_JSON_TAG_GUISTATE_PARAMETERS) {
                 found = true;
                 for (auto& w : h.value().items()) {
                     std::string json_param_name = w.key();
@@ -2164,9 +2159,8 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
 }
 
 
+/// ! Implementation should be duplicate to Configurator-Version megamol::gui::configurator::GraphManager::parameters_gui_state_to_json()
 bool megamol::gui::GUIWindows::parameters_gui_state_to_json(nlohmann::json& out_json) {
-
-    /// Implementation should be duplicate to megamol::gui::configurator::GraphManager::parameters_gui_state_to_json()
     
     try {
         if (this->core_instance == nullptr) {
@@ -2175,17 +2169,15 @@ bool megamol::gui::GUIWindows::parameters_gui_state_to_json(nlohmann::json& out_
             return false;
         }
 
-        const std::string header = "GUIState_Parameters";
         out_json.clear();
 
         this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
             auto parameter = slot.Parameter();
             if (!parameter.IsNull()) {
                 std::string param_name = std::string(slot.Name().PeekBuffer());
-
-                out_json[header][param_name]["gui_visibility"] = parameter->IsGUIVisible();
-                out_json[header][param_name]["gui_read-only"] = parameter->IsGUIReadOnly();
-                out_json[header][param_name]["gui_presentation_mode"] =
+                out_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_name]["gui_visibility"] = parameter->IsGUIVisible();
+                out_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_name]["gui_read-only"] = parameter->IsGUIReadOnly();
+                out_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_name]["gui_presentation_mode"] =
                     static_cast<int>(parameter->GetGUIPresentation());
             }
         });

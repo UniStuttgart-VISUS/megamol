@@ -167,10 +167,24 @@ See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol
         * Rename      
         * Delete
 
-#### Module Grouping
+#### Module Groups
 
+Modules can be bundled in groups. 
+This allows a minimized (collapsed) view of large module groups inside the configurator. 
+Grouped modules can be reused when stored separately. 
+Module groups can be added to any other projects.
 Module groups are stored in project files using the already available module namespace (which is currently unused in the core). 
-Group interface slots are stored in the new tag `--confGroupInterface{...}` in the same line as the corresponding lua command for the module creation.                           
+
+#### Group Interface Slots
+
+Call slots of modules, which are part of a group, can be added to the group interface. 
+This generates new interface slot which allow outgoing calls. 
+Interface slots are automatically genereated if required.
+Additionally call slots can be added to the groups interface via the context menu of the call slots.
+Caller interaface slots (on the right side of a group) allow the bundling of more than one connection to the same callee slot of another module. 
+Add a call slot to an existing interface slot via drag and drop (compatible call slots are highlighted if an interface slot is hoverd).
+Callee interface slots (on the left side of a group) allow only one connected call slot.
+Interface slots are stored in project files as part of the configurators state parameter.                       
 
 ---
 

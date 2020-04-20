@@ -112,11 +112,8 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
             return false;
         }
 
-        // Search for header
-        const std::string header = "Window_Configurations";
-
         for (auto& h : json.items()) {
-            if (h.key() == header) {
+            if (h.key() == (GUI_JSON_TAG_WINDOW_CONFIGURATIONS)) {
                 found = true;
                 for (auto& w : h.value().items()) {
                     std::string window_name = w.key();
@@ -439,40 +436,38 @@ bool WindowManager::StateToJSON(nlohmann::json& out_json) {
     try {
         out_json.clear();
 
-        const std::string header = "Window_Configurations";
-
         for (auto& w : this->windows) {
             if (w.second.win_store_config) {
                 std::string window_name = w.first;
                 WindowConfiguration window_config = w.second;
-                out_json[header][window_name]["win_show"] = window_config.win_show;
-                out_json[header][window_name]["win_flags"] = static_cast<int>(window_config.win_flags);
-                out_json[header][window_name]["win_callback"] = static_cast<int>(window_config.win_callback);
-                out_json[header][window_name]["win_hotkey"] = {
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_show"] = window_config.win_show;
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_flags"] = static_cast<int>(window_config.win_flags);
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_callback"] = static_cast<int>(window_config.win_callback);
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_hotkey"] = {
                     static_cast<int>(window_config.win_hotkey.key), window_config.win_hotkey.mods.toInt()};
-                out_json[header][window_name]["win_position"] = {
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_position"] = {
                     window_config.win_position.x, window_config.win_position.y};
-                out_json[header][window_name]["win_size"] = {window_config.win_size.x, window_config.win_size.y};
-                out_json[header][window_name]["win_soft_reset"] = window_config.win_soft_reset;
-                out_json[header][window_name]["win_reset_size"] = {
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_size"] = {window_config.win_size.x, window_config.win_size.y};
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_soft_reset"] = window_config.win_soft_reset;
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_reset_size"] = {
                     window_config.win_reset_size.x, window_config.win_reset_size.y};
 
                 this->utils.Utf8Encode(window_config.main_project_file);
-                out_json[header][window_name]["main_project_file"] = window_config.main_project_file;
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["main_project_file"] = window_config.main_project_file;
 
-                out_json[header][window_name]["param_show_hotkeys"] = window_config.param_show_hotkeys;
-                out_json[header][window_name]["param_modules_list"] = window_config.param_modules_list;
-                out_json[header][window_name]["param_module_filter"] =
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["param_show_hotkeys"] = window_config.param_show_hotkeys;
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["param_modules_list"] = window_config.param_modules_list;
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["param_module_filter"] =
                     static_cast<int>(window_config.param_module_filter);
-                out_json[header][window_name]["param_expert_mode"] = window_config.param_expert_mode;
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["param_expert_mode"] = window_config.param_expert_mode;
 
-                out_json[header][window_name]["ms_show_options"] = window_config.ms_show_options;
-                out_json[header][window_name]["ms_max_history_count"] = window_config.ms_max_history_count;
-                out_json[header][window_name]["ms_refresh_rate"] = window_config.ms_refresh_rate;
-                out_json[header][window_name]["ms_mode"] = static_cast<int>(window_config.ms_mode);
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["ms_show_options"] = window_config.ms_show_options;
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["ms_max_history_count"] = window_config.ms_max_history_count;
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["ms_refresh_rate"] = window_config.ms_refresh_rate;
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["ms_mode"] = static_cast<int>(window_config.ms_mode);
 
                 this->utils.Utf8Encode(window_config.font_name);
-                out_json[header][window_name]["font_name"] = window_config.font_name;
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["font_name"] = window_config.font_name;
             }
         }
 

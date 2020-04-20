@@ -290,6 +290,7 @@ megamol::gui::configurator::Group::Presentation::Presentation(void)
     , utils()
     , name_label()
     , collapsed_view(false)
+    , allow_selection(false)
     , allow_context(false)
     , selected(false)
     , update(true) {}
@@ -332,32 +333,36 @@ void megamol::gui::configurator::Group::Presentation::Present(
         ImVec2 header_rect_max = group_rect_min + header_size;
 
         ImGui::PushID(inout_group.uid);
-
+        
         if (phase == megamol::gui::PresentPhase::INTERACTION) {
 
+            // Limit selection to header
+            this->allow_selection = false;
+            ImVec2 mouse_pos = ImGui::GetMousePos();
+            if ((mouse_pos.x >= group_rect_min.x) && (mouse_pos.y >= group_rect_min.y) && (mouse_pos.x <= header_rect_max.x) &&
+                (mouse_pos.y <= header_rect_max.y)) {
+                this->allow_selection = true;
+                if (state.interact.group_hovered_uid == inout_group.uid) {
+                    this->allow_context = true;
+                }
+            }  
+            
             // Header Button
             std::string label = "group_" + std::to_string(inout_group.uid);
             ImGui::SetCursorScreenPos(group_rect_min);
             ImGui::SetItemAllowOverlap();
             ImGui::InvisibleButton(label.c_str(), group_size);
             ImGui::SetItemAllowOverlap();
-            if (ImGui::IsItemActive()) {
+            if (ImGui::IsItemActivated()) {
                 state.interact.button_active_uid = inout_group.uid;
             }
             if (ImGui::IsItemHovered()) {
                 state.interact.button_hovered_uid = inout_group.uid;
             }
 
-            ImVec2 mouse = ImGui::GetMousePos();
-            if ((state.interact.group_hovered_uid == inout_group.uid) &&
-                ((mouse.x >= group_rect_min.x) && (mouse.y >= group_rect_min.y) && (mouse.x <= header_rect_max.x) &&
-                    (mouse.y <= header_rect_max.y))) {
-                this->allow_context = true;
-            }
-
             // Context menu
             bool popup_rename = false;
-            if (this->allow_context && ImGui::BeginPopupContextItem("invisible_button_context")) {
+            if (ImGui::BeginPopupContextItem("invisible_button_context")) { /// this->allow_context && 
 
                 state.interact.button_active_uid = inout_group.uid;
 
@@ -379,10 +384,6 @@ void megamol::gui::configurator::Group::Presentation::Present(
                     }
                     this->UpdatePositionSize(inout_group, state.canvas);
                 }
-                /// XXX Not yet implemented
-                // if (ImGui::MenuItem("Save")) {
-                //    state.interact.group_save = true;
-                //}
                 if (ImGui::MenuItem("Rename")) {
                     popup_rename = true;
                 }
@@ -391,9 +392,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
                     std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
                 }
                 ImGui::EndPopup();
-            } else {
-                this->allow_context = false;
-            }
+            } /// else { this->allow_context = false; }
 
             // Automatically delete empty group
             if (inout_group.GetModules().empty()) {
@@ -423,18 +422,10 @@ void megamol::gui::configurator::Group::Presentation::Present(
                 state.interact.group_hovered_uid = GUI_INVALID_ID;
             }
 
-            // Limit activation and hovering to header
-            bool mouse_inside_header = false;
-            ImVec2 mouse = ImGui::GetMousePos();
-            if ((mouse.x >= group_rect_min.x) && (mouse.y >= group_rect_min.y) && (mouse.x <= header_rect_max.x) &&
-                (mouse.y <= header_rect_max.y)) {
-                mouse_inside_header = true;
-            }
-            if (!mouse_inside_header) {
-                active = false;
-                hovered = false;
-            }
-
+            // Adjust state for selection
+            active = active && this->allow_selection;
+            hovered = hovered && this->allow_selection;
+            this->allow_selection = false;
             // Selection
             if (!this->selected && active) {
                 state.interact.group_selected_uid = inout_group.uid;

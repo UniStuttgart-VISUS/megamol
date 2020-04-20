@@ -644,6 +644,8 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
 void megamol::gui::configurator::Parameter::Presentation::present_value_PIN_VALUE_TO_MOUSE(
     megamol::gui::configurator::Parameter& inout_parameter) {
 
+/// Disabled in Configurator
+/*
     auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
     if (!ImGui::IsWindowHovered(hoverFlags)) {
@@ -657,6 +659,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_PIN_VALU
 
         ImGui::EndTooltip();
     }
+*/
 }
 
 

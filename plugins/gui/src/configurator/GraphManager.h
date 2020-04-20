@@ -41,14 +41,13 @@ public:
     inline const ModuleStockVectorType& GetModulesStock(void) { return this->modules_stock; }
     inline const CallStockVectorType& GetCallsStock(void) { return this->calls_stock; }
 
-    bool LoadProjectCore(megamol::core::CoreInstance* core_instance);
+    ImGuiID LoadProjectCore(megamol::core::CoreInstance* core_instance);
     bool AddProjectCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance);
 
-    bool LoadAddProjectFile(ImGuiID graph_uid, const std::string& project_filename);
+    ImGuiID LoadAddProjectFile(ImGuiID graph_uid, const std::string& project_filename);
 
     bool SaveProjectFile(ImGuiID graph_uid, const std::string& project_filename);
-    bool SaveGroupFile(ImGuiID group_uid, const std::string& project_filename);
-
+    
     // GUI Presentation -------------------------------------------------------
 
     void GUI_Present(GraphStateType& state) { this->present.Present(*this, state); }

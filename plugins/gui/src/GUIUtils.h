@@ -57,8 +57,11 @@ namespace gui {
 #define GUI_DND_CALLSLOT_UID_TYPE ("DND_CALL")
 #define GUI_GRAPH_BORDER (GUI_SLOT_RADIUS * 4.0f)
 #define GUI_MULTISELECT_MODIFIER (ImGui::GetIO().KeyShift)
-#define GUI_MODULE_CLASS_NAME ("GUIView")
-#define GUI_MODULE_STATE_PARAM_NAME ("state")
+
+#define GUI_JSON_TAG_WINDOW_CONFIGURATIONS ("Window_Configurations")
+#define GUI_JSON_TAG_GUISTATE_PARAMETERS ("GUIState_Parameters")
+#define GUI_JSON_TAG_CONFIGURATOR ("Configurator")
+#define GUI_JSON_TAG_GRAPHS ("Graphs")
 
 // Global Colors
 #define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.0f, 0.0f, 1.0f))
@@ -103,7 +106,7 @@ typedef std::vector<UIDPairType> UIDPairVectorType;
 typedef std::pair<ImGuiID, std::string> GroupPairType;
 typedef std::vector<megamol::gui::GroupPairType> GroupPairVectorType;
 
-enum PresentPhase { INTERACTION, RENDERING };
+enum PresentPhase : size_t { INTERACTION = 0, RENDERING = 1 };
 
 /* Data type holding information of graph canvas. */
 typedef struct _canvas_ {
@@ -120,7 +123,6 @@ typedef struct _interact_state_ {
     ImGuiID button_hovered_uid;                                      // in out
     ImGuiID group_selected_uid;                                      // in out
     ImGuiID group_hovered_uid;                                       // in out
-    bool group_save;                                                 // out
     UIDVectorType modules_selected_uids;                             // in out
     ImGuiID module_hovered_uid;                                      // in out
     ImGuiID module_mainview_uid;                                     // out

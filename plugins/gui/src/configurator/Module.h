@@ -86,6 +86,7 @@ public:
 
     inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdateSize(*this, in_canvas); }
 
+    inline bool GUI_IsGroupMember(void) { return (this->present.group.uid != GUI_INVALID_ID); }
     inline bool GUI_IsVisibleInGroup(void) { return this->present.group.visible; }
     inline bool GUI_IsLabelVisible(void) { return this->present.label_visible; }
     inline ImGuiID GUI_GetGroupUID(void) { return this->present.group.uid; }
@@ -148,7 +149,6 @@ private:
         bool selected;
         bool update;
         bool show_params;
-        bool last_active;
         bool place_at_mouse_pos;
 
         inline bool found_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {

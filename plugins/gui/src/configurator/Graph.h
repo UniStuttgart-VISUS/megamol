@@ -37,6 +37,7 @@ public:
     bool GetModule(ImGuiID module_uid, ModulePtrType& out_module_ptr);
 
     bool AddCall(const CallStockVectorType& stock_calls, CallSlotPtrType callslot_1, CallSlotPtrType callslot_2);
+    bool AddCall(const CallStockVectorType& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid);
     bool DeleteCall(ImGuiID call_uid);
 
     ImGuiID AddGroup(const std::string& group_name = "");
@@ -63,11 +64,9 @@ public:
 
     inline void GUI_Present(GraphStateType& state) { this->present.Present(*this, state); }
 
-    inline ImGuiID GUI_GetSelectedGroup(void) const { return this->present.GetSelectedGroup(); }
     inline ImGuiID GUI_GetSelectedCallSlot(void) const { return this->present.GetSelectedCallSlot(); }
     inline ImGuiID GUI_GetSelectedInterfaceSlot(void) const { return this->present.GetSelectedInterfaceSlot(); }
     inline ImGuiID GUI_GetDropSlot(void) const { return this->present.GetDropSlot(); }
-    inline bool GUI_GetGroupSave(void) { return this->present.GetGroupSave(); }
     inline bool GUI_GetCanvasHoverd(void) const { return this->present.GetCanvasHoverd(); }
 
     inline void GUI_SetLayoutGraph(void) { this->present.LayoutGraph(); }
@@ -97,7 +96,6 @@ private:
 
         void Present(Graph& inout_graph, GraphStateType& state);
 
-        ImGuiID GetSelectedGroup(void) const { return this->graph_state.interact.group_selected_uid; }
         ImGuiID GetSelectedCallSlot(void) const { return this->graph_state.interact.callslot_selected_uid; }
         ImGuiID GetSelectedInterfaceSlot(void) const { return this->graph_state.interact.interfaceslot_selected_uid; }
         ImGuiID GetDropSlot(void) const { return this->graph_state.interact.slot_dropped_uid; }
@@ -106,12 +104,6 @@ private:
         bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
         bool GetCallLabelVisibility(void) const { return this->show_call_names; }
         bool GetCanvasHoverd(void) const { return this->canvas_hovered; }
-
-        bool GetGroupSave(void) {
-            bool retval = this->graph_state.interact.group_save;
-            this->graph_state.interact.group_save = false;
-            return retval;
-        }
 
         void ForceUpdate(void) { this->update = true; }
 

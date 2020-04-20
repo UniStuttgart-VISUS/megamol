@@ -215,7 +215,7 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
                         ImGui::SetItemAllowOverlap();
                         ImGui::InvisibleButton(label.c_str(), rect_size);
                         ImGui::SetItemAllowOverlap();
-                        if (ImGui::IsItemActive()) {
+                        if (ImGui::IsItemActivated()) {
                             state.interact.button_active_uid = inout_call.uid;
                         }
                         if (ImGui::IsItemHovered()) {

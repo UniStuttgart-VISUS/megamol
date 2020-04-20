@@ -233,6 +233,12 @@ public:
     }
     inline void GUI_SetExpert(bool expert) { this->present.expert = expert; }
 
+    inline bool GUI_GetVisibility(void) { return this->present.visible; }
+    inline bool GUI_GetReadOnly(void) { return this->present.read_only; }
+    inline Parameter::Presentations GUI_GetPresentation(void) {
+        return this->present.presentation;
+    }
+    
     inline float GUI_GetHeight(void) { return this->present.GetHeight(*this); }
 
 private:

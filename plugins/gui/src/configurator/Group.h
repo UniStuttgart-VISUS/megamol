@@ -95,6 +95,7 @@ private:
         GUIUtils utils;
         std::string name_label;
         bool collapsed_view;
+        bool allow_selection;
         bool allow_context;
         bool selected;
         bool update;

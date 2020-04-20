@@ -218,15 +218,6 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
             "Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
-
-    bool group_save = false;
-    ImGuiID group_selected_uid = GUI_INVALID_ID;
-    GraphPtrType selected_graph_ptr;
-    if (this->graph_manager.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
-        group_save = selected_graph_ptr->GUI_GetGroupSave();
-        group_selected_uid = selected_graph_ptr->GUI_GetSelectedGroup();
-    }
-    bool popup_save_group_file = group_save;
     
     bool confirmed, aborted;
     bool popup_save_project_file = false;
@@ -291,13 +282,6 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                     false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
                 popup_save_project_file = true;
             }
-            /// XXX Not implemented yet
-            // Save currently active group to LUA file
-            /*
-            if (ImGui::MenuItem("Save Group", nullptr, false, (group_selected_uid != GUI_INVALID_ID))) {
-                popup_save_group_file = true;
-            }
-            */
             ImGui::EndMenu();
         }
 
@@ -332,12 +316,6 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
             ImGui::EndMenu();
         }
 
-        /// XXX Not necessary any more
-        // Info text ----------------------------------------------------------
-        // ImGui::SameLine(260.0f);
-        // std::string label = "Changes will not affect the currently loaded MegaMol project.";
-        // ImGui::TextColored(GUI_COLOR_TEXT_WARN, label.c_str());
-
         ImGui::EndMenuBar();
     }
 
@@ -369,22 +347,6 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     }
     this->utils.MinimalPopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
-
-    /// XXX Not implemented yet
-    /*
-    popup_failed = false;
-    project_filename.clear();
-    graph_ptr.reset();
-    if (this->graph_manager.GetGraph(group_selected_uid, graph_ptr)) {
-        project_filename = graph_ptr->GetFilename();
-    }
-    if (this->file_utils.FileBrowserPopUp(
-            FileUtils::FileBrowserFlag::SAVE, "Save Group", popup_save_group_file, project_filename)) {
-        popup_failed = !this->graph_manager.SaveGroupFile(group_selected_uid, project_filename);
-    }
-    this->utils.MinimalPopUp("Failed to Save Group", popup_failed, "See console log output for more information.", "",
-        confirmed, "Cancel", aborted);
-    */
 }
 
 
@@ -579,7 +541,6 @@ void megamol::gui::configurator::Configurator::save_state_to_parameter(void) {
 bool megamol::gui::configurator::Configurator::configurator_state_from_json_string(const std::string& in_json_string) {
 
     try {
-        const std::string header = "Configurator";
         bool found = false;
 
         nlohmann::json json;
@@ -592,7 +553,7 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
         }
 
         for (auto& h : json.items()) {
-            if (h.key() == header) {
+            if (h.key() == GUI_JSON_TAG_CONFIGURATOR) {
                 found = true;
                 auto config_state = h.value();
 
@@ -604,13 +565,19 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
                         "JSON state: Failed to read 'module_list_sidebar' as boolean.[%s, %s, line %d]\n", __FILE__,
                         __FUNCTION__, __LINE__);
                 }
-
+            }
+            else if (h.key() == GUI_JSON_TAG_GRAPHS) {
                 for (auto& w : h.value().items()) {
-                    std::string json_param_name = w.key();
-                    auto graph_state = w.value();
-
-
-                    /// TODO
+                    std::string json_graph_id = w.key(); /// = graph filename
+                    // Load graph from file
+                    ImGuiID graph_uid = this->graph_manager.LoadAddProjectFile(GUI_INVALID_ID, json_graph_id);
+                    if (graph_uid != GUI_INVALID_ID) {
+                        GraphPtrType graph_ptr;
+                        if (this->graph_manager.GetGraph(graph_uid, graph_ptr)) {
+                            // Let graph search for his configurator state
+                            graph_ptr->StateFromJsonString(in_json_string);
+                        }
+                    }
                 }
             }
         }
@@ -650,17 +617,15 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
 bool megamol::gui::configurator::Configurator::configurator_state_to_json(nlohmann::json& out_json) {
 
     try {
-        const std::string header = "Configurator";
         out_json.clear();
 
-        out_json[header]["module_list_sidebar"] = this->show_module_list_sidebar;
-        /*
+        out_json[GUI_JSON_TAG_CONFIGURATOR]["module_list_sidebar"] = this->show_module_list_sidebar;
+
         for (auto& graph_ptr : this->graph_manager.GetGraphs()) {
             nlohmann::json graph_json;
             graph_ptr->StateToJSON(graph_json);
-            out_json[header].update(graph_json);
+            out_json.update(graph_json);
         }
-        * */
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(

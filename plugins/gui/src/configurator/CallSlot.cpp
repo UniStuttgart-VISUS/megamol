@@ -332,7 +332,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                 ImGui::SetItemAllowOverlap();
                 ImGui::InvisibleButton(label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
                 ImGui::SetItemAllowOverlap();
-                if (ImGui::IsItemActive()) {
+                if (ImGui::IsItemActivated()) {
                     state.interact.button_active_uid = inout_callslot.uid;
                 }
                 if (ImGui::IsItemHovered()) {

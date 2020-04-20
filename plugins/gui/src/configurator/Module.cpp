@@ -141,7 +141,6 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
     , selected(false)
     , update(true)
     , show_params(false)
-    , last_active(false)
     , place_at_mouse_pos(false) {
 
     this->group.uid = GUI_INVALID_ID;
@@ -270,7 +269,7 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
                     ImGui::SetItemAllowOverlap();
                     ImGui::InvisibleButton(label.c_str(), module_size);
                     ImGui::SetItemAllowOverlap();
-                    if (ImGui::IsItemActive()) {
+                    if (ImGui::IsItemActivated()) {
                         state.interact.button_active_uid = inout_module.uid;
                     }
                     if (ImGui::IsItemHovered()) {
@@ -360,8 +359,7 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
                     }
                 } else if (phase == megamol::gui::PresentPhase::RENDERING) {
 
-                    bool active = ((state.interact.button_active_uid == inout_module.uid) && !this->last_active);
-                    this->last_active = (state.interact.button_active_uid == inout_module.uid);
+                    bool active = (state.interact.button_active_uid == inout_module.uid);
                     bool hovered = (state.interact.button_hovered_uid == inout_module.uid);
 
                     // Selection
