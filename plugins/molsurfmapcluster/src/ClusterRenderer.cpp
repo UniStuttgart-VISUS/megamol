@@ -13,6 +13,7 @@
 #include "vislib\math\ForceDirected.h"
 
 #include <filesystem>
+#include <istream>
 #include <vector>
 #include "glm/glm.hpp"
 
@@ -20,6 +21,8 @@
 #include "ClusterHierarchieRenderer.h"
 #include "ClusterRenderer.h"
 #include "TextureLoader.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/utility/ColourParser.h"
 
 #define LINECOLOR 0.0, 0.0, 1.0
 #define BLACK 0, 0, 0
@@ -43,8 +46,7 @@ ClusterRenderer::ClusterRenderer(void)
     , clusterDataSlot("inData", "The input data slot for sphere data.")
     , getPosition("getPosition", "Returns the aktual Rendered-Root-Node from clustering")
     , setPosition("setPosition", "Set the aktual position-root-node from clustering")
-
-
+    , colorTableFileParam("colortable", "Path to the file containing an alternative color table")
     , theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
     , mouseX(0.0f)
     , mouseY(0.0f)
@@ -70,7 +72,8 @@ ClusterRenderer::ClusterRenderer(void)
     this->MakeSlotAvailable(&this->setPosition);
 
     // ParamSlot
-
+    this->colorTableFileParam.SetParameter(new param::FilePathParam(""));
+    this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // Variablen
     this->lastHash = 0;
@@ -370,9 +373,9 @@ void ClusterRenderer::renderAllLeaves(
         for (std::tuple<HierarchicalClustering::CLUSTERNODE*, ClusterRenderer::RGBCOLOR*>* colortuple : *colors) {
             if (this->clustering->parentIs(node, std::get<0>(*colortuple))) {
                 ClusterRenderer::RGBCOLOR* color = std::get<1>(*colortuple);
-                double r = (255 - color->r) / 255;
-                double g = (255 - color->g) / 255;
-                double b = (255 - color->b) / 255;
+                double r = (color->r) / 255;
+                double g = (color->g) / 255;
+                double b = (color->b) / 255;
                 rescolor = glm::vec3(r, g, b);
                 clusternode = true;
             }
@@ -509,6 +512,11 @@ bool ClusterRenderer::Render(view::CallRender2D& call) {
     CallClustering* ccc = this->clusterDataSlot.CallAs<CallClustering>();
     if (!ccc) return false;
     if (!(*ccc)(CallClustering::CallForGetData)) return false;
+
+    if (this->colorTableFileParam.IsDirty()) {
+        this->colorTableFileParam.ResetDirty();
+        this->colortab = this->loadColorTable();
+    }
 
     // read matrices (old bullshit)
     GLfloat viewMatrixColumn[16];
@@ -750,13 +758,35 @@ void ClusterRenderer::renderText(vislib::StringA text, glm::mat4 mvp, double x, 
 std::vector<std::tuple<HierarchicalClustering::CLUSTERNODE*, ClusterRenderer::RGBCOLOR*>*>*
 ClusterRenderer::getNdiffrentColors(std::vector<HierarchicalClustering::CLUSTERNODE*>* cluster) {
 
+    std::vector<std::tuple<HierarchicalClustering::CLUSTERNODE*, RGBCOLOR*>*>* result =
+        new std::vector<std::tuple<HierarchicalClustering::CLUSTERNODE*, RGBCOLOR*>*>();
+    int counter = 0;
+    int quantity = cluster->size();
+
+    if (!this->colortab.empty()) {
+        for (int i = 0; i < quantity; ++i) {
+            int index = i % colortab.size();
+            RGBCOLOR* tmp = new RGBCOLOR();
+            tmp->r = colortab[index].r;
+            tmp->g = colortab[index].g;
+            tmp->b = colortab[index].b;
+
+            std::tuple<HierarchicalClustering::CLUSTERNODE*, RGBCOLOR*>* tmpcolor =
+                new std::tuple<HierarchicalClustering::CLUSTERNODE*, RGBCOLOR*>();
+            std::get<0>(*tmpcolor) = (*cluster)[i];
+            std::get<1>(*tmpcolor) = tmp;
+            result->push_back(tmpcolor);
+        }
+        return result;
+    }
+
+
     /* Dieser Teil der Funktion ermittelt für jeden Farbkanal einzeln, in wie viele Teile die 255 Werte
     des jeweiligen Farbkanals mindestens zerlegt werden müssen, damit die Funktion die geforderte Anzahl
     Farben durch Permutationen erzeugen kann.
         */
 
     double red_number, blue_number, green_number;
-    int quantity = cluster->size();
 
     double root = pow(quantity, 1.0 / 3.0);
     if (ceil(root) * pow(floor(root), 2) >= quantity) {
@@ -770,10 +800,6 @@ ClusterRenderer::getNdiffrentColors(std::vector<HierarchicalClustering::CLUSTERN
     }
 
     /* Dieser Teil berechnet die Permutationen und bricht ab, wenn genügend erzeugt wurden. */
-
-    std::vector<std::tuple<HierarchicalClustering::CLUSTERNODE*, RGBCOLOR*>*>* result =
-        new std::vector<std::tuple<HierarchicalClustering::CLUSTERNODE*, RGBCOLOR*>*>();
-    int counter = 0;
 
     for (int red_counter = 0; red_counter <= red_number; red_counter++) {
         for (int green_counter = 0; green_counter <= green_number; green_counter++) {
@@ -795,4 +821,25 @@ ClusterRenderer::getNdiffrentColors(std::vector<HierarchicalClustering::CLUSTERN
             }
         }
     }
+}
+
+std::vector<glm::uvec4> ClusterRenderer::loadColorTable(void) {
+    std::vector<glm::uvec4> result;
+    auto path = this->colorTableFileParam.Param<param::FilePathParam>()->Value();
+    std::string pstring = path.PeekBuffer();
+    if (pstring.empty()) return result;
+    std::ifstream file(pstring);
+    if (file.is_open()) {
+        std::string line;
+        while (std::getline(file, line)) {
+            if (!line.empty()) {
+                std::array<unsigned char, 3> col;
+                if (core::utility::ColourParser::FromString(line.c_str(), 3, col.data())) {
+                    result.push_back(glm::uvec4(col[0], col[1], col[2], 255));
+                }
+            }
+        }
+        file.close();
+    }
+    return result;
 }

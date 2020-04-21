@@ -15,6 +15,7 @@
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/param/ParamSlot.h"
 
 #include "vislib/Array.h"
 #include "vislib/graphics/gl/GLSLShader.h"
@@ -109,6 +110,9 @@ private:
     /**********************************************************************
      * variables
      **********************************************************************/
+
+    core::param::ParamSlot colorTableFileParam;
+
     /**The Viewport*/
     vislib::math::Vector<float, 2> viewport;
 
@@ -172,6 +176,7 @@ private:
         HierarchicalClustering::CLUSTERNODE* node1, HierarchicalClustering::CLUSTERNODE* node2, glm::mat4);
     void setMinMax(std::vector<HierarchicalClustering::CLUSTERNODE*>*);
     void DrawCircle(glm::mat4 mvp, float cx, float cy, float r, int num_segments);
+    std::vector<glm::uvec4> loadColorTable(void);
 
     std::vector<std::tuple<HierarchicalClustering::CLUSTERNODE*, RGBCOLOR*>*>* getNdiffrentColors(
         std::vector<HierarchicalClustering::CLUSTERNODE*>*);
@@ -195,6 +200,7 @@ private:
     /** The slot for requesting data. */
     core::CalleeSlot getPosition;
     bool newposition;
+    std::vector<glm::uvec4> colortab;
 };
 
 } // namespace MolSurfMapCluster

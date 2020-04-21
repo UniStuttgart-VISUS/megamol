@@ -302,13 +302,13 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
     // Select Color
     bool clusternode = false;
     glm::vec4 currentcolor;
-    if (this->colors != nullptr) {
+    if (colors != nullptr) {
         for (std::tuple<HierarchicalClustering::CLUSTERNODE*, ClusterRenderer::RGBCOLOR*>* colortuple : *colors) {
             if (this->clustering->parentIs(node, std::get<0>(*colortuple))) {
                 ClusterRenderer::RGBCOLOR* color = std::get<1>(*colortuple);
-                double r = (255 - color->r) / 255;
-                double g = (255 - color->g) / 255;
-                double b = (255 - color->b) / 255;
+                double r = (color->r) / 255;
+                double g = (color->g) / 255;
+                double b = (color->b) / 255;
                 currentcolor = glm::vec4(r, g, b, 1.0f);
                 clusternode = true;
             }
@@ -407,7 +407,7 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
             auto stringToDraw = node->pic->pdbid.c_str();
             auto lineWidth = theFont.LineWidth(height, stringToDraw);
 
-            std::array<float, 4> color = {1.0f, 1.0f, 1.0f, 1.0f};
+            std::array<float, 4> color = {0.1f, 0.1f, 0.1f, 1.0f};
             this->theFont.DrawString(color.data(), posx, yp, height, false, stringToDraw,
                 core::utility::AbstractFont::Alignment::ALIGN_CENTER_MIDDLE);
 
@@ -417,7 +417,7 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
         if (this->addBrendaParam.Param<param::BoolParam>()->Value()) {
             auto pdbid = node->pic->pdbid;
             auto classes = EnzymeClassProvider::RetrieveClassesForPdbId(pdbid, *this->GetCoreInstance());
-            std::array<float, 4> color = {1.0f, 1.0f, 1.0f, 1.0f};
+            std::array<float, 4> color = {0.1f, 0.1f, 0.1f, 1.0f};
             auto curheight = height * 0.5f;
             for (const auto c : classes) {
                 auto text = EnzymeClassProvider::ConvertEnzymeClassToString(c);
@@ -584,22 +584,8 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
         if (checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex, distanceX,
                 distanceY) == -1) {
             auto pdbid = this->popup->pic->pdbid;
-//#define OLD_BEHAVIOR
-#ifdef OLD_BEHAVIOR
-            auto clusterids = DBScanClusteringProvider::RetrieveClustersForPdbId(pdbid, *this->GetCoreInstance());
-            this->dbscancluster.clear();
-            for (const auto& id : clusterids) {
-                if (id >= 0) {
-                    auto ids = DBScanClusteringProvider::RetrievePDBIdsForCluster(id, *this->GetCoreInstance());
-                    for (const auto val : ids) {
-                        this->dbscancluster.insert(val);
-                    }
-                }
-            }
-            this->dbscanclustercolor = true;
-#else
-            if (action == core::view::MouseButtonAction::PRESS) {
 
+            if (action == core::view::MouseButtonAction::PRESS) {
                 auto ci = this->GetCoreInstance();
                 auto istart = ci->ModuleGraphRoot()->ChildList_Begin();
                 auto iend = ci->ModuleGraphRoot()->ChildList_End();
@@ -630,13 +616,6 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
                     if (!res) std::cout << "Could not change parameter" << std::endl;
                 }
             }
-#endif
-        } else {
-#ifdef OLD_BEHAVIOR
-            this->dbscancluster.clear();
-            this->dbscanclustercolor = false;
-#else
-#endif
         }
     }
 
