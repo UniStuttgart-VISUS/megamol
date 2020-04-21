@@ -60,6 +60,11 @@ public:
      */
     inline const std::vector<megamol::core::param::ParamSlot*> GetParams(void) const { return this->param_slots; }
 
+    /**
+     * Save current configurator state to state parameter.
+     */
+    void UpdateStateParameter(void);
+    
 private:
     // VARIABLES --------------------------------------------------------------
 
@@ -84,15 +89,11 @@ private:
     // FUNCTIONS --------------------------------------------------------------
 
     void draw_window_menu(megamol::core::CoreInstance* core_instance);
-
     void draw_window_module_list(float width);
-
+    
     void add_empty_project(void);
 
-    void save_state_to_parameter(void);
-
     bool configurator_state_from_json_string(const std::string& json_string);
-
     bool configurator_state_to_json(nlohmann::json& out_json);
 
 #ifdef GUI_USE_GLFW

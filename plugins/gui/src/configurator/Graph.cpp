@@ -83,7 +83,7 @@ ImGuiID megamol::gui::configurator::Graph::AddModule(
 
                 this->modules.emplace_back(mod_ptr);
                 vislib::sys::Log::DefaultLog.WriteInfo(
-                    "Added module '%s' to project '%s'.\n", mod_ptr->class_name.c_str(), this->name.c_str());
+                    "[Configurator] Added module '%s' (uid %i) to project '%s'.\n", mod_ptr->class_name.c_str(), mod_ptr->uid, this->name.c_str());
 
                 this->dirty_flag = true;
 
@@ -115,7 +115,6 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
                 for (auto& group_ptr : this->groups) {
                     if (group_ptr->ContainsModule(module_uid)) {
                         group_ptr->RemoveModule(module_uid);
-                        ///this->restore_callslots_interfaceslot_state(group_ptr->uid);
                     }
                     if (group_ptr->Empty()) {
                         this->DeleteGroup(group_ptr->uid);
@@ -124,6 +123,7 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
 
                 // Second remove call slots
                 (*iter)->RemoveAllCallSlots();
+                
                 // Delete calls which are no longer connected
                 this->delete_disconnected_calls();
                 
@@ -134,7 +134,7 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
                 }
 
                 vislib::sys::Log::DefaultLog.WriteInfo(
-                    "Deleted module '%s' from  project '%s'.\n", (*iter)->class_name.c_str(), this->name.c_str());
+                    "[Configurator] Deleted module '%s' (uid %i) from  project '%s'.\n", (*iter)->class_name.c_str(), (*iter)->uid, this->name.c_str());
                 (*iter).reset();
                 this->modules.erase(iter);
 
@@ -216,7 +216,7 @@ bool megamol::gui::configurator::Graph::AddCall(
 
             this->calls.emplace_back(call_ptr);
             vislib::sys::Log::DefaultLog.WriteInfo(
-                "Added call '%s' to project '%s'.\n", call_ptr->class_name.c_str(), this->name.c_str());
+                "[Configurator] Added call '%s' (uid %i) to project '%s'.\n", call_ptr->class_name.c_str(), call_ptr->uid, this->name.c_str());
 
             // Add connected call slots to interface of group of the parent module
             if (callslot_1->IsParentModuleConnected() && callslot_2->IsParentModuleConnected()) {
@@ -372,48 +372,58 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
         std::vector<ImGuiID> delete_calls_uids;
         delete_calls_uids.emplace_back(call_uid);
                 
-        // Collect other calls connceted to same interface slot                
+        // Also delete other calls, which are connceted to same interface slot and call slot
+        ImGuiID caller_uid = GUI_INVALID_ID;
+        ImGuiID callee_uid = GUI_INVALID_ID;
         for (auto& call_ptr : this->calls) {
-            if (call_ptr->uid == call_uid) {
-                auto call_slot_1 = call_ptr->GetCallSlot(CallSlotType::CALLER);
-                if (call_slot_1 != nullptr) {
-                    if (call_slot_1->GUI_IsGroupInterface()) {
-                        for (auto& group : this->groups) {
-                            for (auto& interfaceslot_map : group->GetInterfaceSlots()) {
-                                for (auto& interfaceslot_ptr : interfaceslot_map.second) {
-                                    if (interfaceslot_ptr->ContainsCallSlot(call_slot_1->uid)) {
-                                        for (auto& callslot_ptr : interfaceslot_ptr->GetCallSlots()) {
-                                            for (auto& call_ptr : callslot_ptr->GetConnectedCalls()) {
-                                                delete_calls_uids.emplace_back(call_ptr->uid);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+            if (call_ptr->uid == call_uid) {             
+                auto caller = call_ptr->GetCallSlot(CallSlotType::CALLER);
+                auto callee = call_ptr->GetCallSlot(CallSlotType::CALLEE);                
+                if (caller != nullptr) {
+                    caller_uid = caller->uid;
+                    if (caller->GUI_IsGroupInterface()) {
+                        caller_uid = caller->GUI_GetGroupInterface()->uid;
                     }
                 }
-                auto call_slot_2 = call_ptr->GetCallSlot(CallSlotType::CALLEE);
-                if (call_slot_2 != nullptr) {
-                    if (call_slot_2->GUI_IsGroupInterface()) {
-                        for (auto& group : this->groups) {
-                            for (auto& interfaceslot_map : group->GetInterfaceSlots()) {
-                                for (auto& interfaceslot_ptr : interfaceslot_map.second) {
-                                    if (interfaceslot_ptr->ContainsCallSlot(call_slot_2->uid)) {
-                                        for (auto& callslot_ptr : interfaceslot_ptr->GetCallSlots()) {
-                                            for (auto& call_ptr : callslot_ptr->GetConnectedCalls()) {
-                                                delete_calls_uids.emplace_back(call_ptr->uid);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                if (callee != nullptr) {
+                    if (callee->GUI_IsGroupInterface()) {
+                        callee_uid = callee->uid;
+                        if (callee->GUI_IsGroupInterface()) {
+                            callee_uid = callee->GUI_GetGroupInterface()->uid;
                         }
                     }
                 }            
             }
         }
+        for (auto& call_ptr : this->calls) {
+            if (call_ptr->uid != call_uid) { 
+                bool caller_fits = false;
+                bool callee_fits = false;
+                auto caller = call_ptr->GetCallSlot(CallSlotType::CALLER);
+                auto callee = call_ptr->GetCallSlot(CallSlotType::CALLEE);     
+                if (caller != nullptr) {
+                    if (caller->GUI_IsGroupInterface()) {
+                        caller_fits = (caller_uid == caller->GUI_GetGroupInterface()->uid);
+                    }
+                    else {
+                        caller_fits = (caller_uid == caller->uid);
+                    }
+                }
+                if (callee != nullptr) {
+                    if (callee->GUI_IsGroupInterface()) {
+                        callee_fits = (callee_uid == callee->GUI_GetGroupInterface()->uid);
+                    }
+                    else {
+                        callee_fits = (callee_uid == callee->uid);
+                    }
+                } 
+                if (caller_fits && callee_fits) {
+                    delete_calls_uids.emplace_back(call_ptr->uid);
+                }
+            }
+        }
         
+        // Actual deletion of calls
         for (auto& delete_call_uid : delete_calls_uids) {
             for (auto iter = this->calls.begin(); iter != this->calls.end(); iter++) {
                 if ((*iter)->uid == delete_call_uid) {
@@ -426,8 +436,8 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
                             (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                     }
 
-                    vislib::sys::Log::DefaultLog.WriteInfo("Deleted call '%s' from  project '%s'.\n",
-                        (*iter)->class_name.c_str(), this->name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                    vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Deleted call '%s' (uid %i) from  project '%s'.\n",
+                        (*iter)->class_name.c_str(), (*iter)->uid, this->name.c_str());
                     (*iter).reset();
                     this->calls.erase(iter);
 
@@ -457,7 +467,7 @@ ImGuiID megamol::gui::configurator::Graph::AddGroup(const std::string& group_nam
         this->groups.emplace_back(group_ptr);
 
         vislib::sys::Log::DefaultLog.WriteInfo(
-            "Added group '%s' to project '%s'.\n", group_ptr->name.c_str(), this->name.c_str());
+            "[Configurator] Added group '%s' (uid %i) to project '%s'.\n", group_ptr->name.c_str(), group_ptr->uid, this->name.c_str());
         return group_id;
 
     } catch (std::exception e) {
@@ -485,8 +495,8 @@ bool megamol::gui::configurator::Graph::DeleteGroup(ImGuiID group_uid) {
                         (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 }
 
-                vislib::sys::Log::DefaultLog.WriteInfo("Deleted group '%s' from  project '%s'.\n",
-                    (*iter)->name.c_str(), this->name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Deleted group '%s' (uid %i) from  project '%s'.\n",
+                    (*iter)->name.c_str(), (*iter)->uid, this->name.c_str());
                 (*iter).reset();
                 this->groups.erase(iter);
 
@@ -580,118 +590,6 @@ bool megamol::gui::configurator::Graph::IsMainViewSet(void) {
         }
     }
     return false;
-}
-
-
-bool megamol::gui::configurator::Graph::StateFromJsonString(const std::string& in_json_string) {
-
-    try {
-        bool found = false;
-        bool valid = true;
-
-        nlohmann::json json;
-        json = nlohmann::json::parse(in_json_string);
-
-        if (!json.is_object()) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-
-        for (auto& h : json.items()) {
-            if (h.key() == GUI_JSON_TAG_GRAPHS) {
-                for (auto& w : h.value().items()) {
-                    std::string json_graph_id = w.key();
-                    if (json_graph_id == this->filename) { /// = graph filename
-                        found = true;
-                        auto config_state = w.value();
-
-
-                        /// TODO ...
-                        
-                        
-                        
-                    }
-                }
-            }
-        }
-
-        if (!found) {
-            /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find configurator state in JSON. [%s, %s, line %d]\n",
-            /// __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-
-    } catch (nlohmann::json::type_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::invalid_iterator& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::out_of_range& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::other_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    return true;
-}
-
-
-bool megamol::gui::configurator::Graph::StateToJSON(nlohmann::json& out_json) {
-
-    try {
-        out_json.clear();
-        std::string json_graph_id = this->filename; /// = graph filename
-        // ! State of graph is only stored if project was saved to file previously. Otherwise the project can not be loaded again.
-        if (!json_graph_id.empty()) {
-        
-
-            /// TODO
-            
-            /// - module_positions:             name - ImVec2          (replacing --confPos)
-            /// - group_interface_slots:        group name - slots{,,} (replacing --confGroupInterface)
-            /// - state of parameter_sidebar:   bool                   (visible/hidden)
-
-            // out_json[GUI_JSON_TAG_GRAPHS][graph_json_id][...] = this->...;
-        }
-        else {
-            vislib::sys::Log::DefaultLog.WriteWarn("State of project '%s' is not being saved. Save project to file in order to get its state saved. [%s, %s, line %d]\n", this->name, __FILE__, __FUNCTION__, __LINE__);
-        }
-
-    } catch (nlohmann::json::type_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::invalid_iterator& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::out_of_range& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::other_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    return true;
 }
 
 
@@ -853,6 +751,8 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     , show_call_names(true)
     , show_slot_names(false)
     , show_module_names(true)
+    , show_parameter_sidebar(false)
+    , change_show_parameter_sidebar(false)
     , layout_current_graph(false)
     , child_split_width(300.0f)
     , reset_zooming(true)
@@ -870,30 +770,33 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     this->graph_state.canvas.zooming = 1.0f;
     this->graph_state.canvas.offset = ImVec2(0.0f, 0.0f);
 
-    this->graph_state.groups.clear();
-    this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;
-    this->graph_state.interact.group_hovered_uid = GUI_INVALID_ID;
-
-    this->graph_state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
-    this->graph_state.interact.interfaceslot_hovered_uid = GUI_INVALID_ID;
-    this->graph_state.interact.interfaceslot_compat_ptr = nullptr;
-
+    this->graph_state.interact.button_active_uid = GUI_INVALID_ID;         
+    this->graph_state.interact.button_hovered_uid = GUI_INVALID_ID;  
+          
+    this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;        
+    this->graph_state.interact.group_hovered_uid = GUI_INVALID_ID;         
+           
     this->graph_state.interact.modules_selected_uids.clear();
-    this->graph_state.interact.module_hovered_uid = GUI_INVALID_ID;
-    this->graph_state.interact.module_mainview_uid = GUI_INVALID_ID;
+    this->graph_state.interact.module_hovered_uid = GUI_INVALID_ID;        
+    this->graph_state.interact.module_mainview_uid = GUI_INVALID_ID; 
     this->graph_state.interact.modules_add_group_uids.clear();
     this->graph_state.interact.modules_remove_group_uids.clear();
-
-    this->graph_state.interact.call_selected_uid = GUI_INVALID_ID;
-    this->graph_state.interact.call_hovered_uid = GUI_INVALID_ID;    
-
-    this->graph_state.interact.callslot_selected_uid = GUI_INVALID_ID;
-    this->graph_state.interact.callslot_hovered_uid = GUI_INVALID_ID;
-    this->graph_state.interact.callslot_add_group_uid = UIDPairType(GUI_INVALID_ID, GUI_INVALID_ID);
-    this->graph_state.interact.callslot_compat_ptr = nullptr;
-
-    this->graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;
     
+    this->graph_state.interact.call_selected_uid = GUI_INVALID_ID;         
+    this->graph_state.interact.call_hovered_uid = GUI_INVALID_ID;          
+    
+    this->graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;    
+              
+    this->graph_state.interact.callslot_selected_uid = GUI_INVALID_ID;     
+    this->graph_state.interact.callslot_hovered_uid = GUI_INVALID_ID;      
+    this->graph_state.interact.callslot_add_group_uid = UIDPairType(GUI_INVALID_ID, GUI_INVALID_ID);
+    this->graph_state.interact.callslot_compat_ptr.reset(); 
+    
+    this->graph_state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
+    this->graph_state.interact.interfaceslot_hovered_uid = GUI_INVALID_ID; 
+    this->graph_state.interact.interfaceslot_compat_ptr.reset();
+        
+    this->graph_state.groups.clear();      
     // this->graph_state.hotkeys are already initialzed
 }
 
@@ -916,6 +819,12 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         ImGui::PushID(graph_uid);
 
         // State Init/Reset ----------------------
+        this->show_parameter_sidebar = state.show_parameter_sidebar;
+        if (this->change_show_parameter_sidebar) {
+            this->show_parameter_sidebar = !this->show_parameter_sidebar;
+            state.show_parameter_sidebar = this->show_parameter_sidebar;
+            this->change_show_parameter_sidebar = false;
+        }
         this->graph_state.hotkeys = state.hotkeys;
         this->graph_state.groups.clear();
         for (auto& group : inout_graph.GetGroups()) {
@@ -995,7 +904,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
             this->present_menu(inout_graph);
 
             float child_width_auto = 0.0f;
-            if (state.show_parameter_sidebar) {
+            if (this->show_parameter_sidebar) {
                 this->utils.VerticalSplitter(
                     GUIUtils::FixedSplitterSide::RIGHT, child_width_auto, this->child_split_width);
             }
@@ -1040,7 +949,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 throw std::invalid_argument("Pointer to font is nullptr.");
             }
 
-            if (state.show_parameter_sidebar) {
+            if (this->show_parameter_sidebar) {
                 ImGui::SameLine();
                 this->present_parameters(inout_graph, this->child_split_width);
             }
@@ -1070,7 +979,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 }
                 if (module_ptr != nullptr) {
 
-                    // Add module to new or alredy existing group
+                    // Add module to new or already existing group
                     // Create new group for multiple selected modules only once!
                     ImGuiID group_uid = GUI_INVALID_ID;
                     if ((uid_pair.second == GUI_INVALID_ID) && (new_group_uid == GUI_INVALID_ID)) {
@@ -1107,7 +1016,6 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 for (auto& remove_group_ptr : inout_graph.GetGroups()) {
                     if (remove_group_ptr->ContainsModule(module_uid)) {
                         remove_group_ptr->RemoveModule(module_uid);
-                        ///inout_graph.restore_callslots_interfaceslot_state(remove_group_ptr->uid);
                     }
                 }
             }
@@ -1167,7 +1075,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                         }
                     }
                 }                  
-            }
+            }                        
             // Reset interact state for modules and call slots
             this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;
             this->graph_state.interact.group_hovered_uid = GUI_INVALID_ID;
@@ -1184,6 +1092,16 @@ void megamol::gui::configurator::Graph::Presentation::Present(
             this->graph_state.interact.callslot_hovered_uid = GUI_INVALID_ID;
             this->graph_state.interact.callslot_add_group_uid = UIDPairType(GUI_INVALID_ID, GUI_INVALID_ID);
             this->graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;    
+        }
+        // Delete empty group(s)
+        std::vector<ImGuiID> delete_empty_groups_uids;
+        for (auto& group_ptr : inout_graph.GetGroups()) {
+            if (group_ptr->GetModules().empty()) {
+                delete_empty_groups_uids.emplace_back(group_ptr->uid);
+            }
+        }
+        for (auto& group_uid : delete_empty_groups_uids) {
+            inout_graph.DeleteGroup(group_uid);
         }
         // Set delete flag if tab was closed
         if (!open) {
@@ -1205,6 +1123,335 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
+}
+
+
+
+bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(Graph& inout_graph, const std::string& in_json_string) {
+
+    try {
+        if (in_json_string.empty()) {
+            return false;
+        }
+                
+        bool found = false;
+        bool valid = true;
+
+        nlohmann::json json;
+        json = nlohmann::json::parse(in_json_string);
+
+        if (!json.is_object()) {
+            ///vislib::sys::Log::DefaultLog.WriteError("State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+
+        for (auto& header_item : json.items()) {
+            if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
+                for (auto& content_item : header_item.value().items()) {
+                    std::string json_graph_id = content_item.key();
+                    if (json_graph_id == inout_graph.GetFilename()) { /// = graph filename
+                        found = true;
+                        auto config_state = content_item.value();
+
+                        // show_parameter_sidebar
+                        bool tmp_show_parameter_sidebar;
+                        this->change_show_parameter_sidebar = false;
+                        if (config_state.at("show_parameter_sidebar").is_boolean()) {
+                            config_state.at("show_parameter_sidebar").get_to(tmp_show_parameter_sidebar);
+                            if (this->show_parameter_sidebar != tmp_show_parameter_sidebar) {
+                                this->change_show_parameter_sidebar = true;
+                            }
+                            
+                        } else {
+                            vislib::sys::Log::DefaultLog.WriteError(
+                                "JSON state: Failed to read 'show_parameter_sidebar' as boolean. [%s, %s, line %d]\n", __FILE__,
+                                __FUNCTION__, __LINE__);
+                        }
+                        // show_call_names
+                        if (config_state.at("show_call_names").is_boolean()) {
+                            config_state.at("show_call_names").get_to(this->show_call_names);
+                        } else {
+                            vislib::sys::Log::DefaultLog.WriteError(
+                                "JSON state: Failed to read 'show_call_names' as boolean. [%s, %s, line %d]\n", __FILE__,
+                                __FUNCTION__, __LINE__);
+                        }     
+                        // show_slot_names
+                        if (config_state.at("show_slot_names").is_boolean()) {
+                            config_state.at("show_slot_names").get_to(this->show_slot_names);
+                        } else {
+                            vislib::sys::Log::DefaultLog.WriteError(
+                                "JSON state: Failed to read 'show_slot_names' as boolean. [%s, %s, line %d]\n", __FILE__,
+                                __FUNCTION__, __LINE__);
+                        }
+                        // show_module_names
+                        if (config_state.at("show_module_names").is_boolean()) {
+                            config_state.at("show_module_names").get_to(this->show_module_names);
+                        } else {
+                            vislib::sys::Log::DefaultLog.WriteError(
+                                "JSON state: Failed to read 'show_module_names' as boolean. [%s, %s, line %d]\n", __FILE__,
+                                __FUNCTION__, __LINE__);
+                        }   
+                        // params_visible
+                        if (config_state.at("params_visible").is_boolean()) {
+                            config_state.at("params_visible").get_to(this->params_visible);
+                        } else {
+                            vislib::sys::Log::DefaultLog.WriteError(
+                                "JSON state: Failed to read 'params_visible' as boolean. [%s, %s, line %d]\n", __FILE__,
+                                __FUNCTION__, __LINE__);
+                        }   
+                        // params_readonly
+                        if (config_state.at("params_readonly").is_boolean()) {
+                            config_state.at("params_readonly").get_to(this->params_readonly);
+                        } else {
+                            vislib::sys::Log::DefaultLog.WriteError(
+                                "JSON state: Failed to read 'params_readonly' as boolean. [%s, %s, line %d]\n", __FILE__,
+                                __FUNCTION__, __LINE__);
+                        }       
+                        // param_expert_mode
+                        if (config_state.at("param_expert_mode").is_boolean()) {
+                            config_state.at("param_expert_mode").get_to(this->param_expert_mode);
+                        } else {
+                            vislib::sys::Log::DefaultLog.WriteError(
+                                "JSON state: Failed to read 'param_expert_mode' as boolean. [%s, %s, line %d]\n", __FILE__,
+                                __FUNCTION__, __LINE__);
+                        }         
+                    
+                        // modules
+                        for (auto& module_item : content_item.value().items()) {
+                            if (module_item.key() == "modules") {
+                                for (auto& module_state : module_item.value().items()) {
+                                    std::string module_name = module_state.key();
+                                    auto position_item = module_state.value();
+                                    valid = true;
+                                                                
+                                    // graph_position
+                                    ImVec2 module_position;
+                                    if (position_item.at("graph_position").is_array() && (position_item.at("graph_position").size() == 2)) {
+                                        if (position_item.at("graph_position")[0].is_number_float()) {
+                                            position_item.at("graph_position")[0].get_to(module_position.x);
+                                        } else {
+                                            vislib::sys::Log::DefaultLog.WriteError(
+                                                "JSON state: Failed to read first value of 'graph_position' as float. [%s, %s, line %d]\n",
+                                                __FILE__, __FUNCTION__, __LINE__);
+                                            valid = false;
+                                        }
+                                        if (position_item.at("graph_position")[1].is_number_float()) {
+                                            position_item.at("graph_position")[1].get_to(module_position.y);
+                                        } else {
+                                            vislib::sys::Log::DefaultLog.WriteError(
+                                                "JSON state: Failed to read second value of 'graph_position' as float. [%s, %s, line %d]\n",
+                                                __FILE__, __FUNCTION__, __LINE__);
+                                            valid = false;
+                                        }
+                                    } else {
+                                        vislib::sys::Log::DefaultLog.WriteError(
+                                            "JSON state: Failed to read 'graph_position' as array of size two. [%s, %s, line %d]\n", __FILE__,
+                                            __FUNCTION__, __LINE__);
+                                        valid = false;
+                                    }
+                                    
+                                    // Apply graph position to module
+                                    if (valid) {
+                                        bool module_found = false;
+                                        for (auto& module_ptr : inout_graph.modules) {
+                                            if (module_ptr->FullName() == module_name) {
+                                                module_ptr->GUI_SetPosition(module_position);
+                                            
+                                                module_found = true;
+                                            }
+                                            
+                                        }
+                                        if (!module_found) {
+                                            vislib::sys::Log::DefaultLog.WriteError(
+                                                "JSON state: Unable to find module '%s' to apply graph position in configurator. [%s, %s, line %d]\n", module_name.c_str(), __FILE__,
+                                                __FUNCTION__, __LINE__);
+                                        }   
+                                    }                         
+                                }
+                            }
+                        }
+                                        
+                                       
+                        // interfaces
+                        for (auto& interfaces_item : content_item.value().items()) {
+                            if (interfaces_item.key() == "interfaces") {
+                                for (auto& interface_state : interfaces_item.value().items()) {
+                                    std::string group_name = interface_state.key();
+                                    auto interfaceslot_items = interface_state.value();
+                                                
+                                    // interfaces
+                                    for (auto& interfaceslot_item : interfaceslot_items.items()) {
+                                        valid = true;
+                                        
+                                        std::vector<std::string> calleslot_fullnames;
+                                        for (auto& callslot_item : interfaceslot_item.value().items()) {
+                                            if (callslot_item.value().is_string()) {
+                                                calleslot_fullnames.emplace_back(callslot_item.value().get<std::string>());
+                                            } else {
+                                                vislib::sys::Log::DefaultLog.WriteError(
+                                                    "JSON state: Failed to read value of call slot as string. [%s, %s, line %d]\n",
+                                                    __FILE__, __FUNCTION__, __LINE__);
+                                                valid = false;
+                                            }
+                                        }
+                                    
+                                        // Add interface slot containing found calls slots to group
+                                        if (valid && !calleslot_fullnames.empty()) {
+
+                                            // Find pointers to call slots by name
+                                            CallSlotPtrVectorType callslot_ptr_vector;
+                                            for (auto& callsslot_fullname : calleslot_fullnames) {
+                                                auto split_pos = callsslot_fullname.rfind("::");
+                                                if (split_pos != std::string::npos) {
+                                                    std::string callslot_name = callsslot_fullname.substr(split_pos);
+                                                    std::string module_fullname = callsslot_fullname.substr(0, (split_pos-2));
+                                                    for (auto& module_ptr : inout_graph.modules) {
+                                                        if (module_ptr->FullName() == module_fullname) {
+                                                            for (auto& callslot_map : module_ptr->GetCallSlots()) {
+                                                                for (auto& callslot_ptr : callslot_map.second) {
+                                                                    if (callslot_ptr->name == callslot_name) {
+                                                                        callslot_ptr_vector.emplace_back(callslot_ptr);
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                                    
+                                                    
+                                            bool group_found = false;
+                                            for (auto& group_ptr : inout_graph.groups) {
+                                                if (group_ptr->name == group_name) {
+                                                    for (auto& callslot_ptr : callslot_ptr_vector) {
+                                                        std::cout << ">>>>>> GROUP: " << group_name << " Interface - CallSlots: " <<  callslot_ptr->name << std::endl;
+                                                    }
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    //ImGuiID new_interfaceslot_uid = inout_graph.generate_unique_id();
+                                                    //group_ptr->InterfaceSlot_AddCallSlot( , new_interfaceslot_uid);
+
+
+                                                    group_found = true;
+                                                }
+                                            }
+                                            if (!group_found) {
+                                                vislib::sys::Log::DefaultLog.WriteError(
+                                                    "JSON state: Unable to find group '%s' to add interface slot. [%s, %s, line %d]\n", group_name.c_str(), __FILE__,
+                                                    __FUNCTION__, __LINE__);
+                                            }   
+                                        }                                                                            
+                                    }
+                                }
+                            }   
+                        } 
+                    }
+                }
+            }
+        }
+
+        if (!found) {
+            /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find configurator state in JSON. [%s, %s, line %d]\n",
+            /// __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+
+    } catch (nlohmann::json::type_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::invalid_iterator& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::out_of_range& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::other_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return true;
+}
+
+
+bool megamol::gui::configurator::Graph::Presentation::StateToJSON(Graph& inout_graph, nlohmann::json& out_json) {
+
+    try {
+        out_json.clear();
+        std::string json_graph_id = inout_graph.GetFilename(); /// = graph filename
+        
+        // ! State of graph is only stored if project was saved to file previously. Otherwise the project can not be loaded again.
+        if (!json_graph_id.empty()) {
+
+            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["show_parameter_sidebar"] = this->show_parameter_sidebar;            
+            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["show_call_names"] = this->show_call_names;
+            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["show_slot_names"] = this->show_slot_names;
+            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["show_module_names"] = this->show_module_names;
+            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["params_visible"] = this->params_visible;
+            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["params_readonly"] = this->params_readonly;
+            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["param_expert_mode"] = this->param_expert_mode;  
+            
+            // Module positions
+            for (auto& module_ptr : inout_graph.modules) {
+                out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["modules"][module_ptr->FullName()]["graph_position"] = {module_ptr->GUI_GetPosition().x, module_ptr->GUI_GetPosition().y};  
+            }
+            // Group interface slots
+            size_t interface_number = 0;
+            for (auto& group_ptr : inout_graph.groups) {
+                for (auto& interfaceslots_map : group_ptr->GetInterfaceSlots()) {
+                    for (auto& interface_ptr : interfaceslots_map.second) {
+                        std::string interface_label = "interface_slot_" + std::to_string(interface_number);
+                        for (auto& callslot_ptr : interface_ptr->GetCallSlots()) {
+                            std::string callslot_fullname;
+                            if (callslot_ptr->IsParentModuleConnected()) {
+                                callslot_fullname = callslot_ptr->GetParentModule()->FullName() + "::" + callslot_ptr->name;
+                            }
+                            
+                            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["interfaces"][group_ptr->name][interface_label] += callslot_fullname;
+                        }
+                        interface_number++;
+                    }
+                }
+            }   
+        }
+        else {
+            ///vislib::sys::Log::DefaultLog.WriteWarn("State of project '%s' is not being saved. Save project to file in order to get its state saved. [%s, %s, line %d]\n", inout_graph.name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+
+    } catch (nlohmann::json::type_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::invalid_iterator& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::out_of_range& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (nlohmann::json::other_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return true;
 }
 
 
@@ -1527,13 +1774,13 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
     // Mode
     ImGui::BeginGroup();
     this->utils.PointCircleButton("Mode");
-    if (ImGui::BeginPopupContextItem("param_mode_button_context", 0)) { // 0 = left mouse button
+    if (ImGui::BeginPopupContextItem("graph_param_mode_button_context", 0)) { // 0 = left mouse button
         bool changed = false;
-        if (ImGui::MenuItem("Basic", nullptr, (this->param_expert_mode == false))) {
+        if (ImGui::MenuItem("Basic###graph_basic_mode", nullptr, !this->param_expert_mode, true)) {
             this->param_expert_mode = false;
             changed = true;
         }
-        if (ImGui::MenuItem("Expert", nullptr, (this->param_expert_mode == true))) {
+        if (ImGui::MenuItem("Expert###graph_expert_mode", nullptr, this->param_expert_mode, true)) {
             this->param_expert_mode = true;
             changed = true;
         }

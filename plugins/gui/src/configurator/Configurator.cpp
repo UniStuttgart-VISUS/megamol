@@ -105,13 +105,6 @@ bool megamol::gui::configurator::Configurator::Draw(
         return false;
     }
 
-    // Check for parameter changes
-    if (this->state_param.IsDirty()) {
-        std::string state = std::string(this->state_param.Param<core::param::StringParam>()->Value().PeekBuffer());
-        this->configurator_state_from_json_string(state);
-        this->state_param.ResetDirty();
-    }
-
     // Draw
     if (this->init_state < 2) {
         /// Step 1] (two frames!)
@@ -151,6 +144,13 @@ bool megamol::gui::configurator::Configurator::Draw(
     } else {
         /// Step 3]
         // Render configurator gui content
+        
+        // Check for parameter changes
+        if (this->state_param.IsDirty()) {
+            std::string state = std::string(this->state_param.Param<core::param::StringParam>()->Value().PeekBuffer());
+            this->configurator_state_from_json_string(state);
+            this->state_param.ResetDirty();
+        }        
 
         // Child Windows
         this->draw_window_menu(core_instance);
@@ -208,6 +208,18 @@ bool megamol::gui::configurator::Configurator::Draw(
     }
 
     return true;
+}
+
+
+void megamol::gui::configurator::Configurator::UpdateStateParameter(void) {
+
+    // Save current state of configurator to state parameter
+    nlohmann::json configurator_json;
+    if (this->configurator_state_to_json(configurator_json)) {
+        std::string state;
+        state = configurator_json.dump(2); /// pass nothing for unformatted output or pass number of indent spaces
+        this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
+    }
 }
 
 
@@ -342,7 +354,6 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     }
     if (this->file_utils.FileBrowserPopUp(
             FileUtils::FileBrowserFlag::SAVE, "Save Project", popup_save_project_file, project_filename)) {
-        this->save_state_to_parameter();
         popup_failed = !this->graph_manager.SaveProjectFile(this->graph_state.graph_selected_uid, project_filename);
     }
     this->utils.MinimalPopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
@@ -526,21 +537,13 @@ void megamol::gui::configurator::Configurator::add_empty_project(void) {
 }
 
 
-void megamol::gui::configurator::Configurator::save_state_to_parameter(void) {
-
-    // Save current state of configurator to state parameter
-    nlohmann::json configurator_json;
-    if (this->configurator_state_to_json(configurator_json)) {
-        std::string state;
-        state = configurator_json.dump(2);
-        this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
-    }
-}
-
-
 bool megamol::gui::configurator::Configurator::configurator_state_from_json_string(const std::string& in_json_string) {
 
     try {
+        if (in_json_string.empty()) {
+            return false;
+        }
+                
         bool found = false;
 
         nlohmann::json json;
@@ -552,30 +555,30 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
             return false;
         }
 
-        for (auto& h : json.items()) {
-            if (h.key() == GUI_JSON_TAG_CONFIGURATOR) {
+        for (auto& header_item : json.items()) {
+            if (header_item.key() == GUI_JSON_TAG_CONFIGURATOR) {
                 found = true;
-                auto config_state = h.value();
+                auto config_state = header_item.value();
 
-                // module_list_sidebar
-                if (config_state.at("module_list_sidebar").is_boolean()) {
-                    config_state.at("module_list_sidebar").get_to(this->show_module_list_sidebar);
+                // show_module_list_sidebar
+                if (config_state.at("show_module_list_sidebar").is_boolean()) {
+                    config_state.at("show_module_list_sidebar").get_to(this->show_module_list_sidebar);
                 } else {
                     vislib::sys::Log::DefaultLog.WriteError(
-                        "JSON state: Failed to read 'module_list_sidebar' as boolean.[%s, %s, line %d]\n", __FILE__,
+                        "JSON state: Failed to read 'show_module_list_sidebar' as boolean. [%s, %s, line %d]\n", __FILE__,
                         __FUNCTION__, __LINE__);
                 }
             }
-            else if (h.key() == GUI_JSON_TAG_GRAPHS) {
-                for (auto& w : h.value().items()) {
-                    std::string json_graph_id = w.key(); /// = graph filename
+            else if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
+                for (auto& config_item : header_item.value().items()) {
+                    std::string json_graph_id = config_item.key(); /// = graph filename
                     // Load graph from file
                     ImGuiID graph_uid = this->graph_manager.LoadAddProjectFile(GUI_INVALID_ID, json_graph_id);
                     if (graph_uid != GUI_INVALID_ID) {
                         GraphPtrType graph_ptr;
                         if (this->graph_manager.GetGraph(graph_uid, graph_ptr)) {
                             // Let graph search for his configurator state
-                            graph_ptr->StateFromJsonString(in_json_string);
+                            graph_ptr->GUI_StateFromJsonString(in_json_string);
                         }
                     }
                 }
@@ -619,12 +622,13 @@ bool megamol::gui::configurator::Configurator::configurator_state_to_json(nlohma
     try {
         out_json.clear();
 
-        out_json[GUI_JSON_TAG_CONFIGURATOR]["module_list_sidebar"] = this->show_module_list_sidebar;
+        out_json[GUI_JSON_TAG_CONFIGURATOR]["show_module_list_sidebar"] = this->show_module_list_sidebar;
 
         for (auto& graph_ptr : this->graph_manager.GetGraphs()) {
             nlohmann::json graph_json;
-            graph_ptr->StateToJSON(graph_json);
-            out_json.update(graph_json);
+            if (graph_ptr->GUI_StateToJSON(graph_json)) {
+                out_json.update(graph_json);
+            }
         }
 
     } catch (nlohmann::json::type_error& e) {

@@ -38,6 +38,7 @@ GUIWindows::GUIWindows()
     , file_utils()
     , state()
     , parent_module_fullname()
+    , force_open_main_window(false)
     , widgtmap_text()
     , widgtmap_int()
     , widgtmap_float()
@@ -236,21 +237,21 @@ bool GUIWindows::PostDraw(void) {
             }
             wc.buf_font_reset = false;
         }
-
+            
         // Draw window content
-        if (wc.win_show) {
+        if (wc.win_show) {                   
             ImGui::SetNextWindowBgAlpha(1.0f);
             if (!ImGui::Begin(wn.c_str(), &wc.win_show, wc.win_flags)) {
                 ImGui::End(); // early ending
                 return;
             }
-
+            
             // Always set configurator window size to current viewport
             if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
                 wc.win_size = viewport;
                 wc.win_reset = true;
             }
-
+                        
             // Apply soft reset of window position and size (before calling window callback)
             if (wc.win_soft_reset) {
                 this->window_manager.SoftResetWindowSizePos(wn, wc);
@@ -268,7 +269,7 @@ bool GUIWindows::PostDraw(void) {
                 cb(wn, wc);
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
-                    "Missing valid callback for WindowDrawCallback: '%d'.[%s, %s, line %d]\n", (int)wc.win_callback,
+                    "Missing valid callback for WindowDrawCallback: '%d'. [%s, %s, line %d]\n", (int)wc.win_callback,
                     __FILE__, __FUNCTION__, __LINE__);
             }
 
@@ -278,6 +279,24 @@ bool GUIWindows::PostDraw(void) {
 
             ImGui::End();
         }
+        
+        // Bring back main window (once) when configurator is closed.
+        if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
+            if (wc.win_show) {
+                this->force_open_main_window = true;
+            }
+            else if (!wc.win_show && this->force_open_main_window) {
+                this->force_open_main_window = false;
+                
+                const auto configurator_func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
+                    if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
+                        wc.win_show = true;
+                    }
+                };
+                this->window_manager.EnumWindows(configurator_func);
+            }
+        }
+        
     };
     this->window_manager.EnumWindows(func);
 
@@ -620,8 +639,7 @@ bool GUIWindows::createContext(void) {
 
     // CONFIGURATOR Window -----------------------------------------------
     buf_win.win_show = false;
-    // State of configurator should not be stored (visibility is configured via auto load parameter and will always be i
-    // viewport size).
+    // State of configurator should not be stored (visibility is configured via auto load parameter and will always be viewport size).
     buf_win.win_store_config = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
     buf_win.win_flags =
@@ -809,10 +827,11 @@ void GUIWindows::validateParameter() {
         bool autostart = this->autostart_configurator.Param<core::param::BoolParam>()->Value();
         if (autostart) {
             const auto configurator_func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-                if (wc.win_callback != WindowManager::DrawCallbacks::CONFIGURATOR) {
-                    wc.win_show = false;
-                } else {
+                if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
                     wc.win_show = true;
+                } 
+                else { 
+                    wc.win_show = false; 
                 }
             };
             this->window_manager.EnumWindows(configurator_func);
@@ -876,10 +895,10 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
     ImGui::BeginGroup();
     this->utils.PointCircleButton("Mode");
     if (ImGui::BeginPopupContextItem("gui_param_mode_button_context", 0)) { // 0 = left mouse button
-        if (ImGui::MenuItem("Basic", nullptr, (wc.param_expert_mode == false))) {
+        if (ImGui::MenuItem("Basic###gui_basic_mode", nullptr, !wc.param_expert_mode, true)) {
             wc.param_expert_mode = false;
         }
-        if (ImGui::MenuItem("Expert", nullptr, (wc.param_expert_mode == true))) {
+        if (ImGui::MenuItem("Expert###gui_expert_mode", nullptr, wc.param_expert_mode, true)) {
             wc.param_expert_mode = true;
         }
         ImGui::EndPopup();
@@ -2041,10 +2060,12 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
         window_json.update(parameter_json);
 
         std::string state;
-        state = window_json.dump(2);
+        state = window_json.dump(2); /// pass nothing for unformatted output or pass number of indent spaces
 
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
     }
+    
+    this->configurator.UpdateStateParameter();
 }
 
 
@@ -2052,6 +2073,9 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
 bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::string& in_json_string) {
 
     try {
+        if (in_json_string.empty()) {
+            return false;
+        }        
         if (this->core_instance == nullptr) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -2068,12 +2092,12 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
             return false;
         }
         
-        for (auto& h : json.items()) {
-            if (h.key() == GUI_JSON_TAG_GUISTATE_PARAMETERS) {
+        for (auto& header_item : json.items()) {
+            if (header_item.key() == GUI_JSON_TAG_GUISTATE_PARAMETERS) {
                 found = true;
-                for (auto& w : h.value().items()) {
-                    std::string json_param_name = w.key();
-                    auto gui_state = w.value();
+                for (auto& config_item : header_item.value().items()) {
+                    std::string json_param_name = config_item.key();
+                    auto gui_state = config_item.value();
                     valid = true;
 
                     // gui_visibility
@@ -2082,7 +2106,7 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
                         gui_state.at("gui_visibility").get_to(gui_visibility);
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'gui_visibility' as boolean.[%s, %s, line %d]\n", __FILE__,
+                            "JSON state: Failed to read 'gui_visibility' as boolean. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -2093,7 +2117,7 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
                         gui_state.at("gui_read-only").get_to(gui_read_only);
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'gui_read-only' as boolean.[%s, %s, line %d]\n", __FILE__,
+                            "JSON state: Failed to read 'gui_read-only' as boolean. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -2105,7 +2129,7 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
                             gui_state.at("gui_presentation_mode").get<int>());
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'gui_presentation_mode' as integer.[%s, %s, line %d]\n",
+                            "JSON state: Failed to read 'gui_presentation_mode' as integer. [%s, %s, line %d]\n",
                             __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }

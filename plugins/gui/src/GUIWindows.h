@@ -192,7 +192,10 @@ private:
 
     /** The full name of the parent module incorporating this GUI. */
     std::string parent_module_fullname;
-
+    
+    /** Flag forcing opening of main window (e.g. when configurator is closed)*/
+    bool force_open_main_window;
+    
     /** Input Widget Buffers. */
     std::map<std::string, std::string> widgtmap_text;
     std::map<std::string, int> widgtmap_int;

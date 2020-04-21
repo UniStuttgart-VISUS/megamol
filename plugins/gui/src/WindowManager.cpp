@@ -99,6 +99,10 @@ bool WindowManager::DeleteWindowConfiguration(const std::string& window_name) {
 bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
 
     try {
+        if (in_json_string.empty()) {
+            return false;
+        }
+        
         bool found = false;
         bool valid = true;
         std::map<std::string, WindowConfiguration> tmp_windows;
@@ -112,15 +116,15 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
             return false;
         }
 
-        for (auto& h : json.items()) {
-            if (h.key() == (GUI_JSON_TAG_WINDOW_CONFIGURATIONS)) {
+        for (auto& header_item : json.items()) {
+            if (header_item.key() == (GUI_JSON_TAG_WINDOW_CONFIGURATIONS)) {
                 found = true;
-                for (auto& w : h.value().items()) {
-                    std::string window_name = w.key();
+                for (auto& config_item : header_item.value().items()) {
+                    std::string window_name = config_item.key();
                     WindowConfiguration tmp_config;
 
                     // Getting all configuration values for current window.
-                    auto config_values = w.value();
+                    auto config_values = config_item.value();
 
                     // WindowConfiguration ------------------------------------
                     // show
@@ -128,7 +132,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                         config_values.at("win_show").get_to(tmp_config.win_show);
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'win_show' as boolean.[%s, %s, line %d]\n", __FILE__,
+                            "JSON state: Failed to read 'win_show' as boolean. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -137,7 +141,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                         tmp_config.win_flags = static_cast<ImGuiWindowFlags>(config_values.at("win_flags").get<int>());
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'win_flags' as integer.[%s, %s, line %d]\n", __FILE__,
+                            "JSON state: Failed to read 'win_flags' as integer. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -147,7 +151,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                             static_cast<DrawCallbacks>(config_values.at("win_callback").get<int>());
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'win_callback' as integer.[%s, %s, line %d]\n", __FILE__,
+                            "JSON state: Failed to read 'win_callback' as integer. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -161,13 +165,13 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                                 static_cast<core::view::Key>(key), static_cast<core::view::Modifiers>(mods));
                         } else {
                             vislib::sys::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read 'win_hotkey' values as integers.[%s, %s, line %d]\n",
+                                "JSON state: Failed to read 'win_hotkey' values as integers. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                             valid = false;
                         }
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'win_hotkey' as array of size two.[%s, %s, line %d]\n",
+                            "JSON state: Failed to read 'win_hotkey' as array of size two. [%s, %s, line %d]\n",
                             __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -177,7 +181,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                             config_values.at("win_position")[0].get_to(tmp_config.win_position.x);
                         } else {
                             vislib::sys::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read first value of 'win_position' as float.[%s, %s, line %d]\n",
+                                "JSON state: Failed to read first value of 'win_position' as float. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                             valid = false;
                         }
@@ -185,13 +189,13 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                             config_values.at("win_position")[1].get_to(tmp_config.win_position.y);
                         } else {
                             vislib::sys::Log::DefaultLog.WriteError("JSON state: Failed to read second value of "
-                                                                    "'win_position' as float.[%s, %s, line %d]\n",
+                                                                    "'win_position' as float. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                             valid = false;
                         }
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'win_position' as array of size two.[%s, %s, line %d]\n",
+                            "JSON state: Failed to read 'win_position' as array of size two. [%s, %s, line %d]\n",
                             __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -201,7 +205,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                             config_values.at("win_size")[0].get_to(tmp_config.win_size.x);
                         } else {
                             vislib::sys::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read first value of 'win_size' as float.[%s, %s, line %d]\n",
+                                "JSON state: Failed to read first value of 'win_size' as float. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                             valid = false;
                         }
@@ -209,13 +213,13 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                             config_values.at("win_size")[1].get_to(tmp_config.win_size.y);
                         } else {
                             vislib::sys::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read second value of 'win_size' as float.[%s, %s, line %d]\n",
+                                "JSON state: Failed to read second value of 'win_size' as float. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                             valid = false;
                         }
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'win_size' as array of size two.[%s, %s, line %d]\n", __FILE__,
+                            "JSON state: Failed to read 'win_size' as array of size two. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -224,7 +228,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                         config_values.at("win_soft_reset").get_to(tmp_config.win_soft_reset);
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'win_soft_reset' as boolean.[%s, %s, line %d]\n", __FILE__,
+                            "JSON state: Failed to read 'win_soft_reset' as boolean. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -235,7 +239,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                             config_values.at("win_reset_size")[0].get_to(tmp_config.win_reset_size.x);
                         } else {
                             vislib::sys::Log::DefaultLog.WriteError("JSON state: Failed to read first value of "
-                                                                    "'win_reset_size' as float.[%s, %s, line %d]\n",
+                                                                    "'win_reset_size' as float. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                             valid = false;
                         }
@@ -243,13 +247,13 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                             config_values.at("win_reset_size")[1].get_to(tmp_config.win_reset_size.y);
                         } else {
                             vislib::sys::Log::DefaultLog.WriteError("JSON state: Failed to read second value  of "
-                                                                    "'win_reset_size' as float.[%s, %s, line %d]\n",
+                                                                    "'win_reset_size' as float. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                             valid = false;
                         }
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'win_reset_size' as array of size two.[%s, %s, line %d]\n",
+                            "JSON state: Failed to read 'win_reset_size' as array of size two. [%s, %s, line %d]\n",
                             __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -260,7 +264,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                         this->utils.Utf8Decode(tmp_config.main_project_file);
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'main_project_file' as string.[%s, %s, line %d]\n", __FILE__,
+                            "JSON state: Failed to read 'main_project_file' as string. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -270,7 +274,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                         config_values.at("param_show_hotkeys").get_to(tmp_config.param_show_hotkeys);
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'param_show_hotkeys' as boolean.[%s, %s, line %d]\n", __FILE__,
+                            "JSON state: Failed to read 'param_show_hotkeys' as boolean. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -284,7 +288,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                                     config_values.at("param_modules_list")[i].get<std::string>());
                             } else {
                                 vislib::sys::Log::DefaultLog.WriteError(
-                                    "JSON state: Failed to read element of 'param_modules_list' as string.[%s, %s, "
+                                    "JSON state: Failed to read element of 'param_modules_list' as string. [%s, %s, "
                                     "line %d]\n",
                                     __FILE__, __FUNCTION__, __LINE__);
                                 valid = false;
@@ -292,7 +296,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                         }
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'param_modules_list' as array.[%s, %s, line %d]\n", __FILE__,
+                            "JSON state: Failed to read 'param_modules_list' as array. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -302,7 +306,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                             static_cast<FilterModes>(config_values.at("param_module_filter").get<int>());
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'param_module_filter' as integer.[%s, %s, line %d]\n", __FILE__,
+                            "JSON state: Failed to read 'param_module_filter' as integer. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -311,7 +315,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                         config_values.at("param_expert_mode").get_to(tmp_config.param_expert_mode);
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'param_expert_mode' as boolean.[%s, %s, line %d]\n", __FILE__,
+                            "JSON state: Failed to read 'param_expert_mode' as boolean. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -322,7 +326,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                         config_values.at("ms_show_options").get_to(tmp_config.ms_show_options);
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'ms_show_options' as boolean.[%s, %s, line %d]\n", __FILE__,
+                            "JSON state: Failed to read 'ms_show_options' as boolean. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -331,7 +335,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                         config_values.at("ms_max_history_count").get_to(tmp_config.ms_max_history_count);
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'ms_max_history_count' as integer.[%s, %s, line %d]\n",
+                            "JSON state: Failed to read 'ms_max_history_count' as integer. [%s, %s, line %d]\n",
                             __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -340,7 +344,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                         config_values.at("ms_refresh_rate").get_to(tmp_config.ms_refresh_rate);
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'ms_refresh_rate' as float.[%s, %s, line %d]\n", __FILE__,
+                            "JSON state: Failed to read 'ms_refresh_rate' as float. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -349,7 +353,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                         tmp_config.ms_mode = static_cast<TimingModes>(config_values.at("ms_mode").get<int>());
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'ms_mode' as integer.[%s, %s, line %d]\n", __FILE__,
+                            "JSON state: Failed to read 'ms_mode' as integer. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -360,7 +364,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                         this->utils.Utf8Decode(tmp_config.font_name);
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'font_name' as string.[%s, %s, line %d]\n", __FILE__,
+                            "JSON state: Failed to read 'font_name' as string. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -436,10 +440,11 @@ bool WindowManager::StateToJSON(nlohmann::json& out_json) {
     try {
         out_json.clear();
 
-        for (auto& w : this->windows) {
-            if (w.second.win_store_config) {
-                std::string window_name = w.first;
-                WindowConfiguration window_config = w.second;
+        for (auto& window : this->windows) {
+            if (window.second.win_store_config) {
+                std::string window_name = window.first;
+                WindowConfiguration window_config = window.second;
+                
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_show"] = window_config.win_show;
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_flags"] = static_cast<int>(window_config.win_flags);
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_callback"] = static_cast<int>(window_config.win_callback);

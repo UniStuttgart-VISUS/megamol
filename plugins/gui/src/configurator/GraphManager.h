@@ -83,15 +83,11 @@ private:
 
     bool get_call_stock_data(
         Call::StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);
-
     bool get_module_stock_data(
         Module::StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
 
     bool read_project_command_arguments(const std::string& line, size_t arg_count, std::vector<std::string>& out_args);
     ImVec2 project_read_confpos(const std::string& line);
-    std::string project_write_confpos(const ImVec2& pos);
-    std::vector<std::string> project_read_confgroupinterface(const std::string& line);
-    std::string project_write_confgroupinterface(const ModulePtrType& module_ptr, const GraphPtrType& graph_ptr);
     bool project_separate_name_and_namespace(const std::string& full_name, std::string& name_space, std::string& name);
 
     bool parameters_gui_state_from_json_string(const GraphPtrType& graph_ptr, const std::string& in_json_string);

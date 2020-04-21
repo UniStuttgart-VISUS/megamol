@@ -121,23 +121,30 @@ typedef struct _canvas_ {
 typedef struct _interact_state_ {
     ImGuiID button_active_uid;                                       // in out
     ImGuiID button_hovered_uid;                                      // in out
+    
     ImGuiID group_selected_uid;                                      // in out
     ImGuiID group_hovered_uid;                                       // in out
+    
     UIDVectorType modules_selected_uids;                             // in out
     ImGuiID module_hovered_uid;                                      // in out
     ImGuiID module_mainview_uid;                                     // out
     UIDPairVectorType modules_add_group_uids;                        // out
     UIDVectorType modules_remove_group_uids;                         // out
+    
     ImGuiID call_selected_uid;                                       // in out
     ImGuiID call_hovered_uid;                                        // in out
+    
+    ImGuiID slot_dropped_uid;                                        // in out    
+      
     ImGuiID callslot_selected_uid;                                   // in out
     ImGuiID callslot_hovered_uid;                                    // in out
     UIDPairType callslot_add_group_uid;                              // in out
     configurator::CallSlotPtrType callslot_compat_ptr;               // in
+    
     ImGuiID interfaceslot_selected_uid;                              // in out
     ImGuiID interfaceslot_hovered_uid;                               // in out
-    ImGuiID slot_dropped_uid;                                        // in out   
     configurator::InterfaceSlotPtrType interfaceslot_compat_ptr;     // in
+    
 } GraphItemsInteractType;
 
 /* Data type holding shared state of graph items. */

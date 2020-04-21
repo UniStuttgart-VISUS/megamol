@@ -56,7 +56,7 @@ bool megamol::gui::configurator::InterfaceSlot::AddCallSlot(
             callslot_ptr->GUI_SetGroupInterface(parent_interfaceslot_ptr);
 
             vislib::sys::Log::DefaultLog.WriteInfo(
-                "Added call slot '%s' to interface slot of group.\n", callslot_ptr->name.c_str());
+                "[Configurator] Added call slot '%s' to interface slot of group.\n", callslot_ptr->name.c_str());
             return true;
         }
     } catch (std::exception e) {
@@ -84,7 +84,7 @@ bool megamol::gui::configurator::InterfaceSlot::RemoveCallSlot(ImGuiID callslot_
                 (*iter)->GUI_SetGroupInterface(nullptr);
 
                 vislib::sys::Log::DefaultLog.WriteInfo(
-                    "Removed call slot '%s' from interface slot of group.\n", (*iter)->name.c_str());
+                    "[Configurator] Removed call slot '%s' from interface slot of group.\n", (*iter)->name.c_str());
                 (*iter).reset();
                 this->callslots.erase(iter);
 

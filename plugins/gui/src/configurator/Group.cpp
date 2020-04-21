@@ -48,7 +48,7 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
     for (auto& mod : this->modules) {
         if (mod->uid == module_ptr->uid) {
             vislib::sys::Log::DefaultLog.WriteInfo(
-                "Module '%s' is already part of group '%s'.\n", mod->name.c_str(), this->name.c_str());
+                "[Configurator] Module '%s' is already part of group '%s'.\n", mod->name.c_str(), this->name.c_str());
             return false;
         }
     }
@@ -61,7 +61,7 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
     this->present.ForceUpdate();
 
     vislib::sys::Log::DefaultLog.WriteInfo(
-        "Added module '%s' to group '%s'.\n", module_ptr->name.c_str(), this->name.c_str());
+        "[Configurator] Added module '%s' to group '%s'.\n", module_ptr->name.c_str(), this->name.c_str());
     return true;
 }
 
@@ -85,7 +85,7 @@ bool megamol::gui::configurator::Group::RemoveModule(ImGuiID module_uid) {
                 this->present.ForceUpdate();
 
                 vislib::sys::Log::DefaultLog.WriteInfo(
-                    "Removed module '%s' from group '%s'.\n", (*mod_iter)->name.c_str(), this->name.c_str());
+                    "[Configurator] Removed module '%s' from group '%s'.\n", (*mod_iter)->name.c_str(), this->name.c_str());
                 (*mod_iter).reset();
                 this->modules.erase(mod_iter);
 
@@ -118,7 +118,7 @@ bool megamol::gui::configurator::Group::ContainsModule(ImGuiID module_uid) {
 
 
 bool megamol::gui::configurator::Group::InterfaceSlot_AddCallSlot(
-    const CallSlotPtrType& callslot_ptr, ImGuiID interfaceslot_uid) {
+    const CallSlotPtrType& callslot_ptr, ImGuiID new_interfaceslot_uid) {
 
     bool successfully_added = false;
 
@@ -131,7 +131,7 @@ bool megamol::gui::configurator::Group::InterfaceSlot_AddCallSlot(
     // Check if call slot is already part of the group
     for (auto& interfaceslot_ptr : this->interfaceslots[callslot_ptr->type]) {
         if (interfaceslot_ptr->ContainsCallSlot(callslot_ptr->uid)) {
-            vislib::sys::Log::DefaultLog.WriteInfo("Call Slot '%s' is already part of interface slot of group '%s'.\n",
+            vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Call Slot '%s' is already part of interface slot of group '%s'.\n",
                 callslot_ptr->name.c_str(), this->name.c_str());
             return false;
         }
@@ -154,11 +154,11 @@ bool megamol::gui::configurator::Group::InterfaceSlot_AddCallSlot(
 
     if (parent_module_group_uid) {
         
-        InterfaceSlotPtrType interfaceslot_ptr = std::make_shared<InterfaceSlot>(interfaceslot_uid);
+        InterfaceSlotPtrType interfaceslot_ptr = std::make_shared<InterfaceSlot>(new_interfaceslot_uid);
         if (interfaceslot_ptr != nullptr) {        
             interfaceslot_ptr->GUI_SetGroupUID(this->uid);
             this->interfaceslots[callslot_ptr->type].emplace_back(interfaceslot_ptr);
-            vislib::sys::Log::DefaultLog.WriteInfo("Added interface slot to group '%s'.\n", this->name.c_str()); 
+            vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Added interface slot to group '%s'.\n", this->name.c_str()); 
                 
             successfully_added = interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr);
             interfaceslot_ptr->GUI_SetGroupView(this->present.IsViewCollapsed());
@@ -256,7 +256,7 @@ bool megamol::gui::configurator::Group::DeleteInterfaceSlot(ImGuiID interfaceslo
                     (*iter).reset();
                     interfaceslot_map.second.erase(iter);
                     vislib::sys::Log::DefaultLog.WriteInfo(
-                        "Removed interface slot from group '%s'.\n", this->name.c_str());
+                        "[Configurator] Removed interface slot from group '%s'.\n", this->name.c_str());
                     return true;
                 }
             }
@@ -393,12 +393,6 @@ void megamol::gui::configurator::Group::Presentation::Present(
                 }
                 ImGui::EndPopup();
             } /// else { this->allow_context = false; }
-
-            // Automatically delete empty group
-            if (inout_group.GetModules().empty()) {
-                std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-                state.interact.button_active_uid = inout_group.uid;
-            }
 
             // Rename pop-up
             if (this->utils.RenamePopUp("Rename Group", popup_rename, inout_group.name)) {

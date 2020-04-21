@@ -81,6 +81,7 @@ public:
             , param_show_hotkeys(false)
             , param_modules_list()
             , param_module_filter(FilterModes::ALL)
+            , param_expert_mode(false)
             , ms_show_options(false)
             , ms_max_history_count(20)
             , ms_refresh_rate(2.0f)

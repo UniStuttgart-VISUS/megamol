@@ -54,16 +54,16 @@ public:
 
     bool UniqueModuleRename(const std::string& module_name);
 
-    const std::string GetFilename(void) { return this->filename; }
+    const std::string GetFilename(void) const { return this->filename; }
     void SetFilename(const std::string& filename) { this->filename = filename; }
-
-    bool StateFromJsonString(const std::string& json_string);
-    bool StateToJSON(nlohmann::json& out_json);
 
     // GUI Presentation -------------------------------------------------------
 
     inline void GUI_Present(GraphStateType& state) { this->present.Present(*this, state); }
 
+    bool GUI_StateFromJsonString(const std::string& json_string) { return this->present.StateFromJsonString(*this, json_string); }
+    bool GUI_StateToJSON(nlohmann::json& out_json) { return this->present.StateToJSON(*this, out_json); }
+        
     inline ImGuiID GUI_GetSelectedCallSlot(void) const { return this->present.GetSelectedCallSlot(); }
     inline ImGuiID GUI_GetSelectedInterfaceSlot(void) const { return this->present.GetSelectedInterfaceSlot(); }
     inline ImGuiID GUI_GetDropSlot(void) const { return this->present.GetDropSlot(); }
@@ -96,6 +96,11 @@ private:
 
         void Present(Graph& inout_graph, GraphStateType& state);
 
+        void ForceUpdate(void) { this->update = true; }
+            
+        bool StateFromJsonString(Graph& inout_graph, const std::string& json_string);
+        bool StateToJSON(Graph& inout_graph, nlohmann::json& out_json);
+    
         ImGuiID GetSelectedCallSlot(void) const { return this->graph_state.interact.callslot_selected_uid; }
         ImGuiID GetSelectedInterfaceSlot(void) const { return this->graph_state.interact.interfaceslot_selected_uid; }
         ImGuiID GetDropSlot(void) const { return this->graph_state.interact.slot_dropped_uid; }
@@ -104,9 +109,7 @@ private:
         bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
         bool GetCallLabelVisibility(void) const { return this->show_call_names; }
         bool GetCanvasHoverd(void) const { return this->canvas_hovered; }
-
-        void ForceUpdate(void) { this->update = true; }
-
+        
         /**
          * Really simple module layouting.
          * Sort modules into differnet layers 'from left to right' following the calls.
@@ -116,16 +119,21 @@ private:
         bool params_visible;
         bool params_readonly;
         bool param_expert_mode;
-
+        
     private:
         GUIUtils utils;
 
         bool update;
+        
         bool show_grid;
         bool show_call_names;
         bool show_slot_names;
         bool show_module_names;
+        bool show_parameter_sidebar;
+        bool change_show_parameter_sidebar;
+
         bool layout_current_graph;
+        
         float child_split_width;
         bool reset_zooming;
         std::string param_name_space;
@@ -134,6 +142,7 @@ private:
         bool multiselect_done;
         bool canvas_hovered;
         float current_font_scaling;
+        
         // State propagated and shared by all graph items.
         megamol::gui::GraphItemsStateType graph_state;
 
