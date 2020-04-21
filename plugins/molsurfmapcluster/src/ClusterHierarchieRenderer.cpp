@@ -13,6 +13,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/view/Renderer2DModule.h"
 
 #include "vislib/sys/Log.h"
@@ -22,6 +23,7 @@
 #include "DBScanClusteringProvider.h"
 #include "EnzymeClassProvider.h"
 #include "TextureLoader.h"
+#include "DistanceMatrixLoader.h"
 
 #define VIEWPORT_WIDTH 2560
 #define VIEWPORT_HEIGHT 1440
@@ -53,6 +55,7 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
     , addBrendaParam("addparam::brendaClass", "Additionally display the brenda class below each leaf node")
     , addMapParam("addparam::map", "Additionally display the map below each leaf node")
     , addIdParam("addparam::pdbId", "Additionally display the pdb id below each leaf node")
+    , distanceMatrixParam("distanceMatrixFile", "Path of the file containing a distance matrix to compare")
     , theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
     , texVa(0) {
 
@@ -80,7 +83,11 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
     this->fontSizeParam.SetParameter(new core::param::FloatParam(22.0f, 5.0f, 300.0f));
     this->MakeSlotAvailable(&this->fontSizeParam);
 
-    this->useDistanceColors.SetParameter(new param::BoolParam(false));
+    core::param::EnumParam* enpar = new core::param::EnumParam(static_cast<int>(DistanceColorMode::NONE));
+    enpar->SetTypePair(static_cast<int>(DistanceColorMode::NONE), "None");
+    enpar->SetTypePair(static_cast<int>(DistanceColorMode::BRENDA), "BRENDA");
+    enpar->SetTypePair(static_cast<int>(DistanceColorMode::TMSCORE), "TM-Score");
+    this->useDistanceColors.SetParameter(enpar);
     this->MakeSlotAvailable(&this->useDistanceColors);
 
     this->minColorParam.SetParameter(new param::ColorParam(0.266666f, 0.05098f, 0.32941f, 1.0f));
@@ -109,6 +116,9 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
 
     this->addMapParam.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->addMapParam);
+
+    this->distanceMatrixParam.SetParameter(new param::FilePathParam(""));
+    this->MakeSlotAvailable(&this->distanceMatrixParam);
 
     // Variablen
     this->lastHashClustering = 0;
@@ -315,18 +325,28 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
         }
     }
 
-    if (this->useDistanceColors.Param<param::BoolParam>()->Value()) {
+    auto enval = this->useDistanceColors.Param<param::EnumParam>()->Value();
+    if (enval != static_cast<int>(DistanceColorMode::NONE)) {
         std::string leftpdb = node->left == nullptr ? node->pic->pdbid : node->left->pic->pdbid;
         std::string rightpdb = node->right == nullptr ? node->pic->pdbid : node->right->pic->pdbid;
-        auto leftvec = EnzymeClassProvider::RetrieveClassesForPdbId(leftpdb, *this->GetCoreInstance());
-        auto rightvec = EnzymeClassProvider::RetrieveClassesForPdbId(rightpdb, *this->GetCoreInstance());
 
-        float mindist = 10.0f;
-        for (const auto& l : leftvec) {
-            for (const auto& r : rightvec) {
-                auto d = this->enzymeClassDistance(l, r);
-                if (d < mindist) mindist = d;
+        float mindist;
+        float middle;
+        if (enval == static_cast<int>(DistanceColorMode::BRENDA)) {
+            auto leftvec = EnzymeClassProvider::RetrieveClassesForPdbId(leftpdb, *this->GetCoreInstance());
+            auto rightvec = EnzymeClassProvider::RetrieveClassesForPdbId(rightpdb, *this->GetCoreInstance());
+
+            mindist = 10.0f;
+            for (const auto& l : leftvec) {
+                for (const auto& r : rightvec) {
+                    auto d = this->enzymeClassDistance(l, r);
+                    if (d < mindist) mindist = d;
+                }
             }
+            middle = 2.0f;
+        } else {
+            mindist = DistanceMatrixLoader::GetDistance(leftpdb, rightpdb);
+            middle = 0.5f;
         }
 
         auto minColor = glm::make_vec4(this->minColorParam.Param<param::ColorParam>()->Value().data());
@@ -337,10 +357,10 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
         if (mindist > 5.0f) {
             currentcolor = failColor;
         } else {
-            if (mindist <= 2.0f) {
+            if (mindist <= middle) {
                 currentcolor = glm::mix(maxColor, midColor, mindist / 2.0f);
             } else {
-                currentcolor = glm::mix(midColor, minColor, (mindist - 2.0f) / 2.0f);
+                currentcolor = glm::mix(midColor, minColor, (mindist - middle) / 2.0f);
             }
         }
     }
@@ -446,6 +466,13 @@ bool ClusterHierarchieRenderer::Render(view::CallRender2D& call) {
     if (cr == nullptr) return false;
 
     this->windowMeasurements = cr->GetViewport();
+
+    if (this->distanceMatrixParam.IsDirty()) {
+        this->distanceMatrixParam.ResetDirty();
+        std::string pathstring = this->distanceMatrixParam.Param<param::FilePathParam>()->Value().PeekBuffer();
+        std::filesystem::path dpath(pathstring);
+        DistanceMatrixLoader::load(dpath);
+    }
 
     // Update data Clustering
     CallClustering* ccc = this->clusterDataSlot.CallAs<CallClustering>();

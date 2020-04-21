@@ -103,6 +103,13 @@ private:
     /**********************************************************************
      * variables
      **********************************************************************/
+
+    enum class DistanceColorMode {
+        NONE = 0,
+        BRENDA = 1,
+        TMSCORE = 2
+    };
+
     /** Parameters */
     core::param::ParamSlot showEnzymeClassesParam;
     core::param::ParamSlot showPDBIdsParam;
@@ -117,6 +124,7 @@ private:
     core::param::ParamSlot midColorParam;
     core::param::ParamSlot maxColorParam;
     core::param::ParamSlot failColorParam;
+    core::param::ParamSlot distanceMatrixParam;
 
     core::param::ParamSlot windowWidthParam;
     core::param::ParamSlot windowHeightParam;
