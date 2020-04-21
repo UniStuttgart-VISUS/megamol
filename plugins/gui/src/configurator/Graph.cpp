@@ -1151,7 +1151,7 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(Graph&
                     std::string json_graph_id = content_item.key();
                     if (json_graph_id == inout_graph.GetFilename()) { /// = graph filename
                         found = true;
-                        auto config_state = content_item.value();
+                        auto config_state = content_item.value();      
 
                         // show_parameter_sidebar
                         bool tmp_show_parameter_sidebar;
@@ -1167,9 +1167,21 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(Graph&
                                 "JSON state: Failed to read 'show_parameter_sidebar' as boolean. [%s, %s, line %d]\n", __FILE__,
                                 __FUNCTION__, __LINE__);
                         }
+                        // show_grid
+                        if (config_state.at("show_grid").is_boolean()) {
+                            config_state.at("show_grid").get_to(this->show_grid);                          
+                        } else {
+                            vislib::sys::Log::DefaultLog.WriteError(
+                                "JSON state: Failed to read 'show_grid' as boolean. [%s, %s, line %d]\n", __FILE__,
+                                __FUNCTION__, __LINE__);
+                        }  
+                                                
                         // show_call_names
                         if (config_state.at("show_call_names").is_boolean()) {
                             config_state.at("show_call_names").get_to(this->show_call_names);
+                            for (auto& call : inout_graph.get_calls()) {
+                                call->GUI_SetLabelVisibility(this->show_call_names);
+                            }                            
                         } else {
                             vislib::sys::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'show_call_names' as boolean. [%s, %s, line %d]\n", __FILE__,
@@ -1178,6 +1190,13 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(Graph&
                         // show_slot_names
                         if (config_state.at("show_slot_names").is_boolean()) {
                             config_state.at("show_slot_names").get_to(this->show_slot_names);
+                            for (auto& mod : inout_graph.GetModules()) {
+                                for (auto& callslot_types : mod->GetCallSlots()) {
+                                    for (auto& callslots : callslot_types.second) {
+                                        callslots->GUI_SetLabelVisibility(this->show_slot_names);
+                                    }
+                                }
+                            }
                         } else {
                             vislib::sys::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'show_slot_names' as boolean. [%s, %s, line %d]\n", __FILE__,
@@ -1186,6 +1205,9 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(Graph&
                         // show_module_names
                         if (config_state.at("show_module_names").is_boolean()) {
                             config_state.at("show_module_names").get_to(this->show_module_names);
+                            for (auto& mod : inout_graph.GetModules()) {
+                                mod->GUI_SetLabelVisibility(this->show_module_names);
+                            }
                         } else {
                             vislib::sys::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'show_module_names' as boolean. [%s, %s, line %d]\n", __FILE__,
@@ -1194,6 +1216,7 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(Graph&
                         // params_visible
                         if (config_state.at("params_visible").is_boolean()) {
                             config_state.at("params_visible").get_to(this->params_visible);
+                            /// Do not apply. Already refelcted in parameter gui state.
                         } else {
                             vislib::sys::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'params_visible' as boolean. [%s, %s, line %d]\n", __FILE__,
@@ -1202,6 +1225,7 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(Graph&
                         // params_readonly
                         if (config_state.at("params_readonly").is_boolean()) {
                             config_state.at("params_readonly").get_to(this->params_readonly);
+                            /// Do not apply. Already refelcted in parameter gui state.
                         } else {
                             vislib::sys::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'params_readonly' as boolean. [%s, %s, line %d]\n", __FILE__,
@@ -1210,17 +1234,52 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(Graph&
                         // param_expert_mode
                         if (config_state.at("param_expert_mode").is_boolean()) {
                             config_state.at("param_expert_mode").get_to(this->param_expert_mode);
+                            for (auto& module_ptr : inout_graph.GetModules()) {
+                                for (auto& parameter : module_ptr->parameters) {
+                                    parameter.GUI_SetExpert(this->param_expert_mode);
+                                }
+                            }
                         } else {
                             vislib::sys::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'param_expert_mode' as boolean. [%s, %s, line %d]\n", __FILE__,
                                 __FUNCTION__, __LINE__);
-                        }         
-                    
+                        }
+                        // canvas_scrolling
+                        if (config_state.at("canvas_scrolling").is_array() && (config_state.at("canvas_scrolling").size() == 2)) {
+                            if (config_state.at("canvas_scrolling")[0].is_number_float()) {
+                                config_state.at("canvas_scrolling")[0].get_to(this->graph_state.canvas.scrolling.x);
+                            } else {
+                                vislib::sys::Log::DefaultLog.WriteError(
+                                    "JSON state: Failed to read first value of 'canvas_scrolling' as float. [%s, %s, line %d]\n",
+                                    __FILE__, __FUNCTION__, __LINE__);
+                            }
+                            if (config_state.at("canvas_scrolling")[1].is_number_float()) {
+                                config_state.at("canvas_scrolling")[1].get_to(this->graph_state.canvas.scrolling.y);
+                            } else {
+                                vislib::sys::Log::DefaultLog.WriteError(
+                                    "JSON state: Failed to read second value of 'canvas_scrolling' as float. [%s, %s, line %d]\n",
+                                    __FILE__, __FUNCTION__, __LINE__);
+                            }
+                        } else {
+                            vislib::sys::Log::DefaultLog.WriteError(
+                                "JSON state: Failed to read 'canvas_scrolling' as array of size two. [%s, %s, line %d]\n", __FILE__,
+                                __FUNCTION__, __LINE__);
+                        }
+                        // canvas_zooming
+                        if (config_state.at("canvas_zooming").is_number_float()) {
+                            config_state.at("canvas_zooming").get_to(this->graph_state.canvas.zooming);
+                            this->reset_zooming = false;
+                        } else {
+                            vislib::sys::Log::DefaultLog.WriteError(
+                                "JSON state: Failed to read first value of 'canvas_zooming' as float. [%s, %s, line %d]\n",
+                                __FILE__, __FUNCTION__, __LINE__);
+                        }                    
+                        
                         // modules
                         for (auto& module_item : content_item.value().items()) {
                             if (module_item.key() == "modules") {
                                 for (auto& module_state : module_item.value().items()) {
-                                    std::string module_name = module_state.key();
+                                    std::string module_fullname = module_state.key();
                                     auto position_item = module_state.value();
                                     valid = true;
                                                                 
@@ -1254,25 +1313,23 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(Graph&
                                     if (valid) {
                                         bool module_found = false;
                                         for (auto& module_ptr : inout_graph.modules) {
-                                            if (module_ptr->FullName() == module_name) {
+                                            if (module_ptr->FullName() == module_fullname) {
                                                 module_ptr->GUI_SetPosition(module_position);
-                                            
                                                 module_found = true;
                                             }
-                                            
                                         }
                                         if (!module_found) {
                                             vislib::sys::Log::DefaultLog.WriteError(
-                                                "JSON state: Unable to find module '%s' to apply graph position in configurator. [%s, %s, line %d]\n", module_name.c_str(), __FILE__,
+                                                "JSON state: Unable to find module '%s' to apply graph position in configurator. [%s, %s, line %d]\n", module_fullname.c_str(), __FILE__,
                                                 __FUNCTION__, __LINE__);
                                         }   
                                     }                         
                                 }
                             }
                         }
-                                        
-                                       
+                    
                         // interfaces
+                        /*
                         for (auto& interfaces_item : content_item.value().items()) {
                             if (interfaces_item.key() == "interfaces") {
                                 for (auto& interface_state : interfaces_item.value().items()) {
@@ -1296,7 +1353,7 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(Graph&
                                         }
                                     
                                         // Add interface slot containing found calls slots to group
-                                        if (valid && !calleslot_fullnames.empty()) {
+                                        if (valid ) {
 
                                             // Find pointers to call slots by name
                                             CallSlotPtrVectorType callslot_ptr_vector;
@@ -1347,14 +1404,19 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(Graph&
                                 }
                             }   
                         } 
+                        */
                     }
                 }
             }
         }
 
-        if (!found) {
-            /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find configurator state in JSON. [%s, %s, line %d]\n",
-            /// __FILE__, __FUNCTION__, __LINE__);
+        if (found) {
+            this->update = true;
+            vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Read graph state for '%s' from JSON string.", inout_graph.name.c_str());  
+        }
+        else {
+            /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find graph state in JSON. [%s, %s, line
+            /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -1390,16 +1452,19 @@ bool megamol::gui::configurator::Graph::Presentation::StateToJSON(Graph& inout_g
         out_json.clear();
         std::string json_graph_id = inout_graph.GetFilename(); /// = graph filename
         
-        // ! State of graph is only stored if project was saved to file previously. Otherwise the project can not be loaded again.
+        // ! State of graph is only stored if project was saved to file previously. Otherwise the project could not be loaded again.
         if (!json_graph_id.empty()) {
 
             out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["show_parameter_sidebar"] = this->show_parameter_sidebar;            
+            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["show_grid"] = this->show_grid;
             out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["show_call_names"] = this->show_call_names;
             out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["show_slot_names"] = this->show_slot_names;
             out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["show_module_names"] = this->show_module_names;
             out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["params_visible"] = this->params_visible;
             out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["params_readonly"] = this->params_readonly;
-            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["param_expert_mode"] = this->param_expert_mode;  
+            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["param_expert_mode"] = this->param_expert_mode;
+            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["canvas_scrolling"] = { this->graph_state.canvas.scrolling.x, this->graph_state.canvas.scrolling.y };
+            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["canvas_zooming"] = this->graph_state.canvas.zooming;
             
             // Module positions
             for (auto& module_ptr : inout_graph.modules) {
@@ -1422,7 +1487,9 @@ bool megamol::gui::configurator::Graph::Presentation::StateToJSON(Graph& inout_g
                         interface_number++;
                     }
                 }
-            }   
+            } 
+            
+            ///vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Wrote graph state to JSON.");  
         }
         else {
             ///vislib::sys::Log::DefaultLog.WriteWarn("State of project '%s' is not being saved. Save project to file in order to get its state saved. [%s, %s, line %d]\n", inout_graph.name.c_str(), __FILE__, __FUNCTION__, __LINE__);

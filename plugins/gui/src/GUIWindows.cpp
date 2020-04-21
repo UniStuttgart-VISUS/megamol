@@ -526,8 +526,8 @@ bool GUIWindows::OnMouseButton(
     auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
 
-    // Trigger saving state when mouse hoverd any window and on button mouse release event
-    if ((!down) && (io.MouseDown[buttonIndex]) && hoverFlags) {
+    // Trigger saving state when mouse hovered any window and on button mouse release event
+    if (ImGui::IsMouseReleased[buttonIndex] && hoverFlags) {
         this->state.win_save_state = true;
         this->state.win_save_delay = 0.0f;
     }
@@ -817,8 +817,7 @@ void GUIWindows::validateParameter() {
         this->window_manager.StateFromJsonString(state);
         this->parameters_gui_state_from_json_string(state);
         this->state_param.ResetDirty();
-    } else if (this->state.win_save_state &&
-               (this->state.win_save_delay > 2.0f)) { // Delayed saving after triggering saving state (in seconds).
+    } else if (this->state.win_save_state && (this->state.win_save_delay > 2.0f)) { // Delayed saving after triggering saving state (in seconds).
         this->save_state_to_parameter();
         this->state.win_save_state = false;
     }
@@ -1302,7 +1301,7 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
 #else // LINUX
             vislib::sys::Log::DefaultLog.WriteWarn(
                 "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("Current Performance Monitor Value:\n%s", overlay.c_str());
+            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Current Performance Monitor Value:\n%s", overlay.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1322,7 +1321,7 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
 #else // LINUX
             vislib::sys::Log::DefaultLog.WriteWarn(
                 "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("All Performance Monitor Values:\n%s", stream.str().c_str());
+            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] All Performance Monitor Values:\n%s", stream.str().c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1470,7 +1469,7 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 #else // LINUX
             vislib::sys::Log::DefaultLog.WriteWarn(
                 "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("E-Mail address:\n%s", eMail.c_str());
+            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] E-Mail address:\n%s", eMail.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1486,7 +1485,7 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 #else // LINUX
             vislib::sys::Log::DefaultLog.WriteWarn(
                 "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("Website link:\n%s", webLink.c_str());
+            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Website link:\n%s", webLink.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1501,7 +1500,7 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 #else // LINUX
             vislib::sys::Log::DefaultLog.WriteWarn(
                 "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("GitHub link:\n%s", gitLink.c_str());
+            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] GitHub link:\n%s", gitLink.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1871,7 +1870,7 @@ void GUIWindows::drawTransferFunctionEdit(
 #else // LINUX
         vislib::sys::Log::DefaultLog.WriteWarn(
             "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        vislib::sys::Log::DefaultLog.WriteInfo("Transfer Function JSON String:\n%s", p.Value().c_str());
+        vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Transfer Function JSON String:\n%s", p.Value().c_str());
 #endif
     }
     ImGui::SameLine();
@@ -2040,7 +2039,7 @@ bool megamol::gui::GUIWindows::hotkeyPressed(megamol::core::view::KeyCode keycod
 void megamol::gui::GUIWindows::shutdown(void) {
 
     if (this->core_instance != nullptr) {
-        vislib::sys::Log::DefaultLog.WriteInfo("GUIWindows: Triggering MegaMol instance shutdown.");
+        vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Triggering MegaMol instance shutdown.");
         this->core_instance->Shutdown();
     } else {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -2151,7 +2150,10 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
             }
         }
 
-        if (!found) {
+        if (found) {
+            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Read parameter gui state from JSON string.");  
+        }
+        else {
             /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON. [%s, %s, line
             /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
@@ -2205,6 +2207,8 @@ bool megamol::gui::GUIWindows::parameters_gui_state_to_json(nlohmann::json& out_
                     static_cast<int>(parameter->GetGUIPresentation());
             }
         });
+        
+        ///vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Wrote parameter gui state to JSON.");        
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(

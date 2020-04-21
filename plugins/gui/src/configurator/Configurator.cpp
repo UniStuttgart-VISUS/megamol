@@ -322,7 +322,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 #else // LINUX
                 vislib::sys::Log::DefaultLog.WriteWarn(
                     "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                vislib::sys::Log::DefaultLog.WriteInfo("Readme Link:\n%s", docu_link.c_str());
+                vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Readme Link:\n%s", docu_link.c_str());
 #endif
             }
             ImGui::EndMenu();
@@ -354,7 +354,8 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     }
     if (this->file_utils.FileBrowserPopUp(
             FileUtils::FileBrowserFlag::SAVE, "Save Project", popup_save_project_file, project_filename)) {
-        popup_failed = !this->graph_manager.SaveProjectFile(this->graph_state.graph_selected_uid, project_filename);
+        std::string state_parameter_name = std::string(this->state_param.Name().PeekBuffer());
+        popup_failed = !this->graph_manager.SaveProjectFile(this->graph_state.graph_selected_uid, project_filename, state_parameter_name);
     }
     this->utils.MinimalPopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
@@ -574,6 +575,7 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
                     std::string json_graph_id = config_item.key(); /// = graph filename
                     // Load graph from file
                     ImGuiID graph_uid = this->graph_manager.LoadAddProjectFile(GUI_INVALID_ID, json_graph_id);
+                    /*
                     if (graph_uid != GUI_INVALID_ID) {
                         GraphPtrType graph_ptr;
                         if (this->graph_manager.GetGraph(graph_uid, graph_ptr)) {
@@ -581,13 +583,17 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
                             graph_ptr->GUI_StateFromJsonString(in_json_string);
                         }
                     }
+                    */
                 }
             }
         }
 
-        if (!found) {
-            /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find configurator state in JSON. [%s, %s, line %d]\n",
-            /// __FILE__, __FUNCTION__, __LINE__);
+        if (found) {
+            vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Read configurator state from JSON string.");  
+        }
+        else {
+            /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find configurator state in JSON. [%s, %s, line
+            /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -630,6 +636,8 @@ bool megamol::gui::configurator::Configurator::configurator_state_to_json(nlohma
                 out_json.update(graph_json);
             }
         }
+        
+        ///vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Wrote configurator state to JSON.");  
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(

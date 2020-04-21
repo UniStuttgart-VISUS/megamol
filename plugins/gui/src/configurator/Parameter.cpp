@@ -715,7 +715,7 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
 #else // LINUX
         vislib::sys::Log::DefaultLog.WriteWarn(
             "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        vislib::sys::Log::DefaultLog.WriteInfo("Transfer Function JSON String:\n%s", value.c_str());
+        vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Transfer Function JSON String:\n%s", value.c_str());
 #endif
     }
     ImGui::SameLine();

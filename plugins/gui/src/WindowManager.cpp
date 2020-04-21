@@ -382,7 +382,10 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
         }
 
         if (found) {
-            if (!valid) {
+            if (valid) {
+                vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Read window configurations from JSON string.");  
+            }
+            else {
                 vislib::sys::Log::DefaultLog.WriteWarn(
                     "Could not load window configuration state from JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                     __LINE__);
@@ -475,6 +478,7 @@ bool WindowManager::StateToJSON(nlohmann::json& out_json) {
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["font_name"] = window_config.font_name;
             }
         }
+        ///vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Wrote window configurations to JSON.");
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
