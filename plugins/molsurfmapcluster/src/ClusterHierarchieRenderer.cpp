@@ -346,6 +346,7 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
             middle = 2.0f;
         } else {
             mindist = DistanceMatrixLoader::GetDistance(leftpdb, rightpdb);
+            if (mindist >= 0.0) mindist = 1.0 - mindist;
             middle = 0.5f;
         }
 
@@ -354,7 +355,7 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
         auto maxColor = glm::make_vec4(this->maxColorParam.Param<param::ColorParam>()->Value().data());
         auto failColor = glm::make_vec4(this->failColorParam.Param<param::ColorParam>()->Value().data());
 
-        if (mindist > 5.0f) {
+        if (mindist > 5.0f || mindist < 0.0f) {
             currentcolor = failColor;
         } else {
             if (mindist <= middle) {

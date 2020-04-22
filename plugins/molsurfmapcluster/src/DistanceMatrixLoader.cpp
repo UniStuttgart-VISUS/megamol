@@ -67,9 +67,11 @@ bool DistanceMatrixLoader::load(const std::filesystem::path& path, bool force) {
 }
 
 double DistanceMatrixLoader::GetDistance(std::string pdbid1, std::string pdbid2) {
-    if (pdbid1.compare(pdbid2) == 0) return 0.0;     // both strings are equal
+    if (pdbid1.compare(pdbid2) == 0) return 1.0;     // both strings are equal
     if (distanceMap.size() == 0) return -1.0;        // no distances available
     if (!distanceMap.count(pdbid1) > 0) return -1.0; // no entry for pdbid1
     if (!distanceMap.count(pdbid2) > 0) return -1.0; // no entry for pdbid2
-    return distanceMap.at(pdbid1).at(pdbid2);
+    double dir1 = distanceMap.at(pdbid1).at(pdbid2);
+    double dir2 = distanceMap.at(pdbid2).at(pdbid1);
+    return std::min(dir1, dir2);
 }
