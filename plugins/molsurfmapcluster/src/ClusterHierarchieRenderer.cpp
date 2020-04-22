@@ -10,10 +10,10 @@
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/param/EnumParam.h"
 #include "mmcore/view/Renderer2DModule.h"
 
 #include "vislib/sys/Log.h"
@@ -21,9 +21,9 @@
 #include "CallClusterPosition.h"
 #include "ClusterHierarchieRenderer.h"
 #include "DBScanClusteringProvider.h"
+#include "DistanceMatrixLoader.h"
 #include "EnzymeClassProvider.h"
 #include "TextureLoader.h"
-#include "DistanceMatrixLoader.h"
 
 #define VIEWPORT_WIDTH 2560
 #define VIEWPORT_HEIGHT 1440
@@ -421,6 +421,33 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
 
         // draw stuff like the pdb id and brenda class
         if (this->addMapParam.Param<param::BoolParam>()->Value()) {
+            glDisable(GL_CULL_FACE);
+            glEnable(GL_TEXTURE_2D);
+            // TextureLoader::loadTexturesToRender(this->clustering);
+            // TODO load correct texture
+
+            if (node->pic->texture == nullptr) {
+                glowl::TextureLayout layout(
+                    GL_RGB8, node->pic->width, node->pic->height, 1, GL_RGB, GL_UNSIGNED_BYTE, 1);
+                node->pic->texture =
+                    std::make_unique<glowl::Texture2D>("", layout, node->pic->image->PeekDataAs<BYTE>());
+            }
+
+            node->pic->texture->bindTexture();
+
+            glBindVertexArray(this->texVa);
+            this->textureShader.Enable();
+
+            glUniform2f(this->textureShader.ParameterLocation("lowerleft"), xp, yp - height);
+            glUniform2f(this->textureShader.ParameterLocation("upperright"), xp + width, yp);
+            glUniformMatrix4fv(this->textureShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
+            glUniform1i(this->textureShader.ParameterLocation("tex"), 0);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+            this->textureShader.Disable();
+            glBindVertexArray(0);
+            glDisable(GL_TEXTURE_2D);
+            yp -= height * 1.55f;
         }
 
         if (this->addIdParam.Param<param::BoolParam>()->Value()) {
