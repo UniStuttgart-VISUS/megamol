@@ -1363,7 +1363,6 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(
 
                                         // Add interface slot containing found calls slots to group
                                         if (valid) {
-
                                             // Find pointers to call slots by name
                                             CallSlotPtrVectorType callslot_ptr_vector;
                                             for (auto& callsslot_fullname : calleslot_fullnames) {
@@ -1385,22 +1384,26 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(
                                                         }
                                                     }
                                                 }
-                                            }
+                                            }                                            
                                             if (!callslot_ptr_vector.empty()) {
                                                 bool group_found = false;
                                                 for (auto& group_ptr : inout_graph.groups) {
                                                     if (group_ptr->name == group_name) {
-                                                        ImGuiID new_interfaceslot_uid =
-                                                            inout_graph.generate_unique_id();
-                                                        if (group_ptr->InterfaceSlot_AddCallSlot(
-                                                                callslot_ptr_vector[0], new_interfaceslot_uid)) {
+                                                        ImGuiID new_interfaceslot_uid = inout_graph.generate_unique_id();
+                                                        auto callslot_ptr = callslot_ptr_vector[0];
+                                                        // First remove previously added interface slot which was automatically added during adding module to group
+                                                        if (group_ptr->InterfaceSlot_ContainsCallSlot(callslot_ptr->uid)) {
+                                                            group_ptr->InterfaceSlot_RemoveCallSlot(callslot_ptr->uid);
+                                                        }
+                                                        if (group_ptr->InterfaceSlot_AddCallSlot(callslot_ptr, new_interfaceslot_uid)) {
                                                             InterfaceSlotPtrType interfaceslot_ptr;
-                                                            if (group_ptr->GetInterfaceSlot(
-                                                                    new_interfaceslot_uid, interfaceslot_ptr)) {
-                                                                for (size_t i = 1; i < callslot_ptr_vector.size();
-                                                                     i++) {
-                                                                    interfaceslot_ptr->AddCallSlot(
-                                                                        callslot_ptr_vector[i], interfaceslot_ptr);
+                                                            if (group_ptr->GetInterfaceSlot(new_interfaceslot_uid, interfaceslot_ptr)) {
+                                                                for (size_t i = 1; i < callslot_ptr_vector.size(); i++) {
+                                                                    callslot_ptr = callslot_ptr_vector[i];
+                                                                    if (group_ptr->InterfaceSlot_ContainsCallSlot(callslot_ptr->uid)) {
+                                                                        group_ptr->InterfaceSlot_RemoveCallSlot(callslot_ptr->uid);
+                                                                    }
+                                                                    interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr);
                                                                 }
                                                             }
                                                         }
@@ -1463,7 +1466,9 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(
 bool megamol::gui::configurator::Graph::Presentation::StateToJSON(Graph& inout_graph, nlohmann::json& out_json) {
 
     try {
-        out_json.clear();
+        /// Append to given json
+        //out_json.clear();
+        
         std::string json_graph_id = inout_graph.GetFilename(); /// = graph filename
 
         // ! State of graph is only stored if project was saved to file previously. Otherwise the project could not be

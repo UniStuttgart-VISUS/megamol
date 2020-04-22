@@ -58,6 +58,10 @@ namespace gui {
 #define GUI_GRAPH_BORDER (GUI_SLOT_RADIUS * 4.0f)
 #define GUI_MULTISELECT_MODIFIER (ImGui::GetIO().KeyShift)
 
+#define GUI_MODULE_NAME ("GUIView")
+#define GUI_GUI_STATE_PARAM_NAME ("state")
+#define GUI_CONFIGURATOR_STATE_PARAM_NAME ("configurator::state")
+
 #define GUI_JSON_TAG_WINDOW_CONFIGURATIONS ("WindowConfigurations")
 #define GUI_JSON_TAG_GUISTATE_PARAMETERS ("Parameters")
 #define GUI_JSON_TAG_CONFIGURATOR ("Configurator")

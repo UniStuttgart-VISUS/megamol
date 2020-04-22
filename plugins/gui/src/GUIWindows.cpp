@@ -10,7 +10,7 @@
  *
  * - Show/hide Windows: F8-F12
  * - Reset windows:     Shift + F8-F12
- * - Search Paramter:   Ctrl + p
+ * - Search Paramter:   Ctrl + Shift + p
  * - Save Project:      Ctrl + s
  * - Quit program:      Alt   + F4
  */
@@ -27,7 +27,7 @@ GUIWindows::GUIWindows()
     : core_instance(nullptr)
     , param_slots()
     , style_param("style", "Color style, theme")
-    , state_param("state", "Current state of all windows.")
+    , state_param(GUI_GUI_STATE_PARAM_NAME, "Current state of all windows.")
     , autostart_configurator("autostart_configurator", "Start the configurator at start up automatically. ")
     , context(nullptr)
     , impl(Implementation::NONE)
@@ -73,7 +73,7 @@ GUIWindows::GUIWindows()
     this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = megamol::gui::HotkeyDataType(
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
     this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] = megamol::gui::HotkeyDataType(
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false);
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL | core::view::Modifier::SHIFT), false);
     this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT] = megamol::gui::HotkeyDataType(
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false);
 }
@@ -363,17 +363,37 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     bool enter_pressed = (!last_num_enter_key && cur_num_enter_key);
     io.KeysDown[static_cast<size_t>(core::view::Key::KEY_ENTER)] = (return_pressed || enter_pressed);
 
-    // Check for GUIWindows specific hotkeys
-    for (auto& h : this->hotkeys) {
-        auto key = std::get<0>(h).key;
-        auto mods = std::get<0>(h).mods;
-        if (ImGui::IsKeyDown(static_cast<int>(key)) && (mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
-            (mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
-            (mods.test(core::view::Modifier::SHIFT) == io.KeyShift)) {
-            std::get<1>(h) = true;
-            hotkeyPressed = true;
+    // Check for specific GUI hotkeys
+    bool main_window_shown = false;
+    bool configurator_window_shown = false;
+    const auto func = [&](const std::string& wn, WindowManager::WindowConfiguration& wc) {
+      if (wc.win_show && (wc.win_callback == WindowManager::DrawCallbacks::MAIN)) {
+          main_window_shown = true;
+      }
+      if (wc.win_show && (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR)) {
+          configurator_window_shown = true;
+      }      
+    };
+    this->window_manager.EnumWindows(func);
+    // Main Window
+    if (main_window_shown && !configurator_window_shown) {
+        for (auto& h : this->hotkeys) {
+            auto key = std::get<0>(h).key;
+            auto mods = std::get<0>(h).mods;
+            if (ImGui::IsKeyDown(static_cast<int>(key)) && (mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
+                (mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
+                (mods.test(core::view::Modifier::SHIFT) == io.KeyShift)) {
+                std::get<1>(h) = true;
+                hotkeyPressed = true;
+            }
         }
     }
+    // Configurator
+    if (configurator_window_shown) {
+        if (this->configurator.CheckHotkeys()) {
+            hotkeyPressed = true;
+        } 
+    }  
     if (hotkeyPressed) return true;
 
     // Check for additional text modification hotkeys
@@ -408,7 +428,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
 
     // Hotkeys for showing/hiding window(s)
     hotkeyPressed = false;
-    const auto func = [&](const std::string& wn, WindowManager::WindowConfiguration& wc) {
+    const auto windows_func = [&](const std::string& wn, WindowManager::WindowConfiguration& wc) {
         bool windowHotkeyPressed = this->hotkeyPressed(wc.win_hotkey);
         if (windowHotkeyPressed) {
             wc.win_show = !wc.win_show;
@@ -425,13 +445,8 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
         }
         hotkeyPressed = (hotkeyPressed || windowHotkeyPressed);
     };
-    this->window_manager.EnumWindows(func);
+    this->window_manager.EnumWindows(windows_func);
     if (hotkeyPressed) return true;
-
-    // Check for configurator hotkeys
-    if (this->configurator.CheckHotkeys()) {
-        return true;
-    }
 
     // Always consume keyboard input if requested by any imgui widget (e.g. text input).
     // User expects hotkey priority of text input thus needs to be processed before parameter hotkeys.
@@ -521,7 +536,7 @@ bool GUIWindows::OnMouseButton(
     auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
 
-    /// Useless since state ist always saved before project is stored.
+    /// Useless since state ist always saved before project is stored?
     /*
     // Trigger saving state when mouse hovered any window and on button mouse release event
     if (ImGui::IsMouseReleased[buttonIndex] && hoverFlags) {
@@ -2052,21 +2067,19 @@ void megamol::gui::GUIWindows::shutdown(void) {
 
 void megamol::gui::GUIWindows::save_state_to_parameter(void) {
 
+    this->configurator.UpdateStateParameter();
+    
     nlohmann::json window_json;
     nlohmann::json parameter_json;
 
     if (this->window_manager.StateToJSON(window_json) && this->parameters_gui_state_to_json(parameter_json)) {
-
         // Merge both JSON states
         window_json.update(parameter_json);
 
         std::string state;
-        state = window_json.dump(2); /// pass nothing for unformatted output or pass number of indent spaces
-
+        state = window_json.dump(2); 
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
     }
-
-    this->configurator.UpdateStateParameter();
 }
 
 
@@ -2198,7 +2211,8 @@ bool megamol::gui::GUIWindows::parameters_gui_state_to_json(nlohmann::json& out_
             return false;
         }
 
-        out_json.clear();
+        /// Append to given json
+        //out_json.clear();
 
         this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
             auto parameter = slot.Parameter();

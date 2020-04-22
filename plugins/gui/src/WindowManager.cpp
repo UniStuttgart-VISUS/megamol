@@ -440,7 +440,8 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
 bool WindowManager::StateToJSON(nlohmann::json& out_json) {
 
     try {
-        out_json.clear();
+        /// Append to given json
+        //out_json.clear();
 
         for (auto& window : this->windows) {
             if (window.second.win_store_config) {

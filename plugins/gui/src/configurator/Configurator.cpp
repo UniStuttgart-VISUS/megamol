@@ -10,7 +10,7 @@
  *
  * - Search module:        Ctrl + Shift + m
  * - Search parameter:     Ctrl + Shift + p
- * - Save active project:  Ctrl + Shift + s
+ * - Save active project:  Ctrl + s
  * - Delete graph item:    Delete
  */
 
@@ -28,7 +28,7 @@ std::vector<std::string> megamol::gui::configurator::Configurator::dropped_files
 
 megamol::gui::configurator::Configurator::Configurator()
     : param_slots()
-    , state_param("configurator::state", "State of the configurator.")
+    , state_param(GUI_CONFIGURATOR_STATE_PARAM_NAME, "State of the configurator.")
     , graph_manager()
     , file_utils()
     , utils()
@@ -56,7 +56,7 @@ megamol::gui::configurator::Configurator::Configurator()
     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM] =
         megamol::gui::HotkeyDataType(core::view::KeyCode(core::view::Key::KEY_DELETE), false);
     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT] = megamol::gui::HotkeyDataType(
-        megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
+        megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL),
         false);
     this->graph_state.font_scalings = {0.85f, 0.95f, 1.0f, 1.5f, 2.5f};
     this->graph_state.child_width = 0.0f;
@@ -220,7 +220,7 @@ void megamol::gui::configurator::Configurator::UpdateStateParameter(void) {
     nlohmann::json configurator_json;
     if (this->configurator_state_to_json(configurator_json)) {
         std::string state;
-        state = configurator_json.dump(2); /// pass nothing for unformatted output or pass number of indent spaces
+        state = configurator_json.dump(2);
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
     }
 }
@@ -239,7 +239,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     bool popup_load_file = false;
 
     // Hotkeys
-    if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT])) {
+    if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT]) && (this->graph_state.graph_selected_uid != GUI_INVALID_ID)) {
         popup_save_project_file = true;
     }
 
@@ -574,9 +574,13 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
             } else if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
                 for (auto& config_item : header_item.value().items()) {
                     std::string json_graph_id = config_item.key(); /// = graph filename
+                    
                     // Load graph from file
-                    this->graph_manager.LoadAddProjectFile(GUI_INVALID_ID, json_graph_id);
+                    ImGuiID graph_uid = this->graph_manager.LoadAddProjectFile(GUI_INVALID_ID, json_graph_id);
+                    
+                    /// XXX Disabled (Ignoring graph state stored in this project)
                     /*
+                    // Overwrite graph states with the one found in this project
                     if (graph_uid != GUI_INVALID_ID) {
                         GraphPtrType graph_ptr;
                         if (this->graph_manager.GetGraph(graph_uid, graph_ptr)) {
@@ -626,15 +630,13 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
 bool megamol::gui::configurator::Configurator::configurator_state_to_json(nlohmann::json& out_json) {
 
     try {
-        out_json.clear();
+        /// Append to given json
+        //out_json.clear();
 
         out_json[GUI_JSON_TAG_CONFIGURATOR]["show_module_list_sidebar"] = this->show_module_list_sidebar;
 
         for (auto& graph_ptr : this->graph_manager.GetGraphs()) {
-            nlohmann::json graph_json;
-            if (graph_ptr->GUI_StateToJSON(graph_json)) {
-                out_json.update(graph_json);
-            }
+            graph_ptr->GUI_StateToJSON(out_json);
         }
 
         vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Wrote configurator state to JSON.");
