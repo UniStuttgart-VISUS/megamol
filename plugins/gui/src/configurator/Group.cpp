@@ -335,6 +335,8 @@ void megamol::gui::configurator::Group::Presentation::Present(
         ImVec2 header_rect_max = group_rect_min + header_size;
 
         ImGui::PushID(inout_group.uid);
+        
+        bool changed_view = false;
 
         if (phase == megamol::gui::PresentPhase::INTERACTION) {
 
@@ -349,11 +351,11 @@ void megamol::gui::configurator::Group::Presentation::Present(
                 }
             }
 
-            // Header Button
-            std::string label = "group_" + std::to_string(inout_group.uid);
+            // Button
+            std::string button_label = "group_" + std::to_string(inout_group.uid);
             ImGui::SetCursorScreenPos(group_rect_min);
             ImGui::SetItemAllowOverlap();
-            ImGui::InvisibleButton(label.c_str(), group_size);
+            ImGui::InvisibleButton(button_label.c_str(), group_size);
             ImGui::SetItemAllowOverlap();
             if (ImGui::IsItemActivated()) {
                 state.interact.button_active_uid = inout_group.uid;
@@ -376,15 +378,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
                 }
                 if (ImGui::MenuItem(view.c_str())) {
                     this->collapsed_view = !this->collapsed_view;
-                    for (auto& module_ptr : inout_group.GetModules()) {
-                        module_ptr->GUI_SetGroupVisibility(this->ModulesVisible());
-                    }
-                    for (auto& interfaceslots_map : inout_group.interfaceslots) {
-                        for (auto& interfaceslot_ptr : interfaceslots_map.second) {
-                            interfaceslot_ptr->GUI_SetGroupView(this->collapsed_view);
-                        }
-                    }
-                    this->UpdatePositionSize(inout_group, state.canvas);
+                    changed_view = true;
                 }
                 if (ImGui::MenuItem("Rename")) {
                     popup_rename = true;
@@ -438,6 +432,12 @@ void megamol::gui::configurator::Group::Presentation::Present(
                 if (state.interact.group_selected_uid == inout_group.uid) {
                     state.interact.group_selected_uid = GUI_INVALID_ID;
                 }
+            }
+            
+            // Toggle View
+            if (active && ImGui::IsMouseDoubleClicked(0)) {
+                this->collapsed_view = !this->collapsed_view;
+                changed_view = true;
             }
 
             // Dragging
@@ -495,6 +495,18 @@ void megamol::gui::configurator::Group::Presentation::Present(
         }
 
         ImGui::PopID();
+        
+        if (changed_view) {
+            for (auto& module_ptr : inout_group.GetModules()) {
+                module_ptr->GUI_SetGroupVisibility(this->ModulesVisible());
+            }
+            for (auto& interfaceslots_map : inout_group.interfaceslots) {
+                for (auto& interfaceslot_ptr : interfaceslots_map.second) {
+                    interfaceslot_ptr->GUI_SetGroupView(this->collapsed_view);
+                }
+            }
+            this->UpdatePositionSize(inout_group, state.canvas);
+        }            
 
         // INTERFACE SLOTS -----------------------------------------------------
         for (auto& interfaceslots_map : inout_group.GetInterfaceSlots()) {
@@ -544,7 +556,24 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
     size_t callee_count = inout_group.interfaceslots[CallSlotType::CALLEE].size();
     size_t max_slot_count = std::max(caller_count, callee_count);
 
-    group_width = (1.5f * GUIUtils::TextWidgetWidth(this->name_label) / in_canvas.zooming) + (3.0f * GUI_SLOT_RADIUS);
+    // WIDTH
+    float max_label_length = 0.0f;
+    // Consider interface slot label width only in collapsed view 
+    if (this->collapsed_view) {
+        for (auto& interfaceslot_map: inout_group.GetInterfaceSlots()) {
+            for (auto& interfaceslot_ptr : interfaceslot_map.second) {
+                if (interfaceslot_ptr->GUI_IsLabelVisible()) {
+                    max_label_length = std::max(GUIUtils::TextWidgetWidth(interfaceslot_ptr->GUI_GetLabel()), max_label_length);
+                }
+            }
+        }
+        if (max_label_length > 0.0f) {
+            max_label_length = (2.0f * max_label_length / in_canvas.zooming) + (1.0f * GUI_SLOT_RADIUS);
+        }
+    }
+    group_width = std::max((1.5f * GUIUtils::TextWidgetWidth(this->name_label) / in_canvas.zooming), max_label_length) + (3.0f * GUI_SLOT_RADIUS);
+    
+    // HEIGHT
     group_height = std::max((3.0f * line_height),
         (line_height + (static_cast<float>(max_slot_count) * (GUI_SLOT_RADIUS * 2.0f) * 1.5f) + GUI_SLOT_RADIUS));
 

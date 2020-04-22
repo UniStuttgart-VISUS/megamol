@@ -321,7 +321,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                 }
             }
         } else {
-            std::string label = "callslot_" + std::to_string(inout_callslot.uid);
+            std::string button_label = "callslot_" + std::to_string(inout_callslot.uid);
 
             ImGui::PushID(inout_callslot.uid);
 
@@ -330,7 +330,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                 // Button
                 ImGui::SetCursorScreenPos(slot_position - ImVec2(radius, radius));
                 ImGui::SetItemAllowOverlap();
-                ImGui::InvisibleButton(label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
+                ImGui::InvisibleButton(button_label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
                 ImGui::SetItemAllowOverlap();
                 if (ImGui::IsItemActivated()) {
                     state.interact.button_active_uid = inout_callslot.uid;
@@ -378,7 +378,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
 
                 // Hover Tooltip
                 if ((state.interact.callslot_hovered_uid == inout_callslot.uid) && !this->label_visible) {
-                    this->utils.HoverToolTip(inout_callslot.name, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
+                    this->utils.HoverToolTip(inout_callslot.name, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
                 } else {
                     this->utils.ResetHoverToolTip();
                 }
@@ -456,11 +456,11 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                 draw_list->AddCircle(slot_position, radius, slot_border_color, segment_numer);
 
                 // Text
-                ImU32 slot_text_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLER);
-                if (inout_callslot.type == CallSlotType::CALLEE) {
-                    slot_text_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLEE);
-                }
                 if (this->label_visible) {
+                    ImU32 slot_text_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLER);
+                    if (inout_callslot.type == CallSlotType::CALLEE) {
+                        slot_text_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLEE);
+                    }                
                     draw_list->AddText(text_pos_left_upper, slot_text_color, inout_callslot.name.c_str());
                 }
             }

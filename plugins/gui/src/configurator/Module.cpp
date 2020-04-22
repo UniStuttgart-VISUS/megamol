@@ -260,14 +260,14 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
                 }
             } else {
                 // MODULE ------------------------------------------------------
-                std::string label = "module_" + std::to_string(inout_module.uid);
+                std::string button_label = "module_" + std::to_string(inout_module.uid);
 
                 if (phase == megamol::gui::PresentPhase::INTERACTION) {
 
                     // Button
                     ImGui::SetCursorScreenPos(module_rect_min);
                     ImGui::SetItemAllowOverlap();
-                    ImGui::InvisibleButton(label.c_str(), module_size);
+                    ImGui::InvisibleButton(button_label.c_str(), module_size);
                     ImGui::SetItemAllowOverlap();
                     if (ImGui::IsItemActivated()) {
                         state.interact.button_active_uid = inout_module.uid;
@@ -348,7 +348,7 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
 
                     // Hover Tooltip
                     if ((state.interact.module_hovered_uid == inout_module.uid) && !this->label_visible) {
-                        this->utils.HoverToolTip(inout_module.name, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
+                        this->utils.HoverToolTip(inout_module.name, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
                     } else {
                         this->utils.ResetHoverToolTip();
                     }
@@ -589,10 +589,10 @@ void megamol::gui::configurator::Module::Presentation::UpdateSize(
     }
     max_label_length /= in_canvas.zooming;
     float max_slot_name_length = 0.0f;
-    for (auto& callslot_type_list : inout_module.GetCallSlots()) {
-        for (auto& callslot : callslot_type_list.second) {
-            if (callslot->GUI_IsLabelVisible()) {
-                max_slot_name_length = std::max(GUIUtils::TextWidgetWidth(callslot->name), max_slot_name_length);
+    for (auto& callslots_map : inout_module.GetCallSlots()) {
+        for (auto& callslot_ptr : callslots_map.second) {
+            if (callslot_ptr->GUI_IsLabelVisible()) {
+                max_slot_name_length = std::max(GUIUtils::TextWidgetWidth(callslot_ptr->name), max_slot_name_length);
             }
         }
     }

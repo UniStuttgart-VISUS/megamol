@@ -168,13 +168,17 @@ bool megamol::gui::configurator::Configurator::Draw(
         // Module Stock List in separate child window
         GraphPtrType selected_graph_ptr;
         if (this->graph_manager.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
+            
             ImGuiID selected_callslot_uid = selected_graph_ptr->GUI_GetSelectedCallSlot();
-            bool double_click_anywhere = (ImGui::IsMouseDoubleClicked(0) && !this->show_module_list_child &&
-                                          selected_graph_ptr->GUI_GetCanvasHoverd());
+            ImGuiID selected_group_uid = selected_graph_ptr->GUI_GetSelectedGroup();
+            
+            bool valid_double_click = (ImGui::IsMouseDoubleClicked(0) && !this->show_module_list_child &&
+                                          selected_graph_ptr->GUI_GetCanvasHoverd() && (selected_group_uid == GUI_INVALID_ID));
             bool double_click_callslot =
-                (ImGui::IsMouseDoubleClicked(0) && (selected_callslot_uid != GUI_INVALID_ID) &&
+                (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->GUI_GetCanvasHoverd() && (selected_callslot_uid != GUI_INVALID_ID) &&
                     ((!this->show_module_list_child) || (this->last_selected_callslot_uid != selected_callslot_uid)));
-            if (double_click_anywhere || double_click_callslot) {
+                    
+            if (valid_double_click || double_click_callslot) {
                 std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
                 this->last_selected_callslot_uid = selected_callslot_uid;
             }
@@ -396,20 +400,21 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
 
     std::string compat_callslot_name;
     CallSlotPtrType selected_callslot_ptr;
-    GraphPtrType graph_ptr;
-    if (this->graph_manager.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
-        auto callslot_id = graph_ptr->GUI_GetSelectedCallSlot();
+    GraphPtrType selected_graph_ptr;
+    if (this->graph_manager.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
+        
+        auto callslot_id = selected_graph_ptr->GUI_GetSelectedCallSlot();
         if (callslot_id != GUI_INVALID_ID) {
-            for (auto& module_ptr : graph_ptr->GetModules()) {
+            for (auto& module_ptr : selected_graph_ptr->GetModules()) {
                 CallSlotPtrType callslot_ptr;
                 if (module_ptr->GetCallSlot(callslot_id, callslot_ptr)) {
                     selected_callslot_ptr = callslot_ptr;
                 }
             }
         }
-        auto interfaceslot_id = graph_ptr->GUI_GetSelectedInterfaceSlot();
+        auto interfaceslot_id = selected_graph_ptr->GUI_GetSelectedInterfaceSlot();
         if (interfaceslot_id != GUI_INVALID_ID) {
-            for (auto& group_ptr : graph_ptr->GetGroups()) {
+            for (auto& group_ptr : selected_graph_ptr->GetGroups()) {
                 InterfaceSlotPtrType interfaceslot_ptr;
                 if (group_ptr->GetInterfaceSlot(interfaceslot_id, interfaceslot_ptr)) {
                     CallSlotPtrType callslot_ptr;
@@ -470,24 +475,46 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
             }
 
             if (add_module) {
-                if (graph_ptr != nullptr) {
-                    ImGuiID module_uid = graph_ptr->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
+                if (selected_graph_ptr != nullptr) {                                
+                    ImGuiID module_uid = selected_graph_ptr->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
                     ModulePtrType module_ptr;
-                    if (graph_ptr->GetModule(module_uid, module_ptr)) {
+                    if (selected_graph_ptr->GetModule(module_uid, module_ptr)) {
+                        
                         // If there is a call slot selected, create call to compatible call slot of new module
+                        bool added_call = false;
                         if (compat_filter && (selected_callslot_ptr != nullptr)) {
                             // Get call slots of last added module
                             for (auto& callslot_map : module_ptr->GetCallSlots()) {
-                                for (auto& callslot : callslot_map.second) {
-                                    if (callslot->name == compat_callslot_name) {
-                                        graph_ptr->AddCall(
-                                            this->graph_manager.GetCallsStock(), selected_callslot_ptr, callslot);
+                                for (auto& callslot_ptr : callslot_map.second) {
+                                    if (callslot_ptr->name == compat_callslot_name) {
+                                        added_call = selected_graph_ptr->AddCall(
+                                            this->graph_manager.GetCallsStock(), selected_callslot_ptr, callslot_ptr);
                                     }
                                 }
                             }
                         } else if (this->show_module_list_child) {
                             // Place new module at mouse pos if added via separate module list child window.
                             module_ptr->GUI_PlaceAtMousePosition();
+                        }
+                        
+                        // If there is a group selected or hoverd or the new call is connceted to module which is part of group, add module to this group
+                        ImGuiID connceted_group =  GUI_INVALID_ID;
+                        if (added_call && selected_callslot_ptr->IsParentModuleConnected()) {
+                            connceted_group = selected_callslot_ptr->GetParentModule()->GUI_GetGroupUID();
+                        }
+                        ImGuiID selected_group_uid = selected_graph_ptr->GUI_GetSelectedGroup();
+                        ImGuiID hovered_group_uid = selected_graph_ptr->GUI_GetHoveredGroup();
+                        ImGuiID group_uid = (connceted_group != GUI_INVALID_ID) ? (connceted_group) : ((selected_group_uid != GUI_INVALID_ID) ? (selected_group_uid) : (hovered_group_uid));
+                        
+                        if (group_uid != GUI_INVALID_ID) {
+                            for (auto& group_ptr : selected_graph_ptr->GetGroups()) {
+                                if (group_ptr->uid == group_uid) {
+                                    if (group_ptr->AddModule(module_ptr)) {
+                                        selected_graph_ptr->RestoreCallslotsInterfaceslotState(group_uid);
+                                    }
+                                }
+                            }
+                            
                         }
                     }
                     this->show_module_list_child = false;

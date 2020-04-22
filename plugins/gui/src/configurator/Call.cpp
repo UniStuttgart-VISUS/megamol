@@ -206,14 +206,14 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
                         ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
                     ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
 
-                    std::string label = "call_" + std::to_string(inout_call.uid);
+                    std::string button_label = "call_" + std::to_string(inout_call.uid);
 
                     if (phase == megamol::gui::PresentPhase::INTERACTION) {
 
                         // Button
                         ImGui::SetCursorScreenPos(call_rect_min);
                         ImGui::SetItemAllowOverlap();
-                        ImGui::InvisibleButton(label.c_str(), rect_size);
+                        ImGui::InvisibleButton(button_label.c_str(), rect_size);
                         ImGui::SetItemAllowOverlap();
                         if (ImGui::IsItemActivated()) {
                             state.interact.button_active_uid = inout_call.uid;
@@ -246,7 +246,7 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
                         // Hover Tooltip
                         if (state.interact.call_hovered_uid == inout_call.uid) {
                             std::string tooltip = callerslot_ptr->name + " >> " + calleeslot_ptr->name;
-                            this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
+                            this->utils.HoverToolTip(tooltip, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
                         } else {
                             this->utils.ResetHoverToolTip();
                         }

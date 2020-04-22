@@ -179,7 +179,12 @@ bool megamol::gui::configurator::InterfaceSlot::IsEmpty(void) { return (this->ca
 // GROUP INTERFACE SLOT PRESENTATION ###########################################
 
 megamol::gui::configurator::InterfaceSlot::Presentation::Presentation(void)
-    : group(), position(ImVec2(FLT_MAX, FLT_MAX)), utils(), selected(false) {
+    : group()
+    , label_visible(false)
+    , position(ImVec2(FLT_MAX, FLT_MAX))
+    , utils()
+    , selected(false)
+    , label()  {
 
     this->group.uid = GUI_INVALID_ID;
     this->group.collapsed_view = false;
@@ -216,21 +221,17 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
             }
             compatible = compatible || inout_interfaceslot.IsCallSlotCompatible((*state.interact.callslot_compat_ptr));
         }
-        std::string tooltip;
-        if (!this->group.collapsed_view) {
-            for (auto& callslot_ptr : inout_interfaceslot.GetCallSlots()) {
-                tooltip += (callslot_ptr->name + "\n");
-            }
-        } else {
-            for (auto& callslot_ptr : inout_interfaceslot.GetCallSlots()) {
-                if (callslot_ptr->IsParentModuleConnected()) {
-                    tooltip += (callslot_ptr->GetParentModule()->name + " > ");
-                }
-                tooltip += (callslot_ptr->name + "\n");
-            }
+
+        this->label.clear();
+        for (auto& callslot_ptr : inout_interfaceslot.GetCallSlots()) {
+            this->label += (callslot_ptr->name + " ");
+        }
+        auto callslot_count = inout_interfaceslot.GetCallSlots().size();
+        if (callslot_count > 1) {
+            this->label += ("[" + std::to_string(callslot_count) + "]");
         }
 
-        std::string label = "interfaceslot_" + std::to_string(inout_interfaceslot.uid);
+        std::string button_label = "interfaceslot_" + std::to_string(inout_interfaceslot.uid);
 
         ImGui::PushID(inout_interfaceslot.uid);
 
@@ -239,7 +240,7 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
             // Button
             ImGui::SetCursorScreenPos(actual_position - ImVec2(radius, radius));
             ImGui::SetItemAllowOverlap();
-            ImGui::InvisibleButton(label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
+            ImGui::InvisibleButton(button_label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
             ImGui::SetItemAllowOverlap();
             if (ImGui::IsItemActivated()) {
                 state.interact.button_active_uid = inout_interfaceslot.uid;
@@ -285,8 +286,8 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
             }
 
             // Hover Tooltip
-            if (state.interact.interfaceslot_hovered_uid == inout_interfaceslot.uid) {
-                this->utils.HoverToolTip(tooltip, ImGui::GetID(label.c_str()), 0.5f, 5.0f);
+            if ((state.interact.interfaceslot_hovered_uid == inout_interfaceslot.uid) && !this->label_visible) {
+                this->utils.HoverToolTip(this->label, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
             } else {
                 this->utils.ResetHoverToolTip();
             }
@@ -360,6 +361,22 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
                     draw_list->AddLine(actual_position, callslot_ptr->GUI_GetPosition(), COLOR_INTERFACE_LINE,
                         GUI_LINE_THICKNESS * state.canvas.zooming);
                 }
+            }
+            
+            // Text
+            if (this->label_visible && this->group.collapsed_view) {
+                auto type = inout_interfaceslot.GetCallSlotType();
+                ImVec2 text_pos_left_upper = ImVec2(0.0f, 0.0f);
+                text_pos_left_upper.y = actual_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
+                text_pos_left_upper.x = actual_position.x - GUIUtils::TextWidgetWidth(this->label) - (1.5f * radius);
+                if (type == CallSlotType::CALLEE) {
+                    text_pos_left_upper.x = actual_position.x + (1.5f * radius);
+                }   
+                ImU32 slot_text_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLER);
+                if (type == CallSlotType::CALLEE) {
+                    slot_text_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLEE);
+                }            
+                draw_list->AddText(text_pos_left_upper, slot_text_color, this->label.c_str());
             }
         }
 

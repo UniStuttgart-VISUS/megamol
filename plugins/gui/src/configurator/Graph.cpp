@@ -545,7 +545,7 @@ ImGuiID megamol::gui::configurator::Graph::AddGroupModule(
             for (auto& group_ptr : this->groups) {
                 if (group_ptr->uid == existing_group_uid) {
                     if (group_ptr->AddModule(module_ptr)) {
-                        this->restore_callslots_interfaceslot_state(group_ptr->uid);
+                        this->RestoreCallslotsInterfaceslotState(group_ptr->uid);
                         return existing_group_uid;
                     }
                 }
@@ -588,7 +588,7 @@ bool megamol::gui::configurator::Graph::IsMainViewSet(void) {
 }
 
 
-void megamol::gui::configurator::Graph::restore_callslots_interfaceslot_state(ImGuiID group_uid) {
+void megamol::gui::configurator::Graph::RestoreCallslotsInterfaceslotState(ImGuiID group_uid) {
 
     GroupPtrType group_ptr;
     if (this->get_group(group_uid, group_ptr)) {
@@ -997,12 +997,12 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                         if (inout_graph.get_group(module_group_uid, remove_group_ptr)) {
                             if (remove_group_ptr->uid != add_group_ptr->uid) {
                                 remove_group_ptr->RemoveModule(module_ptr->uid);
-                                inout_graph.restore_callslots_interfaceslot_state(remove_group_ptr->uid);
+                                inout_graph.RestoreCallslotsInterfaceslotState(remove_group_ptr->uid);
                             }
                         }
                         // Add module to group
                         add_group_ptr->AddModule(module_ptr);
-                        inout_graph.restore_callslots_interfaceslot_state(add_group_ptr->uid);
+                        inout_graph.RestoreCallslotsInterfaceslotState(add_group_ptr->uid);
                     }
                 }
             }
@@ -1195,6 +1195,14 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(
                                 for (auto& callslot_types : mod->GetCallSlots()) {
                                     for (auto& callslots : callslot_types.second) {
                                         callslots->GUI_SetLabelVisibility(this->show_slot_names);
+                                    }
+                                }
+                            }
+                            for (auto& group_ptr : inout_graph.GetGroups()) {
+                                for (auto& interfaceslots_map : group_ptr->GetInterfaceSlots()) {
+                                    for (auto& interfaceslot_ptr : interfaceslots_map.second) {
+                                        interfaceslot_ptr->GUI_SetLabelVisibility(this->show_slot_names);
+
                                     }
                                 }
                             }
@@ -1627,10 +1635,17 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
     ImGui::SameLine();
 
     if (ImGui::Checkbox("Slot Names", &this->show_slot_names)) {
-        for (auto& mod : inout_graph.GetModules()) {
-            for (auto& callslot_types : mod->GetCallSlots()) {
+        for (auto& module_ptr : inout_graph.GetModules()) {
+            for (auto& callslot_types : module_ptr->GetCallSlots()) {
                 for (auto& callslots : callslot_types.second) {
                     callslots->GUI_SetLabelVisibility(this->show_slot_names);
+                }
+            }
+        }
+        for (auto& group_ptr : inout_graph.GetGroups()) {
+            for (auto& interfaceslots_map : group_ptr->GetInterfaceSlots()) {
+                for (auto& interfaceslot_ptr : interfaceslots_map.second) {
+                    interfaceslot_ptr->GUI_SetLabelVisibility(this->show_slot_names);
                 }
             }
         }

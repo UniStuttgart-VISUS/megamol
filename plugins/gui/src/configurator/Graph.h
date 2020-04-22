@@ -43,9 +43,9 @@ public:
     ImGuiID AddGroup(const std::string& group_name = "");
     bool DeleteGroup(ImGuiID group_uid);
     inline const GroupPtrVectorType& GetGroups(void) { return this->groups; }
-
     ImGuiID AddGroupModule(const std::string& group_name, const ModulePtrType& module_ptr);
-
+    void RestoreCallslotsInterfaceslotState(ImGuiID group_uid);
+    
     inline bool IsDirty(void) const { return this->dirty_flag; }
     inline void ResetDirty(void) { this->dirty_flag = false; }
 
@@ -65,6 +65,8 @@ public:
     }
     bool GUI_StateToJSON(nlohmann::json& out_json) { return this->present.StateToJSON(*this, out_json); }
 
+    inline ImGuiID GUI_GetHoveredGroup(void) const { return this->present.GetHoveredGroup(); }
+    inline ImGuiID GUI_GetSelectedGroup(void) const { return this->present.GetSelectedGroup(); }
     inline ImGuiID GUI_GetSelectedCallSlot(void) const { return this->present.GetSelectedCallSlot(); }
     inline ImGuiID GUI_GetSelectedInterfaceSlot(void) const { return this->present.GetSelectedInterfaceSlot(); }
     inline ImGuiID GUI_GetDropSlot(void) const { return this->present.GetDropSlot(); }
@@ -102,6 +104,8 @@ private:
         bool StateFromJsonString(Graph& inout_graph, const std::string& json_string);
         bool StateToJSON(Graph& inout_graph, nlohmann::json& out_json);
 
+        ImGuiID GetHoveredGroup(void) const { return this->graph_state.interact.group_hovered_uid; }
+        ImGuiID GetSelectedGroup(void) const { return this->graph_state.interact.group_selected_uid; }
         ImGuiID GetSelectedCallSlot(void) const { return this->graph_state.interact.callslot_selected_uid; }
         ImGuiID GetSelectedInterfaceSlot(void) const { return this->graph_state.interact.interfaceslot_selected_uid; }
         ImGuiID GetDropSlot(void) const { return this->graph_state.interact.slot_dropped_uid; }
@@ -161,7 +165,6 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    void restore_callslots_interfaceslot_state(ImGuiID group_uid);
     bool delete_disconnected_calls(void);
     inline const CallPtrVectorType& get_calls(void) { return this->calls; }
     bool get_group(ImGuiID group_uid, GroupPtrType& out_group_ptr);
