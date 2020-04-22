@@ -109,7 +109,7 @@ private:
     core::CalleeSlot data_out_slot_;
     core::CallerSlot data_in_slot_;
 
-    std::shared_ptr<adiosDataMap> data_map_;
+    //std::shared_ptr<adiosDataMap> data_map_;
 
     std::vector<float> data_;
     std::vector<stdplugin::datatools::table::TableDataCall::ColumnInfo> infos_;
