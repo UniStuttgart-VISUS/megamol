@@ -257,7 +257,7 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
                 ImGui::Separator();
                 if (ImGui::MenuItem("Delete",
                         std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str(),
-                        false, !inout_interfaceslot.IsConnected())) {
+                        false, true)) {
                     std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
                 }
 

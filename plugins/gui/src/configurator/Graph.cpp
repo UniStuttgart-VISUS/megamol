@@ -121,7 +121,9 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
                         delete_empty_group = group_ptr->uid;
                     }
                 }
-                this->DeleteGroup(delete_empty_group);
+                if (delete_empty_group != GUI_INVALID_ID) {
+                    this->DeleteGroup(delete_empty_group);
+                }
 
                 // Second remove call slots
                 (*iter)->RemoveAllCallSlots();
@@ -1063,6 +1065,26 @@ void megamol::gui::configurator::Graph::Presentation::Present(
             }
             if (this->graph_state.interact.group_selected_uid != GUI_INVALID_ID) {
                 inout_graph.DeleteGroup(this->graph_state.interact.group_selected_uid);
+            }
+            if (this->graph_state.interact.interfaceslot_selected_uid != GUI_INVALID_ID) {
+                for (auto& group_ptr : inout_graph.GetGroups()) {
+                    InterfaceSlotPtrType interfaceslot_ptr;
+                    if (group_ptr->GetInterfaceSlot(this->graph_state.interact.interfaceslot_selected_uid, interfaceslot_ptr)) {
+                        // Delete all connceted calls
+                        std::vector<ImGuiID> call_uids;
+                        for (auto& callslot_ptr : interfaceslot_ptr->GetCallSlots()) {
+                            for (auto& call_ptr : callslot_ptr->GetConnectedCalls()) {
+                                call_uids.emplace_back(call_ptr->uid);
+                            }
+                        }
+                        for (auto& call_uid : call_uids) {
+                            inout_graph.DeleteCall(call_uid);
+                        }
+                        interfaceslot_ptr.reset();
+                        
+                        group_ptr->DeleteInterfaceSlot(this->graph_state.interact.interfaceslot_selected_uid);
+                    }
+                }
             }
             if (this->graph_state.interact.interfaceslot_selected_uid != GUI_INVALID_ID) {
                 for (auto& group_ptr : inout_graph.groups) {
@@ -2174,11 +2196,13 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas_multiselect
 
 bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui::configurator::Graph& inout_graph) {
 
-    std::vector<std::vector<ModulePtrType>> layers;
-    layers.clear();
+    /// TODO consider collapsed groups
+
+    std::vector<std::vector<ModulePtrType>> module_layers;
+    module_layers.clear();
 
     // Fill first layer with modules having no connected callee
-    layers.emplace_back();
+    module_layers.emplace_back();
     for (auto& mod : inout_graph.GetModules()) {
         bool any_connected_callee = false;
         for (auto& callee_slot : mod->GetCallSlots(CallSlotType::CALLEE)) {
@@ -2187,7 +2211,7 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
             }
         }
         if (!any_connected_callee) {
-            layers.back().emplace_back(mod);
+            module_layers.back().emplace_back(mod);
         }
     }
 
@@ -2196,9 +2220,9 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
     while (added_module) {
         added_module = false;
         // Add new layer
-        layers.emplace_back();
+        module_layers.emplace_back();
         // Loop through last filled layer
-        for (auto& layer_mod : layers[layers.size() - 2]) {
+        for (auto& layer_mod : module_layers[module_layers.size() - 2]) {
             for (auto& caller_slot : layer_mod->GetCallSlots(CallSlotType::CALLER)) {
                 if (caller_slot->CallsConnected()) {
                     for (auto& call : caller_slot->GetConnectedCalls()) {
@@ -2206,13 +2230,13 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
 
                         // Add module only if not already present in current layer
                         bool module_already_added = false;
-                        for (auto& last_layer_mod : layers.back()) {
+                        for (auto& last_layer_mod : module_layers.back()) {
                             if (last_layer_mod == add_mod) {
                                 module_already_added = true;
                             }
                         }
                         if (!module_already_added) {
-                            layers.back().emplace_back(add_mod);
+                            module_layers.back().emplace_back(add_mod);
                             added_module = true;
                         }
                     }
@@ -2222,13 +2246,13 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
     }
 
     // Deleting duplicate modules from back to front
-    int layer_size = static_cast<int>(layers.size());
+    int layer_size = static_cast<int>(module_layers.size());
     for (int i = (layer_size - 1); i >= 0; i--) {
-        for (auto& layer_module : layers[i]) {
+        for (auto& layer_module : module_layers[i]) {
             for (int j = (i - 1); j >= 0; j--) {
-                for (auto module_iter = layers[j].begin(); module_iter != layers[j].end(); module_iter++) {
+                for (auto module_iter = module_layers[j].begin(); module_iter != module_layers[j].end(); module_iter++) {
                     if ((*module_iter) == layer_module) {
-                        layers[j].erase(module_iter);
+                        module_layers[j].erase(module_iter);
                         break;
                     }
                 }
@@ -2242,7 +2266,7 @@ bool megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
     float max_call_width = 25.0f;
     float max_module_width = 0.0f;
     size_t layer_mod_cnt = 0;
-    for (auto& layer : layers) {
+    for (auto& layer : module_layers) {
         if (this->show_call_names) {
             max_call_width = 0.0f;
         }
