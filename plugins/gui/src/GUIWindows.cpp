@@ -72,8 +72,10 @@ GUIWindows::GUIWindows()
 
     this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = megamol::gui::HotkeyDataType(
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] = megamol::gui::HotkeyDataType(
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL | core::view::Modifier::SHIFT), false);
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] =
+        megamol::gui::HotkeyDataType(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P,
+                                         core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
+            false);
     this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT] = megamol::gui::HotkeyDataType(
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false);
 }
@@ -367,12 +369,12 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     bool main_window_shown = false;
     bool configurator_window_shown = false;
     const auto func = [&](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-      if (wc.win_show && (wc.win_callback == WindowManager::DrawCallbacks::MAIN)) {
-          main_window_shown = true;
-      }
-      if (wc.win_show && (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR)) {
-          configurator_window_shown = true;
-      }      
+        if (wc.win_show && (wc.win_callback == WindowManager::DrawCallbacks::MAIN)) {
+            main_window_shown = true;
+        }
+        if (wc.win_show && (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR)) {
+            configurator_window_shown = true;
+        }
     };
     this->window_manager.EnumWindows(func);
     // Main Window
@@ -392,8 +394,8 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     if (configurator_window_shown) {
         if (this->configurator.CheckHotkeys()) {
             hotkeyPressed = true;
-        } 
-    }  
+        }
+    }
     if (hotkeyPressed) return true;
 
     // Check for additional text modification hotkeys
@@ -2068,7 +2070,7 @@ void megamol::gui::GUIWindows::shutdown(void) {
 void megamol::gui::GUIWindows::save_state_to_parameter(void) {
 
     this->configurator.UpdateStateParameter();
-    
+
     nlohmann::json window_json;
     nlohmann::json parameter_json;
 
@@ -2077,7 +2079,7 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
         window_json.update(parameter_json);
 
         std::string state;
-        state = window_json.dump(2); 
+        state = window_json.dump(2);
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
     }
 }
@@ -2212,7 +2214,7 @@ bool megamol::gui::GUIWindows::parameters_gui_state_to_json(nlohmann::json& out_
         }
 
         /// Append to given json
-        //out_json.clear();
+        // out_json.clear();
 
         this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
             auto parameter = slot.Parameter();

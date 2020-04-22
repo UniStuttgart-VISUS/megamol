@@ -95,7 +95,7 @@ private:
     bool replace_graph_state(
         const GraphPtrType& graph_ptr, const std::string& in_json_string, std::string& out_json_string);
     bool replace_parameter_gui_state(
-        const GraphPtrType& graph_ptr, const std::string& in_json_string, std::string& out_json_string);        
+        const GraphPtrType& graph_ptr, const std::string& in_json_string, std::string& out_json_string);
 
     inline const std::string generate_unique_graph_name(void) {
         return ("Project_" + std::to_string(++graph_name_uid));

@@ -838,7 +838,7 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                             for (auto& parameter : module_ptr->parameters) {
                                 if (parameter.full_name == param_full_name) {
                                     parameter.SetValueString(value_str);
-                                    
+
                                     // Reading state parameters
                                     if (module_ptr->class_name == GUI_MODULE_NAME) {
                                         if (parameter.full_name == GUI_GUI_STATE_PARAM_NAME) {
@@ -846,9 +846,9 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                                             this->parameters_gui_state_from_json_string(graph_ptr, value_str);
                                         }
                                         if (parameter.full_name == GUI_CONFIGURATOR_STATE_PARAM_NAME) {
-                                            // Reading configurator state param containing a graph state 
-                                            /// ! Needs filename set for graph because this is how the graph state is found
-                                            /// inside the JSON state
+                                            // Reading configurator state param containing a graph state
+                                            /// ! Needs filename set for graph because this is how the graph state is
+                                            /// found inside the JSON state
                                             if (graph_ptr->GUI_StateFromJsonString(value_str)) {
                                                 found_configurator_positions = true;
                                             }
@@ -928,8 +928,8 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_uid
 
                 // Save filename for graph (before saving states!)
                 graph_ptr->SetFilename(project_filename);
-                
-                // Serialze graph to string                
+
+                // Serialze graph to string
                 for (auto& module_ptr : graph_ptr->GetModules()) {
                     std::string instance_name = graph_ptr->name;
                     if (module_ptr->is_view_instance) {
@@ -944,13 +944,14 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_uid
 
                         // Writing state parameters
                         /// ! Needs filename set for graph because this is how the graph state is found
-                        /// inside the JSON state                        
+                        /// inside the JSON state
                         if (module_ptr->class_name == GUI_MODULE_NAME) {
                             // Store graph state to state parameter of configurator
-                            if (!wrote_graph_state &&  (parameter.full_name == GUI_CONFIGURATOR_STATE_PARAM_NAME)) {
+                            if (!wrote_graph_state && (parameter.full_name == GUI_CONFIGURATOR_STATE_PARAM_NAME)) {
                                 // Replacing exisiting graph state with new one and leaving rest untouched
                                 std::string new_configurator_graph_state;
-                                this->replace_graph_state(graph_ptr, parameter.GetValueString(), new_configurator_graph_state); 
+                                this->replace_graph_state(
+                                    graph_ptr, parameter.GetValueString(), new_configurator_graph_state);
                                 parameter.SetValue(new_configurator_graph_state);
                                 wrote_graph_state = true;
                             }
@@ -958,7 +959,8 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_uid
                             if (!wrote_parameter_gui_state && (parameter.full_name == GUI_GUI_STATE_PARAM_NAME)) {
                                 // Replacing exisiting parameter gui state with new one and leaving rest untouched
                                 std::string new_parameter_gui_state;
-                                this->replace_parameter_gui_state(graph_ptr, parameter.GetValueString(), new_parameter_gui_state); 
+                                this->replace_parameter_gui_state(
+                                    graph_ptr, parameter.GetValueString(), new_parameter_gui_state);
                                 parameter.SetValue(new_parameter_gui_state);
                                 wrote_parameter_gui_state = true;
                             }
@@ -1485,8 +1487,8 @@ bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_st
                     // gui_presentation_mode
                     Parameter::Presentations gui_presentation_mode;
                     if (gui_state.at("gui_presentation_mode").is_number_integer()) {
-                        gui_presentation_mode = static_cast<Parameter::Presentations>(
-                            gui_state.at("gui_presentation_mode").get<int>());
+                        gui_presentation_mode =
+                            static_cast<Parameter::Presentations>(gui_state.at("gui_presentation_mode").get<int>());
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
                             "JSON state: Failed to read 'gui_presentation_mode' as integer. [%s, %s, line %d]\n",
@@ -1555,7 +1557,7 @@ bool megamol::gui::configurator::GraphManager::parameters_gui_state_to_json(
         }
 
         /// Append to given json
-        //out_json.clear();
+        // out_json.clear();
 
         for (auto& module_ptr : graph_ptr->GetModules()) {
             for (auto& parameter : module_ptr->parameters) {
@@ -1612,7 +1614,7 @@ bool megamol::gui::configurator::GraphManager::replace_graph_state(
             json[GUI_JSON_TAG_GRAPHS].erase(json_graph_id);
         }
         if (graph_ptr->GUI_StateToJSON(json)) {
-            out_json_string = json.dump(2); 
+            out_json_string = json.dump(2);
         } else {
             return false;
         }
@@ -1643,7 +1645,8 @@ bool megamol::gui::configurator::GraphManager::replace_graph_state(
 }
 
 
-bool megamol::gui::configurator::GraphManager::replace_parameter_gui_state(const GraphPtrType& graph_ptr, const std::string& in_json_string, std::string& out_json_string) {
+bool megamol::gui::configurator::GraphManager::replace_parameter_gui_state(
+    const GraphPtrType& graph_ptr, const std::string& in_json_string, std::string& out_json_string) {
 
     try {
         nlohmann::json json;
@@ -1686,7 +1689,6 @@ bool megamol::gui::configurator::GraphManager::replace_parameter_gui_state(const
 
     return true;
 }
-
 
 
 // GRAPH MANAGET PRESENTATION ####################################################

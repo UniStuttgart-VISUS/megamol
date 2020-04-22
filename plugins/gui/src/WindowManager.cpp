@@ -441,7 +441,7 @@ bool WindowManager::StateToJSON(nlohmann::json& out_json) {
 
     try {
         /// Append to given json
-        //out_json.clear();
+        // out_json.clear();
 
         for (auto& window : this->windows) {
             if (window.second.win_store_config) {
