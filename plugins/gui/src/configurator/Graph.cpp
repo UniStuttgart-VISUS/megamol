@@ -558,17 +558,6 @@ ImGuiID megamol::gui::configurator::Graph::AddGroupModule(
 }
 
 
-bool megamol::gui::configurator::Graph::AddGroupInterfaceCallSlot(
-    ImGuiID group_uid, const CallSlotPtrType& callslot_ptr) {
-
-    GroupPtrType group_ptr;
-    if (this->get_group(group_uid, group_ptr)) {
-        return group_ptr->InterfaceSlot_AddCallSlot(callslot_ptr, this->generate_unique_id());
-    }
-    return false;
-}
-
-
 bool megamol::gui::configurator::Graph::UniqueModuleRename(const std::string& module_name) {
 
     for (auto& mod : this->modules) {
@@ -819,12 +808,12 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         ImGui::PushID(graph_uid);
 
         // State Init/Reset ----------------------
-        this->show_parameter_sidebar = state.show_parameter_sidebar;
         if (this->change_show_parameter_sidebar) {
-            this->show_parameter_sidebar = !this->show_parameter_sidebar;
             state.show_parameter_sidebar = this->show_parameter_sidebar;
             this->change_show_parameter_sidebar = false;
         }
+        this->show_parameter_sidebar = state.show_parameter_sidebar;
+                
         this->graph_state.hotkeys = state.hotkeys;
         this->graph_state.groups.clear();
         for (auto& group : inout_graph.GetGroups()) {
@@ -1126,7 +1115,6 @@ void megamol::gui::configurator::Graph::Presentation::Present(
 }
 
 
-
 bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(Graph& inout_graph, const std::string& in_json_string) {
 
     try {
@@ -1160,6 +1148,7 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(Graph&
                             config_state.at("show_parameter_sidebar").get_to(tmp_show_parameter_sidebar);
                             if (this->show_parameter_sidebar != tmp_show_parameter_sidebar) {
                                 this->change_show_parameter_sidebar = true;
+                                this->show_parameter_sidebar = tmp_show_parameter_sidebar;
                             }
                             
                         } else {
@@ -1329,7 +1318,6 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(Graph&
                         }
                     
                         // interfaces
-                        /*
                         for (auto& interfaces_item : content_item.value().items()) {
                             if (interfaces_item.key() == "interfaces") {
                                 for (auto& interface_state : interfaces_item.value().items()) {
@@ -1339,7 +1327,6 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(Graph&
                                     // interfaces
                                     for (auto& interfaceslot_item : interfaceslot_items.items()) {
                                         valid = true;
-                                        
                                         std::vector<std::string> calleslot_fullnames;
                                         for (auto& callslot_item : interfaceslot_item.value().items()) {
                                             if (callslot_item.value().is_string()) {
@@ -1351,7 +1338,7 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(Graph&
                                                 valid = false;
                                             }
                                         }
-                                    
+                                        
                                         // Add interface slot containing found calls slots to group
                                         if (valid ) {
 
@@ -1360,8 +1347,8 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(Graph&
                                             for (auto& callsslot_fullname : calleslot_fullnames) {
                                                 auto split_pos = callsslot_fullname.rfind("::");
                                                 if (split_pos != std::string::npos) {
-                                                    std::string callslot_name = callsslot_fullname.substr(split_pos);
-                                                    std::string module_fullname = callsslot_fullname.substr(0, (split_pos-2));
+                                                    std::string callslot_name = callsslot_fullname.substr(split_pos+2);
+                                                    std::string module_fullname = callsslot_fullname.substr(0, (split_pos));
                                                     for (auto& module_ptr : inout_graph.modules) {
                                                         if (module_ptr->FullName() == module_fullname) {
                                                             for (auto& callslot_map : module_ptr->GetCallSlots()) {
@@ -1375,36 +1362,33 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(Graph&
                                                     }
                                                 }
                                             }
-                                                    
-                                                    
-                                            bool group_found = false;
-                                            for (auto& group_ptr : inout_graph.groups) {
-                                                if (group_ptr->name == group_name) {
-                                                    for (auto& callslot_ptr : callslot_ptr_vector) {
-                                                        std::cout << ">>>>>> GROUP: " << group_name << " Interface - CallSlots: " <<  callslot_ptr->name << std::endl;
+                                            if (!callslot_ptr_vector.empty()) {
+                                                bool group_found = false;
+                                                for (auto& group_ptr : inout_graph.groups) {
+                                                    if (group_ptr->name == group_name) {
+                                                        ImGuiID new_interfaceslot_uid = inout_graph.generate_unique_id();
+                                                        if (group_ptr->InterfaceSlot_AddCallSlot(callslot_ptr_vector[0], new_interfaceslot_uid)) {
+                                                            InterfaceSlotPtrType interfaceslot_ptr;
+                                                            if (group_ptr->GetInterfaceSlot(new_interfaceslot_uid, interfaceslot_ptr)) {
+                                                                for (size_t i = 1; i < callslot_ptr_vector.size(); i++) {
+                                                                    interfaceslot_ptr->AddCallSlot(callslot_ptr_vector[i], interfaceslot_ptr);
+                                                                }
+                                                            }
+                                                        }
+                                                        group_found = true;
                                                     }
-                                                    
-                                                    
-                                                    
-                                                    
-                                                    //ImGuiID new_interfaceslot_uid = inout_graph.generate_unique_id();
-                                                    //group_ptr->InterfaceSlot_AddCallSlot( , new_interfaceslot_uid);
-
-
-                                                    group_found = true;
                                                 }
+                                                if (!group_found) {
+                                                    vislib::sys::Log::DefaultLog.WriteError(
+                                                        "JSON state: Unable to find group '%s' to add interface slot. [%s, %s, line %d]\n", group_name.c_str(), __FILE__,
+                                                        __FUNCTION__, __LINE__);
+                                                }   
                                             }
-                                            if (!group_found) {
-                                                vislib::sys::Log::DefaultLog.WriteError(
-                                                    "JSON state: Unable to find group '%s' to add interface slot. [%s, %s, line %d]\n", group_name.c_str(), __FILE__,
-                                                    __FUNCTION__, __LINE__);
-                                            }   
                                         }                                                                            
                                     }
                                 }
                             }   
                         } 
-                        */
                     }
                 }
             }
@@ -1489,10 +1473,10 @@ bool megamol::gui::configurator::Graph::Presentation::StateToJSON(Graph& inout_g
                 }
             } 
             
-            ///vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Wrote graph state to JSON.");  
+            vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Wrote graph state to JSON.");  
         }
         else {
-            ///vislib::sys::Log::DefaultLog.WriteWarn("State of project '%s' is not being saved. Save project to file in order to get its state saved. [%s, %s, line %d]\n", inout_graph.name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteWarn("State of project '%s' is not being saved. Save project to file in order to get its state saved. [%s, %s, line %d]\n", inout_graph.name.c_str(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 

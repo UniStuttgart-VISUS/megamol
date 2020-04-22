@@ -46,7 +46,7 @@ public:
 
     ImGuiID LoadAddProjectFile(ImGuiID graph_uid, const std::string& project_filename);
 
-    bool SaveProjectFile(ImGuiID graph_uid, const std::string& project_filename, const std::string& configurator_state_param);
+    bool SaveProjectFile(ImGuiID graph_uid, const std::string& project_filename);
     
     // GUI Presentation -------------------------------------------------------
 

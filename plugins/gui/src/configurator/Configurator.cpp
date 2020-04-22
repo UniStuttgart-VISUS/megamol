@@ -8,9 +8,10 @@
 /**
  * USED HOTKEYS:
  *
- * - Search module:        Shift + Ctrl + m
- * - Search parameter:     Shift + Ctrl + p
- * - Delete module/call:   Delete
+ * - Search module:        Ctrl + Shift + m
+ * - Search parameter:     Ctrl + Shift + p
+ * - Save active project:  Ctrl + Shift + s
+ * - Delete graph item:    Delete
  */
 
 #include "stdafx.h"
@@ -43,6 +44,7 @@ megamol::gui::configurator::Configurator::Configurator()
 
     this->state_param << new core::param::StringParam("");
     this->state_param.Parameter()->SetGUIVisible(false);
+    this->state_param.Parameter()->SetGUIReadOnly(true);
 
     this->param_slots.clear();
     this->param_slots.push_back(&this->state_param);
@@ -54,7 +56,7 @@ megamol::gui::configurator::Configurator::Configurator()
     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM] =
         megamol::gui::HotkeyDataType(core::view::KeyCode(core::view::Key::KEY_DELETE), false);
     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT] = megamol::gui::HotkeyDataType(
-        megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL), false);
+        megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::SHIFT), false);
     this->graph_state.font_scalings = {0.85f, 0.95f, 1.0f, 1.5f, 2.5f};
     this->graph_state.child_width = 0.0f;
     this->graph_state.show_parameter_sidebar = false;
@@ -130,8 +132,8 @@ bool megamol::gui::configurator::Configurator::Draw(
         // Load available modules and calls and currently loaded project from core once(!)
         this->graph_manager.UpdateModulesCallsStock(core_instance);
 
-        // Load once inital project
-        this->graph_manager.LoadProjectCore(core_instance);
+        // Load inital project
+        /// this->graph_manager.LoadProjectCore(core_instance);
         /// or: this->add_empty_project();
 
         // Enable drag and drop of files for configurator (if glfw is available here)
@@ -354,8 +356,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     }
     if (this->file_utils.FileBrowserPopUp(
             FileUtils::FileBrowserFlag::SAVE, "Save Project", popup_save_project_file, project_filename)) {
-        std::string state_parameter_name = std::string(this->state_param.Name().PeekBuffer());
-        popup_failed = !this->graph_manager.SaveProjectFile(this->graph_state.graph_selected_uid, project_filename, state_parameter_name);
+        popup_failed = !this->graph_manager.SaveProjectFile(this->graph_state.graph_selected_uid, project_filename);
     }
     this->utils.MinimalPopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
@@ -574,7 +575,7 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
                 for (auto& config_item : header_item.value().items()) {
                     std::string json_graph_id = config_item.key(); /// = graph filename
                     // Load graph from file
-                    ImGuiID graph_uid = this->graph_manager.LoadAddProjectFile(GUI_INVALID_ID, json_graph_id);
+                    this->graph_manager.LoadAddProjectFile(GUI_INVALID_ID, json_graph_id);
                     /*
                     if (graph_uid != GUI_INVALID_ID) {
                         GraphPtrType graph_ptr;
@@ -637,7 +638,7 @@ bool megamol::gui::configurator::Configurator::configurator_state_to_json(nlohma
             }
         }
         
-        ///vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Wrote configurator state to JSON.");  
+        vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Wrote configurator state to JSON.");  
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(

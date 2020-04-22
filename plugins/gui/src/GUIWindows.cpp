@@ -10,8 +10,8 @@
  *
  * - Show/hide Windows: F8-F12
  * - Reset windows:     Shift + F8-F12
- * - Search Paramter:   Shift + Alt + p
- * - Save Project:      Shift + Alt + s
+ * - Search Paramter:   Ctrl + p
+ * - Save Project:      Ctrl + s
  * - Quit program:      Alt   + F4
  */
 
@@ -27,7 +27,7 @@ GUIWindows::GUIWindows()
     : core_instance(nullptr)
     , param_slots()
     , style_param("style", "Color style, theme")
-    , state_param("state", "Current state of all windows. Automatically updated.")
+    , state_param("state", "Current state of all windows.")
     , autostart_configurator("autostart_configurator", "Start the configurator at start up automatically. ")
     , context(nullptr)
     , impl(Implementation::NONE)
@@ -58,6 +58,7 @@ GUIWindows::GUIWindows()
 
     this->state_param << new core::param::StringParam("");
     this->state_param.Parameter()->SetGUIVisible(false);
+    this->state_param.Parameter()->SetGUIReadOnly(true);
 
     this->autostart_configurator << new core::param::BoolParam(false);
 
@@ -73,11 +74,11 @@ GUIWindows::GUIWindows()
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
     this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] =
         megamol::gui::HotkeyDataType(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P,
-                                         core::view::Modifier::CTRL | core::view::Modifier::ALT),
+                                         core::view::Modifier::CTRL),
             false);
     this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT] =
         megamol::gui::HotkeyDataType(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S,
-                                         core::view::Modifier::CTRL | core::view::Modifier::ALT),
+                                         core::view::Modifier::CTRL),
             false);
 }
 
@@ -526,11 +527,14 @@ bool GUIWindows::OnMouseButton(
     auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
 
+    /// Useless since state ist always saved before project is stored.
+    /*
     // Trigger saving state when mouse hovered any window and on button mouse release event
     if (ImGui::IsMouseReleased[buttonIndex] && hoverFlags) {
         this->state.win_save_state = true;
         this->state.win_save_delay = 0.0f;
     }
+    */
 
     io.MouseDown[buttonIndex] = down;
 
@@ -809,22 +813,27 @@ void GUIWindows::validateParameter() {
         }
         this->style_param.ResetDirty();
     }
-
-    ImGuiIO& io = ImGui::GetIO();
-    this->state.win_save_delay += io.DeltaTime;
+    
     if (this->state_param.IsDirty()) {
         std::string state = std::string(this->state_param.Param<core::param::StringParam>()->Value().PeekBuffer());
         this->window_manager.StateFromJsonString(state);
         this->parameters_gui_state_from_json_string(state);
         this->state_param.ResetDirty();
-    } else if (this->state.win_save_state && (this->state.win_save_delay > 2.0f)) { // Delayed saving after triggering saving state (in seconds).
+    } 
+    /// Useless since state ist always saved before project is stored.
+    ///ImGuiIO& io = ImGui::GetIO();
+    ///this->state.win_save_delay += io.DeltaTime;    
+    /*
+    else if (this->state.win_save_state && (this->state.win_save_delay > 2.0f)) { // Delayed saving after triggering saving state (in seconds).
         this->save_state_to_parameter();
         this->state.win_save_state = false;
     }
+    */
 
     if (this->autostart_configurator.IsDirty()) {
         bool autostart = this->autostart_configurator.Param<core::param::BoolParam>()->Value();
         if (autostart) {
+            // Hide main window
             const auto configurator_func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
                 if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
                     wc.win_show = true;
@@ -2208,7 +2217,7 @@ bool megamol::gui::GUIWindows::parameters_gui_state_to_json(nlohmann::json& out_
             }
         });
         
-        ///vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Wrote parameter gui state to JSON.");        
+        vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Wrote parameter gui state to JSON.");        
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(

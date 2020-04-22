@@ -67,7 +67,7 @@ public:
     
 private:
     // VARIABLES --------------------------------------------------------------
-
+    
     std::vector<megamol::core::param::ParamSlot*> param_slots;
     megamol::core::param::ParamSlot state_param;
 

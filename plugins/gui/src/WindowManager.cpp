@@ -478,7 +478,7 @@ bool WindowManager::StateToJSON(nlohmann::json& out_json) {
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["font_name"] = window_config.font_name;
             }
         }
-        ///vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Wrote window configurations to JSON.");
+        vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Wrote window configurations to JSON.");
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
