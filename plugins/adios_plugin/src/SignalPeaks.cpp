@@ -1,25 +1,40 @@
 #include "stdafx.h"
 #include "SignalPeaks.h"
 
+#include <functional>
+
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/EnumParam.h"
 
 
 megamol::adios::SignalPeaks::SignalPeaks()
     : data_out_slot_("dataOut", "Output")
     , data_in_slot_("dataIn", "Input")
     , num_peaks_slot_("numPeaks", "Number of peaks to select")
+    , peak_selector_slot_("peakSelector", "Select peak detection method")
+    , column_grouping_factor_slot_("columnGroupingFactor", "Size of column group")
     , data_hash_(std::numeric_limits<size_t>::max()) {
-    data_out_slot_.SetCallback(
-        CallADIOSData::ClassName(), CallADIOSData::FunctionName(0), &SignalPeaks::getDataCallback);
-    data_out_slot_.SetCallback(
-        CallADIOSData::ClassName(), CallADIOSData::FunctionName(1), &SignalPeaks::getHeaderCallback);
+    data_out_slot_.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
+        stdplugin::datatools::table::TableDataCall::FunctionName(0), &SignalPeaks::getDataCallback);
+    data_out_slot_.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
+        stdplugin::datatools::table::TableDataCall::FunctionName(1), &SignalPeaks::getHeaderCallback);
     MakeSlotAvailable(&data_out_slot_);
 
-    data_in_slot_.SetCompatibleCall<CallADIOSDataDescription>();
+    data_in_slot_.SetCompatibleCall<stdplugin::datatools::table::TableDataCallDescription>();
     MakeSlotAvailable(&data_in_slot_);
 
     num_peaks_slot_ << new core::param::IntParam(1, 1);
     MakeSlotAvailable(&num_peaks_slot_);
+
+    auto ep = new core::param::EnumParam(static_cast<int>(PeakSelector::MAXVARIANCE));
+    ep->SetTypePair(static_cast<int>(PeakSelector::EQUIDISTANT), "equidistant");
+    ep->SetTypePair(static_cast<int>(PeakSelector::MAXVARIANCE), "maxvariance");
+    ep->SetTypePair(static_cast<int>(PeakSelector::NTHHIGHEST), "nthhighest");
+    peak_selector_slot_ << ep;
+    MakeSlotAvailable(&peak_selector_slot_);
+
+    column_grouping_factor_slot_ << new core::param::IntParam(1, 1);
+    MakeSlotAvailable(&column_grouping_factor_slot_);
 }
 
 
@@ -33,10 +48,10 @@ void megamol::adios::SignalPeaks::release() {}
 
 
 bool megamol::adios::SignalPeaks::getDataCallback(core::Call& c) {
-    auto out_data = dynamic_cast<CallADIOSData*>(&c);
+    auto out_data = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&c);
     if (out_data == nullptr) return false;
 
-    auto in_data = data_in_slot_.CallAs<CallADIOSData>();
+    auto in_data = data_in_slot_.CallAs<stdplugin::datatools::table::TableDataCall>();
     if (in_data == nullptr) return false;
 
     if (!(*in_data)(1)) {
@@ -44,72 +59,85 @@ bool megamol::adios::SignalPeaks::getDataCallback(core::Call& c) {
         return false;
     }
 
-    if (data_hash_ != in_data->getDataHash()) {
-        data_hash_ = in_data->getDataHash();
+    if (data_hash_ != in_data->DataHash() || isDirty()) {
+        data_hash_ = in_data->DataHash();
+        resetDirty();
 
-        data_map_->clear();
+        data_.clear();
+        infos_.clear();
 
         auto const numPeaks = num_peaks_slot_.Param<core::param::IntParam>()->Value();
-
-        auto avail_vars = in_data->getAvailableVars();
-
-        // iterate through all attributes
-        for (auto const& el : avail_vars) {
-            in_data->inquire(el);
-        }
 
         if (!(*in_data)(0)) {
             vislib::sys::Log::DefaultLog.WriteError("SignalPeaks: Error during GetData");
             return false;
         }
 
-        std::vector<std::vector<float>> data(avail_vars.size());
+        auto const num_columns = in_data->GetColumnsCount();
+        auto const num_rows = in_data->GetRowsCount();
 
-        for (size_t i = 0; i < avail_vars.size(); ++i) {
-            data[i] = in_data->getData(avail_vars[i])->GetAsFloat();
-            if (data[i].size() / 2 < numPeaks) {
-                vislib::sys::Log::DefaultLog.WriteError("SignalPeaks: Not enough samples in signal");
-                return false;
-            }
-            std::vector<float> tmp(data[i].size() / 2);
-            for (size_t j = 0; j < data[i].size() / 2; ++j) {
-                tmp[j] = data[i][j * 2];
-            }
-            std::nth_element(tmp.begin(), tmp.begin() + numPeaks, tmp.end(), std::greater<float>());
-            auto tval = tmp[numPeaks];
-            std::stable_partition(data[i].begin(), data[i].end(), [tval](auto const& a) { return a >= tval; });
+        auto const in_data_ptr = in_data->GetData();
 
-            auto fCon = std::make_shared<FloatContainer>();
-            auto& fVec = fCon->getVec();
-            fVec = std::vector<float>(data[i].begin(), data[i].begin() + numPeaks);
+        out_num_columns_ = num_columns;
 
-            data_map_->operator[](avail_vars[i]) = std::move(fCon);
+        auto const method = peak_selector_slot_.Param<core::param::EnumParam>()->Value();
+
+        std::function<std::vector<size_t>(
+            float const* data, size_t num_cols, size_t num_rows, size_t num_peaks)> selector;
+
+        switch (method) {
+        case static_cast<int>(PeakSelector::EQUIDISTANT):
+            selector = std::bind(&SignalPeaks::equidistant, this, std::placeholders::_1, std::placeholders::_2,
+                std::placeholders::_3, std::placeholders::_4);
+            break;
+        case static_cast<int>(PeakSelector::NTHHIGHEST):
+            selector = std::bind(&SignalPeaks::nthhighest, this, std::placeholders::_1, std::placeholders::_2,
+                std::placeholders::_3, std::placeholders::_4);
+        case static_cast<int>(PeakSelector::MAXVARIANCE):
+        default:
+            selector = std::bind(&SignalPeaks::maxvariance, this, std::placeholders::_1, std::placeholders::_2,
+                std::placeholders::_3, std::placeholders::_4);
         }
+
+        auto const peaks = selector(in_data_ptr, num_columns, num_rows, numPeaks);
+
+        out_num_rows_ = peaks.size();
+        data_ = extract_peaks(in_data_ptr, num_columns, num_rows, peaks);
+        
+        auto const in_infos_ptr = in_data->GetColumnsInfos();
+
+        auto const new_ranges = reevaluate_colums(data_, out_num_columns_, out_num_rows_);
+
+        infos_.resize(num_columns);
+        std::copy(in_infos_ptr, in_infos_ptr + num_columns, infos_.data());
+
+        populate_ranges(infos_, new_ranges);
     }
 
-    out_data->setData(data_map_);
+    out_data->Set(out_num_columns_, out_num_rows_, infos_.data(), data_.data());
 
-    out_data->setDataHash(data_hash_);
+    out_data->SetDataHash(data_hash_);
 
     return true;
 }
 
 
 bool megamol::adios::SignalPeaks::getHeaderCallback(core::Call& c) {
-    auto out_data = dynamic_cast<CallADIOSData*>(&c);
+    auto out_data = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&c);
     if (out_data == nullptr) return false;
 
-    auto in_data = data_in_slot_.CallAs<CallADIOSData>();
+    auto in_data = data_in_slot_.CallAs<stdplugin::datatools::table::TableDataCall>();
     if (in_data == nullptr) return false;
 
+    in_data->SetFrameID(out_data->GetFrameID());
     if (!(*in_data)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("SignalPeaks: Error during GetHeader");
+        vislib::sys::Log::DefaultLog.WriteError("Clustering: Error during GetHash");
         return false;
     }
 
-    out_data->setAvailableVars(in_data->getAvailableVars());
+    out_data->SetFrameCount(in_data->GetFrameCount());
 
-    out_data->setFrameCount(in_data->getFrameCount());
+    out_data->SetFrameID(in_data->GetFrameID());
 
     return true;
 }
