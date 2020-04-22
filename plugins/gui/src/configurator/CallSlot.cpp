@@ -76,7 +76,7 @@ bool megamol::gui::configurator::CallSlot::DisconnectCall(ImGuiID call_uid, bool
                     if (!called_by_call) {
                         (*call_iter)->DisconnectCallSlots();
                     }
-                    
+
                     (*call_iter).reset();
                     this->connected_calls.erase(call_iter);
                     return true;
@@ -430,10 +430,12 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                 if (!is_group_interface) {
                     bool compatible = false;
                     if (state.interact.callslot_compat_ptr != nullptr) {
-                        compatible = (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.callslot_compat_ptr, inout_callslot) != GUI_INVALID_ID);
+                        compatible = (CallSlot::CheckCompatibleAvailableCallIndex(
+                                          state.interact.callslot_compat_ptr, inout_callslot) != GUI_INVALID_ID);
                     }
                     if (state.interact.interfaceslot_compat_ptr != nullptr) {
-                        compatible = compatible || state.interact.interfaceslot_compat_ptr->IsCallSlotCompatible(inout_callslot);
+                        compatible =
+                            compatible || state.interact.interfaceslot_compat_ptr->IsCallSlotCompatible(inout_callslot);
                     }
                     if (compatible) {
                         tmpcol = GUI_COLOR_SLOT_COMPATIBLE;

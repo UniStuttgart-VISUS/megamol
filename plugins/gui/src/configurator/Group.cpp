@@ -84,8 +84,8 @@ bool megamol::gui::configurator::Group::RemoveModule(ImGuiID module_uid) {
                 (*mod_iter)->GUI_SetGroupName("");
                 this->present.ForceUpdate();
 
-                vislib::sys::Log::DefaultLog.WriteInfo(
-                    "[Configurator] Removed module '%s' from group '%s'.\n", (*mod_iter)->name.c_str(), this->name.c_str());
+                vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Removed module '%s' from group '%s'.\n",
+                    (*mod_iter)->name.c_str(), this->name.c_str());
                 (*mod_iter).reset();
                 this->modules.erase(mod_iter);
 
@@ -131,7 +131,8 @@ bool megamol::gui::configurator::Group::InterfaceSlot_AddCallSlot(
     // Check if call slot is already part of the group
     for (auto& interfaceslot_ptr : this->interfaceslots[callslot_ptr->type]) {
         if (interfaceslot_ptr->ContainsCallSlot(callslot_ptr->uid)) {
-            vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Call Slot '%s' is already part of interface slot of group '%s'.\n",
+            vislib::sys::Log::DefaultLog.WriteInfo(
+                "[Configurator] Call Slot '%s' is already part of interface slot of group '%s'.\n",
                 callslot_ptr->name.c_str(), this->name.c_str());
             return false;
         }
@@ -153,13 +154,14 @@ bool megamol::gui::configurator::Group::InterfaceSlot_AddCallSlot(
     }
 
     if (parent_module_group_uid) {
-        
+
         InterfaceSlotPtrType interfaceslot_ptr = std::make_shared<InterfaceSlot>(new_interfaceslot_uid);
-        if (interfaceslot_ptr != nullptr) {        
+        if (interfaceslot_ptr != nullptr) {
             interfaceslot_ptr->GUI_SetGroupUID(this->uid);
             this->interfaceslots[callslot_ptr->type].emplace_back(interfaceslot_ptr);
-            vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Added interface slot to group '%s'.\n", this->name.c_str()); 
-                
+            vislib::sys::Log::DefaultLog.WriteInfo(
+                "[Configurator] Added interface slot to group '%s'.\n", this->name.c_str());
+
             successfully_added = interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr);
             interfaceslot_ptr->GUI_SetGroupView(this->present.IsViewCollapsed());
         }
@@ -238,7 +240,7 @@ bool megamol::gui::configurator::Group::DeleteInterfaceSlot(ImGuiID interfaceslo
             for (auto iter = interfaceslot_map.second.begin(); iter != interfaceslot_map.second.end(); iter++) {
                 if ((*iter)->uid == interfaceslot_uid) {
 
-                    // Remove all call slots from interface slot  
+                    // Remove all call slots from interface slot
                     std::vector<ImGuiID> callslots_uids;
                     for (auto& callslot_ptr : (*iter)->GetCallSlots()) {
                         callslots_uids.emplace_back(callslot_ptr->uid);
@@ -333,20 +335,20 @@ void megamol::gui::configurator::Group::Presentation::Present(
         ImVec2 header_rect_max = group_rect_min + header_size;
 
         ImGui::PushID(inout_group.uid);
-        
+
         if (phase == megamol::gui::PresentPhase::INTERACTION) {
 
             // Limit selection to header
             this->allow_selection = false;
             ImVec2 mouse_pos = ImGui::GetMousePos();
-            if ((mouse_pos.x >= group_rect_min.x) && (mouse_pos.y >= group_rect_min.y) && (mouse_pos.x <= header_rect_max.x) &&
-                (mouse_pos.y <= header_rect_max.y)) {
+            if ((mouse_pos.x >= group_rect_min.x) && (mouse_pos.y >= group_rect_min.y) &&
+                (mouse_pos.x <= header_rect_max.x) && (mouse_pos.y <= header_rect_max.y)) {
                 this->allow_selection = true;
                 if (state.interact.group_hovered_uid == inout_group.uid) {
                     this->allow_context = true;
                 }
-            }  
-            
+            }
+
             // Header Button
             std::string label = "group_" + std::to_string(inout_group.uid);
             ImGui::SetCursorScreenPos(group_rect_min);
@@ -362,7 +364,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
 
             // Context menu
             bool popup_rename = false;
-            if (ImGui::BeginPopupContextItem("invisible_button_context")) { /// this->allow_context && 
+            if (ImGui::BeginPopupContextItem("invisible_button_context")) { /// this->allow_context &&
 
                 state.interact.button_active_uid = inout_group.uid;
 

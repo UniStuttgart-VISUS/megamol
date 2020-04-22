@@ -66,8 +66,9 @@ bool megamol::gui::FileUtils::SaveProjectFile(
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    
-    vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Successfully saved running MegaMol project to file '%s'.\n", project_filename.c_str());    
+
+    vislib::sys::Log::DefaultLog.WriteInfo(
+        "[GUI] Successfully saved running MegaMol project to file '%s'.\n", project_filename.c_str());
     return true;
 #else
     return false;

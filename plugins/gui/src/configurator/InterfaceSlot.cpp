@@ -49,7 +49,7 @@ bool megamol::gui::configurator::InterfaceSlot::AddCallSlot(
                 "Pointer to interface slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-        
+
         if (!(this->ContainsCallSlot(callslot_ptr->uid)) && (this->IsCallSlotCompatible((*callslot_ptr)))) {
             this->callslots.emplace_back(callslot_ptr);
 
@@ -120,7 +120,7 @@ bool megamol::gui::configurator::InterfaceSlot::IsCallSlotCompatible(const CallS
     if (this->callslots.size() > 0) {
         if ((this->GetCallSlotType() == CallSlotType::CALLEE)) {
             return false;
-        }    
+        }
     }
 
     // Check for compatibility (with all available call slots...)
@@ -142,18 +142,18 @@ bool megamol::gui::configurator::InterfaceSlot::IsCallSlotCompatible(const CallS
 
 
 bool megamol::gui::configurator::InterfaceSlot::GetCompatibleCallSlot(CallSlotPtrType& out_callslot_ptr) {
-    
+
     out_callslot_ptr.reset();
     if (!this->callslots.empty()) {
         out_callslot_ptr = this->callslots[0];
         return true;
-    }   
+    }
     return false;
 }
 
 
 bool megamol::gui::configurator::InterfaceSlot::IsConnected(void) {
-    
+
     for (auto& callslot_ptr : this->callslots) {
         if (callslot_ptr->CallsConnected()) {
             return true;
@@ -164,14 +164,14 @@ bool megamol::gui::configurator::InterfaceSlot::IsConnected(void) {
 
 
 CallSlotType megamol::gui::configurator::InterfaceSlot::GetCallSlotType(void) {
-    
+
     CallSlotType ret_type = CallSlotType::CALLER;
     if (!this->callslots.empty()) {
         return this->callslots[0]->type;
-    }   
+    }
     return ret_type;
-}    
-    
+}
+
 
 bool megamol::gui::configurator::InterfaceSlot::IsEmpty(void) { return (this->callslots.empty()); }
 
@@ -180,7 +180,7 @@ bool megamol::gui::configurator::InterfaceSlot::IsEmpty(void) { return (this->ca
 
 megamol::gui::configurator::InterfaceSlot::Presentation::Presentation(void)
     : group(), position(ImVec2(FLT_MAX, FLT_MAX)), utils(), selected(false) {
-        
+
     this->group.uid = GUI_INVALID_ID;
     this->group.collapsed_view = false;
     this->group.collapsed_view = false;
@@ -211,7 +211,8 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
         if (state.interact.callslot_compat_ptr != nullptr) {
             CallSlotPtrType callslot_ptr;
             if (inout_interfaceslot.GetCompatibleCallSlot(callslot_ptr)) {
-                compatible = (CallSlot::CheckCompatibleAvailableCallIndex(state.interact.callslot_compat_ptr, (*callslot_ptr)) != GUI_INVALID_ID);
+                compatible = (CallSlot::CheckCompatibleAvailableCallIndex(
+                                  state.interact.callslot_compat_ptr, (*callslot_ptr)) != GUI_INVALID_ID);
             }
             compatible = compatible || inout_interfaceslot.IsCallSlotCompatible((*state.interact.callslot_compat_ptr));
         }
@@ -254,7 +255,8 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
                 ImGui::TextUnformatted("Interface Slot");
                 ImGui::Separator();
                 if (ImGui::MenuItem("Delete",
-                        std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str(), false, !inout_interfaceslot.IsConnected())) {
+                        std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str(),
+                        false, !inout_interfaceslot.IsConnected())) {
                     std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
                 }
 
@@ -334,7 +336,8 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
             const ImU32 COLOR_INTERFACE_LINE = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
             // Color modification
-            ImU32 slot_highlight_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLER);;
+            ImU32 slot_highlight_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLER);
+            ;
             if (inout_interfaceslot.GetCallSlotType() == CallSlotType::CALLEE) {
                 slot_highlight_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLEE);
             }

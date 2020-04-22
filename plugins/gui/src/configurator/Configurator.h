@@ -64,10 +64,10 @@ public:
      * Save current configurator state to state parameter.
      */
     void UpdateStateParameter(void);
-    
+
 private:
     // VARIABLES --------------------------------------------------------------
-    
+
     std::vector<megamol::core::param::ParamSlot*> param_slots;
     megamol::core::param::ParamSlot state_param;
 
@@ -90,7 +90,7 @@ private:
 
     void draw_window_menu(megamol::core::CoreInstance* core_instance);
     void draw_window_module_list(float width);
-    
+
     void add_empty_project(void);
 
     bool configurator_state_from_json_string(const std::string& json_string);

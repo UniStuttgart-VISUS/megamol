@@ -60,11 +60,11 @@ public:
 
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(*this); }
     inline ImGuiID GUI_GetGroupUID(void) { return this->present.group.uid; }
-    
+
     inline void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
     inline void GUI_SetGroupView(bool collapsed_view) { this->present.group.collapsed_view = collapsed_view; }
     inline void GUI_SetGroupUID(ImGuiID uid) { this->present.group.uid = uid; }
-    
+
 private:
     CallSlotPtrVectorType callslots;
 
@@ -74,7 +74,7 @@ private:
     class Presentation {
     public:
         struct GroupState {
-            ImGuiID uid;            
+            ImGuiID uid;
             bool collapsed_view;
         };
 

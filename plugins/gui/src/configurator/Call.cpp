@@ -117,7 +117,7 @@ const megamol::gui::configurator::CallSlotPtrType& megamol::gui::configurator::C
 // CALL PRESENTATION #########################################################
 
 megamol::gui::configurator::Call::Presentation::Presentation(void)
-    : presentations(Call::Presentations::DEFAULT), label_visible(true), selected(false),utils() {}
+    : presentations(Call::Presentations::DEFAULT), label_visible(true), selected(false), utils() {}
 
 
 megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
@@ -186,8 +186,8 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
                 const ImU32 COLOR_CALL_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
                 if (phase == megamol::gui::PresentPhase::RENDERING) {
-                    
-                    // Draw Curve                 
+
+                    // Draw Curve
                     /// Draw simple line if zooming is too small for nice bezier curves.
                     if (state.canvas.zooming < 0.25f) {
                         draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, GUI_LINE_THICKNESS * state.canvas.zooming);
@@ -242,7 +242,7 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
 
                             ImGui::EndPopup();
                         }
-                        
+
                         // Hover Tooltip
                         if (state.interact.call_hovered_uid == inout_call.uid) {
                             std::string tooltip = callerslot_ptr->name + " >> " + calleeslot_ptr->name;
@@ -250,7 +250,7 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
                         } else {
                             this->utils.ResetHoverToolTip();
                         }
-                                        
+
                     } else if (phase == megamol::gui::PresentPhase::RENDERING) {
 
                         bool active = (state.interact.button_active_uid == inout_call.uid);
@@ -274,14 +274,14 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
                                 state.interact.call_selected_uid = GUI_INVALID_ID;
                             }
                         }
-                        
+
                         // Hovering
                         if (hovered) {
                             state.interact.call_hovered_uid = inout_call.uid;
                         }
                         if (!hovered && (state.interact.call_hovered_uid == inout_call.uid)) {
                             state.interact.call_hovered_uid = GUI_INVALID_ID;
-                        }                        
+                        }
 
                         // Draw Background
                         ImU32 call_bg_color = (this->selected) ? (COLOR_CALL_HIGHTLIGHT) : (COLOR_CALL_BACKGROUND);

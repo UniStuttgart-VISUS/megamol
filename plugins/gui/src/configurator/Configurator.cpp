@@ -56,7 +56,8 @@ megamol::gui::configurator::Configurator::Configurator()
     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM] =
         megamol::gui::HotkeyDataType(core::view::KeyCode(core::view::Key::KEY_DELETE), false);
     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT] = megamol::gui::HotkeyDataType(
-        megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::SHIFT), false);
+        megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
+        false);
     this->graph_state.font_scalings = {0.85f, 0.95f, 1.0f, 1.5f, 2.5f};
     this->graph_state.child_width = 0.0f;
     this->graph_state.show_parameter_sidebar = false;
@@ -146,13 +147,13 @@ bool megamol::gui::configurator::Configurator::Draw(
     } else {
         /// Step 3]
         // Render configurator gui content
-        
+
         // Check for parameter changes
         if (this->state_param.IsDirty()) {
             std::string state = std::string(this->state_param.Param<core::param::StringParam>()->Value().PeekBuffer());
             this->configurator_state_from_json_string(state);
             this->state_param.ResetDirty();
-        }        
+        }
 
         // Child Windows
         this->draw_window_menu(core_instance);
@@ -232,7 +233,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
             "Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
-    
+
     bool confirmed, aborted;
     bool popup_save_project_file = false;
     bool popup_load_file = false;
@@ -545,7 +546,7 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
         if (in_json_string.empty()) {
             return false;
         }
-                
+
         bool found = false;
 
         nlohmann::json json;
@@ -567,11 +568,10 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
                     config_state.at("show_module_list_sidebar").get_to(this->show_module_list_sidebar);
                 } else {
                     vislib::sys::Log::DefaultLog.WriteError(
-                        "JSON state: Failed to read 'show_module_list_sidebar' as boolean. [%s, %s, line %d]\n", __FILE__,
-                        __FUNCTION__, __LINE__);
+                        "JSON state: Failed to read 'show_module_list_sidebar' as boolean. [%s, %s, line %d]\n",
+                        __FILE__, __FUNCTION__, __LINE__);
                 }
-            }
-            else if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
+            } else if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
                 for (auto& config_item : header_item.value().items()) {
                     std::string json_graph_id = config_item.key(); /// = graph filename
                     // Load graph from file
@@ -590,9 +590,8 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
         }
 
         if (found) {
-            vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Read configurator state from JSON string.");  
-        }
-        else {
+            vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Read configurator state from JSON string.");
+        } else {
             /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find configurator state in JSON. [%s, %s, line
             /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
@@ -637,8 +636,8 @@ bool megamol::gui::configurator::Configurator::configurator_state_to_json(nlohma
                 out_json.update(graph_json);
             }
         }
-        
-        vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Wrote configurator state to JSON.");  
+
+        vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Wrote configurator state to JSON.");
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(

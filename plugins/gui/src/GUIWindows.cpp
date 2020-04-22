@@ -72,14 +72,10 @@ GUIWindows::GUIWindows()
 
     this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = megamol::gui::HotkeyDataType(
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] =
-        megamol::gui::HotkeyDataType(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P,
-                                         core::view::Modifier::CTRL),
-            false);
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT] =
-        megamol::gui::HotkeyDataType(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S,
-                                         core::view::Modifier::CTRL),
-            false);
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] = megamol::gui::HotkeyDataType(
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false);
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT] = megamol::gui::HotkeyDataType(
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false);
 }
 
 
@@ -238,21 +234,21 @@ bool GUIWindows::PostDraw(void) {
             }
             wc.buf_font_reset = false;
         }
-            
+
         // Draw window content
-        if (wc.win_show) {                   
+        if (wc.win_show) {
             ImGui::SetNextWindowBgAlpha(1.0f);
             if (!ImGui::Begin(wn.c_str(), &wc.win_show, wc.win_flags)) {
                 ImGui::End(); // early ending
                 return;
             }
-            
+
             // Always set configurator window size to current viewport
             if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
                 wc.win_size = viewport;
                 wc.win_reset = true;
             }
-                        
+
             // Apply soft reset of window position and size (before calling window callback)
             if (wc.win_soft_reset) {
                 this->window_manager.SoftResetWindowSizePos(wn, wc);
@@ -280,15 +276,14 @@ bool GUIWindows::PostDraw(void) {
 
             ImGui::End();
         }
-        
+
         // Bring back main window (once) when configurator is closed.
         if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
             if (wc.win_show) {
                 this->force_open_main_window = true;
-            }
-            else if (!wc.win_show && this->force_open_main_window) {
+            } else if (!wc.win_show && this->force_open_main_window) {
                 this->force_open_main_window = false;
-                
+
                 const auto configurator_func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
                     if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
                         wc.win_show = true;
@@ -297,7 +292,6 @@ bool GUIWindows::PostDraw(void) {
                 this->window_manager.EnumWindows(configurator_func);
             }
         }
-        
     };
     this->window_manager.EnumWindows(func);
 
@@ -643,7 +637,8 @@ bool GUIWindows::createContext(void) {
 
     // CONFIGURATOR Window -----------------------------------------------
     buf_win.win_show = false;
-    // State of configurator should not be stored (visibility is configured via auto load parameter and will always be viewport size).
+    // State of configurator should not be stored (visibility is configured via auto load parameter and will always be
+    // viewport size).
     buf_win.win_store_config = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
     buf_win.win_flags =
@@ -813,20 +808,19 @@ void GUIWindows::validateParameter() {
         }
         this->style_param.ResetDirty();
     }
-    
+
     if (this->state_param.IsDirty()) {
         std::string state = std::string(this->state_param.Param<core::param::StringParam>()->Value().PeekBuffer());
         this->window_manager.StateFromJsonString(state);
         this->parameters_gui_state_from_json_string(state);
         this->state_param.ResetDirty();
-    } 
+    }
     /// Useless since state ist always saved before project is stored.
-    ///ImGuiIO& io = ImGui::GetIO();
-    ///this->state.win_save_delay += io.DeltaTime;    
+    /// ImGuiIO& io = ImGui::GetIO();
+    /// this->state.win_save_delay += io.DeltaTime;
     /*
-    else if (this->state.win_save_state && (this->state.win_save_delay > 2.0f)) { // Delayed saving after triggering saving state (in seconds).
-        this->save_state_to_parameter();
-        this->state.win_save_state = false;
+    else if (this->state.win_save_state && (this->state.win_save_delay > 2.0f)) { // Delayed saving after triggering
+    saving state (in seconds). this->save_state_to_parameter(); this->state.win_save_state = false;
     }
     */
 
@@ -837,9 +831,8 @@ void GUIWindows::validateParameter() {
             const auto configurator_func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
                 if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
                     wc.win_show = true;
-                } 
-                else { 
-                    wc.win_show = false; 
+                } else {
+                    wc.win_show = false;
                 }
             };
             this->window_manager.EnumWindows(configurator_func);
@@ -2072,18 +2065,19 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
 
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
     }
-    
+
     this->configurator.UpdateStateParameter();
 }
 
 
-/// ! Implementation should be duplicate to Configurator-Version megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_string()
+/// ! Implementation should be duplicate to Configurator-Version
+/// megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_string()
 bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::string& in_json_string) {
 
     try {
         if (in_json_string.empty()) {
             return false;
-        }        
+        }
         if (this->core_instance == nullptr) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -2099,7 +2093,7 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
                 "State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-        
+
         for (auto& header_item : json.items()) {
             if (header_item.key() == GUI_JSON_TAG_GUISTATE_PARAMETERS) {
                 found = true;
@@ -2160,9 +2154,8 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
         }
 
         if (found) {
-            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Read parameter gui state from JSON string.");  
-        }
-        else {
+            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Read parameter gui state from JSON string.");
+        } else {
             /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON. [%s, %s, line
             /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
@@ -2194,9 +2187,10 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
 }
 
 
-/// ! Implementation should be duplicate to Configurator-Version megamol::gui::configurator::GraphManager::parameters_gui_state_to_json()
+/// ! Implementation should be duplicate to Configurator-Version
+/// megamol::gui::configurator::GraphManager::parameters_gui_state_to_json()
 bool megamol::gui::GUIWindows::parameters_gui_state_to_json(nlohmann::json& out_json) {
-    
+
     try {
         if (this->core_instance == nullptr) {
             vislib::sys::Log::DefaultLog.WriteError(
@@ -2216,8 +2210,8 @@ bool megamol::gui::GUIWindows::parameters_gui_state_to_json(nlohmann::json& out_
                     static_cast<int>(parameter->GetGUIPresentation());
             }
         });
-        
-        vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Wrote parameter gui state to JSON.");        
+
+        vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Wrote parameter gui state to JSON.");
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
