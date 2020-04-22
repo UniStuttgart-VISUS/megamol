@@ -112,18 +112,20 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
             if ((*iter)->uid == module_uid) {
 
                 // First reset module and call slot pointers in groups
+                ImGuiID delete_empty_group = GUI_INVALID_ID;
                 for (auto& group_ptr : this->groups) {
                     if (group_ptr->ContainsModule(module_uid)) {
                         group_ptr->RemoveModule(module_uid);
                     }
                     if (group_ptr->Empty()) {
-                        this->DeleteGroup(group_ptr->uid);
+                        delete_empty_group = group_ptr->uid;
                     }
                 }
+                this->DeleteGroup(delete_empty_group);
 
                 // Second remove call slots
                 (*iter)->RemoveAllCallSlots();
-
+                
                 // Delete calls which are no longer connected
                 this->delete_disconnected_calls();
 
