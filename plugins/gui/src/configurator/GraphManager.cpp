@@ -30,9 +30,10 @@ ImGuiID megamol::gui::configurator::GraphManager::AddGraph(void) {
         if (graph_ptr != nullptr) {
             this->graphs.emplace_back(graph_ptr);
             retval = graph_ptr->uid;
-
+            #ifdef GUI_VERBOSE
             vislib::sys::Log::DefaultLog.WriteInfo(
                 "[Configurator] Added graph %s' (uid %i). \n", graph_ptr->name.c_str(), graph_ptr->uid);
+            #endif // GUI_VERBOSE
         }
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -51,9 +52,10 @@ bool megamol::gui::configurator::GraphManager::DeleteGraph(ImGuiID graph_uid) {
 
     for (auto iter = this->graphs.begin(); iter != this->graphs.end(); iter++) {
         if ((*iter)->uid == graph_uid) {
-
+            #ifdef GUI_VERBOSE
             vislib::sys::Log::DefaultLog.WriteInfo(
                 "[Configurator] Deleted graph %s' (uid %i). \n", (*iter)->name.c_str(), (*iter)->uid);
+            #endif // GUI_VERBOSE
 
             if ((*iter).use_count() > 1) {
                 vislib::sys::Log::DefaultLog.WriteError(
@@ -1000,6 +1002,7 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_uid
         if (found_graph_ptr != nullptr) {
             found_graph_ptr->ResetDirty();
             if (FileUtils::WriteFile(project_filename, projectstr)) {
+
                 vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Successfully saved project '%s' to file '%s'.\n",
                     found_graph_ptr->name.c_str(), project_filename.c_str());
                 return true;
@@ -1512,7 +1515,9 @@ bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_st
         }
 
         if (found) {
+            #ifdef GUI_VERBOSE
             vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Read parameter gui state from JSON string.");
+            #endif // GUI_VERBOSE
         } else {
             /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON. [%s, %s, line
             /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -1569,8 +1574,9 @@ bool megamol::gui::configurator::GraphManager::parameters_gui_state_to_json(
                     static_cast<int>(parameter.GUI_GetPresentation());
             }
         }
-
+        #ifdef GUI_VERBOSE
         vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Wrote parameter gui state to JSON.");
+        #endif // GUI_VERBOSE
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(

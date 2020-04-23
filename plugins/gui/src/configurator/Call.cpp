@@ -174,26 +174,37 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
                 ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
+                
                 tmpcol = style.Colors[ImGuiCol_FrameBgActive];
+                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);                
+                const ImU32 COLOR_CALL_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
+                
+                tmpcol = style.Colors[ImGuiCol_FrameBgHovered];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-                const ImU32 COLOR_CALL_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
+                                
+                tmpcol = style.Colors[ImGuiCol_ButtonActive];
+                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+                const ImU32 COLOR_CALL_CURVE_HIGHLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);                
 
                 tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
                 if (phase == megamol::gui::PresentPhase::RENDERING) {
-
+                    bool hovered = (state.interact.button_hovered_uid == inout_call.uid);
+                    
                     // Draw Curve
+                    ImU32 color_curve = COLOR_CALL_CURVE;
+                    if (hovered || this->selected) {
+                        color_curve = COLOR_CALL_CURVE_HIGHLIGHT;
+                    }                    
                     /// Draw simple line if zooming is too small for nice bezier curves.
                     if (state.canvas.zooming < 0.25f) {
-                        draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, GUI_LINE_THICKNESS * state.canvas.zooming);
+                        draw_list->AddLine(p1, p2, color_curve, GUI_LINE_THICKNESS * state.canvas.zooming);
                     } else {
                         draw_list->AddBezierCurve(p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2,
-                            COLOR_CALL_CURVE, GUI_LINE_THICKNESS * state.canvas.zooming);
+                            color_curve, GUI_LINE_THICKNESS * state.canvas.zooming);
                     }
                 }
 
@@ -245,7 +256,7 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
 
                         // Hover Tooltip
                         if (state.interact.call_hovered_uid == inout_call.uid) {
-                            std::string tooltip = callerslot_ptr->name + " >> " + calleeslot_ptr->name;
+                            std::string tooltip = callerslot_ptr->name + " > " + calleeslot_ptr->name;
                             this->utils.HoverToolTip(tooltip, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
                         } else {
                             this->utils.ResetHoverToolTip();
@@ -284,7 +295,7 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
                         }
 
                         // Draw Background
-                        ImU32 call_bg_color = (this->selected) ? (COLOR_CALL_HIGHTLIGHT) : (COLOR_CALL_BACKGROUND);
+                        ImU32 call_bg_color = (this->selected || hovered) ? (COLOR_CALL_HIGHTLIGHT) : (COLOR_CALL_BACKGROUND);
                         draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, GUI_RECT_CORNER_RADIUS);
                         draw_list->AddRect(
                             call_rect_min, call_rect_max, COLOR_CALL_GROUP_BORDER, GUI_RECT_CORNER_RADIUS);

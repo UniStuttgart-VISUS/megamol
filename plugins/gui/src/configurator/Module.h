@@ -67,8 +67,8 @@ public:
     bool AddCallSlot(CallSlotPtrType callslot);
     bool RemoveAllCallSlots(void);
     bool GetCallSlot(ImGuiID callslot_uid, CallSlotPtrType& out_callslot_ptr);
-    const CallSlotPtrVectorType& GetCallSlots(CallSlotType type);
-    const CallSlotPtrMapType& GetCallSlots(void);
+    const CallSlotPtrVectorType& GetCallSlots(CallSlotType type) { return this->callslots[type]; }
+    const CallSlotPtrMapType& GetCallSlots(void) { return this->callslots; }
 
     const inline std::string FullName(void) const {
         std::string fullname = "::" + this->name;
@@ -84,7 +84,7 @@ public:
         this->present.Present(phase, *this, state);
     }
 
-    inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdateSize(*this, in_canvas); }
+    inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.Update(*this, in_canvas); }
 
     inline bool GUI_IsGroupMember(void) { return (this->present.group.uid != GUI_INVALID_ID); }
     inline bool GUI_IsVisibleInGroup(void) { return this->present.group.visible; }
@@ -101,7 +101,6 @@ public:
     inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
     inline void GUI_SetPresentation(Module::Presentations present) { this->present.presentations = present; }
     inline void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
-
     static ImVec2 GUI_GetInitModulePosition(const GraphCanvasType& canvas) {
         return Module::Presentation::GetInitModulePosition(canvas);
     }
@@ -126,7 +125,7 @@ private:
 
         void Present(megamol::gui::PresentPhase phase, Module& inout_module, GraphItemsStateType& state);
 
-        void UpdateSize(Module& inout_module, const GraphCanvasType& in_canvas);
+        void Update(Module& inout_module, const GraphCanvasType& in_canvas);
 
         inline ImVec2 GetPosition(void) { return this->position; }
         inline ImVec2 GetSize(void) { return this->size; }

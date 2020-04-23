@@ -50,6 +50,7 @@ public:
     bool InterfaceSlot_ContainsCallSlot(ImGuiID callslot_uid);
     bool GetInterfaceSlot(ImGuiID interfaceslot_uid, InterfaceSlotPtrType& interfaceslot_ptr);
     inline const InterfaceSlotPtrMapType& GetInterfaceSlots(void) { return this->interfaceslots; }
+    inline const InterfaceSlotPtrVectorType& GetInterfaceSlots(CallSlotType type) { return this->interfaceslots[type]; }
     bool DeleteInterfaceSlot(ImGuiID interfaceslot_uid);
     bool ContainsInterfaceSlot(ImGuiID interfaceslot_uid);
 
@@ -60,7 +61,12 @@ public:
     }
 
     inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePositionSize(*this, in_canvas); }
+    inline bool GUI_IsViewCollapsed(void) { return this->present.IsViewCollapsed(); }
 
+    inline ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
+    
+    inline void GUI_SetPosition(const GraphCanvasType& in_canvas, ImVec2 pos) { this->present.SetPosition(*this,in_canvas, pos); }
+    
 private:
     // VARIABLES --------------------------------------------------------------
 
@@ -83,6 +89,10 @@ private:
         inline bool IsViewCollapsed(void) { return this->collapsed_view; }
         inline bool ModulesVisible(void) { return !this->collapsed_view; }
         inline void ForceUpdate(void) { this->update = true; }
+        
+        inline ImVec2 GetSize(void) { return this->size; }
+                
+        void SetPosition(Group& inout_group, const GraphCanvasType& in_canvas, ImVec2 pos);
 
     private:
         const float border;

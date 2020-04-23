@@ -2058,7 +2058,9 @@ bool megamol::gui::GUIWindows::hotkeyPressed(megamol::core::view::KeyCode keycod
 void megamol::gui::GUIWindows::shutdown(void) {
 
     if (this->core_instance != nullptr) {
+        #ifdef GUI_VERBOSE
         vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Triggering MegaMol instance shutdown.");
+        #endif // GUI_VERBOSE
         this->core_instance->Shutdown();
     } else {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -2169,7 +2171,9 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
         }
 
         if (found) {
+            #ifdef GUI_VERBOSE
             vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Read parameter gui state from JSON string.");
+            #endif // GUI_VERBOSE
         } else {
             /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON. [%s, %s, line
             /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -2226,8 +2230,9 @@ bool megamol::gui::GUIWindows::parameters_gui_state_to_json(nlohmann::json& out_
                     static_cast<int>(parameter->GetGUIPresentation());
             }
         });
-
+        #ifdef GUI_VERBOSE
         vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Wrote parameter gui state to JSON.");
+        #endif // GUI_VERBOSE
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(

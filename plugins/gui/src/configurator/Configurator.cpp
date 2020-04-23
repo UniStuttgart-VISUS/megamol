@@ -265,12 +265,13 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
     // Menu
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("New Project")) {
+                this->add_empty_project();
+            }
+            
             if (ImGui::BeginMenu("Load Project")) {
-                if (ImGui::MenuItem("New", nullptr)) {
-                    this->add_empty_project();
-                }
                 // Load project from LUA file
-                if (ImGui::MenuItem("File", nullptr)) {
+                if (ImGui::MenuItem("File")) {
                     this->add_project_graph_uid = GUI_INVALID_ID;
                     popup_load_file = true;
                 }
@@ -621,7 +622,9 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
         }
 
         if (found) {
+            #ifdef GUI_VERBOSE
             vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Read configurator state from JSON string.");
+            #endif // GUI_VERBOSE
         } else {
             /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find configurator state in JSON. [%s, %s, line
             /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -665,8 +668,9 @@ bool megamol::gui::configurator::Configurator::configurator_state_to_json(nlohma
         for (auto& graph_ptr : this->graph_manager.GetGraphs()) {
             graph_ptr->GUI_StateToJSON(out_json);
         }
-
+        #ifdef GUI_VERBOSE
         vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Wrote configurator state to JSON.");
+        #endif // GUI_VERBOSE
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(

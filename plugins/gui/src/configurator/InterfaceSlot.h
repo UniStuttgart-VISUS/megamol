@@ -62,6 +62,7 @@ public:
     inline ImGuiID GUI_GetGroupUID(void) { return this->present.group.uid; }
     inline bool GUI_IsLabelVisible(void) { return this->present.label_visible; }    
     inline std::string GUI_GetLabel(void) { return this->present.GetLabel(); }
+    inline bool GUI_IsGroupViewCollapsed(void) { return this->present.IsGroupViewCollapsed(); }    
     
     inline void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
     inline void GUI_SetGroupUID(ImGuiID uid) { this->present.group.uid = uid; }    
@@ -89,6 +90,7 @@ private:
 
         std::string GetLabel(void) { return this->label; }
         ImVec2 GetPosition(InterfaceSlot& inout_interfaceslot);
+        inline bool IsGroupViewCollapsed(void) { return this->group.collapsed_view; }  
 
         void SetPosition(ImVec2 pos) { this->position = pos; }
 

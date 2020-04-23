@@ -275,7 +275,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
     try {
         // Apply update of position first
         if (this->update_once) {
-            this->UpdatePosition(inout_callslot, state.canvas);
+            this->Update(inout_callslot, state.canvas);
             this->update_once = false;
         }
 
@@ -478,7 +478,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
 }
 
 
-void megamol::gui::configurator::CallSlot::Presentation::UpdatePosition(
+void megamol::gui::configurator::CallSlot::Presentation::Update(
     megamol::gui::configurator::CallSlot& inout_callslot, const GraphCanvasType& in_canvas) {
 
     if (inout_callslot.IsParentModuleConnected()) {

@@ -86,7 +86,7 @@ public:
         this->present.Present(phase, *this, state);
     }
 
-    inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePosition(*this, in_canvas); }
+    inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.Update(*this, in_canvas); }
 
     inline bool GUI_IsVisible(void) { return this->present.IsVisible(); }
     inline bool GUI_IsGroupInterface(void) { return (this->present.group.interfaceslot_ptr != nullptr); }
@@ -120,7 +120,7 @@ private:
 
         void Present(megamol::gui::PresentPhase phase, CallSlot& inout_callslot, GraphItemsStateType& state);
 
-        void UpdatePosition(CallSlot& inout_callslot, const GraphCanvasType& in_canvas);
+        void Update(CallSlot& inout_callslot, const GraphCanvasType& in_canvas);
 
         ImVec2 GetPosition(void) { return this->position; }
         bool IsVisible(void) { return this->visible; }

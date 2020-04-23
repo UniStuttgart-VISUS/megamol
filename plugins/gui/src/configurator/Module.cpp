@@ -111,23 +111,6 @@ bool megamol::gui::configurator::Module::GetCallSlot(
 }
 
 
-const std::vector<megamol::gui::configurator::CallSlotPtrType>& megamol::gui::configurator::Module::GetCallSlots(
-    megamol::gui::configurator::CallSlotType type) {
-
-    // if (this->callslots[type].empty()) {
-    //    vislib::sys::Log::DefaultLog.WriteWarn(
-    //        "Returned call slot list is empty. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    //}
-    return this->callslots[type];
-}
-
-
-const std::map<megamol::gui::configurator::CallSlotType, std::vector<megamol::gui::configurator::CallSlotPtrType>>&
-megamol::gui::configurator::Module::GetCallSlots(void) {
-
-    return this->callslots;
-}
-
 
 // MODULE PRESENTATION ####################################################
 
@@ -169,7 +152,7 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
     try {
         // Update size
         if (this->update || (this->size.x <= 0.0f) || (this->size.y <= 0.0f)) {
-            this->UpdateSize(inout_module, state.canvas);
+            this->Update(inout_module, state.canvas);
             this->update = false;
         }
 
@@ -355,7 +338,7 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
 
                     // Rename pop-up
                     if (this->utils.RenamePopUp("Rename Project", popup_rename, inout_module.name)) {
-                        this->UpdateSize(inout_module, state.canvas);
+                        this->Update(inout_module, state.canvas);
                     }
                 } else if (phase == megamol::gui::PresentPhase::RENDERING) {
 
@@ -394,7 +377,7 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
                     // Dragging
                     if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
                         this->position += (ImGui::GetIO().MouseDelta / state.canvas.zooming);
-                        this->UpdateSize(inout_module, state.canvas);
+                        this->Update(inout_module, state.canvas);
                     }
 
                     // Hovering
@@ -572,7 +555,7 @@ ImVec2 megamol::gui::configurator::Module::Presentation::GetInitModulePosition(c
 }
 
 
-void megamol::gui::configurator::Module::Presentation::UpdateSize(
+void megamol::gui::configurator::Module::Presentation::Update(
     megamol::gui::configurator::Module& inout_module, const GraphCanvasType& in_canvas) {
 
     ImGuiStyle& style = ImGui::GetStyle();
