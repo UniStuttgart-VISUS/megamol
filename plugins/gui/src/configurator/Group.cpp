@@ -61,6 +61,8 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
     module_ptr->GUI_SetGroupVisibility(this->present.ModulesVisible());
     module_ptr->GUI_SetGroupName(this->name);
     this->present.ForceUpdate();
+    
+    this->restore_callslots_interfaceslot_state();
 
     #ifdef GUI_VERBOSE
     vislib::sys::Log::DefaultLog.WriteInfo(
@@ -87,12 +89,15 @@ bool megamol::gui::configurator::Group::RemoveModule(ImGuiID module_uid) {
                 (*mod_iter)->GUI_SetGroupVisibility(false);
                 (*mod_iter)->GUI_SetGroupName("");
                 this->present.ForceUpdate();
+                                
                 #ifdef GUI_VERBOSE
                 vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Removed module '%s' from group '%s'.\n",
                     (*mod_iter)->name.c_str(), this->name.c_str());
                 #endif // GUI_VERBOSE
                 (*mod_iter).reset();
                 this->modules.erase(mod_iter);
+                
+                this->restore_callslots_interfaceslot_state();
 
                 return true;
             }
