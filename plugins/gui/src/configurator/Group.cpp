@@ -297,8 +297,7 @@ bool megamol::gui::configurator::Group::ContainsInterfaceSlot(ImGuiID interfaces
 // GROUP PRESENTATION ####################################################
 
 megamol::gui::configurator::Group::Presentation::Presentation(void)
-    : border(GUI_SLOT_RADIUS * 4.0f)
-    , position(ImVec2(FLT_MAX, FLT_MAX))
+    : position(ImVec2(FLT_MAX, FLT_MAX))
     , size(ImVec2(0.0f, 0.0f))
     , utils()
     , name_label()
@@ -562,8 +561,8 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
             pos_minX = std::min(tmp_pos.x, pos_minX);
             pos_minY = std::min(tmp_pos.y, pos_minY);
         }
-        pos_minX -= this->border;
-        pos_minY -= (this->border + line_height);
+        pos_minX -= GUI_GRAPH_BORDER;
+        pos_minY -= (GUI_GRAPH_BORDER + line_height);
         this->position = ImVec2(pos_minX, pos_minY);
     } else {
         this->position = megamol::gui::configurator::Module::GUI_GetInitModulePosition(in_canvas);
@@ -608,11 +607,11 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
             pos_maxX = std::max(tmp_pos.x + tmp_size.x, pos_maxX);
             pos_maxY = std::max(tmp_pos.y + tmp_size.y, pos_maxY);
         }
-        group_width = std::max(group_width, (pos_maxX + this->border) - pos_minX);
-        group_height = std::max(group_height, (pos_maxY + this->border) - pos_minY);
+        group_width = std::max(group_width, (pos_maxX + GUI_GRAPH_BORDER) - pos_minX);
+        group_height = std::max(group_height, (pos_maxY + GUI_GRAPH_BORDER) - pos_minY);
     }
     // Clamp to minimum size
-    this->size = ImVec2(std::max(group_width, 75.0f), std::max(group_height, 25.0f));
+    this->size = ImVec2(std::max(group_width, 100.0f), std::max(group_height, 50.0f));
 
 
     // Set group interface position of call slots --------------------------

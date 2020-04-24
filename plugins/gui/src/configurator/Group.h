@@ -65,7 +65,7 @@ public:
 
     inline ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
     
-    inline void GUI_SetPosition(const GraphCanvasType& in_canvas, ImVec2 pos) { this->present.SetPosition(*this,in_canvas, pos); }
+    inline void GUI_SetPosition(const GraphCanvasType& in_canvas, ImVec2 pos) { this->present.SetPosition(*this, in_canvas, pos); }
     
 private:
     // VARIABLES --------------------------------------------------------------
@@ -95,8 +95,6 @@ private:
         void SetPosition(Group& inout_group, const GraphCanvasType& in_canvas, ImVec2 pos);
 
     private:
-        const float border;
-
         // Relative position without considering canvas offset and zooming
         ImVec2 position;
         // Relative size without considering zooming

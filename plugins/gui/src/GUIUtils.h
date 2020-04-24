@@ -163,7 +163,7 @@ typedef struct _graph_item_state_ {
 /* Data type holding shared state of graphs. */
 typedef struct _graph_state_ {
     FontScalingArrayType font_scalings;    // in
-    float child_width;                     // in
+    float graph_width;                     // in
     bool show_parameter_sidebar;           // in
     megamol::gui::HotkeyArrayType hotkeys; // in out
     ImGuiID graph_selected_uid;            // out

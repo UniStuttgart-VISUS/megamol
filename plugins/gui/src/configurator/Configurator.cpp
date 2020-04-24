@@ -33,9 +33,10 @@ megamol::gui::configurator::Configurator::Configurator()
     , file_utils()
     , utils()
     , init_state(0)
-    , left_child_width(250.0f)
+    , module_list_sidebar_width(250.0f)
     , selected_list_module_uid(GUI_INVALID_ID)
     , add_project_graph_uid(GUI_INVALID_ID)
+    , module_list_popup_hovered_group_uid(GUI_INVALID_ID)
     , show_module_list_sidebar(false)
     , show_module_list_child(false)
     , module_list_popup_pos()
@@ -58,7 +59,7 @@ megamol::gui::configurator::Configurator::Configurator()
     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT] = megamol::gui::HotkeyDataType(
         megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL), false);
     this->graph_state.font_scalings = {0.85f, 0.95f, 1.0f, 1.5f, 2.5f};
-    this->graph_state.child_width = 0.0f;
+    this->graph_state.graph_width = 0.0f;
     this->graph_state.show_parameter_sidebar = false;
     this->graph_state.graph_selected_uid = GUI_INVALID_ID;
     this->graph_state.graph_delete = false;
@@ -156,11 +157,11 @@ bool megamol::gui::configurator::Configurator::Draw(
 
         // Child Windows
         this->draw_window_menu(core_instance);
-        this->graph_state.child_width = 0.0f;
+        this->graph_state.graph_width = 0.0f;
         if (this->show_module_list_sidebar) {
             this->utils.VerticalSplitter(
-                GUIUtils::FixedSplitterSide::LEFT, this->left_child_width, this->graph_state.child_width);
-            this->draw_window_module_list(this->left_child_width);
+                GUIUtils::FixedSplitterSide::LEFT, this->module_list_sidebar_width, this->graph_state.graph_width);
+            this->draw_window_module_list(this->module_list_sidebar_width);
             ImGui::SameLine();
         }
         this->graph_manager.GUI_Present(this->graph_state);
@@ -186,6 +187,7 @@ bool megamol::gui::configurator::Configurator::Draw(
         if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
             this->show_module_list_child = true;
             this->module_list_popup_pos = ImGui::GetMousePos();
+            this->module_list_popup_hovered_group_uid = selected_graph_ptr->GUI_GetHoveredGroup();
             ImGui::SetNextWindowPos(this->module_list_popup_pos);
         }
         if (this->show_module_list_child) {
@@ -194,10 +196,10 @@ bool megamol::gui::configurator::Configurator::Draw(
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             ImGui::PushStyleColor(ImGuiCol_ChildBg, tmpcol);
             ImGui::SetCursorScreenPos(this->module_list_popup_pos);
-            float child_width = 250.0f;
+            float graph_width = 250.0f;
             float child_height = std::min(350.0f, (ImGui::GetContentRegionAvail().y - ImGui::GetWindowPos().y));
             auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NavFlattened;
-            ImGui::BeginChild("module_list_child", ImVec2(child_width, child_height), true, child_flags);
+            ImGui::BeginChild("module_list_child", ImVec2(graph_width, child_height), true, child_flags);
             if (ImGui::Button("Close") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
                 this->show_module_list_child = false;
             }
@@ -495,7 +497,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                             }
                         } else if (this->show_module_list_child) {
                             // Place new module at mouse pos if added via separate module list child window.
-                            module_ptr->GUI_PlaceAtMousePosition();
+                            module_ptr->GUI_PlaceAtScreenPosition(this->module_list_popup_pos);
                         }
                         
                         // If there is a group selected or hoverd or the new call is connceted to module which is part of group, add module to this group
@@ -504,8 +506,8 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                             connceted_group = selected_callslot_ptr->GetParentModule()->GUI_GetGroupUID();
                         }
                         ImGuiID selected_group_uid = selected_graph_ptr->GUI_GetSelectedGroup();
-                        ImGuiID hovered_group_uid = selected_graph_ptr->GUI_GetHoveredGroup();
-                        ImGuiID group_uid = (connceted_group != GUI_INVALID_ID) ? (connceted_group) : ((selected_group_uid != GUI_INVALID_ID) ? (selected_group_uid) : (hovered_group_uid));
+                        ImGuiID group_uid = (connceted_group != GUI_INVALID_ID) ? (connceted_group) : 
+                            ((selected_group_uid != GUI_INVALID_ID) ? (selected_group_uid) : (this->module_list_popup_hovered_group_uid));
                         
                         if (group_uid != GUI_INVALID_ID) {
                             for (auto& group_ptr : selected_graph_ptr->GetGroups()) {
@@ -599,6 +601,16 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
                         "JSON state: Failed to read 'show_module_list_sidebar' as boolean. [%s, %s, line %d]\n",
                         __FILE__, __FUNCTION__, __LINE__);
                 }
+                
+                // module_list_sidebar_width
+                if (config_state.at("module_list_sidebar_width").is_number_float()) {
+                    config_state.at("module_list_sidebar_width").get_to(this->module_list_sidebar_width);
+                } else {
+                    vislib::sys::Log::DefaultLog.WriteError("JSON state: Failed to read first value of "
+                                                            "'module_list_sidebar_width' as float. [%s, %s, line %d]\n",
+                        __FILE__, __FUNCTION__, __LINE__);
+                }
+                                        
             } else if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
                 for (auto& config_item : header_item.value().items()) {
                     std::string json_graph_id = config_item.key(); /// = graph filename
@@ -664,6 +676,7 @@ bool megamol::gui::configurator::Configurator::configurator_state_to_json(nlohma
         // out_json.clear();
 
         out_json[GUI_JSON_TAG_CONFIGURATOR]["show_module_list_sidebar"] = this->show_module_list_sidebar;
+        out_json[GUI_JSON_TAG_CONFIGURATOR]["module_list_sidebar_width"] = this->module_list_sidebar_width;
 
         for (auto& graph_ptr : this->graph_manager.GetGraphs()) {
             graph_ptr->GUI_StateToJSON(out_json);

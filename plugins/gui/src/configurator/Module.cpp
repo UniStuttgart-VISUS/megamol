@@ -124,7 +124,7 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
     , selected(false)
     , update(true)
     , show_params(false)
-    , place_at_mouse_pos(false) {
+    , place_at_screen_pos(ImVec2(FLT_MAX, FLT_MAX)) {
 
     this->group.uid = GUI_INVALID_ID;
     this->group.visible = false;
@@ -157,9 +157,9 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
         }
 
         // Init position of newly created module (check after size update)
-        if (this->place_at_mouse_pos) {
-            this->position = (ImGui::GetMousePos() - state.canvas.offset) / state.canvas.zooming;
-            this->place_at_mouse_pos = false;
+        if ((this->place_at_screen_pos.x != FLT_MAX) && (this->place_at_screen_pos.y != FLT_MAX)) {
+            this->position = (this->place_at_screen_pos - state.canvas.offset) / state.canvas.zooming;
+            this->place_at_screen_pos = ImVec2(FLT_MAX, FLT_MAX);
         } else if ((this->position.x == FLT_MAX) && (this->position.y == FLT_MAX)) {
             unsigned int connected_callslot_count = 0;
             for (auto& callslot_map : inout_module.GetCallSlots()) {
@@ -263,7 +263,8 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
                     bool popup_rename = false;
                     if (ImGui::BeginPopupContextItem("invisible_button_context")) {
                         state.interact.button_active_uid = inout_module.uid;
-
+                        bool singleselect = ((state.interact.modules_selected_uids.size() == 1) && (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)));
+                                             
                         ImGui::TextUnformatted("Module");
                         ImGui::Separator();
 
@@ -273,9 +274,8 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
                                               .c_str())) {
                             std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
                         }
-                        bool rename_valid = ((state.interact.modules_selected_uids.size() == 1) &&
-                                             (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)));
-                        if (ImGui::MenuItem("Rename", nullptr, false, rename_valid)) {
+
+                        if (ImGui::MenuItem("Rename", nullptr, false, singleselect)) {
                             popup_rename = true;
                         }
                         if (ImGui::BeginMenu("Add to Group", true)) {
@@ -320,12 +320,13 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
                                 state.interact.modules_remove_group_uids.emplace_back(inout_module.uid);
                             }
                         }
-                        ImGui::Separator();
-                        ImGui::TextDisabled("Description");
-                        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 13.0f);
-                        ImGui::TextUnformatted(inout_module.description.c_str());
-                        ImGui::PopTextWrapPos();
-
+                        if (singleselect) {
+                            ImGui::Separator();
+                            ImGui::TextDisabled("Description");
+                            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 13.0f);
+                            ImGui::TextUnformatted(inout_module.description.c_str());
+                            ImGui::PopTextWrapPos();
+                        }
                         ImGui::EndPopup();
                     }
 
@@ -549,7 +550,7 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
 
 ImVec2 megamol::gui::configurator::Module::Presentation::GetInitModulePosition(const GraphCanvasType& canvas) {
 
-    return ((ImVec2(2.0f * (GUI_GRAPH_BORDER), 2.0f * (GUI_GRAPH_BORDER) + ImGui::GetTextLineHeightWithSpacing()) +
+    return ((ImVec2((2.0f * GUI_GRAPH_BORDER), (2.0f * GUI_GRAPH_BORDER) + ImGui::GetTextLineHeightWithSpacing()) +
                 (canvas.position - canvas.offset)) /
             canvas.zooming);
 }

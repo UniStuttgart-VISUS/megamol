@@ -127,19 +127,15 @@ private:
 
     private:
         GUIUtils utils;
-
         bool update;
-
         bool show_grid;
         bool show_call_names;
         bool show_slot_names;
         bool show_module_names;
         bool show_parameter_sidebar;
         bool change_show_parameter_sidebar;
-
         bool layout_current_graph;
-
-        float child_split_width;
+        float parameter_sidebar_width;
         bool reset_zooming;
         std::string param_name_space;
         ImVec2 multiselect_start_pos;
@@ -147,7 +143,6 @@ private:
         bool multiselect_done;
         bool canvas_hovered;
         float current_font_scaling;
-
         // State propagated and shared by all graph items.
         megamol::gui::GraphItemsStateType graph_state;
 
@@ -159,7 +154,8 @@ private:
         void present_canvas_dragged_call(Graph& inout_graph);
         void present_canvas_multiselection(Graph& inout_graph);
 
-        bool layout_graph(Graph& inout_graph);
+        void layout_graph(Graph& inout_graph);
+        void layout_modules(const ModulePtrVectorType& modules);
 
     } present;
 

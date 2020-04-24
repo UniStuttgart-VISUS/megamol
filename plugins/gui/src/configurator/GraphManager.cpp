@@ -1717,7 +1717,7 @@ void megamol::gui::configurator::GraphManager::Presentation::Present(
         }
 
         const auto child_flags = ImGuiWindowFlags_None;
-        ImGui::BeginChild("graph_child_window", ImVec2(state.child_width, 0.0f), true, child_flags);
+        ImGui::BeginChild("graph_child_window", ImVec2(state.graph_width, 0.0f), true, child_flags);
 
         // Assuming only one closed tab/graph per frame.
         bool popup_close_unsaved = false;

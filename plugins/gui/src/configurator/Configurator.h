@@ -77,9 +77,10 @@ private:
     megamol::gui::FileUtils file_utils;
     megamol::gui::GUIUtils utils;
     int init_state;
-    float left_child_width;
+    float module_list_sidebar_width;
     ImGuiID selected_list_module_uid;
     ImGuiID add_project_graph_uid;
+    ImGuiID module_list_popup_hovered_group_uid;
     bool show_module_list_sidebar;
     bool show_module_list_child;
     ImVec2 module_list_popup_pos;
