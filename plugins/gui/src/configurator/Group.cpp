@@ -186,20 +186,25 @@ bool megamol::gui::configurator::Group::InterfaceSlot_AddCallSlot(
 
 
 bool megamol::gui::configurator::Group::InterfaceSlot_RemoveCallSlot(ImGuiID callslots_uid) {
-
+    
+    bool retval = false;
     try {
+        std::vector<ImGuiID> empty_interfaceslots_uids;
         for (auto& interfaceslot_map : this->interfaceslots) {
             for (auto& interfaceslot_ptr : interfaceslot_map.second) {
                 if (interfaceslot_ptr->ContainsCallSlot(callslots_uid)) {
                     interfaceslot_ptr->RemoveCallSlot(callslots_uid);
-                    // Delete empty interface slots
+                    retval = true;
                     if (interfaceslot_ptr->IsEmpty()) {
-                        this->DeleteInterfaceSlot(interfaceslot_ptr->uid);
+                        empty_interfaceslots_uids.emplace_back(interfaceslot_ptr->uid);
                     }
-                    return true;
                 }
             }
         }
+        // Delete empty interface slots        
+        for (auto& interfaceslot_uid : empty_interfaceslots_uids) {
+            this->DeleteInterfaceSlot(interfaceslot_uid);
+        }       
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -208,7 +213,7 @@ bool megamol::gui::configurator::Group::InterfaceSlot_RemoveCallSlot(ImGuiID cal
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    return false;
+    return retval;
 }
 
 
@@ -291,6 +296,48 @@ bool megamol::gui::configurator::Group::ContainsInterfaceSlot(ImGuiID interfaces
         }
     }
     return false;
+}
+
+
+void megamol::gui::configurator::Group::restore_callslots_interfaceslot_state(void) {
+
+    for (auto& module_ptr : this->modules) {
+        // Add/remove connected call slots to group interface if connected module is not part of same group
+        // CALLER
+        for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
+            if (callerslot_ptr->CallsConnected()) {
+                for (auto& call : callerslot_ptr->GetConnectedCalls()) {
+                    auto calleeslot_ptr = call->GetCallSlot(CallSlotType::CALLEE);
+                    if (calleeslot_ptr->IsParentModuleConnected()) {
+                        ImGuiID parent_module_group_uid = calleeslot_ptr->GetParentModule()->GUI_GetGroupUID();
+                        if (parent_module_group_uid != this->uid) {
+                            this->InterfaceSlot_AddCallSlot(callerslot_ptr, GenerateUniqueID());
+                        }
+                        else {
+                            this->InterfaceSlot_RemoveCallSlot(calleeslot_ptr->uid);
+                        }
+                    }
+                }
+            }
+        }
+        // CALLEE
+        for (auto& calleeslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLEE)) {
+            if (calleeslot_ptr->CallsConnected()) {
+                for (auto& call : calleeslot_ptr->GetConnectedCalls()) {
+                    auto callerslot_ptr = call->GetCallSlot(CallSlotType::CALLER);
+                    if (callerslot_ptr->IsParentModuleConnected()) {
+                        ImGuiID parent_module_group_uid = callerslot_ptr->GetParentModule()->GUI_GetGroupUID();
+                        if (parent_module_group_uid != this->uid) {
+                            this->InterfaceSlot_AddCallSlot(calleeslot_ptr, GenerateUniqueID());
+                        }
+                        else {
+                            this->InterfaceSlot_RemoveCallSlot(callerslot_ptr->uid);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 

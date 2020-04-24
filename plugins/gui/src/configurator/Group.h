@@ -109,6 +109,10 @@ private:
         bool update;
 
     } present;
+    
+    // FUNCTIONS --------------------------------------------------------------
+    
+    void restore_callslots_interfaceslot_state(void);
 };
 
 

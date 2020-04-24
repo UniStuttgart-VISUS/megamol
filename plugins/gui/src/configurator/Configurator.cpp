@@ -10,6 +10,7 @@
  *
  * - Search module:        Ctrl + Shift + m
  * - Search parameter:     Ctrl + Shift + p
+ * - Save active project:  Ctrl + saddmodule
  * - Save active project:  Ctrl + s
  * - Delete graph item:    Delete
  */
@@ -512,9 +513,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                         if (group_uid != GUI_INVALID_ID) {
                             for (auto& group_ptr : selected_graph_ptr->GetGroups()) {
                                 if (group_ptr->uid == group_uid) {
-                                    if (group_ptr->AddModule(module_ptr)) {
-                                        selected_graph_ptr->RestoreCallslotsInterfaceslotState(group_uid);
-                                    }
+                                    group_ptr->AddModule(module_ptr);
                                 }
                             }
                             

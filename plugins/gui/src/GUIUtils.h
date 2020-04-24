@@ -49,7 +49,7 @@ namespace gui {
 
 /********** Defines **********/
 
-//#define GUI_VERBOSE
+#define GUI_VERBOSE
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_SLOT_RADIUS (8.0f)
 #define GUI_LINE_THICKNESS (3.0f)
@@ -169,6 +169,12 @@ typedef struct _graph_state_ {
     ImGuiID graph_selected_uid;            // out
     bool graph_delete;                     // out
 } GraphStateType;
+
+
+/********** Global Unique ID **********/
+
+static ImGuiID generated_uid = 0; // must be greater than or equal to zero
+static ImGuiID GenerateUniqueID(void) { return (++generated_uid); }
 
 
 /********** Class **********/

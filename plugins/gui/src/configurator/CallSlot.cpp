@@ -366,7 +366,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                     }
                     ImGui::EndDragDropTarget();
                 }
-                if (!is_group_interface && this->selected) {
+                if (this->selected) {
                     auto dnd_flags =
                         ImGuiDragDropFlags_AcceptNoDrawDefaultRect; // | ImGuiDragDropFlags_SourceNoPreviewTooltip;
                     if (ImGui::BeginDragDropSource(dnd_flags)) {

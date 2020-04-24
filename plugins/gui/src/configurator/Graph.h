@@ -44,7 +44,6 @@ public:
     bool DeleteGroup(ImGuiID group_uid);
     inline const GroupPtrVectorType& GetGroups(void) { return this->groups; }
     ImGuiID AddGroupModule(const std::string& group_name, const ModulePtrType& module_ptr);
-    void RestoreCallslotsInterfaceslotState(ImGuiID group_uid);
     
     inline bool IsDirty(void) const { return this->dirty_flag; }
     inline void ResetDirty(void) { this->dirty_flag = false; }
@@ -77,8 +76,6 @@ public:
 private:
     // VARIABLES --------------------------------------------------------------
 
-    static ImGuiID generated_uid;
-
     unsigned int group_name_uid;
 
     ModulePtrVectorType modules;
@@ -100,7 +97,11 @@ private:
         void Present(Graph& inout_graph, GraphStateType& state);
 
         void ForceUpdate(void) { this->update = true; }
-
+        void ResetSelectedPointers(void) {
+            this->graph_state.interact.callslot_compat_ptr.reset();
+            this->graph_state.interact.interfaceslot_compat_ptr.reset();
+        }
+        
         bool StateFromJsonString(Graph& inout_graph, const std::string& json_string);
         bool StateToJSON(Graph& inout_graph, nlohmann::json& out_json);
 
@@ -166,7 +167,6 @@ private:
     bool get_group(ImGuiID group_uid, GroupPtrType& out_group_ptr);
     const std::string generate_unique_group_name(void);
     const std::string generate_unique_module_name(const std::string& name);
-    inline ImGuiID generate_unique_id(void) { return (++this->generated_uid); }
 };
 
 } // namespace configurator
