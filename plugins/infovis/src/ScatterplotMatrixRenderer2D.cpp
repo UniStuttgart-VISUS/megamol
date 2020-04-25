@@ -1132,6 +1132,7 @@ void ScatterplotMatrixRenderer2D::drawScreen() {
     glDisable(GL_BLEND);
     // glEnable(GL_DEPTH_TEST);
 
+    this->transferFunction->UnbindConvenience(); // bound in bindMappingUniforms()
     this->screenShader.Disable();
 
     debugPop();
