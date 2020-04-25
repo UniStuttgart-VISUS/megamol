@@ -59,6 +59,9 @@ public:
 
     inline void GUI_Present(GraphStateType& state) { this->present.Present(*this, state); }
 
+
+    void GUI_ResetSelectedPointers(void) { this->present.ResetSelectedPointers(); }
+    
     bool GUI_StateFromJsonString(const std::string& json_string) {
         return this->present.StateFromJsonString(*this, json_string);
     }

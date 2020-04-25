@@ -513,6 +513,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                         if (group_uid != GUI_INVALID_ID) {
                             for (auto& group_ptr : selected_graph_ptr->GetGroups()) {
                                 if (group_ptr->uid == group_uid) {
+                                    selected_graph_ptr->GUI_ResetSelectedPointers();
                                     group_ptr->AddModule(module_ptr);
                                 }
                             }

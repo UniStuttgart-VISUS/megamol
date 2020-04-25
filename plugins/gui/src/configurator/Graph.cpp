@@ -114,6 +114,7 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
                 ImGuiID delete_empty_group = GUI_INVALID_ID;
                 for (auto& group_ptr : this->groups) {
                     if (group_ptr->ContainsModule(module_uid)) {
+                        this->present.ResetSelectedPointers();
                         group_ptr->RemoveModule(module_uid);
                     }
                     if (group_ptr->Empty()) {
@@ -553,6 +554,7 @@ ImGuiID megamol::gui::configurator::Graph::AddGroupModule(
             // Add module to group
             for (auto& group_ptr : this->groups) {
                 if (group_ptr->uid == existing_group_uid) {
+                    this->present.ResetSelectedPointers();
                     if (group_ptr->AddModule(module_ptr)) {
                         return existing_group_uid;
                     }
@@ -935,10 +937,12 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                         GroupPtrType remove_group_ptr;
                         if (inout_graph.get_group(module_group_uid, remove_group_ptr)) {
                             if (remove_group_ptr->uid != add_group_ptr->uid) {
+                                this->ResetSelectedPointers();
                                 remove_group_ptr->RemoveModule(module_ptr->uid);                             
                             }
                         }
                         // Add module to group
+                        this->ResetSelectedPointers();
                         add_group_ptr->AddModule(module_ptr);                               
                     }
                 }
@@ -950,6 +954,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
             for (auto& module_uid : this->graph_state.interact.modules_remove_group_uids) {
                 for (auto& remove_group_ptr : inout_graph.GetGroups()) {
                     if (remove_group_ptr->ContainsModule(module_uid)) {
+                        this->ResetSelectedPointers();
                         remove_group_ptr->RemoveModule(module_uid);
                     }
                 }
@@ -1002,7 +1007,6 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 for (auto& group_ptr : inout_graph.GetGroups()) {
                     InterfaceSlotPtrType interfaceslot_ptr;
                     if (group_ptr->GetInterfaceSlot(this->graph_state.interact.interfaceslot_selected_uid, interfaceslot_ptr)) {
-                        
                         // Delete all connceted calls
                         std::vector<ImGuiID> call_uids;
                         for (auto& callslot_ptr : interfaceslot_ptr->GetCallSlots()) {

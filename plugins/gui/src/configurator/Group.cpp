@@ -306,8 +306,39 @@ bool megamol::gui::configurator::Group::ContainsInterfaceSlot(ImGuiID interfaces
 
 void megamol::gui::configurator::Group::restore_callslots_interfaceslot_state(void) {
 
+    /// 1] REMOVE connected call slots of group interface if connected module is part of same group
     for (auto& module_ptr : this->modules) {
-        // Add/remove connected call slots to group interface if connected module is not part of same group
+        // CALLER
+        for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
+            if (callerslot_ptr->CallsConnected()) {
+                for (auto& call : callerslot_ptr->GetConnectedCalls()) {
+                    auto calleeslot_ptr = call->GetCallSlot(CallSlotType::CALLEE);
+                    if (calleeslot_ptr->IsParentModuleConnected()) {
+                        ImGuiID parent_module_group_uid = calleeslot_ptr->GetParentModule()->GUI_GetGroupUID();
+                        if (parent_module_group_uid == this->uid) {
+                            this->InterfaceSlot_RemoveCallSlot(calleeslot_ptr->uid);
+                        }
+                    }
+                }
+            }
+        }
+        // CALLEE
+        for (auto& calleeslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLEE)) {
+            if (calleeslot_ptr->CallsConnected()) {
+                for (auto& call : calleeslot_ptr->GetConnectedCalls()) {
+                    auto callerslot_ptr = call->GetCallSlot(CallSlotType::CALLER);
+                    if (callerslot_ptr->IsParentModuleConnected()) {
+                        ImGuiID parent_module_group_uid = callerslot_ptr->GetParentModule()->GUI_GetGroupUID();
+                        if (parent_module_group_uid == this->uid) {
+                            this->InterfaceSlot_RemoveCallSlot(callerslot_ptr->uid);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    /// 2] ADD connected call slots to group interface if connected module is not part of same group
+    for (auto& module_ptr : this->modules) {        
         // CALLER
         for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
             if (callerslot_ptr->CallsConnected()) {
@@ -317,9 +348,6 @@ void megamol::gui::configurator::Group::restore_callslots_interfaceslot_state(vo
                         ImGuiID parent_module_group_uid = calleeslot_ptr->GetParentModule()->GUI_GetGroupUID();
                         if (parent_module_group_uid != this->uid) {
                             this->InterfaceSlot_AddCallSlot(callerslot_ptr, GenerateUniqueID());
-                        }
-                        else {
-                            this->InterfaceSlot_RemoveCallSlot(calleeslot_ptr->uid);
                         }
                     }
                 }
@@ -335,13 +363,10 @@ void megamol::gui::configurator::Group::restore_callslots_interfaceslot_state(vo
                         if (parent_module_group_uid != this->uid) {
                             this->InterfaceSlot_AddCallSlot(calleeslot_ptr, GenerateUniqueID());
                         }
-                        else {
-                            this->InterfaceSlot_RemoveCallSlot(callerslot_ptr->uid);
-                        }
                     }
                 }
             }
-        }
+        }        
     }
 }
 
