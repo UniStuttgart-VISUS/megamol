@@ -3,6 +3,7 @@ uniform vec4 axisColor;
 uniform uint numTicks;
 uniform float tickLength;
 uniform bool redundantTicks;
+uniform bool invertY;
 
 out vec4 vsColor;
 
@@ -41,6 +42,9 @@ vec2 tick(const Plot plot, const uint vertexIndex) {
             isHorizontal ? 0 : tickLength,
             isHorizontal ? -tickLength : 0
         );
+    }
+    if (isHorizontal && invertY) {
+        offset += vec2(0.0, plot.sizeY + tickLength);
     }
     if (redundantTicks || isNextToDiagnoal) {
         return offset + mix(

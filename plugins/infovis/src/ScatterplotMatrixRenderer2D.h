@@ -227,6 +227,8 @@ private:
 
     core::param::ParamSlot axisTickSizeParam;
 
+    core::param::ParamSlot cellInvertYParam;
+
     core::param::ParamSlot cellSizeParam;
 
     core::param::ParamSlot cellMarginParam;
