@@ -1040,10 +1040,10 @@ void ScatterplotMatrixRenderer2D::drawMouseLabels() {
     this->axisFont.SetRotation(90.0, 0.0, 0.0, 1.0);
 
     std::string labelY = columnInfos[cellIdY].Name();
-    const float yLabelLeft = static_cast<float>(cellIdX + 1) * (cellSize + cellMargin) - cellMargin;
+    const float yLabelLeft = static_cast<float>(cellIdX) * (cellSize + cellMargin) - cellSize;
     const float yLabelTop = static_cast<float>(cellIdY) * (cellSize + cellMargin);
     this->axisFont.DrawString(axisColor.data(), yLabelTop, -yLabelLeft, cellSize, cellSize, nameSize, false,
-        labelY.c_str(), core::utility::AbstractFont::ALIGN_CENTER_TOP);
+        labelY.c_str(), core::utility::AbstractFont::ALIGN_CENTER_BOTTOM);
 
     this->axisFont.ResetRotation();
 
