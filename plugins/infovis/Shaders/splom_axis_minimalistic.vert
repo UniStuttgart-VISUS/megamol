@@ -1,7 +1,7 @@
 uniform mat4 modelViewProjection;
 uniform vec4 axisColor;
 uniform uint numTicks;
-uniform float tickSize;
+uniform float tickLength;
 uniform bool redundantTicks;
 
 out vec4 vsColor;
@@ -38,8 +38,8 @@ vec2 tick(const Plot plot, const uint vertexIndex) {
     vec2 offset = vec2(0);
     if (tickIndex % 2 == 0) {
         offset = vec2(
-            isHorizontal ? 0 : tickSize,
-            isHorizontal ? -tickSize : 0
+            isHorizontal ? 0 : tickLength,
+            isHorizontal ? -tickLength : 0
         );
     }
     if (redundantTicks || isNextToDiagnoal) {
