@@ -14,42 +14,53 @@ using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::GraphManager::GraphManager(void) : graphs(), modules_stock(), calls_stock() {}
+megamol::gui::configurator::GraphManager::GraphManager(void)
+    : graphs(), modules_stock(), calls_stock(), graph_name_uid(0) {}
 
 
 megamol::gui::configurator::GraphManager::~GraphManager(void) {}
 
 
-bool megamol::gui::configurator::GraphManager::AddGraph(std::string name) {
+ImGuiID megamol::gui::configurator::GraphManager::AddGraph(void) {
+
+    ImGuiID retval = GUI_INVALID_ID;
 
     try {
-        Graph graph(name);
-        this->graphs.emplace_back(std::make_shared<Graph>(graph));
+        GraphPtrType graph_ptr = std::make_shared<Graph>(this->generate_unique_graph_name());
+        if (graph_ptr != nullptr) {
+            this->graphs.emplace_back(graph_ptr);
+            retval = graph_ptr->uid;
+        }
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        return GUI_INVALID_ID;
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        return GUI_INVALID_ID;
     }
 
-    return true;
+    return retval;
 }
 
 
 bool megamol::gui::configurator::GraphManager::DeleteGraph(ImGuiID graph_uid) {
 
     for (auto iter = this->graphs.begin(); iter != this->graphs.end(); iter++) {
-        if ((*iter)->GetUID() == graph_uid) {
+        if ((*iter)->uid == graph_uid) {
 
-            vislib::sys::Log::DefaultLog.WriteWarn("Found %i references pointing to graph. [%s, %s, line %d]\n",
-                (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteInfo(
+                "Deleted graph: %s [%s, %s, line %d]\n", (*iter)->name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+
+            if ((*iter).use_count() > 1) {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "Unclean deletion. Found %i references pointing to graph. [%s, %s, line %d]\n", (*iter).use_count(),
+                    __FILE__, __FUNCTION__, __LINE__);
+            }
+
             assert((*iter).use_count() == 1);
-            (*iter) = nullptr;
+            (*iter).reset();
             this->graphs.erase(iter);
-            // vislib::sys::Log::DefaultLog.WriteInfo("Deleted graph: %s [%s, %s, line %d]\n",
-            //    (*iter)->GetName().c_str(), __FILE__, __FUNCTION__, __LINE__);
 
             return true;
         }
@@ -59,19 +70,18 @@ bool megamol::gui::configurator::GraphManager::DeleteGraph(ImGuiID graph_uid) {
 }
 
 
-const GraphManager::GraphsType& megamol::gui::configurator::GraphManager::GetGraphs(void) { return this->graphs; }
+bool megamol::gui::configurator::GraphManager::GetGraph(
+    ImGuiID graph_uid, megamol::gui::configurator::GraphPtrType& out_graph_ptr) {
 
-
-const GraphManager::GraphPtrType megamol::gui::configurator::GraphManager::GetGraph(ImGuiID graph_uid) {
-
-    for (auto iter = this->graphs.begin(); iter != this->graphs.end(); iter++) {
-        if ((*iter)->GetUID() == graph_uid) {
-            return (*iter);
+    if (graph_uid != GUI_INVALID_ID) {
+        for (auto& graph_ptr : this->graphs) {
+            if (graph_ptr->uid == graph_uid) {
+                out_graph_ptr = graph_ptr;
+                return true;
+            }
         }
     }
-    // vislib::sys::Log::DefaultLog.WriteWarn(
-    //    "Invalid graph uid. Returning nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    return nullptr;
+    return false;
 }
 
 
@@ -191,19 +201,21 @@ bool megamol::gui::configurator::GraphManager::UpdateModulesCallsStock(
 }
 
 
-bool megamol::gui::configurator::GraphManager::LoadProjectCore(
-    const std::string& name, megamol::core::CoreInstance* core_instance) {
+bool megamol::gui::configurator::GraphManager::LoadProjectCore(megamol::core::CoreInstance* core_instance) {
 
     // Create new graph
-    bool retval = this->AddGraph(name);
-    auto graph_ptr = this->GetGraphs().back();
-
+    bool retval = this->AddGraph();
+    auto graph_ptr = this->get_graphs().back();
     if (retval && (graph_ptr != nullptr)) {
-        return this->AddProjectCore(graph_ptr->GetUID(), core_instance);
+        if (this->AddProjectCore(graph_ptr->uid, core_instance)) {
+            // Layout project loaded from core
+            graph_ptr->GUI_SetLayoutGraph();
+            return true;
+        }
     }
 
     vislib::sys::Log::DefaultLog.WriteError(
-        "Failed to create new graph: %s [%s, %s, line %d]\n", name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        "Failed to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
 
@@ -212,8 +224,8 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
     ImGuiID graph_uid, megamol::core::CoreInstance* core_instance) {
 
     try {
-        auto graph_ptr = this->GetGraph(graph_uid);
-        if (graph_ptr == nullptr) {
+        GraphPtrType graph_ptr;
+        if (!this->GetGraph(graph_uid, graph_ptr)) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Unable to find graph for given uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
@@ -245,27 +257,39 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
         // Load call connections to temporary data structure since not all call slots are yet available for being
         // connected.
         const auto module_func = [&, this](megamol::core::Module* mod) {
+            std::string full_name = std::string(mod->FullName().PeekBuffer());
+            std::string module_name;
+            std::string module_namespace;
+            if (!this->separateNameAndNamespace(full_name, module_namespace, module_name)) {
+                vislib::sys::Log::DefaultLog.WriteError("Core Project: Invalid module name '%s'. [%s, %s, line %d]\n",
+                    full_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            }
+
+            /// DEBUG
+            // vislib::sys::Log::DefaultLog.WriteInfo(">>>> Class: '%s' NameSpace: '%s' Name: '%s'.\n",
+            // mod->ClassName(), module_namespace.c_str(), module_name.c_str());
+
             // Ensure unique module name is not yet assigned
-            std::string module_name = std::string(mod->Name().PeekBuffer());
-            if (graph_ptr->RenameAssignedModuleName(module_name)) {
+            if (graph_ptr->UniqueModuleRename(module_name)) {
                 vislib::sys::Log::DefaultLog.WriteWarn(
                     "Renamed existing module '%s' while adding module with same name. "
                     "This is required for successful unambiguous parameter addressing which uses the module name. [%s, "
                     "%s, line %d]\n",
                     module_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
             }
+
             // Creating new module
             graph_ptr->AddModule(this->modules_stock, std::string(mod->ClassName()));
-            auto graph_module = graph_ptr->GetGraphModules().back();
+            auto graph_module = graph_ptr->GetModules().back();
             graph_module->name = module_name;
-            std::string full_name = std::string(mod->FullName().PeekBuffer());
-            graph_module->name_space = full_name.substr(0, full_name.find(graph_module->name) - 2);
             graph_module->is_view_instance = false;
+
+            graph_ptr->AddGroupModule(module_namespace, graph_module);
 
             if (view_instances.find(std::string(mod->FullName().PeekBuffer())) != view_instances.end()) {
                 // Instance Name
-                graph_ptr->SetName(view_instances[std::string(mod->FullName().PeekBuffer())]);
-                graph_module->is_view_instance = true;
+                graph_ptr->name = view_instances[std::string(mod->FullName().PeekBuffer())];
+                graph_module->is_view_instance = (graph_ptr->IsMainViewSet()) ? (false) : (true);
             }
 
             megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator se = mod->ChildList_End();
@@ -370,9 +394,9 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
         // Create calls
         for (auto& cd : call_data) {
             CallSlotPtrType call_slot_1 = nullptr;
-            for (auto& mod : graph_ptr->GetGraphModules()) {
+            for (auto& mod : graph_ptr->GetModules()) {
                 if (mod->FullName() == cd.caller_module_full_name) {
-                    for (auto call_slot : mod->GetCallSlots(CallSlot::CallSlotType::CALLER)) {
+                    for (auto call_slot : mod->GetCallSlots(CallSlotType::CALLER)) {
                         if (call_slot->name == cd.caller_module_call_slot_name) {
                             call_slot_1 = call_slot;
                         }
@@ -380,9 +404,9 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
                 }
             }
             CallSlotPtrType call_slot_2 = nullptr;
-            for (auto& mod : graph_ptr->GetGraphModules()) {
+            for (auto& mod : graph_ptr->GetModules()) {
                 if (mod->FullName() == cd.callee_module_full_name) {
-                    for (auto call_slot : mod->GetCallSlots(CallSlot::CallSlotType::CALLEE)) {
+                    for (auto call_slot : mod->GetCallSlots(CallSlotType::CALLEE)) {
                         if (call_slot->name == cd.callee_module_call_slot_name) {
                             call_slot_2 = call_slot;
                         }
@@ -391,6 +415,8 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
             }
             graph_ptr->AddCall(this->GetCallsStock(), call_slot_1, call_slot_2);
         }
+
+        graph_ptr->GUI_SetLayoutGraph();
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -409,7 +435,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
     ImGuiID graph_uid, const std::string& project_filename) {
 
     std::string projectstr;
-    if (!file::ReadFile(project_filename, projectstr)) return false;
+    if (!FileUtils::ReadFile(project_filename, projectstr)) return false;
 
     const std::string lua_view = "mmCreateView";
     const std::string lua_module = "mmCreateModule";
@@ -417,16 +443,11 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
     const std::string lua_call = "mmCreateCall";
 
     GraphPtrType graph_ptr;
-    if (graph_uid != GUI_INVALID_ID) {
-        graph_ptr = this->GetGraph(graph_uid);
-        if (graph_ptr == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "Unable to find graph for given uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-    }
+    this->GetGraph(graph_uid, graph_ptr);
 
     try {
+        bool found_conf_pos = false;
+
         std::stringstream content(projectstr);
         std::vector<std::string> lines;
 
@@ -455,67 +476,90 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 if (!this->readLuaProjectCommandArguments(lines[i], arg_count, args)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Error parsing lua command '%s' "
                                                             "requiring %i arguments. [%s, %s, line %d]\n",
-                        project_filename.c_str(), i, lua_view.c_str(), arg_count, __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), lua_view.c_str(), arg_count, __FILE__, __FUNCTION__,
+                        __LINE__);
                     return false;
                 }
 
                 std::string view_instance = args[0];
                 std::string view_class_name = args[1];
                 std::string view_full_name = args[2];
-                std::string view_name_prefix;
+                std::string view_namespace;
                 std::string view_name;
-                if (!this->separateNameAndPrefix(view_full_name, view_name_prefix, view_name)) {
+                if (!this->separateNameAndNamespace(view_full_name, view_namespace, view_name)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Invalid view name argument "
                                                             "(3rd) in lua command '%s'. [%s, %s, line %d]\n",
-                        project_filename.c_str(), i, lua_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), lua_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return false;
                 }
                 ImVec2 module_pos = this->readLuaProjectConfPos(lines[i]);
+                if ((module_pos.x != FLT_MAX) && (module_pos.x != FLT_MAX)) found_conf_pos = true;
+                std::vector<std::string> group_interface_callslots = this->readLuaProjectConfGroupInterface(lines[i]);
 
                 /// DEBUG
                 // vislib::sys::Log::DefaultLog.WriteInfo(
                 //     ">>>> Instance: '%s' Class: '%s' NameSpace: '%s' Name: '%s' ConfPos: %f, %f.\n",
-                //     view_instance.c_str(), view_class_name.c_str(), view_name_space.c_str(), view_name.c_str(),
+                //     view_instance.c_str(), view_class_name.c_str(), view_namespace.c_str(), view_name.c_str(),
                 //     module_pos.x, module_pos.y);
 
                 // Create new graph
-                if (graph_uid == GUI_INVALID_ID) {
-                    if (!this->AddGraph(view_instance)) {
+                if (graph_ptr == nullptr) {
+                    ImGuiID new_graph_uid = this->AddGraph();
+                    if (new_graph_uid == GUI_INVALID_ID) {
                         vislib::sys::Log::DefaultLog.WriteError(
                             "Project File '%s' line %i: Unable to create new graph '%s'. [%s, %s, line %d]\n",
-                            project_filename.c_str(), i, view_instance.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                            project_filename.c_str(), (i + 1), view_instance.c_str(), __FILE__, __FUNCTION__, __LINE__);
                         return false;
                     }
-                    graph_ptr = this->GetGraphs().back();
-                    if (graph_ptr == nullptr) {
+                    if (!this->GetGraph(new_graph_uid, graph_ptr)) {
                         vislib::sys::Log::DefaultLog.WriteError(
                             "Unable to get pointer to last added graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                             __LINE__);
                         return false;
                     }
+                    graph_ptr->name = view_instance;
                 }
 
                 // Ensure unique module name is not yet assigned
-                if (graph_ptr->RenameAssignedModuleName(view_name)) {
+                if (graph_ptr->UniqueModuleRename(view_name)) {
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "Project File '%s' line %i: Renamed existing module '%s' while adding module with same name. "
                         "This is required for successful unambiguous parameter addressing which uses the module name. "
                         "[%s, %s, line %d]\n",
-                        project_filename.c_str(), i, view_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), view_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 }
 
                 // Add module and set as view instance
-                if (!graph_ptr->AddModule(this->modules_stock, view_class_name)) {
+                if (graph_ptr->AddModule(this->modules_stock, view_class_name) == GUI_INVALID_ID) {
                     vislib::sys::Log::DefaultLog.WriteError(
                         "Project File '%s' line %i: Unable to add new module '%s'. [%s, %s, line %d]\n",
-                        project_filename.c_str(), i, view_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), view_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return false;
                 }
-                auto graph_module = graph_ptr->GetGraphModules().back();
+                auto graph_module = graph_ptr->GetModules().back();
                 graph_module->name = view_name;
-                graph_module->name_space = view_name_prefix;
-                graph_module->is_view_instance = true;
+                graph_module->is_view_instance = (graph_ptr->IsMainViewSet()) ? (false) : (true);
                 graph_module->GUI_SetPosition(module_pos);
+
+                ImGuiID group_uid = graph_ptr->AddGroupModule(view_namespace, graph_module);
+                if ((group_uid == GUI_INVALID_ID) && (group_interface_callslots.size() > 0)) {
+                    vislib::sys::Log::DefaultLog.WriteWarn("Project File '%s' line %i: Unable to create group for "
+                                                           "given group interface call slots. [%s, %s, line %d]\n",
+                        project_filename.c_str(), (i + 1), __FILE__, __FUNCTION__, __LINE__);
+                }
+
+                GroupPtrType group_ptr;
+                if (graph_ptr->GetGroup(group_uid, group_ptr)) {
+                    for (auto& callslot_interface_name : group_interface_callslots) {
+                        for (auto& callslot_map : graph_module->GetCallSlots()) {
+                            for (auto& callslot : callslot_map.second) {
+                                if (callslot->name == callslot_interface_name) {
+                                    group_ptr->AddCallSlot(callslot);
+                                }
+                            }
+                        }
+                    }
+                }
 
                 found_main_view = true;
             }
@@ -536,59 +580,82 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 if (!this->readLuaProjectCommandArguments(lines[i], arg_count, args)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Error parsing lua command '%s' "
                                                             "requiring %i arguments. [%s, %s, line %d]\n",
-                        project_filename.c_str(), i, lua_module.c_str(), arg_count, __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), lua_module.c_str(), arg_count, __FILE__, __FUNCTION__,
+                        __LINE__);
                     return false;
                 }
 
                 std::string module_class_name = args[0];
                 std::string module_full_name = args[1];
-                std::string module_name_prefix;
+                std::string module_namespace;
                 std::string module_name;
-                if (!this->separateNameAndPrefix(module_full_name, module_name_prefix, module_name)) {
+                if (!this->separateNameAndNamespace(module_full_name, module_namespace, module_name)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Invalid module name argument "
                                                             "(2nd) in lua command '%s'. [%s, %s, line %d]\n",
-                        project_filename.c_str(), i, lua_module.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), lua_module.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return false;
                 }
                 ImVec2 module_pos = this->readLuaProjectConfPos(lines[i]);
+                if ((module_pos.x != FLT_MAX) && (module_pos.x != FLT_MAX)) found_conf_pos = true;
+                std::vector<std::string> group_interface_callslots = this->readLuaProjectConfGroupInterface(lines[i]);
 
                 /// DEBUG
                 // vislib::sys::Log::DefaultLog.WriteInfo(">>>> Class: '%s' NameSpace: '%s' Name: '%s' ConfPos: %f,
                 // %f.\n",
-                //     module_class_name.c_str(), module_name_space.c_str(), module_name.c_str(), module_pos.x,
-                //     module_pos.y);
+                //    module_class_name.c_str(), module_namespace.c_str(), module_name.c_str(), module_pos.x,
+                //    module_pos.y);
 
                 // Add module
                 if (graph_ptr != nullptr) {
 
                     // Ensure unique module name is not yet assigned
-                    if (graph_ptr->RenameAssignedModuleName(module_name)) {
+                    if (graph_ptr->UniqueModuleRename(module_name)) {
                         vislib::sys::Log::DefaultLog.WriteWarn(
                             "Project File '%s' line %i: Renamed existing module '%s' while adding module with same "
                             "name. "
                             "This is required for successful unambiguous parameter addressing which uses the module "
                             "name. [%s, %s, line %d]\n",
-                            project_filename.c_str(), i, module_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                            project_filename.c_str(), (i + 1), module_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     }
 
-                    if (!graph_ptr->AddModule(this->modules_stock, module_class_name)) {
+                    if (graph_ptr->AddModule(this->modules_stock, module_class_name) == GUI_INVALID_ID) {
                         vislib::sys::Log::DefaultLog.WriteError(
                             "Project File '%s' line %i: Unable to add new module '%s'. [%s, %s, line %d]\n",
-                            project_filename.c_str(), i, module_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                            project_filename.c_str(), (i + 1), module_class_name.c_str(), __FILE__, __FUNCTION__,
+                            __LINE__);
                         return false;
                     }
-                    auto graph_module = graph_ptr->GetGraphModules().back();
+                    auto graph_module = graph_ptr->GetModules().back();
                     graph_module->name = module_name;
-                    graph_module->name_space = module_name_prefix;
                     graph_module->is_view_instance = false;
                     graph_module->GUI_SetPosition(module_pos);
+
+                    ImGuiID group_uid = graph_ptr->AddGroupModule(module_namespace, graph_module);
+                    if ((group_uid == GUI_INVALID_ID) && (group_interface_callslots.size() > 0)) {
+                        vislib::sys::Log::DefaultLog.WriteWarn("Project File '%s' line %i: Unable to create group for "
+                                                               "given group interface call slots. [%s, %s, line %d]\n",
+                            project_filename.c_str(), (i + 1), __FILE__, __FUNCTION__, __LINE__);
+                    }
+
+                    GroupPtrType group_ptr;
+                    if (graph_ptr->GetGroup(group_uid, group_ptr)) {
+                        for (auto& callslot_interface_name : group_interface_callslots) {
+                            for (auto& callslot_map : graph_module->GetCallSlots()) {
+                                for (auto& callslot : callslot_map.second) {
+                                    if (callslot->name == callslot_interface_name) {
+                                        group_ptr->AddCallSlot(callslot);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
 
         // Find and create calls
         for (unsigned int i = 0; i < lines_count; i++) {
-            // Lua command must start at beginning after removeing leading spaces
+            // Lua command must start at beginning after removing leading spaces
             if (lines[i].rfind(lua_call, 0) == 0) {
 
                 size_t arg_count = 3;
@@ -596,7 +663,8 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 if (!this->readLuaProjectCommandArguments(lines[i], arg_count, args)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Error parsing lua command '%s' "
                                                             "requiring %i arguments. [%s, %s, line %d]\n",
-                        project_filename.c_str(), i, lua_call.c_str(), arg_count, __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), lua_call.c_str(), arg_count, __FILE__, __FUNCTION__,
+                        __LINE__);
                     return false;
                 }
 
@@ -605,26 +673,26 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 std::string callee_slot_full_name = args[2];
 
                 std::string caller_slot_name;
-                std::string caller_slot_prefix;
-                if (!this->separateNameAndPrefix(caller_slot_full_name, caller_slot_prefix, caller_slot_name)) {
+                std::string caller_slot_namespace;
+                if (!this->separateNameAndNamespace(caller_slot_full_name, caller_slot_namespace, caller_slot_name)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Invalid caller slot name "
                                                             "argument (2nd) in lua command '%s'. [%s, %s, line %d]\n",
-                        project_filename.c_str(), i, lua_call.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), lua_call.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 }
 
                 std::string callee_slot_name;
-                std::string callee_slot_prefix;
-                if (!this->separateNameAndPrefix(callee_slot_full_name, callee_slot_prefix, callee_slot_name)) {
+                std::string callee_slot_namespace;
+                if (!this->separateNameAndNamespace(callee_slot_full_name, callee_slot_namespace, callee_slot_name)) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Invalid callee slot name "
                                                             "argument (3nd) in lua command '%s'. [%s, %s, line %d]\n",
-                        project_filename.c_str(), i, lua_call.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), lua_call.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 }
 
                 /// DEBUG
                 // vislib::sys::Log::DefaultLog.WriteInfo(
-                //     ">>>> Call Name: '%s' CALLER Module: '%s' Slot: '%s' - CALLEE Module: '%s' Slot: '%s'.\n",
-                //     call_class_name.c_str(), caller_module_name.c_str(), caller_slot_name.c_str(),
-                //     callee_module_name.c_str(), callee_slot_name.c_str());
+                //    ">>>> Call Name: '%s' CALLER Module: '%s' Slot: '%s' - CALLEE Module: '%s' Slot: '%s'.\n",
+                //    call_class_name.c_str(), caller_slot_namespace.c_str(), caller_slot_name.c_str(),
+                //    callee_slot_namespace.c_str(), callee_slot_name.c_str());
 
                 // Searching for call
                 if (graph_ptr != nullptr) {
@@ -633,7 +701,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                     std::string callee_name, caller_name;
                     CallSlotPtrType callee_slot, caller_slot;
 
-                    for (auto& mod : graph_ptr->GetGraphModules()) {
+                    for (auto& mod : graph_ptr->GetModules()) {
                         module_full_name = mod->FullName() + "::";
                         // Caller
                         module_name_idx = caller_slot_full_name.find(module_full_name);
@@ -659,19 +727,30 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                         }
                     }
 
-                    if ((callee_slot == nullptr) || (caller_slot == nullptr)) {
+                    if (callee_slot == nullptr) {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "Project File '%s' line %i: Unable to find all call slots "
+                            "Project File '%s' line %i: Unable to find all callee slot '%s' "
                             "for creating call '%s'. [%s, %s, line %d]\n",
-                            project_filename.c_str(), i, call_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                            project_filename.c_str(), (i + 1), callee_slot_full_name.c_str(), call_class_name.c_str(),
+                            __FILE__, __FUNCTION__, __LINE__);
                         return false;
                     }
+                    if (caller_slot == nullptr) {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "Project File '%s' line %i: Unable to find all caller slot "
+                            "for creating call '%s'. [%s, %s, line %d]\n",
+                            project_filename.c_str(), (i + 1), caller_slot_full_name.c_str(), call_class_name.c_str(),
+                            __FILE__, __FUNCTION__, __LINE__);
+                        return false;
+                    }
+
 
                     // Add call
                     if (!graph_ptr->AddCall(this->calls_stock, caller_slot, callee_slot)) {
                         vislib::sys::Log::DefaultLog.WriteError(
                             "Project File '%s' line %i: Unable to add new call '%s'. [%s, %s, line %d]\n",
-                            project_filename.c_str(), i, call_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                            project_filename.c_str(), (i + 1), call_class_name.c_str(), __FILE__, __FUNCTION__,
+                            __LINE__);
                         return false;
                     }
                 }
@@ -691,14 +770,14 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 if (first_bracket_idx == std::string::npos) {
                     vislib::sys::Log::DefaultLog.WriteError(
                         "Project File '%s' line %i: Missing opening brackets for '%s'. [%s, %s, line %d]\n",
-                        project_filename.c_str(), i, lua_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), lua_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return false;
                 }
                 size_t first_delimiter_idx = param_line.find(',');
                 if (first_delimiter_idx == std::string::npos) {
                     vislib::sys::Log::DefaultLog.WriteError(
                         "Project File '%s' line %i: Missing argument delimiter ',' for '%s'. [%s, %s, line %d]\n",
-                        project_filename.c_str(), i, lua_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), lua_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return false;
                 }
 
@@ -707,7 +786,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 if ((param_slot_full_name.front() != '"') || (param_slot_full_name.back() != '"')) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Parameter name argument should "
                                                             "be enclosed in '\"' for '%s'. [%s, %s, line %d]\n",
-                        project_filename.c_str(), i, lua_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), lua_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return false;
                 }
                 param_slot_full_name = param_slot_full_name.substr(1, param_slot_full_name.size() - 2);
@@ -720,7 +799,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 if (value_start_idx == std::string::npos) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Unable to find parameter value "
                                                             "start delimiter '%s'. [%s, %s, line %d]\n",
-                        project_filename.c_str(), i, start_delimieter.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), start_delimieter.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return false;
                 }
                 bool found_end_delimiter = true;
@@ -737,7 +816,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 if (!found_end_delimiter) {
                     vislib::sys::Log::DefaultLog.WriteError("Project File '%s' line %i: Unable to find parameter value "
                                                             "end delimiter '%s'. [%s, %s, line %d]\n",
-                        project_filename.c_str(), i, end_delimieter.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), end_delimieter.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return false;
                 }
                 std::string value_str = param_line.substr(value_start_idx + start_delimieter.size(),
@@ -751,7 +830,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 if (graph_ptr != nullptr) {
                     std::string module_full_name;
                     size_t module_name_idx = std::string::npos;
-                    for (auto& mod : graph_ptr->GetGraphModules()) {
+                    for (auto& mod : graph_ptr->GetModules()) {
                         module_full_name = mod->FullName() + "::";
                         module_name_idx = param_slot_full_name.find(module_full_name);
                         if (module_name_idx != std::string::npos) {
@@ -768,6 +847,11 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
             }
         }
 
+        // Layout graph if no confPos tags could be detected.
+        if (!found_conf_pos) {
+            graph_ptr->GUI_SetLayoutGraph();
+        }
+
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -781,7 +865,7 @@ bool megamol::gui::configurator::GraphManager::LoadAddProjectFile(
 }
 
 
-bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_id, const std::string& project_filename) {
+bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_uid, const std::string& project_filename) {
 
     std::string projectstr;
     std::stringstream confInstances, confModules, confCalls, confParams;
@@ -790,12 +874,12 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_id,
     try {
         // Search for top most view
         for (auto& graph : this->graphs) {
-            if (graph->GetUID() == graph_id) {
+            if (graph->uid == graph_uid) {
 
                 bool found_error = false;
                 bool found_instance = false;
-                for (auto& mod_1 : graph->GetGraphModules()) {
-                    for (auto& mod_2 : graph->GetGraphModules()) {
+                for (auto& mod_1 : graph->GetModules()) {
+                    for (auto& mod_2 : graph->GetModules()) {
                         if ((mod_1 != mod_2) && (mod_1->FullName() == mod_2->FullName())) {
                             vislib::sys::Log::DefaultLog.WriteError(
                                 "Save Project >>> Found non unique module name: %s [%s, %s, line %d]\n",
@@ -821,21 +905,22 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_id,
                 }
                 if (found_error) return false;
 
-                for (auto& mod : graph->GetGraphModules()) {
-                    std::string instance_name = graph->GetName();
+                for (auto& mod : graph->GetModules()) {
+                    std::string instance_name = graph->name;
                     if (mod->is_view_instance) {
                         confInstances << "mmCreateView(\"" << instance_name << "\",\"" << mod->class_name << "\",\""
                                       << mod->FullName() << "\") "
-                                      << this->writeLuaProjectConfPos(mod->GUI_GetPosition()) << "\n";
+                                      << this->writeLuaProjectConfPos(mod->GUI_GetPosition()) << " "
+                                      << this->writeLuaProjectConfGroupInterface(mod, graph) << "\n";
                     } else {
                         confModules << "mmCreateModule(\"" << mod->class_name << "\",\"" << mod->FullName() << "\") "
-                                    << this->writeLuaProjectConfPos(mod->GUI_GetPosition()) << "\n";
+                                    << this->writeLuaProjectConfPos(mod->GUI_GetPosition()) << " "
+                                    << this->writeLuaProjectConfGroupInterface(mod, graph) << "\n";
                     }
 
                     for (auto& param_slot : mod->parameters) {
                         // Only write parameters with other values than the default
-                        if (param_slot
-                                .DefaultValueMismatch()) { // && (param_slot.type != Parameter::ParamType::BUTTON)) {
+                        if (param_slot.DefaultValueMismatch()) {
                             // Encode to UTF-8 string
                             vislib::StringA valueString;
                             vislib::UTF8Encoder::Encode(
@@ -845,20 +930,18 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_id,
                         }
                     }
 
-                    for (auto& caller_slot : mod->GetCallSlots(CallSlot::CallSlotType::CALLER)) {
+                    for (auto& caller_slot : mod->GetCallSlots(CallSlotType::CALLER)) {
                         for (auto& call : caller_slot->GetConnectedCalls()) {
                             if (call->IsConnected()) {
-                                confCalls
-                                    << "mmCreateCall(\"" << call->class_name << "\",\""
-                                    << call->GetCallSlot(CallSlot::CallSlotType::CALLER)->GetParentModule()->FullName()
-                                    << "::" << call->GetCallSlot(CallSlot::CallSlotType::CALLER)->name << "\",\""
-                                    << call->GetCallSlot(CallSlot::CallSlotType::CALLEE)->GetParentModule()->FullName()
-                                    << "::" << call->GetCallSlot(CallSlot::CallSlotType::CALLEE)->name << "\")\n";
+                                confCalls << "mmCreateCall(\"" << call->class_name << "\",\""
+                                          << call->GetCallSlot(CallSlotType::CALLER)->GetParentModule()->FullName()
+                                          << "::" << call->GetCallSlot(CallSlotType::CALLER)->name << "\",\""
+                                          << call->GetCallSlot(CallSlotType::CALLEE)->GetParentModule()->FullName()
+                                          << "::" << call->GetCallSlot(CallSlotType::CALLEE)->name << "\")\n";
                             }
                         }
                     }
                 }
-
 
                 projectstr = confInstances.str() + "\n" + confModules.str() + "\n" + confCalls.str() + "\n" +
                              confParams.str() + "\n";
@@ -884,7 +967,39 @@ bool megamol::gui::configurator::GraphManager::SaveProjectFile(ImGuiID graph_id,
         found_graph->ResetDirty();
     }
 
-    return file::WriteFile(project_filename, projectstr);
+    return FileUtils::WriteFile(project_filename, projectstr);
+}
+
+
+bool megamol::gui::configurator::GraphManager::SaveGroupFile(ImGuiID group_uid, const std::string& project_filename) {
+
+    std::string projectstr;
+    std::stringstream confInstances, confModules, confCalls, confParams;
+    bool found_group = false;
+
+    try {
+
+        /// TODO
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "Feature is WIP ... coming soon. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    if (!found_group) {
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "Invalid group uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return FileUtils::WriteFile(project_filename, projectstr);
 }
 
 
@@ -897,8 +1012,8 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
     mod.is_view = false;
     mod.parameters.clear();
     mod.call_slots.clear();
-    mod.call_slots.emplace(CallSlot::CallSlotType::CALLER, std::vector<CallSlot::StockCallSlot>());
-    mod.call_slots.emplace(CallSlot::CallSlotType::CALLEE, std::vector<CallSlot::StockCallSlot>());
+    mod.call_slots.emplace(CallSlotType::CALLER, std::vector<CallSlot::StockCallSlot>());
+    mod.call_slots.emplace(CallSlotType::CALLEE, std::vector<CallSlot::StockCallSlot>());
 
     if (this->calls_stock.empty()) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -1030,7 +1145,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
             csd.name = std::string(caller_slot->Name().PeekBuffer());
             csd.description = std::string(caller_slot->Description().PeekBuffer());
             csd.compatible_call_idxs.clear();
-            csd.type = CallSlot::CallSlotType::CALLER;
+            csd.type = CallSlotType::CALLER;
 
             SIZE_T callCount = caller_slot->GetCompCallCount();
             for (SIZE_T i = 0; i < callCount; ++i) {
@@ -1052,7 +1167,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
             csd.name = std::string(callee_slot->Name().PeekBuffer());
             csd.description = std::string(callee_slot->Description().PeekBuffer());
             csd.compatible_call_idxs.clear();
-            csd.type = CallSlot::CallSlotType::CALLEE;
+            csd.type = CallSlotType::CALLEE;
 
             SIZE_T callbackCount = callee_slot->GetCallbackCount();
             std::vector<std::string> callNames, funcNames;
@@ -1213,7 +1328,7 @@ bool megamol::gui::configurator::GraphManager::readLuaProjectCommandArguments(
 
 ImVec2 megamol::gui::configurator::GraphManager::readLuaProjectConfPos(const std::string& line) {
 
-    ImVec2 conf_idx;
+    ImVec2 conf_pos(FLT_MAX, FLT_MAX);
 
     std::string x_start_tag = "--confPos={X=";
     std::string y_start_tag = ",Y=";
@@ -1232,7 +1347,7 @@ ImVec2 megamol::gui::configurator::GraphManager::readLuaProjectConfPos(const std
         } catch (std::invalid_argument e) {
             vislib::sys::Log::DefaultLog.WriteError(" Error while reading x value of confPos: %s [%s, %s, line %d]\n",
                 e.what(), __FILE__, __FUNCTION__, __LINE__);
-            return conf_idx;
+            return conf_pos;
         }
         try {
             std::string val_str = line.substr(y_start_idx + y_start_tag.length(), y_length);
@@ -1240,33 +1355,121 @@ ImVec2 megamol::gui::configurator::GraphManager::readLuaProjectConfPos(const std
         } catch (std::invalid_argument e) {
             vislib::sys::Log::DefaultLog.WriteError(" Error while reading y value of confPos: %s [%s, %s, line %d]\n",
                 e.what(), __FILE__, __FUNCTION__, __LINE__);
-            return conf_idx;
+            return conf_pos;
         }
-        conf_idx = ImVec2(x, y);
+        conf_pos = ImVec2(x, y);
     }
 
-    return conf_idx;
+    return conf_pos;
 }
 
 
 std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfPos(const ImVec2& pos) {
 
-    std::stringstream conf_idx;
-    /// XXX Should position values be int for compatibility with old configurator?
-    conf_idx << " --confPos={X=" << pos.x << ",Y=" << pos.y << "} ";
-    return conf_idx.str();
+    std::stringstream conf_pos;
+    /// XXX Should values be integers for compatibility with old configurator?
+    conf_pos << "--confPos={X=" << pos.x << ",Y=" << pos.y << "}";
+    return conf_pos.str();
 }
 
 
-bool megamol::gui::configurator::GraphManager::separateNameAndPrefix(
+std::vector<std::string> megamol::gui::configurator::GraphManager::readLuaProjectConfGroupInterface(
+    const std::string& line) {
+
+    std::vector<std::string> conf_group_interface;
+
+    std::string start_tag = "--confGroupInterface={";
+    std::string delimiter = ",";
+    std::string end_tag = "}";
+    size_t start_idx = line.find(start_tag);
+    size_t end_idx = line.find(end_tag, (start_idx + start_tag.length()));
+    if ((start_idx != std::string::npos) && (end_idx != std::string::npos)) {
+        try {
+            start_idx += start_tag.length();
+            std::string callslots_line = line.substr(start_idx, (end_idx - start_idx));
+            auto delimiter_idx = callslots_line.find(delimiter);
+            while (delimiter_idx != std::string::npos) {
+                std::string callslot = callslots_line.substr(0, delimiter_idx);
+                conf_group_interface.emplace_back(callslot);
+                start_idx = delimiter_idx + delimiter.length();
+                callslots_line = callslots_line.substr(start_idx);
+                delimiter_idx = callslots_line.find(delimiter);
+            }
+            if (callslots_line.empty()) {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    " Error while reading group interface call slots. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                    __LINE__);
+            }
+            conf_group_interface.emplace_back(callslots_line);
+        } catch (std::exception e) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            return conf_group_interface;
+        } catch (...) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return conf_group_interface;
+        }
+    }
+
+    return conf_group_interface;
+}
+
+
+std::string megamol::gui::configurator::GraphManager::writeLuaProjectConfGroupInterface(
+    const ModulePtrType& module_ptr, const GraphPtrType& graph_ptr) {
+
+    std::stringstream conf_group_interface;
+
+    ImGuiID module_group_uid = module_ptr->GUI_GetGroupMembership();
+    if (module_group_uid != GUI_INVALID_ID) {
+        bool first = true;
+        for (auto& group : graph_ptr->GetGroups()) {
+            if (group->uid == module_group_uid) {
+                for (auto& callslot_map : group->GetCallSlots()) {
+                    for (auto& callslot : callslot_map.second) {
+                        if (callslot->ParentModuleConnected()) {
+                            if (callslot->GetParentModule()->uid == module_ptr->uid) {
+                                if (first) {
+                                    conf_group_interface << "--confGroupInterface={";
+                                    first = false;
+                                } else {
+                                    conf_group_interface << ",";
+                                }
+                                conf_group_interface << callslot->name;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (!conf_group_interface.str().empty()) {
+            conf_group_interface << "}";
+        }
+    }
+
+    return conf_group_interface.str();
+}
+
+
+bool megamol::gui::configurator::GraphManager::separateNameAndNamespace(
     const std::string& full_name, std::string& name_space, std::string& name) {
 
     name = full_name;
     name_space = "";
-    size_t delimiter_index = full_name.rfind(':');
+    size_t delimiter_index = full_name.rfind("::");
     if (delimiter_index != std::string::npos) {
-        name = full_name.substr(delimiter_index + 1);
-        name_space = full_name.substr(0, delimiter_index - 1);
+        name = full_name.substr(delimiter_index + 2);
+        name_space = full_name.substr(0, delimiter_index);
+        if (!name_space.empty()) {
+            if (name_space.find("::") == 0) {
+                name_space = name_space.substr(2);
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "Invalid namespace in argument. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                return false;
+            }
+        }
     }
 
     if (name.empty()) {
@@ -1282,28 +1485,24 @@ bool megamol::gui::configurator::GraphManager::separateNameAndPrefix(
 // GRAPH MANAGET PRESENTATION ####################################################
 
 megamol::gui::configurator::GraphManager::Presentation::Presentation(void)
-    : delete_graph_uid(GUI_INVALID_ID), utils() {}
+    : graph_delete_uid(GUI_INVALID_ID), utils() {}
 
 
 megamol::gui::configurator::GraphManager::Presentation::~Presentation(void) {}
 
 
-ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
-    megamol::gui::configurator::GraphManager& inout_graph_manager, float in_child_width, ImFont* in_graph_font,
-    HotKeyArrayType& inout_hotkeys) {
-
-    ImGuiID retval = GUI_INVALID_ID;
+void megamol::gui::configurator::GraphManager::Presentation::Present(
+    megamol::gui::configurator::GraphManager& inout_graph_manager, GraphStateType& state) {
 
     try {
         if (ImGui::GetCurrentContext() == nullptr) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
+            return;
         }
 
         const auto child_flags = ImGuiWindowFlags_None;
-
-        ImGui::BeginChild("graph_child_window", ImVec2(in_child_width, 0.0f), true, child_flags);
+        ImGui::BeginChild("graph_child_window", ImVec2(state.child_width, 0.0f), true, child_flags);
 
         // Assuming only one closed tab/graph per frame.
         bool popup_close_unsaved = false;
@@ -1312,21 +1511,18 @@ ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
         ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
         ImGui::BeginTabBar("Graphs", tab_bar_flags);
 
-        for (auto& graph : inout_graph_manager.GetGraphs()) {
+        for (auto& graph : inout_graph_manager.get_graphs()) {
 
             // Draw graph
-            bool delete_graph = false;
-            auto id = graph->GUI_Present(in_child_width, in_graph_font, inout_hotkeys, delete_graph);
-            if (id != GUI_INVALID_ID) {
-                retval = id;
-            }
+            graph->GUI_Present(state);
 
             // Do not delete graph while looping through graphs list
-            if (delete_graph) {
-                this->delete_graph_uid = retval;
+            if (state.graph_delete) {
+                this->graph_delete_uid = state.graph_selected_uid;
                 if (graph->IsDirty()) {
                     popup_close_unsaved = true;
                 }
+                state.graph_delete = false;
             }
 
             // Catch call drop event and create new call
@@ -1338,48 +1534,18 @@ ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
                     auto drop_call_slot_uid = graph->GUI_GetDropCallSlot();
                     CallSlotPtrType drag_call_slot_ptr;
                     CallSlotPtrType drop_call_slot_ptr;
-                    for (auto& mods : graph->GetGraphModules()) {
-                        CallSlotPtrType call_slot_ptr = mods->GetCallSlot(drag_call_slot_uid);
-                        if (call_slot_ptr != nullptr) {
+                    for (auto& mods : graph->GetModules()) {
+                        CallSlotPtrType call_slot_ptr;
+                        if (mods->GetCallSlot(drag_call_slot_uid, call_slot_ptr)) {
                             drag_call_slot_ptr = call_slot_ptr;
                         }
-                        call_slot_ptr = mods->GetCallSlot(drop_call_slot_uid);
-                        if (call_slot_ptr != nullptr) {
+                        if (mods->GetCallSlot(drop_call_slot_uid, call_slot_ptr)) {
                             drop_call_slot_ptr = call_slot_ptr;
                         }
                     }
                     graph->AddCall(inout_graph_manager.calls_stock, drag_call_slot_ptr, drop_call_slot_ptr);
                 }
             }
-
-            /*
-
-            // Drag source
-            label.resize(dnd_size);
-            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
-                ImGui::SetDragDropPayload(
-                    "DND_COPY_MODULE_PARAMETERS", label.c_str(), (label.size() * sizeof(char)));
-                ImGui::Text(label.c_str());
-                ImGui::EndDragDropSource();
-            }
-
-            // Drop target
-            ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFontSize()));
-            if (ImGui::BeginDragDropTarget()) {
-                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_COPY_MODULE_PARAMETERS")) {
-
-                    IM_ASSERT(payload->DataSize == (dnd_size * sizeof(char)));
-                    std::string payload_id = (const char*)payload->Data;
-
-                    // Insert dragged module name only if not contained in list
-                    if (!this->considerModule(payload_id, wc.param_modules_list)) {
-                        wc.param_modules_list.emplace_back(payload_id);
-                    }
-                }
-                ImGui::EndDragDropTarget();
-            }
-
-            */
         }
         ImGui::EndTabBar();
 
@@ -1388,24 +1554,24 @@ ImGuiID megamol::gui::configurator::GraphManager::Presentation::Present(
         bool aborted = false;
         bool popup_open = this->utils.MinimalPopUp(
             "Closing Unsaved Project", popup_close_unsaved, "Discard changes?", "Yes", confirmed, "No", aborted);
-        if (this->delete_graph_uid != GUI_INVALID_ID) {
+        if (this->graph_delete_uid != GUI_INVALID_ID) {
             if (aborted) {
-                this->delete_graph_uid = GUI_INVALID_ID;
+                this->graph_delete_uid = GUI_INVALID_ID;
             } else if (confirmed || !popup_open) {
-                inout_graph_manager.DeleteGraph(delete_graph_uid);
-                this->delete_graph_uid = GUI_INVALID_ID;
+                inout_graph_manager.DeleteGraph(graph_delete_uid);
+                this->graph_delete_uid = GUI_INVALID_ID;
+                state.graph_selected_uid = GUI_INVALID_ID;
             }
         }
 
         ImGui::EndChild();
+
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return GUI_INVALID_ID;
+        return;
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return GUI_INVALID_ID;
+        return;
     }
-
-    return retval;
 }

@@ -24,12 +24,9 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 
-#include "vislib/sys/Log.h"
-
-#include <map>
 #include <variant>
-#include <vector>
 
+#include "FileUtils.h"
 #include "GUIUtils.h"
 #include "TransferFunctionEditor.h"
 
@@ -43,12 +40,18 @@ namespace megamol {
 namespace gui {
 namespace configurator {
 
-
 // Forward declaration
+class Call;
+class CallSlot;
+class Module;
 class Parameter;
 
 // Pointer types to classes
 typedef std::shared_ptr<Parameter> ParamPtrType;
+typedef std::shared_ptr<Call> CallPtrType;
+typedef std::shared_ptr<CallSlot> CallSlotPtrType;
+typedef std::shared_ptr<Module> ModulePtrType;
+
 
 /**
  * Defines parameter data structure for graph.
@@ -214,13 +217,17 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    bool GUI_Present(void) { return this->present.Present(*this); }
+    inline bool GUI_Present(void) { return this->present.Present(*this); }
 
-    void GUI_SetLabelVisibility(bool visible) { this->present.visible = visible; }
-    void GUI_SetReadOnly(bool readonly) { this->present.read_only = readonly; }
-    void GUI_SetExpert(bool expert) { this->present.expert = expert; }
+    inline void GUI_SetLabelVisibility(bool visible) { this->present.visible = visible; }
+    inline void GUI_SetReadOnly(bool readonly) { this->present.read_only = readonly; }
+    inline void GUI_SetExpert(bool expert) { this->present.expert = expert; }
+
+    inline float GUI_GetHeight(void) { return this->present.GetHeight(*this); }
 
 private:
+    // VARIABLES --------------------------------------------------------------
+
     MinType minval;
     MaxType maxval;
     StroageType storage;
@@ -229,18 +236,20 @@ private:
     ValueType default_value;
     bool default_value_mismatch;
 
-    /**
+    /** ************************************************************************
      * Defines GUI parameter presentation.
      */
     class Presentation {
     public:
-        enum Presentations : size_t { DEFAULT = 0, PIN_VALUE_TO_MOUSE = 1, _COUNT_ = 2 };
+        enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
 
         Presentation(void);
 
         ~Presentation(void);
 
-        bool Present(Parameter& param);
+        bool Present(Parameter& inout_param);
+
+        float GetHeight(Parameter& inout_param);
 
         bool read_only;
         bool visible;
@@ -248,26 +257,21 @@ private:
 
     private:
         Presentations presentations;
-
         std::string help;
         megamol::gui::GUIUtils utils;
+        megamol::gui::FileUtils file_utils;
         bool show_tf_editor;
         megamol::gui::TransferFunctionEditor tf_editor;
         std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
-
-        static bool popup_open;
-
         const std::string float_format;
+        float height;
 
-        void present_prefix(Parameter& param);
-        void present_value_DEFAULT(Parameter& param);
-        void present_value_PIN_VALUE_TO_MOUSE(Parameter& param);
-
-        void present_postfix(Parameter& param);
-
+        void present_prefix(void);
+        void present_value_DEFAULT(Parameter& inout_param);
+        // void present_value_PIN_VALUE_TO_MOUSE(Parameter& param);
+        void present_postfix(Parameter& inout_param);
         bool presentation_button(void);
-
-        void transfer_function_edit(Parameter& param);
+        void transfer_function_edit(Parameter& inout_param);
 
     } present;
 };

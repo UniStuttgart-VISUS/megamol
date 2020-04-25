@@ -9,6 +9,11 @@
 #include "ProbeCalls.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
+#include "probe/MeshUtilities.h"
+
+
+namespace megamol {
+namespace probe {
 
 megamol::probe::PlaceProbes::PlaceProbes()
     : Module()
@@ -17,11 +22,22 @@ megamol::probe::PlaceProbes::PlaceProbes()
     , m_probe_slot("deployProbes", "")
     , m_centerline_slot("getCenterLine", "")
     , m_method_slot("method", "")
-    , m_probes_per_unit_slot("Probes_per_unit", "Sets the average probe count per unit area") {
+    , m_probes_per_unit_slot("Probes_per_unit", "Sets the average probe count per unit area")
+    , m_probe_positions_slot("deployProbePositions", "Safe probe positions to a file")
+    , m_load_probe_positions_slot("loadProbePositions", "Load saved probe positions") {
 
     this->m_probe_slot.SetCallback(CallProbes::ClassName(), CallProbes::FunctionName(0), &PlaceProbes::getData);
     this->m_probe_slot.SetCallback(CallProbes::ClassName(), CallProbes::FunctionName(1), &PlaceProbes::getMetaData);
     this->MakeSlotAvailable(&this->m_probe_slot);
+
+    this->m_probe_positions_slot.SetCallback(
+        adios::CallADIOSData::ClassName(), adios::CallADIOSData::FunctionName(0), &PlaceProbes::getADIOSData);
+    this->m_probe_positions_slot.SetCallback(
+        adios::CallADIOSData::ClassName(), adios::CallADIOSData::FunctionName(1), &PlaceProbes::getADIOSMetaData);
+    this->MakeSlotAvailable(&this->m_probe_positions_slot);
+
+    this->m_load_probe_positions_slot.SetCompatibleCall<adios::CallADIOSDataDescription>();
+    this->MakeSlotAvailable(&this->m_load_probe_positions_slot);
 
     this->m_mesh_slot.SetCompatibleCall<mesh::CallMeshDescription>();
     this->MakeSlotAvailable(&this->m_mesh_slot);
@@ -33,12 +49,12 @@ megamol::probe::PlaceProbes::PlaceProbes()
     ep->SetTypePair(0, "vertices");
     ep->SetTypePair(1, "dart_throwing");
     ep->SetTypePair(2, "force_directed");
-    ep->SetTypePair(3, "simple_wruschd_sampling");
+    ep->SetTypePair(3, "load_existing");
     ep->SetTypePair(4, "vertices+normals");
     this->m_method_slot << ep;
     this->MakeSlotAvailable(&this->m_method_slot);
 
-    this->m_probes_per_unit_slot << new core::param::IntParam(1,0);
+    this->m_probes_per_unit_slot << new core::param::IntParam(1, 0);
 
     /* Feasibility test */
     m_probes = std::make_shared<ProbeCollection>();
@@ -83,12 +99,13 @@ bool megamol::probe::PlaceProbes::getData(core::Call& call) {
     // here something really happens
     if (something_changed) {
         ++m_version;
-        
+
         if (mesh_meta_data.m_bboxs.IsBoundingBoxValid()) {
             m_whd = {mesh_meta_data.m_bboxs.BoundingBox().Width(), mesh_meta_data.m_bboxs.BoundingBox().Height(),
-            mesh_meta_data.m_bboxs.BoundingBox().Depth()};
+                mesh_meta_data.m_bboxs.BoundingBox().Depth()};
         } else if (centerline_meta_data.m_bboxs.IsBoundingBoxValid()) {
-            m_whd = {centerline_meta_data.m_bboxs.BoundingBox().Width(), centerline_meta_data.m_bboxs.BoundingBox().Height(),
+            m_whd = {centerline_meta_data.m_bboxs.BoundingBox().Width(),
+                centerline_meta_data.m_bboxs.BoundingBox().Height(),
                 centerline_meta_data.m_bboxs.BoundingBox().Depth()};
         }
         const auto longest_edge_index = std::distance(m_whd.begin(), std::max_element(m_whd.begin(), m_whd.end()));
@@ -96,7 +113,7 @@ bool megamol::probe::PlaceProbes::getData(core::Call& call) {
         this->placeProbes(longest_edge_index);
     }
 
-    pc->setData(this->m_probes,m_version);
+    pc->setData(this->m_probes, m_version);
 
     pc->setMetaData(probe_meta_data);
     return true;
@@ -123,21 +140,20 @@ bool megamol::probe::PlaceProbes::getMetaData(core::Call& call) {
 
     if (!(*cm)(1)) return false;
     if (!(*ccl)(1)) return false;
-    
+
     mesh_meta_data = cm->getMetaData();
     centerline_meta_data = ccl->getMetaData();
 
     probe_meta_data.m_frame_cnt = mesh_meta_data.m_frame_cnt;
     probe_meta_data.m_bboxs = mesh_meta_data.m_bboxs; // normally not available here
-    
+
     pc->setMetaData(probe_meta_data);
 
     return true;
 }
 
 void megamol::probe::PlaceProbes::dartSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
-    std::vector<std::array<float, 4>>& output, mesh::MeshDataAccessCollection::IndexData indexData,
-    float distanceIndicator) {
+    mesh::MeshDataAccessCollection::IndexData indexData, float distanceIndicator) {
 
     uint32_t num_triangles = indexData.byte_size / (mesh::MeshDataAccessCollection::getByteSize(indexData.type) * 3);
     auto indexDataAccessor = reinterpret_cast<uint32_t*>(indexData.data);
@@ -146,16 +162,16 @@ void megamol::probe::PlaceProbes::dartSampling(mesh::MeshDataAccessCollection::V
 
     std::mt19937 rnd;
     rnd.seed(std::random_device()());
-    //rnd.seed(666);
+    // rnd.seed(666);
     std::uniform_real_distribution<float> fltdist(0, 1);
     std::uniform_int_distribution<uint32_t> dist(0, num_triangles - 1);
 
     uint32_t num_probes = 4000;
-    output.reserve(num_probes);
+    _probePositions.reserve(num_probes);
 
     uint32_t indx = 0;
     uint32_t error_index = 0;
-    while (indx != (num_probes - 1) && error_index < num_probes){//&& error_index < (num_triangles - indx)) {
+    while (indx != (num_probes - 1) && error_index < num_probes) { //&& error_index < (num_triangles - indx)) {
 
         uint32_t triangle = dist(rnd);
         std::array<float, 3> vert0;
@@ -180,16 +196,16 @@ void megamol::probe::PlaceProbes::dartSampling(mesh::MeshDataAccessCollection::V
         float rnd3 = 1 - (rnd1 + rnd2);
 
         std::array<float, 3> triangle_middle;
-        triangle_middle[0] = (rnd1*vert0[0] + rnd2*vert1[0] + rnd3*vert2[0]) ;
-        triangle_middle[1] = (rnd1*vert0[1] + rnd2*vert1[1] + rnd3*vert2[1]) ;
-        triangle_middle[2] = (rnd1*vert0[2] + rnd2*vert1[2] + rnd3*vert2[2]) ;
+        triangle_middle[0] = (rnd1 * vert0[0] + rnd2 * vert1[0] + rnd3 * vert2[0]);
+        triangle_middle[1] = (rnd1 * vert0[1] + rnd2 * vert1[1] + rnd3 * vert2[1]);
+        triangle_middle[2] = (rnd1 * vert0[2] + rnd2 * vert1[2] + rnd3 * vert2[2]);
 
         bool do_placement = true;
         for (uint32_t j = 0; j < indx; j++) {
             std::array<float, 3> dist_vec;
-            dist_vec[0] = triangle_middle[0] - output[j][0];
-            dist_vec[1] = triangle_middle[1] - output[j][1];
-            dist_vec[2] = triangle_middle[2] - output[j][2];
+            dist_vec[0] = triangle_middle[0] - _probePositions[j][0];
+            dist_vec[1] = triangle_middle[1] - _probePositions[j][1];
+            dist_vec[2] = triangle_middle[2] - _probePositions[j][2];
 
             const float distance =
                 std::sqrt(dist_vec[0] * dist_vec[0] + dist_vec[1] * dist_vec[1] + dist_vec[2] * dist_vec[2]);
@@ -201,50 +217,249 @@ void megamol::probe::PlaceProbes::dartSampling(mesh::MeshDataAccessCollection::V
         }
 
         if (do_placement) {
-            output.emplace_back(std::array<float,4>({triangle_middle[0], triangle_middle[1], triangle_middle[2], 1.0f}));
+            _probePositions.emplace_back(
+                std::array<float, 4>({triangle_middle[0], triangle_middle[1], triangle_middle[2], 1.0f}));
             indx++;
             error_index = 0;
         } else {
             error_index++;
         }
     }
-    output.shrink_to_fit();
+    _probePositions.shrink_to_fit();
 }
 
-void megamol::probe::PlaceProbes::forceDirectedSampling(
-    mesh::MeshDataAccessCollection::VertexAttribute& vertices, std::vector<std::array<float, 4>>& output) {
+void megamol::probe::PlaceProbes::forceDirectedSampling(const const mesh::MeshDataAccessCollection::Mesh& mesh) {
 
 
+    int full_iterations = 0;
+    int iterations_per_triangle = 4;
+    float samples_per_area = 10.0f;
+    double initial_delta_t = 5e-1 / std::pow(static_cast<double>(samples_per_area), 2);
 
 
+    if (!_mu) {
+        _mu = std::make_shared<MeshUtility>();
+        _mu->inputData(mesh);
+        _numFaces = _mu->getNumTotalFaces();
+    }
+
+    float total_area = 0;
+    uint32_t total_points = 0;
+    _pointsPerFace.resize(_numFaces);
+
+    //#pragma omp parallel for
+    for (int idx = 0; idx < _numFaces; ++idx) {
+
+        auto area = _mu->calcTriangleArea(idx);
+        total_area += area;
+        auto num_points = static_cast<uint32_t>(area * samples_per_area);
+        total_points += num_points;
+
+        _neighborMap[idx] = _mu->getNeighboringTriangles(idx);
+        // Eigen::MatrixXd patch_vertices;
+        // Eigen::MatrixXi patch_indices;
+        //_mu->getPatch(idx, patch_vertices, patch_indices, _neighborMap[idx]);
+
+        // Eigen::MatrixXd vertices_uv;
+        //_mu->UVMapping(patch_indices, patch_vertices, vertices_uv);
+
+        _mu->seedPoints(idx, num_points, _pointsPerFace[idx]);
+
+        //_mu->fillMeshFaces(patch_indices, this->_mesh_faces);
+        //_mu->fillMeshVertices(patch_vertices, this->_mesh_vertices);
+        //_mu->fillMeshVertices(vertices_uv, this->_mesh_vertices);
 
 
+        // project uv mapping onto bbox
+        // auto scale = std::min(_bbox.BoundingBox().Width(), _bbox.BoundingBox().Height());
+        // std::array<float, 3> mid = {_bbox.BoundingBox().Left() + _bbox.BoundingBox().Width() / 2,
+        //    _bbox.BoundingBox().Bottom() + _bbox.BoundingBox().Height()/2, _bbox.BoundingBox().Front()};
+        // for (int i = 0; i < this->_mesh_vertices.size() / 3; ++i) {
+        //    for (int j = 0; j < 3; ++j) {
+        //        _mesh_vertices[3 * i + j] *= scale;
+        //        _mesh_vertices[3 * i + j] += mid[j];
+        //    }
+        //}
+    }
+
+    for (int full_it = 0; full_it < full_iterations; ++full_it) {
+        //#pragma omp parallel for
+        for (uint32_t idx = 0; idx < _numFaces; ++idx) {
+            // uint32_t idx = 0;
+            // transform samples points, so we can perform relaxation in 2D
+            Eigen::MatrixXd patch_vertices;
+            Eigen::MatrixXi patch_indices;
+            _mu->getPatch(idx, patch_vertices, patch_indices, _neighborMap[idx]);
+
+            int num_patch_points = 0;
+            int num_fixed_points = 0;
+            for (auto neighbor : _neighborMap[idx]) {
+                num_patch_points += _pointsPerFace[neighbor].rows();
+                if (neighbor != idx) {
+                    num_fixed_points += _pointsPerFace[neighbor].rows();
+                }
+            }
+
+            Eigen::MatrixXd fixed_points(num_fixed_points, 3);
+            int n = 0;
+            for (auto neighbor : _neighborMap[idx]) {
+                if (neighbor != idx) {
+                    for (int i = 0; i < _pointsPerFace[neighbor].rows(); ++i) {
+                        for (int j = 0; j < _pointsPerFace[neighbor].cols(); ++j) {
+                            fixed_points(n, j) = _pointsPerFace[neighbor](i, j);
+                        }
+                        n++;
+                    }
+                }
+            }
+            Eigen::MatrixXd transformed_fixed_points;
+            _mu->perform2Dprojection(idx, fixed_points, transformed_fixed_points);
+            Eigen::MatrixXd patch_samples;
+            patch_samples.resize(_pointsPerFace[idx].rows(), 3);
+            for (int i = 0; i < patch_samples.rows(); ++i) {
+                for (int j = 0; j < patch_samples.cols(); ++j) {
+                    patch_samples(i, j) = _pointsPerFace[idx](i, j);
+                }
+            }
+            Eigen::MatrixXd transformed_patch_samples;
+            _mu->perform2Dprojection(idx, patch_samples, transformed_patch_samples);
+
+            // project triangle vertices as well for easy inTriangle checks
+            Eigen::Matrix3d idx_verts;
+            _mu->getTriangleVertices(idx, idx_verts);
+            Eigen::MatrixXd transformed_idx_verts;
+            _mu->perform2Dprojection(idx, idx_verts, transformed_idx_verts);
+            std::array<glm::vec2, 3> current_transformed_vertices;
+            for (int i = 0; i < current_transformed_vertices.size(); ++i) {
+                for (int j = 0; j < 2; ++j) {
+                    current_transformed_vertices[i][j] = transformed_idx_verts(i, j);
+                }
+            }
+
+            std::vector<Eigen::Matrix3d> neighbor_verts(_neighborMap[idx].size() - 1);
+            std::vector<Eigen::MatrixXd> transformed_neighbor_verts(_neighborMap[idx].size() - 1);
+            n = 0;
+            for (int i = 0; i < _neighborMap[idx].size(); ++i) {
+                if (_neighborMap[idx][i] != idx) {
+                    _mu->getTriangleVertices(_neighborMap[idx][i], neighbor_verts[n]);
+                    _mu->perform2Dprojection(idx, neighbor_verts[n], transformed_neighbor_verts[n]);
+                    ++n;
+                }
+            }
+
+            // perform relaxation (omit n-dimension)
+            // using the verlet integration scheme
+            auto delta_t = initial_delta_t;
+            Eigen::MatrixXd old_transfromed_patch_samples = transformed_patch_samples;
+            for (int step = 0; step < iterations_per_triangle; ++step) {
+                glm::vec2 force = {0.0f, 0.0f};
+                Eigen::MatrixXd before_movement_buffer;
+                before_movement_buffer.resizeLike(transformed_patch_samples);
+// sum up forces
+// for every (not fixed) particle
+#pragma omp parallel for
+                for (int k = 0; k < transformed_patch_samples.rows(); ++k) {
+                    glm::vec2 current_particle = {transformed_patch_samples(k, 0), transformed_patch_samples(k, 1)};
+                    // interaction with fixed samples
+                    for (int l = 0; l < transformed_fixed_points.rows(); ++l) {
+                        glm::vec2 current_partner = {transformed_fixed_points(l, 0), transformed_fixed_points(l, 1)};
+                        glm::vec2 dif = current_partner - current_particle;
+                        auto amount_force = coulomb_force(glm::length(dif));
+                        force += amount_force * glm::normalize(dif);
+                    }
+                    // interaction with not fixed samples
+                    for (int h = 0; h < transformed_patch_samples.rows(); ++h) {
+                        if (h != k) {
+                            glm::vec2 current_partner = {
+                                transformed_patch_samples(h, 0), transformed_patch_samples(h, 1)};
+                            glm::vec2 dif = current_partner - current_particle;
+                            auto amount_force = coulomb_force(glm::length(dif));
+                            force += amount_force * glm::normalize(dif);
+                        }
+                    }
+                    // buffer new positions
+                    before_movement_buffer(k, 0) = 2 * transformed_patch_samples(k, 0) -
+                                                   old_transfromed_patch_samples(k, 0) + force.x * std::pow(delta_t, 2);
+                    before_movement_buffer(k, 1) = 2 * transformed_patch_samples(k, 1) -
+                                                   old_transfromed_patch_samples(k, 1) + force.y * std::pow(delta_t, 2);
+                    before_movement_buffer(k, 2) = transformed_patch_samples(k, 2);
+
+                    // Check if new positions are still inside the triangle
+                    glm::vec2 current_point = {before_movement_buffer(k, 0), before_movement_buffer(k, 1)};
+                    if (!_mu->pointInTriangle(current_transformed_vertices, current_point)) {
+                        // still make a little step in this direction
+                        glm::vec2 start;
+                        glm::vec2 end;
+                        start[0] = transformed_patch_samples(k, 0);
+                        start[1] = transformed_patch_samples(k, 1);
+                        end[0] = before_movement_buffer(k, 0);
+                        end[1] = before_movement_buffer(k, 1);
+                        auto dif = end - start;
+                        auto new_end = 0.1f * dif + start;
+                        before_movement_buffer(k, 0) = new_end[0];
+                        before_movement_buffer(k, 1) = new_end[1];
+                    }
+
+                } // end for patch samples
+
+
+                // save old positions
+                old_transfromed_patch_samples = transformed_patch_samples;
+                // move all particles
+                transformed_patch_samples = before_movement_buffer;
+
+                // delta_t *= 2;
+            } // iterations per triangle
+
+            // transform relaxed points back and put them in _pointsPerFace
+            _mu->performInverse2Dprojection(idx, transformed_patch_samples, patch_samples);
+            _pointsPerFace[idx] = patch_samples;
+
+            // debug patch
+            //_mu->fillMeshFaces(patch_indices, this->_mesh_faces);
+            //_mu->fillMeshVertices(patch_vertices, this->_mesh_vertices);
+
+            // for (int i = 0; i < _pointsPerFace[idx].rows(); ++i) {
+            //    for (int j = 0; j < 3; ++j) {
+            //        _points.emplace_back(_pointsPerFace[idx](i,j));
+            //    }
+            //}
+
+        } // end for every triangle
+    }     // end full_iterations
+
+    // fill debug points
+    _probePositions.reserve(total_points);
+    for (uint32_t idx = 0; idx < _numFaces; ++idx) {
+        for (int i = 0; i < _pointsPerFace[idx].rows(); ++i) {
+            std::array<float, 4> point = {
+                _pointsPerFace[idx](i, 0), _pointsPerFace[idx](i, 1), _pointsPerFace[idx](i, 2), 1.0f};
+            _probePositions.emplace_back(point);
+        }
+    }
 }
 
 
-void megamol::probe::PlaceProbes::vertexSampling(
-    mesh::MeshDataAccessCollection::VertexAttribute& vertices, std::vector<std::array<float, 4>>& output) {
+void megamol::probe::PlaceProbes::vertexSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices) {
 
 
     uint32_t probe_count = vertices.byte_size / vertices.stride;
-    output.resize(probe_count);
+    _probePositions.resize(probe_count);
 
     auto vertex_accessor = reinterpret_cast<float*>(vertices.data);
     auto vertex_step = vertices.stride / sizeof(float);
 
 #pragma omp parallel for
     for (int i = 0; i < probe_count; i++) {
-        output[i][0] = vertex_accessor[vertex_step * i + 0];
-        output[i][1] = vertex_accessor[vertex_step * i + 1];
-        output[i][2] = vertex_accessor[vertex_step * i + 2];
-        output[i][3] = 1.0f;
+        _probePositions[i][0] = vertex_accessor[vertex_step * i + 0];
+        _probePositions[i][1] = vertex_accessor[vertex_step * i + 1];
+        _probePositions[i][2] = vertex_accessor[vertex_step * i + 2];
+        _probePositions[i][3] = 1.0f;
     }
 }
 
-void megamol::probe::PlaceProbes::vertexNormalSampling(
-    mesh::MeshDataAccessCollection::VertexAttribute& vertices,
-    mesh::MeshDataAccessCollection::VertexAttribute& normals)
-{
+void megamol::probe::PlaceProbes::vertexNormalSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
+    mesh::MeshDataAccessCollection::VertexAttribute& normals) {
 
     uint32_t probe_count = vertices.byte_size / vertices.stride;
 
@@ -254,18 +469,14 @@ void megamol::probe::PlaceProbes::vertexNormalSampling(
     auto normal_accessor = reinterpret_cast<float*>(normals.data);
     auto normal_step = normals.stride / sizeof(float);
 
-//#pragma omp parallel for
+    //#pragma omp parallel for
     for (int i = 0; i < probe_count; i++) {
 
         BaseProbe probe;
 
-        probe.m_position = {
-            vertex_accessor[vertex_step * i + 0],
-            vertex_accessor[vertex_step * i + 1],
+        probe.m_position = {vertex_accessor[vertex_step * i + 0], vertex_accessor[vertex_step * i + 1],
             vertex_accessor[vertex_step * i + 2]};
-        probe.m_direction = {
-            normal_accessor[normal_step * i + 0],
-            normal_accessor[normal_step * i + 1],
+        probe.m_direction = {normal_accessor[normal_step * i + 0], normal_accessor[normal_step * i + 1],
             normal_accessor[normal_step * i + 2]};
         probe.m_begin = -2.0;
         probe.m_end = 50.0;
@@ -300,17 +511,17 @@ bool megamol::probe::PlaceProbes::placeProbes(uint32_t lei) {
     }
 
 
-    std::vector<std::array<float, 4>> probePositions;
-
     const auto smallest_edge_index = std::distance(m_whd.begin(), std::min_element(m_whd.begin(), m_whd.end()));
     const float distanceIndicator = m_whd[smallest_edge_index] / 20;
 
     if (this->m_method_slot.Param<core::param::EnumParam>()->Value() == 0) {
-        this->vertexSampling(vertices, probePositions);
+        this->vertexSampling(vertices);
     } else if (this->m_method_slot.Param<core::param::EnumParam>()->Value() == 1) {
-        this->dartSampling(vertices, probePositions, m_mesh->accessMesh()[0].indices, distanceIndicator);
+        this->dartSampling(vertices, m_mesh->accessMesh()[0].indices, distanceIndicator);
     } else if (this->m_method_slot.Param<core::param::EnumParam>()->Value() == 2) {
-        this->forceDirectedSampling(vertices, probePositions);
+        this->forceDirectedSampling(m_mesh->accessMesh()[0]);
+    } else if (this->m_method_slot.Param<core::param::EnumParam>()->Value() == 3) {
+        this->loadFromFile();
     }
 
     if (this->m_method_slot.Param<core::param::EnumParam>()->Value() == 4) {
@@ -323,29 +534,27 @@ bool megamol::probe::PlaceProbes::placeProbes(uint32_t lei) {
         }
 
         this->vertexNormalSampling(vertices, normals);
-    }
-    else
-    {
-        this->placeByCenterline(lei, probePositions, centerline);
+    } else {
+        this->placeByCenterline(lei, centerline);
     }
 
     return true;
 }
 
-bool megamol::probe::PlaceProbes::placeByCenterline(uint32_t lei, std::vector<std::array<float, 4>>& probePositions,
-    mesh::MeshDataAccessCollection::VertexAttribute& centerline) {
+bool megamol::probe::PlaceProbes::placeByCenterline(
+    uint32_t lei, mesh::MeshDataAccessCollection::VertexAttribute& centerline) {
 
 
-    uint32_t probe_count = probePositions.size();
+    uint32_t probe_count = _probePositions.size();
     // uint32_t probe_count = 1;
     uint32_t centerline_vert_count = centerline.byte_size / centerline.stride;
 
-    auto vertex_accessor = reinterpret_cast<float*>(probePositions.data()->data());
+    auto vertex_accessor = reinterpret_cast<float*>(_probePositions.data()->data());
     auto centerline_accessor = reinterpret_cast<float*>(centerline.data);
 
     auto vertex_step = 4;
     auto centerline_step = centerline.stride / sizeof(centerline.component_type);
-    
+
     for (uint32_t i = 0; i < probe_count; i++) {
         BaseProbe probe;
 
@@ -453,3 +662,76 @@ bool megamol::probe::PlaceProbes::placeByCenterline(uint32_t lei, std::vector<st
 
     return true;
 }
+
+bool megamol::probe::PlaceProbes::getADIOSData(core::Call& call) {
+
+    auto* cadios = dynamic_cast<adios::CallADIOSData*>(&call);
+    if (cadios == nullptr) return false;
+    if (_probePositions.empty()) return false;
+
+    auto dataContainer = std::make_shared<adios::FloatContainer>();
+    std::vector<float>& tmp_data = dataContainer->getVec();
+    tmp_data.resize(_probePositions.size() * _probePositions.data()->size());
+    dataContainer->shape = {_probePositions.size(), _probePositions.data()->size()};
+    for (int i = 0; i < _probePositions.size(); ++i) {
+        for (int j = 0; j < _probePositions.data()->size(); ++j) {
+            tmp_data[_probePositions.data()->size() * i + j] = _probePositions[i][j];
+        }
+    }
+    dataMap["xyzw"] = std::move(dataContainer);
+
+    cadios->setData(std::make_shared<adios::adiosDataMap>(dataMap));
+    // cadios->setDataHash();
+    return true;
+}
+
+bool megamol::probe::PlaceProbes::getADIOSMetaData(core::Call& call) {
+
+    auto* cadios = dynamic_cast<adios::CallADIOSData*>(&call);
+    mesh::CallMesh* cm = this->m_mesh_slot.CallAs<mesh::CallMesh>();
+
+    if (cadios == nullptr) return false;
+    if (cm == nullptr) return false;
+
+    auto mesh_meta_data = cm->getMetaData();
+    // mesh_meta_data.m_frame_ID = cadios->getFrameIDtoLoad();
+    mesh_meta_data.m_frame_ID = 0;
+    cm->setMetaData(mesh_meta_data);
+
+    if (!(*cm)(1)) return false;
+    mesh_meta_data = cm->getMetaData();
+
+    cadios->setFrameCount(mesh_meta_data.m_frame_cnt);
+
+    std::vector<std::string> availVars = {"xyzw"};
+    cadios->setAvailableVars(availVars);
+
+    return true;
+}
+
+bool megamol::probe::PlaceProbes::loadFromFile() {
+
+    auto cd = this->m_load_probe_positions_slot.CallAs<adios::CallADIOSData>();
+    if (cd == nullptr) return false;
+
+    cd->setFrameIDtoLoad(0);
+    if (!(*cd)(1)) return false;
+    auto availVars = cd->getAvailableVars();
+    if (availVars.empty()) return false;
+    cd->inquire(availVars[0]);
+    if (!(*cd)(0)) return false;
+
+    auto tmp_data = cd->getData(availVars[0])->GetAsFloat();
+    _probePositions.resize(tmp_data.size() / 4);
+    for (int i = 0; i < _probePositions.size(); ++i) {
+        for (int j = 0; j < _probePositions.data()->size(); ++j) {
+            _probePositions[i][j] = tmp_data[_probePositions.data()->size() * i + j];
+        }
+    }
+
+
+    return true;
+}
+
+} // namespace probe
+} // namespace megamol

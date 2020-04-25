@@ -54,7 +54,7 @@ std::shared_ptr<megamol::mesh::MeshDataAccessCollection> megamol::probe::Extract
 
 //#pragma omp parallel for
     for (auto i = 0; i < probe_count; i++) {
-        auto probe = this->_probes->getProbe<FloatProbe>(i);
+        auto probe = this->_probes->getProbe<BaseProbe>(i);
 
         std::array<float,4> vert1, vert2;
 
