@@ -227,6 +227,10 @@ private:
 
     core::param::ParamSlot axisTickSizeParam;
 
+    core::param::ParamSlot drawOuterLabelsParam;
+
+    core::param::ParamSlot drawDiagonalLabelsParam;
+
     core::param::ParamSlot cellInvertYParam;
 
     core::param::ParamSlot cellSizeParam;
