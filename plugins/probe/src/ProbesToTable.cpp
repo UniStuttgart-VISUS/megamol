@@ -1,0 +1,188 @@
+/*
+ * ProbesToTable.cpp
+ * Copyright (C) 2020 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
+
+#include "ProbesToTable.h"
+#include "ProbeCalls.h"
+
+namespace megamol {
+namespace probe {
+
+ProbeToTable::ProbeToTable() : Module(), _getDataSlot("getData", ""), _deployTableSlot("deployTable", "") {
+
+    this->_deployTableSlot.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
+        stdplugin::datatools::table::TableDataCall::FunctionName(0), &ProbeToTable::getData);
+    this->_deployTableSlot.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
+        stdplugin::datatools::table::TableDataCall::FunctionName(1), &ProbeToTable::getMetaData);
+    this->MakeSlotAvailable(&this->_deployTableSlot);
+
+    this->_getDataSlot.SetCompatibleCall<CallProbesDescription>();
+    this->MakeSlotAvailable(&this->_getDataSlot);
+}
+
+ProbeToTable::~ProbeToTable() { this->Release(); }
+
+bool ProbeToTable::create() { return true; }
+
+void ProbeToTable::release() {}
+
+bool ProbeToTable::InterfaceIsDirty() { return false; }
+
+
+bool ProbeToTable::getData(core::Call& call) {
+
+    stdplugin::datatools::table::TableDataCall* ctd = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&call);
+    if (ctd == nullptr) return false;
+
+    CallProbes* cpd = this->_getDataSlot.CallAs<CallProbes>();
+    if (cpd == nullptr) return false;
+
+    auto meta_data = cpd->getMetaData();
+    // maybe get meta data was not called jet
+    if (meta_data.m_frame_cnt == 0) {
+        this->getMetaData(call);
+        meta_data = cpd->getMetaData();
+    }
+
+    if (!(*cpd)(0)) {
+        vislib::sys::Log::DefaultLog.WriteError("[ProbeToTable] Error during GetData");
+        return false;
+    }
+
+    auto probe_data = cpd->getData();
+
+    if (cpd->hasUpdate() || (meta_data.m_frame_ID != _currentFrame)) {
+
+        auto num_probes = probe_data->getProbeCount();
+        auto probe_one = probe_data->getProbe<FloatProbe>(0);
+        auto num_samples = probe_one.getSamplingResult()->samples.size();
+        _rows = num_probes;
+
+        _cols =  probe_one.m_position.size();
+        _cols += probe_one.m_direction.size();
+        _cols += 6; // other parameters
+
+        std::vector<std::string> var_names = {"id",
+            "position_x", "position_y", "position_z",
+            "direction_x", "direction_y", "direction_z",
+            "begin","end","timestamp","sample_radius"};
+        auto fixed_var_names_index = var_names.size();
+
+        for (int i = 0; i < num_samples; ++i) {
+            std::string var = "sample_value_" + std::to_string(i);
+            var_names.emplace_back(var);
+        }
+
+        _colinfo.resize(_cols);
+        std::vector<std::vector<float>> raw_data(_cols);
+        for (int i = 0; i < _cols; ++i) {
+            raw_data[i].resize(num_probes);
+            std::vector<float> mins(var_names.size(), std::numeric_limits<float>::max());
+            std::vector<float> maxes(var_names.size(), std::numeric_limits<float>::min());
+            for (int j = 0; j < num_probes; ++j) {
+                int current_col = 0;
+                auto probe = probe_data->getProbe<FloatProbe>(j);
+                raw_data[i][current_col] = j;
+                mins[current_col] = std::min(mins[current_col], static_cast<float>(j));
+                maxes[current_col] = std::max(maxes[current_col], static_cast<float>(j));
+                current_col += 1;
+
+                for (int n = 0; n < probe.m_position.size(); ++n) {
+                    raw_data[i][current_col] = probe.m_position[n];
+                    mins[current_col] = std::min(mins[current_col], probe.m_position[n]);
+                    maxes[current_col] = std::max(maxes[current_col], probe.m_position[n]);
+                    current_col += 1;
+                }
+
+                for (int n = 0; n < probe.m_position.size(); ++n) {
+                    raw_data[i][current_col] = probe.m_direction[n];
+                    mins[current_col] = std::min(mins[current_col], probe.m_direction[n]);
+                    maxes[current_col] = std::max(maxes[current_col], probe.m_direction[n]);
+                    current_col += 1;
+                }
+
+                raw_data[i][current_col] = probe.m_begin;
+                mins[current_col] = std::min(mins[current_col], probe.m_begin);
+                maxes[current_col] = std::max(maxes[current_col], probe.m_begin);
+                current_col += 1;
+
+                raw_data[i][current_col] = probe.m_end;
+                mins[current_col] = std::min(mins[current_col], probe.m_end);
+                maxes[current_col] = std::max(maxes[current_col], probe.m_end);
+                current_col += 1;
+                
+                raw_data[i][current_col] = probe.m_timestamp;
+                mins[current_col] = std::min(mins[current_col], static_cast<float>(probe.m_timestamp));
+                maxes[current_col] = std::max(maxes[current_col], static_cast<float>(probe.m_timestamp));
+                current_col += 1;
+
+                raw_data[i][current_col] = probe.m_end;
+                mins[current_col] = std::min(mins[current_col], probe.m_end);
+                maxes[current_col] = std::max(maxes[current_col], probe.m_end);
+                current_col += 1;
+
+                raw_data[i][current_col] = probe.m_sample_radius;
+                mins[current_col] = std::min(mins[current_col], probe.m_sample_radius);
+                maxes[current_col] = std::max(maxes[current_col], probe.m_sample_radius);
+                current_col += 1;
+
+                auto result = probe.getSamplingResult()->samples;
+                for (int k = 0; k < result.size(); ++k) {
+                    raw_data[i][fixed_var_names_index + k] = result[k];
+                    mins[fixed_var_names_index + k] = std::min(mins[fixed_var_names_index + k], result[k]);
+                    maxes[fixed_var_names_index + k] = std::max(maxes[fixed_var_names_index + k], result[k]);
+                }
+            }
+            _colinfo[i].SetName(var_names[i]);
+            _colinfo[i].SetMaximumValue(maxes[i]);
+            _colinfo[i].SetMinimumValue(mins[i]);
+            _colinfo[i].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+        }
+
+        _floatBlob.resize(_rows * _cols);
+#pragma omp parallel for
+        for (int i = 0; i < _rows; ++i) {
+            for (int j = 0; j < _cols; ++j) {
+                if (i >= raw_data[j].size()) {
+                    _floatBlob[_cols * i + j] = 0.0f;
+                } else {
+                    _floatBlob[_cols * i + j] = raw_data[j][i];
+                }
+            }
+        }
+    }
+
+    if (_floatBlob.empty()) return false;
+
+    _currentFrame = ctd->GetFrameID();
+    ctd->Set(_cols, _rows, _colinfo.data(), _floatBlob.data());
+    ctd->SetDataHash(_datahash++);
+    return true;
+}
+
+bool ProbeToTable::getMetaData(core::Call& call) {
+
+    stdplugin::datatools::table::TableDataCall* ctd = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&call);
+    if (ctd == nullptr) return false;
+
+    CallProbes* cpd = this->_getDataSlot.CallAs<CallProbes>();
+    if (cpd == nullptr) return false;
+
+    // get metadata from probes
+    auto meta_data = cpd->getMetaData();
+    meta_data.m_frame_ID = ctd->GetFrameID();
+    cpd->setMetaData(meta_data);
+
+    if (!(*cpd)(1)) return false;
+
+    // put metadata in table call
+    meta_data = cpd->getMetaData();
+    ctd->SetFrameCount(meta_data.m_frame_cnt);
+
+    return true;
+}
+
+}
+}
