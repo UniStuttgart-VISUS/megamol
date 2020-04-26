@@ -92,7 +92,9 @@ template <size_t PaletteSize> PresetGenerator ColormapAdapter(const float palett
             // Linear interpolation from palette.
             size_t i0 = static_cast<size_t>(std::floor(t * LastIndex));
             size_t i1 = static_cast<size_t>(std::ceil(t * LastIndex));
-            double it = std::fmod(t * LastIndex, LastIndex);
+            double unused;
+            double it = std::modf(t * LastIndex, &unused);
+
             double r[2] = {static_cast<double>(palette[i0][0]), static_cast<double>(palette[i1][0])};
             double g[2] = {static_cast<double>(palette[i0][1]), static_cast<double>(palette[i1][1])};
             double b[2] = {static_cast<double>(palette[i0][2]), static_cast<double>(palette[i1][2])};
