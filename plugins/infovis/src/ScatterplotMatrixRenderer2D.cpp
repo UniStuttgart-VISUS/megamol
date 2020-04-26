@@ -509,6 +509,8 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis() {
     const float size = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
     const float margin = this->cellMarginParam.Param<core::param::FloatParam>()->Value();
     const float nameSize = this->cellNameSizeParam.Param<core::param::FloatParam>()->Value();
+    const GLsizei numTicks = this->axisTicksParam.Param<core::param::IntParam>()->Value();
+    const GLfloat tickLength = this->axisTickLengthParam.Param<core::param::FloatParam>()->Value();
     const float tickSize = this->axisTickSizeParam.Param<core::param::FloatParam>()->Value();
     const bool drawOuter = this->drawOuterLabelsParam.Param<core::param::BoolParam>()->Value();
     const bool drawDiagonal = this->drawDiagonalLabelsParam.Param<core::param::BoolParam>()->Value();
@@ -522,8 +524,6 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis() {
         getModelViewProjection().PeekComponents());
 
     // Other uniforms.
-    const GLfloat tickLength = this->axisTickLengthParam.Param<core::param::FloatParam>()->Value();
-    const GLsizei numTicks = this->axisTicksParam.Param<core::param::IntParam>()->Value();
     glUniform4fv(this->minimalisticAxisShader.ParameterLocation("axisColor"), 1,
         this->axisColorParam.Param<core::param::ColorParam>()->Value().data());
     glUniform1ui(this->minimalisticAxisShader.ParameterLocation("numTicks"), numTicks);
@@ -1084,39 +1084,66 @@ void ScatterplotMatrixRenderer2D::drawMouseLabels() {
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
     const float nameSize = this->cellNameSizeParam.Param<core::param::FloatParam>()->Value();
+    const GLsizei numTicks = this->axisTicksParam.Param<core::param::IntParam>()->Value();
+    const GLfloat tickLength = this->axisTickLengthParam.Param<core::param::FloatParam>()->Value();
+    const float tickSize = this->axisTickSizeParam.Param<core::param::FloatParam>()->Value();
+    const bool invertY = this->cellInvertYParam.Param<core::param::BoolParam>()->Value();
 
     if (this->mouse.x < 0 || this->mouse.y < 0) {
         return;
     }
 
-    int cellIdX = static_cast<int>(this->mouse.x / (cellSize + cellMargin));
-    int cellIdY = static_cast<int>(this->mouse.y / (cellSize + cellMargin));
+    // cell ids as global grid coords
+    const int cellPosIdX = static_cast<int>(this->mouse.x / (cellSize + cellMargin));
+    const int cellPosIdY = static_cast<int>(this->mouse.y / (cellSize + cellMargin));
+    if (this->mouse.x - static_cast<float>(cellPosIdX) * (cellSize + cellMargin) > cellSize ||
+        this->mouse.y - static_cast<float>(cellPosIdY) * (cellSize + cellMargin) > cellSize) {
+        return;
+    }
 
-    if (cellIdX >= columnCount || cellIdY >= columnCount || cellIdX + 1 >= cellIdY ||
-        this->mouse.x - static_cast<float>(cellIdX) * (cellSize + cellMargin) > cellSize ||
-        this->mouse.y - static_cast<float>(cellIdY) * (cellSize + cellMargin) > cellSize) {
+    // map to actual column ids
+    const int cellColIdX = cellPosIdX;
+    const int cellColIdY = invertY ? (columnCount - cellPosIdY - 1) : cellPosIdY;
+
+    if (cellColIdX >= columnCount || cellColIdY >= columnCount || cellColIdX >= cellColIdY) {
         return;
     }
 
     auto oldMode = this->axisFont.GetBatchDrawMode();
     this->axisFont.SetBatchDrawMode(false);
 
+    // bottom left of cell
+    const float offsetX = static_cast<float>(cellPosIdX) * (cellSize + cellMargin);
+    const float offsetY = static_cast<float>(cellPosIdY) * (cellSize + cellMargin);
+
     // Labels
-    std::string labelX = columnInfos[cellIdX].Name();
-    const float xLabelLeft = static_cast<float>(cellIdX) * (cellSize + cellMargin);
-    const float xLabelTop = static_cast<float>(cellIdY) * (cellSize + cellMargin);
-    this->axisFont.DrawString(axisColor.data(), xLabelLeft, xLabelTop, cellSize, cellSize, nameSize, false,
-        labelX.c_str(), core::utility::AbstractFont::ALIGN_CENTER_TOP);
+    std::string labelX = columnInfos[cellColIdX].Name();
+    std::string labelY = columnInfos[cellColIdY].Name();
+
+    this->axisFont.DrawString(axisColor.data(), offsetX, offsetY - tickLength - tickSize, cellSize, cellSize, nameSize,
+        false, labelX.c_str(), core::utility::AbstractFont::ALIGN_CENTER_TOP);
 
     this->axisFont.SetRotation(90.0, 0.0, 0.0, 1.0);
-
-    std::string labelY = columnInfos[cellIdY].Name();
-    const float yLabelLeft = static_cast<float>(cellIdX) * (cellSize + cellMargin) - cellSize;
-    const float yLabelTop = static_cast<float>(cellIdY) * (cellSize + cellMargin);
-    this->axisFont.DrawString(axisColor.data(), yLabelTop, -yLabelLeft, cellSize, cellSize, nameSize, false,
-        labelY.c_str(), core::utility::AbstractFont::ALIGN_CENTER_BOTTOM);
-
+    this->axisFont.DrawString(axisColor.data(), offsetY, -offsetX + cellSize + tickLength + 2 * tickSize, cellSize,
+        cellSize, nameSize, false, labelY.c_str(), core::utility::AbstractFont::ALIGN_CENTER_BOTTOM);
     this->axisFont.ResetRotation();
+
+    // draw tick labels
+    // float horizontalY = offsetY + (invertY ? -margin + tickLength : size + margin - tickLength);
+    for (size_t tick = 0; tick < numTicks; ++tick) {
+        const float t = static_cast<float>(tick) / (numTicks - 1);
+        const float px = lerp(offsetX, offsetX + cellSize, t);
+        const float py = lerp(offsetY, offsetY + cellSize, t);
+        const float pValueX = lerp(columnInfos[cellColIdX].MinimumValue(), columnInfos[cellColIdX].MaximumValue(), t);
+        const float pValueY = lerp(columnInfos[cellColIdY].MinimumValue(), columnInfos[cellColIdY].MaximumValue(), t);
+        const std::string pLabelX = to_string(pValueX);
+        const std::string pLabelY = to_string(pValueY);
+
+        this->axisFont.DrawString(axisColor.data(), px, offsetY - tickLength, tickSize, false, pLabelX.c_str(),
+            core::utility::AbstractFont::ALIGN_CENTER_TOP);
+        this->axisFont.DrawString(axisColor.data(), offsetX - tickLength, py, tickSize, false, pLabelY.c_str(),
+            core::utility::AbstractFont::ALIGN_RIGHT_MIDDLE);
+    }
 
     this->axisFont.SetBatchDrawMode(oldMode);
 }
