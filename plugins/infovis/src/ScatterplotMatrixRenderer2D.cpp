@@ -108,6 +108,8 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , cellSizeParam("cellSize", "Aspect ratio scaling x axis length")
     , cellMarginParam("cellMargin", "Set the scaling of y axis")
     , cellNameSizeParam("cellNameSize", "Sets the fontsize for cell names, i.e., column names")
+    , outerXLabelMarginParam("outerXLabelMarginParam", "Margin between tick labels and name labels on outer x axis")
+    , outerYLabelMarginParam("outerYLabelMarginParam", "Margin between tick labels and name labels on outer y axis")
     , alphaScalingParam("alphaScaling", "Scaling factor for overall alpha")
     , alphaAttenuateSubpixelParam("alphaAttenuateSubpixel", "Attenuate alpha of points that have subpixel size")
     , mouse({0, 0, BrushState::NOP})
@@ -228,6 +230,12 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
 
     this->cellNameSizeParam << new core::param::FloatParam(2.0f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->cellNameSizeParam);
+
+    this->outerXLabelMarginParam << new core::param::FloatParam(0.0f, 0.0f);
+    this->MakeSlotAvailable(&this->outerXLabelMarginParam);
+
+    this->outerYLabelMarginParam << new core::param::FloatParam(0.5f, 0.0f);
+    this->MakeSlotAvailable(&this->outerYLabelMarginParam);
 
     this->alphaScalingParam << new core::param::FloatParam(1.0f, 0.0f);
     this->MakeSlotAvailable(&this->alphaScalingParam);
@@ -515,6 +523,8 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis() {
     const bool drawOuter = this->drawOuterLabelsParam.Param<core::param::BoolParam>()->Value();
     const bool drawDiagonal = this->drawDiagonalLabelsParam.Param<core::param::BoolParam>()->Value();
     const bool invertY = this->cellInvertYParam.Param<core::param::BoolParam>()->Value();
+    const float xLabelMargin = this->outerXLabelMarginParam.Param<core::param::FloatParam>()->Value();
+    const float yLabelMargin = this->outerYLabelMarginParam.Param<core::param::FloatParam>()->Value();
     const float totalSize = columnCount * (size + margin) - margin;
 
     this->minimalisticAxisShader.Enable();
@@ -566,20 +576,19 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis() {
         // horizontal
         if (drawOuter && i < columnCount - 1) {
             if (invertY) {
-                this->axisFont.DrawString(axisColor.data(), offsetX, -tickLength - tickSize, size, size, nameSize,
-                    false, label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_TOP);
+                this->axisFont.DrawString(axisColor.data(), offsetX, -tickLength - tickSize - xLabelMargin, size, size,
+                    nameSize, false, label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_TOP);
             } else {
-                this->axisFont.DrawString(axisColor.data(), offsetX, totalSize + tickLength + tickSize + size, size,
-                    size, nameSize, false, label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_BOTTOM);
+                this->axisFont.DrawString(axisColor.data(), offsetX,
+                    totalSize + tickLength + tickSize + xLabelMargin + size, size, size, nameSize, false, label.c_str(),
+                    core::utility::AbstractFont::ALIGN_CENTER_BOTTOM);
             }
         }
         // vertical
         if (drawOuter && i > 0) {
             this->axisFont.SetRotation(90.0, 0.0, 0.0, 1.0);
-            // tickSize is font height, but here we need font width, which depends on the text,
-            // 2 * tickSize in the following is just arbitrary assumption for this.
-            this->axisFont.DrawString(axisColor.data(), offsetY, tickLength + 2 * tickSize + size, size, size, nameSize,
-                false, label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_BOTTOM);
+            this->axisFont.DrawString(axisColor.data(), offsetY, tickLength + tickSize + yLabelMargin + size, size,
+                size, nameSize, false, label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_BOTTOM);
             this->axisFont.ResetRotation();
         }
         // diagonal
@@ -1088,6 +1097,8 @@ void ScatterplotMatrixRenderer2D::drawMouseLabels() {
     const GLfloat tickLength = this->axisTickLengthParam.Param<core::param::FloatParam>()->Value();
     const float tickSize = this->axisTickSizeParam.Param<core::param::FloatParam>()->Value();
     const bool invertY = this->cellInvertYParam.Param<core::param::BoolParam>()->Value();
+    const float xLabelMargin = this->outerXLabelMarginParam.Param<core::param::FloatParam>()->Value();
+    const float yLabelMargin = this->outerYLabelMarginParam.Param<core::param::FloatParam>()->Value();
 
     if (this->mouse.x < 0 || this->mouse.y < 0) {
         return;
@@ -1120,12 +1131,12 @@ void ScatterplotMatrixRenderer2D::drawMouseLabels() {
     std::string labelX = columnInfos[cellColIdX].Name();
     std::string labelY = columnInfos[cellColIdY].Name();
 
-    this->axisFont.DrawString(axisColor.data(), offsetX, offsetY - tickLength - tickSize, cellSize, cellSize, nameSize,
-        false, labelX.c_str(), core::utility::AbstractFont::ALIGN_CENTER_TOP);
+    this->axisFont.DrawString(axisColor.data(), offsetX, offsetY - tickLength - tickSize - xLabelMargin, cellSize,
+        cellSize, nameSize, false, labelX.c_str(), core::utility::AbstractFont::ALIGN_CENTER_TOP);
 
     this->axisFont.SetRotation(90.0, 0.0, 0.0, 1.0);
-    this->axisFont.DrawString(axisColor.data(), offsetY, -offsetX + cellSize + tickLength + 2 * tickSize, cellSize,
-        cellSize, nameSize, false, labelY.c_str(), core::utility::AbstractFont::ALIGN_CENTER_BOTTOM);
+    this->axisFont.DrawString(axisColor.data(), offsetY, -offsetX + cellSize + tickLength + tickSize + yLabelMargin,
+        cellSize, cellSize, nameSize, false, labelY.c_str(), core::utility::AbstractFont::ALIGN_CENTER_BOTTOM);
     this->axisFont.ResetRotation();
 
     // draw tick labels

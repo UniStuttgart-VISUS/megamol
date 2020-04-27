@@ -239,6 +239,10 @@ private:
 
     core::param::ParamSlot cellNameSizeParam;
 
+    core::param::ParamSlot outerXLabelMarginParam;
+
+    core::param::ParamSlot outerYLabelMarginParam;
+
     core::param::ParamSlot alphaScalingParam;
 
     core::param::ParamSlot alphaAttenuateSubpixelParam;
