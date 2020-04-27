@@ -56,6 +56,7 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
     , addMapParam("addparam::map", "Additionally display the map below each leaf node")
     , addIdParam("addparam::pdbId", "Additionally display the pdb id below each leaf node")
     , distanceMatrixParam("distanceMatrixFile", "Path of the file containing a distance matrix to compare")
+    , sizeMultiplierParam("sizeMultiplier", "Factor that is able to tweak the size of drawn GL_POINTS and GL_LINES")
     , theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
     , texVa(0) {
 
@@ -119,6 +120,9 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
 
     this->distanceMatrixParam.SetParameter(new param::FilePathParam(""));
     this->MakeSlotAvailable(&this->distanceMatrixParam);
+
+    this->sizeMultiplierParam.SetParameter(new param::FloatParam(1.0, 0.5, 20.0));
+    this->MakeSlotAvailable(&this->sizeMultiplierParam);
 
     // Variablen
     this->lastHashClustering = 0;
@@ -375,7 +379,7 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
     }
 
     // Draw Point
-    glPointSize(10);
+    glPointSize(10 * this->sizeMultiplierParam.Param<param::FloatParam>()->Value());
     glBindVertexArray(this->dummyVa);
     this->passthroughShader.Enable();
 
@@ -401,7 +405,7 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
         double posLeftY = minheight + (node->left->height / maxheight) * totalheight;
         double posRightY = minheight + (node->right->height / maxheight) * totalheight;
 
-        glLineWidth(2);
+        glLineWidth(2 * this->sizeMultiplierParam.Param<param::FloatParam>()->Value());
         std::vector<glm::vec4> data(6);
         data[0] = glm::vec4(posRight, posy, 0.0f, 1.0f);
         data[1] = glm::vec4(posLeft, posy, 0.0f, 1.0f);
@@ -575,6 +579,8 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
     this->mouseAction = action;
     this->mouseButton = button;
 
+    float sizefactor = this->sizeMultiplierParam.Param<param::FloatParam>()->Value();
+
     // Wenn mouse-click auf cluster => change position ...
     // Check position
     if (!shiftmod) {
@@ -590,8 +596,8 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
         double spacey = height / (this->root->level);
         double spacex = width / (this->clustering->getLeaves()->size() - 1);
 
-        double distanceX = 30.0 / (windowMeasurements.Width() * 2.0 * this->zoomFactor);
-        double distanceY = 30.0 / (windowMeasurements.Height() * 2.0 * this->zoomFactor);
+        double distanceX = 30.0 * sizefactor / (windowMeasurements.Width() * 2.0 * this->zoomFactor);
+        double distanceY = 30.0 * sizefactor / (windowMeasurements.Height() * 2.0 * this->zoomFactor);
 
         if (checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex, distanceX,
                 distanceY) == -1) {
@@ -633,8 +639,8 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
         double spacey = height / (this->root->level);
         double spacex = width / (this->clustering->getLeaves()->size() - 1);
 
-        double distanceX = 30.0 / (windowMeasurements.Width() * 2.0 * this->zoomFactor);
-        double distanceY = 30.0 / (windowMeasurements.Height() * 2.0 * this->zoomFactor);
+        double distanceX = 30.0 * sizefactor / (windowMeasurements.Width() * 2.0 * this->zoomFactor);
+        double distanceY = 30.0 * sizefactor / (windowMeasurements.Height() * 2.0 * this->zoomFactor);
 
         if (checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex, distanceX,
                 distanceY) == -1) {
@@ -705,8 +711,9 @@ bool ClusterHierarchieRenderer::OnMouseMove(double x, double y) {
     double spacey = height / (this->root->level);
     double spacex = width / (this->clustering->getLeaves()->size() - 1);
 
-    double distanceX = 30.0 / (windowMeasurements.Width() * 2.0 * this->zoomFactor);
-    double distanceY = 30.0 / (windowMeasurements.Height() * 2.0 * this->zoomFactor);
+    float sizefactor = this->sizeMultiplierParam.Param<param::FloatParam>()->Value();
+    double distanceX = 30.0 * sizefactor / (windowMeasurements.Width() * 2.0 * this->zoomFactor);
+    double distanceY = 30.0 * sizefactor / (windowMeasurements.Height() * 2.0 * this->zoomFactor);
 
     checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex, distanceX, distanceY);
 

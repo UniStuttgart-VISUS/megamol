@@ -115,6 +115,7 @@ private:
     core::param::ParamSlot showPDBIdsParam;
     core::param::ParamSlot fontSizeParam;
     core::param::ParamSlot useDistanceColors;
+    core::param::ParamSlot sizeMultiplierParam;
 
     core::param::ParamSlot addMapParam;
     core::param::ParamSlot addIdParam;
