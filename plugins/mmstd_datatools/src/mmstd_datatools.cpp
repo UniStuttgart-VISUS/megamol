@@ -87,6 +87,7 @@
 #include "table/TableSampler.h"
 #include "table/TableToLines.h"
 #include "table/TableToParticles.h"
+#include "table/TableItemSelector.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -241,6 +242,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::SyncedMMPLDProvider>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableManipulator>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::CPERAWDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableItemSelector>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();
