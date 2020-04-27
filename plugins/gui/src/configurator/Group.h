@@ -45,14 +45,14 @@ public:
     inline const ModulePtrVectorType& GetModules(void) { return this->modules; }
     inline bool Empty(void) { return (this->modules.empty()); }
 
-    bool InterfaceSlot_AddCallSlot(const CallSlotPtrType& callslot_ptr, ImGuiID new_interfaceslot_uid);
-    bool InterfaceSlot_RemoveCallSlot(ImGuiID callslot_uid);
-    bool InterfaceSlot_ContainsCallSlot(ImGuiID callslot_uid);
+    ImGuiID AddInterfaceSlot(const CallSlotPtrType& callslot_ptr, bool auto_add = true);
     bool GetInterfaceSlot(ImGuiID interfaceslot_uid, InterfaceSlotPtrType& interfaceslot_ptr);
     inline const InterfaceSlotPtrMapType& GetInterfaceSlots(void) { return this->interfaceslots; }
     inline const InterfaceSlotPtrVectorType& GetInterfaceSlots(CallSlotType type) { return this->interfaceslots[type]; }
     bool DeleteInterfaceSlot(ImGuiID interfaceslot_uid);
-    bool ContainsInterfaceSlot(ImGuiID interfaceslot_uid);
+    bool ContainsInterfaceSlot(ImGuiID interfaceslot_uid);    
+    bool InterfaceSlot_RemoveCallSlot(ImGuiID callslot_uid);
+    bool InterfaceSlot_ContainsCallSlot(ImGuiID callslot_uid);
 
     // GUI Presentation -------------------------------------------------------
 
@@ -113,6 +113,7 @@ private:
     // FUNCTIONS --------------------------------------------------------------
     
     void restore_callslots_interfaceslot_state(void);
+    
 };
 
 

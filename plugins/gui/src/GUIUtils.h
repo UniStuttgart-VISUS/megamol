@@ -12,7 +12,6 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
-
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -50,6 +49,7 @@ namespace gui {
 /********** Defines **********/
 
 #define GUI_VERBOSE
+
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_SLOT_RADIUS (8.0f)
 #define GUI_LINE_THICKNESS (3.0f)
@@ -173,8 +173,8 @@ typedef struct _graph_state_ {
 
 /********** Global Unique ID **********/
 
-static ImGuiID generated_uid = 0; // must be greater than or equal to zero
-static ImGuiID GenerateUniqueID(void) { return (++generated_uid); }
+extern ImGuiID gui_generated_uid; 
+static ImGuiID GenerateUniqueID(void) { return (++megamol::gui::gui_generated_uid); }
 
 
 /********** Class **********/

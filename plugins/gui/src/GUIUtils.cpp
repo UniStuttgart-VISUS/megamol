@@ -13,6 +13,9 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
+ImGuiID megamol::gui::gui_generated_uid = 0; 
+
+
 GUIUtils::GUIUtils(void)
     : tooltip_time(0.0f)
     , tooltip_id(GUI_INVALID_ID)

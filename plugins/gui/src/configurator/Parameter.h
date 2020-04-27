@@ -134,7 +134,7 @@ public:
     };
 
     Parameter(ImGuiID uid, ParamType type, StroageType store, MinType min, MaxType max);
-    ~Parameter() {}
+    ~Parameter(void);
 
     const ImGuiID uid;
     const ParamType type;

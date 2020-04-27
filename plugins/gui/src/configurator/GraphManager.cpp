@@ -1697,6 +1697,7 @@ bool megamol::gui::configurator::GraphManager::replace_parameter_gui_state(
 }
 
 
+
 // GRAPH MANAGET PRESENTATION ####################################################
 
 megamol::gui::configurator::GraphManager::Presentation::Presentation(void)

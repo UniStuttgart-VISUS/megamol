@@ -65,7 +65,7 @@ public:
     bool is_view_instance;
 
     bool AddCallSlot(CallSlotPtrType callslot);
-    bool RemoveAllCallSlots(void);
+    bool DeleteCallSlots(void);
     bool GetCallSlot(ImGuiID callslot_uid, CallSlotPtrType& out_callslot_ptr);
     const CallSlotPtrVectorType& GetCallSlots(CallSlotType type) { return this->callslots[type]; }
     const CallSlotPtrMapType& GetCallSlots(void) { return this->callslots; }

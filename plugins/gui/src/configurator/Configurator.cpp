@@ -402,6 +402,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
     bool search_filter = true;
     bool compat_filter = true;
 
+    bool interfaceslot_selected = false;
     std::string compat_callslot_name;
     CallSlotPtrType selected_callslot_ptr;
     GraphPtrType selected_graph_ptr;
@@ -424,6 +425,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                     CallSlotPtrType callslot_ptr;
                     if (interfaceslot_ptr->GetCompatibleCallSlot(callslot_ptr)) {
                         selected_callslot_ptr = callslot_ptr;
+                        interfaceslot_selected = true;
                     }
                 }
             }
@@ -496,28 +498,32 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                                     }
                                 }
                             }
-                        } else if (this->show_module_list_child) {
-                            // Place new module at mouse pos if added via separate module list child window.
+                        }
+                        
+                        // Place new module at mouse pos if added via separate module list child window.
+                        if (this->show_module_list_child) {
                             module_ptr->GUI_PlaceAtScreenPosition(this->module_list_popup_pos);
                         }
                         
                         // If there is a group selected or hoverd or the new call is connceted to module which is part of group, add module to this group
-                        ImGuiID connceted_group =  GUI_INVALID_ID;
-                        if (added_call && selected_callslot_ptr->IsParentModuleConnected()) {
-                            connceted_group = selected_callslot_ptr->GetParentModule()->GUI_GetGroupUID();
-                        }
-                        ImGuiID selected_group_uid = selected_graph_ptr->GUI_GetSelectedGroup();
-                        ImGuiID group_uid = (connceted_group != GUI_INVALID_ID) ? (connceted_group) : 
-                            ((selected_group_uid != GUI_INVALID_ID) ? (selected_group_uid) : (this->module_list_popup_hovered_group_uid));
-                        
-                        if (group_uid != GUI_INVALID_ID) {
-                            for (auto& group_ptr : selected_graph_ptr->GetGroups()) {
-                                if (group_ptr->uid == group_uid) {
-                                    selected_graph_ptr->GUI_ResetSelectedPointers();
-                                    group_ptr->AddModule(module_ptr);
-                                }
+                        if (!interfaceslot_selected) {
+                            ImGuiID connceted_group = GUI_INVALID_ID;
+                            if (added_call && selected_callslot_ptr->IsParentModuleConnected()) {
+                                connceted_group = selected_callslot_ptr->GetParentModule()->GUI_GetGroupUID();
                             }
+                            ImGuiID selected_group_uid = selected_graph_ptr->GUI_GetSelectedGroup();
+                            ImGuiID group_uid = (connceted_group != GUI_INVALID_ID) ? (connceted_group) : 
+                                ((selected_group_uid != GUI_INVALID_ID) ? (selected_group_uid) : (this->module_list_popup_hovered_group_uid));
                             
+                            if (group_uid != GUI_INVALID_ID) {
+                                for (auto& group_ptr : selected_graph_ptr->GetGroups()) {
+                                    if (group_ptr->uid == group_uid) {
+                                        selected_graph_ptr->GUI_ResetStatePointers();
+                                        group_ptr->AddModule(module_ptr);
+                                    }
+                                }
+                                
+                            }
                         }
                     }
                     this->show_module_list_child = false;

@@ -26,7 +26,11 @@ megamol::gui::configurator::Call::Call(ImGuiID uid)
 }
 
 
-megamol::gui::configurator::Call::~Call() { this->DisconnectCallSlots(); }
+megamol::gui::configurator::Call::~Call() { 
+    
+    // Disconnect call slots
+    this->DisconnectCallSlots(); 
+}
 
 
 bool megamol::gui::configurator::Call::IsConnected(void) {
@@ -112,6 +116,7 @@ const megamol::gui::configurator::CallSlotPtrType& megamol::gui::configurator::C
     //}
     return this->connected_callslots[type];
 }
+
 
 
 // CALL PRESENTATION #########################################################

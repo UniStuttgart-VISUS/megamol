@@ -35,7 +35,11 @@ megamol::gui::configurator::Module::Module(ImGuiID uid)
 }
 
 
-megamol::gui::configurator::Module::~Module() { this->RemoveAllCallSlots(); }
+megamol::gui::configurator::Module::~Module() { 
+    
+    // Delete all call slots
+    this->DeleteCallSlots();
+}
 
 
 bool megamol::gui::configurator::Module::AddCallSlot(megamol::gui::configurator::CallSlotPtrType callslot) {
@@ -59,7 +63,7 @@ bool megamol::gui::configurator::Module::AddCallSlot(megamol::gui::configurator:
 }
 
 
-bool megamol::gui::configurator::Module::RemoveAllCallSlots(void) {
+bool megamol::gui::configurator::Module::DeleteCallSlots(void) {
 
     try {
         for (auto& callslots_map : this->callslots) {
@@ -550,9 +554,8 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
 
 ImVec2 megamol::gui::configurator::Module::Presentation::GetInitModulePosition(const GraphCanvasType& canvas) {
 
-    return ((ImVec2((2.0f * GUI_GRAPH_BORDER), (2.0f * GUI_GRAPH_BORDER) + ImGui::GetTextLineHeightWithSpacing()) +
-                (canvas.position - canvas.offset)) /
-            canvas.zooming);
+    return ((ImVec2((2.0f * GUI_GRAPH_BORDER), (2.0f * GUI_GRAPH_BORDER) ) + //ImGui::GetTextLineHeightWithSpacing()) +
+                (canvas.position - canvas.offset)) / canvas.zooming);
 }
 
 

@@ -24,6 +24,7 @@ megamol::gui::configurator::CallSlot::CallSlot(ImGuiID uid)
 
 megamol::gui::configurator::CallSlot::~CallSlot() {
 
+    // Disconnects calls and parent module
     this->DisconnectCalls();
     this->DisconnectParentModule();
 }
@@ -240,6 +241,7 @@ ImGuiID megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(
 }
 
 
+
 // CALL SLOT PRESENTATION ####################################################
 
 megamol::gui::configurator::CallSlot::Presentation::Presentation(void)
@@ -427,21 +429,19 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                 // Draw Slot
                 ImU32 slot_border_color = COLOR_SLOT_BORDER;
                 ImU32 slot_background_color = COLOR_SLOT_BACKGROUND;
-                if (!is_group_interface) {
-                    bool compatible = false;
-                    if (state.interact.callslot_compat_ptr != nullptr) {
-                        compatible = (CallSlot::CheckCompatibleAvailableCallIndex(
-                                          state.interact.callslot_compat_ptr, inout_callslot) != GUI_INVALID_ID);
-                    }
-                    if (state.interact.interfaceslot_compat_ptr != nullptr) {
-                        compatible =
-                            compatible || state.interact.interfaceslot_compat_ptr->IsCallSlotCompatible(inout_callslot);
-                    }
-                    if (compatible) {
-                        tmpcol = GUI_COLOR_SLOT_COMPATIBLE;
-                        tmpcol.w = alpha;
-                        slot_background_color = ImGui::ColorConvertFloat4ToU32(tmpcol);
-                    }
+                bool compatible = false;
+                if (state.interact.callslot_compat_ptr != nullptr) {
+                    compatible = (CallSlot::CheckCompatibleAvailableCallIndex(
+                                      state.interact.callslot_compat_ptr, inout_callslot) != GUI_INVALID_ID);
+                }
+                if (state.interact.interfaceslot_compat_ptr != nullptr) {
+                    compatible =
+                        compatible || state.interact.interfaceslot_compat_ptr->IsCallSlotCompatible(inout_callslot);
+                }
+                if (compatible) {
+                    tmpcol = GUI_COLOR_SLOT_COMPATIBLE;
+                    tmpcol.w = alpha;
+                    slot_background_color = ImGui::ColorConvertFloat4ToU32(tmpcol);
                 }
                 if (hovered || this->selected) {
                     tmpcol = GUI_COLOR_SLOT_CALLER;

@@ -17,7 +17,7 @@ using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::InterfaceSlot::InterfaceSlot(ImGuiID uid) : uid(uid) {}
+megamol::gui::configurator::InterfaceSlot::InterfaceSlot(ImGuiID uid, bool auto_create) : uid(uid), auto_created(auto_create) {}
 
 
 megamol::gui::configurator::InterfaceSlot::~InterfaceSlot(void) {
@@ -175,7 +175,11 @@ CallSlotType megamol::gui::configurator::InterfaceSlot::GetCallSlotType(void) {
 }
 
 
-bool megamol::gui::configurator::InterfaceSlot::IsEmpty(void) { return (this->callslots.empty()); }
+bool megamol::gui::configurator::InterfaceSlot::IsEmpty(void) { 
+    
+    return (this->callslots.empty()); 
+}
+
 
 
 // GROUP INTERFACE SLOT PRESENTATION ###########################################

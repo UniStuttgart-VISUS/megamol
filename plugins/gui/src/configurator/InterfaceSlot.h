@@ -37,7 +37,7 @@ typedef std::map<CallSlotType, InterfaceSlotPtrVectorType> InterfaceSlotPtrMapTy
  */
 class InterfaceSlot {
 public:
-    InterfaceSlot(ImGuiID uid);
+    InterfaceSlot(ImGuiID uid, bool auto_create);
     ~InterfaceSlot();
 
     const ImGuiID uid;
@@ -51,6 +51,7 @@ public:
     bool IsConnected(void);
     CallSlotType GetCallSlotType(void);
     bool IsEmpty(void);
+    bool IsAutoCreated(void) { return this->auto_created; }
 
     // GUI Presentation -------------------------------------------------------
 
@@ -70,6 +71,8 @@ public:
     inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }    
 
 private:
+    bool auto_created;
+    
     CallSlotPtrVectorType callslots;
 
     /** ************************************************************************
