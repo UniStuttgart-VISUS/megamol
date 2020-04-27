@@ -1103,17 +1103,7 @@ std::vector<HierarchicalClustering::CLUSTERNODE*>* HierarchicalClustering::getCl
     std::vector<CLUSTERNODE*>* queue = new std::vector<CLUSTERNODE*>();
     queue->push_back(node);
 
-    // Setting max distance
-    this->maxdistance = DBL_MAX * -1;
-    auto tmpleaves = this->getLeavesOfNode(node);
-    for (CLUSTERNODE* node1 : *tmpleaves) {
-        for (CLUSTERNODE* node2 : *tmpleaves) {
-            double dist = this->nodeDistance(node1, node2);
-            if (dist > this->maxdistance) {
-                this->maxdistance = dist;
-            }
-        }
-    }
+    float rootheight = node->height;
 
     // Calculate cluster
     while (queue->size() > 0) {
@@ -1122,18 +1112,9 @@ std::vector<HierarchicalClustering::CLUSTERNODE*>* HierarchicalClustering::getCl
         // Check Distance of children
         if (tmp->left != nullptr && tmp->right != nullptr) {
             // Get max ditsance of leaves
-            double dist = DBL_MAX * -1;
-            auto leaves = this->getLeavesOfNode(tmp);
-            for (HierarchicalClustering::CLUSTERNODE* node1 : *leaves) {
-                for (HierarchicalClustering::CLUSTERNODE* node2 : *leaves) {
-                    double tmpdist = this->nodeDistance(node1, node2);
-                    if (tmpdist > dist) {
-                        dist = tmpdist;
-                    }
-                }
-            }
+            double dist = tmp->height;
 
-            if (dist > this->maxdistance * this->distancemultiplier) {
+            if (dist > rootheight * this->distancemultiplier) {
                 queue->push_back(tmp->left);
                 queue->push_back(tmp->right);
             } else {
