@@ -12,10 +12,10 @@ namespace clustering {
 using cluster_id_t = int;
 using clusters_t = std::vector<cluster_id_t>;
 
-enum CLUSTER_IDS { UNDEFINED = -2, NOISE = -1 };
+enum class CLUSTER_IDS : int { UNDEFINED = -2, NOISE = -1 };
 
 inline void DBSCAN_expand(ANNkd_tree& kd_tree, float srad, int minPts, cluster_id_t id, clusters_t& cluster, ANNidx idx) {
-    if (cluster[idx] > NOISE) return;
+    if (cluster[idx] > static_cast<int>(CLUSTER_IDS::NOISE)) return;
     cluster[idx] = id;
 
     auto const n = kd_tree.nPoints();
@@ -42,12 +42,12 @@ inline clusters_t DBSCAN_scan(ANNkd_tree& kd_tree, float eps, int minPts, int& n
 
     auto const srad = eps * eps;
 
-    clusters_t cluster = clusters_t(n, UNDEFINED);
+    clusters_t cluster = clusters_t(n, static_cast<int>(CLUSTER_IDS::UNDEFINED));
 
     cluster_id_t current_id = 0;
 
     for (int idx = 0; idx < n; ++idx) {
-        if (cluster[idx] != UNDEFINED) continue;
+        if (cluster[idx] != static_cast<int>(CLUSTER_IDS::UNDEFINED)) continue;
 
         ann_point p(d, points[idx]);
 
@@ -64,7 +64,7 @@ inline clusters_t DBSCAN_scan(ANNkd_tree& kd_tree, float eps, int minPts, int& n
 
             ++current_id;
         } else {
-            cluster[idx] = NOISE;
+            cluster[idx] = static_cast<int>(CLUSTER_IDS::NOISE);
             continue;
         }
     }
