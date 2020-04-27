@@ -152,14 +152,14 @@ std::array<std::tuple<std::string, PresetGenerator>, 20> PRESETS = {
     std::make_tuple("Cubehelix (default, colorful)", CubeHelixAdapter(0.5, -1.5, 1.5, 1.0)),
     std::make_tuple("Cubehelix (default, de-pinked)", CubeHelixAdapter(0.5, -1.0, 1.0, 1.0)),
     std::make_tuple("Cool-Warm (diverging)", ColormapAdapter<257>(CoolWarmColorMap)),
-    std::make_tuple("AccentMap (qualitative)", ColormapAdapter<8, true>(AccentMap)),
-    std::make_tuple("Dark2 (qualitative)", ColormapAdapter<8, true>(Dark2)),
-    std::make_tuple("Paired (qualitative)", ColormapAdapter<12, true>(Paired)),
-    std::make_tuple("Pastel1 (qualitative)", ColormapAdapter<9, true>(Pastel1)),
-    std::make_tuple("Pastel2 (qualitative)", ColormapAdapter<8, true>(Pastel2)),
-    std::make_tuple("Set1 (qualitative)", ColormapAdapter<9, true>(Set1)),
-    std::make_tuple("Set2 (qualitative)", ColormapAdapter<8, true>(Set2)),
-    std::make_tuple("Set3 (qualitative)", ColormapAdapter<12, true>(Set3)),
+    std::make_tuple("8-class Accent", ColormapAdapter<8, true>(AccentMap)),
+    std::make_tuple("8-class Dark2", ColormapAdapter<8, true>(Dark2Map)),
+    std::make_tuple("12-class Paired", ColormapAdapter<12, true>(PairedMap)),
+    std::make_tuple("9-class Pastel1", ColormapAdapter<9, true>(Pastel1Map)),
+    std::make_tuple("8-class Pastel2", ColormapAdapter<8, true>(Pastel2Map)),
+    std::make_tuple("9-class Set1", ColormapAdapter<9, true>(Set1Map)),
+    std::make_tuple("8-class Set2", ColormapAdapter<8, true>(Set2Map)),
+    std::make_tuple("12-class Set3", ColormapAdapter<12, true>(Set3Map)),
 };
 
 
