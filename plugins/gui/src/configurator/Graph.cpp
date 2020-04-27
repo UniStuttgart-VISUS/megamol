@@ -27,6 +27,8 @@ megamol::gui::configurator::Graph::Graph(const std::string& graph_name)
 
 megamol::gui::configurator::Graph::~Graph(void) {
        
+    this->present.ResetStatePointers();
+       
     // Delete all modules 
     std::vector<ImGuiID> module_uids;
     for (auto& module_ptr : this->modules) {
@@ -816,9 +818,9 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 ? (this->graph_state.interact.callslot_hovered_uid)
                 : ((interfaceslot_hovered) ? (GUI_INVALID_ID) : (this->graph_state.interact.callslot_selected_uid));
         if (slot_uid != GUI_INVALID_ID) {
-            for (auto& mods : inout_graph.GetModules()) {
+            for (auto& module_ptr : inout_graph.GetModules()) {
                 CallSlotPtrType callslot_ptr;
-                if (mods->GetCallSlot(slot_uid, callslot_ptr)) {
+                if (module_ptr->GetCallSlot(slot_uid, callslot_ptr)) {
                     this->graph_state.interact.callslot_compat_ptr = callslot_ptr;
                     found_compatible_callslot = true;
                 }
@@ -1385,7 +1387,7 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(
                                                         this->ResetStatePointers();
                                                         for (size_t i = 1; i < callslot_ptr_vector.size(); i++) {
                                                             if (group_ptr->InterfaceSlot_ContainsCallSlot(callslot_ptr_vector[i]->uid)) {
-                                                                group_ptr->InterfaceSlot_RemoveCallSlot(callslot_ptr_vector[i]->uid);
+                                                                group_ptr->InterfaceSlot_RemoveCallSlot(callslot_ptr_vector[i]->uid, true);
                                                             }
                                                         }
                                                         ImGuiID interfaceslot_uid = group_ptr->AddInterfaceSlot(callslot_ptr);
@@ -2153,10 +2155,12 @@ void megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
     GroupPtrVectorType groups = inout_graph.GetGroups();
 
     // Layout modules within groups
+    /*
     for (auto& group_ptr : groups) {
          this->layout_modules(group_ptr->GetModules());
          group_ptr->GUI_Update(this->graph_state.canvas);
     }
+    * */
   
     /// LAYOUT GROUPS AND ungrouped MODULES ----------------------------------------------------------
 
@@ -2167,18 +2171,18 @@ void megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
     std::vector<std::vector<LayoutItem>> layers;
     layers.clear();
 
-    // Fill first layer with groups and ungrouped modules having no connected callee
+    // Fill last layer with groups and ungrouped modules having no connected caller slots
     layers.emplace_back();
     for (auto& group_ptr : groups) {
-        bool any_connected_callee = false;
-        for (auto& interfaceslot_slot : group_ptr->GetInterfaceSlots(CallSlotType::CALLEE)) {
-            for (auto& callee_slot : interfaceslot_slot->GetCallSlots()) {
-                if (callee_slot->CallsConnected()) {
-                    any_connected_callee = true;
+        bool any_connected_caller = false;
+        for (auto& interfaceslot_slot : group_ptr->GetInterfaceSlots(CallSlotType::CALLER)) {
+            for (auto& caller_slot : interfaceslot_slot->GetCallSlots()) {
+                if (caller_slot->CallsConnected()) {
+                    any_connected_caller = true;
                 }
             }
         }
-        if (!any_connected_callee) {
+        if (!any_connected_caller) {
             LayoutItem layout_item;
             layout_item.module_ptr.reset();
             layout_item.group_ptr = group_ptr;
@@ -2187,13 +2191,13 @@ void megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
     }     
     for (auto& module_ptr : modules) {
         if (!module_ptr->GUI_IsGroupMember()) {
-            bool any_connected_callee = false;
-            for (auto& callee_slot : module_ptr->GetCallSlots(CallSlotType::CALLEE)) {
-                if (callee_slot->CallsConnected()) {
-                    any_connected_callee = true;
+            bool any_connected_caller = false;
+            for (auto& caller_slot : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
+                if (caller_slot->CallsConnected()) {
+                    any_connected_caller = true;
                 }
             }
-            if (!any_connected_callee) {
+            if (!any_connected_caller) {
                 LayoutItem layout_item;
                 layout_item.module_ptr = module_ptr;
                 layout_item.group_ptr.reset();
@@ -2202,123 +2206,80 @@ void megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
         }
     }
 
-
     // Loop while groups and ungrouped modules are added to new layer
     bool added_item = true;
     while (added_item) {
         added_item = false;
         // Add new layer
-        layers.emplace_back();
+        layers.emplace_back();       
+        
         // Loop through last filled layer
         for (auto& layer_item : layers[layers.size() - 2]) {
+            
+            CallSlotPtrVectorType calleeslots;
             if (layer_item.module_ptr != nullptr) {
-                for (auto& caller_slot : layer_item.module_ptr->GetCallSlots(CallSlotType::CALLER)) {
-                    if (caller_slot->CallsConnected()) {
-                        for (auto& call_ptr : caller_slot->GetConnectedCalls()) {
-                            if (call_ptr->GetCallSlot(CallSlotType::CALLEE)->IsParentModuleConnected()) {
-                                auto add_module_ptr = call_ptr->GetCallSlot(CallSlotType::CALLEE)->GetParentModule();
-                                if (!add_module_ptr->GUI_IsGroupMember()) {
-                                    // Add module only if not already present in current layer
-                                    bool module_already_added = false;
-                                    for (auto& last_layer_item : layers.back()) {
-                                        if (last_layer_item.module_ptr != nullptr) {
-                                            if (last_layer_item.module_ptr->uid == add_module_ptr->uid) {
-                                                module_already_added = true;
-                                            }
-                                        }
-                                    }                                                                
-                                    if (!module_already_added) {
-                                        LayoutItem layout_item;
-                                        layout_item.module_ptr = add_module_ptr;
-                                        layout_item.group_ptr.reset();
-                                        layers.back().emplace_back(layout_item);
-                                        added_item = true;
-                                    }
-                                }
-                                else {
-                                    ImGuiID group_uid = add_module_ptr->GUI_GetGroupUID(); // != GUI_INVALID_ID
-                                    GroupPtrType add_group_ptr;
-                                    for (auto& group_ptr : groups) {
-                                        if (group_ptr->uid == group_uid) {
-                                            add_group_ptr = group_ptr;
-                                        }
-                                    }
-                                    if (add_group_ptr != nullptr) {
-                                        // Add group only if not already present in current layer
-                                        bool group_already_added = false;
-                                        for (auto& last_layer_item : layers.back()) {
-                                            if (last_layer_item.group_ptr != nullptr) {
-                                                if (last_layer_item.group_ptr->uid == add_group_ptr->uid) {
-                                                    group_already_added = true;
-                                                }
-                                            }
-                                        }                                                                
-                                        if (!group_already_added) {
-                                            LayoutItem layout_item;
-                                            layout_item.module_ptr.reset();
-                                            layout_item.group_ptr = add_group_ptr;
-                                            layers.back().emplace_back(layout_item);
-                                            added_item = true;
-                                        }  
-                                    }
-                                }
-                            }
-                        }
+                calleeslots = layer_item.module_ptr->GetCallSlots(CallSlotType::CALLEE);
+            }
+            else if (layer_item.group_ptr != nullptr) {
+                for (auto& interfaceslot_slot : layer_item.group_ptr->GetInterfaceSlots(CallSlotType::CALLEE)) {
+                    for (auto& calleeslot_ptr : interfaceslot_slot->GetCallSlots()) {
+                        calleeslots.emplace_back(calleeslot_ptr);
                     }
                 }
             }
-            else if (layer_item.group_ptr != nullptr) {
-                for (auto& interfaceslot_slot : layer_item.group_ptr->GetInterfaceSlots(CallSlotType::CALLER)) {
-                    for (auto& caller_slot : interfaceslot_slot->GetCallSlots()) {
-                        if (caller_slot->CallsConnected()) {
-                            for (auto& call_ptr : caller_slot->GetConnectedCalls()) {
-                                if (call_ptr->GetCallSlot(CallSlotType::CALLEE)->IsParentModuleConnected()) {
-                                    auto add_module_ptr = call_ptr->GetCallSlot(CallSlotType::CALLEE)->GetParentModule();
-                                    if (!add_module_ptr->GUI_IsGroupMember()) {
-                                        // Add module only if not already present in current layer
-                                        bool module_already_added = false;
-                                        for (auto& last_layer_item : layers.back()) {
-                                            if (last_layer_item.module_ptr != nullptr) {
-                                                if (last_layer_item.module_ptr->uid == add_module_ptr->uid) {
-                                                    module_already_added = true;
-                                                }
-                                            }
-                                        }                                                                
-                                        if (!module_already_added) {
-                                            LayoutItem layout_item;
-                                            layout_item.module_ptr = add_module_ptr;
-                                            layout_item.group_ptr.reset();
-                                            layers.back().emplace_back(layout_item);
-                                            added_item = true;
-                                        }
-                                    }
-                                    else {
-                                        ImGuiID group_uid = add_module_ptr->GUI_GetGroupUID(); // != GUI_INVALID_ID
-                                        GroupPtrType add_group_ptr;
-                                        for (auto& group_ptr : groups) {
-                                            if (group_ptr->uid == group_uid) {
-                                                add_group_ptr = group_ptr;
+            for (auto& calleeslot_ptr : calleeslots) {
+                if (calleeslot_ptr->CallsConnected()) {
+                    for (auto& call_ptr : calleeslot_ptr->GetConnectedCalls()) {
+                        if (call_ptr->GetCallSlot(CallSlotType::CALLER)->IsParentModuleConnected()) {
+                            auto add_module_ptr = call_ptr->GetCallSlot(CallSlotType::CALLER)->GetParentModule();
+                            if (!add_module_ptr->GUI_IsGroupMember()) {
+                                
+                                // Add module only if not already present (prevent cyclic dependency)
+                                bool module_already_added = false;
+                                for (auto& previous_layer : layers) {
+                                    for (auto& previous_layer_item : previous_layer) {
+                                        if (previous_layer_item.module_ptr != nullptr) {
+                                            if (previous_layer_item.module_ptr->uid == add_module_ptr->uid) {
+                                                module_already_added = true;
                                             }
                                         }
-                                        if (add_group_ptr != nullptr) {
-                                            // Add group only if not already present in current layer
-                                            bool group_already_added = false;
-                                            for (auto& last_layer_item : layers.back()) {
-                                                if (last_layer_item.group_ptr != nullptr) {
-                                                    if (last_layer_item.group_ptr->uid == add_group_ptr->uid) {
-                                                        group_already_added = true;
-                                                    }
-                                                }
-                                            }                                                                
-                                            if (!group_already_added) {
-                                                LayoutItem layout_item;
-                                                layout_item.module_ptr.reset();
-                                                layout_item.group_ptr = add_group_ptr;
-                                                layers.back().emplace_back(layout_item);
-                                                added_item = true;
-                                            }  
-                                        }
+                                    }      
+                                }                      
+                                if (!module_already_added) {                                    
+                                    LayoutItem layout_item;
+                                    layout_item.module_ptr = add_module_ptr;
+                                    layout_item.group_ptr.reset();
+                                    layers.back().emplace_back(layout_item);
+                                    added_item = true;
+                                }
+                            }
+                            else {
+                                ImGuiID group_uid = add_module_ptr->GUI_GetGroupUID(); // != GUI_INVALID_ID
+                                GroupPtrType add_group_ptr;
+                                for (auto& group_ptr : groups) {
+                                    if (group_ptr->uid == group_uid) {
+                                        add_group_ptr = group_ptr;
                                     }
+                                }
+                                if (add_group_ptr != nullptr) {
+                                    // Add group only if not already present (prevent cyclic dependency)
+                                    bool group_already_added = false;
+                                    for (auto& previous_layer : layers) {
+                                        for (auto& previous_layer_item : previous_layer) {
+                                            if (previous_layer_item.group_ptr != nullptr) {
+                                                if (previous_layer_item.group_ptr->uid == add_group_ptr->uid) {
+                                                    group_already_added = true;
+                                                }
+                                            }
+                                        }      
+                                    }
+                                    if (!group_already_added) {
+                                        LayoutItem layout_item;
+                                        layout_item.module_ptr.reset();
+                                        layout_item.group_ptr = add_group_ptr;
+                                        layers.back().emplace_back(layout_item);
+                                        added_item = true;
+                                    }  
                                 }
                             }
                         }
@@ -2328,47 +2289,104 @@ void megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
         }
     }
     
-    // Deleting duplicate modules and groups from back to front
-    int layer_size = static_cast<int>(layers.size());
-    for (int i = (layer_size - 1); i >= 0; i--) {
-        for (auto& layout_item : layers[i]) {
-            for (int j = (i - 1); j >= 0; j--) {
-                for (auto layer_iter = layers[j].begin(); layer_iter != layers[j].end(); layer_iter++) {
-                    if ((*layer_iter).module_ptr != nullptr && (layout_item.module_ptr != nullptr)) {
-                        if ((*layer_iter).module_ptr->uid == layout_item.module_ptr->uid) {
-                            layers[j].erase(layer_iter);
-                            break;
+    // Sort modules to right layer
+    std::vector<std::vector<LayoutItem>> reorderd_layers;    
+    size_t layer_count = layers.size();
+    for (size_t i = layer_count; i > 0; i--) {
+        auto idx = (i-1);
+        size_t layer_items_count = layers[idx].size();
+        for (size_t j = 0; j < layer_items_count; j++)  {
+            auto layer_item = layers[idx][j];
+            
+            // Collect callee slots of current graph element
+            CallSlotPtrVectorType calleeslots;
+            if (layer_item.module_ptr != nullptr) {
+                calleeslots = layer_item.module_ptr->GetCallSlots(CallSlotType::CALLEE);
+            }
+            else if (layer_item.group_ptr != nullptr) {
+                for (auto& interfaceslot_slot : layer_item.group_ptr->GetInterfaceSlots(CallSlotType::CALLEE)) {
+                    for (auto& calleeslot_ptr : interfaceslot_slot->GetCallSlots()) {
+                        calleeslots.emplace_back(calleeslot_ptr);
+                    }
+                }
+            }
+            // Collect all connected caller slots
+            CallSlotPtrVectorType current_callerslots;
+            for(auto& calleeslot_ptr : calleeslots) {
+                for (auto& call_ptr : calleeslot_ptr->GetConnectedCalls()) {
+                    auto callerslot_ptr = call_ptr->GetCallSlot(CallSlotType::CALLER);
+                    current_callerslots.emplace_back(callerslot_ptr);
+                }
+            }
+            
+            // Search for connected graph elements lying in same or deeper layer 
+            for (size_t k = i; k < layer_count; k++) {
+                for (size_t m = 0; m < layers[k].size(); m++)  {
+                    auto other_layout_item = layers[k][m];
+                    
+                    CallSlotPtrVectorType other_callerslots;
+                    if (other_layout_item.module_ptr != nullptr) {
+                        other_callerslots = other_layout_item.module_ptr->GetCallSlots(CallSlotType::CALLER);
+                    }
+                    else if (other_layout_item.group_ptr != nullptr) {
+                        for (auto& interfaceslot_slot : other_layout_item.group_ptr->GetInterfaceSlots(CallSlotType::CALLER)) {
+                            for (auto& callerslot_ptr : interfaceslot_slot->GetCallSlots()) {
+                                other_callerslots.emplace_back(callerslot_ptr);
+                            }
                         }
                     }
-                    if ((*layer_iter).group_ptr != nullptr && (layout_item.group_ptr != nullptr)) {                            
-                        if ((*layer_iter).group_ptr->uid == layout_item.group_ptr->uid) {
-                            layers[j].erase(layer_iter);
-                            break;
-                        }                            
+            
+                    for (auto& current_callerslot_ptr : current_callerslots) {
+                        for (auto& other_callerslot_ptr : other_callerslots) {    
+                            if (current_callerslot_ptr->uid == other_callerslot_ptr->uid) {
+                                if ((k+1) == layers.size()) {
+                                    layers.emplace_back();
+                                }
+                                layers[k+1].emplace_back(layer_item);
+                                layer_item.module_ptr.reset();
+                                layer_item.group_ptr.reset();
+                                
+                                std::cout << ">>> CHANGED MODULE order " <<  std::endl;
+                            }
+                        }
                     }
                 }
             }
         }
-    }  
+    }
+    
+    
+    /// DEBUG
+    for (size_t i = 0; i < layer_count; i++) {
+        std::cout << ">>> --- LAYER --- " <<  i <<  std::endl;
+        size_t layer_items_count = layers[i].size();
+        for (size_t j = 0; j < layer_items_count; j++)  {
+            auto layer_item = layers[i][j];
+            std::cout << ">>> ITEM " << j << " - " <<  ((layer_item.module_ptr != nullptr)? ("Module: " + layer_item.module_ptr->FullName()) : ("")) << 
+            ((layer_item.group_ptr != nullptr) ? ("GROUP: " + layer_item.group_ptr->name) : ("")) << std::endl;
+        }
+    }
+    std::cout << std::endl; 
     
     // Calculating new position for groups and ungrouped modules
-    ImVec2 init_position = megamol::gui::configurator::Module::GUI_GetInitModulePosition(this->graph_state.canvas);
+    ImVec2 init_position = megamol::gui::configurator::Module::GUI_GetDefaultModulePosition(this->graph_state.canvas);
     ImVec2 pos = init_position;
     float max_call_width = 25.0f; 
     float max_graph_element_width = 0.0f;
-    size_t layer_count = 0;
-    for (auto& layer : layers) {
-        
+
+    for (size_t i = 0; i < layer_count; i++) {
+
         if (this->show_call_names) {
             max_call_width = 0.0f;
         }
         max_graph_element_width = 0.0f;
         pos.y = init_position.y;
-        layer_count = layer.size();
+        bool found_layer_item = false;
         
-        for (size_t i = 0; i < layer_count; i++) {
-            auto layer_item = layer[i];
-            
+        size_t layer_items_count = layers[i].size();
+        for (size_t j = 0; j < layer_items_count; j++)  {
+            auto layer_item = layers[i][j];
+                        
             if (layer_item.module_ptr != nullptr) {
                 if (this->show_call_names) {
                     for (auto& callerslot_ptr : layer_item.module_ptr->GetCallSlots(CallSlotType::CALLER)) {
@@ -2384,6 +2402,7 @@ void megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
                 auto module_size = layer_item.module_ptr->GUI_GetSize();
                 pos.y += (module_size.y + GUI_GRAPH_BORDER);
                 max_graph_element_width = std::max(module_size.x, max_graph_element_width);
+                found_layer_item = true;
                 
             } else if (layer_item.group_ptr != nullptr) {
                 if (this->show_call_names) {
@@ -2402,9 +2421,12 @@ void megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
                 auto group_size = layer_item.group_ptr->GUI_GetSize();
                 pos.y += (group_size.y + GUI_GRAPH_BORDER);
                 max_graph_element_width = std::max(group_size.x, max_graph_element_width);
+                found_layer_item = true;
             }
         }
-        pos.x += (max_graph_element_width + max_call_width + (2.0f * GUI_GRAPH_BORDER));
+        if (found_layer_item) {
+            pos.x += (max_graph_element_width + max_call_width + (2.0f * GUI_GRAPH_BORDER));
+        }
     }
 }
 
@@ -2460,12 +2482,16 @@ void megamol::gui::configurator::Graph::Presentation::layout_modules(const Modul
                                         }
                                     }
                                     if (module_in_list) {
-                                        // Add module only if not already present in current layer
+                                        // Add module only if not already present (prevent cyclic dependency)
                                         bool module_already_added = false;
-                                        for (auto& last_module_ptr : module_layers.back()) {
-                                            if (last_module_ptr->uid == add_module_ptr->uid) {
-                                                module_already_added = true;
-                                            }
+                                        for (auto& previous_layer : module_layers) {
+                                            for (auto& previous_module_ptr : previous_layer) {
+                                                if (previous_module_ptr != nullptr) {
+                                                    if (previous_module_ptr->uid == add_module_ptr->uid) {
+                                                        module_already_added = true;
+                                                    }
+                                                }
+                                            }      
                                         }                                                                
                                         if (!module_already_added) {
                                             module_layers.back().emplace_back(add_module_ptr);
@@ -2479,26 +2505,13 @@ void megamol::gui::configurator::Graph::Presentation::layout_modules(const Modul
                 }
             }
         }
-
-        // Deleting duplicate modules from back to front
-        int layer_size = static_cast<int>(module_layers.size());
-        for (int i = (layer_size - 1); i >= 0; i--) {
-            for (auto& module_ptr : module_layers[i]) {
-                for (int j = (i - 1); j >= 0; j--) {
-                    for (auto layer_iter = module_layers[j].begin(); layer_iter != module_layers[j].end(); layer_iter++) {
-                        if ((*layer_iter) != nullptr && (module_ptr != nullptr)) {
-                            if ((*layer_iter)->uid == module_ptr->uid) {
-                                module_layers[j].erase(layer_iter);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }    
+        
+        
+        /// TODO Re-order found modules ...
+        
         
         // Calculating new position for modules
-        ImVec2 init_position = megamol::gui::configurator::Module::GUI_GetInitModulePosition(this->graph_state.canvas);
+        ImVec2 init_position = megamol::gui::configurator::Module::GUI_GetDefaultModulePosition(this->graph_state.canvas);
         ImVec2 pos = init_position;   
         float max_call_width = 25.0f;
         float max_module_width = 0.0f;
@@ -2510,6 +2523,8 @@ void megamol::gui::configurator::Graph::Presentation::layout_modules(const Modul
             max_module_width = 0.0f;
             pos.y = init_position.y;
             layer_count = layer.size();
+            bool found_layer_item = false;
+            
             for (size_t i = 0; i < layer_count; i++) {
                 auto module_ptr = layer[i];   
                 if (this->show_call_names) {
@@ -2526,8 +2541,11 @@ void megamol::gui::configurator::Graph::Presentation::layout_modules(const Modul
                 auto module_size = module_ptr->GUI_GetSize();
                 pos.y += (module_size.y + GUI_GRAPH_BORDER);
                 max_module_width = std::max(module_size.x, max_module_width);
+                found_layer_item = true;
             }
-            pos.x += (max_module_width + max_call_width + (2.0f * GUI_GRAPH_BORDER));
+            if (found_layer_item) {
+                pos.x += (max_module_width + max_call_width + (2.0f * GUI_GRAPH_BORDER));
+            }
         }
     }
 }

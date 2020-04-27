@@ -493,16 +493,17 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                             for (auto& callslot_map : module_ptr->GetCallSlots()) {
                                 for (auto& callslot_ptr : callslot_map.second) {
                                     if (callslot_ptr->name == compat_callslot_name) {
-                                        added_call = selected_graph_ptr->AddCall(
-                                            this->graph_manager.GetCallsStock(), selected_callslot_ptr, callslot_ptr);
+                                        added_call = selected_graph_ptr->AddCall(this->graph_manager.GetCallsStock(), selected_callslot_ptr, callslot_ptr);
+                                        if (added_call) {
+                                            module_ptr->GUI_SetSelectedSlotPosition();
+                                        }
                                     }
                                 }
                             }
                         }
-                        
                         // Place new module at mouse pos if added via separate module list child window.
-                        if (this->show_module_list_child) {
-                            module_ptr->GUI_PlaceAtScreenPosition(this->module_list_popup_pos);
+                        else if (this->show_module_list_child) {
+                            module_ptr->GUI_SetScreenPosition(this->module_list_popup_pos);
                         }
                         
                         // If there is a group selected or hoverd or the new call is connceted to module which is part of group, add module to this group

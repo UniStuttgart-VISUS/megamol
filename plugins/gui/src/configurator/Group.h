@@ -51,7 +51,7 @@ public:
     inline const InterfaceSlotPtrVectorType& GetInterfaceSlots(CallSlotType type) { return this->interfaceslots[type]; }
     bool DeleteInterfaceSlot(ImGuiID interfaceslot_uid);
     bool ContainsInterfaceSlot(ImGuiID interfaceslot_uid);    
-    bool InterfaceSlot_RemoveCallSlot(ImGuiID callslot_uid);
+    bool InterfaceSlot_RemoveCallSlot(ImGuiID callslot_uid, bool force = false);
     bool InterfaceSlot_ContainsCallSlot(ImGuiID callslot_uid);
 
     // GUI Presentation -------------------------------------------------------

@@ -94,15 +94,16 @@ public:
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
     inline ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
 
-    inline void GUI_PlaceAtScreenPosition(ImVec2 pos) { this->present.PlaceAtScreenPosition(pos); }
+    inline void GUI_SetSelectedSlotPosition(void) { this->present.SetSelectedSlotPosition(); }
+    inline void GUI_SetScreenPosition(ImVec2 pos) { this->present.SetScreenPosition(pos); }
     inline void GUI_SetGroupUID(ImGuiID uid) { this->present.group.uid = uid; }
     inline void GUI_SetGroupVisibility(bool visible) { this->present.group.visible = visible; }
     inline void GUI_SetGroupName(const std::string& name) { this->present.group.name = name; }
     inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
     inline void GUI_SetPresentation(Module::Presentations present) { this->present.presentations = present; }
     inline void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
-    static ImVec2 GUI_GetInitModulePosition(const GraphCanvasType& canvas) {
-        return Module::Presentation::GetInitModulePosition(canvas);
+    static ImVec2 GUI_GetDefaultModulePosition(const GraphCanvasType& canvas) {
+        return Module::Presentation::GetDefaultModulePosition(canvas);
     }
 
 private:
@@ -129,9 +130,10 @@ private:
 
         inline ImVec2 GetPosition(void) { return this->position; }
         inline ImVec2 GetSize(void) { return this->size; }
-        static ImVec2 GetInitModulePosition(const GraphCanvasType& canvas);
+        static ImVec2 GetDefaultModulePosition(const GraphCanvasType& canvas);
 
-        void PlaceAtScreenPosition(ImVec2 pos) { this->place_at_screen_pos = pos; }
+        void SetSelectedSlotPosition(void) { this->set_selected_slot_position = true; }
+        void SetScreenPosition(ImVec2 pos) { this->set_screen_position = pos; }
         inline void SetPosition(ImVec2 pos) { this->position = pos; }
 
         GroupState group;
@@ -148,7 +150,8 @@ private:
         bool selected;
         bool update;
         bool show_params;
-        ImVec2 place_at_screen_pos;
+        ImVec2 set_screen_position;
+        bool set_selected_slot_position;
 
         inline bool found_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {
             return (std::find(modules_uid_vector.begin(), modules_uid_vector.end(), module_uid) !=

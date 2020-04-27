@@ -81,7 +81,7 @@ bool megamol::gui::configurator::Group::RemoveModule(ImGuiID module_uid) {
                 // Remove call slots from group interface
                 for (auto& callslot_map : (*mod_iter)->GetCallSlots()) {
                     for (auto& callslot_ptr : callslot_map.second) {
-                        this->InterfaceSlot_RemoveCallSlot(callslot_ptr->uid);
+                        this->InterfaceSlot_RemoveCallSlot(callslot_ptr->uid, true);
                     }
                 }
                                                                 
@@ -184,14 +184,14 @@ ImGuiID megamol::gui::configurator::Group::AddInterfaceSlot(const CallSlotPtrTyp
 }
 
 
-bool megamol::gui::configurator::Group::InterfaceSlot_RemoveCallSlot(ImGuiID callslots_uid) {
+bool megamol::gui::configurator::Group::InterfaceSlot_RemoveCallSlot(ImGuiID callslots_uid, bool force) {
     
     bool retval = false;
     try {
         std::vector<ImGuiID> empty_interfaceslots_uids;
         for (auto& interfaceslot_map : this->interfaceslots) {
             for (auto& interfaceslot_ptr : interfaceslot_map.second) {
-                if (interfaceslot_ptr->IsAutoCreated() && interfaceslot_ptr->ContainsCallSlot(callslots_uid)) {
+                if ((interfaceslot_ptr->IsAutoCreated() || force) && interfaceslot_ptr->ContainsCallSlot(callslots_uid)) {
                     interfaceslot_ptr->RemoveCallSlot(callslots_uid);
                     retval = true;
                     if (interfaceslot_ptr->IsEmpty()) {
@@ -632,7 +632,7 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
         pos_minY -= (GUI_GRAPH_BORDER + line_height);
         this->position = ImVec2(pos_minX, pos_minY);
     } else {
-        this->position = megamol::gui::configurator::Module::GUI_GetInitModulePosition(in_canvas);
+        this->position = megamol::gui::configurator::Module::GUI_GetDefaultModulePosition(in_canvas);
     }
 
     // SIZE

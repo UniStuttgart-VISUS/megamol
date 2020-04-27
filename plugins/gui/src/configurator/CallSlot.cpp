@@ -24,6 +24,11 @@ megamol::gui::configurator::CallSlot::CallSlot(ImGuiID uid)
 
 megamol::gui::configurator::CallSlot::~CallSlot() {
 
+    if (this->GUI_IsGroupInterface()) {
+        
+    }
+
+
     // Disconnects calls and parent module
     this->DisconnectCalls();
     this->DisconnectParentModule();
