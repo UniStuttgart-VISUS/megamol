@@ -100,7 +100,7 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
     this->maxColorParam.SetParameter(new param::ColorParam(0.992157f, 0.90588f, 0.14509f, 1.0f));
     this->MakeSlotAvailable(&this->maxColorParam);
 
-    this->failColorParam.SetParameter(new param::ColorParam(1.0f, 0.0f, 0.0f, 1.0f));
+    this->failColorParam.SetParameter(new param::ColorParam(0.2f, 0.2f, 0.2f, 1.0f));
     this->MakeSlotAvailable(&this->failColorParam);
 
     this->windowHeightParam.SetParameter(new param::IntParam(VIEWPORT_HEIGHT, 1000, 20000));
@@ -334,6 +334,10 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
         std::string leftpdb = node->left == nullptr ? node->pic->pdbid : node->left->pic->pdbid;
         std::string rightpdb = node->right == nullptr ? node->pic->pdbid : node->right->pic->pdbid;
 
+        bool isleaf = true;
+        if (node->left != nullptr && node->left->left != nullptr) isleaf = false;
+        if (node->right != nullptr && node->right->left != nullptr) isleaf = false;
+
         float mindist;
         float middle;
         if (enval == static_cast<int>(DistanceColorMode::BRENDA)) {
@@ -348,10 +352,12 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
                 }
             }
             middle = 2.0f;
+            if (!isleaf) mindist = -1.0f; 
         } else {
             mindist = DistanceMatrixLoader::GetDistance(leftpdb, rightpdb);
             if (mindist >= 0.0) mindist = 1.0 - mindist;
             middle = 0.5f;
+            if (!isleaf) mindist = -1.0f;
         }
 
         auto minColor = glm::make_vec4(this->minColorParam.Param<param::ColorParam>()->Value().data());

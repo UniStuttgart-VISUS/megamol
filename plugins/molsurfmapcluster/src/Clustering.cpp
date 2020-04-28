@@ -117,7 +117,7 @@ Clustering::Clustering(void)
     this->momentsmethode << cluster_moments_param;
     this->MakeSlotAvailable(&this->momentsmethode);
 
-    this->distancemultiplier.SetParameter(new megamol::core::param::FloatParam(0.75, 0.0, 1.0));
+    this->distancemultiplier.SetParameter(new megamol::core::param::FloatParam(0.75, 0.0, 1.1));
     this->MakeSlotAvailable(&this->distancemultiplier);
 
     this->featuresSlot1Param.SetParameter(new megamol::core::param::FilePathParam(""));
