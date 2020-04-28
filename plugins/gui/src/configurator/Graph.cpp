@@ -1019,7 +1019,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
             this->graph_state.interact.callslot_add_group_uid.second = GUI_INVALID_ID;
         }
         // Process module/call/group deletion
-        if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM])) {
+        if (this->canvas_hovered && std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM])) {
             if (!this->graph_state.interact.modules_selected_uids.empty()) {
                 for (auto& module_uid : this->graph_state.interact.modules_selected_uids) {
                     inout_graph.DeleteModule(module_uid);
@@ -1656,7 +1656,7 @@ void megamol::gui::configurator::Graph::Presentation::present_canvas(
     auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
     ImGui::BeginChild("region", ImVec2(graph_width, 0.0f), true, child_flags);
 
-    this->canvas_hovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
+    this->canvas_hovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_None);
 
     // UPDATE CANVAS -----------------------------------------------------------
 
@@ -2166,7 +2166,7 @@ void megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
 
     struct LayoutItem {
         ModulePtrType module_ptr;
-        GroupPtrType group_ptr;
+        GroupPtrType group_ptr; 
     };
     std::vector<std::vector<LayoutItem>> layers;
     layers.clear();
@@ -2289,7 +2289,7 @@ void megamol::gui::configurator::Graph::Presentation::layout_graph(megamol::gui:
         }
     }
     
-    // Sort modules to right layer
+    // Move modules to right layer
     std::vector<std::vector<LayoutItem>> reorderd_layers;    
     size_t layer_count = layers.size();
     for (size_t i = layer_count; i > 0; i--) {
