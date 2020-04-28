@@ -2,7 +2,7 @@
     "name": "btf-peek",
     "displayName": "btf-peek",
     "description": "allows to peek into referenced snippets in btf shader index files",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "publisher": "VISUS",
     "license": "BSD-3-Clause",
     "repository": {
@@ -31,12 +31,12 @@
     },
     "devDependencies": {
         "@types/mocha": "^7.0.2",
-        "@types/node": "^13.9.3",
+        "@types/node": "^13.13.4",
         "ts-loader": "^6.2.2",
-        "tslint": "^6.1.0",
+        "tslint": "^6.1.2",
         "typescript": "^3.8.3",
-        "vscode": "^1.1.36",
-        "webpack": "^4.42.1",
+        "vscode": "^1.1.37",
+        "webpack": "^4.43.0",
         "webpack-cli": "^3.3.11"
     },
     "dependencies": {
