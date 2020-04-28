@@ -168,8 +168,8 @@ void Clustering::clusterData(
         auto ps3 = this->featuresSlot3Param.Param<core::param::FilePathParam>()->Value();
 
         std::filesystem::path path1(T2A(ps1).PeekBuffer());
-        std::filesystem::path path2(T2A(ps1).PeekBuffer());
-        std::filesystem::path path3(T2A(ps1).PeekBuffer());
+        std::filesystem::path path2(T2A(ps2).PeekBuffer());
+        std::filesystem::path path3(T2A(ps3).PeekBuffer());
         
         this->loadFeatureVectorFromFile(path1, this->slot1Features);
         this->loadFeatureVectorFromFile(path2, this->slot2Features);

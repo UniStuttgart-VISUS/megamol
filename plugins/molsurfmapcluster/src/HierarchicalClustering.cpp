@@ -209,6 +209,7 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
                     } else {
                         vislib::sys::Log::DefaultLog.WriteWarn("Could not find feature vector in the feature list");
                     }
+                    break;
                 }
                 case 1: {
                     if (features2.count(node->pic->pdbid) > 0) {
@@ -217,6 +218,7 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
                     } else {
                         vislib::sys::Log::DefaultLog.WriteWarn("Could not find feature vector in the feature list");
                     }
+                    break;
                 }
                 case 2: {
                     if (features3.count(node->pic->pdbid) > 0) {
@@ -225,6 +227,7 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
                     } else {
                         vislib::sys::Log::DefaultLog.WriteWarn("Could not find feature vector in the feature list");
                     }
+                    break;
                 }
                 default: {
                     if (features1.count(node->pic->pdbid) > 0) {
@@ -233,6 +236,7 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
                     } else {
                         vislib::sys::Log::DefaultLog.WriteWarn("Could not find feature vector in the feature list");
                     }
+                    break;
                 }
                 }
             }
