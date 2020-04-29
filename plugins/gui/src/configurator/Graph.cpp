@@ -2173,11 +2173,15 @@ void megamol::gui::configurator::Graph::Presentation::layout(const ModulePtrVect
     struct LayoutItem {
         ModulePtrType module_ptr;
         GroupPtrType group_ptr; 
+        bool considered;
+        
+        LayoutItem() : module_ptr(nullptr), group_ptr(nullptr),considered(false) {}
+        ~LayoutItem() {}
     };
     std::vector<std::vector<LayoutItem>> layers;
     layers.clear();
 
-    // Fill last layer with groups and modules having no connected caller slots
+    // Fill last layer with graph elements having no connected caller slots
     layers.emplace_back();
     for (auto& group_ptr : groups) {
         bool any_connected_caller = false;
@@ -2223,16 +2227,14 @@ void megamol::gui::configurator::Graph::Presentation::layout(const ModulePtrVect
     std::cout << std::endl; 
     */
     
-    // Loop while groups and ungrouped modules are added to new layer
+    // Loop while graph elements are added to new layer
     bool added_item = true;
     while (added_item) {
         added_item = false;
-        // Add new layer
         layers.emplace_back();       
         
-        // Loop through last filled layer
+        // Loop through graph elements of last filled layer
         for (auto& layer_item : layers[layers.size() - 2]) {
-            
             CallSlotPtrVectorType calleeslots;
             if (layer_item.module_ptr != nullptr) {
                 for (auto& calleeslot_ptr : layer_item.module_ptr->GetCallSlots(CallSlotType::CALLEE)) {
@@ -2323,7 +2325,7 @@ void megamol::gui::configurator::Graph::Presentation::layout(const ModulePtrVect
     layers = reorderd_layers;
     
     /// DEBUG
-    /*
+    
     std::cout << ">>> ### ADDING ### " << std::endl;
     for (size_t i = 0; i < layers.size(); i++) {
         std::cout << ">>> --- LAYER --- " <<  i <<  std::endl;
@@ -2335,8 +2337,7 @@ void megamol::gui::configurator::Graph::Presentation::layout(const ModulePtrVect
         }
     }
     std::cout << std::endl; 
-    */
-        
+    
     // Move modules back to right layer
     for (size_t i = 0; i < layers.size(); i++) {
         for (size_t j = 0; j < layers[i].size(); j++)  {
@@ -2363,33 +2364,36 @@ void megamol::gui::configurator::Graph::Presentation::layout(const ModulePtrVect
                     current_calleeslots.emplace_back(calleeslot_ptr);
                 }
             }
-            
-            // Search for connected graph elements lying in same or lower layer 
+                       
+            // Search for connected graph elements lying in same or lower layer and move graph element
             for (size_t k = 0; k <= i; k++) {
                 for (size_t m = 0; m < layers[k].size(); m++)  {
-                    
-                    CallSlotPtrVectorType other_calleeslots;
-                    if (layers[k][m].module_ptr != nullptr) {
-                        for (auto& calleeslot_ptr : layers[k][m].module_ptr->GetCallSlots(CallSlotType::CALLEE)) {
-                            other_calleeslots.emplace_back(calleeslot_ptr);
-                        }
-                    }
-                    else if (layers[k][m].group_ptr != nullptr) {
-                        for (auto& interfaceslot_slot : layers[k][m].group_ptr->GetInterfaceSlots(CallSlotType::CALLEE)) {
-                            for (auto& calleeslot_ptr : interfaceslot_slot->GetCallSlots()) {
+                    if (!layers[k][m].considered) {
+                        CallSlotPtrVectorType other_calleeslots;
+                        if (layers[k][m].module_ptr != nullptr) {
+                            for (auto& calleeslot_ptr : layers[k][m].module_ptr->GetCallSlots(CallSlotType::CALLEE)) {
                                 other_calleeslots.emplace_back(calleeslot_ptr);
                             }
                         }
-                    }
-                    for (auto& current_calleeslot_ptr : current_calleeslots) {
-                        for (auto& other_calleeslot_ptr : other_calleeslots) {    
-                            if (current_calleeslot_ptr->uid == other_calleeslot_ptr->uid) {
-                                if ((i+1) == layers.size()) {
-                                    layers.emplace_back();
+                        else if (layers[k][m].group_ptr != nullptr) {
+                            for (auto& interfaceslot_slot : layers[k][m].group_ptr->GetInterfaceSlots(CallSlotType::CALLEE)) {
+                                for (auto& calleeslot_ptr : interfaceslot_slot->GetCallSlots()) {
+                                    other_calleeslots.emplace_back(calleeslot_ptr);
                                 }
-                                layers[i+1].emplace_back(layers[k][m]);
-                                layers[k][m].module_ptr.reset();
-                                layers[k][m].group_ptr.reset();
+                            }
+                        }
+                        for (auto& current_calleeslot_ptr : current_calleeslots) {
+                            for (auto& other_calleeslot_ptr : other_calleeslots) {    
+                                if (current_calleeslot_ptr->uid == other_calleeslot_ptr->uid) {
+                                    if ((i+1) == layers.size()) {
+                                        layers.emplace_back();
+                                    }
+                                    layers[i+1].emplace_back(layers[k][m]);
+                                    layers[k][m].module_ptr.reset();
+                                    layers[k][m].group_ptr.reset();
+                                    
+                                    layers[i][j].considered = true;
+                                }
                             }
                         }
                     }
@@ -2397,7 +2401,7 @@ void megamol::gui::configurator::Graph::Presentation::layout(const ModulePtrVect
             }
         }
     }
-    
+
     /// DEBUG
     /*
     std::cout << ">>> ### SORTING ### " << std::endl;    
@@ -2413,7 +2417,7 @@ void megamol::gui::configurator::Graph::Presentation::layout(const ModulePtrVect
     std::cout << std::endl; 
     */
     
-    // Calculating new position for groups and ungrouped modules
+    // Calculate new position of graph elements
     ImVec2 init_position = megamol::gui::configurator::Module::GUI_GetDefaultModulePosition(this->graph_state.canvas);
     ImVec2 pos = init_position;
     float max_call_width = 25.0f; 
@@ -2430,9 +2434,8 @@ void megamol::gui::configurator::Graph::Presentation::layout(const ModulePtrVect
         bool found_layer_item = false;
         
         size_t layer_items_count = layers[i].size();
-        for (size_t j = layer_items_count; j > 0; j--)  {
-            auto jdx = (j-1);
-            auto layer_item = layers[i][jdx];
+        for (size_t j = 0; j < layer_items_count; j++)  {
+            auto layer_item = layers[i][j];
                         
             if (layer_item.module_ptr != nullptr) {
                 if (this->show_call_names) {
