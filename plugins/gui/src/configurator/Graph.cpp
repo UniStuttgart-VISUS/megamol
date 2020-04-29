@@ -2212,21 +2212,6 @@ void megamol::gui::configurator::Graph::Presentation::layout(const ModulePtrVect
         }
     }
 
-    /// DEBUG
-    /*
-    std::cout << ">>> ### INIT ### " << std::endl;
-    for (size_t i = 0; i < layers.size(); i++) {
-        std::cout << ">>> --- LAYER --- " <<  i <<  std::endl;
-        size_t layer_items_count = layers[i].size();
-        for (size_t j = 0; j < layer_items_count; j++)  {
-            auto layer_item = layers[i][j];
-            std::cout << ">>> ITEM " << j << " - " <<  ((layer_item.module_ptr != nullptr)? ("Module: " + layer_item.module_ptr->FullName()) : ("")) << 
-            ((layer_item.group_ptr != nullptr) ? ("GROUP: " + layer_item.group_ptr->name) : ("")) << std::endl;
-        }
-    }
-    std::cout << std::endl; 
-    */
-    
     // Loop while graph elements are added to new layer
     bool added_item = true;
     while (added_item) {
@@ -2325,7 +2310,7 @@ void megamol::gui::configurator::Graph::Presentation::layout(const ModulePtrVect
     layers = reorderd_layers;
     
     /// DEBUG
-    
+    /*
     std::cout << ">>> ### ADDING ### " << std::endl;
     for (size_t i = 0; i < layers.size(); i++) {
         std::cout << ">>> --- LAYER --- " <<  i <<  std::endl;
@@ -2337,6 +2322,7 @@ void megamol::gui::configurator::Graph::Presentation::layout(const ModulePtrVect
         }
     }
     std::cout << std::endl; 
+    */
     
     // Move modules back to right layer
     for (size_t i = 0; i < layers.size(); i++) {
@@ -2461,7 +2447,7 @@ void megamol::gui::configurator::Graph::Presentation::layout(const ModulePtrVect
                             if (callerslot_ptr->CallsConnected() && this->connected_callslot(modules, groups, callerslot_ptr)) {
                                 for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
                                     auto call_name_length = GUIUtils::TextWidgetWidth(call_ptr->class_name);
-                                    max_call_width = std::max(call_name_length, max_call_width);
+                                    max_call_width = std::max(call_name_length - (2.0f * GUI_GRAPH_BORDER), max_call_width);
                                 }
                             }
                         }
