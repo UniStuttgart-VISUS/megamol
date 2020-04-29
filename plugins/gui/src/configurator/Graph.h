@@ -159,7 +159,14 @@ private:
         void present_canvas_multiselection(Graph& inout_graph);
 
         void layout_graph(Graph& inout_graph);
-        void layout_modules(const ModulePtrVectorType& modules);
+        void layout(const ModulePtrVectorType& modules, const GroupPtrVectorType& groups);
+        
+        bool connected_callslot(const ModulePtrVectorType& modules, const GroupPtrVectorType& groups, const CallSlotPtrType& callslot_ptr);
+        bool connected_interfaceslot(const ModulePtrVectorType& modules, const GroupPtrVectorType& groups, const InterfaceSlotPtrType& interfaceslot_ptr);
+        bool contains_callslot(const ModulePtrVectorType& modules, ImGuiID callslot_uid);
+        bool contains_interfaceslot(const GroupPtrVectorType& groups, ImGuiID interfaceslot_uid);
+        bool contains_module(const ModulePtrVectorType& modules, ImGuiID module_uid);
+        bool contains_group(const GroupPtrVectorType& groups, ImGuiID group_uid);
 
     } present;
 

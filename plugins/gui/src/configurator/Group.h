@@ -61,9 +61,9 @@ public:
     }
 
     inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePositionSize(*this, in_canvas); }
-    inline bool GUI_IsViewCollapsed(void) { return this->present.IsViewCollapsed(); }
-
+    
     inline ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
+    inline bool GUI_IsViewCollapsed(void) { return this->present.IsViewCollapsed(); }
     
     inline void GUI_SetPosition(const GraphCanvasType& in_canvas, ImVec2 pos) { this->present.SetPosition(*this, in_canvas, pos); }
     
@@ -85,13 +85,12 @@ private:
         void Present(megamol::gui::PresentPhase phase, Group& inout_group, GraphItemsStateType& state);
 
         void UpdatePositionSize(Group& inout_group, const GraphCanvasType& in_canvas);
-
+        
+        inline ImVec2 GetSize(void) { return this->size; }        
         inline bool IsViewCollapsed(void) { return this->collapsed_view; }
         inline bool ModulesVisible(void) { return !this->collapsed_view; }
         inline void ForceUpdate(void) { this->update = true; }
-        
-        inline ImVec2 GetSize(void) { return this->size; }
-                
+
         void SetPosition(Group& inout_group, const GraphCanvasType& in_canvas, ImVec2 pos);
 
     private:

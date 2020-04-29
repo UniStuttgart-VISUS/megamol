@@ -683,10 +683,10 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
 
     // Set group interface position of call slots --------------------------
 
-    ImVec2 pos = in_canvas.offset + this->position * in_canvas.zooming;
-    pos.y += (line_height * in_canvas.zooming);
-    ImVec2 size = this->size * in_canvas.zooming;
-    size.y -= (line_height * in_canvas.zooming);
+    ImVec2 group_pos = in_canvas.offset + this->position * in_canvas.zooming;
+    group_pos.y += (line_height * in_canvas.zooming);
+    ImVec2 group_size = this->size * in_canvas.zooming;
+    group_size.y -= (line_height * in_canvas.zooming);
 
     size_t caller_idx = 0;
     size_t callee_idx = 0;
@@ -696,11 +696,11 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
         for (auto& interfaceslot_ptr : interfaceslots_map.second) {
             if (interfaceslots_map.first == CallSlotType::CALLER) {
                 callslot_group_position =
-                    ImVec2((pos.x + size.x), (pos.y + size.y * ((float)caller_idx + 1) / ((float)caller_count + 1)));
+                    ImVec2((group_pos.x + group_size.x), (group_pos.y + group_size.y * ((float)caller_idx + 1) / ((float)caller_count + 1)));
                 caller_idx++;
             } else if (interfaceslots_map.first == CallSlotType::CALLEE) {
                 callslot_group_position =
-                    ImVec2(pos.x, (pos.y + size.y * ((float)callee_idx + 1) / ((float)callee_count + 1)));
+                    ImVec2(group_pos.x, (group_pos.y + group_size.y * ((float)callee_idx + 1) / ((float)callee_count + 1)));
                 callee_idx++;
             }
             interfaceslot_ptr->GUI_SetPosition(callslot_group_position);
