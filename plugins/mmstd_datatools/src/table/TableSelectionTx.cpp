@@ -23,6 +23,7 @@ TableSelectionTx::TableSelectionTx()
     , flagStorageWriteOutSlot("writeFlagStorageOut", "Flag storage write output")
     , senderThreadQuit_(false)
     , senderThreadNotified_(false)
+    , receiverThreadQuit_(false)
 {
     this->tableInSlot.SetCompatibleCall<TableDataCallDescription>();
     this->MakeSlotAvailable(&this->tableInSlot);
@@ -54,17 +55,26 @@ bool TableSelectionTx::create() {
         senderThread_ = std::thread(&TableSelectionTx::selectionSender, this);
     }
 
+    receiverThreadQuit_ = false;
+    if (!receiverThread_.joinable()) {
+        receiverThread_ = std::thread(&TableSelectionTx::selectionReceiver, this);
+    }
+
     return true;
 }
 
 void TableSelectionTx::release() {
     senderThreadQuit_ = true;
+    receiverThreadQuit_ = true;
     senderThreadNotified_ = true;
     condVar_.notify_one();
     context_->close();
     context_.reset();
     if (senderThread_.joinable()) {
         senderThread_.join();
+    }
+    if (receiverThread_.joinable()) {
+        receiverThread_.join();
     }
 }
 
@@ -210,6 +220,37 @@ void TableSelectionTx::selectionSender() {
                 }
             }
             lock.lock();
+        }
+    }
+}
+
+void TableSelectionTx::selectionReceiver() {
+    zmq::socket_t socket{*context_, ZMQ_REP};
+    socket.bind("tcp://*:10002");
+
+    const std::string okString{"Ok!"};
+
+    while (!receiverThreadQuit_) {
+        try {
+            zmq::message_t request;
+            socket.recv(request, zmq::recv_flags::none);
+            size_t size = request.size() / sizeof(uint64_t);
+            uint64_t* data_ptr = static_cast<uint64_t*>(request.data());
+            std::vector<uint64_t> data(data_ptr, data_ptr + size);
+
+            if (data.size() > 0) {
+                uint64_t name = data[0];
+                uint32_t timestep = name >> 32u;
+                uint32_t number = name & 0xFFFFFFFF;
+                std::cout << "=== " << timestep << " " << number << std::endl;
+            }
+
+            zmq::message_t reply{okString.cbegin(), okString.cend()};
+            socket.send(reply, zmq::send_flags::none);
+        } catch (const zmq::error_t& e) {
+            if (e.num() != ETERM) {
+                std::cerr << e.what() << std::endl;
+            }
         }
     }
 }

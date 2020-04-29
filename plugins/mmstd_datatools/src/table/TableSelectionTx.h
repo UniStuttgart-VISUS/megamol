@@ -61,6 +61,8 @@ protected:
 
     void selectionSender();
 
+    void selectionReceiver();
+
 private:
     core::CallerSlot tableInSlot;
     core::CallerSlot flagStorageReadInSlot;
@@ -70,12 +72,14 @@ private:
     core::CalleeSlot flagStorageWriteOutSlot;
 
     std::thread senderThread_;
+    std::thread receiverThread_;
     std::unique_ptr<zmq::context_t> context_;
     std::vector<uint64_t> selected_;
     std::mutex selectedMutex_;
     std::condition_variable condVar_;
     bool senderThreadQuit_;
     bool senderThreadNotified_;
+    bool receiverThreadQuit_;
 };
 
 } /* end namespace table */
