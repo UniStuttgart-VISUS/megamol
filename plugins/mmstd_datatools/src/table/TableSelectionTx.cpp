@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "TableSelectionTx.h"
 
+#include "mmcore/param/BoolParam.h"
 #include "vislib/sys/Log.h"
 
 using namespace megamol::stdplugin::datatools;
@@ -21,9 +22,12 @@ TableSelectionTx::TableSelectionTx()
     , flagStorageWriteInSlot("writeFlagStorageIn", "Flag storage write input")
     , flagStorageReadOutSlot("readFlagStorageOut", "Flag storage read output")
     , flagStorageWriteOutSlot("writeFlagStorageOut", "Flag storage write output")
+    , updateSelectionParam("updateSelectionParam", "Enable selection update")
     , senderThreadQuit_(false)
     , senderThreadNotified_(false)
     , receiverThreadQuit_(false)
+    , oldName_(0)
+    , newName_(0)
 {
     this->tableInSlot.SetCompatibleCall<TableDataCallDescription>();
     this->MakeSlotAvailable(&this->tableInSlot);
@@ -41,6 +45,9 @@ TableSelectionTx::TableSelectionTx()
     this->flagStorageWriteOutSlot.SetCallback(core::FlagCallWrite_GL::ClassName(), core::FlagCallWrite_GL::FunctionName(core::FlagCallWrite_GL::CallGetData), &TableSelectionTx::writeDataCallback);
     this->flagStorageWriteOutSlot.SetCallback(core::FlagCallWrite_GL::ClassName(), core::FlagCallWrite_GL::FunctionName(core::FlagCallWrite_GL::CallGetMetaData), &TableSelectionTx::writeMetaDataCallback);
     this->MakeSlotAvailable(&this->flagStorageWriteOutSlot);
+
+    this->updateSelectionParam << new core::param::BoolParam(true);
+    this->MakeSlotAvailable(&this->updateSelectionParam);
 }
 
 TableSelectionTx::~TableSelectionTx() {
@@ -85,6 +92,10 @@ bool TableSelectionTx::readDataCallback(core::Call& call) {
     }
 
     if (!validateCalls()) {
+        return false;
+    }
+
+    if (!validateSelectionUpdate()) {
         return false;
     }
 
@@ -195,6 +206,60 @@ bool TableSelectionTx::validateCalls() {
     return true;
 }
 
+bool TableSelectionTx::validateSelectionUpdate() {
+    std::lock_guard<std::mutex> lock(newNameMutex_);
+    if (newName_ == oldName_) {
+        return true;
+    }
+
+    oldName_ = newName_;
+
+    if (!this->updateSelectionParam.Param<core::param::BoolParam>()->Value()) {
+        return true;
+    }
+
+    auto *flagsReadInCall = this->flagStorageReadInSlot.CallAs<core::FlagCallRead_GL>();
+    (*flagsReadInCall)(core::FlagCallRead_GL::CallGetData);
+    auto flagCollection = flagsReadInCall->getData();
+    auto version = flagsReadInCall->version();
+
+    auto *tableInCall = this->tableInSlot.CallAs<TableDataCall>();
+    tableInCall->SetFrameID(0);
+    (*tableInCall)(1);
+    (*tableInCall)(0);
+
+    size_t numberOfRows = tableInCall->GetRowsCount();
+    size_t numberOfCols = tableInCall->GetColumnsCount();
+    const float *tableInData = tableInCall->GetData();
+
+    if (numberOfCols < 2) {
+        return false;
+    }
+
+    std::vector<uint32_t> flags_data(numberOfRows, core::FlagStorage::ENABLED);
+
+    // find index of selected row
+    if (newName_ > 0) {
+        for (size_t i = 0; i < numberOfRows; ++i) {
+            auto rowTime = static_cast<uint32_t>(tableInData[numberOfCols * i + 0]);   // 0 = id of time column
+            auto rowNumber = static_cast<uint32_t>(tableInData[numberOfCols * i + 1]); // 1 = id of number column
+            uint64_t rowName = (static_cast<uint64_t>(rowTime) << 32u) + static_cast<uint64_t>(rowNumber);
+            if (rowName == newName_) {
+                flags_data[i] = core::FlagStorage::ENABLED | core::FlagStorage::SELECTED;
+                break;
+            }
+        }
+    }
+
+    flagCollection->flags = std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, flags_data, GL_DYNAMIC_DRAW);
+
+    auto *flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core::FlagCallWrite_GL>();
+    flagsWriteInCall->setData(flagCollection, version + 1);
+    (*flagsWriteInCall)(core::FlagCallWrite_GL::CallGetData);
+
+    return true;
+}
+
 void TableSelectionTx::selectionSender() {
     zmq::socket_t socket{*context_, ZMQ_REQ};
     socket.setsockopt(ZMQ_LINGER, 0);
@@ -239,10 +304,8 @@ void TableSelectionTx::selectionReceiver() {
             std::vector<uint64_t> data(data_ptr, data_ptr + size);
 
             if (data.size() > 0) {
-                uint64_t name = data[0];
-                uint32_t timestep = name >> 32u;
-                uint32_t number = name & 0xFFFFFFFF;
-                std::cout << "=== " << timestep << " " << number << std::endl;
+                std::lock_guard<std::mutex> lock(newNameMutex_);
+                newName_ = data[0];
             }
 
             zmq::message_t reply{okString.cbegin(), okString.cend()};

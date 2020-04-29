@@ -59,6 +59,8 @@ protected:
 
     bool validateCalls();
 
+    bool validateSelectionUpdate();
+
     void selectionSender();
 
     void selectionReceiver();
@@ -71,6 +73,8 @@ private:
     core::CalleeSlot flagStorageReadOutSlot;
     core::CalleeSlot flagStorageWriteOutSlot;
 
+    core::param::ParamSlot updateSelectionParam;
+
     std::thread senderThread_;
     std::thread receiverThread_;
     std::unique_ptr<zmq::context_t> context_;
@@ -80,6 +84,10 @@ private:
     bool senderThreadQuit_;
     bool senderThreadNotified_;
     bool receiverThreadQuit_;
+
+    uint64_t oldName_;
+    uint64_t newName_;
+    std::mutex newNameMutex_;
 };
 
 } /* end namespace table */
