@@ -101,16 +101,6 @@ protected:
     bool filenameChanged(core::param::ParamSlot& slot);
 
     /**
-     * Transforms tetrahedron data into a vtkm dataset.
-     *
-     * If triggered, the 'dirty' slot file gets updated
-     * and the dataset is built from scratch
-     *
-     * @return 'true' if dataset could be built, 'false' otherwise
-     */
-    bool tetrahedronFilenameChanged();
-
-    /**
      * Gets the data from the source.
      *
      * @param caller The calling call.
@@ -136,26 +126,8 @@ private:
     /** The file name  */
     core::param::ParamSlot filename;
 
-    /** The file name for the tetrahedron topology */
-    core::param::ParamSlot topology;
-
-    /** The file name for the node labels need to build the tetrahedrons */
-    core::param::ParamSlot labels;
-
     /** The slot for requesting data */
     core::CalleeSlot getData;
-
-    /** The opened data file */
-    vislib::sys::File* file;
-
-    /** The data set bounding box */
-    vislib::math::Cuboid<float> bbox;
-
-    /** The data set clipping box */
-    vislib::math::Cuboid<float> clipbox;
-
-    /** file version */
-    unsigned int fileVersion;
 
     /** Data file load id counter */
     size_t data_hash;
@@ -165,8 +137,6 @@ private:
 
     /** The vtkm data file name */
     std::string vtkmDataFile;
-
-    bool dirtyFlag;
 };
 
 } /* end namespace mmvtkm */

@@ -22,7 +22,8 @@
 #include "vtkm/cont/DataSetFieldAdd.h"
 #include "vtkm/io/reader/VTKDataSetReader.h"
 #include "vtkm/io/writer/VTKDataSetWriter.h"
-#include "vtkm/VecTraits.h"
+#include "vtkm/Math.h"
+#include "vtkm/Matrix.h"
 
 
 using namespace megamol;
@@ -37,27 +38,13 @@ mmvtkmDataSource::mmvtkmDataSource(void)
     , nodesAdiosCallerSlot("adiosNodeSlot", "Slot to request node data from adios.")
     , labelAdiosCallerSlot("adiosLabelSlot", "Slot to request label data from adios.")
     , filename("filename", "The path to the vtkm file to load.")
-    , topology("topology", "The path to the tetrahedron file to load.")
-    , labels("labels", "The path to the node labels file to load.")
-    , file(NULL)
-    , bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
-    , clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
     , data_hash(0)
     , vtkmDataFile("")
-    , vtkmData()
-    , dirtyFlag(true) {
+    , vtkmData() {
 
     this->filename.SetParameter(new core::param::FilePathParam(""));
     this->filename.SetUpdateCallback(&mmvtkmDataSource::filenameChanged);
     this->MakeSlotAvailable(&this->filename);
-
-    this->topology.SetParameter(new core::param::FilePathParam(""));
-    this->topology.SetUpdateCallback(&mmvtkmDataSource::filenameChanged);
-    this->MakeSlotAvailable(&this->topology);
-
-    this->labels.SetParameter(new core::param::FilePathParam(""));
-    this->labels.SetUpdateCallback(&mmvtkmDataSource::filenameChanged);
-    this->MakeSlotAvailable(&this->labels);
 
     this->getData.SetCallback(mmvtkmDataCall::ClassName(), mmvtkmDataCall::FunctionName(0),
         &mmvtkmDataSource::getDataCallback); // GetData is FunctionName(0)
@@ -95,21 +82,6 @@ bool mmvtkmDataSource::create(void) { return true; }
  * moldyn::mmvtkmDataSource::loadFrame
  */
 void mmvtkmDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx) {
-    using vislib::sys::Log;
-    Frame* f = dynamic_cast<Frame*>(frame);
-    if (f == NULL) return;
-    if (this->file == NULL) {
-        // f->Clear();
-        return;
-    }
-    // printf("Requesting frame %u of %u frames\n", idx, this->FrameCount());
-    // Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Requesting frame %u of %u frames\n", idx, this->FrameCount());
-    ASSERT(idx < this->FrameCount());
-
-    // if (!f->LoadFrame(this->file, idx, this->frameIdx[idx + 1] - this->frameIdx[idx], this->fileVersion)) {
-    //    // failed
-    //    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from vtkm file\n", idx);
-    //}
 }
 
 
@@ -117,13 +89,6 @@ void mmvtkmDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsig
  * moldyn::mmvtkmDataSource::release
  */
 void mmvtkmDataSource::release(void) {
-    this->resetFrameCache();
-    if (this->file != NULL) {
-        vislib::sys::File* f = this->file;
-        this->file = NULL;
-        f->Close();
-        delete f;
-    }
 }
 
 /*
@@ -144,8 +109,6 @@ bool mmvtkmDataSource::filenameChanged(core::param::ParamSlot& slot) {
     vtkm::io::reader::VTKDataSetReader readData(vtkmDataFile);
     vtkmData = readData.ReadDataSet();
     vislib::sys::Log::DefaultLog.WriteInfo("Safety check");
-
-    dirtyFlag = true;
 
     return true;
 }
@@ -208,6 +171,15 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
     std::vector<float> x_coord = nodesCad->getData("x")->GetAsFloat();
     std::vector<float> y_coord = nodesCad->getData("y")->GetAsFloat();
     std::vector<float> z_coord = nodesCad->getData("z")->GetAsFloat();
+    std::vector<float> s11 = nodesCad->getData("s11")->GetAsFloat();
+    std::vector<float> s12 = nodesCad->getData("s11")->GetAsFloat();
+    std::vector<float> s13 = nodesCad->getData("s11")->GetAsFloat();
+    std::vector<float> s21 = s12;
+    std::vector<float> s22 = nodesCad->getData("s11")->GetAsFloat();
+    std::vector<float> s23 = nodesCad->getData("s11")->GetAsFloat();
+    std::vector<float> s31 = s13;
+    std::vector<float> s32 = s23;
+    std::vector<float> s33 = nodesCad->getData("s11")->GetAsFloat();
     std::vector<float> hs1_wert = nodesCad->getData("hs1_wert")->GetAsFloat();
     std::vector<float> hs1_x = nodesCad->getData("hs1_x")->GetAsFloat();
     std::vector<float> hs1_y = nodesCad->getData("hs1_y")->GetAsFloat();
@@ -231,18 +203,57 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
 
 
     int num_elements = element_label.size();
-    vtkm::cont::DataSetBuilderExplicitIterative dataSetBuilder;
+    int num_nodes = node_labels.size();
+    vtkm::cont::DataSetBuilderExplicit dataSetBuilder;
     vtkm::cont::DataSetFieldAdd dataSetFieldAdd;
 
-    int cell_idx = 0;
+
     int num_skipped = 0;
-    std::vector<std::vector<vtkm::Vec<float, 3>>> point_hs;
-    std::vector<float> point_hstest;
+    std::vector<vtkm::Vec3f_32> points(num_nodes);
+    std::vector<vtkm::Vec3f_32> point_hs1(num_nodes);
+    std::vector<vtkm::Vec3f_32> point_hs2(num_nodes);
+    std::vector<vtkm::Vec3f_32> point_hs3(num_nodes);
+    std::vector<vtkm::Vec3f_32> point_hs(num_nodes);
+    std::vector<vtkm::Matrix<vtkm::Float32, 3, 3>> point_tensors(num_nodes);
+    //std::vector<vtkm::Id> cell_indices(num_elements * 4);
+    std::vector<vtkm::Id> cell_indices;
+    std::vector<vtkm::IdComponent> num_indices;
+    std::vector<vtkm::UInt8> cell_shapes;
+
+
+	for (int i = 0; i < num_nodes; ++i) {
+        vtkm::Vec3f_32 point = {x_coord[i], y_coord[i], z_coord[i]};
+        vtkm::Vec3f_32 hs1 = {hs1_x[i], hs1_y[i], hs1_z[i]};
+        vtkm::Vec3f_32 hs2 = {hs2_x[i], hs2_y[i], hs2_z[i]};
+        vtkm::Vec3f_32 hs3 = {hs3_x[i], hs3_y[i], hs3_z[i]};
+
+		vtkm::Matrix<vtkm::Float32, 3, 3> tensor;
+		point_tensors[0][0] = s11[i];
+		point_tensors[0][1] = s12[i];
+		point_tensors[0][2] = s13[i];
+		point_tensors[1][0] = s21[i];
+		point_tensors[1][1] = s22[i];
+		point_tensors[1][2] = s23[i];
+		point_tensors[2][0] = s31[i];
+		point_tensors[2][1] = s32[i];
+		point_tensors[2][2] = s33[i];
+
+		vtkm::Vec3f_32 hs1_tens_prod = hs1_wert[i] * vtkm::MatrixMultiply(tensor, hs1);
+        vtkm::Vec3f_32 hs2_tens_prod = hs2_wert[i] * vtkm::MatrixMultiply(tensor, hs2);
+        vtkm::Vec3f_32 hs3_tens_prod = hs3_wert[i] * vtkm::MatrixMultiply(tensor, hs3);
+
+		points[i] = point;
+        point_tensors[i] = tensor;
+        point_hs1[i] = hs1;
+        point_hs2[i] = hs2;
+        point_hs3[i] = hs3;
+        point_hs[i] = hs1_tens_prod + hs2_tens_prod + hs3_tens_prod;
+	}
+
 
     for (int i = 0; i < num_elements; ++i) {
         std::vector<int> labels = {(int)nodeA[i], (int)nodeB[i], (int)nodeC[i], (int)nodeD[i]};
-        std::vector<vtkm::Vec<float, 3>> vertex_buffer(4);
-        //std::vector<std::vector<vtkm::Vec<float, 3>>> hs(4);
+        std::vector<vtkm::Id> index_buffer(4);
 
         bool not_found = false;
 
@@ -258,38 +269,26 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
                 break;
             }
             int idx = 3 * j;
-            vertex_buffer[j] = {x_coord[node_index], y_coord[node_index], z_coord[node_index]};
-            //hs.clear();
-            //hs.resize(3);
-            //hs[j][0] = {hs1_x[node_index], hs1_y[node_index], hs1_z[node_index]};
-            //hs[j][1] = {hs2_x[node_index], hs2_y[node_index], hs2_z[node_index]};
-            //hs[j][2] = {hs3_x[node_index], hs3_y[node_index], hs3_z[node_index]};
+            index_buffer[j] = {node_index};
         }
 
         if (not_found) continue;
 
-        for (int j = 0; j < 4; ++j) {
-            // TODO better vertex handling: could use vertex multiple times by just adding correct index
-            // add vertices of all "correct" vertices and get indices
-            dataSetBuilder.AddPoint(vertex_buffer[j][0], vertex_buffer[j][1], vertex_buffer[j][2]);
-            //point_hs.emplace_back(hs[j]);
-            point_hstest.emplace_back(1.f);
-        }
+		cell_shapes.emplace_back(vtkm::CELL_SHAPE_TETRA);
+        num_indices.emplace_back(4);	// tetrahedrons always have 4 vertices
 
-        dataSetBuilder.AddCell(vtkm::CELL_SHAPE_TETRA);
         for (int j = 0; j < 4; ++j) {
-            // TODO better index connection --> could use index multiple times
-            dataSetBuilder.AddCellPoint(4 * cell_idx + j);
+            cell_indices.emplace_back(index_buffer[j]);
         }
-
-        ++cell_idx;
     }
 
     vislib::sys::Log::DefaultLog.WriteInfo("Number of skipped tetrahedrons: %i", num_skipped);
 
-    // vtkmData = dataSetBuilder.Create(vertices, shapes, numIndices, connectivity);
-    vtkmData = dataSetBuilder.Create();
-    dataSetFieldAdd.AddPointField(vtkmData, "hs_points", point_hstest);
+    vtkmData = dataSetBuilder.Create(points, cell_shapes, num_indices, cell_indices);
+    dataSetFieldAdd.AddPointField(vtkmData, "hs1", point_hs1);
+    dataSetFieldAdd.AddPointField(vtkmData, "hs2", point_hs2);
+    dataSetFieldAdd.AddPointField(vtkmData, "hs3", point_hs3);
+    dataSetFieldAdd.AddPointField(vtkmData, "hs", point_hs);
 
     vtkm::io::writer::VTKDataSetWriter writer("tetrahedron.vtk");
     writer.WriteDataSet(vtkmData);
@@ -318,7 +317,7 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
 bool mmvtkmDataSource::getMetaDataCallback(core::Call& caller) {
     mmvtkmDataCall* c2 = dynamic_cast<mmvtkmDataCall*>(&caller);
 
-    if (c2 != NULL && dirtyFlag) {
+    if (c2 != NULL) {
         c2->SetDataHash(this->data_hash);
         return true;
     }
