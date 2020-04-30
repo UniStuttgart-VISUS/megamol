@@ -48,7 +48,7 @@ namespace gui {
 
 /********** Defines **********/
 
-//#define GUI_VERBOSE
+#define GUI_VERBOSE
 
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_SLOT_RADIUS (8.0f)
@@ -129,12 +129,14 @@ typedef struct _interact_state_ {
 
     ImGuiID group_selected_uid; // in out
     ImGuiID group_hovered_uid;  // in out
+    bool group_layout;          // out
 
     UIDVectorType modules_selected_uids;      // in out
     ImGuiID module_hovered_uid;               // in out
     ImGuiID module_mainview_uid;              // out
     UIDPairVectorType modules_add_group_uids; // out
     UIDVectorType modules_remove_group_uids;  // out
+    bool modules_layout;                      // out
 
     ImGuiID call_selected_uid; // in out
     ImGuiID call_hovered_uid;  // in out

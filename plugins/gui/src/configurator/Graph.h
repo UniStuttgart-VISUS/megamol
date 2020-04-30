@@ -74,7 +74,7 @@ public:
     inline ImGuiID GUI_GetDropSlot(void) const { return this->present.GetDropSlot(); }
     inline bool GUI_GetCanvasHoverd(void) const { return this->present.GetCanvasHoverd(); }
 
-    inline void GUI_SetLayoutGraph(void) { this->present.LayoutGraph(); }
+    inline void GUI_SetLayoutGraph(void) { this->present.SetLayoutGraph(); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -89,7 +89,7 @@ private:
     std::string filename;
 
     /** ************************************************************************
-     * Defines GUI graph present.
+     * Defines GUI graph presentation.
      */
     class Presentation {
     public:
@@ -113,17 +113,12 @@ private:
         ImGuiID GetSelectedCallSlot(void) const { return this->graph_state.interact.callslot_selected_uid; }
         ImGuiID GetSelectedInterfaceSlot(void) const { return this->graph_state.interact.interfaceslot_selected_uid; }
         ImGuiID GetDropSlot(void) const { return this->graph_state.interact.slot_dropped_uid; }
-
         bool GetModuleLabelVisibility(void) const { return this->show_module_names; }
         bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
         bool GetCallLabelVisibility(void) const { return this->show_call_names; }
         bool GetCanvasHoverd(void) const { return this->canvas_hovered; }
 
-        /**
-         * Really simple module layouting.
-         * Sort modules into differnet layers 'from left to right' following the calls.
-         */
-        void LayoutGraph(void) { this->layout_current_graph = true; }
+        void SetLayoutGraph(void) { this->graph_layout = true; }
 
         bool params_visible;
         bool params_readonly;
@@ -138,7 +133,7 @@ private:
         bool show_module_names;
         bool show_parameter_sidebar;
         bool change_show_parameter_sidebar;
-        bool layout_current_graph;
+        bool graph_layout;
         float parameter_sidebar_width;
         bool reset_zooming;
         std::string param_name_space;
@@ -159,7 +154,7 @@ private:
         void present_canvas_multiselection(Graph& inout_graph);
 
         void layout_graph(Graph& inout_graph);
-        void layout(const ModulePtrVectorType& modules, const GroupPtrVectorType& groups);
+        void layout(const ModulePtrVectorType& modules, const GroupPtrVectorType& groups, ImVec2 init_position);
         
         bool connected_callslot(const ModulePtrVectorType& modules, const GroupPtrVectorType& groups, const CallSlotPtrType& callslot_ptr);
         bool connected_interfaceslot(const ModulePtrVectorType& modules, const GroupPtrVectorType& groups, const InterfaceSlotPtrType& interfaceslot_ptr);

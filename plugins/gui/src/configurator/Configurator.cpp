@@ -623,7 +623,8 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
                     std::string json_graph_id = config_item.key(); /// = graph filename
 
                     // Load graph from file
-                    ImGuiID graph_uid = this->graph_manager.LoadAddProjectFile(GUI_INVALID_ID, json_graph_id);
+                    //ImGuiID graph_uid = 
+                    this->graph_manager.LoadAddProjectFile(GUI_INVALID_ID, json_graph_id);
 
                     /// XXX Disabled (Ignoring graph state stored in this project)
                     /*

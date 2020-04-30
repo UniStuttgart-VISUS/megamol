@@ -225,7 +225,10 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
                 compatible = (CallSlot::CheckCompatibleAvailableCallIndex(
                                   state.interact.callslot_compat_ptr, (*callslot_ptr)) != GUI_INVALID_ID);
             }
-            compatible = compatible || inout_interfaceslot.IsCallSlotCompatible((*state.interact.callslot_compat_ptr));
+            if (state.interact.callslot_compat_ptr->IsParentModuleConnected() && (state.interact.callslot_compat_ptr->GUI_GetGroupInterface() == nullptr)) {
+                compatible = compatible || (inout_interfaceslot.IsCallSlotCompatible((*state.interact.callslot_compat_ptr)) &&
+                 (state.interact.callslot_compat_ptr->GetParentModule()->GUI_GetGroupUID() == this->group.uid));
+             }
         }
 
         this->label.clear();
@@ -261,9 +264,9 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
 
                 ImGui::TextUnformatted("Interface Slot");
                 ImGui::Separator();
+                
                 if (ImGui::MenuItem("Delete",
-                        std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str(),
-                        false, true)) {
+                        std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
                     std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
                 }
 

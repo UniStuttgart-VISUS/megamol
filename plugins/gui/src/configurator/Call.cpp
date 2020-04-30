@@ -244,6 +244,7 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
 
                             ImGui::TextUnformatted("Call");
                             ImGui::Separator();
+                            
                             if (ImGui::MenuItem(
                                     "Delete", std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM])
                                                   .ToString()
@@ -251,6 +252,7 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
                                 std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
                             }
                             ImGui::Separator();
+                            
                             ImGui::TextDisabled("Description");
                             ImGui::PushTextWrapPos(ImGui::GetFontSize() * 13.0f);
                             ImGui::TextUnformatted(inout_call.description.c_str());

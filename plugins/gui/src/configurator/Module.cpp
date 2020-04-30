@@ -272,7 +272,9 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
                                               .c_str())) {
                             std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
                         }
-
+                        if (ImGui::MenuItem("Layout", nullptr, false, !singleselect)) {
+                            state.interact.modules_layout = true;
+                        }
                         if (ImGui::MenuItem("Rename", nullptr, false, singleselect)) {
                             popup_rename = true;
                         }
@@ -318,6 +320,7 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
                                 state.interact.modules_remove_group_uids.emplace_back(inout_module.uid);
                             }
                         }
+                        
                         if (singleselect) {
                             ImGui::Separator();
                             ImGui::TextDisabled("Description");

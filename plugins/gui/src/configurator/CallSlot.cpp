@@ -352,12 +352,14 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
 
                     ImGui::TextUnformatted("Call Slot");
                     ImGui::Separator();
+                    
                     bool menu_enabled = (!is_group_interface && (is_parent_module_group_uid != GUI_INVALID_ID));
-                    if (ImGui::MenuItem("Add new Interface Slot ", nullptr, false, menu_enabled)) {
+                    if (ImGui::MenuItem("Create Interface Slot ", nullptr, false, menu_enabled)) {
                         state.interact.callslot_add_group_uid.first = inout_callslot.uid;
                         state.interact.callslot_add_group_uid.second = inout_callslot.GetParentModule()->uid;
-                    }
+                    }                 
                     ImGui::Separator();
+                    
                     ImGui::TextDisabled("Description");
                     ImGui::PushTextWrapPos(ImGui::GetFontSize() * 13.0f);
                     ImGui::TextUnformatted(inout_callslot.description.c_str());
@@ -439,9 +441,11 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                     compatible = (CallSlot::CheckCompatibleAvailableCallIndex(
                                       state.interact.callslot_compat_ptr, inout_callslot) != GUI_INVALID_ID);
                 }
-                if (state.interact.interfaceslot_compat_ptr != nullptr) {
-                    compatible =
-                        compatible || state.interact.interfaceslot_compat_ptr->IsCallSlotCompatible(inout_callslot);
+                if ((state.interact.interfaceslot_compat_ptr != nullptr) && inout_callslot.IsParentModuleConnected() && (this->group.interfaceslot_ptr == nullptr)) {
+                    if (inout_callslot.GetParentModule()->GUI_IsGroupMember()) {
+                        compatible = compatible || (state.interact.interfaceslot_compat_ptr->IsCallSlotCompatible(inout_callslot) && 
+                        (state.interact.interfaceslot_compat_ptr->GUI_GetGroupUID() == inout_callslot.GetParentModule()->GUI_GetGroupUID()));
+                    }
                 }
                 if (compatible) {
                     tmpcol = GUI_COLOR_SLOT_COMPATIBLE;

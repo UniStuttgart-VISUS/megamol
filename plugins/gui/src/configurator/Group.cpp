@@ -449,13 +449,17 @@ void megamol::gui::configurator::Group::Presentation::Present(
 
                 ImGui::TextUnformatted("Group");
                 ImGui::Separator();
-                std::string view = "Collapsed View";
+                
+                std::string view = "Collapse";
                 if (this->collapsed_view) {
-                    view = "Expanded View";
+                    view = "Expand";
                 }
-                if (ImGui::MenuItem(view.c_str())) {
+                if (ImGui::MenuItem(view.c_str(), "'Double-Click' Header")) {
                     this->collapsed_view = !this->collapsed_view;
                     changed_view = true;
+                }
+                if (ImGui::MenuItem("Layout")) {
+                    state.interact.group_layout = true;
                 }
                 if (ImGui::MenuItem("Rename")) {
                     popup_rename = true;
