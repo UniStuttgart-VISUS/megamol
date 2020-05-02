@@ -7,6 +7,8 @@
 #include "mmcore/param/ParamSlot.h"
 #include "ClusterDataTypes.h"
 
+#include <array>
+
 namespace megamol {
 namespace molsurfmapcluster {
 
@@ -87,14 +89,14 @@ private:
     /** Parameter to select the clustering method */
     core::param::ParamSlot clusteringMethodSelectionParam;
 
-    /** Parameter to select the linkage method */
-    core::param::ParamSlot linkageMethodSelectionParam;
-
     /** Pointer to the vector containing the cluster nodes */
     std::shared_ptr<std::vector<ClusterNode_2>> nodes;
 
+    /** Bool indicating whether the clustering has to be recalculated */
+    bool recalculateClustering;
+
     /** The last hash of the incoming data */
-    uint64_t lastDataHash;
+    std::array<uint64_t, 4> lastDataHash;
 
     /** Offset to the incoming hash */
     uint64_t dataHashOffset;

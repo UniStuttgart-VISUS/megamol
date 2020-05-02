@@ -35,7 +35,7 @@ struct ClusterNode_2 {
 };
 
 /** Enum representing all available clustering methods */
-enum class ClusteringMethod { IMAGE_MOMENTS = 0, COLOR_MOMENTS = 1 };
+enum class ClusteringMethod { IMAGE_MOMENTS = 0, COLOR_MOMENTS = 1, MOBILENETV2 = 2 };
 
 /** Enum representing all available distance measures */
 enum class DistanceMeasure {

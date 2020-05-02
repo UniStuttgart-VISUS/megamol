@@ -3,8 +3,8 @@
 #include "CallClustering_2.h"
 #include "image_calls/Image2DCall.h"
 
-#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/EnumParam.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -20,9 +20,7 @@ Clustering_2::Clustering_2(void)
     , useMultipleMapsParam("useMultipleMaps", "Enables that the clustering uses multiple maps instead of one")
     , clusteringMethodSelectionParam("mode::clusteringMethod", "Selection of the used clustering method")
     , distanceMeasureSelectionParam("mode::distanceMeasure", "Selection of the used distance measure")
-    , linkageMethodSelectionParam("mode::linkageMethod", "Selection of the used linkage method")
-    , dataHashOffset(0)
-    , lastDataHash(0) {
+    , dataHashOffset(0) {
     // Callee slots
     this->sendClusterSlot.SetCallback(CallClustering_2::ClassName(),
         CallClustering_2::FunctionName(CallClustering_2::CallForGetExtent), &Clustering_2::GetExtentCallback);
@@ -47,13 +45,14 @@ Clustering_2::Clustering_2(void)
     this->useMultipleMapsParam.SetParameter(new core::param::BoolParam(false));
     this->MakeSlotAvailable(&this->useMultipleMapsParam);
 
-    auto* clusteringMethodEnum = new core::param::EnumParam(0);
+    auto* clusteringMethodEnum = new core::param::EnumParam(static_cast<int>(ClusteringMethod::MOBILENETV2));
     clusteringMethodEnum->SetTypePair(static_cast<int>(ClusteringMethod::IMAGE_MOMENTS), "Image Moments");
     clusteringMethodEnum->SetTypePair(static_cast<int>(ClusteringMethod::COLOR_MOMENTS), "Color Moments");
+    clusteringMethodEnum->SetTypePair(static_cast<int>(ClusteringMethod::MOBILENETV2), "MobileNetV2");
     this->clusteringMethodSelectionParam.SetParameter(clusteringMethodEnum);
     this->MakeSlotAvailable(&this->clusteringMethodSelectionParam);
 
-    auto* distanceMeasureEnum = new core::param::EnumParam(0);
+    auto* distanceMeasureEnum = new core::param::EnumParam(static_cast<int>(DistanceMeasure::EUCLIDEAN_DISTANCE));
     distanceMeasureEnum->SetTypePair(static_cast<int>(DistanceMeasure::EUCLIDEAN_DISTANCE), "Euclidean Distance");
     distanceMeasureEnum->SetTypePair(static_cast<int>(DistanceMeasure::L3_DISTANCE), "L3 Distance");
     distanceMeasureEnum->SetTypePair(static_cast<int>(DistanceMeasure::COSINUS_DISTANCE), "Cosinus Similarity");
@@ -62,15 +61,9 @@ Clustering_2::Clustering_2(void)
     this->distanceMeasureSelectionParam.SetParameter(distanceMeasureEnum);
     this->MakeSlotAvailable(&this->distanceMeasureSelectionParam);
 
-    auto* linkageMethodEnum = new core::param::EnumParam(0);
-    linkageMethodEnum->SetTypePair(static_cast<int>(LinkageMethod::CENTROID_LINKAGE), "Centroid");
-    linkageMethodEnum->SetTypePair(static_cast<int>(LinkageMethod::SINGLE_LINKAGE), "Single");
-    linkageMethodEnum->SetTypePair(static_cast<int>(LinkageMethod::AVERAGE_LINKAGE), "Average");
-    this->linkageMethodSelectionParam.SetParameter(linkageMethodEnum);
-    this->MakeSlotAvailable(&this->linkageMethodSelectionParam);
-
     // Variables
     this->nodes = std::make_shared<std::vector<ClusterNode_2>>();
+    this->lastDataHash = {0, 0, 0, 0};
 }
 
 Clustering_2::~Clustering_2(void) { this->Release(); }
@@ -90,24 +83,35 @@ bool Clustering_2::GetDataCallback(Call& call) {
 }
 
 bool Clustering_2::GetExtentCallback(Call& call) {
-    std::vector<image_calls::Image2DCall*> calls;
-    calls.push_back(this->getImageSlot.CallAs<image_calls::Image2DCall>());
-
+    std::vector<std::pair<image_calls::Image2DCall*, int>> calls;
+    calls.push_back(std::make_pair(this->getImageSlot.CallAs<image_calls::Image2DCall>(), 0));
     {
         image_calls::Image2DCall* imc2 = this->getImageSlot2.CallAs<image_calls::Image2DCall>();
         image_calls::Image2DCall* imc3 = this->getImageSlot3.CallAs<image_calls::Image2DCall>();
         image_calls::Image2DCall* imc4 = this->getImageSlot4.CallAs<image_calls::Image2DCall>();
 
-        if (imc2 != nullptr) calls.push_back(imc2);
-        if (imc3 != nullptr) calls.push_back(imc3);
-        if (imc4 != nullptr) calls.push_back(imc4);
+        if (imc2 != nullptr) calls.push_back(std::make_pair(imc2, 1));
+        if (imc3 != nullptr) calls.push_back(std::make_pair(imc3, 2));
+        if (imc4 != nullptr) calls.push_back(std::make_pair(imc4, 3));
     }
     // if the first one is not connected, fail
-    if (calls.at(0) == nullptr) return false;
+    if (calls.at(0).first == nullptr) return false;
 
-    // get the metadata for all calls
-    for (const auto& c : calls) {
-        if (!(*c)(image_calls::Image2DCall::CallForGetMetaData)) return false;
+    // get the metadata for all relevant calls
+    if (this->useMultipleMapsParam.Param<param::BoolParam>()->Value()) {
+        for (const auto& c : calls) {
+            if (!(*c.first)(image_calls::Image2DCall::CallForGetMetaData)) return false;
+            if (this->lastDataHash.at(c.second) != c.first->DataHash()) {
+                this->lastDataHash.at(c.second) = c.first->DataHash();
+                this->recalculateClustering = true;
+            }
+        }
+    } else {
+        if (!(*calls.at(0).first)(image_calls::Image2DCall::CallForGetMetaData)) return false;
+        if (this->lastDataHash.at(calls.at(0).second) != calls.at(0).first->DataHash()) {
+            this->lastDataHash.at(calls.at(0).second) = calls.at(0).first->DataHash();
+            this->recalculateClustering = true;
+        }
     }
 
     return true;
