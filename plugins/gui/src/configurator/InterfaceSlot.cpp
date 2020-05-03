@@ -50,7 +50,7 @@ bool megamol::gui::configurator::InterfaceSlot::AddCallSlot(
             return false;
         }
 
-        if (!(this->ContainsCallSlot(callslot_ptr->uid)) && (this->IsCallSlotCompatible((*callslot_ptr)))) {
+        if (!(this->ContainsCallSlot(callslot_ptr->uid)) && (this->IsCompatible((*callslot_ptr)))) {
             this->callslots.emplace_back(callslot_ptr);
 
             callslot_ptr->GUI_SetGroupInterface(parent_interfaceslot_ptr);
@@ -116,7 +116,19 @@ bool megamol::gui::configurator::InterfaceSlot::ContainsCallSlot(ImGuiID callslo
 }
 
 
-bool megamol::gui::configurator::InterfaceSlot::IsCallSlotCompatible(const CallSlot& callslot) {
+bool megamol::gui::configurator::InterfaceSlot::IsCompatible(InterfaceSlot& interfaceslot) {
+
+    CallSlotPtrType callslot_ptr_1;
+    CallSlotPtrType callslot_ptr_2;
+    if (this->GetCompatibleCallSlot(callslot_ptr_1) && interfaceslot.GetCompatibleCallSlot(callslot_ptr_2)) {
+        return (callslot_ptr_1->IsCompatible((*callslot_ptr_2)));
+    }
+
+    return false;
+}
+
+
+bool megamol::gui::configurator::InterfaceSlot::IsCompatible(CallSlot& callslot) {
 
     // Callee interface slots can only have one call slot
     if (this->callslots.size() > 0) {
@@ -124,22 +136,35 @@ bool megamol::gui::configurator::InterfaceSlot::IsCallSlotCompatible(const CallS
             return false;
         }
     }
-
-    // Check for compatibility (with all available call slots...)
-    size_t compatible = 0;
-    for (auto& callslot_ptr : this->callslots) {
-        if ((callslot.type == callslot_ptr->type) &&
-            (callslot.compatible_call_idxs == callslot_ptr->compatible_call_idxs)) {
-            compatible++;
+    
+    // Check for exisiting interface slot connceted to call slot
+    if (callslot.GUI_IsGroupInterface()) {
+        return false;
+    }
+    
+    // Check for same group membership
+    if (callslot.IsParentModuleConnected()) {
+        if (this->GUI_GetGroupUID() != callslot.GetParentModule()->GUI_GetGroupUID()) {
+            return false;
         }
     }
-    bool retval = (compatible == this->callslots.size());
-
-    if ((compatible > 0) && (compatible != this->callslots.size())) {
+    
+    // Check for compatibility (with all available call slots...)
+    size_t compatible_slot_count = 0;
+    for (auto& interface_callslot_ptr : this->callslots) {
+        // Check for same type and same compatible call indices
+        if ((callslot.type == interface_callslot_ptr->type) &&
+            (callslot.compatible_call_idxs == interface_callslot_ptr->compatible_call_idxs)) {
+            compatible_slot_count++;
+        }
+    }
+    bool compatible = (compatible_slot_count == this->callslots.size());
+    // Check for existing incompatible call slots
+    if ((compatible_slot_count > 0) && (compatible_slot_count != this->callslots.size())) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Interface slot contains incompatible call slots. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
-    return retval;
+    return compatible;
 }
 
 
@@ -190,7 +215,10 @@ megamol::gui::configurator::InterfaceSlot::Presentation::Presentation(void)
     , position(ImVec2(FLT_MAX, FLT_MAX))
     , utils()
     , selected(false)
-    , label()  {
+    , label() 
+    , last_compat_callslot_uid(GUI_INVALID_ID)
+    , last_compat_interface_uid(GUI_INVALID_ID)
+    , compatible(false) {
 
     this->group.uid = GUI_INVALID_ID;
     this->group.collapsed_view = false;
@@ -218,19 +246,6 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
     try {
         ImVec2 actual_position = this->GetPosition(inout_interfaceslot);
         float radius = GUI_SLOT_RADIUS * state.canvas.zooming;
-        bool compatible = false;
-        if (state.interact.callslot_compat_ptr != nullptr) {
-            CallSlotPtrType callslot_ptr;
-            if (inout_interfaceslot.GetCompatibleCallSlot(callslot_ptr)) {
-                compatible = (CallSlot::CheckCompatibleAvailableCallIndex(
-                                  state.interact.callslot_compat_ptr, (*callslot_ptr)) != GUI_INVALID_ID);
-            }
-            if (state.interact.callslot_compat_ptr->IsParentModuleConnected() && (state.interact.callslot_compat_ptr->GUI_GetGroupInterface() == nullptr)) {
-                compatible = compatible || (inout_interfaceslot.IsCallSlotCompatible((*state.interact.callslot_compat_ptr)) &&
-                 (state.interact.callslot_compat_ptr->GetParentModule()->GUI_GetGroupUID() == this->group.uid));
-             }
-        }
-
         this->label.clear();
         for (auto& callslot_ptr : inout_interfaceslot.GetCallSlots()) {
             this->label += (callslot_ptr->name + " ");
@@ -239,7 +254,6 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
         if (callslot_count > 1) {
             this->label += ("[" + std::to_string(callslot_count) + "]");
         }
-
         std::string button_label = "interfaceslot_" + std::to_string(inout_interfaceslot.uid);
 
         ImGui::PushID(inout_interfaceslot.uid);
@@ -305,6 +319,25 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
             bool active = (state.interact.button_active_uid == inout_interfaceslot.uid);
             bool hovered = (state.interact.button_hovered_uid == inout_interfaceslot.uid);
             bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+            
+            // Compatibility
+            if (state.interact.callslot_compat_ptr != nullptr) {
+                if (state.interact.callslot_compat_ptr->uid != this->last_compat_callslot_uid) {
+                    this->compatible = inout_interfaceslot.IsCompatible((*state.interact.callslot_compat_ptr));
+                    this->last_compat_callslot_uid = state.interact.callslot_compat_ptr->uid;
+                }
+            }
+            if (state.interact.interfaceslot_compat_ptr != nullptr) {
+                if (state.interact.interfaceslot_compat_ptr->uid != this->last_compat_interface_uid) {
+                    this->compatible = this->compatible || inout_interfaceslot.IsCompatible((*state.interact.interfaceslot_compat_ptr));
+                    this->last_compat_interface_uid = state.interact.interfaceslot_compat_ptr->uid;
+                }
+            } 
+            if ((state.interact.callslot_compat_ptr == nullptr) && (state.interact.interfaceslot_compat_ptr == nullptr)) {
+                this->compatible = false;
+                this->last_compat_callslot_uid = GUI_INVALID_ID;
+                this->last_compat_interface_uid = GUI_INVALID_ID;                
+            }
 
             // Selection
             if (!this->selected && active) {
@@ -352,7 +385,7 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
                 slot_highlight_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLEE);
             }
             ImU32 slot_color = COLOR_INTERFACE_BACKGROUND;
-            if (compatible) {
+            if (this->compatible) {
                 slot_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_COMPATIBLE);
             }
             if (hovered || this->selected) {

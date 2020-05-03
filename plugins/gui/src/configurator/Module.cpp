@@ -70,8 +70,8 @@ bool megamol::gui::configurator::Module::DeleteCallSlots(void) {
         for (auto& callslots_map : this->callslots) {
             for (auto callslot_iter = callslots_map.second.begin(); callslot_iter != callslots_map.second.end(); callslot_iter++) {
                 if ((*callslot_iter) == nullptr) {
-                    // vislib::sys::Log::DefaultLog.WriteWarn(
-                    //     "Call slot is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                    /// vislib::sys::Log::DefaultLog.WriteWarn(
+                    ///     "Call slot is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 } else {
                     (*callslot_iter)->DisconnectCalls();
                     (*callslot_iter)->DisconnectParentModule();

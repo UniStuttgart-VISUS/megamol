@@ -270,8 +270,8 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
             }
 
             /// DEBUG
-            // vislib::sys::Log::DefaultLog.WriteInfo(">>>> Class: '%s' NameSpace: '%s' Name: '%s'.\n",
-            // mod->ClassName(), module_namespace.c_str(), module_name.c_str());
+            /// vislib::sys::Log::DefaultLog.WriteInfo(">>>> Class: '%s' NameSpace: '%s' Name: '%s'.\n",
+            /// mod->ClassName(), module_namespace.c_str(), module_name.c_str());
 
             // Ensure unique module name is not yet assigned
             if (graph_ptr->UniqueModuleRename(module_name)) {
@@ -520,9 +520,9 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 /// DEPRECATED
 
                 /// DEBUG
-                // vislib::sys::Log::DefaultLog.WriteInfo(
-                //     ">>>> Instance: '%s' Class: '%s' NameSpace: '%s' Name: '%s' ConfPos: %f, %f.\n",
-                //     view_instance.c_str(), view_class_name.c_str(), view_namespace.c_str(), view_name.c_str());
+                /// vislib::sys::Log::DefaultLog.WriteInfo(
+                ///     ">>>> Instance: '%s' Class: '%s' NameSpace: '%s' Name: '%s' ConfPos: %f, %f.\n",
+                ///     view_instance.c_str(), view_class_name.c_str(), view_namespace.c_str(), view_name.c_str());
 
                 // Create new graph
                 if (graph_ptr == nullptr) {
@@ -615,9 +615,9 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 /// DEPRECATED
 
                 /// DEBUG
-                // vislib::sys::Log::DefaultLog.WriteInfo(">>>> Class: '%s' NameSpace: '%s' Name: '%s' ConfPos: %f,
-                // %f.\n",
-                //    module_class_name.c_str(), module_namespace.c_str(), module_name.c_str());
+                /// vislib::sys::Log::DefaultLog.WriteInfo(">>>> Class: '%s' NameSpace: '%s' Name: '%s' ConfPos: %f,
+                /// %f.\n",
+                ///    module_class_name.c_str(), module_namespace.c_str(), module_name.c_str());
 
                 // Add module
                 if (graph_ptr != nullptr) {
@@ -691,10 +691,10 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 }
 
                 /// DEBUG
-                // vislib::sys::Log::DefaultLog.WriteInfo(
-                //    ">>>> Call Name: '%s' CALLER Module: '%s' Slot: '%s' - CALLEE Module: '%s' Slot: '%s'.\n",
-                //    call_class_name.c_str(), caller_slot_namespace.c_str(), caller_slot_name.c_str(),
-                //    callee_slot_namespace.c_str(), callee_slot_name.c_str());
+                /// vislib::sys::Log::DefaultLog.WriteInfo(
+                ///    ">>>> Call Name: '%s' CALLER Module: '%s' Slot: '%s' - CALLEE Module: '%s' Slot: '%s'.\n",
+                ///    call_class_name.c_str(), caller_slot_namespace.c_str(), caller_slot_name.c_str(),
+                ///    callee_slot_namespace.c_str(), callee_slot_name.c_str());
 
                 // Searching for call
                 if (graph_ptr != nullptr) {
@@ -794,7 +794,7 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                 param_slot_full_name = param_slot_full_name.substr(1, param_slot_full_name.size() - 2);
 
                 /// DEBUG
-                // vislib::sys::Log::DefaultLog.WriteInfo(">>>> %s\n", param_slot_full_name.c_str());
+                /// vislib::sys::Log::DefaultLog.WriteInfo(">>>> %s\n", param_slot_full_name.c_str());
 
                 // Copy multi line parameter values into one string
                 auto value_start_idx = param_line.find(start_delimieter);
@@ -825,7 +825,7 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                     (param_line.find(end_delimieter)) - value_start_idx - end_delimieter.size());
 
                 /// DEBUG
-                // vislib::sys::Log::DefaultLog.WriteInfo(">>>> '%s'\n", value_str.c_str());
+                /// vislib::sys::Log::DefaultLog.WriteInfo(">>>> '%s'\n", value_str.c_str());
 
                 // Searching for parameter
                 if (graph_ptr != nullptr) {

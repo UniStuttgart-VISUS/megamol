@@ -64,7 +64,7 @@ public:
     CallSlotType type;
 
     bool CallsConnected(void) const;
-    bool ConnectCall(CallPtrType call);
+    bool ConnectCall(const CallPtrType& call_ptr);
     bool DisconnectCall(ImGuiID call_uid, bool called_by_call);
     bool DisconnectCalls(void);
     const std::vector<CallPtrType>& GetConnectedCalls(void);
@@ -73,13 +73,12 @@ public:
     bool ConnectParentModule(ModulePtrType parent_module);
     bool DisconnectParentModule(void);
     const ModulePtrType& GetParentModule(void);
+    
+    static ImGuiID GetCompatibleCallIndex(const CallSlotPtrType& callslot_1, const CallSlotPtrType& callslot_2);
+    static ImGuiID GetCompatibleCallIndex(const CallSlotPtrType& callslot, const CallSlot::StockCallSlot& stock_callslot);
 
-    static ImGuiID CheckCompatibleAvailableCallIndex(const CallSlotPtrType callslot_ptr, CallSlot& callslot);
-
-    static ImGuiID GetCompatibleCallIndex(const CallSlotPtrType callslot_1, const CallSlotPtrType callslot_2);
-    static ImGuiID GetCompatibleCallIndex(
-        const CallSlotPtrType callslot, const CallSlot::StockCallSlot& stock_callslot);
-
+    bool IsCompatible(CallSlot& callslot);
+    
     // GUI Presentation -------------------------------------------------------
 
     inline void GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
@@ -140,6 +139,10 @@ private:
         bool selected;
         bool update_once;
         bool show_modulestock;
+        
+        ImGuiID last_compat_callslot_uid;
+        ImGuiID last_compat_interface_uid;
+        bool compatible;
 
     } present;
 };

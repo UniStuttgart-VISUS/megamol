@@ -304,8 +304,8 @@ bool megamol::gui::configurator::Graph::AddCall(
 
     try {
         if ((slot_1_uid == GUI_INVALID_ID) || (slot_2_uid == GUI_INVALID_ID)) {
-            ///vislib::sys::Log::DefaultLog.WriteError(
-            ///    "Invalid slot uid given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            /// vislib::sys::Log::DefaultLog.WriteError(
+            ///     "Invalid slot uid given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -352,7 +352,7 @@ bool megamol::gui::configurator::Graph::AddCall(
                 callslot_group_uid = callslot_ptr->GetParentModule()->GUI_GetGroupUID();
             }
 
-            if ((interfaceslot_group_uid == callslot_group_uid) && interface_ptr->IsCallSlotCompatible((*callslot_ptr))) {
+            if ((interfaceslot_group_uid == callslot_group_uid) && interface_ptr->IsCompatible((*callslot_ptr))) {
                 if (!callslot_ptr->GUI_IsGroupInterface()) {
                     interface_ptr->AddCallSlot(callslot_ptr, interface_ptr);
                 }
@@ -374,8 +374,7 @@ bool megamol::gui::configurator::Graph::AddCall(
                         interface_ptr->RemoveCallSlot(callslot_ptr->uid);
                     }
                 }
-            } else { // if (interfaceslot_group_uid != callslot_group_uid) {
-                                                       
+            } else { /// interfaceslot_group_uid != callslot_group_uid
                 for (auto& interface_callslots_ptr : interface_ptr->GetCallSlots()) {
                     this->AddCall(stock_calls, callslot_ptr, interface_callslots_ptr);
                 }
@@ -383,17 +382,11 @@ bool megamol::gui::configurator::Graph::AddCall(
         }
         // InterfaceSlot <-> InterfaceSlot
         else if ((drag_interfaceslot_ptr != nullptr) && (drop_interfaceslot_ptr != nullptr)) {
-
-            ImGuiID drag_interfaceslot_group_uid = drag_interfaceslot_ptr->GUI_GetGroupUID();
-            ImGuiID drop_interfaceslot_group_uid = drop_interfaceslot_ptr->GUI_GetGroupUID();
-
-            //if (drag_interfaceslot_group_uid != drop_interfaceslot_group_uid) {
-                for (auto& drag_interface_callslots_ptr : drag_interfaceslot_ptr->GetCallSlots()) {
-                    for (auto& drop_interface_callslots_ptr : drop_interfaceslot_ptr->GetCallSlots()) {
-                        this->AddCall(stock_calls, drag_interface_callslots_ptr, drop_interface_callslots_ptr);
-                    }
+            for (auto& drag_interface_callslots_ptr : drag_interfaceslot_ptr->GetCallSlots()) {
+                for (auto& drop_interface_callslots_ptr : drop_interfaceslot_ptr->GetCallSlots()) {
+                    this->AddCall(stock_calls, drag_interface_callslots_ptr, drop_interface_callslots_ptr);
                 }
-            //}
+            }
         }
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(

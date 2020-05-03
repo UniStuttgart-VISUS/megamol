@@ -45,7 +45,8 @@ public:
     bool AddCallSlot(const CallSlotPtrType& callslot_ptr, const InterfaceSlotPtrType& parent_interfaceslot_ptr);
     bool RemoveCallSlot(ImGuiID callslot_uid);
     bool ContainsCallSlot(ImGuiID callslot_uid);
-    bool IsCallSlotCompatible(const CallSlot& callslot);
+    bool IsCompatible(CallSlot& callslot);
+    bool IsCompatible(InterfaceSlot& interfaceslot);
     bool GetCompatibleCallSlot(CallSlotPtrType& out_callslot_ptr);
     CallSlotPtrVectorType& GetCallSlots(void) { return this->callslots; }
     bool IsConnected(void);
@@ -107,6 +108,10 @@ private:
         GUIUtils utils;
         bool selected;
         std::string label;
+        
+        ImGuiID last_compat_callslot_uid;
+        ImGuiID last_compat_interface_uid;
+        bool compatible;
 
     } present;
 };
