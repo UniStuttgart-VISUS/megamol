@@ -811,7 +811,6 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         // Compatible call slot ptr
         this->graph_state.interact.callslot_compat_ptr.reset();
         //  Prioritise hovered slots but only if there is no drag and drop
-        bool found_compatible_callslot = false;
         bool callslot_hovered = (this->graph_state.interact.callslot_hovered_uid != GUI_INVALID_ID);
         bool interfaceslot_hovered = (this->graph_state.interact.interfaceslot_hovered_uid != GUI_INVALID_ID);
         if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
@@ -829,7 +828,6 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 CallSlotPtrType callslot_ptr;
                 if (module_ptr->GetCallSlot(slot_uid, callslot_ptr)) {
                     this->graph_state.interact.callslot_compat_ptr = callslot_ptr;
-                    found_compatible_callslot = true;
                 }
             }
         }
@@ -837,7 +835,7 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         this->graph_state.interact.interfaceslot_compat_ptr.reset();
         slot_uid = (interfaceslot_hovered) ? (this->graph_state.interact.interfaceslot_hovered_uid)
                                            : (this->graph_state.interact.interfaceslot_selected_uid);
-        if (!found_compatible_callslot && (slot_uid != GUI_INVALID_ID)) {
+        if ((this->graph_state.interact.callslot_compat_ptr == nullptr) && (slot_uid != GUI_INVALID_ID)) {
             for (auto& group_ptr : inout_graph.GetGroups()) {
                 InterfaceSlotPtrType interfaceslot_ptr;
                 if (group_ptr->GetInterfaceSlot(slot_uid, interfaceslot_ptr)) {

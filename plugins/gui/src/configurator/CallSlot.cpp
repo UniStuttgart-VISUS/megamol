@@ -40,7 +40,6 @@ bool megamol::gui::configurator::CallSlot::CallsConnected(void) const {
                 __LINE__);
         }
     }
-
     return (!this->connected_calls.empty());
 }
 
@@ -69,11 +68,15 @@ bool megamol::gui::configurator::CallSlot::DisconnectCall(ImGuiID call_uid) {
 
     try {
         for (auto call_iter = this->connected_calls.begin(); call_iter != this->connected_calls.end(); call_iter++) {
-            if ((*call_iter)->uid == call_uid) {
-                (*call_iter)->DisconnectCallSlots(this->uid);
-                (*call_iter).reset();
-                this->connected_calls.erase(call_iter);
-                return true;
+            if ((*call_iter) != nullptr) {
+                if ((*call_iter)->uid == call_uid) {
+                    (*call_iter)->DisconnectCallSlots(this->uid);
+                    (*call_iter).reset();
+                    if (call_iter != this->connected_calls.end()) {
+                        this->connected_calls.erase(call_iter);
+                    }
+                    return true;
+                }
             }
         }
     } catch (std::exception e) {
@@ -92,7 +95,9 @@ bool megamol::gui::configurator::CallSlot::DisconnectCalls(void) {
 
     try {
         for (auto& call_ptr : this->connected_calls) {
-            call_ptr->DisconnectCallSlots(this->uid);
+            if (call_ptr != nullptr) {
+                call_ptr->DisconnectCallSlots(this->uid);
+            }
         }
         this->connected_calls.clear();
         
@@ -119,12 +124,12 @@ const std::vector<megamol::gui::configurator::CallPtrType>& megamol::gui::config
                 __LINE__);
         }
     }
-
     return this->connected_calls;
 }
 
 
 bool megamol::gui::configurator::CallSlot::IsParentModuleConnected(void) const {
+    
     return (this->parent_module != nullptr);
 }
 
@@ -135,6 +140,7 @@ bool megamol::gui::configurator::CallSlot::ConnectParentModule(
     if (parent_module == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn(
             "Pointer to given parent module is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
     }
     if (this->parent_module != nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn(
