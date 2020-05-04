@@ -447,8 +447,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
             compat_filter = false;
             for (auto& stock_callslot_map : mod.callslots) {
                 for (auto& stock_callslot : stock_callslot_map.second) {
-                    ImGuiID cpcidx = CallSlot::GetCompatibleCallIndex(selected_callslot_ptr, stock_callslot);
-                    if (cpcidx != GUI_INVALID_ID) {
+                    if (CallSlot::GetCompatibleCallIndex(selected_callslot_ptr, stock_callslot) != GUI_INVALID_ID) {
                         compat_callslot_name = stock_callslot.name;
                         compat_filter = true;
                     }
@@ -646,8 +645,9 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
             vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Read configurator state from JSON string.");
             #endif // GUI_VERBOSE
         } else {
-            /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find configurator state in JSON. [%s, %s, line
-            /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            #ifdef GUI_VERBOSE
+            vislib::sys::Log::DefaultLog.WriteWarn("Could not find configurator state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            #endif // GUI_VERBOSE
             return false;
         }
 

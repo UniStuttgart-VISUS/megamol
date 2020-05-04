@@ -63,7 +63,7 @@ public:
 
     bool IsConnected(void);
     bool ConnectCallSlots(CallSlotPtrType callslot_1, CallSlotPtrType callslot_2);
-    bool DisconnectCallSlots(void);
+    bool DisconnectCallSlots(ImGuiID calling_callslot_uid = GUI_INVALID_ID);
     const CallSlotPtrType& GetCallSlot(CallSlotType type);
 
     // GUI Presentation -------------------------------------------------------

@@ -1519,8 +1519,9 @@ bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_st
             vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Read parameter gui state from JSON string.");
             #endif // GUI_VERBOSE
         } else {
-            /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON. [%s, %s, line
-            /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            #ifdef GUI_VERBOSE
+            vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            #endif // GUI_VERBOSE
             return false;
         }
 

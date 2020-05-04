@@ -146,6 +146,7 @@ typedef struct _interact_state_ {
     ImGuiID callslot_selected_uid;                     // in out
     ImGuiID callslot_hovered_uid;                      // in out
     UIDPairType callslot_add_group_uid;                // in out
+    UIDPairType callslot_remove_group_uid;             // in out
     configurator::CallSlotPtrType callslot_compat_ptr; // in
 
     ImGuiID interfaceslot_selected_uid;                          // in out

@@ -65,23 +65,15 @@ bool megamol::gui::configurator::CallSlot::ConnectCall(const megamol::gui::confi
 }
 
 
-bool megamol::gui::configurator::CallSlot::DisconnectCall(ImGuiID call_uid, bool called_by_call) {
+bool megamol::gui::configurator::CallSlot::DisconnectCall(ImGuiID call_uid) {
 
     try {
         for (auto call_iter = this->connected_calls.begin(); call_iter != this->connected_calls.end(); call_iter++) {
-            if ((*call_iter) == nullptr) {
-                /// vislib::sys::Log::DefaultLog.WriteWarn(
-                ///     "Call is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            } else {
-                if ((*call_iter)->uid == call_uid) {
-                    if (!called_by_call) {
-                        (*call_iter)->DisconnectCallSlots();
-                    }
-
-                    (*call_iter).reset();
-                    this->connected_calls.erase(call_iter);
-                    return true;
-                }
+            if ((*call_iter)->uid == call_uid) {
+                (*call_iter)->DisconnectCallSlots(this->uid);
+                (*call_iter).reset();
+                this->connected_calls.erase(call_iter);
+                return true;
             }
         }
     } catch (std::exception e) {
@@ -99,19 +91,11 @@ bool megamol::gui::configurator::CallSlot::DisconnectCall(ImGuiID call_uid, bool
 bool megamol::gui::configurator::CallSlot::DisconnectCalls(void) {
 
     try {
-        // Since connected calls operate on this list for disconnecting slots
-        // a local copy of the connected calls is required.
-        auto connected_calls_copy = this->connected_calls;
-        for (auto& call_ptr : connected_calls_copy) {
-            if (call_ptr == nullptr) {
-                /// vislib::sys::Log::DefaultLog.WriteWarn(
-                ///     "Call is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            } else {
-                call_ptr->DisconnectCallSlots();
-            }
+        for (auto& call_ptr : this->connected_calls) {
+            call_ptr->DisconnectCallSlots(this->uid);
         }
         this->connected_calls.clear();
-        connected_calls_copy.clear();
+        
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -165,8 +149,9 @@ bool megamol::gui::configurator::CallSlot::ConnectParentModule(
 bool megamol::gui::configurator::CallSlot::DisconnectParentModule(void) {
 
     if (parent_module == nullptr) {
-        /// vislib::sys::Log::DefaultLog.WriteWarn(
-        ///      "Pointer to parent module is already nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        #ifdef GUI_VERBOSE
+        /// vislib::sys::Log::DefaultLog.WriteWarn("Pointer to parent module is already nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        #endif // GUI_VERBOSE
         return false;
     }
     this->parent_module.reset();
@@ -222,26 +207,23 @@ ImGuiID megamol::gui::configurator::CallSlot::GetCompatibleCallIndex(
 }
 
 
-bool megamol::gui::configurator::CallSlot::IsCompatible(CallSlot& callslot) {
+bool megamol::gui::configurator::CallSlot::IsConnectionValid(CallSlot& callslot) {
     
     // Check for different type
     if (this->type == callslot.type) {
-        /// vislib::sys::Log::DefaultLog.WriteError(
-        ///    "Call slots must have different type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        ///vislib::sys::Log::DefaultLog.WriteError("Call slots must have different types. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Check for present parent module
     if ((callslot.GetParentModule() == nullptr) || (this->GetParentModule() == nullptr)) {
-        /// vislib::sys::Log::DefaultLog.WriteError(
-        ///    "Call slots must have different parent module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        ///vislib::sys::Log::DefaultLog.WriteError("Call slots must have a connected parent module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Check for different parent module
     if ((this->GetParentModule()->uid == callslot.GetParentModule()->uid)) {
-        /// vislib::sys::Log::DefaultLog.WriteError(
-        ///    "Call slots must have different parent module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        ///vislib::sys::Log::DefaultLog.WriteError("Call slots must have different parent modules. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
-    }    
+    }
     // Check for at least one found compatible call index
     for (auto& selected_comp_callslot : callslot.compatible_call_idxs) {
         for (auto& current_comp_callslots : this->compatible_call_idxs) {
@@ -364,11 +346,15 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                     ImGui::TextUnformatted("Call Slot");
                     ImGui::Separator();
                     
-                    bool menu_enabled = (!is_group_interface && (is_parent_module_group_uid != GUI_INVALID_ID));
-                    if (ImGui::MenuItem("Create Interface Slot ", nullptr, false, menu_enabled)) {
+                    bool enable_interface_creation = (!is_group_interface && (is_parent_module_group_uid != GUI_INVALID_ID));
+                    if (ImGui::MenuItem("Create new Interface Slot ", nullptr, false, enable_interface_creation)) {
                         state.interact.callslot_add_group_uid.first = inout_callslot.uid;
                         state.interact.callslot_add_group_uid.second = inout_callslot.GetParentModule()->uid;
-                    }                 
+                    }           
+                    if (ImGui::MenuItem("Remove from Interface", nullptr, false, is_group_interface)) {
+                        state.interact.callslot_remove_group_uid.first = inout_callslot.uid;
+                        state.interact.callslot_remove_group_uid.second = inout_callslot.GetParentModule()->uid;
+                    }                             
                     ImGui::Separator();
                     
                     ImGui::TextDisabled("Description");
@@ -410,13 +396,13 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                 // Compatibility
                 if (state.interact.callslot_compat_ptr != nullptr) {
                     if (state.interact.callslot_compat_ptr->uid != this->last_compat_callslot_uid) {
-                        this->compatible = inout_callslot.IsCompatible((*state.interact.callslot_compat_ptr));
+                        this->compatible = inout_callslot.IsConnectionValid((*state.interact.callslot_compat_ptr));
                         this->last_compat_callslot_uid = state.interact.callslot_compat_ptr->uid;
                     }
                 }
-                if (state.interact.interfaceslot_compat_ptr != nullptr) {
+                else if (state.interact.interfaceslot_compat_ptr != nullptr) {
                     if (state.interact.interfaceslot_compat_ptr->uid != this->last_compat_interface_uid) {
-                        this->compatible = this->compatible || state.interact.interfaceslot_compat_ptr->IsCompatible(inout_callslot);
+                        this->compatible = state.interact.interfaceslot_compat_ptr->IsConnectionValid(inout_callslot);
                         this->last_compat_interface_uid = state.interact.interfaceslot_compat_ptr->uid;
                     }
                 }
@@ -425,7 +411,6 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                     this->last_compat_callslot_uid = GUI_INVALID_ID;
                     this->last_compat_interface_uid = GUI_INVALID_ID;
                 }
-    
                 
                 // Selection
                 if (!this->selected && active) {

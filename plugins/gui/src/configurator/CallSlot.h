@@ -65,7 +65,7 @@ public:
 
     bool CallsConnected(void) const;
     bool ConnectCall(const CallPtrType& call_ptr);
-    bool DisconnectCall(ImGuiID call_uid, bool called_by_call);
+    bool DisconnectCall(ImGuiID call_uid);
     bool DisconnectCalls(void);
     const std::vector<CallPtrType>& GetConnectedCalls(void);
 
@@ -77,7 +77,7 @@ public:
     static ImGuiID GetCompatibleCallIndex(const CallSlotPtrType& callslot_1, const CallSlotPtrType& callslot_2);
     static ImGuiID GetCompatibleCallIndex(const CallSlotPtrType& callslot, const CallSlot::StockCallSlot& stock_callslot);
 
-    bool IsCompatible(CallSlot& callslot);
+    bool IsConnectionValid(CallSlot& callslot);
     
     // GUI Presentation -------------------------------------------------------
 

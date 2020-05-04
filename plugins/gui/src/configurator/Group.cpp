@@ -158,7 +158,6 @@ ImGuiID megamol::gui::configurator::Group::AddInterfaceSlot(const CallSlotPtrTyp
     }
 
     if (parent_module_group_uid) {
-
         InterfaceSlotPtrType interfaceslot_ptr = std::make_shared<InterfaceSlot>(megamol::gui::GenerateUniqueID(), auto_add);
         if (interfaceslot_ptr != nullptr) {
             interfaceslot_ptr->GUI_SetGroupUID(this->uid);
@@ -173,7 +172,6 @@ ImGuiID megamol::gui::configurator::Group::AddInterfaceSlot(const CallSlotPtrTyp
                 return interfaceslot_ptr->uid;
             }
         }
-
     } else {
         vislib::sys::Log::DefaultLog.WriteError("Parent module of call slot which should be added to group interface "
                                                 "is not part of any group. [%s, %s, line %d]\n",

@@ -10,6 +10,7 @@
 
 #include "CallSlot.h"
 #include "Module.h"
+#include "Call.h"
 
 
 using namespace megamol;
@@ -50,7 +51,7 @@ bool megamol::gui::configurator::InterfaceSlot::AddCallSlot(
             return false;
         }
 
-        if (!(this->ContainsCallSlot(callslot_ptr->uid)) && (this->IsCompatible((*callslot_ptr)))) {
+        if (this->is_callslot_compatible((*callslot_ptr))) {
             this->callslots.emplace_back(callslot_ptr);
 
             callslot_ptr->GUI_SetGroupInterface(parent_interfaceslot_ptr);
@@ -70,7 +71,7 @@ bool megamol::gui::configurator::InterfaceSlot::AddCallSlot(
     }
 
     vislib::sys::Log::DefaultLog.WriteError(
-        "Unable to add call slot '%s' to interface slot of group. [%s, %s, line %d]\n", callslot_ptr->name.c_str(),
+        "Call slot '%s' is incompatible to interface slot of group. [%s, %s, line %d]\n", callslot_ptr->name.c_str(),
         __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
@@ -82,6 +83,21 @@ bool megamol::gui::configurator::InterfaceSlot::RemoveCallSlot(ImGuiID callslot_
         for (auto iter = this->callslots.begin(); iter != this->callslots.end(); iter++) {
             if ((*iter)->uid == callslot_uid) {
 
+                // Delete all calls connected outside the group             
+                std::vector<ImGuiID> call_uids;
+                CallSlotType other_type = ((*iter)->type == CallSlotType::CALLEE)?(CallSlotType::CALLER):(CallSlotType::CALLEE);
+                for (auto& call_ptr : (*iter)->GetConnectedCalls()) {
+                    CallSlotPtrType other_callslot_ptr = call_ptr->GetCallSlot(other_type);
+                    if (other_callslot_ptr->IsParentModuleConnected()) {
+                        if (other_callslot_ptr->GetParentModule()->GUI_GetGroupUID() != this->GUI_GetGroupUID()) {
+                            call_uids.emplace_back(call_ptr->uid);
+                        }
+                    }
+                }
+                for (auto& call_uid : call_uids) {
+                    (*iter)->DisconnectCall(call_uid);
+                }
+                
                 (*iter)->GUI_SetGroupInterface(nullptr);
                 #ifdef GUI_VERBOSE
                 vislib::sys::Log::DefaultLog.WriteInfo(
@@ -116,7 +132,7 @@ bool megamol::gui::configurator::InterfaceSlot::ContainsCallSlot(ImGuiID callslo
 }
 
 
-bool megamol::gui::configurator::InterfaceSlot::IsCompatible(InterfaceSlot& interfaceslot) {
+bool megamol::gui::configurator::InterfaceSlot::IsConnectionValid(InterfaceSlot& interfaceslot) {
 
     CallSlotPtrType callslot_ptr_1;
     CallSlotPtrType callslot_ptr_2;
@@ -124,7 +140,7 @@ bool megamol::gui::configurator::InterfaceSlot::IsCompatible(InterfaceSlot& inte
         // Check for different group
         if (this->GUI_GetGroupUID() != interfaceslot.GUI_GetGroupUID()) {
             // Check for compatibility of call slots which are part of the interface slots
-            return (callslot_ptr_1->IsCompatible((*callslot_ptr_2)));
+            return (callslot_ptr_1->IsConnectionValid((*callslot_ptr_2)));
         }
     }
 
@@ -132,44 +148,41 @@ bool megamol::gui::configurator::InterfaceSlot::IsCompatible(InterfaceSlot& inte
 }
 
 
-bool megamol::gui::configurator::InterfaceSlot::IsCompatible(CallSlot& callslot) {
+bool megamol::gui::configurator::InterfaceSlot::IsConnectionValid(CallSlot& callslot) {
 
-    // Callee interface slots can only have one call slot
-    if (this->callslots.size() > 0) {
-        if ((this->GetCallSlotType() == CallSlotType::CALLEE)) {
-            return false;
-        }
-    }
-        
-    // Check for same group membership
-    if (callslot.IsParentModuleConnected()) {
-        if (this->GUI_GetGroupUID() == callslot.GetParentModule()->GUI_GetGroupUID()) {
-            return false;
-        }
-        else {
-            // Check for exisiting interface slot connceted to call slot
-            if (callslot.GUI_IsGroupInterface()) {
+    if (this->is_callslot_compatible(callslot)) {
+        return true;
+    } else {
+        // Callee interface slots can only have one call slot
+        if (this->callslots.size() > 0) {
+            if ((this->GetCallSlotType() == CallSlotType::CALLEE)) {
+                ///vislib::sys::Log::DefaultLog.WriteError("Callee interface slots can only have one call slot connceted. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);       
                 return false;
             }
         }
-    }
-    
-    // Check for compatibility (with all available call slots...)
-    size_t compatible_slot_count = 0;
-    for (auto& interface_callslot_ptr : this->callslots) {
-        // Check for same type and same compatible call indices
-        if ((callslot.type == interface_callslot_ptr->type) &&
-            (callslot.compatible_call_idxs == interface_callslot_ptr->compatible_call_idxs)) {
-            compatible_slot_count++;
+        // Call slot can only be added if parent module is not part of same group
+        if (callslot.GetParentModule() == nullptr)  {
+            ///vislib::sys::Log::DefaultLog.WriteError("Call slots must have connceted parent module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__); 
+            return false;
         }
+        if (callslot.GetParentModule()->GUI_GetGroupUID() == this->GUI_GetGroupUID())  {
+            ///vislib::sys::Log::DefaultLog.WriteError("Parent module of call slot should not be in same group as the interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);    
+            return false;
+        }
+        // Call slot can only be added if not already part of other interface
+        if (callslot.GUI_IsGroupInterface())  {
+            ///vislib::sys::Log::DefaultLog.WriteError("Call slots can only be added if not already part of other interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);    
+            return false;
+        }
+        // Check for compatibility of call slots
+        CallSlotPtrType interface_callslot_ptr;
+        if (this->GetCompatibleCallSlot(interface_callslot_ptr)) {
+            if (interface_callslot_ptr->IsConnectionValid(callslot)) {
+                return true;
+            }
+        } 
     }
-    bool compatible = (compatible_slot_count == this->callslots.size());
-    // Check for existing incompatible call slots
-    if ((compatible_slot_count > 0) && (compatible_slot_count != this->callslots.size())) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Interface slot contains incompatible call slots. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
-    return compatible;
+    return false;
 }
 
 
@@ -208,6 +221,54 @@ CallSlotType megamol::gui::configurator::InterfaceSlot::GetCallSlotType(void) {
 bool megamol::gui::configurator::InterfaceSlot::IsEmpty(void) { 
     
     return (this->callslots.empty()); 
+}
+
+
+bool megamol::gui::configurator::InterfaceSlot::is_callslot_compatible(CallSlot& callslot) {
+
+    // Callee interface slots can only have one call slot
+    if (this->callslots.size() > 0) {
+        if ((this->GetCallSlotType() == CallSlotType::CALLEE)) {
+            ///vislib::sys::Log::DefaultLog.WriteError("Callee interface slots can only have one call slot connceted. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);       
+            return false;
+        }
+    }
+    // Call slot can only be added if not already part of this interface
+    if (this->ContainsCallSlot(callslot.uid))  {
+        ///vislib::sys::Log::DefaultLog.WriteError("Call slots can only be added if not already part of this interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);      
+        return false;
+    }
+    // Call slot can only be added if not already part of other interface
+    if (callslot.GUI_IsGroupInterface())  {
+        ///vislib::sys::Log::DefaultLog.WriteError("Call slots can only be added if not already part of other interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);    
+        return false;
+    }
+    // Call slot can only be added if parent module is part of same group
+    if (callslot.GetParentModule() == nullptr)  {
+        ///vislib::sys::Log::DefaultLog.WriteError("Call slots must have connceted parent module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }        
+    if (callslot.GetParentModule()->GUI_GetGroupUID() != this->GUI_GetGroupUID())  {
+        ///vislib::sys::Log::DefaultLog.WriteError("Parent module of call slot should be in same group as the interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);      
+        return false;
+    }     
+    
+    // Check for compatibility (with all available call slots...)
+    size_t compatible_slot_count = 0;
+    for (auto& interface_callslot_ptr : this->callslots) {
+        // Check for same type and same compatible call indices
+        if ((callslot.type == interface_callslot_ptr->type) &&
+            (callslot.compatible_call_idxs == interface_callslot_ptr->compatible_call_idxs)) {
+            compatible_slot_count++;
+        }
+    }
+    bool compatible = (compatible_slot_count == this->callslots.size());
+    // Check for existing incompatible call slots
+    if ((compatible_slot_count > 0) && (compatible_slot_count != this->callslots.size())) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Interface slot contains incompatible call slots. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
+    return compatible;
 }
 
 
@@ -328,13 +389,13 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
             // Compatibility
             if (state.interact.callslot_compat_ptr != nullptr) {
                 if (state.interact.callslot_compat_ptr->uid != this->last_compat_callslot_uid) {
-                    this->compatible = inout_interfaceslot.IsCompatible((*state.interact.callslot_compat_ptr));
+                    this->compatible = inout_interfaceslot.IsConnectionValid((*state.interact.callslot_compat_ptr));
                     this->last_compat_callslot_uid = state.interact.callslot_compat_ptr->uid;
                 }
             }
-            if (state.interact.interfaceslot_compat_ptr != nullptr) {
+            else if (state.interact.interfaceslot_compat_ptr != nullptr) {
                 if (state.interact.interfaceslot_compat_ptr->uid != this->last_compat_interface_uid) {
-                    this->compatible = this->compatible || inout_interfaceslot.IsCompatible((*state.interact.interfaceslot_compat_ptr));
+                    this->compatible =  inout_interfaceslot.IsConnectionValid((*state.interact.interfaceslot_compat_ptr));
                     this->last_compat_interface_uid = state.interact.interfaceslot_compat_ptr->uid;
                 }
             } 
@@ -442,9 +503,9 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
 
 ImVec2 megamol::gui::configurator::InterfaceSlot::Presentation::GetPosition(InterfaceSlot& inout_interfaceslot) {
 
-    auto only_callslot_ptr = inout_interfaceslot.GetCallSlots().front();
     ImVec2 ret_position = this->position;
-    if (!this->group.collapsed_view) {
+    if ((!this->group.collapsed_view) && (inout_interfaceslot.GetCallSlots().size() > 0)) {
+        auto only_callslot_ptr = inout_interfaceslot.GetCallSlots().front();
         ret_position.x = this->position.x;
         ret_position.y = only_callslot_ptr->GUI_GetPosition().y;
     }

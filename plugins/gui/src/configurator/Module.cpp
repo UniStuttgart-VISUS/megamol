@@ -69,21 +69,16 @@ bool megamol::gui::configurator::Module::DeleteCallSlots(void) {
     try {
         for (auto& callslots_map : this->callslots) {
             for (auto callslot_iter = callslots_map.second.begin(); callslot_iter != callslots_map.second.end(); callslot_iter++) {
-                if ((*callslot_iter) == nullptr) {
-                    /// vislib::sys::Log::DefaultLog.WriteWarn(
-                    ///     "Call slot is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                } else {
-                    (*callslot_iter)->DisconnectCalls();
-                    (*callslot_iter)->DisconnectParentModule();
+                (*callslot_iter)->DisconnectCalls();
+                (*callslot_iter)->DisconnectParentModule();
 
-                    if ((*callslot_iter).use_count() > 1) {
-                        vislib::sys::Log::DefaultLog.WriteError(
-                            "Unclean deletion. Found %i references pointing to call slot. [%s, %s, line %d]\n",
-                            (*callslot_iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
-                    }
-
-                    (*callslot_iter).reset();
+                if ((*callslot_iter).use_count() > 1) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "Unclean deletion. Found %i references pointing to call slot. [%s, %s, line %d]\n",
+                        (*callslot_iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 }
+
+                (*callslot_iter).reset();
             }
             callslots_map.second.clear();
         }

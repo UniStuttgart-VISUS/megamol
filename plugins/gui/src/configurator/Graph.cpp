@@ -213,10 +213,18 @@ bool megamol::gui::configurator::Graph::AddCall(
     const CallStockVectorType& stock_calls, CallSlotPtrType callslot_1, CallSlotPtrType callslot_2) {
 
     try {
+        if ((callslot_1 == nullptr) || (callslot_2 == nullptr)) {
+            vislib::sys::Log::DefaultLog.WriteWarn(
+                "Pointer to call slot is nulptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        if (!callslot_1->IsConnectionValid((*callslot_2))) {
+            return false;
+        }
         auto compat_idx = CallSlot::GetCompatibleCallIndex(callslot_1, callslot_2);
         if (compat_idx == GUI_INVALID_ID) {
             vislib::sys::Log::DefaultLog.WriteWarn(
-                "Unable to find compatible call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "Unable to find index of compatible call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         Call::StockCall call_stock_data = stock_calls[compat_idx];
@@ -282,8 +290,7 @@ bool megamol::gui::configurator::Graph::AddCall(
             this->dirty_flag = true;
         } else {
             this->DeleteCall(call_ptr->uid);
-            vislib::sys::Log::DefaultLog.WriteWarn("Unable to connect call: %s [%s, %s, line %d]\n",
-                call_ptr->class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteWarn("Unable to create call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
     } catch (std::exception e) {
@@ -304,8 +311,9 @@ bool megamol::gui::configurator::Graph::AddCall(
 
     try {
         if ((slot_1_uid == GUI_INVALID_ID) || (slot_2_uid == GUI_INVALID_ID)) {
-            /// vislib::sys::Log::DefaultLog.WriteError(
-            ///     "Invalid slot uid given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            #ifdef GUI_VERBOSE
+            ///vislib::sys::Log::DefaultLog.WriteError("Invalid slot uid given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            #endif // GUI_VERBOSE
             return false;
         }
 
@@ -352,29 +360,28 @@ bool megamol::gui::configurator::Graph::AddCall(
                 callslot_group_uid = callslot_ptr->GetParentModule()->GUI_GetGroupUID();
             }
 
-            if ((interfaceslot_group_uid == callslot_group_uid) && interface_ptr->IsCompatible((*callslot_ptr))) {
-                if (!callslot_ptr->GUI_IsGroupInterface()) {
-                    interface_ptr->AddCallSlot(callslot_ptr, interface_ptr);
-                }
-                CallSlotType compatible_callslot_type =
-                    (interface_ptr->GetCallSlotType() == CallSlotType::CALLEE) ? (CallSlotType::CALLER)
-                                                                               : (CallSlotType::CALLEE);
-                // Add calls to all call slots the call slots of the interface are connected to.
-                /// XXX ?! One is sufficient since all call slots are connected to the same call slot.
-                CallSlotPtrType connect_callslot_ptr;
-                for (auto& interface_callslots_ptr : interface_ptr->GetCallSlots()) {
-                    if (interface_callslots_ptr->uid != callslot_ptr->uid) {
-                        for (auto& call_ptr : interface_callslots_ptr->GetConnectedCalls()) {
-                            connect_callslot_ptr = call_ptr->GetCallSlot(compatible_callslot_type);
+            if (interfaceslot_group_uid == callslot_group_uid) {
+                if (interface_ptr->AddCallSlot(callslot_ptr, interface_ptr)) {
+                    CallSlotType compatible_callslot_type =
+                        (interface_ptr->GetCallSlotType() == CallSlotType::CALLEE) ? (CallSlotType::CALLER)
+                                                                                   : (CallSlotType::CALLEE);
+                    // Get call slot the interface slot is connected to and add call for new added call slot
+                    CallSlotPtrType connect_callslot_ptr;
+                    for (auto& interface_callslots_ptr : interface_ptr->GetCallSlots()) {
+                        if (interface_callslots_ptr->uid != callslot_ptr->uid) {
+                            for (auto& call_ptr : interface_callslots_ptr->GetConnectedCalls()) {
+                                connect_callslot_ptr = call_ptr->GetCallSlot(compatible_callslot_type);
+                            }
+                        }
+                    }
+                    if (connect_callslot_ptr != nullptr) {
+                        if (!this->AddCall(stock_calls, callslot_ptr, connect_callslot_ptr)) {
+                            interface_ptr->RemoveCallSlot(callslot_ptr->uid);
                         }
                     }
                 }
-                if (connect_callslot_ptr != nullptr) {
-                    if (!this->AddCall(stock_calls, callslot_ptr, connect_callslot_ptr)) {
-                        interface_ptr->RemoveCallSlot(callslot_ptr->uid);
-                    }
-                }
-            } else { /// interfaceslot_group_uid != callslot_group_uid
+            } else if (interfaceslot_group_uid != callslot_group_uid) {
+                // Add calls to all call slots the call slots of the interface are connected to.
                 for (auto& interface_callslots_ptr : interface_ptr->GetCallSlots()) {
                     this->AddCall(stock_calls, callslot_ptr, interface_callslots_ptr);
                 }
@@ -382,9 +389,11 @@ bool megamol::gui::configurator::Graph::AddCall(
         }
         // InterfaceSlot <-> InterfaceSlot
         else if ((drag_interfaceslot_ptr != nullptr) && (drop_interfaceslot_ptr != nullptr)) {
-            for (auto& drag_interface_callslots_ptr : drag_interfaceslot_ptr->GetCallSlots()) {
-                for (auto& drop_interface_callslots_ptr : drop_interfaceslot_ptr->GetCallSlots()) {
-                    this->AddCall(stock_calls, drag_interface_callslots_ptr, drop_interface_callslots_ptr);
+            if (drag_interfaceslot_ptr->IsConnectionValid((*drop_interfaceslot_ptr))) {
+                for (auto& drag_interface_callslots_ptr : drag_interfaceslot_ptr->GetCallSlots()) {
+                    for (auto& drop_interface_callslots_ptr : drop_interfaceslot_ptr->GetCallSlots()) {
+                        this->AddCall(stock_calls, drag_interface_callslots_ptr, drop_interface_callslots_ptr);
+                    }
                 }
             }
         }
@@ -640,6 +649,7 @@ bool megamol::gui::configurator::Graph::get_group(
 
 bool megamol::gui::configurator::Graph::delete_disconnected_calls(void) {
 
+    bool retval = false;
     try {
         UIDVectorType call_uids;
         for (auto& call : this->calls) {
@@ -648,8 +658,10 @@ bool megamol::gui::configurator::Graph::delete_disconnected_calls(void) {
             }
         }
         for (auto& id : call_uids) {
-            this->DeleteCall(id);
-        }
+            if (this->DeleteCall(id)) {
+                retval = true;
+            }
+        }        
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -659,7 +671,7 @@ bool megamol::gui::configurator::Graph::delete_disconnected_calls(void) {
         return false;
     }
 
-    return true;
+    return retval;
 }
 
 
@@ -753,6 +765,7 @@ megamol::gui::configurator::Graph::Presentation::Presentation(void)
     this->graph_state.interact.callslot_selected_uid = GUI_INVALID_ID;
     this->graph_state.interact.callslot_hovered_uid = GUI_INVALID_ID;
     this->graph_state.interact.callslot_add_group_uid = UIDPairType(GUI_INVALID_ID, GUI_INVALID_ID);
+    this->graph_state.interact.callslot_remove_group_uid = UIDPairType(GUI_INVALID_ID, GUI_INVALID_ID);
     this->graph_state.interact.callslot_compat_ptr.reset();
 
     this->graph_state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
@@ -829,10 +842,6 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 InterfaceSlotPtrType interfaceslot_ptr;
                 if (group_ptr->GetInterfaceSlot(slot_uid, interfaceslot_ptr)) {
                     this->graph_state.interact.interfaceslot_compat_ptr = interfaceslot_ptr;
-                    CallSlotPtrType callslot_ptr;
-                    if (interfaceslot_ptr->GetCompatibleCallSlot(callslot_ptr)) {
-                        this->graph_state.interact.callslot_compat_ptr = callslot_ptr;
-                    }
                 }
             }
         }
@@ -1005,6 +1014,22 @@ void megamol::gui::configurator::Graph::Presentation::Present(
             this->graph_state.interact.callslot_add_group_uid.first = GUI_INVALID_ID;
             this->graph_state.interact.callslot_add_group_uid.second = GUI_INVALID_ID;
         }
+        // Remove call slot from interface of group
+        callslot_uid = this->graph_state.interact.callslot_remove_group_uid.first;
+        if (callslot_uid != GUI_INVALID_ID) {
+            ImGuiID module_uid = this->graph_state.interact.callslot_remove_group_uid.second;
+            if (module_uid != GUI_INVALID_ID) {
+                for (auto& group : inout_graph.GetGroups()) {
+                    if (group->ContainsModule(module_uid)) {
+                        group->InterfaceSlot_RemoveCallSlot(callslot_uid, true);
+                    }
+                }
+            }
+            this->graph_state.interact.callslot_remove_group_uid.first = GUI_INVALID_ID;
+            this->graph_state.interact.callslot_remove_group_uid.second = GUI_INVALID_ID;
+        } 
+        
+        bool reset_state = false;      
         // Process module/call/group deletion
         if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM])) {
             if (!this->graph_state.interact.modules_selected_uids.empty()) {
@@ -1022,21 +1047,30 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 for (auto& group_ptr : inout_graph.GetGroups()) {
                     InterfaceSlotPtrType interfaceslot_ptr;
                     if (group_ptr->GetInterfaceSlot(this->graph_state.interact.interfaceslot_selected_uid, interfaceslot_ptr)) {
-                        // Delete all connceted calls
-                        std::vector<ImGuiID> call_uids;
-                        for (auto& callslot_ptr : interfaceslot_ptr->GetCallSlots()) {
-                            for (auto& call_ptr : callslot_ptr->GetConnectedCalls()) {
-                                call_uids.emplace_back(call_ptr->uid);
-                            }
-                        }
-                        for (auto& call_uid : call_uids) {
-                            inout_graph.DeleteCall(call_uid);
-                        }
                         interfaceslot_ptr.reset();
-                        group_ptr->DeleteInterfaceSlot(this->graph_state.interact.interfaceslot_selected_uid);                         
+                        group_ptr->DeleteInterfaceSlot(this->graph_state.interact.interfaceslot_selected_uid);                      
                     }
                 }
             }
+            reset_state = true;
+        }
+        // Delete empty group(s)
+        std::vector<ImGuiID> delete_empty_groups_uids;
+        for (auto& group_ptr : inout_graph.GetGroups()) {
+            if (group_ptr->GetModules().empty()) {
+                delete_empty_groups_uids.emplace_back(group_ptr->uid);
+            }
+        }
+        for (auto& group_uid : delete_empty_groups_uids) {
+            if (inout_graph.DeleteGroup(group_uid)) {
+                reset_state = true;
+            }
+        }
+        // Delete disconnected calls
+        if (inout_graph.delete_disconnected_calls()) {
+            reset_state = true;
+        }          
+        if (reset_state) {
             // Reset interact state for modules and call slots
             this->graph_state.interact.group_selected_uid = GUI_INVALID_ID;
             this->graph_state.interact.group_hovered_uid = GUI_INVALID_ID;
@@ -1052,18 +1086,10 @@ void megamol::gui::configurator::Graph::Presentation::Present(
             this->graph_state.interact.callslot_selected_uid = GUI_INVALID_ID;
             this->graph_state.interact.callslot_hovered_uid = GUI_INVALID_ID;
             this->graph_state.interact.callslot_add_group_uid = UIDPairType(GUI_INVALID_ID, GUI_INVALID_ID);
+            this->graph_state.interact.callslot_remove_group_uid = UIDPairType(GUI_INVALID_ID, GUI_INVALID_ID);
             this->graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;
         }
-        // Delete empty group(s)
-        std::vector<ImGuiID> delete_empty_groups_uids;
-        for (auto& group_ptr : inout_graph.GetGroups()) {
-            if (group_ptr->GetModules().empty()) {
-                delete_empty_groups_uids.emplace_back(group_ptr->uid);
-            }
-        }
-        for (auto& group_uid : delete_empty_groups_uids) {
-            inout_graph.DeleteGroup(group_uid);
-        }
+
         // Layout graph
         if (this->graph_layout) {
             this->layout_graph(inout_graph);
@@ -1141,8 +1167,9 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(
         json = nlohmann::json::parse(in_json_string);
 
         if (!json.is_object()) {
-            /// vislib::sys::Log::DefaultLog.WriteError("State is no valid JSON object. [%s, %s, line %d]\n", __FILE__,
-            /// __FUNCTION__, __LINE__);
+            #ifdef GUI_VERBOSE
+            vislib::sys::Log::DefaultLog.WriteError("State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            #endif // GUI_VERBOSE
             return false;
         }
 
@@ -1451,8 +1478,9 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(
                 "[Configurator] Read graph state for '%s' from JSON string.", inout_graph.name.c_str());
             #endif // GUI_VERBOSE
         } else {
-            /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find graph state in JSON. [%s, %s, line
-            /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            #ifdef GUI_VERBOSE
+            vislib::sys::Log::DefaultLog.WriteWarn("Could not find graph state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            #endif // GUI_VERBOSE
             return false;
         }
 

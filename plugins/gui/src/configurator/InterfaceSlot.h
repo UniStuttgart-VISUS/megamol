@@ -45,8 +45,8 @@ public:
     bool AddCallSlot(const CallSlotPtrType& callslot_ptr, const InterfaceSlotPtrType& parent_interfaceslot_ptr);
     bool RemoveCallSlot(ImGuiID callslot_uid);
     bool ContainsCallSlot(ImGuiID callslot_uid);
-    bool IsCompatible(CallSlot& callslot);
-    bool IsCompatible(InterfaceSlot& interfaceslot);
+    bool IsConnectionValid(CallSlot& callslot);
+    bool IsConnectionValid(InterfaceSlot& interfaceslot);
     bool GetCompatibleCallSlot(CallSlotPtrType& out_callslot_ptr);
     CallSlotPtrVectorType& GetCallSlots(void) { return this->callslots; }
     bool IsConnected(void);
@@ -72,6 +72,8 @@ public:
     inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }    
 
 private:
+    // VARIABLES --------------------------------------------------------------
+
     bool auto_created;
     
     CallSlotPtrVectorType callslots;
@@ -114,6 +116,11 @@ private:
         bool compatible;
 
     } present;
+    
+
+    // FUNCTIONS --------------------------------------------------------------
+    
+    bool is_callslot_compatible(CallSlot& callslot);
 };
 
 } // namespace configurator
