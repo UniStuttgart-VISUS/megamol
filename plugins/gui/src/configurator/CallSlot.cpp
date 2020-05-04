@@ -230,12 +230,18 @@ bool megamol::gui::configurator::CallSlot::IsCompatible(CallSlot& callslot) {
         ///    "Call slots must have different type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    // Check for different parents
-    if ((this->GetParentModule() == callslot.GetParentModule()) && (callslot.GetParentModule() != nullptr) && (this->GetParentModule() != nullptr)) {
+    // Check for present parent module
+    if ((callslot.GetParentModule() == nullptr) || (this->GetParentModule() == nullptr)) {
         /// vislib::sys::Log::DefaultLog.WriteError(
         ///    "Call slots must have different parent module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+    // Check for different parent module
+    if ((this->GetParentModule()->uid == callslot.GetParentModule()->uid)) {
+        /// vislib::sys::Log::DefaultLog.WriteError(
+        ///    "Call slots must have different parent module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }    
     // Check for at least one found compatible call index
     for (auto& selected_comp_callslot : callslot.compatible_call_idxs) {
         for (auto& current_comp_callslots : this->compatible_call_idxs) {

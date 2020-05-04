@@ -121,7 +121,11 @@ bool megamol::gui::configurator::InterfaceSlot::IsCompatible(InterfaceSlot& inte
     CallSlotPtrType callslot_ptr_1;
     CallSlotPtrType callslot_ptr_2;
     if (this->GetCompatibleCallSlot(callslot_ptr_1) && interfaceslot.GetCompatibleCallSlot(callslot_ptr_2)) {
-        return (callslot_ptr_1->IsCompatible((*callslot_ptr_2)));
+        // Check for different group
+        if (this->GUI_GetGroupUID() != interfaceslot.GUI_GetGroupUID()) {
+            // Check for compatibility of call slots which are part of the interface slots
+            return (callslot_ptr_1->IsCompatible((*callslot_ptr_2)));
+        }
     }
 
     return false;
@@ -136,16 +140,17 @@ bool megamol::gui::configurator::InterfaceSlot::IsCompatible(CallSlot& callslot)
             return false;
         }
     }
-    
-    // Check for exisiting interface slot connceted to call slot
-    if (callslot.GUI_IsGroupInterface()) {
-        return false;
-    }
-    
+        
     // Check for same group membership
     if (callslot.IsParentModuleConnected()) {
-        if (this->GUI_GetGroupUID() != callslot.GetParentModule()->GUI_GetGroupUID()) {
+        if (this->GUI_GetGroupUID() == callslot.GetParentModule()->GUI_GetGroupUID()) {
             return false;
+        }
+        else {
+            // Check for exisiting interface slot connceted to call slot
+            if (callslot.GUI_IsGroupInterface()) {
+                return false;
+            }
         }
     }
     
