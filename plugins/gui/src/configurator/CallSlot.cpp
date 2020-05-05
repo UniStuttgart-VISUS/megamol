@@ -453,6 +453,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                 const ImU32 COLOR_SLOT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
                 tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive];
+                tmpcol.w *= brightness;
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 

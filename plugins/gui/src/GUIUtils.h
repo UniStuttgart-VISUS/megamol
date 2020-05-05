@@ -126,6 +126,7 @@ typedef struct _canvas_ {
 typedef struct _interact_state_ {
     ImGuiID button_active_uid;  // in out
     ImGuiID button_hovered_uid; // in out
+    bool process_deletion;      // out
 
     ImGuiID group_selected_uid; // in out
     ImGuiID group_hovered_uid;  // in out

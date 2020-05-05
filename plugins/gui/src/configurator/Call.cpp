@@ -236,7 +236,7 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
                                     "Delete", std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM])
                                                   .ToString()
                                                   .c_str())) {
-                                std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+                                state.interact.process_deletion = true;
                             }
                             ImGui::Separator();
                             

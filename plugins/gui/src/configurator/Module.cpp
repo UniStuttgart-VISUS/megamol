@@ -265,7 +265,7 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
                                 "Delete", std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM])
                                               .ToString()
                                               .c_str())) {
-                            std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+                            state.interact.process_deletion = true;
                         }
                         if (ImGui::MenuItem("Layout", nullptr, false, !singleselect)) {
                             state.interact.modules_layout = true;
