@@ -1064,20 +1064,20 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                     ImGui::Dummy(ImVec2(1.0f, ImGui::GetFrameHeightWithSpacing()));
                 }
 
-                // Reset parameter namespace stuff
-                param_namespace = "";
-                param_namespace_open = true;
-                while (param_indent_stack > 0) {
-                    param_indent_stack--;
-                    ImGui::Unindent();
-                }
-
                 // Check if module should be considered.
                 if (!this->considerModule(label, wc.param_modules_list)) {
                     current_mod_open = false;
                     return;
                 }
 
+                // Reset parameter indent
+                param_namespace = "";
+                param_namespace_open = true;
+                while (param_indent_stack > 0) {
+                    param_indent_stack--;
+                    ImGui::Unindent();
+                }
+                
                 // Determine header state and change color depending on active parameter search
                 auto headerId = ImGui::GetID(label.c_str());
                 auto headerState = overrideState;
@@ -1091,9 +1091,14 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                 ImGui::GetStateStorage()->SetInt(headerId, headerState);
 
                 current_mod_open = ImGui::CollapsingHeader(label.c_str(), nullptr);
+                
                 if (!currentSearchString.empty()) {
                     ImGui::PopStyleColor();
                 }
+                
+                // Set parameter indent
+                param_indent_stack++;
+                ImGui::Indent();                
 
                 // Module description as hover tooltip
                 auto mod_desc = this->core_instance->GetModuleDescriptionManager().Find(mod.ClassName());
@@ -1162,13 +1167,13 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                     }
                     if (current_param_namespace != param_namespace) {
                         param_namespace = current_param_namespace;
-                        while (param_indent_stack > 0) {
+                        while (param_indent_stack > 1) {
                             param_indent_stack--;
                             ImGui::Unindent();
                         }
                         /// ImGui::Separator();
                         if (!param_namespace.empty()) {
-                            ImGui::Indent();
+                            
                             std::string label = param_namespace + "###" + param_namespace + "__" + param_name;
                             if (!currentSearchString.empty()) {
                                 auto headerId = ImGui::GetID(label.c_str());
@@ -1177,6 +1182,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                             param_namespace_open =
                                 ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
                             param_indent_stack++;
+                            ImGui::Indent();
                         } else {
                             param_namespace_open = true;
                         }
@@ -1197,7 +1203,6 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
         vislib::sys::Log::DefaultLog.WriteError(
             "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
-
 
     // Reset parameter namespace stuff
     while (param_indent_stack > 0) {

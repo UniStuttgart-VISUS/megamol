@@ -2033,11 +2033,13 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
                     ImGui::GetStateStorage()->SetInt(headerId, headerState);
 
                     if (ImGui::CollapsingHeader(module_ptr->name.c_str(), nullptr, ImGuiTreeNodeFlags_None)) {
+                        unsigned int param_indent_stack = 0;
                         this->utils.HoverToolTip(
                             module_ptr->description, ImGui::GetID(module_ptr->name.c_str()), 0.75f, 5.0f);
+                        ImGui::Indent();
+                        param_indent_stack++;
 
                         bool param_name_space_open = true;
-                        unsigned int param_indent_stack = 0;
                         for (auto& parameter : module_ptr->parameters) {
                             // Filter module by given search string
                             bool search_filter = true;
@@ -2050,13 +2052,13 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
                             std::string current_param_namespace = parameter.GetNameSpace();
                             if (current_param_namespace != this->param_name_space) {
                                 this->param_name_space = current_param_namespace;
-                                while (param_indent_stack > 0) {
+                                while (param_indent_stack > 1) {
                                     param_indent_stack--;
                                     ImGui::Unindent();
                                 }
                                 /// ImGui::Separator();
                                 if (!this->param_name_space.empty()) {
-                                    ImGui::Indent();
+                                    
                                     std::string label = this->param_name_space + "###" + parameter.full_name;
                                     // Open all namespace headers when parameter search is active
                                     if (!search_string.empty()) {
@@ -2065,6 +2067,7 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
                                     }
                                     param_name_space_open =
                                         ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
+                                    ImGui::Indent();
                                     param_indent_stack++;
                                 } else {
                                     param_name_space_open = true;
@@ -2075,6 +2078,10 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
                             if (search_filter && param_name_space_open) {
                                 parameter.GUI_Present();
                             }
+                        }
+                        while (param_indent_stack > 0) {
+                            param_indent_stack--;
+                            ImGui::Unindent();
                         }
                         // Vertical spacing
                         ImGui::Dummy(ImVec2(1.0f, ImGui::GetFrameHeightWithSpacing()));
