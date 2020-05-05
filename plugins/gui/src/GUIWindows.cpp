@@ -1077,7 +1077,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                     param_indent_stack--;
                     ImGui::Unindent();
                 }
-                
+
                 // Determine header state and change color depending on active parameter search
                 auto headerId = ImGui::GetID(label.c_str());
                 auto headerState = overrideState;
@@ -1091,14 +1091,14 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                 ImGui::GetStateStorage()->SetInt(headerId, headerState);
 
                 current_mod_open = ImGui::CollapsingHeader(label.c_str(), nullptr);
-                
+
                 if (!currentSearchString.empty()) {
                     ImGui::PopStyleColor();
                 }
-                
+
                 // Set parameter indent
                 param_indent_stack++;
-                ImGui::Indent();                
+                ImGui::Indent();
 
                 // Module description as hover tooltip
                 auto mod_desc = this->core_instance->GetModuleDescriptionManager().Find(mod.ClassName());
@@ -1173,7 +1173,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                         }
                         /// ImGui::Separator();
                         if (!param_namespace.empty()) {
-                            
+
                             std::string label = param_namespace + "###" + param_namespace + "__" + param_name;
                             if (!currentSearchString.empty()) {
                                 auto headerId = ImGui::GetID(label.c_str());
@@ -2063,9 +2063,9 @@ bool megamol::gui::GUIWindows::hotkeyPressed(megamol::core::view::KeyCode keycod
 void megamol::gui::GUIWindows::shutdown(void) {
 
     if (this->core_instance != nullptr) {
-        #ifdef GUI_VERBOSE
+#ifdef GUI_VERBOSE
         vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Triggering MegaMol instance shutdown.");
-        #endif // GUI_VERBOSE
+#endif // GUI_VERBOSE
         this->core_instance->Shutdown();
     } else {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -2176,9 +2176,9 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
         }
 
         if (found) {
-            #ifdef GUI_VERBOSE
+#ifdef GUI_VERBOSE
             vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Read parameter gui state from JSON string.");
-            #endif // GUI_VERBOSE
+#endif // GUI_VERBOSE
         } else {
             /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON. [%s, %s, line
             /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -2235,9 +2235,9 @@ bool megamol::gui::GUIWindows::parameters_gui_state_to_json(nlohmann::json& out_
                     static_cast<int>(parameter->GetGUIPresentation());
             }
         });
-        #ifdef GUI_VERBOSE
+#ifdef GUI_VERBOSE
         vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Wrote parameter gui state to JSON.");
-        #endif // GUI_VERBOSE
+#endif // GUI_VERBOSE
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(

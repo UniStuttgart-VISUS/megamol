@@ -26,10 +26,10 @@ megamol::gui::configurator::Call::Call(ImGuiID uid)
 }
 
 
-megamol::gui::configurator::Call::~Call() { 
-    
+megamol::gui::configurator::Call::~Call() {
+
     // Disconnect call slots
-    this->DisconnectCallSlots(); 
+    this->DisconnectCallSlots();
 }
 
 
@@ -42,7 +42,8 @@ bool megamol::gui::configurator::Call::IsConnected(void) {
         }
     }
     if (connected != 2) {
-        ///vislib::sys::Log::DefaultLog.WriteWarn("Call has only one connected call slot. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        /// vislib::sys::Log::DefaultLog.WriteWarn("Call has only one connected call slot. [%s, %s, line %d]\n",
+        /// __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return (connected == 2);
@@ -99,11 +100,11 @@ const megamol::gui::configurator::CallSlotPtrType& megamol::gui::configurator::C
     megamol::gui::configurator::CallSlotType type) {
 
     if (this->connected_callslots[type] == nullptr) {
-        ///vislib::sys::Log::DefaultLog.WriteWarn("Returned pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        /// vislib::sys::Log::DefaultLog.WriteWarn("Returned pointer to call slot is nullptr. [%s, %s, line %d]\n",
+        /// __FILE__, __FUNCTION__, __LINE__);
     }
     return this->connected_callslots[type];
 }
-
 
 
 // CALL PRESENTATION #########################################################
@@ -166,18 +167,18 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
                 ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-                
+
                 tmpcol = style.Colors[ImGuiCol_FrameBgActive];
-                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);                
+                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
-                
+
                 tmpcol = style.Colors[ImGuiCol_FrameBgHovered];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
-                                
+
                 tmpcol = style.Colors[ImGuiCol_ButtonActive];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-                const ImU32 COLOR_CALL_CURVE_HIGHLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);                
+                const ImU32 COLOR_CALL_CURVE_HIGHLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
                 tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
@@ -185,12 +186,12 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
 
                 if (phase == megamol::gui::PresentPhase::RENDERING) {
                     bool hovered = (state.interact.button_hovered_uid == inout_call.uid);
-                    
+
                     // Draw Curve
                     ImU32 color_curve = COLOR_CALL_CURVE;
                     if (hovered || this->selected) {
                         color_curve = COLOR_CALL_CURVE_HIGHLIGHT;
-                    }                    
+                    }
                     /// Draw simple line if zooming is too small for nice bezier curves.
                     if (state.canvas.zooming < 0.25f) {
                         draw_list->AddLine(p1, p2, color_curve, GUI_LINE_THICKNESS * state.canvas.zooming);
@@ -231,7 +232,7 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
 
                             ImGui::TextUnformatted("Call");
                             ImGui::Separator();
-                            
+
                             if (ImGui::MenuItem(
                                     "Delete", std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM])
                                                   .ToString()
@@ -239,7 +240,7 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
                                 state.interact.process_deletion = true;
                             }
                             ImGui::Separator();
-                            
+
                             ImGui::TextDisabled("Description");
                             ImGui::PushTextWrapPos(ImGui::GetFontSize() * 13.0f);
                             ImGui::TextUnformatted(inout_call.description.c_str());
@@ -289,7 +290,8 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
                         }
 
                         // Draw Background
-                        ImU32 call_bg_color = (this->selected || hovered) ? (COLOR_CALL_HIGHTLIGHT) : (COLOR_CALL_BACKGROUND);
+                        ImU32 call_bg_color =
+                            (this->selected || hovered) ? (COLOR_CALL_HIGHTLIGHT) : (COLOR_CALL_BACKGROUND);
                         draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, GUI_RECT_CORNER_RADIUS);
                         draw_list->AddRect(
                             call_rect_min, call_rect_max, COLOR_CALL_GROUP_BORDER, GUI_RECT_CORNER_RADIUS);

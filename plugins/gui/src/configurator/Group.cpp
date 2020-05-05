@@ -47,27 +47,27 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
     // Check if module is already part of the group
     for (auto& mod : this->modules) {
         if (mod->uid == module_ptr->uid) {
-            #ifdef GUI_VERBOSE
+#ifdef GUI_VERBOSE
             vislib::sys::Log::DefaultLog.WriteInfo(
                 "[Configurator] Module '%s' is already part of group '%s'.\n", mod->name.c_str(), this->name.c_str());
-            #endif // GUI_VERBOSE
+#endif // GUI_VERBOSE
             return false;
         }
     }
 
     this->modules.emplace_back(module_ptr);
-    
+
     module_ptr->GUI_SetGroupUID(this->uid);
     module_ptr->GUI_SetGroupVisibility(this->present.ModulesVisible());
     module_ptr->GUI_SetGroupName(this->name);
-    
+
     this->present.ForceUpdate();
     this->restore_callslots_interfaceslot_state();
-    
-    #ifdef GUI_VERBOSE
+
+#ifdef GUI_VERBOSE
     vislib::sys::Log::DefaultLog.WriteInfo(
         "[Configurator] Added module '%s' to group '%s'.\n", module_ptr->name.c_str(), this->name.c_str());
-    #endif // GUI_VERBOSE
+#endif // GUI_VERBOSE
     return true;
 }
 
@@ -84,21 +84,21 @@ bool megamol::gui::configurator::Group::RemoveModule(ImGuiID module_uid) {
                         this->InterfaceSlot_RemoveCallSlot(callslot_ptr->uid, true);
                     }
                 }
-                                                                
+
                 (*mod_iter)->GUI_SetGroupUID(GUI_INVALID_ID);
                 (*mod_iter)->GUI_SetGroupVisibility(false);
                 (*mod_iter)->GUI_SetGroupName("");
-                                                
-                #ifdef GUI_VERBOSE
+
+#ifdef GUI_VERBOSE
                 vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Removed module '%s' from group '%s'.\n",
                     (*mod_iter)->name.c_str(), this->name.c_str());
-                #endif // GUI_VERBOSE
+#endif // GUI_VERBOSE
                 (*mod_iter).reset();
                 this->modules.erase(mod_iter);
-                
+
                 this->present.ForceUpdate();
                 this->restore_callslots_interfaceslot_state();
-                                
+
                 return true;
             }
         }
@@ -158,14 +158,15 @@ ImGuiID megamol::gui::configurator::Group::AddInterfaceSlot(const CallSlotPtrTyp
     }
 
     if (parent_module_group_uid) {
-        InterfaceSlotPtrType interfaceslot_ptr = std::make_shared<InterfaceSlot>(megamol::gui::GenerateUniqueID(), auto_add);
+        InterfaceSlotPtrType interfaceslot_ptr =
+            std::make_shared<InterfaceSlot>(megamol::gui::GenerateUniqueID(), auto_add);
         if (interfaceslot_ptr != nullptr) {
             interfaceslot_ptr->GUI_SetGroupUID(this->uid);
             this->interfaceslots[callslot_ptr->type].emplace_back(interfaceslot_ptr);
-            #ifdef GUI_VERBOSE
-            vislib::sys::Log::DefaultLog.WriteInfo(
-                "[Configurator] Added interface slot (uid %i) to group '%s'.\n", interfaceslot_ptr->uid, this->name.c_str());
-            #endif // GUI_VERBOSE
+#ifdef GUI_VERBOSE
+            vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Added interface slot (uid %i) to group '%s'.\n",
+                interfaceslot_ptr->uid, this->name.c_str());
+#endif // GUI_VERBOSE
 
             if (interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr)) {
                 interfaceslot_ptr->GUI_SetGroupView(this->present.IsViewCollapsed());
@@ -183,13 +184,14 @@ ImGuiID megamol::gui::configurator::Group::AddInterfaceSlot(const CallSlotPtrTyp
 
 
 bool megamol::gui::configurator::Group::InterfaceSlot_RemoveCallSlot(ImGuiID callslots_uid, bool force) {
-    
+
     bool retval = false;
     try {
         std::vector<ImGuiID> empty_interfaceslots_uids;
         for (auto& interfaceslot_map : this->interfaceslots) {
             for (auto& interfaceslot_ptr : interfaceslot_map.second) {
-                if ((interfaceslot_ptr->IsAutoCreated() || force) && interfaceslot_ptr->ContainsCallSlot(callslots_uid)) {
+                if ((interfaceslot_ptr->IsAutoCreated() || force) &&
+                    interfaceslot_ptr->ContainsCallSlot(callslots_uid)) {
                     interfaceslot_ptr->RemoveCallSlot(callslots_uid);
                     retval = true;
                     if (interfaceslot_ptr->IsEmpty()) {
@@ -198,10 +200,10 @@ bool megamol::gui::configurator::Group::InterfaceSlot_RemoveCallSlot(ImGuiID cal
                 }
             }
         }
-        // Delete empty interface slots       
+        // Delete empty interface slots
         for (auto& interfaceslot_uid : empty_interfaceslots_uids) {
             this->DeleteInterfaceSlot(interfaceslot_uid);
-        }       
+        }
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -265,11 +267,12 @@ bool megamol::gui::configurator::Group::DeleteInterfaceSlot(ImGuiID interfaceslo
                             "Unclean deletion. Found %i references pointing to interface slot. [%s, %s, line %d]\n",
                             (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                     }
-                    
-                    #ifdef GUI_VERBOSE
+
+#ifdef GUI_VERBOSE
                     vislib::sys::Log::DefaultLog.WriteInfo(
-                        "[Configurator] Deleted interface slot (uid %i) from group '%s'.\n", (*iter)->uid, this->name.c_str());
-                    #endif // GUI_VERBOSE                    
+                        "[Configurator] Deleted interface slot (uid %i) from group '%s'.\n", (*iter)->uid,
+                        this->name.c_str());
+#endif // GUI_VERBOSE
 
                     (*iter).reset();
                     interfaceslot_map.second.erase(iter);
@@ -329,7 +332,7 @@ void megamol::gui::configurator::Group::restore_callslots_interfaceslot_state(vo
     }
 
     /// 2] ADD connected call slots to group interface if connected module is not part of same group
-    for (auto& module_ptr : this->modules) {        
+    for (auto& module_ptr : this->modules) {
         // CALLER
         for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
             for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
@@ -353,10 +356,9 @@ void megamol::gui::configurator::Group::restore_callslots_interfaceslot_state(vo
                     }
                 }
             }
-        }        
+        }
     }
 }
-
 
 
 // GROUP PRESENTATION ####################################################
@@ -409,7 +411,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
         ImVec2 header_rect_max = group_rect_min + header_size;
 
         ImGui::PushID(inout_group.uid);
-        
+
         bool changed_view = false;
 
         if (phase == megamol::gui::PresentPhase::INTERACTION) {
@@ -446,7 +448,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
 
                 ImGui::TextUnformatted("Group");
                 ImGui::Separator();
-                
+
                 std::string view = "Collapse";
                 if (this->collapsed_view) {
                     view = "Expand";
@@ -511,7 +513,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
                     state.interact.group_selected_uid = GUI_INVALID_ID;
                 }
             }
-            
+
             // Toggle View
             if (active && ImGui::IsMouseDoubleClicked(0)) {
                 this->collapsed_view = !this->collapsed_view;
@@ -520,7 +522,8 @@ void megamol::gui::configurator::Group::Presentation::Present(
 
             // Dragging
             if (this->selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
-                this->SetPosition(inout_group, state.canvas, (this->position + (ImGui::GetIO().MouseDelta / state.canvas.zooming)));
+                this->SetPosition(
+                    inout_group, state.canvas, (this->position + (ImGui::GetIO().MouseDelta / state.canvas.zooming)));
             }
 
             // Colors
@@ -566,7 +569,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
         }
 
         ImGui::PopID();
-        
+
         if (changed_view) {
             for (auto& module_ptr : inout_group.GetModules()) {
                 module_ptr->GUI_SetGroupVisibility(this->ModulesVisible());
@@ -577,7 +580,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
                 }
             }
             this->UpdatePositionSize(inout_group, state.canvas);
-        }            
+        }
 
         // INTERFACE SLOTS -----------------------------------------------------
         for (auto& interfaceslots_map : inout_group.GetInterfaceSlots()) {
@@ -597,10 +600,11 @@ void megamol::gui::configurator::Group::Presentation::Present(
 }
 
 
-void megamol::gui::configurator::Group::Presentation::SetPosition(Group& inout_group, const GraphCanvasType& in_canvas, ImVec2 pos) { 
-    
+void megamol::gui::configurator::Group::Presentation::SetPosition(
+    Group& inout_group, const GraphCanvasType& in_canvas, ImVec2 pos) {
+
     ImVec2 pos_delta = (pos - this->position);
-    
+
     // Moving modules and then updating group position
     ImVec2 tmp_pos;
     for (auto& module_ptr : inout_group.GetModules()) {
@@ -611,7 +615,7 @@ void megamol::gui::configurator::Group::Presentation::SetPosition(Group& inout_g
     }
     this->UpdatePositionSize(inout_group, in_canvas);
 }
-        
+
 
 void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
     megamol::gui::configurator::Group& inout_group, const GraphCanvasType& in_canvas) {
@@ -644,12 +648,13 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
 
     // WIDTH
     float max_label_length = 0.0f;
-    // Consider interface slot label width only in collapsed view 
+    // Consider interface slot label width only in collapsed view
     if (this->collapsed_view) {
-        for (auto& interfaceslot_map: inout_group.GetInterfaceSlots()) {
+        for (auto& interfaceslot_map : inout_group.GetInterfaceSlots()) {
             for (auto& interfaceslot_ptr : interfaceslot_map.second) {
                 if (interfaceslot_ptr->GUI_IsLabelVisible()) {
-                    max_label_length = std::max(GUIUtils::TextWidgetWidth(interfaceslot_ptr->GUI_GetLabel()), max_label_length);
+                    max_label_length =
+                        std::max(GUIUtils::TextWidgetWidth(interfaceslot_ptr->GUI_GetLabel()), max_label_length);
                 }
             }
         }
@@ -657,8 +662,9 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
             max_label_length = (2.0f * max_label_length / in_canvas.zooming) + (1.0f * GUI_SLOT_RADIUS);
         }
     }
-    group_width = std::max((1.5f * GUIUtils::TextWidgetWidth(inout_group.name) / in_canvas.zooming), max_label_length) + (3.0f * GUI_SLOT_RADIUS);
-    
+    group_width = std::max((1.5f * GUIUtils::TextWidgetWidth(inout_group.name) / in_canvas.zooming), max_label_length) +
+                  (3.0f * GUI_SLOT_RADIUS);
+
     // HEIGHT
     group_height = std::max((3.0f * line_height),
         (line_height + (static_cast<float>(max_slot_count) * (GUI_SLOT_RADIUS * 2.0f) * 1.5f) + GUI_SLOT_RADIUS));
@@ -695,12 +701,12 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
     for (auto& interfaceslots_map : inout_group.interfaceslots) {
         for (auto& interfaceslot_ptr : interfaceslots_map.second) {
             if (interfaceslots_map.first == CallSlotType::CALLER) {
-                callslot_group_position =
-                    ImVec2((group_pos.x + group_size.x), (group_pos.y + group_size.y * ((float)caller_idx + 1) / ((float)caller_count + 1)));
+                callslot_group_position = ImVec2((group_pos.x + group_size.x),
+                    (group_pos.y + group_size.y * ((float)caller_idx + 1) / ((float)caller_count + 1)));
                 caller_idx++;
             } else if (interfaceslots_map.first == CallSlotType::CALLEE) {
-                callslot_group_position =
-                    ImVec2(group_pos.x, (group_pos.y + group_size.y * ((float)callee_idx + 1) / ((float)callee_count + 1)));
+                callslot_group_position = ImVec2(
+                    group_pos.x, (group_pos.y + group_size.y * ((float)callee_idx + 1) / ((float)callee_count + 1)));
                 callee_idx++;
             }
             interfaceslot_ptr->GUI_SetPosition(callslot_group_position);

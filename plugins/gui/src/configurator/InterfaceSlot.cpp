@@ -8,9 +8,9 @@
 #include "stdafx.h"
 #include "InterfaceSlot.h"
 
+#include "Call.h"
 #include "CallSlot.h"
 #include "Module.h"
-#include "Call.h"
 
 
 using namespace megamol;
@@ -18,7 +18,8 @@ using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::InterfaceSlot::InterfaceSlot(ImGuiID uid, bool auto_create) : uid(uid), auto_created(auto_create) {}
+megamol::gui::configurator::InterfaceSlot::InterfaceSlot(ImGuiID uid, bool auto_create)
+    : uid(uid), auto_created(auto_create) {}
 
 
 megamol::gui::configurator::InterfaceSlot::~InterfaceSlot(void) {
@@ -55,10 +56,10 @@ bool megamol::gui::configurator::InterfaceSlot::AddCallSlot(
             this->callslots.emplace_back(callslot_ptr);
 
             callslot_ptr->GUI_SetGroupInterface(parent_interfaceslot_ptr);
-            #ifdef GUI_VERBOSE
+#ifdef GUI_VERBOSE
             vislib::sys::Log::DefaultLog.WriteInfo(
                 "[Configurator] Added call slot '%s' to interface slot of group.\n", callslot_ptr->name.c_str());
-            #endif // GUI_VERBOSE
+#endif // GUI_VERBOSE
             return true;
         }
     } catch (std::exception e) {
@@ -70,7 +71,8 @@ bool megamol::gui::configurator::InterfaceSlot::AddCallSlot(
         return false;
     }
 
-    ///vislib::sys::Log::DefaultLog.WriteError("Call slot '%s' is incompatible to interface slot of group. [%s, %s, line %d]\n", callslot_ptr->name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+    /// vislib::sys::Log::DefaultLog.WriteError("Call slot '%s' is incompatible to interface slot of group. [%s, %s,
+    /// line %d]\n", callslot_ptr->name.c_str(), __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
 
@@ -80,12 +82,12 @@ bool megamol::gui::configurator::InterfaceSlot::RemoveCallSlot(ImGuiID callslot_
     try {
         for (auto iter = this->callslots.begin(); iter != this->callslots.end(); iter++) {
             if ((*iter)->uid == callslot_uid) {
-                
+
                 (*iter)->GUI_SetGroupInterface(nullptr);
-                #ifdef GUI_VERBOSE
+#ifdef GUI_VERBOSE
                 vislib::sys::Log::DefaultLog.WriteInfo(
                     "[Configurator] Removed call slot '%s' from interface slot of group.\n", (*iter)->name.c_str());
-                #endif // GUI_VERBOSE                    
+#endif // GUI_VERBOSE
                 (*iter).reset();
                 this->callslots.erase(iter);
 
@@ -137,12 +139,14 @@ bool megamol::gui::configurator::InterfaceSlot::IsConnectionValid(CallSlot& call
         return true;
     } else {
         // Call slot can only be added if parent module is not part of same group
-        if (callslot.GetParentModule() == nullptr)  {
-            ///vislib::sys::Log::DefaultLog.WriteError("Call slots must have connceted parent module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__); 
+        if (callslot.GetParentModule() == nullptr) {
+            /// vislib::sys::Log::DefaultLog.WriteError("Call slots must have connceted parent module. [%s, %s, line
+            /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-        if (callslot.GetParentModule()->GUI_GetGroupUID() == this->GUI_GetGroupUID())  {
-            ///vislib::sys::Log::DefaultLog.WriteError("Parent module of call slot should not be in same group as the interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);    
+        if (callslot.GetParentModule()->GUI_GetGroupUID() == this->GUI_GetGroupUID()) {
+            /// vislib::sys::Log::DefaultLog.WriteError("Parent module of call slot should not be in same group as the
+            /// interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         // Check for compatibility of call slots
@@ -151,7 +155,7 @@ bool megamol::gui::configurator::InterfaceSlot::IsConnectionValid(CallSlot& call
             if (interface_callslot_ptr->IsConnectionValid(callslot)) {
                 return true;
             }
-        } 
+        }
     }
     return false;
 }
@@ -189,10 +193,7 @@ CallSlotType megamol::gui::configurator::InterfaceSlot::GetCallSlotType(void) {
 }
 
 
-bool megamol::gui::configurator::InterfaceSlot::IsEmpty(void) { 
-    
-    return (this->callslots.empty()); 
-}
+bool megamol::gui::configurator::InterfaceSlot::IsEmpty(void) { return (this->callslots.empty()); }
 
 
 bool megamol::gui::configurator::InterfaceSlot::is_callslot_compatible(CallSlot& callslot) {
@@ -200,29 +201,34 @@ bool megamol::gui::configurator::InterfaceSlot::is_callslot_compatible(CallSlot&
     // Callee interface slots can only have one call slot
     if (this->callslots.size() > 0) {
         if ((this->GetCallSlotType() == CallSlotType::CALLEE)) {
-            ///vislib::sys::Log::DefaultLog.WriteError("Callee interface slots can only have one call slot connceted. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);       
+            /// vislib::sys::Log::DefaultLog.WriteError("Callee interface slots can only have one call slot connceted.
+            /// [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
     }
     // Call slot can only be added if not already part of this interface
-    if (this->ContainsCallSlot(callslot.uid))  {
-        ///vislib::sys::Log::DefaultLog.WriteError("Call slots can only be added if not already part of this interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);      
+    if (this->ContainsCallSlot(callslot.uid)) {
+        /// vislib::sys::Log::DefaultLog.WriteError("Call slots can only be added if not already part of this interface.
+        /// [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Call slot can only be added if not already part of other interface
-    if (callslot.GUI_IsGroupInterface())  {
-        ///vislib::sys::Log::DefaultLog.WriteError("Call slots can only be added if not already part of other interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);    
+    if (callslot.GUI_IsGroupInterface()) {
+        /// vislib::sys::Log::DefaultLog.WriteError("Call slots can only be added if not already part of other
+        /// interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Call slot can only be added if parent module is part of same group
-    if (callslot.GetParentModule() == nullptr)  {
-        ///vislib::sys::Log::DefaultLog.WriteError("Call slots must have connceted parent module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    if (callslot.GetParentModule() == nullptr) {
+        /// vislib::sys::Log::DefaultLog.WriteError("Call slots must have connceted parent module. [%s, %s, line %d]\n",
+        /// __FILE__, __FUNCTION__, __LINE__);
         return false;
-    }        
-    if (callslot.GetParentModule()->GUI_GetGroupUID() != this->GUI_GetGroupUID())  {
-        ///vislib::sys::Log::DefaultLog.WriteError("Parent module of call slot should be in same group as the interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);      
+    }
+    if (callslot.GetParentModule()->GUI_GetGroupUID() != this->GUI_GetGroupUID()) {
+        /// vislib::sys::Log::DefaultLog.WriteError("Parent module of call slot should be in same group as the
+        /// interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
-    }     
+    }
     // Check for compatibility (with all available call slots...)
     size_t compatible_slot_count = 0;
     for (auto& interface_callslot_ptr : this->callslots) {
@@ -235,11 +241,11 @@ bool megamol::gui::configurator::InterfaceSlot::is_callslot_compatible(CallSlot&
     bool compatible = (compatible_slot_count == this->callslots.size());
     // Check for existing incompatible call slots
     if ((compatible_slot_count > 0) && (compatible_slot_count != this->callslots.size())) {
-        ///vislib::sys::Log::DefaultLog.WriteError("Interface slot contains incompatible call slots. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        /// vislib::sys::Log::DefaultLog.WriteError("Interface slot contains incompatible call slots. [%s, %s, line
+        /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     return compatible;
 }
-
 
 
 // GROUP INTERFACE SLOT PRESENTATION ###########################################
@@ -250,7 +256,7 @@ megamol::gui::configurator::InterfaceSlot::Presentation::Presentation(void)
     , position(ImVec2(FLT_MAX, FLT_MAX))
     , utils()
     , selected(false)
-    , label() 
+    , label()
     , last_compat_callslot_uid(GUI_INVALID_ID)
     , last_compat_interface_uid(GUI_INVALID_ID)
     , compatible(false) {
@@ -313,7 +319,7 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
 
                 ImGui::TextUnformatted("Interface Slot");
                 ImGui::Separator();
-                
+
                 if (ImGui::MenuItem("Delete",
                         std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
                     state.interact.process_deletion = true;
@@ -354,24 +360,24 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
             bool active = (state.interact.button_active_uid == inout_interfaceslot.uid);
             bool hovered = (state.interact.button_hovered_uid == inout_interfaceslot.uid);
             bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
-            
+
             // Compatibility
             if (state.interact.callslot_compat_ptr != nullptr) {
                 if (state.interact.callslot_compat_ptr->uid != this->last_compat_callslot_uid) {
                     this->compatible = inout_interfaceslot.IsConnectionValid((*state.interact.callslot_compat_ptr));
                     this->last_compat_callslot_uid = state.interact.callslot_compat_ptr->uid;
                 }
-            }
-            else if (state.interact.interfaceslot_compat_ptr != nullptr) {
+            } else if (state.interact.interfaceslot_compat_ptr != nullptr) {
                 if (state.interact.interfaceslot_compat_ptr->uid != this->last_compat_interface_uid) {
-                    this->compatible =  inout_interfaceslot.IsConnectionValid((*state.interact.interfaceslot_compat_ptr));
+                    this->compatible =
+                        inout_interfaceslot.IsConnectionValid((*state.interact.interfaceslot_compat_ptr));
                     this->last_compat_interface_uid = state.interact.interfaceslot_compat_ptr->uid;
                 }
-            } 
-            else { /// (state.interact.callslot_compat_ptr == nullptr) && (state.interact.interfaceslot_compat_ptr == nullptr)
+            } else { /// (state.interact.callslot_compat_ptr == nullptr) && (state.interact.interfaceslot_compat_ptr ==
+                     /// nullptr)
                 this->compatible = false;
                 this->last_compat_callslot_uid = GUI_INVALID_ID;
-                this->last_compat_interface_uid = GUI_INVALID_ID;                
+                this->last_compat_interface_uid = GUI_INVALID_ID;
             }
 
             // Selection
@@ -412,7 +418,7 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
             tmpcol = style.Colors[ImGuiCol_FrameBgHovered];
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             const ImU32 COLOR_INTERFACE_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
-                            
+
             // Color modification
             ImU32 slot_highlight_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLER);
             ;
@@ -439,7 +445,7 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
                         GUI_LINE_THICKNESS * state.canvas.zooming);
                 }
             }
-            
+
             // Text
             if (this->label_visible && this->group.collapsed_view) {
                 auto type = inout_interfaceslot.GetCallSlotType();
@@ -448,11 +454,11 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
                 text_pos_left_upper.x = actual_position.x - GUIUtils::TextWidgetWidth(this->label) - (1.5f * radius);
                 if (type == CallSlotType::CALLEE) {
                     text_pos_left_upper.x = actual_position.x + (1.5f * radius);
-                }   
+                }
                 ImU32 slot_text_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLER);
                 if (type == CallSlotType::CALLEE) {
                     slot_text_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLEE);
-                }            
+                }
                 draw_list->AddText(text_pos_left_upper, slot_text_color, this->label.c_str());
             }
         }

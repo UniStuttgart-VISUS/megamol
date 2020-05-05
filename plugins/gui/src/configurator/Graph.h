@@ -44,7 +44,7 @@ public:
     bool DeleteGroup(ImGuiID group_uid);
     inline const GroupPtrVectorType& GetGroups(void) { return this->groups; }
     ImGuiID AddGroupModule(const std::string& group_name, const ModulePtrType& module_ptr);
-    
+
     inline bool IsDirty(void) const { return this->dirty_flag; }
     inline void ResetDirty(void) { this->dirty_flag = false; }
 
@@ -61,7 +61,7 @@ public:
 
 
     void GUI_ResetStatePointers(void) { this->present.ResetStatePointers(); }
-    
+
     bool GUI_StateFromJsonString(const std::string& json_string) {
         return this->present.StateFromJsonString(*this, json_string);
     }
@@ -104,7 +104,7 @@ private:
             this->graph_state.interact.callslot_compat_ptr.reset();
             this->graph_state.interact.interfaceslot_compat_ptr.reset();
         }
-        
+
         bool StateFromJsonString(Graph& inout_graph, const std::string& json_string);
         bool StateToJSON(Graph& inout_graph, nlohmann::json& out_json);
 
@@ -155,9 +155,11 @@ private:
 
         void layout_graph(Graph& inout_graph);
         void layout(const ModulePtrVectorType& modules, const GroupPtrVectorType& groups, ImVec2 init_position);
-        
-        bool connected_callslot(const ModulePtrVectorType& modules, const GroupPtrVectorType& groups, const CallSlotPtrType& callslot_ptr);
-        bool connected_interfaceslot(const ModulePtrVectorType& modules, const GroupPtrVectorType& groups, const InterfaceSlotPtrType& interfaceslot_ptr);
+
+        bool connected_callslot(
+            const ModulePtrVectorType& modules, const GroupPtrVectorType& groups, const CallSlotPtrType& callslot_ptr);
+        bool connected_interfaceslot(const ModulePtrVectorType& modules, const GroupPtrVectorType& groups,
+            const InterfaceSlotPtrType& interfaceslot_ptr);
         bool contains_callslot(const ModulePtrVectorType& modules, ImGuiID callslot_uid);
         bool contains_interfaceslot(const GroupPtrVectorType& groups, ImGuiID interfaceslot_uid);
         bool contains_module(const ModulePtrVectorType& modules, ImGuiID module_uid);

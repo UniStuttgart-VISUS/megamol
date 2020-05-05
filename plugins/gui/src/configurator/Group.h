@@ -50,7 +50,7 @@ public:
     inline const InterfaceSlotPtrMapType& GetInterfaceSlots(void) { return this->interfaceslots; }
     inline const InterfaceSlotPtrVectorType& GetInterfaceSlots(CallSlotType type) { return this->interfaceslots[type]; }
     bool DeleteInterfaceSlot(ImGuiID interfaceslot_uid);
-    bool ContainsInterfaceSlot(ImGuiID interfaceslot_uid);    
+    bool ContainsInterfaceSlot(ImGuiID interfaceslot_uid);
     bool InterfaceSlot_RemoveCallSlot(ImGuiID callslot_uid, bool force = false);
     bool InterfaceSlot_ContainsCallSlot(ImGuiID callslot_uid);
 
@@ -61,12 +61,14 @@ public:
     }
 
     inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePositionSize(*this, in_canvas); }
-    
+
     inline ImVec2 GUI_GetSize(void) { return this->present.GetSize(); }
     inline bool GUI_IsViewCollapsed(void) { return this->present.IsViewCollapsed(); }
-    
-    inline void GUI_SetPosition(const GraphCanvasType& in_canvas, ImVec2 pos) { this->present.SetPosition(*this, in_canvas, pos); }
-    
+
+    inline void GUI_SetPosition(const GraphCanvasType& in_canvas, ImVec2 pos) {
+        this->present.SetPosition(*this, in_canvas, pos);
+    }
+
 private:
     // VARIABLES --------------------------------------------------------------
 
@@ -85,8 +87,8 @@ private:
         void Present(megamol::gui::PresentPhase phase, Group& inout_group, GraphItemsStateType& state);
 
         void UpdatePositionSize(Group& inout_group, const GraphCanvasType& in_canvas);
-        
-        inline ImVec2 GetSize(void) { return this->size; }        
+
+        inline ImVec2 GetSize(void) { return this->size; }
         inline bool IsViewCollapsed(void) { return this->collapsed_view; }
         inline bool ModulesVisible(void) { return !this->collapsed_view; }
         inline void ForceUpdate(void) { this->update = true; }
@@ -107,11 +109,10 @@ private:
         bool update;
 
     } present;
-    
+
     // FUNCTIONS --------------------------------------------------------------
-    
+
     void restore_callslots_interfaceslot_state(void);
-    
 };
 
 

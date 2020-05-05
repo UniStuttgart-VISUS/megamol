@@ -13,7 +13,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-ImGuiID megamol::gui::gui_generated_uid = 0; 
+ImGuiID megamol::gui::gui_generated_uid = 0;
 
 
 GUIUtils::GUIUtils(void)

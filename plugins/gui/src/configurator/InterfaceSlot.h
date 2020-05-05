@@ -62,20 +62,20 @@ public:
 
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(*this); }
     inline ImGuiID GUI_GetGroupUID(void) { return this->present.group.uid; }
-    inline bool GUI_IsLabelVisible(void) { return this->present.label_visible; }    
+    inline bool GUI_IsLabelVisible(void) { return this->present.label_visible; }
     inline std::string GUI_GetLabel(void) { return this->present.GetLabel(); }
-    inline bool GUI_IsGroupViewCollapsed(void) { return this->present.IsGroupViewCollapsed(); }    
-    
+    inline bool GUI_IsGroupViewCollapsed(void) { return this->present.IsGroupViewCollapsed(); }
+
     inline void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
-    inline void GUI_SetGroupUID(ImGuiID uid) { this->present.group.uid = uid; }    
+    inline void GUI_SetGroupUID(ImGuiID uid) { this->present.group.uid = uid; }
     inline void GUI_SetGroupView(bool collapsed_view) { this->present.group.collapsed_view = collapsed_view; }
-    inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }    
+    inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
 
 private:
     // VARIABLES --------------------------------------------------------------
 
     bool auto_created;
-    
+
     CallSlotPtrVectorType callslots;
 
     /** ************************************************************************
@@ -96,13 +96,13 @@ private:
 
         std::string GetLabel(void) { return this->label; }
         ImVec2 GetPosition(InterfaceSlot& inout_interfaceslot);
-        inline bool IsGroupViewCollapsed(void) { return this->group.collapsed_view; }  
+        inline bool IsGroupViewCollapsed(void) { return this->group.collapsed_view; }
 
         void SetPosition(ImVec2 pos) { this->position = pos; }
 
         GroupState group;
         bool label_visible;
-        
+
     private:
         // Absolute position including canvas offset and zooming
         ImVec2 position;
@@ -110,16 +110,16 @@ private:
         GUIUtils utils;
         bool selected;
         std::string label;
-        
+
         ImGuiID last_compat_callslot_uid;
         ImGuiID last_compat_interface_uid;
         bool compatible;
 
     } present;
-    
+
 
     // FUNCTIONS --------------------------------------------------------------
-    
+
     bool is_callslot_compatible(CallSlot& callslot);
 };
 

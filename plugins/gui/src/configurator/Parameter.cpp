@@ -81,10 +81,8 @@ megamol::gui::configurator::Parameter::Parameter(
 }
 
 
-megamol::gui::configurator::Parameter::~Parameter(void)  {
-    
-}
-    
+megamol::gui::configurator::Parameter::~Parameter(void) {}
+
 
 std::string megamol::gui::configurator::Parameter::GetValueString(void) {
     std::string value_string = "UNKNOWN PARAMETER TYPE";
@@ -256,7 +254,6 @@ bool megamol::gui::configurator::Parameter::SetValueString(const std::string& va
 
     return retval;
 }
-
 
 
 // PARAMETER PRESENTATION ####################################################
