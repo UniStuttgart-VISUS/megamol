@@ -357,7 +357,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                         state.interact.callslot_add_group_uid.first = inout_callslot.uid;
                         state.interact.callslot_add_group_uid.second = inout_callslot.GetParentModule()->uid;
                     }           
-                    if (ImGui::MenuItem("Remove from Interface", nullptr, false, is_group_interface)) {
+                    if (ImGui::MenuItem("Remove from Interface Slot", nullptr, false, is_group_interface)) {
                         state.interact.callslot_remove_group_uid.first = inout_callslot.uid;
                         state.interact.callslot_remove_group_uid.second = inout_callslot.GetParentModule()->uid;
                     }                             

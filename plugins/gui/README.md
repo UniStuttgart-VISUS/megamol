@@ -126,31 +126,32 @@ See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol
         
 #### Project Graph
 
-* Drop File to Load/Add Project
-    * Drag file in a file browser and drop it inside the MegaMol window. The configurator windows must be open and focused.\
-        **NOTE** 
-        * Successfully testet using Windows10 and (X)Ubuntu with "Nautilus" file browser as drag source of the files. Failed using (X)Ubuntu with "Thunar" file browser. File drop is currently unimplemented in glfw for "Wayland" (e.g. Fedora).
-* Spawn *Module Stock List* in pop-up window at mouse position
-    * `Ctrl + Shift + m`
-    * `Double Left Click`
 * Call Creation
-    * Drag and Drop Call from one Call Slot to other highlighted compatible Call Slot.
+    * Drag and Drop from Call Slot to other highlighted compatible Call Slot.
+* Add Call Slot to existing Interface Slot
+    * Drag and Drop from Call Slot to other highlighted compatible Interface Slot. 
+* Spawn *Module Stock List* in pop-up window at mouse position.
+    * `Ctrl + Shift + m`
+    * `Double Left Click`    
 * Sidebar Splitter Collapsing/Expansion
     * `Double Right Click` on Splitter
 * Graph Zooming
     * `Mouse Wheel`
 * Graph Scrolling
     * `Middle Mouse Button`
-* Module Multiselection
-    * Drag & Drop with `Left Mouse Button` (start outside of any module). Each module partially overlapped by the multiselection frame will be selected.
-    * Hold `Shift` + `Left Click` on modules you additionally want to select/deselect to current selection.
+* Multiple Selection of Modules
+    * Drag & Drop with `Left Mouse Button` (start outside of any module). Each module partially overlapped by the frame will be selected.
+    * Hold `Shift` + `Left Click` on modules you additionally want to select/deselect to/from current selection.
 * `Module`
     * Main View `Radio Button`: Toggle main view flag (only available for view modules).
     * Parameter `Arrow Button`: Show/Hide *Module Parameters* in small window sticked to module.
     * Context Menu (`Right Click`)
         * Delete (Alternative: Select with `Left Click` an press `Delete`)
+        * Layout (Only available when multiple modules are selected)
         * Rename
         * Add to Group
+            * New
+            * *Select from list of existing groups*
         * Remove from Group
 * `Call`
     * Context Menu (`Right Click`)
@@ -158,14 +159,19 @@ See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol
 * Call `Slot` 
     * `Double Left Click` Show *Module Stock List* in pop-up window.
     * Context Menu (`Right Click`)    
-        * Add to Group Interface
-        * Remove from Group Interface
-        * Show *Module Stock List* in pop-up window at mouse position.
+        * Create new Interface Slot
+        * Remove from Interface Slot
 * `Group`(-Header)
+    * `Double Left Click` Toggle between expanded and collapsed view.
     * Context Menu (`Right Click`)
         * Collapse View / Expand View
+        * Layout 
         * Rename      
-        * Delete
+        * Delete (Alternative: Select with `Left Click` an press `Delete`)
+* Drop File to Load/Add Project
+    * Drag file in a file browser and drop it inside the MegaMol window. The configurator windows must be open and focused.\
+        **NOTE** 
+        * Successfully testet using Windows10 and (X)Ubuntu with "Nautilus" file browser as drag source of the files. Failed using (X)Ubuntu with "Thunar" file browser. File drop is currently unimplemented in glfw for "Wayland" (e.g. Fedora).
 
 #### Module Groups
 
