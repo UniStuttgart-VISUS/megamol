@@ -412,7 +412,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                         this->last_compat_interface_uid = state.interact.interfaceslot_compat_ptr->uid;
                     }
                 }
-                if ((state.interact.callslot_compat_ptr == nullptr) && (state.interact.interfaceslot_compat_ptr == nullptr)) {
+                else { /// (state.interact.callslot_compat_ptr == nullptr) && (state.interact.interfaceslot_compat_ptr == nullptr)
                     this->compatible = false;
                     this->last_compat_callslot_uid = GUI_INVALID_ID;
                     this->last_compat_interface_uid = GUI_INVALID_ID;

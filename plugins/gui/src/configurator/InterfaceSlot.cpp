@@ -70,9 +70,7 @@ bool megamol::gui::configurator::InterfaceSlot::AddCallSlot(
         return false;
     }
 
-    vislib::sys::Log::DefaultLog.WriteError(
-        "Call slot '%s' is incompatible to interface slot of group. [%s, %s, line %d]\n", callslot_ptr->name.c_str(),
-        __FILE__, __FUNCTION__, __LINE__);
+    ///vislib::sys::Log::DefaultLog.WriteError("Call slot '%s' is incompatible to interface slot of group. [%s, %s, line %d]\n", callslot_ptr->name.c_str(), __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
 
@@ -138,13 +136,6 @@ bool megamol::gui::configurator::InterfaceSlot::IsConnectionValid(CallSlot& call
     if (this->is_callslot_compatible(callslot)) {
         return true;
     } else {
-        // Callee interface slots can only have one call slot
-        if (this->callslots.size() > 0) {
-            if ((this->GetCallSlotType() == CallSlotType::CALLEE)) {
-                ///vislib::sys::Log::DefaultLog.WriteError("Callee interface slots can only have one call slot connceted. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);       
-                return false;
-            }
-        }
         // Call slot can only be added if parent module is not part of same group
         if (callslot.GetParentModule() == nullptr)  {
             ///vislib::sys::Log::DefaultLog.WriteError("Call slots must have connceted parent module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__); 
@@ -152,11 +143,6 @@ bool megamol::gui::configurator::InterfaceSlot::IsConnectionValid(CallSlot& call
         }
         if (callslot.GetParentModule()->GUI_GetGroupUID() == this->GUI_GetGroupUID())  {
             ///vislib::sys::Log::DefaultLog.WriteError("Parent module of call slot should not be in same group as the interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);    
-            return false;
-        }
-        // Call slot can only be added if not already part of other interface
-        if (callslot.GUI_IsGroupInterface())  {
-            ///vislib::sys::Log::DefaultLog.WriteError("Call slots can only be added if not already part of other interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);    
             return false;
         }
         // Check for compatibility of call slots
@@ -237,7 +223,6 @@ bool megamol::gui::configurator::InterfaceSlot::is_callslot_compatible(CallSlot&
         ///vislib::sys::Log::DefaultLog.WriteError("Parent module of call slot should be in same group as the interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);      
         return false;
     }     
-    
     // Check for compatibility (with all available call slots...)
     size_t compatible_slot_count = 0;
     for (auto& interface_callslot_ptr : this->callslots) {
@@ -383,7 +368,7 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
                     this->last_compat_interface_uid = state.interact.interfaceslot_compat_ptr->uid;
                 }
             } 
-            if ((state.interact.callslot_compat_ptr == nullptr) && (state.interact.interfaceslot_compat_ptr == nullptr)) {
+            else { /// (state.interact.callslot_compat_ptr == nullptr) && (state.interact.interfaceslot_compat_ptr == nullptr)
                 this->compatible = false;
                 this->last_compat_callslot_uid = GUI_INVALID_ID;
                 this->last_compat_interface_uid = GUI_INVALID_ID;                
@@ -424,10 +409,10 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             const ImU32 COLOR_INTERFACE_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
-            tmpcol = style.Colors[ImGuiCol_ScrollbarGrab];
+            tmpcol = style.Colors[ImGuiCol_FrameBgHovered];
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-            const ImU32 COLOR_INTERFACE_LINE = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
+            const ImU32 COLOR_INTERFACE_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
+                            
             // Color modification
             ImU32 slot_highlight_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLER);
             ;
@@ -450,7 +435,7 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
             // Draw Curves
             if (!this->group.collapsed_view) {
                 for (auto& callslot_ptr : inout_interfaceslot.GetCallSlots()) {
-                    draw_list->AddLine(actual_position, callslot_ptr->GUI_GetPosition(), COLOR_INTERFACE_LINE,
+                    draw_list->AddLine(actual_position, callslot_ptr->GUI_GetPosition(), COLOR_INTERFACE_CURVE,
                         GUI_LINE_THICKNESS * state.canvas.zooming);
                 }
             }

@@ -578,7 +578,7 @@ void megamol::gui::configurator::Module::Presentation::Update(
     if (max_slot_name_length > 0.0f) {
         max_slot_name_length = (2.0f * max_slot_name_length / in_canvas.zooming) + (1.0f * GUI_SLOT_RADIUS);
     }
-    float module_width = std::max(class_width, ((max_label_length + max_slot_name_length) + (3.0f * GUI_SLOT_RADIUS)));
+    float module_width = std::max((class_width/in_canvas.zooming), ((max_label_length + max_slot_name_length) + (3.0f * GUI_SLOT_RADIUS)));
 
     // HEIGHT
     float line_height = (ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming);

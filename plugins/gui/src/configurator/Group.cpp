@@ -365,7 +365,6 @@ megamol::gui::configurator::Group::Presentation::Presentation(void)
     : position(ImVec2(FLT_MAX, FLT_MAX))
     , size(ImVec2(0.0f, 0.0f))
     , utils()
-    , name_label()
     , collapsed_view(false)
     , allow_selection(false)
     , allow_context(false)
@@ -553,7 +552,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
             draw_list->AddRect(group_rect_min, group_rect_max, COLOR_GROUP_BORDER, 0.0f);
 
             // Draw text
-            float name_width = GUIUtils::TextWidgetWidth(this->name_label);
+            float name_width = GUIUtils::TextWidgetWidth(inout_group.name);
             ImVec2 text_pos_left_upper =
                 ImVec2((group_center.x - (name_width / 2.0f)), (group_rect_min.y + (style.ItemSpacing.y / 2.0f)));
             if (!this->collapsed_view) {
@@ -563,7 +562,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
             auto header_color = (this->selected) ? (COLOR_HEADER_HIGHLIGHT) : (COLOR_HEADER);
             draw_list->AddRectFilled(group_rect_min, header_rect_max, header_color, GUI_RECT_CORNER_RADIUS,
                 (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
-            draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->name_label.c_str());
+            draw_list->AddText(text_pos_left_upper, COLOR_TEXT, inout_group.name.c_str());
         }
 
         ImGui::PopID();
@@ -617,7 +616,6 @@ void megamol::gui::configurator::Group::Presentation::SetPosition(Group& inout_g
 void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
     megamol::gui::configurator::Group& inout_group, const GraphCanvasType& in_canvas) {
 
-    this->name_label = "[Group] " + inout_group.name;
     float line_height = ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming;
 
     // POSITION
@@ -659,7 +657,7 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
             max_label_length = (2.0f * max_label_length / in_canvas.zooming) + (1.0f * GUI_SLOT_RADIUS);
         }
     }
-    group_width = std::max((1.5f * GUIUtils::TextWidgetWidth(this->name_label) / in_canvas.zooming), max_label_length) + (3.0f * GUI_SLOT_RADIUS);
+    group_width = std::max((1.5f * GUIUtils::TextWidgetWidth(inout_group.name) / in_canvas.zooming), max_label_length) + (3.0f * GUI_SLOT_RADIUS);
     
     // HEIGHT
     group_height = std::max((3.0f * line_height),

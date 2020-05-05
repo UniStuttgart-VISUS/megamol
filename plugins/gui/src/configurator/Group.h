@@ -100,7 +100,6 @@ private:
         ImVec2 size;
 
         GUIUtils utils;
-        std::string name_label;
         bool collapsed_view;
         bool allow_selection;
         bool allow_context;
