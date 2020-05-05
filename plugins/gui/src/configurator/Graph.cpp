@@ -2036,8 +2036,8 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
                         unsigned int param_indent_stack = 0;
                         this->utils.HoverToolTip(
                             module_ptr->description, ImGui::GetID(module_ptr->name.c_str()), 0.75f, 5.0f);
-                        ImGui::Indent();
                         param_indent_stack++;
+                        ImGui::Indent();
 
                         bool param_name_space_open = true;
                         for (auto& parameter : module_ptr->parameters) {
@@ -2067,8 +2067,8 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
                                     }
                                     param_name_space_open =
                                         ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
-                                    ImGui::Indent();
                                     param_indent_stack++;
+                                    ImGui::Indent();
                                 } else {
                                     param_name_space_open = true;
                                 }
