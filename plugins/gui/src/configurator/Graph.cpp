@@ -1015,11 +1015,33 @@ void megamol::gui::configurator::Graph::Presentation::Present(
         // Remove call slot from interface of group
         callslot_uid = this->graph_state.interact.callslot_remove_group_uid.first;
         if (callslot_uid != GUI_INVALID_ID) {
+            CallSlotPtrType callslot_ptr = nullptr;
+            for (auto& mod : inout_graph.GetModules()) {
+                for (auto& callslot_map : mod->GetCallSlots()) {
+                    for (auto& callslot : callslot_map.second) {
+                        if (callslot->uid == callslot_uid) {
+                            callslot_ptr = callslot;
+                        }
+                    }
+                }
+            }
             ImGuiID module_uid = this->graph_state.interact.callslot_remove_group_uid.second;
             if (module_uid != GUI_INVALID_ID) {
                 for (auto& group : inout_graph.GetGroups()) {
                     if (group->ContainsModule(module_uid)) {
-                        group->InterfaceSlot_RemoveCallSlot(callslot_uid, true);
+                        if (group->InterfaceSlot_RemoveCallSlot(callslot_uid, true)) {
+                            
+                            // Delete connection to calls connected outside the group             
+                            CallSlotType other_type = (callslot_ptr->type == CallSlotType::CALLEE)?(CallSlotType::CALLER):(CallSlotType::CALLEE);
+                            for (auto& call_ptr : callslot_ptr->GetConnectedCalls()) {
+                                CallSlotPtrType other_callslot_ptr = call_ptr->GetCallSlot(other_type);
+                                if (other_callslot_ptr->IsParentModuleConnected()) {
+                                    if (other_callslot_ptr->GetParentModule()->GUI_GetGroupUID() != group->uid) {
+                                        callslot_ptr->DisconnectCall(call_ptr->uid);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1045,8 +1067,25 @@ void megamol::gui::configurator::Graph::Presentation::Present(
                 for (auto& group_ptr : inout_graph.GetGroups()) {
                     InterfaceSlotPtrType interfaceslot_ptr;
                     if (group_ptr->GetInterfaceSlot(this->graph_state.interact.interfaceslot_selected_uid, interfaceslot_ptr)) {
+                        // Delete all connected calls 
+                        std::vector<ImGuiID> call_uids;
+                        for (auto& callslot_ptr : interfaceslot_ptr->GetCallSlots()) {
+                            for (auto& call_ptr : callslot_ptr->GetConnectedCalls()) {
+                                auto caller = call_ptr->GetCallSlot(CallSlotType::CALLER);
+                                auto callee = call_ptr->GetCallSlot(CallSlotType::CALLEE);
+                                if (caller->IsParentModuleConnected() && callee->IsParentModuleConnected()) {
+                                    if (caller->GetParentModule()->GUI_GetGroupUID() != callee->GetParentModule()->GUI_GetGroupUID()) {
+                                        call_uids.emplace_back(call_ptr->uid);
+                                    }
+                                }
+                            }
+                        }
+                        for (auto& call_uid : call_uids) {
+                            inout_graph.DeleteCall(call_uid);
+                        }                        
                         interfaceslot_ptr.reset();
-                        group_ptr->DeleteInterfaceSlot(this->graph_state.interact.interfaceslot_selected_uid);                      
+                        
+                        group_ptr->DeleteInterfaceSlot(this->graph_state.interact.interfaceslot_selected_uid);                         
                     }
                 }
             }

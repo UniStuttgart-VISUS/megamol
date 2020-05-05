@@ -42,7 +42,7 @@ bool megamol::gui::configurator::Call::IsConnected(void) {
         }
     }
     if (connected != 2) {
-        vislib::sys::Log::DefaultLog.WriteWarn("Call has only one connected call slot. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        ///vislib::sys::Log::DefaultLog.WriteWarn("Call has only one connected call slot. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return (connected == 2);
@@ -99,7 +99,7 @@ const megamol::gui::configurator::CallSlotPtrType& megamol::gui::configurator::C
     megamol::gui::configurator::CallSlotType type) {
 
     if (this->connected_callslots[type] == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn("Returned pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        ///vislib::sys::Log::DefaultLog.WriteWarn("Returned pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     return this->connected_callslots[type];
 }

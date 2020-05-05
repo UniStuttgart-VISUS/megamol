@@ -82,21 +82,6 @@ bool megamol::gui::configurator::InterfaceSlot::RemoveCallSlot(ImGuiID callslot_
     try {
         for (auto iter = this->callslots.begin(); iter != this->callslots.end(); iter++) {
             if ((*iter)->uid == callslot_uid) {
-
-                // Delete all calls connected outside the group             
-                std::vector<ImGuiID> call_uids;
-                CallSlotType other_type = ((*iter)->type == CallSlotType::CALLEE)?(CallSlotType::CALLER):(CallSlotType::CALLEE);
-                for (auto& call_ptr : (*iter)->GetConnectedCalls()) {
-                    CallSlotPtrType other_callslot_ptr = call_ptr->GetCallSlot(other_type);
-                    if (other_callslot_ptr->IsParentModuleConnected()) {
-                        if (other_callslot_ptr->GetParentModule()->GUI_GetGroupUID() != this->GUI_GetGroupUID()) {
-                            call_uids.emplace_back(call_ptr->uid);
-                        }
-                    }
-                }
-                for (auto& call_uid : call_uids) {
-                    (*iter)->DisconnectCall(call_uid);
-                }
                 
                 (*iter)->GUI_SetGroupInterface(nullptr);
                 #ifdef GUI_VERBOSE
@@ -265,8 +250,7 @@ bool megamol::gui::configurator::InterfaceSlot::is_callslot_compatible(CallSlot&
     bool compatible = (compatible_slot_count == this->callslots.size());
     // Check for existing incompatible call slots
     if ((compatible_slot_count > 0) && (compatible_slot_count != this->callslots.size())) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Interface slot contains incompatible call slots. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        ///vislib::sys::Log::DefaultLog.WriteError("Interface slot contains incompatible call slots. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     return compatible;
 }
