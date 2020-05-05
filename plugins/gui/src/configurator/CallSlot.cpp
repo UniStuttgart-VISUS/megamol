@@ -445,14 +445,15 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                 }
 
                 // Colors
-                float alpha = (is_group_interface) ? (0.6f) : (1.0f);
+                float brightness = (is_group_interface) ? (0.6f) : (1.0f);
 
                 ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
-                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, alpha);
+                tmpcol.w *= brightness;
+                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_SLOT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
                 tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive];
-                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, alpha);
+                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
                 // Draw Slot
@@ -460,7 +461,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                 ImU32 slot_background_color = COLOR_SLOT_BACKGROUND;
                 if (this->compatible) {
                     tmpcol = GUI_COLOR_SLOT_COMPATIBLE;
-                    tmpcol.w = alpha;
+                    tmpcol = ImVec4(tmpcol.x * brightness, tmpcol.y * brightness, tmpcol.z * brightness, tmpcol.w);
                     slot_background_color = ImGui::ColorConvertFloat4ToU32(tmpcol);
                 }
                 if (hovered || this->selected) {
@@ -468,7 +469,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
                     if (inout_callslot.type == CallSlotType::CALLEE) {
                         tmpcol = GUI_COLOR_SLOT_CALLEE;
                     }
-                    tmpcol.w = alpha;
+                    tmpcol = ImVec4(tmpcol.x * brightness, tmpcol.y * brightness, tmpcol.z * brightness, tmpcol.w);
                     slot_background_color = ImGui::ColorConvertFloat4ToU32(tmpcol);
                 }
                 const float segment_numer = 20.0f;

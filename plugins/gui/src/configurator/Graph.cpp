@@ -1693,16 +1693,16 @@ void megamol::gui::configurator::Graph::Presentation::present_menu(megamol::gui:
     ImGui::SameLine();
 
     if (ImGui::Checkbox("Call Names", &this->show_call_names)) {
-        for (auto& call : inout_graph.get_calls()) {
-            call->GUI_SetLabelVisibility(this->show_call_names);
+        for (auto& call_ptr : inout_graph.get_calls()) {
+            call_ptr->GUI_SetLabelVisibility(this->show_call_names);
         }
         this->update = true;
     }
     ImGui::SameLine();
 
     if (ImGui::Checkbox("Module Names", &this->show_module_names)) {
-        for (auto& mod : inout_graph.GetModules()) {
-            mod->GUI_SetLabelVisibility(this->show_module_names);
+        for (auto& module_ptr : inout_graph.GetModules()) {
+            module_ptr->GUI_SetLabelVisibility(this->show_module_names);
         }
         this->update = true;
     }
