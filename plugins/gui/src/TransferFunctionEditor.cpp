@@ -154,7 +154,6 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , range({0.0f, 1.0f})
     , mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , textureSize(256)
-
     , textureInvalid(true)
     , pendingChanges(true)
     , texturePixels()
@@ -165,7 +164,8 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , currentDragChange()
     , immediateMode(false)
     , showOptions(true)
-    , widget_buffer() {
+    , widget_buffer()
+    , range_overwrite(false) {
 
     // Init transfer function colors
     this->nodes.clear();
@@ -262,6 +262,11 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
     // Interval range -----------------------------------------------------
     ImGui::PushItemWidth(tfw_item_width * 0.5f - style.ItemSpacing.x);
 
+    ImGui::Checkbox("Overwrite Value Range", &this->range_overwrite);
+    if (!this->range_overwrite) {
+        GUIUtils::ReadOnlyWigetStyle(true);
+    }
+
     ImGui::InputFloat("###min", &this->widget_buffer.min_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
         this->range[0] =
@@ -285,6 +290,10 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
         this->textureInvalid = true;
     }
     ImGui::PopItemWidth();
+
+    if (!this->range_overwrite) {
+        GUIUtils::ReadOnlyWigetStyle(false);
+    }
 
     ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
     ImGui::TextUnformatted("Value Range");
