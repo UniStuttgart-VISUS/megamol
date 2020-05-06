@@ -842,6 +842,7 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                                     parameter.SetValueString(value_str);
 
                                     // Reading state parameters
+                                    /// XXX State parameters have no newline formatting
                                     if (module_ptr->class_name == GUI_MODULE_NAME) {
                                         if (parameter.full_name == GUI_GUI_STATE_PARAM_NAME) {
                                             // Reading gui state param containing parameter gui states

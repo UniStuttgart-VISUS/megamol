@@ -2535,7 +2535,7 @@ void megamol::gui::configurator::Graph::Presentation::layout(
                 max_graph_element_width = std::max(module_size.x, max_graph_element_width);
                 found_layer_item = true;
 
-            } else if (layer_item.group_ptr != nullptr) {
+            } else if (layer_item.group_ptr != nullptr) {             
                 if (this->show_call_names) {
                     for (auto& interfaceslot_slot : layer_item.group_ptr->GetInterfaceSlots(CallSlotType::CALLER)) {
                         for (auto& callerslot_ptr : interfaceslot_slot->GetCallSlots()) {
