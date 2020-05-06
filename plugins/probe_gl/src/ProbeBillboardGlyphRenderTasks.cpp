@@ -8,6 +8,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/transform.hpp"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 
@@ -50,6 +51,7 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
     , m_billboard_dummy_mesh(nullptr)
     , m_billboard_size_slot("BillBoardSize", "Sets the scaling factor of the texture billboards")
     , m_rendering_mode_slot("RenderingMode", "Glyph rendering mode")
+    , m_use_interpolation_slot("UseInterpolation", "Interpolate between samples")
     , m_tf_min(0.0f)
     , m_tf_max(1.0f)
     , m_show_glyphs(true)
@@ -71,6 +73,9 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
     this->m_rendering_mode_slot.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Precomputed");
     this->m_rendering_mode_slot.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Realtime");
     this->MakeSlotAvailable(&this->m_rendering_mode_slot);
+
+    this->m_use_interpolation_slot << new core::param::BoolParam(true);
+    this->MakeSlotAvailable(&this->m_use_interpolation_slot);
 }
 
 megamol::probe_gl::ProbeBillboardGlyphRenderTasks::~ProbeBillboardGlyphRenderTasks() {}
@@ -288,6 +293,32 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         auto const& vector_shader = gpu_mtl_storage->getMaterials()[2].shader_program;
         rt_collection->addRenderTasks(
             vector_shader, m_billboard_dummy_mesh, m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
+
+
+        std::array<PerFrameData, 1> data;
+        data[0].use_interpolation = m_use_interpolation_slot.Param<core::param::BoolParam>()->Value();
+
+        if (rt_collection->getPerFrameBuffers().empty()) {
+            rt_collection->addPerFrameDataBuffer(data, 1);
+        }
+    }
+
+    if (this->m_use_interpolation_slot.IsDirty())
+    {
+        this->m_use_interpolation_slot.ResetDirty();
+
+
+        std::array<PerFrameData,1> data;
+        data[0].use_interpolation = m_use_interpolation_slot.Param<core::param::BoolParam>()->Value();
+
+        if (!rt_collection->getPerFrameBuffers().empty())
+        {
+            rt_collection->addPerFrameDataBuffer(data, 1);
+        }
+        else
+        {
+            rt_collection->updatePerFrameDataBuffer(data, 1);
+        }
     }
 
     // check for pending probe manipulations

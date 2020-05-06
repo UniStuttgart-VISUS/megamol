@@ -1,6 +1,8 @@
 
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };
 
+layout(std430, binding = 1) readonly buffer PerFrameDataBuffer { PerFrameData[] per_frame_data; };
+
 uniform mat4 view_mx;
 
 layout(location = 0) flat in int draw_id;
@@ -65,42 +67,49 @@ void main() {
         depth_out = gl_FragCoord.z;
         return;
     }
-
-    float radar_sections_cnt = mesh_shader_params[draw_id].sample_cnt;
+    
     float r = length(uv_coords - vec2(0.5)) * 2.0;
-    vec3 proj_pv = normalize(projectOntoPlane(pixel_vector,mesh_shader_params[draw_id].probe_direction.xyz));
 
     if(r > 1.0) discard;
     if(r < 0.1) discard;
 
-	// inverse direction of sample lookup to map higher sample depth to smaller radius
+    float radar_sections_cnt = mesh_shader_params[draw_id].sample_cnt;
+    vec3 proj_pv = normalize(projectOntoPlane(pixel_vector,mesh_shader_params[draw_id].probe_direction.xyz));
+    
+    vec3 out_colour = vec3(0.0,0.0,0.0);
+    bool interpolate = bool(per_frame_data[0].use_interpolation);
+
+    vec3 sample_vector = vec3(0.0);
+    float sample_magnitude = 0.0;
+
+    // inverse direction of sample lookup to map higher sample depth to smaller radius
     // also shift slightly away from probe center, since that region is not useful to clearly show directions
     float invere_r = 1.0 - ( (r - 0.1) / 0.9 );
 
-    // identify section of radar glyph that the pixel belongs to
-    int radar_section_0 = clamp(int(floor(invere_r * radar_sections_cnt - 1.0)),0,int(radar_sections_cnt)-1);
-    int radar_section_1 = clamp(int(ceil(invere_r * radar_sections_cnt - 1.0)),0,int(radar_sections_cnt)-1);
-    float lerp = fract(invere_r * radar_sections_cnt-1);
+    if(interpolate)
+    {    
+        // identify section of radar glyph that the pixel belongs to
+        int radar_section_0 = clamp(int(floor(invere_r * (radar_sections_cnt - 1.0))),0,int(radar_sections_cnt)-1);
+        int radar_section_1 = clamp(int(ceil(invere_r * (radar_sections_cnt - 1.0))),0,int(radar_sections_cnt)-1);
+        float lerp = fract(invere_r * (radar_sections_cnt-1));
 
-    // based on section, calculate vector projection
-    vec3 sample_vector_0 = normalize(mesh_shader_params[draw_id].samples[radar_section_0].xyz);
-    float sample_magnitude_0 = mesh_shader_params[draw_id].samples[radar_section_0].w;
+        // based on section, calculate vector projection
+        vec3 sample_vector_0 = normalize(mesh_shader_params[draw_id].samples[radar_section_0].xyz);
+        float sample_magnitude_0 = mesh_shader_params[draw_id].samples[radar_section_0].w;
 
-    vec3 sample_vector_1 = normalize(mesh_shader_params[draw_id].samples[radar_section_1].xyz);
-    float sample_magnitude_1 = mesh_shader_params[draw_id].samples[radar_section_1].w;
+        vec3 sample_vector_1 = normalize(mesh_shader_params[draw_id].samples[radar_section_1].xyz);
+        float sample_magnitude_1 = mesh_shader_params[draw_id].samples[radar_section_1].w;
 
-    vec3 out_colour = vec3(0.0,0.0,0.0);
-    bool interpolate = false;
-
-    vec3 sample_vector = sample_vector_0;
-    float sample_magnitude = sample_magnitude_0;
-
-    if(interpolate){
-        sample_vector = mix(sample_vector_0,sample_vector_1,lerp);
+        sample_vector = normalize(mix(sample_vector_0,sample_vector_1,lerp));
         sample_magnitude = mix(sample_magnitude_0,sample_magnitude_1,lerp);
     }
-    //else{
-    //}
+    else
+    {
+        int radar_section = clamp(int(round(invere_r * (radar_sections_cnt - 1.0))),0,int(radar_sections_cnt)-1);
+
+        sample_vector = normalize(mesh_shader_params[draw_id].samples[radar_section].xyz);
+        sample_magnitude = mesh_shader_params[draw_id].samples[radar_section].w;
+    }
 
     vec3 proj_sv =  normalize(projectOntoPlane(sample_vector,mesh_shader_params[draw_id].probe_direction.xyz));
 

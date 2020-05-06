@@ -52,8 +52,6 @@ protected:
 
     bool getMetaDataCallback(core::Call& caller);
 
-    core::param::ParamSlot m_billboard_size_slot;
-
 private:
     uint32_t m_version;
 
@@ -63,7 +61,11 @@ private:
 
     core::CallerSlot m_probe_manipulation_slot;
 
+    core::param::ParamSlot m_billboard_size_slot;
+
     core::param::ParamSlot m_rendering_mode_slot;
+
+    core::param::ParamSlot m_use_interpolation_slot;
 
     std::shared_ptr<glowl::Mesh> m_billboard_dummy_mesh;
 
@@ -78,6 +80,14 @@ private:
     /**
      *
      */
+
+    struct PerFrameData {
+        int use_interpolation;
+
+        int padding0;
+        int padding1;
+        int padding2;
+    };
 
     struct TexturedGlyphData {
         glm::vec4 position;

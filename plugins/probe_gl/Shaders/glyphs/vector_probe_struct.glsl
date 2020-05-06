@@ -15,3 +15,12 @@ struct MeshShaderParams
 	float tf_min;
     float tf_max;
 };
+
+struct PerFrameData
+{
+   int use_interpolation;
+
+   int padding0;
+   int padding1;
+   int padding2;
+};
