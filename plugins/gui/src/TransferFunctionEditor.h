@@ -131,6 +131,9 @@ private:
 
     /** The global input widget state buffer. */
     WidgetBuffer widget_buffer;
+
+    /** Flag indicating if propagated range should be overwriten by editor */
+    bool range_overwrite;
 };
 
 } // namespace gui
