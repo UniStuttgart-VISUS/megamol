@@ -7,6 +7,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
@@ -43,6 +44,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , selectedItemsColor()
     , drawOtherItemsSlot("drawOtherItems", "Draw other (e.g., non-selected) items")
     , otherItemsColorSlot("otherItemsColor", "Color for other items (e.g., non-selected)")
+    , otherItemsAttribSlot("otherItemsAttrib", "attribute to use for TF lookup and item coloring")
     , otherItemsAlphaSlot("otherItemsAlpha", "Alpha for other items (e.g., non-selected)")
     , otherItemsColor()
     , drawAxesSlot("drawAxes", "Draw dimension axes")
@@ -120,6 +122,8 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     otherItemsColorSlot << new core::param::StringParam("gray");
     otherItemsColorSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::otherItemsColorSlotCallback);
     this->MakeSlotAvailable(&otherItemsColorSlot);
+    otherItemsAttribSlot << new core::param::FlexEnumParam("undef");
+    this->MakeSlotAvailable(&this->otherItemsAttribSlot);
     otherItemsAlphaSlot << new core::param::FloatParam(1.0f, 0.0f, 1.0f);
     otherItemsAlphaSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::otherItemsColorSlotCallback);
     this->MakeSlotAvailable(&otherItemsAlphaSlot);
@@ -386,7 +390,6 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
     (*floats)(0);
     call.SetTimeFramesCount(floats->GetFrameCount());
     auto hash = floats->DataHash();
-    (*tc)(0);
     (*flagsc)(core::FlagCallRead_GL::CallGetData);
     if (flagsc->hasUpdate()) {
         this->currentFlagsVersion = flagsc->version();
@@ -404,6 +407,8 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
         this->minimums.resize(columnCount);
         this->maximums.resize(columnCount);
         this->names.resize(columnCount);
+        this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->ClearValues();
+        this->columnIndex.clear();
         for (GLuint x = 0; x < columnCount; x++) {
             axisIndirection[x] = x;
             filters[x].dimension = 0;
@@ -413,7 +418,11 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
             names[x] = floats->GetColumnsInfos()[x].Name();
             filters[x].lower = minimums[x];
             filters[x].upper = maximums[x];
+            this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->AddValue(
+                floats->GetColumnsInfos()[x].Name());
+            this->columnIndex[floats->GetColumnsInfos()[x].Name()] = x;
         }
+
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, dataBuffer);
         glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * this->itemCount * sizeof(float), floats->GetData(),
             GL_STATIC_DRAW); // TODO: huh.
@@ -435,6 +444,15 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
         this->currentHash = hash;
         this->lastTimeStep = static_cast<unsigned int>(call.Time());
     }
+
+    // set minmax for TF
+    try {
+        auto colcol = this->columnIndex[this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value()];
+        tc->SetRange(
+            {floats->GetColumnsInfos()[colcol].MinimumValue(), floats->GetColumnsInfos()[colcol].MinimumValue()});
+    } catch (std::out_of_range& ex) {
+    }
+    (*tc)(0);
 
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(dataBuffer));
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(minimumsBuffer));
@@ -703,6 +721,15 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 
     glUniform4fv(prog.ParameterLocation("color"), 1, color);
     glUniform1f(prog.ParameterLocation("tfColorFactor"), tfColorFactor);
+    try {
+        auto colcol = this->columnIndex[this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value()];
+        glUniform1i(prog.ParameterLocation("colorColumn"), colcol);
+    } catch (std::out_of_range& ex) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "ParallelCoordinatesRenderer2D: tried to color lines by non-existing column '%s'",
+            this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value().c_str());
+        glUniform1i(prog.ParameterLocation("colorColumn"), -1);
+    }
     glUniform1ui(prog.ParameterLocation("fragmentTestMask"), testMask);
     glUniform1ui(prog.ParameterLocation("fragmentPassMask"), passMask);
 

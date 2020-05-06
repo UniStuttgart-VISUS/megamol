@@ -147,6 +147,12 @@ public:
     inline void ResetDirty() { this->usedTFVersion = availableTFVersion; }
 
     /**
+     * Sets the value range (domain) of this transfer function. Values 
+	 * outside of min/max are to be clamped.
+     */
+    inline void SetRange(std::array<float, 2> range) { this->range = range; }
+
+    /**
      * Sets the 1D texture information
      *
      * @param id The OpenGL texture object id
