@@ -59,7 +59,7 @@ void main()
   
   float value = out_.itemID / float(itemCount - 1);
   if (colorColumn != -1) {
-    float value = pc_item_dataValue_unscaled(pc_item_dataID(out_.itemID, colorColumn));
+    value = pc_item_dataValue_unscaled(pc_item_dataID(out_.itemID, colorColumn));
   }
   if (bitflag_test(flags[out_.itemID], FLAG_SELECTED, FLAG_SELECTED)) {
     out_.color = color;
