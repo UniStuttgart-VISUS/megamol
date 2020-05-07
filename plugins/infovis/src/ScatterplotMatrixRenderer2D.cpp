@@ -451,6 +451,7 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
     map.labelIdx = nameToIndex(this->floatTable, this->labelSelectorParam.Param<core::param::FlexEnumParam>()->Value())
                        .value_or(0);
 
+    this->screenValid = false;
     this->trianglesValid = false;
     this->textValid = false;
     this->updateColumns();
