@@ -447,7 +447,7 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
 
     // set minmax for TF
     try {
-        auto colcol = this->columnIndex[this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value()];
+        auto colcol = this->columnIndex.at(this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value());
         tc->SetRange(
             {floats->GetColumnsInfos()[colcol].MinimumValue(), floats->GetColumnsInfos()[colcol].MinimumValue()});
     } catch (std::out_of_range& ex) {
@@ -717,13 +717,16 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #endif
 
     this->enableProgramAndBind(prog);
+    // vislib::sys::Log::DefaultLog.WriteInfo("setting tf range to [%f, %f]", tf->Range()[0], tf->Range()[1]);
     tf->BindConvenience(prog, GL_TEXTURE5, 5);
 
     glUniform4fv(prog.ParameterLocation("color"), 1, color);
     glUniform1f(prog.ParameterLocation("tfColorFactor"), tfColorFactor);
     try {
-        auto colcol = this->columnIndex[this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value()];
-        glUniform1i(prog.ParameterLocation("colorColumn"), colcol);
+        auto colcol = this->columnIndex.at(this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value());
+        auto x = prog.ParameterLocation("colorColumn");
+        vislib::sys::Log::DefaultLog.WriteInfo("found colorColumn at %i", x);
+        glUniform1i(x, colcol);
     } catch (std::out_of_range& ex) {
         vislib::sys::Log::DefaultLog.WriteError(
             "ParallelCoordinatesRenderer2D: tried to color lines by non-existing column '%s'",
@@ -865,6 +868,7 @@ void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
     // glUniform2f(drawItemContinuousProgram.ParameterLocation("bottomLeft"), 0.0f, 0.0f);
     // glUniform2f(drawItemContinuousProgram.ParameterLocation("topRight"), windowWidth, windowHeight);
     densityFBO.BindColourTexture();
+    // vislib::sys::Log::DefaultLog.WriteInfo("setting tf range to [%f, %f]", tf->Range()[0], tf->Range()[1]);
     tf->BindConvenience(drawItemContinuousProgram, GL_TEXTURE5, 5);
     glUniform1i(this->drawItemContinuousProgram.ParameterLocation("fragmentCount"), 1);
     glUniform4fv(this->drawItemContinuousProgram.ParameterLocation("clearColor"), 1, backgroundColor);
