@@ -6,16 +6,14 @@
     <snippet name="vertex_attributes" type="string">
         <![CDATA[
 
-uniform uint flagsAvailable;
-uniform vec4 flagSelectedCol;
-uniform vec4 flagSoftSelectedCol;
-
-uniform uint flagOffset;
+uniform uint flags_available;
+uniform vec4 flag_selected_col;
+uniform vec4 flag_softselected_col;
+uniform uint flags_offset;
 
 #ifdef FLAG_STORAGE_SSBO
-    layout(std430, binding = 4) buffer flags
-    {
-        coherent uint inFlags[];
+    layout(std430, binding = 4) buffer flags {
+        uint inFlags[];
     };
 #else
     in uint inFlags;
@@ -32,16 +30,16 @@ flat out uint discardFrag;
 
 uint flag = uint(0);
 
-if (bool(flagsAvailable)) {    
+if (bool(flags_available)) {    
 #ifdef FLAG_STORAGE_SSBO
-    flag = inFlags[(flagOffset + gl_VertexID)];
+    flag = inFlags[(flags_offset + gl_VertexID)];
 #else
-    flag = flagOffset + inFlags;
+    flag = flags_offset + inFlags;
 #endif // FLAG_STORAGE_SSBO
 }
 
 discardFrag = uint(0);
-if ((bool(flagsAvailable) && !bitflag_isVisible(flag))) {
+if ((bool(flags_available) && !bitflag_isVisible(flag))) {
     discardFrag = uint(1);
 }
 
@@ -78,9 +76,9 @@ in uint geoDiscardFrag[1];
 
 flat out uint discardFrag;
 
-uniform uint flagsAvailable;
-uniform vec4 flagSelectedCol;
-uniform vec4 flagSoftSelectedCol;
+uniform uint flags_available;
+uniform vec4 flag_selected_col;
+uniform vec4 flag_softselected_col;
 
         ]]>
     </snippet>

@@ -15,7 +15,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/FlagStorage.h"
-#include "mmcore/FlagCall.h"
+#include "mmcore/FlagCall_GL.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/param/EnumParam.h"
@@ -294,11 +294,8 @@ namespace rendering {
         RenderMode                               renderMode;
         GLuint                                   greyTF;
 
-        bool                                     flagsEnabled;
-        GLuint                                   flagsBuffer;
-        bool                                     flagsUseSSBO;
-        FlagStorage::FlagVersionType             flagsCurrentVersion;
-        std::shared_ptr<FlagStorage::FlagVectorType> flagsData;
+        bool                                     flags_enabled;
+        bool                                     flags_SSBO_available;
 
         GLSLShader                               sphereShader;
         GLSLGeometryShader                       sphereGeometryShader;
@@ -351,7 +348,7 @@ namespace rendering {
         megamol::core::CallerSlot getDataSlot;
         megamol::core::CallerSlot getClipPlaneSlot;
         megamol::core::CallerSlot getTFSlot;
-        megamol::core::CallerSlot getFlagsSlot;
+        megamol::core::CallerSlot readFlagsSlot;
 
         /*********************************************************************/
         /* PARAMETERS                                                        */

@@ -27,9 +27,9 @@ const GLuint SSBOflagsBindingPoint = 4;
 
 SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
     , getDataSlot("getdata", "Connects to the data source")
-    , getTFSlot("gettransferfunction", "Connects to the transfer function module")
-    , getClipPlaneSlot("getclipplane", "Connects to a clipping plane module")
-    , getFlagsSlot("getflags", "Connects to a flag storage module")
+    , getTFSlot("gettransferfunction", "The slot for the transfer function module")
+    , getClipPlaneSlot("getclipplane", "The slot for the clipping plane module")
+    , readFlagsSlot("readFlags", "The slot for reading the selection flags")
     , curViewAttrib()
     , curClipDat()
     , oldClipDat()
@@ -46,11 +46,8 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
     , curMVPtransp()
     , renderMode(RenderMode::SIMPLE)
     , greyTF(0)
-    , flagsEnabled(false)
-    , flagsBuffer(0)
-    , flagsUseSSBO(false)
-    , flagsCurrentVersion(0xFFFFFFFF)
-    , flagsData(nullptr)
+    , flags_enabled(false)
+    , flags_SSBO_available(false)
     , sphereShader()
     , sphereGeometryShader()
     , lightingShader()
@@ -122,8 +119,8 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
     this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
     this->MakeSlotAvailable(&this->getClipPlaneSlot);
 
-    this->getFlagsSlot.SetCompatibleCall<FlagCallDescription>();
-    this->MakeSlotAvailable(&this->getFlagsSlot);
+    this->readFlagsSlot.SetCompatibleCall<FlagCallRead_GLDescription>();
+    this->MakeSlotAvailable(&this->readFlagsSlot);
 
     // Initialising enum param with all possible modes (needed for configurator)
     // (Removing not available render modes later in create function)
@@ -328,13 +325,8 @@ bool SphereRenderer::resetResources(void) {
     // Outlining
     this->outlineSizeSlot.Param<param::FloatParam>()->SetGUIVisible(false);
 
-    this->flagsCurrentVersion = (0xFFFFFFFF);
-    this->flagsEnabled = false;
-    this->flagsUseSSBO = false;
-    this->flagsData = nullptr;
-    if (this->flagsUseSSBO) {
-        glDeleteBuffers(1, &this->flagsBuffer);
-    }
+    this->flags_enabled = false;
+    this->flags_SSBO_available = false;
 
     if (this->greyTF != 0) {
         glDeleteTextures(1, &this->greyTF);
@@ -450,10 +442,10 @@ bool SphereRenderer::createResources() {
     // Check availbility of ssbo flag storage
     int major = -1;
     int minor = -1;
-    this->flagsUseSSBO = false;
+    this->flags_SSBO_available = false;
     this->getGLSLVersion(major, minor);
     if ((major == 4) && (minor >= 3) || (major > 4)) {
-        this->flagsUseSSBO = true;
+        this->flags_SSBO_available = true;
     }
     vislib::SmartPtr<ShaderSource::Snippet> flagSnippet;
     std::string flagDefine = "\n#define FLAG_STORAGE_SSBO\n\n";
@@ -488,7 +480,7 @@ bool SphereRenderer::createResources() {
                     vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
                 return false;
             }
-            this->flagsUseSSBO = false;
+            this->flags_SSBO_available = false;
         } break;
 
         case (RenderMode::GEOMETRY_SHADER): {
@@ -517,7 +509,7 @@ bool SphereRenderer::createResources() {
                     "[SphereRenderer] Unable to link sphere geometry shader: Unknown error\n");
                 return false;
             }
-            this->flagsUseSSBO = false;
+            this->flags_SSBO_available = false;
         } break;
 
         case (RenderMode::SSBO_STREAM): {
@@ -527,7 +519,7 @@ bool SphereRenderer::createResources() {
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
-            if (this->flagsUseSSBO) {
+            if (this->flags_SSBO_available) {
                 this->vertShader->Insert(1, flagSnippet);
             }
             if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
@@ -546,7 +538,7 @@ bool SphereRenderer::createResources() {
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
-            if (this->flagsUseSSBO) {
+            if (this->flags_SSBO_available) {
                 this->vertShader->Insert(1, flagSnippet);
             }
             if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
@@ -570,10 +562,10 @@ bool SphereRenderer::createResources() {
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
-            if (this->flagsUseSSBO) {
+            if (this->flags_SSBO_available) {
                 this->vertShader->Insert(1, flagSnippet);
             }
-            // this->flagsUseSSBO = false;
+            // this->flags_SSBO_available = false;
             if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
@@ -619,7 +611,7 @@ bool SphereRenderer::createResources() {
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
-            if (this->flagsUseSSBO) {
+            if (this->flags_SSBO_available) {
                 this->vertShader->Insert(1, flagSnippet);
             }
             if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
@@ -642,7 +634,7 @@ bool SphereRenderer::createResources() {
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
-            if (this->flagsUseSSBO) {
+            if (this->flags_SSBO_available) {
                 this->vertShader->Insert(1, flagSnippet);
             }
             if (!instance()->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), *this->geoShader)) {
@@ -725,7 +717,7 @@ bool SphereRenderer::createResources() {
                     vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
                 return false;
             }
-            this->flagsUseSSBO = false;
+            this->flags_SSBO_available = false;
         } break;
 
         default:
@@ -745,10 +737,6 @@ bool SphereRenderer::createResources() {
         vislib::sys::Log::DefaultLog.WriteMsg(
             vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown exception\n");
         return false;
-    }
-
-    if (this->flagsUseSSBO) {
-        glGenBuffers(1, &this->flagsBuffer);
     }
 
     return true;
@@ -983,7 +971,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     // timer.BeginFrame();
 
     auto cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-    auto flagc = this->getFlagsSlot.CallAs<FlagCall>();
+    auto flagc = this->readFlagsSlot.CallAs<FlagCallRead_GL>();
 
     // Checking for changed render mode
     auto currentRenderMode = static_cast<RenderMode>(this->renderModeParam.Param<param::EnumParam>()->Value());
@@ -1159,7 +1147,6 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
 bool SphereRenderer::renderSimple(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
-
     this->setFlagStorage(this->sphereShader, mpdc);
 
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
@@ -1184,12 +1171,12 @@ bool SphereRenderer::renderSimple(view::CallRender3D_2& call, MultiParticleDataC
             continue;
         }
 
-        glUniform1ui(this->sphereShader.ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
-        if (this->flagsEnabled) {
-            glUniform1ui(this->sphereShader.ParameterLocation("flagOffset"), flagPartsCount);
-            glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1,
+        glUniform1ui(this->sphereShader.ParameterLocation("flags_available"), GLuint(this->flags_enabled));
+        if (this->flags_enabled) {
+            glUniform1ui(this->sphereShader.ParameterLocation("flags_offset"), flagPartsCount);
+            glUniform4fv(this->sphereShader.ParameterLocation("flag_selected_col"), 1,
                 this->selectColorParam.Param<param::ColorParam>()->Value().data());
-            glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1,
+            glUniform4fv(this->sphereShader.ParameterLocation("flag_softselected_col"), 1,
                 this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
@@ -1246,21 +1233,20 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2& call, MultiParticleDataCal
         if (colType != parts.GetColourDataType() || vertType != parts.GetVertexDataType()) {
             this->newShader = this->generateShader(parts);
         }
-
         if (this->newShader == nullptr) return false;
-        this->newShader->Enable();
 
+        this->newShader->Enable();
+        this->setFlagStorage(*this->newShader, mpdc);
         if (!this->setShaderData(*this->newShader, parts)) {
             continue;
         }
 
-        this->setFlagStorage(*this->newShader, mpdc);
-        glUniform1ui(this->newShader->ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
-        if (this->flagsEnabled) {
-            glUniform1ui(this->newShader->ParameterLocation("flagOffset"), flagPartsCount);
-            glUniform4fv(this->newShader->ParameterLocation("flagSelectedCol"), 1,
+        glUniform1ui(this->newShader->ParameterLocation("flags_available"), GLuint(this->flags_enabled));
+        if (this->flags_enabled) {
+            glUniform1ui(this->newShader->ParameterLocation("flags_offset"), flagPartsCount);
+            glUniform4fv(this->newShader->ParameterLocation("flag_selected_col"), 1,
                 this->selectColorParam.Param<param::ColorParam>()->Value().data());
-            glUniform4fv(this->newShader->ParameterLocation("flagSoftSelectedCol"), 1,
+            glUniform4fv(this->newShader->ParameterLocation("flag_softselected_col"), 1,
                 this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
@@ -1383,11 +1369,13 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2& call, MultiParticleDataCal
             }
         }
 
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         this->unsetShaderData();
         this->unsetFlagStorage(*this->newShader);
-        flagPartsCount += parts.GetCount();
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
         this->newShader->Disable();
+
+        flagPartsCount += parts.GetCount();
 
 #ifdef CHRONOTIMING
         printf("waitSignal times:\n");
@@ -1434,21 +1422,20 @@ bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCa
         if (colType != parts.GetColourDataType() || vertType != parts.GetVertexDataType()) {
             this->newShader = this->generateShader(parts);
         }
-
         if (this->newShader == nullptr) return false;
-        this->newShader->Enable();
 
+        this->newShader->Enable();
+        this->setFlagStorage(*this->newShader, mpdc);
         if (!this->setShaderData(*this->newShader, parts)) {
             continue;
         }
 
-        this->setFlagStorage(*this->newShader, mpdc);
-        glUniform1ui(this->newShader->ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
-        if (this->flagsEnabled) {
-            glUniform1ui(this->newShader->ParameterLocation("flagOffset"), flagPartsCount);
-            glUniform4fv(this->newShader->ParameterLocation("flagSelectedCol"), 1,
+        glUniform1ui(this->newShader->ParameterLocation("flags_available"), GLuint(this->flags_enabled));
+        if (this->flags_enabled) {
+            glUniform1ui(this->newShader->ParameterLocation("flags_offset"), flagPartsCount);
+            glUniform4fv(this->newShader->ParameterLocation("flag_selected_col"), 1,
                 this->selectColorParam.Param<param::ColorParam>()->Value().data());
-            glUniform4fv(this->newShader->ParameterLocation("flagSoftSelectedCol"), 1,
+            glUniform4fv(this->newShader->ParameterLocation("flag_softselected_col"), 1,
                 this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
         glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
@@ -1515,11 +1502,13 @@ bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCa
                 "[SphereRenderer] Splat mode does not support not interleaved data so far ...");
         }
 
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         this->unsetShaderData();
         this->unsetFlagStorage(*this->newShader);
-        flagPartsCount += parts.GetCount();
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
         newShader->Disable();
+
+        flagPartsCount += parts.GetCount();
     }
 
     glDisable(GL_POINT_SPRITE);
@@ -1535,7 +1524,6 @@ bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCa
 bool SphereRenderer::renderBufferArray(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
-
     this->setFlagStorage(this->sphereShader, mpdc);
 
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
@@ -1561,10 +1549,10 @@ bool SphereRenderer::renderBufferArray(view::CallRender3D_2& call, MultiParticle
             continue;
         }
 
-        glUniform1ui(this->sphereShader.ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
-        if (this->flagsEnabled) {
-            glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
-            glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
+        glUniform1ui(this->sphereShader.ParameterLocation("flags_available"), GLuint(this->flags_enabled));
+        if (this->flags_enabled) {
+            glUniform4fv(this->sphereShader.ParameterLocation("flag_selected_col"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform4fv(this->sphereShader.ParameterLocation("flag_softselected_col"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
         unsigned int colBytes, vertBytes, colStride, vertStride;
@@ -1594,9 +1582,9 @@ bool SphereRenderer::renderBufferArray(view::CallRender3D_2& call, MultiParticle
                     this->theSingleBuffer, numVerts * this->currBuf, vertsThisTime * vertStride);
                 // glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
 
-                if (this->flagsEnabled) {
+                if (this->flags_enabled) {
                     // Adapting flag offset to ring buffer gl_VertexID
-                    glUniform1ui(this->sphereShader.ParameterLocation("flagOffset"),
+                    glUniform1ui(this->sphereShader.ParameterLocation("flags_offset"),
                         flagPartsCount - static_cast<GLuint>(numVerts * this->currBuf));
                 }
                 this->setBufferData(this->sphereShader, parts, this->theSingleBuffer,
@@ -1644,7 +1632,6 @@ bool SphereRenderer::renderGeometryShader(view::CallRender3D_2& call, MultiParti
     // glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
 
     this->sphereGeometryShader.Enable();
-
     this->setFlagStorage(this->sphereGeometryShader, mpdc);
 
     // Set shader variables
@@ -1670,12 +1657,12 @@ bool SphereRenderer::renderGeometryShader(view::CallRender3D_2& call, MultiParti
             continue;
         }
 
-        glUniform1ui(this->sphereGeometryShader.ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
-        if (this->flagsEnabled) {
-            glUniform1ui(this->sphereGeometryShader.ParameterLocation("flagOffset"), flagPartsCount);
-            glUniform4fv(this->sphereGeometryShader.ParameterLocation("flagSelectedCol"), 1,
+        glUniform1ui(this->sphereGeometryShader.ParameterLocation("flags_available"), GLuint(this->flags_enabled));
+        if (this->flags_enabled) {
+            glUniform1ui(this->sphereGeometryShader.ParameterLocation("flags_offset"), flagPartsCount);
+            glUniform4fv(this->sphereGeometryShader.ParameterLocation("flag_selected_col"), 1,
                 this->selectColorParam.Param<param::ColorParam>()->Value().data());
-            glUniform4fv(this->sphereGeometryShader.ParameterLocation("flagSoftSelectedCol"), 1,
+            glUniform4fv(this->sphereGeometryShader.ParameterLocation("flag_softselected_col"), 1,
                 this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
@@ -1734,7 +1721,6 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2& call, MultiPar
     glBindFragDataLocation(theShader.ProgramHandle(), 1, "outNormal");
 
     theShader.Enable();
-
     this->setFlagStorage(theShader, mpdc);
 
     glUniformMatrix4fv(theShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->curMVP));
@@ -1759,12 +1745,12 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2& call, MultiPar
             continue;
         }
 
-        glUniform1ui(theShader.ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
-        if (this->flagsEnabled) {
-            glUniform1ui(theShader.ParameterLocation("flagOffset"), flagPartsCount);
-            glUniform4fv(theShader.ParameterLocation("flagSelectedCol"), 1,
+        glUniform1ui(theShader.ParameterLocation("flags_available"), GLuint(this->flags_enabled));
+        if (this->flags_enabled) {
+            glUniform1ui(theShader.ParameterLocation("flags_offset"), flagPartsCount);
+            glUniform4fv(theShader.ParameterLocation("flag_selected_col"), 1,
                 this->selectColorParam.Param<param::ColorParam>()->Value().data());
-            glUniform4fv(theShader.ParameterLocation("flagSoftSelectedCol"), 1,
+            glUniform4fv(theShader.ParameterLocation("flag_softselected_col"), 1,
                 this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
@@ -1777,7 +1763,6 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2& call, MultiPar
     }
 
     glBindVertexArray(0);
-
     this->unsetFlagStorage(theShader);
     theShader.Disable();
 
@@ -1793,7 +1778,6 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2& call, MultiPar
 bool SphereRenderer::renderOutline(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
-
     this->setFlagStorage(this->sphereShader, mpdc);
 
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
@@ -1820,11 +1804,11 @@ bool SphereRenderer::renderOutline(view::CallRender3D_2& call, MultiParticleData
             continue;
         }
 
-        glUniform1ui(this->sphereShader.ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
-        if (this->flagsEnabled) {
-            glUniform1ui(this->sphereShader.ParameterLocation("flagOffset"), flagPartsCount);
-            glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
-            glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
+        glUniform1ui(this->sphereShader.ParameterLocation("flags_available"), GLuint(this->flags_enabled));
+        if (this->flags_enabled) {
+            glUniform1ui(this->sphereShader.ParameterLocation("flags_offset"), flagPartsCount);
+            glUniform4fv(this->sphereShader.ParameterLocation("flag_selected_col"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform4fv(this->sphereShader.ParameterLocation("flag_softselected_col"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
         this->setBufferData(this->sphereShader, parts, 0, parts.GetVertexData(), 0, parts.GetColourData());
@@ -2082,70 +2066,52 @@ bool SphereRenderer::unsetTransferFunctionTexture(void) {
 
 bool SphereRenderer::setFlagStorage(const vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall* mpdc) {
 
-    this->flagsEnabled = false;
-
-    auto flagc = this->getFlagsSlot.CallAs<FlagCall>();
+    this->flags_enabled = false;
+/*
+    auto flagc = this->readFlagsSlot.CallAs<FlagCallRead_GL>();
     if (flagc == nullptr) {
         return false;
     }
-
     if (mpdc == nullptr) {
         return false;
     }
-    unsigned int partsCount = 0;
-    for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
+
+    uint32_t partsCount = 0;
+    uint32_t partlistcount = static_cast<uint32_t>(mpdc->GetParticleListCount());
+    for (uint32_t i = 0; i < partlistcount; i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
-        partsCount += parts.GetCount();
+        partsCount += static_cast<uint32_t>(parts.GetCount());
     }
-
-    ((*flagc)(FlagCall::CallMapFlags));
-    flagc->validateFlagsCount(partsCount);
-
-    this->flagsData = nullptr;
-    this->flagsData = flagc->GetFlags();
-
-    if (this->flagsUseSSBO) {
-        auto version = flagc->GetVersion();
-        if ((version != this->flagsCurrentVersion) || (version == 0)) {
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->flagsBuffer);
-            glBufferData(GL_SHADER_STORAGE_BUFFER, partsCount * sizeof(FlagStorage::FlagItemType),
-                this->flagsData.get()->data(), GL_STATIC_DRAW);
-            this->flagsCurrentVersion = flagc->GetVersion();
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-        }
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOflagsBindingPoint, this->flagsBuffer);
+    flagc->getData()->validateFlagCount(partsCount);
+ 
+    if (this->flags_SSBO_available) {
+        flagc->getData()->flags->bind(SSBOflagsBindingPoint);
     } else {
-        GLuint flagAttrib = glGetAttribLocation(shader, "inFlags");
-        glEnableVertexAttribArray(flagAttrib);
-        glVertexAttribIPointer(
-            flagAttrib, 1, GL_UNSIGNED_INT, sizeof(FlagStorage::FlagItemType), this->flagsData.get()->data());
+        //GLuint flagAttrib = glGetAttribLocation(shader, "inFlags");
+        //glEnableVertexAttribArray(flagAttrib);
+        //glVertexAttribIPointer(
+        //    flagAttrib, 1, GL_UNSIGNED_INT, sizeof(FlagStorage::FlagItemType), this->flags_data.get()->data());
     }
-
-    this->flagsEnabled = true;
-
+    this->flags_enabled = true;
+    */
     return true;
 }
 
 
 bool SphereRenderer::unsetFlagStorage(const vislib::graphics::gl::GLSLShader& shader) {
 
-    auto flagc = this->getFlagsSlot.CallAs<FlagCall>();
-    if (flagc == nullptr) {
-        return false;
+/*
+    if (this->flags_enabled) {
+        if (this->flags_SSBO_available) {
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
+        } else {
+            //GLuint flagAttrib = glGetAttribLocation(shader, "inFlags");
+            //glDisableVertexAttribArray(flagAttrib);
+        }
     }
+*/
 
-    if (this->flagsUseSSBO) {
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
-    } else {
-        GLuint flagAttrib = glGetAttribLocation(shader, "inFlags");
-        glDisableVertexAttribArray(flagAttrib);
-    }
-
-    flagc->SetFlags(this->flagsData);
-    (*flagc)(FlagCall::CallUnmapFlags);
-
-    this->flagsEnabled = false;
-
+    this->flags_enabled = false;
     return true;
 }
 
