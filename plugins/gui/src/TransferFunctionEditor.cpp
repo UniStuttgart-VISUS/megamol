@@ -152,7 +152,6 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , activeParameter(nullptr)
     , nodes()
     , range({0.0f, 1.0f})
-    , dataset_range({0.0f, 1.0f})
     , range_overwrite(false)
     , mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , textureSize(256)
@@ -191,8 +190,9 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool us
         }
     }
 
+    std::array<float, 2> new_range;
     bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
-        tfs, this->nodes, this->mode, this->textureSize, this->dataset_range);
+        tfs, this->nodes, this->mode, this->textureSize, new_range);
     if (!ok) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Could parse transfer function");
         return;
@@ -205,8 +205,10 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool us
     this->currentChannel = 0;
     this->currentDragChange = ImVec2(0.0f, 0.0f);
 
-    this->range_overwrite = false;
-    this->range = this->dataset_range;
+    if (!this->range_overwrite) {
+        this->range = new_range;
+    }
+
     this->widget_buffer.min_range = this->range[0];
     this->widget_buffer.max_range = this->range[1];
     this->widget_buffer.tex_size = this->textureSize;
@@ -257,24 +259,15 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
         this->showOptions = !this->showOptions;
     }
     if (!this->showOptions) {
+        ImGui::EndGroup();
         return false;
     }
-
     ImGui::Separator();
 
     // Interval range -----------------------------------------------------
     ImGui::PushItemWidth(tfw_item_width * 0.5f - style.ItemSpacing.x);
-    if (ImGui::Checkbox("Overwrite Value Range", &this->range_overwrite)) {
-        if (!this->range_overwrite) {
-            this->range = this->dataset_range;
-            this->widget_buffer.min_range = this->range[0];
-            this->widget_buffer.max_range = this->range[1];
-            this->widget_buffer.tex_size = this->textureSize;
-            this->widget_buffer.range_value =
-                (this->nodes[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
-            this->textureInvalid = true;
-        }
-    }
+
+    ImGui::Checkbox("Overwrite Value Range", &this->range_overwrite);
     if (!this->range_overwrite) {
         GUIUtils::ReadOnlyWigetStyle(true);
     }

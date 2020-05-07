@@ -1759,6 +1759,11 @@ void GUIWindows::drawTransferFunctionEdit(
     ImGui::PopStyleColor(3);
     ImGui::PopID();
 
+    // Check for changed parameter value which should be forced to the editor once.
+    if (isActive && p.UpdateEditor()) {
+        updateEditor = true;
+    }
+
     // Propagate the transfer function to the editor.
     if (isActive && updateEditor) {
         this->tf_editor.SetTransferFunction(p.Value());

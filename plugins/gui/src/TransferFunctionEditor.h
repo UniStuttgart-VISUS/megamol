@@ -95,9 +95,6 @@ private:
     /** Min/Max intervall the data should be mapped. */
     std::array<float, 2> range;
 
-    /** Min/Max intervall the data set actually has. */
-    std::array<float, 2> dataset_range;
-
     /** Flag indicating if propagated range should be overwriten by editor */
     bool range_overwrite;
 
