@@ -149,7 +149,7 @@ std::array<std::tuple<std::string, PresetGenerator>, 12> PRESETS = {
 
 TransferFunctionEditor::TransferFunctionEditor(void)
     : utils()
-    , activeParameter(nullptr)
+    , active_parameter(nullptr)
     , nodes()
     , range({0.0f, 1.0f})
     , range_overwrite(false)
@@ -181,10 +181,10 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     this->widget_buffer.range_value = zero[4];
 }
 
-void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool useActiveParameter) {
+void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool active_parameter_mode) {
 
-    if (useActiveParameter) {
-        if (activeParameter == nullptr) {
+    if (active_parameter_mode) {
+        if (active_parameter == nullptr) {
             vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Missing active parameter to edit");
             return;
         }
@@ -225,12 +225,12 @@ bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
         tfs, this->nodes, this->mode, this->textureSize, this->range);
 }
 
-bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter) {
+bool TransferFunctionEditor::DrawTransferFunctionEditor(bool active_parameter_mode) {
 
     ImGui::BeginGroup();
 
-    if (useActiveParameter) {
-        if (this->activeParameter == nullptr) {
+    if (active_parameter_mode) {
+        if (this->active_parameter == nullptr) {
             const char* message = "Changes have no effect.\n"
                                   "Please set a transfer function parameter.\n";
             ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), message);
@@ -464,12 +464,12 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
         this->pendingChanges = false;
     }
 
-    if (useActiveParameter) {
+    if (active_parameter_mode) {
         if (apply_changes) {
-            if (this->activeParameter != nullptr) {
+            if (this->active_parameter != nullptr) {
                 std::string tf;
                 if (this->GetTransferFunction(tf)) {
-                    this->activeParameter->SetValue(tf);
+                    this->active_parameter->SetValue(tf);
                 }
             }
         }

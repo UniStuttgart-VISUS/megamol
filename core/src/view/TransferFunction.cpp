@@ -11,9 +11,6 @@
 #include "mmcore/param/TransferFunctionParam.h"
 
 
-#include <iostream>
-
-
 using namespace megamol::core;
 using namespace megamol::core::view;
 
@@ -31,7 +28,8 @@ TransferFunction::TransferFunction(void)
     , texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGBA)
     , interpolMode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , range({0.0f, 1.0f})
-    , skip_tfparam_changes_once(false) {
+    , tfparam_check_init_value(true)
+    , tfparam_skip_changes_once(false) {
 
     CallGetTransferFunctionDescription cgtfd;
     this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(0), &TransferFunction::requestTF);
@@ -75,12 +73,12 @@ bool TransferFunction::requestTF(Call& call) {
     CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
     if (cgtf == nullptr) return false;
 
-    if (!this->skip_tfparam_changes_once && !this->tfParam.Param<param::TransferFunctionParam>()->Value().empty()) {
-        this->skip_tfparam_changes_once = true;
+    if (this->tfparam_check_init_value && !this->tfParam.Param<param::TransferFunctionParam>()->Value().empty()) {
+        this->tfparam_skip_changes_once = true;
+        this->tfparam_check_init_value = false;
     }
-
     // Update changed data set range for transfer function parameter
-    if (!this->skip_tfparam_changes_once && (this->range != cgtf->Range())) {
+    if (!this->tfparam_skip_changes_once && (this->range != cgtf->Range())) {
         // Get current values from parameter string 
         param::TransferFunctionParam::TFNodeType tfnodes;
         if (megamol::core::param::TransferFunctionParam::ParseTransferFunction(this->tfParam.Param<param::TransferFunctionParam>()->Value(), tfnodes, this->interpolMode, this->texSize, this->range)) {
@@ -93,6 +91,7 @@ bool TransferFunction::requestTF(Call& call) {
             }
         }
     }
+    this->tfparam_skip_changes_once = false;
 
     if ((this->texID == 0) || this->tfParam.IsDirty()) {
         this->tfParam.ResetDirty();
@@ -139,6 +138,5 @@ bool TransferFunction::requestTF(Call& call) {
     cgtf->SetTexture(this->texID, this->texSize, this->tex.data(), this->texFormat,
         this->range, this->version);
 
-    this->skip_tfparam_changes_once = false;
     return true;
 }

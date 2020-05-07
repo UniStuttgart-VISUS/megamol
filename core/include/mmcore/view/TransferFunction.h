@@ -126,7 +126,8 @@ namespace view {
 
         /** Flag indicating that there should be no changes applied if the 
          * parameter has an inital value loaded from project file. */
-        bool skip_tfparam_changes_once;
+        bool tfparam_check_init_value;
+        bool tfparam_skip_changes_once;
 
         /** Version of texture */
         uint32_t version = 0;
