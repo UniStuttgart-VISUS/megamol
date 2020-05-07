@@ -152,6 +152,8 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , activeParameter(nullptr)
     , nodes()
     , range({0.0f, 1.0f})
+    , dataset_range({0.0f, 1.0f})
+    , range_overwrite(false)
     , mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , textureSize(256)
     , textureInvalid(true)
@@ -164,8 +166,7 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , currentDragChange()
     , immediateMode(false)
     , showOptions(true)
-    , widget_buffer()
-    , range_overwrite(false) {
+    , widget_buffer() {
 
     // Init transfer function colors
     this->nodes.clear();
@@ -191,7 +192,7 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool us
     }
 
     bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
-        tfs, this->nodes, this->mode, this->textureSize, this->range);
+        tfs, this->nodes, this->mode, this->textureSize, this->dataset_range);
     if (!ok) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Could parse transfer function");
         return;
@@ -204,12 +205,14 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool us
     this->currentChannel = 0;
     this->currentDragChange = ImVec2(0.0f, 0.0f);
 
+    this->range_overwrite = false;
+    this->range = this->dataset_range;
     this->widget_buffer.min_range = this->range[0];
     this->widget_buffer.max_range = this->range[1];
     this->widget_buffer.tex_size = this->textureSize;
-
     this->widget_buffer.range_value =
         (this->nodes[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
+
     this->widget_buffer.gauss_sigma = this->nodes[this->currentNode][5];
 
     this->textureInvalid = true;
@@ -261,8 +264,17 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
 
     // Interval range -----------------------------------------------------
     ImGui::PushItemWidth(tfw_item_width * 0.5f - style.ItemSpacing.x);
-
-    ImGui::Checkbox("Overwrite Value Range", &this->range_overwrite);
+    if (ImGui::Checkbox("Overwrite Value Range", &this->range_overwrite)) {
+        if (!this->range_overwrite) {
+            this->range = this->dataset_range;
+            this->widget_buffer.min_range = this->range[0];
+            this->widget_buffer.max_range = this->range[1];
+            this->widget_buffer.tex_size = this->textureSize;
+            this->widget_buffer.range_value =
+                (this->nodes[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
+            this->textureInvalid = true;
+        }
+    }
     if (!this->range_overwrite) {
         GUIUtils::ReadOnlyWigetStyle(true);
     }
@@ -289,11 +301,11 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
         this->widget_buffer.max_range = this->range[1];
         this->textureInvalid = true;
     }
-    ImGui::PopItemWidth();
 
     if (!this->range_overwrite) {
         GUIUtils::ReadOnlyWigetStyle(false);
     }
+    ImGui::PopItemWidth();
 
     ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
     ImGui::TextUnformatted("Value Range");
@@ -668,7 +680,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
         } else if (io.MouseClicked[1]) {
             // Right Click -> Add/delete Node
-            if (selected_node < 0) {
+            if (selected_node == GUI_INVALID_ID) {
                 // Add new at current position
                 float new_x = (mouse_cur_pos.x - canvas_pos.x) / canvas_size.x;
                 new_x = std::max(0.0f, std::min(new_x, 1.0f));

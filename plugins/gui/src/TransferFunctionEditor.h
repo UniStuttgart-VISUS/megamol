@@ -95,6 +95,12 @@ private:
     /** Min/Max intervall the data should be mapped. */
     std::array<float, 2> range;
 
+    /** Min/Max intervall the data set actually has. */
+    std::array<float, 2> dataset_range;
+
+    /** Flag indicating if propagated range should be overwriten by editor */
+    bool range_overwrite;
+
     /** Current interpolation option. */
     megamol::core::param::TransferFunctionParam::InterpolationMode mode;
 
@@ -131,9 +137,6 @@ private:
 
     /** The global input widget state buffer. */
     WidgetBuffer widget_buffer;
-
-    /** Flag indicating if propagated range should be overwriten by editor */
-    bool range_overwrite;
 };
 
 } // namespace gui

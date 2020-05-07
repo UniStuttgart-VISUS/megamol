@@ -70,9 +70,23 @@ bool TransferFunction::requestTF(Call& call) {
 
     CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
     if (cgtf == nullptr) return false;
-
+ 
     if ((this->texID == 0) || this->tfParam.IsDirty()) {
         this->tfParam.ResetDirty();
+
+        // Update changed data set range for transfer function parameter
+        if (this->range != cgtf->Range()) {
+            // Get current values from parameter string 
+            param::TransferFunctionParam::TFNodeType tfnodes;
+            if (megamol::core::param::TransferFunctionParam::ParseTransferFunction(this->tfParam.Param<param::TransferFunctionParam>()->Value(), tfnodes, this->interpolMode, this->texSize, this->range)) {
+                std::string tf_str;
+                this->range = cgtf->Range();
+                // Set transfer function using updated range
+                if (megamol::core::param::TransferFunctionParam::DumpTransferFunction(tf_str, tfnodes, this->interpolMode, this->texSize, this->range)) {
+                    this->tfParam.Param<param::TransferFunctionParam>()->SetValue(tf_str);
+                }
+            }
+        }
 
         // Get current values from parameter string (Values are checked, too).
         param::TransferFunctionParam::TFNodeType tfnodes;
@@ -112,6 +126,7 @@ bool TransferFunction::requestTF(Call& call) {
         if (!t1de) glDisable(GL_TEXTURE_1D);
         ++this->version;
     }
+
     cgtf->SetTexture(this->texID, this->texSize, this->tex.data(), this->texFormat,
         this->range, this->version);
 
