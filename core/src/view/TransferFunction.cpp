@@ -73,25 +73,30 @@ bool TransferFunction::requestTF(Call& call) {
     CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
     if (cgtf == nullptr) return false;
 
-    if (this->tfparam_check_init_value && !this->tfParam.Param<param::TransferFunctionParam>()->Value().empty()) {
-        this->tfparam_skip_changes_once = true;
+    // Skip changes propagated by call once to apply initial value of transfer function parameter set from project file.
+    this->tfparam_skip_changes_once = false;
+    if (this->tfparam_check_init_value) {
+        if (!this->tfParam.Param<param::TransferFunctionParam>()->Value().empty()) {
+            this->tfparam_skip_changes_once = true;
+        }
         this->tfparam_check_init_value = false;
     }
     // Update changed data set range for transfer function parameter
-    if (!this->tfparam_skip_changes_once && (this->range != cgtf->Range())) {
-        // Get current values from parameter string 
-        param::TransferFunctionParam::TFNodeType tfnodes;
-        if (megamol::core::param::TransferFunctionParam::ParseTransferFunction(this->tfParam.Param<param::TransferFunctionParam>()->Value(), tfnodes, this->interpolMode, this->texSize, this->range)) {
-            std::string tf_str;
-            this->range = cgtf->Range();
-            // Set transfer function using updated range
-            if (megamol::core::param::TransferFunctionParam::DumpTransferFunction(tf_str, tfnodes, this->interpolMode, this->texSize, this->range)) {
-                this->tfParam.Param<param::TransferFunctionParam>()->SetValue(tf_str);
-                this->tfParam.Param<param::TransferFunctionParam>()->ForceEditorUpdate();
+    if (!this->tfparam_skip_changes_once) {
+        if (cgtf->UpdateProcessed()) {
+            // Get current values from parameter string 
+            param::TransferFunctionParam::TFNodeType tfnodes;
+            if (megamol::core::param::TransferFunctionParam::ParseTransferFunction(this->tfParam.Param<param::TransferFunctionParam>()->Value(), tfnodes, this->interpolMode, this->texSize, this->range)) {
+                std::string tf_str;
+                this->range = cgtf->Range();
+                // Set transfer function parameter value using updated range
+                if (megamol::core::param::TransferFunctionParam::DumpTransferFunction(tf_str, tfnodes, this->interpolMode, this->texSize, this->range)) {
+                    this->tfParam.Param<param::TransferFunctionParam>()->SetValue(tf_str);
+                    this->tfParam.Param<param::TransferFunctionParam>()->ForceEditorUpdate();
+                }
             }
         }
     }
-    this->tfparam_skip_changes_once = false;
 
     if ((this->texID == 0) || this->tfParam.IsDirty()) {
         this->tfParam.ResetDirty();
