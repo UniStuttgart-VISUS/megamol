@@ -396,6 +396,21 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
         flagsc->getData()->validateFlagCount(floats->GetRowsCount());
     }
 
+    if (hash != this->currentHash || this->lastTimeStep != static_cast<unsigned int>(call.Time()) ||
+        this->otherItemsAttribSlot.IsDirty()) {
+        // set minmax for TF only when frame or hash changes
+        try {
+            auto colcol = this->columnIndex.at(this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value());
+            tc->SetRange(
+                {floats->GetColumnsInfos()[colcol].MinimumValue(), floats->GetColumnsInfos()[colcol].MaximumValue()});
+            this->otherItemsAttribSlot.ResetDirty();
+        } catch (std::out_of_range& ex) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "ParallelCoordinatesRenderer2D: tried to color lines by non-existing column '%s'",
+                this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value().c_str());
+        }
+    }
+
     if (hash != this->currentHash || this->lastTimeStep != static_cast<unsigned int>(call.Time())) {
 
         this->computeScaling();
@@ -445,13 +460,6 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
         this->lastTimeStep = static_cast<unsigned int>(call.Time());
     }
 
-    // set minmax for TF
-    try {
-        auto colcol = this->columnIndex.at(this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value());
-        tc->SetRange(
-            {floats->GetColumnsInfos()[colcol].MinimumValue(), floats->GetColumnsInfos()[colcol].MinimumValue()});
-    } catch (std::out_of_range& ex) {
-    }
     (*tc)(0);
 
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(dataBuffer));
@@ -724,13 +732,11 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     glUniform1f(prog.ParameterLocation("tfColorFactor"), tfColorFactor);
     try {
         auto colcol = this->columnIndex.at(this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value());
-        auto x = prog.ParameterLocation("colorColumn");
-        vislib::sys::Log::DefaultLog.WriteInfo("found colorColumn at %i", x);
-        glUniform1i(x, colcol);
+        glUniform1i(prog.ParameterLocation("colorColumn"), colcol);
     } catch (std::out_of_range& ex) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "ParallelCoordinatesRenderer2D: tried to color lines by non-existing column '%s'",
-            this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value().c_str());
+        // vislib::sys::Log::DefaultLog.WriteError(
+        //    "ParallelCoordinatesRenderer2D: tried to color lines by non-existing column '%s'",
+        //    this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value().c_str());
         glUniform1i(prog.ParameterLocation("colorColumn"), -1);
     }
     glUniform1ui(prog.ParameterLocation("fragmentTestMask"), testMask);
