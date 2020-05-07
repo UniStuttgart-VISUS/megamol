@@ -207,6 +207,10 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool ac
 
     if (!this->range_overwrite) {
         this->range = new_range;
+    } else {
+        vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Changed data set range [%f,%f] is ignored, "
+                                               "because overwriting range value option is enabled.",
+            new_range[0], new_range[1]);
     }
 
     this->widget_buffer.min_range = this->range[0];
