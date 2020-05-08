@@ -522,6 +522,8 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool switch_xy) 
     if (switch_xy) {
         image_size.x = size.y;
         image_size.y = size.x;
+        uv0 = ImVec2(1.0f, 1.0f);
+        uv1 = ImVec2(0.0f, 0.0f);
     }
 
     if (textureSize == 0 || this->textureId == 0) {
@@ -591,14 +593,14 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     for (unsigned int i = 0; i < scale_count; i++) {
         if (switch_xy) {
             float y = height_delta * static_cast<float>(i);
-            if (i == 0) y += line_thickness;
-            if (i == (scale_count - 1)) y -= line_thickness;
+            if (i == 0) y += (line_thickness / 2.0f);
+            if (i == (scale_count - 1)) y -= (line_thickness / 2.0f);
             drawList->AddLine(
                 init_pos + ImVec2(0.0f, y), init_pos + ImVec2(line_length, y), line_color, line_thickness);
         } else {
             float x = width_delta * static_cast<float>(i);
-            if (i == 0) x += line_thickness;
-            if (i == (scale_count - 1)) x -= line_thickness;
+            if (i == 0) x += (line_thickness / 2.0f);
+            if (i == (scale_count - 1)) x -= (line_thickness / 2.0f);
             drawList->AddLine(
                 init_pos + ImVec2(x, 0.0f), init_pos + ImVec2(x, line_length), line_color, line_thickness);
         }
@@ -625,21 +627,21 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     if (switch_xy) {
         float font_size = ImGui::GetFontSize();
         ImVec2 text_pos = init_pos + ImVec2(item_y_spacing + line_length, 0.0f);
-        // Start Value
+        // Max Value
         ImGui::SetCursorScreenPos(text_pos);
-        ImGui::TextUnformatted(min_label_str.c_str());
+        ImGui::TextUnformatted(max_label_str.c_str());
         // Middle Values
         float mid_value_height = (height - (2.0f * font_size) - (2.0f * item_y_spacing));
         if ((mid_value_height > font_size)) {
             ImGui::SetCursorScreenPos(text_pos + ImVec2(0.0f, (height / 2.0f) - (font_size / 2.0f)));
             ImGui::TextUnformatted(mid_label_str.c_str());
         }
-        // End Value
+        // Min Value
         ImGui::SetCursorScreenPos(text_pos + ImVec2(0.0f, (height - font_size)));
-        ImGui::TextUnformatted(max_label_str.c_str());
+        ImGui::TextUnformatted(min_label_str.c_str());
     } else {
         ImGui::SetCursorScreenPos(pos + ImVec2(0.0f, line_length));
-        // Start Value
+        // Min Value
         ImGui::TextUnformatted(min_label_str.c_str());
         // Middle Values
         float mid_value_width = (width - min_item_width - max_item_width - (2.0f * item_x_spacing));
@@ -647,7 +649,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
             ImGui::SameLine((width / 2.0f) - (mid_item_width / 2.0f));
             ImGui::TextUnformatted(mid_label_str.c_str());
         }
-        // End Value
+        // Max Value
         ImGui::SameLine(width - max_item_width);
         ImGui::TextUnformatted(max_label_str.c_str());
     }
