@@ -270,10 +270,12 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool active_parameter_mo
         ImGui::BeginGroup();
         if (ImGui::RadioButton("Vertical", this->switch_legend_xy)) {
             this->switch_legend_xy = true;
+            this->textureInvalid = true;
         }
         ImGui::SameLine();
         if (ImGui::RadioButton("Horizontal", !this->switch_legend_xy)) {
             this->switch_legend_xy = false;
+            this->textureInvalid = true;
         }
         ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x);
         ImGui::TextUnformatted("Legend Alignment");
@@ -445,7 +447,13 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool active_parameter_mo
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureSize, 1, 0, GL_RGBA, GL_FLOAT, this->texturePixels.data());
+        GLuint width = textureSize;
+        GLuint height = 1;
+        if (this->switch_legend_xy) {
+            width = 1;
+            height = textureSize;
+        }
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, this->texturePixels.data());
 
         glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -514,8 +522,6 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool switch_xy) 
     if (switch_xy) {
         image_size.x = size.y;
         image_size.y = size.x;
-        uv0 = ImVec2(0.0f, 0.0f);
-        uv1 = ImVec2(1.0f, 1.0f);
     }
 
     if (textureSize == 0 || this->textureId == 0) {
@@ -539,9 +545,9 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool switch_xy) 
         ImGui::EndTooltip();
     }
 
-    // if (!this->showOptions) {
+    /// if (!this->showOptions) {
     this->drawScale(ImGui::GetCursorScreenPos(), size, switch_xy);
-    // }
+    /// }
 
     ImGui::EndGroup();
 }
@@ -585,14 +591,14 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     for (unsigned int i = 0; i < scale_count; i++) {
         if (switch_xy) {
             float y = height_delta * static_cast<float>(i);
-            if (i == 0) y += (line_thickness / 2.0f);
-            if (i == (scale_count - 1)) y -= (line_thickness / 2.0f);
+            if (i == 0) y += line_thickness;
+            if (i == (scale_count - 1)) y -= line_thickness;
             drawList->AddLine(
                 init_pos + ImVec2(0.0f, y), init_pos + ImVec2(line_length, y), line_color, line_thickness);
         } else {
             float x = width_delta * static_cast<float>(i);
-            if (i == 0) x += (line_thickness / 2.0f);
-            if (i == (scale_count - 1)) x -= (line_thickness / 2.0f);
+            if (i == 0) x += line_thickness;
+            if (i == (scale_count - 1)) x -= line_thickness;
             drawList->AddLine(
                 init_pos + ImVec2(x, 0.0f), init_pos + ImVec2(x, line_length), line_color, line_thickness);
         }
