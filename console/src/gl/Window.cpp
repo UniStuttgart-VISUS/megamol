@@ -86,7 +86,25 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
             }
 
             hWnd = ::glfwCreateWindow(w, h, title, nullptr, share);
+            int left, top, right, bottom;
+            glfwGetWindowFrameSize(hWnd, &left, &top, &right, &bottom);
             vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", w, h);
+            int actualw = 0, actualh = 0;
+            glfwGetWindowSize(hWnd, &actualw, &actualh);
+            if (actualw - left - right != w || actualh - top - bottom != h) {
+                //vislib::sys::Log::DefaultLog.WriteError("Console::Window: Created window does not have requested size! w: %d, h: %d\n", actualw, actualh);
+                vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: framebuffer size too small, adjusting window and compensating decorations\n");
+                w = w + left + right;
+                h = h + top + bottom;
+                glfwSetWindowSizeLimits(hWnd, w, h, w, h);
+                glfwSetWindowSize(hWnd, w, h);
+                glfwGetWindowSize(hWnd, &actualw, &actualh);
+                if (actualw != w || actualh != h) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "Console::Window: Created window does not have requested size even after changed limits! w: %d, h: %d\n", actualw,
+                        actualh);
+                }
+            }
             if (hWnd != nullptr) {
                 if (placement.pos) ::glfwSetWindowPos(hWnd, placement.x, placement.y);
             }
@@ -115,7 +133,7 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
             // this only works since we are NOT setting a monitor
             ::glfwWindowHint(GLFW_FLOATING, GL_TRUE);
 
-            /* note we do not use a real fullscrene mode, since then we would have focus-iconify problems */
+            /* note we do not use a real fullscreen mode, since then we would have focus-iconify problems */
             hWnd = ::glfwCreateWindow(mode->width, mode->height, title, nullptr, share);
             vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", mode->width, mode->height);
             int x, y;
@@ -136,6 +154,11 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
             ::glfwSetCursorPosCallback(hWnd, &Window::glfw_onMouseMove_func);
             ::glfwSetScrollCallback(hWnd, &Window::glfw_onMouseWheel_func);
             ::glfwSetCharCallback(hWnd, &Window::glfw_onChar_func);
+
+            GLint vp[4];
+            glGetIntegerv(GL_VIEWPORT, vp);
+            vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: viewport size w: %d, h: %d\n", vp[2], vp[3]);
+
         }
 
         glGenQueries(1, &fragmentQuery);
