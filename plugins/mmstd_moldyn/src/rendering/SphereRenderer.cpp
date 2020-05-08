@@ -476,7 +476,7 @@ bool SphereRenderer::createResources() {
         case (RenderMode::SIMPLE_CLUSTERED): {
             vertShaderName = "sphere_simple::vertex";
             fragShaderName = "sphere_simple::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), (*this->vertShader))) {
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
             if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
@@ -902,8 +902,8 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
         }
         break;
     case (RenderMode::AMBIENT_OCCLUSION):
-        if (ogl_IsVersionGEQ(4, 5) == 0) {
-            warnstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. OpenGL version 4.5 or "
+        if (ogl_IsVersionGEQ(4, 2) == 0) {
+            warnstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. OpenGL version 4.2 or "
                        "greater is required. \n";
         }
         if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
@@ -1247,6 +1247,7 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2& call, MultiParticleDataCal
             this->newShader = this->generateShader(parts);
         }
 
+        if (this->newShader == nullptr) return false;
         this->newShader->Enable();
 
         if (!this->setShaderData(*this->newShader, parts)) {
@@ -1434,6 +1435,7 @@ bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCa
             this->newShader = this->generateShader(parts);
         }
 
+        if (this->newShader == nullptr) return false;
         this->newShader->Enable();
 
         if (!this->setShaderData(*this->newShader, parts)) {
@@ -2402,10 +2404,10 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> SphereRenderer::generateShader
         codeSnip = new ShaderSource::StringSnippet(code.c_str());
 
         // Generated shader declaration snippet is inserted after ssbo_vert_attributes.glsl
-        v2->Insert(8, declarationSnip);
+        v2->Insert(9, declarationSnip);
         // Generated shader code snippet is inserted after ssbo_vert_mainstart.glsl (Consider new index through first
         // insertion)
-        v2->Insert(10, codeSnip);
+        v2->Insert(11, codeSnip);
 
         std::shared_ptr<ShaderSource> vss(v2);
         this->theShaders.emplace(std::make_pair(std::make_tuple(c, p, interleaved), makeShader(v2, this->fragShader)));
