@@ -29,7 +29,9 @@ TransferFunction::TransferFunction(void)
     , interpolMode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , range({0.0f, 1.0f})
     , tfparam_check_init_value(true)
-    , tfparam_skip_changes_once(false) {
+    , tfparam_skip_changes_once(false)
+    , version(0)
+    , last_frame_id(0) {
 
     CallGetTransferFunctionDescription cgtfd;
     this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(0), &TransferFunction::requestTF);
@@ -73,6 +75,15 @@ bool TransferFunction::requestTF(Call& call) {
     CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
     if (cgtf == nullptr) return false;
 
+    // XXX todo ...
+    auto current_frame_id = this->GetCoreInstance()->GetFrameID();
+    if (this->last_frame_id != current_frame_id) {
+
+
+        /// std::cout << "Frame ID: " << current_frame_id << std::endl;
+        this->last_frame_id = current_frame_id;
+    }
+
     // Skip changes propagated by call once to apply initial value of transfer function parameter set from project file.
     this->tfparam_skip_changes_once = false;
     if (this->tfparam_check_init_value) {
@@ -92,7 +103,6 @@ bool TransferFunction::requestTF(Call& call) {
                 // Set transfer function parameter value using updated range
                 if (megamol::core::param::TransferFunctionParam::DumpTransferFunction(tf_str, tfnodes, this->interpolMode, this->texSize, this->range)) {
                     this->tfParam.Param<param::TransferFunctionParam>()->SetValue(tf_str);
-                    this->tfParam.Param<param::TransferFunctionParam>()->ForceEditorUpdate();
                 }
             }
         }

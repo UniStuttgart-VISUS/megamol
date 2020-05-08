@@ -33,6 +33,7 @@ GUIWindows::GUIWindows()
     , impl(Implementation::NONE)
     , window_manager()
     , tf_editor()
+    , tf_last_param_val()
     , configurator()
     , utils()
     , file_utils()
@@ -1760,8 +1761,11 @@ void GUIWindows::drawTransferFunctionEdit(
     ImGui::PopID();
 
     // Check for changed parameter value which should be forced to the editor once.
-    if (isActive && p.UpdateEditor()) {
-        updateEditor = true;
+    if (isActive) {
+        if (this->tf_last_param_val != p.Value()) {
+            this->tf_last_param_val = p.Value();
+            updateEditor = true;
+        }
     }
 
     // Propagate the transfer function to the editor.

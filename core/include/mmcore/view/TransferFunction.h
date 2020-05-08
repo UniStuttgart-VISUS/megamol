@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
+#include "mmcore/CoreInstance.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
@@ -130,7 +131,10 @@ namespace view {
         bool tfparam_skip_changes_once;
 
         /** Version of texture */
-        uint32_t version = 0;
+        uint32_t version;
+
+        /** Global frame ID */
+        uint32_t last_frame_id;
 
 #ifdef _WIN32
 #pragma warning (default: 4251)

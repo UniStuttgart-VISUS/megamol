@@ -240,24 +240,6 @@ public:
         return this->val;
     }
 
-    /** 
-     * Set flag indicating that current parameter value changes 
-     * should be applied in the transfer function editor.
-     */
-    inline void ForceEditorUpdate(void) {
-        this->update_editor = true;
-    }
-
-    /**
-     * Get and reset flag indicating that current parameter value changes 
-     * should be applied only once(!) in the transfer function editor.
-     */
-    inline bool UpdateEditor(void) {
-        bool retval = this->update_editor;
-        this->update_editor = false;
-        return retval;
-    }
-
 private:
 
 #ifdef _WIN32
@@ -266,9 +248,6 @@ private:
 
     /** The value of the parameter */
     std::string val;
-
-    /** Flag indicating updates which should be considered in the editor. */
-    bool update_editor;
 
 #ifdef _WIN32
 #pragma warning (disable: 4251)
