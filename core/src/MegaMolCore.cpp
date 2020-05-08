@@ -603,7 +603,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingJob(void *hCore,
  * mmcRenderView
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
-        mmcRenderViewContext *context) {
+        mmcRenderViewContext *context, uint32_t frameID) {
     megamol::core::ViewInstance *view
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
@@ -651,7 +651,9 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
             //    }
             //}
 
-            double it = view->View()->GetCoreInstance()->GetCoreInstanceTime();
+            auto core = view->View()->GetCoreInstance();
+            core->SetFrameID(frameID);
+            double it = core->GetCoreInstanceTime();
             context->Time = view->View()->DefaultTime(it);
             context->InstanceTime = it; 
 

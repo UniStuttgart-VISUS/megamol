@@ -94,7 +94,7 @@ namespace gl {
         }
         void RequestClose();
 
-        void Update();
+        void Update(uint32_t frameID);
 
     private:
 
