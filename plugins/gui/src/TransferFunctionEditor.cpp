@@ -78,7 +78,8 @@ PresetGenerator CubeHelixAdapter(double start, double rots, double hue, double g
     };
 }
 
-template <size_t PaletteSize> PresetGenerator ColormapAdapter(const float palette[PaletteSize][3]) {
+template <size_t PaletteSize, bool NearestNeighbor = false>
+PresetGenerator ColormapAdapter(const float palette[PaletteSize][3]) {
     const double LastIndex = static_cast<double>(PaletteSize - 1);
     return [=](auto& nodes, auto n) {
         nodes.clear();
@@ -88,7 +89,12 @@ template <size_t PaletteSize> PresetGenerator ColormapAdapter(const float palett
             // Linear interpolation from palette.
             size_t i0 = static_cast<size_t>(std::floor(t * LastIndex));
             size_t i1 = static_cast<size_t>(std::ceil(t * LastIndex));
-            double it = std::fmod(t * LastIndex, LastIndex);
+            double unused;
+            double it = std::modf(t * LastIndex, &unused);
+            if (NearestNeighbor) {
+                it = std::round(it);
+            }
+
             double r[2] = {static_cast<double>(palette[i0][0]), static_cast<double>(palette[i1][0])};
             double g[2] = {static_cast<double>(palette[i0][1]), static_cast<double>(palette[i1][1])};
             double b[2] = {static_cast<double>(palette[i0][2]), static_cast<double>(palette[i1][2])};
@@ -129,8 +135,9 @@ void RainbowAdapter(param::TransferFunctionParam::TFNodeType& nodes, size_t n) {
     }
 }
 
-std::array<std::tuple<std::string, PresetGenerator>, 12> PRESETS = {
-    std::make_tuple("Select...", [](auto& nodes, auto n) {}), std::make_tuple("Ramp", RampAdapter),
+std::array<std::tuple<std::string, PresetGenerator>, 20> PRESETS = {
+    std::make_tuple("Select...", [](auto& nodes, auto n) {}),
+    std::make_tuple("Ramp", RampAdapter),
     std::make_tuple("Hue rotation (rainbow, harmful)", RainbowAdapter),
     std::make_tuple("Inferno", ColormapAdapter<256>(InfernoColorMap)),
     std::make_tuple("Magma", ColormapAdapter<256>(MagmaColorMap)),
@@ -140,7 +147,16 @@ std::array<std::tuple<std::string, PresetGenerator>, 12> PRESETS = {
     std::make_tuple("Cubehelix (default)", CubeHelixAdapter(0.5, -1.5, 1.0, 1.0)),
     std::make_tuple("Cubehelix (default, colorful)", CubeHelixAdapter(0.5, -1.5, 1.5, 1.0)),
     std::make_tuple("Cubehelix (default, de-pinked)", CubeHelixAdapter(0.5, -1.0, 1.0, 1.0)),
-    std::make_tuple("Cool-Warm (diverging)", ColormapAdapter<257>(CoolWarmColorMap))};
+    std::make_tuple("Cool-Warm (diverging)", ColormapAdapter<257>(CoolWarmColorMap)),
+    std::make_tuple("8-class Accent", ColormapAdapter<8, true>(AccentMap)),
+    std::make_tuple("8-class Dark2", ColormapAdapter<8, true>(Dark2Map)),
+    std::make_tuple("12-class Paired", ColormapAdapter<12, true>(PairedMap)),
+    std::make_tuple("9-class Pastel1", ColormapAdapter<9, true>(Pastel1Map)),
+    std::make_tuple("8-class Pastel2", ColormapAdapter<8, true>(Pastel2Map)),
+    std::make_tuple("9-class Set1", ColormapAdapter<9, true>(Set1Map)),
+    std::make_tuple("8-class Set2", ColormapAdapter<8, true>(Set2Map)),
+    std::make_tuple("12-class Set3", ColormapAdapter<12, true>(Set3Map)),
+};
 
 
 TransferFunctionEditor::TransferFunctionEditor(void)
