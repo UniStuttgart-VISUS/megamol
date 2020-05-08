@@ -8,7 +8,7 @@
         vertColor = tflookup(inColIdx);
     }
     // Overwrite color depending on flags
-    if (bool(flags_available)) {
+    if (bool(flags_enabled)) {
         if (bitflag_test(flag, FLAG_SELECTED, FLAG_SELECTED)) {
             vertColor = flag_selected_col;
         }

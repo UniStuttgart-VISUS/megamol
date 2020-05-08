@@ -294,8 +294,8 @@ namespace rendering {
         RenderMode                               renderMode;
         GLuint                                   greyTF;
 
+        bool                                     flags_available;
         bool                                     flags_enabled;
-        bool                                     flags_SSBO_available;
 
         GLSLShader                               sphereShader;
         GLSLGeometryShader                       sphereGeometryShader;
@@ -419,6 +419,15 @@ namespace rendering {
          * @return 'True' on success, 'false' otherwise.
          */
         static bool isRenderModeAvailable(RenderMode rm, bool silent = false);
+
+        /**
+         * Check if specified render mode or all render mode are available.
+         *
+         * @param out_flag_snippet   The vertex shader snippet defining the usage of the flag storage depending on its availability.
+         *
+         * @return 'True' on success, 'false' otherwise.
+         */
+        bool isFlagStorageAvailable(vislib::SmartPtr<ShaderSource::Snippet>& out_flag_snippet);
 
         /**
          * Create shaders for given render mode.
