@@ -470,7 +470,7 @@ bool SphereRenderer::createResources() {
             if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
                     this->fragShader->Code(), this->fragShader->Count())) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
+                    vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
         } break;
@@ -494,12 +494,12 @@ bool SphereRenderer::createResources() {
                     this->geoShader->Code(), this->geoShader->Count(), this->fragShader->Code(),
                     this->fragShader->Count())) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                    "[SphereRenderer] Unable to compile sphere geometry shader: Unknown error\n");
+                    "Unable to compile sphere geometry shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
             if (!this->sphereGeometryShader.Link()) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                    "[SphereRenderer] Unable to link sphere geometry shader: Unknown error\n");
+                    "Unable to link sphere geometry shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
         } break;
@@ -559,7 +559,7 @@ bool SphereRenderer::createResources() {
             if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
                     this->fragShader->Code(), this->fragShader->Count())) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
+                    vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
             glGenVertexArrays(1, &this->vertArray);
@@ -605,7 +605,7 @@ bool SphereRenderer::createResources() {
             if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
                     this->fragShader->Code(), this->fragShader->Count())) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
+                    vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
 
@@ -630,12 +630,12 @@ bool SphereRenderer::createResources() {
                     this->geoShader->Code(), this->geoShader->Count(), this->fragShader->Code(),
                     this->fragShader->Count())) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                    "[SphereRenderer] Unable to compile sphere geometry shader: Unknown error\n");
+                    "Unable to compile sphere geometry shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
             if (!this->sphereGeometryShader.Link()) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                    "[SphereRenderer] Unable to link sphere geometry shader: Unknown error\n");
+                    "Unable to link sphere geometry shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
 
@@ -668,7 +668,7 @@ bool SphereRenderer::createResources() {
             if (!this->lightingShader.Create(this->vertShader->Code(), this->vertShader->Count(),
                     this->fragShader->Code(), this->fragShader->Count())) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile mdao lightning shader.");
+                    vislib::sys::Log::LEVEL_ERROR, "Unable to compile mdao lightning shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
 
@@ -677,7 +677,7 @@ bool SphereRenderer::createResources() {
             this->volGen->SetShaderSourceFactory(&this->GetCoreInstance()->ShaderSourceFactory());
             if (!this->volGen->Init()) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "Error initializing volume generator!\n");
+                    vislib::sys::Log::LEVEL_ERROR, "Error initializing volume generator. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
 
@@ -698,7 +698,7 @@ bool SphereRenderer::createResources() {
             if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
                 this->fragShader->Code(), this->fragShader->Count())) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
+                    vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
         } break;
@@ -708,17 +708,17 @@ bool SphereRenderer::createResources() {
         }
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "[SphereRenderer] Unable to compile sphere shader (@%s): %s\n",
+            "Unable to compile sphere shader (@%s): %s. [%s, %s, line %d]\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
+            ce.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (vislib::Exception e) {
         vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: %s\n", e.GetMsgA());
+            vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: %s. [%s, %s, line %d]\n", e.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown exception\n");
+            vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown exception. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -913,6 +913,7 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
 bool SphereRenderer::isFlagStorageAvailable(vislib::SmartPtr<ShaderSource::Snippet>& out_flag_snippet) {
 
     if (out_flag_snippet != nullptr) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Pointer to flag snippet parameter is not nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     this->flags_available = true;
@@ -1504,8 +1505,7 @@ bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCa
                 const char* whence = currVert < currCol ? currVert : currCol;
                 UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
                 this->waitSingle(this->fences[this->currBuf]);
-                // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Memcopying %u
-                // bytes from %016" PRIxPTR " to %016" PRIxPTR "\n", vertsThisTime * vertStride, whence, mem);
+                /// vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Memcopying %u bytes from %016" PRIxPTR " to %016" PRIxPTR ". [%s, %s, line %d]\n", vertsThisTime * vertStride, whence, mem, __FILE__, __FUNCTION__, __LINE__);
                 memcpy(mem, whence, vertsThisTime * vertStride);
                 glFlushMappedNamedBufferRange(
                     this->theSingleBuffer, bufSize * this->currBuf, vertsThisTime * vertStride);
@@ -1604,8 +1604,7 @@ bool SphereRenderer::renderBufferArray(view::CallRender3D_2& call, MultiParticle
                 const char* whence = currVert < currCol ? currVert : currCol;
                 UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
                 this->waitSingle(this->fences[this->currBuf]);
-                // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Memcopying %u
-                // bytes from %016" PRIxPTR " to %016" PRIxPTR "\n", vertsThisTime * vertStride, whence, mem);
+                /// vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Memcopying %u bytes from %016" PRIxPTR " to %016" PRIxPTR ". [%s, %s, line %d]\n", vertsThisTime * vertStride, whence, mem, __FILE__, __FUNCTION__, __LINE__);
                 memcpy(mem, whence, vertsThisTime * vertStride);
                 glFlushMappedNamedBufferRange(
                     this->theSingleBuffer, numVerts * this->currBuf, vertsThisTime * vertStride);
@@ -2302,23 +2301,22 @@ std::shared_ptr<GLSLShader> SphereRenderer::makeShader(std::shared_ptr<ShaderSou
     try {
         if (!sh->Create(vert->Code(), vert->Count(), frag->Code(), frag->Count())) {
             vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
+                vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return nullptr;
         }
-
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "[SphereRenderer] Unable to compile sphere shader (@%s): %s\n",
+            "Unable to compile sphere shader (@%s): %s. [%s, %s, line %d]\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
+            ce.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return nullptr;
     } catch (vislib::Exception e) {
         vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: %s\n", e.GetMsgA());
+            vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: %s. [%s, %s, line %d]\n", e.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return nullptr;
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown exception\n");
+            vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown exception. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return nullptr;
     }
     return sh;
@@ -2509,7 +2507,7 @@ bool SphereRenderer::rebuildGBuffer() {
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Framebuffer NOT complete!");
+            vislib::sys::Log::LEVEL_ERROR, "Framebuffer not complete. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
