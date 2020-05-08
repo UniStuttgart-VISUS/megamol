@@ -67,7 +67,9 @@ public:
     bool DrawTransferFunctionEditor(bool active_parameter_mode);
 
 private:
-    void drawTextureBox(const ImVec2& size);
+    void drawTextureBox(const ImVec2& size, bool switch_xy);
+
+    void drawScale(const ImVec2& pos, const ImVec2& size, bool switch_xy);
 
     void drawFunctionPlot(const ImVec2& size);
 
@@ -133,6 +135,9 @@ private:
 
     /** The global input widget state buffer. */
     WidgetBuffer widget_buffer;
+
+    /** Legend alignment flag. */
+    bool switch_legend_xy;
 };
 
 } // namespace gui
