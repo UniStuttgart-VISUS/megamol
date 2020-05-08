@@ -165,7 +165,8 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , currentDragChange()
     , immediateMode(false)
     , showOptions(true)
-    , widget_buffer() {
+    , widget_buffer()
+    , switch_legend_xy(false) {
 
     // Init transfer function colors
     this->nodes.clear();
@@ -247,166 +248,184 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool active_parameter_mo
     }
 
     const float tfw_item_width = ImGui::GetContentRegionAvail().x * 0.75f;
-    const float canvas_height = 150.0f;
-    const float canvas_width = tfw_item_width;
     ImGui::PushItemWidth(tfw_item_width); // set general proportional item width
 
-    this->drawTextureBox(ImVec2(tfw_item_width, 30.0f));
+    ImVec2 image_size = ImVec2(tfw_item_width, 30.0f);
+    if (!this->showOptions) {
+        if (image_size.x < 300.0f) image_size.x = 300.0f;
+    }
 
+    this->drawTextureBox(image_size, this->switch_legend_xy);
+
+    // if (!this->switch_legend_xy) {
     ImGui::SameLine();
+    //}
     if (ImGui::ArrowButton("Options", this->showOptions ? ImGuiDir_Down : ImGuiDir_Up)) {
         this->showOptions = !this->showOptions;
     }
-    if (!this->showOptions) {
+
+    if (this->showOptions) {
+
+        // Legend alignment ---------------------------------------------------
+        ImGui::BeginGroup();
+        if (ImGui::RadioButton("Vertical", this->switch_legend_xy)) {
+            this->switch_legend_xy = true;
+            this->textureInvalid = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Horizontal", !this->switch_legend_xy)) {
+            this->switch_legend_xy = false;
+            this->textureInvalid = true;
+        }
+        ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x);
+        ImGui::TextUnformatted("Legend Alignment");
         ImGui::EndGroup();
-        return false;
-    }
-    ImGui::Separator();
 
-    // Interval range -----------------------------------------------------
-    ImGui::PushItemWidth(tfw_item_width * 0.5f - style.ItemSpacing.x);
+        // Interval range -----------------------------------------------------
+        ImGui::PushItemWidth(tfw_item_width * 0.5f - style.ItemSpacing.x);
 
-    ImGui::Checkbox("Overwrite Value Range", &this->range_overwrite);
-    if (!this->range_overwrite) {
-        GUIUtils::ReadOnlyWigetStyle(true);
-    }
-
-    ImGui::InputFloat("###min", &this->widget_buffer.min_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
-    if (ImGui::IsItemDeactivatedAfterEdit()) {
-        this->range[0] =
-            (this->widget_buffer.min_range < this->range[1]) ? (this->widget_buffer.min_range) : (this->range[0]);
-        if (this->range[0] >= this->range[1]) {
-            this->range[0] = this->range[1] - 0.000001f;
+        if (!this->range_overwrite) {
+            GUIUtils::ReadOnlyWigetStyle(true);
         }
-        this->widget_buffer.min_range = this->range[0];
-        this->textureInvalid = true;
-    }
-    ImGui::SameLine();
 
-    ImGui::InputFloat("###max", &this->widget_buffer.max_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
-    if (ImGui::IsItemDeactivatedAfterEdit()) {
-        this->range[1] =
-            (this->widget_buffer.max_range > this->range[0]) ? (this->widget_buffer.max_range) : (this->range[1]);
-        if (this->range[0] >= this->range[1]) {
-            this->range[1] = this->range[0] + 0.000001f;
+        ImGui::InputFloat("###min", &this->widget_buffer.min_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
+        if (ImGui::IsItemDeactivatedAfterEdit()) {
+            this->range[0] =
+                (this->widget_buffer.min_range < this->range[1]) ? (this->widget_buffer.min_range) : (this->range[0]);
+            if (this->range[0] >= this->range[1]) {
+                this->range[0] = this->range[1] - 0.000001f;
+            }
+            this->widget_buffer.min_range = this->range[0];
+            this->textureInvalid = true;
         }
-        this->widget_buffer.max_range = this->range[1];
-        this->textureInvalid = true;
-    }
+        ImGui::SameLine();
 
-    if (!this->range_overwrite) {
-        GUIUtils::ReadOnlyWigetStyle(false);
-    }
-    ImGui::PopItemWidth();
-
-    ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
-    ImGui::TextUnformatted("Value Range");
-
-    // Value slider -------------------------------------------------------
-    this->widget_buffer.range_value =
-        (this->nodes[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
-    if (ImGui::SliderFloat("Selected Value", &this->widget_buffer.range_value, this->range[0], this->range[1])) {
-        float new_x = (this->widget_buffer.range_value - this->range[0]) / (this->range[1] - this->range[0]);
-        if (this->currentNode == 0) {
-            new_x = 0.0f;
-        } else if (this->currentNode == (this->nodes.size() - 1)) {
-            new_x = 1.0f;
-        } else if (new_x < this->nodes[this->currentNode - 1][4]) {
-            new_x = this->nodes[this->currentNode - 1][4];
-        } else if (new_x > this->nodes[this->currentNode + 1][4]) {
-            new_x = this->nodes[this->currentNode + 1][4];
+        ImGui::InputFloat("###max", &this->widget_buffer.max_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
+        if (ImGui::IsItemDeactivatedAfterEdit()) {
+            this->range[1] =
+                (this->widget_buffer.max_range > this->range[0]) ? (this->widget_buffer.max_range) : (this->range[1]);
+            if (this->range[0] >= this->range[1]) {
+                this->range[1] = this->range[0] + 0.000001f;
+            }
+            this->widget_buffer.max_range = this->range[1];
+            this->textureInvalid = true;
         }
-        this->nodes[this->currentNode][4] = new_x;
-        this->textureInvalid = true;
-    }
-    std::string help = "[Ctrl-Click] for keyboard input";
-    this->utils.HelpMarkerToolTip(help);
 
-    // Sigma slider -------------------------------------------------------
-    if (this->mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
-        if (ImGui::SliderFloat("Selected Sigma", &this->widget_buffer.gauss_sigma, 0.0f, 1.0f)) {
-            this->nodes[this->currentNode][5] = this->widget_buffer.gauss_sigma;
+        if (!this->range_overwrite) {
+            GUIUtils::ReadOnlyWigetStyle(false);
+        }
+        ImGui::PopItemWidth();
+
+        ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
+        ImGui::TextUnformatted("Value Range");
+
+        ImGui::Checkbox("Overwrite Value Range", &this->range_overwrite);
+
+        // Value slider -------------------------------------------------------
+        this->widget_buffer.range_value =
+            (this->nodes[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
+        if (ImGui::SliderFloat("Selected Value", &this->widget_buffer.range_value, this->range[0], this->range[1])) {
+            float new_x = (this->widget_buffer.range_value - this->range[0]) / (this->range[1] - this->range[0]);
+            if (this->currentNode == 0) {
+                new_x = 0.0f;
+            } else if (this->currentNode == (this->nodes.size() - 1)) {
+                new_x = 1.0f;
+            } else if (new_x < this->nodes[this->currentNode - 1][4]) {
+                new_x = this->nodes[this->currentNode - 1][4];
+            } else if (new_x > this->nodes[this->currentNode + 1][4]) {
+                new_x = this->nodes[this->currentNode + 1][4];
+            }
+            this->nodes[this->currentNode][4] = new_x;
             this->textureInvalid = true;
         }
         std::string help = "[Ctrl-Click] for keyboard input";
         this->utils.HelpMarkerToolTip(help);
-    }
 
-    // Plot ---------------------------------------------------------------
-    this->drawFunctionPlot(ImVec2(canvas_width, canvas_height));
-
-    // Color channels -----------------------------------------------------
-    ImGui::Checkbox("Red", &this->activeChannels[0]);
-    ImGui::SameLine();
-    ImGui::Checkbox("Green", &this->activeChannels[1]);
-    ImGui::SameLine();
-    ImGui::Checkbox("Blue", &this->activeChannels[2]);
-    ImGui::SameLine();
-    ImGui::Checkbox("Alpha", &this->activeChannels[3]);
-    ImGui::SameLine();
-    ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x + ImGui::GetScrollX());
-    ImGui::TextUnformatted("Color Channels");
-
-    // Color editor for selected node -------------------------------------
-    float edit_col[4] = {this->nodes[this->currentNode][0], this->nodes[this->currentNode][1],
-        this->nodes[this->currentNode][2], this->nodes[this->currentNode][3]};
-    ImGuiColorEditFlags numberColorFlags =
-        ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_Float;
-    if (ImGui::ColorEdit4("Selected Color", edit_col, numberColorFlags)) {
-        this->nodes[this->currentNode][0] = edit_col[0];
-        this->nodes[this->currentNode][1] = edit_col[1];
-        this->nodes[this->currentNode][2] = edit_col[2];
-        this->nodes[this->currentNode][3] = edit_col[3];
-        this->textureInvalid = true;
-    }
-    help = "[Click] on the colored square to open a color picker.\n"
-           "[CTRL+Click] on individual component to input value.\n"
-           "[Right-Click] on the individual color widget to show options.";
-    this->utils.HelpMarkerToolTip(help);
-
-
-    // Interpolation mode -------------------------------------------------
-    std::map<param::TransferFunctionParam::InterpolationMode, std::string> opts;
-    opts[param::TransferFunctionParam::InterpolationMode::LINEAR] = "Linear";
-    opts[param::TransferFunctionParam::InterpolationMode::GAUSS] = "Gauss";
-    size_t opts_cnt = opts.size();
-    if (ImGui::BeginCombo("Interpolation", opts[this->mode].c_str())) {
-        for (size_t i = 0; i < opts_cnt; ++i) {
-            if (ImGui::Selectable(opts[(param::TransferFunctionParam::InterpolationMode)i].c_str(),
-                    (this->mode == (param::TransferFunctionParam::InterpolationMode)i))) {
-                this->mode = (param::TransferFunctionParam::InterpolationMode)i;
+        // Sigma slider -------------------------------------------------------
+        if (this->mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
+            if (ImGui::SliderFloat("Selected Sigma", &this->widget_buffer.gauss_sigma, 0.0f, 1.0f)) {
+                this->nodes[this->currentNode][5] = this->widget_buffer.gauss_sigma;
                 this->textureInvalid = true;
             }
+            std::string help = "[Ctrl-Click] for keyboard input";
+            this->utils.HelpMarkerToolTip(help);
         }
-        ImGui::EndCombo();
-    }
 
-    // Presets -------------------------------------------------
-    if (ImGui::BeginCombo("Load Preset", std::get<0>(PRESETS[0]).c_str())) {
-        for (auto preset : PRESETS) {
-            if (ImGui::Selectable(std::get<0>(preset).c_str())) {
-                std::get<1>(preset)(this->nodes, this->textureSize);
-                this->textureInvalid = true;
+        // Plot ---------------------------------------------------------------
+        ImVec2 canvas_size = ImVec2(tfw_item_width, 150.0f);
+        this->drawFunctionPlot(canvas_size);
+
+        // Color channels -----------------------------------------------------
+        ImGui::Checkbox("Red", &this->activeChannels[0]);
+        ImGui::SameLine();
+        ImGui::Checkbox("Green", &this->activeChannels[1]);
+        ImGui::SameLine();
+        ImGui::Checkbox("Blue", &this->activeChannels[2]);
+        ImGui::SameLine();
+        ImGui::Checkbox("Alpha", &this->activeChannels[3]);
+        ImGui::SameLine();
+        ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x + ImGui::GetScrollX());
+        ImGui::TextUnformatted("Color Channels");
+
+        // Color editor for selected node -------------------------------------
+        float edit_col[4] = {this->nodes[this->currentNode][0], this->nodes[this->currentNode][1],
+            this->nodes[this->currentNode][2], this->nodes[this->currentNode][3]};
+        ImGuiColorEditFlags numberColorFlags =
+            ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_Float;
+        if (ImGui::ColorEdit4("Selected Color", edit_col, numberColorFlags)) {
+            this->nodes[this->currentNode][0] = edit_col[0];
+            this->nodes[this->currentNode][1] = edit_col[1];
+            this->nodes[this->currentNode][2] = edit_col[2];
+            this->nodes[this->currentNode][3] = edit_col[3];
+            this->textureInvalid = true;
+        }
+        help = "[Click] on the colored square to open a color picker.\n"
+               "[CTRL+Click] on individual component to input value.\n"
+               "[Right-Click] on the individual color widget to show options.";
+        this->utils.HelpMarkerToolTip(help);
+
+
+        // Interpolation mode -------------------------------------------------
+        std::map<param::TransferFunctionParam::InterpolationMode, std::string> opts;
+        opts[param::TransferFunctionParam::InterpolationMode::LINEAR] = "Linear";
+        opts[param::TransferFunctionParam::InterpolationMode::GAUSS] = "Gauss";
+        size_t opts_cnt = opts.size();
+        if (ImGui::BeginCombo("Interpolation", opts[this->mode].c_str())) {
+            for (size_t i = 0; i < opts_cnt; ++i) {
+                if (ImGui::Selectable(opts[(param::TransferFunctionParam::InterpolationMode)i].c_str(),
+                        (this->mode == (param::TransferFunctionParam::InterpolationMode)i))) {
+                    this->mode = (param::TransferFunctionParam::InterpolationMode)i;
+                    this->textureInvalid = true;
+                }
             }
+            ImGui::EndCombo();
         }
-        ImGui::EndCombo();
-    }
 
-    // Texture size -------------------------------------------------------
-    ImGui::InputInt("Texture Size", &this->widget_buffer.tex_size, 1, 10, ImGuiInputTextFlags_None);
-    if (ImGui::IsItemDeactivatedAfterEdit()) {
-        this->textureSize = (UINT)std::max(1, this->widget_buffer.tex_size);
-        this->widget_buffer.tex_size = this->textureSize;
-        this->textureInvalid = true;
-    }
+        // Presets -------------------------------------------------
+        if (ImGui::BeginCombo("Load Preset", std::get<0>(PRESETS[0]).c_str())) {
+            for (auto preset : PRESETS) {
+                if (ImGui::Selectable(std::get<0>(preset).c_str())) {
+                    std::get<1>(preset)(this->nodes, this->textureSize);
+                    this->textureInvalid = true;
+                }
+            }
+            ImGui::EndCombo();
+        }
 
+        // Texture size -------------------------------------------------------
+        ImGui::InputInt("Texture Size", &this->widget_buffer.tex_size, 1, 10, ImGuiInputTextFlags_None);
+        if (ImGui::IsItemDeactivatedAfterEdit()) {
+            this->textureSize = (UINT)std::max(1, this->widget_buffer.tex_size);
+            this->widget_buffer.tex_size = this->textureSize;
+            this->textureInvalid = true;
+        }
+    }
     // --------------------------------------------------------------------
 
     // Create current texture data
     if (this->textureInvalid) {
         this->pendingChanges = true;
-    }
-    if (this->textureInvalid) {
+
         if (this->mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
             param::TransferFunctionParam::LinearInterpolation(this->texturePixels, this->textureSize, this->nodes);
         } else if (this->mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
@@ -428,82 +447,213 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool active_parameter_mo
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureSize, 1, 0, GL_RGBA, GL_FLOAT, this->texturePixels.data());
+        GLuint width = textureSize;
+        GLuint height = 1;
+        if (this->switch_legend_xy) {
+            width = 1;
+            height = textureSize;
+        }
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, this->texturePixels.data());
 
         glBindTexture(GL_TEXTURE_2D, 0);
 
         this->textureInvalid = false;
     }
 
+
+    // Apply -------------------------------------------------------
     bool apply_changes = false;
+    if (this->showOptions) {
 
-    // Return true for current changes being applied
-    const auto err_btn_color = ImVec4(0.6f, 0.0f, 0.0f, 1.0f);
-    const auto er_btn_hov_color = ImVec4(0.9f, 0.0f, 0.0f, 1.0f);
-    ImGui::PushStyleColor(ImGuiCol_Button, this->pendingChanges ? err_btn_color : style.Colors[ImGuiCol_Button]);
-    ImGui::PushStyleColor(
-        ImGuiCol_ButtonHovered, this->pendingChanges ? er_btn_hov_color : style.Colors[ImGuiCol_ButtonHovered]);
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
-    if (ImGui::Button("Apply")) {
-        apply_changes = true;
-    }
-    ImGui::PopStyleColor(3);
+        // Return true for current changes being applied
+        const auto err_btn_color = ImVec4(0.6f, 0.0f, 0.0f, 1.0f);
+        const auto er_btn_hov_color = ImVec4(0.9f, 0.0f, 0.0f, 1.0f);
+        ImGui::PushStyleColor(ImGuiCol_Button, this->pendingChanges ? err_btn_color : style.Colors[ImGuiCol_Button]);
+        ImGui::PushStyleColor(
+            ImGuiCol_ButtonHovered, this->pendingChanges ? er_btn_hov_color : style.Colors[ImGuiCol_ButtonHovered]);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
+        if (ImGui::Button("Apply")) {
+            apply_changes = true;
+        }
+        ImGui::PopStyleColor(3);
 
-    ImGui::SameLine();
+        ImGui::SameLine();
 
-    if (ImGui::Checkbox("Auto-apply", &this->immediateMode)) {
-        apply_changes = this->immediateMode;
-    }
+        if (ImGui::Checkbox("Auto-apply", &this->immediateMode)) {
+            apply_changes = this->immediateMode;
+        }
 
-    if (this->immediateMode && this->pendingChanges) {
-        apply_changes = true;
-    }
+        if (this->immediateMode && this->pendingChanges) {
+            apply_changes = true;
+        }
 
-    if (apply_changes) {
-        this->pendingChanges = false;
-    }
-
-    if (active_parameter_mode) {
         if (apply_changes) {
-            if (this->active_parameter != nullptr) {
-                std::string tf;
-                if (this->GetTransferFunction(tf)) {
-                    this->active_parameter->SetValue(tf);
+            this->pendingChanges = false;
+        }
+
+        if (active_parameter_mode) {
+            if (apply_changes) {
+                if (this->active_parameter != nullptr) {
+                    std::string tf;
+                    if (this->GetTransferFunction(tf)) {
+                        this->active_parameter->SetValue(tf);
+                    }
                 }
             }
         }
     }
 
     ImGui::PopItemWidth();
-
     ImGui::EndGroup();
 
     return apply_changes;
 }
 
 
-void TransferFunctionEditor::drawTextureBox(const ImVec2& size) {
+void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool switch_xy) {
     ImVec2 pos = ImGui::GetCursorScreenPos();
     const size_t textureSize = this->texturePixels.size() / 4;
+
+    ImGui::BeginGroup();
+
+    ImVec2 image_size = size;
+    ImVec2 uv0 = ImVec2(0.0f, 0.0f);
+    ImVec2 uv1 = ImVec2(1.0f, 1.0f);
+    if (switch_xy) {
+        image_size.x = size.y;
+        image_size.y = size.x;
+    }
 
     if (textureSize == 0 || this->textureId == 0) {
         // Reserve layout space and draw a black background rectangle.
         ImDrawList* drawList = ImGui::GetWindowDrawList();
-        ImGui::Dummy(size);
-        drawList->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), IM_COL32(0, 0, 0, 255), 0.0f, 10);
+        ImGui::Dummy(image_size);
+        drawList->AddRectFilled(
+            pos, ImVec2(pos.x + image_size.x, pos.y + image_size.y), IM_COL32(0, 0, 0, 255), 0.0f, 10);
     } else {
         // Draw texture as image.
-        ImGui::Image(reinterpret_cast<ImTextureID>(this->textureId), size);
+        ImGui::Image(reinterpret_cast<ImTextureID>(this->textureId), image_size, uv0, uv1);
     }
 
     // Draw tooltip, if requested.
     if (ImGui::IsItemHovered()) {
         float xPx = ImGui::GetMousePos().x - pos.x - ImGui::GetScrollX();
-        float xU = xPx / size.x;
+        float xU = xPx / image_size.x;
         float xValue = xU * (this->range[1] - this->range[0]) + this->range[0];
         ImGui::BeginTooltip();
         ImGui::Text("%f Absolute Value\n%f Normalized Value", xValue, xU);
         ImGui::EndTooltip();
+    }
+
+    /// if (!this->showOptions) {
+    this->drawScale(ImGui::GetCursorScreenPos(), size, switch_xy);
+    /// }
+
+    ImGui::EndGroup();
+}
+
+
+void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bool switch_xy) {
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    if (drawList == nullptr) return;
+    ImVec2 reset_pos = ImGui::GetCursorScreenPos();
+
+    const unsigned int scale_count = 3;
+
+    float width = size.x;
+    float height = size.y;
+    if (switch_xy) {
+        width = size.y;
+        height = size.x;
+    }
+    float item_x_spacing = style.ItemInnerSpacing.x;
+    float item_y_spacing = style.ItemInnerSpacing.y;
+
+    // Draw scale lines
+    const float line_length = 5.0f;
+    const float line_thickness = 2.0f;
+    const ImU32 line_color = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
+
+    ImVec2 init_pos = pos;
+    float width_delta = 0.0f;
+    float height_delta = 0.0f;
+    if (switch_xy) {
+        init_pos.x += width;
+        init_pos.y -= (height + item_y_spacing);
+        height_delta = height / static_cast<float>(scale_count - 1);
+    } else {
+        init_pos.y -= item_y_spacing;
+        width_delta = width / static_cast<float>(scale_count - 1);
+    }
+
+    for (unsigned int i = 0; i < scale_count; i++) {
+        if (switch_xy) {
+            float y = height_delta * static_cast<float>(i);
+            if (i == 0) y += line_thickness;
+            if (i == (scale_count - 1)) y -= line_thickness;
+            drawList->AddLine(
+                init_pos + ImVec2(0.0f, y), init_pos + ImVec2(line_length, y), line_color, line_thickness);
+        } else {
+            float x = width_delta * static_cast<float>(i);
+            if (i == 0) x += line_thickness;
+            if (i == (scale_count - 1)) x -= line_thickness;
+            drawList->AddLine(
+                init_pos + ImVec2(x, 0.0f), init_pos + ImVec2(x, line_length), line_color, line_thickness);
+        }
+    }
+
+    // Draw scale text
+    std::stringstream label_stream; /// String stream offers much better float formatting
+    label_stream << this->range[0];
+    std::string min_label_str = label_stream.str();
+    float min_item_width = GUIUtils::TextWidgetWidth(min_label_str);
+
+    label_stream.str("");
+    label_stream.clear();
+    label_stream << this->range[1];
+    std::string max_label_str = label_stream.str();
+    float max_item_width = GUIUtils::TextWidgetWidth(max_label_str);
+
+    label_stream.str("");
+    label_stream.clear();
+    label_stream << ((this->range[1] - this->range[0]) / 2.0f);
+    std::string mid_label_str = label_stream.str();
+    float mid_item_width = GUIUtils::TextWidgetWidth(mid_label_str);
+
+    if (switch_xy) {
+        float font_size = ImGui::GetFontSize();
+        ImVec2 text_pos = init_pos + ImVec2(item_y_spacing + line_length, 0.0f);
+        // Start Value
+        ImGui::SetCursorScreenPos(text_pos);
+        ImGui::TextUnformatted(min_label_str.c_str());
+        // Middle Values
+        float mid_value_height = (height - (2.0f * font_size) - (2.0f * item_y_spacing));
+        if ((mid_value_height > font_size)) {
+            ImGui::SetCursorScreenPos(text_pos + ImVec2(0.0f, (height / 2.0f) - (font_size / 2.0f)));
+            ImGui::TextUnformatted(mid_label_str.c_str());
+        }
+        // End Value
+        ImGui::SetCursorScreenPos(text_pos + ImVec2(0.0f, (height - font_size)));
+        ImGui::TextUnformatted(max_label_str.c_str());
+    } else {
+        ImGui::SetCursorScreenPos(pos + ImVec2(0.0f, line_length));
+        // Start Value
+        ImGui::TextUnformatted(min_label_str.c_str());
+        // Middle Values
+        float mid_value_width = (width - min_item_width - max_item_width - (2.0f * item_x_spacing));
+        if ((mid_value_width > mid_item_width)) {
+            ImGui::SameLine((width / 2.0f) - (mid_item_width / 2.0f));
+            ImGui::TextUnformatted(mid_label_str.c_str());
+        }
+        // End Value
+        ImGui::SameLine(width - max_item_width);
+        ImGui::TextUnformatted(max_label_str.c_str());
+    }
+
+    if (switch_xy) {
+        ImGui::SetCursorScreenPos(reset_pos);
     }
 }
 
@@ -516,8 +666,8 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
     ImVec2 canvas_pos = ImGui::GetCursorScreenPos(); // ImDrawList API uses screen coordinates!
     ImVec2 canvas_size = size;
-    if (canvas_size.x < 50.0f) canvas_size.x = 100.0f;
-    if (canvas_size.y < 50.0f) canvas_size.y = 50.0f;
+    if (canvas_size.x < 100.0f) canvas_size.x = 100.0f;
+    if (canvas_size.y < 100.0f) canvas_size.y = 100.0f;
     ImVec2 mouse_cur_pos = io.MousePos; // current mouse position
 
     ImVec4 tmp_frameBkgrd = style.Colors[ImGuiCol_FrameBg];
