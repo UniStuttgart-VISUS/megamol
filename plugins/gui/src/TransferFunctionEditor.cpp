@@ -149,12 +149,12 @@ std::array<std::tuple<std::string, PresetGenerator>, 12> PRESETS = {
 
 TransferFunctionEditor::TransferFunctionEditor(void)
     : utils()
-    , activeParameter(nullptr)
+    , active_parameter(nullptr)
     , nodes()
     , range({0.0f, 1.0f})
+    , range_overwrite(false)
     , mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , textureSize(256)
-
     , textureInvalid(true)
     , pendingChanges(true)
     , texturePixels()
@@ -181,17 +181,18 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     this->widget_buffer.range_value = zero[4];
 }
 
-void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool useActiveParameter) {
+void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool active_parameter_mode) {
 
-    if (useActiveParameter) {
-        if (activeParameter == nullptr) {
+    if (active_parameter_mode) {
+        if (active_parameter == nullptr) {
             vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Missing active parameter to edit");
             return;
         }
     }
 
+    std::array<float, 2> new_range;
     bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
-        tfs, this->nodes, this->mode, this->textureSize, this->range);
+        tfs, this->nodes, this->mode, this->textureSize, new_range);
     if (!ok) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Could parse transfer function");
         return;
@@ -204,12 +205,15 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool us
     this->currentChannel = 0;
     this->currentDragChange = ImVec2(0.0f, 0.0f);
 
+    if (!this->range_overwrite) {
+        this->range = new_range;
+    }
     this->widget_buffer.min_range = this->range[0];
     this->widget_buffer.max_range = this->range[1];
     this->widget_buffer.tex_size = this->textureSize;
-
     this->widget_buffer.range_value =
         (this->nodes[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
+
     this->widget_buffer.gauss_sigma = this->nodes[this->currentNode][5];
 
     this->textureInvalid = true;
@@ -220,12 +224,12 @@ bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
         tfs, this->nodes, this->mode, this->textureSize, this->range);
 }
 
-bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter) {
+bool TransferFunctionEditor::DrawTransferFunctionEditor(bool active_parameter_mode) {
 
     ImGui::BeginGroup();
 
-    if (useActiveParameter) {
-        if (this->activeParameter == nullptr) {
+    if (active_parameter_mode) {
+        if (this->active_parameter == nullptr) {
             const char* message = "Changes have no effect.\n"
                                   "Please set a transfer function parameter.\n";
             ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), message);
@@ -254,13 +258,18 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
         this->showOptions = !this->showOptions;
     }
     if (!this->showOptions) {
+        ImGui::EndGroup();
         return false;
     }
-
     ImGui::Separator();
 
     // Interval range -----------------------------------------------------
     ImGui::PushItemWidth(tfw_item_width * 0.5f - style.ItemSpacing.x);
+
+    ImGui::Checkbox("Overwrite Value Range", &this->range_overwrite);
+    if (!this->range_overwrite) {
+        GUIUtils::ReadOnlyWigetStyle(true);
+    }
 
     ImGui::InputFloat("###min", &this->widget_buffer.min_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -283,6 +292,10 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
         }
         this->widget_buffer.max_range = this->range[1];
         this->textureInvalid = true;
+    }
+
+    if (!this->range_overwrite) {
+        GUIUtils::ReadOnlyWigetStyle(false);
     }
     ImGui::PopItemWidth();
 
@@ -450,12 +463,12 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
         this->pendingChanges = false;
     }
 
-    if (useActiveParameter) {
+    if (active_parameter_mode) {
         if (apply_changes) {
-            if (this->activeParameter != nullptr) {
+            if (this->active_parameter != nullptr) {
                 std::string tf;
                 if (this->GetTransferFunction(tf)) {
-                    this->activeParameter->SetValue(tf);
+                    this->active_parameter->SetValue(tf);
                 }
             }
         }
@@ -659,7 +672,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
         } else if (io.MouseClicked[1]) {
             // Right Click -> Add/delete Node
-            if (selected_node < 0) {
+            if (selected_node == GUI_INVALID_ID) {
                 // Add new at current position
                 float new_x = (mouse_cur_pos.x - canvas_pos.x) / canvas_size.x;
                 new_x = std::max(0.0f, std::min(new_x, 1.0f));

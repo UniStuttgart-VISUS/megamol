@@ -27,7 +27,9 @@ TransferFunction::TransferFunction(void)
     , tex()
     , texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGBA)
     , interpolMode(param::TransferFunctionParam::InterpolationMode::LINEAR)
-    , range({0.0f, 1.0f}) {
+    , range({0.0f, 1.0f})
+    , tfparam_check_init_value(true)
+    , tfparam_skip_changes_once(false) {
 
     CallGetTransferFunctionDescription cgtfd;
     this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(0), &TransferFunction::requestTF);
@@ -71,6 +73,31 @@ bool TransferFunction::requestTF(Call& call) {
     CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
     if (cgtf == nullptr) return false;
 
+    // Skip changes propagated by call once to apply initial value of transfer function parameter set from project file.
+    this->tfparam_skip_changes_once = false;
+    if (this->tfparam_check_init_value) {
+        if (!this->tfParam.Param<param::TransferFunctionParam>()->Value().empty()) {
+            this->tfparam_skip_changes_once = true;
+        }
+        this->tfparam_check_init_value = false;
+    }
+    // Update changed data set range for transfer function parameter
+    if (!this->tfparam_skip_changes_once) {
+        if (cgtf->UpdateProcessed()) {
+            // Get current values from parameter string 
+            param::TransferFunctionParam::TFNodeType tfnodes;
+            if (megamol::core::param::TransferFunctionParam::ParseTransferFunction(this->tfParam.Param<param::TransferFunctionParam>()->Value(), tfnodes, this->interpolMode, this->texSize, this->range)) {
+                std::string tf_str;
+                this->range = cgtf->Range();
+                // Set transfer function parameter value using updated range
+                if (megamol::core::param::TransferFunctionParam::DumpTransferFunction(tf_str, tfnodes, this->interpolMode, this->texSize, this->range)) {
+                    this->tfParam.Param<param::TransferFunctionParam>()->SetValue(tf_str);
+                    this->tfParam.Param<param::TransferFunctionParam>()->ForceEditorUpdate();
+                }
+            }
+        }
+    }
+
     if ((this->texID == 0) || this->tfParam.IsDirty()) {
         this->tfParam.ResetDirty();
 
@@ -112,6 +139,7 @@ bool TransferFunction::requestTF(Call& call) {
         if (!t1de) glDisable(GL_TEXTURE_1D);
         ++this->version;
     }
+
     cgtf->SetTexture(this->texID, this->texSize, this->tex.data(), this->texFormat,
         this->range, this->version);
 

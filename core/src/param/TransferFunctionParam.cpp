@@ -15,7 +15,7 @@ using namespace megamol::core::param;
 /**
  * TransferFunctionParam::TransferFunctionParam
  */
-TransferFunctionParam::TransferFunctionParam(const std::string& initVal) : AbstractParam() {
+TransferFunctionParam::TransferFunctionParam(const std::string& initVal) : AbstractParam(), update_editor(false) {
     if (this->CheckTransferFunctionString(initVal)) {
         this->val = initVal;
     } else {
@@ -28,7 +28,7 @@ TransferFunctionParam::TransferFunctionParam(const std::string& initVal) : Abstr
 /**
  * TransferFunctionParam::TransferFunctionParam
  */
-TransferFunctionParam::TransferFunctionParam(const char* initVal) : AbstractParam() {
+TransferFunctionParam::TransferFunctionParam(const char* initVal) : AbstractParam(), update_editor(false) {
     if (this->CheckTransferFunctionString(std::string(initVal))) {
         this->val = std::string(initVal);
     } else {
@@ -41,7 +41,7 @@ TransferFunctionParam::TransferFunctionParam(const char* initVal) : AbstractPara
 /**
  * TransferFunctionParam::TransferFunctionParam
  */
-TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal) : AbstractParam() {
+TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal) : AbstractParam(), update_editor(false) {
     if (this->CheckTransferFunctionString(std::string(initVal.PeekBuffer()))) {
         this->val = std::string(initVal.PeekBuffer());
     } else {

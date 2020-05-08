@@ -46,6 +46,7 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
     , curMVPtransp()
     , renderMode(RenderMode::SIMPLE)
     , greyTF(0)
+    , range({ 0.0f, 1.0f })
     , flagsEnabled(false)
     , flagsBuffer(0)
     , flagsUseSSBO(false)
@@ -94,8 +95,6 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
     , forceTimeSlot(
           "forceTime", "Flag to force the time code to the specified value. Set to true when rendering a video.")
     , useLocalBBoxParam("useLocalBbox", "Enforce usage of local bbox for camera setup")
-    , colIdxRangeInfoParam(
-          "transfer function::colorIndexRange", "The current color index range. Use as range in transfer function.")
     , selectColorParam("flag storage::selectedColor", "Color for selected spheres in flag storage.")
     , softSelectColorParam("flag storage::softSelectedColor", "Color for soft selected spheres in flag storage.")
     , alphaScalingParam("splat::alphaScaling", "Splat: Scaling factor for particle alpha.")
@@ -148,10 +147,6 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
 
     this->useLocalBBoxParam << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->useLocalBBoxParam);
-
-    this->colIdxRangeInfoParam << new param::Vector2fParam(vislib::math::Vector<float, 2>(0.0f, 0.0f));
-    this->MakeSlotAvailable(&this->colIdxRangeInfoParam);
-    this->colIdxRangeInfoParam.Param<param::Vector2fParam>()->SetGUIReadOnly(true);
 
     this->selectColorParam << new param::ColorParam(1.0f, 0.0f, 0.0f, 1.0f);
     this->MakeSlotAvailable(&this->selectColorParam);
@@ -308,7 +303,6 @@ bool SphereRenderer::resetResources(void) {
 
     this->selectColorParam.Param<param::ColorParam>()->SetGUIVisible(false);
     this->softSelectColorParam.Param<param::ColorParam>()->SetGUIVisible(false);
-    this->colIdxRangeInfoParam.Param<param::Vector2fParam>()->SetGUIVisible(false);
 
     // Set all render mode dependent parameter to GUI invisible
     // SPLAT
@@ -1000,7 +994,6 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     if (mpdc == nullptr) return false;
 
     // Update parameter visibility
-    this->colIdxRangeInfoParam.Param<param::Vector2fParam>()->SetGUIVisible((bool)(cgtf != nullptr));
     this->selectColorParam.Param<param::ColorParam>()->SetGUIVisible((bool)(flagc != nullptr));
     this->softSelectColorParam.Param<param::ColorParam>()->SetGUIVisible((bool)(flagc != nullptr));
 
@@ -1011,18 +1004,18 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     const unsigned int frameID = mpdc->FrameID();
     this->stateInvalid = ((hash != this->oldHash) || (frameID != this->oldFrameID));
 
-    // Update read only parameter values of color index range to be set manually in  transfer function
+    // Update data set range
     if (this->stateInvalid) {
-        std::array<float, 2> range;
-        range[0] = std::numeric_limits<float>::max(); // min
-        range[1] = std::numeric_limits<float>::min(); // max
+        this->range[0] = std::numeric_limits<float>::max(); // min
+        this->range[1] = std::numeric_limits<float>::min(); // max
         for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
             MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
-            range[0] = std::min(parts.GetMinColourIndexValue(), range[0]);
-            range[1] = std::max(parts.GetMaxColourIndexValue(), range[1]);
+            this->range[0] = std::min(parts.GetMinColourIndexValue(), this->range[0]);
+            this->range[1] = std::max(parts.GetMaxColourIndexValue(), this->range[1]);
         }
-        this->colIdxRangeInfoParam.Param<param::Vector2fParam>()->SetValue(
-            vislib::math::Vector<float, 2>(range[0], range[1]));
+        if (cgtf != nullptr) {
+            cgtf->SetRange(this->range);
+        }
     }
 
     this->oldHash = hash;
@@ -2058,8 +2051,7 @@ bool SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GLSLShader
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_1D, this->greyTF);
         glUniform1i(shader.ParameterLocation("tfTexture"), 0);
-        auto range = this->colIdxRangeInfoParam.Param<param::Vector2fParam>()->Value();
-        glUniform2fv(shader.ParameterLocation("tfRange"), 1, static_cast<GLfloat*>(range.PeekComponents()));
+        glUniform2fv(shader.ParameterLocation("tfRange"), 1, static_cast<GLfloat*>(this->range.data()));
     }
     return true;
 }

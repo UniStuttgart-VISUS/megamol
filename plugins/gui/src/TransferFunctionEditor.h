@@ -42,7 +42,7 @@ public:
      *
      * @return True if string was successfully converted into transfer function data, false otherwise.
      */
-    void SetTransferFunction(const std::string& tfs, bool useActiveParameter = true);
+    void SetTransferFunction(const std::string& tfs, bool active_parameter_mode);
 
     /**
      * Get current transfer function data.
@@ -54,18 +54,17 @@ public:
     /**
      * Set the currently active parameter.
      */
-    void SetActiveParameter(core::param::TransferFunctionParam* param) { this->activeParameter = param; }
+    void SetActiveParameter(core::param::TransferFunctionParam* param) { this->active_parameter = param; }
 
     /**
      * Get the currently active parameter.
      */
-    core::param::TransferFunctionParam* GetActiveParameter(void) { return this->activeParameter; }
+    core::param::TransferFunctionParam* GetActiveParameter(void) { return this->active_parameter; }
 
     /**
      * Draws the transfer function editor.
      */
-    bool DrawTransferFunctionEditor(bool useActiveParameter = true);
-
+    bool DrawTransferFunctionEditor(bool active_parameter_mode);
 
 private:
     void drawTextureBox(const ImVec2& size);
@@ -87,13 +86,16 @@ private:
     GUIUtils utils;
 
     /** The currently active parameter whose transfer function is currently loaded into this editor. */
-    core::param::TransferFunctionParam* activeParameter;
+    core::param::TransferFunctionParam* active_parameter;
 
     /** Array holding current colors and function values. */
     megamol::core::param::TransferFunctionParam::TFNodeType nodes;
 
     /** Min/Max intervall the data should be mapped. */
     std::array<float, 2> range;
+
+    /** Flag indicating if propagated range should be overwriten by editor */
+    bool range_overwrite;
 
     /** Current interpolation option. */
     megamol::core::param::TransferFunctionParam::InterpolationMode mode;

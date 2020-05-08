@@ -421,6 +421,9 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
     this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (this->transferFunction == nullptr || !(*(this->transferFunction))()) return false;
 
+    auto columnInfos = this->floatTable->GetColumnsInfos();
+    const size_t colCount = this->floatTable->GetColumnsCount();
+
     auto mvp = getModelViewProjection();
     // mvp is unstable across GetExtents and Render, so we just do these checks when rendering
     if (hasDirtyScreen() || hasDirtyData() || (!ignoreMVP && (screenLastMVP != mvp || this->readFlags->hasUpdate())) ||
@@ -429,12 +432,16 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
         resetDirtyScreen();
         screenLastMVP = mvp;
         this->transferFunction->ResetDirty();
+        if (map.valueIdx.has_value() &&
+            this->valueMappingParam.Param<core::param::EnumParam>()->Value() == VALUE_MAPPING_KERNEL_BLEND) {
+            this->transferFunction->SetRange(
+                {columnInfos[map.valueIdx.value()].MinimumValue(), columnInfos[map.valueIdx.value()].MaximumValue()});
+        } else {
+            this->transferFunction->SetRange({0.0f, 1.0f});
+        }
     }
 
     if (this->dataHash == this->floatTable->DataHash() && ts == this->dataTime && !hasDirtyData()) return true;
-
-    auto columnInfos = this->floatTable->GetColumnsInfos();
-    const size_t colCount = this->floatTable->GetColumnsCount();
 
     if (this->dataHash != this->floatTable->DataHash()) {
         // Update dynamic parameters.
@@ -451,6 +458,15 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
     map.labelIdx = nameToIndex(this->floatTable, this->labelSelectorParam.Param<core::param::FlexEnumParam>()->Value())
                        .value_or(0);
 
+    if (map.valueIdx.has_value() &&
+        this->valueMappingParam.Param<core::param::EnumParam>()->Value() == VALUE_MAPPING_KERNEL_BLEND) {
+        this->transferFunction->SetRange(
+            {columnInfos[map.valueIdx.value()].MinimumValue(), columnInfos[map.valueIdx.value()].MaximumValue()});
+    } else {
+        this->transferFunction->SetRange({0.0f, 1.0f});
+    }
+
+    this->screenValid = false;
     this->trianglesValid = false;
     this->textValid = false;
     this->updateColumns();
@@ -1131,6 +1147,7 @@ void ScatterplotMatrixRenderer2D::drawScreen() {
     glDisable(GL_BLEND);
     // glEnable(GL_DEPTH_TEST);
 
+    this->transferFunction->UnbindConvenience(); // bound in bindMappingUniforms()
     this->screenShader.Disable();
 
     debugPop();

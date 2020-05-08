@@ -802,7 +802,7 @@ void GUIWindows::drawMainWindowCallback(const std::string& wn, WindowManager::Wi
 
 void GUIWindows::drawTFWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
 
-    this->tf_editor.DrawTransferFunctionEditor();
+    this->tf_editor.DrawTransferFunctionEditor(true);
 }
 
 
@@ -1759,9 +1759,14 @@ void GUIWindows::drawTransferFunctionEdit(
     ImGui::PopStyleColor(3);
     ImGui::PopID();
 
+    // Check for changed parameter value which should be forced to the editor once.
+    if (isActive && p.UpdateEditor()) {
+        updateEditor = true;
+    }
+
     // Propagate the transfer function to the editor.
     if (isActive && updateEditor) {
-        this->tf_editor.SetTransferFunction(p.Value());
+        this->tf_editor.SetTransferFunction(p.Value(), true);
     }
 
     ImGui::PopID();

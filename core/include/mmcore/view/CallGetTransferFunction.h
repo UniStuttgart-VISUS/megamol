@@ -147,6 +147,15 @@ public:
     inline void ResetDirty() { this->usedTFVersion = availableTFVersion; }
 
     /**
+     * Sets the value range (domain) of this transfer function. Values 
+	 * outside of min/max are to be clamped.
+     */
+    inline void SetRange(std::array<float, 2> range) {
+        this->range = range; 
+        this->data_updated = true;
+    }
+
+    /**
      * Sets the 1D texture information
      *
      * @param id The OpenGL texture object id
@@ -182,6 +191,13 @@ public:
         memcpy(color, &this->texData[index * 4], colorSize);
     }
 
+    /** Reset update flag when changes are procesed by callee. */
+    inline bool UpdateProcessed(void) { 
+        bool retval = this->data_updated;
+        this->data_updated = false;
+        return retval;
+    }
+
 private:
     /** The OpenGL texture object id */
     unsigned int texID;
@@ -197,6 +213,9 @@ private:
 
     /** The range the texture lies within */
     std::array<float, 2> range;
+
+    /** Flag indicating updated data by the caller. */
+    bool data_updated;
 
     uint32_t availableTFVersion = 1;
     uint32_t usedTFVersion = 0;
