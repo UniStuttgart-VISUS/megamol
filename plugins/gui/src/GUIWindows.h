@@ -179,7 +179,7 @@ private:
     TransferFunctionEditor tf_editor;
 
     /** The last tf param value. */
-    std::string tf_last_param_val;
+    size_t tf_hash;
 
     /** The configurator. */
     megamol::gui::configurator::Configurator configurator;

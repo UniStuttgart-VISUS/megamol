@@ -33,7 +33,7 @@ GUIWindows::GUIWindows()
     , impl(Implementation::NONE)
     , window_manager()
     , tf_editor()
-    , tf_last_param_val()
+    , tf_hash(0)
     , configurator()
     , utils()
     , file_utils()
@@ -1762,8 +1762,8 @@ void GUIWindows::drawTransferFunctionEdit(
 
     // Check for changed parameter value which should be forced to the editor once.
     if (isActive) {
-        if (this->tf_last_param_val != p.Value()) {
-            this->tf_last_param_val = p.Value();
+        if (this->tf_hash != p.ValueHash()) {
+            this->tf_hash = p.ValueHash();
             updateEditor = true;
         }
     }
