@@ -1113,6 +1113,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
 #endif
 
     unsigned int visCnt = 0;
+    unsigned int visPart = 0;
 
     if (speakVertCount) {
         //
@@ -1183,6 +1184,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                 CellInfo::CacheItem &ci = info.cache[j];
                 float minC = 0.0f, maxC = 0.0f;
                 unsigned int colTabSize = 0;
+                visPart += parts.GetCount();
 
                 // radius and position
                 bool matrixpooper = false;
@@ -1332,6 +1334,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                 CellInfo::CacheItem &ci = info.cache[j];
                 float minC = 0.0f, maxC = 0.0f;
                 unsigned int colTabSize = 0;
+                visPart += parts.GetCount();
 
                 // colour
                 switch (ptype.GetColourDataType()) {
@@ -1537,6 +1540,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                 CellInfo::CacheItem &ci = info.cache[j];
                 float minC = 0.0f, maxC = 0.0f;
                 unsigned int colTabSize = 0;
+                visPart += parts.GetCount();
 
                 // colour
                 switch (ptype.GetColourDataType()) {
@@ -1694,6 +1698,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
 
     if (speakCellPerc) {
         printf("CELLS VISIBLE: %f%%\n", float(visCnt * 100) / float(cellcnt));
+        printf("PARTICLES IN VISIBLE CELLS: %u\n", visPart);
     }
 
     daSphereShader->Disable();

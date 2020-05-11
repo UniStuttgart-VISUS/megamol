@@ -40,8 +40,8 @@ function(require_external NAME)
     endif()
 
     add_external_headeronly_project(Eigen
-      GIT_REPOSITORY https://github.com/eigenteam/eigen-git-mirror.git
-      GIT_TAG "3.3.4")
+      GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
+      GIT_TAG "3.3.7")
 
   # glm
   elseif(NAME STREQUAL "glm")

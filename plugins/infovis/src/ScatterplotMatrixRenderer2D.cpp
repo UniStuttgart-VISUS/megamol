@@ -93,6 +93,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , pickRadiusParam("pickRadius", "Picking radius")
     , resetSelectionParam("resetSelection", "Reset selection")
     , drawPickIndicatorParam("drawPickIndicator", "Draw picking indicator")
+    , drawMouseLabelsParam("drawMouseLabels", "Draw labels on cells on mouse hover")
     , triangulationSmoothnessParam("triangulationSmoothness", "Number of iterations to smooth the triangulation")
     , axisModeParam("axisMode", "Axis drawing mode")
     , axisColorParam("axisColor", "Color of axis")
@@ -178,6 +179,9 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
 
     this->drawPickIndicatorParam << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&this->drawPickIndicatorParam);
+
+    this->drawMouseLabelsParam << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->drawMouseLabelsParam);
 
     auto* axisModes = new core::param::EnumParam(1);
     axisModes->SetTypePair(AXIS_MODE_NONE, "None");
@@ -354,6 +358,10 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
             this->drawPickIndicator();
         }
 
+        if (this->drawMouseLabelsParam.Param<core::param::BoolParam>()->Value()) {
+            this->drawMouseLabels();
+        }
+
         this->drawScreen();
 
     } catch (...) {
@@ -445,6 +453,7 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
     map.labelIdx = nameToIndex(this->floatTable, this->labelSelectorParam.Param<core::param::FlexEnumParam>()->Value())
                        .value_or(0);
 
+    this->screenValid = false;
     this->trianglesValid = false;
     this->textValid = false;
     this->updateColumns();
@@ -997,6 +1006,50 @@ void ScatterplotMatrixRenderer2D::drawPickIndicator() {
     this->pickIndicatorShader.Disable();
 
     debugPop();
+}
+
+void ScatterplotMatrixRenderer2D::drawMouseLabels() {
+    const float cellSize = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
+    const float cellMargin = this->cellMarginParam.Param<core::param::FloatParam>()->Value();
+    const auto axisColor = this->axisColorParam.Param<core::param::ColorParam>()->Value();
+    const auto columnCount = this->floatTable->GetColumnsCount();
+    const auto columnInfos = this->floatTable->GetColumnsInfos();
+    const float nameSize = this->cellNameSizeParam.Param<core::param::FloatParam>()->Value();
+
+    if (this->mouse.x < 0 || this->mouse.y < 0) {
+        return;
+    }
+
+    int cellIdX = static_cast<int>(this->mouse.x / (cellSize + cellMargin));
+    int cellIdY = static_cast<int>(this->mouse.y / (cellSize + cellMargin));
+
+    if (cellIdX >= columnCount || cellIdY >= columnCount || cellIdX + 1 >= cellIdY ||
+        this->mouse.x - static_cast<float>(cellIdX) * (cellSize + cellMargin) > cellSize ||
+        this->mouse.y - static_cast<float>(cellIdY) * (cellSize + cellMargin) > cellSize) {
+        return;
+    }
+
+    auto oldMode = this->axisFont.GetBatchDrawMode();
+    this->axisFont.SetBatchDrawMode(false);
+
+    // Labels
+    std::string labelX = columnInfos[cellIdX].Name();
+    const float xLabelLeft = static_cast<float>(cellIdX) * (cellSize + cellMargin);
+    const float xLabelTop = static_cast<float>(cellIdY) * (cellSize + cellMargin);
+    this->axisFont.DrawString(axisColor.data(), xLabelLeft, xLabelTop, cellSize, cellSize, nameSize, false,
+        labelX.c_str(), core::utility::AbstractFont::ALIGN_CENTER_TOP);
+
+    this->axisFont.SetRotation(90.0, 0.0, 0.0, 1.0);
+
+    std::string labelY = columnInfos[cellIdY].Name();
+    const float yLabelLeft = static_cast<float>(cellIdX + 1) * (cellSize + cellMargin) - cellMargin;
+    const float yLabelTop = static_cast<float>(cellIdY) * (cellSize + cellMargin);
+    this->axisFont.DrawString(axisColor.data(), yLabelTop, -yLabelLeft, cellSize, cellSize, nameSize, false,
+        labelY.c_str(), core::utility::AbstractFont::ALIGN_CENTER_TOP);
+
+    this->axisFont.ResetRotation();
+
+    this->axisFont.SetBatchDrawMode(oldMode);
 }
 
 void ScatterplotMatrixRenderer2D::bindAndClearScreen() {
