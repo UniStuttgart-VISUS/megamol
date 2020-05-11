@@ -474,7 +474,7 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool setBufferData(const GLSLShader& shader, const MultiParticleDataCall::Particles &parts, 
+        bool enableBufferData(const GLSLShader& shader, const MultiParticleDataCall::Particles &parts, 
             GLuint vertBuf, const void *vertPtr, GLuint colBuf,  const void *colPtr, bool createBufferData = false);
 
         /**
@@ -484,7 +484,7 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool unsetBufferData(const GLSLShader& shader);
+        bool disableBufferData(const GLSLShader& shader);
 
         /**
          * Set pointers to vertex and color buffers and corresponding shader variables.
@@ -494,14 +494,14 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool setShaderData(GLSLShader& shader, const MultiParticleDataCall::Particles &parts);
+        bool enableShaderData(GLSLShader& shader, const MultiParticleDataCall::Particles &parts);
 
         /**
          * Unset pointers to vertex and color buffers.
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool unsetShaderData(void);
+        bool disableShaderData(void);
 
         /**
          * Enables the transfer function texture.
@@ -510,14 +510,14 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool setTransferFunctionTexture(GLSLShader& shader);
+        bool enableTransferFunctionTexture(GLSLShader& shader);
 
         /**
          * Disables the transfer function texture.
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool unsetTransferFunctionTexture(void);
+        bool disableTransferFunctionTexture(void);
 
         /**
          * Enable flag storage.
@@ -527,7 +527,7 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool setFlagStorage(const GLSLShader& shader, MultiParticleDataCall* mpdc);
+        bool enableFlagStorage(const GLSLShader& shader, MultiParticleDataCall* mpdc);
 
         /**
          * Enable flag storage.
@@ -536,7 +536,7 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool unsetFlagStorage(const GLSLShader& shader);
+        bool disableFlagStorage(const GLSLShader& shader);
 
         /**
          * Get bytes and stride.

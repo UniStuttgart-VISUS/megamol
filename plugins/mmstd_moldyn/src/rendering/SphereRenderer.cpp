@@ -1177,7 +1177,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
 bool SphereRenderer::renderSimple(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
-    this->setFlagStorage(this->sphereShader, mpdc);
+    this->enableFlagStorage(this->sphereShader, mpdc);
 
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(this->curCamView));
@@ -1197,7 +1197,7 @@ bool SphereRenderer::renderSimple(view::CallRender3D_2& call, MultiParticleDataC
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
-        if (!this->setShaderData(this->sphereShader, parts)) {
+        if (!this->enableShaderData(this->sphereShader, parts)) {
             continue;
         }
 
@@ -1215,12 +1215,12 @@ bool SphereRenderer::renderSimple(view::CallRender3D_2& call, MultiParticleDataC
             parts.GetVAOs(vao, vb, cb);
             if (parts.IsVAO()) {
                 glBindVertexArray(vao);
-                this->setBufferData(
+                this->enableBufferData(
                     this->sphereShader, parts, vb, parts.GetVertexData(), cb, parts.GetColourData(), true); // or false?
             }
         }
         if ((this->renderMode == RenderMode::SIMPLE) || (!parts.IsVAO())) {
-            this->setBufferData(this->sphereShader, parts, 0, parts.GetVertexData(), 0, parts.GetColourData());
+            this->enableBufferData(this->sphereShader, parts, 0, parts.GetVertexData(), 0, parts.GetColourData());
         }
 
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
@@ -1230,12 +1230,12 @@ bool SphereRenderer::renderSimple(view::CallRender3D_2& call, MultiParticleDataC
                 glBindVertexArray(0);
             }
         }
-        this->unsetBufferData(this->sphereShader);
-        this->unsetShaderData();
+        this->disableBufferData(this->sphereShader);
+        this->disableShaderData();
         flagPartsCount += parts.GetCount();
     }
 
-    this->unsetFlagStorage(this->sphereShader);
+    this->disableFlagStorage(this->sphereShader);
     this->sphereShader.Disable();
 
     mpdc->Unlock();
@@ -1266,8 +1266,8 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2& call, MultiParticleDataCal
         if (this->newShader == nullptr) return false;
 
         this->newShader->Enable();
-        this->setFlagStorage(*this->newShader, mpdc);
-        if (!this->setShaderData(*this->newShader, parts)) {
+        this->enableFlagStorage(*this->newShader, mpdc);
+        if (!this->enableShaderData(*this->newShader, parts)) {
             continue;
         }
 
@@ -1399,8 +1399,8 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2& call, MultiParticleDataCal
             }
         }
 
-        this->unsetShaderData();
-        this->unsetFlagStorage(*this->newShader);
+        this->disableShaderData();
+        this->disableFlagStorage(*this->newShader);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
         this->newShader->Disable();
@@ -1455,8 +1455,8 @@ bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCa
         if (this->newShader == nullptr) return false;
 
         this->newShader->Enable();
-        this->setFlagStorage(*this->newShader, mpdc);
-        if (!this->setShaderData(*this->newShader, parts)) {
+        this->enableFlagStorage(*this->newShader, mpdc);
+        if (!this->enableShaderData(*this->newShader, parts)) {
             continue;
         }
 
@@ -1531,8 +1531,8 @@ bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCa
                 "[SphereRenderer] Splat mode does not support not interleaved data so far ...");
         }
 
-        this->unsetShaderData();
-        this->unsetFlagStorage(*this->newShader);
+        this->disableShaderData();
+        this->disableFlagStorage(*this->newShader);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
         newShader->Disable();
@@ -1553,7 +1553,7 @@ bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCa
 bool SphereRenderer::renderBufferArray(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
-    this->setFlagStorage(this->sphereShader, mpdc);
+    this->enableFlagStorage(this->sphereShader, mpdc);
 
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(this->curCamView));
@@ -1574,7 +1574,7 @@ bool SphereRenderer::renderBufferArray(view::CallRender3D_2& call, MultiParticle
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
-        if (!this->setShaderData(this->sphereShader, parts)) {
+        if (!this->enableShaderData(this->sphereShader, parts)) {
             continue;
         }
 
@@ -1615,7 +1615,7 @@ bool SphereRenderer::renderBufferArray(view::CallRender3D_2& call, MultiParticle
                     glUniform1ui(this->sphereShader.ParameterLocation("flags_offset"),
                         flagPartsCount - static_cast<GLuint>(numVerts * this->currBuf));
                 }
-                this->setBufferData(this->sphereShader, parts, this->theSingleBuffer,
+                this->enableBufferData(this->sphereShader, parts, this->theSingleBuffer,
                     reinterpret_cast<const void*>(currVert - whence), this->theSingleBuffer,
                     reinterpret_cast<const void*>(currCol - whence));
 
@@ -1633,12 +1633,12 @@ bool SphereRenderer::renderBufferArray(view::CallRender3D_2& call, MultiParticle
                 "[SphereRenderer] BufferArray mode does not support not interleaved data so far ...");
         }
 
-        this->unsetBufferData(this->sphereShader);
-        this->unsetShaderData();
+        this->disableBufferData(this->sphereShader);
+        this->disableShaderData();
         flagPartsCount += parts.GetCount();
     }
 
-    this->unsetFlagStorage(this->sphereShader);
+    this->disableFlagStorage(this->sphereShader);
     this->sphereShader.Disable();
 
     mpdc->Unlock();
@@ -1660,7 +1660,7 @@ bool SphereRenderer::renderGeometryShader(view::CallRender3D_2& call, MultiParti
     // glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
 
     this->sphereGeometryShader.Enable();
-    this->setFlagStorage(this->sphereGeometryShader, mpdc);
+    this->enableFlagStorage(this->sphereGeometryShader, mpdc);
 
     // Set shader variables
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
@@ -1681,7 +1681,7 @@ bool SphereRenderer::renderGeometryShader(view::CallRender3D_2& call, MultiParti
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
-        if (!this->setShaderData(this->sphereGeometryShader, parts)) {
+        if (!this->enableShaderData(this->sphereGeometryShader, parts)) {
             continue;
         }
 
@@ -1694,16 +1694,16 @@ bool SphereRenderer::renderGeometryShader(view::CallRender3D_2& call, MultiParti
                 this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
-        this->setBufferData(this->sphereGeometryShader, parts, 0, parts.GetVertexData(), 0, parts.GetColourData());
+        this->enableBufferData(this->sphereGeometryShader, parts, 0, parts.GetVertexData(), 0, parts.GetColourData());
 
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 
-        this->unsetBufferData(this->sphereGeometryShader);
-        this->unsetShaderData();
+        this->disableBufferData(this->sphereGeometryShader);
+        this->disableShaderData();
         flagPartsCount += parts.GetCount();
     }
 
-    this->unsetFlagStorage(this->sphereGeometryShader);
+    this->disableFlagStorage(this->sphereGeometryShader);
     this->sphereGeometryShader.Disable();
 
     // glDisable(GL_VERTEX_PROGRAM_TWO_SIDE);
@@ -1749,7 +1749,7 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2& call, MultiPar
     glBindFragDataLocation(theShader.ProgramHandle(), 1, "outNormal");
 
     theShader.Enable();
-    this->setFlagStorage(theShader, mpdc);
+    this->enableFlagStorage(theShader, mpdc);
 
     glUniformMatrix4fv(theShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->curMVP));
     glUniformMatrix4fv(theShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
@@ -1769,7 +1769,7 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2& call, MultiPar
     for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
-        if (!this->setShaderData(theShader, parts)) {
+        if (!this->enableShaderData(theShader, parts)) {
             continue;
         }
 
@@ -1786,12 +1786,12 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2& call, MultiPar
 
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(mpdc->AccessParticles(i).GetCount()));
 
-        this->unsetShaderData();
+        this->disableShaderData();
         flagPartsCount += parts.GetCount();
     }
 
     glBindVertexArray(0);
-    this->unsetFlagStorage(theShader);
+    this->disableFlagStorage(theShader);
     theShader.Disable();
 
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
@@ -1806,7 +1806,7 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2& call, MultiPar
 bool SphereRenderer::renderOutline(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
-    this->setFlagStorage(this->sphereShader, mpdc);
+    this->enableFlagStorage(this->sphereShader, mpdc);
 
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(this->curCamView));
@@ -1828,7 +1828,7 @@ bool SphereRenderer::renderOutline(view::CallRender3D_2& call, MultiParticleData
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
-        if (!this->setShaderData(this->sphereShader, parts)) {
+        if (!this->enableShaderData(this->sphereShader, parts)) {
             continue;
         }
 
@@ -1839,16 +1839,16 @@ bool SphereRenderer::renderOutline(view::CallRender3D_2& call, MultiParticleData
             glUniform4fv(this->sphereShader.ParameterLocation("flag_softselected_col"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
-        this->setBufferData(this->sphereShader, parts, 0, parts.GetVertexData(), 0, parts.GetColourData());
+        this->enableBufferData(this->sphereShader, parts, 0, parts.GetVertexData(), 0, parts.GetColourData());
     
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 
-        this->unsetBufferData(this->sphereShader);
-        this->unsetShaderData();
+        this->disableBufferData(this->sphereShader);
+        this->disableShaderData();
         flagPartsCount += parts.GetCount();
     }
 
-    this->unsetFlagStorage(this->sphereShader);
+    this->disableFlagStorage(this->sphereShader);
     this->sphereShader.Disable();
 
     mpdc->Unlock();
@@ -1857,7 +1857,7 @@ bool SphereRenderer::renderOutline(view::CallRender3D_2& call, MultiParticleData
 }
 
 
-bool SphereRenderer::setBufferData(const vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts,
+bool SphereRenderer::enableBufferData(const vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts,
     GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr, bool createBufferData) {
 
     GLuint vertAttribLoc = glGetAttribLocation(shader, "inPosition");
@@ -1989,7 +1989,7 @@ bool SphereRenderer::setBufferData(const vislib::graphics::gl::GLSLShader& shade
 }
 
 
-bool SphereRenderer::unsetBufferData(const vislib::graphics::gl::GLSLShader& shader) {
+bool SphereRenderer::disableBufferData(const vislib::graphics::gl::GLSLShader& shader) {
 
     GLuint vertAttribLoc = glGetAttribLocation(shader, "inPosition");
     GLuint colAttribLoc = glGetAttribLocation(shader, "inColor");
@@ -2004,7 +2004,7 @@ bool SphereRenderer::unsetBufferData(const vislib::graphics::gl::GLSLShader& sha
 }
 
 
-bool SphereRenderer::setShaderData(vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts) {
+bool SphereRenderer::enableShaderData(vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts) {
 
     // colour
     bool useGlobalColor = false;
@@ -2018,7 +2018,7 @@ bool SphereRenderer::setShaderData(vislib::graphics::gl::GLSLShader& shader, con
     } break;
     case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
     case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
-        this->setTransferFunctionTexture(shader);
+        this->enableTransferFunctionTexture(shader);
         useTf = true;
     } break;
     case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
@@ -2056,13 +2056,13 @@ bool SphereRenderer::setShaderData(vislib::graphics::gl::GLSLShader& shader, con
 }
 
 
-bool SphereRenderer::unsetShaderData(void) {
+bool SphereRenderer::disableShaderData(void) {
 
-    return this->unsetTransferFunctionTexture();
+    return this->disableTransferFunctionTexture();
 }
 
 
-bool SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader) {
+bool SphereRenderer::enableTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader) {
 
     view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     if ((cgtf != nullptr) && (*cgtf)(0)) {
@@ -2079,7 +2079,7 @@ bool SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GLSLShader
 }
 
 
-bool SphereRenderer::unsetTransferFunctionTexture(void) {
+bool SphereRenderer::disableTransferFunctionTexture(void) {
 
     view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     if (cgtf != nullptr) {
@@ -2092,7 +2092,7 @@ bool SphereRenderer::unsetTransferFunctionTexture(void) {
 }
 
 
-bool SphereRenderer::setFlagStorage(const vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::enableFlagStorage(const vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall* mpdc) {
 
     if (!this->flags_available) return false;
     if (mpdc == nullptr) return false;
@@ -2120,7 +2120,7 @@ bool SphereRenderer::setFlagStorage(const vislib::graphics::gl::GLSLShader& shad
 }
 
 
-bool SphereRenderer::unsetFlagStorage(const vislib::graphics::gl::GLSLShader& shader) {
+bool SphereRenderer::disableFlagStorage(const vislib::graphics::gl::GLSLShader& shader) {
 
     if (!this->flags_available) return false;
 
@@ -2551,10 +2551,10 @@ void SphereRenderer::rebuildWorkingData(view::CallRender3D_2& call, MultiParticl
             MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
             glBindVertexArray(this->gpuData[i].vertexArray);
-            this->setBufferData(shader, parts, this->gpuData[i].vertexVBO, parts.GetVertexData(),
+            this->enableBufferData(shader, parts, this->gpuData[i].vertexVBO, parts.GetVertexData(),
                 this->gpuData[i].colorVBO, parts.GetColourData(), true);
             glBindVertexArray(0);
-            this->unsetBufferData(shader);
+            this->disableBufferData(shader);
         }
     }
 
