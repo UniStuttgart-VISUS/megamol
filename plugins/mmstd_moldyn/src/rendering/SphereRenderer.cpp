@@ -21,9 +21,9 @@ using namespace vislib::graphics::gl;
 #define SSBO_GENERATED_SHADER_INSTANCE "gl_VertexID" // or "gl_InstanceID"
 #define SSBO_GENERATED_SHADER_ALIGNMENT "packed"     // "std430"
 
-const GLuint SSBOvertexBindingPoint = 2;
-const GLuint SSBOcolorBindingPoint = 3;
-const GLuint SSBOflagsBindingPoint = 4;
+const GLuint SSBOflagsBindingPoint = 2;
+const GLuint SSBOvertexBindingPoint = 3;
+const GLuint SSBOcolorBindingPoint = 4;
 
 SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
     , getDataSlot("getdata", "Connects to the data source")
