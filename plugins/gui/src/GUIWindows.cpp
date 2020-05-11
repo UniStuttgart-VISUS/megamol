@@ -34,6 +34,7 @@ GUIWindows::GUIWindows()
     , window_manager()
     , tf_editor()
     , tf_hash(0)
+    , tf_texture_id(0)
     , configurator()
     , utils()
     , file_utils()
@@ -1169,9 +1170,9 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
         wc.ms_mode = WindowManager::TimingModes::MS;
     }
 
-    ImGui::SameLine(ImGui::CalcItemWidth() -
-                    (ImGui::GetItemsLineHeightWithSpacing() - style.ItemSpacing.x - style.ItemInnerSpacing.x));
-    if (ImGui::ArrowButton("Options", ((wc.ms_show_options) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+    ImGui::SameLine(
+        ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() - style.ItemSpacing.x - style.ItemInnerSpacing.x));
+    if (ImGui::ArrowButton("Options_", ((wc.ms_show_options) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
         wc.ms_show_options = !wc.ms_show_options;
     }
 
@@ -1709,6 +1710,9 @@ void GUIWindows::drawTransferFunctionEdit(
     const std::string& id, const std::string& label, megamol::core::param::TransferFunctionParam& p) {
     ImGuiStyle& style = ImGui::GetStyle();
 
+    bool isActive = (&p == this->tf_editor.GetActiveParameter());
+    bool updateEditor = false;
+
     ImGui::BeginGroup();
     ImGui::PushID(id.c_str());
 
@@ -1716,12 +1720,37 @@ void GUIWindows::drawTransferFunctionEdit(
     if (p.Value().empty()) {
         ImGui::TextDisabled("{    (empty)    }");
     } else {
-        // XXX: A gradient texture would be nice here (sharing some editor code?)
-        ImGui::TextUnformatted("{ ............. }");
+        // Create texture
+        if (this->tf_hash != p.ValueHash()) {
+            UINT tex_size;
+            std::array<float, 2> tf_range;
+            core::param::TransferFunctionParam::InterpolationMode tf_interpol_mode;
+            core::param::TransferFunctionParam::TFNodeType tf_nodes;
+            if (megamol::core::param::TransferFunctionParam::ParseTransferFunction(
+                    p.Value(), tf_nodes, tf_interpol_mode, tex_size, tf_range)) {
+                std::vector<float> texture_data;
+                if (tf_interpol_mode == core::param::TransferFunctionParam::InterpolationMode::LINEAR) {
+                    core::param::TransferFunctionParam::LinearInterpolation(texture_data, tex_size, tf_nodes);
+                } else if (tf_interpol_mode == core::param::TransferFunctionParam::InterpolationMode::GAUSS) {
+                    core::param::TransferFunctionParam::GaussInterpolation(texture_data, tex_size, tf_nodes);
+                }
+                this->tf_editor.CreateTexture(this->tf_texture_id, tex_size, 1, texture_data.data());
+            }
+        }
+        // Draw texture
+        if (this->tf_texture_id != 0) {
+            ImGui::Image(reinterpret_cast<ImTextureID>(this->tf_texture_id),
+                ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight()), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f),
+                ImVec4(1.0f, 1.0f, 1.0f, 1.0f), style.Colors[ImGuiCol_Border]);
+        } else {
+            ImGui::TextUnformatted("{ ............. }");
+        }
     }
 
-    bool isActive = (&p == this->tf_editor.GetActiveParameter());
-    bool updateEditor = false;
+    ImGui::SameLine(ImGui::CalcItemWidth() + style.ItemInnerSpacing.x);
+    ImGui::TextEx(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
+
+    ImGui::Indent();
 
     // Copy transfer function.
     if (ImGui::Button("Copy")) {
@@ -1773,10 +1802,11 @@ void GUIWindows::drawTransferFunctionEdit(
     ImGui::PopStyleColor(3);
     ImGui::PopID();
 
+    ImGui::Unindent();
+
     // Check for changed parameter value which should be forced to the editor once.
     if (isActive) {
         if (this->tf_hash != p.ValueHash()) {
-            this->tf_hash = p.ValueHash();
             updateEditor = true;
         }
     }
@@ -1786,10 +1816,10 @@ void GUIWindows::drawTransferFunctionEdit(
         this->tf_editor.SetTransferFunction(p.Value(), true);
     }
 
+    this->tf_hash = p.ValueHash();
+
     ImGui::PopID();
 
-    ImGui::SameLine();
-    ImGui::TextEx(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
     ImGui::EndGroup();
 }
 

@@ -71,10 +71,15 @@ public:
      */
     inline bool IsMinimized(void) const { return !this->showOptions; }
 
-private:
-    void drawTextureBox(const ImVec2& size, bool switch_xy);
+    /**
+     * Create texture.
+     */
+    void CreateTexture(GLuint& inout_id, GLsizei width, GLsizei height, float* data) const;
 
-    void drawScale(const ImVec2& pos, const ImVec2& size, bool switch_xy);
+private:
+    void drawTextureBox(const ImVec2& size, bool flip_xy);
+
+    void drawScale(const ImVec2& pos, const ImVec2& size, bool flip_xy);
 
     void drawFunctionPlot(const ImVec2& size);
 
@@ -118,7 +123,10 @@ private:
 
     /** Current texture data. */
     std::vector<float> texturePixels;
-    GLuint textureId;
+
+    /** OpenGL Texture IDs. */
+    GLuint texture_id_vert;
+    GLuint texture_id_horiz;
 
     /** Currently active color channels in plot. */
     std::array<bool, 4> activeChannels;
@@ -142,7 +150,7 @@ private:
     WidgetBuffer widget_buffer;
 
     /** Legend alignment flag. */
-    bool switch_legend_xy;
+    bool flip_xy;
 };
 
 } // namespace gui

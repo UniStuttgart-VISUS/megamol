@@ -174,7 +174,8 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , textureInvalid(true)
     , pendingChanges(true)
     , texturePixels()
-    , textureId(0)
+    , texture_id_vert(0)
+    , texture_id_horiz(0)
     , activeChannels{false, false, false, false}
     , currentNode(0)
     , currentChannel(0)
@@ -182,7 +183,7 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , immediateMode(false)
     , showOptions(true)
     , widget_buffer()
-    , switch_legend_xy(false) {
+    , flip_xy(false) {
 
     // Init transfer function colors
     this->nodes.clear();
@@ -244,6 +245,7 @@ bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
 bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
 
     ImGui::BeginGroup();
+    ImGui::PushID("TransferFunctionEditor");
 
     if (active_parameter_mode) {
         if (this->active_parameter == nullptr) {
@@ -271,10 +273,14 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
         if (image_size.x < 300.0f) image_size.x = 300.0f;
     }
 
-    this->drawTextureBox(image_size, this->switch_legend_xy);
+    ImGui::BeginGroup();
+    this->drawTextureBox(image_size, this->flip_xy);
+    this->drawScale(ImGui::GetCursorScreenPos(), image_size, this->flip_xy);
+    ImGui::EndGroup();
+
     ImGui::SameLine();
 
-    if (ImGui::ArrowButton("Options", this->showOptions ? ImGuiDir_Down : ImGuiDir_Up)) {
+    if (ImGui::ArrowButton("Options_", this->showOptions ? ImGuiDir_Down : ImGuiDir_Up)) {
         this->showOptions = !this->showOptions;
     }
 
@@ -283,13 +289,13 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
 
         // Legend alignment ---------------------------------------------------
         ImGui::BeginGroup();
-        if (ImGui::RadioButton("Vertical", this->switch_legend_xy)) {
-            this->switch_legend_xy = true;
+        if (ImGui::RadioButton("Vertical", this->flip_xy)) {
+            this->flip_xy = true;
             this->textureInvalid = true;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton("Horizontal", !this->switch_legend_xy)) {
-            this->switch_legend_xy = false;
+        if (ImGui::RadioButton("Horizontal", !this->flip_xy)) {
+            this->flip_xy = false;
             this->textureInvalid = true;
         }
         ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x);
@@ -447,34 +453,13 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
             param::TransferFunctionParam::GaussInterpolation(this->texturePixels, this->textureSize, this->nodes);
         }
 
-        // Delete old texture.
-        if (this->textureId != 0) {
-            glDeleteTextures(1, &this->textureId);
-        }
-        this->textureId = 0;
-
-        // Upload texture.
-        glGenTextures(1, &this->textureId);
-        glBindTexture(GL_TEXTURE_2D, this->textureId);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-        GLuint width = textureSize;
-        GLuint height = 1;
-        if (this->switch_legend_xy) {
-            width = 1;
-            height = textureSize;
-        }
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, this->texturePixels.data());
-
-        glBindTexture(GL_TEXTURE_2D, 0);
+        this->CreateTexture(
+            this->texture_id_horiz, static_cast<GLsizei>(this->textureSize), 1, this->texturePixels.data());
+        this->CreateTexture(
+            this->texture_id_vert, 1, static_cast<GLsizei>(this->textureSize), this->texturePixels.data());
 
         this->textureInvalid = false;
     }
-
 
     // Apply -------------------------------------------------------
     bool apply_changes = false;
@@ -519,29 +504,58 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
     }
 
     ImGui::PopItemWidth();
+
+    ImGui::PopID();
     ImGui::EndGroup();
 
     return apply_changes;
 }
 
 
-void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool switch_xy) {
+void TransferFunctionEditor::CreateTexture(GLuint& inout_id, GLsizei width, GLsizei height, float* data) const {
+
+    if (data == nullptr) return;
+
+    // Delete old texture.
+    if (inout_id != 0) {
+        glDeleteTextures(1, &inout_id);
+    }
+    inout_id = 0;
+
+    // Upload texture.
+    glGenTextures(1, &inout_id);
+    glBindTexture(GL_TEXTURE_2D, inout_id);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, data);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+
+void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_xy) {
+
+    ImGuiStyle& style = ImGui::GetStyle();
     ImVec2 pos = ImGui::GetCursorScreenPos();
     const size_t textureSize = this->texturePixels.size() / 4;
 
-    ImGui::BeginGroup();
-
+    GLuint texture_id = this->texture_id_horiz;
     ImVec2 image_size = size;
     ImVec2 uv0 = ImVec2(0.0f, 0.0f);
     ImVec2 uv1 = ImVec2(1.0f, 1.0f);
-    if (switch_xy) {
+    if (flip_xy) {
+        texture_id = this->texture_id_vert;
         image_size.x = size.y;
         image_size.y = size.x;
         uv0 = ImVec2(1.0f, 1.0f);
         uv1 = ImVec2(0.0f, 0.0f);
     }
 
-    if (textureSize == 0 || this->textureId == 0) {
+    if (textureSize == 0 || texture_id == 0) {
         // Reserve layout space and draw a black background rectangle.
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         ImGui::Dummy(image_size);
@@ -549,7 +563,8 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool switch_xy) 
             pos, ImVec2(pos.x + image_size.x, pos.y + image_size.y), IM_COL32(0, 0, 0, 255), 0.0f, 10);
     } else {
         // Draw texture as image.
-        ImGui::Image(reinterpret_cast<ImTextureID>(this->textureId), image_size, uv0, uv1);
+        ImGui::Image(reinterpret_cast<ImTextureID>(texture_id), image_size, uv0, uv1, ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
+            style.Colors[ImGuiCol_Border]);
     }
 
     // Draw tooltip, if requested.
@@ -561,16 +576,10 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool switch_xy) 
         ImGui::Text("%f Absolute Value\n%f Normalized Value", xValue, xU);
         ImGui::EndTooltip();
     }
-
-    /// if (!this->showOptions) {
-    this->drawScale(ImGui::GetCursorScreenPos(), size, switch_xy);
-    /// }
-
-    ImGui::EndGroup();
 }
 
 
-void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bool switch_xy) {
+void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bool flip_xy) {
 
     ImGuiStyle& style = ImGui::GetStyle();
     ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -581,7 +590,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
 
     float width = size.x;
     float height = size.y;
-    if (switch_xy) {
+    if (flip_xy) {
         width = size.y;
         height = size.x;
     }
@@ -596,7 +605,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     ImVec2 init_pos = pos;
     float width_delta = 0.0f;
     float height_delta = 0.0f;
-    if (switch_xy) {
+    if (flip_xy) {
         init_pos.x += width;
         init_pos.y -= (height + item_y_spacing);
         height_delta = height / static_cast<float>(scale_count - 1);
@@ -606,7 +615,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     }
 
     for (unsigned int i = 0; i < scale_count; i++) {
-        if (switch_xy) {
+        if (flip_xy) {
             float y = height_delta * static_cast<float>(i);
             if (i == 0) y += (line_thickness / 2.0f);
             if (i == (scale_count - 1)) y -= (line_thickness / 2.0f);
@@ -639,7 +648,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     std::string mid_label_str = label_stream.str();
     float mid_item_width = GUIUtils::TextWidgetWidth(mid_label_str);
 
-    if (switch_xy) {
+    if (flip_xy) {
         float font_size = ImGui::GetFontSize();
         ImVec2 text_pos = init_pos + ImVec2(item_y_spacing + line_length, 0.0f);
         // Max Value
@@ -669,7 +678,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
         ImGui::TextUnformatted(max_label_str.c_str());
     }
 
-    if (switch_xy) {
+    if (flip_xy) {
         ImGui::SetCursorScreenPos(reset_pos);
     }
 }
