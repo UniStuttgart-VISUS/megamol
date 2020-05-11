@@ -64,7 +64,12 @@ public:
     /**
      * Draws the transfer function editor.
      */
-    bool DrawTransferFunctionEditor(bool active_parameter_mode);
+    bool Draw(bool active_parameter_mode);
+
+    /**
+     * Returns true if editor is in minimized view.
+     */
+    inline bool IsMinimized(void) const { return !this->showOptions; }
 
 private:
     void drawTextureBox(const ImVec2& size, bool switch_xy);

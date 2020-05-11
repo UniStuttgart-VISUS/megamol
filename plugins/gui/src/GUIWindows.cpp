@@ -222,6 +222,18 @@ bool GUIWindows::PostDraw(void) {
         // Draw window content
         if (wc.win_show) {
             ImGui::SetNextWindowBgAlpha(1.0f);
+
+            // Change window falgs depending on current view of transfer function editor
+            if (wc.win_callback == WindowManager::DrawCallbacks::TRANSFER_FUNCTION) {
+                if (this->tf_editor.IsMinimized()) {
+                    wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
+                                   ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
+                } else {
+                    wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
+                }
+            }
+
+            // Begin Window
             if (!ImGui::Begin(wn.c_str(), &wc.win_show, wc.win_flags)) {
                 ImGui::End(); // early ending
                 return;
@@ -517,22 +529,19 @@ bool GUIWindows::createContext(void) {
         WindowManager::DrawCallbacks::MAIN, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
             this->drawMainWindowCallback(wn, wc);
         });
-    this->window_manager.RegisterDrawWindowCallback(
-        WindowManager::DrawCallbacks::PARAM, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-            this->drawParametersCallback(wn, wc);
-        });
-    this->window_manager.RegisterDrawWindowCallback(
-        WindowManager::DrawCallbacks::FPSMS, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-            this->drawFpsWindowCallback(wn, wc);
-        });
+    this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::PARAMETERS,
+        [&, this](
+            const std::string& wn, WindowManager::WindowConfiguration& wc) { this->drawParametersCallback(wn, wc); });
+    this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::PERFORMANCE,
+        [&, this](
+            const std::string& wn, WindowManager::WindowConfiguration& wc) { this->drawFpsWindowCallback(wn, wc); });
     this->window_manager.RegisterDrawWindowCallback(
         WindowManager::DrawCallbacks::FONT, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
             this->drawFontWindowCallback(wn, wc);
         });
-    this->window_manager.RegisterDrawWindowCallback(
-        WindowManager::DrawCallbacks::TF, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-            this->drawTFWindowCallback(wn, wc);
-        });
+    this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::TRANSFER_FUNCTION,
+        [&, this](
+            const std::string& wn, WindowManager::WindowConfiguration& wc) { this->drawTFWindowCallback(wn, wc); });
     this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::CONFIGURATOR,
         [&, this](
             const std::string& wn, WindowManager::WindowConfiguration& wc) { this->drawConfiguratorCallback(wn, wc); });
@@ -554,7 +563,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
-    buf_win.win_callback = WindowManager::DrawCallbacks::FPSMS;
+    buf_win.win_callback = WindowManager::DrawCallbacks::PERFORMANCE;
     // buf_win.win_size = autoresize
     this->window_manager.AddWindowConfiguration("Performance Metrics", buf_win);
 
@@ -570,7 +579,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
-    buf_win.win_callback = WindowManager::DrawCallbacks::TF;
+    buf_win.win_callback = WindowManager::DrawCallbacks::TRANSFER_FUNCTION;
     // buf_win.win_size = autoresize
     this->window_manager.AddWindowConfiguration("Transfer Function Editor", buf_win);
 
@@ -803,7 +812,7 @@ void GUIWindows::drawMainWindowCallback(const std::string& wn, WindowManager::Wi
 
 void GUIWindows::drawTFWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
 
-    this->tf_editor.DrawTransferFunctionEditor(true);
+    this->tf_editor.Draw(true);
 }
 
 
@@ -1000,7 +1009,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                         WindowManager::WindowConfiguration buf_win;
                         buf_win.win_show = true;
                         buf_win.win_flags = ImGuiWindowFlags_HorizontalScrollbar;
-                        buf_win.win_callback = WindowManager::DrawCallbacks::PARAM;
+                        buf_win.win_callback = WindowManager::DrawCallbacks::PARAMETERS;
                         buf_win.param_show_hotkeys = false;
                         buf_win.param_modules_list.emplace_back(label);
                         this->window_manager.AddWindowConfiguration(window_name, buf_win);
@@ -1115,6 +1124,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
 
 void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
     ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
 
     // Leave some space in histogram for text of current value
     wc.buf_current_delay += io.DeltaTime;
@@ -1159,8 +1169,11 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
         wc.ms_mode = WindowManager::TimingModes::MS;
     }
 
-    ImGui::SameLine(0.0f, 50.0f);
-    ImGui::Checkbox("Options", &wc.ms_show_options);
+    ImGui::SameLine(ImGui::CalcItemWidth() -
+                    (ImGui::GetItemsLineHeightWithSpacing() - style.ItemSpacing.x - style.ItemInnerSpacing.x));
+    if (ImGui::ArrowButton("Options", ((wc.ms_show_options) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+        wc.ms_show_options = !wc.ms_show_options;
+    }
 
     std::vector<float> value_array = wc.buf_values;
     if (wc.ms_mode == WindowManager::TimingModes::FPS) {
@@ -1751,7 +1764,7 @@ void GUIWindows::drawTransferFunctionEdit(
         this->tf_editor.SetActiveParameter(&p);
         // Open window calling the transfer function editor callback
         const auto func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-            if (wc.win_callback == WindowManager::DrawCallbacks::TF) {
+            if (wc.win_callback == WindowManager::DrawCallbacks::TRANSFER_FUNCTION) {
                 wc.win_show = true;
             }
         };

@@ -241,7 +241,7 @@ bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
         tfs, this->nodes, this->mode, this->textureSize, this->range);
 }
 
-bool TransferFunctionEditor::DrawTransferFunctionEditor(bool active_parameter_mode) {
+bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
 
     ImGui::BeginGroup();
 
@@ -272,15 +272,14 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool active_parameter_mo
     }
 
     this->drawTextureBox(image_size, this->switch_legend_xy);
-
-    // if (!this->switch_legend_xy) {
     ImGui::SameLine();
-    //}
+
     if (ImGui::ArrowButton("Options", this->showOptions ? ImGuiDir_Down : ImGuiDir_Up)) {
         this->showOptions = !this->showOptions;
     }
 
     if (this->showOptions) {
+        ImGui::Separator();
 
         // Legend alignment ---------------------------------------------------
         ImGui::BeginGroup();
