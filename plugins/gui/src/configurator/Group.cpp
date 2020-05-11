@@ -555,7 +555,7 @@ void megamol::gui::configurator::Group::Presentation::Present(
             draw_list->AddRect(group_rect_min, group_rect_max, COLOR_GROUP_BORDER, 0.0f);
 
             // Draw text
-            float name_width = GUIUtils::TextWidgetWidth(inout_group.name);
+            float name_width = ImGui::CalcTextSize(inout_group.name.c_str()).x;
             ImVec2 text_pos_left_upper =
                 ImVec2((group_center.x - (name_width / 2.0f)), (group_rect_min.y + (style.ItemSpacing.y / 2.0f)));
             if (!this->collapsed_view) {
@@ -654,7 +654,7 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
             for (auto& interfaceslot_ptr : interfaceslot_map.second) {
                 if (interfaceslot_ptr->GUI_IsLabelVisible()) {
                     max_label_length =
-                        std::max(GUIUtils::TextWidgetWidth(interfaceslot_ptr->GUI_GetLabel()), max_label_length);
+                        std::max(ImGui::CalcTextSize(interfaceslot_ptr->GUI_GetLabel().c_str()).x, max_label_length);
                 }
             }
         }
@@ -662,7 +662,7 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
             max_label_length = (2.0f * max_label_length / in_canvas.zooming) + (1.0f * GUI_SLOT_RADIUS);
         }
     }
-    group_width = std::max((1.5f * GUIUtils::TextWidgetWidth(inout_group.name) / in_canvas.zooming), max_label_length) +
+    group_width = std::max((1.5f * ImGui::CalcTextSize(inout_group.name.c_str()).x / in_canvas.zooming), max_label_length) +
                   (3.0f * GUI_SLOT_RADIUS);
 
     // HEIGHT

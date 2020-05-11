@@ -451,7 +451,7 @@ void megamol::gui::configurator::InterfaceSlot::Presentation::Present(PresentPha
                 auto type = inout_interfaceslot.GetCallSlotType();
                 ImVec2 text_pos_left_upper = ImVec2(0.0f, 0.0f);
                 text_pos_left_upper.y = actual_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
-                text_pos_left_upper.x = actual_position.x - GUIUtils::TextWidgetWidth(this->label) - (1.5f * radius);
+                text_pos_left_upper.x = actual_position.x - ImGui::CalcTextSize(this->label.c_str()).x - (1.5f * radius);
                 if (type == CallSlotType::CALLEE) {
                     text_pos_left_upper.x = actual_position.x + (1.5f * radius);
                 }

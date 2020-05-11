@@ -2523,7 +2523,7 @@ void megamol::gui::configurator::Graph::Presentation::layout(
                         if (callerslot_ptr->CallsConnected() &&
                             this->connected_callslot(modules, groups, callerslot_ptr)) {
                             for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
-                                auto call_name_length = GUIUtils::TextWidgetWidth(call_ptr->class_name);
+                                auto call_name_length = ImGui::CalcTextSize(call_ptr->class_name.c_str()).x;
                                 max_call_width = std::max(call_name_length, max_call_width);
                             }
                         }
@@ -2542,7 +2542,7 @@ void megamol::gui::configurator::Graph::Presentation::layout(
                             if (callerslot_ptr->CallsConnected() &&
                                 this->connected_callslot(modules, groups, callerslot_ptr)) {
                                 for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
-                                    auto call_name_length = GUIUtils::TextWidgetWidth(call_ptr->class_name);
+                                    auto call_name_length = ImGui::CalcTextSize(call_ptr->class_name.c_str()).x;
                                     max_call_width = std::max(call_name_length, max_call_width);
                                 }
                             }

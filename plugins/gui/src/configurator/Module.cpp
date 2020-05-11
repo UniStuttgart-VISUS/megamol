@@ -170,7 +170,7 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
                         (callslot_ptr->type == CallSlotType::CALLEE) ? (CallSlotType::CALLER) : (CallSlotType::CALLEE);
                     for (auto& call_ptr : callslot_ptr->GetConnectedCalls()) {
                         auto connected_callslot_ptr = call_ptr->GetCallSlot(callslot_type);
-                        float call_width = (4.0f * GUI_GRAPH_BORDER + GUIUtils::TextWidgetWidth(call_ptr->class_name));
+                        float call_width = (4.0f * GUI_GRAPH_BORDER + ImGui::CalcTextSize(call_ptr->class_name.c_str()).x);
                         if (state.interact.callslot_selected_uid != GUI_INVALID_ID) {
                             if ((connected_callslot_ptr->uid == state.interact.callslot_selected_uid) &&
                                 connected_callslot_ptr->IsParentModuleConnected()) {
@@ -437,12 +437,12 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
                         draw_list->AddRectFilled(module_rect_min, header_rect_max, header_color, GUI_RECT_CORNER_RADIUS,
                             (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
 
-                        text_width = GUIUtils::TextWidgetWidth(inout_module.class_name);
+                        text_width = ImGui::CalcTextSize(inout_module.class_name.c_str()).x;
                         text_pos_left_upper = ImVec2(
                             module_center.x - (text_width / 2.0f), module_rect_min.y + (style.ItemSpacing.y / 2.0f));
                         draw_list->AddText(text_pos_left_upper, COLOR_TEXT, inout_module.class_name.c_str());
 
-                        text_width = GUIUtils::TextWidgetWidth(inout_module.name);
+                        text_width = ImGui::CalcTextSize(inout_module.name.c_str()).x;
                         text_pos_left_upper =
                             module_center -
                             ImVec2((text_width / 2.0f), ((any_option_button) ? (line_height * 0.6f) : (0.0f)));
@@ -569,8 +569,8 @@ void megamol::gui::configurator::Module::Presentation::Update(
     float class_width = 0.0f;
     float max_label_length = 0.0f;
     if (this->label_visible) {
-        class_width = GUIUtils::TextWidgetWidth(inout_module.class_name);
-        float name_length = GUIUtils::TextWidgetWidth(inout_module.name);
+        class_width = ImGui::CalcTextSize(inout_module.class_name.c_str()).x;
+        float name_length = ImGui::CalcTextSize(inout_module.name.c_str()).x;
         float button_width =
             ((inout_module.is_view) ? (2.0f) : (1.0f)) * ImGui::GetTextLineHeightWithSpacing() + style.ItemSpacing.x;
         max_label_length = std::max(name_length, button_width);
@@ -580,7 +580,7 @@ void megamol::gui::configurator::Module::Presentation::Update(
     for (auto& callslots_map : inout_module.GetCallSlots()) {
         for (auto& callslot_ptr : callslots_map.second) {
             if (callslot_ptr->GUI_IsLabelVisible()) {
-                max_slot_name_length = std::max(GUIUtils::TextWidgetWidth(callslot_ptr->name), max_slot_name_length);
+                max_slot_name_length = std::max(ImGui::CalcTextSize(callslot_ptr->name.c_str()).x, max_slot_name_length);
             }
         }
     }

@@ -203,7 +203,7 @@ void megamol::gui::configurator::Call::Presentation::Present(megamol::gui::Prese
 
                 if (this->label_visible) {
                     ImVec2 call_center = ImVec2(p1.x + (p2.x - p1.x) / 2.0f, p1.y + (p2.y - p1.y) / 2.0f);
-                    auto call_name_width = GUIUtils::TextWidgetWidth(inout_call.class_name);
+                    auto call_name_width = ImGui::CalcTextSize(inout_call.class_name.c_str()).x;
                     ImVec2 rect_size = ImVec2(call_name_width + (2.0f * style.ItemSpacing.x),
                         ImGui::GetFontSize() + (2.0f * style.ItemSpacing.y));
                     ImVec2 call_rect_min =

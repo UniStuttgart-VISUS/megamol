@@ -96,7 +96,7 @@ bool megamol::gui::GUIUtils::MinimalPopUp(const std::string& caption, bool open_
 
     if (open_popup) {
         ImGui::OpenPopup(caption.c_str());
-        float max_width = std::max(this->TextWidgetWidth(caption), this->TextWidgetWidth(info_text));
+        float max_width = std::max(ImGui::CalcTextSize(caption.c_str()).x, ImGui::CalcTextSize(info_text.c_str()).x);
         max_width += (style.ItemSpacing.x * 2.0f);
         ImGui::SetNextWindowSize(ImVec2(max_width, 0.0f));
     }
@@ -173,19 +173,6 @@ bool megamol::gui::GUIUtils::RenamePopUp(const std::string& caption, bool open_p
 }
 
 
-float GUIUtils::TextWidgetWidth(const std::string& text) {
-    assert(ImGui::GetCurrentContext() != nullptr);
-
-    ImVec2 pos = ImGui::GetCursorPos();
-    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
-    ImGui::TextUnformatted(text.c_str());
-    ImGui::PopStyleVar();
-    ImGui::SetCursorPos(pos);
-
-    return ImGui::GetItemRectSize().x;
-}
-
-
 void megamol::gui::GUIUtils::ReadOnlyWigetStyle(bool set) {
 
     if (set) {
@@ -242,7 +229,7 @@ bool megamol::gui::GUIUtils::StringSearch(const std::string& id, const std::stri
 
     std::string complete_label = "Search (?)";
     auto width = ImGui::GetContentRegionAvail().x - ImGui::GetCursorPosX() + 4.0f * style.ItemInnerSpacing.x -
-                 this->TextWidgetWidth(complete_label);
+                 ImGui::CalcTextSize(complete_label.c_str()).x;
     const float min_width = 50.0f;
     width = (width < min_width) ? (min_width) : width;
     ImGui::PushItemWidth(width);

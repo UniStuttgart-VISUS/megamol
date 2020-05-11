@@ -301,7 +301,7 @@ void megamol::gui::configurator::CallSlot::Presentation::Present(PresentPhase ph
             text_pos_left_upper.y = slot_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
             if (inout_callslot.type == CallSlotType::CALLER) {
                 text_pos_left_upper.x =
-                    slot_position.x - GUIUtils::TextWidgetWidth(inout_callslot.name) - (1.5f * radius);
+                    slot_position.x - ImGui::CalcTextSize(inout_callslot.name.c_str()).x - (1.5f * radius);
             } else if (inout_callslot.type == CallSlotType::CALLEE) {
                 text_pos_left_upper.x = slot_position.x + (1.5f * radius);
             }

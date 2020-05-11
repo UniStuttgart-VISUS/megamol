@@ -273,12 +273,7 @@ public:
     // Other utility functions ------------------------------------------------
 
     /**
-     * Returns width of text drawn as widget.
-     */
-    static float TextWidgetWidth(const std::string& text);
-
-    /**
-     * Set/Unset read only widget style.
+     * Enable/Disable read only widget style.
      */
     static void ReadOnlyWigetStyle(bool set);
 
