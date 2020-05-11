@@ -14,7 +14,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/FlagStorage.h"
+#include "mmcore/FlagStorage_GL.h"
 #include "mmcore/FlagCall_GL.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
