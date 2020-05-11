@@ -168,7 +168,6 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , active_parameter(nullptr)
     , nodes()
     , range({0.0f, 1.0f})
-    , range_overwrite(false)
     , mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , textureSize(256)
     , textureInvalid(true)
@@ -212,7 +211,7 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool ac
     bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
         tfs, this->nodes, this->mode, this->textureSize, new_range);
     if (!ok) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Could parse transfer function");
+        vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Could not parse transfer function");
         return;
     }
 
@@ -223,9 +222,9 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool ac
     this->currentChannel = 0;
     this->currentDragChange = ImVec2(0.0f, 0.0f);
 
-    if (!this->range_overwrite) {
-        this->range = new_range;
-    }
+    /// XXX if (!this->range_overwrite) {
+    this->range = new_range;
+    /// XXX }
     this->widget_buffer.min_range = this->range[0];
     this->widget_buffer.max_range = this->range[1];
     this->widget_buffer.tex_size = this->textureSize;
@@ -305,10 +304,6 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
         // Interval range -----------------------------------------------------
         ImGui::PushItemWidth(tfw_item_width * 0.5f - style.ItemSpacing.x);
 
-        if (!this->range_overwrite) {
-            GUIUtils::ReadOnlyWigetStyle(true);
-        }
-
         ImGui::InputFloat("###min", &this->widget_buffer.min_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
             this->range[0] =
@@ -332,15 +327,10 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
             this->textureInvalid = true;
         }
 
-        if (!this->range_overwrite) {
-            GUIUtils::ReadOnlyWigetStyle(false);
-        }
         ImGui::PopItemWidth();
 
         ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
         ImGui::TextUnformatted("Value Range");
-
-        ImGui::Checkbox("Overwrite Value Range", &this->range_overwrite);
 
         // Value slider -------------------------------------------------------
         this->widget_buffer.range_value =
@@ -509,6 +499,16 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
     ImGui::EndGroup();
 
     return apply_changes;
+}
+
+
+bool TransferFunctionEditor::ActiveParamterValueHash(size_t& out_tf_value_hash) {
+
+    if (this->active_parameter != nullptr) {
+        out_tf_value_hash = this->active_parameter->ValueHash();
+        return true;
+    }
+    return false;
 }
 
 

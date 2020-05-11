@@ -67,6 +67,11 @@ public:
     bool Draw(bool active_parameter_mode);
 
     /**
+     * Return current value ahsh of active parameter.
+     */
+    bool ActiveParamterValueHash(size_t& out_tf_value_hash);
+
+    /**
      * Returns true if editor is in minimized view.
      */
     inline bool IsMinimized(void) const { return !this->showOptions; }
@@ -105,9 +110,6 @@ private:
 
     /** Min/Max intervall the data should be mapped. */
     std::array<float, 2> range;
-
-    /** Flag indicating if propagated range should be overwriten by editor */
-    bool range_overwrite;
 
     /** Current interpolation option. */
     megamol::core::param::TransferFunctionParam::InterpolationMode mode;

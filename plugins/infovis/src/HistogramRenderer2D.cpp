@@ -184,7 +184,6 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
     call.SetTimeFramesCount(floatTableCall->GetFrameCount());
     auto hash = floatTableCall->DataHash();
     auto frameId = floatTableCall->GetFrameID();
-    (*tfCall)(0);
     (*readFlagsCall)(core::FlagCallRead_GL::CallGetData);
 
     bool dataChanged = this->currentTableDataHash != hash || this->currentTableFrameId != frameId;
@@ -257,9 +256,13 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->maxBinValueBuffer);
         glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLint), &this->maxBinValue);
 
+        tfCall->SetRange({0.0f, 1.0f});
+
         this->currentTableDataHash = hash;
         this->currentTableFrameId = frameId;
     }
+
+    (*tfCall)(0);
 
     return true;
 }

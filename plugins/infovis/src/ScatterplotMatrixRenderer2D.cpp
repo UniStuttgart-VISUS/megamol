@@ -432,6 +432,7 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
         resetDirtyScreen();
         screenLastMVP = mvp;
         this->transferFunction->ResetDirty();
+        /// XXX Changing tf range when tf has changed overwrites previous changes and forces following range
         if (map.valueIdx.has_value() &&
             this->valueMappingParam.Param<core::param::EnumParam>()->Value() == VALUE_MAPPING_KERNEL_BLEND) {
             this->transferFunction->SetRange(

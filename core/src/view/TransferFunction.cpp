@@ -75,15 +75,6 @@ bool TransferFunction::requestTF(Call& call) {
     CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
     if (cgtf == nullptr) return false;
 
-    // XXX todo ...
-    auto current_frame_id = this->GetCoreInstance()->GetFrameID();
-    if (this->last_frame_id != current_frame_id) {
-
-
-        /// std::cout << "Frame ID: " << current_frame_id << std::endl;
-        this->last_frame_id = current_frame_id;
-    }
-
     // Skip changes propagated by call once to apply initial value of transfer function parameter set from project file.
     this->tfparam_skip_changes_once = false;
     if (this->tfparam_check_init_value) {
@@ -94,14 +85,16 @@ bool TransferFunction::requestTF(Call& call) {
     }
     // Update changed data set range for transfer function parameter
     if (!this->tfparam_skip_changes_once) {
-        if (cgtf->UpdateProcessed()) {
+        if (cgtf->ConsumeRangeUpdate()) {
             // Get current values from parameter string 
-            param::TransferFunctionParam::TFNodeType tfnodes;
-            if (megamol::core::param::TransferFunctionParam::ParseTransferFunction(this->tfParam.Param<param::TransferFunctionParam>()->Value(), tfnodes, this->interpolMode, this->texSize, this->range)) {
+            auto tmp_range = this->range;
+            auto tmp_interpol = this->interpolMode;
+            auto tmp_tex_size = this->texSize;
+            param::TransferFunctionParam::TFNodeType tmp_nodes;
+            if (megamol::core::param::TransferFunctionParam::ParseTransferFunction(this->tfParam.Param<param::TransferFunctionParam>()->Value(), tmp_nodes, tmp_interpol, tmp_tex_size, tmp_range)) {
                 std::string tf_str;
-                this->range = cgtf->Range();
                 // Set transfer function parameter value using updated range
-                if (megamol::core::param::TransferFunctionParam::DumpTransferFunction(tf_str, tfnodes, this->interpolMode, this->texSize, this->range)) {
+                if (megamol::core::param::TransferFunctionParam::DumpTransferFunction(tf_str, tmp_nodes, tmp_interpol, tmp_tex_size, cgtf->Range())) {
                     this->tfParam.Param<param::TransferFunctionParam>()->SetValue(tf_str);
                 }
             }

@@ -814,6 +814,11 @@ void GUIWindows::drawMainWindowCallback(const std::string& wn, WindowManager::Wi
 void GUIWindows::drawTFWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
 
     this->tf_editor.Draw(true);
+
+    size_t current_tf_hash = 0;
+    if (this->tf_editor.ActiveParamterValueHash(current_tf_hash)) {
+        this->tf_hash = current_tf_hash;
+    }
 }
 
 
@@ -1748,6 +1753,7 @@ void GUIWindows::drawTransferFunctionEdit(
     }
 
     ImGui::SameLine(ImGui::CalcItemWidth() + style.ItemInnerSpacing.x);
+    ImGui::AlignTextToFramePadding();
     ImGui::TextEx(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
 
     ImGui::Indent();
@@ -1819,7 +1825,6 @@ void GUIWindows::drawTransferFunctionEdit(
     this->tf_hash = p.ValueHash();
 
     ImGui::PopID();
-
     ImGui::EndGroup();
 }
 

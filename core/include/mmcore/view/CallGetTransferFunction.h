@@ -138,8 +138,7 @@ public:
      *
      * @return dirty flag
      */
-    inline bool IsDirty() { return this->usedTFVersion != this->availableTFVersion;
-    }
+    inline bool IsDirty() { return this->usedTFVersion != this->availableTFVersion; }
 
     /**
      * Sets the transferfunction dirtiness
@@ -151,8 +150,8 @@ public:
 	 * outside of min/max are to be clamped.
      */
     inline void SetRange(std::array<float, 2> range) {
+        this->range_updated = true;
         this->range = range; 
-        this->data_updated = true;
     }
 
     /**
@@ -191,11 +190,13 @@ public:
         memcpy(color, &this->texData[index * 4], colorSize);
     }
 
-    /** Reset update flag when changes are procesed by callee. */
-    inline bool UpdateProcessed(void) { 
-        bool retval = this->data_updated;
-        this->data_updated = false;
-        return retval;
+    /** 
+     * Check for updated range value and consume triggered update.
+     */
+    bool ConsumeRangeUpdate(void) {
+        bool consume = this->range_updated;
+        this->range_updated = false;
+        return consume;
     }
 
 private:
@@ -214,8 +215,8 @@ private:
     /** The range the texture lies within */
     std::array<float, 2> range;
 
-    /** Flag indicating updated data by the caller. */
-    bool data_updated;
+    /** Flag indicating changed range value. */
+    bool range_updated;
 
     uint32_t availableTFVersion = 1;
     uint32_t usedTFVersion = 0;
