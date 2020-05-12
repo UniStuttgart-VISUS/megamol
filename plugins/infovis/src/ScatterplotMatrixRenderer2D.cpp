@@ -406,6 +406,9 @@ void ScatterplotMatrixRenderer2D::resetDirtyScreen() {
 bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool ignoreMVP) {
     this->floatTable = this->floatTableInSlot.CallAs<table::TableDataCall>();
 
+    this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
+    if ((this->transferFunction == nullptr) || !(*(this->transferFunction))(0)) return false;
+
     if (this->floatTable == nullptr || !(*this->floatTable)(1)) return false;
     auto ts = this->floatTable->GetFrameCount();
     call.SetTimeFramesCount(ts);
@@ -418,9 +421,6 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
     if (this->readFlags == nullptr) return false;
     (*this->readFlags)(core::FlagCallRead_GL::CallGetData);
 
-    this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
-    if (this->transferFunction == nullptr) return false;
-
     auto columnInfos = this->floatTable->GetColumnsInfos();
     const size_t colCount = this->floatTable->GetColumnsCount();
 
@@ -431,8 +431,10 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
         this->screenValid = false;
         resetDirtyScreen();
         screenLastMVP = mvp;
-
-        // Resolve selectors.
+        this->transferFunction->ResetDirty();
+    }
+    if (hasDirtyData()) {
+        // Update transfer fucntion range
         map.valueIdx =
             nameToIndex(this->floatTable, this->valueSelectorParam.Param<core::param::FlexEnumParam>()->Value());
         map.labelIdx =
@@ -458,8 +460,6 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
             this->labelSelectorParam.Param<core::param::FlexEnumParam>()->AddValue(columnInfos[i].Name());
         }
     }
-
-    (*(this->transferFunction))(0);
 
     this->screenValid = false;
     this->trianglesValid = false;
