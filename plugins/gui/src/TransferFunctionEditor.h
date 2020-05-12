@@ -111,6 +111,9 @@ private:
     /** Min/Max intervall the data should be mapped. */
     std::array<float, 2> range;
 
+    /** Flag indicating if propagated range should be overwriten by editor */
+    bool range_overwrite;
+
     /** Current interpolation option. */
     megamol::core::param::TransferFunctionParam::InterpolationMode mode;
 

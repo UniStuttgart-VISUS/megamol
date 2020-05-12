@@ -813,11 +813,11 @@ void GUIWindows::drawMainWindowCallback(const std::string& wn, WindowManager::Wi
 
 void GUIWindows::drawTFWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
 
-    this->tf_editor.Draw(true);
-
-    size_t current_tf_hash = 0;
-    if (this->tf_editor.ActiveParamterValueHash(current_tf_hash)) {
-        this->tf_hash = current_tf_hash;
+    if (this->tf_editor.Draw(true)) {
+        size_t current_tf_hash = 0;
+        if (this->tf_editor.ActiveParamterValueHash(current_tf_hash)) {
+            this->tf_hash = current_tf_hash;
+        }
     }
 }
 

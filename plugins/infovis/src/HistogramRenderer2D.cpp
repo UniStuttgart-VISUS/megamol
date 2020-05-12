@@ -188,6 +188,8 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
 
     bool dataChanged = this->currentTableDataHash != hash || this->currentTableFrameId != frameId;
     if (dataChanged) {
+        tfCall->SetRange({0.0f, 1.0f});
+
         this->colCount = floatTableCall->GetColumnsCount();
         this->rowCount = floatTableCall->GetRowsCount();
 
@@ -255,8 +257,6 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
         // Download max bin value for text label.
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->maxBinValueBuffer);
         glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLint), &this->maxBinValue);
-
-        tfCall->SetRange({0.0f, 1.0f});
 
         this->currentTableDataHash = hash;
         this->currentTableFrameId = frameId;

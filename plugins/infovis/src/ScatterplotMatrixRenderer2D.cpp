@@ -419,7 +419,7 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
     (*this->readFlags)(core::FlagCallRead_GL::CallGetData);
 
     this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
-    if (this->transferFunction == nullptr || !(*(this->transferFunction))()) return false;
+    if (this->transferFunction == nullptr) return false;
 
     auto columnInfos = this->floatTable->GetColumnsInfos();
     const size_t colCount = this->floatTable->GetColumnsCount();
@@ -431,8 +431,13 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
         this->screenValid = false;
         resetDirtyScreen();
         screenLastMVP = mvp;
-        this->transferFunction->ResetDirty();
-        /// XXX Changing tf range when tf has changed overwrites previous changes and forces following range
+
+        // Resolve selectors.
+        map.valueIdx =
+            nameToIndex(this->floatTable, this->valueSelectorParam.Param<core::param::FlexEnumParam>()->Value());
+        map.labelIdx =
+            nameToIndex(this->floatTable, this->labelSelectorParam.Param<core::param::FlexEnumParam>()->Value())
+                .value_or(0);
         if (map.valueIdx.has_value() &&
             this->valueMappingParam.Param<core::param::EnumParam>()->Value() == VALUE_MAPPING_KERNEL_BLEND) {
             this->transferFunction->SetRange(
@@ -454,18 +459,7 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
         }
     }
 
-    // Resolve selectors.
-    map.valueIdx = nameToIndex(this->floatTable, this->valueSelectorParam.Param<core::param::FlexEnumParam>()->Value());
-    map.labelIdx = nameToIndex(this->floatTable, this->labelSelectorParam.Param<core::param::FlexEnumParam>()->Value())
-                       .value_or(0);
-
-    if (map.valueIdx.has_value() &&
-        this->valueMappingParam.Param<core::param::EnumParam>()->Value() == VALUE_MAPPING_KERNEL_BLEND) {
-        this->transferFunction->SetRange(
-            {columnInfos[map.valueIdx.value()].MinimumValue(), columnInfos[map.valueIdx.value()].MaximumValue()});
-    } else {
-        this->transferFunction->SetRange({0.0f, 1.0f});
-    }
+    (*(this->transferFunction))(0);
 
     this->screenValid = false;
     this->trianglesValid = false;
