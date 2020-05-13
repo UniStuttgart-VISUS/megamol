@@ -184,12 +184,11 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
     call.SetTimeFramesCount(floatTableCall->GetFrameCount());
     auto hash = floatTableCall->DataHash();
     auto frameId = floatTableCall->GetFrameID();
+    (*tfCall)(0);
     (*readFlagsCall)(core::FlagCallRead_GL::CallGetData);
 
     bool dataChanged = this->currentTableDataHash != hash || this->currentTableFrameId != frameId;
     if (dataChanged) {
-        tfCall->SetRange({0.0f, 1.0f});
-
         this->colCount = floatTableCall->GetColumnsCount();
         this->rowCount = floatTableCall->GetRowsCount();
 
@@ -261,8 +260,6 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
         this->currentTableDataHash = hash;
         this->currentTableFrameId = frameId;
     }
-
-    (*tfCall)(0);
 
     return true;
 }
