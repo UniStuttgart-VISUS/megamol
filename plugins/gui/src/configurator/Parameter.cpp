@@ -452,16 +452,17 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                 }
             } break;
             case (Parameter::ParamType::ENUM): {
-                /// XXX: no UTF8 fanciness required here?
+                /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
                 auto map = inout_parameter.GetStorage<EnumStorageType>();
-                if (ImGui::BeginCombo(param_label.c_str(), map[arg].c_str())) {
+                std::string utf8Str = map[arg];
+                GUIUtils::Utf8Encode(utf8Str);
+                if (ImGui::BeginCombo(param_label.c_str(), utf8Str.c_str())) {
                     for (auto& pair : map) {
                         bool isSelected = (pair.first == arg);
-                        if (ImGui::Selectable(pair.second.c_str(), isSelected)) {
+                        utf8Str = pair.second;
+                        GUIUtils::Utf8Encode(utf8Str);
+                        if (ImGui::Selectable(utf8Str.c_str(), isSelected)) {
                             inout_parameter.SetValue(pair.first);
-                        }
-                        if (isSelected) {
-                            ImGui::SetItemDefaultFocus();
                         }
                     }
                     ImGui::EndCombo();
@@ -473,8 +474,8 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
         } else if constexpr (std::is_same_v<T, std::string>) {
             switch (inout_parameter.type) {
             case (Parameter::ParamType::STRING): {
+                /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
                 if (!std::holds_alternative<T>(this->widget_store)) {
-                    /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
                     std::string utf8Str = arg;
                     GUIUtils::Utf8Encode(utf8Str);
                     this->widget_store = utf8Str;
@@ -505,8 +506,8 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                 this->transfer_function_edit(inout_parameter);
             } break;
             case (Parameter::ParamType::FILEPATH): {
+                /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
                 if (!std::holds_alternative<T>(this->widget_store)) {
-                    /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
                     std::string utf8Str = arg;
                     GUIUtils::Utf8Encode(utf8Str);
                     this->widget_store = utf8Str;
@@ -529,20 +530,40 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                 ImGui::PopItemWidth();
             } break;
             case (Parameter::ParamType::FLEXENUM): {
-                /// XXX: no UTF8 fanciness required here?
-                if (ImGui::BeginCombo(param_label.c_str(), arg.c_str())) {
+                /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+                if (!std::holds_alternative<T>(this->widget_store)) {
+                    this->widget_store = std::string();
+                }                                    
+                std::string utf8Str = arg;
+                GUIUtils::Utf8Encode(utf8Str);
+                if (ImGui::BeginCombo(param_label.c_str(), utf8Str.c_str())) {
+                    ImGui::AlignTextToFramePadding();
+                    ImGui::TextUnformatted("Add");
+                    ImGui::SameLine();
+                    ///ImGui::SetKeyboardFocusHere();
+                    ImGui::InputText("###flex_enum_text_edit", &std::get<std::string>(this->widget_store), ImGuiInputTextFlags_None);
+                    if (ImGui::IsItemDeactivatedAfterEdit()) {
+                        if (!std::get<std::string>(this->widget_store).empty()) {
+                            GUIUtils::Utf8Decode(std::get<std::string>(this->widget_store));
+                            inout_parameter.SetValue(std::get<std::string>(this->widget_store));
+                            std::get<std::string>(this->widget_store) = std::string();
+                        }
+                        ImGui::CloseCurrentPopup(); 
+                    }                 
+                                         
                     for (auto& valueOption :
                         inout_parameter.GetStorage<megamol::core::param::FlexEnumParam::Storage_t>()) {
                         bool isSelected = (valueOption == arg);
-                        if (ImGui::Selectable(valueOption.c_str(), isSelected)) {
-                            inout_parameter.SetValue(valueOption);
-                        }
-                        if (isSelected) {
-                            ImGui::SetItemDefaultFocus();
-                        }
+                        utf8Str = valueOption;
+                        GUIUtils::Utf8Encode(utf8Str);
+                        if (ImGui::Selectable(utf8Str.c_str(), isSelected)) {
+                            GUIUtils::Utf8Decode(utf8Str);
+                            inout_parameter.SetValue(utf8Str);
+                        }                      
                     }
                     ImGui::EndCombo();
                 }
+                this->help = "Only selected value will be stored.";
             } break;
             default:
                 break;

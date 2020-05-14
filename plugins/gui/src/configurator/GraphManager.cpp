@@ -1759,7 +1759,7 @@ void megamol::gui::configurator::GraphManager::Presentation::Present(
         bool confirmed = false;
         bool aborted = false;
         bool popup_open = this->utils.MinimalPopUp(
-            "Closing Unsaved Project", popup_close_unsaved, "Discard changes?", "Yes", confirmed, "No", aborted);
+            "Closing unsaved Project", popup_close_unsaved, "Discard changes?", "Yes", confirmed, "No", aborted);
         if (this->graph_delete_uid != GUI_INVALID_ID) {
             if (aborted) {
                 this->graph_delete_uid = GUI_INVALID_ID;

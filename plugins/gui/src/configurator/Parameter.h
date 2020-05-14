@@ -180,6 +180,12 @@ public:
     template <typename T> void SetValue(T val, bool set_default_val = false) {
         if (std::holds_alternative<T>(this->value)) {
             this->value = val;
+            if (this->type == Parameter::ParamType::FLEXENUM) {
+                auto storage = this->GetStorage<megamol::core::param::FlexEnumParam::Storage_t>();
+                storage.insert(std::get<std::string>(this->value));
+                this->SetStorage(storage);
+            }
+            
             if (set_default_val) {
                 this->default_value = val;
                 this->default_value_mismatch = false;
