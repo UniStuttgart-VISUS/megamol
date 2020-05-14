@@ -536,7 +536,23 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                 }                                    
                 std::string utf8Str = arg;
                 GUIUtils::Utf8Encode(utf8Str);
-                if (ImGui::BeginCombo(param_label.c_str(), utf8Str.c_str())) {
+                if (ImGui::BeginCombo(param_label.c_str(), utf8Str.c_str())) {             
+                                      
+                    bool one_present = false;
+                    for (auto& valueOption :
+                        inout_parameter.GetStorage<megamol::core::param::FlexEnumParam::Storage_t>()) {
+                        bool isSelected = (valueOption == arg);
+                        utf8Str = valueOption;
+                        GUIUtils::Utf8Encode(utf8Str);
+                        if (ImGui::Selectable(utf8Str.c_str(), isSelected)) {
+                            GUIUtils::Utf8Decode(utf8Str);
+                            inout_parameter.SetValue(utf8Str);
+                        }
+                        one_present = true;
+                    }
+                    if (one_present) {
+                        ImGui::Separator();
+                    }
                     ImGui::AlignTextToFramePadding();
                     ImGui::TextUnformatted("Add");
                     ImGui::SameLine();
@@ -549,18 +565,8 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                             std::get<std::string>(this->widget_store) = std::string();
                         }
                         ImGui::CloseCurrentPopup(); 
-                    }                 
-                                         
-                    for (auto& valueOption :
-                        inout_parameter.GetStorage<megamol::core::param::FlexEnumParam::Storage_t>()) {
-                        bool isSelected = (valueOption == arg);
-                        utf8Str = valueOption;
-                        GUIUtils::Utf8Encode(utf8Str);
-                        if (ImGui::Selectable(utf8Str.c_str(), isSelected)) {
-                            GUIUtils::Utf8Decode(utf8Str);
-                            inout_parameter.SetValue(utf8Str);
-                        }                      
-                    }
+                    }                       
+                    
                     ImGui::EndCombo();
                 }
                 this->help = "Only selected value will be stored.";
