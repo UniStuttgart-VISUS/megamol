@@ -731,7 +731,7 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadAddProjectFile(
 
                     if (callee_slot == nullptr) {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "Project File '%s' line %i: Unable to find all callee slot '%s' "
+                            "Project File '%s' line %i: Unable to find callee slot '%s' "
                             "for creating call '%s'. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), callee_slot_full_name.c_str(), call_class_name.c_str(),
                             __FILE__, __FUNCTION__, __LINE__);
@@ -739,7 +739,7 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadAddProjectFile(
                     }
                     if (caller_slot == nullptr) {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "Project File '%s' line %i: Unable to find all caller slot "
+                            "Project File '%s' line %i: Unable to find caller slot '%s' "
                             "for creating call '%s'. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), caller_slot_full_name.c_str(), call_class_name.c_str(),
                             __FILE__, __FUNCTION__, __LINE__);

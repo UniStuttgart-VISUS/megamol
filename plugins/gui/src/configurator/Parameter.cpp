@@ -270,7 +270,8 @@ megamol::gui::configurator::Parameter::Presentation::Presentation(void)
     , tf_editor()
     , widget_store()
     , float_format("%.7f")
-    , height(0.0f) {}
+    , height(0.0f)
+    , set_focus(0) {}
 
 
 megamol::gui::configurator::Parameter::Presentation::~Presentation(void) {}
@@ -548,15 +549,23 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                             GUIUtils::Utf8Decode(utf8Str);
                             inout_parameter.SetValue(utf8Str);
                         }
+                        if (isSelected) {
+                            ImGui::SetItemDefaultFocus();
+                        }                        
                         one_present = true;
                     }
+
                     if (one_present) {
                         ImGui::Separator();
                     }
                     ImGui::AlignTextToFramePadding();
                     ImGui::TextUnformatted("Add");
                     ImGui::SameLine();
-                    ///ImGui::SetKeyboardFocusHere();
+                    /// Keyboard focus needs to be set in/untill second frame
+                    if (this->set_focus < 2) {
+                        ImGui::SetKeyboardFocusHere();
+                        this->set_focus++;
+                    }
                     ImGui::InputText("###flex_enum_text_edit", &std::get<std::string>(this->widget_store), ImGuiInputTextFlags_None);
                     if (ImGui::IsItemDeactivatedAfterEdit()) {
                         if (!std::get<std::string>(this->widget_store).empty()) {
@@ -565,11 +574,15 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                             std::get<std::string>(this->widget_store) = std::string();
                         }
                         ImGui::CloseCurrentPopup(); 
-                    }                       
+                    } 
                     
                     ImGui::EndCombo();
                 }
-                this->help = "Only selected value will be stored.";
+                else {
+                    this->set_focus = 0;
+                }
+                                        
+                this->help = "Only selected value will be saved to project file";
             } break;
             default:
                 break;
