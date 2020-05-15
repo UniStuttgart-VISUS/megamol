@@ -110,6 +110,7 @@ private:
 
     /** Min/Max intervall the data should be mapped. */
     std::array<float, 2> range;
+    std::array<float, 2> last_range;
 
     /** Flag indicating if propagated range should be overwriten by editor */
     bool range_overwrite;

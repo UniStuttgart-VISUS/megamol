@@ -168,6 +168,7 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , active_parameter(nullptr)
     , nodes()
     , range({0.0f, 1.0f})
+    , last_range({0.0f, 1.0f})
     , range_overwrite(false)
     , mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , textureSize(256)
@@ -226,6 +227,9 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool ac
     if (!this->range_overwrite) {
         this->range = new_range;
     }
+    // Save new range propagated by renderers for later recovery
+    this->last_range = new_range;
+
     this->widget_buffer.min_range = this->range[0];
     this->widget_buffer.max_range = this->range[1];
     this->widget_buffer.tex_size = this->textureSize;
@@ -340,7 +344,20 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
         ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
         ImGui::TextUnformatted("Value Range");
 
-        ImGui::Checkbox("Overwrite Value Range", &this->range_overwrite);
+        if (ImGui::Checkbox("Overwrite Value Range", &this->range_overwrite)) {
+            if (this->range_overwrite) {
+                // Save last range before overwrite
+                this->last_range = this->range;
+            } else {
+                // Reset range to last range before overwrite was enabled
+                this->range = this->last_range;
+                this->widget_buffer.min_range = this->range[0];
+                this->widget_buffer.max_range = this->range[1];
+                this->widget_buffer.range_value =
+                    (this->nodes[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
+                this->textureInvalid = true;
+            }
+        }
 
         // Value slider -------------------------------------------------------
         this->widget_buffer.range_value =
