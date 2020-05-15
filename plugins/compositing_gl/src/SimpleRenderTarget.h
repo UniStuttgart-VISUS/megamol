@@ -1,5 +1,5 @@
 /*
- * DeferredShading.h
+ * SimpleRenderTarget.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
@@ -123,7 +123,6 @@ protected:
      */
     bool getMetaDataCallback(core::Call& caller);
 
-private:
     /**
      * G-Buffer for deferred rendering. By default if uses three color attachments (and a depth renderbuffer):
      * surface albedo - RGB 16bit per channel
@@ -131,6 +130,10 @@ private:
      * depth - single channel 32bit
      */
     std::shared_ptr<glowl::FramebufferObject> m_GBuffer;
+
+    uint32_t m_version;
+
+private:
 
     /** Local copy of last used camera*/
     core::view::Camera_2 m_last_used_camera;

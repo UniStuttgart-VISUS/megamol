@@ -8,6 +8,7 @@
 
     <shader name="vertex">
         <snippet type="version">430</snippet>
+        <snippet name="Extensions"                type="file">sphere/mdao_vertex_extensions.glsl</snippet>
         <snippet name="CommonDefines"             type="file">commondefines.glsl</snippet>
         <snippet name="Attributes"                type="file">sphere/vertex_attributes.glsl</snippet>            
         <snippet name="bitflags::main"/>
@@ -23,6 +24,7 @@
 
     <shader name="fragment">
         <snippet type="version">150</snippet>
+        <snippet name="Extensions"                type="file">sphere/fragment_extensions.glsl</snippet>
         <snippet name="CommonDefines"             type="file">commondefines.glsl</snippet>        
         <snippet name="Attributes"                type="file">sphere/fragment_attributes.glsl</snippet>
         <snippet name="sphere_flags::fragment_attributes"/>          
@@ -65,6 +67,7 @@
 
         <shader name="fragment">
             <snippet type="version">150</snippet>
+            <snippet name="Extensions"            type="file">sphere/fragment_extensions.glsl</snippet>
             <snippet name="CommonDefines"         type="file">commondefines.glsl</snippet>        
             <snippet name="Attributes"            type="file">sphere/fragment_attributes.glsl</snippet>
             <snippet name="sphere_flags::fragment_attributes"/>              

@@ -17,11 +17,11 @@ using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::Call::Call(ImGuiID uid) : uid(uid), present() {
+megamol::gui::configurator::Call::Call(ImGuiID uid)
+    : uid(uid), class_name(), description(), plugin_name(), functions(), connected_call_slots(), present() {
 
-    this->connected_call_slots.clear();
-    this->connected_call_slots.emplace(CallSlot::CallSlotType::CALLER, nullptr);
-    this->connected_call_slots.emplace(CallSlot::CallSlotType::CALLEE, nullptr);
+    this->connected_call_slots.emplace(CallSlotType::CALLER, nullptr);
+    this->connected_call_slots.emplace(CallSlotType::CALLEE, nullptr);
 }
 
 
@@ -101,8 +101,8 @@ bool megamol::gui::configurator::Call::DisConnectCallSlots(void) {
 }
 
 
-const megamol::gui::configurator::CallSlotPtrType megamol::gui::configurator::Call::GetCallSlot(
-    megamol::gui::configurator::CallSlot::CallSlotType type) {
+const megamol::gui::configurator::CallSlotPtrType& megamol::gui::configurator::Call::GetCallSlot(
+    megamol::gui::configurator::CallSlotType type) {
 
     if (this->connected_call_slots[type] == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn(
@@ -120,15 +120,14 @@ megamol::gui::configurator::Call::Presentation::Presentation(void)
 megamol::gui::configurator::Call::Presentation::~Presentation(void) {}
 
 
-ImGuiID megamol::gui::configurator::Call::Presentation::Present(
-    megamol::gui::configurator::Call& inout_call, const CanvasType& in_canvas, HotKeyArrayType& inout_hotkeys) {
+void megamol::gui::configurator::Call::Presentation::Present(
+    megamol::gui::configurator::Call& inout_call, megamol::gui::GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        return;
     }
-    ImGuiID retval_id = GUI_INVALID_ID;
     ImGuiStyle& style = ImGui::GetStyle();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
@@ -136,97 +135,134 @@ ImGuiID megamol::gui::configurator::Call::Presentation::Present(
     try {
         if (inout_call.IsConnected()) {
 
-            ImVec2 p1 = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLER)->GUI_GetPosition();
-            ImVec2 p2 = inout_call.GetCallSlot(CallSlot::CallSlotType::CALLEE)->GUI_GetPosition();
-
-            /// XXX Check is too expensive!? ...
-            // Clip calls if lying ouside the canvas
-            // ImVec2 canvas_rect_min = in_canvas.position;
-            // ImVec2 canvas_rect_max = in_canvas.position + in_canvas.size;
-            // if (...) {
-            //    return GUI_INVALID_ID;
-            //}
-
-            ImVec4 tmpcol = style.Colors[ImGuiCol_Button];
-            // tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-            const ImU32 COLOR_CALL_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-            const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
-            const ImU32 COLOR_CALL_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
-            const ImU32 COLOR_CALL_BORDER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PopupBg]);
-
-            const float CURVE_THICKNESS = 3.0f;
-
-            ImGui::PushID(inout_call.uid);
-
-            // Draw simple line if zooming is too small for nice bezier curves
-            draw_list->ChannelsSetCurrent(0); // Background
-
-            // LEVEL OF DETAIL depending on zooming
-            if (in_canvas.zooming < 0.25f) {
-                draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * in_canvas.zooming);
-            } else {
-                draw_list->AddBezierCurve(p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2, COLOR_CALL_CURVE,
-                    CURVE_THICKNESS * in_canvas.zooming);
+            bool visibility = true;
+            if ((inout_call.GetCallSlot(CallSlotType::CALLER)->ParentModuleConnected()) &&
+                (inout_call.GetCallSlot(CallSlotType::CALLEE)->ParentModuleConnected())) {
+                auto caller_parent = inout_call.GetCallSlot(CallSlotType::CALLER)->GetParentModule();
+                auto callee_parent = inout_call.GetCallSlot(CallSlotType::CALLEE)->GetParentModule();
+                visibility = !((caller_parent->GUI_GetGroupMembership() == callee_parent->GUI_GetGroupMembership()) &&
+                               (caller_parent->GUI_GetGroupMembership() != GUI_INVALID_ID) &&
+                               (callee_parent->GUI_GetGroupMembership() != GUI_INVALID_ID) &&
+                               !caller_parent->GUI_GetGroupVisibility());
             }
 
-            if (this->label_visible) {
+            if (visibility) {
 
-                draw_list->ChannelsSetCurrent(1); // Foreground
+                const float CURVE_THICKNESS = 3.0f;
+                ImVec2 p1 = inout_call.GetCallSlot(CallSlotType::CALLER)->GUI_GetPosition();
+                ImVec2 p2 = inout_call.GetCallSlot(CallSlotType::CALLEE)->GUI_GetPosition();
 
-                ImVec2 call_center = ImVec2(p1.x + (p2.x - p1.x) / 2.0f, p1.y + (p2.y - p1.y) / 2.0f);
-                auto call_name_width = this->utils.TextWidgetWidth(inout_call.class_name);
+                // Clip calls if lying ouside the canvas
+                /// XXX Check is too expensive
+                // ImVec2 canvas_rect_min = state.canvas.position;
+                // ImVec2 canvas_rect_max = state.canvas.position + state.canvas.size;
+                // if (...) {
+                //    return GUI_INVALID_ID;
+                //}
 
-                // Draw box
-                ImVec2 rect_size = ImVec2(call_name_width + (2.0f * style.ItemSpacing.x),
-                    ImGui::GetFontSize() + (2.0f * style.ItemSpacing.y));
-                ImVec2 call_rect_min =
-                    ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
-                ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
-                ImGui::SetCursorScreenPos(call_rect_min);
-                std::string label = "call_" + inout_call.class_name + std::to_string(inout_call.uid);
-                ImGui::InvisibleButton(label.c_str(), rect_size);
-                // Context menu
-                if (ImGui::BeginPopupContextItem()) {
-                    if (ImGui::MenuItem(
-                            "Delete", std::get<0>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
-                        std::get<1>(inout_hotkeys[HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
-                        retval_id = inout_call.uid;
+                // Draw simple line if zooming is too small for nice bezier curves
+                ImGui::PushID(inout_call.uid);
+
+                // Colors
+                ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg]; // ImGuiCol_FrameBg ImGuiCol_Button
+                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+                const ImU32 COLOR_CALL_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
+                tmpcol = style.Colors[ImGuiCol_FrameBgActive]; // ImGuiCol_FrameBgActive ImGuiCol_ButtonActive
+                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+                const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
+                const ImU32 COLOR_CALL_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
+                tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive]; // ImGuiCol_Border ImGuiCol_ScrollbarGrabActive
+                tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+                const ImU32 COLOR_CALL_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
+                // Draw Curve
+                /// Level of detal depending on zooming
+                if (state.canvas.zooming < 0.25f) {
+                    draw_list->AddLine(p1, p2, COLOR_CALL_CURVE, CURVE_THICKNESS * state.canvas.zooming);
+                } else {
+                    draw_list->AddBezierCurve(p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2,
+                        COLOR_CALL_CURVE, CURVE_THICKNESS * state.canvas.zooming);
+                }
+
+                if (this->label_visible) {
+                    ImVec2 call_center = ImVec2(p1.x + (p2.x - p1.x) / 2.0f, p1.y + (p2.y - p1.y) / 2.0f);
+                    auto call_name_width = this->utils.TextWidgetWidth(inout_call.class_name);
+
+                    // Button
+                    ImVec2 rect_size = ImVec2(call_name_width + (2.0f * style.ItemSpacing.x),
+                        ImGui::GetFontSize() + (2.0f * style.ItemSpacing.y));
+                    ImVec2 call_rect_min =
+                        ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
+                    ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
+
+                    ImGui::SetCursorScreenPos(call_rect_min);
+                    std::string label = "call_" + inout_call.class_name + std::to_string(inout_call.uid);
+                    ImGui::SetItemAllowOverlap();
+                    ImGui::InvisibleButton(label.c_str(), rect_size);
+                    ImGui::SetItemAllowOverlap();
+
+                    bool active = ImGui::IsItemActive();
+                    bool hovered = ImGui::IsItemHovered();
+                    bool mouse_clicked = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+
+                    // Context Menu
+                    if (ImGui::BeginPopupContextItem()) {
+                        active = true; // Force selection (next frame)
+
+                        ImGui::TextUnformatted("Call");
+                        ImGui::Separator();
+                        if (ImGui::MenuItem(
+                                "Delete", std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM])
+                                              .ToString()
+                                              .c_str())) {
+                            std::get<1>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]) = true;
+                        }
+                        ImGui::EndPopup();
                     }
-                    ImGui::EndPopup();
-                }
-                bool active = ImGui::IsItemActive();
-                bool hovered = ImGui::IsItemHovered();
-                bool mouse_clicked = ImGui::GetIO().MouseClicked[0];
-                if (mouse_clicked && !hovered) {
-                    this->selected = false;
-                }
-                if (active) {
-                    this->selected = true;
-                }
-                if (this->selected) {
-                    retval_id = inout_call.uid;
-                }
-                ImU32 call_bg_color = (hovered || this->selected) ? COLOR_CALL_HIGHTLIGHT : COLOR_CALL_BACKGROUND;
-                draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, 4.0f);
-                draw_list->AddRect(call_rect_min, call_rect_max, COLOR_CALL_BORDER, 4.0f);
 
-                // Draw text
-                ImGui::SetCursorScreenPos(
-                    call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
-                ImGui::Text(inout_call.class_name.c_str());
+                    // Selection
+                    if (state.interact.call_selected_uid == inout_call.uid) {
+                        /// Call before "active" if-statement for one frame delayed check for last valid candidate for
+                        /// selection
+                        this->selected = true;
+                        state.interact.callslot_selected_uid = GUI_INVALID_ID;
+                        state.interact.modules_selected_uids.clear();
+                        state.interact.group_selected_uid = GUI_INVALID_ID;
+                    }
+                    if (active) {
+                        state.interact.call_selected_uid = inout_call.uid;
+                    }
+                    if ((mouse_clicked && !hovered) || (state.interact.call_selected_uid != inout_call.uid)) {
+                        this->selected = false;
+                        if (state.interact.call_selected_uid == inout_call.uid) {
+                            state.interact.call_selected_uid = GUI_INVALID_ID;
+                        }
+                    }
+
+                    // Draw Background
+                    ImU32 call_bg_color = (this->selected) ? (COLOR_CALL_HIGHTLIGHT) : (COLOR_CALL_BACKGROUND);
+                    draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, GUI_RECT_CORNER_RADIUS);
+                    draw_list->AddRect(call_rect_min, call_rect_max, COLOR_CALL_GROUP_BORDER, GUI_RECT_CORNER_RADIUS);
+
+                    // Draw Text
+                    ImVec2 text_pos_left_upper =
+                        (call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
+                    draw_list->AddText(text_pos_left_upper, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]),
+                        inout_call.class_name.c_str());
+                }
+
+                ImGui::PopID();
             }
         }
-
-        ImGui::PopID();
-
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return GUI_INVALID_ID;
+        return;
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return GUI_INVALID_ID;
+        return;
     }
-
-    return retval_id;
 }

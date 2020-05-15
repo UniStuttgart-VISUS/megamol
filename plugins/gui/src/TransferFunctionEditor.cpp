@@ -82,7 +82,8 @@ PresetGenerator CubeHelixAdapter(double start, double rots, double hue, double g
     };
 }
 
-template <size_t PaletteSize> PresetGenerator ColormapAdapter(const float palette[PaletteSize][3]) {
+template <size_t PaletteSize, bool NearestNeighbor = false>
+PresetGenerator ColormapAdapter(const float palette[PaletteSize][3]) {
     const double LastIndex = static_cast<double>(PaletteSize - 1);
     return [=](auto& nodes, auto n) {
         nodes.clear();
@@ -92,7 +93,12 @@ template <size_t PaletteSize> PresetGenerator ColormapAdapter(const float palett
             // Linear interpolation from palette.
             size_t i0 = static_cast<size_t>(std::floor(t * LastIndex));
             size_t i1 = static_cast<size_t>(std::ceil(t * LastIndex));
-            double it = std::fmod(t * LastIndex, LastIndex);
+            double unused;
+            double it = std::modf(t * LastIndex, &unused);
+            if (NearestNeighbor) {
+                it = std::round(it);
+            }
+
             double r[2] = {static_cast<double>(palette[i0][0]), static_cast<double>(palette[i1][0])};
             double g[2] = {static_cast<double>(palette[i0][1]), static_cast<double>(palette[i1][1])};
             double b[2] = {static_cast<double>(palette[i0][2]), static_cast<double>(palette[i1][2])};
@@ -133,8 +139,9 @@ void RainbowAdapter(param::TransferFunctionParam::TFNodeType& nodes, size_t n) {
     }
 }
 
-std::array<std::tuple<std::string, PresetGenerator>, 12> PRESETS = {
-    std::make_tuple("Select...", [](auto& nodes, auto n) {}), std::make_tuple("Ramp", RampAdapter),
+std::array<std::tuple<std::string, PresetGenerator>, 20> PRESETS = {
+    std::make_tuple("Select...", [](auto& nodes, auto n) {}),
+    std::make_tuple("Ramp", RampAdapter),
     std::make_tuple("Hue rotation (rainbow, harmful)", RainbowAdapter),
     std::make_tuple("Inferno", ColormapAdapter<256>(InfernoColorMap)),
     std::make_tuple("Magma", ColormapAdapter<256>(MagmaColorMap)),
@@ -144,24 +151,38 @@ std::array<std::tuple<std::string, PresetGenerator>, 12> PRESETS = {
     std::make_tuple("Cubehelix (default)", CubeHelixAdapter(0.5, -1.5, 1.0, 1.0)),
     std::make_tuple("Cubehelix (default, colorful)", CubeHelixAdapter(0.5, -1.5, 1.5, 1.0)),
     std::make_tuple("Cubehelix (default, de-pinked)", CubeHelixAdapter(0.5, -1.0, 1.0, 1.0)),
-    std::make_tuple("Cool-Warm (diverging)", ColormapAdapter<257>(CoolWarmColorMap))};
+    std::make_tuple("Cool-Warm (diverging)", ColormapAdapter<257>(CoolWarmColorMap)),
+    std::make_tuple("8-class Accent", ColormapAdapter<8, true>(AccentMap)),
+    std::make_tuple("8-class Dark2", ColormapAdapter<8, true>(Dark2Map)),
+    std::make_tuple("12-class Paired", ColormapAdapter<12, true>(PairedMap)),
+    std::make_tuple("9-class Pastel1", ColormapAdapter<9, true>(Pastel1Map)),
+    std::make_tuple("8-class Pastel2", ColormapAdapter<8, true>(Pastel2Map)),
+    std::make_tuple("9-class Set1", ColormapAdapter<9, true>(Set1Map)),
+    std::make_tuple("8-class Set2", ColormapAdapter<8, true>(Set2Map)),
+    std::make_tuple("12-class Set3", ColormapAdapter<12, true>(Set3Map)),
+};
 
 
 TransferFunctionEditor::TransferFunctionEditor(void)
     : utils()
     , activeParameter(nullptr)
+    , nodes()
     , range({0.0f, 1.0f})
     , mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , textureSize(256)
-    , textureId(0)
+
     , textureInvalid(true)
     , pendingChanges(true)
+    , texturePixels()
+    , textureId(0)
     , activeChannels{false, false, false, false}
     , currentNode(0)
     , currentChannel(0)
     , currentDragChange()
     , immediateMode(false)
-    , showOptions(true) {
+    , showOptions(true)
+    , widget_buffer() {
+
     // Init transfer function colors
     this->nodes.clear();
     std::array<float, TFP_VAL_CNT> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f};
@@ -217,6 +238,8 @@ bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
 
 bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter) {
 
+    ImGui::BeginGroup();
+
     if (useActiveParameter) {
         if (this->activeParameter == nullptr) {
             const char* message = "Changes have no effect.\n"
@@ -228,17 +251,14 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
     assert(ImGui::GetCurrentContext() != nullptr);
     assert(this->nodes.size() > 1);
 
-    ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
-
 
     // Test if selected node is still in range
     if (this->nodes.size() <= this->currentNode) {
         this->currentNode = 0;
     }
 
-    const float tfw_height = 28.0f;
-    const float tfw_item_width = ImGui::GetContentRegionAvailWidth() * 0.75f;
+    const float tfw_item_width = ImGui::GetContentRegionAvail().x * 0.75f;
     const float canvas_height = 150.0f;
     const float canvas_width = tfw_item_width;
     ImGui::PushItemWidth(tfw_item_width); // set general proportional item width
@@ -256,7 +276,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
     ImGui::Separator();
 
     // Interval range -----------------------------------------------------
-    ImGui::PushItemWidth(tfw_item_width * 0.5f - style.ItemInnerSpacing.x);
+    ImGui::PushItemWidth(tfw_item_width * 0.5f - style.ItemSpacing.x);
 
     ImGui::InputFloat("###min", &this->widget_buffer.min_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -280,10 +300,10 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
         this->widget_buffer.max_range = this->range[1];
         this->textureInvalid = true;
     }
-    ImGui::SameLine();
     ImGui::PopItemWidth();
-    ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x);
-    ImGui::Text("Value Range");
+
+    ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
+    ImGui::TextUnformatted("Value Range");
 
     // Value slider -------------------------------------------------------
     this->widget_buffer.range_value =
@@ -320,20 +340,21 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
 
     // Color channels -----------------------------------------------------
     ImGui::Checkbox("Red", &this->activeChannels[0]);
-    ImGui::SameLine(tfw_item_width * 0.26f);
+    ImGui::SameLine();
     ImGui::Checkbox("Green", &this->activeChannels[1]);
-    ImGui::SameLine(tfw_item_width * 0.49f);
+    ImGui::SameLine();
     ImGui::Checkbox("Blue", &this->activeChannels[2]);
-    ImGui::SameLine(tfw_item_width * 0.725f);
+    ImGui::SameLine();
     ImGui::Checkbox("Alpha", &this->activeChannels[3]);
-    ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x);
-    ImGui::Text("Color Channels");
+    ImGui::SameLine();
+    ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x + ImGui::GetScrollX());
+    ImGui::TextUnformatted("Color Channels");
 
     // Color editor for selected node -------------------------------------
     float edit_col[4] = {this->nodes[this->currentNode][0], this->nodes[this->currentNode][1],
         this->nodes[this->currentNode][2], this->nodes[this->currentNode][3]};
     ImGuiColorEditFlags numberColorFlags =
-        ImGuiColorEditFlags_RGB | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_Float;
+        ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_Float;
     if (ImGui::ColorEdit4("Selected Color", edit_col, numberColorFlags)) {
         this->nodes[this->currentNode][0] = edit_col[0];
         this->nodes[this->currentNode][1] = edit_col[1];
@@ -455,6 +476,10 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool useActiveParameter)
             }
         }
     }
+
+    ImGui::PopItemWidth();
+
+    ImGui::EndGroup();
 
     return apply_changes;
 }
@@ -700,7 +725,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
         }
     }
     ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
-    ImGui::Text("Function Plot");
+    ImGui::TextUnformatted("Function Plot");
     this->utils.HelpMarkerToolTip(
         "First and last node are always present\nwith fixed value 0 and 1.\n[Left-Click] Select "
         "Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");

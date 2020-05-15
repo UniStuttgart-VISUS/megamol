@@ -115,7 +115,7 @@ namespace misc {
          * @return The number of frames loaded.
          */
         inline size_t GetAvailableFrames(void) const {
-            return this->cntFrames;
+            return this->FrameCount();
         }
 
         /**
@@ -282,7 +282,7 @@ namespace misc {
          */
         void SetData(void *data, const size_t cntFrames = 1) {
             this->data = data;
-            this->cntFrames = cntFrames;
+            this->SetFrameCount(cntFrames);
         }
 
 		void SetData(uint32_t texture_name)	{
@@ -313,9 +313,6 @@ namespace misc {
 
         /** The functions that are provided by the call. */
         static const char *FUNCTIONS[6];
-
-        /** The number of frames that 'data' designates. */
-        size_t cntFrames;
 
         /** The pointer to the raw data. The call does not own this memory! */
         void *data;

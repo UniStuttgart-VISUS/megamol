@@ -6,6 +6,7 @@
 
 megamol::mesh::WavefrontObjLoader::WavefrontObjLoader()
     : core::Module()
+    , m_version(0)
     , m_meta_data()
     , m_filename_slot("Wavefront OBJ filename", "The name of the obj file to load")
     , m_getData_slot("CallMesh", "The slot publishing the loaded data") {
@@ -31,6 +32,8 @@ bool megamol::mesh::WavefrontObjLoader::getDataCallback(core::Call& caller) {
 
     if (this->m_filename_slot.IsDirty()) {
         m_filename_slot.ResetDirty();
+
+        ++m_version;
 
         auto vislib_filename = m_filename_slot.Param<core::param::FilePathParam>()->Value();
         std::string filename(vislib_filename.PeekBuffer());
@@ -140,7 +143,6 @@ bool megamol::mesh::WavefrontObjLoader::getDataCallback(core::Call& caller) {
             const auto pos_ptr = &m_obj_model->attrib.vertices[m_obj_model->shapes[s].mesh.indices.front().vertex_index];
             const auto vertex_cnt = m_obj_model->shapes[s].mesh.num_face_vertices.size();
 
-
             std::vector<MeshDataAccessCollection::VertexAttribute> mesh_attributes;
 
             mesh_attributes.emplace_back(MeshDataAccessCollection::VertexAttribute{reinterpret_cast<uint8_t*>(pos_ptr),
@@ -172,14 +174,18 @@ bool megamol::mesh::WavefrontObjLoader::getDataCallback(core::Call& caller) {
             mesh_indices.type = MeshDataAccessCollection::UNSIGNED_INT;
 
             this->m_mesh_data_access->addMesh(mesh_attributes, mesh_indices);
-
         }
 
-        ++(m_meta_data.m_data_hash);
+        m_meta_data.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
+        m_meta_data.m_bboxs.SetClipBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
     }
 
-    cm->setMetaData(m_meta_data);
-    cm->setData(m_mesh_data_access);
+    if (cm->version() < m_version)
+    {
+        cm->setMetaData(m_meta_data);
+        cm->setData(m_mesh_data_access,m_version);
+    }
+    
     return true;
 }
 
@@ -190,7 +196,6 @@ bool megamol::mesh::WavefrontObjLoader::getMetaDataCallback(core::Call& caller) 
     if (cm == nullptr) return false;
 
     cm->setMetaData(m_meta_data);
-
     return true;
 }
 

@@ -14,11 +14,8 @@ megamol::mesh::AbstractGPURenderTaskDataSource::AbstractGPURenderTaskDataSource(
     : core::Module()
     , m_renderTask_lhs_slot("getData", "The slot publishing the loaded data")
     , m_renderTask_rhs_slot("getRenderTasks", "The slot for chaining render task data sources.")
-    , m_renderTask_rhs_cached_hash(0)
     , m_material_slot("getMaterialData", "Connects to a material data source")
-    , m_material_cached_hash(0)
     , m_mesh_slot("getMeshData", "Connects to a mesh data source")
-    , m_mesh_cached_hash(0)
     , m_light_slot("lights", "Lights are retrieved over this slot. If no light is connected, a default camera light is used")
     , m_light_cached_hash(0)
 {
@@ -60,7 +57,6 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::getMetaDataCallback(core::C
     if (lhs_rt_call == NULL) return false;
     auto lhs_meta_data = lhs_rt_call->getMetaData();
 
-    bool something_has_changed = false; // something has changed in the neath...
     unsigned int frame_cnt = std::numeric_limits<unsigned int>::max();
     auto bbox = lhs_meta_data.m_bboxs.BoundingBox();
     auto cbbox = lhs_meta_data.m_bboxs.ClipBox();
@@ -73,10 +69,6 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::getMetaDataCallback(core::C
         if (!(*rhs_rt_call)(1)) return false;
         rhs_meta_data = rhs_rt_call->getMetaData();
 
-        if (rhs_meta_data.m_data_hash > m_renderTask_rhs_cached_hash) {
-            something_has_changed = true;
-        }
-
         frame_cnt = std::min(rhs_meta_data.m_frame_cnt, frame_cnt);
 
         bbox.Union(rhs_meta_data.m_bboxs.BoundingBox());
@@ -85,12 +77,9 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::getMetaDataCallback(core::C
 
     if (material_call != NULL) {
         auto mtl_meta_data = material_call->getMetaData();
-
-        //TODO....
-
-        if (mtl_meta_data.m_data_hash > m_material_cached_hash) {
-            something_has_changed = true;
-        }
+        
+        if (!(*material_call)(1)) return false;
+        mtl_meta_data = material_call->getMetaData();
     }
     
     if (mesh_call != NULL){
@@ -100,18 +89,12 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::getMetaDataCallback(core::C
         if (!(*mesh_call)(1)) return false;
         mesh_meta_data = mesh_call->getMetaData();
 
-        if (mesh_meta_data.m_data_hash > m_mesh_cached_hash) {
-            something_has_changed = true;
-        }
-
         frame_cnt = std::min(mesh_meta_data.m_frame_cnt, frame_cnt);
 
         bbox.Union(mesh_meta_data.m_bboxs.BoundingBox());
         cbbox.Union(mesh_meta_data.m_bboxs.ClipBox());
     }
 
-
-    lhs_meta_data.m_data_hash = something_has_changed ? lhs_meta_data.m_data_hash + 1 : lhs_meta_data.m_data_hash;
     lhs_meta_data.m_frame_cnt = frame_cnt;
     lhs_meta_data.m_bboxs.SetBoundingBox(bbox);
     lhs_meta_data.m_bboxs.SetClipBox(cbbox);

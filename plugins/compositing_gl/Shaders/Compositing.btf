@@ -12,6 +12,11 @@
         <snippet name="Main"             type="file">comp/textureMultiply_c.glsl</snippet>
     </shader>
 
+    <shader name="textureAlphaCompositing">
+        <snippet type="version">430</snippet>
+        <snippet name="Main"             type="file">comp/textureAlphaCompositing_c.glsl</snippet>
+    </shader>
+    
     <shader name="textureDepthCompositing">
         <snippet type="version">430</snippet>
         <snippet name="Main"             type="file">comp/textureDepthCompositing_c.glsl</snippet>

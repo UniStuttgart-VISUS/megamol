@@ -19,6 +19,7 @@ class MESH_API MeshDataAccessCollection {
 public:
     enum ValueType { BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT, INT, UNSIGNED_INT, HALF_FLOAT, FLOAT, DOUBLE };
     enum AttributeSemanticType { POSITION, NORMAL, COLOR, TEXCOORD, TANGENT};
+    enum PrimitiveType { TRIANGLES, QUADS, LINES };
 
     static constexpr unsigned int convertToGLType(ValueType value_type) {
         unsigned int retval = 0;
@@ -154,6 +155,7 @@ public:
     struct Mesh {
         std::vector<VertexAttribute> attributes;
         IndexData                    indices;
+        PrimitiveType                primitive_type;
 
         // TODO interleaved flag?
     };
@@ -161,8 +163,8 @@ public:
     MeshDataAccessCollection() = default;
     ~MeshDataAccessCollection() = default;
 
-    void addMesh(std::vector<VertexAttribute> const& attribs, IndexData const& indices);
-    void addMesh(std::vector<VertexAttribute> && attribs, IndexData const& indices);
+    void addMesh(std::vector<VertexAttribute> const& attribs, IndexData const& indices, PrimitiveType primitive_type = TRIANGLES);
+    void addMesh(std::vector<VertexAttribute>&& attribs, IndexData const& indices, PrimitiveType primitive_type = TRIANGLES);
 
     // TODO delete functionality
 
@@ -173,12 +175,14 @@ private:
     std::vector<Mesh> meshes;
 };
 
-inline void MeshDataAccessCollection::addMesh(std::vector<VertexAttribute> const& attribs, IndexData const& indices) {
-    meshes.push_back({attribs, indices});
+inline void MeshDataAccessCollection::addMesh(std::vector<VertexAttribute> const& attribs, IndexData const& indices,
+    PrimitiveType primitive_type) {
+    meshes.push_back({attribs, indices, primitive_type});
 }
 
-inline void MeshDataAccessCollection::addMesh(std::vector<VertexAttribute>&& attribs, IndexData const& indices) {
-    meshes.push_back({attribs, indices});
+inline void MeshDataAccessCollection::addMesh(std::vector<VertexAttribute>&& attribs, IndexData const& indices,
+    PrimitiveType primitive_type) {
+    meshes.push_back({attribs, indices, primitive_type});
 }
 
 inline std::vector<MeshDataAccessCollection::Mesh>& MeshDataAccessCollection::accessMesh() {

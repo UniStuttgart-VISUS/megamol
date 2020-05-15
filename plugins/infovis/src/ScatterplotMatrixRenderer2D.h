@@ -167,6 +167,10 @@ private:
 
     void drawText();
 
+    void drawPickIndicator();
+
+    void drawMouseLabels();
+
     void unbindScreen();
 
     void bindAndClearScreen();
@@ -174,6 +178,8 @@ private:
     void drawScreen();
 
     void updateSelection();
+
+    bool resetSelectionCallback(core::param::ParamSlot& caller);
 
     core::CallerSlot floatTableInSlot;
 
@@ -196,6 +202,14 @@ private:
     core::param::ParamSlot kernelWidthParam;
 
     core::param::ParamSlot kernelTypeParam;
+
+    core::param::ParamSlot pickRadiusParam;
+
+    core::param::ParamSlot resetSelectionParam;
+
+    core::param::ParamSlot drawPickIndicatorParam;
+
+    core::param::ParamSlot drawMouseLabelsParam;
 
     core::param::ParamSlot triangulationSmoothnessParam;
 
@@ -250,6 +264,8 @@ private:
 
     vislib::graphics::gl::GLSLShader triangleShader;
 
+    vislib::graphics::gl::GLSLShader pickIndicatorShader;
+
     vislib::graphics::gl::GLSLShader screenShader;
 
     vislib::graphics::gl::GLSLComputeShader pickProgram;
@@ -266,6 +282,7 @@ private:
     core::FlagStorage::FlagVersionType flagsBufferVersion;
 
     bool selectionNeedsUpdate = false;
+    bool selectionNeedsReset = false;
 
     GLuint triangleVBO;
     GLuint triangleIBO;
