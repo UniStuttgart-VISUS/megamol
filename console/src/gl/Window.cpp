@@ -215,7 +215,7 @@ void gl::Window::RequestClose() {
     }
 }
 
-void gl::Window::Update() {
+void gl::Window::Update(uint32_t frameID) {
     if (hWnd == nullptr) return;
 
     // this also issues the callbacks, which might close this window
@@ -245,7 +245,7 @@ void gl::Window::Update() {
     if ((width > 0) && (height > 0)) {
         if (showFragmentsInTitle) glBeginQuery(GL_SAMPLES_PASSED, fragmentQuery);
         if (showPrimsInTitle) glBeginQuery(GL_PRIMITIVES_GENERATED, primsQuery);
-        ::mmcRenderView(hView, &renderContext);
+        ::mmcRenderView(hView, &renderContext, frameID);
         if (showFragmentsInTitle) glEndQuery(GL_SAMPLES_PASSED);
         if (showPrimsInTitle) glEndQuery(GL_PRIMITIVES_GENERATED);
     }

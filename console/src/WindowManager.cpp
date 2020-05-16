@@ -46,7 +46,7 @@ megamol::console::WindowManager::WindowManager(void) : windows() {}
 
 bool megamol::console::WindowManager::IsAlive(void) const { return !windows.empty(); }
 
-void megamol::console::WindowManager::Update(void) {
+void megamol::console::WindowManager::Update(uint32_t frameID) {
     if (windows.empty()) return;
 
     bool cleaning = false;
@@ -59,7 +59,7 @@ void megamol::console::WindowManager::Update(void) {
             continue;
         }
 
-        win->Update();
+        win->Update(frameID);
         if (windows.empty()) return;
     }
 
@@ -81,7 +81,8 @@ void megamol::console::WindowManager::Shutdown(void) {
         if (win->IsAlive()) win->RequestClose();
     }
     megamol::console::JobManager::Instance().Shutdown();
-    while (!windows.empty()) Update();
+    // this frameID is broken, but it should not matter since we are shutting down anyway
+    while (!windows.empty()) Update(0);
 }
 
 bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {

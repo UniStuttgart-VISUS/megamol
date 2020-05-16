@@ -791,7 +791,7 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
 
     // Draw transfer function editor
     if (this->show_tf_editor) {
-        if (this->tf_editor.DrawTransferFunctionEditor(false)) {
+        if (this->tf_editor.Draw(false)) {
             std::string value;
             if (this->tf_editor.GetTransferFunction(value)) {
                 inout_parameter.SetValue(value);

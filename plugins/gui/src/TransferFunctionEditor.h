@@ -39,7 +39,7 @@ public:
      *
      * @return True if string was successfully converted into transfer function data, false otherwise.
      */
-    void SetTransferFunction(const std::string& tfs, bool useActiveParameter = true);
+    void SetTransferFunction(const std::string& tfs, bool active_parameter_mode);
 
     /**
      * Get current transfer function data.
@@ -51,21 +51,37 @@ public:
     /**
      * Set the currently active parameter.
      */
-    void SetActiveParameter(core::param::TransferFunctionParam* param) { this->activeParameter = param; }
+    void SetActiveParameter(core::param::TransferFunctionParam* param) { this->active_parameter = param; }
 
     /**
      * Get the currently active parameter.
      */
-    core::param::TransferFunctionParam* GetActiveParameter(void) { return this->activeParameter; }
+    core::param::TransferFunctionParam* GetActiveParameter(void) { return this->active_parameter; }
 
     /**
      * Draws the transfer function editor.
      */
-    bool DrawTransferFunctionEditor(bool useActiveParameter = true);
+    bool Draw(bool active_parameter_mode);
 
+    /**
+     * Return current value ahsh of active parameter.
+     */
+    bool ActiveParamterValueHash(size_t& out_tf_value_hash);
+
+    /**
+     * Returns true if editor is in minimized view.
+     */
+    inline bool IsMinimized(void) const { return !this->showOptions; }
+
+    /**
+     * Create texture.
+     */
+    void CreateTexture(GLuint& inout_id, GLsizei width, GLsizei height, float* data) const;
 
 private:
-    void drawTextureBox(const ImVec2& size);
+    void drawTextureBox(const ImVec2& size, bool flip_xy);
+
+    void drawScale(const ImVec2& pos, const ImVec2& size, bool flip_xy);
 
     void drawFunctionPlot(const ImVec2& size);
 
@@ -84,13 +100,17 @@ private:
     GUIUtils utils;
 
     /** The currently active parameter whose transfer function is currently loaded into this editor. */
-    core::param::TransferFunctionParam* activeParameter;
+    core::param::TransferFunctionParam* active_parameter;
 
     /** Array holding current colors and function values. */
     megamol::core::param::TransferFunctionParam::TFNodeType nodes;
 
     /** Min/Max intervall the data should be mapped. */
     std::array<float, 2> range;
+    std::array<float, 2> last_range;
+
+    /** Flag indicating if propagated range should be overwriten by editor */
+    bool range_overwrite;
 
     /** Current interpolation option. */
     megamol::core::param::TransferFunctionParam::InterpolationMode mode;
@@ -106,7 +126,10 @@ private:
 
     /** Current texture data. */
     std::vector<float> texturePixels;
-    GLuint textureId;
+
+    /** OpenGL Texture IDs. */
+    GLuint texture_id_vert;
+    GLuint texture_id_horiz;
 
     /** Currently active color channels in plot. */
     std::array<bool, 4> activeChannels;
@@ -128,6 +151,9 @@ private:
 
     /** The global input widget state buffer. */
     WidgetBuffer widget_buffer;
+
+    /** Legend alignment flag. */
+    bool flip_xy;
 };
 
 } // namespace gui
