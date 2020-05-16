@@ -57,7 +57,10 @@ void main()
   
   out_.dataID = pc_item_dataID(out_.itemID, out_.dataDimension);
   
-  float value = out_.itemID / float(itemCount - 1);//pc_item_dataValue(pc_item_dataID(out_.itemID, 0), 0);
+  float value = out_.itemID / float(itemCount - 1);
+  if (colorColumn != -1) {
+    value = pc_item_dataValue_unscaled(pc_item_dataID(out_.itemID, colorColumn));
+  }
   if (bitflag_test(flags[out_.itemID], FLAG_SELECTED, FLAG_SELECTED)) {
     out_.color = color;
   } else {

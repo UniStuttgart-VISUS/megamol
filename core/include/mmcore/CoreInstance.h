@@ -804,6 +804,17 @@ public:
      */
     inline void* GetCurrentImGuiContext() const { return this->lastImGuiContext; }
 
+    /**
+     * get the number of the currently rendered frame
+     */
+    inline uint32_t GetFrameID(void) { return this->frameID; }
+
+    /**
+     * Set the number of the currently rendered frame. Whatever you think you are doing, don't: it's wrong.
+     * This method is for use by the frontend only.
+     */
+    inline void SetFrameID(uint32_t frameID) { this->frameID = frameID; }
+
 private:
     /**
      * Nested class with pre initialisation values.
@@ -1271,6 +1282,9 @@ private:
 
     /** the time offset */
     double timeOffset;
+
+    /** the count of rendered frames */
+    uint32_t frameID;
 
     /** List of registered param update listeners */
     vislib::SingleLinkedList<param::ParamUpdateListener*> paramUpdateListeners;

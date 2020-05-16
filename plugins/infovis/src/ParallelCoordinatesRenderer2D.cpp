@@ -7,6 +7,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
@@ -43,6 +44,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , selectedItemsColor()
     , drawOtherItemsSlot("drawOtherItems", "Draw other (e.g., non-selected) items")
     , otherItemsColorSlot("otherItemsColor", "Color for other items (e.g., non-selected)")
+    , otherItemsAttribSlot("otherItemsAttrib", "attribute to use for TF lookup and item coloring")
     , otherItemsAlphaSlot("otherItemsAlpha", "Alpha for other items (e.g., non-selected)")
     , otherItemsColor()
     , drawAxesSlot("drawAxes", "Draw dimension axes")
@@ -120,6 +122,8 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     otherItemsColorSlot << new core::param::StringParam("gray");
     otherItemsColorSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::otherItemsColorSlotCallback);
     this->MakeSlotAvailable(&otherItemsColorSlot);
+    otherItemsAttribSlot << new core::param::FlexEnumParam("undef");
+    this->MakeSlotAvailable(&this->otherItemsAttribSlot);
     otherItemsAlphaSlot << new core::param::FloatParam(1.0f, 0.0f, 1.0f);
     otherItemsAlphaSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::otherItemsColorSlotCallback);
     this->MakeSlotAvailable(&otherItemsAlphaSlot);
@@ -386,11 +390,25 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
     (*floats)(0);
     call.SetTimeFramesCount(floats->GetFrameCount());
     auto hash = floats->DataHash();
-    (*tc)(0);
     (*flagsc)(core::FlagCallRead_GL::CallGetData);
     if (flagsc->hasUpdate()) {
         this->currentFlagsVersion = flagsc->version();
         flagsc->getData()->validateFlagCount(floats->GetRowsCount());
+    }
+
+    if (hash != this->currentHash || this->lastTimeStep != static_cast<unsigned int>(call.Time()) ||
+        this->otherItemsAttribSlot.IsDirty()) {
+        // set minmax for TF only when frame or hash changes
+        try {
+            auto colcol = this->columnIndex.at(this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value());
+            tc->SetRange(
+                {floats->GetColumnsInfos()[colcol].MinimumValue(), floats->GetColumnsInfos()[colcol].MaximumValue()});
+            this->otherItemsAttribSlot.ResetDirty();
+        } catch (std::out_of_range& ex) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "ParallelCoordinatesRenderer2D: tried to color lines by non-existing column '%s'",
+                this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value().c_str());
+        }
     }
 
     if (hash != this->currentHash || this->lastTimeStep != static_cast<unsigned int>(call.Time())) {
@@ -404,6 +422,8 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
         this->minimums.resize(columnCount);
         this->maximums.resize(columnCount);
         this->names.resize(columnCount);
+        this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->ClearValues();
+        this->columnIndex.clear();
         for (GLuint x = 0; x < columnCount; x++) {
             axisIndirection[x] = x;
             filters[x].dimension = 0;
@@ -413,7 +433,11 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
             names[x] = floats->GetColumnsInfos()[x].Name();
             filters[x].lower = minimums[x];
             filters[x].upper = maximums[x];
+            this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->AddValue(
+                floats->GetColumnsInfos()[x].Name());
+            this->columnIndex[floats->GetColumnsInfos()[x].Name()] = x;
         }
+
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, dataBuffer);
         glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * this->itemCount * sizeof(float), floats->GetData(),
             GL_STATIC_DRAW); // TODO: huh.
@@ -435,6 +459,8 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
         this->currentHash = hash;
         this->lastTimeStep = static_cast<unsigned int>(call.Time());
     }
+
+    (*tc)(0);
 
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(dataBuffer));
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(minimumsBuffer));
@@ -699,10 +725,20 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #endif
 
     this->enableProgramAndBind(prog);
+    // vislib::sys::Log::DefaultLog.WriteInfo("setting tf range to [%f, %f]", tf->Range()[0], tf->Range()[1]);
     tf->BindConvenience(prog, GL_TEXTURE5, 5);
 
     glUniform4fv(prog.ParameterLocation("color"), 1, color);
     glUniform1f(prog.ParameterLocation("tfColorFactor"), tfColorFactor);
+    try {
+        auto colcol = this->columnIndex.at(this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value());
+        glUniform1i(prog.ParameterLocation("colorColumn"), colcol);
+    } catch (std::out_of_range& ex) {
+        // vislib::sys::Log::DefaultLog.WriteError(
+        //    "ParallelCoordinatesRenderer2D: tried to color lines by non-existing column '%s'",
+        //    this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value().c_str());
+        glUniform1i(prog.ParameterLocation("colorColumn"), -1);
+    }
     glUniform1ui(prog.ParameterLocation("fragmentTestMask"), testMask);
     glUniform1ui(prog.ParameterLocation("fragmentPassMask"), passMask);
 
@@ -838,6 +874,7 @@ void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
     // glUniform2f(drawItemContinuousProgram.ParameterLocation("bottomLeft"), 0.0f, 0.0f);
     // glUniform2f(drawItemContinuousProgram.ParameterLocation("topRight"), windowWidth, windowHeight);
     densityFBO.BindColourTexture();
+    // vislib::sys::Log::DefaultLog.WriteInfo("setting tf range to [%f, %f]", tf->Range()[0], tf->Range()[1]);
     tf->BindConvenience(drawItemContinuousProgram, GL_TEXTURE5, 5);
     glUniform1i(this->drawItemContinuousProgram.ParameterLocation("fragmentCount"), 1);
     glUniform4fv(this->drawItemContinuousProgram.ParameterLocation("clearColor"), 1, backgroundColor);
