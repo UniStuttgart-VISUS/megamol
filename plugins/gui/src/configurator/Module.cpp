@@ -170,7 +170,8 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
                         (callslot_ptr->type == CallSlotType::CALLEE) ? (CallSlotType::CALLER) : (CallSlotType::CALLEE);
                     for (auto& call_ptr : callslot_ptr->GetConnectedCalls()) {
                         auto connected_callslot_ptr = call_ptr->GetCallSlot(callslot_type);
-                        float call_width = (4.0f * GUI_GRAPH_BORDER + ImGui::CalcTextSize(call_ptr->class_name.c_str()).x);
+                        float call_width =
+                            (4.0f * GUI_GRAPH_BORDER + ImGui::CalcTextSize(call_ptr->class_name.c_str()).x);
                         if (state.interact.callslot_selected_uid != GUI_INVALID_ID) {
                             if ((connected_callslot_ptr->uid == state.interact.callslot_selected_uid) &&
                                 connected_callslot_ptr->IsParentModuleConnected()) {
@@ -580,7 +581,8 @@ void megamol::gui::configurator::Module::Presentation::Update(
     for (auto& callslots_map : inout_module.GetCallSlots()) {
         for (auto& callslot_ptr : callslots_map.second) {
             if (callslot_ptr->GUI_IsLabelVisible()) {
-                max_slot_name_length = std::max(ImGui::CalcTextSize(callslot_ptr->name.c_str()).x, max_slot_name_length);
+                max_slot_name_length =
+                    std::max(ImGui::CalcTextSize(callslot_ptr->name.c_str()).x, max_slot_name_length);
             }
         }
     }

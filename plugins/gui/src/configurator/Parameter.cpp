@@ -534,11 +534,11 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                 /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
                 if (!std::holds_alternative<T>(this->widget_store)) {
                     this->widget_store = std::string();
-                }                                    
+                }
                 std::string utf8Str = arg;
                 GUIUtils::Utf8Encode(utf8Str);
-                if (ImGui::BeginCombo(param_label.c_str(), utf8Str.c_str())) {             
-                                      
+                if (ImGui::BeginCombo(param_label.c_str(), utf8Str.c_str())) {
+
                     bool one_present = false;
                     for (auto& valueOption :
                         inout_parameter.GetStorage<megamol::core::param::FlexEnumParam::Storage_t>()) {
@@ -551,7 +551,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                         }
                         if (isSelected) {
                             ImGui::SetItemDefaultFocus();
-                        }                        
+                        }
                         one_present = true;
                     }
 
@@ -566,22 +566,22 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                         ImGui::SetKeyboardFocusHere();
                         this->set_focus++;
                     }
-                    ImGui::InputText("###flex_enum_text_edit", &std::get<std::string>(this->widget_store), ImGuiInputTextFlags_None);
+                    ImGui::InputText(
+                        "###flex_enum_text_edit", &std::get<std::string>(this->widget_store), ImGuiInputTextFlags_None);
                     if (ImGui::IsItemDeactivatedAfterEdit()) {
                         if (!std::get<std::string>(this->widget_store).empty()) {
                             GUIUtils::Utf8Decode(std::get<std::string>(this->widget_store));
                             inout_parameter.SetValue(std::get<std::string>(this->widget_store));
                             std::get<std::string>(this->widget_store) = std::string();
                         }
-                        ImGui::CloseCurrentPopup(); 
-                    } 
-                    
+                        ImGui::CloseCurrentPopup();
+                    }
+
                     ImGui::EndCombo();
-                }
-                else {
+                } else {
                     this->set_focus = 0;
                 }
-                                        
+
                 this->help = "Only selected value will be saved to project file";
             } break;
             default:

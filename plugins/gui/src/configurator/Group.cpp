@@ -662,8 +662,9 @@ void megamol::gui::configurator::Group::Presentation::UpdatePositionSize(
             max_label_length = (2.0f * max_label_length / in_canvas.zooming) + (1.0f * GUI_SLOT_RADIUS);
         }
     }
-    group_width = std::max((1.5f * ImGui::CalcTextSize(inout_group.name.c_str()).x / in_canvas.zooming), max_label_length) +
-                  (3.0f * GUI_SLOT_RADIUS);
+    group_width =
+        std::max((1.5f * ImGui::CalcTextSize(inout_group.name.c_str()).x / in_canvas.zooming), max_label_length) +
+        (3.0f * GUI_SLOT_RADIUS);
 
     // HEIGHT
     group_height = std::max((3.0f * line_height),

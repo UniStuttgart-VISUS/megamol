@@ -360,7 +360,7 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
         help = "[Enable] for overwriting value range propagated from connected module(s).\n"
                "[Disable] for recovery of last value range or last value range propagated from connected module(s).";
         this->utils.HelpMarkerToolTip(help);
-        
+
         // Value slider -------------------------------------------------------
         this->widget_buffer.range_value =
             (this->nodes[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];

@@ -185,7 +185,7 @@ public:
                 storage.insert(std::get<std::string>(this->value));
                 this->SetStorage(storage);
             }
-            
+
             if (set_default_val) {
                 this->default_value = val;
                 this->default_value_mismatch = false;
