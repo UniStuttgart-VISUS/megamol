@@ -391,8 +391,6 @@ bool SphereRenderer::resetResources(void) {
     if (this->isRenderModeAvailable(RenderMode::SPLAT, true) ||
         this->isRenderModeAvailable(RenderMode::BUFFER_ARRAY, true)) {
 
-        glUnmapNamedBuffer(this->theSingleBuffer);
-
         for (auto& x : fences) {
             if (x) {
                 glDeleteSync(x);
@@ -404,6 +402,7 @@ bool SphereRenderer::resetResources(void) {
         this->singleBufferCreationBits = (GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT);
         this->singleBufferMappingBits = (GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
 
+        // Named buffer object is automatically unmapped, too
         glDeleteBuffers(1, &(this->theSingleBuffer));
     }
 
