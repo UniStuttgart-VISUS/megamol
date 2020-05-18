@@ -293,6 +293,7 @@ namespace rendering {
 
         RenderMode                               renderMode;
         GLuint                                   greyTF;
+        std::array<float, 2>                     range;
 
         bool                                     flags_available;
         bool                                     flags_enabled;
@@ -355,7 +356,6 @@ namespace rendering {
         /*********************************************************************/
 
         megamol::core::param::ParamSlot renderModeParam;
-        megamol::core::param::ParamSlot colIdxRangeInfoParam;
         megamol::core::param::ParamSlot radiusScalingParam;
         megamol::core::param::ParamSlot forceTimeSlot;
         megamol::core::param::ParamSlot useLocalBBoxParam;

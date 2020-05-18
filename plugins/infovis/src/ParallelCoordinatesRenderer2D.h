@@ -186,6 +186,7 @@ private:
 
     core::param::ParamSlot drawOtherItemsSlot;
     core::param::ParamSlot otherItemsColorSlot;
+    core::param::ParamSlot otherItemsAttribSlot;
     core::param::ParamSlot otherItemsAlphaSlot;
     float otherItemsColor[4];
 
@@ -282,6 +283,7 @@ private:
     float strokeEndY;
     bool needSelectionUpdate;
     bool needFlagsUpdate;
+    std::map<std::string, uint32_t> columnIndex;
 
     GLint maxAxes;
     GLint isoLinesPerInvocation;

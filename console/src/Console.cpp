@@ -514,6 +514,7 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
 
     // main loop
     bool winsAlive, jobsAlive;
+    uint32_t frameID = 0;
     do {
         winsAlive = megamol::console::WindowManager::Instance().IsAlive();
         jobsAlive = megamol::console::JobManager::Instance().IsAlive();
@@ -528,9 +529,10 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
             if (terminationRequest) {
                 megamol::console::WindowManager::Instance().Shutdown();
             }
-            megamol::console::WindowManager::Instance().Update();
+            megamol::console::WindowManager::Instance().Update(frameID);
         }
         processPendingActions();
+        frameID++;
     } while (winsAlive || jobsAlive);
 
 #if 0

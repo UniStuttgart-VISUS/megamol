@@ -34,7 +34,8 @@ void main() {
     if (valueColumn == -1) {
         vsValue = 1.0;
     } else {
-        vsValue = normalizeValue(values[rowOffset + valueColumn]);
+        vsValue = values[rowOffset + valueColumn];
+        //vsValue = normalizeValue(values[rowOffset + valueColumn]);
     }
     vsValueColor = flagifyColor(tflookup(vsValue), flags[gl_VertexID]);
 

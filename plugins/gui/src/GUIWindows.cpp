@@ -33,6 +33,8 @@ GUIWindows::GUIWindows()
     , impl(Implementation::NONE)
     , window_manager()
     , tf_editor()
+    , tf_hash(0)
+    , tf_texture_id(0)
     , configurator()
     , utils()
     , file_utils()
@@ -221,6 +223,18 @@ bool GUIWindows::PostDraw(void) {
         // Draw window content
         if (wc.win_show) {
             ImGui::SetNextWindowBgAlpha(1.0f);
+
+            // Change window falgs depending on current view of transfer function editor
+            if (wc.win_callback == WindowManager::DrawCallbacks::TRANSFER_FUNCTION) {
+                if (this->tf_editor.IsMinimized()) {
+                    wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
+                                   ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
+                } else {
+                    wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
+                }
+            }
+
+            // Begin Window
             if (!ImGui::Begin(wn.c_str(), &wc.win_show, wc.win_flags)) {
                 ImGui::End(); // early ending
                 return;
@@ -516,22 +530,19 @@ bool GUIWindows::createContext(void) {
         WindowManager::DrawCallbacks::MAIN, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
             this->drawMainWindowCallback(wn, wc);
         });
-    this->window_manager.RegisterDrawWindowCallback(
-        WindowManager::DrawCallbacks::PARAM, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-            this->drawParametersCallback(wn, wc);
-        });
-    this->window_manager.RegisterDrawWindowCallback(
-        WindowManager::DrawCallbacks::FPSMS, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-            this->drawFpsWindowCallback(wn, wc);
-        });
+    this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::PARAMETERS,
+        [&, this](
+            const std::string& wn, WindowManager::WindowConfiguration& wc) { this->drawParametersCallback(wn, wc); });
+    this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::PERFORMANCE,
+        [&, this](
+            const std::string& wn, WindowManager::WindowConfiguration& wc) { this->drawFpsWindowCallback(wn, wc); });
     this->window_manager.RegisterDrawWindowCallback(
         WindowManager::DrawCallbacks::FONT, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
             this->drawFontWindowCallback(wn, wc);
         });
-    this->window_manager.RegisterDrawWindowCallback(
-        WindowManager::DrawCallbacks::TF, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-            this->drawTFWindowCallback(wn, wc);
-        });
+    this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::TRANSFER_FUNCTION,
+        [&, this](
+            const std::string& wn, WindowManager::WindowConfiguration& wc) { this->drawTFWindowCallback(wn, wc); });
     this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::CONFIGURATOR,
         [&, this](
             const std::string& wn, WindowManager::WindowConfiguration& wc) { this->drawConfiguratorCallback(wn, wc); });
@@ -553,7 +564,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
-    buf_win.win_callback = WindowManager::DrawCallbacks::FPSMS;
+    buf_win.win_callback = WindowManager::DrawCallbacks::PERFORMANCE;
     // buf_win.win_size = autoresize
     this->window_manager.AddWindowConfiguration("Performance Metrics", buf_win);
 
@@ -569,7 +580,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
-    buf_win.win_callback = WindowManager::DrawCallbacks::TF;
+    buf_win.win_callback = WindowManager::DrawCallbacks::TRANSFER_FUNCTION;
     // buf_win.win_size = autoresize
     this->window_manager.AddWindowConfiguration("Transfer Function Editor", buf_win);
 
@@ -802,7 +813,12 @@ void GUIWindows::drawMainWindowCallback(const std::string& wn, WindowManager::Wi
 
 void GUIWindows::drawTFWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
 
-    this->tf_editor.DrawTransferFunctionEditor();
+    if (this->tf_editor.Draw(true)) {
+        size_t current_tf_hash = 0;
+        if (this->tf_editor.ActiveParamterValueHash(current_tf_hash)) {
+            this->tf_hash = current_tf_hash;
+        }
+    }
 }
 
 
@@ -999,7 +1015,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                         WindowManager::WindowConfiguration buf_win;
                         buf_win.win_show = true;
                         buf_win.win_flags = ImGuiWindowFlags_HorizontalScrollbar;
-                        buf_win.win_callback = WindowManager::DrawCallbacks::PARAM;
+                        buf_win.win_callback = WindowManager::DrawCallbacks::PARAMETERS;
                         buf_win.param_show_hotkeys = false;
                         buf_win.param_modules_list.emplace_back(label);
                         this->window_manager.AddWindowConfiguration(window_name, buf_win);
@@ -1114,6 +1130,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
 
 void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
     ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
 
     // Leave some space in histogram for text of current value
     wc.buf_current_delay += io.DeltaTime;
@@ -1158,8 +1175,11 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
         wc.ms_mode = WindowManager::TimingModes::MS;
     }
 
-    ImGui::SameLine(0.0f, 50.0f);
-    ImGui::Checkbox("Options", &wc.ms_show_options);
+    ImGui::SameLine(
+        ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() - style.ItemSpacing.x - style.ItemInnerSpacing.x));
+    if (ImGui::ArrowButton("Options_", ((wc.ms_show_options) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+        wc.ms_show_options = !wc.ms_show_options;
+    }
 
     std::vector<float> value_array = wc.buf_values;
     if (wc.ms_mode == WindowManager::TimingModes::FPS) {
@@ -1695,6 +1715,9 @@ void GUIWindows::drawTransferFunctionEdit(
     const std::string& id, const std::string& label, megamol::core::param::TransferFunctionParam& p) {
     ImGuiStyle& style = ImGui::GetStyle();
 
+    bool isActive = (&p == this->tf_editor.GetActiveParameter());
+    bool updateEditor = false;
+
     ImGui::BeginGroup();
     ImGui::PushID(id.c_str());
 
@@ -1702,12 +1725,38 @@ void GUIWindows::drawTransferFunctionEdit(
     if (p.Value().empty()) {
         ImGui::TextDisabled("{    (empty)    }");
     } else {
-        // XXX: A gradient texture would be nice here (sharing some editor code?)
-        ImGui::TextUnformatted("{ ............. }");
+        // Create texture
+        if (this->tf_hash != p.ValueHash()) {
+            UINT tex_size;
+            std::array<float, 2> tf_range;
+            core::param::TransferFunctionParam::InterpolationMode tf_interpol_mode;
+            core::param::TransferFunctionParam::TFNodeType tf_nodes;
+            if (megamol::core::param::TransferFunctionParam::ParseTransferFunction(
+                    p.Value(), tf_nodes, tf_interpol_mode, tex_size, tf_range)) {
+                std::vector<float> texture_data;
+                if (tf_interpol_mode == core::param::TransferFunctionParam::InterpolationMode::LINEAR) {
+                    core::param::TransferFunctionParam::LinearInterpolation(texture_data, tex_size, tf_nodes);
+                } else if (tf_interpol_mode == core::param::TransferFunctionParam::InterpolationMode::GAUSS) {
+                    core::param::TransferFunctionParam::GaussInterpolation(texture_data, tex_size, tf_nodes);
+                }
+                this->tf_editor.CreateTexture(this->tf_texture_id, tex_size, 1, texture_data.data());
+            }
+        }
+        // Draw texture
+        if (this->tf_texture_id != 0) {
+            ImGui::Image(reinterpret_cast<ImTextureID>(this->tf_texture_id),
+                ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight()), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f),
+                ImVec4(1.0f, 1.0f, 1.0f, 1.0f), style.Colors[ImGuiCol_Border]);
+        } else {
+            ImGui::TextUnformatted("{ ............. }");
+        }
     }
 
-    bool isActive = (&p == this->tf_editor.GetActiveParameter());
-    bool updateEditor = false;
+    ImGui::SameLine(ImGui::CalcItemWidth() + style.ItemInnerSpacing.x);
+    ImGui::AlignTextToFramePadding();
+    ImGui::TextEx(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
+
+    ImGui::Indent();
 
     // Copy transfer function.
     if (ImGui::Button("Copy")) {
@@ -1750,7 +1799,7 @@ void GUIWindows::drawTransferFunctionEdit(
         this->tf_editor.SetActiveParameter(&p);
         // Open window calling the transfer function editor callback
         const auto func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-            if (wc.win_callback == WindowManager::DrawCallbacks::TF) {
+            if (wc.win_callback == WindowManager::DrawCallbacks::TRANSFER_FUNCTION) {
                 wc.win_show = true;
             }
         };
@@ -1759,15 +1808,23 @@ void GUIWindows::drawTransferFunctionEdit(
     ImGui::PopStyleColor(3);
     ImGui::PopID();
 
-    // Propagate the transfer function to the editor.
-    if (isActive && updateEditor) {
-        this->tf_editor.SetTransferFunction(p.Value());
+    ImGui::Unindent();
+
+    // Check for changed parameter value which should be forced to the editor once.
+    if (isActive) {
+        if (this->tf_hash != p.ValueHash()) {
+            updateEditor = true;
+        }
     }
 
-    ImGui::PopID();
+    // Propagate the transfer function to the editor.
+    if (isActive && updateEditor) {
+        this->tf_editor.SetTransferFunction(p.Value(), true);
+    }
 
-    ImGui::SameLine();
-    ImGui::TextEx(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
+    this->tf_hash = p.ValueHash();
+
+    ImGui::PopID();
     ImGui::EndGroup();
 }
 
