@@ -400,8 +400,9 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
 
     this->help.clear();
 
-    // set general proportional item width
-    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f);
+    // Set general proportional item width
+    float widget_width = ImGui::GetContentRegionAvail().x * 0.5f;
+    ImGui::PushItemWidth(widget_width);
 
     if (this->read_only) {
         GUIUtils::ReadOnlyWigetStyle(true);
@@ -514,8 +515,8 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
                     this->widget_store = utf8Str;
                 }
                 ImGuiStyle& style = ImGui::GetStyle();
-                ImGui::PushItemWidth(
-                    ImGui::GetContentRegionAvail().x * 0.65f - ImGui::GetFrameHeight() - style.ItemSpacing.x);
+                widget_width -= (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
+                ImGui::PushItemWidth(widget_width);
                 bool button_edit = this->file_utils.FileBrowserButton(std::get<std::string>(this->widget_store));
                 ImGui::SameLine();
                 ImGui::InputText(
@@ -717,6 +718,8 @@ void megamol::gui::configurator::Parameter::Presentation::present_postfix(
 void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit(
     megamol::gui::configurator::Parameter& inout_parameter) {
 
+    ImGuiStyle& style = ImGui::GetStyle();
+
     if ((inout_parameter.type != Parameter::ParamType::TRANSFERFUNCTION) ||
         (!std::holds_alternative<std::string>(inout_parameter.GetValue()))) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -726,27 +729,31 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
     }
     auto value = std::get<std::string>(inout_parameter.GetValue());
 
+    bool updateEditor = false;
+    
     ImGui::BeginGroup();
 
     // Reduced display of value and editor state.
     if (value.empty()) {
         ImGui::TextDisabled("{    (empty)    }");
+        ImGui::SameLine();
     } else {
-        /// XXX: A gradient texture would be nice here (sharing some editor code?)
-        ImGui::TextUnformatted("{ ............. }");
-    }
-    ImGui::SameLine();
-
-    bool updateEditor = false;
-
-    // Edit transfer function.
-    if (ImGui::Checkbox("Editor", &this->show_tf_editor)) {
-        // Set once
-        if (this->show_tf_editor) {
-            updateEditor = true;
+        // Draw texture
+        if (this->tf_editor.GetHorizontalTexture() != 0) {
+            ImGui::Image(reinterpret_cast<ImTextureID>(this->tf_editor.GetHorizontalTexture()),
+                ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight()), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f),
+                ImVec4(1.0f, 1.0f, 1.0f, 1.0f), style.Colors[ImGuiCol_Border]);
+            ImGui::SameLine(ImGui::CalcItemWidth() + style.ItemInnerSpacing.x);
+            ImGui::AlignTextToFramePadding();                
+        } else {
+            ImGui::TextUnformatted("{ ............. }");
+            ImGui::SameLine();
         }
     }
-    ImGui::SameLine();
+    std::string label = inout_parameter.full_name;
+    ImGui::TextUnformatted(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
+
+    ImGui::Indent();
 
     // Copy transfer function.
     if (ImGui::Button("Copy")) {
@@ -776,12 +783,17 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
 #endif
         updateEditor = true;
     }
-
     ImGui::SameLine();
 
-    std::string label = inout_parameter.full_name;
-    ImGui::TextUnformatted(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
+    // Edit transfer function.
+    if (ImGui::Checkbox("Editor", &this->show_tf_editor)) {
+        // Set once
+        if (this->show_tf_editor) {
+            updateEditor = true;
+        }
+    }
 
+    ImGui::Unindent();
     ImGui::EndGroup();
 
     // Propagate the transfer function to the editor.

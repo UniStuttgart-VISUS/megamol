@@ -34,7 +34,6 @@ GUIWindows::GUIWindows()
     , window_manager()
     , tf_editor()
     , tf_hash(0)
-    , tf_texture_id(0)
     , configurator()
     , utils()
     , file_utils()
@@ -632,7 +631,7 @@ bool GUIWindows::createContext(void) {
     // MAIN Window ------------------------------------------------------------
     buf_win.win_show = true;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F12);
-    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoTitleBar;
+    buf_win.win_flags = ImGuiWindowFlags_MenuBar |  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar;
     buf_win.win_callback = WindowManager::DrawCallbacks::MAIN;
     buf_win.win_position = ImVec2(0.0f, 0.0f);
     buf_win.win_size = ImVec2(400.0f, 600.0f);
@@ -847,8 +846,9 @@ void GUIWindows::validateParameter() {
     /// ImGuiIO& io = ImGui::GetIO();
     /// this->state.win_save_delay += io.DeltaTime;
     /*
-    else if (this->state.win_save_state && (this->state.win_save_delay > 2.0f)) { // Delayed saving after triggering
-    saving state (in seconds). this->save_state_to_parameter(); this->state.win_save_state = false;
+    else if (this->state.win_save_state && (this->state.win_save_delay > 2.0f)) { 
+        // Delayed saving after triggering saving state (in seconds). 
+        this->save_state_to_parameter(); this->state.win_save_state = false;
     }
     */
 
@@ -911,14 +911,15 @@ void GUIWindows::drawConfiguratorCallback(const std::string& wn, WindowManager::
 
 void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
 
-    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.5f); // set general proportional item width
-
+    // Set general proportional item width
+    float widget_width = ImGui::GetContentRegionAvail().x * 0.5f;
+    ImGui::PushItemWidth(widget_width);
+    
     // Options
     ImGuiID overrideState = GUI_INVALID_ID;
     if (ImGui::Button("Expand All")) {
         overrideState = 1; // open
     }
-
     ImGui::SameLine();
 
     if (ImGui::Button("Collapse All")) {
@@ -1056,7 +1057,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
     ImGui::Separator();
 
     // Create child window for sepearte scroll bar and keeping header always visible on top of parameter list
-    ImGui::BeginChild("###ParameterList");
+    ImGui::BeginChild("###ParameterList", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_HorizontalScrollbar);
 
     // Listing modules and their parameters
     const core::Module* current_mod = nullptr;
@@ -1899,36 +1900,20 @@ void GUIWindows::drawTransferFunctionEdit(
     // Reduced display of value and editor state.
     if (p.Value().empty()) {
         ImGui::TextDisabled("{    (empty)    }");
+        ImGui::SameLine();
     } else {
-        // Create texture
-        if (this->tf_hash != p.ValueHash()) {
-            UINT tex_size;
-            std::array<float, 2> tf_range;
-            core::param::TransferFunctionParam::InterpolationMode tf_interpol_mode;
-            core::param::TransferFunctionParam::TFNodeType tf_nodes;
-            if (megamol::core::param::TransferFunctionParam::ParseTransferFunction(
-                    p.Value(), tf_nodes, tf_interpol_mode, tex_size, tf_range)) {
-                std::vector<float> texture_data;
-                if (tf_interpol_mode == core::param::TransferFunctionParam::InterpolationMode::LINEAR) {
-                    core::param::TransferFunctionParam::LinearInterpolation(texture_data, tex_size, tf_nodes);
-                } else if (tf_interpol_mode == core::param::TransferFunctionParam::InterpolationMode::GAUSS) {
-                    core::param::TransferFunctionParam::GaussInterpolation(texture_data, tex_size, tf_nodes);
-                }
-                this->tf_editor.CreateTexture(this->tf_texture_id, tex_size, 1, texture_data.data());
-            }
-        }
         // Draw texture
-        if (this->tf_texture_id != 0) {
-            ImGui::Image(reinterpret_cast<ImTextureID>(this->tf_texture_id),
+        if (this->tf_editor.GetHorizontalTexture() != 0) {
+            ImGui::Image(reinterpret_cast<ImTextureID>(this->tf_editor.GetHorizontalTexture()),
                 ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight()), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f),
                 ImVec4(1.0f, 1.0f, 1.0f, 1.0f), style.Colors[ImGuiCol_Border]);
+            ImGui::SameLine(ImGui::CalcItemWidth() + style.ItemInnerSpacing.x);
+            ImGui::AlignTextToFramePadding();                
         } else {
             ImGui::TextUnformatted("{ ............. }");
+            ImGui::SameLine();
         }
     }
-
-    ImGui::SameLine(ImGui::CalcItemWidth() + style.ItemInnerSpacing.x);
-    ImGui::AlignTextToFramePadding();
     ImGui::TextEx(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
 
     ImGui::Indent();
@@ -1961,9 +1946,9 @@ void GUIWindows::drawTransferFunctionEdit(
 #endif
         updateEditor = true;
     }
-
-    // Edit transfer function.
     ImGui::SameLine();
+    
+    // Edit transfer function.
     ImGui::PushID("Edit_");
     ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[isActive ? ImGuiCol_ButtonHovered : ImGuiCol_Button]);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.Colors[isActive ? ImGuiCol_Button : ImGuiCol_ButtonHovered]);

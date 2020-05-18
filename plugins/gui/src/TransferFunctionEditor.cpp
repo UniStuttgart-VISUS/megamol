@@ -342,7 +342,6 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
         ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
         ImGui::TextUnformatted("Value Range");
 
-
         if (ImGui::Checkbox("Overwrite Value Range", &this->range_overwrite)) {
             if (this->range_overwrite) {
                 // Save last range before overwrite
@@ -472,9 +471,10 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
             param::TransferFunctionParam::GaussInterpolation(this->texturePixels, this->textureSize, this->nodes);
         }
 
-        this->CreateTexture(
+        // Always create horizontal and vertical texture for possible external use
+        this->createTexture(
             this->texture_id_horiz, static_cast<GLsizei>(this->textureSize), 1, this->texturePixels.data());
-        this->CreateTexture(
+        this->createTexture(
             this->texture_id_vert, 1, static_cast<GLsizei>(this->textureSize), this->texturePixels.data());
 
         this->textureInvalid = false;
@@ -538,31 +538,6 @@ bool TransferFunctionEditor::ActiveParamterValueHash(size_t& out_tf_value_hash) 
         return true;
     }
     return false;
-}
-
-
-void TransferFunctionEditor::CreateTexture(GLuint& inout_id, GLsizei width, GLsizei height, float* data) const {
-
-    if (data == nullptr) return;
-
-    // Delete old texture.
-    if (inout_id != 0) {
-        glDeleteTextures(1, &inout_id);
-    }
-    inout_id = 0;
-
-    // Upload texture.
-    glGenTextures(1, &inout_id);
-    glBindTexture(GL_TEXTURE_2D, inout_id);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, data);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 
@@ -931,4 +906,29 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
     this->utils.HelpMarkerToolTip(
         "First and last node are always present\nwith fixed value 0 and 1.\n[Left-Click] Select "
         "Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");
+}
+
+
+void TransferFunctionEditor::createTexture(GLuint& inout_id, GLsizei width, GLsizei height, float* data) const {
+
+    if (data == nullptr) return;
+
+    // Delete old texture.
+    if (inout_id != 0) {
+        glDeleteTextures(1, &inout_id);
+    }
+    inout_id = 0;
+
+    // Upload texture.
+    glGenTextures(1, &inout_id);
+    glBindTexture(GL_TEXTURE_2D, inout_id);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, data);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
 }

@@ -181,9 +181,6 @@ private:
     /** The last tf param value. */
     size_t tf_hash;
 
-    /** The tf texture id. */
-    GLuint tf_texture_id;
-
     /** The configurator. */
     megamol::gui::configurator::Configurator configurator;
 

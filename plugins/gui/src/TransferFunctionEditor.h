@@ -72,18 +72,13 @@ public:
      * Returns true if editor is in minimized view.
      */
     inline bool IsMinimized(void) const { return !this->showOptions; }
-
+    
     /**
-     * Create texture.
+     * Return texture id of horizontal texture.
      */
-    void CreateTexture(GLuint& inout_id, GLsizei width, GLsizei height, float* data) const;
+    GLuint GetHorizontalTexture(void) { return this->texture_id_horiz; }
 
 private:
-    void drawTextureBox(const ImVec2& size, bool flip_xy);
-
-    void drawScale(const ImVec2& pos, const ImVec2& size, bool flip_xy);
-
-    void drawFunctionPlot(const ImVec2& size);
 
     /** The global input widget state buffer. */
     struct WidgetBuffer {
@@ -154,6 +149,17 @@ private:
 
     /** Legend alignment flag. */
     bool flip_xy;
+    
+    // FUNCTIONS -----------------------------------------------------------
+
+    void drawTextureBox(const ImVec2& size, bool flip_xy);
+
+    void drawScale(const ImVec2& pos, const ImVec2& size, bool flip_xy);
+
+    void drawFunctionPlot(const ImVec2& size);
+
+    void createTexture(GLuint& inout_id, GLsizei width, GLsizei height, float* data) const;    
+        
 };
 
 } // namespace gui
