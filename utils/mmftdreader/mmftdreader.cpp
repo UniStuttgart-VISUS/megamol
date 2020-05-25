@@ -1,10 +1,19 @@
-#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <string>
+#include <vector>
 
+#if defined(_HAS_CXX17) || ((defined(_MSC_VER) && (_MSC_VER > 1916))) // C++2017 or since VS2019
+#include <filesystem>
 namespace fs = std::filesystem;
+#elif _WIN32
+#include <filesystem>
+namespace fs = std::experimental::filesystem;
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif
 
 struct ColumnInfo {
     uint16_t nameLength;
