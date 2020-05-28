@@ -10,6 +10,10 @@ endif()
 # Include external script
 include("${CMAKE_BINARY_DIR}/script-externals/cmake/External.cmake")
 
+# other includes
+# TODO: remove when uploading
+include(CMakePrintHelpers)
+
 #
 # Centralized function to require externals to add them once by invoking
 # require_external(<EXTERNAL_TARGET>).
@@ -612,28 +616,21 @@ function(require_external NAME)
     set(LIB_VER 1)
 
     if(WIN32)
-      set(VTKM_CONT_IMPORT_LIB "lib/vtkm_cont-${VTKM_VER}.lib")
-      set(VTKM_RENDERER_IMPORT_LIB "lib/vtkm_rendering-${VTKM_VER}.lib")
-      set(VTKM_WORKLET_IMPORT_LIB "lib/vtkm_worklet-${VTKM_VER}.lib")
-      #set(VTKM_CONT_LIB "bin/vtkm_cont-${VTKM_VER}.dll")
-      #set(VTKM_RENDERER_LIB "bin/vtkm_rendering-${VTKM_VER}.dll")
-      #set(VTKM_WORKLET_LIB "bin/vtkm_worklet-${VTKM_VER}.dll")
+      set(VTKM_CONT_LIB "lib/vtkm_cont-${VTKM_VER}.lib")
+      set(VTKM_RENDERER_LIB "lib/vtkm_rendering-${VTKM_VER}.lib")
+      set(VTKM_WORKLET_LIB "lib/vtkm_worklet-${VTKM_VER}.lib")
     else()
       set(VTKM_CONT_LIB "lib/libvtkm_cont-${VTKM_VER}.so.${LIB_VER}")
       set(VTKM_RENDERER_LIB "lib/libvtkm_rendering-${VTKM_VER}.so.${LIB_VER}")
       set(VTKM_WORKLET_LIB "lib/libvtkm_worklet-${VTKM_VER}.so.${LIB_VER}")
-      
     endif()
 
     option(vtkm_ENABLE_CUDA "Option to build vtkm with cuda enabled" OFF)
-
+    
     add_external_project(vtkm STATIC
       GIT_REPOSITORY https://gitlab.kitware.com/vtk/vtk-m.git
       GIT_TAG "v1.5.0"
       BUILD_BYPRODUCTS 
-	      #"<INSTALL_DIR>/${VTKM_CONT_IMPORT_LIB}"
-	      #"<INSTALL_DIR>/${VTKM_RENDERER_IMPORT_LIB}"
-	      #"<INSTALL_DIR>/${VTKM_WORKLET_IMPORT_LIB}"
         "<INSTALL_DIR>/${VTKM_CONT_LIB}"
 	      "<INSTALL_DIR>/${VTKM_RENDERER_LIB}"
 	      "<INSTALL_DIR>/${VTKM_WORKLET_LIB}"
@@ -644,26 +641,20 @@ function(require_external NAME)
         -DBUILD_TESTING:BOOL=OFF
         -DVTKm_ENABLE_DEVELOPER_FLAGS:BOOL=OFF
         -DVTKm_INSTALL_ONLY_LIBRARIES:BOOL=ON
-        -DCMAKE_BUILD_TYPE=Release
+        #-DCMAKE_BUILD_TYPE=Release
         )
 
     add_external_library(vtkm_cont
       PROJECT vtkm
-      #IMPORT_LIBRARY ${VTKM_CONT_IMPORT_LIB}
-      #LIBRARY ${VTKM_CONT_LIB})
-      LIBRARY ${VTKM_CONT_IMPORT_LIB})
+      LIBRARY ${VTKM_CONT_LIB})
 
     add_external_library(vtkm_renderer
       PROJECT vtkm
-      #IMPORT_LIBRARY ${VTKM_RENDERER_IMPORT_LIB}
-      #LIBRARY ${VTKM_RENDERER_LIB})
-      LIBRARY ${VTKM_RENDERER_IMPORT_LIB})
+      LIBRARY ${VTKM_RENDERER_LIB})
 
     add_external_library(vtkm_worklet
       PROJECT vtkm
-      #IMPORT_LIBRARY ${VTKM_WORKLET_IMPORT_LIB}
-      #LIBRARY ${VTKM_WORKLET_LIB})
-      LIBRARY ${VTKM_WORKLET_IMPORT_LIB})
+      LIBRARY ${VTKM_WORKLET_LIB})
 
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")
