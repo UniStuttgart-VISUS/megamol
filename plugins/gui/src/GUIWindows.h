@@ -257,7 +257,7 @@ private:
      * Transfer function edit widget.
      */
     void drawTransferFunctionEdit(
-        const std::string& id, const std::string& label, megamol::core::param::TransferFunctionParam& p);
+        const std::string& param_full_name, const std::string& label, megamol::core::param::TransferFunctionParam& p);
 
     /**
      * Draws only a button parameter's hotkey.

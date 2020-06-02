@@ -49,7 +49,7 @@ public:
         ImVec2 win_size;                // size for reset on state loading (current size)
         bool win_soft_reset;            // soft reset of window position and size
         ImVec2 win_reset_size;          // minimum window size for soft reset
-        bool win_reset; // flag for reset window position and size on state loading  (not saved in state)
+        bool win_reset;                 // flag for reset window position and size on state loading [NOT SAVED]
         // ---------- Main window configuration ----------
         std::string main_project_file; // project file name
         // ---------- Parameter specific configuration ----------
@@ -62,15 +62,20 @@ public:
         int ms_max_history_count;      // maximum count of values in value array
         float ms_refresh_rate;         // maximum delay when fps/ms value should be renewed.
         TimingModes ms_mode;           // mode for displaying either FPS or MS
-        float buf_current_delay;       // current delay between frames (not saved in state)
-        std::vector<float> buf_values; // current ms values (not saved in state)
-        float buf_plot_ms_scaling;     // current ms plot scaling factor (not saved in state)
-        float buf_plot_fps_scaling;    // current fps plot scaling factor (not saved in state)
+        float buf_current_delay;       // current delay between frames                              [NOT SAVED]
+        std::vector<float> buf_values; // current ms values                                         [NOT SAVED]
+        float buf_plot_ms_scaling;     // current ms plot scaling factor                            [NOT SAVED]
+        float buf_plot_fps_scaling;    // current fps plot scaling factor                           [NOT SAVED]
         // ---------- Font specific configuration ---------
         std::string font_name;     // font name (only already loaded font names will be restored)
-        bool buf_font_reset;       // flag for reset of font on state loading  (not saved in state)
-        std::string buf_font_file; // current font file name (not saved in state)
-        float buf_font_size;       // current font size (not saved in state)
+        bool buf_font_reset;       // flag for reset of font on state loading                       [NOT SAVED]
+        std::string buf_font_file; // current font file name                                        [NOT SAVED]
+        float buf_font_size;       // current font size                                             [NOT SAVED]
+        // ---------- Transfer Function Editor specific configuration ---------
+        bool tfe_view_minimized;        // flag indicating minimized window state 
+        bool tfe_view_vertical;         // flag indicating vertical window state
+        std::string tfe_active_param;   // last active parameter connected to editor
+        bool buf_tfe_reset;             // flag for reset of tfe window on state loading            [NOT SAVED]
 
         // Ctor for default values
         WindowConfiguration(void)
@@ -101,7 +106,11 @@ public:
             , font_name()
             , buf_font_reset(false)
             , buf_font_file()
-            , buf_font_size(13.0f) {}
+            , buf_font_size(13.0f) 
+            , tfe_view_minimized(false)
+            , tfe_view_vertical(false)
+            , tfe_active_param("")
+            , buf_tfe_reset(false) {}
     };
 
     /** Type for callback function. */

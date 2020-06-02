@@ -217,8 +217,8 @@ bool GUIWindows::PostDraw(void) {
 
     // Draw GUI Windows -------------------------------------------------------
     const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-        // Loading font (from FONT window configuration - even if FONT window is not shown)
-        if (wc.buf_font_reset) {
+        // Loading changed window state of font (even if window is not shown)
+        if ((wc.win_callback == WindowManager::DrawCallbacks::FONT) && wc.buf_font_reset) {
             if (!wc.font_name.empty()) {
                 this->state.font_index = GUI_INVALID_ID;
                 for (unsigned int n = this->graph_fonts_reserved; n < static_cast<unsigned int>(io.Fonts->Fonts.Size);
@@ -237,12 +237,29 @@ bool GUIWindows::PostDraw(void) {
             }
             wc.buf_font_reset = false;
         }
+        // Loading changed window state of transfer function editor (even if window is not shown)
+        if ((wc.win_callback == WindowManager::DrawCallbacks::TRANSFER_FUNCTION) && wc.buf_tfe_reset) {
+            this->tf_editor.SetMinimized(wc.tfe_view_minimized);
+            this->tf_editor.SetVertical(wc.tfe_view_vertical);
+            if (this->core_instance != nullptr) {
+                this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
+                    std::string param_name = std::string(slot.Name().PeekBuffer());
+                    std::string param_full_name = std::string(mod.FullName().PeekBuffer()) + "::" + param_name;
+                    if (wc.tfe_active_param == param_full_name) {        
+                        if (auto* p = slot.template Param<core::param::TransferFunctionParam>()) {
+                            this->tf_editor.SetActiveParameter(p, param_full_name);
+                        }
+                    }
+                });
+            }
+            wc.buf_tfe_reset = false;
+        }        
 
         // Draw window content
         if (wc.win_show) {
             ImGui::SetNextWindowBgAlpha(1.0f);
 
-            // Change window falgs depending on current view of transfer function editor
+            // Change window flags depending on current view of transfer function editor
             if (wc.win_callback == WindowManager::DrawCallbacks::TRANSFER_FUNCTION) {
                 if (this->tf_editor.IsMinimized()) {
                     wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
@@ -250,6 +267,8 @@ bool GUIWindows::PostDraw(void) {
                 } else {
                     wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
                 }
+                wc.tfe_view_minimized = this->tf_editor.IsMinimized();
+                wc.tfe_view_vertical = this->tf_editor.IsVertical();
             }
 
             // Begin Window
@@ -900,6 +919,7 @@ void GUIWindows::drawTFWindowCallback(const std::string& wn, WindowManager::Wind
             this->tf_hash = current_tf_hash;
         }
     }
+    wc.tfe_active_param = this->tf_editor.GetActiveParameter();
 }
 
 
@@ -1589,12 +1609,12 @@ void GUIWindows::drawParameter(
     if (!parameter.IsNull()) {
 
         std::string param_name = slot.Name().PeekBuffer();
-        std::string param_id = std::string(mod.FullName().PeekBuffer()) + "::" + param_name;
+        std::string param_full_name = std::string(mod.FullName().PeekBuffer()) + "::" + param_name;
         auto pos = param_name.find("::");
         if (pos != std::string::npos) {
             param_name = param_name.substr(pos + 2);
         }
-        std::string param_label_hidden = "###" + param_id;
+        std::string param_label_hidden = "###" + param_full_name;
         std::string param_label = param_name + param_label_hidden;
         std::string param_desc = slot.Description().PeekBuffer();
         std::string float_format = "%.7f";
@@ -1688,7 +1708,7 @@ void GUIWindows::drawParameter(
                    "[CTRL+Click] on individual component to input value.\n"
                    "[Right-Click] on the individual color widget to show options.";
         } else if (auto* p = slot.template Param<core::param::TransferFunctionParam>()) {
-            drawTransferFunctionEdit(param_id, param_label, *p);
+            this->drawTransferFunctionEdit(param_full_name, param_label, *p);
         } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
             /// XXX: no UTF8 fanciness required here?
             auto map = p->getMap();
@@ -1723,10 +1743,10 @@ void GUIWindows::drawParameter(
                 ImGui::EndCombo();
             }
         } else if (auto* p = slot.template Param<core::param::FloatParam>()) {
-            auto it = this->widgtmap_float.find(param_id);
+            auto it = this->widgtmap_float.find(param_full_name);
             if (it == this->widgtmap_float.end()) {
-                this->widgtmap_float.emplace(param_id, p->Value());
-                it = this->widgtmap_float.find(param_id);
+                this->widgtmap_float.emplace(param_full_name, p->Value());
+                it = this->widgtmap_float.find(param_full_name);
             }
             ImGui::InputFloat(
                 param_label.c_str(), &it->second, 1.0f, 10.0f, float_format.c_str(), ImGuiInputTextFlags_None);
@@ -1737,10 +1757,10 @@ void GUIWindows::drawParameter(
                 it->second = p->Value();
             }
         } else if (auto* p = slot.template Param<core::param::IntParam>()) {
-            auto it = this->widgtmap_int.find(param_id);
+            auto it = this->widgtmap_int.find(param_full_name);
             if (it == this->widgtmap_int.end()) {
-                this->widgtmap_int.emplace(param_id, p->Value());
-                it = this->widgtmap_int.find(param_id);
+                this->widgtmap_int.emplace(param_full_name, p->Value());
+                it = this->widgtmap_int.find(param_full_name);
             }
             ImGui::InputInt(param_label.c_str(), &it->second, 1, 10, ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -1750,10 +1770,10 @@ void GUIWindows::drawParameter(
                 it->second = p->Value();
             }
         } else if (auto* p = slot.template Param<core::param::Vector2fParam>()) {
-            auto it = this->widgtmap_vec2.find(param_id);
+            auto it = this->widgtmap_vec2.find(param_full_name);
             if (it == this->widgtmap_vec2.end()) {
-                this->widgtmap_vec2.emplace(param_id, p->Value());
-                it = this->widgtmap_vec2.find(param_id);
+                this->widgtmap_vec2.emplace(param_full_name, p->Value());
+                it = this->widgtmap_vec2.find(param_full_name);
             }
             ImGui::InputFloat2(
                 param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
@@ -1766,10 +1786,10 @@ void GUIWindows::drawParameter(
                 it->second = p->Value();
             }
         } else if (auto* p = slot.template Param<core::param::Vector3fParam>()) {
-            auto it = this->widgtmap_vec3.find(param_id);
+            auto it = this->widgtmap_vec3.find(param_full_name);
             if (it == this->widgtmap_vec3.end()) {
-                this->widgtmap_vec3.emplace(param_id, p->Value());
-                it = this->widgtmap_vec3.find(param_id);
+                this->widgtmap_vec3.emplace(param_full_name, p->Value());
+                it = this->widgtmap_vec3.find(param_full_name);
             }
             ImGui::InputFloat3(
                 param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
@@ -1783,10 +1803,10 @@ void GUIWindows::drawParameter(
                 it->second = p->Value();
             }
         } else if (auto* p = slot.template Param<core::param::Vector4fParam>()) {
-            auto it = this->widgtmap_vec4.find(param_id);
+            auto it = this->widgtmap_vec4.find(param_full_name);
             if (it == this->widgtmap_vec4.end()) {
-                this->widgtmap_vec4.emplace(param_id, p->Value());
-                it = this->widgtmap_vec4.find(param_id);
+                this->widgtmap_vec4.emplace(param_full_name, p->Value());
+                it = this->widgtmap_vec4.find(param_full_name);
             }
             ImGui::InputFloat4(
                 param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
@@ -1819,12 +1839,12 @@ void GUIWindows::drawParameter(
             ImGui::TextUnformatted(param_name.c_str());
         } else if (auto* p = slot.Param<core::param::StringParam>()) {
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            auto it = this->widgtmap_text.find(param_id);
+            auto it = this->widgtmap_text.find(param_full_name);
             if (it == this->widgtmap_text.end()) {
                 std::string utf8Str = std::string(p->ValueString().PeekBuffer());
                 GUIUtils::Utf8Encode(utf8Str);
-                this->widgtmap_text.emplace(param_id, utf8Str);
-                it = this->widgtmap_text.find(param_id);
+                this->widgtmap_text.emplace(param_full_name, utf8Str);
+                it = this->widgtmap_text.find(param_full_name);
             }
             // Determine multi line count of string
             int lcnt = static_cast<int>(std::count(it->second.begin(), it->second.end(), '\n'));
@@ -1847,12 +1867,12 @@ void GUIWindows::drawParameter(
             help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
         } else if (auto* p = slot.Param<core::param::FilePathParam>()) {
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            auto it = this->widgtmap_text.find(param_id);
+            auto it = this->widgtmap_text.find(param_full_name);
             if (it == this->widgtmap_text.end()) {
                 std::string utf8Str = std::string(p->ValueString().PeekBuffer());
                 GUIUtils::Utf8Encode(utf8Str);
-                this->widgtmap_text.emplace(param_id, utf8Str);
-                it = this->widgtmap_text.find(param_id);
+                this->widgtmap_text.emplace(param_full_name, utf8Str);
+                it = this->widgtmap_text.find(param_full_name);
             }
             ImGui::PushItemWidth(
                 ImGui::GetContentRegionAvail().x * 0.65f - ImGui::GetFrameHeight() - style.ItemSpacing.x);
@@ -1888,14 +1908,14 @@ void GUIWindows::drawParameter(
 }
 
 void GUIWindows::drawTransferFunctionEdit(
-    const std::string& id, const std::string& label, megamol::core::param::TransferFunctionParam& p) {
+    const std::string& param_full_name, const std::string& label, megamol::core::param::TransferFunctionParam& p) {
     ImGuiStyle& style = ImGui::GetStyle();
 
-    bool isActive = (&p == this->tf_editor.GetActiveParameter());
+    bool isActive = (param_full_name == this->tf_editor.GetActiveParameter());
     bool updateEditor = false;
 
     ImGui::BeginGroup();
-    ImGui::PushID(id.c_str());
+    ImGui::PushID(param_full_name.c_str());
 
     // Reduced display of value and editor state.
     if (p.Value().empty()) {
@@ -1956,7 +1976,8 @@ void GUIWindows::drawTransferFunctionEdit(
     if (ImGui::Button("Edit")) {
         updateEditor = true;
         isActive = true;
-        this->tf_editor.SetActiveParameter(&p);
+        this->tf_editor.SetActiveParameter(&p, param_full_name);
+        
         // Open window calling the transfer function editor callback
         const auto func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
             if (wc.win_callback == WindowManager::DrawCallbacks::TRANSFER_FUNCTION) {

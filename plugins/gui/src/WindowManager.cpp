@@ -121,7 +121,11 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                 found = true;
                 for (auto& config_item : header_item.value().items()) {
                     std::string window_name = config_item.key();
+                    
                     WindowConfiguration tmp_config;
+                    tmp_config.buf_font_reset = false;
+                    tmp_config.buf_tfe_reset = false;
+                    tmp_config.win_reset = true;
 
                     // Getting all configuration values for current window.
                     auto config_values = config_item.value();
@@ -362,20 +366,55 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                     if (config_values.at("font_name").is_string()) {
                         config_values.at("font_name").get_to(tmp_config.font_name);
                         this->utils.Utf8Decode(tmp_config.font_name);
+                        
+                        if (!tmp_config.font_name.empty()) {
+                            tmp_config.buf_font_reset = true;
+                        }
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
                             "JSON state: Failed to read 'font_name' as string. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
-
-                    // set reset flags
-                    tmp_config.win_reset = true;
-
-                    tmp_config.buf_font_reset = false;
-                    if (!tmp_config.font_name.empty()) {
-                        tmp_config.buf_font_reset = true;
+                    // FTFEConfig ---------------------------------------------
+                    // tfe_view_minimized
+                    if (config_values.at("tfe_view_minimized").is_boolean()) {
+                        config_values.at("tfe_view_minimized").get_to(tmp_config.tfe_view_minimized);
+                        
+                        tmp_config.buf_tfe_reset = true; 
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "JSON state: Failed to read 'tfe_view_minimized' as boolean. [%s, %s, line %d]\n", __FILE__,
+                            __FUNCTION__, __LINE__);
+                        valid = false;
                     }
+                    // tfe_view_vertical
+                    if (config_values.at("tfe_view_vertical").is_boolean()) {
+                        config_values.at("tfe_view_vertical").get_to(tmp_config.tfe_view_vertical);
+                        
+                        tmp_config.buf_tfe_reset = true; 
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "JSON state: Failed to read 'tfe_view_vertical' as boolean. [%s, %s, line %d]\n", __FILE__,
+                            __FUNCTION__, __LINE__);
+                        valid = false;
+                    }                    
+                    // tfe_active_param (supports UTF-8)
+                    if (config_values.at("tfe_active_param").is_string()) {
+                        config_values.at("tfe_active_param").get_to(tmp_config.tfe_active_param);
+                        this->utils.Utf8Decode(tmp_config.tfe_active_param);
+                        
+                        if (!tmp_config.font_name.empty()) {
+                            tmp_config.buf_tfe_reset = true; 
+                        }
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "JSON state: Failed to read 'tfe_active_param' as string. [%s, %s, line %d]\n", __FILE__,
+                            __FUNCTION__, __LINE__);
+                        valid = false;
+                    }
+
+                    // add current window config to tmp window config list
                     tmp_windows.emplace(window_name, tmp_config);
                 }
             }
@@ -388,7 +427,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
 #endif // GUI_VERBOSE
             } else {
                 vislib::sys::Log::DefaultLog.WriteWarn(
-                    "Could not load window configuration state from JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                    "Error while loading window configuration state from JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                     __LINE__);
                 return false;
             }
@@ -397,7 +436,9 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
             /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-
+        
+        /// Not omitting complete read windows configuration if there was an error while reading 
+        /// (preventing 'old' configurations going out of use)
         // Replace existing window configurations and add new windows.
         for (auto& new_win : tmp_windows) {
             bool found_existing = false;
@@ -411,7 +452,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
             if (!found_existing) {
                 this->windows.emplace(new_win);
             }
-        }
+        }        
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -490,6 +531,10 @@ bool WindowManager::StateToJSON(nlohmann::json& out_json) {
 
                 this->utils.Utf8Encode(window_config.font_name);
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["font_name"] = window_config.font_name;
+                
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["tfe_view_minimized"] = window_config.tfe_view_minimized;
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["tfe_view_vertical"] = window_config.tfe_view_vertical;
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["tfe_active_param"] = window_config.tfe_active_param;
             }
         }
 #ifdef GUI_VERBOSE

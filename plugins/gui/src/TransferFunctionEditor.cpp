@@ -161,7 +161,8 @@ std::array<std::tuple<std::string, PresetGenerator>, 20> PRESETS = {
 
 TransferFunctionEditor::TransferFunctionEditor(void)
     : utils()
-    , active_parameter(nullptr)
+    , active_parameter_ptr(nullptr)
+    , active_parameter_name("")
     , nodes()
     , range({0.0f, 1.0f})
     , last_range({0.0f, 1.0f})
@@ -198,11 +199,9 @@ TransferFunctionEditor::TransferFunctionEditor(void)
 
 void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool active_parameter_mode) {
 
-    if (active_parameter_mode) {
-        if (active_parameter == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Missing active parameter to edit");
-            return;
-        }
+    if (active_parameter_mode && (this->active_parameter_ptr == nullptr)) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Missing active parameter to edit");
+        return;
     }
 
     std::array<float, 2> new_range;
@@ -249,12 +248,10 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
     ImGui::BeginGroup();
     ImGui::PushID("TransferFunctionEditor");
 
-    if (active_parameter_mode) {
-        if (this->active_parameter == nullptr) {
-            const char* message = "Changes have no effect.\n"
-                                  "Please set a transfer function parameter.\n";
-            ImGui::TextColored(GUI_COLOR_TEXT_WARN, message);
-        }
+    if (active_parameter_mode && (this->active_parameter_ptr == nullptr)) {
+        const char* message = "Changes have no effect.\n"
+                              "No transfer function parameter connected for edit.\n";
+        ImGui::TextColored(GUI_COLOR_TEXT_WARN, message);
     }
 
     assert(ImGui::GetCurrentContext() != nullptr);
@@ -288,6 +285,11 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
 
     if (this->showOptions) {
         ImGui::Separator();
+        
+        if (active_parameter_mode) {
+            ImGui::TextUnformatted("Parameter:");
+            ImGui::TextColored(GUI_COLOR_TEXT_WARN, ((this->active_parameter_ptr == nullptr)?("-"):(this->active_parameter_name.c_str())));
+        }
 
         // Legend alignment ---------------------------------------------------
         ImGui::BeginGroup();
@@ -512,10 +514,10 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
 
         if (active_parameter_mode) {
             if (apply_changes) {
-                if (this->active_parameter != nullptr) {
+                if (this->active_parameter_ptr != nullptr) {
                     std::string tf;
                     if (this->GetTransferFunction(tf)) {
-                        this->active_parameter->SetValue(tf);
+                        this->active_parameter_ptr->SetValue(tf);
                     }
                 }
             }
@@ -533,8 +535,8 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
 
 bool TransferFunctionEditor::ActiveParamterValueHash(size_t& out_tf_value_hash) {
 
-    if (this->active_parameter != nullptr) {
-        out_tf_value_hash = this->active_parameter->ValueHash();
+    if (this->active_parameter_ptr != nullptr) {
+        out_tf_value_hash = this->active_parameter_ptr->ValueHash();
         return true;
     }
     return false;

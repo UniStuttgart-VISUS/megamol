@@ -51,12 +51,15 @@ public:
     /**
      * Set the currently active parameter.
      */
-    void SetActiveParameter(core::param::TransferFunctionParam* param) { this->active_parameter = param; }
+    void SetActiveParameter(core::param::TransferFunctionParam* param, const std::string& name) { 
+        this->active_parameter_ptr = param; 
+        this->active_parameter_name = name; 
+        }
 
     /**
-     * Get the currently active parameter.
+     * Get name of currently active parameter.
      */
-    core::param::TransferFunctionParam* GetActiveParameter(void) { return this->active_parameter; }
+    std::string GetActiveParameter(void) { return this->active_parameter_name; }
 
     /**
      * Draws the transfer function editor.
@@ -73,6 +76,21 @@ public:
      */
     inline bool IsMinimized(void) const { return !this->showOptions; }
     
+    /**
+     * Set minimized view.
+     */
+    inline void SetMinimized(bool minimized) { this->showOptions = !minimized; }    
+    
+    /**
+     * Returns true if editor is in vertical view.
+     */
+    inline bool IsVertical(void) const { return this->flip_xy; }
+    
+    /**
+     * Set vertical view.
+     */
+    inline void SetVertical(bool vertical) { this->flip_xy = vertical; }    
+        
     /**
      * Return texture id of horizontal texture.
      */
@@ -95,7 +113,8 @@ private:
     GUIUtils utils;
 
     /** The currently active parameter whose transfer function is currently loaded into this editor. */
-    core::param::TransferFunctionParam* active_parameter;
+    core::param::TransferFunctionParam* active_parameter_ptr;
+    std::string active_parameter_name;
 
     /** Array holding current colors and function values. */
     megamol::core::param::TransferFunctionParam::TFNodeType nodes;
