@@ -14,7 +14,7 @@ namespace core {
 namespace param {
 
 
-class AbstractParamPresentation {
+class MEGAMOLCORE_API AbstractParamPresentation {
 public:
 
     enum Presentations : int {
