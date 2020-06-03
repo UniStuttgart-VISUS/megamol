@@ -248,6 +248,7 @@ bool GUIWindows::PostDraw(void) {
                     if (wc.tfe_active_param == param_full_name) {
                         if (auto* p = slot.template Param<core::param::TransferFunctionParam>()) {
                             this->tf_editor.SetActiveParameter(p, param_full_name);
+                            this->tf_editor.SetTransferFunction(p->Value(), true);
                         }
                     }
                 });
@@ -1099,10 +1100,8 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                 current_mod = &mod;
                 std::string label = mod.FullName().PeekBuffer();
 
-                if (current_mod_open) {
-                    // Vertical spacing
-                    ImGui::Dummy(ImVec2(1.0f, ImGui::GetFrameHeightWithSpacing()));
-                }
+                // Vertical spacing
+                /// if (current_mod_open) ImGui::Dummy(ImVec2(1.0f, ImGui::GetFrameHeightWithSpacing()));
 
                 // Check if module should be considered.
                 if (!this->considerModule(label, wc.param_modules_list)) {

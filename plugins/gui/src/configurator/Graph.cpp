@@ -2098,7 +2098,7 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
                             ImGui::Unindent();
                         }
                         // Vertical spacing
-                        ImGui::Dummy(ImVec2(1.0f, ImGui::GetFrameHeightWithSpacing()));
+                        /// ImGui::Dummy(ImVec2(1.0f, ImGui::GetFrameHeightWithSpacing()));
                     }
                     ImGui::PopID();
                 }
