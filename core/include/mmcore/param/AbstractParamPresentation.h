@@ -8,6 +8,8 @@
 #ifndef MEGAMOLCORE_ABSTRACTPARAMPRESENTATION_H_INCLUDED
 #define MEGAMOLCORE_ABSTRACTPARAMPRESENTATION_H_INCLUDED
 
+#include "mmcore/api/MegaMolCore.std.h"
+
 
 namespace megamol {
 namespace core {
@@ -19,7 +21,7 @@ public:
 
     enum Presentations : int {
         RawValue           = 0,           // Presentation representing the parameters value with default raw value widget
-        PinValueToMouse    = 1 << 2       // Presentation pinning value of parameter to mouse position
+        PinValueToMouse    = 1 << 1       // Presentation pinning value of parameter to mouse position
     };
 
     /**
