@@ -285,10 +285,11 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
 
     if (this->showOptions) {
         ImGui::Separator();
-        
+
         if (active_parameter_mode) {
             ImGui::TextUnformatted("Parameter:");
-            ImGui::TextColored(GUI_COLOR_TEXT_WARN, ((this->active_parameter_ptr == nullptr)?("-"):(this->active_parameter_name.c_str())));
+            ImGui::TextColored(GUI_COLOR_TEXT_WARN,
+                ((this->active_parameter_ptr == nullptr) ? ("-") : (this->active_parameter_name.c_str())));
         }
 
         // Legend alignment ---------------------------------------------------

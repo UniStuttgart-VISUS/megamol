@@ -51,10 +51,10 @@ public:
     /**
      * Set the currently active parameter.
      */
-    void SetActiveParameter(core::param::TransferFunctionParam* param, const std::string& name) { 
-        this->active_parameter_ptr = param; 
-        this->active_parameter_name = name; 
-        }
+    void SetActiveParameter(core::param::TransferFunctionParam* param, const std::string& name) {
+        this->active_parameter_ptr = param;
+        this->active_parameter_name = name;
+    }
 
     /**
      * Get name of currently active parameter.
@@ -75,29 +75,28 @@ public:
      * Returns true if editor is in minimized view.
      */
     inline bool IsMinimized(void) const { return !this->showOptions; }
-    
+
     /**
      * Set minimized view.
      */
-    inline void SetMinimized(bool minimized) { this->showOptions = !minimized; }    
-    
+    inline void SetMinimized(bool minimized) { this->showOptions = !minimized; }
+
     /**
      * Returns true if editor is in vertical view.
      */
     inline bool IsVertical(void) const { return this->flip_xy; }
-    
+
     /**
      * Set vertical view.
      */
-    inline void SetVertical(bool vertical) { this->flip_xy = vertical; }    
-        
+    inline void SetVertical(bool vertical) { this->flip_xy = vertical; }
+
     /**
      * Return texture id of horizontal texture.
      */
     GLuint GetHorizontalTexture(void) { return this->texture_id_horiz; }
 
 private:
-
     /** The global input widget state buffer. */
     struct WidgetBuffer {
         float min_range;
@@ -168,7 +167,7 @@ private:
 
     /** Legend alignment flag. */
     bool flip_xy;
-    
+
     // FUNCTIONS -----------------------------------------------------------
 
     void drawTextureBox(const ImVec2& size, bool flip_xy);
@@ -177,8 +176,7 @@ private:
 
     void drawFunctionPlot(const ImVec2& size);
 
-    void createTexture(GLuint& inout_id, GLsizei width, GLsizei height, float* data) const;    
-        
+    void createTexture(GLuint& inout_id, GLsizei width, GLsizei height, float* data) const;
 };
 
 } // namespace gui

@@ -730,7 +730,7 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
     auto value = std::get<std::string>(inout_parameter.GetValue());
 
     bool updateEditor = false;
-    
+
     ImGui::BeginGroup();
 
     // Reduced display of value and editor state.
@@ -744,7 +744,7 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
                 ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight()), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f),
                 ImVec4(1.0f, 1.0f, 1.0f, 1.0f), style.Colors[ImGuiCol_Border]);
             ImGui::SameLine(ImGui::CalcItemWidth() + style.ItemInnerSpacing.x);
-            ImGui::AlignTextToFramePadding();                
+            ImGui::AlignTextToFramePadding();
         } else {
             ImGui::TextUnformatted("{ ............. }");
             ImGui::SameLine();

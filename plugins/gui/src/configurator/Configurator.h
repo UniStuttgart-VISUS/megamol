@@ -86,6 +86,8 @@ private:
     ImVec2 module_list_popup_pos;
     ImGuiID last_selected_callslot_uid;
     megamol::gui::GraphStateType graph_state;
+    bool open_popup_save;
+    bool open_popup_load;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -96,6 +98,8 @@ private:
 
     bool configurator_state_from_json_string(const std::string& json_string);
     bool configurator_state_to_json(nlohmann::json& out_json);
+
+    void showPopUps(void);
 
 #ifdef GUI_USE_GLFW
     /**

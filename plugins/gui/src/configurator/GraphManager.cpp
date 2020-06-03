@@ -870,8 +870,8 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadAddProjectFile(
         if (!found_configurator_positions) {
             graph_ptr->GUI_SetLayoutGraph();
         }
-        
-        graph_ptr->ResetDirty();        
+
+        graph_ptr->ResetDirty();
 
         vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Successfully loaded project '%s' from file '%s'.\n",
             graph_ptr->name.c_str(), project_filename.c_str());

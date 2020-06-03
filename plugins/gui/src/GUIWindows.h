@@ -140,6 +140,8 @@ private:
         float win_save_delay;      // Flag indicating how long to wait for saving window state since last user action.
         std::string win_delete;    // Name of the window to delete.
         double last_instance_time; // Last instance time.
+        bool open_popup_about;     // Flag for opening about pop-up
+        bool open_popup_save;      // Flag for opening save pop-up
         bool hotkeys_check_once;   // WORKAROUND: Check multiple hotkey assignments once.
     };
 
@@ -266,6 +268,11 @@ private:
      * @param slot  The current parameter slot.
      */
     void drawParameterHotkey(const core::Module& mod, core::param::ParamSlot& slot);
+
+    /**
+     * Handle pop-ups.
+     */
+    void showPopUps(WindowManager::WindowConfiguration& wc);
 
     /**
      * Check if module's parameters should be visible.

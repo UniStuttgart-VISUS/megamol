@@ -283,7 +283,7 @@ private:
         std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
         const std::string float_format;
         float height;
-        UINT set_focus;      
+        UINT set_focus;
 
         void present_prefix(void);
         void present_value_DEFAULT(Parameter& inout_parameter);

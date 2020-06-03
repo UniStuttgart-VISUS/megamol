@@ -42,7 +42,9 @@ megamol::gui::configurator::Configurator::Configurator()
     , show_module_list_child(false)
     , module_list_popup_pos()
     , last_selected_callslot_uid(GUI_INVALID_ID)
-    , graph_state() {
+    , graph_state()
+    , open_popup_save(false)
+    , open_popup_load(false) {
 
     this->state_param << new core::param::StringParam("");
     this->state_param.Parameter()->SetGUIVisible(false);
@@ -113,8 +115,8 @@ bool megamol::gui::configurator::Configurator::Draw(
     if (this->init_state < 2) {
         /// Step 1] (two frames!)
 
-        // Show pop-up before calling UpdateAvailableModulesCallsOnce of graph.
-        /// Rendering of pop-up requires two complete Draw calls!
+        // Show pop-up before calling this->graph_manager.UpdateModulesCallsStock().
+        /// Rendering of pop-up requires two complete draw calls!
         bool open = true;
         std::string popup_label = "Loading";
         if (this->init_state == 0) {
@@ -149,14 +151,35 @@ bool megamol::gui::configurator::Configurator::Draw(
         /// Step 3]
         // Render configurator gui content
 
-        // Check for parameter changes
+        // Update state -------------------------------------------------------
+        // Check for configurator parameter changes
         if (this->state_param.IsDirty()) {
             std::string state = std::string(this->state_param.Param<core::param::StringParam>()->Value().PeekBuffer());
             this->configurator_state_from_json_string(state);
             this->state_param.ResetDirty();
         }
+        // Hotkeys
+        if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT]) &&
+            (this->graph_state.graph_selected_uid != GUI_INVALID_ID)) {
+            this->open_popup_save = true;
+        }
 
-        // Child Windows
+        // Clear dropped file list (when configurator window is opened, after it was closed)
+        if (ImGui::IsWindowAppearing()) {
+            megamol::gui::configurator::Configurator::dropped_files.clear();
+        }
+        // Process dropped files
+        if (!megamol::gui::configurator::Configurator::dropped_files.empty()) {
+            // ... only if configurator is focused.
+            if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
+                for (auto& dropped_file : megamol::gui::configurator::Configurator::dropped_files) {
+                    this->graph_manager.LoadAddProjectFile(this->graph_state.graph_selected_uid, dropped_file);
+                }
+            }
+            megamol::gui::configurator::Configurator::dropped_files.clear();
+        }
+
+        // Draw Windows -------------------------------------------------------
         this->draw_window_menu(core_instance);
         this->graph_state.graph_width = 0.0f;
         if (this->show_module_list_sidebar) {
@@ -166,56 +189,13 @@ bool megamol::gui::configurator::Configurator::Draw(
             ImGui::SameLine();
         }
         this->graph_manager.GUI_Present(this->graph_state);
+        // Process Pop-ups
+        this->showPopUps();
 
-        // Module Stock List in separate child window
-        GraphPtrType selected_graph_ptr;
-        if (this->graph_manager.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
-
-            ImGuiID selected_callslot_uid = selected_graph_ptr->GUI_GetSelectedCallSlot();
-            ImGuiID selected_group_uid = selected_graph_ptr->GUI_GetSelectedGroup();
-
-            bool valid_double_click =
-                (ImGui::IsMouseDoubleClicked(0) && !this->show_module_list_child &&
-                    selected_graph_ptr->GUI_GetCanvasHoverd() && (selected_group_uid == GUI_INVALID_ID));
-            bool double_click_callslot =
-                (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->GUI_GetCanvasHoverd() &&
-                    (selected_callslot_uid != GUI_INVALID_ID) &&
-                    ((!this->show_module_list_child) || (this->last_selected_callslot_uid != selected_callslot_uid)));
-
-            if (valid_double_click || double_click_callslot) {
-                std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
-                this->last_selected_callslot_uid = selected_callslot_uid;
-            }
+        // Reset state -------------------------------------------------------
+        for (auto& h : this->graph_state.hotkeys) {
+            std::get<1>(h) = false;
         }
-        if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
-            this->show_module_list_child = true;
-            this->module_list_popup_pos = ImGui::GetMousePos();
-            this->module_list_popup_hovered_group_uid = selected_graph_ptr->GUI_GetHoveredGroup();
-            ImGui::SetNextWindowPos(this->module_list_popup_pos);
-        }
-        if (this->show_module_list_child) {
-            ImGuiStyle& style = ImGui::GetStyle();
-            ImVec4 tmpcol = style.Colors[ImGuiCol_ChildBg];
-            tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-            ImGui::PushStyleColor(ImGuiCol_ChildBg, tmpcol);
-            ImGui::SetCursorScreenPos(this->module_list_popup_pos);
-            float graph_width = 250.0f;
-            float child_height = std::min(350.0f, (ImGui::GetContentRegionAvail().y - ImGui::GetWindowPos().y));
-            auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NavFlattened;
-            ImGui::BeginChild("module_list_child", ImVec2(graph_width, child_height), true, child_flags);
-            if (ImGui::Button("Close") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
-                this->show_module_list_child = false;
-            }
-            ImGui::Separator();
-            this->draw_window_module_list(0.0f);
-            ImGui::EndChild();
-            ImGui::PopStyleColor();
-        }
-    }
-
-    // Reset hotkeys
-    for (auto& h : this->graph_state.hotkeys) {
-        std::get<1>(h) = false;
     }
 
     return true;
@@ -242,31 +222,6 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
         return;
     }
 
-    bool confirmed, aborted;
-    bool popup_save_project_file = false;
-    bool popup_load_file = false;
-
-    // Hotkeys
-    if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT]) &&
-        (this->graph_state.graph_selected_uid != GUI_INVALID_ID)) {
-        popup_save_project_file = true;
-    }
-
-    // Clear dropped file list, when configurator window is opened, after it was closed.
-    if (ImGui::IsWindowAppearing()) {
-        megamol::gui::configurator::Configurator::dropped_files.clear();
-    }
-    // Process dropped files ...
-    if (!megamol::gui::configurator::Configurator::dropped_files.empty()) {
-        // ... only if configurator is focused.
-        if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
-            for (auto& dropped_file : megamol::gui::configurator::Configurator::dropped_files) {
-                this->graph_manager.LoadAddProjectFile(this->graph_state.graph_selected_uid, dropped_file);
-            }
-        }
-        megamol::gui::configurator::Configurator::dropped_files.clear();
-    }
-
     // Menu
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
@@ -278,7 +233,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                 // Load project from LUA file
                 if (ImGui::MenuItem("File")) {
                     this->add_project_graph_uid = GUI_INVALID_ID;
-                    popup_load_file = true;
+                    this->open_popup_load = true;
                 }
                 if (ImGui::MenuItem("Running")) {
                     this->graph_manager.LoadProjectCore(core_instance);
@@ -291,7 +246,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                 // Add project from LUA file to current project
                 if (ImGui::MenuItem("File", nullptr, false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
                     this->add_project_graph_uid = this->graph_state.graph_selected_uid;
-                    popup_load_file = true;
+                    this->open_popup_load = true;
                 }
                 if (ImGui::MenuItem(
                         "Running", nullptr, false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
@@ -305,7 +260,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
             if (ImGui::MenuItem("Save Project",
                     std::get<0>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT]).ToString().c_str(),
                     false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
-                popup_save_project_file = true;
+                this->open_popup_save = true;
             }
             ImGui::EndMenu();
         }
@@ -343,34 +298,6 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 
         ImGui::EndMenuBar();
     }
-
-    // Pop-ups-----------------------------------
-    bool popup_failed = false;
-    std::string project_filename;
-    GraphPtrType graph_ptr;
-    if (this->graph_manager.GetGraph(add_project_graph_uid, graph_ptr)) {
-        project_filename = graph_ptr->GetFilename();
-    }
-    if (this->file_utils.FileBrowserPopUp(
-            FileUtils::FileBrowserFlag::LOAD, "Load Project", popup_load_file, project_filename)) {
-        popup_failed = !this->graph_manager.LoadAddProjectFile(add_project_graph_uid, project_filename);
-        this->add_project_graph_uid = GUI_INVALID_ID;
-    }
-    this->utils.MinimalPopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
-        confirmed, "Cancel", aborted);
-
-    popup_failed = false;
-    project_filename.clear();
-    graph_ptr.reset();
-    if (this->graph_manager.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
-        project_filename = graph_ptr->GetFilename();
-    }
-    if (this->file_utils.FileBrowserPopUp(
-            FileUtils::FileBrowserFlag::SAVE, "Save Project", popup_save_project_file, project_filename)) {
-        popup_failed = !this->graph_manager.SaveProjectFile(this->graph_state.graph_selected_uid, project_filename);
-    }
-    this->utils.MinimalPopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
-        confirmed, "Cancel", aborted);
 }
 
 
@@ -724,6 +651,87 @@ bool megamol::gui::configurator::Configurator::configurator_state_to_json(nlohma
     }
 
     return true;
+}
+
+
+void megamol::gui::configurator::Configurator::showPopUps(void) {
+
+    bool confirmed, aborted;
+
+    // Pop-ups-----------------------------------
+    // LOAD
+    bool popup_failed = false;
+    std::string project_filename;
+    GraphPtrType graph_ptr;
+    if (this->graph_manager.GetGraph(this->add_project_graph_uid, graph_ptr)) {
+        project_filename = graph_ptr->GetFilename();
+    }
+    if (this->file_utils.FileBrowserPopUp(
+            FileUtils::FileBrowserFlag::LOAD, "Load Project", this->open_popup_load, project_filename)) {
+        popup_failed = !this->graph_manager.LoadAddProjectFile(this->add_project_graph_uid, project_filename);
+        this->add_project_graph_uid = GUI_INVALID_ID;
+    }
+    this->utils.MinimalPopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
+        confirmed, "Cancel", aborted);
+    this->open_popup_load = false;
+    // SAVE
+    popup_failed = false;
+    project_filename.clear();
+    graph_ptr.reset();
+    if (this->graph_manager.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
+        project_filename = graph_ptr->GetFilename();
+    }
+    if (this->file_utils.FileBrowserPopUp(
+            FileUtils::FileBrowserFlag::SAVE, "Save Project", this->open_popup_save, project_filename)) {
+        popup_failed = !this->graph_manager.SaveProjectFile(this->graph_state.graph_selected_uid, project_filename);
+    }
+    this->utils.MinimalPopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
+        confirmed, "Cancel", aborted);
+    this->open_popup_save = false;
+
+    // Module Stock List Child Window ------------------------------------------
+    GraphPtrType selected_graph_ptr;
+    if (this->graph_manager.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
+
+        ImGuiID selected_callslot_uid = selected_graph_ptr->GUI_GetSelectedCallSlot();
+        ImGuiID selected_group_uid = selected_graph_ptr->GUI_GetSelectedGroup();
+
+        bool valid_double_click = (ImGui::IsMouseDoubleClicked(0) && !this->show_module_list_child &&
+                                   selected_graph_ptr->GUI_GetCanvasHoverd() && (selected_group_uid == GUI_INVALID_ID));
+        bool double_click_callslot =
+            (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->GUI_GetCanvasHoverd() &&
+                (selected_callslot_uid != GUI_INVALID_ID) &&
+                ((!this->show_module_list_child) || (this->last_selected_callslot_uid != selected_callslot_uid)));
+
+        if (valid_double_click || double_click_callslot) {
+            std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
+            this->last_selected_callslot_uid = selected_callslot_uid;
+        }
+    }
+    if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
+        this->show_module_list_child = true;
+        this->module_list_popup_pos = ImGui::GetMousePos();
+        this->module_list_popup_hovered_group_uid = selected_graph_ptr->GUI_GetHoveredGroup();
+        ImGui::SetNextWindowPos(this->module_list_popup_pos);
+    }
+    if (this->show_module_list_child) {
+        ImGuiStyle& style = ImGui::GetStyle();
+        ImVec4 tmpcol = style.Colors[ImGuiCol_ChildBg];
+        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, tmpcol);
+        ImGui::SetCursorScreenPos(this->module_list_popup_pos);
+        float graph_width = 250.0f;
+        float child_height = std::min(350.0f, (ImGui::GetContentRegionAvail().y - ImGui::GetWindowPos().y));
+        auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NavFlattened;
+        ImGui::BeginChild("module_list_child", ImVec2(graph_width, child_height), true, child_flags);
+        if (ImGui::Button("Close") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+            this->show_module_list_child = false;
+        }
+        ImGui::Separator();
+        this->draw_window_module_list(0.0f);
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+    }
 }
 
 

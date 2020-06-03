@@ -245,7 +245,7 @@ bool GUIWindows::PostDraw(void) {
                 this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
                     std::string param_name = std::string(slot.Name().PeekBuffer());
                     std::string param_full_name = std::string(mod.FullName().PeekBuffer()) + "::" + param_name;
-                    if (wc.tfe_active_param == param_full_name) {        
+                    if (wc.tfe_active_param == param_full_name) {
                         if (auto* p = slot.template Param<core::param::TransferFunctionParam>()) {
                             this->tf_editor.SetActiveParameter(p, param_full_name);
                         }
@@ -253,7 +253,10 @@ bool GUIWindows::PostDraw(void) {
                 });
             }
             wc.buf_tfe_reset = false;
-        }        
+        }
+
+        // Process pop-ups (even if windows are not shown)
+        this->showPopUps(wc);
 
         // Draw window content
         if (wc.win_show) {
@@ -409,8 +412,9 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
         }
     };
     this->window_manager.EnumWindows(func);
+
     // Main Window
-    if (main_window_shown && !configurator_window_shown) {
+    if (!configurator_window_shown) {
         for (auto& h : this->hotkeys) {
             auto key = std::get<0>(h).key;
             auto mods = std::get<0>(h).mods;
@@ -650,7 +654,7 @@ bool GUIWindows::createContext(void) {
     // MAIN Window ------------------------------------------------------------
     buf_win.win_show = true;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F12);
-    buf_win.win_flags = ImGuiWindowFlags_MenuBar |  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar;
+    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar;
     buf_win.win_callback = WindowManager::DrawCallbacks::MAIN;
     buf_win.win_position = ImVec2(0.0f, 0.0f);
     buf_win.win_size = ImVec2(400.0f, 600.0f);
@@ -714,6 +718,8 @@ bool GUIWindows::createContext(void) {
     this->state.win_save_delay = 0.0f;
     this->state.win_delete = "";
     this->state.last_instance_time = 0.0f;
+    this->state.open_popup_about = false;
+    this->state.open_popup_save = false;
     this->state.hotkeys_check_once = true;
     // Adding additional utf-8 glyph ranges
     // (there is no error if glyph has no representation in font atlas)
@@ -865,8 +871,8 @@ void GUIWindows::validateParameter() {
     /// ImGuiIO& io = ImGui::GetIO();
     /// this->state.win_save_delay += io.DeltaTime;
     /*
-    else if (this->state.win_save_state && (this->state.win_save_delay > 2.0f)) { 
-        // Delayed saving after triggering saving state (in seconds). 
+    else if (this->state.win_save_state && (this->state.win_save_delay > 2.0f)) {
+        // Delayed saving after triggering saving state (in seconds).
         this->save_state_to_parameter(); this->state.win_save_state = false;
     }
     */
@@ -934,7 +940,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
     // Set general proportional item width
     float widget_width = ImGui::GetContentRegionAvail().x * 0.5f;
     ImGui::PushItemWidth(widget_width);
-    
+
     // Options
     ImGuiID overrideState = GUI_INVALID_ID;
     if (ImGui::Button("Expand All")) {
@@ -1445,12 +1451,11 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
 
 void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfiguration& wc) {
 
-    bool open_popup_project = false;
     if (ImGui::BeginMenu("File")) {
         // Load/save parameter values to LUA file
         if (ImGui::MenuItem("Save Project",
                 std::get<0>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]).ToString().c_str())) {
-            open_popup_project = true;
+            this->state.open_popup_save = true;
         }
 
         if (ImGui::MenuItem("Exit", "ALT + 'F4'")) {
@@ -1491,110 +1496,11 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
     }
 
     // Help
-    bool open_popup_about = false;
     if (ImGui::BeginMenu("Help")) {
-        // if (ImGui::MenuItem("Usability Hints")) {
-        //}
-
         if (ImGui::MenuItem("About")) {
-            open_popup_about = true;
+            this->state.open_popup_about = true;
         }
         ImGui::EndMenu();
-    }
-
-    // Popups -----------------------------------------------------------------
-
-    // ABOUT
-    if (open_popup_about) {
-        ImGui::OpenPopup("About");
-    }
-    bool open = true;
-    if (ImGui::BeginPopupModal("About", &open, (ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))) {
-
-        const std::string eMail = "megamol@visus.uni-stuttgart.de";
-        const std::string webLink = "https://megamol.org/";
-        const std::string gitLink = "https://github.com/UniStuttgart-VISUS/megamol";
-
-        std::string about = std::string("MegaMol - Version ") + std::to_string(MEGAMOL_CORE_MAJOR_VER) + (".") +
-                            std::to_string(MEGAMOL_CORE_MINOR_VER) + ("\ngit# ") + std::string(MEGAMOL_CORE_COMP_REV) +
-                            ("\nDear ImGui - Version ") + std::string(IMGUI_VERSION) + ("\n");
-        std::string mailstr = std::string("Contact: ") + eMail;
-        std::string webstr = std::string("Web: ") + webLink;
-        std::string gitstr = std::string("Git-Hub: ") + gitLink;
-
-        ImGui::TextUnformatted(about.c_str());
-
-        ImGui::Separator();
-        if (ImGui::Button("Copy E-Mail")) {
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, eMail.c_str());
-#elif _WIN32
-            ImGui::SetClipboardText(eMail.c_str());
-#else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] E-Mail address:\n%s", eMail.c_str());
-#endif
-        }
-        ImGui::SameLine();
-        ImGui::TextUnformatted(mailstr.c_str());
-
-
-        if (ImGui::Button("Copy Website")) {
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, webLink.c_str());
-#elif _WIN32
-            ImGui::SetClipboardText(webLink.c_str());
-#else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Website link:\n%s", webLink.c_str());
-#endif
-        }
-        ImGui::SameLine();
-        ImGui::TextUnformatted(webstr.c_str());
-
-        if (ImGui::Button("Copy GitHub")) {
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, gitLink.c_str());
-#elif _WIN32
-            ImGui::SetClipboardText(gitLink.c_str());
-#else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] GitHub link:\n%s", gitLink.c_str());
-#endif
-        }
-        ImGui::SameLine();
-        ImGui::TextUnformatted(gitstr.c_str());
-
-        ImGui::Separator();
-        about = "Copyright (C) 2009-2019 by Universitaet Stuttgart "
-                "(VIS).\nAll rights reserved.";
-        ImGui::TextUnformatted(about.c_str());
-
-        ImGui::Separator();
-        if (ImGui::Button("Close")) {
-            ImGui::CloseCurrentPopup();
-        }
-
-        ImGui::EndPopup();
-    }
-
-    // Save project pop-up
-    open_popup_project = (open_popup_project || std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]));
-    if (open_popup_project) {
-        std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]) = false;
-    }
-    if (this->file_utils.FileBrowserPopUp(
-            FileUtils::FileBrowserFlag::SAVE, "Save Project", open_popup_project, wc.main_project_file)) {
-        // Serialize current state to parameter.
-        this->save_state_to_parameter();
-        // Serialize project to file
-        FileUtils::SaveProjectFile(wc.main_project_file, this->core_instance);
     }
 }
 
@@ -1928,7 +1834,7 @@ void GUIWindows::drawTransferFunctionEdit(
                 ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight()), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f),
                 ImVec4(1.0f, 1.0f, 1.0f, 1.0f), style.Colors[ImGuiCol_Border]);
             ImGui::SameLine(ImGui::CalcItemWidth() + style.ItemInnerSpacing.x);
-            ImGui::AlignTextToFramePadding();                
+            ImGui::AlignTextToFramePadding();
         } else {
             ImGui::TextUnformatted("{ ............. }");
             ImGui::SameLine();
@@ -1967,7 +1873,7 @@ void GUIWindows::drawTransferFunctionEdit(
         updateEditor = true;
     }
     ImGui::SameLine();
-    
+
     // Edit transfer function.
     ImGui::PushID("Edit_");
     ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[isActive ? ImGuiCol_ButtonHovered : ImGuiCol_Button]);
@@ -1977,7 +1883,7 @@ void GUIWindows::drawTransferFunctionEdit(
         updateEditor = true;
         isActive = true;
         this->tf_editor.SetActiveParameter(&p, param_full_name);
-        
+
         // Open window calling the transfer function editor callback
         const auto func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
             if (wc.win_callback == WindowManager::DrawCallbacks::TRANSFER_FUNCTION) {
@@ -2032,6 +1938,111 @@ void GUIWindows::drawParameterHotkey(const core::Module& mod, core::param::Param
             ImGui::Columns(1);
 
             ImGui::Separator();
+        }
+    }
+}
+
+
+void megamol::gui::GUIWindows::showPopUps(WindowManager::WindowConfiguration& wc) {
+
+    // Pop-ups of mein window
+    if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
+
+        // ABOUT
+        if (this->state.open_popup_about) {
+            this->state.open_popup_about = false;
+            ImGui::OpenPopup("About");
+        }
+        bool open = true;
+        if (ImGui::BeginPopupModal("About", &open, (ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))) {
+
+            const std::string eMail = "megamol@visus.uni-stuttgart.de";
+            const std::string webLink = "https://megamol.org/";
+            const std::string gitLink = "https://github.com/UniStuttgart-VISUS/megamol";
+
+            std::string about = std::string("MegaMol - Version ") + std::to_string(MEGAMOL_CORE_MAJOR_VER) + (".") +
+                                std::to_string(MEGAMOL_CORE_MINOR_VER) + ("\ngit# ") +
+                                std::string(MEGAMOL_CORE_COMP_REV) + ("\nDear ImGui - Version ") +
+                                std::string(IMGUI_VERSION) + ("\n");
+            std::string mailstr = std::string("Contact: ") + eMail;
+            std::string webstr = std::string("Web: ") + webLink;
+            std::string gitstr = std::string("Git-Hub: ") + gitLink;
+
+            ImGui::TextUnformatted(about.c_str());
+
+            ImGui::Separator();
+            if (ImGui::Button("Copy E-Mail")) {
+#ifdef GUI_USE_GLFW
+                auto glfw_win = ::glfwGetCurrentContext();
+                ::glfwSetClipboardString(glfw_win, eMail.c_str());
+#elif _WIN32
+                ImGui::SetClipboardText(eMail.c_str());
+#else // LINUX
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                vislib::sys::Log::DefaultLog.WriteInfo("[GUI] E-Mail address:\n%s", eMail.c_str());
+#endif
+            }
+            ImGui::SameLine();
+            ImGui::TextUnformatted(mailstr.c_str());
+
+
+            if (ImGui::Button("Copy Website")) {
+#ifdef GUI_USE_GLFW
+                auto glfw_win = ::glfwGetCurrentContext();
+                ::glfwSetClipboardString(glfw_win, webLink.c_str());
+#elif _WIN32
+                ImGui::SetClipboardText(webLink.c_str());
+#else // LINUX
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Website link:\n%s", webLink.c_str());
+#endif
+            }
+            ImGui::SameLine();
+            ImGui::TextUnformatted(webstr.c_str());
+
+            if (ImGui::Button("Copy GitHub")) {
+#ifdef GUI_USE_GLFW
+                auto glfw_win = ::glfwGetCurrentContext();
+                ::glfwSetClipboardString(glfw_win, gitLink.c_str());
+#elif _WIN32
+                ImGui::SetClipboardText(gitLink.c_str());
+#else // LINUX
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                vislib::sys::Log::DefaultLog.WriteInfo("[GUI] GitHub link:\n%s", gitLink.c_str());
+#endif
+            }
+            ImGui::SameLine();
+            ImGui::TextUnformatted(gitstr.c_str());
+
+            ImGui::Separator();
+            about = "Copyright (C) 2009-2019 by Universitaet Stuttgart "
+                    "(VIS).\nAll rights reserved.";
+            ImGui::TextUnformatted(about.c_str());
+
+            ImGui::Separator();
+            if (ImGui::Button("Close")) {
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
+        }
+
+        // Save project pop-up
+        this->state.open_popup_save =
+            (this->state.open_popup_save || std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]));
+        if (this->file_utils.FileBrowserPopUp(
+                FileUtils::FileBrowserFlag::SAVE, "Save Project", this->state.open_popup_save, wc.main_project_file)) {
+            // Serialize current state to parameter.
+            this->save_state_to_parameter();
+            // Serialize project to file
+            FileUtils::SaveProjectFile(wc.main_project_file, this->core_instance);
+        }
+        if (this->state.open_popup_save) {
+            this->state.open_popup_save = false;
+            std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]) = false;
         }
     }
 }

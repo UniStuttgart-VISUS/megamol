@@ -72,10 +72,10 @@ public:
         std::string buf_font_file; // current font file name                                        [NOT SAVED]
         float buf_font_size;       // current font size                                             [NOT SAVED]
         // ---------- Transfer Function Editor specific configuration ---------
-        bool tfe_view_minimized;        // flag indicating minimized window state 
-        bool tfe_view_vertical;         // flag indicating vertical window state
-        std::string tfe_active_param;   // last active parameter connected to editor
-        bool buf_tfe_reset;             // flag for reset of tfe window on state loading            [NOT SAVED]
+        bool tfe_view_minimized;      // flag indicating minimized window state
+        bool tfe_view_vertical;       // flag indicating vertical window state
+        std::string tfe_active_param; // last active parameter connected to editor
+        bool buf_tfe_reset;           // flag for reset of tfe window on state loading            [NOT SAVED]
 
         // Ctor for default values
         WindowConfiguration(void)
@@ -106,7 +106,7 @@ public:
             , font_name()
             , buf_font_reset(false)
             , buf_font_file()
-            , buf_font_size(13.0f) 
+            , buf_font_size(13.0f)
             , tfe_view_minimized(false)
             , tfe_view_vertical(false)
             , tfe_active_param("")
