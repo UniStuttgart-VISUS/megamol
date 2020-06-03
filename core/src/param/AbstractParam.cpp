@@ -23,8 +23,7 @@ AbstractParam::~AbstractParam(void) {
 /*
  * AbstractParam::AbstractParam
  */
-AbstractParam::AbstractParam(void) : slot(NULL), hash(0),
-gui_visible(true), gui_read_only(false), gui_presentation(AbstractParam::Presentations::DEFAULT) {
+AbstractParam::AbstractParam(void) : slot(NULL), hash(0) {
     // intentionally empty
 }
 

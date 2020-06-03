@@ -315,12 +315,12 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                         valid = false;
                     }
                     // expert_mode
-                    if (config_values.at("param_expert_mode").is_boolean()) {
-                        config_values.at("param_expert_mode").get_to(tmp_config.param_expert_mode);
+                    if (config_values.at("param_extended_mode").is_boolean()) {
+                        config_values.at("param_extended_mode").get_to(tmp_config.param_extended_mode);
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'param_expert_mode' as boolean. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
+                            "JSON state: Failed to read 'param_extended_mode' as boolean. [%s, %s, line %d]\n",
+                            __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
 
@@ -517,8 +517,8 @@ bool WindowManager::StateToJSON(nlohmann::json& out_json) {
                     window_config.param_modules_list;
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["param_module_filter"] =
                     static_cast<int>(window_config.param_module_filter);
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["param_expert_mode"] =
-                    window_config.param_expert_mode;
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["param_extended_mode"] =
+                    window_config.param_extended_mode;
 
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["ms_show_options"] =
                     window_config.ms_show_options;

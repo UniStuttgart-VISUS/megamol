@@ -84,7 +84,7 @@ ImGuiID megamol::gui::configurator::Graph::AddModule(
                     param_slot.GUI_SetPresentation(p.gui_presentation);
                     // Apply current global configurator parameter gui settings
                     // Do not apply global read-only and visibility.
-                    param_slot.GUI_SetExpert(this->present.param_expert_mode);
+                    param_slot.GUI_SetExpert(this->present.param_extended_mode);
 
                     mod_ptr->parameters.emplace_back(param_slot);
                 }
@@ -718,7 +718,7 @@ const std::string megamol::gui::configurator::Graph::generate_unique_module_name
 megamol::gui::configurator::Graph::Presentation::Presentation(void)
     : params_visible(true)
     , params_readonly(false)
-    , param_expert_mode(false)
+    , param_extended_mode(false)
     , utils()
     , update(true)
     , show_grid(false)
@@ -1327,17 +1327,17 @@ bool megamol::gui::configurator::Graph::Presentation::StateFromJsonString(
                                 "JSON state: Failed to read 'params_readonly' as boolean. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
-                        // param_expert_mode
-                        if (config_state.at("param_expert_mode").is_boolean()) {
-                            config_state.at("param_expert_mode").get_to(this->param_expert_mode);
+                        // param_extended_mode
+                        if (config_state.at("param_extended_mode").is_boolean()) {
+                            config_state.at("param_extended_mode").get_to(this->param_extended_mode);
                             for (auto& module_ptr : inout_graph.GetModules()) {
                                 for (auto& parameter : module_ptr->parameters) {
-                                    parameter.GUI_SetExpert(this->param_expert_mode);
+                                    parameter.GUI_SetExpert(this->param_extended_mode);
                                 }
                             }
                         } else {
                             vislib::sys::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read 'param_expert_mode' as boolean. [%s, %s, line %d]\n",
+                                "JSON state: Failed to read 'param_extended_mode' as boolean. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
                         // canvas_scrolling
@@ -1588,7 +1588,7 @@ bool megamol::gui::configurator::Graph::Presentation::StateToJSON(Graph& inout_g
             out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["show_module_names"] = this->show_module_names;
             out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["params_visible"] = this->params_visible;
             out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["params_readonly"] = this->params_readonly;
-            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["param_expert_mode"] = this->param_expert_mode;
+            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["param_extended_mode"] = this->param_extended_mode;
             out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["canvas_scrolling"] = {
                 this->graph_state.canvas.scrolling.x, this->graph_state.canvas.scrolling.y};
             out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["canvas_zooming"] = this->graph_state.canvas.zooming;
@@ -1982,18 +1982,18 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
     this->utils.PointCircleButton("Mode");
     if (ImGui::BeginPopupContextItem("graph_param_mode_button_context", 0)) { // 0 = left mouse button
         bool changed = false;
-        if (ImGui::MenuItem("Basic###graph_basic_mode", nullptr, !this->param_expert_mode, true)) {
-            this->param_expert_mode = false;
+        if (ImGui::MenuItem("Basic###graph_basic_mode", nullptr, !this->param_extended_mode, true)) {
+            this->param_extended_mode = false;
             changed = true;
         }
-        if (ImGui::MenuItem("Expert###graph_expert_mode", nullptr, this->param_expert_mode, true)) {
-            this->param_expert_mode = true;
+        if (ImGui::MenuItem("Expert###graph_expert_mode", nullptr, this->param_extended_mode, true)) {
+            this->param_extended_mode = true;
             changed = true;
         }
         if (changed) {
             for (auto& module_ptr : inout_graph.GetModules()) {
                 for (auto& parameter : module_ptr->parameters) {
-                    parameter.GUI_SetExpert(this->param_expert_mode);
+                    parameter.GUI_SetExpert(this->param_extended_mode);
                 }
             }
         }
@@ -2001,7 +2001,7 @@ void megamol::gui::configurator::Graph::Presentation::present_parameters(
     }
     ImGui::EndGroup();
 
-    if (this->param_expert_mode) {
+    if (this->param_extended_mode) {
         ImGui::SameLine();
 
         // Visibility

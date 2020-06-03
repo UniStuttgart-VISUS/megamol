@@ -122,7 +122,7 @@ private:
 
         bool params_visible;
         bool params_readonly;
-        bool param_expert_mode;
+        bool param_extended_mode;
 
     private:
         GUIUtils utils;

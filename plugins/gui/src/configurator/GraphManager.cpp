@@ -314,8 +314,7 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
                                 parameter.GUI_SetVisibility(parameter_ptr->IsGUIVisible());
                                 parameter.GUI_SetReadOnly(parameter_ptr->IsGUIReadOnly());
                                 auto core_param_presentation = static_cast<size_t>(parameter_ptr->GetGUIPresentation());
-                                parameter.GUI_SetPresentation(
-                                    static_cast<Parameter::Presentations>(core_param_presentation));
+                                parameter.GUI_SetPresentation(static_cast<PresentType>(core_param_presentation));
                             }
 
                             if (auto* p_ptr = param_slot->Param<core::param::ButtonParam>()) {
@@ -1097,7 +1096,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
                 psd.gui_visibility = parameter_ptr->IsGUIVisible();
                 psd.gui_read_only = parameter_ptr->IsGUIReadOnly();
                 auto core_param_presentation = static_cast<size_t>(parameter_ptr->GetGUIPresentation());
-                psd.gui_presentation = static_cast<Parameter::Presentations>(core_param_presentation);
+                psd.gui_presentation = static_cast<PresentType>(core_param_presentation);
             }
 
             // Set parameter type
@@ -1492,10 +1491,10 @@ bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_st
                     }
 
                     // gui_presentation_mode
-                    Parameter::Presentations gui_presentation_mode;
+                    PresentType gui_presentation_mode;
                     if (gui_state.at("gui_presentation_mode").is_number_integer()) {
                         gui_presentation_mode =
-                            static_cast<Parameter::Presentations>(gui_state.at("gui_presentation_mode").get<int>());
+                            static_cast<PresentType>(gui_state.at("gui_presentation_mode").get<int>());
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
                             "JSON state: Failed to read 'gui_presentation_mode' as integer. [%s, %s, line %d]\n",

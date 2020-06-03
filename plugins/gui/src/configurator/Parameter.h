@@ -13,6 +13,7 @@
 #include "GUIUtils.h"
 #include "TransferFunctionEditor.h"
 
+#include "mmcore/param/AbstractParamPresentation.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -53,6 +54,8 @@ typedef std::shared_ptr<Module> ModulePtrType;
 // Pointer types to classes
 typedef std::shared_ptr<Parameter> ParamPtrType;
 
+
+typedef megamol::core::param::AbstractParamPresentation::Presentations PresentType;
 
 /**
  * Defines parameter data structure for graph.
@@ -117,9 +120,6 @@ public:
         >
         StroageType;
 
-    // Should be the same as in megamol::core::param::AbstractParam.h line 131
-    enum Presentations : size_t { DEFAULT = 0, PIN_VALUE_TO_MOUSE = 1, __COUNT__ = 2 };
-
     struct StockParameter {
         std::string full_name;
         std::string description;
@@ -130,7 +130,7 @@ public:
         StroageType storage;
         bool gui_visibility;
         bool gui_read_only;
-        Parameter::Presentations gui_presentation;
+        PresentType gui_presentation;
     };
 
     Parameter(ImGuiID uid, ParamType type, StroageType store, MinType min, MaxType max);
@@ -232,16 +232,14 @@ public:
 
     inline bool GUI_Present(void) { return this->present.Present(*this); }
 
-    inline void GUI_SetVisibility(bool visible) { this->present.visible = visible; }
-    inline void GUI_SetReadOnly(bool readonly) { this->present.read_only = readonly; }
-    inline void GUI_SetPresentation(Parameter::Presentations presentation) {
-        this->present.presentation = presentation;
-    }
+    inline void GUI_SetVisibility(bool visible) { this->present.SetGUIVisible(visible); }
+    inline void GUI_SetReadOnly(bool readonly) { this->present.SetGUIReadOnly(readonly); }
+    inline void GUI_SetPresentation(PresentType presentation) { this->present.SetGUIPresentation(presentation); }
     inline void GUI_SetExpert(bool expert) { this->present.expert = expert; }
 
-    inline bool GUI_GetVisibility(void) { return this->present.visible; }
-    inline bool GUI_GetReadOnly(void) { return this->present.read_only; }
-    inline Parameter::Presentations GUI_GetPresentation(void) { return this->present.presentation; }
+    inline bool GUI_GetVisibility(void) { return this->present.IsGUIVisible(); }
+    inline bool GUI_GetReadOnly(void) { return this->present.IsGUIReadOnly(); }
+    inline PresentType GUI_GetPresentation(void) { return this->present.GetGUIPresentation(); }
 
     inline float GUI_GetHeight(void) { return this->present.GetHeight(*this); }
 
@@ -259,7 +257,7 @@ private:
     /** ************************************************************************
      * Defines GUI parameter presentation.
      */
-    class Presentation {
+    class Presentation : public megamol::core::param::AbstractParamPresentation {
     public:
         Presentation(void);
 
@@ -269,9 +267,6 @@ private:
 
         float GetHeight(Parameter& inout_param);
 
-        Presentations presentation;
-        bool read_only;
-        bool visible;
         bool expert;
 
     private:
@@ -286,8 +281,7 @@ private:
         UINT set_focus;
 
         void present_prefix(void);
-        void present_value_DEFAULT(Parameter& inout_parameter);
-        void present_value_PIN_VALUE_TO_MOUSE(Parameter& inout_parameter);
+        void present_value_RawValue(Parameter& inout_parameter);
         void present_postfix(Parameter& inout_parameter);
         bool presentation_button(void);
         void transfer_function_edit(Parameter& inout_parameter);

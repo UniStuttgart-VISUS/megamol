@@ -342,7 +342,7 @@ bool GUIWindows::PostDraw(void) {
                                   ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
                 if (!ImGui::IsWindowHovered(hoverFlags)) {
                     if (parameter->GetGUIPresentation() ==
-                        megamol::core::param::AbstractParam::Presentations::PIN_VALUE_TO_MOUSE) {
+                        megamol::core::param::AbstractParamPresentation::Presentations::PinValueToMouse) {
                         ImGui::BeginTooltip();
                         std::string label = std::string(slot.Name().PeekBuffer());
                         ImGui::TextDisabled(label.c_str());
@@ -937,9 +937,7 @@ void GUIWindows::drawConfiguratorCallback(const std::string& wn, WindowManager::
 
 void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
 
-    // Set general proportional item width
-    float widget_width = ImGui::GetContentRegionAvail().x * 0.5f;
-    ImGui::PushItemWidth(widget_width);
+    ImGuiStyle& style = ImGui::GetStyle();
 
     // Options
     ImGuiID overrideState = GUI_INVALID_ID;
@@ -956,17 +954,16 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
     ImGui::BeginGroup();
     this->utils.PointCircleButton("Mode");
     if (ImGui::BeginPopupContextItem("gui_param_mode_button_context", 0)) { // 0 = left mouse button
-        if (ImGui::MenuItem("Basic###gui_basic_mode", nullptr, !wc.param_expert_mode, true)) {
-            wc.param_expert_mode = false;
+        if (ImGui::MenuItem("Basic###gui_basic_mode", nullptr, !wc.param_extended_mode, true)) {
+            wc.param_extended_mode = false;
         }
-        if (ImGui::MenuItem("Expert###gui_expert_mode", nullptr, wc.param_expert_mode, true)) {
-            wc.param_expert_mode = true;
+        if (ImGui::MenuItem("Expert###gui_expert_mode", nullptr, wc.param_extended_mode, true)) {
+            wc.param_extended_mode = true;
         }
         ImGui::EndPopup();
     }
     ImGui::EndGroup();
-    std::string mode_help = "Expert mode enables buttons for additional parameter presentation options.\n"
-                            "Note: Changes are NOT (yet) stored in project files.";
+    std::string mode_help = "Expert mode enables buttons for additional parameter presentation options.";
     this->utils.HelpMarkerToolTip(mode_help);
 
     ImGui::SameLine();
@@ -1199,7 +1196,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                     showSearchedParameter = this->utils.FindCaseInsensitiveSubstring(param_name, currentSearchString);
                 }
 
-                bool param_visible = ((parameter->IsGUIVisible() || wc.param_expert_mode) && showSearchedParameter);
+                bool param_visible = ((parameter->IsGUIVisible() || wc.param_extended_mode) && showSearchedParameter);
                 if (!parameter.IsNull() && param_visible) {
 
                     // Parameter namespace header
@@ -1231,6 +1228,11 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                         }
                     }
 
+                    // Set general proportional parameter item width
+                    float widget_width = ImGui::GetContentRegionAvail().x * 0.6f;
+                    /// widget_width -= (static_cast<float>(param_indent_stack) * style.IndentSpacing);
+                    ImGui::PushItemWidth(widget_width);
+
                     // Draw parameter
                     if (param_namespace_open) {
                         if (wc.param_show_hotkeys) {
@@ -1239,6 +1241,8 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                             this->drawParameter(wc, mod, slot);
                         }
                     }
+
+                    ImGui::PopItemWidth();
                 }
             }
         });
@@ -1270,8 +1274,6 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
     }
 
     ImGui::EndChild();
-
-    ImGui::PopItemWidth();
 }
 
 
@@ -1529,7 +1531,7 @@ void GUIWindows::drawParameter(
 
         // Expert Options
         ImGui::PushID(param_label.c_str());
-        if (wc.param_expert_mode) {
+        if (wc.param_extended_mode) {
             // Visibility
             bool param_visible = parameter->IsGUIVisible();
             if (ImGui::RadioButton("###visible", param_visible)) {
@@ -1549,35 +1551,35 @@ void GUIWindows::drawParameter(
             ImGui::SameLine();
 
             // Presentation
-            bool default_present =
-                (slot.Parameter()->GetGUIPresentation() == megamol::core::param::AbstractParam::Presentations::DEFAULT);
+            bool default_present = (slot.Parameter()->GetGUIPresentation() ==
+                                    megamol::core::param::AbstractParamPresentation::Presentations::RawValue);
             this->utils.PointCircleButton("", !default_present);
             this->utils.HoverToolTip("Presentation");
-            if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) { // 0 = left mouse button
-                for (size_t i = 0; i < megamol::core::param::AbstractParam::Presentations::__COUNT__; i++) {
-                    std::string param_present_str;
-                    auto param_present = static_cast<megamol::core::param::AbstractParam::Presentations>(i);
-                    switch (param_present) {
-                    case (megamol::core::param::AbstractParam::Presentations::DEFAULT):
-                        param_present_str = "Default";
-                        break;
-                    case (megamol::core::param::AbstractParam::Presentations::PIN_VALUE_TO_MOUSE):
-                        param_present_str = "Pin Value to Mouse";
-                        break;
-                    default:
-                        break;
-                    }
-                    if (param_present_str.empty()) break;
-                    if (ImGui::MenuItem(param_present_str.c_str(), nullptr,
-                            (param_present == slot.Parameter()->GetGUIPresentation()))) {
-                        slot.Parameter()->SetGUIPresentation(param_present);
-                    }
+            if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) {
+
+                auto param_present = megamol::core::param::AbstractParamPresentation::Presentations::RawValue;
+                if (ImGui::MenuItem("Default", nullptr, (param_present == slot.Parameter()->GetGUIPresentation()))) {
+                    slot.Parameter()->SetGUIPresentation(param_present);
                 }
+
+                param_present = megamol::core::param::AbstractParamPresentation::Presentations::PinValueToMouse;
+                if (ImGui::MenuItem("Pin Value to Mouse Position", nullptr,
+                        (param_present == slot.Parameter()->GetGUIPresentation()))) {
+                    slot.Parameter()->SetGUIPresentation(param_present);
+                }
+
                 ImGui::EndPopup();
             }
             ImGui::SameLine();
         }
         ImGui::PopID();
+
+        // Skip if parameter presentation is not 'RawValue'
+        if (!wc.param_extended_mode && (slot.Parameter()->GetGUIPresentation() !=
+                                           megamol::core::param::AbstractParamPresentation::Presentations::RawValue)) {
+            ImGui::EndGroup();
+            return;
+        }
 
         // Parameter
         ImGui::PushID(param_label.c_str());
@@ -2221,10 +2223,11 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
                     }
 
                     // gui_presentation_mode
-                    megamol::core::param::AbstractParam::Presentations gui_presentation_mode;
+                    megamol::core::param::AbstractParamPresentation::Presentations gui_presentation_mode;
                     if (gui_state.at("gui_presentation_mode").is_number_integer()) {
-                        gui_presentation_mode = static_cast<megamol::core::param::AbstractParam::Presentations>(
-                            gui_state.at("gui_presentation_mode").get<int>());
+                        gui_presentation_mode =
+                            static_cast<megamol::core::param::AbstractParamPresentation::Presentations>(
+                                gui_state.at("gui_presentation_mode").get<int>());
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
                             "JSON state: Failed to read 'gui_presentation_mode' as integer. [%s, %s, line %d]\n",

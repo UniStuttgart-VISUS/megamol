@@ -15,6 +15,7 @@
 #include "vislib/RawStorage.h"
 #include "vislib/String.h"
 #include "vislib/tchar.h"
+#include "mmcore/param/AbstractParamPresentation.h"
 
 
 namespace megamol {
@@ -29,7 +30,7 @@ namespace param {
     /**
      * Abstract base class for all parameter objects
      */
-    class MEGAMOLCORE_API AbstractParam {
+    class MEGAMOLCORE_API AbstractParam : public AbstractParamPresentation {
     public:
         friend class AbstractParamSlot;
 
@@ -89,65 +90,6 @@ namespace param {
             this->hash = hash;
         }
 
-        /**
-        * Answer visibility in GUI.
-        *
-        * @return GUI visibility
-        */
-        inline bool IsGUIVisible() const {
-            return this->gui_visible;
-        }
-
-        /**
-        * Set visibility in GUI.
-        *
-        * @param visible True: visible in GUI, false: invisible
-        */
-        inline void SetGUIVisible(const bool visible) {
-            this->gui_visible = visible;
-        }
-
-        /**
-        * Answer accessibility in GUI.
-        *
-        * @return GUI accessibility
-        */
-        inline bool IsGUIReadOnly() const {
-            return this->gui_read_only;
-        }
-
-        /**
-        * Set accessibility in GUI.
-        *
-        * @param read_only True: read-only in GUI, false: writable
-        */
-        inline void SetGUIReadOnly(const bool read_only) {
-            this->gui_read_only = read_only;
-        }     
-        
-        /** 
-         *  GUI presentations of parameter.
-         */
-        enum Presentations : size_t { DEFAULT = 0, PIN_VALUE_TO_MOUSE = 1, __COUNT__ = 2 };
-        
-        /**
-        * Set presentation in GUI.
-        *
-        * @param presentation Presentation of parameter in GUI.
-        */
-        inline void SetGUIPresentation(const Presentations presentation) {
-            this->gui_presentation = presentation;
-        }
-        
-        /**
-        * Answer presentation in GUI.
-        *
-        * @return GUI presentation.
-        */
-        inline Presentations GetGUIPresentation() const {
-            return this->gui_presentation;
-        }
-
     protected:
 
         /**
@@ -173,22 +115,6 @@ namespace param {
          * (i.e. requires rebuilding the UI).
          */
         size_t hash;
-
-        /**
-        * Show or hide the parameter in the GUI.
-        */
-        bool gui_visible;
-
-        /**
-        * Make parameter read-only in the GUI.
-        */
-        bool gui_read_only;
-        
-        /**
-        * Presentation of parameter in the GUI.
-        */
-        Presentations gui_presentation;
-
     };
 
 

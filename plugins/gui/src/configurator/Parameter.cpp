@@ -259,9 +259,7 @@ bool megamol::gui::configurator::Parameter::SetValueString(const std::string& va
 // PARAMETER PRESENTATION ####################################################
 
 megamol::gui::configurator::Parameter::Presentation::Presentation(void)
-    : presentation(Presentations::DEFAULT)
-    , read_only(false)
-    , visible(true)
+    : megamol::core::param::AbstractParamPresentation()
     , expert(false)
     , help()
     , utils()
@@ -287,7 +285,7 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(
     }
 
     try {
-        if (this->visible || this->expert) {
+        if (this->IsGUIVisible() || this->expert) {
             ImGui::BeginGroup();
             ImGui::PushID(inout_parameter.uid);
 
@@ -296,21 +294,12 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(
                 ImGui::SameLine();
             }
 
-            this->present_value_DEFAULT(inout_parameter);
+            this->present_value_RawValue(inout_parameter);
             ImGui::SameLine();
             this->present_postfix(inout_parameter);
 
             ImGui::PopID();
             ImGui::EndGroup();
-
-            // Additional alternative parameter presentations
-            switch (this->presentation) {
-            case (Presentations::PIN_VALUE_TO_MOUSE): {
-                this->present_value_PIN_VALUE_TO_MOUSE(inout_parameter);
-            } break;
-            default:
-                break;
-            }
         }
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -344,28 +333,19 @@ bool megamol::gui::configurator::Parameter::Presentation::presentation_button(vo
 
     bool retval = false;
 
-    this->utils.PointCircleButton("", (this->presentation != Presentations::DEFAULT));
-    if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) { // 0 = left mouse button
-        for (size_t i = 0; i < static_cast<size_t>(Presentations::__COUNT__); i++) {
-            std::string presentation_str;
-            auto presentation_i = static_cast<Presentations>(i);
-            switch (presentation_i) {
-            case (Presentations::DEFAULT):
-                presentation_str = "Default";
-                break;
-            case (Presentations::PIN_VALUE_TO_MOUSE):
-                presentation_str = "Pin Value to Mouse";
-                break;
-            default:
-                break;
-            }
-            if (!presentation_str.empty()) {
-                if (ImGui::MenuItem(presentation_str.c_str(), nullptr, (presentation_i == this->presentation))) {
-                    this->presentation = presentation_i;
-                    retval = true;
-                }
-            }
+    this->utils.PointCircleButton("", (this->GetGUIPresentation() != PresentType::RawValue));
+    if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) {
+
+        auto param_present = PresentType::RawValue;
+        if (ImGui::MenuItem("Default", nullptr, (param_present == this->GetGUIPresentation()))) {
+            this->SetGUIPresentation(param_present);
         }
+
+        param_present = PresentType::PinValueToMouse;
+        if (ImGui::MenuItem("Pin Value to Mouse Position", nullptr, (param_present == this->GetGUIPresentation()))) {
+            this->SetGUIPresentation(param_present);
+        }
+
         ImGui::EndPopup();
     }
 
@@ -376,15 +356,17 @@ bool megamol::gui::configurator::Parameter::Presentation::presentation_button(vo
 void megamol::gui::configurator::Parameter::Presentation::present_prefix(void) {
 
     // Visibility
-    if (ImGui::RadioButton("###visible", this->visible)) {
-        this->visible = !this->visible;
+    if (ImGui::RadioButton("###visible", this->IsGUIVisible())) {
+        this->SetGUIVisible(!this->IsGUIVisible());
     }
     this->utils.HoverToolTip("Visibility", ImGui::GetItemID(), 0.5f);
 
     ImGui::SameLine();
 
     // Read-only option
-    ImGui::Checkbox("###readonly", &this->read_only);
+    bool read_only = this->IsGUIReadOnly();
+    ImGui::Checkbox("###readonly", &read_only);
+    this->SetGUIReadOnly(read_only);
     this->utils.HoverToolTip("Read-Only", ImGui::GetItemID(), 0.5f);
 
     ImGui::SameLine();
@@ -395,7 +377,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_prefix(void) {
 }
 
 
-void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
+void megamol::gui::configurator::Parameter::Presentation::present_value_RawValue(
     megamol::gui::configurator::Parameter& inout_parameter) {
 
     this->help.clear();
@@ -404,7 +386,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
     float widget_width = ImGui::GetContentRegionAvail().x * 0.5f;
     ImGui::PushItemWidth(widget_width);
 
-    if (this->read_only) {
+    if (this->IsGUIReadOnly()) {
         GUIUtils::ReadOnlyWigetStyle(true);
     }
 
@@ -677,33 +659,11 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_DEFAULT(
 
     std::visit(visitor, inout_parameter.GetValue());
 
-    if (this->read_only) {
+    if (this->IsGUIReadOnly()) {
         GUIUtils::ReadOnlyWigetStyle(false);
     }
 
     ImGui::PopItemWidth();
-}
-
-
-void megamol::gui::configurator::Parameter::Presentation::present_value_PIN_VALUE_TO_MOUSE(
-    megamol::gui::configurator::Parameter& inout_parameter) {
-
-    /// Disabled in Configurator
-    /*
-        auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
-                          ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
-        if (!ImGui::IsWindowHovered(hoverFlags)) {
-
-            ImGui::BeginTooltip();
-
-            std::string label = inout_parameter.GetName();
-            ImGui::TextDisabled(label.c_str());
-            ImGui::SameLine();
-            ImGui::TextUnformatted(inout_parameter.GetValueString().c_str());
-
-            ImGui::EndTooltip();
-        }
-    */
 }
 
 
