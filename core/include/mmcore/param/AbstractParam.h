@@ -12,10 +12,11 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/param/AbstractParamPresentation.h"
+
 #include "vislib/RawStorage.h"
 #include "vislib/String.h"
 #include "vislib/tchar.h"
-#include "mmcore/param/AbstractParamPresentation.h"
 
 
 namespace megamol {

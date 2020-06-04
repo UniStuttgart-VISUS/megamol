@@ -333,7 +333,7 @@ bool GUIWindows::PostDraw(void) {
     };
     this->window_manager.EnumWindows(func);
 
-    // Draw global parameter presentation --------------------------------------
+    // Handle global parameter presentations -------------------------------------
     if (this->core_instance != nullptr) {
         this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
             auto parameter = slot.Parameter();
@@ -341,9 +341,10 @@ bool GUIWindows::PostDraw(void) {
                 auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
                                   ImGuiHoveredFlags_AllowWhenBlockedByPopup |
                                   ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
+                // Show only if mouse is outside any window
                 if (!ImGui::IsWindowHovered(hoverFlags)) {
-                    if (parameter->GetGUIPresentation() ==
-                        megamol::core::param::AbstractParamPresentation::Presentations::PinValueToMouse) {
+
+                    if (parameter->GetGUIPresentation() == megamol::core::param::Presentations::PinValueToMouse) {
                         ImGui::BeginTooltip();
                         std::string label = std::string(slot.Name().PeekBuffer());
                         ImGui::TextDisabled(label.c_str());
@@ -1509,9 +1510,6 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 void GUIWindows::drawParameter(
     WindowManager::WindowConfiguration& wc, const core::Module& mod, core::param::ParamSlot& slot) {
 
-    ImGuiStyle& style = ImGui::GetStyle();
-    std::string help;
-
     auto parameter = slot.Parameter();
     if (!parameter.IsNull()) {
 
@@ -1521,16 +1519,14 @@ void GUIWindows::drawParameter(
         if (pos != std::string::npos) {
             param_name = param_name.substr(pos + 2);
         }
-        std::string param_label_hidden = "###" + param_full_name;
-        std::string param_label = param_name + param_label_hidden;
-        std::string param_desc = slot.Description().PeekBuffer();
-        std::string float_format = "%.7f";
+        std::string widget_label = param_name + "###" + param_full_name;
 
         ImGui::BeginGroup();
 
-        // Expert Options
-        ImGui::PushID(param_label.c_str());
         if (wc.param_extended_mode) {
+            // Expert Options
+            ImGui::PushID(widget_label.c_str());
+
             // Visibility
             bool param_visible = parameter->IsGUIVisible();
             if (ImGui::RadioButton("###visible", param_visible)) {
@@ -1550,269 +1546,326 @@ void GUIWindows::drawParameter(
             ImGui::SameLine();
 
             // Presentation
-            bool default_present = (slot.Parameter()->GetGUIPresentation() ==
-                                    megamol::core::param::AbstractParamPresentation::Presentations::RawValue);
+            bool default_present =
+                (slot.Parameter()->GetGUIPresentation() == megamol::core::param::Presentations::Basic);
             this->utils.PointCircleButton("", !default_present);
             this->utils.HoverToolTip("Presentation");
             if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) {
-
-                auto param_present = megamol::core::param::AbstractParamPresentation::Presentations::RawValue;
-                if (ImGui::MenuItem("Default", nullptr, (param_present == slot.Parameter()->GetGUIPresentation()))) {
-                    slot.Parameter()->SetGUIPresentation(param_present);
+                megamol::core::param::Presentations param_present = megamol::core::param::Presentations::Basic;
+                if (slot.Parameter()->IsPresentationCompatible(param_present)) {
+                    if (ImGui::MenuItem("Basic", nullptr, (param_present == slot.Parameter()->GetGUIPresentation()))) {
+                        slot.Parameter()->SetGUIPresentation(param_present);
+                    }
                 }
-
-                param_present = megamol::core::param::AbstractParamPresentation::Presentations::PinValueToMouse;
-                if (ImGui::MenuItem("Pin Value to Mouse Position", nullptr,
-                        (param_present == slot.Parameter()->GetGUIPresentation()))) {
-                    slot.Parameter()->SetGUIPresentation(param_present);
+                param_present = megamol::core::param::Presentations::Color;
+                if (slot.Parameter()->IsPresentationCompatible(param_present)) {
+                    if (ImGui::MenuItem("Color", nullptr, (param_present == slot.Parameter()->GetGUIPresentation()))) {
+                        slot.Parameter()->SetGUIPresentation(param_present);
+                    }
                 }
-
+                param_present = megamol::core::param::Presentations::FilePath;
+                if (slot.Parameter()->IsPresentationCompatible(param_present)) {
+                    if (ImGui::MenuItem(
+                            "File Path", nullptr, (param_present == slot.Parameter()->GetGUIPresentation()))) {
+                        slot.Parameter()->SetGUIPresentation(param_present);
+                    }
+                }
+                param_present = megamol::core::param::Presentations::TransferFunction;
+                if (slot.Parameter()->IsPresentationCompatible(param_present)) {
+                    if (ImGui::MenuItem(
+                            "Transfer Function", nullptr, (param_present == slot.Parameter()->GetGUIPresentation()))) {
+                        slot.Parameter()->SetGUIPresentation(param_present);
+                    }
+                }
+                param_present = megamol::core::param::Presentations::PinValueToMouse;
+                if (slot.Parameter()->IsPresentationCompatible(param_present)) {
+                    if (ImGui::MenuItem("Pin Value to Mouse Position", nullptr,
+                            (param_present == slot.Parameter()->GetGUIPresentation()))) {
+                        slot.Parameter()->SetGUIPresentation(param_present);
+                    }
+                }
                 ImGui::EndPopup();
             }
             ImGui::SameLine();
-        }
-        ImGui::PopID();
 
-        // Skip if parameter presentation is not 'RawValue'
-        if (!wc.param_extended_mode && (slot.Parameter()->GetGUIPresentation() !=
-                                           megamol::core::param::AbstractParamPresentation::Presentations::RawValue)) {
-            ImGui::EndGroup();
-            return;
+            ImGui::PopID();
         }
 
-        // Parameter
-        ImGui::PushID(param_label.c_str());
-
-        // Set different style if parameter is read-only
+        // Set different style if parameter is read-only (save state - might change!)
         bool readOnly = parameter->IsGUIReadOnly();
         if (readOnly) {
             GUIUtils::ReadOnlyWigetStyle(true);
         }
 
-        if (auto* p = slot.template Param<core::param::BoolParam>()) {
-            auto value = p->Value();
-            if (ImGui::Checkbox(param_label.c_str(), &value)) {
-                p->SetValue(value);
-            }
-        } else if (auto* p = slot.template Param<core::param::ButtonParam>()) {
-            std::string hotkey = "";
-            std::string buttonHotkey = p->GetKeyCode().ToString();
-            if (!buttonHotkey.empty()) {
-                hotkey = " (" + buttonHotkey + ")";
-            }
-            auto insert_pos = param_label.find("###");
-            param_label.insert(insert_pos, hotkey);
-            if (ImGui::Button(param_label.c_str())) {
-                p->setDirty();
-            }
-        } else if (auto* p = slot.template Param<core::param::ColorParam>()) {
-            core::param::ColorParam::ColorType value = p->Value();
-            auto color_flags = ImGuiColorEditFlags_AlphaPreview; // | ImGuiColorEditFlags_Float;
-            if (ImGui::ColorEdit4(param_label.c_str(), (float*)value.data(), color_flags)) {
-                p->SetValue(value);
-            }
-            help = "[Click] on the colored square to open a color picker.\n"
-                   "[CTRL+Click] on individual component to input value.\n"
-                   "[Right-Click] on the individual color widget to show options.";
-        } else if (auto* p = slot.template Param<core::param::TransferFunctionParam>()) {
-            this->drawTransferFunctionEdit(param_full_name, param_label, *p);
-        } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
-            /// XXX: no UTF8 fanciness required here?
-            auto map = p->getMap();
-            auto key = p->Value();
-            if (ImGui::BeginCombo(param_label.c_str(), map[key].PeekBuffer())) {
-                auto iter = map.GetConstIterator();
-                while (iter.HasNext()) {
-                    auto pair = iter.Next();
-                    bool isSelected = (pair.Key() == key);
-                    if (ImGui::Selectable(pair.Value().PeekBuffer(), isSelected)) {
-                        p->SetValue(pair.Key());
-                    }
-                    if (isSelected) {
-                        ImGui::SetItemDefaultFocus();
-                    }
-                }
-                ImGui::EndCombo();
-            }
-        } else if (auto* p = slot.template Param<core::param::FlexEnumParam>()) {
-            /// XXX: no UTF8 fanciness required here?
-            auto value = p->Value();
-            if (ImGui::BeginCombo(param_label.c_str(), value.c_str())) {
-                for (auto& valueOption : p->getStorage()) {
-                    bool isSelected = (valueOption == value);
-                    if (ImGui::Selectable(valueOption.c_str(), isSelected)) {
-                        p->SetValue(valueOption);
-                    }
-                    if (isSelected) {
-                        ImGui::SetItemDefaultFocus();
-                    }
-                }
-                ImGui::EndCombo();
-            }
-        } else if (auto* p = slot.template Param<core::param::FloatParam>()) {
-            auto it = this->widgtmap_float.find(param_full_name);
-            if (it == this->widgtmap_float.end()) {
-                this->widgtmap_float.emplace(param_full_name, p->Value());
-                it = this->widgtmap_float.find(param_full_name);
-            }
-            ImGui::InputFloat(
-                param_label.c_str(), &it->second, 1.0f, 10.0f, float_format.c_str(), ImGuiInputTextFlags_None);
-            if (ImGui::IsItemDeactivatedAfterEdit()) {
-                it->second = std::max(p->MinValue(), std::min(it->second, p->MaxValue()));
-                p->SetValue(it->second);
-            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                it->second = p->Value();
-            }
-        } else if (auto* p = slot.template Param<core::param::IntParam>()) {
-            auto it = this->widgtmap_int.find(param_full_name);
-            if (it == this->widgtmap_int.end()) {
-                this->widgtmap_int.emplace(param_full_name, p->Value());
-                it = this->widgtmap_int.find(param_full_name);
-            }
-            ImGui::InputInt(param_label.c_str(), &it->second, 1, 10, ImGuiInputTextFlags_None);
-            if (ImGui::IsItemDeactivatedAfterEdit()) {
-                it->second = std::max(p->MinValue(), std::min(it->second, p->MaxValue()));
-                p->SetValue(it->second);
-            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                it->second = p->Value();
-            }
-        } else if (auto* p = slot.template Param<core::param::Vector2fParam>()) {
-            auto it = this->widgtmap_vec2.find(param_full_name);
-            if (it == this->widgtmap_vec2.end()) {
-                this->widgtmap_vec2.emplace(param_full_name, p->Value());
-                it = this->widgtmap_vec2.find(param_full_name);
-            }
-            ImGui::InputFloat2(
-                param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
-            if (ImGui::IsItemDeactivatedAfterEdit()) {
-                auto x = std::max(p->MinValue().X(), std::min(it->second.X(), p->MaxValue().X()));
-                auto y = std::max(p->MinValue().Y(), std::min(it->second.Y(), p->MaxValue().Y()));
-                it->second = vislib::math::Vector<float, 2>(x, y);
-                p->SetValue(it->second);
-            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                it->second = p->Value();
-            }
-        } else if (auto* p = slot.template Param<core::param::Vector3fParam>()) {
-            auto it = this->widgtmap_vec3.find(param_full_name);
-            if (it == this->widgtmap_vec3.end()) {
-                this->widgtmap_vec3.emplace(param_full_name, p->Value());
-                it = this->widgtmap_vec3.find(param_full_name);
-            }
-            ImGui::InputFloat3(
-                param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
-            if (ImGui::IsItemDeactivatedAfterEdit()) {
-                auto x = std::max(p->MinValue().X(), std::min(it->second.X(), p->MaxValue().X()));
-                auto y = std::max(p->MinValue().Y(), std::min(it->second.Y(), p->MaxValue().Y()));
-                auto z = std::max(p->MinValue().Z(), std::min(it->second.Z(), p->MaxValue().Z()));
-                it->second = vislib::math::Vector<float, 3>(x, y, z);
-                p->SetValue(it->second);
-            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                it->second = p->Value();
-            }
-        } else if (auto* p = slot.template Param<core::param::Vector4fParam>()) {
-            auto it = this->widgtmap_vec4.find(param_full_name);
-            if (it == this->widgtmap_vec4.end()) {
-                this->widgtmap_vec4.emplace(param_full_name, p->Value());
-                it = this->widgtmap_vec4.find(param_full_name);
-            }
-            ImGui::InputFloat4(
-                param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
-            if (ImGui::IsItemDeactivatedAfterEdit()) {
-                auto x = std::max(p->MinValue().X(), std::min(it->second.X(), p->MaxValue().X()));
-                auto y = std::max(p->MinValue().Y(), std::min(it->second.Y(), p->MaxValue().Y()));
-                auto z = std::max(p->MinValue().Z(), std::min(it->second.Z(), p->MaxValue().Z()));
-                auto w = std::max(p->MinValue().W(), std::min(it->second.W(), p->MaxValue().W()));
-                it->second = vislib::math::Vector<float, 4>(x, y, z, w);
-                p->SetValue(it->second);
-            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                it->second = p->Value();
-            }
-        } else if (auto* p = slot.template Param<core::param::TernaryParam>()) {
-            auto value = p->Value();
-            if (ImGui::RadioButton("True", value.IsTrue())) {
-                p->SetValue(vislib::math::Ternary::TRI_TRUE);
-            }
-            ImGui::SameLine();
-            if (ImGui::RadioButton("False", value.IsFalse())) {
-                p->SetValue(vislib::math::Ternary::TRI_FALSE);
-            }
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Unknown", value.IsUnknown())) {
-                p->SetValue(vislib::math::Ternary::TRI_UNKNOWN);
-            }
-            ImGui::SameLine();
-            ImGui::TextDisabled("|");
-            ImGui::SameLine();
-            ImGui::TextUnformatted(param_name.c_str());
-        } else if (auto* p = slot.Param<core::param::StringParam>()) {
-            /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            auto it = this->widgtmap_text.find(param_full_name);
-            if (it == this->widgtmap_text.end()) {
-                std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                GUIUtils::Utf8Encode(utf8Str);
-                this->widgtmap_text.emplace(param_full_name, utf8Str);
-                it = this->widgtmap_text.find(param_full_name);
-            }
-            // Determine multi line count of string
-            int lcnt = static_cast<int>(std::count(it->second.begin(), it->second.end(), '\n'));
-            lcnt = std::min(static_cast<int>(GUI_MAX_MULITLINE), lcnt);
-            ImVec2 ml_dim = ImVec2(
-                ImGui::CalcItemWidth(), ImGui::GetFrameHeight() + (ImGui::GetFontSize() * static_cast<float>(lcnt)));
-            ImGui::InputTextMultiline(
-                param_label_hidden.c_str(), &it->second, ml_dim, ImGuiInputTextFlags_CtrlEnterForNewLine);
-            if (ImGui::IsItemDeactivatedAfterEdit()) {
-                std::string utf8Str = it->second;
-                GUIUtils::Utf8Decode(utf8Str);
-                p->SetValue(vislib::StringA(utf8Str.c_str()));
-            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                GUIUtils::Utf8Encode(utf8Str);
-                it->second = utf8Str;
-            }
-            ImGui::SameLine();
-            ImGui::TextUnformatted(param_name.c_str());
-            help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
-        } else if (auto* p = slot.Param<core::param::FilePathParam>()) {
-            /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            auto it = this->widgtmap_text.find(param_full_name);
-            if (it == this->widgtmap_text.end()) {
-                std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                GUIUtils::Utf8Encode(utf8Str);
-                this->widgtmap_text.emplace(param_full_name, utf8Str);
-                it = this->widgtmap_text.find(param_full_name);
-            }
-            ImGui::PushItemWidth(
-                ImGui::GetContentRegionAvail().x * 0.65f - ImGui::GetFrameHeight() - style.ItemSpacing.x);
-            bool button_edit = this->file_utils.FileBrowserButton(it->second);
-            ImGui::SameLine();
-            ImGui::InputText(param_label.c_str(), &it->second, ImGuiInputTextFlags_None);
-            if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
-                GUIUtils::Utf8Decode(it->second);
-                p->SetValue(vislib::StringA(it->second.c_str()));
-            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                GUIUtils::Utf8Encode(utf8Str);
-                it->second = utf8Str;
-            }
-            ImGui::PopItemWidth();
-        } else {
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "Unknown Parameter Type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return;
-        }
+        // Draw parameter widget
+        this->drawParameterPresentation(slot, widget_label, param_name, param_full_name);
 
-        // Reset to default style (use saved state)
+        // Reset to default style (use saved state!)
         if (readOnly) {
             GUIUtils::ReadOnlyWigetStyle(false);
         }
-        ImGui::PopID();
-
-        this->utils.HoverToolTip(param_desc, ImGui::GetID(param_label.c_str()), 0.5f);
-        this->utils.HelpMarkerToolTip(help);
 
         ImGui::EndGroup();
     }
 }
+
+
+void megamol::gui::GUIWindows::drawParameterPresentation(core::param::ParamSlot& slot, const std::string& widget_label,
+    const std::string& param_name, const std::string& param_full_name) {
+
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    std::string help;
+    std::string float_format = "%.7f";
+    std::string param_desc = slot.Description().PeekBuffer();
+
+    ImGui::PushID(widget_label.c_str());
+
+    // BOOL -------------------------------------------------------------------
+    if (auto* p = slot.template Param<core::param::BoolParam>()) {
+        if (p->GetGUIPresentation() == megamol::core::param::Presentations::Basic) {
+            auto value = p->Value();
+            if (ImGui::Checkbox(widget_label.c_str(), &value)) {
+                p->SetValue(value);
+            }
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "No widget presentation '%i' available for BoolParam . [%s, %s, line %d]\n",
+                static_cast<int>(p->GetGUIPresentation()), __FILE__, __FUNCTION__, __LINE__);
+        }
+        // BUTTON -----------------------------------------------------------------
+    } else if (auto* p = slot.template Param<core::param::ButtonParam>()) {
+        std::string hotkey = "";
+        std::string buttonHotkey = p->GetKeyCode().ToString();
+        if (!buttonHotkey.empty()) {
+            hotkey = " (" + buttonHotkey + ")";
+        }
+        std::string label_edit = widget_label;
+        auto insert_pos = label_edit.find("###");
+        label_edit.insert(insert_pos, hotkey);
+        if (ImGui::Button(label_edit.c_str())) {
+            p->setDirty();
+        }
+        // COLOR ------------------------------------------------------------------
+    } else if (auto* p = slot.template Param<core::param::ColorParam>()) {
+        core::param::ColorParam::ColorType value = p->Value();
+        auto color_flags = ImGuiColorEditFlags_AlphaPreview; // | ImGuiColorEditFlags_Float;
+        if (ImGui::ColorEdit4(widget_label.c_str(), (float*)value.data(), color_flags)) {
+            p->SetValue(value);
+        }
+        help = "[Click] on the colored square to open a color picker.\n"
+               "[CTRL+Click] on individual component to input value.\n"
+               "[Right-Click] on the individual color widget to show options.";
+        // TRANSFER FUNCTION ------------------------------------------------------
+    } else if (auto* p = slot.template Param<core::param::TransferFunctionParam>()) {
+        this->drawTransferFunctionEdit(param_full_name, widget_label, *p);
+        // ENUM -------------------------------------------------------------------
+    } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
+        /// XXX: no UTF8 fanciness required here?
+        auto map = p->getMap();
+        auto key = p->Value();
+        if (ImGui::BeginCombo(widget_label.c_str(), map[key].PeekBuffer())) {
+            auto iter = map.GetConstIterator();
+            while (iter.HasNext()) {
+                auto pair = iter.Next();
+                bool isSelected = (pair.Key() == key);
+                if (ImGui::Selectable(pair.Value().PeekBuffer(), isSelected)) {
+                    p->SetValue(pair.Key());
+                }
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+        // FLEX ENUM --------------------------------------------------------------
+    } else if (auto* p = slot.template Param<core::param::FlexEnumParam>()) {
+        /// XXX: no UTF8 fanciness required here?
+        auto value = p->Value();
+        if (ImGui::BeginCombo(widget_label.c_str(), value.c_str())) {
+            for (auto& valueOption : p->getStorage()) {
+                bool isSelected = (valueOption == value);
+                if (ImGui::Selectable(valueOption.c_str(), isSelected)) {
+                    p->SetValue(valueOption);
+                }
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+        // FLOAT ------------------------------------------------------------------
+    } else if (auto* p = slot.template Param<core::param::FloatParam>()) {
+        auto it = this->widgtmap_float.find(param_full_name);
+        if (it == this->widgtmap_float.end()) {
+            this->widgtmap_float.emplace(param_full_name, p->Value());
+            it = this->widgtmap_float.find(param_full_name);
+        }
+        ImGui::InputFloat(
+            widget_label.c_str(), &it->second, 1.0f, 10.0f, float_format.c_str(), ImGuiInputTextFlags_None);
+        if (ImGui::IsItemDeactivatedAfterEdit()) {
+            it->second = std::max(p->MinValue(), std::min(it->second, p->MaxValue()));
+            p->SetValue(it->second);
+        } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+            it->second = p->Value();
+        }
+        // INT --------------------------------------------------------------------
+    } else if (auto* p = slot.template Param<core::param::IntParam>()) {
+        auto it = this->widgtmap_int.find(param_full_name);
+        if (it == this->widgtmap_int.end()) {
+            this->widgtmap_int.emplace(param_full_name, p->Value());
+            it = this->widgtmap_int.find(param_full_name);
+        }
+        ImGui::InputInt(widget_label.c_str(), &it->second, 1, 10, ImGuiInputTextFlags_None);
+        if (ImGui::IsItemDeactivatedAfterEdit()) {
+            it->second = std::max(p->MinValue(), std::min(it->second, p->MaxValue()));
+            p->SetValue(it->second);
+        } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+            it->second = p->Value();
+        }
+        // VECTOR 2 ---------------------------------------------------------------
+    } else if (auto* p = slot.template Param<core::param::Vector2fParam>()) {
+        auto it = this->widgtmap_vec2.find(param_full_name);
+        if (it == this->widgtmap_vec2.end()) {
+            this->widgtmap_vec2.emplace(param_full_name, p->Value());
+            it = this->widgtmap_vec2.find(param_full_name);
+        }
+        ImGui::InputFloat2(
+            widget_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
+        if (ImGui::IsItemDeactivatedAfterEdit()) {
+            auto x = std::max(p->MinValue().X(), std::min(it->second.X(), p->MaxValue().X()));
+            auto y = std::max(p->MinValue().Y(), std::min(it->second.Y(), p->MaxValue().Y()));
+            it->second = vislib::math::Vector<float, 2>(x, y);
+            p->SetValue(it->second);
+        } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+            it->second = p->Value();
+        }
+        // VECTOR 3 ---------------------------------------------------------------
+    } else if (auto* p = slot.template Param<core::param::Vector3fParam>()) {
+        auto it = this->widgtmap_vec3.find(param_full_name);
+        if (it == this->widgtmap_vec3.end()) {
+            this->widgtmap_vec3.emplace(param_full_name, p->Value());
+            it = this->widgtmap_vec3.find(param_full_name);
+        }
+        ImGui::InputFloat3(
+            widget_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
+        if (ImGui::IsItemDeactivatedAfterEdit()) {
+            auto x = std::max(p->MinValue().X(), std::min(it->second.X(), p->MaxValue().X()));
+            auto y = std::max(p->MinValue().Y(), std::min(it->second.Y(), p->MaxValue().Y()));
+            auto z = std::max(p->MinValue().Z(), std::min(it->second.Z(), p->MaxValue().Z()));
+            it->second = vislib::math::Vector<float, 3>(x, y, z);
+            p->SetValue(it->second);
+        } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+            it->second = p->Value();
+        }
+        // VECTOR 4 ---------------------------------------------------------------
+    } else if (auto* p = slot.template Param<core::param::Vector4fParam>()) {
+        auto it = this->widgtmap_vec4.find(param_full_name);
+        if (it == this->widgtmap_vec4.end()) {
+            this->widgtmap_vec4.emplace(param_full_name, p->Value());
+            it = this->widgtmap_vec4.find(param_full_name);
+        }
+        ImGui::InputFloat4(
+            widget_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
+        if (ImGui::IsItemDeactivatedAfterEdit()) {
+            auto x = std::max(p->MinValue().X(), std::min(it->second.X(), p->MaxValue().X()));
+            auto y = std::max(p->MinValue().Y(), std::min(it->second.Y(), p->MaxValue().Y()));
+            auto z = std::max(p->MinValue().Z(), std::min(it->second.Z(), p->MaxValue().Z()));
+            auto w = std::max(p->MinValue().W(), std::min(it->second.W(), p->MaxValue().W()));
+            it->second = vislib::math::Vector<float, 4>(x, y, z, w);
+            p->SetValue(it->second);
+        } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+            it->second = p->Value();
+        }
+        // TERNARY ----------------------------------------------------------------
+    } else if (auto* p = slot.template Param<core::param::TernaryParam>()) {
+        ImGui::BeginGroup();
+        auto value = p->Value();
+        if (ImGui::RadioButton("True", value.IsTrue())) {
+            p->SetValue(vislib::math::Ternary::TRI_TRUE);
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("False", value.IsFalse())) {
+            p->SetValue(vislib::math::Ternary::TRI_FALSE);
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Unknown", value.IsUnknown())) {
+            p->SetValue(vislib::math::Ternary::TRI_UNKNOWN);
+        }
+        ImGui::SameLine();
+        ImGui::TextDisabled("|");
+        ImGui::SameLine();
+        ImGui::TextUnformatted(param_name.c_str());
+        ImGui::EndGroup();
+        // STRING -----------------------------------------------------------------
+    } else if (auto* p = slot.Param<core::param::StringParam>()) {
+        ImGui::BeginGroup();
+        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+        auto it = this->widgtmap_text.find(param_full_name);
+        if (it == this->widgtmap_text.end()) {
+            std::string utf8Str = std::string(p->ValueString().PeekBuffer());
+            GUIUtils::Utf8Encode(utf8Str);
+            this->widgtmap_text.emplace(param_full_name, utf8Str);
+            it = this->widgtmap_text.find(param_full_name);
+        }
+        // Determine multi line count of string
+        int lcnt = static_cast<int>(std::count(it->second.begin(), it->second.end(), '\n'));
+        lcnt = std::min(static_cast<int>(GUI_MAX_MULITLINE), lcnt);
+        ImVec2 ml_dim =
+            ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight() + (ImGui::GetFontSize() * static_cast<float>(lcnt)));
+        std::string hidden_widget_label = "###" + param_full_name;
+        ImGui::InputTextMultiline(
+            hidden_widget_label.c_str(), &it->second, ml_dim, ImGuiInputTextFlags_CtrlEnterForNewLine);
+        if (ImGui::IsItemDeactivatedAfterEdit()) {
+            std::string utf8Str = it->second;
+            GUIUtils::Utf8Decode(utf8Str);
+            p->SetValue(vislib::StringA(utf8Str.c_str()));
+        } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+            std::string utf8Str = std::string(p->ValueString().PeekBuffer());
+            GUIUtils::Utf8Encode(utf8Str);
+            it->second = utf8Str;
+        }
+        ImGui::SameLine();
+        ImGui::TextUnformatted(param_name.c_str());
+        help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
+        ImGui::EndGroup();
+        // FILE PATH --------------------------------------------------------------
+    } else if (auto* p = slot.Param<core::param::FilePathParam>()) {
+        ImGui::BeginGroup();
+        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+        auto it = this->widgtmap_text.find(param_full_name);
+        if (it == this->widgtmap_text.end()) {
+            std::string utf8Str = std::string(p->ValueString().PeekBuffer());
+            GUIUtils::Utf8Encode(utf8Str);
+            this->widgtmap_text.emplace(param_full_name, utf8Str);
+            it = this->widgtmap_text.find(param_full_name);
+        }
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f - ImGui::GetFrameHeight() - style.ItemSpacing.x);
+        bool button_edit = this->file_utils.FileBrowserButton(it->second);
+        ImGui::SameLine();
+        ImGui::InputText(widget_label.c_str(), &it->second, ImGuiInputTextFlags_None);
+        if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
+            GUIUtils::Utf8Decode(it->second);
+            p->SetValue(vislib::StringA(it->second.c_str()));
+        } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+            std::string utf8Str = std::string(p->ValueString().PeekBuffer());
+            GUIUtils::Utf8Encode(utf8Str);
+            it->second = utf8Str;
+        }
+        ImGui::PopItemWidth();
+        ImGui::EndGroup();
+    } else {
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "Unknown Parameter Type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
+
+    ImGui::PopID();
+
+    this->utils.HoverToolTip(param_desc, ImGui::GetID(widget_label.c_str()), 0.5f);
+    this->utils.HelpMarkerToolTip(help);
+}
+
 
 void GUIWindows::drawTransferFunctionEdit(
     const std::string& param_full_name, const std::string& label, megamol::core::param::TransferFunctionParam& p) {
@@ -2222,11 +2275,10 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
                     }
 
                     // gui_presentation_mode
-                    megamol::core::param::AbstractParamPresentation::Presentations gui_presentation_mode;
+                    megamol::core::param::Presentations gui_presentation_mode;
                     if (gui_state.at("gui_presentation_mode").is_number_integer()) {
-                        gui_presentation_mode =
-                            static_cast<megamol::core::param::AbstractParamPresentation::Presentations>(
-                                gui_state.at("gui_presentation_mode").get<int>());
+                        gui_presentation_mode = static_cast<megamol::core::param::Presentations>(
+                            gui_state.at("gui_presentation_mode").get<int>());
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
                             "JSON state: Failed to read 'gui_presentation_mode' as integer. [%s, %s, line %d]\n",

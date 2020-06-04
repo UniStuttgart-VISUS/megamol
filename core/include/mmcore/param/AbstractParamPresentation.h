@@ -10,26 +10,50 @@
 
 #include "mmcore/api/MegaMolCore.std.h"
 
+#include "vislib/sys/Log.h"
+
 
 namespace megamol {
 namespace core {
 namespace param {
 
 
+// Available GUI widget implementations for parameter presentation.
+enum class Presentations : int { /// (limited to 32)
+    NONE              = 0,
+    Basic             = 1 << 1,      // Basic widget (must be supported for all parameter types) -> Default
+    Color             = 1 << 2,      // Color editor widget
+    FilePath          = 1 << 3,      // File path widget
+    TransferFunction  = 1 << 4,      // Transfer function editor widget
+    PinValueToMouse   = 1 << 5       // Pin parameter value to mouse position
+};
+inline Presentations operator|(Presentations a, Presentations b) {
+    return static_cast<Presentations>(static_cast<int>(a) | static_cast<int>(b));
+}
+inline Presentations operator&(Presentations a, Presentations b) {
+    return static_cast<Presentations>(static_cast<int>(a) & static_cast<int>(b));
+}
+
+
 class MEGAMOLCORE_API AbstractParamPresentation {
 public:
 
-    enum Presentations : int {
-        RawValue           = 0,           // Presentation representing the parameters value with default raw value widget
-        PinValueToMouse    = 1 << 1       // Presentation pinning value of parameter to mouse position
-    };
+    /**
+    * Initalise presentation for parameter once.
+    *
+    * @param default_presentation   Default presentation to use for parameter.
+    * @param compatible             Set compatible presentations.
+    *
+    * @return True on success, false otherwise.
+    */
+    bool InitPresentation(Presentations compatible, Presentations default_presentation, bool read_only = false, bool visible = true);
 
     /**
     * Answer visibility in GUI.
     *
     * @return GUI visibility
     */
-    inline bool IsGUIVisible() const {
+    inline bool IsGUIVisible(void) const {
         return this->visible;
     }
 
@@ -38,7 +62,7 @@ public:
     *
     * @param visible True: visible in GUI, false: invisible
     */
-    inline void SetGUIVisible(const bool visible) {
+    inline void SetGUIVisible(bool visible) {
         this->visible = visible;
     }
 
@@ -47,7 +71,7 @@ public:
     *
     * @return GUI accessibility
     */
-    inline bool IsGUIReadOnly() const {
+    inline bool IsGUIReadOnly(void) const {
         return this->read_only;
     }
 
@@ -56,7 +80,7 @@ public:
     *
     * @param read_only True: read-only in GUI, false: writable
     */
-    inline void SetGUIReadOnly(const bool read_only) {
+    inline void SetGUIReadOnly(bool read_only) {
         this->read_only = read_only;
     }     
     
@@ -64,18 +88,27 @@ public:
     * Set presentation of parameter in GUI.
     *
     * @param presentation Presentation of parameter in GUI.
+    *
+    * @return True if given presentation is compatible, false otherwise.
     */
-    inline void SetGUIPresentation(AbstractParamPresentation::Presentations presentation) {
-        this->presentation = presentation;
-    }
+    bool SetGUIPresentation(Presentations presentation);
     
     /**
     * Answer parameter presentation in GUI.
     *
-    * @return GUI presentation.
+    * @return Parameter presentation.
     */
-    inline AbstractParamPresentation::Presentations GetGUIPresentation() const {
+    inline Presentations GetGUIPresentation(void) const {
         return this->presentation;
+    }
+
+    /**
+    * Answer whether given presentation is compatible with parameter.
+    *
+    * @return True if given presentation is compatible, false otherwise.
+    */
+    inline bool IsPresentationCompatible(Presentations presentation) const {
+        return (Presentations::NONE != (presentation & this->compatible));
     }
 
 protected:
@@ -94,8 +127,13 @@ private:
     bool read_only;
     
     /* Presentation (= widget representation) of parameter in the GUI. */
-    AbstractParamPresentation::Presentations presentation;
+    Presentations presentation;
     
+    /* Compatible presentations */
+    Presentations compatible;
+
+    /* Falg ensuring that initialisation can only be applied once. */
+    bool initialised;
 };
 
 } /* end namespace param */

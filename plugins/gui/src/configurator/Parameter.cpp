@@ -26,7 +26,7 @@ megamol::gui::configurator::Parameter::Parameter(
     , value()
     , default_value()
     , default_value_mismatch(false)
-    , present() {
+    , present(type) {
 
     // Initialize variant types which should/can not be changed afterwards.
     // Default ctor of variants initializes std::monostate.
@@ -258,7 +258,7 @@ bool megamol::gui::configurator::Parameter::SetValueString(const std::string& va
 
 // PARAMETER PRESENTATION ####################################################
 
-megamol::gui::configurator::Parameter::Presentation::Presentation(void)
+megamol::gui::configurator::Parameter::Presentation::Presentation(ParamType type)
     : megamol::core::param::AbstractParamPresentation()
     , expert(false)
     , help()
@@ -269,7 +269,57 @@ megamol::gui::configurator::Parameter::Presentation::Presentation(void)
     , widget_store()
     , float_format("%.7f")
     , height(0.0f)
-    , set_focus(0) {}
+    , set_focus(0) {
+
+    // Initialize presentations depending on type
+    switch (type) {
+    case (Parameter::ParamType::BOOL): {
+        this->InitPresentation(PresentType::Basic, PresentType::Basic);
+    } break;
+    case (Parameter::ParamType::BUTTON): {
+        this->InitPresentation(PresentType::Basic, PresentType::Basic);
+    } break;
+    case (Parameter::ParamType::COLOR): {
+        this->InitPresentation(PresentType::Basic | PresentType::Color, PresentType::Color);
+    } break;
+    case (Parameter::ParamType::ENUM): {
+        this->InitPresentation(PresentType::Basic, PresentType::Basic);
+    } break;
+    case (Parameter::ParamType::FILEPATH): {
+        this->InitPresentation(PresentType::Basic | PresentType::FilePath, PresentType::FilePath);
+    } break;
+    case (Parameter::ParamType::FLEXENUM): {
+        this->InitPresentation(PresentType::Basic, PresentType::Basic);
+    } break;
+    case (Parameter::ParamType::FLOAT): {
+        this->InitPresentation(PresentType::Basic | PresentType::PinValueToMouse, PresentType::Basic);
+    } break;
+    case (Parameter::ParamType::INT): {
+        this->InitPresentation(PresentType::Basic | PresentType::PinValueToMouse, PresentType::Basic);
+    } break;
+    case (Parameter::ParamType::STRING): {
+        this->InitPresentation(PresentType::Basic, PresentType::Basic);
+    } break;
+    case (Parameter::ParamType::TERNARY): {
+        this->InitPresentation(PresentType::Basic, PresentType::Basic);
+    } break;
+    case (Parameter::ParamType::TRANSFERFUNCTION): {
+        this->InitPresentation(PresentType::Basic | PresentType::TransferFunction, PresentType::TransferFunction);
+    } break;
+    case (Parameter::ParamType::VECTOR2F): {
+        this->InitPresentation(PresentType::Basic | PresentType::PinValueToMouse, PresentType::Basic);
+    } break;
+    case (Parameter::ParamType::VECTOR3F): {
+        this->InitPresentation(PresentType::Basic | PresentType::PinValueToMouse, PresentType::Basic);
+    } break;
+    case (Parameter::ParamType::VECTOR4F): {
+        this->InitPresentation(
+            PresentType::Basic | PresentType::PinValueToMouse | PresentType::Color, PresentType::Basic);
+    } break;
+    default:
+        break;
+    }
+}
 
 
 megamol::gui::configurator::Parameter::Presentation::~Presentation(void) {}
@@ -333,19 +383,39 @@ bool megamol::gui::configurator::Parameter::Presentation::presentation_button(vo
 
     bool retval = false;
 
-    this->utils.PointCircleButton("", (this->GetGUIPresentation() != PresentType::RawValue));
+    this->utils.PointCircleButton("", (this->GetGUIPresentation() != PresentType::Basic));
     if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) {
-
-        auto param_present = PresentType::RawValue;
-        if (ImGui::MenuItem("Default", nullptr, (param_present == this->GetGUIPresentation()))) {
-            this->SetGUIPresentation(param_present);
+        auto param_present = PresentType::Basic;
+        if (this->IsPresentationCompatible(param_present)) {
+            if (ImGui::MenuItem("Basic", nullptr, (param_present == this->GetGUIPresentation()))) {
+                this->SetGUIPresentation(param_present);
+            }
         }
-
+        param_present = PresentType::Color;
+        if (this->IsPresentationCompatible(param_present)) {
+            if (ImGui::MenuItem("Color", nullptr, (param_present == this->GetGUIPresentation()))) {
+                this->SetGUIPresentation(param_present);
+            }
+        }
+        param_present = PresentType::FilePath;
+        if (this->IsPresentationCompatible(param_present)) {
+            if (ImGui::MenuItem("File Path", nullptr, (param_present == this->GetGUIPresentation()))) {
+                this->SetGUIPresentation(param_present);
+            }
+        }
+        param_present = PresentType::TransferFunction;
+        if (this->IsPresentationCompatible(param_present)) {
+            if (ImGui::MenuItem("Transfer Function", nullptr, (param_present == this->GetGUIPresentation()))) {
+                this->SetGUIPresentation(param_present);
+            }
+        }
         param_present = PresentType::PinValueToMouse;
-        if (ImGui::MenuItem("Pin Value to Mouse Position", nullptr, (param_present == this->GetGUIPresentation()))) {
-            this->SetGUIPresentation(param_present);
+        if (this->IsPresentationCompatible(param_present)) {
+            if (ImGui::MenuItem(
+                    "Pin Value to Mouse Position", nullptr, (param_present == this->GetGUIPresentation()))) {
+                this->SetGUIPresentation(param_present);
+            }
         }
-
         ImGui::EndPopup();
     }
 
@@ -394,10 +464,12 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_RawValue
 
     auto visitor = [&](auto&& arg) {
         using T = std::decay_t<decltype(arg)>;
+        // BOOL -------------------------------------------------------------------------
         if constexpr (std::is_same_v<T, bool>) {
             if (ImGui::Checkbox(param_label.c_str(), &arg)) {
                 inout_parameter.SetValue(arg);
             }
+            // COLOR ------------------------------------------------------------------------
         } else if constexpr (std::is_same_v<T, megamol::core::param::ColorParam::ColorType>) {
             auto color_flags = ImGuiColorEditFlags_AlphaPreview; // | ImGuiColorEditFlags_Float;
             if (ImGui::ColorEdit4(param_label.c_str(), (float*)arg.data(), color_flags)) {
@@ -406,6 +478,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_RawValue
             this->help = "[Click] on the colored square to open a color picker.\n"
                          "[CTRL+Click] on individual component to input value.\n"
                          "[Right-Click] on the individual color widget to show options.";
+            // FLOAT ------------------------------------------------------------------------
         } else if constexpr (std::is_same_v<T, float>) {
             if (!std::holds_alternative<T>(this->widget_store)) {
                 this->widget_store = arg;
@@ -421,6 +494,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_RawValue
             }
         } else if constexpr (std::is_same_v<T, int>) {
             switch (inout_parameter.type) {
+            // INT ----------------------------------------------------------------------
             case (Parameter::ParamType::INT): {
                 if (!std::holds_alternative<T>(this->widget_store)) {
                     this->widget_store = arg;
@@ -435,6 +509,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_RawValue
                     this->widget_store = arg;
                 }
             } break;
+            // ENUM ---------------------------------------------------------------------
             case (Parameter::ParamType::ENUM): {
                 /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
                 auto map = inout_parameter.GetStorage<EnumStorageType>();
@@ -457,7 +532,9 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_RawValue
             }
         } else if constexpr (std::is_same_v<T, std::string>) {
             switch (inout_parameter.type) {
+            // STRING -------------------------------------------------------------------
             case (Parameter::ParamType::STRING): {
+                ImGui::BeginGroup();
                 /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
                 if (!std::holds_alternative<T>(this->widget_store)) {
                     std::string utf8Str = arg;
@@ -485,11 +562,15 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_RawValue
                 ImGui::SameLine();
                 ImGui::TextUnformatted(param_label.c_str());
                 this->help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
+                ImGui::EndGroup();
             } break;
+            // TRANSFER FUNCTION --------------------------------------------------------
             case (Parameter::ParamType::TRANSFERFUNCTION): {
                 this->transfer_function_edit(inout_parameter);
             } break;
+            // FILE PATH ----------------------------------------------------------------
             case (Parameter::ParamType::FILEPATH): {
+                ImGui::BeginGroup();
                 /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
                 if (!std::holds_alternative<T>(this->widget_store)) {
                     std::string utf8Str = arg;
@@ -512,7 +593,9 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_RawValue
                     this->widget_store = utf8Str;
                 }
                 ImGui::PopItemWidth();
+                ImGui::EndGroup();
             } break;
+            // FLEX ENUM ----------------------------------------------------------------
             case (Parameter::ParamType::FLEXENUM): {
                 /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
                 if (!std::holds_alternative<T>(this->widget_store)) {
@@ -521,7 +604,6 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_RawValue
                 std::string utf8Str = arg;
                 GUIUtils::Utf8Encode(utf8Str);
                 if (ImGui::BeginCombo(param_label.c_str(), utf8Str.c_str())) {
-
                     bool one_present = false;
                     for (auto& valueOption :
                         inout_parameter.GetStorage<megamol::core::param::FlexEnumParam::Storage_t>()) {
@@ -537,7 +619,6 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_RawValue
                         }
                         one_present = true;
                     }
-
                     if (one_present) {
                         ImGui::Separator();
                     }
@@ -559,18 +640,18 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_RawValue
                         }
                         ImGui::CloseCurrentPopup();
                     }
-
                     ImGui::EndCombo();
                 } else {
                     this->set_focus = 0;
                 }
-
                 this->help = "Only selected value will be saved to project file";
             } break;
             default:
                 break;
             }
+            // TERNARY ----------------------------------------------------------------------
         } else if constexpr (std::is_same_v<T, vislib::math::Ternary>) {
+            ImGui::BeginGroup();
             if (ImGui::RadioButton("True", arg.IsTrue())) {
                 inout_parameter.SetValue(vislib::math::Ternary::TRI_TRUE);
             }
@@ -586,6 +667,8 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_RawValue
             ImGui::TextDisabled("|");
             ImGui::SameLine();
             ImGui::TextUnformatted(param_label.c_str());
+            ImGui::EndGroup();
+            // VECTOR 2 ---------------------------------------------------------------------
         } else if constexpr (std::is_same_v<T, glm::vec2>) {
             if (!std::holds_alternative<T>(this->widget_store)) {
                 this->widget_store = arg;
@@ -602,6 +685,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_RawValue
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 this->widget_store = arg;
             }
+            // VECTOR 3 ---------------------------------------------------------------------
         } else if constexpr (std::is_same_v<T, glm::vec3>) {
             if (!std::holds_alternative<T>(this->widget_store)) {
                 this->widget_store = arg;
@@ -619,6 +703,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_RawValue
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 this->widget_store = arg;
             }
+            // VECTOR 4 ---------------------------------------------------------------------
         } else if constexpr (std::is_same_v<T, glm::vec4>) {
             if (!std::holds_alternative<T>(this->widget_store)) {
                 this->widget_store = arg;
@@ -639,6 +724,7 @@ void megamol::gui::configurator::Parameter::Presentation::present_value_RawValue
             }
         } else if constexpr (std::is_same_v<T, std::monostate>) {
             switch (inout_parameter.type) {
+            // BUTTON -------------------------------------------------------------------
             case (Parameter::ParamType::BUTTON): {
                 std::string hotkey = "";
                 auto keycode = inout_parameter.GetStorage<megamol::core::view::KeyCode>();

@@ -17,7 +17,7 @@ using namespace megamol::core::param;
  */
 ButtonParam::ButtonParam(void) : AbstractParam(), keycode() {
 
-    // intentionally empty
+    this->InitPresentation(Presentations::Basic, Presentations::Basic);
 }
 
 
@@ -27,7 +27,7 @@ ButtonParam::ButtonParam(void) : AbstractParam(), keycode() {
 ButtonParam::ButtonParam(const core::view::KeyCode &keycode) : AbstractParam(),
     keycode(keycode) {
 
-    // intentionally empty
+    this->InitPresentation(Presentations::Basic, Presentations::Basic);
 }
 
 
@@ -37,7 +37,7 @@ ButtonParam::ButtonParam(const core::view::KeyCode &keycode) : AbstractParam(),
 ButtonParam::ButtonParam(const core::view::Key &key, const core::view::Modifiers &mods) : AbstractParam(), 
     keycode(key, mods) {
 
-    // intentionally empty
+    this->InitPresentation(Presentations::Basic, Presentations::Basic);
 }
 
 
@@ -47,7 +47,7 @@ ButtonParam::ButtonParam(const core::view::Key &key, const core::view::Modifiers
 ButtonParam::ButtonParam(const core::view::Key &key, const core::view::Modifier &mod) : AbstractParam(),
 keycode(key, core::view::Modifiers(mod)) {
 
-    // intentionally empty
+    this->InitPresentation(Presentations::Basic, Presentations::Basic);
 }
 
 
@@ -57,6 +57,7 @@ keycode(key, core::view::Modifiers(mod)) {
 ButtonParam::ButtonParam(const core::view::Key &key) : AbstractParam(), keycode() {
 
     this->keycode.key = key;
+    this->InitPresentation(Presentations::Basic, Presentations::Basic);
 }
 
 

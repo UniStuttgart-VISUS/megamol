@@ -17,7 +17,7 @@ using namespace megamol::core::param;
  */
 StringParam::StringParam(const vislib::StringA& initVal)
         : AbstractParam(), val(initVal) {
-    // intentionally empty
+    this->InitPresentation(Presentations::Basic, Presentations::Basic);
 }
 
 
@@ -26,7 +26,7 @@ StringParam::StringParam(const vislib::StringA& initVal)
  */
 StringParam::StringParam(const vislib::StringW& initVal)
         : AbstractParam(), val(initVal) {
-    // intentionally empty
+    this->InitPresentation(Presentations::Basic, Presentations::Basic);
 }
 
 
@@ -35,7 +35,7 @@ StringParam::StringParam(const vislib::StringW& initVal)
  */
 StringParam::StringParam(const char *initVal)
         : AbstractParam(), val(initVal) {
-    // intentionally empty
+    this->InitPresentation(Presentations::Basic, Presentations::Basic);
 }
 
 
@@ -44,7 +44,7 @@ StringParam::StringParam(const char *initVal)
  */
 StringParam::StringParam(const wchar_t *initVal)
         : AbstractParam(), val(initVal) {
-    // intentionally empty
+    this->InitPresentation(Presentations::Basic, Presentations::Basic);
 }
 
 

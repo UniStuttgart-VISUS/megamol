@@ -54,8 +54,7 @@ typedef std::shared_ptr<Module> ModulePtrType;
 // Pointer types to classes
 typedef std::shared_ptr<Parameter> ParamPtrType;
 
-
-typedef megamol::core::param::AbstractParamPresentation::Presentations PresentType;
+typedef megamol::core::param::Presentations PresentType;
 
 /**
  * Defines parameter data structure for graph.
@@ -259,7 +258,7 @@ private:
      */
     class Presentation : public megamol::core::param::AbstractParamPresentation {
     public:
-        Presentation(void);
+        Presentation(ParamType type);
 
         ~Presentation(void);
 

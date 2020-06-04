@@ -25,6 +25,7 @@ param::Vector2fParam::Vector2fParam(
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
     ASSERT(this->isLessOrEqual(this->minVal, this->val));
     ASSERT(this->isLessOrEqual(this->val, this->maxVal));
+    this->InitPresentation(Presentations::Basic, Presentations::Basic);
 }
 
 
@@ -39,6 +40,7 @@ param::Vector2fParam::Vector2fParam(
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
     ASSERT(this->isLessOrEqual(this->minVal, this->val));
     ASSERT(this->isLessOrEqual(this->val, this->maxVal));
+    this->InitPresentation(Presentations::Basic, Presentations::Basic);
 }
 
 
@@ -54,6 +56,7 @@ param::Vector2fParam::Vector2fParam(
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
     ASSERT(this->isLessOrEqual(this->minVal, this->val));
     ASSERT(this->isLessOrEqual(this->val, this->maxVal));
+    this->InitPresentation(Presentations::Basic, Presentations::Basic);
 }
 
 

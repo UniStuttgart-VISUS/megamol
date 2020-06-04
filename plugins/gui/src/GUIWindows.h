@@ -256,6 +256,16 @@ private:
     void drawParameter(WindowManager::WindowConfiguration& wc, const core::Module& mod, core::param::ParamSlot& slot);
 
     /**
+     * Draws one parameter in its respective presentation.
+     *
+     * @param slot   The current parameter slot.
+     * @param label  The label for the parameter widget.
+     * @param name   The parameters name.
+     */
+    void drawParameterPresentation(core::param::ParamSlot& slot, const std::string& widget_label,
+        const std::string& param_name, const std::string& param_full_name);
+
+    /**
      * Transfer function edit widget.
      */
     void drawTransferFunctionEdit(
