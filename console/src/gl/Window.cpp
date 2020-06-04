@@ -73,8 +73,8 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
         
         if (!placement.fullScreen) {
             // window mode
-            ::glfwWindowHint(GLFW_DECORATED, placement.noDec ? GL_FALSE : GL_TRUE);
-            ::glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+            ::glfwWindowHint(GLFW_DECORATED, placement.noDec ? GLFW_FALSE : GLFW_TRUE);
+            ::glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
             int w = placement.w;
             int h = placement.h;
@@ -124,14 +124,14 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
             }
             if (placement.noDec) vislib::sys::Log::DefaultLog.WriteWarn("Ignoring no-decorations setting when requesting fullscreen.");
 
-            ::glfwWindowHint(GLFW_DECORATED, GL_FALSE);
-            ::glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+            ::glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+            ::glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
             ::glfwWindowHint(GLFW_RED_BITS, mode->redBits);
             ::glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
             ::glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
             ::glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
             // this only works since we are NOT setting a monitor
-            ::glfwWindowHint(GLFW_FLOATING, GL_TRUE);
+            ::glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
 
             /* note we do not use a real fullscreen mode, since then we would have focus-iconify problems */
             hWnd = ::glfwCreateWindow(mode->width, mode->height, title, nullptr, share);
