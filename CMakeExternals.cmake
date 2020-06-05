@@ -210,12 +210,16 @@ function(require_external NAME)
       set(GLFW_LIB "bin/glfw3.dll")
     else()
       set(GLFW_LIB "${CMAKE_INSTALL_LIBDIR}/libglfw.so")
+      # This is a try to fix #544 at least for GLFW. I found no nicer solution, probably this needs some major refactoring of the externals system.
+      # It is probably a very ugly hack, but hopefully this whole dynamic linking stuff dies anytime soon.
+      set(GLFW_LIB2 "${CMAKE_INSTALL_LIBDIR}/libglfw.so.3")
+      set(GLFW_LIB3 "${CMAKE_INSTALL_LIBDIR}/libglfw.so.3.3")
     endif()
 
     add_external_project(glfw SHARED
       GIT_REPOSITORY https://github.com/glfw/glfw.git
       GIT_TAG "3.3.2"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_LIB}" "<INSTALL_DIR>/${GLFW_IMPORT_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_LIB}" "<INSTALL_DIR>/${GLFW_LIB2}" "<INSTALL_DIR>/${GLFW_LIB3}" "<INSTALL_DIR>/${GLFW_IMPORT_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DGLFW_BUILD_EXAMPLES=OFF
