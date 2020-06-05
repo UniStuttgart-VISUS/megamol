@@ -126,6 +126,7 @@ namespace gl {
         GLuint primsQuery;
         bool showFragmentsInTitle;
         bool showPrimsInTitle;
+        bool firstUpdate;
     };
 
 } /* end namespace gl */

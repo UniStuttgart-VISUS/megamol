@@ -36,7 +36,7 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
         : glfw(), 
         hView(), hWnd(nullptr), width(-1), height(-1), renderContext(), uiLayers(), mouseCapture(),
         name(title), fpsCntr(), fps(1000.0f), fpsList(), showFpsInTitle(true), fpsSyncTime(), topMost(false),
-        fragmentQuery(0), showFragmentsInTitle(false), showPrimsInTitle(false) {
+        fragmentQuery(0), showFragmentsInTitle(false), showPrimsInTitle(false), firstUpdate(true) {
 
     if (::memcmp(name.c_str(), WindowManager::TitlePrefix, WindowManager::TitlePrefixLength) == 0) {
         name = name.substr(WindowManager::TitlePrefixLength);
@@ -73,8 +73,22 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
         
         if (!placement.fullScreen) {
             // window mode
-            ::glfwWindowHint(GLFW_DECORATED, placement.noDec ? GL_FALSE : GL_TRUE);
-            ::glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+            ::glfwWindowHint(GLFW_DECORATED, placement.noDec ? GLFW_FALSE : GLFW_TRUE);
+            ::glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+
+            // Hack for window size larger than screen:
+            // The width and height for glfwCreateWindow is just a hint for the underlying window manager. Most window
+            // managers (Windows + Linux/X11) will just resize and maximise the window on the screen, when a size
+            // larger than the screen is requested. When we do not allow resizing, the window managers seems to use the
+            // wanted size.
+            // But we want a resizable window, therefore we need to set the window resizable again. But the second
+            // problem with window managers is, that window creation is an async task (at least with X11). When we
+            // immediately after window creation set the window to be resizable again, the automatic resize will happen
+            // again. We need to delay this to a later point in time (i.e. rendering of first frame).
+            // The async task problem holds (of course) also for querying the window size with glfwGetWindowSize.
+            // Calling this right after glfwCreateWindow will just return our values, not the actual window size.
+            // Therefore here we cannot test for correct window size.
+            ::glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
             int w = placement.w;
             int h = placement.h;
@@ -85,26 +99,9 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
                 h = mode->height * 3 / 4;
             }
 
+            // According to glfw docs width and height means the content area of the window without window decorations.
             hWnd = ::glfwCreateWindow(w, h, title, nullptr, share);
-            int left, top, right, bottom;
-            glfwGetWindowFrameSize(hWnd, &left, &top, &right, &bottom);
             vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", w, h);
-            int actualw = 0, actualh = 0;
-            glfwGetWindowSize(hWnd, &actualw, &actualh);
-            if (actualw - left - right != w || actualh - top - bottom != h) {
-                //vislib::sys::Log::DefaultLog.WriteError("Console::Window: Created window does not have requested size! w: %d, h: %d\n", actualw, actualh);
-                vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: framebuffer size too small, adjusting window and compensating decorations\n");
-                w = w + left + right;
-                h = h + top + bottom;
-                glfwSetWindowSizeLimits(hWnd, w, h, w, h);
-                glfwSetWindowSize(hWnd, w, h);
-                glfwGetWindowSize(hWnd, &actualw, &actualh);
-                if (actualw != w || actualh != h) {
-                    vislib::sys::Log::DefaultLog.WriteError(
-                        "Console::Window: Created window does not have requested size even after changed limits! w: %d, h: %d\n", actualw,
-                        actualh);
-                }
-            }
             if (hWnd != nullptr) {
                 if (placement.pos) ::glfwSetWindowPos(hWnd, placement.x, placement.y);
             }
@@ -124,14 +121,14 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
             }
             if (placement.noDec) vislib::sys::Log::DefaultLog.WriteWarn("Ignoring no-decorations setting when requesting fullscreen.");
 
-            ::glfwWindowHint(GLFW_DECORATED, GL_FALSE);
-            ::glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+            ::glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+            ::glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
             ::glfwWindowHint(GLFW_RED_BITS, mode->redBits);
             ::glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
             ::glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
             ::glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
             // this only works since we are NOT setting a monitor
-            ::glfwWindowHint(GLFW_FLOATING, GL_TRUE);
+            ::glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
 
             /* note we do not use a real fullscreen mode, since then we would have focus-iconify problems */
             hWnd = ::glfwCreateWindow(mode->width, mode->height, title, nullptr, share);
@@ -217,6 +214,17 @@ void gl::Window::RequestClose() {
 
 void gl::Window::Update(uint32_t frameID) {
     if (hWnd == nullptr) return;
+
+    // See comment above window creation on window size.
+    if (firstUpdate) {
+        firstUpdate = false;
+
+        int actualw = 0, actualh = 0;
+        glfwGetWindowSize(hWnd, &actualw, &actualh);
+        vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Actual window size: w: %d, h: %d\n", actualw, actualh);
+
+        glfwSetWindowAttrib(hWnd, GLFW_RESIZABLE, GLFW_TRUE);
+    }
 
     // this also issues the callbacks, which might close this window
     ::glfwPollEvents();
