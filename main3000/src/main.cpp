@@ -17,6 +17,8 @@ int main() {
 
 	megamol::render_api::OpenGL_GLFW_RAPI::Config openglConfig;
     openglConfig.windowTitlePrefix = openglConfig.windowTitlePrefix + " ~ Main3000";
+    openglConfig.versionMajor = 4;
+    openglConfig.versionMinor = 6;
     gl_api->initAPI(&openglConfig);
 
 	auto* apiRawPtr = gl_api.get(); // TODO: this is dangerous and we need a graceful shutdown mechanism for the new graph
@@ -24,10 +26,10 @@ int main() {
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider, std::move(gl_api), gl_api_name);
 
 	// TODO: verify valid input IDs/names in graph instantiation methods - dont defer validation until executing the changes
-	graph.QueueModuleInstantiation("View3D", gl_api_name + "::view");
-	graph.QueueModuleInstantiation("SphereOutlineRenderer", gl_api_name + "::spheres");
+	graph.QueueModuleInstantiation("View3D_2", gl_api_name + "::view");
+	graph.QueueModuleInstantiation("SphereRenderer", gl_api_name + "::spheres");
 	graph.QueueModuleInstantiation("TestSpheresDataSource", gl_api_name + "::datasource");
-	graph.QueueCallInstantiation("CallRender3D", gl_api_name + "::view::rendering", gl_api_name + "::spheres::rendering");
+	graph.QueueCallInstantiation("CallRender3D_2", gl_api_name + "::view::rendering", gl_api_name + "::spheres::rendering");
 	graph.QueueCallInstantiation("MultiParticleDataCall", gl_api_name + "::spheres::getdata", gl_api_name + "::datasource::getData");
 
 	graph.ExecuteGraphUpdates();
