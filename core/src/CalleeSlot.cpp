@@ -71,24 +71,31 @@ CalleeSlot::~CalleeSlot(void) {
 /*
  * CalleeSlot::ConnectCall
  */
-bool CalleeSlot::ConnectCall(megamol::core::Call *call) {
+bool CalleeSlot::ConnectCall(megamol::core::Call *call, factories::CallDescription::ptr call_description) {
     vislib::sys::AutoLock lock(this->Parent()->ModuleGraphLock());
     if (call == NULL) {
         this->SetStatusDisconnected(); // TODO: This is wrong! Reference counting!
         return true;
     }
-    core::CoreInstance& coreInst = *this->GetCoreInstance();
 
     factories::CallDescriptionManager::description_ptr_type desc;
-    for (unsigned int i = 0; i < this->callbacks.Count(); i++) {
-        if ((desc = coreInst.GetCallDescriptionManager().Find(
-                this->callbacks[i]->CallName()))->IsDescribing(call))
-            break;
-        desc.reset();
-    }
-    if (!desc) {
-        return false;
-    }
+	// for the new MegaMolGraph, we don't want to handle ConreInstances.
+	// so now we pass the call_description, which the graph holds anyway, to satisfy the code filling call->funcMap[]
+	if (call_description == nullptr)
+	{
+		core::CoreInstance& coreInst = *this->GetCoreInstance();
+		for (unsigned int i = 0; i < this->callbacks.Count(); i++) {
+		    if ((desc = coreInst.GetCallDescriptionManager().Find(
+		            this->callbacks[i]->CallName()))->IsDescribing(call))
+		        break;
+		    desc.reset();
+		}
+		if (!desc) {
+		    return false;
+		}
+    } else {
+        desc = call_description;
+	}
 
     vislib::StringA cn(desc->ClassName());
     for (unsigned int i = 0; i < desc->FunctionCount(); i++) {

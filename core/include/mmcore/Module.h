@@ -156,6 +156,8 @@ namespace core {
             return this->className;
         }
 
+        bool isCreated() const { return this->created; }
+
     protected:
 
         /**

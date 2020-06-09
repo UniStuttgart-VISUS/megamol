@@ -8,6 +8,8 @@
 #include "gl/WindowEscapeHotKeysUILayer.h"
 #include "WindowManager.h"
 
+#include "mmcore/view/Input.h"
+
 using namespace megamol;
 using namespace megamol::console;
 

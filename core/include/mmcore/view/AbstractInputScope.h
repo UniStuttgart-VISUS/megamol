@@ -11,11 +11,19 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "Input.h"
+#include "../../input_events/include/KeyboardMouseInput.h"
+// TODO: do this include correctly via CMake.
+// the structs used here are now located in the input_events CMake module.
 
 namespace megamol {
 namespace core {
 namespace view {
+
+using megamol::input_events::Key;
+using megamol::input_events::KeyAction;
+using megamol::input_events::Modifiers;
+using megamol::input_events::MouseButton;
+using megamol::input_events::MouseButtonAction;
 
 class AbstractInputScope {
 public:

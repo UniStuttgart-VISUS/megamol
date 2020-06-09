@@ -21,6 +21,8 @@
 #include "GLFW/glfw3native.h" 
 #endif
 
+#include "mmcore/view/Input.h"
+
 //#include "HotKeyButtonParam.h"
 //#include "vislib/RawStorage.h"
 //#include "vislib/types.h"
