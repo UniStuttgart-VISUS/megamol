@@ -40,9 +40,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 #   $<INSTALL_INTERFACE:include/>
 # )
 
-if(WIN32)
-  set(VERSION_LIBRARY "Version.lib")
-endif()
+#if(WIN32)
+#  set(VERSION_LIBRARY "Version.lib")
+#endif()
 
 # we dont use libs from outside for the events interfaces
 # # GLFW
@@ -99,18 +99,18 @@ source_group("Source Files" FILES ${source_files})
 
 #  set(cfg_MEGAMOLCON "${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}")
 
-  if(UNIX)
-    include(GNUInstallDirs)
-    set(cfg_EXTERNAL_LIB_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
-    set(MEGAMOL_SHELL_START_SCRIPT "megamol.sh")
-    configure_file(extra/megamol.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} DESTINATION "bin")
-  endif()
+  #if(UNIX)
+  #  include(GNUInstallDirs)
+  #  set(cfg_EXTERNAL_LIB_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+  #  set(MEGAMOL_SHELL_START_SCRIPT "megamol.sh")
+  #  configure_file(extra/megamol.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
+  #  install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} DESTINATION "bin")
+  #endif()
 
-  set(MMPLG_DIR "lib")
-  if(WIN32)
-    set(MMPLG_DIR "bin")
-  endif()
+  #set(MMPLG_DIR "lib")
+  #if(WIN32)
+  #  set(MMPLG_DIR "bin")
+  #endif()
 
 #  configure_file(extra/megamolconfig.lua.in ${CMAKE_BINARY_DIR}/megamolconfig.lua)
 #  configure_file(extra/install_megamolconfig_lua.cmake.in ${CMAKE_BINARY_DIR}/install_megamolconfig_lua.cmake @ONLY)

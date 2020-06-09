@@ -30,9 +30,9 @@ if(BUILD_RAPI)
     $<INSTALL_INTERFACE:include/>
   )
   
-  if(WIN32)
-    set(VERSION_LIBRARY "Version.lib")
-  endif()
+  #if(WIN32)
+  #  set(VERSION_LIBRARY "Version.lib")
+  #endif()
 
   # GLFW
   if(USE_GLFW)
@@ -44,22 +44,22 @@ if(BUILD_RAPI)
 
   target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} glad_ vislib PUBLIC input_events)
 
-  # Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
-  set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")
-  set(cfg_MEGAMOLCON "${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}")
+  ## Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
+  #set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")
+  #set(cfg_MEGAMOLCON "${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}")
 
-  if(UNIX)
-    include(GNUInstallDirs)
-    set(cfg_EXTERNAL_LIB_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
-    set(MEGAMOL_SHELL_START_SCRIPT "megamol.sh")
-    configure_file(extra/megamol.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} DESTINATION "bin")
-  endif()
+  #if(UNIX)
+  #  include(GNUInstallDirs)
+  #  set(cfg_EXTERNAL_LIB_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+  #  set(MEGAMOL_SHELL_START_SCRIPT "megamol.sh")
+  #  configure_file(extra/megamol.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
+  #  install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} DESTINATION "bin")
+  #endif()
 
-  set(MMPLG_DIR "lib")
-  if(WIN32)
-    set(MMPLG_DIR "bin")
-  endif()
+  #set(MMPLG_DIR "lib")
+  #if(WIN32)
+  #  set(MMPLG_DIR "bin")
+  #endif()
   
   # Grouping in Visual Studio
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
