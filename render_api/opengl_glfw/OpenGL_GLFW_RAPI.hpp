@@ -42,6 +42,8 @@ public:
     // TODO: how to force RAPI subclasses to implement a Config struct which should be passed to constructor??
     // set sane defaults for all options here, so usage is as simple as possible
     struct Config {
+        int versionMajor = 4;
+        int versionMinor = 6;
         std::string windowTitlePrefix = "MegaMol";
         void* sharedContextPtr = nullptr;
         std::string viewInstanceName = "";
