@@ -13,7 +13,6 @@
 #define init bool ret = false; m_lastCapture = nullptr;
 #define abort {m_lastCapture = uil; break;}
 
-using namespace megamol::render_api;
 using namespace megamol::input_events;
 
 std::shared_ptr<AbstractUILayer> UILayersCollection::lastEventCaptureUILayer() {

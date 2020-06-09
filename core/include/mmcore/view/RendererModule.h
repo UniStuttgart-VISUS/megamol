@@ -16,9 +16,9 @@
 #include "mmcore/Module.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/view/AbstractCallRender.h"
-#include "mmcore/view/AbstractInputScope.h"
 #include "mmcore/view/InputCall.h"
 #include "mmcore/view/MouseFlags.h"
+#include <AbstractInputScope.h>
 
 namespace megamol {
 namespace core {
@@ -27,7 +27,7 @@ namespace view {
 /**
  * Base class of rendering modules.
  */
-template <class C> class MEGAMOLCORE_API RendererModule : public Module, public AbstractInputScope {
+template <class C> class MEGAMOLCORE_API RendererModule : public Module, public megamol::input_events::AbstractInputScope {
 public:
     /** Ctor. */
     RendererModule()

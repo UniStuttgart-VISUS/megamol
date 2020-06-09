@@ -32,7 +32,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
                                                     "src")
   target_link_libraries(${PROJECT_NAME} 
     PRIVATE core 
-    PUBLIC quickhull tinyobjloader tinygltf compositing_gl)
+    PUBLIC quickhull tinyobjloader tinygltf compositing_gl input_events)
 
   if(MSVC)
       target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX)

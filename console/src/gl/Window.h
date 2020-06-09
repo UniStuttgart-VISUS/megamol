@@ -17,21 +17,25 @@
 #include "gl/glfwInst.h"
 #include "utility/ConfigHelper.h"
 #include "mmcore/api/MegaMolCore.h"
-#include "AbstractUILayer.h"
 #include "vislib/graphics/FpsCounter.h"
 #include "UILayersCollection.hpp"
 #include <chrono>
 #include <array>
 #include <cstring>
+#include <AbstractUILayer.h>
 
 namespace megamol {
 namespace console {
 namespace gl {
 
+    using namespace megamol::input_events;
+    using megamol::input_events::AbstractUILayer;
+
     /**
      * Class of viewing windows.
      */
     class Window {
+
     public:
         static void MEGAMOLCORE_CALLBACK RequestCloseCallback(void *w) {
             Window* win = static_cast<Window*>(w);

@@ -5,11 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 #pragma once
-#include "AbstractUILayer.h"
+#include <AbstractUILayer.h>
 
 namespace megamol {
 namespace console {
 namespace utility {
+
+	using namespace megamol::input_events;
 
     /** Utility class closing a window when ESC is pressed */
     class HotFixFileName : public AbstractUILayer {
@@ -17,7 +19,7 @@ namespace utility {
         HotFixFileName(void* hCore);
         virtual ~HotFixFileName();
 
-        virtual bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods);
+        virtual bool OnKey(Key key, KeyAction action, Modifiers mods);
     private:
         void* hCore;
     };

@@ -21,7 +21,7 @@ void ViewUILayer::OnResize(int w, int h) {
     ::mmcResizeView(hView, static_cast<unsigned int>(w), static_cast<unsigned int>(h));
 }
 
-bool ViewUILayer::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
+bool ViewUILayer::OnKey(Key key, KeyAction action, Modifiers mods) {
     return ::mmcSendKeyEvent(hView,
 		static_cast<mmcInputKey>(key),
 		static_cast<mmcInputKeyAction>(action),
@@ -33,7 +33,7 @@ bool ViewUILayer::OnChar(unsigned int codePoint) {
 }
 
 bool ViewUILayer::OnMouseButton(
-    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+    MouseButton button, MouseButtonAction action, Modifiers mods) {
     return ::mmcSendMouseButtonEvent(hView, 
 		static_cast<mmcInputButton>(button), 
 		static_cast<mmcInputButtonAction>(action),

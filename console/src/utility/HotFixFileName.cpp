@@ -10,9 +10,11 @@
 #include "vislib/String.h"
 #include "vislib/sys/File.h"
 #include "CoreHandle.h"
+#include <KeyboardMouseInput.h>
 
 using namespace megamol;
 using namespace megamol::console;
+using namespace megamol::input_events;
 
 extern "C" {
 
@@ -61,8 +63,8 @@ utility::HotFixFileName::~HotFixFileName() {
     hCore = nullptr; // we don't own, so we don't delete
 }
 
-bool utility::HotFixFileName::OnKey(core::view::Key key,  core::view::KeyAction action, core::view::Modifiers mods) {
-    if (((key == core::view::Key::KEY_F)) && (action == core::view::KeyAction::PRESS) && mods.none()) {
+bool utility::HotFixFileName::OnKey(Key key,  KeyAction action, Modifiers mods) {
+    if (((key == Key::KEY_F)) && (action == KeyAction::PRESS) && mods.none()) {
         ::mmcEnumParametersA(hCore, fixFileNameEnum, hCore);
         return true;
     }

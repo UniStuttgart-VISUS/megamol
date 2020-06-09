@@ -6,19 +6,23 @@
  */
 #pragma once
 
-#include "AbstractUILayer.h"
 #include <chrono>
 #include <map>
 #include "vislib/String.h"
 #include "mmcore/view/Input.h"
+#include <AbstractUILayer.h>
 
 namespace megamol {
 namespace console {
 
+	using megamol::input_events::Key;
+	using megamol::input_events::KeyAction;
+	using megamol::input_events::Modifiers;
+
     /**
      * This UI layer implements hot key for button parameter.
      */
-    class ButtonParamUILayer : public AbstractUILayer {
+    class ButtonParamUILayer : public megamol::input_events::AbstractUILayer {
     public:
         ButtonParamUILayer(void * coreHandle, void * viewHandle);
         virtual ~ButtonParamUILayer();
@@ -28,7 +32,7 @@ namespace console {
         }
         virtual bool Enabled();
 
-        virtual bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods);
+        virtual bool OnKey(Key key, KeyAction action, Modifiers mods);
     private:
         void updateHotkeyList();
 

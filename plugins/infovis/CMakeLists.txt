@@ -33,7 +33,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     PRIVATE "3rd"
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PUBLIC "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools Eigen nanoflann Delaunator bhtsne)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools Eigen nanoflann Delaunator bhtsne input_events)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

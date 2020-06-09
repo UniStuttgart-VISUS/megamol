@@ -6,12 +6,12 @@
  */
 #pragma once
 
-#include "../../include/mmcore/view/AbstractInputScope.h"
+#include "AbstractInputScope.h"
 
 namespace megamol {
-namespace render_api {
+namespace input_events {
 
-class AbstractUILayer : public megamol::core::view::AbstractInputScope {
+class AbstractUILayer : public megamol::input_events::AbstractInputScope {
 public:
     virtual bool Enabled() { return true; }
 
@@ -23,5 +23,5 @@ protected:
     virtual ~AbstractUILayer() = default;
 };
 
-} /* end namespace render_api */
+} /* end namespace input_events */
 } /* end namespace megamol */

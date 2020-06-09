@@ -16,22 +16,31 @@
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/AbstractParam.h"
-#include "mmcore/view/AbstractInputScope.h"
 #include "vislib/Array.h"
 #include "vislib/Serialiser.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
+#include <AbstractInputScope.h>
 
 namespace megamol {
 namespace core {
 namespace view {
 
+using megamol::input_events::Key;
+using megamol::input_events::KeyAction;
+using megamol::input_events::KeyCode;
+using megamol::input_events::Modifier;
+using megamol::input_events::Modifiers;
+using megamol::input_events::MouseButton;
+using megamol::input_events::MouseButtonAction;
 
 /**
  * Abstract base class of rendering views
  */
-class MEGAMOLCORE_API AbstractView : public Module, public AbstractInputScope {
+class MEGAMOLCORE_API AbstractView : public Module, public megamol::input_events::AbstractInputScope {
+
+
 public:
     /**
      * Interfaces class for hooking into view processes
@@ -157,7 +166,7 @@ public:
      *
      * @param hook The hook to register
      */
-    void RegisterHook(view::AbstractView::Hooks* hook) {
+    void RegisterHook(Hooks* hook) {
         if (!this->hooks.Contains(hook)) {
             this->hooks.Add(hook);
         }
@@ -168,7 +177,7 @@ public:
      *
      * @param hook The hook to unregister
      */
-    void UnregisterHook(view::AbstractView::Hooks* hook) { this->hooks.RemoveAll(hook); }
+    void UnregisterHook(Hooks* hook) { this->hooks.RemoveAll(hook); }
 
     /**
      * Callback requesting a rendering of this view

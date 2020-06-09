@@ -12,7 +12,7 @@
 #include "AbstractUILayer.h"
 
 namespace megamol {
-namespace render_api {
+namespace input_events {
 
 class UILayersCollection : AbstractUILayer {
 public:
@@ -37,5 +37,5 @@ private:
     std::shared_ptr<AbstractUILayer> m_lastCapture = nullptr;
 };
 
-} // namespace render_api
+} // namespace input_events
 } // namespace megamol

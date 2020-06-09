@@ -9,6 +9,7 @@
 #include "mmcore/view/AbstractOverrideView.h"
 
 using namespace megamol::core;
+using namespace megamol::input_events;
 
 
 /*
