@@ -145,8 +145,8 @@ public:
 private:
     const factories::ModuleDescriptionManager& ModuleProvider();
     const factories::CallDescriptionManager& CallProvider();
-    const factories::ModuleDescriptionManager const* moduleProvider_ptr;
-    const factories::CallDescriptionManager const* callProvider_ptr;
+    const factories::ModuleDescriptionManager* moduleProvider_ptr;
+    const factories::CallDescriptionManager* callProvider_ptr;
 
 public:
     //////////////////////////// serialization ////////////////////////////////
