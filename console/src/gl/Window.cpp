@@ -156,6 +156,12 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
             glGetIntegerv(GL_VIEWPORT, vp);
             vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: viewport size w: %d, h: %d\n", vp[2], vp[3]);
 
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Could not create GLFW Window. You probably do not have OpenGL support. Your graphics hardware might "
+                "be very old, your drivers could be outdated or you are running in a remote desktop session.");
+            // we should do a proper shutdown now, but that is too expensive given the expected lifetime of this front end.
+            exit(-1);
         }
 
         glGenQueries(1, &fragmentQuery);
