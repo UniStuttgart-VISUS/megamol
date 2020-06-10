@@ -359,7 +359,7 @@ bool SphereRenderer::resetResources(void) {
 
     // AMBIENT OCCLUSION
     if (this->isRenderModeAvailable(RenderMode::AMBIENT_OCCLUSION, true)) {
-        for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
+        for (unsigned int i = 0; i < this->gpuData.size(); i++) {
             glDeleteVertexArrays(3, reinterpret_cast<GLuint*>(&(this->gpuData[i])));
         }
         this->gpuData.clear();
@@ -904,6 +904,12 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
 
 bool SphereRenderer::isFlagStorageAvailable(vislib::SmartPtr<ShaderSource::Snippet>& out_flag_snippet) {
 
+    auto flagc = this->readFlagsSlot.CallAs<FlagCallRead_GL>();
+
+    // Update parameter visibility
+    this->selectColorParam.Param<param::ColorParam>()->SetGUIVisible((bool)(flagc != nullptr));
+    this->softSelectColorParam.Param<param::ColorParam>()->SetGUIVisible((bool)(flagc != nullptr));
+
     if (out_flag_snippet != nullptr) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Pointer to flag snippet parameter is not nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -993,7 +999,6 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     // timer.BeginFrame();
 
     auto cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-    auto flagc = this->readFlagsSlot.CallAs<FlagCallRead_GL>();
 
     // Checking for changed render mode
     auto currentRenderMode = static_cast<RenderMode>(this->renderModeParam.Param<param::EnumParam>()->Value());
@@ -1008,10 +1013,6 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     float scaling = 1.0f;
     MultiParticleDataCall* mpdc = this->getData(static_cast<unsigned int>(call.Time()), scaling);
     if (mpdc == nullptr) return false;
-
-    // Update parameter visibility
-    this->selectColorParam.Param<param::ColorParam>()->SetGUIVisible((bool)(flagc != nullptr));
-    this->softSelectColorParam.Param<param::ColorParam>()->SetGUIVisible((bool)(flagc != nullptr));
 
     // Update current state variables -----------------------------------------
 
@@ -1155,7 +1156,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     // Save some current data
     this->lastVpHeight = this->curVpHeight;
     this->lastVpWidth = this->curVpWidth;
-    for (size_t i = 0; i < 4; ++i) {
+    for (size_t i = 0; i < 4; i++) {
         this->oldClipDat[i] = this->curClipDat[i];
     }
 
@@ -1757,7 +1758,7 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2& call, MultiPar
     glUniform1i(theShader.ParameterLocation("inUseHighPrecision"), (int)highPrecision);
 
     GLuint flagPartsCount = 0;
-    for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
+    for (unsigned int i = 0; i < this->gpuData.size(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
         if (!this->enableShaderData(theShader, parts)) {
@@ -1775,7 +1776,7 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2& call, MultiPar
 
         glBindVertexArray(this->gpuData[i].vertexArray);
 
-        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(mpdc->AccessParticles(i).GetCount()));
+        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 
         this->disableShaderData();
         flagPartsCount += parts.GetCount();
@@ -2517,7 +2518,7 @@ void SphereRenderer::rebuildWorkingData(view::CallRender3D_2& call, MultiParticl
         unsigned int partsCount = mpdc->GetParticleListCount();
 
         // Add buffers if neccessary
-        for (unsigned int i = static_cast<unsigned int>(this->gpuData.size()); i < partsCount; ++i) {
+        for (unsigned int i = static_cast<unsigned int>(this->gpuData.size()); i < partsCount; i++) {
             gpuParticleDataType data;
 
             glGenVertexArrays(1, &(data.vertexArray));
@@ -2537,7 +2538,7 @@ void SphereRenderer::rebuildWorkingData(view::CallRender3D_2& call, MultiParticl
         }
 
         // Reupload buffers
-        for (unsigned int i = 0; i < partsCount; ++i) {
+        for (unsigned int i = 0; i < partsCount; i++) {
             MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
             glBindVertexArray(this->gpuData[i].vertexArray);
@@ -2557,7 +2558,7 @@ void SphereRenderer::rebuildWorkingData(view::CallRender3D_2& call, MultiParticl
 
     // Recreate the volume if neccessary
     bool equalClipData = true;
-    for (size_t i = 0; i < 4; ++i) {
+    for (size_t i = 0; i < 4; i++) {
         if (this->oldClipDat[i] != this->curClipDat[i]) {
             equalClipData = false;
             break;
@@ -2588,7 +2589,7 @@ void SphereRenderer::rebuildWorkingData(view::CallRender3D_2& call, MultiParticl
 
         this->volGen->StartInsertion(this->curClipBox, glm::vec4(this->curClipDat[0], this->curClipDat[1],
             this->curClipDat[2], this->curClipDat[3]));
-        for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
+        for (unsigned int i = 0; i < this->gpuData.size(); i++) {
             float globalRadius = 0.0f;
             if (mpdc->AccessParticles(i).GetVertexDataType() !=
                 MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
@@ -2672,7 +2673,7 @@ void SphereRenderer::generate3ConeDirections(std::vector<glm::vec4>& directions,
     float height = sqrt(1.0f - edge_length * edge_length / 12.0f);
     float radius = sqrt(3.0f) / 3.0f * edge_length;
 
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 3; i++) {
         float angle = static_cast<float>(i) / 3.0f * 2.0f * static_cast<float>(M_PI);
 
         glm::vec3 center(cos(angle) * radius, height, sin(angle) * radius);
@@ -2693,7 +2694,7 @@ std::string SphereRenderer::generateDirectionShaderArrayString(const std::vector
     result << "const vec4 " << directionsName << "[NUM_" << upperDirName << "] = vec4[NUM_" << upperDirName << "]("
            << std::endl;
 
-    for (auto iter = directions.begin(); iter != directions.end(); ++iter) {
+    for (auto iter = directions.begin(); iter != directions.end(); iter++) {
         result << "\tvec4(" << (*iter)[0] << ", " << (*iter)[1] << ", " << (*iter)[2] << ", " << (*iter)[3] << ")";
         if (iter + 1 != directions.end()) result << ",";
         result << std::endl;
