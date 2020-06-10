@@ -23,9 +23,34 @@ namespace megamol {
 namespace gui {
 namespace configurator {
 
+// Forward declarations
+class GraphManager;
+
+// Types
 typedef std::shared_ptr<Graph> GraphPtrType;
 typedef std::vector<GraphPtrType> GraphsType;
 
+
+/** ************************************************************************
+ * Defines GUI graph manager presentation.
+ */
+class GraphManagerPresentation {
+public:
+    GraphManagerPresentation(void);
+
+    ~GraphManagerPresentation(void);
+
+    void Present(GraphManager& inout_graph_manager, GraphStateType& state);
+
+private:
+    ImGuiID graph_delete_uid;
+    GUIUtils utils;
+};
+
+
+/** ************************************************************************
+ * Defines the graph manager.
+ */
 class GraphManager {
 public:
     GraphManager(void);
@@ -56,28 +81,10 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     GraphsType graphs;
-
     ModuleStockVectorType modules_stock;
     CallStockVectorType calls_stock;
-
     unsigned int graph_name_uid;
-
-    /** ************************************************************************
-     * Defines GUI graph present.
-     */
-    class Presentation {
-    public:
-        Presentation(void);
-
-        ~Presentation(void);
-
-        void Present(GraphManager& inout_graph_manager, GraphStateType& state);
-
-    private:
-        ImGuiID graph_delete_uid;
-        GUIUtils utils;
-
-    } present;
+    GraphManagerPresentation present;
 
     // FUNCTIONS --------------------------------------------------------------
 

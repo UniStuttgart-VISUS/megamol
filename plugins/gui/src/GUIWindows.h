@@ -12,27 +12,13 @@
 #include "CorporateGreyStyle.h"
 #include "CorporateWhiteStyle.h"
 #include "FileUtils.h"
+#include "ParameterManager.h"
 #include "TransferFunctionEditor.h"
 #include "WindowManager.h"
 #include "configurator/Configurator.h"
 
 #include "mmcore/CoreInstance.h"
-#include "mmcore/param/ParamSlot.h"
 
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/ColorParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/FlexEnumParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/StringParam.h"
-#include "mmcore/param/TernaryParam.h"
-#include "mmcore/param/TransferFunctionParam.h"
-#include "mmcore/param/Vector2fParam.h"
-#include "mmcore/param/Vector3fParam.h"
-#include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/versioninfo.h"
 
@@ -155,13 +141,10 @@ private:
 
     /** List of pointers to all paramters. */
     std::vector<megamol::core::param::ParamSlot*> param_slots;
-
     /** A parameter to select the style */
     megamol::core::param::ParamSlot style_param;
-
     /** A parameter to store the profile */
     megamol::core::param::ParamSlot state_param;
-
     /** A parameter for automatically start the configurator at start up */
     megamol::core::param::ParamSlot autostart_configurator;
 
@@ -201,7 +184,12 @@ private:
     /** Flag forcing opening of main window (e.g. when configurator is closed)*/
     bool force_open_main_window;
 
-    /** Input Widget Buffers. */
+    /** Numer of fonts reserved for the configurator graph canvas. */
+    unsigned int graph_fonts_reserved;
+
+    /** Parameter Manager */
+    ParameterManager param_manager;
+
     std::map<std::string, std::string> widgtmap_text;
     std::map<std::string, int> widgtmap_int;
     std::map<std::string, float> widgtmap_float;
@@ -209,8 +197,6 @@ private:
     std::map<std::string, vislib::math::Vector<float, 3>> widgtmap_vec3;
     std::map<std::string, vislib::math::Vector<float, 4>> widgtmap_vec4;
 
-    /** Numer of fonts reserved for the configurator graph canvas. */
-    unsigned int graph_fonts_reserved;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -268,8 +254,8 @@ private:
     /**
      * Transfer function edit widget.
      */
-    void drawTransferFunctionEdit(
-        const std::string& param_full_name, const std::string& label, megamol::core::param::TransferFunctionParam& p);
+    void drawTransferFunctionEdit(const std::string& param_full_name, const std::string& label,
+        vislib::SmartPtr<megamol::core::param::AbstractParam> param);
 
     /**
      * Draws only a button parameter's hotkey.

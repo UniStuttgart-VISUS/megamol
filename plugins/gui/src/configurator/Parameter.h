@@ -13,7 +13,6 @@
 #include "GUIUtils.h"
 #include "TransferFunctionEditor.h"
 
-#include "mmcore/param/AbstractParamPresentation.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -41,7 +40,7 @@ namespace megamol {
 namespace gui {
 namespace configurator {
 
-// Forward declaration
+// Forward declarations
 class Parameter;
 class Call;
 class CallSlot;
@@ -50,35 +49,49 @@ typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
 
-
-// Pointer types to classes
+// Types
 typedef std::shared_ptr<Parameter> ParamPtrType;
 
-typedef megamol::core::param::Presentations PresentType;
 
-/**
+/** ************************************************************************
+ * Defines GUI parameter presentation.
+ */
+class ParameterPresentation : public megamol::core::param::AbstractParamPresentation {
+public:
+    ParameterPresentation(ParamType type);
+
+    ~ParameterPresentation(void);
+
+    bool Present(Parameter& inout_param);
+
+    float GetHeight(Parameter& inout_param);
+
+    bool expert;
+
+private:
+    std::string help;
+    megamol::gui::GUIUtils utils;
+    megamol::gui::FileUtils file_utils;
+    bool show_tf_editor;
+    megamol::gui::TransferFunctionEditor tf_editor;
+    std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
+    const std::string float_format;
+    float height;
+    UINT set_focus;
+
+    void present_prefix(void);
+    void parameter_widget_presentation(Parameter& inout_parameter);
+    void present_postfix(Parameter& inout_parameter);
+    bool presentation_button(void);
+    void transfer_function_edit(Parameter& inout_parameter);
+};
+
+
+/** ************************************************************************
  * Defines parameter data structure for graph.
  */
 class Parameter {
 public:
-    enum ParamType {
-        BOOL,
-        BUTTON,
-        COLOR,
-        ENUM,
-        FILEPATH,
-        FLEXENUM,
-        FLOAT,
-        INT,
-        STRING,
-        TERNARY,
-        TRANSFERFUNCTION,
-        VECTOR2F,
-        VECTOR3F,
-        VECTOR4F,
-        UNKNOWN
-    };
-
     typedef std::map<int, std::string> EnumStorageType;
 
     typedef std::variant<std::monostate,             // default  BUTTON
@@ -122,7 +135,7 @@ public:
     struct StockParameter {
         std::string full_name;
         std::string description;
-        Parameter::ParamType type;
+        ParamType type;
         std::string default_value;
         MinType minval;
         MaxType maxval;
@@ -179,7 +192,7 @@ public:
     template <typename T> void SetValue(T val, bool set_default_val = false) {
         if (std::holds_alternative<T>(this->value)) {
             this->value = val;
-            if (this->type == Parameter::ParamType::FLEXENUM) {
+            if (this->type == ParamType::FLEXENUM) {
                 auto storage = this->GetStorage<megamol::core::param::FlexEnumParam::Storage_t>();
                 storage.insert(std::get<std::string>(this->value));
                 this->SetStorage(storage);
@@ -253,41 +266,8 @@ private:
     ValueType default_value;
     bool default_value_mismatch;
 
-    /** ************************************************************************
-     * Defines GUI parameter presentation.
-     */
-    class Presentation : public megamol::core::param::AbstractParamPresentation {
-    public:
-        Presentation(ParamType type);
-
-        ~Presentation(void);
-
-        bool Present(Parameter& inout_param);
-
-        float GetHeight(Parameter& inout_param);
-
-        bool expert;
-
-    private:
-        std::string help;
-        megamol::gui::GUIUtils utils;
-        megamol::gui::FileUtils file_utils;
-        bool show_tf_editor;
-        megamol::gui::TransferFunctionEditor tf_editor;
-        std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
-        const std::string float_format;
-        float height;
-        UINT set_focus;
-
-        void present_prefix(void);
-        void present_value_RawValue(Parameter& inout_parameter);
-        void present_postfix(Parameter& inout_parameter);
-        bool presentation_button(void);
-        void transfer_function_edit(Parameter& inout_parameter);
-
-    } present;
+    ParameterPresentation present;
 };
-
 
 } // namespace configurator
 } // namespace gui

@@ -14,6 +14,91 @@ using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
+// GRAPH MANAGER PRESENTATION ####################################################
+
+megamol::gui::configurator::GraphManagerPresentation::GraphManagerPresentation(void)
+    : graph_delete_uid(GUI_INVALID_ID), utils() {}
+
+
+megamol::gui::configurator::GraphManagerPresentation::~GraphManagerPresentation(void) {}
+
+
+void megamol::gui::configurator::GraphManagerPresentation::Present(
+    megamol::gui::configurator::GraphManager& inout_graph_manager, GraphStateType& state) {
+
+    try {
+        if (ImGui::GetCurrentContext() == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return;
+        }
+
+        const auto child_flags = ImGuiWindowFlags_None;
+        ImGui::BeginChild("graph_child_window", ImVec2(state.graph_width, 0.0f), true, child_flags);
+
+        // Assuming only one closed tab/graph per frame.
+        bool popup_close_unsaved = false;
+
+        // Draw Graphs
+        ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
+        ImGui::BeginTabBar("Graphs", tab_bar_flags);
+
+        for (auto& graph : inout_graph_manager.GetGraphs()) {
+
+            // Draw graph
+            graph->GUI_Present(state);
+
+            // Do not delete graph while looping through graphs list
+            if (state.graph_delete) {
+                this->graph_delete_uid = state.graph_selected_uid;
+                if (graph->IsDirty()) {
+                    popup_close_unsaved = true;
+                }
+                state.graph_delete = false;
+            }
+
+            // Catch call drop event and create new call(s) ...
+            if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
+                if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE) && payload->IsDelivery()) {
+                    ImGuiID* dragged_slot_uid_ptr = (ImGuiID*)payload->Data;
+                    auto drag_slot_uid = (*dragged_slot_uid_ptr);
+                    auto drop_slot_uid = graph->GUI_GetDropSlot();
+                    graph->AddCall(inout_graph_manager.GetCallsStock(), drag_slot_uid, drop_slot_uid);
+                }
+            }
+        }
+        ImGui::EndTabBar();
+
+        // Delete marked graph when tab is closed and unsaved changes should be discarded.
+        bool confirmed = false;
+        bool aborted = false;
+        bool popup_open = this->utils.MinimalPopUp(
+            "Closing unsaved Project", popup_close_unsaved, "Discard changes?", "Yes", confirmed, "No", aborted);
+        if (this->graph_delete_uid != GUI_INVALID_ID) {
+            if (aborted) {
+                this->graph_delete_uid = GUI_INVALID_ID;
+            } else if (confirmed || !popup_open) {
+                inout_graph_manager.DeleteGraph(graph_delete_uid);
+                this->graph_delete_uid = GUI_INVALID_ID;
+                state.graph_selected_uid = GUI_INVALID_ID;
+            }
+        }
+
+        ImGui::EndChild();
+
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
+}
+
+
+// GRAPH MANAGER ##############################################################
+
 megamol::gui::configurator::GraphManager::GraphManager(void)
     : graphs(), modules_stock(), calls_stock(), graph_name_uid(0) {}
 
@@ -190,7 +275,8 @@ bool megamol::gui::configurator::GraphManager::UpdateModulesCallsStock(
             static_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - start_time).count();
 
         vislib::sys::Log::DefaultLog.WriteInfo(
-            "[Configurator] Reading available modules and calls ... DONE (duration: %.3f seconds)\n", delta_time);
+            "[Configurator] Reading available modules (#%i) and calls (#%i) ... DONE (duration: %.3f seconds)\n",
+            this->modules_stock.size(), this->calls_stock.size(), delta_time);
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -211,11 +297,7 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadProjectCore(megamol::core:
     ImGuiID retval = this->AddGraph();
     auto graph_ptr = this->GetGraphs().back();
     if ((retval != GUI_INVALID_ID) && (graph_ptr != nullptr)) {
-        if (this->AddProjectCore(graph_ptr->uid, core_instance)) {
-            // Layout project loaded from core
-            graph_ptr->GUI_SetLayoutGraph();
-            return retval;
-        }
+        return this->AddProjectCore(graph_ptr->uid, core_instance);
     }
 
     vislib::sys::Log::DefaultLog.WriteError(
@@ -314,8 +396,7 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
                                 parameter.GUI_SetVisibility(parameter_ptr->IsGUIVisible());
                                 parameter.GUI_SetReadOnly(parameter_ptr->IsGUIReadOnly());
                                 auto core_param_presentation = static_cast<size_t>(parameter_ptr->GetGUIPresentation());
-                                parameter.GUI_SetPresentation(
-                                    static_cast<megamol::core::param::Presentations>(core_param_presentation));
+                                parameter.GUI_SetPresentation(static_cast<PresentType>(core_param_presentation));
                             }
 
                             if (auto* p_ptr = param_slot->Param<core::param::ButtonParam>()) {
@@ -870,7 +951,6 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadAddProjectFile(
         if (!found_configurator_positions) {
             graph_ptr->GUI_SetLayoutGraph();
         }
-
         graph_ptr->ResetDirty();
 
         vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Successfully loaded project '%s' from file '%s'.\n",
@@ -1052,9 +1132,11 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
     try {
         /// Following code is adapted from megamol::core::job::job::PluginsStateFileGeneratorJob.cpp
 
+        // vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Creating module '%s' ...", mod_desc->ClassName());
+
         megamol::core::Module::ptr_type new_mod(mod_desc->CreateModule(nullptr));
         if (new_mod == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError("Unable to create module: %s. [%s, %s, line %d]\n",
+            vislib::sys::Log::DefaultLog.WriteError("Unable to create module '%s'. [%s, %s, line %d]\n",
                 mod_desc->ClassName(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
@@ -1097,21 +1179,21 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
                 psd.gui_visibility = parameter_ptr->IsGUIVisible();
                 psd.gui_read_only = parameter_ptr->IsGUIReadOnly();
                 auto core_param_presentation = static_cast<size_t>(parameter_ptr->GetGUIPresentation());
-                psd.gui_presentation = static_cast<megamol::core::param::Presentations>(core_param_presentation);
+                psd.gui_presentation = static_cast<PresentType>(core_param_presentation);
             }
 
             // Set parameter type
             if (auto* p_ptr = param_slot->Param<core::param::ButtonParam>()) {
-                psd.type = Parameter::ParamType::BUTTON;
+                psd.type = ParamType::BUTTON;
                 psd.storage = p_ptr->GetKeyCode();
             } else if (auto* p_ptr = param_slot->Param<core::param::BoolParam>()) {
-                psd.type = Parameter::ParamType::BOOL;
+                psd.type = ParamType::BOOL;
                 psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
             } else if (auto* p_ptr = param_slot->Param<core::param::ColorParam>()) {
-                psd.type = Parameter::ParamType::COLOR;
+                psd.type = ParamType::COLOR;
                 psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
             } else if (auto* p_ptr = param_slot->Param<core::param::EnumParam>()) {
-                psd.type = Parameter::ParamType::ENUM;
+                psd.type = ParamType::ENUM;
                 psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
                 Parameter::EnumStorageType map;
                 auto psd_map = p_ptr->getMap();
@@ -1122,47 +1204,47 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
                 }
                 psd.storage = map;
             } else if (auto* p_ptr = param_slot->Param<core::param::FilePathParam>()) {
-                psd.type = Parameter::ParamType::FILEPATH;
+                psd.type = ParamType::FILEPATH;
                 psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
             } else if (auto* p_ptr = param_slot->Param<core::param::FlexEnumParam>()) {
-                psd.type = Parameter::ParamType::FLEXENUM;
+                psd.type = ParamType::FLEXENUM;
                 psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
                 psd.storage = p_ptr->getStorage();
             } else if (auto* p_ptr = param_slot->Param<core::param::FloatParam>()) {
-                psd.type = Parameter::ParamType::FLOAT;
+                psd.type = ParamType::FLOAT;
                 psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
                 psd.minval = p_ptr->MinValue();
                 psd.maxval = p_ptr->MaxValue();
             } else if (auto* p_ptr = param_slot->Param<core::param::IntParam>()) {
-                psd.type = Parameter::ParamType::INT;
+                psd.type = ParamType::INT;
                 psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
                 psd.minval = p_ptr->MinValue();
                 psd.maxval = p_ptr->MaxValue();
             } else if (auto* p_ptr = param_slot->Param<core::param::StringParam>()) {
-                psd.type = Parameter::ParamType::STRING;
+                psd.type = ParamType::STRING;
                 psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
             } else if (auto* p_ptr = param_slot->Param<core::param::TernaryParam>()) {
-                psd.type = Parameter::ParamType::TERNARY;
+                psd.type = ParamType::TERNARY;
                 psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
             } else if (auto* p_ptr = param_slot->Param<core::param::TransferFunctionParam>()) {
-                psd.type = Parameter::ParamType::TRANSFERFUNCTION;
+                psd.type = ParamType::TRANSFERFUNCTION;
                 psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
             } else if (auto* p_ptr = param_slot->Param<core::param::Vector2fParam>()) {
-                psd.type = Parameter::ParamType::VECTOR2F;
+                psd.type = ParamType::VECTOR2F;
                 psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
                 auto min = p_ptr->MinValue();
                 psd.minval = glm::vec2(min.X(), min.Y());
                 auto max = p_ptr->MaxValue();
                 psd.maxval = glm::vec2(max.X(), max.Y());
             } else if (auto* p_ptr = param_slot->Param<core::param::Vector3fParam>()) {
-                psd.type = Parameter::ParamType::VECTOR3F;
+                psd.type = ParamType::VECTOR3F;
                 psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
                 auto min = p_ptr->MinValue();
                 psd.minval = glm::vec3(min.X(), min.Y(), min.Z());
                 auto max = p_ptr->MaxValue();
                 psd.maxval = glm::vec3(max.X(), max.Y(), max.Z());
             } else if (auto* p_ptr = param_slot->Param<core::param::Vector4fParam>()) {
-                psd.type = Parameter::ParamType::VECTOR4F;
+                psd.type = ParamType::VECTOR4F;
                 psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
                 auto min = p_ptr->MinValue();
                 psd.minval = glm::vec4(min.X(), min.Y(), min.Z(), min.W());
@@ -1172,7 +1254,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
                 vislib::sys::Log::DefaultLog.WriteError("Found unknown parameter type. Please extend parameter types "
                                                         "for the configurator. [%s, %s, line %d]\n",
                     __FILE__, __FUNCTION__, __LINE__);
-                psd.type = Parameter::ParamType::UNKNOWN;
+                psd.type = ParamType::UNKNOWN;
             }
 
             mod.parameters.emplace_back(psd);
@@ -1492,10 +1574,10 @@ bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_st
                     }
 
                     // gui_presentation_mode
-                    megamol::core::param::Presentations gui_presentation_mode;
+                    PresentType gui_presentation_mode;
                     if (gui_state.at("gui_presentation_mode").is_number_integer()) {
-                        gui_presentation_mode = static_cast<megamol::core::param::Presentations>(
-                            gui_state.at("gui_presentation_mode").get<int>());
+                        gui_presentation_mode =
+                            static_cast<PresentType>(gui_state.at("gui_presentation_mode").get<int>());
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
                             "JSON state: Failed to read 'gui_presentation_mode' as integer. [%s, %s, line %d]\n",
@@ -1700,87 +1782,4 @@ bool megamol::gui::configurator::GraphManager::replace_parameter_gui_state(
     }
 
     return true;
-}
-
-
-// GRAPH MANAGET PRESENTATION ####################################################
-
-megamol::gui::configurator::GraphManager::Presentation::Presentation(void)
-    : graph_delete_uid(GUI_INVALID_ID), utils() {}
-
-
-megamol::gui::configurator::GraphManager::Presentation::~Presentation(void) {}
-
-
-void megamol::gui::configurator::GraphManager::Presentation::Present(
-    megamol::gui::configurator::GraphManager& inout_graph_manager, GraphStateType& state) {
-
-    try {
-        if (ImGui::GetCurrentContext() == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return;
-        }
-
-        const auto child_flags = ImGuiWindowFlags_None;
-        ImGui::BeginChild("graph_child_window", ImVec2(state.graph_width, 0.0f), true, child_flags);
-
-        // Assuming only one closed tab/graph per frame.
-        bool popup_close_unsaved = false;
-
-        // Draw Graphs
-        ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
-        ImGui::BeginTabBar("Graphs", tab_bar_flags);
-
-        for (auto& graph : inout_graph_manager.GetGraphs()) {
-
-            // Draw graph
-            graph->GUI_Present(state);
-
-            // Do not delete graph while looping through graphs list
-            if (state.graph_delete) {
-                this->graph_delete_uid = state.graph_selected_uid;
-                if (graph->IsDirty()) {
-                    popup_close_unsaved = true;
-                }
-                state.graph_delete = false;
-            }
-
-            // Catch call drop event and create new call(s) ...
-            if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
-                if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE) && payload->IsDelivery()) {
-                    ImGuiID* dragged_slot_uid_ptr = (ImGuiID*)payload->Data;
-                    auto drag_slot_uid = (*dragged_slot_uid_ptr);
-                    auto drop_slot_uid = graph->GUI_GetDropSlot();
-                    graph->AddCall(inout_graph_manager.calls_stock, drag_slot_uid, drop_slot_uid);
-                }
-            }
-        }
-        ImGui::EndTabBar();
-
-        // Delete marked graph when tab is closed and unsaved changes should be discarded.
-        bool confirmed = false;
-        bool aborted = false;
-        bool popup_open = this->utils.MinimalPopUp(
-            "Closing unsaved Project", popup_close_unsaved, "Discard changes?", "Yes", confirmed, "No", aborted);
-        if (this->graph_delete_uid != GUI_INVALID_ID) {
-            if (aborted) {
-                this->graph_delete_uid = GUI_INVALID_ID;
-            } else if (confirmed || !popup_open) {
-                inout_graph_manager.DeleteGraph(graph_delete_uid);
-                this->graph_delete_uid = GUI_INVALID_ID;
-                state.graph_selected_uid = GUI_INVALID_ID;
-            }
-        }
-
-        ImGui::EndChild();
-
-    } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return;
-    }
 }

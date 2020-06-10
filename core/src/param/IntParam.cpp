@@ -21,7 +21,7 @@ IntParam::IntParam(int initVal)
     ASSERT(this->minVal <= this->maxVal);
     ASSERT(this->minVal <= this->val);
     ASSERT(this->val <= this->maxVal);
-    this->InitPresentation(Presentations::Basic | Presentations::PinValueToMouse, Presentations::Basic);
+    this->InitPresentation(AbstractParamPresentation::ParamType::INT);
 }
 
 
@@ -34,7 +34,7 @@ IntParam::IntParam(int initVal, int minVal)
     ASSERT(this->minVal <= this->maxVal);
     ASSERT(this->minVal <= this->val);
     ASSERT(this->val <= this->maxVal);
-    this->InitPresentation(Presentations::Basic | Presentations::PinValueToMouse, Presentations::Basic);
+    this->InitPresentation(AbstractParamPresentation::ParamType::INT);
 }
 
 
@@ -47,7 +47,7 @@ IntParam::IntParam(int initVal, int minVal, int maxVal)
     ASSERT(this->minVal <= this->maxVal);
     ASSERT(this->minVal <= this->val);
     ASSERT(this->val <= this->maxVal);
-    this->InitPresentation(Presentations::Basic | Presentations::PinValueToMouse, Presentations::Basic);
+    this->InitPresentation(AbstractParamPresentation::ParamType::INT);
 }
 
 

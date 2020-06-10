@@ -18,15 +18,50 @@ namespace megamol {
 namespace gui {
 namespace configurator {
 
-// Forward declaration
+// Forward declarations
 class Group;
 
-// Pointer types to class
+// Types
 typedef std::shared_ptr<Group> GroupPtrType;
 typedef std::vector<GroupPtrType> GroupPtrVectorType;
 
 
-/**
+/** ************************************************************************
+ * Defines GUI group presentation.
+ */
+class GroupPresentation {
+public:
+    GroupPresentation(void);
+
+    ~GroupPresentation(void);
+
+    void Present(megamol::gui::PresentPhase phase, Group& inout_group, GraphItemsStateType& state);
+
+    void UpdatePositionSize(Group& inout_group, const GraphCanvasType& in_canvas);
+
+    inline ImVec2 GetSize(void) { return this->size; }
+    inline bool IsViewCollapsed(void) { return this->collapsed_view; }
+    inline bool ModulesVisible(void) { return !this->collapsed_view; }
+    inline void ForceUpdate(void) { this->update = true; }
+
+    void SetPosition(Group& inout_group, const GraphCanvasType& in_canvas, ImVec2 pos);
+
+private:
+    // Relative position without considering canvas offset and zooming
+    ImVec2 position;
+    // Relative size without considering zooming
+    ImVec2 size;
+
+    GUIUtils utils;
+    bool collapsed_view;
+    bool allow_selection;
+    bool allow_context;
+    bool selected;
+    bool update;
+};
+
+
+/** ************************************************************************
  * Defines module data structure for graph.
  */
 class Group {
@@ -47,8 +82,8 @@ public:
 
     ImGuiID AddInterfaceSlot(const CallSlotPtrType& callslot_ptr, bool auto_add = true);
     bool GetInterfaceSlot(ImGuiID interfaceslot_uid, InterfaceSlotPtrType& interfaceslot_ptr);
-    inline const InterfaceSlotPtrMapType& GetInterfaceSlots(void) { return this->interfaceslots; }
-    inline const InterfaceSlotPtrVectorType& GetInterfaceSlots(CallSlotType type) { return this->interfaceslots[type]; }
+    inline InterfaceSlotPtrMapType& GetInterfaceSlots(void) { return this->interfaceslots; }
+    inline InterfaceSlotPtrVectorType& GetInterfaceSlots(CallSlotType type) { return this->interfaceslots[type]; }
     bool DeleteInterfaceSlot(ImGuiID interfaceslot_uid);
     bool ContainsInterfaceSlot(ImGuiID interfaceslot_uid);
     bool InterfaceSlot_RemoveCallSlot(ImGuiID callslot_uid, bool force = false);
@@ -74,41 +109,7 @@ private:
 
     ModulePtrVectorType modules;
     InterfaceSlotPtrMapType interfaceslots;
-
-    /** ************************************************************************
-     * Defines GUI group presentation.
-     */
-    class Presentation {
-    public:
-        Presentation(void);
-
-        ~Presentation(void);
-
-        void Present(megamol::gui::PresentPhase phase, Group& inout_group, GraphItemsStateType& state);
-
-        void UpdatePositionSize(Group& inout_group, const GraphCanvasType& in_canvas);
-
-        inline ImVec2 GetSize(void) { return this->size; }
-        inline bool IsViewCollapsed(void) { return this->collapsed_view; }
-        inline bool ModulesVisible(void) { return !this->collapsed_view; }
-        inline void ForceUpdate(void) { this->update = true; }
-
-        void SetPosition(Group& inout_group, const GraphCanvasType& in_canvas, ImVec2 pos);
-
-    private:
-        // Relative position without considering canvas offset and zooming
-        ImVec2 position;
-        // Relative size without considering zooming
-        ImVec2 size;
-
-        GUIUtils utils;
-        bool collapsed_view;
-        bool allow_selection;
-        bool allow_context;
-        bool selected;
-        bool update;
-
-    } present;
+    GroupPresentation present;
 
     // FUNCTIONS --------------------------------------------------------------
 

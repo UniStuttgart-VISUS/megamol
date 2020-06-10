@@ -19,7 +19,7 @@ using namespace megamol::core::param;
  */
 EnumParam::EnumParam(int initVal)
         : AbstractParam(), val(initVal), typepairs() {
-    this->InitPresentation(Presentations::Basic, Presentations::Basic);
+    this->InitPresentation(AbstractParamPresentation::ParamType::ENUM);
 }
 
 
@@ -27,7 +27,7 @@ EnumParam::EnumParam(int initVal)
  * EnumParam::~EnumParam
  */
 EnumParam::~EnumParam(void) {
-    this->InitPresentation(Presentations::Basic, Presentations::Basic);
+    // intentionally empty
 }
 
 

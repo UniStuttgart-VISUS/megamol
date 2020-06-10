@@ -17,7 +17,7 @@ namespace gui {
 namespace configurator {
 
 
-// Forward declaration
+// Forward declarations
 class InterfaceSlot;
 class CallSlot;
 #ifndef _CALL_SLOT_TYPE_
@@ -26,13 +26,52 @@ enum CallSlotType { CALLEE, CALLER };
 #endif
 typedef std::vector<CallSlotPtrType> CallSlotPtrVectorType;
 
-// Pointer types to classes
+// Types
 typedef std::shared_ptr<InterfaceSlot> InterfaceSlotPtrType;
 typedef std::vector<InterfaceSlotPtrType> InterfaceSlotPtrVectorType;
 typedef std::map<CallSlotType, InterfaceSlotPtrVectorType> InterfaceSlotPtrMapType;
 
 
-/**
+/** ************************************************************************
+ * Defines GUI call slot presentation.
+ */
+class InterfaceSlotPresentation {
+public:
+    struct GroupState {
+        ImGuiID uid;
+        bool collapsed_view;
+    };
+
+    InterfaceSlotPresentation(void);
+
+    ~InterfaceSlotPresentation(void);
+
+    void Present(megamol::gui::PresentPhase phase, InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state);
+
+    std::string GetLabel(void) { return this->label; }
+    ImVec2 GetPosition(InterfaceSlot& inout_interfaceslot);
+    inline bool IsGroupViewCollapsed(void) { return this->group.collapsed_view; }
+
+    void SetPosition(ImVec2 pos) { this->position = pos; }
+
+    GroupState group;
+    bool label_visible;
+
+private:
+    // Absolute position including canvas offset and zooming
+    ImVec2 position;
+
+    GUIUtils utils;
+    bool selected;
+    std::string label;
+
+    ImGuiID last_compat_callslot_uid;
+    ImGuiID last_compat_interface_uid;
+    bool compatible;
+};
+
+
+/** ************************************************************************
  * Defines group interface slots bundling and redirecting calls of compatible call slots.
  */
 class InterfaceSlot {
@@ -75,47 +114,8 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     bool auto_created;
-
     CallSlotPtrVectorType callslots;
-
-    /** ************************************************************************
-     * Defines GUI call slot presentation.
-     */
-    class Presentation {
-    public:
-        struct GroupState {
-            ImGuiID uid;
-            bool collapsed_view;
-        };
-
-        Presentation(void);
-
-        ~Presentation(void);
-
-        void Present(megamol::gui::PresentPhase phase, InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state);
-
-        std::string GetLabel(void) { return this->label; }
-        ImVec2 GetPosition(InterfaceSlot& inout_interfaceslot);
-        inline bool IsGroupViewCollapsed(void) { return this->group.collapsed_view; }
-
-        void SetPosition(ImVec2 pos) { this->position = pos; }
-
-        GroupState group;
-        bool label_visible;
-
-    private:
-        // Absolute position including canvas offset and zooming
-        ImVec2 position;
-
-        GUIUtils utils;
-        bool selected;
-        std::string label;
-
-        ImGuiID last_compat_callslot_uid;
-        ImGuiID last_compat_interface_uid;
-        bool compatible;
-
-    } present;
+    InterfaceSlotPresentation present;
 
 
     // FUNCTIONS --------------------------------------------------------------

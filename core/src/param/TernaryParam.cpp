@@ -16,7 +16,7 @@ using namespace megamol::core::param;
  */
 TernaryParam::TernaryParam(const vislib::math::Ternary& initVal)
         : AbstractParam(), val(initVal) {
-    this->InitPresentation(Presentations::Basic, Presentations::Basic);
+    this->InitPresentation(AbstractParamPresentation::ParamType::TERNARY);
 }
 
 
@@ -24,7 +24,7 @@ TernaryParam::TernaryParam(const vislib::math::Ternary& initVal)
  * TernaryParam::~TernaryParam
  */
 TernaryParam::~TernaryParam(void) {
-    this->InitPresentation(Presentations::Basic, Presentations::Basic);
+    // intentionally empty
 }
 
 

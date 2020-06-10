@@ -17,7 +17,7 @@ namespace megamol {
 namespace gui {
 namespace configurator {
 
-// Forward declaration
+// Forward declarations
 class Module;
 class Call;
 class CallSlot;
@@ -26,19 +26,81 @@ typedef std::shared_ptr<Parameter> ParamPtrType;
 typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 
-
-// Pointer types to classes
+// Types
 typedef std::shared_ptr<Module> ModulePtrType;
 typedef std::vector<ModulePtrType> ModulePtrVectorType;
 
 
-/**
+/** ************************************************************************
+ * Defines GUI module presentation.
+ */
+class ModulePresentation {
+public:
+    struct GroupState {
+        ImGuiID uid;
+        bool visible;
+        std::string name;
+    };
+
+    ModulePresentation(void);
+
+    ~ModulePresentation(void);
+
+    void Present(megamol::gui::PresentPhase phase, Module& inout_module, GraphItemsStateType& state);
+
+    void Update(Module& inout_module, const GraphCanvasType& in_canvas);
+
+    inline ImVec2 GetPosition(void) { return this->position; }
+    inline ImVec2 GetSize(void) { return this->size; }
+    static ImVec2 GetDefaultModulePosition(const GraphCanvasType& canvas);
+
+    void SetSelectedSlotPosition(void) { this->set_selected_slot_position = true; }
+    void SetScreenPosition(ImVec2 pos) { this->set_screen_position = pos; }
+    inline void SetPosition(ImVec2 pos) { this->position = pos; }
+
+    GroupState group;
+    bool label_visible;
+
+private:
+    // Relative position without considering canvas offset and zooming
+    ImVec2 position;
+    // Relative size without considering zooming
+    ImVec2 size;
+
+    GUIUtils utils;
+    bool selected;
+    bool update;
+    bool show_params;
+    ImVec2 set_screen_position;
+    bool set_selected_slot_position;
+
+    inline bool found_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {
+        return (
+            std::find(modules_uid_vector.begin(), modules_uid_vector.end(), module_uid) != modules_uid_vector.end());
+    }
+
+    inline void erase_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {
+        for (auto iter = modules_uid_vector.begin(); iter != modules_uid_vector.end(); iter++) {
+            if ((*iter) == module_uid) {
+                modules_uid_vector.erase(iter);
+                return;
+            }
+        }
+    }
+
+    inline void add_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {
+        if (!this->found_uid(modules_uid_vector, module_uid)) {
+            modules_uid_vector.emplace_back(module_uid);
+        }
+    }
+};
+
+
+/** ************************************************************************
  * Defines module data structure for graph.
  */
 class Module {
 public:
-    enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
-
     struct StockModule {
         std::string class_name;
         std::string description;
@@ -100,80 +162,14 @@ public:
     inline void GUI_SetGroupVisibility(bool visible) { this->present.group.visible = visible; }
     inline void GUI_SetGroupName(const std::string& name) { this->present.group.name = name; }
     inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
-    inline void GUI_SetPresentation(Module::Presentations present) { this->present.presentations = present; }
     inline void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
     static ImVec2 GUI_GetDefaultModulePosition(const GraphCanvasType& canvas) {
-        return Module::Presentation::GetDefaultModulePosition(canvas);
+        return ModulePresentation::GetDefaultModulePosition(canvas);
     }
 
 private:
     CallSlotPtrMapType callslots;
-
-    /** ************************************************************************
-     * Defines GUI module presentation.
-     */
-    class Presentation {
-    public:
-        struct GroupState {
-            ImGuiID uid;
-            bool visible;
-            std::string name;
-        };
-
-        Presentation(void);
-
-        ~Presentation(void);
-
-        void Present(megamol::gui::PresentPhase phase, Module& inout_module, GraphItemsStateType& state);
-
-        void Update(Module& inout_module, const GraphCanvasType& in_canvas);
-
-        inline ImVec2 GetPosition(void) { return this->position; }
-        inline ImVec2 GetSize(void) { return this->size; }
-        static ImVec2 GetDefaultModulePosition(const GraphCanvasType& canvas);
-
-        void SetSelectedSlotPosition(void) { this->set_selected_slot_position = true; }
-        void SetScreenPosition(ImVec2 pos) { this->set_screen_position = pos; }
-        inline void SetPosition(ImVec2 pos) { this->position = pos; }
-
-        GroupState group;
-        Module::Presentations presentations;
-        bool label_visible;
-
-    private:
-        // Relative position without considering canvas offset and zooming
-        ImVec2 position;
-        // Relative size without considering zooming
-        ImVec2 size;
-
-        GUIUtils utils;
-        bool selected;
-        bool update;
-        bool show_params;
-        ImVec2 set_screen_position;
-        bool set_selected_slot_position;
-
-        inline bool found_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {
-            return (std::find(modules_uid_vector.begin(), modules_uid_vector.end(), module_uid) !=
-                    modules_uid_vector.end());
-        }
-
-        inline void erase_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {
-            for (auto iter = modules_uid_vector.begin(); iter != modules_uid_vector.end(); iter++) {
-                if ((*iter) == module_uid) {
-                    modules_uid_vector.erase(iter);
-                    return;
-                }
-            }
-        }
-
-        inline void add_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {
-            if (!this->found_uid(modules_uid_vector, module_uid)) {
-                modules_uid_vector.emplace_back(module_uid);
-            }
-        }
-
-    } present;
+    ModulePresentation present;
 };
 
 

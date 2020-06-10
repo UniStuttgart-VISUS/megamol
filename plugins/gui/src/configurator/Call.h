@@ -16,7 +16,7 @@ namespace megamol {
 namespace gui {
 namespace configurator {
 
-// Forward declaration
+// Forward declarations
 class Call;
 class CallSlot;
 class Module;
@@ -30,19 +30,35 @@ typedef std::shared_ptr<Parameter> ParamPtrType;
 typedef std::shared_ptr<CallSlot> CallSlotPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
 
-
-// Pointer types to classes
+// Types
 typedef std::shared_ptr<Call> CallPtrType;
 typedef std::vector<CallPtrType> CallPtrVectorType;
 
 
-/**
+/** ************************************************************************
+ * Defines GUI call presentation.
+ */
+class CallPresentation {
+public:
+    CallPresentation(void);
+
+    ~CallPresentation(void);
+
+    void Present(megamol::gui::PresentPhase phase, Call& inout_call, GraphItemsStateType& state);
+
+    bool label_visible;
+
+private:
+    bool selected;
+    GUIUtils utils;
+};
+
+
+/** ************************************************************************
  * Defines call data structure for graph.
  */
 class Call {
 public:
-    enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
-
     struct StockCall {
         std::string class_name;
         std::string description;
@@ -73,30 +89,10 @@ public:
     }
 
     inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
-    inline void GUI_SetPresentation(Call::Presentations present) { this->present.presentations = present; }
 
 private:
     std::map<CallSlotType, CallSlotPtrType> connected_callslots;
-
-    /** ************************************************************************
-     * Defines GUI call presentation.
-     */
-    class Presentation {
-    public:
-        Presentation(void);
-
-        ~Presentation(void);
-
-        void Present(megamol::gui::PresentPhase phase, Call& inout_call, GraphItemsStateType& state);
-
-        Call::Presentations presentations;
-        bool label_visible;
-
-    private:
-        bool selected;
-        GUIUtils utils;
-
-    } present;
+    CallPresentation present;
 };
 
 

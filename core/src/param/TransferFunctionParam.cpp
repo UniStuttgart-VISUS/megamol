@@ -23,7 +23,7 @@ TransferFunctionParam::TransferFunctionParam(const std::string& initVal) : Abstr
         vislib::sys::Log::DefaultLog.WriteError(
             "[TransferFunctionParam] No valid parameter value for constructor given.");
     }
-    this->InitPresentation(Presentations::Basic | Presentations::TransferFunction, Presentations::TransferFunction);
+    this->InitPresentation(AbstractParamPresentation::ParamType::TRANSFERFUNCTION);
 }
 
 
@@ -38,7 +38,7 @@ TransferFunctionParam::TransferFunctionParam(const char* initVal) : AbstractPara
         vislib::sys::Log::DefaultLog.WriteError(
             "[TransferFunctionParam] No valid parameter value for constructor given.");
     }
-    this->InitPresentation(Presentations::Basic | Presentations::TransferFunction, Presentations::TransferFunction);
+    this->InitPresentation(AbstractParamPresentation::ParamType::TRANSFERFUNCTION);
 }
 
 
@@ -53,7 +53,7 @@ TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal) : A
         vislib::sys::Log::DefaultLog.WriteError(
             "[TransferFunctionParam] No valid parameter value for constructor given.");
     }
-    this->InitPresentation(Presentations::Basic | Presentations::TransferFunction, Presentations::TransferFunction);
+    this->InitPresentation(AbstractParamPresentation::ParamType::TRANSFERFUNCTION);
 }
 
 

@@ -36,6 +36,7 @@
 #include <utility>
 #include <vector>
 
+#include "mmcore/param/AbstractParamPresentation.h"
 #include "mmcore/view/Input.h"
 
 #include "vislib/UTF8Encoder.h"
@@ -79,8 +80,10 @@ namespace gui {
 
 /********** Types **********/
 
+typedef megamol::core::param::AbstractParamPresentation::Presentation PresentType;
+typedef megamol::core::param::AbstractParamPresentation::ParamType ParamType;
+
 /** Hotkey Data Types (exclusively for configurator) */
-typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyDataType;
 enum HotkeyIndex : size_t {
     MODULE_SEARCH = 0,
     PARAMETER_SEARCH = 1,
@@ -88,6 +91,7 @@ enum HotkeyIndex : size_t {
     SAVE_PROJECT = 3,
     INDEX_COUNT = 4
 };
+typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyDataType;
 typedef std::array<megamol::gui::HotkeyDataType, megamol::gui::HotkeyIndex::INDEX_COUNT> HotkeyArrayType;
 
 namespace configurator {

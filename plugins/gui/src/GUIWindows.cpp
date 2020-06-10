@@ -40,13 +40,15 @@ GUIWindows::GUIWindows()
     , state()
     , parent_module_fullname()
     , force_open_main_window(false)
+    , graph_fonts_reserved(0)
+    , param_manager()
+
     , widgtmap_text()
     , widgtmap_int()
     , widgtmap_float()
     , widgtmap_vec2()
     , widgtmap_vec3()
-    , widgtmap_vec4()
-    , graph_fonts_reserved(0) {
+    , widgtmap_vec4() {
 
     core::param::EnumParam* styles = new core::param::EnumParam((int)(Styles::DarkColors));
     styles->SetTypePair(Styles::CorporateGray, "Corporate Gray");
@@ -344,7 +346,7 @@ bool GUIWindows::PostDraw(void) {
                 // Show only if mouse is outside any window
                 if (!ImGui::IsWindowHovered(hoverFlags)) {
 
-                    if (parameter->GetGUIPresentation() == megamol::core::param::Presentations::PinValueToMouse) {
+                    if (parameter->GetGUIPresentation() == PresentType::PinValueToMouse) {
                         ImGui::BeginTooltip();
                         std::string label = std::string(slot.Name().PeekBuffer());
                         ImGui::TextDisabled(label.c_str());
@@ -927,7 +929,7 @@ void GUIWindows::drawTFWindowCallback(const std::string& wn, WindowManager::Wind
             this->tf_hash = current_tf_hash;
         }
     }
-    wc.tfe_active_param = this->tf_editor.GetActiveParameter();
+    wc.tfe_active_param = this->tf_editor.GetActiveParameterName();
 }
 
 
@@ -1546,38 +1548,37 @@ void GUIWindows::drawParameter(
             ImGui::SameLine();
 
             // Presentation
-            bool default_present =
-                (slot.Parameter()->GetGUIPresentation() == megamol::core::param::Presentations::Basic);
+            bool default_present = (slot.Parameter()->GetGUIPresentation() == PresentType::Basic);
             this->utils.PointCircleButton("", !default_present);
             this->utils.HoverToolTip("Presentation");
             if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) {
-                megamol::core::param::Presentations param_present = megamol::core::param::Presentations::Basic;
+                PresentType param_present = PresentType::Basic;
                 if (slot.Parameter()->IsPresentationCompatible(param_present)) {
                     if (ImGui::MenuItem("Basic", nullptr, (param_present == slot.Parameter()->GetGUIPresentation()))) {
                         slot.Parameter()->SetGUIPresentation(param_present);
                     }
                 }
-                param_present = megamol::core::param::Presentations::Color;
+                param_present = PresentType::Color;
                 if (slot.Parameter()->IsPresentationCompatible(param_present)) {
                     if (ImGui::MenuItem("Color", nullptr, (param_present == slot.Parameter()->GetGUIPresentation()))) {
                         slot.Parameter()->SetGUIPresentation(param_present);
                     }
                 }
-                param_present = megamol::core::param::Presentations::FilePath;
+                param_present = PresentType::FilePath;
                 if (slot.Parameter()->IsPresentationCompatible(param_present)) {
                     if (ImGui::MenuItem(
                             "File Path", nullptr, (param_present == slot.Parameter()->GetGUIPresentation()))) {
                         slot.Parameter()->SetGUIPresentation(param_present);
                     }
                 }
-                param_present = megamol::core::param::Presentations::TransferFunction;
+                param_present = PresentType::TransferFunction;
                 if (slot.Parameter()->IsPresentationCompatible(param_present)) {
                     if (ImGui::MenuItem(
                             "Transfer Function", nullptr, (param_present == slot.Parameter()->GetGUIPresentation()))) {
                         slot.Parameter()->SetGUIPresentation(param_present);
                     }
                 }
-                param_present = megamol::core::param::Presentations::PinValueToMouse;
+                param_present = PresentType::PinValueToMouse;
                 if (slot.Parameter()->IsPresentationCompatible(param_present)) {
                     if (ImGui::MenuItem("Pin Value to Mouse Position", nullptr,
                             (param_present == slot.Parameter()->GetGUIPresentation()))) {
@@ -1623,7 +1624,7 @@ void megamol::gui::GUIWindows::drawParameterPresentation(core::param::ParamSlot&
 
     // BOOL -------------------------------------------------------------------
     if (auto* p = slot.template Param<core::param::BoolParam>()) {
-        if (p->GetGUIPresentation() == megamol::core::param::Presentations::Basic) {
+        if (p->GetGUIPresentation() == PresentType::Basic) {
             auto value = p->Value();
             if (ImGui::Checkbox(widget_label.c_str(), &value)) {
                 p->SetValue(value);
@@ -1658,7 +1659,7 @@ void megamol::gui::GUIWindows::drawParameterPresentation(core::param::ParamSlot&
                "[Right-Click] on the individual color widget to show options.";
         // TRANSFER FUNCTION ------------------------------------------------------
     } else if (auto* p = slot.template Param<core::param::TransferFunctionParam>()) {
-        this->drawTransferFunctionEdit(param_full_name, widget_label, *p);
+        this->drawTransferFunctionEdit(param_full_name, widget_label, slot.Parameter());
         // ENUM -------------------------------------------------------------------
     } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
         /// XXX: no UTF8 fanciness required here?
@@ -1867,18 +1868,24 @@ void megamol::gui::GUIWindows::drawParameterPresentation(core::param::ParamSlot&
 }
 
 
-void GUIWindows::drawTransferFunctionEdit(
-    const std::string& param_full_name, const std::string& label, megamol::core::param::TransferFunctionParam& p) {
+void GUIWindows::drawTransferFunctionEdit(const std::string& param_full_name, const std::string& label,
+    vislib::SmartPtr<megamol::core::param::AbstractParam> param) {
     ImGuiStyle& style = ImGui::GetStyle();
 
-    bool isActive = (param_full_name == this->tf_editor.GetActiveParameter());
+    auto* p = param.DynamicCast<megamol::core::param::TransferFunctionParam>();
+    if (p == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Wrong parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
+
+    bool isActive = (param_full_name == this->tf_editor.GetActiveParameterName());
     bool updateEditor = false;
 
     ImGui::BeginGroup();
     ImGui::PushID(param_full_name.c_str());
 
     // Reduced display of value and editor state.
-    if (p.Value().empty()) {
+    if (p->Value().empty()) {
         ImGui::TextDisabled("{    (empty)    }");
         ImGui::SameLine();
     } else {
@@ -1902,13 +1909,13 @@ void GUIWindows::drawTransferFunctionEdit(
     if (ImGui::Button("Copy")) {
 #ifdef GUI_USE_GLFW
         auto glfw_win = ::glfwGetCurrentContext();
-        ::glfwSetClipboardString(glfw_win, p.Value().c_str());
+        ::glfwSetClipboardString(glfw_win, p->Value().c_str());
 #elif _WIN32
-        ImGui::SetClipboardText(p.Value().c_str());
+        ImGui::SetClipboardText(p->Value().c_str());
 #else // LINUX
         vislib::sys::Log::DefaultLog.WriteWarn(
             "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Transfer Function JSON String:\n%s", p.Value().c_str());
+        vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Transfer Function JSON String:\n%s", p->Value().c_str());
 #endif
     }
     ImGui::SameLine();
@@ -1917,9 +1924,9 @@ void GUIWindows::drawTransferFunctionEdit(
     if (ImGui::Button("Paste")) {
 #ifdef GUI_USE_GLFW
         auto glfw_win = ::glfwGetCurrentContext();
-        p.SetValue(::glfwGetClipboardString(glfw_win));
+        p->SetValue(::glfwGetClipboardString(glfw_win));
 #elif _WIN32
-        p.SetValue(ImGui::GetClipboardText());
+        p->SetValue(ImGui::GetClipboardText());
 #else // LINUX
         vislib::sys::Log::DefaultLog.WriteWarn(
             "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -1936,7 +1943,7 @@ void GUIWindows::drawTransferFunctionEdit(
     if (ImGui::Button("Edit")) {
         updateEditor = true;
         isActive = true;
-        this->tf_editor.SetActiveParameter(&p, param_full_name);
+        this->tf_editor.SetActiveParameter(param, param_full_name);
 
         // Open window calling the transfer function editor callback
         const auto func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
@@ -1953,17 +1960,17 @@ void GUIWindows::drawTransferFunctionEdit(
 
     // Check for changed parameter value which should be forced to the editor once.
     if (isActive) {
-        if (this->tf_hash != p.ValueHash()) {
+        if (this->tf_hash != p->ValueHash()) {
             updateEditor = true;
         }
     }
 
     // Propagate the transfer function to the editor.
     if (isActive && updateEditor) {
-        this->tf_editor.SetTransferFunction(p.Value(), true);
+        this->tf_editor.SetTransferFunction(p->Value(), true);
     }
 
-    this->tf_hash = p.ValueHash();
+    this->tf_hash = p->ValueHash();
 
     ImGui::PopID();
     ImGui::EndGroup();
@@ -2275,10 +2282,10 @@ bool megamol::gui::GUIWindows::parameters_gui_state_from_json_string(const std::
                     }
 
                     // gui_presentation_mode
-                    megamol::core::param::Presentations gui_presentation_mode;
+                    PresentType gui_presentation_mode;
                     if (gui_state.at("gui_presentation_mode").is_number_integer()) {
-                        gui_presentation_mode = static_cast<megamol::core::param::Presentations>(
-                            gui_state.at("gui_presentation_mode").get<int>());
+                        gui_presentation_mode =
+                            static_cast<PresentType>(gui_state.at("gui_presentation_mode").get<int>());
                     } else {
                         vislib::sys::Log::DefaultLog.WriteError(
                             "JSON state: Failed to read 'gui_presentation_mode' as integer. [%s, %s, line %d]\n",

@@ -16,7 +16,7 @@ using namespace megamol::core::param;
  */
 BoolParam::BoolParam(bool initVal)
         : AbstractParam(), val(initVal) {
-    this->InitPresentation(Presentations::Basic, Presentations::Basic);
+    this->InitPresentation(AbstractParamPresentation::ParamType::BOOL);
 }
 
 

@@ -16,7 +16,7 @@ namespace megamol {
 namespace gui {
 namespace configurator {
 
-// Forward declaration
+// Forward declarations
 class CallSlot;
 class Call;
 class Module;
@@ -27,8 +27,7 @@ typedef std::shared_ptr<Call> CallPtrType;
 typedef std::shared_ptr<Module> ModulePtrType;
 typedef std::shared_ptr<InterfaceSlot> InterfaceSlotPtrType;
 
-
-// Pointer types to classes
+// Types
 #ifndef _CALL_SLOT_TYPE_
 enum CallSlotType { CALLEE, CALLER };
 #    define _CALL_SLOT_TYPE_
@@ -38,13 +37,52 @@ typedef std::vector<CallSlotPtrType> CallSlotPtrVectorType;
 typedef std::map<CallSlotType, CallSlotPtrVectorType> CallSlotPtrMapType;
 
 
-/**
+/** ************************************************************************
+ * Defines GUI call slot presentation.
+ */
+class CallSlotPresentation {
+public:
+    struct GroupState {
+        InterfaceSlotPtrType interfaceslot_ptr;
+    };
+
+    CallSlotPresentation(void);
+
+    ~CallSlotPresentation(void);
+
+    void Present(megamol::gui::PresentPhase phase, CallSlot& inout_callslot, GraphItemsStateType& state);
+
+    void Update(CallSlot& inout_callslot, const GraphCanvasType& in_canvas);
+
+    ImVec2 GetPosition(void) { return this->position; }
+    bool IsVisible(void) { return this->visible; }
+
+    void SetVisibility(bool is_visible) { this->visible = is_visible; }
+
+    GroupState group;
+    bool label_visible;
+
+private:
+    // Absolute position including canvas offset and zooming
+    ImVec2 position;
+
+    GUIUtils utils;
+    bool visible;
+    bool selected;
+    bool update_once;
+    bool show_modulestock;
+
+    ImGuiID last_compat_callslot_uid;
+    ImGuiID last_compat_interface_uid;
+    bool compatible;
+};
+
+
+/** ************************************************************************
  * Defines call slot data structure for graph.
  */
 class CallSlot {
 public:
-    enum Presentations : size_t { DEFAULT = 0, _COUNT_ = 1 };
-
     struct StockCallSlot {
         std::string name;
         std::string description;
@@ -98,54 +136,12 @@ public:
     inline void GUI_SetGroupInterface(const InterfaceSlotPtrType& interfaceslot_ptr) {
         this->present.group.interfaceslot_ptr = interfaceslot_ptr;
     }
-    inline void GUI_SetPresentation(CallSlot::Presentations present) { this->present.presentations = present; }
     inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
 
 private:
     ModulePtrType parent_module;
     std::vector<CallPtrType> connected_calls;
-
-    /** ************************************************************************
-     * Defines GUI call slot presentation.
-     */
-    class Presentation {
-    public:
-        struct GroupState {
-            InterfaceSlotPtrType interfaceslot_ptr;
-        };
-
-        Presentation(void);
-
-        ~Presentation(void);
-
-        void Present(megamol::gui::PresentPhase phase, CallSlot& inout_callslot, GraphItemsStateType& state);
-
-        void Update(CallSlot& inout_callslot, const GraphCanvasType& in_canvas);
-
-        ImVec2 GetPosition(void) { return this->position; }
-        bool IsVisible(void) { return this->visible; }
-
-        void SetVisibility(bool is_visible) { this->visible = is_visible; }
-
-        GroupState group;
-        CallSlot::Presentations presentations;
-        bool label_visible;
-
-    private:
-        // Absolute position including canvas offset and zooming
-        ImVec2 position;
-
-        GUIUtils utils;
-        bool visible;
-        bool selected;
-        bool update_once;
-        bool show_modulestock;
-
-        ImGuiID last_compat_callslot_uid;
-        ImGuiID last_compat_interface_uid;
-        bool compatible;
-
-    } present;
+    CallSlotPresentation present;
 };
 
 } // namespace configurator

@@ -18,105 +18,10 @@ using namespace megamol::gui;
 using namespace megamol::gui::configurator;
 
 
-megamol::gui::configurator::Module::Module(ImGuiID uid)
-    : uid(uid)
-    , class_name()
-    , description()
-    , plugin_name()
-    , is_view(false)
-    , parameters()
-    , name()
-    , is_view_instance(false)
-    , callslots()
-    , present() {
-
-    this->callslots.emplace(megamol::gui::configurator::CallSlotType::CALLER, std::vector<CallSlotPtrType>());
-
-    this->callslots.emplace(megamol::gui::configurator::CallSlotType::CALLEE, std::vector<CallSlotPtrType>());
-}
-
-
-megamol::gui::configurator::Module::~Module() {
-
-    // Delete all call slots
-    this->DeleteCallSlots();
-}
-
-
-bool megamol::gui::configurator::Module::AddCallSlot(megamol::gui::configurator::CallSlotPtrType callslot) {
-
-    if (callslot == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "Pointer to given call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    auto type = callslot->type;
-    for (auto& callslot_ptr : this->callslots[type]) {
-        if (callslot_ptr == callslot) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "Pointer to call slot already registered in modules call slot list. [%s, %s, line %d]\n", __FILE__,
-                __FUNCTION__, __LINE__);
-            return false;
-        }
-    }
-    this->callslots[type].emplace_back(callslot);
-    return true;
-}
-
-
-bool megamol::gui::configurator::Module::DeleteCallSlots(void) {
-
-    try {
-        for (auto& callslots_map : this->callslots) {
-            for (auto callslot_iter = callslots_map.second.begin(); callslot_iter != callslots_map.second.end();
-                 callslot_iter++) {
-                (*callslot_iter)->DisconnectCalls();
-                (*callslot_iter)->DisconnectParentModule();
-
-                if ((*callslot_iter).use_count() > 1) {
-                    vislib::sys::Log::DefaultLog.WriteError(
-                        "Unclean deletion. Found %i references pointing to call slot. [%s, %s, line %d]\n",
-                        (*callslot_iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
-                }
-
-                (*callslot_iter).reset();
-            }
-            callslots_map.second.clear();
-        }
-    } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    return true;
-}
-
-
-bool megamol::gui::configurator::Module::GetCallSlot(
-    ImGuiID callslot_uid, megamol::gui::configurator::CallSlotPtrType& out_callslot_ptr) {
-
-    if (callslot_uid != GUI_INVALID_ID) {
-        for (auto& callslot_map : this->GetCallSlots()) {
-            for (auto& callslot : callslot_map.second) {
-                if (callslot->uid == callslot_uid) {
-                    out_callslot_ptr = callslot;
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
-
 // MODULE PRESENTATION ####################################################
 
-megamol::gui::configurator::Module::Presentation::Presentation(void)
+megamol::gui::configurator::ModulePresentation::ModulePresentation(void)
     : group()
-    , presentations(Module::Presentations::DEFAULT)
     , label_visible(true)
     , position(ImVec2(FLT_MAX, FLT_MAX))
     , size(ImVec2(0.0f, 0.0f))
@@ -133,10 +38,10 @@ megamol::gui::configurator::Module::Presentation::Presentation(void)
 }
 
 
-megamol::gui::configurator::Module::Presentation::~Presentation(void) {}
+megamol::gui::configurator::ModulePresentation::~ModulePresentation(void) {}
 
 
-void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::PresentPhase phase,
+void megamol::gui::configurator::ModulePresentation::Present(megamol::gui::PresentPhase phase,
     megamol::gui::configurator::Module& inout_module, megamol::gui::GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
@@ -553,7 +458,7 @@ void megamol::gui::configurator::Module::Presentation::Present(megamol::gui::Pre
 }
 
 
-ImVec2 megamol::gui::configurator::Module::Presentation::GetDefaultModulePosition(const GraphCanvasType& canvas) {
+ImVec2 megamol::gui::configurator::ModulePresentation::GetDefaultModulePosition(const GraphCanvasType& canvas) {
 
     return ((ImVec2((2.0f * GUI_GRAPH_BORDER), (2.0f * GUI_GRAPH_BORDER)) + // ImGui::GetTextLineHeightWithSpacing()) +
                 (canvas.position - canvas.offset)) /
@@ -561,7 +466,7 @@ ImVec2 megamol::gui::configurator::Module::Presentation::GetDefaultModulePositio
 }
 
 
-void megamol::gui::configurator::Module::Presentation::Update(
+void megamol::gui::configurator::ModulePresentation::Update(
     megamol::gui::configurator::Module& inout_module, const GraphCanvasType& in_canvas) {
 
     ImGuiStyle& style = ImGui::GetStyle();
@@ -610,4 +515,100 @@ void megamol::gui::configurator::Module::Presentation::Update(
             slot->GUI_Update(in_canvas);
         }
     }
+}
+
+
+// MODULE #####################################################################
+
+megamol::gui::configurator::Module::Module(ImGuiID uid)
+    : uid(uid)
+    , class_name()
+    , description()
+    , plugin_name()
+    , is_view(false)
+    , parameters()
+    , name()
+    , is_view_instance(false)
+    , callslots()
+    , present() {
+
+    this->callslots.emplace(megamol::gui::configurator::CallSlotType::CALLER, std::vector<CallSlotPtrType>());
+
+    this->callslots.emplace(megamol::gui::configurator::CallSlotType::CALLEE, std::vector<CallSlotPtrType>());
+}
+
+
+megamol::gui::configurator::Module::~Module() {
+
+    // Delete all call slots
+    this->DeleteCallSlots();
+}
+
+
+bool megamol::gui::configurator::Module::AddCallSlot(megamol::gui::configurator::CallSlotPtrType callslot) {
+
+    if (callslot == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "Pointer to given call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    auto type = callslot->type;
+    for (auto& callslot_ptr : this->callslots[type]) {
+        if (callslot_ptr == callslot) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Pointer to call slot already registered in modules call slot list. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
+            return false;
+        }
+    }
+    this->callslots[type].emplace_back(callslot);
+    return true;
+}
+
+
+bool megamol::gui::configurator::Module::DeleteCallSlots(void) {
+
+    try {
+        for (auto& callslots_map : this->callslots) {
+            for (auto callslot_iter = callslots_map.second.begin(); callslot_iter != callslots_map.second.end();
+                 callslot_iter++) {
+                (*callslot_iter)->DisconnectCalls();
+                (*callslot_iter)->DisconnectParentModule();
+
+                if ((*callslot_iter).use_count() > 1) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "Unclean deletion. Found %i references pointing to call slot. [%s, %s, line %d]\n",
+                        (*callslot_iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+                }
+
+                (*callslot_iter).reset();
+            }
+            callslots_map.second.clear();
+        }
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    return true;
+}
+
+
+bool megamol::gui::configurator::Module::GetCallSlot(
+    ImGuiID callslot_uid, megamol::gui::configurator::CallSlotPtrType& out_callslot_ptr) {
+
+    if (callslot_uid != GUI_INVALID_ID) {
+        for (auto& callslot_map : this->GetCallSlots()) {
+            for (auto& callslot : callslot_map.second) {
+                if (callslot->uid == callslot_uid) {
+                    out_callslot_ptr = callslot;
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }

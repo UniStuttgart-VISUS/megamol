@@ -51,15 +51,12 @@ public:
     /**
      * Set the currently active parameter.
      */
-    void SetActiveParameter(core::param::TransferFunctionParam* param, const std::string& name) {
-        this->active_parameter_ptr = param;
-        this->active_parameter_name = name;
-    }
+    void SetActiveParameter(vislib::SmartPtr<megamol::core::param::AbstractParam> param, const std::string& name);
 
     /**
      * Get name of currently active parameter.
      */
-    std::string GetActiveParameter(void) { return this->active_parameter_name; }
+    inline const std::string GetActiveParameterName(void) const { return this->active_parameter_name; }
 
     /**
      * Draws the transfer function editor.
@@ -112,7 +109,7 @@ private:
     GUIUtils utils;
 
     /** The currently active parameter whose transfer function is currently loaded into this editor. */
-    core::param::TransferFunctionParam* active_parameter_ptr;
+    vislib::SmartPtr<megamol::core::param::AbstractParam> active_parameter_ptr;
     std::string active_parameter_name;
 
     /** Array holding current colors and function values. */
