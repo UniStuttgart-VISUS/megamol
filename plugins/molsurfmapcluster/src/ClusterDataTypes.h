@@ -30,6 +30,9 @@ struct ClusterNode_2 {
     /** Path to the represented picture file*/
     std::string picturePath = "";
 
+    /** Path to the represented value file */
+    std::string valueImagePath = "";
+
     /** Pointer to the represented image */
     std::weak_ptr<vislib::graphics::BitmapImage> picturePtr;
 };
@@ -45,9 +48,6 @@ enum class DistanceMeasure {
     DICE_DISTANCE = 3,
     JACCARD_DISTANCE = 4
 };
-
-/** Enum representing all available linkage modes */
-enum class LinkageMethod { CENTROID_LINKAGE = 0, SINGLE_LINKAGE = 1, AVERAGE_LINKAGE = 2 };
 
 } // namespace molsurfmapcluster
 } // namespace megamol

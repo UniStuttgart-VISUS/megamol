@@ -78,11 +78,27 @@ void Clustering_2::release(void) {
 }
 
 bool Clustering_2::GetDataCallback(Call& call) {
-    // TODO
+    CallClustering_2* cc = dynamic_cast<CallClustering_2*>(&call);
+    if (cc == nullptr) return false;
+
+    if (this->recalculateClustering) {
+        this->recalculateClustering = false;
+        if (!runComputation()) return false;
+    }
+
+    // TODO copy data
+
     return true;
 }
 
 bool Clustering_2::GetExtentCallback(Call& call) {
+    CallClustering_2* cc = dynamic_cast<CallClustering_2*>(&call);
+    if (cc == nullptr) return false;
+
+    if (this->checkParameterDirtyness()) {
+        this->recalculateClustering = true;
+    }
+
     std::vector<std::pair<image_calls::Image2DCall*, int>> calls;
     calls.push_back(std::make_pair(this->getImageSlot.CallAs<image_calls::Image2DCall>(), 0));
     {
@@ -114,5 +130,51 @@ bool Clustering_2::GetExtentCallback(Call& call) {
         }
     }
 
+    if (this->recalculateClustering) {
+        this->dataHashOffset++;
+    }
+
+    ClusteringMetaData meta;
+    meta.dataHash = this->dataHashOffset;
+    for (const auto& val : this->lastDataHash) {
+        meta.dataHash += val;
+    }
+    meta.numLeafNodes = calls.at(0).first->GetImageCount();
+    cc->SetMetaData(meta);
+
+    return true;
+}
+
+bool Clustering_2::checkParameterDirtyness(void) {
+    bool result = false;
+    if (this->clusteringMethodSelectionParam.IsDirty()) {
+        this->clusteringMethodSelectionParam.ResetDirty();
+        result = true;
+    }
+    if (this->distanceMeasureSelectionParam.IsDirty()) {
+        this->distanceMeasureSelectionParam.ResetDirty();
+        result = true;
+    }
+    if (this->useMultipleMapsParam.IsDirty()) {
+        this->useMultipleMapsParam.ResetDirty();
+        result = true;
+    }
+    return result;
+}
+
+bool Clustering_2::runComputation(void) {
+    //if (!this->calculateFeatureVectors) return false;
+    //if (!this->clusterImages) return false;
+    return true;
+}
+
+
+bool Clustering_2::calculateFeatureVectors(void) {
+    // TODO implement
+    return true;
+}
+
+bool Clustering_2::clusterImages(void) {
+    // TODO implement
     return true;
 }

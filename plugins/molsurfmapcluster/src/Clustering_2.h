@@ -71,6 +71,20 @@ protected:
     virtual bool GetExtentCallback(core::Call& caller);
 
 private:
+
+    /**
+     * Checks whether at least one Parameter is dirty and resets their dirty flags
+     *
+     * @return True, if at least one parameter was dirty, false otherwise
+     */
+    bool checkParameterDirtyness(void);
+
+    bool runComputation(void);
+
+    bool clusterImages(void);
+
+    bool calculateFeatureVectors(void);
+
     /** Slot to retrieve the image data */
     core::CallerSlot getImageSlot;
     core::CallerSlot getImageSlot2;
