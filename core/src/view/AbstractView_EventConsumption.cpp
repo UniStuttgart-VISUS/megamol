@@ -18,9 +18,9 @@ using namespace megamol::input_events;
 // if the type is present in the resource is made available as an 'events' variable in the if statemtnt.
 // note that when using this macro there is no visible opening bracket { for the if statements because it is hidden inside the macro
 #define IF(TYPENAME) \
-    auto optional_resource = resource.getResource<##TYPENAME>();    \
+    auto optional_resource = resource.getResource<TYPENAME>();    \
     if (optional_resource.has_value()) {                          \
-		##TYPENAME const& events = optional_resource.value().get();
+		TYPENAME const& events = optional_resource.value().get();
 
 
 void view_consume_keyboard_events(AbstractView& view, megamol::render_api::RenderResource const& resource) {
