@@ -15,6 +15,8 @@
 #include "Framebuffer_Events.h"
 #include "Window_Events.h"
 
+#include <memory>
+
 namespace megamol {
 namespace render_api {
 
