@@ -13,20 +13,17 @@ if(BUILD_MAIN3000)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
+  # Collect source files
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
 
   # Add target
   add_executable(${PROJECT_NAME} ${header_files} ${source_files})
   set_target_properties(${PROJECT_NAME}
-    PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+    PROPERTIES #RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
     OUTPUT_NAME ${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME} PRIVATE "src" "include")
   target_link_libraries(${PROJECT_NAME} PRIVATE core render_api)
-
-  if(WIN32)
-    set(VERSION_LIBRARY "Version.lib")
-  endif()
 
   target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS})
 
@@ -42,28 +39,4 @@ if(BUILD_MAIN3000)
       install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
     endif()
   endif ()
-
-
-  # Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
-  set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")
-
-  set(cfg_MEGAMOLCON "${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}")
-
-  if(UNIX)
-    include(GNUInstallDirs)
-    set(cfg_EXTERNAL_LIB_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
-    set(MEGAMOL_SHELL_START_SCRIPT "megamol.sh")
-    configure_file(extra/megamol.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} DESTINATION "bin")
-  endif()
-
-  set(MMPLG_DIR "lib")
-  if(WIN32)
-    set(MMPLG_DIR "bin")
-  endif()
-
-  configure_file(extra/megamolconfig.lua.in ${CMAKE_BINARY_DIR}/megamolconfig.lua)
-  configure_file(extra/install_megamolconfig_lua.cmake.in ${CMAKE_BINARY_DIR}/install_megamolconfig_lua.cmake @ONLY)
-
-  install(SCRIPT ${CMAKE_BINARY_DIR}/install_megamolconfig_lua.cmake)
 endif()
