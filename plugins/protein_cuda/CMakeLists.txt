@@ -61,7 +61,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src" "src/helper_includes" "${CUDA_BIN_DIR}/../include")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls protein_calls cufft)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls protein_calls cufft input_events)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
