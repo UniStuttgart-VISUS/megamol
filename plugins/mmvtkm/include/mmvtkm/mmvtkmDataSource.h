@@ -131,12 +131,17 @@ private:
 
     /** Data file load id counter */
     size_t data_hash;
+    size_t oldNodeDataHash;
+    size_t oldLabelDataHash;
 
     /** The vtkm data holder */
     vtkm::cont::DataSet vtkmData;
 
     /** The vtkm data file name */
     std::string vtkmDataFile;
+
+	/** Min and max boundaries from vtkm data. Used for metadata */
+    vtkm::Bounds minMaxBounds;
 };
 
 } /* end namespace mmvtkm */

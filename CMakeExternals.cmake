@@ -612,16 +612,20 @@ function(require_external NAME)
       return()
     endif()
 
-    set(VTKM_VER 1.5)
+    set(VTKM_VER 1.4)
     set(LIB_VER 1)
 
     if(WIN32)
       set(VTKM_CONT_LIB "lib/vtkm_cont-${VTKM_VER}.lib")
+      set(VTKM_FILTER_LIB "lib/vtkm_filter-${VTKM_VER}.lib")
       set(VTKM_RENDERER_LIB "lib/vtkm_rendering-${VTKM_VER}.lib")
+      set(VTKM_SOURCE_LIB "lib/vtkm_source-${VTKM_VER}.lib")
       set(VTKM_WORKLET_LIB "lib/vtkm_worklet-${VTKM_VER}.lib")
     else()
       set(VTKM_CONT_LIB "lib/libvtkm_cont-${VTKM_VER}.so.${LIB_VER}")
+      #set(VTKM_FILTER_LIB "lib/libvtkm_filter-${VTKM_VER}.so.${LIB_VER}")
       set(VTKM_RENDERER_LIB "lib/libvtkm_rendering-${VTKM_VER}.so.${LIB_VER}")
+      #set(VTKM_SOURCE_LIB "lib/libvtkm_source-${VTKM_VER}.so.${LIB_VER}")
       set(VTKM_WORKLET_LIB "lib/libvtkm_worklet-${VTKM_VER}.so.${LIB_VER}")
     endif()
 
@@ -629,17 +633,20 @@ function(require_external NAME)
     
     add_external_project(vtkm STATIC
       GIT_REPOSITORY https://gitlab.kitware.com/vtk/vtk-m.git
-      GIT_TAG "v1.5.0"
+      GIT_TAG "v${VTKM_VER}.0"
       BUILD_BYPRODUCTS 
         "<INSTALL_DIR>/${VTKM_CONT_LIB}"
+        #"<INSTALL_DIR>/${VTKM_FILTER_LIB}"
 	      "<INSTALL_DIR>/${VTKM_RENDERER_LIB}"
+	      #"<INSTALL_DIR>/${VTKM_SOURCE_LIB}"
 	      "<INSTALL_DIR>/${VTKM_WORKLET_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS:BOOL=OFF
-        -DVTKm_ENABLE_TESTING:BOOL=OFF
-        -DVTKm_ENABLE_CUDA:BOOL=${vtkm_ENABLE_CUDA}
         -DBUILD_TESTING:BOOL=OFF
+        -DVTKm_ENABLE_CUDA:BOOL=${vtkm_ENABLE_CUDA}
+        -DVTKm_ENABLE_TESTING:BOOL=OFF
         -DVTKm_ENABLE_DEVELOPER_FLAGS:BOOL=OFF
+        -DVTKm_ENABLE_EXAMPLES:BOOL=OFF
         -DVTKm_INSTALL_ONLY_LIBRARIES:BOOL=ON
         #-DCMAKE_BUILD_TYPE=Release
         )
@@ -648,9 +655,17 @@ function(require_external NAME)
       PROJECT vtkm
       LIBRARY ${VTKM_CONT_LIB})
 
+    #add_external_library(vtkm_filter
+    #  PROJECT vtkm
+    #  LIBRARY ${VTKM_FILTER_LIB})
+
     add_external_library(vtkm_renderer
       PROJECT vtkm
       LIBRARY ${VTKM_RENDERER_LIB})
+
+    #add_external_library(vtkm_source
+    #  PROJECT vtkm
+    #  LIBRARY ${VTKM_SOURCE_LIB})
 
     add_external_library(vtkm_worklet
       PROJECT vtkm

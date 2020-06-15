@@ -90,9 +90,38 @@ public:
      */
     vtkm::cont::DataSet* GetDataSet() { return this->mData; }
 
+	/**
+     * Sets the value if data has been changed within the vtkm data source
+	 *
+	 * @param true, if data has changed, false otherwise
+     */
+    void UpdateDataChanges(bool update) { this->mDataChanges = update; }
+
+	/**
+     * Returns if the data within the vtkm data source has changed or not
+     */
+    bool HasUpdate() { return this->mDataChanges; }
+
+	/**
+	* Sets lower and upper bounds of the current dataset
+	*/
+	void SetBounds(const vtkm::Bounds &bounds) { 
+		this->minMaxBounds = bounds;
+	}
+
+	/**
+	* Returns lower and upper bounds of the current dataset
+	*/
+	vtkm::Bounds GetBounds() { 
+		return this->minMaxBounds;
+	}
+
 
 private:
     vtkm::cont::DataSet* mData;
+
+    vtkm::Bounds minMaxBounds;
+	bool mDataChanges;
 };
 
 

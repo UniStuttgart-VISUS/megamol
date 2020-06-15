@@ -11,7 +11,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_ADIOS_PLUGIN_PLUGIN" CACHE INTERNAL "")
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_ADIOS_PLUGIN_PLUGIN BUILD_MESH_PLUGIN" CACHE INTERNAL "")
   
   # Add externals.
   require_external(vtkm)
@@ -41,7 +41,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     "${SOURCE_DIR}/vtkm/thirdparty/diy"
     "${SOURCE_DIR}/vtkm/thirdparty/lcl/vtkmlcl"
     )
-  target_link_libraries(${PROJECT_NAME} PRIVATE core vtkm_cont vtkm_renderer vtkm_worklet adios_plugin)
+  #target_link_libraries(${PROJECT_NAME} PRIVATE core vtkm_cont vtkm_filter vtkm_renderer vtkm_source vtkm_worklet adios_plugin mesh)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core vtkm_cont vtkm_renderer vtkm_worklet adios_plugin mesh)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
