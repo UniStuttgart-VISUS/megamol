@@ -44,17 +44,12 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , drawOtherItemsSlot("drawOtherItems", "Draw other (e.g., non-selected) items")
     , otherItemsColorSlot("otherItemsColor", "Color for other items (e.g., non-selected)")
     , otherItemsAttribSlot("otherItemsAttrib", "attribute to use for TF lookup and item coloring")
-    , otherItemsAlphaSlot("otherItemsAlpha", "Alpha for other items (e.g., non-selected)")
-    , otherItemsColor()
     , drawAxesSlot("drawAxes", "Draw dimension axes")
     , axesColorSlot("axesColor", "Color for dimension axes")
-    , axesColor()
     , filterIndicatorColorSlot("filterIndicatorCol", "Color for filter indicators")
-    , filterIndicatorColor()
     , selectionModeSlot("selectionMode", "Selection mode")
     , drawSelectionIndicatorSlot("drawSelectionIndicator", "Draw selection indicator")
     , selectionIndicatorColorSlot("selectionIndicatorColor", "Color for selection indicator")
-    , selectionIndicatorColor()
     , pickRadiusSlot("pickRadius", "Picking radius in object-space")
     , scaleToFitSlot("scaleToFit", "fit the diagram in the viewport")
     , glDepthTestSlot("glEnableDepthTest", "Toggle GLDEPTHTEST")
@@ -113,36 +108,25 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     drawOtherItemsSlot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&drawOtherItemsSlot);
 
-    otherItemsColorSlot << new core::param::StringParam("gray");
-    otherItemsColorSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::otherItemsColorSlotCallback);
+    otherItemsColorSlot << new core::param::ColorParam("gray");
     this->MakeSlotAvailable(&otherItemsColorSlot);
     otherItemsAttribSlot << new core::param::FlexEnumParam("undef");
     this->MakeSlotAvailable(&this->otherItemsAttribSlot);
-    otherItemsAlphaSlot << new core::param::FloatParam(1.0f, 0.0f, 1.0f);
-    otherItemsAlphaSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::otherItemsColorSlotCallback);
-    this->MakeSlotAvailable(&otherItemsAlphaSlot);
-    otherItemsColorSlotCallback(otherItemsColorSlot);
 
     drawAxesSlot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&drawAxesSlot);
 
-    axesColorSlot << new core::param::StringParam("white");
-    axesColorSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::axesColorSlotCallback);
+    axesColorSlot << new core::param::ColorParam("white");
     this->MakeSlotAvailable(&axesColorSlot);
-    axesColorSlotCallback(axesColorSlot);
 
-    filterIndicatorColorSlot << new core::param::StringParam("orange");
-    filterIndicatorColorSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::filterIndicatorColorSlotCallback);
+    filterIndicatorColorSlot << new core::param::ColorParam("orange");
     this->MakeSlotAvailable(&filterIndicatorColorSlot);
-    filterIndicatorColorSlotCallback(filterIndicatorColorSlot);
 
     drawSelectionIndicatorSlot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&drawSelectionIndicatorSlot);
 
-    selectionIndicatorColorSlot << new core::param::StringParam("MegaMolBlue");
-    selectionIndicatorColorSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::selectionIndicatorColorSlotCallback);
+    selectionIndicatorColorSlot << new core::param::ColorParam("MegaMolBlue");
     this->MakeSlotAvailable(&selectionIndicatorColorSlot);
-    selectionIndicatorColorSlotCallback(selectionIndicatorColorSlot);
 
     auto pickModes = new core::param::EnumParam(SELECT_PICK);
     pickModes->SetTypePair(SELECT_PICK, "Pick");
@@ -316,28 +300,6 @@ void ParallelCoordinatesRenderer2D::pickIndicator(float x, float y, int& axis, i
     if (index == -1) {
         axis = -1;
     }
-}
-
-bool ParallelCoordinatesRenderer2D::otherItemsColorSlotCallback(core::param::ParamSlot& caller) {
-    core::utility::ColourParser::FromString(
-        this->otherItemsColorSlot.Param<core::param::StringParam>()->Value(), 4, otherItemsColor);
-    otherItemsColor[3] = this->otherItemsAlphaSlot.Param<core::param::FloatParam>()->Value();
-    return true;
-}
-bool ParallelCoordinatesRenderer2D::axesColorSlotCallback(core::param::ParamSlot& caller) {
-    core::utility::ColourParser::FromString(
-        this->axesColorSlot.Param<core::param::StringParam>()->Value(), 4, axesColor);
-    return true;
-}
-bool ParallelCoordinatesRenderer2D::filterIndicatorColorSlotCallback(core::param::ParamSlot& caller) {
-    core::utility::ColourParser::FromString(
-        this->filterIndicatorColorSlot.Param<core::param::StringParam>()->Value(), 4, filterIndicatorColor);
-    return true;
-}
-bool ParallelCoordinatesRenderer2D::selectionIndicatorColorSlotCallback(core::param::ParamSlot& caller) {
-    core::utility::ColourParser::FromString(
-        this->selectionIndicatorColorSlot.Param<core::param::StringParam>()->Value(), 4, selectionIndicatorColor);
-    return true;
 }
 
 bool ParallelCoordinatesRenderer2D::scalingChangedCallback(core::param::ParamSlot& caller) {
@@ -624,13 +586,15 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
     debugPush(1, "drawAxes");
     if (this->columnCount > 0) {
         this->enableProgramAndBind(this->drawAxesProgram);
-        glUniform4fv(this->drawAxesProgram.ParameterLocation("color"), 1, this->axesColor);
+        glUniform4fv(this->drawAxesProgram.ParameterLocation("color"), 1,
+            this->axesColorSlot.Param<core::param::ColorParam>()->Value().data());
         glUniform1i(this->drawAxesProgram.ParameterLocation("pickedAxis"), pickedAxis);
         glDrawArraysInstanced(GL_LINES, 0, 2, this->columnCount);
         this->drawAxesProgram.Disable();
 
         this->enableProgramAndBind(this->drawScalesProgram);
-        glUniform4fv(this->drawScalesProgram.ParameterLocation("color"), 1, this->axesColor);
+        glUniform4fv(this->drawScalesProgram.ParameterLocation("color"), 1,
+            this->axesColorSlot.Param<core::param::ColorParam>()->Value().data());
         glUniform1ui(this->drawScalesProgram.ParameterLocation("numTicks"), this->numTicks);
         glUniform1f(this->drawScalesProgram.ParameterLocation("axisHalfTick"), 2.0f);
         glUniform1i(this->drawScalesProgram.ParameterLocation("pickedAxis"), pickedAxis);
@@ -638,14 +602,15 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
         this->drawScalesProgram.Disable();
 
         this->enableProgramAndBind(this->drawFilterIndicatorsProgram);
-        glUniform4fv(this->drawFilterIndicatorsProgram.ParameterLocation("color"), 1, this->filterIndicatorColor);
+        glUniform4fv(this->drawFilterIndicatorsProgram.ParameterLocation("color"), 1,
+            this->filterIndicatorColorSlot.Param<core::param::ColorParam>()->Value().data());
         glUniform1f(this->drawFilterIndicatorsProgram.ParameterLocation("axisHalfTick"), 2.0f);
         glUniform2i(this->drawFilterIndicatorsProgram.ParameterLocation("pickedIndicator"), pickedIndicatorAxis,
             pickedIndicatorIndex);
         glDrawArraysInstanced(GL_LINE_STRIP, 0, 3, this->columnCount * 2);
         this->drawScalesProgram.Disable();
         float red[4] = {1.0f, 0.0f, 0.0f, 1.0f};
-        float* color;
+        const float* color;
 #ifndef REMOVE_TEXT
         glActiveTexture(GL_TEXTURE0);
         font.ClearBatchDrawCache();
@@ -654,7 +619,7 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
             if (this->pickedAxis == realCol) {
                 color = red;
             } else {
-                color = this->axesColor;
+                color = this->axesColorSlot.Param<core::param::ColorParam>()->Value().data();
             }
             float x = this->marginX + this->axisDistance * c;
 #    if 0
@@ -904,8 +869,8 @@ void ParallelCoordinatesRenderer2D::drawParcos(void) {
 
     switch (drawmode) {
     case DRAW_DISCRETE:
-        this->drawDiscrete(
-            this->otherItemsColor, this->selectedItemsColorSlot.Param<core::param::ColorParam>()->Value().data(), 1.0f);
+        this->drawDiscrete(this->otherItemsColorSlot.Param<core::param::ColorParam>()->Value().data(),
+            this->selectedItemsColorSlot.Param<core::param::ColorParam>()->Value().data(), 1.0f);
         break;
     case DRAW_CONTINUOUS:
     case DRAW_HISTOGRAM:
@@ -1037,12 +1002,13 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         case SELECT_STROKE:
             if (this->interactionState == InteractionState::INTERACTION_SELECT) {
                 this->drawStrokeIndicator(this->strokeStartX, this->strokeStartY, this->strokeEndX, this->strokeEndY,
-                    this->selectionIndicatorColor);
+                    this->selectionIndicatorColorSlot.Param<core::param::ColorParam>()->Value().data());
             }
             break;
         case SELECT_PICK:
             this->drawPickIndicator(this->mouseX, this->mouseY,
-                this->pickRadiusSlot.Param<megamol::core::param::FloatParam>()->Value(), this->selectionIndicatorColor);
+                this->pickRadiusSlot.Param<megamol::core::param::FloatParam>()->Value(),
+                this->selectionIndicatorColorSlot.Param<core::param::ColorParam>()->Value().data());
             break;
         }
     }
