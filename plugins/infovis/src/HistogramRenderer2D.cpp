@@ -2,6 +2,7 @@
 #include "HistogramRenderer2D.h"
 
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/IntParam.h"
 
 using namespace megamol;
@@ -17,6 +18,7 @@ HistogramRenderer2D::HistogramRenderer2D()
     , flagStorageReadCallerSlot("readFlagStorage", "Flag storage read input")
     , numberOfBinsParam("numberOfBins", "Number of bins")
     , logPlotParam("logPlot", "Logarithmic scale")
+    , selectionColorParam("selectionColorParam", "Color of selection")
     , currentTableDataHash(std::numeric_limits<std::size_t>::max())
     , currentTableFrameId(std::numeric_limits<unsigned int>::max())
     , bins(10)
@@ -38,6 +40,9 @@ HistogramRenderer2D::HistogramRenderer2D()
 
     this->logPlotParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->logPlotParam);
+
+    this->selectionColorParam << new core::param::ColorParam("red");
+    this->MakeSlotAvailable(&this->selectionColorParam);
 }
 
 HistogramRenderer2D::~HistogramRenderer2D() { this->Release(); }
@@ -117,6 +122,8 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D& call) {
     glUniform1i(this->histogramProgram.ParameterLocation("colCount"), this->colCount);
     glUniform1i(this->histogramProgram.ParameterLocation("logPlot"),
         static_cast<int>(this->logPlotParam.Param<core::param::BoolParam>()->Value()));
+    glUniform4fv(this->histogramProgram.ParameterLocation("selectionColor"), 1,
+        this->selectionColorParam.Param<core::param::ColorParam>()->Value().data());
 
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, this->bins * this->colCount);
 

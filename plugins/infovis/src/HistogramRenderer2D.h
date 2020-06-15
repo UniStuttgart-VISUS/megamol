@@ -92,6 +92,7 @@ private:
 
     core::param::ParamSlot numberOfBinsParam;
     core::param::ParamSlot logPlotParam;
+    core::param::ParamSlot selectionColorParam;
 
     size_t currentTableDataHash;
     unsigned int currentTableFrameId;
