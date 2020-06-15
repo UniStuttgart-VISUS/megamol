@@ -128,7 +128,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     selectionIndicatorColorSlot << new core::param::ColorParam("MegaMolBlue");
     this->MakeSlotAvailable(&selectionIndicatorColorSlot);
 
-    auto pickModes = new core::param::EnumParam(SELECT_PICK);
+    auto pickModes = new core::param::EnumParam(SELECT_STROKE);
     pickModes->SetTypePair(SELECT_PICK, "Pick");
     pickModes->SetTypePair(SELECT_STROKE, "Stroke");
     selectionModeSlot.SetParameter(pickModes);
