@@ -6,6 +6,7 @@
 #include "mmcore/FlagCall_GL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -40,8 +41,6 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , drawModeSlot("drawMode", "Draw mode")
     , drawSelectedItemsSlot("drawSelectedItems", "Draw selected items")
     , selectedItemsColorSlot("selectedItemsColor", "Color for selected items")
-    , selectedItemsAlphaSlot("selectedItemsAlpha", "Alpha for selected items")
-    , selectedItemsColor()
     , drawOtherItemsSlot("drawOtherItems", "Draw other (e.g., non-selected) items")
     , otherItemsColorSlot("otherItemsColor", "Color for other items (e.g., non-selected)")
     , otherItemsAttribSlot("otherItemsAttrib", "attribute to use for TF lookup and item coloring")
@@ -108,13 +107,8 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     drawSelectedItemsSlot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&drawSelectedItemsSlot);
 
-    selectedItemsColorSlot << new core::param::StringParam("red");
-    selectedItemsColorSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::selectedItemsColorSlotCallback);
+    selectedItemsColorSlot << new core::param::ColorParam("red");
     this->MakeSlotAvailable(&selectedItemsColorSlot);
-    selectedItemsAlphaSlot << new core::param::FloatParam(1.0f, 0.0f, 1.0f);
-    selectedItemsAlphaSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::selectedItemsColorSlotCallback);
-    this->MakeSlotAvailable(&selectedItemsAlphaSlot);
-    selectedItemsColorSlotCallback(selectedItemsColorSlot);
 
     drawOtherItemsSlot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&drawOtherItemsSlot);
@@ -322,13 +316,6 @@ void ParallelCoordinatesRenderer2D::pickIndicator(float x, float y, int& axis, i
     if (index == -1) {
         axis = -1;
     }
-}
-
-bool ParallelCoordinatesRenderer2D::selectedItemsColorSlotCallback(core::param::ParamSlot& caller) {
-    core::utility::ColourParser::FromString(
-        this->selectedItemsColorSlot.Param<core::param::StringParam>()->Value(), 4, selectedItemsColor);
-    selectedItemsColor[3] = this->selectedItemsAlphaSlot.Param<core::param::FloatParam>()->Value();
-    return true;
 }
 
 bool ParallelCoordinatesRenderer2D::otherItemsColorSlotCallback(core::param::ParamSlot& caller) {
@@ -917,7 +904,8 @@ void ParallelCoordinatesRenderer2D::drawParcos(void) {
 
     switch (drawmode) {
     case DRAW_DISCRETE:
-        this->drawDiscrete(this->otherItemsColor, this->selectedItemsColor, 1.0f);
+        this->drawDiscrete(
+            this->otherItemsColor, this->selectedItemsColorSlot.Param<core::param::ColorParam>()->Value().data(), 1.0f);
         break;
     case DRAW_CONTINUOUS:
     case DRAW_HISTOGRAM:

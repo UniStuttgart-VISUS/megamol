@@ -91,7 +91,6 @@ protected:
 
     bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) override;
 
-    bool selectedItemsColorSlotCallback(core::param::ParamSlot& caller);
     bool otherItemsColorSlotCallback(core::param::ParamSlot& caller);
     bool axesColorSlotCallback(core::param::ParamSlot& caller);
     bool filterIndicatorColorSlotCallback(core::param::ParamSlot& caller);
@@ -181,8 +180,6 @@ private:
 
     core::param::ParamSlot drawSelectedItemsSlot;
     core::param::ParamSlot selectedItemsColorSlot;
-    core::param::ParamSlot selectedItemsAlphaSlot;
-    float selectedItemsColor[4];
 
     core::param::ParamSlot drawOtherItemsSlot;
     core::param::ParamSlot otherItemsColorSlot;
