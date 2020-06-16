@@ -58,11 +58,14 @@ typedef std::shared_ptr<Parameter> ParamPtrType;
  */
 class ParameterPresentation : public megamol::core::param::AbstractParamPresentation {
 public:
+
+    enum WidgetScope { GLOBAL, LOCAL };
+
     ParameterPresentation(ParamType type);
 
     ~ParameterPresentation(void);
 
-    bool Present(Parameter& inout_param);
+    bool Present(Parameter& inout_param, WidgetScope scope);
 
     float GetHeight(Parameter& inout_param);
 
@@ -70,6 +73,7 @@ public:
 
 private:
     std::string help;
+    std::string description;
     megamol::gui::GUIUtils utils;
     megamol::gui::FileUtils file_utils;
     bool show_tf_editor;
@@ -79,11 +83,25 @@ private:
     float height;
     UINT set_focus;
 
-    void present_prefix(void);
-    void parameter_widget_presentation(Parameter& inout_parameter);
-    void present_postfix(Parameter& inout_parameter);
-    bool presentation_button(void);
-    void transfer_function_edit(Parameter& inout_parameter);
+    bool present_parameter(Parameter& inout_parameter, WidgetScope scope);
+
+    // Local widgets
+    bool widget_button(const std::string& label, const megamol::core::view::KeyCode& keycode);
+    bool widget_bool(const std::string& label, bool& value);
+    bool widget_string(const std::string& label, std::string& value);
+    bool widget_color(const std::string& label, glm::vec4& value);
+    bool widget_enum(const std::string& label, int& value, EnumStorageType storage);
+    bool widget_flexenum(const std::string& label, std::string& value, megamol::core::param::FlexEnumParam::Storage_t storage);
+    bool widget_filepath(const std::string& label, std::string& value);
+    bool widget_ternary(const std::string& label, vislib::math::Ternary& value);
+    bool widget_int(const std::string& label, int& value, int min, int max);
+    bool widget_float(const std::string& label, float& value, float min, float max);
+    bool widget_vector2f(const std::string& label, glm::vec2& value, glm::vec2 min, glm::vec2 max);
+    bool widget_vector3f(const std::string& label, glm::vec3& value, glm::vec3 min, glm::vec3 max);
+    bool widget_vector4f(const std::string& label, glm::vec4& value, glm::vec4 min, glm::vec4 max);
+    // Local and global widgets
+    bool widget_pinvaluetomouse(const std::string& label, const std::string& value, WidgetScope scope);
+    bool widget_transfer_function_editor(Parameter& inout_parameter, WidgetScope scope);
 };
 
 
@@ -92,18 +110,16 @@ private:
  */
 class Parameter {
 public:
-    typedef std::map<int, std::string> EnumStorageType;
 
     typedef std::variant<std::monostate,             // default  BUTTON
         bool,                                        // BOOL
-        megamol::core::param::ColorParam::ColorType, // COLOR
         float,                                       // FLOAT
         int,                                         // INT      ENUM
         std::string,                                 // STRING   TRANSFERFUNCTION    FILEPATH    FLEXENUM
         vislib::math::Ternary,                       // TERNARY
         glm::vec2,                                   // VECTOR2F
         glm::vec3,                                   // VECTOR3F
-        glm::vec4                                    // VECTOR4F
+        glm::vec4                                    // VECTOR4F, COLOR
         >
         ValueType;
 
@@ -242,7 +258,7 @@ public:
 
     // GUI Presentation -------------------------------------------------------
 
-    inline bool GUI_Present(void) { return this->present.Present(*this); }
+    inline bool GUI_Present(ParameterPresentation::WidgetScope scope) { return this->present.Present(*this, scope); }
 
     inline void GUI_SetVisibility(bool visible) { this->present.SetGUIVisible(visible); }
     inline void GUI_SetReadOnly(bool readonly) { this->present.SetGUIReadOnly(readonly); }

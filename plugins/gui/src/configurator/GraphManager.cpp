@@ -404,10 +404,11 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
                             } else if (auto* p_ptr = param_slot->Param<core::param::BoolParam>()) {
                                 parameter.SetValue(p_ptr->Value());
                             } else if (auto* p_ptr = param_slot->Param<core::param::ColorParam>()) {
-                                parameter.SetValue(p_ptr->Value());
+                                auto value = p_ptr->Value();
+                                parameter.SetValue(glm::vec4(value[0], value[1], value[2], value[3]));
                             } else if (auto* p_ptr = param_slot->Param<core::param::EnumParam>()) {
                                 parameter.SetValue(p_ptr->Value());
-                                Parameter::EnumStorageType map;
+                                EnumStorageType map;
                                 auto param_map = p_ptr->getMap();
                                 auto iter = param_map.GetConstIterator();
                                 while (iter.HasNext()) {
@@ -1195,7 +1196,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
             } else if (auto* p_ptr = param_slot->Param<core::param::EnumParam>()) {
                 psd.type = ParamType::ENUM;
                 psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-                Parameter::EnumStorageType map;
+                EnumStorageType map;
                 auto psd_map = p_ptr->getMap();
                 auto iter = psd_map.GetConstIterator();
                 while (iter.HasNext()) {

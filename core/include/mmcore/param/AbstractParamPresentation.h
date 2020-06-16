@@ -12,6 +12,8 @@
 
 #include "vislib/sys/Log.h"
 
+#include <map>
+
 
 namespace megamol {
 namespace core {
@@ -22,6 +24,7 @@ class MEGAMOLCORE_API AbstractParamPresentation {
 public:
 
     // Available parameter types
+    /// ! Add new type to name function.
     enum ParamType {
         BOOL,
         BUTTON,
@@ -39,7 +42,8 @@ public:
         VECTOR4F,
         UNKNOWN
     };
-
+         
+    /// ! Add new widget presentation to name map in ctor.
     enum Presentation : int {  /// (limited to 32 options)
         NONE                = 0,
         Basic               = 1 << 1,       // Basic widget (is supported for all parameter types) -> Default
@@ -119,7 +123,32 @@ public:
     inline bool IsPresentationCompatible(Presentation presentation) const {
         return (Presentation::NONE != (presentation & this->compatible));
     }
-
+    
+    /** 
+    * Get presentation name map.
+    * 
+    * @return The presentation name map.
+    */
+     const std::map<Presentation, std::string>& GetPresentationNameMap(void) { return this->presentation_name_map; }
+     
+    /** 
+    * Get presentation name.
+    *
+    * @param presentation Presentation of parameter in GUI.
+    *
+    * @return The human readable name of the given presentation.
+    */   
+     const std::string GetPresentationName(Presentation presentation) { return this->presentation_name_map[presentation]; }
+          
+    /** 
+    * Get human readable parameter type.
+    *
+    * @param type The parameter type.
+    *
+    * @return The human readable name of the given parameter type.
+    */   
+     static const std::string GetTypeName(ParamType type);
+               
 protected:
 
     AbstractParamPresentation(void);
@@ -131,7 +160,7 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     /* Show or hide the parameter in the GUI.
-       Paramter is implicitly hidden in GUI if other than raw value view is selected. */
+       Parameter is implicitly hidden in GUI if other than raw value view is selected. */
     bool visible;
 
     /* Make parameter read-only in the GUI. */
@@ -145,12 +174,16 @@ private:
 
     /* Falg ensuring that initialisation can only be applied once. */
     bool initialised;
+    
+    /* Presentation name map */
+    std::map<Presentation, std::string> presentation_name_map;
 };
 
 
 inline AbstractParamPresentation::Presentation operator|(AbstractParamPresentation::Presentation a, AbstractParamPresentation::Presentation b) {
     return static_cast<AbstractParamPresentation::Presentation>(static_cast<int>(a) | static_cast<int>(b));
 }
+
 inline AbstractParamPresentation::Presentation operator&(AbstractParamPresentation::Presentation a, AbstractParamPresentation::Presentation b) {
     return static_cast<AbstractParamPresentation::Presentation>(static_cast<int>(a) & static_cast<int>(b));
 }

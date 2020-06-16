@@ -72,16 +72,17 @@ namespace gui {
 // Global Colors
 #define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.0f, 0.0f, 1.0f))
 #define GUI_COLOR_TEXT_WARN (ImVec4(0.75f, 0.75f, 0.f, 1.0f))
-#define GUI_COLOR_BUTTON_MODIFIED (ImVec4(0.6f, 0.0f, 0.0f, 1.0f))
-#define GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT (ImVec4(0.9f, 0.0f, 0.0f, 1.0f))
+#define GUI_COLOR_BUTTON_MODIFIED (ImVec4(0.6f, 0.0f, 0.3f, 1.0f))
+#define GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT (ImVec4(0.9f, 0.0f, 0.45f, 1.0f))
 #define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 1.0f, 0.75f, 1.0f))
 #define GUI_COLOR_SLOT_CALLEE (ImVec4(0.75f, 0.0f, 1.0f, 1.0f))
 #define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.75f, 1.0f, 0.25f, 1.0f))
 
 /********** Types **********/
 
-typedef megamol::core::param::AbstractParamPresentation::Presentation PresentType;
-typedef megamol::core::param::AbstractParamPresentation::ParamType ParamType;
+typedef megamol::core::param::AbstractParamPresentation::Presentation   PresentType;
+typedef megamol::core::param::AbstractParamPresentation::ParamType      ParamType;
+typedef std::map<int, std::string>                                      EnumStorageType;
 
 /** Hotkey Data Types (exclusively for configurator) */
 enum HotkeyIndex : size_t {

@@ -12,7 +12,6 @@
 #include "CorporateGreyStyle.h"
 #include "CorporateWhiteStyle.h"
 #include "FileUtils.h"
-#include "ParameterManager.h"
 #include "TransferFunctionEditor.h"
 #include "WindowManager.h"
 #include "configurator/Configurator.h"
@@ -187,16 +186,8 @@ private:
     /** Numer of fonts reserved for the configurator graph canvas. */
     unsigned int graph_fonts_reserved;
 
-    /** Parameter Manager */
-    ParameterManager param_manager;
-
-    std::map<std::string, std::string> widgtmap_text;
-    std::map<std::string, int> widgtmap_int;
-    std::map<std::string, float> widgtmap_float;
-    std::map<std::string, vislib::math::Vector<float, 2>> widgtmap_vec2;
-    std::map<std::string, vislib::math::Vector<float, 3>> widgtmap_vec3;
-    std::map<std::string, vislib::math::Vector<float, 4>> widgtmap_vec4;
-
+    /** Widget Presentations of Core Parameter */
+    std::map<megamol::core::param::AbstractParam*, std::shared_ptr<megamol::gui::configurator::Parameter>> param_presentations;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -215,7 +206,6 @@ private:
      */
     void validateParameter();
 
-
     // Window Draw Callbacks
     void drawMainWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
     void drawParametersCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
@@ -233,37 +223,12 @@ private:
     void drawMenu(const std::string& wn, WindowManager::WindowConfiguration& wc);
 
     /**
-     * Draws one parameter.
+     * Draw one parameter.
      *
-     * @param wc    The configuration of the calling window.*
-     * @param mod   Module the paramter belongs to.
-     * @param slot  The current parameter slot.
+     * @param slot      The slot of the parameter to draw.
+     * @param scope     The scope.
      */
-    void drawParameter(WindowManager::WindowConfiguration& wc, const core::Module& mod, core::param::ParamSlot& slot);
-
-    /**
-     * Draws one parameter in its respective presentation.
-     *
-     * @param slot   The current parameter slot.
-     * @param label  The label for the parameter widget.
-     * @param name   The parameters name.
-     */
-    void drawParameterPresentation(core::param::ParamSlot& slot, const std::string& widget_label,
-        const std::string& param_name, const std::string& param_full_name);
-
-    /**
-     * Transfer function edit widget.
-     */
-    void drawTransferFunctionEdit(const std::string& param_full_name, const std::string& label,
-        vislib::SmartPtr<megamol::core::param::AbstractParam> param);
-
-    /**
-     * Draws only a button parameter's hotkey.
-     *
-     * @param mod   Module the paramter belongs to.
-     * @param slot  The current parameter slot.
-     */
-    void drawParameterHotkey(const core::Module& mod, core::param::ParamSlot& slot);
+    void drawParameter(megamol::core::param::ParamSlot& slot, megamol::gui::configurator::ParameterPresentation::WidgetScope scope);
 
     /**
      * Handle pop-ups.
@@ -312,6 +277,14 @@ private:
      * @return True on success, false otherwise.
      */
     bool parameters_gui_state_to_json(nlohmann::json& out_json);
+    
+    /**
+     *  Adds new parameter to parameter presentation storage
+     *
+     * @param param_slot  The parameter slot.
+     * 
+     */
+    void parameters_add_param(megamol::core::param::ParamSlot& slot);
 };
 
 } // namespace gui

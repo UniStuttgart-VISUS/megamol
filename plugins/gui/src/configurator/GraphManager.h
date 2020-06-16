@@ -84,6 +84,7 @@ private:
     ModuleStockVectorType modules_stock;
     CallStockVectorType calls_stock;
     unsigned int graph_name_uid;
+    
     GraphManagerPresentation present;
 
     // FUNCTIONS --------------------------------------------------------------

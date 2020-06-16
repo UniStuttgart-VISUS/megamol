@@ -115,6 +115,7 @@ private:
 
     bool auto_created;
     CallSlotPtrVectorType callslots;
+    
     InterfaceSlotPresentation present;
 
 

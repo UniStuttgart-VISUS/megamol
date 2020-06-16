@@ -425,7 +425,7 @@ void megamol::gui::configurator::ModulePresentation::Present(megamol::gui::Prese
                         //}
 
                         for (auto& parameter : inout_module.parameters) {
-                            parameter.GUI_Present();
+                            parameter.GUI_Present(ParameterPresentation::WidgetScope::LOCAL);
                         }
 
                         ImGui::EndChild();

@@ -1373,9 +1373,8 @@ void megamol::gui::configurator::GraphPresentation::present_parameters(
                                     param_indent_stack--;
                                     ImGui::Unindent();
                                 }
-                                /// ImGui::Separator();
+                                
                                 if (!this->param_name_space.empty()) {
-
                                     std::string label = this->param_name_space + "###" + parameter.full_name;
                                     // Open all namespace headers when parameter search is active
                                     if (!search_string.empty()) {
@@ -1393,7 +1392,7 @@ void megamol::gui::configurator::GraphPresentation::present_parameters(
 
                             // Draw parameter
                             if (search_filter && param_name_space_open) {
-                                parameter.GUI_Present();
+                                parameter.GUI_Present(ParameterPresentation::WidgetScope::LOCAL);
                             }
                         }
                         while (param_indent_stack > 0) {

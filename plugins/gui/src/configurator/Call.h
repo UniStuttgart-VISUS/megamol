@@ -92,6 +92,7 @@ public:
 
 private:
     std::map<CallSlotType, CallSlotPtrType> connected_callslots;
+    
     CallPresentation present;
 };
 

@@ -11,12 +11,42 @@
 using namespace megamol::core::param;
 
 
+const std::string AbstractParamPresentation::GetTypeName(ParamType type){
+    switch (type) {
+    case(BOOL)              : return "BoolParam";
+    case(BUTTON)            : return "ButtonParam";
+    case(COLOR)             : return "ColorParam";
+    case(ENUM)              : return "EnumParam";
+    case(FILEPATH)          : return "FilePathParam";
+    case(FLEXENUM)          : return "FlexEnumParam";
+    case(FLOAT)             : return "FloatParam";
+    case(INT)               : return "IntParam";
+    case(STRING)            : return "StringParam";
+    case(TERNARY)           : return "TernaryParam";
+    case(TRANSFERFUNCTION)  : return "TransferFunctionParam";
+    case(VECTOR2F)          : return "Vector2fParam";
+    case(VECTOR3F)          : return "Vector3fParam";
+    case(VECTOR4F)          : return "Vector4fParam";
+    default                 : return "UNKNOWN";
+    }
+}
+     
+
 AbstractParamPresentation::AbstractParamPresentation(void)
     : visible(true)
     , read_only(false)
     , presentation(Presentation::Basic)
     , compatible(Presentation::Basic)
-    , initialised(false) {
+    , initialised(false)
+    , presentation_name_map() {
+        
+    this->presentation_name_map.clear();
+    this->presentation_name_map.emplace(Presentation::Basic, "Basic");
+    this->presentation_name_map.emplace(Presentation::String, "String");
+    this->presentation_name_map.emplace(Presentation::Color, "Color");
+    this->presentation_name_map.emplace(Presentation::FilePath, "File Path");
+    this->presentation_name_map.emplace(Presentation::TransferFunction, "Transfer Function");
+    this->presentation_name_map.emplace(Presentation::PinValueToMouse, "Pin Value To Mouse");
 }
 
 

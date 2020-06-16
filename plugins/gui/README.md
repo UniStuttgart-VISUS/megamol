@@ -16,7 +16,7 @@ The menu of the main window of the `GUIView` provides the following options:
 (Assigned hotkeys are given in brackets.)
 
 * `File`
-    * `Save Project` (`Ctrl + Alt + s`) Save the current project to a file (lua).
+    * `Save Project` (`Ctrl + s`) Save the current project to a file (lua).
     * `Exit` (`Alt + F4`) End the program.
 * `Windows` 
     * `Configurator` (`(Shift +)* F8`) Show/Hide the configurator window.

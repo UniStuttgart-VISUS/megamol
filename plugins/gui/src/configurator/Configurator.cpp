@@ -237,7 +237,6 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                 }
                 if (ImGui::MenuItem("Running")) {
                     this->graph_manager.LoadProjectCore(core_instance);
-                    // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
                 }
                 ImGui::EndMenu();
             }

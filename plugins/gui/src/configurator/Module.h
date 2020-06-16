@@ -169,6 +169,7 @@ public:
 
 private:
     CallSlotPtrMapType callslots;
+    
     ModulePresentation present;
 };
 
