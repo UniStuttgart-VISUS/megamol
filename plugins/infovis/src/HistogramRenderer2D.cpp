@@ -16,6 +16,7 @@ HistogramRenderer2D::HistogramRenderer2D()
     , tableDataCallerSlot("getData", "Float table input")
     , transferFunctionCallerSlot("getTransferFunction", "Transfer function input")
     , flagStorageReadCallerSlot("readFlagStorage", "Flag storage read input")
+    , flagStorageWriteCallerSlot("writeFlagStorage", "Flag storage write input")
     , numberOfBinsParam("numberOfBins", "Number of bins")
     , logPlotParam("logPlot", "Logarithmic scale")
     , selectionColorParam("selectionColorParam", "Color of selection")
@@ -25,7 +26,12 @@ HistogramRenderer2D::HistogramRenderer2D()
     , colCount(0)
     , rowCount(0)
     , maxBinValue(0)
-    , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL) {
+    , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
+    , mouseX(0.0f)
+    , mouseY(0.0f)
+    , needSelectionUpdate(false)
+    , selectedCol(-1)
+    , selectedBin(-1) {
     this->tableDataCallerSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->tableDataCallerSlot);
 
@@ -34,6 +40,9 @@ HistogramRenderer2D::HistogramRenderer2D()
 
     this->flagStorageReadCallerSlot.SetCompatibleCall<core::FlagCallRead_GLDescription>();
     this->MakeSlotAvailable(&this->flagStorageReadCallerSlot);
+
+    this->flagStorageWriteCallerSlot.SetCompatibleCall<core::FlagCallWrite_GLDescription>();
+    this->MakeSlotAvailable(&this->flagStorageWriteCallerSlot);
 
     this->numberOfBinsParam << new core::param::IntParam(this->bins, 1);
     this->MakeSlotAvailable(&this->numberOfBinsParam);
@@ -52,6 +61,7 @@ bool HistogramRenderer2D::create() {
     this->font.SetBatchDrawMode(true);
 
     if (!makeProgram("::histo::calc", this->calcHistogramProgram)) return false;
+    if (!makeProgram("::histo::select", this->selectionProgram)) return false;
     if (!makeProgram("::histo::draw", this->histogramProgram)) return false;
     if (!makeProgram("::histo::axes", this->axesProgram)) return false;
 
@@ -62,6 +72,12 @@ bool HistogramRenderer2D::create() {
     glGenBuffers(1, &this->selectedHistogramBuffer);
     glGenBuffers(1, &this->maxBinValueBuffer);
 
+    glGetProgramiv(selectionProgram, GL_COMPUTE_WORK_GROUP_SIZE, selectionWorkgroupSize);
+
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkgroupCount[0]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount[1]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkgroupCount[2]);
+
     return true;
 }
 
@@ -69,6 +85,7 @@ void HistogramRenderer2D::release() {
     this->font.Deinitialise();
 
     this->calcHistogramProgram.Release();
+    this->selectionProgram.Release();
     this->histogramProgram.Release();
     this->axesProgram.Release();
 
@@ -99,6 +116,37 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D& call) {
     auto tfCall = this->transferFunctionCallerSlot.CallAs<core::view::CallGetTransferFunction>();
     if (tfCall == nullptr) {
         return false;
+    }
+
+    // Update selection
+    if (needSelectionUpdate) {
+        needSelectionUpdate = false;
+        auto readFlagsCall = flagStorageReadCallerSlot.CallAs<core::FlagCallRead_GL>();
+        auto writeFlagsCall = flagStorageWriteCallerSlot.CallAs<core::FlagCallWrite_GL>();
+        if (readFlagsCall != nullptr && writeFlagsCall != nullptr) {
+            selectionProgram.Enable();
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->floatDataBuffer);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->minBuffer);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, this->maxBuffer);
+            readFlagsCall->getData()->flags->bind(3);
+
+            glUniform1ui(selectionProgram.ParameterLocation("binCount"), this->bins);
+            glUniform1ui(selectionProgram.ParameterLocation("colCount"), this->colCount);
+            glUniform1ui(selectionProgram.ParameterLocation("rowCount"), this->rowCount);
+            glUniform1i(selectionProgram.ParameterLocation("selectedCol"), selectedCol);
+            glUniform1i(selectionProgram.ParameterLocation("selectedBin"), selectedBin);
+
+            GLuint groupCounts[3];
+            computeDispatchSizes(rowCount, selectionWorkgroupSize, maxWorkgroupCount, groupCounts);
+
+            selectionProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+            selectionProgram.Disable();
+
+            writeFlagsCall->setData(readFlagsCall->getData(), readFlagsCall->version() + 1);
+            (*writeFlagsCall)(core::FlagCallWrite_GL::CallGetData);
+        }
     }
 
     // this is the apex of suck and must die
@@ -181,7 +229,13 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
     auto readFlagsCall = this->flagStorageReadCallerSlot.CallAs<core::FlagCallRead_GL>();
     if (readFlagsCall == nullptr) {
         vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "HistogramRenderer2D requires a flag storage!");
+            vislib::sys::Log::LEVEL_ERROR, "HistogramRenderer2D requires a read flag storage!");
+        return false;
+    }
+    auto writeFlagsCall = this->flagStorageWriteCallerSlot.CallAs<core::FlagCallWrite_GL>();
+    if (writeFlagsCall == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "HistogramRenderer2D requires a write flag storage!");
         return false;
     }
 
@@ -273,7 +327,43 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
 
 bool HistogramRenderer2D::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
-    return false;
+    // This goes to the view.
+    if (mods.test(core::view::Modifier::CTRL)) {
+        return false;
+    }
+
+    if (button != core::view::MouseButton::BUTTON_LEFT || action != core::view::MouseButtonAction::PRESS) {
+        return false;
+    }
+
+    needSelectionUpdate = true;
+    selectedCol = -1;
+    selectedBin = -1;
+
+    if (mouseY < 2.0f || mouseY > 12.0f) {
+        return true;
+    }
+
+    selectedCol = static_cast<int>(std::floor(mouseX / 12.0f));
+    if (selectedCol < 0 || selectedCol >= colCount) {
+        selectedCol = -1;
+        return true;
+    }
+
+    float posX = (std::fmod(mouseX, 12.0f) - 1.0f) / 10.0f;
+    if (posX < 0.0f || posX >= 1.0f) {
+        return true;
+    }
+    selectedBin = static_cast<int>(posX * bins);
+    if (selectedBin < 0 || selectedBin >= bins) {
+        selectedBin = -1;
+    }
+
+    return true;
 }
 
-bool HistogramRenderer2D::OnMouseMove(double x, double y) { return false; }
+bool HistogramRenderer2D::OnMouseMove(double x, double y) {
+    this->mouseX = static_cast<float>(x);
+    this->mouseY = static_cast<float>(y);
+    return false;
+}
