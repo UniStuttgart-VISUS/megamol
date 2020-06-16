@@ -228,7 +228,7 @@ private:
      * @param slot      The slot of the parameter to draw.
      * @param scope     The scope.
      */
-    void drawParameter(megamol::core::param::ParamSlot& slot, megamol::gui::configurator::ParameterPresentation::WidgetScope scope);
+    void drawParameter(megamol::core::param::ParamSlot& slot, megamol::gui::configurator::ParameterPresentation::WidgetScope scope, bool expert = false);
 
     /**
      * Handle pop-ups.

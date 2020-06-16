@@ -50,6 +50,7 @@ bool megamol::gui::configurator::ParameterPresentation::Present(
 
     try {
         ImGui::PushID(inout_parameter.uid);
+        
         this->help = "";
         this->description = inout_parameter.description;
                         
@@ -153,25 +154,23 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
     megamol::gui::configurator::Parameter& inout_parameter, WidgetScope scope) {
 
     bool retval = false;
-
-    // Set general proportional item width
-    float widget_width = ImGui::GetContentRegionAvail().x * 0.6f;
-    ImGui::PushItemWidth(widget_width);
-
-    if (this->IsGUIReadOnly()) {
-        GUIUtils::ReadOnlyWigetStyle(true);
-    }
-    std::string param_label = inout_parameter.GetName();
-    
     bool error = true;
+    std::string param_label = inout_parameter.GetName();
     
     // Implementation of presentation and parameter type mapping defined in AbstractParamPresentation::InitPresentation() to widget.
     auto visitor = [&](auto&& arg) {
         using T = std::decay_t<decltype(arg)>;
         
         // LOCAL #######################################################
-        if (scope == ParameterPresentation::WidgetScope::LOCAL) {
-            
+        if (scope == WidgetScope::LOCAL) {
+            // Set general proportional item width
+            float widget_width = ImGui::GetContentRegionAvail().x * 0.6f;
+            ImGui::PushItemWidth(widget_width);
+
+            if (this->IsGUIReadOnly()) {
+                GUIUtils::ReadOnlyWigetStyle(true);
+            }
+                
             switch (this->GetGUIPresentation()) {
             // BASIC ///////////////////////////////////////////////////
             case(PresentType::Basic) : {
@@ -359,7 +358,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                     switch (inout_parameter.type) {
                     // TRANSFER FUNCTION -------------------------------
                     case (ParamType::TRANSFERFUNCTION): {
-                        if (this->widget_transfer_function_editor(inout_parameter, scope)) {
+                        if (this->widget_transfer_function_editor(inout_parameter, WidgetScope::LOCAL)) {
                             retval = true;
                         }
                         error = false;
@@ -401,15 +400,20 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                     }
                 }
                 if (compatible_type) {
-                    this->widget_pinvaluetomouse(param_label, inout_parameter.GetValueString(), scope);
+                    this->widget_pinvaluetomouse(param_label, inout_parameter.GetValueString(), WidgetScope::LOCAL);
                     error = false;
                 }
             } break; 
             default : break;
-            }             
+            }
+            
+            if (this->IsGUIReadOnly()) {
+                GUIUtils::ReadOnlyWigetStyle(false);
+            }
+            ImGui::PopItemWidth(); 
         }
-        // GLOBAL ##############################################
-        else if (scope == ParameterPresentation::WidgetScope::GLOBAL) {
+        // GLOBAL ######################################################
+        else if (scope == WidgetScope::GLOBAL) {
 
             switch (this->GetGUIPresentation()) {
             // TRANSFER FUNCTION ///////////////////////////////////////
@@ -418,7 +422,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                     switch (inout_parameter.type) {
                     // TRANSFER FUNCTION -------------------------------
                     case (ParamType::TRANSFERFUNCTION): {
-                        if (this->widget_transfer_function_editor(inout_parameter, scope)) {
+                        if (this->widget_transfer_function_editor(inout_parameter, WidgetScope::GLOBAL)) {
                             retval = true;
                         }
                         error = false;
@@ -460,7 +464,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                     }
                 }
                 if (compatible_type) {
-                    this->widget_pinvaluetomouse(param_label, inout_parameter.GetValueString(), scope);
+                    this->widget_pinvaluetomouse(param_label, inout_parameter.GetValueString(), WidgetScope::GLOBAL);
                     error = false;
                 }
             } break; 
@@ -472,17 +476,13 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
     };
 
     std::visit(visitor, inout_parameter.GetValue());
-
-    if (this->IsGUIReadOnly()) {
-        GUIUtils::ReadOnlyWigetStyle(false);
-    }
-
-    ImGui::PopItemWidth(); 
     
-    if (error) vislib::sys::Log::DefaultLog.WriteError("No widget presentation '%s' available for '%s' . [%s, %s, line %d]\n",
+    if (error) {
+        vislib::sys::Log::DefaultLog.WriteError("No widget presentation '%s' available for '%s' . [%s, %s, line %d]\n",
         this->GetPresentationName(this->GetGUIPresentation()).c_str(), 
         megamol::core::param::AbstractParamPresentation::GetTypeName(inout_parameter.type).c_str(), 
         __FILE__, __FUNCTION__, __LINE__); 
+    }
         
     return retval;
 }
@@ -531,9 +531,13 @@ bool megamol::gui::configurator::ParameterPresentation::widget_string(const std:
     int multiline_cnt = static_cast<int>(std::count(std::get<std::string>(this->widget_store).begin(),
         std::get<std::string>(this->widget_store).end(), '\n'));
     multiline_cnt = std::min(static_cast<int>(GUI_MAX_MULITLINE), multiline_cnt);
-    ImVec2 multiline_size = ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeightWithSpacing() + (ImGui::GetFontSize() * static_cast<float>(multiline_cnt)));
-
-    ImGui::InputTextMultiline(hidden_label.c_str(), &std::get<std::string>(this->widget_store), multiline_size, ImGuiInputTextFlags_CtrlEnterForNewLine);
+    ///if (multiline_cnt == 0) {
+    ///    ImGui::InputText(hidden_label.c_str(), &std::get<std::string>(this->widget_store), ImGuiInputTextFlags_CtrlEnterForNewLine);
+    ///}
+    ///else {
+        ImVec2 multiline_size = ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeightWithSpacing() + (ImGui::GetFontSize() * static_cast<float>(multiline_cnt)));
+        ImGui::InputTextMultiline(hidden_label.c_str(), &std::get<std::string>(this->widget_store), multiline_size, ImGuiInputTextFlags_CtrlEnterForNewLine);
+    ///}
     if (ImGui::IsItemDeactivatedAfterEdit()) {
         std::string utf8Str = std::get<std::string>(this->widget_store);
         GUIUtils::Utf8Decode(utf8Str);
@@ -820,10 +824,12 @@ bool megamol::gui::configurator::ParameterPresentation::widget_vector4f(const st
 bool megamol::gui::configurator::ParameterPresentation::widget_pinvaluetomouse(const std::string& label, const std::string& value, WidgetScope scope) {
     bool retval = false;
     
+    // LOCAL -----------------------------------------------------------    
     if (scope == ParameterPresentation::WidgetScope::LOCAL) {
         
         ImGui::TextDisabled(label.c_str());
     }
+    // GLOBAL -----------------------------------------------------------    
     else if (scope == ParameterPresentation::WidgetScope::GLOBAL) {
         
         auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
@@ -850,6 +856,7 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
 
     ImGuiStyle& style = ImGui::GetStyle();
     
+    // LOCAL -----------------------------------------------------------
     if (scope == ParameterPresentation::WidgetScope::LOCAL) {
         
         if ((inout_parameter.type != ParamType::TRANSFERFUNCTION) ||
@@ -933,6 +940,7 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
             ImGui::Separator();
         }
     }
+    // GLOBAL ----------------------------------------------------------
     else if (scope == ParameterPresentation::WidgetScope::GLOBAL) {
         /*
 
@@ -1042,7 +1050,6 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
         ImGui::EndGroup();
 
          */
-        
     }
      
     return retval;

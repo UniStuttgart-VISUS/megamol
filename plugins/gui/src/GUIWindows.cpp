@@ -948,10 +948,9 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
     std::string mode_help = "Expert mode enables buttons for additional parameter presentation options.";
     this->utils.HelpMarkerToolTip(mode_help);
 
-    ImGui::SameLine();
-
     /* DISBALED --- Does anybody use this?
     // Toggel Hotkeys
+    ImGui::SameLine(); 
     bool show_only_hotkeys = wc.param_show_hotkeys;
     ImGui::Checkbox("Show Hotkeys", &show_only_hotkeys);
     wc.param_show_hotkeys = show_only_hotkeys;
@@ -1235,7 +1234,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                             }
                         } else {
                         */
-                            this->drawParameter(slot, configurator::ParameterPresentation::WidgetScope::LOCAL);
+                            this->drawParameter(slot, configurator::ParameterPresentation::WidgetScope::LOCAL, wc.param_extended_mode);
                         /*
                         }
                         */
@@ -1450,16 +1449,17 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
 }
 
 
-void GUIWindows::drawParameter(megamol::core::param::ParamSlot& slot, megamol::gui::configurator::ParameterPresentation::WidgetScope scope) {
+void GUIWindows::drawParameter(megamol::core::param::ParamSlot& slot, megamol::gui::configurator::ParameterPresentation::WidgetScope scope, bool expert) {
     
     /// TODO
-    //wc.param_extended_mode
-        
+            
     this->parameters_add_param(slot);
     //TODO Delete paramters in list which do no longer exist in core.
     auto parameter_ptr = slot.Parameter();
     auto param_ref = &(*parameter_ptr);
     auto param_present = this->param_presentations[param_ref];
+    param_present->GUI_SetExpert(expert);
+    
     if (param_present->GUI_Present(scope)) {
         /// Set value to core param
         
