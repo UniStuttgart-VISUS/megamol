@@ -1,7 +1,7 @@
 /*
  * CoreInstance.h
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2008, 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -681,6 +681,11 @@ public:
     void ParameterValueUpdate(param::ParamSlot& slot);
 
     /**
+     * Fired to notify all listeners with a batch of updates.
+     */
+    void NotifyParamUpdateListener();
+
+    /**
      * Adds a ParamUpdateListener to the list of registered listeners
      *
      * @param pul The ParamUpdateListener to add
@@ -1288,6 +1293,9 @@ private:
 
     /** List of registered param update listeners */
     vislib::SingleLinkedList<param::ParamUpdateListener*> paramUpdateListeners;
+
+    /** Vector storing param updates per frame */
+    param::ParamUpdateListener::param_updates_vec_t paramUpdates;
 
     /** The manager of loaded plugins */
     utility::plugins::PluginManager* plugins;

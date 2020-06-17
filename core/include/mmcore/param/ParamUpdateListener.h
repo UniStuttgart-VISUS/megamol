@@ -1,7 +1,7 @@
 /*
  * ParamUpdateListener.h
  *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2010, 2020 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -10,6 +10,9 @@
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <string>
+#include <vector>
 
 #include "mmcore/param/ParamSlot.h"
 
@@ -25,6 +28,8 @@ namespace param {
     class MEGAMOLCORE_API ParamUpdateListener {
     public:
 
+        using param_updates_vec_t = std::vector<std::pair<std::string, std::string>>;
+
         /** Ctor */
         ParamUpdateListener(void);
 
@@ -37,6 +42,13 @@ namespace param {
          * @param slot The parameter updated
          */
         virtual void ParamUpdated(ParamSlot& slot) = 0;
+
+        /**
+         * Callback called to communicate a batch of parameter updates
+         *
+         * @param updates Vector containing all parameter updates to communicate
+         */
+        virtual void BatchParamUpdated(param_updates_vec_t const& updates);
 
     };
 
