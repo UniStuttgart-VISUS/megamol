@@ -8,11 +8,10 @@
 /**
  * USED HOTKEYS:
  *
- * - Search module:        Ctrl + Shift + m
- * - Search parameter:     Ctrl + Shift + p
- * - Save active project:  Ctrl + saddmodule
- * - Save active project:  Ctrl + s
- * - Delete graph item:    Delete
+ * - Search Module:        Ctrl + Shift + m
+ * - Search Parameter:     Ctrl + Shift + p
+ * - Save Edited Project:  Ctrl + Shift + s
+ * - Delete Graph Item:    Delete
  */
 
 #include "stdafx.h"
@@ -43,7 +42,6 @@ megamol::gui::configurator::Configurator::Configurator()
     , module_list_popup_pos()
     , last_selected_callslot_uid(GUI_INVALID_ID)
     , graph_state()
-    , open_popup_save(false)
     , open_popup_load(false) {
 
     this->state_param << new core::param::StringParam("");
@@ -60,12 +58,13 @@ megamol::gui::configurator::Configurator::Configurator()
     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM] =
         megamol::gui::HotkeyDataType(core::view::KeyCode(core::view::Key::KEY_DELETE), false);
     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT] = megamol::gui::HotkeyDataType(
-        megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL), false);
+        megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::SHIFT), false);
     this->graph_state.font_scalings = {0.85f, 0.95f, 1.0f, 1.5f, 2.5f};
     this->graph_state.graph_width = 0.0f;
     this->graph_state.show_parameter_sidebar = false;
     this->graph_state.graph_selected_uid = GUI_INVALID_ID;
     this->graph_state.graph_delete = false;
+    this->graph_state.graph_save = false;
 }
 
 
@@ -161,7 +160,7 @@ bool megamol::gui::configurator::Configurator::Draw(
         // Hotkeys
         if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT]) &&
             (this->graph_state.graph_selected_uid != GUI_INVALID_ID)) {
-            this->open_popup_save = true;
+            this->graph_state.graph_save = true;
         }
 
         // Clear dropped file list (when configurator window is opened, after it was closed)
@@ -190,7 +189,7 @@ bool megamol::gui::configurator::Configurator::Draw(
         }
         this->graph_manager.GUI_Present(this->graph_state);
         // Process Pop-ups
-        this->showPopUps();
+        this->drawPopUps();
 
         // Reset state -------------------------------------------------------
         for (auto& h : this->graph_state.hotkeys) {
@@ -256,10 +255,10 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
             }
 
             // Save currently active project to LUA file
-            if (ImGui::MenuItem("Save Project",
+            if (ImGui::MenuItem("Save Editor Project",
                     std::get<0>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT]).ToString().c_str(),
                     false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
-                this->open_popup_save = true;
+                this->graph_state.graph_save = true;
             }
             ImGui::EndMenu();
         }
@@ -653,7 +652,7 @@ bool megamol::gui::configurator::Configurator::configurator_state_to_json(nlohma
 }
 
 
-void megamol::gui::configurator::Configurator::showPopUps(void) {
+void megamol::gui::configurator::Configurator::drawPopUps(void) {
 
     bool confirmed, aborted;
 
@@ -673,20 +672,6 @@ void megamol::gui::configurator::Configurator::showPopUps(void) {
     this->utils.MinimalPopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
     this->open_popup_load = false;
-    // SAVE
-    popup_failed = false;
-    project_filename.clear();
-    graph_ptr.reset();
-    if (this->graph_manager.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
-        project_filename = graph_ptr->GetFilename();
-    }
-    if (this->file_utils.FileBrowserPopUp(
-            FileUtils::FileBrowserFlag::SAVE, "Save Project", this->open_popup_save, project_filename)) {
-        popup_failed = !this->graph_manager.SaveProjectFile(this->graph_state.graph_selected_uid, project_filename);
-    }
-    this->utils.MinimalPopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
-        confirmed, "Cancel", aborted);
-    this->open_popup_save = false;
 
     // Module Stock List Child Window ------------------------------------------
     GraphPtrType selected_graph_ptr;

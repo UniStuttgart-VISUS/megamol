@@ -123,7 +123,7 @@ void megamol::gui::configurator::CallSlotPresentation::Present(PresentPhase phas
                 if (ImGui::BeginPopupContextItem("invisible_button_context")) {
                     state.interact.button_active_uid = inout_callslot.uid;
 
-                    ImGui::TextUnformatted("Call Slot");
+                    ImGui::TextDisabled("Call Slot");
                     ImGui::Separator();
 
                     bool enable_interface_creation =

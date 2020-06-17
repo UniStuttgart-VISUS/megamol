@@ -42,9 +42,12 @@ public:
 
     void Present(GraphManager& inout_graph_manager, GraphStateType& state);
 
+    void SaveProjectFile(bool open_popup, GraphManager& inout_graph_manager, GraphStateType& state);
+
 private:
-    ImGuiID graph_delete_uid;
     GUIUtils utils;
+    megamol::gui::FileUtils file_utils;    
+    ImGuiID graph_delete_uid;
 };
 
 
@@ -98,12 +101,13 @@ private:
     ImVec2 project_read_confpos(const std::string& line);
     bool project_separate_name_and_namespace(const std::string& full_name, std::string& name_space, std::string& name);
 
-    bool parameters_gui_state_from_json_string(const GraphPtrType& graph_ptr, const std::string& in_json_string);
-    bool parameters_gui_state_to_json(const GraphPtrType& graph_ptr, nlohmann::json& out_json);
     bool replace_graph_state(
         const GraphPtrType& graph_ptr, const std::string& in_json_string, std::string& out_json_string);
     bool replace_parameter_gui_state(
         const GraphPtrType& graph_ptr, const std::string& in_json_string, std::string& out_json_string);
+
+    bool parameters_gui_state_from_json_string(const GraphPtrType& graph_ptr, const std::string& in_json_string);
+    bool parameters_gui_state_to_json(const GraphPtrType& graph_ptr, nlohmann::json& out_json);
 
     inline const std::string generate_unique_graph_name(void) {
         return ("Project_" + std::to_string(++graph_name_uid));

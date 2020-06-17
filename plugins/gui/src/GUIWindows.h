@@ -127,11 +127,13 @@ private:
         double last_instance_time; // Last instance time.
         bool open_popup_about;     // Flag for opening about pop-up
         bool open_popup_save;      // Flag for opening save pop-up
-        bool hotkeys_check_once;   // WORKAROUND: Check multiple hotkey assignments once.
+        std::string project_file;  // File name of the currently running project    
+        bool menu_visible;         // Flag indicating menu state    
+        bool hotkeys_check_once;   // WORKAROUND: Check multiple hotkey assignments once
     };
 
     /** The GUI hotkey array index mapping. */
-    enum GuiHotkeyIndex : size_t { EXIT_PROGRAM = 0, PARAMETER_SEARCH = 1, SAVE_PROJECT = 2, INDEX_COUNT = 3 };
+    enum GuiHotkeyIndex : size_t { EXIT_PROGRAM = 0, PARAMETER_SEARCH = 1, SAVE_PROJECT = 2, MENU = 3, INDEX_COUNT = 4 };
 
     // VARIABLES --------------------------------------------------------------
 
@@ -180,9 +182,6 @@ private:
     /** The full name of the parent module incorporating this GUI. */
     std::string parent_module_fullname;
 
-    /** Flag forcing opening of main window (e.g. when configurator is closed)*/
-    bool force_open_main_window;
-
     /** Numer of fonts reserved for the configurator graph canvas. */
     unsigned int graph_fonts_reserved;
 
@@ -204,23 +203,19 @@ private:
     /**
      * Validates GUI parameters.
      */
-    void validateParameter();
+    void validateParameters();
 
     // Window Draw Callbacks
-    void drawMainWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
-    void drawParametersCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
-    void drawFpsWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
-    void drawFontWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
-    void drawTFWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
-    void drawConfiguratorCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
+    void drawParametersCallback(WindowManager::WindowConfiguration& wc);
+    void drawFpsWindowCallback(WindowManager::WindowConfiguration& wc);
+    void drawFontWindowCallback(WindowManager::WindowConfiguration& wc);
+    void drawTFWindowCallback(WindowManager::WindowConfiguration& wc);
+    void drawConfiguratorCallback(WindowManager::WindowConfiguration& wc);
 
     /**
      * Draws the menu bar.
-     *
-     * @param wn   The label of the calling window.
-     * @param wc  The configuration of the calling window.
      */
-    void drawMenu(const std::string& wn, WindowManager::WindowConfiguration& wc);
+    void drawMenu(void);
 
     /**
      * Draw one parameter.
@@ -233,7 +228,7 @@ private:
     /**
      * Handle pop-ups.
      */
-    void showPopUps(WindowManager::WindowConfiguration& wc);
+    void drawPopUps(void);
 
     /**
      * Check if module's parameters should be visible.
@@ -256,10 +251,18 @@ private:
     void shutdown(void);
 
     /**
-     * Saves current state to parameter.
+     *  Adds new parameter to parameter presentation storage
+     *
+     * @param param_slot  The parameter slot.
+     * 
+     */
+    void parameters_add_param(megamol::core::param::ParamSlot& slot);
+    
+    /**
+     * Saves current state to json string parameter.
      */
     void save_state_to_parameter(void);
-
+        
     /**
      * Deserializes the parameters gui state.
      *
@@ -267,7 +270,7 @@ private:
      *
      * @return True on success, false otherwise.
      */
-    bool parameters_gui_state_from_json_string(const std::string& in_json_string);
+    bool gui_and_parameters_state_from_json_string(const std::string& in_json_string);
 
     /**
      * Serializes the parameters gui state.
@@ -276,15 +279,7 @@ private:
      *
      * @return True on success, false otherwise.
      */
-    bool parameters_gui_state_to_json(nlohmann::json& out_json);
-    
-    /**
-     *  Adds new parameter to parameter presentation storage
-     *
-     * @param param_slot  The parameter slot.
-     * 
-     */
-    void parameters_add_param(megamol::core::param::ParamSlot& slot);
+    bool gui_and_parameters_state_to_json(nlohmann::json& out_json);
 };
 
 } // namespace gui

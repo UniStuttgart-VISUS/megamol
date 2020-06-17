@@ -140,7 +140,7 @@ void megamol::gui::configurator::CallPresentation::Present(megamol::gui::Present
                         if (ImGui::BeginPopupContextItem()) {
                             state.interact.button_active_uid = inout_call.uid;
 
-                            ImGui::TextUnformatted("Call");
+                            ImGui::TextDisabled("Call");
                             ImGui::Separator();
 
                             if (ImGui::MenuItem(

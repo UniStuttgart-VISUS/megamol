@@ -172,7 +172,7 @@ void megamol::gui::configurator::ModulePresentation::Present(megamol::gui::Prese
                         bool singleselect = ((state.interact.modules_selected_uids.size() == 1) &&
                                              (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)));
 
-                        ImGui::TextUnformatted("Module");
+                        ImGui::TextDisabled("Module");
                         ImGui::Separator();
 
                         if (ImGui::MenuItem(

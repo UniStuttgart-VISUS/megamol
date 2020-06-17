@@ -65,6 +65,7 @@ bool megamol::gui::configurator::ParameterPresentation::Present(
                     // Visibility
                     if (ImGui::RadioButton("###visible", this->IsGUIVisible())) {
                         this->SetGUIVisible(!this->IsGUIVisible());
+                        retval = true;
                     }
                     this->utils.HoverToolTip("Visibility", ImGui::GetItemID(), 0.5f);
 
@@ -74,6 +75,7 @@ bool megamol::gui::configurator::ParameterPresentation::Present(
                     bool read_only = this->IsGUIReadOnly();
                     if (ImGui::Checkbox("###readonly", &read_only)) {
                         this->SetGUIReadOnly(read_only);
+                         retval = true;
                     }
                     this->utils.HoverToolTip("Read-Only", ImGui::GetItemID(), 0.5f);
 
@@ -86,6 +88,7 @@ bool megamol::gui::configurator::ParameterPresentation::Present(
                             if (this->IsPresentationCompatible(present_name_pair.first)) {
                                 if (ImGui::MenuItem(present_name_pair.second.c_str(), nullptr, (present_name_pair.first == this->GetGUIPresentation()))) {
                                     this->SetGUIPresentation(present_name_pair.first);
+                                    retval = true;
                                 }
                             }
                         }
@@ -166,7 +169,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
             // Set general proportional item width
             float widget_width = ImGui::GetContentRegionAvail().x * 0.6f;
             ImGui::PushItemWidth(widget_width);
-
+            // Set read only
             if (this->IsGUIReadOnly()) {
                 GUIUtils::ReadOnlyWigetStyle(true);
             }
@@ -407,9 +410,11 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
             default : break;
             }
             
+            // Reset read only
             if (this->IsGUIReadOnly()) {
                 GUIUtils::ReadOnlyWigetStyle(false);
             }
+            // Reset item width
             ImGui::PopItemWidth(); 
         }
         // GLOBAL ######################################################

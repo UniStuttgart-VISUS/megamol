@@ -24,7 +24,7 @@ public:
     /** Identifiers for the window draw callbacks. */
     enum DrawCallbacks {
         NONE = 0,
-        MAIN = 1,
+        MAIN_PARAMETERS = 1,
         PARAMETERS = 2,
         PERFORMANCE = 3,
         FONT = 4,
@@ -40,18 +40,17 @@ public:
 
     /** Struct holding a window configuration. */
     struct WindowConfiguration {
+        std::string win_name;           // name of the window
         bool win_show;                  // show/hide window
         bool win_store_config;          // flag indicates whether consiguration of window should be stored or not
         ImGuiWindowFlags win_flags;     // imgui window flags
-        DrawCallbacks win_callback;     // id of the callback drawing the window content
+        DrawCallbacks win_callback;     // ID of the callback drawing the window content
         core::view::KeyCode win_hotkey; // hotkey for opening/closing window
         ImVec2 win_position;            // position for reset on state loading (current position)
         ImVec2 win_size;                // size for reset on state loading (current size)
         bool win_soft_reset;            // soft reset of window position and size
         ImVec2 win_reset_size;          // minimum window size for soft reset
         bool win_reset;                 // flag for reset window position and size on state loading [NOT SAVED]
-        // ---------- Main window configuration ----------
-        std::string main_project_file; // project file name
         // ---------- Parameter specific configuration ----------
         bool param_show_hotkeys;                     // flag to toggle showing only parameter hotkeys
         std::vector<std::string> param_modules_list; // modules to show in a parameter window (show all if empty)
@@ -90,7 +89,6 @@ public:
             , win_reset_size(ImVec2(0.0f, 0.0f))
             , win_reset(true)
             // Window specific configurations
-            , main_project_file("")
             , param_show_hotkeys(false)
             , param_modules_list()
             , param_module_filter(FilterModes::ALL)
@@ -114,7 +112,7 @@ public:
     };
 
     /** Type for callback function. */
-    typedef std::function<void(const std::string& window_name, WindowConfiguration& window_config)> GuiCallbackFunc;
+    typedef std::function<void(WindowConfiguration& window_config)> GuiCallbackFunc;
 
     // --------------------------------------------------------------------
     // WINDOWs
@@ -151,10 +149,9 @@ public:
      * Processes window configuration flag: soft_reset_size
      * Should be called between ImGui::Begin() and ImGui::End().
      *
-     * @param window_name    The window name.
      * @param window_config  The window configuration.
      */
-    void SoftResetWindowSizePos(const std::string& window_name, WindowConfiguration& window_config);
+    void SoftResetWindowSizePos(WindowConfiguration& window_config);
 
     /**
      * Reset position and size after new state has been loaded.
@@ -162,10 +159,9 @@ public:
      * Processes window configuration flags: state_position and state_size
      * Should be called between ImGui::Begin() and ImGui::End().
      *
-     * @param window_name    The window name.
      * @param window_config  The window configuration.
      */
-    void ResetWindowOnStateLoad(const std::string& window_name, WindowConfiguration& window_config);
+    void ResetWindowPosSize(WindowConfiguration& window_config);
 
     // --------------------------------------------------------------------
     // CONFIGURATIONs
@@ -176,16 +172,16 @@ public:
      * @param window_name    The window name.
      * @param window_config  The window configuration.
      */
-    bool AddWindowConfiguration(const std::string& window_name, WindowConfiguration& window_config);
+    bool AddWindowConfiguration(WindowConfiguration& window_config);
 
     /**
      * Enumerate windows and call given function.
      *
      * @param cb  The function to call for enumerated windows.
      */
-    inline void EnumWindows(std::function<void(const std::string&, WindowConfiguration&)> cb) {
+    inline void EnumWindows(std::function<void(WindowConfiguration&)> cb) {
         for (auto& wc : this->windows) {
-            cb(wc.first, wc.second);
+            cb(wc);
         }
     }
 
@@ -228,7 +224,10 @@ private:
      * @return True if there is a window configuration for the given name, false otherwise.
      */
     inline bool windowConfigurationExists(const std::string& window_name) const {
-        return (this->windows.find(window_name) != this->windows.end());
+        for (auto& wc : this->windows) {
+            if (wc.win_name == window_name) return true;
+        }
+        return false;
     }
 
     // VARIABLES ------------------------------------------------------
@@ -240,7 +239,7 @@ private:
     std::map<DrawCallbacks, GuiCallbackFunc> callbacks;
 
     /** The list of the window names and their configurations. */
-    std::map<std::string, WindowConfiguration> windows;
+    std::vector<WindowConfiguration> windows;
 };
 
 } // namespace gui

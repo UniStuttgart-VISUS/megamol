@@ -13,7 +13,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-void WindowManager::SoftResetWindowSizePos(const std::string& window_name, WindowConfiguration& window_config) {
+void WindowManager::SoftResetWindowSizePos(WindowConfiguration& window_config) {
     assert(ImGui::GetCurrentContext() != nullptr);
 
     ImGuiIO& io = ImGui::GetIO();
@@ -52,47 +52,52 @@ void WindowManager::SoftResetWindowSizePos(const std::string& window_name, Windo
         win_pos.y = io.DisplaySize.y - (win_size.y); //+ style.DisplayWindowPadding.y);
     }
 
-    ImGui::SetWindowSize(window_name.c_str(), ImVec2(width, height), ImGuiCond_Always);
-    ImGui::SetWindowPos(window_name.c_str(), win_pos, ImGuiCond_Always);
+    ImGui::SetWindowSize(window_config.win_name.c_str(), ImVec2(width, height), ImGuiCond_Always);
+    ImGui::SetWindowPos(window_config.win_name.c_str(), win_pos, ImGuiCond_Always);
 }
 
 
-void WindowManager::ResetWindowOnStateLoad(const std::string& window_name, WindowConfiguration& window_config) {
+void WindowManager::ResetWindowPosSize(WindowConfiguration& window_config) {
     assert(ImGui::GetCurrentContext() != nullptr);
 
     ImVec2 pos = window_config.win_position;
     ImVec2 size = window_config.win_size;
 
-    ImGui::SetWindowSize(window_name.c_str(), size, ImGuiCond_Always);
-    ImGui::SetWindowPos(window_name.c_str(), pos, ImGuiCond_Always);
+    ImGui::SetWindowSize(window_config.win_name.c_str(), size, ImGuiCond_Always);
+    ImGui::SetWindowPos(window_config.win_name.c_str(), pos, ImGuiCond_Always);
 }
 
 
-bool WindowManager::AddWindowConfiguration(const std::string& window_name, WindowConfiguration& window_config) {
-    if (window_name.empty()) {
+bool WindowManager::AddWindowConfiguration(WindowConfiguration& window_config) {
+    if (window_config.win_name.empty()) {
         vislib::sys::Log::DefaultLog.WriteWarn(
             "No valid window name given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    if (this->windowConfigurationExists(window_name)) {
+    if (this->windowConfigurationExists(window_config.win_name)) {
         vislib::sys::Log::DefaultLog.WriteWarn(
             "Found already existing window with name '%s'. Window names must be unique. [%s, %s, line %d]\n",
-            window_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            window_config.win_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    this->windows.emplace(window_name, window_config);
+    this->windows.emplace_back(window_config);
     return true;
 }
 
 
 bool WindowManager::DeleteWindowConfiguration(const std::string& window_name) {
     if (!this->windowConfigurationExists(window_name)) {
-        vislib::sys::Log::DefaultLog.WriteWarn("Found no existing window with name '%s'. [%s, %s, line %d]\n",
+        vislib::sys::Log::DefaultLog.WriteWarn("Could not find window with name '%s'. [%s, %s, line %d]\n",
             window_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    this->windows.erase(window_name);
-    return true;
+    for (auto iter = this->windows.begin(); iter != this->windows.end(); iter++) {
+        if (iter->win_name == window_name) {
+            this->windows.erase(iter);
+            return true;
+        }
+    }
+    return false;
 }
 
 
@@ -105,7 +110,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
 
         bool found = false;
         bool valid = true;
-        std::map<std::string, WindowConfiguration> tmp_windows;
+        std::vector<WindowConfiguration> tmp_windows;
 
         nlohmann::json json;
         json = nlohmann::json::parse(in_json_string);
@@ -120,12 +125,11 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
             if (header_item.key() == (GUI_JSON_TAG_WINDOW_CONFIGURATIONS)) {
                 found = true;
                 for (auto& config_item : header_item.value().items()) {
-                    std::string window_name = config_item.key();
-
                     WindowConfiguration tmp_config;
+                    tmp_config.win_name = config_item.key();
+                    tmp_config.win_reset = true;                    
                     tmp_config.buf_font_reset = false;
                     tmp_config.buf_tfe_reset = false;
-                    tmp_config.win_reset = true;
 
                     // Getting all configuration values for current window.
                     auto config_values = config_item.value();
@@ -260,18 +264,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                             "JSON state: Failed to read 'win_reset_size' as array of size two. [%s, %s, line %d]\n",
                             __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
-                    }
-                    // MainConfig --------------------------------------------
-                    // main_project_file (supports UTF-8)
-                    if (config_values.at("main_project_file").is_string()) {
-                        config_values.at("main_project_file").get_to(tmp_config.main_project_file);
-                        this->utils.Utf8Decode(tmp_config.main_project_file);
-                    } else {
-                        vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'main_project_file' as string. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
+                    }                    
                     // ParamConfig --------------------------------------------
                     // show_hotkeys
                     if (config_values.at("param_show_hotkeys").is_boolean()) {
@@ -415,7 +408,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                     }
 
                     // add current window config to tmp window config list
-                    tmp_windows.emplace(window_name, tmp_config);
+                    tmp_windows.emplace_back(tmp_config);
                 }
             }
         }
@@ -444,13 +437,13 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
             bool found_existing = false;
             for (auto& win : this->windows) {
                 // Check for same name
-                if (win.first == new_win.first) {
-                    win.second = new_win.second;
+                if (win.win_name == new_win.win_name) {
+                    win = new_win;
                     found_existing = true;
                 }
             }
             if (!found_existing) {
-                this->windows.emplace(new_win);
+                this->windows.emplace_back(new_win);
             }
         }
 
@@ -487,9 +480,9 @@ bool WindowManager::StateToJSON(nlohmann::json& out_json) {
         // out_json.clear();
 
         for (auto& window : this->windows) {
-            if (window.second.win_store_config) {
-                std::string window_name = window.first;
-                WindowConfiguration window_config = window.second;
+            if (window.win_store_config) {
+                std::string window_name = window.win_name;
+                WindowConfiguration window_config = window;
 
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_show"] = window_config.win_show;
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_flags"] =
@@ -506,10 +499,6 @@ bool WindowManager::StateToJSON(nlohmann::json& out_json) {
                     window_config.win_soft_reset;
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_reset_size"] = {
                     window_config.win_reset_size.x, window_config.win_reset_size.y};
-
-                this->utils.Utf8Encode(window_config.main_project_file);
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["main_project_file"] =
-                    window_config.main_project_file;
 
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["param_show_hotkeys"] =
                     window_config.param_show_hotkeys;

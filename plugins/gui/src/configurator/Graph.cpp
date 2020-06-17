@@ -166,9 +166,14 @@ void megamol::gui::configurator::GraphPresentation::Present(
         if (ImGui::BeginTabItem(graph_label.c_str(), &open, tab_flags)) {
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
-                ImGui::TextUnformatted("Project");
+                
+                ImGui::TextDisabled("Project");
                 ImGui::Separator();
 
+                if (ImGui::MenuItem("Save")) {
+                    state.graph_save = true;
+                }
+                
                 if (ImGui::MenuItem("Rename")) {
                     popup_rename = true;
                 }

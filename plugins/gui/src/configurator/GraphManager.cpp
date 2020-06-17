@@ -17,7 +17,7 @@ using namespace megamol::gui::configurator;
 // GRAPH MANAGER PRESENTATION ####################################################
 
 megamol::gui::configurator::GraphManagerPresentation::GraphManagerPresentation(void)
-    : graph_delete_uid(GUI_INVALID_ID), utils() {}
+    : graph_delete_uid(GUI_INVALID_ID), utils(), file_utils() {}
 
 
 megamol::gui::configurator::GraphManagerPresentation::~GraphManagerPresentation(void) {}
@@ -47,7 +47,7 @@ void megamol::gui::configurator::GraphManagerPresentation::Present(
 
             // Draw graph
             graph->GUI_Present(state);
-
+            
             // Do not delete graph while looping through graphs list
             if (state.graph_delete) {
                 this->graph_delete_uid = state.graph_selected_uid;
@@ -69,7 +69,11 @@ void megamol::gui::configurator::GraphManagerPresentation::Present(
         }
         ImGui::EndTabBar();
 
-        // Delete marked graph when tab is closed and unsaved changes should be discarded.
+        // Save selected graph
+        this->SaveProjectFile(state.graph_save, inout_graph_manager, state);
+        state.graph_save = false;
+
+        // Delete selected graph when tab is closed and unsaved changes should be discarded.
         bool confirmed = false;
         bool aborted = false;
         bool popup_open = this->utils.MinimalPopUp(
@@ -96,6 +100,23 @@ void megamol::gui::configurator::GraphManagerPresentation::Present(
     }
 }
 
+
+void megamol::gui::configurator::GraphManagerPresentation::SaveProjectFile(bool open_popup, GraphManager& inout_graph_manager, GraphStateType& state) {
+
+    bool confirmed, aborted;
+    bool popup_failed = false;
+    std::string project_filename;
+    GraphPtrType graph_ptr;
+    if (inout_graph_manager.GetGraph(state.graph_selected_uid, graph_ptr)) {
+        project_filename = graph_ptr->GetFilename();
+    }
+    if (this->file_utils.FileBrowserPopUp(
+            FileUtils::FileBrowserFlag::SAVE, "Save Editor Project", open_popup, project_filename)) {
+        popup_failed = !inout_graph_manager.SaveProjectFile(state.graph_selected_uid, project_filename);
+    }
+    this->utils.MinimalPopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
+        confirmed, "Cancel", aborted);
+}
 
 // GRAPH MANAGER ##############################################################
 

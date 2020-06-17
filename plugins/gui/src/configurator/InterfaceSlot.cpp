@@ -87,7 +87,7 @@ void megamol::gui::configurator::InterfaceSlotPresentation::Present(PresentPhase
             if (ImGui::BeginPopupContextItem("invisible_button_context")) {
                 state.interact.button_active_uid = inout_interfaceslot.uid;
 
-                ImGui::TextUnformatted("Interface Slot");
+                ImGui::TextDisabled("Interface Slot");
                 ImGui::Separator();
 
                 if (ImGui::MenuItem("Delete",

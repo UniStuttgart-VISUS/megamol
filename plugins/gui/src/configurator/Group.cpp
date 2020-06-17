@@ -100,7 +100,7 @@ void megamol::gui::configurator::GroupPresentation::Present(
 
                 state.interact.button_active_uid = inout_group.uid;
 
-                ImGui::TextUnformatted("Group");
+                ImGui::TextDisabled("Group");
                 ImGui::Separator();
 
                 std::string view = "Collapse";

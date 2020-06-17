@@ -148,7 +148,6 @@ public:
 
     inline void GUI_Present(GraphStateType& state) { this->present.Present(*this, state); }
 
-
     void GUI_ResetStatePointers(void) { this->present.ResetStatePointers(); }
 
     bool GUI_StateFromJsonString(const std::string& json_string) {
