@@ -48,7 +48,7 @@ public:
      * @return false
      */
     static bool SupportQuickstart(void) { return false; }
-    
+
 protected:
     ///**
     // * Answers whether or not this job is still running.
@@ -56,14 +56,14 @@ protected:
     // * @return 'true' if this job is still running, 'false' if it has
     // *         finished.
     // */
-    //bool IsRunning(void) const override;
+    // bool IsRunning(void) const override;
 
     ///**
     // * Starts the job thread.
     // *
     // * @return true if the job has been successfully started.
     // */
-    //bool Start(void) override;
+    // bool Start(void) override;
 
     ///**
     // * Terminates the job thread.
@@ -71,7 +71,7 @@ protected:
     // * @return true to acknowledge that the job will finish as soon
     // *         as possible, false if termination is not possible.
     // */
-    //bool Terminate(void) override;
+    // bool Terminate(void) override;
 
     bool create() override;
 
@@ -97,7 +97,7 @@ private:
     core::param::ParamSlot address_slot_;
 
     core::param::ParamSlot start_server_slot_;
-    
+
     core::param::ParamSlot lua_command_slot_;
 
     core::param::ParamSlot deploy_project_slot_;

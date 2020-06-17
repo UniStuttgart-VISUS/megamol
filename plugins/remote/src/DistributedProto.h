@@ -8,7 +8,7 @@ enum MessageType : unsigned char { NULL_MSG = 0u, PRJ_FILE_MSG, CAM_UPD_MSG, PAR
 
 using Message_t = std::vector<char>;
 
-struct Message {    
+struct Message {
     MessageType type;
     uint64_t size;
     uint64_t id;
@@ -17,7 +17,7 @@ struct Message {
 
 constexpr size_t MessageTypeSize = sizeof(MessageType);
 constexpr size_t MessageSizeSize = sizeof(uint64_t);
-constexpr size_t MessageIDSize   = sizeof(uint64_t);
+constexpr size_t MessageIDSize = sizeof(uint64_t);
 constexpr size_t MessageHeaderSize = MessageIDSize + MessageTypeSize + MessageSizeSize;
 
 } // end namespace remote

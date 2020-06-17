@@ -44,7 +44,7 @@ megamol::remote::RendernodeView::RendernodeView()
     this->MakeSlotAvailable(&BCastRankSlot_);
 
     port_slot_ << new core::param::IntParam(62562);
-    //port_slot_.SetUpdateCallback(&RendernodeView::onAddressChanged);
+    // port_slot_.SetUpdateCallback(&RendernodeView::onAddressChanged);
     this->MakeSlotAvailable(&port_slot_);
 
     data_has_changed_.store(false);
@@ -321,13 +321,13 @@ void megamol::remote::RendernodeView::recv_loop() {
 
             data_has_changed_.store(true);
 
-            //std::this_thread::sleep_for(1000ms / 60);
+            // std::this_thread::sleep_for(1000ms / 60);
         }
     } catch (...) {
-        //vislib::sys::Log::DefaultLog.WriteError("RendernodeView: Error during communication.");
+        // vislib::sys::Log::DefaultLog.WriteError("RendernodeView: Error during communication.");
     }
 
-    //vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Exiting recv_loop.");
+    // vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Exiting recv_loop.");
 }
 
 

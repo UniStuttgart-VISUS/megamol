@@ -3,17 +3,17 @@
 #include <atomic>
 #include <memory>
 #include <mutex>
+#include <string>
 #include <thread>
 #include <vector>
-#include <string>
 
 #include "mmcore/CallerSlot.h"
+#include "mmcore/LuaState.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractTileView.h"
-#include "mmcore/LuaState.h"
 
 #ifdef WITH_MPI
-#include "mpi.h"
+#    include "mpi.h"
 #endif
 
 #include "DistributedProto.h"
@@ -71,7 +71,7 @@ public:
 
     void Render(const mmcRenderViewContext& context) override;
 
-	bool OnRenderView(core::Call& call) override;
+    bool OnRenderView(core::Call& call) override;
 
 protected:
     bool create(void) override;

@@ -56,13 +56,13 @@ megamol::remote::HeadnodeServer::HeadnodeServer()
 megamol::remote::HeadnodeServer::~HeadnodeServer() { this->Release(); }
 
 
-//bool megamol::remote::HeadnodeServer::IsRunning(void) const { return is_job_running_; }
+// bool megamol::remote::HeadnodeServer::IsRunning(void) const { return is_job_running_; }
 //
 //
-//bool megamol::remote::HeadnodeServer::Start() { return true; }
+// bool megamol::remote::HeadnodeServer::Start() { return true; }
 //
 //
-//bool megamol::remote::HeadnodeServer::Terminate() {
+// bool megamol::remote::HeadnodeServer::Terminate() {
 //    shutdown_threads();
 //    return true;
 //}
@@ -75,7 +75,7 @@ bool megamol::remote::HeadnodeServer::create() {
 
 
 void megamol::remote::HeadnodeServer::release() {
-    //this->is_job_running_ = false;
+    // this->is_job_running_ = false;
     shutdown_threads();
     if (this->GetCoreInstance() != nullptr) {
         this->GetCoreInstance()->UnregisterParamUpdateListener(this);
@@ -93,10 +93,10 @@ void megamol::remote::HeadnodeServer::ParamUpdated(core::param::ParamSlot& slot)
     std::string const value = std::string(slot.Param<core::param::AbstractParam>()->ValueString());
     std::string mg = "mmSetParamValue(\"" + name + "\", \"" + value + "\")";
 
-    //auto fid = this->GetCoreInstance()->GetFrameID();
+    // auto fid = this->GetCoreInstance()->GetFrameID();
     ////vislib::sys::Log::DefaultLog.WriteInfo("Requesting %s = %s in Frame %d", name, value, fid);
-    //printf("Requesting %s = %s in Frame %d\n", name.c_str(), value.c_str(), fid);
-    //if (name == std::string("::Project_1::View3D_21::cam::orientation")) {
+    // printf("Requesting %s = %s in Frame %d\n", name.c_str(), value.c_str(), fid);
+    // if (name == std::string("::Project_1::View3D_21::cam::orientation")) {
     //    auto const rel_val = slot.Param<core::param::Vector4fParam>()->Value();
     //    printf("Requesting with %.17f; %.17f; %.17f; %.17f\n", rel_val.GetX(),
     //           rel_val.GetY(), rel_val.GetZ(), rel_val.GetW());
@@ -179,10 +179,10 @@ bool megamol::remote::HeadnodeServer::shutdown_threads() {
     run_threads_ = false;
     if (is_job_running_) {
         while (!comm_thread_.joinable()) {
-            //vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Trying to join thread.");
+            // vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Trying to join thread.");
             std::this_thread::sleep_for(1s);
         }
-        //vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Joining thread.");
+        // vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Joining thread.");
         comm_thread_.join();
         is_job_running_ = false;
     }
@@ -203,22 +203,22 @@ void megamol::remote::HeadnodeServer::do_communication() {
 
     // retrieve modulgraph
     if (this->deploy_project_slot_.Param<core::param::BoolParam>()->Value()) {
-    if (this->GetCoreInstance()->IsLuaProject()) {
-        auto const lua = std::string(this->GetCoreInstance()->GetMergedLuaProject());
-        std::vector<char> msg(MessageHeaderSize + lua.size());
-        msg[0] = MessageType::PRJ_FILE_MSG;
-        auto size = lua.size();
-        std::copy(reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + MessageSizeSize,
-            msg.begin() + MessageTypeSize);
-        ++msg_id_;
-        std::copy(reinterpret_cast<char*>(&msg_id_), reinterpret_cast<char*>(&msg_id_) + MessageIDSize,
-            msg.begin() + MessageTypeSize + MessageSizeSize);
-        std::copy(lua.begin(), lua.end(), msg.begin() + MessageHeaderSize);
-        {
-            std::lock_guard<std::mutex> lock(send_buffer_guard_);
-            send_buffer_.insert(send_buffer_.end(), msg.begin(), msg.end());
+        if (this->GetCoreInstance()->IsLuaProject()) {
+            auto const lua = std::string(this->GetCoreInstance()->GetMergedLuaProject());
+            std::vector<char> msg(MessageHeaderSize + lua.size());
+            msg[0] = MessageType::PRJ_FILE_MSG;
+            auto size = lua.size();
+            std::copy(reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + MessageSizeSize,
+                msg.begin() + MessageTypeSize);
+            ++msg_id_;
+            std::copy(reinterpret_cast<char*>(&msg_id_), reinterpret_cast<char*>(&msg_id_) + MessageIDSize,
+                msg.begin() + MessageTypeSize + MessageSizeSize);
+            std::copy(lua.begin(), lua.end(), msg.begin() + MessageHeaderSize);
+            {
+                std::lock_guard<std::mutex> lock(send_buffer_guard_);
+                send_buffer_.insert(send_buffer_.end(), msg.begin(), msg.end());
+            }
         }
-    }
     }
     try {
         while (run_threads_) {
@@ -242,7 +242,7 @@ void megamol::remote::HeadnodeServer::do_communication() {
                 }*/
 
                 if (!send_buffer_.empty()) {
-            // vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Sending parameter update.\n");
+                    // vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Sending parameter update.\n");
                     comm_fabric_.Send(send_buffer_, send_type::SEND);
                     send_buffer_.clear();
                     buffer_has_changed_.store(false);
@@ -257,12 +257,12 @@ void megamol::remote::HeadnodeServer::do_communication() {
                 if (!run_threads_) break;
                 comm_fabric_.Send(cam_msg, send_type::SEND);
             }*/
-            //std::this_thread::sleep_for(1000ms / 120);
+            // std::this_thread::sleep_for(1000ms / 120);
         }
     } catch (...) {
-        //vislib::sys::Log::DefaultLog.WriteError("HeadnodeServer: Error during communication;");
+        // vislib::sys::Log::DefaultLog.WriteError("HeadnodeServer: Error during communication;");
     }
-    //vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Exiting sender loop.");
+    // vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Exiting sender loop.");
 }
 
 
