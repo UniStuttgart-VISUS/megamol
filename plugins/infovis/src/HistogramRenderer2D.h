@@ -124,6 +124,7 @@ private:
     float mouseY;
 
     bool needSelectionUpdate;
+    int selectionMode;
     int selectedCol;
     int selectedBin;
 

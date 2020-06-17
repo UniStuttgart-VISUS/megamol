@@ -30,6 +30,7 @@ HistogramRenderer2D::HistogramRenderer2D()
     , mouseX(0.0f)
     , mouseY(0.0f)
     , needSelectionUpdate(false)
+    , selectionMode(0)
     , selectedCol(-1)
     , selectedBin(-1) {
     this->tableDataCallerSlot.SetCompatibleCall<table::TableDataCallDescription>();
@@ -133,6 +134,7 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D& call) {
             glUniform1ui(selectionProgram.ParameterLocation("binCount"), this->bins);
             glUniform1ui(selectionProgram.ParameterLocation("colCount"), this->colCount);
             glUniform1ui(selectionProgram.ParameterLocation("rowCount"), this->rowCount);
+            glUniform1i(selectionProgram.ParameterLocation("selectionMode"), selectionMode);
             glUniform1i(selectionProgram.ParameterLocation("selectedCol"), selectedCol);
             glUniform1i(selectionProgram.ParameterLocation("selectedBin"), selectedBin);
 
@@ -327,12 +329,22 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
 
 bool HistogramRenderer2D::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
-    // This goes to the view.
-    if (mods.test(core::view::Modifier::CTRL)) {
+    // Ctrl goes to the view and ignore everything than press event.
+    if (mods.test(core::view::Modifier::CTRL) || action != core::view::MouseButtonAction::PRESS) {
         return false;
     }
 
-    if (button != core::view::MouseButton::BUTTON_LEFT || action != core::view::MouseButtonAction::PRESS) {
+    bool left = button == core::view::MouseButton::BUTTON_LEFT;
+    bool right = button == core::view::MouseButton::BUTTON_RIGHT;
+    bool shift = mods.test(core::view::Modifier::SHIFT);
+
+    if (left && !shift) {
+        selectionMode = 0;
+    } else if (left && shift) {
+        selectionMode = 1;
+    } else if (right && shift) {
+        selectionMode = 2;
+    } else {
         return false;
     }
 
