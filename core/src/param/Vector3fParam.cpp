@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "mmcore/param/Vector3fParam.h"
 #include <cfloat>
+#include <sstream>
 #include "vislib/assert.h"
 #include "vislib/StringTokeniser.h"
 
@@ -134,9 +135,10 @@ void param::Vector3fParam::SetValue(const vislib::math::Vector<float,3> &v,
  * param::Vector3fParam::ValueString
  */
 vislib::TString param::Vector3fParam::ValueString(void) const {
-    vislib::TString str;
-    str.Format(_T("%f;%f;%f"), this->val[0], this->val[1], this->val[2]);
-    return str;
+    std::stringstream stream;
+    stream.precision(std::numeric_limits<float>::max_digits10);
+    stream << this->val[0] << ";" << this->val[1] << ";" <<  this->val[2];
+    return stream.str().c_str();
 }
 
 
