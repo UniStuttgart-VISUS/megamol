@@ -79,6 +79,8 @@ protected:
 
     void ParamUpdated(core::param::ParamSlot& slot) override;
 
+    void BatchParamUpdated(param_updates_vec_t const& updates) override;
+
 private:
     bool onStartServer(core::param::ParamSlot& param);
 

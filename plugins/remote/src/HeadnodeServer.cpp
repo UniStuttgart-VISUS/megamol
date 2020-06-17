@@ -84,6 +84,8 @@ void megamol::remote::HeadnodeServer::release() {
 
 
 void megamol::remote::HeadnodeServer::ParamUpdated(core::param::ParamSlot& slot) {
+    return;
+#if 0
     // if (!running_) return;
     if (!run_threads_) return;
 
@@ -115,6 +117,34 @@ void megamol::remote::HeadnodeServer::ParamUpdated(core::param::ParamSlot& slot)
 
     std::lock_guard<std::mutex> guard(send_buffer_guard_);
     send_buffer_.insert(send_buffer_.end(), msg.begin(), msg.end());
+    buffer_has_changed_.store(true);
+#endif
+}
+
+
+void megamol::remote::HeadnodeServer::BatchParamUpdated(param_updates_vec_t const& updates) {
+    if (!run_threads_ || updates.empty()) return;
+
+
+    std::lock_guard<std::mutex> guard(send_buffer_guard_);
+    for (auto const& el : updates) {
+        std::vector<char> msg;
+
+        std::string mg = "mmSetParamValue(\"" + el.first + "\", \"" + el.second + "\")";
+
+        msg.resize(MessageHeaderSize + mg.size());
+        msg[0] = static_cast<char>(MessageType::PARAM_UPD_MSG);
+        auto size = mg.size();
+        std::copy(reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + MessageSizeSize,
+            msg.begin() + MessageTypeSize);
+        ++msg_id_;
+        std::copy(reinterpret_cast<char*>(&msg_id_), reinterpret_cast<char*>(&msg_id_) + MessageIDSize,
+            msg.begin() + MessageTypeSize + MessageSizeSize);
+        std::copy(mg.begin(), mg.end(), msg.begin() + MessageHeaderSize);
+
+
+        send_buffer_.insert(send_buffer_.end(), msg.begin(), msg.end());
+    }
     buffer_has_changed_.store(true);
 }
 
