@@ -8,7 +8,7 @@
 #ifndef MEGAMOLCORE_PARAMUPDATELISTENER_H_INCLUDED
 #define MEGAMOLCORE_PARAMUPDATELISTENER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <string>
@@ -22,35 +22,33 @@ namespace core {
 namespace param {
 
 
+/**
+ * Abstract base class for all parameter objects
+ */
+class MEGAMOLCORE_API ParamUpdateListener {
+public:
+    using param_updates_vec_t = std::vector<std::pair<std::string, std::string>>;
+
+    /** Ctor */
+    ParamUpdateListener(void);
+
+    /** Dtor. */
+    virtual ~ParamUpdateListener(void);
+
     /**
-     * Abstract base class for all parameter objects
+     * Callback called when a parameter is updated
+     *
+     * @param slot The parameter updated
      */
-    class MEGAMOLCORE_API ParamUpdateListener {
-    public:
+    virtual void ParamUpdated(ParamSlot& slot) = 0;
 
-        using param_updates_vec_t = std::vector<std::pair<std::string, std::string>>;
-
-        /** Ctor */
-        ParamUpdateListener(void);
-
-        /** Dtor. */
-        virtual ~ParamUpdateListener(void);
-
-        /**
-         * Callback called when a parameter is updated
-         *
-         * @param slot The parameter updated
-         */
-        virtual void ParamUpdated(ParamSlot& slot) = 0;
-
-        /**
-         * Callback called to communicate a batch of parameter updates
-         *
-         * @param updates Vector containing all parameter updates to communicate
-         */
-        virtual void BatchParamUpdated(param_updates_vec_t const& updates);
-
-    };
+    /**
+     * Callback called to communicate a batch of parameter updates
+     *
+     * @param updates Vector containing all parameter updates to communicate
+     */
+    virtual void BatchParamUpdated(param_updates_vec_t const& updates);
+};
 
 
 } /* end namespace param */
