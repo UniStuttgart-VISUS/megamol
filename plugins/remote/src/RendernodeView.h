@@ -83,8 +83,6 @@ private:
 
     bool shutdown_threads();
 
-    // Message_t prepare_bcast_msg();
-
     Message_t prepare_null_msg() const {
         Message_t msg(MessageHeaderSize);
         auto const type = MessageType::NULL_MSG;
@@ -141,11 +139,6 @@ private:
         return true;
     }
 
-    /*bool onAddressChanged(core::param::ParamSlot& p) {
-        if (isBCastMaster()) init_threads();
-        return true;
-    }*/
-
     bool isBCastMaster() const { return rank_ == bcast_rank_; }
 
     bool initMPI();
@@ -153,8 +146,6 @@ private:
     core::CallerSlot request_mpi_slot_;
 
     core::CallerSlot sync_data_slot_;
-
-    // core::param::ParamSlot isBCastMasterSlot_;
 
     core::param::ParamSlot BCastRankSlot_;
 
@@ -173,8 +164,6 @@ private:
     std::atomic<bool> data_has_changed_;
 
     bool run_threads;
-
-    // core::view::CallRenderView* crv_ = nullptr;
 
 #ifdef WITH_MPI
     MPI_Comm comm_;

@@ -44,7 +44,6 @@ megamol::remote::RendernodeView::RendernodeView()
     this->MakeSlotAvailable(&BCastRankSlot_);
 
     port_slot_ << new core::param::IntParam(62562);
-    // port_slot_.SetUpdateCallback(&RendernodeView::onAddressChanged);
     this->MakeSlotAvailable(&port_slot_);
 
     data_has_changed_.store(false);
@@ -285,27 +284,13 @@ void megamol::remote::RendernodeView::recv_loop() {
     try {
         while (run_threads) {
             Message_t buf = {'r', 'e', 'q'};
-            auto start = std::chrono::high_resolution_clock::now();
-            /*if (!recv_comm_.Send(buf, send_type::SEND)) {
-#ifdef RV_DEBUG_OUTPUT
-                vislib::sys::Log::DefaultLog.WriteWarn("RendernodeView: Failed to send request.");
-#endif
-            }*/
-            // vislib::sys::Log::DefaultLog.WriteInfo(
-            //     "RendernodeView: MSG Send took %d ms", (std::chrono::duration_cast<std::chrono::milliseconds>(
-            //                                                 std::chrono::high_resolution_clock::now() - start))
-            //                                                .count());
 
-            start = std::chrono::high_resolution_clock::now();
             while (!recv_comm_.Recv(buf, recv_type::RECV) && run_threads) {
 #ifdef RV_DEBUG_OUTPUT
                 vislib::sys::Log::DefaultLog.WriteWarn("RendernodeView: Failed to recv message.");
 #endif
             }
-            // vislib::sys::Log::DefaultLog.WriteInfo(
-            //     "RendernodeView: MSG Recv took %d ms", (std::chrono::duration_cast<std::chrono::milliseconds>(
-            //                                                 std::chrono::high_resolution_clock::now() - start))
-            //                                                .count());
+
             if (!run_threads) break;
 
 #ifdef RV_DEBUG_OUTPUT
