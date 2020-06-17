@@ -366,6 +366,8 @@ protected:
     param::ParamSlot cameraEyeParam;
     param::ParamSlot cameraGateScalingParam;
     param::ParamSlot cameraFilmGateParam;
+    param::ParamSlot cameraResolutionXParam;
+    param::ParamSlot cameraResolutionYParam;
     param::ParamSlot cameraCenterOffsetParam;
     param::ParamSlot cameraHalfApertureRadiansParam;
     param::ParamSlot cameraHalfDisparityParam;
