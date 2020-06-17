@@ -1,7 +1,7 @@
 /*
  * View3D_2.h
  *
- * Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
+ * Copyright (C) 2018, 2020 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 

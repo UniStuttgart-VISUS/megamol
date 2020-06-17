@@ -1,7 +1,7 @@
 /*
  * View3D_2.cpp
  *
- * Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
+ * Copyright (C) 2018, 2020 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
@@ -13,6 +13,7 @@
 #endif /* _WIN32 */
 #include <chrono>
 #include <fstream>
+#include <glm/gtx/string_cast.hpp>
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/param/BoolParam.h"
@@ -43,7 +44,6 @@
 #include "vislib/sys/KeyCode.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/sysfunctions.h"
-#include <glm/gtx/string_cast.hpp>
 
 using namespace megamol::core;
 using namespace megamol::core::view;
@@ -370,7 +370,8 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
 
     // clear viewport
     ///*if (this->overrideViewport != nullptr) {
-    //    if ((this->overrideViewport[0] >= 0) && (this->overrideViewport[1] >= 0) && (this->overrideViewport[2] >= 0) &&
+    //    if ((this->overrideViewport[0] >= 0) && (this->overrideViewport[1] >= 0) && (this->overrideViewport[2] >= 0)
+    //    &&
     //        (this->overrideViewport[3] >= 0)) {
     //        currentViewport = glm::ivec4(this->overrideViewport[0], this->overrideViewport[1],
     //            this->overrideViewport[2], this->overrideViewport[3]);
@@ -581,12 +582,12 @@ void View3D_2::Resize(unsigned int width, unsigned int height) {
  */
 bool View3D_2::OnRenderView(Call& call) {
     std::array<float, 3> overBC;
-    //std::array<int, 4> overVP = {0, 0, 0, 0};
+    // std::array<int, 4> overVP = {0, 0, 0, 0};
     view::CallRenderView* crv = dynamic_cast<view::CallRenderView*>(&call);
     if (crv == nullptr) return false;
 
-    //this->overrideViewport = overVP.data();
-    //if (crv->IsViewportSet()) {
+    // this->overrideViewport = overVP.data();
+    // if (crv->IsViewportSet()) {
     //    overVP[2] = crv->ViewportWidth();
     //    overVP[3] = crv->ViewportHeight();
     //    if (!crv->IsTileSet()) {
@@ -765,7 +766,8 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
 
             if (!anyManipulatorActive) {
                 if (altPressed ^
-                    (this->arcballDefault && !ctrlPressed)) // Left mouse press + alt/arcDefault+noCtrl -> activate arcball manipluator
+                    (this->arcballDefault &&
+                        !ctrlPressed)) // Left mouse press + alt/arcDefault+noCtrl -> activate arcball manipluator
                 {
                     this->arcballManipulator.setActive(
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
@@ -773,9 +775,7 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
                 {
                     this->turntableManipulator.setActive(
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
-                }
-                else
-                {
+                } else {
                     this->rotateManipulator.setActive();
                 }
             }
@@ -901,7 +901,7 @@ bool view::View3D_2::OnMouseScroll(double dx, double dy) {
     if (abs(dy) > 0.0) {
 
         auto cam_pos = this->cam.eye_position();
-        auto rot_cntr = thecam::math::point<glm::vec4>(glm::vec4(this->rotCenter,0.0f));
+        auto rot_cntr = thecam::math::point<glm::vec4>(glm::vec4(this->rotCenter, 0.0f));
 
         cam_pos.w() = 0.0f;
 
@@ -1234,13 +1234,13 @@ bool View3D_2::adaptCameraValues(view::Camera_2& cam) {
         result = true;
     }
     //// setting of near plane and far plane might make no sense as we are setting them new each frame anyway
-    //if (this->cameraNearPlaneParam.IsDirty()) {
+    // if (this->cameraNearPlaneParam.IsDirty()) {
     //    auto val = this->cameraNearPlaneParam.Param<param::FloatParam>()->Value();
     //    this->cam.near_clipping_plane(val);
     //    this->cameraNearPlaneParam.ResetDirty();
     //    result = true;
     //}
-    //if (this->cameraFarPlaneParam.IsDirty()) {
+    // if (this->cameraFarPlaneParam.IsDirty()) {
     //    auto val = this->cameraFarPlaneParam.Param<param::FloatParam>()->Value();
     //    this->cam.far_clipping_plane(val);
     //    this->cameraFarPlaneParam.ResetDirty();
