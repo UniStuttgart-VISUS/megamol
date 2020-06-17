@@ -62,6 +62,9 @@ private:
     /** compute function */
     bool apply(megamol::stdplugin::datatools::table::TableDataCall* inCall);
 
+    /** compute binomial coefficient */
+    static double binomialCoeff(int n, int k);
+
     /** Data output slot */
     CalleeSlot dataOutSlot;
 
