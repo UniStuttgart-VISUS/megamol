@@ -16,7 +16,7 @@
 namespace megamol {
 namespace remote {
 
-class HeadnodeServer : public core::Module, public core::job::AbstractJob, public core::param::ParamUpdateListener {
+class HeadnodeServer : public core::Module, /*public core::job::AbstractJob,*/ public core::param::ParamUpdateListener {
 public:
     HeadnodeServer();
     ~HeadnodeServer() override;
@@ -50,28 +50,28 @@ public:
     static bool SupportQuickstart(void) { return false; }
     
 protected:
-    /**
-     * Answers whether or not this job is still running.
-     *
-     * @return 'true' if this job is still running, 'false' if it has
-     *         finished.
-     */
-    bool IsRunning(void) const override;
+    ///**
+    // * Answers whether or not this job is still running.
+    // *
+    // * @return 'true' if this job is still running, 'false' if it has
+    // *         finished.
+    // */
+    //bool IsRunning(void) const override;
 
-    /**
-     * Starts the job thread.
-     *
-     * @return true if the job has been successfully started.
-     */
-    bool Start(void) override;
+    ///**
+    // * Starts the job thread.
+    // *
+    // * @return true if the job has been successfully started.
+    // */
+    //bool Start(void) override;
 
-    /**
-     * Terminates the job thread.
-     *
-     * @return true to acknowledge that the job will finish as soon
-     *         as possible, false if termination is not possible.
-     */
-    bool Terminate(void) override;
+    ///**
+    // * Terminates the job thread.
+    // *
+    // * @return true to acknowledge that the job will finish as soon
+    // *         as possible, false if termination is not possible.
+    // */
+    //bool Terminate(void) override;
 
     bool create() override;
 
@@ -94,7 +94,7 @@ private:
 
     core::CallerSlot view_slot_;
 
-    core::param::ParamSlot renderhead_port_slot_;
+    core::param::ParamSlot address_slot_;
 
     core::param::ParamSlot start_server_slot_;
     
@@ -117,6 +117,8 @@ private:
     bool is_job_running_;
 
     std::atomic<bool> buffer_has_changed_;
+
+    uint64_t msg_id_;
 
 }; // end class HeadnodeServer
 

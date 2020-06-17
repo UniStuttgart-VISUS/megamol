@@ -141,10 +141,10 @@ private:
         return true;
     }
 
-    bool onAddressChanged(core::param::ParamSlot& p) {
+    /*bool onAddressChanged(core::param::ParamSlot& p) {
         if (isBCastMaster()) init_threads();
         return true;
-    }
+    }*/
 
     bool isBCastMaster() const { return rank_ == bcast_rank_; }
 
@@ -158,7 +158,7 @@ private:
 
     core::param::ParamSlot BCastRankSlot_;
 
-    core::param::ParamSlot address_slot_;
+    core::param::ParamSlot port_slot_;
 
     std::thread receiver_thread_;
 
