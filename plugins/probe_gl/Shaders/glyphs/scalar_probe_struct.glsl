@@ -16,3 +16,12 @@ struct MeshShaderParams
 
     uvec2 tf_texture_handle;
 };
+
+struct PerFrameData
+{
+   int use_interpolation;
+
+   int padding0;
+   int padding1;
+   int padding2;
+};
