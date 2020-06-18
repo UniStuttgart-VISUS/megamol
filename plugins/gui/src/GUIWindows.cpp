@@ -350,17 +350,16 @@ bool GUIWindows::PostDraw(void) {
     // Synchronizing parameter values -----------------------------------------
     this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
         auto parameter_ptr = slot.Parameter();
-        if (parameter_ptr.IsNull()) {
-            return;
-        }
+        if (parameter_ptr.IsNull()) { return;}
         auto param_ref = &(*parameter_ptr);
         auto param_present = this->param_presentations[param_ref];
-
         if (param_present->IsDirty()) {
             megamol::gui::configurator::WriteCoreParameter((*param_present), slot);
+            vislib::sys::Log::DefaultLog.WriteError("[DEBUG] WriteCoreParameter: '%s' [%s, %s, line %d]\n", param_present->full_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            param_present->ResetDirty();
         } else {
-            megamol::gui::configurator::ReadCoreParameter(
-                slot, (*param_present), std::string(mod.FullName().PeekBuffer()));
+            megamol::gui::configurator::ReadCoreParameter(slot, (*param_present), std::string(mod.FullName().PeekBuffer()));
+            ///vislib::sys::Log::DefaultLog.WriteError("[DEBUG] ReadCoreParameter. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     });
 
@@ -927,8 +926,10 @@ void GUIWindows::drawParametersCallback(WindowManager::WindowConfiguration& wc) 
         ImGui::EndPopup();
     }
     ImGui::EndGroup();
+    /*
     std::string mode_help = "Expert mode enables buttons for additional parameter presentation options.";
     this->utils.HelpMarkerToolTip(mode_help);
+    */
     ImGui::SameLine();
 
     // Options
@@ -1465,9 +1466,7 @@ void GUIWindows::drawParameter(const megamol::core::Module& mod, megamol::core::
     megamol::gui::configurator::ParameterPresentation::WidgetScope scope, bool expert) {
 
     auto parameter_ptr = slot.Parameter();
-    if (parameter_ptr.IsNull()) {
-        return;
-    }
+    if (parameter_ptr.IsNull()) { return; }
     auto param_ref = &(*parameter_ptr);
     auto param_present = this->param_presentations[param_ref];
 
@@ -1476,11 +1475,13 @@ void GUIWindows::drawParameter(const megamol::core::Module& mod, megamol::core::
     if (param_present->type == ParamType::TRANSFERFUNCTION) {
         param_present->GUI_ConnectExternalTransferFunctionEditor(this->tf_editor_ptr);
     }
+    
     if (param_present->GUI_Present(scope)) {
         if (scope == megamol::gui::configurator::ParameterPresentation::WidgetScope::LOCAL) {
-            this->tf_editor_ptr->SetConnectedParameter(param_present);
+            
             // Open window calling the transfer function editor callback
             if ((param_present->type == ParamType::TRANSFERFUNCTION)) {
+                this->tf_editor_ptr->SetConnectedParameter(param_present);
                 const auto func = [](WindowManager::WindowConfiguration& wc) {
                     if (wc.win_callback == WindowManager::DrawCallbacks::TRANSFER_FUNCTION) {
                         wc.win_show = true;
@@ -1768,8 +1769,7 @@ void megamol::gui::GUIWindows::add_param_presentation(
         std::shared_ptr<configurator::Parameter> param_ptr;
         megamol::gui::configurator::ReadCoreParameter(slot, param_ptr, std::string(mod.FullName().PeekBuffer()));
         this->param_presentations.emplace(param_ref, param_ptr);
-        /// vislib::sys::Log::DefaultLog.WriteError(
-        ///    "[DEBUG] Added presentation parameter for core parameter '%s'", param_ptr->full_name.c_str());
+        vislib::sys::Log::DefaultLog.WriteError("[DEBUG] Added presentation parameter for core parameter '%s'", param_ptr->full_name.c_str());
     }
 }
 
