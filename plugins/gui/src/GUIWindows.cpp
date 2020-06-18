@@ -67,15 +67,13 @@ GUIWindows::GUIWindows()
 
     this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = megamol::gui::HotkeyDataType(
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] =
-        megamol::gui::HotkeyDataType(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P,
-                                         core::view::Modifier::CTRL),
-            false);
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] = megamol::gui::HotkeyDataType(
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false);
     this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT] = megamol::gui::HotkeyDataType(
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false);
     this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU] = megamol::gui::HotkeyDataType(
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false);        
-        
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false);
+
     this->tf_editor_ptr = std::make_shared<TransferFunctionEditor>();
 }
 
@@ -130,7 +128,7 @@ bool GUIWindows::PreDraw(
     if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU])) {
         this->state.menu_visible = !this->state.menu_visible;
         std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU]) = false;
-    }    
+    }
     this->validateParameters();
     this->checkMultipleHotkeyAssignement();
     this->parent_module_fullname = module_fullname;
@@ -179,7 +177,7 @@ bool GUIWindows::PreDraw(
         this->state.font_index = GUI_INVALID_ID;
     }
 
-    // Deleting window 
+    // Deleting window
     if (!this->state.win_delete.empty()) {
         this->window_manager.DeleteWindowConfiguration(this->state.win_delete);
         this->state.win_delete.clear();
@@ -224,7 +222,7 @@ bool GUIWindows::PostDraw(void) {
             ImGui::EndMainMenuBar();
         }
     }
-    
+
     // Draw Windows ------------------------------------------------------------
     const auto func = [&, this](WindowManager::WindowConfiguration& wc) {
         // Loading changed window state of font (even if window is not shown)
@@ -252,7 +250,8 @@ bool GUIWindows::PostDraw(void) {
             this->tf_editor_ptr->SetMinimized(wc.tfe_view_minimized);
             this->tf_editor_ptr->SetVertical(wc.tfe_view_vertical);
             for (auto& param_ptr : this->param_presentations) {
-                if ((wc.tfe_active_param == param_ptr.second->full_name) && (param_ptr.second->type == ParamType::TRANSFERFUNCTION)) {
+                if ((wc.tfe_active_param == param_ptr.second->full_name) &&
+                    (param_ptr.second->type == ParamType::TRANSFERFUNCTION)) {
                     this->tf_editor_ptr->SetConnectedParameter(param_ptr.second);
                     this->tf_editor_ptr->SetTransferFunction(std::get<std::string>(param_ptr.second->GetValue()), true);
                 }
@@ -284,7 +283,7 @@ bool GUIWindows::PostDraw(void) {
 
             // Always set configurator window size to current viewport
             if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
-                float y_offset = (this->state.menu_visible)?(ImGui::GetFrameHeight()):(0.0f);
+                float y_offset = (this->state.menu_visible) ? (ImGui::GetFrameHeight()) : (0.0f);
                 wc.win_size = ImVec2(viewport.x, viewport.y - y_offset);
                 wc.win_position = ImVec2(0.0f, y_offset);
                 wc.win_reset = true;
@@ -295,7 +294,7 @@ bool GUIWindows::PostDraw(void) {
                 this->window_manager.SoftResetWindowSizePos(wc);
                 wc.win_soft_reset = false;
             }
-            
+
             // Force window menu
             if (this->state.menu_visible && ImGui::IsMouseReleased(0)) {
                 float y_offset = ImGui::GetFrameHeight();
@@ -341,9 +340,9 @@ bool GUIWindows::PostDraw(void) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
-    
+
     // Draw pop-ups ------------------------------------------------------------
-    this->drawPopUps();    
+    this->drawPopUps();
 
     // Render the current ImGui frame ------------------------------------------
     glViewport(0, 0, static_cast<GLsizei>(viewport.x), static_cast<GLsizei>(viewport.y));
@@ -354,7 +353,7 @@ bool GUIWindows::PostDraw(void) {
     for (auto& h : this->hotkeys) {
         std::get<1>(h) = false;
     }
-        
+
     return true;
 }
 
@@ -601,33 +600,25 @@ bool GUIWindows::createContext(void) {
     ImGui::SetCurrentContext(this->context);
 
     // Register window callbacks in window manager ----------------------------
-    this->window_manager.RegisterDrawWindowCallback(
-        WindowManager::DrawCallbacks::MAIN_PARAMETERS, [&, this](WindowManager::WindowConfiguration& wc) {
-            this->drawParametersCallback(wc);
-        });
+    this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::MAIN_PARAMETERS,
+        [&, this](WindowManager::WindowConfiguration& wc) { this->drawParametersCallback(wc); });
     this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::PARAMETERS,
-        [&, this](
-            WindowManager::WindowConfiguration& wc) { this->drawParametersCallback(wc); });
+        [&, this](WindowManager::WindowConfiguration& wc) { this->drawParametersCallback(wc); });
     this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::PERFORMANCE,
-        [&, this](
-            WindowManager::WindowConfiguration& wc) { this->drawFpsWindowCallback(wc); });
-    this->window_manager.RegisterDrawWindowCallback(
-        WindowManager::DrawCallbacks::FONT, [&, this](WindowManager::WindowConfiguration& wc) {
-            this->drawFontWindowCallback(wc);
-        });
+        [&, this](WindowManager::WindowConfiguration& wc) { this->drawFpsWindowCallback(wc); });
+    this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::FONT,
+        [&, this](WindowManager::WindowConfiguration& wc) { this->drawFontWindowCallback(wc); });
     this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::TRANSFER_FUNCTION,
-        [&, this](
-            WindowManager::WindowConfiguration& wc) { this->drawTFWindowCallback(wc); });
+        [&, this](WindowManager::WindowConfiguration& wc) { this->drawTFWindowCallback(wc); });
     this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::CONFIGURATOR,
-        [&, this](
-            WindowManager::WindowConfiguration& wc) { this->drawConfiguratorCallback(wc); });
-    
+        [&, this](WindowManager::WindowConfiguration& wc) { this->drawConfiguratorCallback(wc); });
+
     // Create window configurations
     WindowManager::WindowConfiguration buf_win;
     buf_win.win_reset = true;
     buf_win.win_position = ImVec2(0.0f, 0.0f);
     buf_win.win_size = ImVec2(400.0f, 600.0f);
-      
+
     // MAIN Window ------------------------------------------------------------
     buf_win.win_name = "All Parameters";
     buf_win.win_show = false;
@@ -638,7 +629,7 @@ bool GUIWindows::createContext(void) {
     this->window_manager.AddWindowConfiguration(buf_win);
 
     // FPS/MS Window ----------------------------------------------------------
-    buf_win.win_name = "Performance Metrics";    
+    buf_win.win_name = "Performance Metrics";
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
@@ -646,7 +637,7 @@ bool GUIWindows::createContext(void) {
     this->window_manager.AddWindowConfiguration(buf_win);
 
     // FONT Window ------------------------------------------------------------
-    buf_win.win_name = "Font Settings";     
+    buf_win.win_name = "Font Settings";
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
@@ -654,7 +645,7 @@ bool GUIWindows::createContext(void) {
     this->window_manager.AddWindowConfiguration(buf_win);
 
     // TRANSFER FUNCTION Window -----------------------------------------------
-    buf_win.win_name = "Transfer Function Editor";     
+    buf_win.win_name = "Transfer Function Editor";
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
@@ -662,7 +653,7 @@ bool GUIWindows::createContext(void) {
     this->window_manager.AddWindowConfiguration(buf_win);
 
     // CONFIGURATOR Window -----------------------------------------------
-    buf_win.win_name = "Configurator";     
+    buf_win.win_name = "Configurator";
     buf_win.win_show = false;
     // State of configurator should not be stored (visibility is configured via auto load parameter and will always be
     // viewport size).
@@ -689,7 +680,7 @@ bool GUIWindows::createContext(void) {
     io.LogFilename = "imgui_log.txt";                     // (set to nullptr to disable)
     io.FontAllowUserScaling = false;                      // disable font scaling using ctrl + mouse wheel
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // allow keyboard navigation
-    
+
     // Init global state -------------------------------------------------------
     this->state.font_file = "";
     this->state.font_size = 13.0f;
@@ -800,16 +791,14 @@ bool GUIWindows::createContext(void) {
     io.KeyMap[ImGuiKey_Z] = static_cast<int>(GuiTextModHotkeys::CTRL_Z);
 
     // Filling parameter presentation list
-    this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {      
-        this->add_param_presentation(slot);
-    });
-    
+    this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) { this->add_param_presentation(slot); });
+
     if (this->tf_editor_ptr == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Pointer to transfer function editor is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-        
+
     return true;
 }
 
@@ -834,7 +823,7 @@ bool GUIWindows::destroyContext(void) {
 }
 
 
-void GUIWindows::validateParameters() {       
+void GUIWindows::validateParameters() {
     if (this->style_param.IsDirty()) {
         auto style = static_cast<Styles>(this->style_param.Param<core::param::EnumParam>()->Value());
         switch (style) {
@@ -865,7 +854,7 @@ void GUIWindows::validateParameters() {
     this->state.win_save_delay += io.DeltaTime;
     else if (this->state.win_save_state && (this->state.win_save_delay > 1.0f)) {
         // Delayed saving after triggering saving state (in seconds).
-        this->save_state_to_parameter(); 
+        this->save_state_to_parameter();
         this->state.win_save_state = false;
     }
     */
@@ -888,7 +877,7 @@ void GUIWindows::validateParameters() {
 void GUIWindows::drawTFWindowCallback(WindowManager::WindowConfiguration& wc) {
 
     this->tf_editor_ptr->Draw(true);
-    
+
     auto param_ptr = this->tf_editor_ptr->GetConnectedParameter();
     if (param_ptr != nullptr) {
         wc.tfe_active_param = param_ptr->full_name;
@@ -903,7 +892,7 @@ void GUIWindows::drawConfiguratorCallback(WindowManager::WindowConfiguration& wc
 
 
 void GUIWindows::drawParametersCallback(WindowManager::WindowConfiguration& wc) {
-        
+
     // Mode
     ImGui::BeginGroup();
     this->utils.PointCircleButton("Mode");
@@ -917,10 +906,10 @@ void GUIWindows::drawParametersCallback(WindowManager::WindowConfiguration& wc) 
         ImGui::EndPopup();
     }
     ImGui::EndGroup();
-    std::string mode_help = "Expert mode enables buttons for additional parameter presentation options."; 
+    std::string mode_help = "Expert mode enables buttons for additional parameter presentation options.";
     this->utils.HelpMarkerToolTip(mode_help);
     ImGui::SameLine();
-                
+
     // Options
     ImGuiID overrideState = GUI_INVALID_ID;
     if (ImGui::Button("Expand All")) {
@@ -931,26 +920,26 @@ void GUIWindows::drawParametersCallback(WindowManager::WindowConfiguration& wc) 
     if (ImGui::Button("Collapse All")) {
         overrideState = 0; // close
     }
-    ImGui::SameLine(); 
+    ImGui::SameLine();
 
     /* DISBALED --- Does anybody use this?
     // Toggel Hotkeys
-    ImGui::SameLine(); 
+    ImGui::SameLine();
     bool show_only_hotkeys = wc.param_show_hotkeys;
     ImGui::Checkbox("Show Hotkeys", &show_only_hotkeys);
     wc.param_show_hotkeys = show_only_hotkeys;
     */
-    
-    // Info 
+
+    // Info
     std::string help_marker = "[INFO]";
     std::string param_help = "[Hover] Show Parameter Description Tooltip\n"
                              "[Right-Click] Context Menu\n"
                              "[Drag & Drop] Move Module to other Parameter Window\n"
                              "[Enter],[Tab],[Left-Click outside Widget] Confirm input changes";
-    ImGui::AlignTextToFramePadding(); 
+    ImGui::AlignTextToFramePadding();
     ImGui::TextDisabled(help_marker.c_str());
     this->utils.HoverToolTip(param_help);
-    
+
     // Paramter substring name filtering (only for main parameter view)
     if (wc.win_callback == WindowManager::DrawCallbacks::MAIN_PARAMETERS) {
         if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH])) {
@@ -963,7 +952,7 @@ void GUIWindows::drawParametersCallback(WindowManager::WindowConfiguration& wc) 
             "Case insensitive substring search in\nparameter names.\nGlobally in all parameter views.\n";
         this->utils.StringSearch("guiwindow_parameter_earch", help_test);
     }
-    
+
     /* DISABLED --- Does anybody use this?
     // Module filtering (only for main parameter view)
     if ((this->core_instance != nullptr) && (wc.win_callback == WindowManager::DrawCallbacks::MAIN_PARAMETERS)) {
@@ -1137,7 +1126,7 @@ void GUIWindows::drawParametersCallback(WindowManager::WindowConfiguration& wc) 
                         buf_win.win_callback = WindowManager::DrawCallbacks::PARAMETERS;
                         buf_win.param_show_hotkeys = false;
                         buf_win.win_position = ImVec2(0.0f, ImGui::GetTextLineHeightWithSpacing());
-                        buf_win.win_size = ImVec2(400.0f, 600.0f);                          
+                        buf_win.win_size = ImVec2(400.0f, 600.0f);
                         buf_win.param_modules_list.emplace_back(label);
                         this->window_manager.AddWindowConfiguration(buf_win);
                     }
@@ -1177,7 +1166,8 @@ void GUIWindows::drawParametersCallback(WindowManager::WindowConfiguration& wc) 
                     showSearchedParameter = this->utils.FindCaseInsensitiveSubstring(param_name, currentSearchString);
                 }
 
-                bool param_visible = ((parameter_ptr->IsGUIVisible() || wc.param_extended_mode) && showSearchedParameter);
+                bool param_visible =
+                    ((parameter_ptr->IsGUIVisible() || wc.param_extended_mode) && showSearchedParameter);
                 if (!parameter_ptr.IsNull() && param_visible) {
 
                     // Parameter namespace header
@@ -1216,7 +1206,7 @@ void GUIWindows::drawParametersCallback(WindowManager::WindowConfiguration& wc) 
 
                     // Draw parameter
                     if (param_namespace_open) {
-                        /* DISABLED 
+                        /* DISABLED
                         if (wc.param_show_hotkeys) {
                             if (auto* p = slot.template Param<core::param::ButtonParam>()) {
                                 std::string label = slot.Name().PeekBuffer();
@@ -1234,7 +1224,8 @@ void GUIWindows::drawParametersCallback(WindowManager::WindowConfiguration& wc) 
                             }
                         } else {
                         */
-                            this->drawParameter(slot, configurator::ParameterPresentation::WidgetScope::LOCAL, wc.param_extended_mode);
+                        this->drawParameter(
+                            slot, configurator::ParameterPresentation::WidgetScope::LOCAL, wc.param_extended_mode);
                         /*
                         }
                         */
@@ -1449,16 +1440,17 @@ void GUIWindows::drawFontWindowCallback(WindowManager::WindowConfiguration& wc) 
 }
 
 
-void GUIWindows::drawParameter(megamol::core::param::ParamSlot& slot, megamol::gui::configurator::ParameterPresentation::WidgetScope scope, bool expert) {
-           
+void GUIWindows::drawParameter(megamol::core::param::ParamSlot& slot,
+    megamol::gui::configurator::ParameterPresentation::WidgetScope scope, bool expert) {
+
     this->add_param_presentation(slot);
-    /// TODO Delete parameters in list which do no longer exist in core.    
-    
+    /// TODO Delete parameters in list which do no longer exist in core.
+
     auto parameter_ptr = slot.Parameter();
     if (parameter_ptr.IsNull()) {
         return;
-    }    
-    auto param_ref = &(*parameter_ptr);    
+    }
+    auto param_ref = &(*parameter_ptr);
     auto param_present = this->param_presentations[param_ref];
     param_present->GUI_SetExpert(expert);
     if (param_present->type == ParamType::TRANSFERFUNCTION) {
@@ -1466,7 +1458,7 @@ void GUIWindows::drawParameter(megamol::core::param::ParamSlot& slot, megamol::g
     }
     if (param_present->GUI_Present(scope)) {
         megamol::gui::configurator::WriteCoreParameter((*param_present), slot);
-        
+
         if (scope == megamol::gui::configurator::ParameterPresentation::WidgetScope::LOCAL) {
             // Open window calling the transfer function editor callback
             if ((param_present->type == ParamType::TRANSFERFUNCTION)) {
@@ -1475,11 +1467,10 @@ void GUIWindows::drawParameter(megamol::core::param::ParamSlot& slot, megamol::g
                         wc.win_show = true;
                     }
                 };
-                this->window_manager.EnumWindows(func);                
+                this->window_manager.EnumWindows(func);
             }
         }
-    }
-    else {
+    } else {
         megamol::gui::configurator::ReadCoreParameter(slot, (*param_present));
     }
 }
@@ -1503,11 +1494,12 @@ void GUIWindows::drawMenu(void) {
 
     // Windows
     if (ImGui::BeginMenu("Windows")) {
-        
-        if (ImGui::MenuItem("Menu", std::get<0>(this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU]).ToString().c_str(), &this->state.menu_visible)) {
+
+        if (ImGui::MenuItem("Menu", std::get<0>(this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU]).ToString().c_str(),
+                &this->state.menu_visible)) {
             this->state.menu_visible = !this->state.menu_visible;
         }
-                
+
         const auto func = [&, this](WindowManager::WindowConfiguration& wc) {
             bool win_open = wc.win_show;
             std::string hotkey_label = wc.win_hotkey.ToString();
@@ -1561,9 +1553,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         const std::string gitLink = "https://github.com/UniStuttgart-VISUS/megamol";
 
         std::string about = std::string("MegaMol - Version ") + std::to_string(MEGAMOL_CORE_MAJOR_VER) + (".") +
-                            std::to_string(MEGAMOL_CORE_MINOR_VER) + ("\ngit# ") +
-                            std::string(MEGAMOL_CORE_COMP_REV) + ("\nDear ImGui - Version ") +
-                            std::string(IMGUI_VERSION) + ("\n");
+                            std::to_string(MEGAMOL_CORE_MINOR_VER) + ("\ngit# ") + std::string(MEGAMOL_CORE_COMP_REV) +
+                            ("\nDear ImGui - Version ") + std::string(IMGUI_VERSION) + ("\n");
         std::string mailstr = std::string("Contact: ") + eMail;
         std::string webstr = std::string("Web: ") + webLink;
         std::string gitstr = std::string("Git-Hub: ") + gitLink;
@@ -1633,8 +1624,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     // Save project pop-up
     this->state.open_popup_save =
         (this->state.open_popup_save || std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]));
-    if (this->file_utils.FileBrowserPopUp(
-            FileUtils::FileBrowserFlag::SAVE, "Save Running Project", this->state.open_popup_save, this->state.project_file)) {
+    if (this->file_utils.FileBrowserPopUp(FileUtils::FileBrowserFlag::SAVE, "Save Running Project",
+            this->state.open_popup_save, this->state.project_file)) {
         // Serialize current state to parameter.
         this->save_state_to_parameter();
         // Serialize project to file
@@ -1748,22 +1739,22 @@ void megamol::gui::GUIWindows::shutdown(void) {
 
 
 void megamol::gui::GUIWindows::add_param_presentation(megamol::core::param::ParamSlot& slot) {
-    
+
     auto parameter_ptr = slot.Parameter();
     if (parameter_ptr.IsNull()) {
         return;
-    }    
-    auto param_ref = &(*parameter_ptr);    
+    }
+    auto param_ref = &(*parameter_ptr);
     auto iter = this->param_presentations.find(param_ref);
-    if (iter == this->param_presentations.end()) {  
+    if (iter == this->param_presentations.end()) {
         std::shared_ptr<configurator::Parameter> param_ptr;
         megamol::gui::configurator::ReadCoreParameter(slot, param_ptr);
         this->param_presentations.emplace(param_ref, param_ptr);
-        ///vislib::sys::Log::DefaultLog.WriteError(
-        ///    "[DEBUG] Added presentation parameter for core parameter '%s'", param_ptr->full_name.c_str());       
-    } 
+        /// vislib::sys::Log::DefaultLog.WriteError(
+        ///    "[DEBUG] Added presentation parameter for core parameter '%s'", param_ptr->full_name.c_str());
+    }
 }
-    
+
 
 void megamol::gui::GUIWindows::save_state_to_parameter(void) {
 
@@ -1772,11 +1763,11 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
     nlohmann::json window_json;
     nlohmann::json gui_parameter_json;
 
-    
+
     if (this->window_manager.StateToJSON(window_json) && this->gui_and_parameters_state_to_json(gui_parameter_json)) {
         // Merge all JSON states
         gui_parameter_json.update(window_json);
-    
+
         std::string state;
         state = gui_parameter_json.dump(2);
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
@@ -1829,11 +1820,10 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
                         "JSON state: Failed to read 'project_file' as string. [%s, %s, line %d]\n", __FILE__,
                         __FUNCTION__, __LINE__);
                 }
-            }            
-            else if (header_item.key() == GUI_JSON_TAG_GUISTATE_PARAMETERS) {
+            } else if (header_item.key() == GUI_JSON_TAG_GUISTATE_PARAMETERS) {
                 /// XXX ! Implementation should be duplicate to Configurator-Version
                 /// XXX megamol::gui::configurator::GraphManager::parameters_state_from_json_string()
-                
+
                 found_parameters = true;
                 for (auto& config_item : header_item.value().items()) {
                     std::string json_param_name = config_item.key();
@@ -1941,8 +1931,8 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_to_json(nlohmann::json& 
 
         this->utils.Utf8Encode(this->state.project_file);
         out_json[GUI_JSON_TAG_GUISTATE]["project_file"] = this->state.project_file;
-        out_json[GUI_JSON_TAG_GUISTATE]["menu_visible"] = this->state.menu_visible;  
-        
+        out_json[GUI_JSON_TAG_GUISTATE]["menu_visible"] = this->state.menu_visible;
+
         /// XXX ! Implementation should be duplicate to Configurator-Version
         /// XXX megamol::gui::configurator::GraphManager::parameters_state_to_json()
         this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {

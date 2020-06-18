@@ -301,7 +301,8 @@ bool TransferFunctionEditor::Draw(bool connected_parameter_mode) {
         if (connected_parameter_mode) {
             ImGui::TextUnformatted("Parameter:");
             ImGui::TextColored(GUI_COLOR_TEXT_WARN,
-                ((this->connected_parameter_ptr == nullptr) ? ("-") : (this->connected_parameter_ptr->full_name.c_str())));
+                ((this->connected_parameter_ptr == nullptr) ? ("-")
+                                                            : (this->connected_parameter_ptr->full_name.c_str())));
         }
 
         // Legend alignment ---------------------------------------------------
@@ -500,9 +501,10 @@ bool TransferFunctionEditor::Draw(bool connected_parameter_mode) {
     if (this->showOptions) {
 
         // Return true for current changes being applied
-        ImGui::PushStyleColor(ImGuiCol_Button, this->pendingChanges ? GUI_COLOR_BUTTON_MODIFIED : style.Colors[ImGuiCol_Button]);
         ImGui::PushStyleColor(
-            ImGuiCol_ButtonHovered, this->pendingChanges ? GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT : style.Colors[ImGuiCol_ButtonHovered]);
+            ImGuiCol_Button, this->pendingChanges ? GUI_COLOR_BUTTON_MODIFIED : style.Colors[ImGuiCol_Button]);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+            this->pendingChanges ? GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT : style.Colors[ImGuiCol_ButtonHovered]);
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
         if (ImGui::Button("Apply")) {
             apply_changes = true;
@@ -530,7 +532,8 @@ bool TransferFunctionEditor::Draw(bool connected_parameter_mode) {
                     if (this->GetTransferFunction(tf)) {
                         if (this->connected_parameter_ptr->type == ParamType::TRANSFERFUNCTION) {
                             this->connected_parameter_ptr->SetValue(tf);
-                            this->connected_parameter_ptr->GUI_SetTransferFunctionEditorHash(this->connected_parameter_ptr->GetStringHash());
+                            this->connected_parameter_ptr->GUI_SetTransferFunctionEditorHash(
+                                this->connected_parameter_ptr->GetStringHash());
                         }
                     }
                 }

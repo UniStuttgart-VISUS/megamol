@@ -127,13 +127,19 @@ private:
         double last_instance_time; // Last instance time.
         bool open_popup_about;     // Flag for opening about pop-up
         bool open_popup_save;      // Flag for opening save pop-up
-        std::string project_file;  // File name of the currently running project    
-        bool menu_visible;         // Flag indicating menu state    
+        std::string project_file;  // File name of the currently running project
+        bool menu_visible;         // Flag indicating menu state
         bool hotkeys_check_once;   // WORKAROUND: Check multiple hotkey assignments once
     };
 
     /** The GUI hotkey array index mapping. */
-    enum GuiHotkeyIndex : size_t { EXIT_PROGRAM = 0, PARAMETER_SEARCH = 1, SAVE_PROJECT = 2, MENU = 3, INDEX_COUNT = 4 };
+    enum GuiHotkeyIndex : size_t {
+        EXIT_PROGRAM = 0,
+        PARAMETER_SEARCH = 1,
+        SAVE_PROJECT = 2,
+        MENU = 3,
+        INDEX_COUNT = 4
+    };
 
     // VARIABLES --------------------------------------------------------------
 
@@ -183,7 +189,8 @@ private:
     unsigned int graph_fonts_reserved;
 
     /** Widget Presentations of Core Parameter */
-    std::map<megamol::core::param::AbstractParam*, std::shared_ptr<megamol::gui::configurator::Parameter>> param_presentations;
+    std::map<megamol::core::param::AbstractParam*, std::shared_ptr<megamol::gui::configurator::Parameter>>
+        param_presentations;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -201,16 +208,17 @@ private:
     void drawConfiguratorCallback(WindowManager::WindowConfiguration& wc);
 
     void drawMenu(void);
-    void drawParameter(megamol::core::param::ParamSlot& slot, megamol::gui::configurator::ParameterPresentation::WidgetScope scope, bool expert = false);
+    void drawParameter(megamol::core::param::ParamSlot& slot,
+        megamol::gui::configurator::ParameterPresentation::WidgetScope scope, bool expert = false);
     void drawPopUps(void);
 
     bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
     void checkMultipleHotkeyAssignement(void);
     bool hotkeyPressed(megamol::core::view::KeyCode keycode);
     void shutdown(void);
-    
+
     void add_param_presentation(megamol::core::param::ParamSlot& slot);
-    
+
     void save_state_to_parameter(void);
     bool gui_and_parameters_state_from_json_string(const std::string& in_json_string);
     bool gui_and_parameters_state_to_json(nlohmann::json& out_json);

@@ -109,7 +109,7 @@ private:
 
     ModulePtrVectorType modules;
     InterfaceSlotPtrMapType interfaceslots;
-    
+
     GroupPresentation present;
 
     // FUNCTIONS --------------------------------------------------------------

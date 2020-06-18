@@ -166,14 +166,14 @@ void megamol::gui::configurator::GraphPresentation::Present(
         if (ImGui::BeginTabItem(graph_label.c_str(), &open, tab_flags)) {
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
-                
+
                 ImGui::TextDisabled("Project");
                 ImGui::Separator();
 
                 if (ImGui::MenuItem("Save")) {
                     state.graph_save = true;
                 }
-                
+
                 if (ImGui::MenuItem("Rename")) {
                     popup_rename = true;
                 }
@@ -1298,7 +1298,7 @@ void megamol::gui::configurator::GraphPresentation::present_parameters(
         ImGui::EndPopup();
     }
     ImGui::EndGroup();
-    
+
     // Parameter Search
     if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH])) {
         this->utils.SetSearchFocus(true);
@@ -1379,7 +1379,7 @@ void megamol::gui::configurator::GraphPresentation::present_parameters(
                                     param_indent_stack--;
                                     ImGui::Unindent();
                                 }
-                                
+
                                 if (!this->param_name_space.empty()) {
                                     std::string label = this->param_name_space + "###" + parameter.full_name;
                                     // Open all namespace headers when parameter search is active

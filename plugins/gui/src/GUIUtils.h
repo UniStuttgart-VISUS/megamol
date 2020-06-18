@@ -81,9 +81,9 @@ namespace gui {
 
 /********** Types **********/
 
-typedef megamol::core::param::AbstractParamPresentation::Presentation   PresentType;
-typedef megamol::core::param::AbstractParamPresentation::ParamType      ParamType;
-typedef std::map<int, std::string>                                      EnumStorageType;
+typedef megamol::core::param::AbstractParamPresentation::Presentation PresentType;
+typedef megamol::core::param::AbstractParamPresentation::ParamType ParamType;
+typedef std::map<int, std::string> EnumStorageType;
 
 /** Hotkey Data Types (exclusively for configurator) */
 enum HotkeyIndex : size_t {

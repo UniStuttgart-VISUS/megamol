@@ -25,12 +25,12 @@ namespace megamol {
 namespace gui {
 
 namespace configurator {
-    
+
 // Forward declarations
 class Parameter;
 typedef std::shared_ptr<Parameter> ParamPtrType;
 
-}
+} // namespace configurator
 
 
 /**
@@ -46,7 +46,7 @@ public:
      * Draws the transfer function editor.
      */
     bool Draw(bool connected_parameter_mode);
-    
+
     /**
      * Set transfer function data to use in editor.
      *
