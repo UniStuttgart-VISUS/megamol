@@ -119,8 +119,8 @@ bool megamol::thermodyn::PhaseAnimator::getDataCallback(core::Call& c) {
             // fluid
             auto const& fbbox = fluid_box.box_;
             for (size_t pidx = 0; pidx < pc; ++pidx) {
-                if (fbbox.Contains(
-                        vislib::math::Point<float, 3>(ps[7 * pidx + 0], ps[7 * pidx + 1], ps[7 * pidx + 2]))) {
+                if (fbbox.Contains(vislib::math::Point<float, 3>(ps[7 * pidx + 0], ps[7 * pidx + 1], ps[7 * pidx + 2]),
+                        vislib::math::Cuboid<float>::FACE_ALL)) {
                     ps[7 * pidx + 6] = fluid_alpha;
                 }
             }
@@ -128,8 +128,8 @@ bool megamol::thermodyn::PhaseAnimator::getDataCallback(core::Call& c) {
             // interface
             auto const& ibbox = interface_box.box_;
             for (size_t pidx = 0; pidx < pc; ++pidx) {
-                if (ibbox.Contains(
-                        vislib::math::Point<float, 3>(ps[7 * pidx + 0], ps[7 * pidx + 1], ps[7 * pidx + 2]))) {
+                if (ibbox.Contains(vislib::math::Point<float, 3>(ps[7 * pidx + 0], ps[7 * pidx + 1], ps[7 * pidx + 2]),
+                        vislib::math::Cuboid<float>::FACE_ALL)) {
                     ps[7 * pidx + 6] = interface_alpha;
                 }
             }
@@ -137,8 +137,8 @@ bool megamol::thermodyn::PhaseAnimator::getDataCallback(core::Call& c) {
             // gas
             auto const& gbbox = gas_box.box_;
             for (size_t pidx = 0; pidx < pc; ++pidx) {
-                if (gbbox.Contains(
-                        vislib::math::Point<float, 3>(ps[7 * pidx + 0], ps[7 * pidx + 1], ps[7 * pidx + 2]))) {
+                if (gbbox.Contains(vislib::math::Point<float, 3>(ps[7 * pidx + 0], ps[7 * pidx + 1], ps[7 * pidx + 2]),
+                        vislib::math::Cuboid<float>::FACE_ALL)) {
                     ps[7 * pidx + 6] = gas_alpha;
                 }
             }

@@ -76,7 +76,7 @@ bool megamol::thermodyn::PhaseSeparator::getDataCallback(core::Call& c) {
     auto const T = ensembleTempSlot_.Param<core::param::FloatParam>()->Value();
 
     // Interface width
-    auto const D = 1.720f * std::powf((Tc - T) / Tc, 1.89f) + 1.103 * std::powf((Tc - T) / Tc, -0.62f);
+    auto const D = 1.720f * std::pow((Tc - T) / Tc, 1.89f) + 1.103 * std::pow((Tc - T) / Tc, -0.62f);
 
     auto inCall = dataInSlot_.CallAs<core::moldyn::MultiParticleDataCall>();
     if (inCall == nullptr) return false;
@@ -137,7 +137,7 @@ bool megamol::thermodyn::PhaseSeparator::getDataCallback(core::Call& c) {
         for (size_t pidx = 0; pidx < pc; ++pidx) {
             auto const pos = pAcc->Get_f(pidx) - offset;
             auto const val = iAcc->Get_f(pidx);
-            auto idx = static_cast<size_t>(std::floorf(pos / diff));
+            auto idx = static_cast<size_t>(std::floor(pos / diff));
             idx = vislib::math::Clamp<size_t>(idx, 0, numSlices - 1);
             ++cnt[idx];
             trend[idx] += val / cnt[idx];
