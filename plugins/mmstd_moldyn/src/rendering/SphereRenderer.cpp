@@ -19,7 +19,7 @@ using namespace vislib::graphics::gl;
 //#define CHRONOTIMING
 
 #define SSBO_GENERATED_SHADER_INSTANCE "gl_VertexID" // or "gl_InstanceID"
-#define SSBO_GENERATED_SHADER_ALIGNMENT "packed"     // "std430"
+#define SSBO_GENERATED_SHADER_ALIGNMENT "std430"     // "std430"
 
 const GLuint SSBOvertexBindingPoint = 2;
 const GLuint SSBOcolorBindingPoint = 3;
@@ -476,10 +476,18 @@ bool SphereRenderer::createResources() {
             if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
-            if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
+            if (!this->sphereShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
                     this->fragShader->Code(), this->fragShader->Count())) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
                     vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
+                return false;
+            }
+            glBindAttribLocation(this->sphereShader, 0, "inPosition");
+            glBindAttribLocation(this->sphereShader, 1, "inColor");
+            glBindAttribLocation(this->sphereShader, 2, "inColIdx");
+            if (!this->sphereShader.Link()) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    "[SphereRenderer] Unable to link sphere shader: Unknown error\n");
                 return false;
             }
             this->flagsUseSSBO = false;
@@ -506,6 +514,9 @@ bool SphereRenderer::createResources() {
                     "[SphereRenderer] Unable to compile sphere geometry shader: Unknown error\n");
                 return false;
             }
+            glBindAttribLocation(this->sphereGeometryShader, 0, "inPosition");
+            glBindAttribLocation(this->sphereGeometryShader, 1, "inColor");
+            glBindAttribLocation(this->sphereGeometryShader, 2, "inColIdx");
             if (!this->sphereGeometryShader.Link()) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
                     "[SphereRenderer] Unable to link sphere geometry shader: Unknown error\n");
@@ -571,10 +582,18 @@ bool SphereRenderer::createResources() {
             if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
-            if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
+            if (!this->sphereShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
                     this->fragShader->Code(), this->fragShader->Count())) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
                     vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
+                return false;
+            }
+            glBindAttribLocation(this->sphereShader, 0, "inPosition");
+            glBindAttribLocation(this->sphereShader, 1, "inColor");
+            glBindAttribLocation(this->sphereShader, 2, "inColIdx");
+            if (!this->sphereShader.Link()) {
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to link sphere shader: Unknown error\n");
                 return false;
             }
             glGenVertexArrays(1, &this->vertArray);
@@ -619,10 +638,18 @@ bool SphereRenderer::createResources() {
             if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
-            if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
+            if (!this->sphereShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
                     this->fragShader->Code(), this->fragShader->Count())) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
                     vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
+                return false;
+            }
+            glBindAttribLocation(this->sphereShader, 0, "inPosition");
+            glBindAttribLocation(this->sphereShader, 1, "inColor");
+            glBindAttribLocation(this->sphereShader, 2, "inColIdx");
+            if (!this->sphereShader.Link()) {
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to link sphere shader: Unknown error\n");
                 return false;
             }
 
@@ -652,6 +679,7 @@ bool SphereRenderer::createResources() {
                     "[SphereRenderer] Unable to compile sphere geometry shader: Unknown error\n");
                 return false;
             }
+            glBindAttribLocation(this->sphereGeometryShader, 0, "position");
             if (!this->sphereGeometryShader.Link()) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
                     "[SphereRenderer] Unable to link sphere geometry shader: Unknown error\n");
@@ -713,10 +741,18 @@ bool SphereRenderer::createResources() {
             if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
-            if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
-                this->fragShader->Code(), this->fragShader->Count())) {
+            if (!this->sphereShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
+                    this->fragShader->Code(), this->fragShader->Count())) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
                     vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
+                return false;
+            }
+            glBindAttribLocation(this->sphereShader, 0, "inPosition");
+            glBindAttribLocation(this->sphereShader, 1, "inColor");
+            glBindAttribLocation(this->sphereShader, 2, "inColIdx");
+            if (!this->sphereShader.Link()) {
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to link sphere shader: Unknown error\n");
                 return false;
             }
             this->flagsUseSSBO = false;
