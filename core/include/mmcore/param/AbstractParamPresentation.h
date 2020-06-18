@@ -12,6 +12,7 @@
 
 #include "vislib/sys/Log.h"
 
+#include <string>
 #include <map>
 
 
