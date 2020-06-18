@@ -13,6 +13,7 @@
 #include "vislib/vislibversion.h"
 
 #include "PhaseSeparator.h"
+#include "PhaseAnimator.h"
 #include "rendering/BoxRenderer.h"
 
 #include "thermodyn/BoxDataCall.h"
@@ -44,6 +45,7 @@ public:
 
         // register modules here:
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PhaseSeparator>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PhaseAnimator>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::rendering::BoxRenderer>();
         //
         // TODO: Register your plugin's modules here
