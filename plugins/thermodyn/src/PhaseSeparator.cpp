@@ -2,6 +2,7 @@
 #include "PhaseSeparator.h"
 
 #include <numeric>
+#include <cmath>
 
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
