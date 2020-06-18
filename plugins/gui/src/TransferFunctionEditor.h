@@ -10,10 +10,11 @@
 
 
 #include "ColorPalettes.h"
-#include "GUIUtils.h"
 
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/view/TransferFunction.h"
+
+#include "GUIUtils.h"
 
 #include <cmath>
 #include <iomanip>
@@ -22,6 +23,15 @@
 
 namespace megamol {
 namespace gui {
+
+namespace configurator {
+    
+// Forward declarations
+class Parameter;
+typedef std::shared_ptr<Parameter> ParamPtrType;
+
+}
+
 
 /**
  * 1D Transfer Function Editor.
@@ -33,13 +43,18 @@ public:
     ~TransferFunctionEditor(void) = default;
 
     /**
+     * Draws the transfer function editor.
+     */
+    bool Draw(bool connected_parameter_mode);
+    
+    /**
      * Set transfer function data to use in editor.
      *
      * @param tfs The transfer function encoded as string in JSON format.
      *
      * @return True if string was successfully converted into transfer function data, false otherwise.
      */
-    void SetTransferFunction(const std::string& tfs, bool active_parameter_mode);
+    void SetTransferFunction(const std::string& tfs, bool connected_parameter_mode);
 
     /**
      * Get current transfer function data.
@@ -49,24 +64,14 @@ public:
     bool GetTransferFunction(std::string& tfs);
 
     /**
-     * Set the currently active parameter.
+     * Set the currently connected parameter.
      */
-    void SetActiveParameter(vislib::SmartPtr<megamol::core::param::AbstractParam> param, const std::string& name);
+    void SetConnectedParameter(configurator::ParamPtrType param_ptr);
 
     /**
-     * Get name of currently active parameter.
+     * Get currently connected parameter.
      */
-    inline const std::string GetActiveParameterName(void) const { return this->active_parameter_name; }
-
-    /**
-     * Draws the transfer function editor.
-     */
-    bool Draw(bool active_parameter_mode);
-
-    /**
-     * Return current value ahsh of active parameter.
-     */
-    bool ActiveParamterValueHash(size_t& out_tf_value_hash);
+    inline const configurator::ParamPtrType GetConnectedParameter(void) const { return this->connected_parameter_ptr; }
 
     /**
      * Returns true if editor is in minimized view.
@@ -109,8 +114,7 @@ private:
     GUIUtils utils;
 
     /** The currently active parameter whose transfer function is currently loaded into this editor. */
-    vislib::SmartPtr<megamol::core::param::AbstractParam> active_parameter_ptr;
-    std::string active_parameter_name;
+    configurator::ParamPtrType connected_parameter_ptr;
 
     /** Array holding current colors and function values. */
     megamol::core::param::TransferFunctionParam::TFNodeType nodes;

@@ -1275,16 +1275,6 @@ void megamol::gui::configurator::GraphPresentation::present_parameters(
     ImGui::TextUnformatted("Parameters");
     ImGui::Separator();
 
-    if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH])) {
-        this->utils.SetSearchFocus(true);
-    }
-    std::string help_text =
-        "[" + std::get<0>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH]).ToString() +
-        "] Set keyboard focus to search input field.\n"
-        "Case insensitive substring search in parameter names.";
-    this->utils.StringSearch("graph_parameter_search", help_text);
-    auto search_string = this->utils.GetSearchString();
-
     // Mode
     ImGui::BeginGroup();
     this->utils.PointCircleButton("Mode");
@@ -1308,6 +1298,17 @@ void megamol::gui::configurator::GraphPresentation::present_parameters(
         ImGui::EndPopup();
     }
     ImGui::EndGroup();
+    
+    // Parameter Search
+    if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH])) {
+        this->utils.SetSearchFocus(true);
+    }
+    std::string help_text =
+        "[" + std::get<0>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH]).ToString() +
+        "] Set keyboard focus to search input field.\n"
+        "Case insensitive substring search in parameter names.";
+    this->utils.StringSearch("graph_parameter_search", help_text);
+    auto search_string = this->utils.GetSearchString();
 
     if (this->param_extended_mode) {
         ImGui::SameLine();

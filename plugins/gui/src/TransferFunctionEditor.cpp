@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "TransferFunctionEditor.h"
+#include "configurator/Parameter.h"
 
 
 using namespace megamol;
@@ -27,7 +28,7 @@ using namespace megamol::core;
  * @param gamma Set the gamma correction for intensity.
  */
 std::array<double, 3> CubeHelixRGB(double t, double start, double rots, double hue, double gamma) {
-    const double PI = 3.141592653589793238463; // Fuck C++!
+    const double PI = 3.141592653589793238463;
 
     double angle = 2.0 * PI * (start / 3.0 + 1 + rots * t);
     double fract = std::pow(t, gamma);
@@ -161,8 +162,7 @@ std::array<std::tuple<std::string, PresetGenerator>, 20> PRESETS = {
 
 TransferFunctionEditor::TransferFunctionEditor(void)
     : utils()
-    , active_parameter_ptr(nullptr)
-    , active_parameter_name("")
+    , connected_parameter_ptr(nullptr)
     , nodes()
     , range({0.0f, 1.0f})
     , last_range({0.0f, 1.0f})
@@ -197,9 +197,9 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     this->widget_buffer.range_value = zero[4];
 }
 
-void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool active_parameter_mode) {
+void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool connected_parameter_mode) {
 
-    if (active_parameter_mode && (this->active_parameter_ptr.IsNull())) {
+    if (connected_parameter_mode && (this->connected_parameter_ptr == nullptr)) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Missing active parameter to edit");
         return;
     }
@@ -242,12 +242,10 @@ bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
 }
 
 
-void TransferFunctionEditor::SetActiveParameter(
-    vislib::SmartPtr<megamol::core::param::AbstractParam> param, const std::string& name) {
-    this->active_parameter_ptr = nullptr;
-    if (auto* p = param.DynamicCast<megamol::core::param::TransferFunctionParam>()) {
-        this->active_parameter_ptr = param;
-        this->active_parameter_name = name;
+void TransferFunctionEditor::SetConnectedParameter(configurator::ParamPtrType param_ptr) {
+    this->connected_parameter_ptr = nullptr;
+    if (param_ptr->type == ParamType::TRANSFERFUNCTION) {
+        this->connected_parameter_ptr = param_ptr;
     } else {
         vislib::sys::Log::DefaultLog.WriteError(
             "Wrong parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -255,14 +253,14 @@ void TransferFunctionEditor::SetActiveParameter(
 }
 
 
-bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
+bool TransferFunctionEditor::Draw(bool connected_parameter_mode) {
 
     std::string help;
 
     ImGui::BeginGroup();
     ImGui::PushID("TransferFunctionEditor");
 
-    if (active_parameter_mode && (this->active_parameter_ptr.IsNull())) {
+    if (connected_parameter_mode && (this->connected_parameter_ptr == nullptr)) {
         const char* message = "Changes have no effect.\n"
                               "No transfer function parameter connected for edit.\n";
         ImGui::TextColored(GUI_COLOR_TEXT_WARN, message);
@@ -300,10 +298,10 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
     if (this->showOptions) {
         ImGui::Separator();
 
-        if (active_parameter_mode) {
+        if (connected_parameter_mode) {
             ImGui::TextUnformatted("Parameter:");
             ImGui::TextColored(GUI_COLOR_TEXT_WARN,
-                ((this->active_parameter_ptr.IsNull()) ? ("-") : (this->active_parameter_name.c_str())));
+                ((this->connected_parameter_ptr == nullptr) ? ("-") : (this->connected_parameter_ptr->full_name.c_str())));
         }
 
         // Legend alignment ---------------------------------------------------
@@ -525,14 +523,14 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
             this->pendingChanges = false;
         }
 
-        if (active_parameter_mode) {
+        if (connected_parameter_mode) {
             if (apply_changes) {
-                if (!this->active_parameter_ptr.IsNull()) {
+                if (this->connected_parameter_ptr != nullptr) {
                     std::string tf;
                     if (this->GetTransferFunction(tf)) {
-                        if (auto* p =
-                                this->active_parameter_ptr.DynamicCast<megamol::core::param::TransferFunctionParam>()) {
-                            p->SetValue(tf);
+                        if (this->connected_parameter_ptr->type == ParamType::TRANSFERFUNCTION) {
+                            this->connected_parameter_ptr->SetValue(tf);
+                            this->connected_parameter_ptr->GUI_SetTransferFunctionEditorHash(this->connected_parameter_ptr->GetStringHash());
                         }
                     }
                 }
@@ -546,18 +544,6 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
     ImGui::EndGroup();
 
     return apply_changes;
-}
-
-
-bool TransferFunctionEditor::ActiveParamterValueHash(size_t& out_tf_value_hash) {
-
-    if (!this->active_parameter_ptr.IsNull()) {
-        if (auto* p = this->active_parameter_ptr.DynamicCast<megamol::core::param::TransferFunctionParam>()) {
-            out_tf_value_hash = p->ValueHash();
-            return true;
-        }
-    }
-    return false;
 }
 
 

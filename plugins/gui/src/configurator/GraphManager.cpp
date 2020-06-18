@@ -17,7 +17,7 @@ using namespace megamol::gui::configurator;
 // GRAPH MANAGER PRESENTATION ####################################################
 
 megamol::gui::configurator::GraphManagerPresentation::GraphManagerPresentation(void)
-    : graph_delete_uid(GUI_INVALID_ID), utils(), file_utils() {}
+    : utils(), file_utils(), graph_delete_uid(GUI_INVALID_ID) {}
 
 
 megamol::gui::configurator::GraphManagerPresentation::~GraphManagerPresentation(void) {}
@@ -410,79 +410,7 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
                     std::string param_full_name = std::string(param_slot->Name().PeekBuffer());
                     for (auto& parameter : graph_module->parameters) {
                         if (parameter.full_name == param_full_name) {
-
-                            // Set gui state of parameter
-                            auto parameter_ptr = param_slot->Parameter();
-                            if (parameter_ptr != nullptr) {
-                                parameter.GUI_SetVisibility(parameter_ptr->IsGUIVisible());
-                                parameter.GUI_SetReadOnly(parameter_ptr->IsGUIReadOnly());
-                                auto core_param_presentation = static_cast<size_t>(parameter_ptr->GetGUIPresentation());
-                                parameter.GUI_SetPresentation(static_cast<PresentType>(core_param_presentation));
-                            }
-
-                            if (auto* p_ptr = param_slot->Param<core::param::ButtonParam>()) {
-                                parameter.SetStorage(p_ptr->GetKeyCode());
-                            } else if (auto* p_ptr = param_slot->Param<core::param::BoolParam>()) {
-                                parameter.SetValue(p_ptr->Value());
-                            } else if (auto* p_ptr = param_slot->Param<core::param::ColorParam>()) {
-                                auto value = p_ptr->Value();
-                                parameter.SetValue(glm::vec4(value[0], value[1], value[2], value[3]));
-                            } else if (auto* p_ptr = param_slot->Param<core::param::EnumParam>()) {
-                                parameter.SetValue(p_ptr->Value());
-                                EnumStorageType map;
-                                auto param_map = p_ptr->getMap();
-                                auto iter = param_map.GetConstIterator();
-                                while (iter.HasNext()) {
-                                    auto pair = iter.Next();
-                                    map.emplace(pair.Key(), std::string(pair.Value().PeekBuffer()));
-                                }
-                                parameter.SetStorage(map);
-                            } else if (auto* p_ptr = param_slot->Param<core::param::FilePathParam>()) {
-                                parameter.SetValue(std::string(p_ptr->Value().PeekBuffer()));
-                            } else if (auto* p_ptr = param_slot->Param<core::param::FlexEnumParam>()) {
-                                parameter.SetValue(p_ptr->Value());
-                                parameter.SetStorage(p_ptr->getStorage());
-                            } else if (auto* p_ptr = param_slot->Param<core::param::FloatParam>()) {
-                                parameter.SetValue(p_ptr->Value());
-                                parameter.SetMinValue(p_ptr->MinValue());
-                                parameter.SetMaxValue(p_ptr->MaxValue());
-                            } else if (auto* p_ptr = param_slot->Param<core::param::IntParam>()) {
-                                parameter.SetValue(p_ptr->Value());
-                                parameter.SetMinValue(p_ptr->MinValue());
-                                parameter.SetMaxValue(p_ptr->MaxValue());
-                            } else if (auto* p_ptr = param_slot->Param<core::param::StringParam>()) {
-                                parameter.SetValue(std::string(p_ptr->Value().PeekBuffer()));
-                            } else if (auto* p_ptr = param_slot->Param<core::param::TernaryParam>()) {
-                                parameter.SetValue(p_ptr->Value());
-                            } else if (auto* p_ptr = param_slot->Param<core::param::TransferFunctionParam>()) {
-                                parameter.SetValue(p_ptr->Value());
-                            } else if (auto* p_ptr = param_slot->Param<core::param::Vector2fParam>()) {
-                                auto val = p_ptr->Value();
-                                parameter.SetValue(glm::vec2(val.X(), val.Y()));
-                                auto min = p_ptr->MinValue();
-                                parameter.SetMinValue(glm::vec2(min.X(), min.Y()));
-                                auto max = p_ptr->MaxValue();
-                                parameter.SetMaxValue(glm::vec2(max.X(), max.Y()));
-                            } else if (auto* p_ptr = param_slot->Param<core::param::Vector3fParam>()) {
-                                auto val = p_ptr->Value();
-                                parameter.SetValue(glm::vec3(val.X(), val.Y(), val.Z()));
-                                auto min = p_ptr->MinValue();
-                                parameter.SetMinValue(glm::vec3(min.X(), min.Y(), min.Z()));
-                                auto max = p_ptr->MaxValue();
-                                parameter.SetMaxValue(glm::vec3(max.X(), max.Y(), max.Z()));
-                            } else if (auto* p_ptr = param_slot->Param<core::param::Vector4fParam>()) {
-                                auto val = p_ptr->Value();
-                                parameter.SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()));
-                                auto min = p_ptr->MinValue();
-                                parameter.SetMinValue(glm::vec4(min.X(), min.Y(), min.Z(), min.W()));
-                                auto max = p_ptr->MaxValue();
-                                parameter.SetMaxValue(glm::vec4(max.X(), max.Y(), max.Z(), max.W()));
-                            } else {
-                                vislib::sys::Log::DefaultLog.WriteError(
-                                    "Found unknown parameter type. Please extend parameter types for the configurator. "
-                                    "[%s, %s, line %d]\n",
-                                    __FILE__, __FUNCTION__, __LINE__);
-                            }
+                            megamol::gui::configurator::ReadCoreParameter((*param_slot), parameter);
                         }
                     }
                 }
@@ -1186,100 +1114,13 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
 
         // Param Slots
         for (std::shared_ptr<core::param::ParamSlot> param_slot : paramSlots) {
-
             if (param_slot == nullptr) {
                 break;
             }
-
             Parameter::StockParameter psd;
-            psd.full_name = std::string(param_slot->Name().PeekBuffer());
-            psd.description = std::string(param_slot->Description().PeekBuffer());
-
-            // Set gui state of parameter
-            auto parameter_ptr = param_slot->Parameter();
-            if (parameter_ptr != nullptr) {
-                psd.gui_visibility = parameter_ptr->IsGUIVisible();
-                psd.gui_read_only = parameter_ptr->IsGUIReadOnly();
-                auto core_param_presentation = static_cast<size_t>(parameter_ptr->GetGUIPresentation());
-                psd.gui_presentation = static_cast<PresentType>(core_param_presentation);
+            if (megamol::gui::configurator::ReadCoreParameter((*param_slot), psd)) {
+                mod.parameters.emplace_back(psd);
             }
-
-            // Set parameter type
-            if (auto* p_ptr = param_slot->Param<core::param::ButtonParam>()) {
-                psd.type = ParamType::BUTTON;
-                psd.storage = p_ptr->GetKeyCode();
-            } else if (auto* p_ptr = param_slot->Param<core::param::BoolParam>()) {
-                psd.type = ParamType::BOOL;
-                psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-            } else if (auto* p_ptr = param_slot->Param<core::param::ColorParam>()) {
-                psd.type = ParamType::COLOR;
-                psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-            } else if (auto* p_ptr = param_slot->Param<core::param::EnumParam>()) {
-                psd.type = ParamType::ENUM;
-                psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-                EnumStorageType map;
-                auto psd_map = p_ptr->getMap();
-                auto iter = psd_map.GetConstIterator();
-                while (iter.HasNext()) {
-                    auto pair = iter.Next();
-                    map.emplace(pair.Key(), std::string(pair.Value().PeekBuffer()));
-                }
-                psd.storage = map;
-            } else if (auto* p_ptr = param_slot->Param<core::param::FilePathParam>()) {
-                psd.type = ParamType::FILEPATH;
-                psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-            } else if (auto* p_ptr = param_slot->Param<core::param::FlexEnumParam>()) {
-                psd.type = ParamType::FLEXENUM;
-                psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-                psd.storage = p_ptr->getStorage();
-            } else if (auto* p_ptr = param_slot->Param<core::param::FloatParam>()) {
-                psd.type = ParamType::FLOAT;
-                psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-                psd.minval = p_ptr->MinValue();
-                psd.maxval = p_ptr->MaxValue();
-            } else if (auto* p_ptr = param_slot->Param<core::param::IntParam>()) {
-                psd.type = ParamType::INT;
-                psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-                psd.minval = p_ptr->MinValue();
-                psd.maxval = p_ptr->MaxValue();
-            } else if (auto* p_ptr = param_slot->Param<core::param::StringParam>()) {
-                psd.type = ParamType::STRING;
-                psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-            } else if (auto* p_ptr = param_slot->Param<core::param::TernaryParam>()) {
-                psd.type = ParamType::TERNARY;
-                psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-            } else if (auto* p_ptr = param_slot->Param<core::param::TransferFunctionParam>()) {
-                psd.type = ParamType::TRANSFERFUNCTION;
-                psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-            } else if (auto* p_ptr = param_slot->Param<core::param::Vector2fParam>()) {
-                psd.type = ParamType::VECTOR2F;
-                psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-                auto min = p_ptr->MinValue();
-                psd.minval = glm::vec2(min.X(), min.Y());
-                auto max = p_ptr->MaxValue();
-                psd.maxval = glm::vec2(max.X(), max.Y());
-            } else if (auto* p_ptr = param_slot->Param<core::param::Vector3fParam>()) {
-                psd.type = ParamType::VECTOR3F;
-                psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-                auto min = p_ptr->MinValue();
-                psd.minval = glm::vec3(min.X(), min.Y(), min.Z());
-                auto max = p_ptr->MaxValue();
-                psd.maxval = glm::vec3(max.X(), max.Y(), max.Z());
-            } else if (auto* p_ptr = param_slot->Param<core::param::Vector4fParam>()) {
-                psd.type = ParamType::VECTOR4F;
-                psd.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-                auto min = p_ptr->MinValue();
-                psd.minval = glm::vec4(min.X(), min.Y(), min.Z(), min.W());
-                auto max = p_ptr->MaxValue();
-                psd.maxval = glm::vec4(max.X(), max.Y(), max.Z(), max.W());
-            } else {
-                vislib::sys::Log::DefaultLog.WriteError("Found unknown parameter type. Please extend parameter types "
-                                                        "for the configurator. [%s, %s, line %d]\n",
-                    __FILE__, __FUNCTION__, __LINE__);
-                psd.type = ParamType::UNKNOWN;
-            }
-
-            mod.parameters.emplace_back(psd);
         }
 
         // CallerSlots

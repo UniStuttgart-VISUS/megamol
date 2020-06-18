@@ -162,10 +162,7 @@ private:
     WindowManager window_manager;
 
     /** The transfer function editor. */
-    TransferFunctionEditor tf_editor;
-
-    /** The last tf param value. */
-    size_t tf_hash;
+    std::shared_ptr<TransferFunctionEditor> tf_editor_ptr;
 
     /** The configurator. */
     megamol::gui::configurator::Configurator configurator;
@@ -190,19 +187,10 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    /**
-     * Creates the ImGui context indepedant of the required implementation.
-     */
-    bool createContext(void);
 
-    /**
-     * Creates the ImGui context indepedant of the required implementation.
-     */
+    bool createContext(void);
     bool destroyContext(void);
 
-    /**
-     * Validates GUI parameters.
-     */
     void validateParameters();
 
     // Window Draw Callbacks
@@ -212,73 +200,19 @@ private:
     void drawTFWindowCallback(WindowManager::WindowConfiguration& wc);
     void drawConfiguratorCallback(WindowManager::WindowConfiguration& wc);
 
-    /**
-     * Draws the menu bar.
-     */
     void drawMenu(void);
-
-    /**
-     * Draw one parameter.
-     *
-     * @param slot      The slot of the parameter to draw.
-     * @param scope     The scope.
-     */
     void drawParameter(megamol::core::param::ParamSlot& slot, megamol::gui::configurator::ParameterPresentation::WidgetScope scope, bool expert = false);
-
-    /**
-     * Handle pop-ups.
-     */
     void drawPopUps(void);
 
-    /**
-     * Check if module's parameters should be visible.
-     */
     bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
-
-    /**
-     * Checks for multiple hotkey assignement.
-     */
     void checkMultipleHotkeyAssignement(void);
-
-    /**
-     * Check if given hotkey is pressed.
-     */
     bool hotkeyPressed(megamol::core::view::KeyCode keycode);
-
-    /**
-     * Shutdown megmol program.
-     */
     void shutdown(void);
-
-    /**
-     *  Adds new parameter to parameter presentation storage
-     *
-     * @param param_slot  The parameter slot.
-     * 
-     */
-    void parameters_add_param(megamol::core::param::ParamSlot& slot);
     
-    /**
-     * Saves current state to json string parameter.
-     */
+    void add_param_presentation(megamol::core::param::ParamSlot& slot);
+    
     void save_state_to_parameter(void);
-        
-    /**
-     * Deserializes the parameters gui state.
-     *
-     * @param json  The string to deserialize from.
-     *
-     * @return True on success, false otherwise.
-     */
     bool gui_and_parameters_state_from_json_string(const std::string& in_json_string);
-
-    /**
-     * Serializes the parameters gui state.
-     *
-     * @param json  The json to serialize to.
-     *
-     * @return True on success, false otherwise.
-     */
     bool gui_and_parameters_state_to_json(nlohmann::json& out_json);
 };
 

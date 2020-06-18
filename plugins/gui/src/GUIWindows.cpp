@@ -33,8 +33,7 @@ GUIWindows::GUIWindows()
     , context(nullptr)
     , impl(Implementation::NONE)
     , window_manager()
-    , tf_editor()
-    , tf_hash(0)
+    , tf_editor_ptr(nullptr)
     , configurator()
     , utils()
     , file_utils()
@@ -76,6 +75,8 @@ GUIWindows::GUIWindows()
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false);
     this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU] = megamol::gui::HotkeyDataType(
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false);        
+        
+    this->tf_editor_ptr = std::make_shared<TransferFunctionEditor>();
 }
 
 
@@ -248,19 +249,13 @@ bool GUIWindows::PostDraw(void) {
         }
         // Loading changed window state of transfer function editor (even if window is not shown)
         if ((wc.win_callback == WindowManager::DrawCallbacks::TRANSFER_FUNCTION) && wc.buf_tfe_reset) {
-            this->tf_editor.SetMinimized(wc.tfe_view_minimized);
-            this->tf_editor.SetVertical(wc.tfe_view_vertical);
-            if (this->core_instance != nullptr) {
-                this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
-                    std::string param_name = std::string(slot.Name().PeekBuffer());
-                    std::string param_full_name = std::string(mod.FullName().PeekBuffer()) + "::" + param_name;
-                    if (wc.tfe_active_param == param_full_name) {
-                        if (auto* p = slot.template Param<core::param::TransferFunctionParam>()) {
-                            this->tf_editor.SetActiveParameter(p, param_full_name);
-                            this->tf_editor.SetTransferFunction(p->Value(), true);
-                        }
-                    }
-                });
+            this->tf_editor_ptr->SetMinimized(wc.tfe_view_minimized);
+            this->tf_editor_ptr->SetVertical(wc.tfe_view_vertical);
+            for (auto& param_ptr : this->param_presentations) {
+                if ((wc.tfe_active_param == param_ptr.second->full_name) && (param_ptr.second->type == ParamType::TRANSFERFUNCTION)) {
+                    this->tf_editor_ptr->SetConnectedParameter(param_ptr.second);
+                    this->tf_editor_ptr->SetTransferFunction(std::get<std::string>(param_ptr.second->GetValue()), true);
+                }
             }
             wc.buf_tfe_reset = false;
         }
@@ -271,14 +266,14 @@ bool GUIWindows::PostDraw(void) {
 
             // Change window flags depending on current view of transfer function editor
             if (wc.win_callback == WindowManager::DrawCallbacks::TRANSFER_FUNCTION) {
-                if (this->tf_editor.IsMinimized()) {
+                if (this->tf_editor_ptr->IsMinimized()) {
                     wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
                                    ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
                 } else {
                     wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
                 }
-                wc.tfe_view_minimized = this->tf_editor.IsMinimized();
-                wc.tfe_view_vertical = this->tf_editor.IsVertical();
+                wc.tfe_view_minimized = this->tf_editor_ptr->IsMinimized();
+                wc.tfe_view_vertical = this->tf_editor_ptr->IsVertical();
             }
 
             // Begin Window
@@ -631,9 +626,10 @@ bool GUIWindows::createContext(void) {
     WindowManager::WindowConfiguration buf_win;
     buf_win.win_reset = true;
     buf_win.win_position = ImVec2(0.0f, 0.0f);
-    buf_win.win_size = ImVec2(400.0f, 600.0f);    
+    buf_win.win_size = ImVec2(400.0f, 600.0f);
+      
     // MAIN Window ------------------------------------------------------------
-    buf_win.win_name = "Main Parameters";
+    buf_win.win_name = "All Parameters";
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
     buf_win.win_flags = ImGuiWindowFlags_HorizontalScrollbar;
@@ -683,6 +679,8 @@ bool GUIWindows::createContext(void) {
                                ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_AlphaBar |
                                ImGuiColorEditFlags_AlphaPreview);
     /// ... for detailed settings see styles defined in separate headers.
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.WindowRounding = 0.0f;
 
     // IO settings ------------------------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
@@ -801,6 +799,17 @@ bool GUIWindows::createContext(void) {
     io.KeyMap[ImGuiKey_Y] = static_cast<int>(GuiTextModHotkeys::CTRL_Y);
     io.KeyMap[ImGuiKey_Z] = static_cast<int>(GuiTextModHotkeys::CTRL_Z);
 
+    // Filling parameter presentation list
+    this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {      
+        this->add_param_presentation(slot);
+    });
+    
+    if (this->tf_editor_ptr == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Pointer to transfer function editor is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+        
     return true;
 }
 
@@ -878,13 +887,12 @@ void GUIWindows::validateParameters() {
 
 void GUIWindows::drawTFWindowCallback(WindowManager::WindowConfiguration& wc) {
 
-    if (this->tf_editor.Draw(true)) {
-        size_t current_tf_hash = 0;
-        if (this->tf_editor.ActiveParamterValueHash(current_tf_hash)) {
-            this->tf_hash = current_tf_hash;
-        }
+    this->tf_editor_ptr->Draw(true);
+    
+    auto param_ptr = this->tf_editor_ptr->GetConnectedParameter();
+    if (param_ptr != nullptr) {
+        wc.tfe_active_param = param_ptr->full_name;
     }
-    wc.tfe_active_param = this->tf_editor.GetActiveParameterName();
 }
 
 
@@ -895,19 +903,7 @@ void GUIWindows::drawConfiguratorCallback(WindowManager::WindowConfiguration& wc
 
 
 void GUIWindows::drawParametersCallback(WindowManager::WindowConfiguration& wc) {
-    
-    // Options
-    ImGuiID overrideState = GUI_INVALID_ID;
-    if (ImGui::Button("Expand All")) {
-        overrideState = 1; // open
-    }
-    ImGui::SameLine();
-
-    if (ImGui::Button("Collapse All")) {
-        overrideState = 0; // close
-    }
-    ImGui::SameLine();
-
+        
     // Mode
     ImGui::BeginGroup();
     this->utils.PointCircleButton("Mode");
@@ -921,9 +917,21 @@ void GUIWindows::drawParametersCallback(WindowManager::WindowConfiguration& wc) 
         ImGui::EndPopup();
     }
     ImGui::EndGroup();
-    std::string mode_help = "Expert mode enables buttons for additional parameter presentation options.";
-    ImGui::AlignTextToFramePadding();   
+    std::string mode_help = "Expert mode enables buttons for additional parameter presentation options."; 
     this->utils.HelpMarkerToolTip(mode_help);
+    ImGui::SameLine();
+                
+    // Options
+    ImGuiID overrideState = GUI_INVALID_ID;
+    if (ImGui::Button("Expand All")) {
+        overrideState = 1; // open
+    }
+    ImGui::SameLine();
+
+    if (ImGui::Button("Collapse All")) {
+        overrideState = 0; // close
+    }
+    ImGui::SameLine(); 
 
     /* DISBALED --- Does anybody use this?
     // Toggel Hotkeys
@@ -934,8 +942,7 @@ void GUIWindows::drawParametersCallback(WindowManager::WindowConfiguration& wc) 
     */
     
     // Info 
-    std::string help_marker = "Help";
-    ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - ImGui::CalcTextSize(help_marker.c_str()).x);
+    std::string help_marker = "[INFO]";
     std::string param_help = "[Hover] Show Parameter Description Tooltip\n"
                              "[Right-Click] Context Menu\n"
                              "[Drag & Drop] Move Module to other Parameter Window\n"
@@ -943,7 +950,7 @@ void GUIWindows::drawParametersCallback(WindowManager::WindowConfiguration& wc) 
     ImGui::AlignTextToFramePadding(); 
     ImGui::TextDisabled(help_marker.c_str());
     this->utils.HoverToolTip(param_help);
-
+    
     // Paramter substring name filtering (only for main parameter view)
     if (wc.win_callback == WindowManager::DrawCallbacks::MAIN_PARAMETERS) {
         if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH])) {
@@ -956,7 +963,7 @@ void GUIWindows::drawParametersCallback(WindowManager::WindowConfiguration& wc) 
             "Case insensitive substring search in\nparameter names.\nGlobally in all parameter views.\n";
         this->utils.StringSearch("guiwindow_parameter_earch", help_test);
     }
-
+    
     /* DISABLED --- Does anybody use this?
     // Module filtering (only for main parameter view)
     if ((this->core_instance != nullptr) && (wc.win_callback == WindowManager::DrawCallbacks::MAIN_PARAMETERS)) {
@@ -1443,32 +1450,37 @@ void GUIWindows::drawFontWindowCallback(WindowManager::WindowConfiguration& wc) 
 
 
 void GUIWindows::drawParameter(megamol::core::param::ParamSlot& slot, megamol::gui::configurator::ParameterPresentation::WidgetScope scope, bool expert) {
-       
-    this->parameters_add_param(slot);
-    /// TODO Delete paramters in list which do no longer exist in core.
+           
+    this->add_param_presentation(slot);
+    /// TODO Delete parameters in list which do no longer exist in core.    
     
     auto parameter_ptr = slot.Parameter();
-    auto param_ref = &(*parameter_ptr);
+    if (parameter_ptr.IsNull()) {
+        return;
+    }    
+    auto param_ref = &(*parameter_ptr);    
     auto param_present = this->param_presentations[param_ref];
     param_present->GUI_SetExpert(expert);
-    
+    if (param_present->type == ParamType::TRANSFERFUNCTION) {
+        param_present->GUI_ConnectExternalTransferFunctionEditor(this->tf_editor_ptr);
+    }
     if (param_present->GUI_Present(scope)) {
-        // Set value to core param
+        megamol::gui::configurator::WriteCoreParameter((*param_present), slot);
         
-        /// TODO Set value
-        
-        parameter_ptr->SetGUIPresentation(param_present->GUI_GetPresentation());
-        parameter_ptr->SetGUIReadOnly(param_present->GUI_GetReadOnly());
-        parameter_ptr->SetGUIVisible(param_present->GUI_GetVisibility());
+        if (scope == megamol::gui::configurator::ParameterPresentation::WidgetScope::LOCAL) {
+            // Open window calling the transfer function editor callback
+            if ((param_present->type == ParamType::TRANSFERFUNCTION)) {
+                const auto func = [](WindowManager::WindowConfiguration& wc) {
+                    if (wc.win_callback == WindowManager::DrawCallbacks::TRANSFER_FUNCTION) {
+                        wc.win_show = true;
+                    }
+                };
+                this->window_manager.EnumWindows(func);                
+            }
+        }
     }
     else {
-        // Get value from core param
-        
-        /// TODO Set value
-        
-        param_present->GUI_SetPresentation(parameter_ptr->GetGUIPresentation());
-        param_present->GUI_SetReadOnly(parameter_ptr->IsGUIReadOnly());
-        param_present->GUI_SetVisibility(parameter_ptr->IsGUIVisible());
+        megamol::gui::configurator::ReadCoreParameter(slot, (*param_present));
     }
 }
 
@@ -1735,108 +1747,23 @@ void megamol::gui::GUIWindows::shutdown(void) {
 }
 
 
-void megamol::gui::GUIWindows::parameters_add_param(megamol::core::param::ParamSlot& slot) {
-
+void megamol::gui::GUIWindows::add_param_presentation(megamol::core::param::ParamSlot& slot) {
+    
     auto parameter_ptr = slot.Parameter();
     if (parameter_ptr.IsNull()) {
         return;
     }    
-    auto param_ref = &(*parameter_ptr);
+    auto param_ref = &(*parameter_ptr);    
     auto iter = this->param_presentations.find(param_ref);
     if (iter == this->param_presentations.end()) {  
-             
         std::shared_ptr<configurator::Parameter> param_ptr;
-        
-        if (auto* p_ptr = slot.template Param<core::param::BoolParam>()) {
-            param_ptr = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::BOOL, std::monostate(), std::monostate(), std::monostate());
-            param_ptr->SetValue(p_ptr->Value());
-        } 
-        else if (auto* p_ptr = slot.template Param<core::param::ButtonParam>()) {
-            param_ptr = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::BUTTON, p_ptr->GetKeyCode(), std::monostate(), std::monostate());
-        } 
-        else if (auto* p_ptr = slot.template Param<core::param::ColorParam>()) {
-            param_ptr = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::COLOR, std::monostate(), std::monostate(), std::monostate());
-            auto value = p_ptr->Value();
-            param_ptr->SetValue(glm::vec4(value[0], value[1], value[2], value[3]));
-        } 
-        else if (auto* p_ptr = slot.template Param<core::param::TransferFunctionParam>()) {
-            param_ptr = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::TRANSFERFUNCTION, std::monostate(), std::monostate(), std::monostate());
-            param_ptr->SetValue(p_ptr->Value());            
-        } 
-        else if (auto* p_ptr = slot.template Param<core::param::EnumParam>()) {             
-            EnumStorageType map;
-            auto param_map = p_ptr->getMap();
-            auto iter = param_map.GetConstIterator();
-            while (iter.HasNext()) {
-                auto pair = iter.Next();
-                map.emplace(pair.Key(), std::string(pair.Value().PeekBuffer()));
-            }
-            param_ptr = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::ENUM, map, std::monostate(), std::monostate());
-            param_ptr->SetValue(p_ptr->Value());            
-        } 
-        else if (auto* p_ptr = slot.template Param<core::param::FlexEnumParam>()) {
-            param_ptr = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::FLEXENUM, p_ptr->getStorage(), std::monostate(), std::monostate());
-            param_ptr->SetValue(p_ptr->Value());            
-        } 
-        else if (auto* p_ptr = slot.template Param<core::param::FloatParam>()) {          
-            param_ptr = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::FLOAT, std::monostate(), p_ptr->MinValue(), p_ptr->MaxValue());
-            param_ptr->SetValue(p_ptr->Value());
-        } 
-        else if (auto* p_ptr = slot.template Param<core::param::IntParam>()) {         
-            param_ptr = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::INT, std::monostate(), p_ptr->MinValue(), p_ptr->MaxValue());
-            param_ptr->SetValue(p_ptr->Value());            
-        } 
-        else if (auto* p_ptr = slot.template Param<core::param::Vector2fParam>()) {
-            auto min = p_ptr->MinValue();
-            auto max = p_ptr->MaxValue();
-            auto val = p_ptr->Value();            
-            param_ptr = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::VECTOR2F, std::monostate(), glm::vec2(min.X(), min.Y()), glm::vec2(max.X(), max.Y()));
-            param_ptr->SetValue(glm::vec2(val.X(), val.Y()));            
-        } 
-        else if (auto* p_ptr = slot.template Param<core::param::Vector3fParam>()) {
-            auto min = p_ptr->MinValue();
-            auto max = p_ptr->MaxValue();
-            auto val = p_ptr->Value();            
-            param_ptr = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::VECTOR3F, std::monostate(), glm::vec3(min.X(), min.Y(), min.Z()), glm::vec3(max.X(), max.Y(), max.Z()));
-            param_ptr->SetValue(glm::vec3(val.X(), val.Y(), val.Z()));
-        } 
-        else if (auto* p_ptr = slot.template Param<core::param::Vector4fParam>()) {
-            auto min = p_ptr->MinValue();
-            auto max = p_ptr->MaxValue();
-            auto val = p_ptr->Value();
-            param_ptr = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::VECTOR4F, std::monostate(), glm::vec4(min.X(), min.Y(), min.Z(), min.W()), glm::vec4(max.X(), max.Y(), max.Z(), max.W()));
-            param_ptr->SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()));                                        
-        } 
-        else if (auto* p_ptr = slot.template Param<core::param::TernaryParam>()) {
-            param_ptr = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::TERNARY, std::monostate(), std::monostate(), std::monostate());
-            p_ptr->SetValue(p_ptr->Value());            
-        } 
-        else if (auto* p_ptr = slot.Param<core::param::StringParam>()) {
-            param_ptr = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::STRING, std::monostate(), std::monostate(), std::monostate());
-            param_ptr->SetValue(std::string(p_ptr->Value().PeekBuffer()));            
-        } 
-        else if (auto* p_ptr = slot.Param<core::param::FilePathParam>()) {
-            param_ptr = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::FILEPATH, std::monostate(), std::monostate(), std::monostate());
-            param_ptr->SetValue(std::string(p_ptr->Value().PeekBuffer()));            
-        } 
-        else {
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "Unknown Parameter Type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return;
-        }
-        param_ptr->full_name = std::string(slot.Name().PeekBuffer()); 
-        param_ptr->description = std::string(slot.Description().PeekBuffer());
-        param_ptr->GUI_SetVisibility(parameter_ptr->IsGUIVisible());
-        param_ptr->GUI_SetReadOnly(parameter_ptr->IsGUIReadOnly());
-        param_ptr->GUI_SetPresentation(parameter_ptr->GetGUIPresentation());
-        
+        megamol::gui::configurator::ReadCoreParameter(slot, param_ptr);
         this->param_presentations.emplace(param_ref, param_ptr);
-        
         ///vislib::sys::Log::DefaultLog.WriteError(
         ///    "[DEBUG] Added presentation parameter for core parameter '%s'", param_ptr->full_name.c_str());       
-    }
+    } 
 }
-
+    
 
 void megamol::gui::GUIWindows::save_state_to_parameter(void) {
 

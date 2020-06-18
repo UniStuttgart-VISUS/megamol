@@ -19,11 +19,12 @@ The menu of the main window of the `GUIView` provides the following options:
     * `Save Project` (`Ctrl + s`) Save the current project to a file (lua).
     * `Exit` (`Alt + F4`) End the program.
 * `Windows` 
-    * `Configurator` (`(Shift +)* F8`) Show/Hide the configurator window.
-    * `Font Settings` (`(Shift +)* F9`) Show/Hide the font settings window.
-    * `Main Windows` (`(Shift +)* F10`) Show/Hide the main window.
-    * `Performance Metrics` (`(Shift +)* F11`) Show/Hide the performance metrics window showing the fps or ms.
-    * `Transfer Function Editor` (`(Shift +)* F12`)Show/Hide the transfer function editor.
+    * `Menu` (`F12`) Show/Hide the configurator window.
+    * `All Parameters` (`(Shift +)* F11`) Show/Hide the main window.
+    * `Performance Metrics` (`(Shift +)* F10`) Show/Hide the performance metrics window showing the fps or ms.
+    * `Font Settings` (`(Shift +)* F9`) Show/Hide the font settings window.    
+    * `Transfer Function Editor` (`(Shift +)* F8`)Show/Hide the transfer function editor.
+    * `Configurator` (`(Shift +)* F7`) Show/Hide the configurator window.
 * `Help`: Some information and links concerning the currently running MegaMol.
 
 *Use `Shift` for resetting the window to fit the currrent viewport.
@@ -96,7 +97,7 @@ See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol
     * `Add` 
         * `File` Add existing project from a file to currently selected project.
         * `Running` Add currently running project to currently selected project.
-    * `Save Project` (`Ctrl + s`) Save the project of the currently selected tab to a file (lua).
+    * `Save Project` (`Ctrl + Shift + s`) Save the project of the currently selected tab to a file (lua).
 * `View`
     * `Modules Sidebar`  Show/Hide sidebar with module stock list.
     * `Parameter Sidebar` Show/Hide sidebar with parameters of currently selected module.
