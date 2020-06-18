@@ -104,14 +104,14 @@ public:
     *
     * @return True if given presentation is compatible, false otherwise.
     */
-    void SetGUIPresentation(Presentation presentation);
+    void SetGUIPresentation(AbstractParamPresentation::Presentation presentation);
 
     /**
     * Answer parameter presentation in GUI.
     *
     * @return Parameter presentation.
     */
-    inline Presentation GetGUIPresentation(void) const {
+    inline AbstractParamPresentation::Presentation GetGUIPresentation(void) const {
         return this->presentation;
     }
 
@@ -120,8 +120,8 @@ public:
     *
     * @return True if given presentation is compatible, false otherwise.
     */
-    inline bool IsPresentationCompatible(Presentation presentation) const {
-        return (Presentation::NONE != (presentation & this->compatible));
+    inline bool IsPresentationCompatible(AbstractParamPresentation::Presentation presentation) const {
+        return (AbstractParamPresentation::Presentation::NONE != (presentation & this->compatible));
     }
     
     /** 
@@ -129,7 +129,7 @@ public:
     * 
     * @return The presentation name map.
     */
-     const std::map<Presentation, std::string>& GetPresentationNameMap(void) { return this->presentation_name_map; }
+     std::map<AbstractParamPresentation::Presentation, std::string>& GetPresentationNameMap(void) { return this->presentation_name_map; }
      
     /** 
     * Get presentation name.
@@ -138,7 +138,7 @@ public:
     *
     * @return The human readable name of the given presentation.
     */   
-     const std::string GetPresentationName(Presentation presentation) { return this->presentation_name_map[presentation]; }
+     std::string GetPresentationName(AbstractParamPresentation::Presentation presentation) { return this->presentation_name_map[presentation]; }
           
     /** 
     * Get human readable parameter type.
