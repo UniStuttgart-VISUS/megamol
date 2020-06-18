@@ -183,6 +183,9 @@ public:
     std::string description;
 
     // Get ----------------------------------
+
+    bool IsDirty(void) { return this->dirty; }
+
     std::string GetName(void) {
         std::string name = this->full_name;
         auto idx = this->full_name.rfind(':');
@@ -203,7 +206,12 @@ public:
 
     std::string GetValueString(void);
 
-    ValueType& GetValue(void) { return this->value; }
+    ValueType& GetValue(bool reset_dirty = false) {
+        if (reset_dirty) {
+            this->dirty = false;
+        }
+        return this->value;
+    }
 
     template <typename T> const T& GetMinValue(void) const { return std::get<T>(this->minval); }
 
@@ -213,14 +221,18 @@ public:
 
     bool DefaultValueMismatch(void) { return this->default_value_mismatch; }
 
-    const size_t GetStringHash(void) const { return this->string_hash; }
+    const size_t GetTransferFunctionHash(void) const { return this->string_hash; }
 
     // SET ----------------------------------
     bool SetValueString(const std::string& val_str, bool set_default_val = false);
 
     template <typename T> void SetValue(T val, bool set_default_val = false) {
         if (std::holds_alternative<T>(this->value)) {
-            this->value = val;
+            if (std::get<T>(this->value) != val) {
+                this->value = val;
+                this->dirty = true;
+            }
+
             // Check for new flex enum entry
             if (this->type == ParamType::FLEXENUM) {
                 auto storage = this->GetStorage<megamol::core::param::FlexEnumParam::Storage_t>();
@@ -305,6 +317,7 @@ private:
     size_t string_hash;
     ValueType default_value;
     bool default_value_mismatch;
+    bool dirty;
 
     ParameterPresentation present;
 };
@@ -406,8 +419,8 @@ static bool ReadCoreParameter(
 }
 
 
-static bool ReadCoreParameter(
-    megamol::core::param::ParamSlot& in_param_slot, megamol::gui::configurator::Parameter& out_param) {
+static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
+    megamol::gui::configurator::Parameter& out_param, const std::string& module_full_name) {
 
     bool type_error = false;
 
@@ -416,7 +429,7 @@ static bool ReadCoreParameter(
         return false;
     }
 
-    out_param.full_name = std::string(in_param_slot.Name().PeekBuffer());
+    out_param.full_name = module_full_name + "::" + std::string(in_param_slot.Name().PeekBuffer());
     out_param.GUI_SetVisibility(parameter_ptr->IsGUIVisible());
     out_param.GUI_SetReadOnly(parameter_ptr->IsGUIReadOnly());
     out_param.GUI_SetPresentation(parameter_ptr->GetGUIPresentation());
@@ -552,8 +565,8 @@ static bool ReadCoreParameter(
 }
 
 
-static bool ReadCoreParameter(
-    megamol::core::param::ParamSlot& in_param_slot, std::shared_ptr<megamol::gui::configurator::Parameter>& out_param) {
+static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
+    std::shared_ptr<megamol::gui::configurator::Parameter>& out_param, const std::string& module_full_name) {
 
     auto parameter_ptr = in_param_slot.Parameter();
     if (parameter_ptr.IsNull()) {
@@ -643,7 +656,7 @@ static bool ReadCoreParameter(
         return false;
     }
 
-    out_param->full_name = std::string(in_param_slot.Name().PeekBuffer());
+    out_param->full_name = module_full_name + "::" + std::string(in_param_slot.Name().PeekBuffer());
     out_param->description = std::string(in_param_slot.Description().PeekBuffer());
     out_param->GUI_SetVisibility(parameter_ptr->IsGUIVisible());
     out_param->GUI_SetReadOnly(parameter_ptr->IsGUIReadOnly());
@@ -674,72 +687,72 @@ static bool WriteCoreParameter(
     } else */
     if (auto* p_ptr = out_param.Param<core::param::BoolParam>()) {
         if (in_param.type == ParamType::BOOL) {
-            p_ptr->SetValue(std::get<bool>(in_param.GetValue()));
+            p_ptr->SetValue(std::get<bool>(in_param.GetValue(true)));
         } else {
             type_error = true;
         }
     } else if (auto* p_ptr = out_param.Param<core::param::ColorParam>()) {
         if (in_param.type == ParamType::COLOR) {
-            auto value = std::get<glm::vec4>(in_param.GetValue());
+            auto value = std::get<glm::vec4>(in_param.GetValue(true));
             p_ptr->SetValue(core::param::ColorParam::ColorType{value[0], value[1], value[2], value[3]});
         } else {
             type_error = true;
         }
     } else if (auto* p_ptr = out_param.Param<core::param::EnumParam>()) {
         if (in_param.type == ParamType::ENUM) {
-            p_ptr->SetValue(std::get<int>(in_param.GetValue()));
+            p_ptr->SetValue(std::get<int>(in_param.GetValue(true)));
             // Map can not be changed
         } else {
             type_error = true;
         }
     } else if (auto* p_ptr = out_param.Param<core::param::FilePathParam>()) {
         if (in_param.type == ParamType::FILEPATH) {
-            p_ptr->SetValue(vislib::StringA(std::get<std::string>(in_param.GetValue()).c_str()));
+            p_ptr->SetValue(vislib::StringA(std::get<std::string>(in_param.GetValue(true)).c_str()));
         } else {
             type_error = true;
         }
     } else if (auto* p_ptr = out_param.Param<core::param::FlexEnumParam>()) {
         if (in_param.type == ParamType::FLEXENUM) {
-            p_ptr->SetValue(std::get<std::string>(in_param.GetValue()));
+            p_ptr->SetValue(std::get<std::string>(in_param.GetValue(true)));
             // Storage can not be changed
         } else {
             type_error = true;
         }
     } else if (auto* p_ptr = out_param.Param<core::param::FloatParam>()) {
         if (in_param.type == ParamType::FLOAT) {
-            p_ptr->SetValue(std::get<float>(in_param.GetValue()));
+            p_ptr->SetValue(std::get<float>(in_param.GetValue(true)));
             // Min and Max can not be changed
         } else {
             type_error = true;
         }
     } else if (auto* p_ptr = out_param.Param<core::param::IntParam>()) {
         if (in_param.type == ParamType::INT) {
-            p_ptr->SetValue(std::get<int>(in_param.GetValue()));
+            p_ptr->SetValue(std::get<int>(in_param.GetValue(true)));
             // Min and Max can not be changed
         } else {
             type_error = true;
         }
     } else if (auto* p_ptr = out_param.Param<core::param::StringParam>()) {
         if (in_param.type == ParamType::STRING) {
-            p_ptr->SetValue(vislib::StringA(std::get<std::string>(in_param.GetValue()).c_str()));
+            p_ptr->SetValue(vislib::StringA(std::get<std::string>(in_param.GetValue(true)).c_str()));
         } else {
             type_error = true;
         }
     } else if (auto* p_ptr = out_param.Param<core::param::TernaryParam>()) {
         if (in_param.type == ParamType::TERNARY) {
-            p_ptr->SetValue(std::get<vislib::math::Ternary>(in_param.GetValue()));
+            p_ptr->SetValue(std::get<vislib::math::Ternary>(in_param.GetValue(true)));
         } else {
             type_error = true;
         }
     } else if (auto* p_ptr = out_param.Param<core::param::TransferFunctionParam>()) {
         if (in_param.type == ParamType::TRANSFERFUNCTION) {
-            p_ptr->SetValue(std::get<std::string>(in_param.GetValue()).c_str());
+            p_ptr->SetValue(std::get<std::string>(in_param.GetValue(true)).c_str());
         } else {
             type_error = true;
         }
     } else if (auto* p_ptr = out_param.Param<core::param::Vector2fParam>()) {
         if (in_param.type == ParamType::VECTOR2F) {
-            auto value = std::get<glm::vec2>(in_param.GetValue());
+            auto value = std::get<glm::vec2>(in_param.GetValue(true));
             p_ptr->SetValue(vislib::math::Vector<float, 2>(value[0], value[1]));
             // Min and Max can not be changed
         } else {
@@ -747,7 +760,7 @@ static bool WriteCoreParameter(
         }
     } else if (auto* p_ptr = out_param.Param<core::param::Vector3fParam>()) {
         if (in_param.type == ParamType::VECTOR3F) {
-            auto value = std::get<glm::vec3>(in_param.GetValue());
+            auto value = std::get<glm::vec3>(in_param.GetValue(true));
             p_ptr->SetValue(vislib::math::Vector<float, 3>(value[0], value[1], value[2]));
             // Min and Max can not be changed
         } else {
@@ -755,7 +768,7 @@ static bool WriteCoreParameter(
         }
     } else if (auto* p_ptr = out_param.Param<core::param::Vector4fParam>()) {
         if (in_param.type == ParamType::VECTOR4F) {
-            auto value = std::get<glm::vec4>(in_param.GetValue());
+            auto value = std::get<glm::vec4>(in_param.GetValue(true));
             p_ptr->SetValue(vislib::math::Vector<float, 4>(value[0], value[1], value[2], value[3]));
             // Min and Max can not be changed
         } else {

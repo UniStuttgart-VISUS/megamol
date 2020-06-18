@@ -180,7 +180,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
             }
 
             switch (this->GetGUIPresentation()) {
-            // BASIC ///////////////////////////////////////////////////
+                // BASIC ///////////////////////////////////////////////////
             case (PresentType::Basic): {
                 // BOOL ------------------------------------------------
                 if constexpr (std::is_same_v<T, bool>) {
@@ -200,7 +200,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                     error = false;
                 } else if constexpr (std::is_same_v<T, int>) {
                     switch (inout_parameter.type) {
-                    // INT ---------------------------------------------
+                        // INT ---------------------------------------------
                     case (ParamType::INT): {
                         if (this->widget_int(
                                 param_label, arg, inout_parameter.GetMinValue<T>(), inout_parameter.GetMaxValue<T>())) {
@@ -209,7 +209,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                         }
                         error = false;
                     } break;
-                    // ENUM --------------------------------------------
+                        // ENUM --------------------------------------------
                     case (ParamType::ENUM): {
                         if (this->widget_enum(param_label, arg, inout_parameter.GetStorage<EnumStorageType>())) {
                             inout_parameter.SetValue(arg);
@@ -222,7 +222,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                     }
                 } else if constexpr (std::is_same_v<T, std::string>) {
                     switch (inout_parameter.type) {
-                    // STRING ------------------------------------------
+                        // STRING ------------------------------------------
                     case (ParamType::STRING): {
                         if (this->widget_string(param_label, arg)) {
                             inout_parameter.SetValue(arg);
@@ -230,7 +230,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                         }
                         error = false;
                     } break;
-                    // TRANSFER FUNCTION -------------------------------
+                        // TRANSFER FUNCTION -------------------------------
                     case (ParamType::TRANSFERFUNCTION): {
                         if (this->widget_string(param_label, arg)) {
                             inout_parameter.SetValue(arg);
@@ -238,7 +238,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                         }
                         error = false;
                     } break;
-                    // FILE PATH ---------------------------------------
+                        // FILE PATH ---------------------------------------
                     case (ParamType::FILEPATH): {
                         if (this->widget_string(param_label, arg)) {
                             inout_parameter.SetValue(arg);
@@ -246,7 +246,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                         }
                         error = false;
                     } break;
-                    // FLEX ENUM ---------------------------------------
+                        // FLEX ENUM ---------------------------------------
                     case (ParamType::FLEXENUM): {
                         if (this->widget_flexenum(param_label, arg,
                                 inout_parameter.GetStorage<megamol::core::param::FlexEnumParam::Storage_t>())) {
@@ -286,7 +286,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                     error = false;
                 } else if constexpr (std::is_same_v<T, glm::vec4>) {
                     switch (inout_parameter.type) {
-                    // VECTOR 4 ----------------------------------------
+                        // VECTOR 4 ----------------------------------------
                     case (ParamType::VECTOR4F): {
                         if (this->widget_vector4f(
                                 param_label, arg, inout_parameter.GetMinValue<T>(), inout_parameter.GetMaxValue<T>())) {
@@ -295,7 +295,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                         }
                         error = false;
                     } break;
-                    // COLOR -------------------------------------------
+                        // COLOR -------------------------------------------
                     case (ParamType::COLOR): {
                         if (this->widget_vector4f(param_label, arg, glm::vec4(0.0f), glm::vec4(1.0f))) {
                             inout_parameter.SetValue(arg);
@@ -308,7 +308,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                     }
                 } else if constexpr (std::is_same_v<T, std::monostate>) {
                     switch (inout_parameter.type) {
-                    // BUTTON ------------------------------------------
+                        // BUTTON ------------------------------------------
                     case (ParamType::BUTTON): {
                         if (this->widget_button(
                                 param_label, inout_parameter.GetStorage<megamol::core::view::KeyCode>())) {
@@ -321,7 +321,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                     }
                 }
             } break;
-            // STRING //////////////////////////////////////////////////
+                // STRING //////////////////////////////////////////////////
             case (PresentType::String): {
                 std::string value_string = inout_parameter.GetValueString();
                 if (this->widget_string(param_label, value_string)) {
@@ -330,11 +330,11 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                 }
                 error = false;
             } break;
-            // COLOR ///////////////////////////////////////////////////
+                // COLOR ///////////////////////////////////////////////////
             case (PresentType::Color): {
                 if constexpr (std::is_same_v<T, glm::vec4>) {
                     switch (inout_parameter.type) {
-                    // VECTOR 4 ----------------------------------------
+                        // VECTOR 4 ----------------------------------------
                     case (ParamType::VECTOR4F): {
                         if (this->widget_color(param_label, arg)) {
                             inout_parameter.SetValue(arg);
@@ -342,7 +342,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                         }
                         error = false;
                     } break;
-                    // COLOR -------------------------------------------
+                        // COLOR -------------------------------------------
                     case (ParamType::COLOR): {
                         if (this->widget_color(param_label, arg)) {
                             inout_parameter.SetValue(arg);
@@ -355,11 +355,11 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                     }
                 }
             } break;
-            // FILE PATH ///////////////////////////////////////////////
+                // FILE PATH ///////////////////////////////////////////////
             case (PresentType::FilePath): {
                 if constexpr (std::is_same_v<T, std::string>) {
                     switch (inout_parameter.type) {
-                    // FILE PATH ---------------------------------------
+                        // FILE PATH ---------------------------------------
                     case (ParamType::FILEPATH): {
                         if (this->widget_filepath(param_label, arg)) {
                             inout_parameter.SetValue(arg);
@@ -372,11 +372,11 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                     }
                 }
             } break;
-            // TRANSFER FUNCTION ///////////////////////////////////////
+                // TRANSFER FUNCTION ///////////////////////////////////////
             case (PresentType::TransferFunction): {
                 if constexpr (std::is_same_v<T, std::string>) {
                     switch (inout_parameter.type) {
-                    // TRANSFER FUNCTION -------------------------------
+                        // TRANSFER FUNCTION -------------------------------
                     case (ParamType::TRANSFERFUNCTION): {
                         if (this->widget_transfer_function_editor(inout_parameter, WidgetScope::LOCAL)) {
                             retval = true;
@@ -388,7 +388,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                     }
                 }
             } break;
-            // PIN VALUE TO MOUSE //////////////////////////////////////
+                // PIN VALUE TO MOUSE //////////////////////////////////////
             case (PresentType::PinValueToMouse): {
                 bool compatible_type = false;
                 // FLOAT -----------------------------------------------
@@ -396,7 +396,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                     compatible_type = true;
                 } else if constexpr (std::is_same_v<T, int>) {
                     switch (inout_parameter.type) {
-                    // INT ---------------------------------------------
+                        // INT ---------------------------------------------
                     case (ParamType::INT): {
                         compatible_type = true;
                     } break;
@@ -413,7 +413,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                     compatible_type = true;
                 } else if constexpr (std::is_same_v<T, glm::vec4>) {
                     switch (inout_parameter.type) {
-                    // VECTOR 4 ----------------------------------------
+                        // VECTOR 4 ----------------------------------------
                     case (ParamType::VECTOR4F): {
                         compatible_type = true;
                     } break;
@@ -441,11 +441,11 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
         else if (scope == WidgetScope::GLOBAL) {
 
             switch (this->GetGUIPresentation()) {
-            // TRANSFER FUNCTION ///////////////////////////////////////
+                // TRANSFER FUNCTION ///////////////////////////////////////
             case (PresentType::TransferFunction): {
                 if constexpr (std::is_same_v<T, std::string>) {
                     switch (inout_parameter.type) {
-                    // TRANSFER FUNCTION -------------------------------
+                        // TRANSFER FUNCTION -------------------------------
                     case (ParamType::TRANSFERFUNCTION): {
                         if (this->widget_transfer_function_editor(inout_parameter, WidgetScope::GLOBAL)) {
                             retval = true;
@@ -457,7 +457,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                     }
                 }
             } break;
-            // PIN VALUE TO MOUSE //////////////////////////////////////
+                // PIN VALUE TO MOUSE //////////////////////////////////////
             case (PresentType::PinValueToMouse): {
                 bool compatible_type = false;
                 // FLOAT -----------------------------------------------
@@ -465,7 +465,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                     compatible_type = true;
                 } else if constexpr (std::is_same_v<T, int>) {
                     switch (inout_parameter.type) {
-                    // INT ---------------------------------------------
+                        // INT ---------------------------------------------
                     case (ParamType::INT): {
                         compatible_type = true;
                     } break;
@@ -482,7 +482,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                     compatible_type = true;
                 } else if constexpr (std::is_same_v<T, glm::vec4>) {
                     switch (inout_parameter.type) {
-                    // VECTOR 4 ----------------------------------------
+                        // VECTOR 4 ----------------------------------------
                     case (ParamType::VECTOR4F): {
                         compatible_type = true;
                     } break;
@@ -895,7 +895,7 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
     bool isActive = false;
     bool updateEditor = false;
     auto value = std::get<std::string>(inout_parameter.GetValue());
-    std::string label = inout_parameter.full_name;
+    std::string label = inout_parameter.GetName();
 
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -979,11 +979,6 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
                 ImGuiCol_ButtonHovered, style.Colors[isActive ? ImGuiCol_Button : ImGuiCol_ButtonHovered]);
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
             if (ImGui::Button("Edit")) {
-                updateEditor = true;
-                isActive = true;
-                // TODO
-                this->tf_editor_ptr->SetConnectedParameter(std::make_shared<Parameter>(inout_parameter));
-
                 retval = true;
             }
             ImGui::PopStyleColor(3);
@@ -1027,23 +1022,23 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
         }
 
         ImGui::EndGroup();
-    }
+    } else {
+        //  GLOBAL
+        if (this->external_tf_editor) {
 
-    // LOCAL and GLOBAL
-    if (this->external_tf_editor) {
-
-        // Check for changed parameter value which should be forced to the editor once.
-        if (isActive) {
-            if (this->tf_editor_hash != inout_parameter.GetStringHash()) {
-                updateEditor = true;
+            // Check for changed parameter value which should be forced to the editor once.
+            if (isActive) {
+                if (this->tf_editor_hash != inout_parameter.GetTransferFunctionHash()) {
+                    updateEditor = true;
+                }
             }
+            // Propagate the transfer function to the editor.
+            if (isActive && updateEditor) {
+                this->tf_editor_ptr->SetTransferFunction(value, true);
+                retval = true;
+            }
+            this->tf_editor_hash = inout_parameter.GetTransferFunctionHash();
         }
-        // Propagate the transfer function to the editor.
-        if (isActive && updateEditor) {
-            this->tf_editor_ptr->SetTransferFunction(value, true);
-            retval = true;
-        }
-        this->tf_editor_hash = inout_parameter.GetStringHash();
     }
 
     return retval;
@@ -1065,7 +1060,8 @@ megamol::gui::configurator::Parameter::Parameter(
     , string_hash(0)
     , default_value()
     , default_value_mismatch(false)
-    , present(type) {
+    , present(type)
+    , dirty(false) {
 
     // Initialize variant types which should/can not be changed afterwards.
     // Default ctor of variants initializes std::monostate.

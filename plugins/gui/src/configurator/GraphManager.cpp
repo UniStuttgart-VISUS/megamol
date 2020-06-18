@@ -411,7 +411,7 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
                     std::string param_full_name = std::string(param_slot->Name().PeekBuffer());
                     for (auto& parameter : graph_module->parameters) {
                         if (parameter.full_name == param_full_name) {
-                            megamol::gui::configurator::ReadCoreParameter((*param_slot), parameter);
+                            megamol::gui::configurator::ReadCoreParameter((*param_slot), parameter, full_name);
                         }
                     }
                 }

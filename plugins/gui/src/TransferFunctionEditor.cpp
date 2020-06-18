@@ -245,7 +245,10 @@ bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
 void TransferFunctionEditor::SetConnectedParameter(configurator::ParamPtrType param_ptr) {
     this->connected_parameter_ptr = nullptr;
     if (param_ptr->type == ParamType::TRANSFERFUNCTION) {
-        this->connected_parameter_ptr = param_ptr;
+        if (this->connected_parameter_ptr != param_ptr) {
+            this->connected_parameter_ptr = param_ptr;
+            this->SetTransferFunction(std::get<std::string>(this->connected_parameter_ptr->GetValue()), true);
+        }
     } else {
         vislib::sys::Log::DefaultLog.WriteError(
             "Wrong parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -302,7 +305,7 @@ bool TransferFunctionEditor::Draw(bool connected_parameter_mode) {
             ImGui::TextUnformatted("Parameter:");
             ImGui::TextColored(GUI_COLOR_TEXT_WARN,
                 ((this->connected_parameter_ptr == nullptr) ? ("-")
-                                                            : (this->connected_parameter_ptr->full_name.c_str())));
+                                                            : (this->connected_parameter_ptr->GetName().c_str())));
         }
 
         // Legend alignment ---------------------------------------------------
@@ -533,7 +536,7 @@ bool TransferFunctionEditor::Draw(bool connected_parameter_mode) {
                         if (this->connected_parameter_ptr->type == ParamType::TRANSFERFUNCTION) {
                             this->connected_parameter_ptr->SetValue(tf);
                             this->connected_parameter_ptr->GUI_SetTransferFunctionEditorHash(
-                                this->connected_parameter_ptr->GetStringHash());
+                                this->connected_parameter_ptr->GetTransferFunctionHash());
                         }
                     }
                 }

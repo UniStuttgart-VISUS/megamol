@@ -208,7 +208,7 @@ private:
     void drawConfiguratorCallback(WindowManager::WindowConfiguration& wc);
 
     void drawMenu(void);
-    void drawParameter(megamol::core::param::ParamSlot& slot,
+    void drawParameter(const megamol::core::Module& mod, megamol::core::param::ParamSlot& slot,
         megamol::gui::configurator::ParameterPresentation::WidgetScope scope, bool expert = false);
     void drawPopUps(void);
 
@@ -217,7 +217,7 @@ private:
     bool hotkeyPressed(megamol::core::view::KeyCode keycode);
     void shutdown(void);
 
-    void add_param_presentation(megamol::core::param::ParamSlot& slot);
+    void add_param_presentation(const megamol::core::Module& mod, megamol::core::param::ParamSlot& slot);
 
     void save_state_to_parameter(void);
     bool gui_and_parameters_state_from_json_string(const std::string& in_json_string);

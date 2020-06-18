@@ -121,6 +121,12 @@ bool GUIWindows::PreDraw(
         return false;
     }
 
+    // Synchronizing parameter presentation list
+    this->core_instance->EnumParameters(
+        [&, this](const auto& mod, auto& slot) { this->add_param_presentation(mod, slot); });
+    /// TODO Delete parameters in list which do no longer exist in core.
+
+    // Checking global hotkeys
     if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM])) {
         this->shutdown();
         return true;
@@ -333,13 +339,30 @@ bool GUIWindows::PostDraw(void) {
         this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
             auto parameter = slot.Parameter();
             if (!parameter.IsNull()) {
-                this->drawParameter(slot, configurator::ParameterPresentation::WidgetScope::GLOBAL);
+                this->drawParameter(mod, slot, configurator::ParameterPresentation::WidgetScope::GLOBAL);
             }
         });
     } else {
         vislib::sys::Log::DefaultLog.WriteError(
             "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
+
+    // Synchronizing parameter values -----------------------------------------
+    this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
+        auto parameter_ptr = slot.Parameter();
+        if (parameter_ptr.IsNull()) {
+            return;
+        }
+        auto param_ref = &(*parameter_ptr);
+        auto param_present = this->param_presentations[param_ref];
+
+        if (param_present->IsDirty()) {
+            megamol::gui::configurator::WriteCoreParameter((*param_present), slot);
+        } else {
+            megamol::gui::configurator::ReadCoreParameter(
+                slot, (*param_present), std::string(mod.FullName().PeekBuffer()));
+        }
+    });
 
     // Draw pop-ups ------------------------------------------------------------
     this->drawPopUps();
@@ -582,6 +605,13 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
 
 bool GUIWindows::createContext(void) {
 
+    // Check for successfully created tf editor
+    if (this->tf_editor_ptr == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Pointer to transfer function editor is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
     // Create ImGui context ---------------------------------------------------
     // Check for existing context and share FontAtlas with new context (required by ImGui).
     bool other_context = (ImGui::GetCurrentContext() != nullptr);
@@ -789,15 +819,6 @@ bool GUIWindows::createContext(void) {
     io.KeyMap[ImGuiKey_X] = static_cast<int>(GuiTextModHotkeys::CTRL_X);
     io.KeyMap[ImGuiKey_Y] = static_cast<int>(GuiTextModHotkeys::CTRL_Y);
     io.KeyMap[ImGuiKey_Z] = static_cast<int>(GuiTextModHotkeys::CTRL_Z);
-
-    // Filling parameter presentation list
-    this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) { this->add_param_presentation(slot); });
-
-    if (this->tf_editor_ptr == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Pointer to transfer function editor is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
 
     return true;
 }
@@ -1225,7 +1246,7 @@ void GUIWindows::drawParametersCallback(WindowManager::WindowConfiguration& wc) 
                         } else {
                         */
                         this->drawParameter(
-                            slot, configurator::ParameterPresentation::WidgetScope::LOCAL, wc.param_extended_mode);
+                            mod, slot, configurator::ParameterPresentation::WidgetScope::LOCAL, wc.param_extended_mode);
                         /*
                         }
                         */
@@ -1440,11 +1461,8 @@ void GUIWindows::drawFontWindowCallback(WindowManager::WindowConfiguration& wc) 
 }
 
 
-void GUIWindows::drawParameter(megamol::core::param::ParamSlot& slot,
+void GUIWindows::drawParameter(const megamol::core::Module& mod, megamol::core::param::ParamSlot& slot,
     megamol::gui::configurator::ParameterPresentation::WidgetScope scope, bool expert) {
-
-    this->add_param_presentation(slot);
-    /// TODO Delete parameters in list which do no longer exist in core.
 
     auto parameter_ptr = slot.Parameter();
     if (parameter_ptr.IsNull()) {
@@ -1452,14 +1470,15 @@ void GUIWindows::drawParameter(megamol::core::param::ParamSlot& slot,
     }
     auto param_ref = &(*parameter_ptr);
     auto param_present = this->param_presentations[param_ref];
+
     param_present->GUI_SetExpert(expert);
+
     if (param_present->type == ParamType::TRANSFERFUNCTION) {
         param_present->GUI_ConnectExternalTransferFunctionEditor(this->tf_editor_ptr);
     }
     if (param_present->GUI_Present(scope)) {
-        megamol::gui::configurator::WriteCoreParameter((*param_present), slot);
-
         if (scope == megamol::gui::configurator::ParameterPresentation::WidgetScope::LOCAL) {
+            this->tf_editor_ptr->SetConnectedParameter(param_present);
             // Open window calling the transfer function editor callback
             if ((param_present->type == ParamType::TRANSFERFUNCTION)) {
                 const auto func = [](WindowManager::WindowConfiguration& wc) {
@@ -1470,8 +1489,6 @@ void GUIWindows::drawParameter(megamol::core::param::ParamSlot& slot,
                 this->window_manager.EnumWindows(func);
             }
         }
-    } else {
-        megamol::gui::configurator::ReadCoreParameter(slot, (*param_present));
     }
 }
 
@@ -1738,7 +1755,8 @@ void megamol::gui::GUIWindows::shutdown(void) {
 }
 
 
-void megamol::gui::GUIWindows::add_param_presentation(megamol::core::param::ParamSlot& slot) {
+void megamol::gui::GUIWindows::add_param_presentation(
+    const megamol::core::Module& mod, megamol::core::param::ParamSlot& slot) {
 
     auto parameter_ptr = slot.Parameter();
     if (parameter_ptr.IsNull()) {
@@ -1748,7 +1766,7 @@ void megamol::gui::GUIWindows::add_param_presentation(megamol::core::param::Para
     auto iter = this->param_presentations.find(param_ref);
     if (iter == this->param_presentations.end()) {
         std::shared_ptr<configurator::Parameter> param_ptr;
-        megamol::gui::configurator::ReadCoreParameter(slot, param_ptr);
+        megamol::gui::configurator::ReadCoreParameter(slot, param_ptr, std::string(mod.FullName().PeekBuffer()));
         this->param_presentations.emplace(param_ref, param_ptr);
         /// vislib::sys::Log::DefaultLog.WriteError(
         ///    "[DEBUG] Added presentation parameter for core parameter '%s'", param_ptr->full_name.c_str());
