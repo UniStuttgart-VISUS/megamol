@@ -60,7 +60,7 @@ public:
     *
     * @param param_type   The parameters type.
     */
-    bool InitPresentation(ParamType param_type);
+    bool InitPresentation(AbstractParamPresentation::ParamType param_type);
 
     /**
     * Answer visibility in GUI.
@@ -105,7 +105,7 @@ public:
     *
     * @return True if given presentation is compatible, false otherwise.
     */
-    void SetGUIPresentation(AbstractParamPresentation::Presentation presentation);
+    void SetGUIPresentation(AbstractParamPresentation::Presentation presentS);
 
     /**
     * Answer parameter presentation in GUI.
@@ -121,8 +121,8 @@ public:
     *
     * @return True if given presentation is compatible, false otherwise.
     */
-    inline bool IsPresentationCompatible(AbstractParamPresentation::Presentation presentation) const {
-        return (AbstractParamPresentation::Presentation::NONE != (presentation & this->compatible));
+    inline bool IsPresentationCompatible(AbstractParamPresentation::Presentation present) const {
+        return (AbstractParamPresentation::Presentation::NONE != (present & this->compatible));
     }
     
     /** 
@@ -139,7 +139,7 @@ public:
     *
     * @return The human readable name of the given presentation.
     */   
-     std::string GetPresentationName(AbstractParamPresentation::Presentation presentation) { return this->presentation_name_map[presentation]; }
+     std::string GetPresentationName(AbstractParamPresentation::Presentation present) { return this->presentation_name_map[present]; }
           
     /** 
     * Get human readable parameter type.
@@ -148,7 +148,7 @@ public:
     *
     * @return The human readable name of the given parameter type.
     */   
-     static const std::string GetTypeName(ParamType type);
+     static const std::string GetTypeName(AbstractParamPresentation::ParamType type);
                
 protected:
 
@@ -168,10 +168,10 @@ private:
     bool read_only;
     
     /* Presentation (= widget representation) of parameter in the GUI. */
-    Presentation presentation;
+    AbstractParamPresentation::Presentation presentation;
 
     /* Compatible presentations */
-    Presentation compatible;
+    AbstractParamPresentation::Presentation compatible;
 
     /* Falg ensuring that initialisation can only be applied once. */
     bool initialised;
