@@ -127,7 +127,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                 for (auto& config_item : header_item.value().items()) {
                     WindowConfiguration tmp_config;
                     tmp_config.win_name = config_item.key();
-                    tmp_config.win_reset = true;                    
+                    tmp_config.win_reset = true;
                     tmp_config.buf_font_reset = false;
                     tmp_config.buf_tfe_reset = false;
 
@@ -264,7 +264,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                             "JSON state: Failed to read 'win_reset_size' as array of size two. [%s, %s, line %d]\n",
                             __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
-                    }                    
+                    }
                     // ParamConfig --------------------------------------------
                     // show_hotkeys
                     if (config_values.at("param_show_hotkeys").is_boolean()) {

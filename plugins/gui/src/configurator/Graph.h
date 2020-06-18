@@ -173,7 +173,7 @@ private:
     GroupPtrVectorType groups;
     bool dirty_flag;
     std::string filename;
-    
+
     GraphPresentation present;
 
     // FUNCTIONS --------------------------------------------------------------

@@ -12,6 +12,7 @@
 
 #include "vislib/sys/Log.h"
 
+#include <string>
 #include <map>
 
 
@@ -59,7 +60,7 @@ public:
     *
     * @param param_type   The parameters type.
     */
-    bool InitPresentation(ParamType param_type);
+    bool InitPresentation(AbstractParamPresentation::ParamType param_type);
 
     /**
     * Answer visibility in GUI.
@@ -104,14 +105,14 @@ public:
     *
     * @return True if given presentation is compatible, false otherwise.
     */
-    void SetGUIPresentation(Presentation presentation);
+    void SetGUIPresentation(AbstractParamPresentation::Presentation presentS);
 
     /**
     * Answer parameter presentation in GUI.
     *
     * @return Parameter presentation.
     */
-    inline Presentation GetGUIPresentation(void) const {
+    inline AbstractParamPresentation::Presentation GetGUIPresentation(void) const {
         return this->presentation;
     }
 
@@ -120,8 +121,8 @@ public:
     *
     * @return True if given presentation is compatible, false otherwise.
     */
-    inline bool IsPresentationCompatible(Presentation presentation) const {
-        return (Presentation::NONE != (presentation & this->compatible));
+    inline bool IsPresentationCompatible(AbstractParamPresentation::Presentation present) const {
+        return (AbstractParamPresentation::Presentation::NONE != (present & this->compatible));
     }
     
     /** 
@@ -129,7 +130,7 @@ public:
     * 
     * @return The presentation name map.
     */
-     const std::map<Presentation, std::string>& GetPresentationNameMap(void) { return this->presentation_name_map; }
+     std::map<AbstractParamPresentation::Presentation, std::string>& GetPresentationNameMap(void) { return this->presentation_name_map; }
      
     /** 
     * Get presentation name.
@@ -138,7 +139,7 @@ public:
     *
     * @return The human readable name of the given presentation.
     */   
-     const std::string GetPresentationName(Presentation presentation) { return this->presentation_name_map[presentation]; }
+     std::string GetPresentationName(AbstractParamPresentation::Presentation present) { return this->presentation_name_map[present]; }
           
     /** 
     * Get human readable parameter type.
@@ -147,7 +148,7 @@ public:
     *
     * @return The human readable name of the given parameter type.
     */   
-     static const std::string GetTypeName(ParamType type);
+     static const std::string GetTypeName(AbstractParamPresentation::ParamType type);
                
 protected:
 
@@ -167,10 +168,10 @@ private:
     bool read_only;
     
     /* Presentation (= widget representation) of parameter in the GUI. */
-    Presentation presentation;
+    AbstractParamPresentation::Presentation presentation;
 
     /* Compatible presentations */
-    Presentation compatible;
+    AbstractParamPresentation::Presentation compatible;
 
     /* Falg ensuring that initialisation can only be applied once. */
     bool initialised;

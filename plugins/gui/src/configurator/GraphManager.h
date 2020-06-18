@@ -46,7 +46,7 @@ public:
 
 private:
     GUIUtils utils;
-    megamol::gui::FileUtils file_utils;    
+    megamol::gui::FileUtils file_utils;
     ImGuiID graph_delete_uid;
 };
 
@@ -87,7 +87,7 @@ private:
     ModuleStockVectorType modules_stock;
     CallStockVectorType calls_stock;
     unsigned int graph_name_uid;
-    
+
     GraphManagerPresentation present;
 
     // FUNCTIONS --------------------------------------------------------------

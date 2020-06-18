@@ -35,7 +35,7 @@ const std::string AbstractParamPresentation::GetTypeName(ParamType type){
 AbstractParamPresentation::AbstractParamPresentation(void)
     : visible(true)
     , read_only(false)
-    , presentation(Presentation::Basic)
+    , presentation(AbstractParamPresentation::Presentation::Basic)
     , compatible(Presentation::Basic)
     , initialised(false)
     , presentation_name_map() {
@@ -50,7 +50,7 @@ AbstractParamPresentation::AbstractParamPresentation(void)
 }
 
 
-bool AbstractParamPresentation::InitPresentation(ParamType param_type) {
+bool AbstractParamPresentation::InitPresentation(AbstractParamPresentation::ParamType param_type) {
     if (!this->initialised) {
         this->initialised = true;
 
@@ -126,9 +126,9 @@ bool AbstractParamPresentation::InitPresentation(ParamType param_type) {
 }
 
 
-void AbstractParamPresentation::SetGUIPresentation(AbstractParamPresentation::Presentation presentation) {
-    if (this->IsPresentationCompatible(presentation)) {
-        this->presentation = presentation;
+void AbstractParamPresentation::SetGUIPresentation(AbstractParamPresentation::Presentation present) {
+    if (this->IsPresentationCompatible(present)) {
+        this->presentation = present;
     }
     else {
         vislib::sys::Log::DefaultLog.WriteWarn(

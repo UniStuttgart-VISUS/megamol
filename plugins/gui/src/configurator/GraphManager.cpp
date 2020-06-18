@@ -47,7 +47,7 @@ void megamol::gui::configurator::GraphManagerPresentation::Present(
 
             // Draw graph
             graph->GUI_Present(state);
-            
+
             // Do not delete graph while looping through graphs list
             if (state.graph_delete) {
                 this->graph_delete_uid = state.graph_selected_uid;
@@ -101,7 +101,8 @@ void megamol::gui::configurator::GraphManagerPresentation::Present(
 }
 
 
-void megamol::gui::configurator::GraphManagerPresentation::SaveProjectFile(bool open_popup, GraphManager& inout_graph_manager, GraphStateType& state) {
+void megamol::gui::configurator::GraphManagerPresentation::SaveProjectFile(
+    bool open_popup, GraphManager& inout_graph_manager, GraphStateType& state) {
 
     bool confirmed, aborted;
     bool popup_failed = false;
@@ -410,7 +411,7 @@ bool megamol::gui::configurator::GraphManager::AddProjectCore(
                     std::string param_full_name = std::string(param_slot->Name().PeekBuffer());
                     for (auto& parameter : graph_module->parameters) {
                         if (parameter.full_name == param_full_name) {
-                            megamol::gui::configurator::ReadCoreParameter((*param_slot), parameter);
+                            megamol::gui::configurator::ReadCoreParameter((*param_slot), parameter, full_name);
                         }
                     }
                 }

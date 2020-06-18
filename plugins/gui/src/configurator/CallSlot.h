@@ -141,7 +141,7 @@ public:
 private:
     ModulePtrType parent_module;
     std::vector<CallPtrType> connected_calls;
-    
+
     CallSlotPresentation present;
 };
 
