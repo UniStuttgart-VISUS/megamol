@@ -44,6 +44,7 @@
 #include "vislib/sys/KeyCode.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/sysfunctions.h"
+#include <glm/gtx/string_cast.hpp>
 
 using namespace megamol::core;
 using namespace megamol::core::view;
@@ -1188,25 +1189,40 @@ void View3D_2::handleCameraMovement(void) {
  */
 void View3D_2::setCameraValues(const view::Camera_2& cam) {
     glm::vec4 pos = cam.position();
+    const bool makeDirty = false;
     this->cameraPositionParam.Param<param::Vector3fParam>()->SetValue(
-        vislib::math::Vector<float, 3>(pos.x, pos.y, pos.z), true);
+        vislib::math::Vector<float, 3>(pos.x, pos.y, pos.z), makeDirty);
+    this->cameraPositionParam.QueueUpdateNotification();
+
     glm::quat orient = cam.orientation();
     this->cameraOrientationParam.Param<param::Vector4fParam>()->SetValue(
-        vislib::math::Vector<float, 4>(orient.x, orient.y, orient.z, orient.w), true);
-    this->cameraProjectionTypeParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.projection_type()), true);
-    /*this->cameraNearPlaneParam.Param<param::FloatParam>()->SetValue(cam.near_clipping_plane(), true);
-    this->cameraFarPlaneParam.Param<param::FloatParam>()->SetValue(cam.far_clipping_plane(), true);*/
-    this->cameraConvergencePlaneParam.Param<param::FloatParam>()->SetValue(cam.convergence_plane(), true);
-    /*this->cameraEyeParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.eye()), true);
-    this->cameraGateScalingParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.gate_scaling()), true);
+        vislib::math::Vector<float, 4>(orient.x, orient.y, orient.z, orient.w), makeDirty);
+    this->cameraOrientationParam.QueueUpdateNotification();
+
+    this->cameraProjectionTypeParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.projection_type()), makeDirty);
+    this->cameraProjectionTypeParam.QueueUpdateNotification();
+
+    this->cameraConvergencePlaneParam.Param<param::FloatParam>()->SetValue(cam.convergence_plane(), makeDirty);
+    this->cameraConvergencePlaneParam.QueueUpdateNotification();
+
+    /*this->cameraNearPlaneParam.Param<param::FloatParam>()->SetValue(cam.near_clipping_plane(), makeDirty);
+    this->cameraFarPlaneParam.Param<param::FloatParam>()->SetValue(cam.far_clipping_plane(), makeDirty);*/
+    /*this->cameraEyeParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.eye()), makeDirty);
+    this->cameraGateScalingParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.gate_scaling()), makeDirty);
     this->cameraFilmGateParam.Param<param::Vector2fParam>()->SetValue(
-        vislib::math::Vector<float, 2>(cam.film_gate().width(), cam.film_gate().height()), true);*/
+        vislib::math::Vector<float, 2>(cam.film_gate().width(), cam.film_gate().height()), makeDirty);*/
     /*this->cameraResolutionXParam.Param<param::IntParam>()->SetValue(cam.resolution_gate().width());
     this->cameraResolutionYParam.Param<param::IntParam>()->SetValue(cam.resolution_gate().height());*/
+
     this->cameraCenterOffsetParam.Param<param::Vector2fParam>()->SetValue(
-        vislib::math::Vector<float, 2>(cam.centre_offset().x(), cam.centre_offset().y()), true);
-    this->cameraHalfApertureRadiansParam.Param<param::FloatParam>()->SetValue(cam.half_aperture_angle_radians(), true);
-    this->cameraHalfDisparityParam.Param<param::FloatParam>()->SetValue(cam.half_disparity(), true);
+        vislib::math::Vector<float, 2>(cam.centre_offset().x(), cam.centre_offset().y()), makeDirty);
+    this->cameraCenterOffsetParam.QueueUpdateNotification();
+
+    this->cameraHalfApertureRadiansParam.Param<param::FloatParam>()->SetValue(cam.half_aperture_angle_radians(), makeDirty);
+    this->cameraHalfApertureRadiansParam.QueueUpdateNotification();
+
+    this->cameraHalfDisparityParam.Param<param::FloatParam>()->SetValue(cam.half_disparity(), makeDirty);
+    this->cameraHalfDisparityParam.QueueUpdateNotification();
 }
 
 /*
