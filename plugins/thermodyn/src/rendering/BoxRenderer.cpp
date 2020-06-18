@@ -9,6 +9,9 @@
 #include "vislib/math/Matrix.h"
 #include "vislib/math/ShallowMatrix.h"
 
+#include "glm/gtx/transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
 
 megamol::thermodyn::rendering::BoxRenderer::BoxRenderer() : dataInSlot_("dataIn", "Input of boxes to render") {
     dataInSlot_.SetCompatibleCall<BoxDataCallDescription>();
@@ -59,7 +62,7 @@ void megamol::thermodyn::rendering::BoxRenderer::release() {
 }
 
 
-bool megamol::thermodyn::rendering::BoxRenderer::Render(megamol::core::view::CallRender3D& call) {
+bool megamol::thermodyn::rendering::BoxRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     std::vector<BoxDataCall::box_entry_t> boxes;
 
     BoxDataCall* inBoxCall = nullptr;
@@ -81,6 +84,12 @@ bool megamol::thermodyn::rendering::BoxRenderer::Render(megamol::core::view::Cal
 
     auto data = prepareData(boxes);
 
+    core::view::Camera_2 cam;
+    call.GetCamera(cam);
+    core::view::Camera_2::snapshot_type cam_snap;
+    core::view::Camera_2::matrix_type view, proj;
+    cam.calc_matrices(cam_snap, view, proj, core::thecam::snapshot_content::all);
+
     // upload data
     glBindVertexArray(vao_);
     glBindBuffer(GL_ARRAY_BUFFER, vvbo_);
@@ -94,21 +103,7 @@ bool megamol::thermodyn::rendering::BoxRenderer::Render(megamol::core::view::Cal
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // render data
-    GLfloat modelViewMatrix_column[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> MV(&modelViewMatrix_column[0]);
-
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> scaleMat;
-    scaleMat.SetAt(0, 0, scaling_);
-    scaleMat.SetAt(1, 1, scaling_);
-    scaleMat.SetAt(2, 2, scaling_);
-    MV = MV * scaleMat;
-
-    GLfloat projMatrix_column[16];
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> const PM(&projMatrix_column[0]);
-
-    auto const MVP = PM * MV;
+    glm::mat4 MVP = proj * view;
 
     // glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -116,7 +111,7 @@ bool megamol::thermodyn::rendering::BoxRenderer::Render(megamol::core::view::Cal
 
     boxShader_.Enable();
 
-    glUniformMatrix4fv(boxShader_.ParameterLocation("mvp"), 1, false, MVP.PeekComponents());
+    glUniformMatrix4fv(boxShader_.ParameterLocation("mvp"), 1, false, glm::value_ptr(MVP));
 
     glDrawArrays(GL_QUADS, 0, data.first.size() / 3);
 
@@ -133,7 +128,7 @@ bool megamol::thermodyn::rendering::BoxRenderer::Render(megamol::core::view::Cal
 }
 
 
-bool megamol::thermodyn::rendering::BoxRenderer::GetExtents(core::view::CallRender3D& call) {
+bool megamol::thermodyn::rendering::BoxRenderer::GetExtents(core::view::CallRender3D_2& call) {
     BoxDataCall* inBoxCall = nullptr;
     core::moldyn::MultiParticleDataCall* inParCall = nullptr;
     if ((inBoxCall = dataInSlot_.CallAs<BoxDataCall>()) != nullptr) {
@@ -142,8 +137,8 @@ bool megamol::thermodyn::rendering::BoxRenderer::GetExtents(core::view::CallRend
         auto const boxes = inBoxCall->GetBoxes();
 
         if (boxes->empty()) {
-            call.AccessBoundingBoxes().SetObjectSpaceBBox({-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f});
-            call.AccessBoundingBoxes().SetObjectSpaceClipBox({-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f});
+            call.AccessBoundingBoxes().SetBoundingBox({-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f});
+            call.AccessBoundingBoxes().SetClipBox({-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f});
         } else {
 
             vislib::math::Cuboid<float> box = (*boxes)[0].box_;
@@ -151,28 +146,28 @@ bool megamol::thermodyn::rendering::BoxRenderer::GetExtents(core::view::CallRend
                 box.Union((*boxes)[i].box_);
             }
 
-            call.AccessBoundingBoxes().SetObjectSpaceBBox(box);
-            call.AccessBoundingBoxes().SetObjectSpaceClipBox(box);
+            call.AccessBoundingBoxes().SetBoundingBox(box);
+            call.AccessBoundingBoxes().SetClipBox(box);
         }
 
     } else if ((inParCall = dataInSlot_.CallAs<core::moldyn::MultiParticleDataCall>()) != nullptr) {
         if (!(*inParCall)(1)) return false;
 
-        call.AccessBoundingBoxes().SetObjectSpaceBBox(inParCall->AccessBoundingBoxes().ObjectSpaceBBox());
-        call.AccessBoundingBoxes().SetObjectSpaceClipBox(inParCall->AccessBoundingBoxes().ObjectSpaceClipBox());
+        call.AccessBoundingBoxes().SetBoundingBox(inParCall->AccessBoundingBoxes().ObjectSpaceBBox());
+        call.AccessBoundingBoxes().SetClipBox(inParCall->AccessBoundingBoxes().ObjectSpaceClipBox());
     } else {
         vislib::sys::Log::DefaultLog.WriteError("BoxRenderer: Could not establish call\n");
         return false;
     }
 
 
-    scaling_ = call.AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+    scaling_ = call.AccessBoundingBoxes().BoundingBox().LongestEdge();
     if (scaling_ > 0.0000001) {
         scaling_ = 10.0f / scaling_;
     } else {
         scaling_ = 1.0f;
     }
-    call.AccessBoundingBoxes().MakeScaledWorld(scaling_);
+    //call.AccessBoundingBoxes().MakeScaledWorld(scaling_);
 
     return true;
 }
