@@ -51,6 +51,7 @@ bool TernaryParam::ParseValue(const vislib::TString& v) {
 void TernaryParam::SetValue(vislib::math::Ternary v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
+        this->indicateChange();
         if (setDirty) this->setDirty();
     }
 }

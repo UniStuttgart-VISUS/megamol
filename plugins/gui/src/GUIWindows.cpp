@@ -1329,6 +1329,8 @@ void GUIWindows::drawFpsWindowCallback(WindowManager::WindowConfiguration& wc) {
         wc.ms_show_options = !wc.ms_show_options;
     }
 
+    ImGui::LabelText("frame ID", "%u", this->core_instance->GetFrameID());
+
     std::vector<float> value_array = wc.buf_values;
     if (wc.ms_mode == WindowManager::TimingModes::FPS) {
         for (auto& v : value_array) {

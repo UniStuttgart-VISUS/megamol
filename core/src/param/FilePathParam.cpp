@@ -112,6 +112,7 @@ bool FilePathParam::ParseValue(const vislib::TString& v) {
 void FilePathParam::SetValue(const vislib::StringA& v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
+        this->indicateChange();
         if (setDirty) this->setDirty();
     }
 }
@@ -123,6 +124,7 @@ void FilePathParam::SetValue(const vislib::StringA& v, bool setDirty) {
 void FilePathParam::SetValue(const vislib::StringW& v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
+        this->indicateChange();
         if (setDirty) this->setDirty();
     }
 }
@@ -145,6 +147,7 @@ void FilePathParam::SetValue(const char *v, bool setDirty) {
 void FilePathParam::SetValue(const wchar_t *v, bool setDirty) {
     if (!this->val.Equals(W2T(v))) {
         this->val = v;
+        this->indicateChange();
         if (setDirty) this->setDirty();
     }
 }

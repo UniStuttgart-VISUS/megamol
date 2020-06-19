@@ -91,6 +91,17 @@ namespace param {
             this->hash = hash;
         }
 
+        /**
+         * Returns the has_changed flag and resets the flag to false.
+         *
+         * @return has_changed
+         */
+        bool ConsumeHasChanged() {
+            auto val = has_changed;
+            has_changed = false;
+            return val;
+        }
+
     protected:
 
         /**
@@ -106,6 +117,11 @@ namespace param {
          */
         bool isSlotPublic(void) const;
 
+        /**
+         * Set has_changed flag to true.
+         */
+        void indicateChange() { has_changed = true; }
+
     private:
 
         /** The holding slot */
@@ -116,6 +132,11 @@ namespace param {
          * (i.e. requires rebuilding the UI).
          */
         size_t hash;
+
+        /**
+         * Indicating that the value has changed.
+         */
+        bool has_changed;
     };
 
 
