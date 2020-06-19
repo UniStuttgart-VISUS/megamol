@@ -125,6 +125,17 @@ namespace param {
             this->gui_read_only = read_only;
         }
 
+        /**
+         * Returns the has_changed flag and resets the flag to false.
+         *
+         * @return has_changed
+         */
+        bool ConsumeHasChanged() {
+            auto val = has_changed;
+            has_changed = false;
+            return val;
+        }
+
     protected:
 
         /**
@@ -139,6 +150,11 @@ namespace param {
          *         slot, 'false' otherwise.
          */
         bool isSlotPublic(void) const;
+
+        /**
+         * Set has_changed flag to true.
+         */
+        void indicateChange() { has_changed = true; }
 
     private:
 
@@ -160,6 +176,11 @@ namespace param {
         * Make parameter read-only in the GUI.
         */
         bool gui_read_only;
+
+        /**
+         * Indicating that the value has changed.
+         */
+        bool has_changed;
 
     };
 

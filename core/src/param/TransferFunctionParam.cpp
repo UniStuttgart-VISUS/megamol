@@ -93,6 +93,7 @@ void TransferFunctionParam::SetValue(const std::string& v, bool setDirty) {
         if (this->CheckTransferFunctionString(v)) {
             this->val = v;
             this->hash = std::hash<std::string>()(this->val);
+            this->indicateChange();
             if (setDirty) this->setDirty();
         }
     }
