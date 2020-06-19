@@ -125,8 +125,11 @@ namespace param {
          * those that have a registered listener. This method is public to allow
          * pushing parameter changes that cannot use the dirty flag to avoid feedback
          * loops.
+         *
+         * @param force Enforce notification, otherwise the notification will only be triggered if the value has
+         * changed.
          */
-        void QueueUpdateNotification();
+        void QueueUpdateNotification(bool force = false);
 
     protected:
 

@@ -100,15 +100,18 @@ void param::Vector2fParam::SetValue(const vislib::math::Vector<float, 2>& v, boo
     if (this->isLessOrEqual(v, this->minVal)) {
         if (this->val != this->minVal) {
             this->val = this->minVal;
+            this->indicateChange();
             if (setDirty) this->setDirty();
         }
     } else if (this->isGreaterOrEqual(v, this->maxVal)) {
         if (this->val != this->maxVal) {
             this->val = this->maxVal;
+            this->indicateChange();
             if (setDirty) this->setDirty();
         }
     } else if (this->val != v) {
         this->val = v;
+        this->indicateChange();
         if (setDirty) this->setDirty();
     }
 }

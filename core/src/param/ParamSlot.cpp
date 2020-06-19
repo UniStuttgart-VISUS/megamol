@@ -66,10 +66,12 @@ bool param::ParamSlot::isSlotAvailable(void) const {
 /*
  * param:::ParamSlot::QueueUpdateNotification
  */
-void param::ParamSlot::QueueUpdateNotification() {
-    Module *m = dynamic_cast<Module*>(this->Parent().get());
-    if ((m != nullptr) && (m->GetCoreInstance() != nullptr)) {
-        m->GetCoreInstance()->ParameterValueUpdate(*this);
+void param::ParamSlot::QueueUpdateNotification(bool force) {
+    if (this->Param<AbstractParam>()->ConsumeHasChanged() || force) {
+        Module* m = dynamic_cast<Module*>(this->Parent().get());
+        if ((m != nullptr) && (m->GetCoreInstance() != nullptr)) {
+            m->GetCoreInstance()->ParameterValueUpdate(*this);
+        }
     }
 }
 
@@ -80,7 +82,7 @@ void param::ParamSlot::update(void) {
     bool oldDirty = this->IsDirty();
     AbstractParamSlot::update();
 
-    QueueUpdateNotification();
+    QueueUpdateNotification(true);
 
     if (oldDirty != this->IsDirty()) {
         if ((this->callback != NULL) && (this->callback->Update(const_cast<Module*>(
