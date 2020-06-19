@@ -96,24 +96,22 @@ private:
 
     bool present_parameter(Parameter& inout_parameter, WidgetScope scope);
 
-    // Local widgets
-    bool widget_button(const std::string& label, const megamol::core::view::KeyCode& keycode);
-    bool widget_bool(const std::string& label, bool& value);
-    bool widget_string(const std::string& label, std::string& value);
-    bool widget_color(const std::string& label, glm::vec4& value);
-    bool widget_enum(const std::string& label, int& value, EnumStorageType storage);
-    bool widget_flexenum(
-        const std::string& label, std::string& value, megamol::core::param::FlexEnumParam::Storage_t storage);
-    bool widget_filepath(const std::string& label, std::string& value);
-    bool widget_ternary(const std::string& label, vislib::math::Ternary& value);
-    bool widget_int(const std::string& label, int& value, int min, int max);
-    bool widget_float(const std::string& label, float& value, float min, float max);
-    bool widget_vector2f(const std::string& label, glm::vec2& value, glm::vec2 min, glm::vec2 max);
-    bool widget_vector3f(const std::string& label, glm::vec3& value, glm::vec3 min, glm::vec3 max);
-    bool widget_vector4f(const std::string& label, glm::vec4& value, glm::vec4 min, glm::vec4 max);
-    // Local and global widgets
-    bool widget_pinvaluetomouse(const std::string& label, const std::string& value, WidgetScope scope);
-    bool widget_transfer_function_editor(Parameter& inout_parameter, WidgetScope scope);
+    bool widget_button(WidgetScope scope, const std::string& labelel, const megamol::core::view::KeyCode& keycode);
+    bool widget_bool(WidgetScope scope, const std::string& labelel, bool& value);
+    bool widget_string(WidgetScope scope, const std::string& labelel, std::string& value);
+    bool widget_color(WidgetScope scope, const std::string& labelel, glm::vec4& value);
+    bool widget_enum(WidgetScope scope, const std::string& labelel, int& value, EnumStorageType storage);
+    bool widget_flexenum(WidgetScope scope, const std::string& label, std::string& value,
+        megamol::core::param::FlexEnumParam::Storage_t storage);
+    bool widget_filepath(WidgetScope scope, const std::string& labelel, std::string& value);
+    bool widget_ternary(WidgetScope scope, const std::string& labelel, vislib::math::Ternary& value);
+    bool widget_int(WidgetScope scope, const std::string& labelel, int& value, int min, int max);
+    bool widget_float(WidgetScope scope, const std::string& labelel, float& value, float min, float max);
+    bool widget_vector2f(WidgetScope scope, const std::string& labelel, glm::vec2& value, glm::vec2 min, glm::vec2 max);
+    bool widget_vector3f(WidgetScope scope, const std::string& labelel, glm::vec3& value, glm::vec3 min, glm::vec3 max);
+    bool widget_vector4f(WidgetScope scope, const std::string& labelel, glm::vec4& value, glm::vec4 min, glm::vec4 max);
+    bool widget_pinvaluetomouse(WidgetScope scope, const std::string& label, const std::string& value);
+    bool widget_transfer_function_editor(WidgetScope scope, Parameter& inout_parameter);
 };
 
 
@@ -184,7 +182,8 @@ public:
 
     bool IsDirty(void) { return this->dirty; }
     void ResetDirty(void) { this->dirty = false; }
-    
+    void ForceSetDirty(void) { this->dirty = true; }
+
     // Get ----------------------------------
 
     std::string GetName(void) {
@@ -224,11 +223,11 @@ public:
 
     template <typename T> void SetValue(T val, bool set_default_val = false) {
         if (std::holds_alternative<T>(this->value)) {
+            // Set value
             if (std::get<T>(this->value) != val) {
                 this->value = val;
                 this->dirty = true;
             }
-
             // Check for new flex enum entry
             if (this->type == ParamType::FLEXENUM) {
                 auto storage = this->GetStorage<megamol::core::param::FlexEnumParam::Storage_t>();
@@ -297,8 +296,8 @@ public:
         this->present.ConnectExternalTransferFunctionEditor(tfe_ptr);
     }
 
-    inline bool GUI_GetVisibility(void) { return this->present.IsGUIVisible(); }
-    inline bool GUI_GetReadOnly(void) { return this->present.IsGUIReadOnly(); }
+    inline bool GUI_IsVisible(void) { return this->present.IsGUIVisible(); }
+    inline bool GUI_IsReadOnly(void) { return this->present.IsGUIReadOnly(); }
     inline PresentType GUI_GetPresentation(void) { return this->present.GetGUIPresentation(); }
 
     inline float GUI_GetHeight(void) { return this->present.GetHeight(*this); }
@@ -663,90 +662,91 @@ static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
 
 
 static bool WriteCoreParameter(
-    megamol::gui::configurator::Parameter& in_param, megamol::core::param::ParamSlot& out_param) {
+    megamol::gui::configurator::Parameter& in_param, megamol::core::param::ParamSlot& out_param_slot) {
     bool type_error = false;
 
-    auto parameter_ptr = out_param.Parameter();
+    auto parameter_ptr = out_param_slot.Parameter();
     if (parameter_ptr.IsNull()) {
         return false;
     }
 
-    parameter_ptr->SetGUIVisible(in_param.GUI_GetVisibility());
-    parameter_ptr->SetGUIReadOnly(in_param.GUI_GetReadOnly());
+    parameter_ptr->SetGUIVisible(in_param.GUI_IsVisible());
+    parameter_ptr->SetGUIReadOnly(in_param.GUI_IsReadOnly());
     parameter_ptr->SetGUIPresentation(in_param.GUI_GetPresentation());
 
-    /*if (auto* p_ptr = out_param.Param<core::param::ButtonParam>()) {
+    if (auto* p_ptr = out_param_slot.Param<core::param::ButtonParam>()) {
         if (in_param.type == ParamType::BUTTON) {
+            p_ptr->setDirty();
             // KeyCode can not be changed
+        } else {
+            type_error = true;
         }
-        else { type_error = true; }
-    } else */
-    if (auto* p_ptr = out_param.Param<core::param::BoolParam>()) {
+    } else if (auto* p_ptr = out_param_slot.Param<core::param::BoolParam>()) {
         if (in_param.type == ParamType::BOOL) {
             p_ptr->SetValue(std::get<bool>(in_param.GetValue()));
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = out_param.Param<core::param::ColorParam>()) {
+    } else if (auto* p_ptr = out_param_slot.Param<core::param::ColorParam>()) {
         if (in_param.type == ParamType::COLOR) {
             auto value = std::get<glm::vec4>(in_param.GetValue());
             p_ptr->SetValue(core::param::ColorParam::ColorType{value[0], value[1], value[2], value[3]});
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = out_param.Param<core::param::EnumParam>()) {
+    } else if (auto* p_ptr = out_param_slot.Param<core::param::EnumParam>()) {
         if (in_param.type == ParamType::ENUM) {
             p_ptr->SetValue(std::get<int>(in_param.GetValue()));
             // Map can not be changed
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = out_param.Param<core::param::FilePathParam>()) {
+    } else if (auto* p_ptr = out_param_slot.Param<core::param::FilePathParam>()) {
         if (in_param.type == ParamType::FILEPATH) {
             p_ptr->SetValue(vislib::StringA(std::get<std::string>(in_param.GetValue()).c_str()));
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = out_param.Param<core::param::FlexEnumParam>()) {
+    } else if (auto* p_ptr = out_param_slot.Param<core::param::FlexEnumParam>()) {
         if (in_param.type == ParamType::FLEXENUM) {
             p_ptr->SetValue(std::get<std::string>(in_param.GetValue()));
             // Storage can not be changed
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = out_param.Param<core::param::FloatParam>()) {
+    } else if (auto* p_ptr = out_param_slot.Param<core::param::FloatParam>()) {
         if (in_param.type == ParamType::FLOAT) {
             p_ptr->SetValue(std::get<float>(in_param.GetValue()));
             // Min and Max can not be changed
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = out_param.Param<core::param::IntParam>()) {
+    } else if (auto* p_ptr = out_param_slot.Param<core::param::IntParam>()) {
         if (in_param.type == ParamType::INT) {
             p_ptr->SetValue(std::get<int>(in_param.GetValue()));
             // Min and Max can not be changed
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = out_param.Param<core::param::StringParam>()) {
+    } else if (auto* p_ptr = out_param_slot.Param<core::param::StringParam>()) {
         if (in_param.type == ParamType::STRING) {
             p_ptr->SetValue(vislib::StringA(std::get<std::string>(in_param.GetValue()).c_str()));
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = out_param.Param<core::param::TernaryParam>()) {
+    } else if (auto* p_ptr = out_param_slot.Param<core::param::TernaryParam>()) {
         if (in_param.type == ParamType::TERNARY) {
             p_ptr->SetValue(std::get<vislib::math::Ternary>(in_param.GetValue()));
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = out_param.Param<core::param::TransferFunctionParam>()) {
+    } else if (auto* p_ptr = out_param_slot.Param<core::param::TransferFunctionParam>()) {
         if (in_param.type == ParamType::TRANSFERFUNCTION) {
             p_ptr->SetValue(std::get<std::string>(in_param.GetValue()).c_str());
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = out_param.Param<core::param::Vector2fParam>()) {
+    } else if (auto* p_ptr = out_param_slot.Param<core::param::Vector2fParam>()) {
         if (in_param.type == ParamType::VECTOR2F) {
             auto value = std::get<glm::vec2>(in_param.GetValue());
             p_ptr->SetValue(vislib::math::Vector<float, 2>(value[0], value[1]));
@@ -754,7 +754,7 @@ static bool WriteCoreParameter(
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = out_param.Param<core::param::Vector3fParam>()) {
+    } else if (auto* p_ptr = out_param_slot.Param<core::param::Vector3fParam>()) {
         if (in_param.type == ParamType::VECTOR3F) {
             auto value = std::get<glm::vec3>(in_param.GetValue());
             p_ptr->SetValue(vislib::math::Vector<float, 3>(value[0], value[1], value[2]));
@@ -762,7 +762,7 @@ static bool WriteCoreParameter(
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = out_param.Param<core::param::Vector4fParam>()) {
+    } else if (auto* p_ptr = out_param_slot.Param<core::param::Vector4fParam>()) {
         if (in_param.type == ParamType::VECTOR4F) {
             auto value = std::get<glm::vec4>(in_param.GetValue());
             p_ptr->SetValue(vislib::math::Vector<float, 4>(value[0], value[1], value[2], value[3]));
