@@ -660,6 +660,30 @@ function(require_external NAME)
       LIBRARY_RELEASE "${VTKM_LIB_WORKLET}"
       LIBRARY_DEBUG "${VTKM_LIB_DEBUG_WORKLET}")
 
+  elseif(NAME STREQUAL "spdlog")
+    if(TARGET spdlog)
+      return()
+    endif()
+  
+    if(WIN32)
+      set(SPDLOG_LIB "lib/spdlog<SUFFIX>.lib")
+    else()
+      include(GNUInstallDirs)
+      set(SPDLOG_LIB "${CMAKE_INSTALL_LIBDIR}/libspdlog.a")
+    endif()
+  
+    add_external_project(spdlog STATIC
+      GIT_REPOSITORY https://github.com/gabime/spdlog.git
+      GIT_TAG "v1.5.0"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${SPDLOG_LIB}"
+      DEBUG_SUFFIX "d"
+      CMAKE_ARGS
+        -DSPDLOG_BUILD_EXAMPLE=OFF
+        -DSPDLOG_BUILD_TESTS=OFF)
+  
+    add_external_library(spdlog
+      LIBRARY ${SPDLOG_LIB}
+      DEBUG_SUFFIX "d")
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")
   endif()
