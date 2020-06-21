@@ -206,11 +206,11 @@ private:
     void validateParameters();
 
     // Window Draw Callbacks
-    void drawParametersCallback(WindowManager::WindowConfiguration& wc);
+    void drawParamWindowCallback(WindowManager::WindowConfiguration& wc);
     void drawFpsWindowCallback(WindowManager::WindowConfiguration& wc);
     void drawFontWindowCallback(WindowManager::WindowConfiguration& wc);
-    void drawTFWindowCallback(WindowManager::WindowConfiguration& wc);
-    void drawConfiguratorCallback(WindowManager::WindowConfiguration& wc);
+    void drawTransferFunctionWindowCallback(WindowManager::WindowConfiguration& wc);
+    void drawConfiguratorWindowCallback(WindowManager::WindowConfiguration& wc);
 
     void drawMenu(void);
     void drawParameter(std::shared_ptr<megamol::gui::configurator::Parameter> param_ptr,

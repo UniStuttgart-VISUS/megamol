@@ -2027,6 +2027,33 @@ megamol::gui::configurator::Graph::~Graph(void) {
 }
 
 
+ImGuiID megamol::gui::configurator::Graph::AddEmptyModule(void) {
+
+    try {
+        ImGuiID mod_uid = megamol::gui::GenerateUniqueID();
+        auto mod_ptr = std::make_shared<Module>(mod_uid);
+        this->modules.emplace_back(mod_ptr);
+        this->dirty_flag = true;
+        
+#ifdef GUI_VERBOSE
+        vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Added empty module to project.\n");
+#endif // GUI_VERBOSE
+
+        return mod_uid;
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return GUI_INVALID_ID;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return GUI_INVALID_ID;
+    }
+
+    vislib::sys::Log::DefaultLog.WriteError("Unable to add empty module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    return GUI_INVALID_ID;
+}
+
+
 ImGuiID megamol::gui::configurator::Graph::AddModule(
     const ModuleStockVectorType& stock_modules, const std::string& module_class_name) {
 
@@ -2078,12 +2105,12 @@ ImGuiID megamol::gui::configurator::Graph::AddModule(
                 }
 
                 this->modules.emplace_back(mod_ptr);
+                this->dirty_flag = true;
+                                
 #ifdef GUI_VERBOSE
                 vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Added module '%s' (uid %i) to project '%s'.\n",
                     mod_ptr->class_name.c_str(), mod_ptr->uid, this->name.c_str());
 #endif // GUI_VERBOSE
-
-                this->dirty_flag = true;
 
                 return mod_uid;
             }
@@ -2097,7 +2124,7 @@ ImGuiID megamol::gui::configurator::Graph::AddModule(
         return GUI_INVALID_ID;
     }
 
-    vislib::sys::Log::DefaultLog.WriteError("Unable to find module in stock: %s [%s, %s, line %d]\n",
+    vislib::sys::Log::DefaultLog.WriteError("Unable to find module in stock: '%s'. [%s, %s, line %d]\n",
         module_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
     return GUI_INVALID_ID;
 }

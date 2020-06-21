@@ -119,6 +119,7 @@ public:
     virtual ~Graph(void);
 
     ImGuiID AddModule(const ModuleStockVectorType& stock_modules, const std::string& module_class_name);
+    ImGuiID AddEmptyModule(void);
     bool DeleteModule(ImGuiID module_uid);
     inline const ModulePtrVectorType& GetModules(void) { return this->modules; }
     bool GetModule(ImGuiID module_uid, ModulePtrType& out_module_ptr);

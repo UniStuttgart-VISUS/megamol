@@ -46,7 +46,7 @@ public:
 
     ~ModulePresentation(void);
 
-    void Present(megamol::gui::PresentPhase phase, Module& inout_module, GraphItemsStateType& state);
+
 
     void Update(Module& inout_module, const GraphCanvasType& in_canvas);
 
@@ -59,9 +59,12 @@ public:
     inline void SetPosition(ImVec2 pos) { this->position = pos; }
 
     GroupState group;
-    bool label_visible;
+    bool label_visible; 
 
 private:
+    friend class Module; 
+    void Present(megamol::gui::PresentPhase phase, Module& inout_module, GraphItemsStateType& state);
+
     // Relative position without considering canvas offset and zooming
     ImVec2 position;
     // Relative size without considering zooming
@@ -100,7 +103,7 @@ private:
  * Defines module data structure for graph.
  */
 class Module {
-public:
+public:    
     struct StockModule {
         std::string class_name;
         std::string description;
@@ -114,7 +117,7 @@ public:
     ~Module();
 
     const ImGuiID uid;
-
+        
     // Init when adding module from stock
     std::string class_name;
     std::string description;
@@ -169,8 +172,8 @@ public:
 
 private:
     CallSlotPtrMapType callslots;
-
-    ModulePresentation present;
+    
+    ModulePresentation present;    
 };
 
 

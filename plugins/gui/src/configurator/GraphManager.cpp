@@ -424,6 +424,7 @@ bool megamol::gui::configurator::GraphManager::AddProjectFromCore(
         // connected.
         const auto module_func = [&, this](megamol::core::Module* mod) {
             std::string full_name = std::string(mod->FullName().PeekBuffer());
+            std::string class_name = std::string(mod->ClassName());
             std::string module_name;
             std::string module_namespace;
             if (!this->project_separate_name_and_namespace(full_name, module_namespace, module_name)) {
@@ -445,26 +446,44 @@ bool megamol::gui::configurator::GraphManager::AddProjectFromCore(
             }
 
             // Creating new module
-            graph_ptr->AddModule(this->modules_stock, std::string(mod->ClassName()));
-            auto graph_module = graph_ptr->GetModules().back();
-            graph_module->name = module_name;
-            graph_module->is_view_instance = false;
-
+            ImGuiID moduel_uid = GUI_INVALID_ID;
+            ModulePtrType module_ptr;
             if (use_stock) {
-                graph_ptr->AddGroupModule(module_namespace, graph_module);
+                moduel_uid = graph_ptr->AddModule(this->modules_stock, class_name);
+                graph_ptr->GetModule(moduel_uid, module_ptr);
             }
             else {
-                
-                /// TODO
-                
+                moduel_uid = graph_ptr->AddEmptyModule();
+                if (graph_ptr->GetModule(moduel_uid, module_ptr)) {
+                    module_ptr->class_name = class_name;
+                    auto mod_desc = core_instance->GetModuleDescriptionManager().Find(vislib::StringA(class_name.c_str()));
+                    if (mod_desc != nullptr) {
+                        module_ptr->description = std::string(mod_desc->Description());
+                    }
+                    module_ptr->plugin_name = "";
+                    core::view::AbstractView* viewptr = dynamic_cast<core::view::AbstractView*>(mod);
+                    module_ptr->is_view = (viewptr != nullptr);
+                }
             }
-
-            if (view_instances.find(std::string(mod->FullName().PeekBuffer())) != view_instances.end()) {
-                // Instance Name
-                graph_ptr->name = view_instances[std::string(mod->FullName().PeekBuffer())];
-                graph_module->is_view_instance = (graph_ptr->IsMainViewSet()) ? (false) : (true);
+            if (module_ptr != nullptr) {
+                module_ptr->name = module_name;
+                
+                // Instance Name                
+                module_ptr->is_view_instance = false;
+                if (view_instances.find(std::string(mod->FullName().PeekBuffer())) != view_instances.end()) {
+                    graph_ptr->name = view_instances[std::string(mod->FullName().PeekBuffer())];
+                    module_ptr->is_view_instance = (graph_ptr->IsMainViewSet()) ? (false) : (true);
+                }
+                
+                // Add module to group
+                graph_ptr->AddGroupModule(module_namespace, module_ptr);
             }
-
+            else {
+                vislib::sys::Log::DefaultLog.WriteError("Unable to get created module. [%s, %s, line %d]\n",
+                    full_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                return;
+            }
+            
             megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator se = mod->ChildList_End();
             for (megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator si =
                      mod->ChildList_Begin();
@@ -476,13 +495,27 @@ bool megamol::gui::configurator::GraphManager::AddProjectFromCore(
                     std::string param_full_name = std::string(param_slot->Name().PeekBuffer());
                     
                     if (use_stock) {
-                        for (auto& parameter : graph_module->parameters) {
+                        for (auto& parameter : module_ptr->parameters) {
                             if (parameter.full_name == param_full_name) {
                                 megamol::gui::configurator::ReadCoreParameter((*param_slot), parameter, full_name);
                             }
                         }
                     }
                     else {
+                        /*
+                        Parameter param_slot(megamol::gui::GenerateUniqueID(), p.type, p.storage, p.minval, p.maxval);
+                        param_slot.full_name = p.full_name;
+                        param_slot.description = p.description;
+                        param_slot.SetValueString(p.default_value, true);
+                        param_slot.GUI_SetVisibility(p.gui_visibility);
+                        param_slot.GUI_SetReadOnly(p.gui_read_only);
+                        param_slot.GUI_SetPresentation(p.gui_presentation);
+                        // Apply current global configurator parameter gui settings
+                        // Do not apply global read-only and visibility.
+                        param_slot.GUI_SetExpert(this->present.param_extended_mode);
+
+                        mod_ptr->parameters.emplace_back(param_slot);
+                        */
                         
                         /// TODO
                         

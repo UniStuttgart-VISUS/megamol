@@ -352,7 +352,7 @@ bool GUIWindows::PostDraw(void) {
     this->window_manager.EnumWindows(func);
 
     // Draw global parameter widgets -------------------------------------------
-    for (auto& pair : this->param_presentations) {
+    for (auto& pair : this->param_core_interface_map) {
         this->drawParameter(pair.second, configurator::ParameterPresentation::WidgetScope::GLOBAL);
     }
 
@@ -512,7 +512,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     this->window_manager.EnumWindows(modfunc);
     std::string current_module_fullname = "";
     bool consider_module = false;
-    for (auto& pair : this->param_presentations) {
+    for (auto& pair : this->param_core_interface_map) {
         std::string module_fullname = pair.second->GetNameSpace();
         if (current_module_fullname != module_fullname) {
             current_module_fullname = module_fullname;
@@ -636,17 +636,17 @@ bool GUIWindows::createContext(void) {
 
     // Register window callbacks in window manager ----------------------------
     this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::MAIN_PARAMETERS,
-        [&, this](WindowManager::WindowConfiguration& wc) { this->drawParametersCallback(wc); });
+        [&, this](WindowManager::WindowConfiguration& wc) { this->drawParamWindowCallback(wc); });
     this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::PARAMETERS,
-        [&, this](WindowManager::WindowConfiguration& wc) { this->drawParametersCallback(wc); });
+        [&, this](WindowManager::WindowConfiguration& wc) { this->drawParamWindowCallback(wc); });
     this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::PERFORMANCE,
         [&, this](WindowManager::WindowConfiguration& wc) { this->drawFpsWindowCallback(wc); });
     this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::FONT,
         [&, this](WindowManager::WindowConfiguration& wc) { this->drawFontWindowCallback(wc); });
     this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::TRANSFER_FUNCTION,
-        [&, this](WindowManager::WindowConfiguration& wc) { this->drawTFWindowCallback(wc); });
+        [&, this](WindowManager::WindowConfiguration& wc) { this->drawTransferFunctionWindowCallback(wc); });
     this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::CONFIGURATOR,
-        [&, this](WindowManager::WindowConfiguration& wc) { this->drawConfiguratorCallback(wc); });
+        [&, this](WindowManager::WindowConfiguration& wc) { this->drawConfiguratorWindowCallback(wc); });
 
     // Create window configurations
     WindowManager::WindowConfiguration buf_win;
@@ -900,7 +900,7 @@ void GUIWindows::validateParameters() {
 }
 
 
-void GUIWindows::drawTFWindowCallback(WindowManager::WindowConfiguration& wc) {
+void GUIWindows::drawTransferFunctionWindowCallback(WindowManager::WindowConfiguration& wc) {
 
     this->tf_editor_ptr->Draw(true);
 
@@ -911,13 +911,13 @@ void GUIWindows::drawTFWindowCallback(WindowManager::WindowConfiguration& wc) {
 }
 
 
-void GUIWindows::drawConfiguratorCallback(WindowManager::WindowConfiguration& wc) {
+void GUIWindows::drawConfiguratorWindowCallback(WindowManager::WindowConfiguration& wc) {
 
     this->configurator.Draw(wc, this->core_instance);
 }
 
 
-void GUIWindows::drawParametersCallback(WindowManager::WindowConfiguration& wc) {
+void GUIWindows::drawParamWindowCallback(WindowManager::WindowConfiguration& wc) {
 
     // Mode
     ImGui::BeginGroup();
@@ -1253,9 +1253,8 @@ void GUIWindows::drawParametersCallback(WindowManager::WindowConfiguration& wc) 
                         } else {
                         */
                         auto param_ref = &(*parameter_ptr);
-                        auto param_ptr = this->param_presentations[param_ref];
-                        this->drawParameter(
-                            param_ptr, configurator::ParameterPresentation::WidgetScope::LOCAL, wc.param_extended_mode);
+                        auto param_ptr = this->param_core_interface_map[param_ref];
+                        this->drawParameter(param_ptr, configurator::ParameterPresentation::WidgetScope::LOCAL, wc.param_extended_mode);
                         /*
                         }
                         */
