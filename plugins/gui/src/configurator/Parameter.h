@@ -64,12 +64,14 @@ public:
      */
     enum WidgetScope { GLOBAL, LOCAL };
 
+    // VARIABLES --------------------------------------------------------------
+    
+    bool expert;
+        
+    // FUCNTIONS --------------------------------------------------------------
+    
     ParameterPresentation(ParamType type);
-
     ~ParameterPresentation(void);
-
-    bool Present(Parameter& inout_param, WidgetScope scope);
-    float GetHeight(Parameter& inout_param);
 
     void SetTransferFunctionEditorHash(size_t hash) { this->tf_editor_hash = hash; }
     inline void ConnectExternalTransferFunctionEditor(std::shared_ptr<megamol::gui::TransferFunctionEditor> tfe_ptr) {
@@ -77,9 +79,9 @@ public:
         this->external_tf_editor = true;
     }
 
-    bool expert;
-
 private:
+    // VARIABLES --------------------------------------------------------------
+    
     std::string help;
     std::string description;
     megamol::gui::GUIUtils utils;
@@ -94,6 +96,14 @@ private:
     bool show_tf_editor;
     size_t tf_editor_hash;
 
+    // FUNCTIONS --------------------------------------------------------------
+    
+    friend void Parameter::GUI_Present(ParameterPresentation::WidgetScope scope) ; 
+    bool Present(Parameter& inout_param, WidgetScope scope);
+    
+    friend float Parameter::GUI_GetHeight(void);
+    float GetHeight(Parameter& inout_param);
+        
     bool present_parameter(Parameter& inout_parameter, WidgetScope scope);
 
     bool widget_button(WidgetScope scope, const std::string& labelel, const megamol::core::view::KeyCode& keycode);
@@ -170,15 +180,20 @@ public:
         PresentType gui_presentation;
     };
 
-    Parameter(ImGuiID uid, ParamType type, StroageType store, MinType min, MaxType max);
-    ~Parameter(void);
-
+    // VARIABLES --------------------------------------------------------------
+    
     const ImGuiID uid;
     const ParamType type;
-
+    ParameterPresentation present;
+    
     // Init when adding parameter from stock
     std::string full_name;
     std::string description;
+
+    // FUNCTIONS --------------------------------------------------------------
+    
+    Parameter(ImGuiID uid, ParamType type, StroageType store, MinType min, MaxType max);
+    ~Parameter(void);
 
     bool IsDirty(void) { return this->dirty; }
     void ResetDirty(void) { this->dirty = false; }
@@ -219,6 +234,7 @@ public:
     const size_t GetTransferFunctionHash(void) const { return this->string_hash; }
 
     // SET ----------------------------------
+    
     bool SetValueString(const std::string& val_str, bool set_default_val = false);
 
     template <typename T> void SetValue(T val, bool set_default_val = false) {
@@ -281,25 +297,9 @@ public:
         }
     }
 
-    // GUI Presentation -------------------------------------------------------
+    // Presentation ----------------------------------------------------
 
     inline bool GUI_Present(ParameterPresentation::WidgetScope scope) { return this->present.Present(*this, scope); }
-
-    inline void GUI_SetVisibility(bool visible) { this->present.SetGUIVisible(visible); }
-    inline void GUI_SetReadOnly(bool readonly) { this->present.SetGUIReadOnly(readonly); }
-    inline void GUI_SetPresentation(PresentType presentation) { this->present.SetGUIPresentation(presentation); }
-    inline void GUI_SetExpert(bool expert) { this->present.expert = expert; }
-    inline void GUI_SetTransferFunctionEditorHash(size_t hash) { this->present.SetTransferFunctionEditorHash(hash); }
-
-    inline void GUI_ConnectExternalTransferFunctionEditor(
-        std::shared_ptr<megamol::gui::TransferFunctionEditor> tfe_ptr) {
-        this->present.ConnectExternalTransferFunctionEditor(tfe_ptr);
-    }
-
-    inline bool GUI_IsVisible(void) { return this->present.IsGUIVisible(); }
-    inline bool GUI_IsReadOnly(void) { return this->present.IsGUIReadOnly(); }
-    inline PresentType GUI_GetPresentation(void) { return this->present.GetGUIPresentation(); }
-
     inline float GUI_GetHeight(void) { return this->present.GetHeight(*this); }
 
 private:
@@ -313,12 +313,10 @@ private:
     ValueType default_value;
     bool default_value_mismatch;
     bool dirty;
-
-    ParameterPresentation present;
 };
 
 
-// Interface functions for Core and GUI Parameters /////////////////////////////////////////////////
+// Static interface functions for core and GUI parameters //////////////////////////////////////////
 
 static bool ReadCoreParameter(
     megamol::core::param::ParamSlot& in_param_slot, megamol::gui::configurator::Parameter::StockParameter& out_param) {

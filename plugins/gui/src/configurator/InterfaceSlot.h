@@ -41,12 +41,19 @@ public:
         ImGuiID uid;
         bool collapsed_view;
     };
+    
+    // VARIABLES --------------------------------------------------------------
+    
+    GroupState group;
+    bool label_visible;
+    
+    // Absolute position including canvas offset and zooming
+    ImVec2 position;
+        
+    // FUNCTIONS --------------------------------------------------------------
 
     InterfaceSlotPresentation(void);
-
     ~InterfaceSlotPresentation(void);
-
-    void Present(megamol::gui::PresentPhase phase, InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state);
 
     std::string GetLabel(void) { return this->label; }
     ImVec2 GetPosition(InterfaceSlot& inout_interfaceslot);
@@ -54,12 +61,8 @@ public:
 
     void SetPosition(ImVec2 pos) { this->position = pos; }
 
-    GroupState group;
-    bool label_visible;
-
 private:
-    // Absolute position including canvas offset and zooming
-    ImVec2 position;
+    // VARIABLES --------------------------------------------------------------
 
     GUIUtils utils;
     bool selected;
@@ -68,6 +71,14 @@ private:
     ImGuiID last_compat_callslot_uid;
     ImGuiID last_compat_interface_uid;
     bool compatible;
+
+    // FUNCTIONS --------------------------------------------------------------
+
+    friend void InterfaceSlot::GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state)
+    void Present(megamol::gui::PresentPhase phase, InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state);    
+    
+    friend ImVec2 InterfaceSlot::GUI_GetPosition(void);S
+    inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(*this); }
 };
 
 
@@ -76,10 +87,16 @@ private:
  */
 class InterfaceSlot {
 public:
-    InterfaceSlot(ImGuiID uid, bool auto_create);
-    ~InterfaceSlot();
+    // VARIABLES --------------------------------------------------------------
 
     const ImGuiID uid;
+    InterfaceSlotPresentation present;
+
+
+    // FUNCTIONS --------------------------------------------------------------
+
+    InterfaceSlot(ImGuiID uid, bool auto_create);
+    ~InterfaceSlot();
 
     bool AddCallSlot(const CallSlotPtrType& callslot_ptr, const InterfaceSlotPtrType& parent_interfaceslot_ptr);
     bool RemoveCallSlot(ImGuiID callslot_uid);
@@ -93,31 +110,18 @@ public:
     bool IsEmpty(void);
     bool IsAutoCreated(void) { return this->auto_created; }
 
-    // GUI Presentation -------------------------------------------------------
+    // Presentation ----------------------------------------------------
 
     inline void GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
         this->present.Present(phase, *this, state);
     }
-
     inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(*this); }
-    inline ImGuiID GUI_GetGroupUID(void) { return this->present.group.uid; }
-    inline bool GUI_IsLabelVisible(void) { return this->present.label_visible; }
-    inline std::string GUI_GetLabel(void) { return this->present.GetLabel(); }
-    inline bool GUI_IsGroupViewCollapsed(void) { return this->present.IsGroupViewCollapsed(); }
-
-    inline void GUI_SetPosition(ImVec2 pos) { this->present.SetPosition(pos); }
-    inline void GUI_SetGroupUID(ImGuiID uid) { this->present.group.uid = uid; }
-    inline void GUI_SetGroupView(bool collapsed_view) { this->present.group.collapsed_view = collapsed_view; }
-    inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
 
 private:
     // VARIABLES --------------------------------------------------------------
 
     bool auto_created;
     CallSlotPtrVectorType callslots;
-
-    InterfaceSlotPresentation present;
-
 
     // FUNCTIONS --------------------------------------------------------------
 

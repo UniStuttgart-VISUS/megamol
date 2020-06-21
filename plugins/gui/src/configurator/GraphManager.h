@@ -38,18 +38,24 @@ typedef std::map<megamol::core::param::AbstractParam*, std::shared_ptr<megamol::
  */
 class GraphManagerPresentation {
 public:
+    // FUNCTIONS --------------------------------------------------------------
+
     GraphManagerPresentation(void);
-
     ~GraphManagerPresentation(void);
-
-    void Present(GraphManager& inout_graph_manager, GraphStateType& state);
 
     void SaveProjectToFile(bool open_popup, GraphManager& inout_graph_manager, GraphStateType& state);
 
 private:
+    // VARIABLES --------------------------------------------------------------
+
     GUIUtils utils;
     megamol::gui::FileUtils file_utils;
     ImGuiID graph_delete_uid;
+    
+    // FUNCTIONS --------------------------------------------------------------
+    
+    friend void GraphManager::GUI_Present(GraphStateType& state);
+    void Present(GraphManager& inout_graph_manager, GraphStateType& state);    
 };
 
 
@@ -58,9 +64,15 @@ private:
  */
 class GraphManager {
 public:
-    GraphManager(void);
 
-    virtual ~GraphManager(void);
+    // VARIABLES --------------------------------------------------------------
+
+    GraphManagerPresentation present;
+    
+    // FUNCTIONS --------------------------------------------------------------
+    
+    GraphManager(void);
+    ~GraphManager(void);
 
     ImGuiID AddGraph(void);
     bool DeleteGraph(ImGuiID graph_uid);
@@ -80,7 +92,7 @@ public:
 
     bool SaveProjectToFile(ImGuiID graph_uid, const std::string& project_filename);
 
-    // GUI Presentation -------------------------------------------------------
+    // Presentation ----------------------------------------------------
 
     void GUI_Present(GraphStateType& state) { this->present.Present(*this, state); }
 
@@ -91,8 +103,6 @@ private:
     ModuleStockVectorType modules_stock;
     CallStockVectorType calls_stock;
     unsigned int graph_name_uid;
-
-    GraphManagerPresentation present;
 
     // FUNCTIONS --------------------------------------------------------------
 

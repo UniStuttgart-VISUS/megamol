@@ -46,26 +46,27 @@ public:
         InterfaceSlotPtrType interfaceslot_ptr;
     };
 
+    // VARIABLES --------------------------------------------------------------
+    
+    GroupState group;
+    bool label_visible;
+        
+    // Absolute position including canvas offset and zooming
+    ImVec2 position;
+            
+    // FUNCTIONS --------------------------------------------------------------
+        
     CallSlotPresentation(void);
-
     ~CallSlotPresentation(void);
-
-    void Present(megamol::gui::PresentPhase phase, CallSlot& inout_callslot, GraphItemsStateType& state);
-
-    void Update(CallSlot& inout_callslot, const GraphCanvasType& in_canvas);
 
     ImVec2 GetPosition(void) { return this->position; }
     bool IsVisible(void) { return this->visible; }
 
     void SetVisibility(bool is_visible) { this->visible = is_visible; }
 
-    GroupState group;
-    bool label_visible;
-
 private:
-    // Absolute position including canvas offset and zooming
-    ImVec2 position;
-
+    // VARIABLES --------------------------------------------------------------
+    
     GUIUtils utils;
     bool visible;
     bool selected;
@@ -75,6 +76,14 @@ private:
     ImGuiID last_compat_callslot_uid;
     ImGuiID last_compat_interface_uid;
     bool compatible;
+    
+    // FUNCTIONS --------------------------------------------------------------
+        
+    friend void CallSlot::GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state);
+    void Present(megamol::gui::PresentPhase phase, CallSlot& inout_callslot, GraphItemsStateType& state);
+
+    friend void CallSlot::GUI_Update(const GraphCanvasType& in_canvas);
+    void Update(CallSlot& inout_callslot, const GraphCanvasType& in_canvas);
 };
 
 
@@ -89,17 +98,22 @@ public:
         std::vector<size_t> compatible_call_idxs;
         CallSlotType type;
     };
-
-    CallSlot(ImGuiID uid);
-    ~CallSlot();
-
+    
+    // VARIABLES --------------------------------------------------------------
+    
     const ImGuiID uid;
-
+    CallSlotPresentation present;
+    
     // Init when adding call slot from stock
     std::string name;
     std::string description;
     std::vector<size_t> compatible_call_idxs; // Storing only indices of compatible calls for faster comparison.
     CallSlotType type;
+    
+    // FUNCTIONS --------------------------------------------------------------
+    
+    CallSlot(ImGuiID uid);
+    ~CallSlot();
 
     bool CallsConnected(void) const;
     bool ConnectCall(const CallPtrType& call_ptr);
@@ -118,31 +132,18 @@ public:
 
     bool IsConnectionValid(CallSlot& callslot);
 
-    // GUI Presentation -------------------------------------------------------
+    // Presentation ----------------------------------------------------
 
     inline void GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
         this->present.Present(phase, *this, state);
     }
-
     inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.Update(*this, in_canvas); }
 
-    inline bool GUI_IsVisible(void) { return this->present.IsVisible(); }
-    inline bool GUI_IsGroupInterface(void) { return (this->present.group.interfaceslot_ptr != nullptr); }
-    inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(); }
-    inline bool GUI_IsLabelVisible(void) { return this->present.label_visible; }
-    inline const InterfaceSlotPtrType& GUI_GetGroupInterface(void) { return this->present.group.interfaceslot_ptr; }
-
-    inline void GUI_SetVisibility(bool is_visible) { this->present.SetVisibility(is_visible); }
-    inline void GUI_SetGroupInterface(const InterfaceSlotPtrType& interfaceslot_ptr) {
-        this->present.group.interfaceslot_ptr = interfaceslot_ptr;
-    }
-    inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
-
 private:
+    // VARIABLES --------------------------------------------------------------
+
     ModulePtrType parent_module;
     std::vector<CallPtrType> connected_calls;
-
-    CallSlotPresentation present;
 };
 
 } // namespace configurator

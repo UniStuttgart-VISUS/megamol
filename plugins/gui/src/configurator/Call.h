@@ -40,17 +40,26 @@ typedef std::vector<CallPtrType> CallPtrVectorType;
  */
 class CallPresentation {
 public:
-    CallPresentation(void);
 
+    // VARIABLES --------------------------------------------------------------
+    
+    bool label_visible;
+        
+    // FUNCTIONS --------------------------------------------------------------
+       
+    CallPresentation(void);
     ~CallPresentation(void);
 
-    void Present(megamol::gui::PresentPhase phase, Call& inout_call, GraphItemsStateType& state);
-
-    bool label_visible;
-
 private:
+    // VARIABLES --------------------------------------------------------------
+    
     bool selected;
     GUIUtils utils;
+    
+    // FUNCTIONS --------------------------------------------------------------
+           
+    friend void Call::GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state);
+    void Present(megamol::gui::PresentPhase phase, Call& inout_call, GraphItemsStateType& state);
 };
 
 
@@ -65,35 +74,38 @@ public:
         std::string plugin_name;
         std::vector<std::string> functions;
     };
-
-    Call(ImGuiID uid);
-    ~Call();
-
-    const ImGuiID uid;
-
+    
+    // VARIABLES --------------------------------------------------------------
+        
+    const ImGuiID uid;        
+    CallPresentation present;
+    
     // Init when adding call from stock
     std::string class_name;
     std::string description;
     std::string plugin_name;
     std::vector<std::string> functions;
+        
+    // FUNCTIONS --------------------------------------------------------------
+       
+    Call(ImGuiID uid);
+    ~Call();
 
     bool IsConnected(void);
     bool ConnectCallSlots(CallSlotPtrType callslot_1, CallSlotPtrType callslot_2);
     bool DisconnectCallSlots(ImGuiID calling_callslot_uid = GUI_INVALID_ID);
     const CallSlotPtrType& GetCallSlot(CallSlotType type);
 
-    // GUI Presentation -------------------------------------------------------
+    // Presentation ----------------------------------------------------
 
     inline void GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
         this->present.Present(phase, *this, state);
     }
 
-    inline void GUI_SetLabelVisibility(bool visible) { this->present.label_visible = visible; }
-
 private:
+    // VARIABLES --------------------------------------------------------------
+    
     std::map<CallSlotType, CallSlotPtrType> connected_callslots;
-
-    CallPresentation present;
 };
 
 
