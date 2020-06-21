@@ -352,16 +352,8 @@ bool GUIWindows::PostDraw(void) {
     this->window_manager.EnumWindows(func);
 
     // Draw global parameter widgets -------------------------------------------
-    if (this->core_instance != nullptr) {
-        this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
-            auto parameter = slot.Parameter();
-            if (!parameter.IsNull()) {
-                this->drawParameter(mod, slot, configurator::ParameterPresentation::WidgetScope::GLOBAL);
-            }
-        });
-    } else {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    for (auto& pair : this->param_presentations) {
+        this->drawParameter(pair.second, configurator::ParameterPresentation::WidgetScope::GLOBAL);
     }
 
     // Synchronizing parameter values -----------------------------------------
@@ -505,7 +497,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
 
     // Always consume keyboard input if requested by any imgui widget (e.g. text input).
     // User expects hotkey priority of text input thus needs to be processed before parameter hotkeys.
-    if (io.WantCaptureKeyboard) {
+    if (io.WantTextInput) { /// io.WantCaptureKeyboard
         return true;
     }
 
@@ -518,35 +510,28 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
         }
     };
     this->window_manager.EnumWindows(modfunc);
-    const core::Module* current_mod = nullptr;
+    std::string current_module_fullname = "";
     bool consider_module = false;
-    if (this->core_instance != nullptr) {
-        this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
-            if (current_mod != &mod) {
-                current_mod = &mod;
-                consider_module = this->considerModule(mod.FullName().PeekBuffer(), modules_list);
-            }
-
-            if (consider_module) {
-                auto parameter = slot.Parameter();
-                if (!parameter.IsNull()) {
-                    if (auto* p = slot.template Param<core::param::ButtonParam>()) {
-                        auto keyCode = p->GetKeyCode();
-
-                        // Break loop after first occurrence of parameter hotkey
-                        if (hotkeyPressed) return;
-
-                        if (this->hotkeyPressed(keyCode)) {
-                            p->setDirty();
-                        }
-                    }
+    for (auto& pair : this->param_presentations) {
+        std::string module_fullname = pair.second->GetNameSpace();
+        if (current_module_fullname != module_fullname) {
+            current_module_fullname = module_fullname;
+            consider_module = this->considerModule(module_fullname, modules_list);
+        }
+        if (consider_module) {
+            auto param_ptr = pair.second;
+            if (param_ptr == nullptr) continue;
+            if (param_ptr->type == ParamType::BUTTON) {
+                auto keyCode = param_ptr->GetStorage<megamol::core::view::KeyCode>();
+                // Break loop after first occurrence of parameter hotkey
+                if (hotkeyPressed) continue;
+                if (this->hotkeyPressed(keyCode)) {
+                    param_ptr->ForceSetDirty();
                 }
             }
-        });
-    } else {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        }
     }
+
     return hotkeyPressed;
 }
 
@@ -1267,8 +1252,10 @@ void GUIWindows::drawParametersCallback(WindowManager::WindowConfiguration& wc) 
                             }
                         } else {
                         */
+                        auto param_ref = &(*parameter_ptr);
+                        auto param_ptr = this->param_presentations[param_ref];
                         this->drawParameter(
-                            mod, slot, configurator::ParameterPresentation::WidgetScope::LOCAL, wc.param_extended_mode);
+                            param_ptr, configurator::ParameterPresentation::WidgetScope::LOCAL, wc.param_extended_mode);
                         /*
                         }
                         */
@@ -1361,6 +1348,8 @@ void GUIWindows::drawFpsWindowCallback(WindowManager::WindowConfiguration& wc) {
     if (ImGui::ArrowButton("Options_", ((wc.ms_show_options) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
         wc.ms_show_options = !wc.ms_show_options;
     }
+
+    ImGui::LabelText("frame ID", "%u", this->core_instance->GetFrameID());
 
     std::vector<float> value_array = wc.buf_values;
     if (wc.ms_mode == WindowManager::TimingModes::FPS) {
@@ -1483,26 +1472,21 @@ void GUIWindows::drawFontWindowCallback(WindowManager::WindowConfiguration& wc) 
 }
 
 
-void GUIWindows::drawParameter(const megamol::core::Module& mod, megamol::core::param::ParamSlot& slot,
-    megamol::gui::configurator::ParameterPresentation::WidgetScope scope, bool expert) {
+void GUIWindows::drawParameter(std::shared_ptr<megamol::gui::configurator::Parameter> param_ptr,
+    megamol::gui::configurator::ParameterPresentation::WidgetScope scope, bool extended) {
 
-    auto parameter_ptr = slot.Parameter();
-    if (parameter_ptr.IsNull()) { return; }
-    auto param_ref = &(*parameter_ptr);
-    auto param_present = this->param_core_interface_map[param_ref];
+    param_ptr->GUI_SetExpert(extended);
 
-    param_present->GUI_SetExpert(expert);
-
-    if (param_present->type == ParamType::TRANSFERFUNCTION) {
-        param_present->GUI_ConnectExternalTransferFunctionEditor(this->tf_editor_ptr);
+    if (param_ptr->type == ParamType::TRANSFERFUNCTION) {
+        param_ptr->GUI_ConnectExternalTransferFunctionEditor(this->tf_editor_ptr);
     }
-    
-    if (param_present->GUI_Present(scope)) {
+
+    if (param_ptr->GUI_Present(scope)) {
         if (scope == megamol::gui::configurator::ParameterPresentation::WidgetScope::LOCAL) {
-            
+
             // Open window calling the transfer function editor callback
-            if ((param_present->type == ParamType::TRANSFERFUNCTION)) {
-                this->tf_editor_ptr->SetConnectedParameter(param_present);
+            if ((param_ptr->type == ParamType::TRANSFERFUNCTION)) {
+                this->tf_editor_ptr->SetConnectedParameter(param_ptr);
                 const auto func = [](WindowManager::WindowConfiguration& wc) {
                     if (wc.win_callback == WindowManager::DrawCallbacks::TRANSFER_FUNCTION) {
                         wc.win_show = true;

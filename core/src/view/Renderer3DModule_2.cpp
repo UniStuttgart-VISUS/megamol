@@ -1,7 +1,7 @@
 /*
  * Renderer3DModule_2.cpp
  *
- * Copyright (C) 2018 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2018, 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -91,7 +91,7 @@ bool Renderer3DModule_2::RenderChain(CallRender3D_2& call) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
-	this->PreRender(call);
+    this->PreRender(call);
 
     CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<CallRender3D_2>();
 
@@ -136,5 +136,5 @@ bool Renderer3DModule_2::GetLights(void) {
  * Renderer3DModule_2::PreRender
  */
 void Renderer3DModule_2::PreRender(CallRender3D_2& call) {
-	//intentionally empty
+    // intentionally empty
 }

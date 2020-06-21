@@ -1600,9 +1600,9 @@ bool megamol::gui::configurator::GraphManager::parameters_gui_state_to_json(
         for (auto& module_ptr : graph_ptr->GetModules()) {
             for (auto& parameter : module_ptr->parameters) {
                 out_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][parameter.full_name]["gui_visibility"] =
-                    parameter.GUI_GetVisibility();
+                    parameter.GUI_IsVisible();
                 out_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][parameter.full_name]["gui_read-only"] =
-                    parameter.GUI_GetReadOnly();
+                    parameter.GUI_IsReadOnly();
                 out_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][parameter.full_name]["gui_presentation_mode"] =
                     static_cast<int>(parameter.GUI_GetPresentation());
             }

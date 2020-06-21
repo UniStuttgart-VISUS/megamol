@@ -56,6 +56,7 @@ bool BoolParam::ParseValue(const vislib::TString& v) {
 void BoolParam::SetValue(bool v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
+        this->indicateChange();
         if (setDirty) this->setDirty();
     }
 }
