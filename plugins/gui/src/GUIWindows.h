@@ -14,6 +14,7 @@
 #include "FileUtils.h"
 #include "TransferFunctionEditor.h"
 #include "WindowManager.h"
+#include "configurator/GraphManager.h"
 #include "configurator/Configurator.h"
 
 #include "mmcore/CoreInstance.h"
@@ -188,9 +189,14 @@ private:
     /** Numer of fonts reserved for the configurator graph canvas. */
     unsigned int graph_fonts_reserved;
 
-    /** Widget Presentations of Core Parameter */
-    std::map<megamol::core::param::AbstractParam*, std::shared_ptr<megamol::gui::configurator::Parameter>>
-        param_presentations;
+    /** UID of graph */
+    ImGuiID graph_uid;
+    
+    /** The graph manager holding the graph of the currently running project. */
+    configurator::GraphManager graph_manager;
+        
+    /** Interface map for fast access of core parameters and parameters in gui graph */
+    configurator::ParamInterfaceMapType param_core_interface_map;
 
     // FUNCTIONS --------------------------------------------------------------
 

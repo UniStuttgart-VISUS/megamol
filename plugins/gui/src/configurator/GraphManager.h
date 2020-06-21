@@ -14,6 +14,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/param/AbstractParam.h"
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 
 #include "utility/plugins/PluginManager.h"
@@ -29,6 +30,7 @@ class GraphManager;
 // Types
 typedef std::shared_ptr<Graph> GraphPtrType;
 typedef std::vector<GraphPtrType> GraphsType;
+typedef std::map<megamol::core::param::AbstractParam*, std::shared_ptr<megamol::gui::configurator::Parameter>> ParamInterfaceMapType;
 
 
 /** ************************************************************************
@@ -42,7 +44,7 @@ public:
 
     void Present(GraphManager& inout_graph_manager, GraphStateType& state);
 
-    void SaveProjectFile(bool open_popup, GraphManager& inout_graph_manager, GraphStateType& state);
+    void SaveProjectToFile(bool open_popup, GraphManager& inout_graph_manager, GraphStateType& state);
 
 private:
     GUIUtils utils;
@@ -65,16 +67,18 @@ public:
     bool GetGraph(ImGuiID graph_uid, GraphPtrType& out_graph_ptr);
     const GraphsType& GetGraphs(void) { return this->graphs; }
 
-    bool UpdateModulesCallsStock(const megamol::core::CoreInstance* core_instance);
+    bool LoadModulesCallsStock(const megamol::core::CoreInstance* core_instance);
     inline const ModuleStockVectorType& GetModulesStock(void) { return this->modules_stock; }
     inline const CallStockVectorType& GetCallsStock(void) { return this->calls_stock; }
 
-    ImGuiID LoadProjectCore(megamol::core::CoreInstance* core_instance);
-    bool AddProjectCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance);
+    ImGuiID LoadUpdateProjectFromCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance, ParamInterfaceMapType& inout_param_interface_map);
+    
+    ImGuiID LoadProjectFromCore(megamol::core::CoreInstance* core_instance);
+    bool AddProjectFromCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance, bool use_stock);
 
-    ImGuiID LoadAddProjectFile(ImGuiID graph_uid, const std::string& project_filename);
+    ImGuiID LoadAddProjectFromFile(ImGuiID graph_uid, const std::string& project_filename);
 
-    bool SaveProjectFile(ImGuiID graph_uid, const std::string& project_filename);
+    bool SaveProjectToFile(ImGuiID graph_uid, const std::string& project_filename);
 
     // GUI Presentation -------------------------------------------------------
 

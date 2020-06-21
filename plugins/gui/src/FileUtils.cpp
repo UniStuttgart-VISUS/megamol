@@ -34,7 +34,7 @@ megamol::gui::FileUtils::FileUtils(void)
 }
 
 
-bool megamol::gui::FileUtils::SaveProjectFile(
+bool megamol::gui::FileUtils::SaveProjectToFile(
     const std::string& project_filename, megamol::core::CoreInstance* core_instance) {
 #ifdef GUI_USE_FILESYSTEM
     if (core_instance == nullptr) {

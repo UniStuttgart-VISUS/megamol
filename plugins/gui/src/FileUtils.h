@@ -83,7 +83,7 @@ public:
      *
      * @return True on success, false otherwise.
      */
-    static bool SaveProjectFile(const std::string& project_filename, megamol::core::CoreInstance* core_instance);
+    static bool SaveProjectToFile(const std::string& project_filename, megamol::core::CoreInstance* core_instance);
 
     /**
      * Writes content to file.

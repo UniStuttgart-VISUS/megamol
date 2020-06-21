@@ -115,7 +115,7 @@ bool megamol::gui::configurator::Configurator::Draw(
     if (this->init_state < 2) {
         /// Step 1] (two frames!)
 
-        // Show pop-up before calling this->graph_manager.UpdateModulesCallsStock().
+        // Show pop-up before calling this->graph_manager.LoadModulesCallsStock().
         /// Rendering of pop-up requires two complete draw calls!
         bool open = true;
         std::string popup_label = "Loading";
@@ -134,10 +134,10 @@ bool megamol::gui::configurator::Configurator::Draw(
         /// Step 2] (one frame)
 
         // Load available modules and calls and currently loaded project from core once(!)
-        this->graph_manager.UpdateModulesCallsStock(core_instance);
+        this->graph_manager.LoadModulesCallsStock(core_instance);
 
         // Load inital project
-        /// this->graph_manager.LoadProjectCore(core_instance);
+        /// this->graph_manager.LoadProjectFromCore(core_instance);
         /// or: this->add_empty_project();
 
         // Enable drag and drop of files for configurator (if glfw is available here)
@@ -173,7 +173,7 @@ bool megamol::gui::configurator::Configurator::Draw(
             // ... only if configurator is focused.
             if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
                 for (auto& dropped_file : megamol::gui::configurator::Configurator::dropped_files) {
-                    this->graph_manager.LoadAddProjectFile(this->graph_state.graph_selected_uid, dropped_file);
+                    this->graph_manager.LoadAddProjectFromFile(this->graph_state.graph_selected_uid, dropped_file);
                 }
             }
             megamol::gui::configurator::Configurator::dropped_files.clear();
@@ -236,7 +236,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                     this->open_popup_load = true;
                 }
                 if (ImGui::MenuItem("Running")) {
-                    this->graph_manager.LoadProjectCore(core_instance);
+                    this->graph_manager.LoadProjectFromCore(core_instance);
                 }
                 ImGui::EndMenu();
             }
@@ -249,7 +249,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                 }
                 if (ImGui::MenuItem(
                         "Running", nullptr, false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
-                    this->graph_manager.AddProjectCore(this->graph_state.graph_selected_uid, core_instance);
+                    this->graph_manager.AddProjectFromCore(this->graph_state.graph_selected_uid, core_instance, true);
                     // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
                 }
                 ImGui::EndMenu();
@@ -556,7 +556,7 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
 
                     // Load graph from file
                     // ImGuiID graph_uid =
-                    this->graph_manager.LoadAddProjectFile(GUI_INVALID_ID, json_graph_id);
+                    this->graph_manager.LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
 
                     /// XXX Disabled (Ignoring graph state stored in this project)
                     /*
@@ -667,7 +667,7 @@ void megamol::gui::configurator::Configurator::drawPopUps(void) {
     }
     if (this->file_utils.FileBrowserPopUp(
             FileUtils::FileBrowserFlag::LOAD, "Load Project", this->open_popup_load, project_filename)) {
-        popup_failed = !this->graph_manager.LoadAddProjectFile(this->add_project_graph_uid, project_filename);
+        popup_failed = !this->graph_manager.LoadAddProjectFromFile(this->add_project_graph_uid, project_filename);
         this->add_project_graph_uid = GUI_INVALID_ID;
     }
     this->utils.MinimalPopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
