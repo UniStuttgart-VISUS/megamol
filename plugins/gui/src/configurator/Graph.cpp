@@ -2091,20 +2091,15 @@ ImGuiID megamol::gui::configurator::Graph::AddModule(
 
                 for (auto& callslots_type : mod.callslots) {
                     for (auto& c : callslots_type.second) {
-                        CallSlot callslot(megamol::gui::GenerateUniqueID());
-                        callslot.name = c.name;
-                        callslot.description = c.description;
-                        callslot.compatible_call_idxs = c.compatible_call_idxs;
-                        callslot.type = c.type;
-                        callslot.present.label_visible = this->present.GetCallSlotLabelVisibility();
+                        auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID());
+                        callslot_ptr->name = c.name;
+                        callslot_ptr->description = c.description;
+                        callslot_ptr->compatible_call_idxs = c.compatible_call_idxs;
+                        callslot_ptr->type = c.type;
+                        callslot_ptr->present.label_visible = this->present.GetCallSlotLabelVisibility();
+                        callslot_ptr->ConnectParentModule(mod_ptr);
 
-                        mod_ptr->AddCallSlot(std::make_shared<CallSlot>(callslot));
-                    }
-                }
-
-                for (auto& callslot_type_list : mod_ptr->GetCallSlots()) {
-                    for (auto& callslot : callslot_type_list.second) {
-                        callslot->ConnectParentModule(mod_ptr);
+                        mod_ptr->AddCallSlot(callslot_ptr);
                     }
                 }
 
@@ -2210,113 +2205,14 @@ bool megamol::gui::configurator::Graph::GetModule(
 
 
 bool megamol::gui::configurator::Graph::AddCall(
-    const CallStockVectorType& stock_calls, CallSlotPtrType callslot_1, CallSlotPtrType callslot_2) {
-
-    try {
-        if ((callslot_1 == nullptr) || (callslot_2 == nullptr)) {
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "Pointer to call slot is nulptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        if (!callslot_1->IsConnectionValid((*callslot_2))) {
-            return false;
-        }
-        auto compat_idx = CallSlot::GetCompatibleCallIndex(callslot_1, callslot_2);
-        if (compat_idx == GUI_INVALID_ID) {
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "Unable to find index of compatible call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        Call::StockCall call_stock_data = stock_calls[compat_idx];
-
-        auto call_ptr = std::make_shared<Call>(megamol::gui::GenerateUniqueID());
-        call_ptr->class_name = call_stock_data.class_name;
-        call_ptr->description = call_stock_data.description;
-        call_ptr->plugin_name = call_stock_data.plugin_name;
-        call_ptr->functions = call_stock_data.functions;
-        call_ptr->present.label_visible = this->present.GetCallLabelVisibility();
-
-        // Delete calls when CALLERs should be connected to new call slot
-        if ((callslot_1->type == CallSlotType::CALLER) && (callslot_1->CallsConnected())) {
-            std::vector<ImGuiID> calls_uids;
-            for (auto& call : callslot_1->GetConnectedCalls()) {
-                calls_uids.emplace_back(call->uid);
-            }
-            for (auto& call_uid : calls_uids) {
-                this->DeleteCall(call_uid);
-            }
-        }
-        if ((callslot_2->type == CallSlotType::CALLER) && (callslot_2->CallsConnected())) {
-            std::vector<ImGuiID> calls_uids;
-            for (auto& call : callslot_2->GetConnectedCalls()) {
-                calls_uids.emplace_back(call->uid);
-            }
-            for (auto& call_uid : calls_uids) {
-                this->DeleteCall(call_uid);
-            }
-        }
-
-        if (call_ptr->ConnectCallSlots(callslot_1, callslot_2) && callslot_1->ConnectCall(call_ptr) &&
-            callslot_2->ConnectCall(call_ptr)) {
-
-            this->calls.emplace_back(call_ptr);
-#ifdef GUI_VERBOSE
-            vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Added call '%s' (uid %i) to project '%s'.\n",
-                call_ptr->class_name.c_str(), call_ptr->uid, this->name.c_str());
-#endif // GUI_VERBOSE
-
-            // Add connected call slots to interface of group of the parent module
-            if (callslot_1->IsParentModuleConnected() && callslot_2->IsParentModuleConnected()) {
-                ImGuiID slot_1_parent_group_uid = callslot_1->GetParentModule()->present.group.uid;
-                ImGuiID slot_2_parent_group_uid = callslot_2->GetParentModule()->present.group.uid;
-                if (slot_1_parent_group_uid != slot_2_parent_group_uid) {
-                    if ((slot_1_parent_group_uid != GUI_INVALID_ID) &&
-                        (callslot_1->present.group.interfaceslot_ptr == nullptr)) {
-                        for (auto& group_ptr : this->groups) {
-                            if (group_ptr->uid == slot_1_parent_group_uid) {
-                                group_ptr->AddInterfaceSlot(callslot_1);
-                            }
-                        }
-                    }
-                    if ((slot_2_parent_group_uid != GUI_INVALID_ID) &&
-                        (callslot_2->present.group.interfaceslot_ptr == nullptr)) {
-                        for (auto& group_ptr : this->groups) {
-                            if (group_ptr->uid == slot_2_parent_group_uid) {
-                                group_ptr->AddInterfaceSlot(callslot_2);
-                            }
-                        }
-                    }
-                }
-            }
-
-            this->dirty_flag = true;
-        } else {
-            this->DeleteCall(call_ptr->uid);
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "Unable to create call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-    } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    return true;
-}
-
-
-bool megamol::gui::configurator::Graph::AddCall(
     const CallStockVectorType& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid) {
 
     try {
         if ((slot_1_uid == GUI_INVALID_ID) || (slot_2_uid == GUI_INVALID_ID)) {
 #ifdef GUI_VERBOSE
-/// vislib::sys::Log::DefaultLog.WriteError("Invalid slot uid given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-/// __LINE__);
+            /// vislib::sys::Log::DefaultLog.WriteError("Invalid slot uid given. [%s, %s, line %d]\n", __FILE__,
+            /// __FUNCTION__,
+            /// __LINE__);
 #endif // GUI_VERBOSE
             return false;
         }
@@ -2411,6 +2307,124 @@ bool megamol::gui::configurator::Graph::AddCall(
     }
 
     return true;
+}
+
+
+bool megamol::gui::configurator::Graph::AddCall(
+    const CallStockVectorType& stock_calls, CallSlotPtrType callslot_1, CallSlotPtrType callslot_2) {
+
+    try {
+        if ((callslot_1 == nullptr) || (callslot_2 == nullptr)) {
+            vislib::sys::Log::DefaultLog.WriteWarn(
+                "Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        if (!callslot_1->IsConnectionValid((*callslot_2))) {
+            return false;
+        }
+        auto compat_idx = CallSlot::GetCompatibleCallIndex(callslot_1, callslot_2);
+        if (compat_idx == GUI_INVALID_ID) {
+            vislib::sys::Log::DefaultLog.WriteWarn(
+                "Unable to find index of compatible call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        Call::StockCall call_stock_data = stock_calls[compat_idx];
+
+        auto call_ptr = std::make_shared<Call>(megamol::gui::GenerateUniqueID());
+        call_ptr->class_name = call_stock_data.class_name;
+        call_ptr->description = call_stock_data.description;
+        call_ptr->plugin_name = call_stock_data.plugin_name;
+        call_ptr->functions = call_stock_data.functions;
+        call_ptr->present.label_visible = this->present.GetCallLabelVisibility();
+
+        return this->AddCall(call_ptr, callslot_1, callslot_2);
+
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+}
+
+
+bool megamol::gui::configurator::Graph::AddCall(
+    CallPtrType& call_ptr, CallSlotPtrType callslot_1, CallSlotPtrType callslot_2) {
+
+    if (call_ptr == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Pointer to call is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    if ((callslot_1 == nullptr) || (callslot_2 == nullptr)) {
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    // Delete calls when CALLERs should be connected to new call slot
+    if ((callslot_1->type == CallSlotType::CALLER) && (callslot_1->CallsConnected())) {
+        std::vector<ImGuiID> calls_uids;
+        for (auto& call : callslot_1->GetConnectedCalls()) {
+            calls_uids.emplace_back(call->uid);
+        }
+        for (auto& call_uid : calls_uids) {
+            this->DeleteCall(call_uid);
+        }
+    }
+    if ((callslot_2->type == CallSlotType::CALLER) && (callslot_2->CallsConnected())) {
+        std::vector<ImGuiID> calls_uids;
+        for (auto& call : callslot_2->GetConnectedCalls()) {
+            calls_uids.emplace_back(call->uid);
+        }
+        for (auto& call_uid : calls_uids) {
+            this->DeleteCall(call_uid);
+        }
+    }
+
+    if (call_ptr->ConnectCallSlots(callslot_1, callslot_2) && callslot_1->ConnectCall(call_ptr) &&
+        callslot_2->ConnectCall(call_ptr)) {
+
+        this->calls.emplace_back(call_ptr);
+#ifdef GUI_VERBOSE
+        vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Added call '%s' (uid %i) to project '%s'.\n",
+            call_ptr->class_name.c_str(), call_ptr->uid, this->name.c_str());
+#endif // GUI_VERBOSE
+
+        // Add connected call slots to interface of group of the parent module
+        if (callslot_1->IsParentModuleConnected() && callslot_2->IsParentModuleConnected()) {
+            ImGuiID slot_1_parent_group_uid = callslot_1->GetParentModule()->present.group.uid;
+            ImGuiID slot_2_parent_group_uid = callslot_2->GetParentModule()->present.group.uid;
+            if (slot_1_parent_group_uid != slot_2_parent_group_uid) {
+                if ((slot_1_parent_group_uid != GUI_INVALID_ID) &&
+                    (callslot_1->present.group.interfaceslot_ptr == nullptr)) {
+                    for (auto& group_ptr : this->groups) {
+                        if (group_ptr->uid == slot_1_parent_group_uid) {
+                            group_ptr->AddInterfaceSlot(callslot_1);
+                        }
+                    }
+                }
+                if ((slot_2_parent_group_uid != GUI_INVALID_ID) &&
+                    (callslot_2->present.group.interfaceslot_ptr == nullptr)) {
+                    for (auto& group_ptr : this->groups) {
+                        if (group_ptr->uid == slot_2_parent_group_uid) {
+                            group_ptr->AddInterfaceSlot(callslot_2);
+                        }
+                    }
+                }
+            }
+        }
+
+        this->dirty_flag = true;
+        return true;
+    } else {
+        this->DeleteCall(call_ptr->uid);
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "Unable to create call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
 }
 
 

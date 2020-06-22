@@ -169,14 +169,12 @@ bool megamol::gui::configurator::GraphManager::DeleteGraph(ImGuiID graph_uid) {
                     "Unclean deletion. Found %i references pointing to graph. [%s, %s, line %d]\n", (*iter).use_count(),
                     __FILE__, __FUNCTION__, __LINE__);
             }
-
             (*iter).reset();
             this->graphs.erase(iter);
 
             return true;
         }
     }
-
     return false;
 }
 
@@ -196,7 +194,7 @@ bool megamol::gui::configurator::GraphManager::GetGraph(
 }
 
 
-bool megamol::gui::configurator::GraphManager::LoadModulesCallsStock(const megamol::core::CoreInstance* core_instance) {
+bool megamol::gui::configurator::GraphManager::LoadCallStock(const megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -204,15 +202,14 @@ bool megamol::gui::configurator::GraphManager::LoadModulesCallsStock(const megam
         return false;
     }
 
-    if (!this->calls_stock.empty() || !this->modules_stock.empty()) {
-        vislib::sys::Log::DefaultLog.WriteWarn("Modules and calls stock already exists. Deleting exiting stock and "
+    if (!this->calls_stock.empty()) {
+        vislib::sys::Log::DefaultLog.WriteWarn("Call stock already exists. Deleting exiting stock and "
                                                "recreating new one. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
     }
 
     bool retval = true;
     this->calls_stock.clear();
-    this->modules_stock.clear();
 
     try {
         std::string plugin_name;
@@ -250,6 +247,53 @@ bool megamol::gui::configurator::GraphManager::LoadModulesCallsStock(const megam
                 }
             }
         }
+
+        auto delta_time =
+            static_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - start_time).count();
+
+
+        vislib::sys::Log::DefaultLog.WriteInfo(
+            "[Configurator] Reading available calls (#%i) ... DONE (duration: %.3f seconds)\n",
+            this->calls_stock.size(), delta_time);
+
+    } catch (std::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return retval;
+}
+
+
+bool megamol::gui::configurator::GraphManager::LoadModuleStock(const megamol::core::CoreInstance* core_instance) {
+
+    if (core_instance == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    if (this->calls_stock.empty()) {
+        vislib::sys::Log::DefaultLog.WriteWarn("Load call stock before getting modules for having calls in place for "
+                                               "setting compatible call indices of slots. [%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    if (!this->modules_stock.empty()) {
+        vislib::sys::Log::DefaultLog.WriteWarn("Module stock already exists. Deleting exiting stock and "
+                                               "recreating new one. [%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
+    }
+
+    bool retval = true;
+    this->modules_stock.clear();
+
+    try {
+        std::string plugin_name;
+        auto start_time = std::chrono::system_clock::now();
 
         // MODULES ----------------------------------------------------------------
         if (this->modules_stock.empty()) {
@@ -297,8 +341,8 @@ bool megamol::gui::configurator::GraphManager::LoadModulesCallsStock(const megam
             static_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - start_time).count();
 
         vislib::sys::Log::DefaultLog.WriteInfo(
-            "[Configurator] Reading available modules (#%i) and calls (#%i) ... DONE (duration: %.3f seconds)\n",
-            this->modules_stock.size(), this->calls_stock.size(), delta_time);
+            "[Configurator] Reading available modules (#%i) ... DONE (duration: %.3f seconds)\n",
+            this->modules_stock.size(), delta_time);
 
     } catch (std::exception e) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -340,13 +384,8 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadUpdateProjectFromCore(
         return GUI_INVALID_ID;
     }
 
-    if (this->AddProjectFromCore(current_graph_id, core_instance, false)) {
-
-
-        /// TODO create inout_param_interface_map
-        // inout_param_interface_map.clear()
-
-
+    inout_param_interface_map.clear();
+    if (this->AddProjectFromCore(current_graph_id, core_instance, false, inout_param_interface_map)) {
         return graph_ptr->uid;
     }
     return GUI_INVALID_ID;
@@ -376,7 +415,8 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadProjectFromCore(megamol::c
         return GUI_INVALID_ID;
     }
 
-    if (this->AddProjectFromCore(new_graph_id, core_instance, true)) {
+
+    if (this->AddProjectFromCore(new_graph_id, core_instance)) {
         return graph_ptr->uid;
     }
     return GUI_INVALID_ID;
@@ -384,7 +424,15 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadProjectFromCore(megamol::c
 
 
 bool megamol::gui::configurator::GraphManager::AddProjectFromCore(
-    ImGuiID graph_uid, megamol::core::CoreInstance* core_instance, bool use_stock) {
+    ImGuiID graph_uid, megamol::core::CoreInstance* core_instance) {
+
+    ParamInterfaceMapType unused_dummy;
+    return this->AddProjectFromCore(graph_uid, core_instance, true, unused_dummy);
+}
+
+
+bool megamol::gui::configurator::GraphManager::AddProjectFromCore(ImGuiID graph_uid,
+    megamol::core::CoreInstance* core_instance, bool use_stock, ParamInterfaceMapType& inout_param_interface_map) {
 
     try {
         if (core_instance == nullptr) {
@@ -402,6 +450,7 @@ bool megamol::gui::configurator::GraphManager::AddProjectFromCore(
 
         // Temporary data structure holding call connection data
         struct CallData {
+            std::string call_class_name;
             std::string caller_module_full_name;
             std::string caller_module_callslot_name;
             std::string callee_module_full_name;
@@ -463,9 +512,10 @@ bool megamol::gui::configurator::GraphManager::AddProjectFromCore(
                     if (mod_desc != nullptr) {
                         module_ptr->description = std::string(mod_desc->Description());
                     }
-                    module_ptr->plugin_name = "";
+                    module_ptr->plugin_name = "unknown";
                     core::view::AbstractView* viewptr = dynamic_cast<core::view::AbstractView*>(mod);
                     module_ptr->is_view = (viewptr != nullptr);
+                    module_ptr->present.label_visible = graph_ptr->present.GetModuleLabelVisibility();
                 }
             }
             if (module_ptr != nullptr) {
@@ -492,7 +542,7 @@ bool megamol::gui::configurator::GraphManager::AddProjectFromCore(
                  si != se; ++si) {
 
                 // Parameter
-                const auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
+                auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
                 if (param_slot != nullptr) {
                     std::string param_full_name = std::string(param_slot->Name().PeekBuffer());
 
@@ -503,48 +553,72 @@ bool megamol::gui::configurator::GraphManager::AddProjectFromCore(
                             }
                         }
                     } else {
-                        /*
-                        Parameter param_slot(megamol::gui::GenerateUniqueID(), p.type, p.storage, p.minval, p.maxval);
-                        param_slot.full_name = p.full_name;
-                        param_slot.description = p.description;
-                        param_slot.SetValueString(p.default_value, true);
-                        param_slot.GUI_SetVisibility(p.gui_visibility);
-                        param_slot.GUI_SetReadOnly(p.gui_read_only);
-                        param_slot.GUI_SetPresentation(p.gui_presentation);
-                        // Apply current global configurator parameter gui settings
-                        // Do not apply global read-only and visibility.
-                        param_slot.GUI_SetExpert(this->present.param_extended_mode);
+                        std::shared_ptr<Parameter> param_ptr;
+                        megamol::gui::configurator::ReadCoreParameter((*param_slot), param_ptr, full_name);
+                        if (param_ptr != nullptr) {
+                            if (!param_slot->Parameter().IsNull()) {
+                                auto param_ref = &(*param_slot->Parameter());
+                                inout_param_interface_map.emplace(param_ref, param_ptr);
+                            }
 
-                        mod_ptr->parameters.emplace_back(param_slot);
-                        */
-
-                        /// TODO
+                            module_ptr->parameters.emplace_back((*param_ptr));
+                        }
                     }
                 }
 
                 // Collect call connection data
-                const auto caller_slot = dynamic_cast<megamol::core::CallerSlot*>((*si).get());
+                std::shared_ptr<core::CallerSlot> caller_slot =
+                    std::dynamic_pointer_cast<megamol::core::CallerSlot>((*si));
                 if (caller_slot) {
-                    const megamol::core::Call* call =
-                        const_cast<megamol::core::CallerSlot*>(caller_slot)->CallAs<megamol::core::Call>();
+                    const megamol::core::Call* call = caller_slot->CallAs<megamol::core::Call>();
                     if (call != nullptr) {
                         CallData cd;
-
+                        cd.call_class_name = std::string(call->ClassName());
                         cd.caller_module_full_name =
                             std::string(call->PeekCallerSlot()->Parent()->FullName().PeekBuffer());
                         cd.caller_module_callslot_name = std::string(call->PeekCallerSlot()->Name().PeekBuffer());
                         cd.callee_module_full_name =
                             std::string(call->PeekCalleeSlot()->Parent()->FullName().PeekBuffer());
                         cd.callee_module_callslot_name = std::string(call->PeekCalleeSlot()->Name().PeekBuffer());
-
                         call_data.emplace_back(cd);
+
+                        if (!use_stock) {
+                            auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID());
+                            callslot_ptr->name = std::string(caller_slot->Name().PeekBuffer());
+                            callslot_ptr->description = std::string(caller_slot->Description().PeekBuffer());
+                            callslot_ptr->compatible_call_idxs = this->get_compatible_caller_idxs(caller_slot);
+                            callslot_ptr->type = CallSlotType::CALLER;
+                            callslot_ptr->present.label_visible = graph_ptr->present.GetCallSlotLabelVisibility();
+                            callslot_ptr->ConnectParentModule(module_ptr);
+
+                            module_ptr->AddCallSlot(callslot_ptr);
+                        }
                     }
+                }
+                std::shared_ptr<core::CalleeSlot> callee_slot =
+                    std::dynamic_pointer_cast<megamol::core::CalleeSlot>((*si));
+                if (callee_slot && !use_stock) {
+                    auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID());
+                    callslot_ptr->name = std::string(callee_slot->Name().PeekBuffer());
+                    callslot_ptr->description = std::string(callee_slot->Description().PeekBuffer());
+                    callslot_ptr->compatible_call_idxs = this->get_compatible_callee_idxs(callee_slot);
+                    callslot_ptr->type = CallSlotType::CALLEE;
+                    callslot_ptr->present.label_visible = graph_ptr->present.GetCallSlotLabelVisibility();
+                    callslot_ptr->ConnectParentModule(module_ptr);
+
+                    module_ptr->AddCallSlot(callslot_ptr);
+                }
+            }
+
+            // Create calls
+            for (auto& callslot_type_list : module_ptr->GetCallSlots()) {
+                for (auto& callslot : callslot_type_list.second) {
+                    callslot->ConnectParentModule(module_ptr);
                 }
             }
         };
         core_instance->EnumModulesNoLock(nullptr, module_func);
 
-        // Create calls
         for (auto& cd : call_data) {
             CallSlotPtrType callslot_1 = nullptr;
             for (auto& mod : graph_ptr->GetModules()) {
@@ -566,13 +640,7 @@ bool megamol::gui::configurator::GraphManager::AddProjectFromCore(
                     }
                 }
             }
-
-            if (use_stock) {
-                graph_ptr->AddCall(this->GetCallsStock(), callslot_1, callslot_2);
-            } else {
-
-                /// TODO
-            }
+            graph_ptr->AddCall(this->GetCallsStock(), callslot_1, callslot_2);
         }
 
         graph_ptr->present.SetLayoutGraph();
@@ -1228,9 +1296,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
 
         // Param Slots
         for (std::shared_ptr<core::param::ParamSlot> param_slot : paramSlots) {
-            if (param_slot == nullptr) {
-                break;
-            }
+            if (param_slot == nullptr) continue;
             Parameter::StockParameter psd;
             if (megamol::gui::configurator::ReadCoreParameter((*param_slot), psd)) {
                 mod.parameters.emplace_back(psd);
@@ -1242,19 +1308,8 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
             CallSlot::StockCallSlot csd;
             csd.name = std::string(caller_slot->Name().PeekBuffer());
             csd.description = std::string(caller_slot->Description().PeekBuffer());
-            csd.compatible_call_idxs.clear();
+            csd.compatible_call_idxs = this->get_compatible_caller_idxs(caller_slot);
             csd.type = CallSlotType::CALLER;
-
-            SIZE_T callCount = caller_slot->GetCompCallCount();
-            for (SIZE_T i = 0; i < callCount; ++i) {
-                std::string comp_call_class_name = std::string(caller_slot->GetCompCallClassName(i));
-                size_t calls_cnt = this->calls_stock.size();
-                for (size_t idx = 0; idx < calls_cnt; ++idx) {
-                    if (this->calls_stock[idx].class_name == comp_call_class_name) {
-                        csd.compatible_call_idxs.emplace_back(idx);
-                    }
-                }
-            }
 
             mod.callslots[csd.type].emplace_back(csd);
         }
@@ -1264,59 +1319,8 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
             CallSlot::StockCallSlot csd;
             csd.name = std::string(callee_slot->Name().PeekBuffer());
             csd.description = std::string(callee_slot->Description().PeekBuffer());
-            csd.compatible_call_idxs.clear();
+            csd.compatible_call_idxs = this->get_compatible_callee_idxs(callee_slot);
             csd.type = CallSlotType::CALLEE;
-
-            SIZE_T callbackCount = callee_slot->GetCallbackCount();
-            std::vector<std::string> callNames, funcNames;
-            std::set<std::string> uniqueCallNames, completeCallNames;
-            for (SIZE_T i = 0; i < callbackCount; ++i) {
-                uniqueCallNames.insert(callee_slot->GetCallbackCallName(i));
-                callNames.push_back(callee_slot->GetCallbackCallName(i));
-                funcNames.push_back(callee_slot->GetCallbackFuncName(i));
-            }
-            size_t ll = callNames.size();
-            assert(ll == funcNames.size());
-            for (std::string callName : uniqueCallNames) {
-                bool found_call = false;
-                Call::StockCall call;
-                for (auto& c : this->calls_stock) {
-                    if (callName == c.class_name) {
-                        call = c;
-                        found_call = true;
-                        break;
-                    }
-                }
-                bool allFound = true;
-                if (found_call) {
-                    for (auto& func_name : call.functions) {
-                        bool found = false;
-                        for (size_t j = 0; j < ll; ++j) {
-                            if ((callNames[j] == callName) && (funcNames[j] == func_name)) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found) {
-                            allFound = false;
-                            break;
-                        }
-                    }
-                } else {
-                    allFound = false;
-                }
-                if (allFound) {
-                    completeCallNames.insert(callName);
-                }
-            }
-            for (std::string callName : completeCallNames) {
-                size_t calls_cnt = this->calls_stock.size();
-                for (size_t idx = 0; idx < calls_cnt; ++idx) {
-                    if (this->calls_stock[idx].class_name == callName) {
-                        csd.compatible_call_idxs.emplace_back(idx);
-                    }
-                }
-            }
 
             mod.callslots[csd.type].emplace_back(csd);
         }
@@ -1759,4 +1763,86 @@ bool megamol::gui::configurator::GraphManager::replace_parameter_gui_state(
     }
 
     return true;
+}
+
+
+std::vector<size_t> megamol::gui::configurator::GraphManager::get_compatible_callee_idxs(
+    std::shared_ptr<megamol::core::CalleeSlot> callee_slot) {
+
+    std::vector<size_t> retval;
+    retval.clear();
+
+    SIZE_T callbackCount = callee_slot->GetCallbackCount();
+    std::vector<std::string> callNames, funcNames;
+    std::set<std::string> uniqueCallNames, completeCallNames;
+    for (SIZE_T i = 0; i < callbackCount; ++i) {
+        uniqueCallNames.insert(callee_slot->GetCallbackCallName(i));
+        callNames.push_back(callee_slot->GetCallbackCallName(i));
+        funcNames.push_back(callee_slot->GetCallbackFuncName(i));
+    }
+    size_t ll = callNames.size();
+    assert(ll == funcNames.size());
+    for (std::string callName : uniqueCallNames) {
+        bool found_call = false;
+        Call::StockCall call;
+        for (auto& c : this->calls_stock) {
+            if (callName == c.class_name) {
+                call = c;
+                found_call = true;
+                break;
+            }
+        }
+        bool allFound = true;
+        if (found_call) {
+            for (auto& func_name : call.functions) {
+                bool found = false;
+                for (size_t j = 0; j < ll; ++j) {
+                    if ((callNames[j] == callName) && (funcNames[j] == func_name)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    allFound = false;
+                    break;
+                }
+            }
+        } else {
+            allFound = false;
+        }
+        if (allFound) {
+            completeCallNames.insert(callName);
+        }
+    }
+    for (std::string callName : completeCallNames) {
+        size_t calls_cnt = this->calls_stock.size();
+        for (size_t idx = 0; idx < calls_cnt; ++idx) {
+            if (this->calls_stock[idx].class_name == callName) {
+                retval.emplace_back(idx);
+            }
+        }
+    }
+
+    return retval;
+}
+
+
+std::vector<size_t> megamol::gui::configurator::GraphManager::get_compatible_caller_idxs(
+    std::shared_ptr<megamol::core::CallerSlot> caller_slot) {
+
+    std::vector<size_t> retval;
+    retval.clear();
+
+    SIZE_T callCount = caller_slot->GetCompCallCount();
+    for (SIZE_T i = 0; i < callCount; ++i) {
+        std::string comp_call_class_name = std::string(caller_slot->GetCompCallClassName(i));
+        size_t calls_cnt = this->calls_stock.size();
+        for (size_t idx = 0; idx < calls_cnt; ++idx) {
+            if (this->calls_stock[idx].class_name == comp_call_class_name) {
+                retval.emplace_back(idx);
+            }
+        }
+    }
+
+    return retval;
 }

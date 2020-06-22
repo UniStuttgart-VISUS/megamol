@@ -421,6 +421,7 @@ static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
     }
 
     out_param.full_name = module_full_name + "::" + std::string(in_param_slot.Name().PeekBuffer());
+    out_param.description = std::string(in_param_slot.Description().PeekBuffer());
     out_param.present.SetGUIVisible(parameter_ptr->IsGUIVisible());
     out_param.present.SetGUIReadOnly(parameter_ptr->IsGUIReadOnly());
     out_param.present.SetGUIPresentation(parameter_ptr->GetGUIPresentation());

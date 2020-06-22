@@ -533,7 +533,6 @@ megamol::gui::configurator::Module::Module(ImGuiID uid)
     , present() {
 
     this->callslots.emplace(megamol::gui::configurator::CallSlotType::CALLER, std::vector<CallSlotPtrType>());
-
     this->callslots.emplace(megamol::gui::configurator::CallSlotType::CALLEE, std::vector<CallSlotPtrType>());
 }
 

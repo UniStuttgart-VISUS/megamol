@@ -222,8 +222,6 @@ private:
     bool hotkeyPressed(megamol::core::view::KeyCode keycode);
     void shutdown(void);
 
-    void add_param_presentation(const megamol::core::Module& mod, megamol::core::param::ParamSlot& slot);
-
     void save_state_to_parameter(void);
     bool gui_and_parameters_state_from_json_string(const std::string& in_json_string);
     bool gui_and_parameters_state_to_json(nlohmann::json& out_json);

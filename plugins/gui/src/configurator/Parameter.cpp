@@ -147,7 +147,8 @@ bool megamol::gui::configurator::ParameterPresentation::Present(
 
 float megamol::gui::configurator::ParameterPresentation::GetHeight(Parameter& inout_parameter) {
 
-    // TODO consider hidden parameters (basic vs. expert mode)
+    /// TODO consider hidden parameters (basic vs. expert mode)
+
     float height = (ImGui::GetFrameHeightWithSpacing() * (1.15f));
     if (inout_parameter.type == ParamType::TRANSFERFUNCTION) {
         if (this->show_tf_editor) {

@@ -137,8 +137,10 @@ public:
     inline const ModulePtrVectorType& GetModules(void) { return this->modules; }
     bool GetModule(ImGuiID module_uid, ModulePtrType& out_module_ptr);
 
-    bool AddCall(const CallStockVectorType& stock_calls, CallSlotPtrType callslot_1, CallSlotPtrType callslot_2);
     bool AddCall(const CallStockVectorType& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid);
+    bool AddCall(const CallStockVectorType& stock_calls, CallSlotPtrType callslot_1, CallSlotPtrType callslot_2);
+    bool AddCall(CallPtrType& call_ptr, CallSlotPtrType callslot_1, CallSlotPtrType callslot_2);
+
     bool DeleteCall(ImGuiID call_uid);
     inline const CallPtrVectorType& GetCalls(void) { return this->calls; }
 

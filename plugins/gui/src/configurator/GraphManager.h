@@ -79,7 +79,8 @@ public:
     bool GetGraph(ImGuiID graph_uid, GraphPtrType& out_graph_ptr);
     const GraphsType& GetGraphs(void) { return this->graphs; }
 
-    bool LoadModulesCallsStock(const megamol::core::CoreInstance* core_instance);
+    bool LoadModuleStock(const megamol::core::CoreInstance* core_instance);
+    bool LoadCallStock(const megamol::core::CoreInstance* core_instance);
     inline const ModuleStockVectorType& GetModulesStock(void) { return this->modules_stock; }
     inline const CallStockVectorType& GetCallsStock(void) { return this->calls_stock; }
 
@@ -87,7 +88,9 @@ public:
         ParamInterfaceMapType& inout_param_interface_map);
 
     ImGuiID LoadProjectFromCore(megamol::core::CoreInstance* core_instance);
-    bool AddProjectFromCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance, bool use_stock);
+    bool AddProjectFromCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance);
+    bool AddProjectFromCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance, bool use_stock,
+        ParamInterfaceMapType& inout_param_interface_map);
 
     ImGuiID LoadAddProjectFromFile(ImGuiID graph_uid, const std::string& project_filename);
 
@@ -127,6 +130,9 @@ private:
     inline const std::string generate_unique_graph_name(void) {
         return ("Project_" + std::to_string(++graph_name_uid));
     }
+
+    std::vector<size_t> get_compatible_callee_idxs(std::shared_ptr<megamol::core::CalleeSlot> callee_slot);
+    std::vector<size_t> get_compatible_caller_idxs(std::shared_ptr<megamol::core::CallerSlot> caller_slot);
 };
 
 } // namespace configurator

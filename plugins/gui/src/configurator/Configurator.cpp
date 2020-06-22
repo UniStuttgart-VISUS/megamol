@@ -134,7 +134,8 @@ bool megamol::gui::configurator::Configurator::Draw(
         /// Step 2] (one frame)
 
         // Load available modules and calls and currently loaded project from core once(!)
-        this->graph_manager.LoadModulesCallsStock(core_instance);
+        this->graph_manager.LoadCallStock(core_instance);
+        this->graph_manager.LoadModuleStock(core_instance);
 
         // Load inital project
         /// this->graph_manager.LoadProjectFromCore(core_instance);
@@ -249,7 +250,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                 }
                 if (ImGui::MenuItem(
                         "Running", nullptr, false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
-                    this->graph_manager.AddProjectFromCore(this->graph_state.graph_selected_uid, core_instance, true);
+                    this->graph_manager.AddProjectFromCore(this->graph_state.graph_selected_uid, core_instance);
                     // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
                 }
                 ImGui::EndMenu();
