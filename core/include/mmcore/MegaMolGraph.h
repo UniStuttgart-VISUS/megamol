@@ -155,14 +155,19 @@ public:
 
     bool CreateCall(std::string const& className, std::string const& from, std::string const& to);
 
+    megamol::core::Module::ptr_type FindModule(std::string const& moduleName) const;
 
+    megamol::core::Call::ptr_type FindCall(std::string const& from, std::string const& to) const;
 
+    megamol::core::param::AbstractParam* FindParameter(std::string const& paramName) const;
 
+    std::vector<megamol::core::param::AbstractParam*> FindModuleParameters(std::string const& moduleName) const;
 
     CallList_t const& ListCalls() const;
 
     ModuleList_t const& ListModules() const;
 
+    std::vector<megamol::core::param::AbstractParam*> ListParameters() const;
 
     bool HasPendingRequests();
 
