@@ -16,6 +16,7 @@
 
 #include "Renderer2D.h"
 
+#include <glm/matrix.hpp>
 #include <map>
 
 namespace megamol {
@@ -226,8 +227,8 @@ private:
 
     GLuint columnCount;
     GLuint itemCount;
-    GLfloat modelViewMatrix_column[16];
-    GLfloat projMatrix_column[16];
+    glm::mat4 modelViewMatrix_column;
+    glm::mat4 projMatrix_column;
 
     vislib::graphics::gl::GLSLShader drawAxesProgram;
     vislib::graphics::gl::GLSLShader drawScalesProgram;

@@ -18,6 +18,7 @@
 #include "vislib/graphics/gl/ShaderSource.h"
 
 #include <array>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include "vislib/graphics/InputModifiers.h"
 
@@ -184,8 +185,8 @@ bool ParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl::G
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, minmaxBuffer);
 
     glUniform2f(program.ParameterLocation("scaling"), 1.0f, 1.0f); // scaling, whatever
-    glUniformMatrix4fv(program.ParameterLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
-    glUniformMatrix4fv(program.ParameterLocation("projection"), 1, GL_FALSE, projMatrix_column);
+    glUniformMatrix4fv(program.ParameterLocation("modelView"), 1, GL_FALSE, glm::value_ptr(modelViewMatrix_column));
+    glUniformMatrix4fv(program.ParameterLocation("projection"), 1, GL_FALSE, glm::value_ptr(projMatrix_column));
     glUniform1ui(program.ParameterLocation("dimensionCount"), this->columnCount);
     glUniform1ui(program.ParameterLocation("itemCount"), this->itemCount);
 
@@ -941,8 +942,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     windowAspect = static_cast<float>(call.GetViewport().AspectRatio());
 
     // this is the apex of suck and must die
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+    glGetFloatv(GL_MODELVIEW_MATRIX, glm::value_ptr(modelViewMatrix_column));
+    glGetFloatv(GL_PROJECTION_MATRIX, glm::value_ptr(projMatrix_column));
     // end suck
     windowWidth = call.GetViewport().Width();
     windowHeight = call.GetViewport().Height();
