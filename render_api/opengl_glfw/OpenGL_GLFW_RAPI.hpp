@@ -113,6 +113,10 @@ private:
     WindowEvents m_windowEvents;
     FramebufferEvents m_framebufferEvents;
 
+public:
+    void clearResources();
+private:
+
     // this holds references to the event structs we fill. the events are passed to the renderers/views using
     // const std::vector<RenderResource>& getRenderResources() override
     std::vector<RenderResource> m_renderResourceReferences;

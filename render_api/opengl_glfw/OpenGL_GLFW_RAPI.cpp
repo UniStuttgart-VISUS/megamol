@@ -485,6 +485,15 @@ void OpenGL_GLFW_RAPI::postViewRender() {
 	
     ::glfwMakeContextCurrent(nullptr);
 
+	/*
+	m_keyboardEvents.clear();
+	m_mouseEvents.clear();
+	m_windowEvents.clear();
+	m_framebufferEvents.clear();
+	*/
+}
+
+void OpenGL_GLFW_RAPI::clearResources() {
 	m_keyboardEvents.clear();
 	m_mouseEvents.clear();
 	m_windowEvents.clear();

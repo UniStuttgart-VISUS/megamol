@@ -52,29 +52,23 @@ int main(int argc, char *argv[]) {
     graph.CreateModule("SphereRenderer", gl_api_name + "::spheres");
     graph.CreateModule("TestSpheresDataSource", gl_api_name + "::datasource");
     graph.CreateCall("CallRender3D_2", gl_api_name + "::view::rendering", gl_api_name + "::spheres::rendering");
-    graph.CreateCall("MultiParticleDataCall", gl_api_name + "::spheres::getdata",
-        gl_api_name + "::datasource::getData");
+    graph.CreateCall("MultiParticleDataCall", gl_api_name + "::spheres::getdata", gl_api_name + "::datasource::getData");
 
+	std::string parameter_name(gl_api_name + "::datasource::numSpheres");
+	auto parameterPtr = graph.FindParameter(parameter_name);
+	if (parameterPtr) {
+		parameterPtr->ParseValue("3");
+	} else {
+		std::cout << "ERROR: could not find parameter: " << parameter_name << std::endl;
+	}
 #endif
 
     while (!apiRawPtr->shouldShutdown()) {
         graph.RenderNextFrame();
-
-        // must set paraeter after frame executed,
-        // because module that contains parameter
-        // only becomes created immediately before frame is rendered
-        static bool first_frame_done = false;
-        if (!first_frame_done) {
-            std::string parameter_name(gl_api_name + "::datasource::numSpheres");
-            auto parameterPtr = graph.FindParameter(parameter_name);
-            if (parameterPtr) {
-                parameterPtr->ParseValue("3");
-            } else {
-                std::cout << "ERROR: could not find parameter: " << parameter_name << std::endl;
-            }
-            first_frame_done = true;
-        }
-    }
+		// TODO: this is a hack for instant module creation. 
+		// this is dangerous and will be removed when we have a structure to provide requested rapi resources to modules during creation
+        dynamic_cast<megamol::render_api::OpenGL_GLFW_RAPI*>(apiRawPtr)->clearResources();
+	}
 
     // clean up modules, calls, graph
 

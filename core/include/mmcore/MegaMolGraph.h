@@ -231,6 +231,13 @@ private:
     std::string rapi_root_name;
     std::list<std::function<bool()>> rapi_commands;
 
+	struct RapiAutoExecution {
+        render_api::AbstractRenderAPI* ptr = nullptr;
+
+        RapiAutoExecution(std::unique_ptr<render_api::AbstractRenderAPI>& rapi);
+        ~RapiAutoExecution();
+	};
+
 	// this struct feeds a view instance with requested render resources like keyboard events or framebuffer resizes
 	// resources are identified by name (a string). when a requested resource name is found 
 	// the resource is passed to a handler function that is registered with the ViewResourceFeeder

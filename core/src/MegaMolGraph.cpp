@@ -51,6 +51,19 @@ megamol::core::MegaMolGraph::MegaMolGraph(megamol::core::CoreInstance& core,
     dummy_namespace->SetCoreInstance(core);
 }
 
+megamol::core::MegaMolGraph::RapiAutoExecution::RapiAutoExecution(
+    std::unique_ptr<render_api::AbstractRenderAPI>& rapi) {
+    this->ptr = rapi.get();
+
+    if (ptr) ptr->preViewRender();
+}
+
+megamol::core::MegaMolGraph::RapiAutoExecution::~RapiAutoExecution() {
+    if (ptr) ptr->postViewRender();
+
+    ptr = nullptr;
+}
+
 /**
  * A move of the graph should be OK, even without changing state of Modules in graph.
  */
@@ -83,28 +96,37 @@ const megamol::core::factories::CallDescriptionManager& megamol::core::MegaMolGr
     return *callProvider_ptr;
 }
 
-bool megamol::core::MegaMolGraph::DeleteModule(std::string const& id) { return delete_module(id); }
+bool megamol::core::MegaMolGraph::DeleteModule(std::string const& id) {
+    RapiAutoExecution rapi(rapi_); // TODO fix OpenGL hack!
+
+    return delete_module(id);
+}
 
 
 bool megamol::core::MegaMolGraph::CreateModule(std::string const& className, std::string const& id) {
+    RapiAutoExecution rapi(rapi_); // TODO fix OpenGL hack!
+
     return add_module(ModuleInstantiationRequest{className, id});
 }
 
 bool megamol::core::MegaMolGraph::DeleteCall(std::string const& from, std::string const& to) {
+    RapiAutoExecution rapi(rapi_); // TODO fix OpenGL hack!
+
     return delete_call(CallDeletionRequest{from, to});
 }
 
 
 bool megamol::core::MegaMolGraph::CreateCall(
     std::string const& className, std::string const& from, std::string const& to) {
+    RapiAutoExecution rapi(rapi_); // TODO fix OpenGL hack!
+
     return add_call(CallInstantiationRequest{className, from, to});
 }
 
 
 bool megamol::core::MegaMolGraph::HasPendingRequests() { return this->rapi_commands.size() > 0; }
 
-megamol::core::MegaMolGraph::ModuleList_t::iterator megamol::core::MegaMolGraph::find_module(
-    std::string const& name) {
+megamol::core::MegaMolGraph::ModuleList_t::iterator megamol::core::MegaMolGraph::find_module(std::string const& name) {
     auto it = std::find_if(this->module_list_.begin(), this->module_list_.end(),
         [&name](megamol::core::MegaMolGraph::ModuleInstance_t const& el) { return el.second.id == name; });
 
@@ -112,7 +134,7 @@ megamol::core::MegaMolGraph::ModuleList_t::iterator megamol::core::MegaMolGraph:
 }
 
 megamol::core::MegaMolGraph::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_module(
-        std::string const& name) const {
+    std::string const& name) const {
 
     auto it = std::find_if(this->module_list_.cbegin(), this->module_list_.cend(),
         [&name](megamol::core::MegaMolGraph::ModuleInstance_t const& el) { return el.second.id == name; });
@@ -131,7 +153,7 @@ megamol::core::MegaMolGraph::CallList_t::iterator megamol::core::MegaMolGraph::f
 }
 
 megamol::core::MegaMolGraph::CallList_t::const_iterator megamol::core::MegaMolGraph::find_call(
-        std::string const& from, std::string const& to) const {
+    std::string const& from, std::string const& to) const {
 
     auto it = std::find_if(
         this->call_list_.cbegin(), this->call_list_.cend(), [&](megamol::core::MegaMolGraph::CallInstance_t const& el) {
@@ -168,8 +190,7 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
     module_ptr->setParent(this->dummy_namespace);
 
     // execute IsAvailable() and Create() in GL context
-    this->rapi_commands.emplace_front([module_description, module_ptr]() {
-
+    const auto create_module = [module_description, module_ptr]() {
         const bool init_ok = module_description->IsAvailable() && module_ptr->Create();
 
         if (!init_ok)
@@ -178,7 +199,9 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
 			log("create module: " + std::string((module_ptr->Name()).PeekBuffer()));
 
         return init_ok;
-    }); // returns false if something went wrong
+    };
+    create_module(); // TODO HACK: until some resource-to-module provider mechanism is implemented, module creation and deletion is wrapped in the OpenGL context
+	// this->rapi_commands.emplace_front(create_module); // returns false if something went wrong
 
     // if the new module is a view module register if with a View Resource Feeder and set it up to get the default
     // resources of the GLFW context plus an empty handler for rendering
@@ -321,13 +344,15 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
     });
 
     // call Release() in GL context
-    this->rapi_commands.emplace_back([module_ptr]() -> bool {
+	const auto release_module = [module_ptr]() -> bool {
         module_ptr->Release();
         log("release module: " + std::string(module_ptr->Name().PeekBuffer()));
         return true;
         // end of lambda scope deletes last shared_ptr to module
         // thus the module gets deleted after execution and deletion of this command callback
-    });
+    };
+    release_module();// TODO HACK: until some resource-to-module provider mechanism is implemented, module creation and deletion is wrapped in the OpenGL context
+    //this->rapi_commands.emplace_back(release_module);
 
     this->module_list_.erase(module_it);
 
