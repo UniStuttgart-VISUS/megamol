@@ -21,7 +21,6 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/deferrable_construction.h"
-#include "mmcore/lockable.h"
 #include "mmcore/serializable.h"
 
 #include "AbstractUpdateQueue.h" // TODO: why can't we use std::list? why is this class called abstract when, in fact, its implementation is very concrete?
@@ -41,14 +40,10 @@ class MEGAMOLCORE_API MegaMolGraph : public serializable, public deferrable_cons
     // todo: what about the view / job descriptions?
 public:
     // todo: constructor(s)? see serialization
-
-    // todo: the lock!
     // todo: probably get rid of RootModuleNamespace altogether
 
     ///////////////////////////// types ////////////////////////////////////////
     using ModuleDeletionRequest_t = std::string;
-
-    using ModuleDeletionQueue_t = AbstractUpdateQueue<ModuleDeletionRequest_t>;
 
     struct ModuleInstantiationRequest {
         std::string className;
@@ -57,16 +52,12 @@ public:
 
     using ModuleInstantiationRequest_t = ModuleInstantiationRequest;
 
-    using ModuleInstantiationQueue_t = AbstractUpdateQueue<ModuleInstantiationRequest_t>;
-
     struct CallDeletionRequest {
         std::string from;
         std::string to;
     };
 
     using CallDeletionRequest_t = CallDeletionRequest;
-
-    using CallDeletionQueue_t = AbstractUpdateQueue<CallDeletionRequest_t>;
 
     struct CallInstantiationRequest {
         std::string className;
@@ -75,8 +66,6 @@ public:
     };
 
     using CallInstantiationRequest_t = CallInstantiationRequest;
-
-    using CallInstantiationQueue_t = AbstractUpdateQueue<CallInstantiationRequest_t>;
 
     using ModuleInstance_t = std::pair<Module::ptr_type, ModuleInstantiationRequest>;
 
@@ -149,8 +138,6 @@ private:
     const factories::CallDescriptionManager* callProvider_ptr;
 
 public:
-    //////////////////////////// serialization ////////////////////////////////
-
     /*
      * Each module should be serializable, i.e. the modules capture their entire state.
      * As a result, an entire MegaMolGraph can basically be copied by reinitializing the serialized descriptor.
@@ -160,51 +147,34 @@ public:
      * modules and calls.
      */
 
-    //////////////////////////// END serialization ////////////////////////////////
+    bool DeleteModule(std::string const& id);
 
-    //////////////////////////// queue methods ////////////////////////////////////
+    bool CreateModule(std::string const& className, std::string const& id);
 
-    // TODO: squash NoLock variants into non-NoLock variant if possible?
-    bool QueueModuleDeletion(std::string const& id);
+    bool DeleteCall(std::string const& from, std::string const& to);
 
-    bool QueueModuleDeletionNoLock(std::string const& id);
+    bool CreateCall(std::string const& className, std::string const& from, std::string const& to);
 
-    bool QueueModuleInstantiation(std::string const& className, std::string const& id);
 
-    bool QueueModuleInstantiationNoLock(std::string const& className, std::string const& id);
 
-    bool QueueCallDeletion(std::string const& from, std::string const& to);
 
-    bool QueueCallDeletionNoLock(std::string const& from, std::string const& to);
 
-    bool QueueCallInstantiation(std::string const& className, std::string const& from, std::string const& to);
+    CallList_t const& ListCalls() const;
 
-    bool QueueCallInstantiationNoLock(std::string const& className, std::string const& from, std::string const& to);
+    ModuleList_t const& ListModules() const;
+
 
     bool HasPendingRequests();
 
-    void ExecuteGraphUpdates();
-
     void RenderNextFrame();
 
-    //////////////////////////// find methods ////////////////////////////////////
-    template <class A>
-    typename std::enable_if<std::is_convertible<A*, Module*>::value, bool>::type FindModule(
-        std::string const& module_name, std::function<void(A const&)> const& cb) const;
+	// Create View ?
 
-    //////////////////////////// enumerators /////////////////////////////////////
-    /*
-     * ModulGraph braucht einen ReadWriterLock. Enumerate const Operatoren k�nnen endlich sinnvoll implementiert
-     * werden.
-     *
-     */
+	// Create Chain Call ?
+
+    //int ListInstatiations(lua_State* L);
 
 private:
-    //////////////////////////// locking //////////////////////////////////////////
-    std::scoped_lock<std::unique_lock<std::mutex>, std::unique_lock<std::mutex>, std::unique_lock<std::mutex>,
-        std::unique_lock<std::mutex>>
-    AcquireQueueLocks();
-
     // get invalidated and the user is helpless
     [[nodiscard]] ModuleList_t::iterator find_module(std::string const& name);
 
@@ -223,18 +193,6 @@ private:
     bool delete_call(CallDeletionRequest_t const& request);
 
 
-    /** Queue for module deletions */
-    ModuleDeletionQueue_t module_deletion_queue_;
-
-    /** Queue for module instantiation */
-    ModuleInstantiationQueue_t module_instantiation_queue_;
-
-    /** Queue for call deletions */
-    CallDeletionQueue_t call_deletion_queue_;
-
-    /** Queue for call instantiations */
-    CallInstantiationQueue_t call_instantiation_queue_;
-
     /** List of modules that this graph owns */
     ModuleList_t module_list_;
 
@@ -244,9 +202,6 @@ private:
 
     /** List of call that this graph owns */
     CallList_t call_list_;
-
-    /** Reader/Writer mutex for the graph */
-    mutable std::shared_mutex graph_lock_;
 
     // Render APIs (RAPIs) provide rendering or other resources (e.g. OpenGL context, user inputs)
     // that are used by MegaMol for rendering. We may use many RAPIs simultaneously that provide data to MegaMol,
@@ -371,22 +326,6 @@ public:
     //    [[nodiscard]] std::shared_ptr<param::AbstractParam> FindParameter(
     //        std::string const& name, bool quiet = false) const;
 };
-
-
-template <class A>
-typename std::enable_if<std::is_convertible<A*, megamol::core::Module*>::value, bool>::type
-megamol::core::MegaMolGraph::FindModule(std::string const& module_name, std::function<void(A const&)> const& cb) const {
-    auto const mod = find_module(module_name);
-
-    if (mod == module_list_.cend() || mod->first != nullptr) {
-        vislib::sys::Log::DefaultLog.WriteInfo("MegaMolGraph: Could not find module %s\n", module_name.c_str());
-
-        return false;
-    }
-
-    cb(*(mod->first));
-    return true;
-}
 
 
 } /* namespace core */

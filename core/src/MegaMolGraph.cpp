@@ -5,16 +5,31 @@
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
-megamol::core::MegaMolGraph::MegaMolGraph(
-	megamol::core::CoreInstance& core, 
+// splits a string of the form "::one::two::three::" into an array of strings {"one", "two", "three"}
+static std::vector<std::string> splitPathName(std::string const& path) {
+    std::vector<std::string> result;
+
+    size_t start = 0;
+    while ((start = path.find_first_not_of(':', start)) != std::string::npos) {
+        auto end = path.find_first_of(':', start);
+        if (start < end) result.push_back(path.substr(start, end - start));
+        start = end;
+    }
+
+    return result;
+}
+
+megamol::core::MegaMolGraph::MegaMolGraph(megamol::core::CoreInstance& core,
     factories::ModuleDescriptionManager const& moduleProvider, factories::CallDescriptionManager const& callProvider,
-		std::unique_ptr<render_api::AbstractRenderAPI> rapi,
-		std::string rapi_name)
-    : moduleProvider_ptr{&moduleProvider}, callProvider_ptr{&callProvider}, rapi_{std::move(rapi)}, rapi_root_name{rapi_name}, dummy_namespace{std::make_shared<RootModuleNamespace>()}
-{
-	// the Core Instance is a parasite that needs to be passed to all modules
-	// TODO: make it so there is no more core instance
-	dummy_namespace->SetCoreInstance(core);
+    std::unique_ptr<render_api::AbstractRenderAPI> rapi, std::string rapi_name)
+    : moduleProvider_ptr{&moduleProvider}
+    , callProvider_ptr{&callProvider}
+    , rapi_{std::move(rapi)}
+    , rapi_root_name{rapi_name}
+    , dummy_namespace{std::make_shared<RootModuleNamespace>()} {
+    // the Core Instance is a parasite that needs to be passed to all modules
+    // TODO: make it so there is no more core instance
+    dummy_namespace->SetCoreInstance(core);
 }
 
 /**
@@ -50,85 +65,36 @@ const megamol::core::factories::CallDescriptionManager& megamol::core::MegaMolGr
     return *callProvider_ptr;
 }
 
-bool megamol::core::MegaMolGraph::QueueModuleDeletion(std::string const& id) {
-    auto lock = module_deletion_queue_.AcquireLock();
-    return QueueModuleDeletion(id);
+bool megamol::core::MegaMolGraph::DeleteModule(std::string const& id) { return delete_module(id); }
+
+
+bool megamol::core::MegaMolGraph::CreateModule(std::string const& className, std::string const& id) {
+    return add_module(ModuleInstantiationRequest{className, id});
+}
+
+bool megamol::core::MegaMolGraph::DeleteCall(std::string const& from, std::string const& to) {
+    return delete_call(CallDeletionRequest{from, to});
 }
 
 
-bool megamol::core::MegaMolGraph::QueueModuleDeletionNoLock(std::string const& id) {
-    module_deletion_queue_.Push(id);
-    return true;
-}
-
-
-bool megamol::core::MegaMolGraph::QueueModuleInstantiation(std::string const& className, std::string const& id) {
-    auto lock = module_instantiation_queue_.AcquireLock();
-    return QueueModuleInstantiationNoLock(className, id);
-}
-
-
-bool megamol::core::MegaMolGraph::QueueModuleInstantiationNoLock(std::string const& className, std::string const& id) {
-    module_instantiation_queue_.Emplace(ModuleInstantiationRequest{className, id});
-    return true;
-}
-
-
-bool megamol::core::MegaMolGraph::QueueCallDeletion(std::string const& from, std::string const& to) {
-    auto lock = call_deletion_queue_.AcquireLock();
-    return QueueCallDeletionNoLock(from, to);
-}
-
-
-bool megamol::core::MegaMolGraph::QueueCallDeletionNoLock(std::string const& from, std::string const& to) {
-    call_deletion_queue_.Emplace(CallDeletionRequest{from, to});
-    return true;
-}
-
-
-bool megamol::core::MegaMolGraph::QueueCallInstantiation(
+bool megamol::core::MegaMolGraph::CreateCall(
     std::string const& className, std::string const& from, std::string const& to) {
-    auto lock = call_instantiation_queue_.AcquireLock();
-    return QueueCallInstantiationNoLock(className, from, to);
+    return add_call(CallInstantiationRequest{className, from, to});
 }
 
 
-bool megamol::core::MegaMolGraph::QueueCallInstantiationNoLock(
-    std::string const& className, std::string const& from, std::string const& to) {
-    call_instantiation_queue_.Emplace(CallInstantiationRequest{className, from, to});
-    return true;
-}
+bool megamol::core::MegaMolGraph::HasPendingRequests() { return this->rapi_commands.size() > 0; }
 
-
-bool megamol::core::MegaMolGraph::HasPendingRequests() {
-    auto lock = AcquireQueueLocks(); // TODO: lock necessary?
-    return !module_deletion_queue_.Empty() || !module_instantiation_queue_.Empty() || !call_deletion_queue_.Empty() ||
-           !call_instantiation_queue_.Empty();
-}
-
-std::scoped_lock<std::unique_lock<std::mutex>, std::unique_lock<std::mutex>, std::unique_lock<std::mutex>,
-    std::unique_lock<std::mutex>>
-megamol::core::MegaMolGraph::AcquireQueueLocks() {
-    auto lock1 = module_deletion_queue_.AcquireDeferredLock();
-    auto lock2 = module_instantiation_queue_.AcquireDeferredLock();
-    auto lock3 = call_deletion_queue_.AcquireDeferredLock();
-    auto lock4 = call_instantiation_queue_.AcquireDeferredLock();
-    return std::scoped_lock(lock1, lock2, lock3, lock4);
-}
-
-[[nodiscard]] megamol::core::MegaMolGraph::ModuleList_t::iterator megamol::core::MegaMolGraph::find_module(
+megamol::core::MegaMolGraph::ModuleList_t::iterator megamol::core::MegaMolGraph::find_module(
     std::string const& name) {
-    std::shared_lock<std::shared_mutex> lock(graph_lock_);
-
     auto it = std::find_if(this->module_list_.begin(), this->module_list_.end(),
         [&name](megamol::core::MegaMolGraph::ModuleInstance_t const& el) { return el.second.id == name; });
 
     return it;
 }
 
-    [[nodiscard]] megamol::core::MegaMolGraph::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_module(
+megamol::core::MegaMolGraph::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_module(
         std::string const& name) const {
-    std::shared_lock<std::shared_mutex> lock(graph_lock_);
 
     auto it = std::find_if(this->module_list_.cbegin(), this->module_list_.cend(),
         [&name](megamol::core::MegaMolGraph::ModuleInstance_t const& el) { return el.second.id == name; });
@@ -136,10 +102,8 @@ megamol::core::MegaMolGraph::AcquireQueueLocks() {
     return it;
 }
 
-[[nodiscard]] megamol::core::MegaMolGraph::CallList_t::iterator megamol::core::MegaMolGraph::find_call(
+megamol::core::MegaMolGraph::CallList_t::iterator megamol::core::MegaMolGraph::find_call(
     std::string const& from, std::string const& to) {
-    std::shared_lock<std::shared_mutex> lock(graph_lock_);
-
     auto it = std::find_if(
         this->call_list_.begin(), this->call_list_.end(), [&](megamol::core::MegaMolGraph::CallInstance_t const& el) {
             return el.second.from == from && el.second.to == to;
@@ -148,10 +112,8 @@ megamol::core::MegaMolGraph::AcquireQueueLocks() {
     return it;
 }
 
-    [[nodiscard]] megamol::core::MegaMolGraph::CallList_t::const_iterator megamol::core::MegaMolGraph::find_call(
+megamol::core::MegaMolGraph::CallList_t::const_iterator megamol::core::MegaMolGraph::find_call(
         std::string const& from, std::string const& to) const {
-
-    std::shared_lock<std::shared_mutex> lock(graph_lock_);
 
     auto it = std::find_if(
         this->call_list_.cbegin(), this->call_list_.cend(), [&](megamol::core::MegaMolGraph::CallInstance_t const& el) {
@@ -161,22 +123,8 @@ megamol::core::MegaMolGraph::AcquireQueueLocks() {
     return it;
 }
 
-// splits a string of the form "::one::two::three::" into an array of strings {"one", "two", "three"}
-static std::vector<std::string> splitPathName(std::string const& path) {
-    std::vector<std::string> result;
 
-    size_t start = 0;
-    while ((start = path.find_first_not_of(':', start)) != std::string::npos) {
-        auto end = path.find_first_of(':', start);
-        if (start < end) result.push_back(path.substr(start, end - start));
-        start = end;
-    }
-
-    return result;
-}
-
-
-[[nodiscard]] bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const& request) {
+bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const& request) {
     factories::ModuleDescription::ptr module_description = this->ModuleProvider().Find(request.className.c_str());
     if (!module_description) return false;
 
@@ -190,32 +138,37 @@ static std::vector<std::string> splitPathName(std::string const& path) {
 
     this->module_list_.emplace_front(module_ptr, request);
 
-	module_ptr->setParent(this->dummy_namespace);
+    module_ptr->setParent(this->dummy_namespace);
 
     // execute IsAvailable() and Create() in GL context
-    this->rapi_commands.emplace_front(
-        [module_description, module_ptr]() { return !(module_description->IsAvailable() && module_ptr->Create()); }); // returns false if something went wrong
+    this->rapi_commands.emplace_front([module_description, module_ptr]() {
 
-	// if the new module is a view module register if with a View Resource Feeder and set it up to get the default resources of the GLFW context plus an empty handler for rendering
-	megamol::core::view::AbstractView* view_ptr = nullptr;
+        const bool init_ok = module_description->IsAvailable() && module_ptr->Create();
+
+        return init_ok;
+    }); // returns false if something went wrong
+
+    // if the new module is a view module register if with a View Resource Feeder and set it up to get the default
+    // resources of the GLFW context plus an empty handler for rendering
+    megamol::core::view::AbstractView* view_ptr = nullptr;
     if (view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get())) {
-        this->view_feeders.push_back(ViewResourceFeeder{view_ptr, 
-			{
-				// rendering resource handlers are executed in the order defined here
-				std::make_pair("KeyboardEvents", megamol::core::view::view_consume_keyboard_events),
-				std::make_pair("MouseEvents", megamol::core::view::view_consume_mouse_events),
-				std::make_pair("WindowEvents", megamol::core::view::view_consume_window_events),
-				std::make_pair("FramebufferEvents", megamol::core::view::view_consume_framebuffer_events),
-				std::make_pair("", megamol::core::view::view_poke_rendering),
-			}});
+        this->view_feeders.push_back(ViewResourceFeeder{
+            view_ptr, {
+                          // rendering resource handlers are executed in the order defined here
+                          std::make_pair("KeyboardEvents", megamol::core::view::view_consume_keyboard_events),
+                          std::make_pair("MouseEvents", megamol::core::view::view_consume_mouse_events),
+                          std::make_pair("WindowEvents", megamol::core::view::view_consume_window_events),
+                          std::make_pair("FramebufferEvents", megamol::core::view::view_consume_framebuffer_events),
+                          std::make_pair("", megamol::core::view::view_poke_rendering),
+                      }});
     }
-	
-	// TODO: make sure that requested rendering resources or inputs for the view are provided by some RAPI
+
+    // TODO: make sure that requested rendering resources or inputs for the view are provided by some RAPI
 
     return true;
 }
 
-    [[nodiscard]] bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& request) {
+bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& request) {
 
     factories::CallDescription::ptr call_description = this->CallProvider().Find(request.className.c_str());
 
@@ -256,9 +209,9 @@ static std::vector<std::string> splitPathName(std::string const& path) {
         }
     }
 
-	// TODO: kill parents of modules/calls when new graph structure is in place
-	callee->setParent(this->dummy_namespace);
-	caller->setParent(this->dummy_namespace);
+    // TODO: kill parents of modules/calls when new graph structure is in place
+    callee->setParent(this->dummy_namespace);
+    caller->setParent(this->dummy_namespace);
 
     Call::ptr_type call = Call::ptr_type(call_description->CreateCall());
     if (!callee->ConnectCall(call.get(), call_description)) return false;
@@ -273,9 +226,8 @@ static std::vector<std::string> splitPathName(std::string const& path) {
     return true;
 }
 
-[[nodiscard]]
-static
-std::list<megamol::core::MegaMolGraph::CallList_t::iterator> find_all_of(megamol::core::MegaMolGraph::CallList_t list,
+static std::list<megamol::core::MegaMolGraph::CallList_t::iterator> find_all_of(
+    megamol::core::MegaMolGraph::CallList_t list,
     std::function<bool(megamol::core::MegaMolGraph::CallInstance_t const&)> const& func) {
 
     std::list<megamol::core::MegaMolGraph::CallList_t::iterator> result;
@@ -299,7 +251,7 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
     auto discard_calls = find_all_of(call_list_,
         [&](auto const& call_info) { return (call_info.second.from == request || call_info.second.to == request); });
 
-	std::for_each(discard_calls.begin(), discard_calls.end(), [&](auto const& call_it) {
+    std::for_each(discard_calls.begin(), discard_calls.end(), [&](auto const& call_it) {
         delete_call(CallDeletionRequest_t{call_it->second.from, call_it->second.to});
     });
 
@@ -307,9 +259,9 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
     this->rapi_commands.emplace_back([module_ptr]() -> bool {
         module_ptr->Release();
         return true;
-		// end of lambda scope deletes last shared_ptr to module
-		// thus the module gets deleted after execution and deletion of this command callback
-     });
+        // end of lambda scope deletes last shared_ptr to module
+        // thus the module gets deleted after execution and deletion of this command callback
+    });
 
     this->module_list_.erase(module_it);
 
@@ -321,12 +273,16 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
 
     auto call_it = find_call(request.from, request.to);
 
-    if (call_it == this->call_list_.end()) return false;
+    if (call_it == this->call_list_.end()) {
+		return false;
+    }
 
     auto target = call_it->first->PeekCalleeSlotNoConst();
     auto source = call_it->first->PeekCallerSlotNoConst();
 
-    if (!target || !source) return false;
+    if (!target || !source) {
+		return false;
+    }
 
     source->SetCleanupMark(true);
     source->DisconnectCalls();
@@ -339,150 +295,51 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
 }
 
 
-void megamol::core::MegaMolGraph::ExecuteGraphUpdates() {
-	// TODO: lock is broken?
-	// TODO: is lock necessary?
-    //auto lock = this->AcquireQueueLocks();
-
-    while (!call_deletion_queue_.Empty()) {
-        auto call_deletion = call_deletion_queue_.Get();
-        delete_call(call_deletion);
-    }
-
-	while (!module_deletion_queue_.Empty()) {
-        auto module_deletion = module_deletion_queue_.Get();
-        delete_module(module_deletion);
-    }
-
-	while (!module_instantiation_queue_.Empty()) {
-        auto module_request = module_instantiation_queue_.Get();
-        bool creation_success = add_module(module_request);
-
-		if (!creation_success)
-			std::cout << "MegaMolGraph: module failed construction: " << module_request.id << ", " << module_request.className << std::endl;
-	}
-
-	while (!call_instantiation_queue_.Empty()) {
-        auto call_request = call_instantiation_queue_.Get();
-        bool creation_success = add_call(call_request);
-
-		if (!creation_success)
-			std::cout << "MegaMolGraph: call failed construction: " << call_request.className << " from " << call_request.from << " to " << call_request.to << std::endl;
-	}
-}
-
 void megamol::core::MegaMolGraph::RenderNextFrame() {
 
-    if (this->rapi_)
-		this->rapi_->preViewRender();
+    if (this->rapi_) this->rapi_->preViewRender();
 
-	// OpenGL context for module Create() provided here by preViewRender() of RAPI with GL context
-	bool some_command_failed = false;
-	for (auto& command : this->rapi_commands)
-		some_command_failed |= command(); // module Create() or Release() called here
+    // OpenGL context for module Create() provided here by preViewRender() of RAPI with GL context
+    bool some_command_failed = false;
+    for (auto& command : this->rapi_commands)
+        some_command_failed |= !command(); // module Create() or Release() called here
 
     this->rapi_commands.clear();
 
-	if (some_command_failed) {
-		// fail and stop execution of MegaMol because without the requested graph modules further execution makes no sense
+    if (some_command_failed) {
+		// TODO
+        // fail and stop execution of MegaMol because without the requested graph modules further execution makes no
+        // sense
         for (auto& m : module_list_) {
             if (!m.first->isCreated())
-                std::cout << "MegaMolGraph: module not created: " << m.second.id << ", " << m.second.className << std::endl;
+				log("error. module not created: " + m.second.id + ", " + m.second.className);
         }
     }
 
-	// process ui events and other resources
-	// this also contains a handler that tells the view to render itself
+    // process ui events and other resources
+    // this also contains a handler that tells the view to render itself
     auto& resources = this->rapi_->getRenderResources();
-    for (auto& view_feeder : view_feeders)
-		view_feeder.consume(resources);
+    for (auto& view_feeder : view_feeders) view_feeder.consume(resources);
 
-	// TODO: handle 'stop rendering' requests
+    // TODO: handle 'stop rendering' requests
 
-    if (this->rapi_)
-		this->rapi_->postViewRender();
+    if (this->rapi_) this->rapi_->postViewRender();
 }
 
 
-//[[nodiscard]] std::shared_ptr<megamol::core::param::AbstractParam> FindParameter(std::string const& name, bool
-// quiet = false) const;
 
-// static const std::tuple<const std::string, const std::string> splitParameterName(std::string const& name) {
-//     const std::string delimiter = "::";
-//
-//     const auto lastDeliPos = name.rfind(delimiter);
-//     if (lastDeliPos == std::string::npos) return {"", ""};
-//
-//     auto secondLastDeliPos = name.rfind(delimiter, lastDeliPos - 1);
-//     if (secondLastDeliPos == std::string::npos)
-//         secondLastDeliPos = 0;
-//     else
-//         secondLastDeliPos = secondLastDeliPos + 2;
-//
-//     const std::string parameterName = name.substr(lastDeliPos + 2);
-//     const auto moduleNameStartPos = secondLastDeliPos;
-//     const std::string moduleName = name.substr(moduleNameStartPos, /*cont*/ lastDeliPos - moduleNameStartPos);
-//
-//     return {moduleName, parameterName};
-// };
-//
-// std::shared_ptr<megamol::core::param::AbstractParam> megamol::core::MegaMolGraph::FindParameter(
-//     std::string const& name, bool quiet) const {
-//     using vislib::sys::Log;
-//
-//     // what exactly is the format of name? assumption: [::]moduleName::parameterName
-//     // split name into moduleName and parameterName:
-//     auto [moduleName, parameterName] = splitParameterName(name);
-//
-//     // parameter or module does not exist
-//     if (moduleName.compare("") == 0 || parameterName.compare("") == 0) {
-//         if (!quiet)
-//             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-//                 "Cannot find parameter \"%s\": could not extract module and parameter name", name.c_str());
-//         return nullptr;
-//     }
-//
-//     param::ParamSlot* slot = nullptr;
-//     Module::ptr_type modPtr = nullptr;
-//
-//     for (auto& graphRoot : this->subgraphs_) {
-//         for (auto& mod : graphRoot.modules_)
-//             if (mod.first->Name().Compare(moduleName.c_str())) {
-//                 modPtr = mod.first;
-//
-//                 const auto result = mod.first->FindChild((moduleName + "::" + parameterName).c_str());
-//                 slot = dynamic_cast<param::ParamSlot*>(result.get());
-//
-//                 break;
-//             }
-//     }
-//
-//     if (!modPtr) {
-//         if (!quiet)
-//             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot find parameter \"%s\": module not found",
-//             name.c_str());
-//         return nullptr;
-//     }
-//
-//     if (slot == nullptr) {
-//         if (!quiet)
-//             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot find parameter \"%s\": slot not found",
-//             name.c_str());
-//         return nullptr;
-//     }
-//     if (slot->GetStatus() == AbstractSlot::STATUS_UNAVAILABLE) {
-//         if (!quiet)
-//             Log::DefaultLog.WriteMsg(
-//                 Log::LEVEL_ERROR, "Cannot find parameter \"%s\": slot is not available", name.c_str());
-//         return nullptr;
-//     }
-//     if (slot->Parameter().IsNull()) {
-//         if (!quiet)
-//             Log::DefaultLog.WriteMsg(
-//                 Log::LEVEL_ERROR, "Cannot find parameter \"%s\": slot has no parameter", name.c_str());
-//         return nullptr;
-//     }
-//
-//
-//     return slot->Parameter();
-// }
+
+
+
+
+
+
+
+megamol::core::MegaMolGraph::CallList_t const& megamol::core::MegaMolGraph::ListCalls() const {
+	return call_list_;
+}
+
+megamol::core::MegaMolGraph::ModuleList_t const& megamol::core::MegaMolGraph::ListModules() const {
+    return module_list_;
+}
+
