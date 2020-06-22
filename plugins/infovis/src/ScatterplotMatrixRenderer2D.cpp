@@ -91,6 +91,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , kernelWidthParam("kernelWidth", "Kernel width of the geometry, i.e., point size or line width")
     , kernelTypeParam("kernelType", "Kernel function, i.e., box or gaussian kernel")
     , pickRadiusParam("pickRadius", "Picking radius")
+    , pickColorParam("pickColor", "Picking color")
     , resetSelectionParam("resetSelection", "Reset selection")
     , drawPickIndicatorParam("drawPickIndicator", "Draw picking indicator")
     , drawMouseLabelsParam("drawMouseLabels", "Draw labels on cells on mouse hover")
@@ -173,6 +174,9 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->pickRadiusParam << new core::param::FloatParam(1.0f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->pickRadiusParam);
 
+    this->pickColorParam << new core::param::ColorParam("red");
+    this->MakeSlotAvailable(&this->pickColorParam);
+
     this->resetSelectionParam << new core::param::ButtonParam();
     this->resetSelectionParam.SetUpdateCallback(this, &ScatterplotMatrixRenderer2D::resetSelectionCallback);
     this->MakeSlotAvailable(&this->resetSelectionParam);
@@ -237,6 +241,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     screenParams.push_back(&this->kernelWidthParam);
     screenParams.push_back(&this->kernelTypeParam);
     screenParams.push_back(&this->pickRadiusParam);
+    screenParams.push_back(&this->pickColorParam);
     screenParams.push_back(&this->axisModeParam);
     screenParams.push_back(&this->axisColorParam);
     screenParams.push_back(&this->axisWidthParam);
@@ -688,6 +693,8 @@ void ScatterplotMatrixRenderer2D::bindMappingUniforms(vislib::graphics::gl::GLSL
     }
     glUniform1f(
         shader.ParameterLocation("alphaScaling"), this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
+    glUniform4fv(shader.ParameterLocation("pickColor"), 1,
+        this->pickColorParam.Param<core::param::ColorParam>()->Value().data());
 
     this->transferFunction->BindConvenience(shader, GL_TEXTURE0, 0);
 }
