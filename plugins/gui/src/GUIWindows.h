@@ -219,7 +219,7 @@ private:
 
     bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
     void checkMultipleHotkeyAssignement(void);
-    bool hotkeyPressed(megamol::core::view::KeyCode keycode);
+    bool isHotkeyPressed(megamol::core::view::KeyCode keycode);
     void shutdown(void);
 
     void save_state_to_parameter(void);

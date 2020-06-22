@@ -39,11 +39,11 @@ public:
     virtual ~Configurator();
 
     /**
-     * Checks if any hotkeys are pressed.
+     * Get hotkey of configurator.
      *
-     * @return true when any hotkey is pressed.
+     * @return Hotkeys of configurator.
      */
-    bool CheckHotkeys(void);
+    megamol::gui::HotkeyArrayType& GetHotkeys(void) { return this->graph_state.hotkeys; }
 
     /**
      * Draw configurator window.

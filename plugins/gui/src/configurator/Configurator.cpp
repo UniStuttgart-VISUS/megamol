@@ -72,31 +72,6 @@ megamol::gui::configurator::Configurator::Configurator()
 Configurator::~Configurator() {}
 
 
-bool megamol::gui::configurator::Configurator::CheckHotkeys(void) {
-
-    if (ImGui::GetCurrentContext() == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    ImGuiIO& io = ImGui::GetIO();
-
-    bool hotkey_pressed = false;
-    for (auto& h : this->graph_state.hotkeys) {
-        auto key = std::get<0>(h).key;
-        auto mods = std::get<0>(h).mods;
-        if (ImGui::IsKeyDown(static_cast<int>(key)) && (mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
-            (mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
-            (mods.test(core::view::Modifier::SHIFT) == io.KeyShift)) {
-            std::get<1>(h) = true;
-            hotkey_pressed = true;
-        }
-    }
-
-    return hotkey_pressed;
-}
-
-
 bool megamol::gui::configurator::Configurator::Draw(
     WindowManager::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance) {
 

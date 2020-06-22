@@ -246,7 +246,7 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(megamol::gui::FileUtils::FileBrow
             // File browser selectables ---------------------------------------
             auto select_flags = ImGuiSelectableFlags_DontClosePopups;
             float child_select_height =
-                (ImGui::GetContentRegionAvail().y - (ImGui::GetFrameHeightWithSpacing() * this->additional_lines) -
+                (ImGui::GetContentRegionAvail().y - (ImGui::GetTextLineHeightWithSpacing() * this->additional_lines) -
                     ImGui::GetFrameHeightWithSpacing() * 2.0f);
             ImGui::BeginChild(
                 "files_list_child_window", ImVec2(0.0f, child_select_height), true, ImGuiWindowFlags_None);
@@ -345,12 +345,6 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(megamol::gui::FileUtils::FileBrow
             if (last_file_name_str != this->file_name_str) {
                 this->validateFile(this->file_name_str, flag);
             }
-            if (!this->file_warning.empty()) {
-                ImGui::TextColored(GUI_COLOR_TEXT_WARN, this->file_warning.c_str());
-            }
-            if (!this->file_error.empty()) {
-                ImGui::TextColored(GUI_COLOR_TEXT_ERROR, this->file_error.c_str());
-            }
 
             // Buttons ------------------------------
             std::string label;
@@ -369,6 +363,14 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(megamol::gui::FileUtils::FileBrow
 
             if (ImGui::Button("Cancel")) {
                 ImGui::CloseCurrentPopup();
+            }
+
+            // Error and warn massages
+            if (!this->file_warning.empty()) {
+                ImGui::TextColored(GUI_COLOR_TEXT_WARN, this->file_warning.c_str());
+            }
+            if (!this->file_error.empty()) {
+                ImGui::TextColored(GUI_COLOR_TEXT_ERROR, this->file_error.c_str());
             }
 
             // Return complete file path --------------------------------------

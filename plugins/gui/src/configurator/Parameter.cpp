@@ -147,7 +147,7 @@ bool megamol::gui::configurator::ParameterPresentation::Present(
 
 float megamol::gui::configurator::ParameterPresentation::GetHeight(Parameter& inout_parameter) {
 
-    /// TODO consider hidden parameters (basic vs. expert mode)
+    /// TODO Do not consider hidden parameters (basic vs. expert mode).
 
     float height = (ImGui::GetFrameHeightWithSpacing() * (1.15f));
     if (inout_parameter.type == ParamType::TRANSFERFUNCTION) {
@@ -928,6 +928,7 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
                 ImGui::SameLine();
             } else {
                 // Draw texture
+                /// TODO Do not load currently pending editor changes but current value of parameter.
                 if (this->tf_editor_ptr->GetHorizontalTexture() != 0) {
                     ImGui::Image(reinterpret_cast<ImTextureID>(this->tf_editor_ptr->GetHorizontalTexture()),
                         ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight()), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f),
@@ -1132,9 +1133,6 @@ std::string megamol::gui::configurator::Parameter::GetValueString(void) {
         if constexpr (std::is_same_v<T, bool>) {
             auto parameter = megamol::core::param::BoolParam(arg);
             value_string = std::string(parameter.ValueString().PeekBuffer());
-        } else if constexpr (std::is_same_v<T, megamol::core::param::ColorParam::ColorType>) {
-            auto parameter = megamol::core::param::ColorParam(arg[0], arg[1], arg[2], arg[3]);
-            value_string = std::string(parameter.ValueString().PeekBuffer());
         } else if constexpr (std::is_same_v<T, float>) {
             auto parameter = megamol::core::param::FloatParam(arg);
             value_string = std::string(parameter.ValueString().PeekBuffer());
@@ -1187,9 +1185,20 @@ std::string megamol::gui::configurator::Parameter::GetValueString(void) {
             auto parameter = megamol::core::param::Vector3fParam(vislib::math::Vector<float, 3>(arg.x, arg.y, arg.z));
             value_string = std::string(parameter.ValueString().PeekBuffer());
         } else if constexpr (std::is_same_v<T, glm::vec4>) {
-            auto parameter =
-                megamol::core::param::Vector4fParam(vislib::math::Vector<float, 4>(arg.x, arg.y, arg.z, arg.w));
-            value_string = std::string(parameter.ValueString().PeekBuffer());
+            switch (this->type) {
+            case (ParamType::COLOR): {
+                auto parameter = megamol::core::param::ColorParam(arg[0], arg[1], arg[2], arg[3]);
+                value_string = std::string(parameter.ValueString().PeekBuffer());
+            } break;
+
+            case (ParamType::VECTOR4F): {
+                auto parameter =
+                    megamol::core::param::Vector4fParam(vislib::math::Vector<float, 4>(arg.x, arg.y, arg.z, arg.w));
+                value_string = std::string(parameter.ValueString().PeekBuffer());
+            } break;
+            default:
+                break;
+            }
         } else if constexpr (std::is_same_v<T, std::monostate>) {
             switch (this->type) {
             case (ParamType::BUTTON): {

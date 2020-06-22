@@ -254,6 +254,7 @@ public:
             }
             // Check default value
             if (set_default_val) {
+                this->dirty = false;
                 this->default_value = val;
                 this->default_value_mismatch = false;
             } else {
@@ -411,7 +412,7 @@ static bool ReadCoreParameter(
 
 
 static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
-    megamol::gui::configurator::Parameter& out_param, const std::string& module_full_name) {
+    megamol::gui::configurator::Parameter& out_param, bool set_default_val) {
 
     bool type_error = false;
 
@@ -420,7 +421,7 @@ static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
         return false;
     }
 
-    out_param.full_name = module_full_name + "::" + std::string(in_param_slot.Name().PeekBuffer());
+    out_param.full_name = std::string(in_param_slot.Name().PeekBuffer());
     out_param.description = std::string(in_param_slot.Description().PeekBuffer());
     out_param.present.SetGUIVisible(parameter_ptr->IsGUIVisible());
     out_param.present.SetGUIReadOnly(parameter_ptr->IsGUIReadOnly());
@@ -434,20 +435,20 @@ static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
         }
     } else if (auto* p_ptr = in_param_slot.Param<core::param::BoolParam>()) {
         if (out_param.type == ParamType::BOOL) {
-            out_param.SetValue(p_ptr->Value());
+            out_param.SetValue(p_ptr->Value(), set_default_val);
         } else {
             type_error = true;
         }
     } else if (auto* p_ptr = in_param_slot.Param<core::param::ColorParam>()) {
         if (out_param.type == ParamType::COLOR) {
             auto value = p_ptr->Value();
-            out_param.SetValue(glm::vec4(value[0], value[1], value[2], value[3]));
+            out_param.SetValue(glm::vec4(value[0], value[1], value[2], value[3]), set_default_val);
         } else {
             type_error = true;
         }
     } else if (auto* p_ptr = in_param_slot.Param<core::param::EnumParam>()) {
         if (out_param.type == ParamType::ENUM) {
-            out_param.SetValue(p_ptr->Value());
+            out_param.SetValue(p_ptr->Value(), set_default_val);
             EnumStorageType map;
             auto param_map = p_ptr->getMap();
             auto iter = param_map.GetConstIterator();
@@ -461,20 +462,20 @@ static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
         }
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
         if (out_param.type == ParamType::FILEPATH) {
-            out_param.SetValue(std::string(p_ptr->Value().PeekBuffer()));
+            out_param.SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val);
         } else {
             type_error = true;
         }
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FlexEnumParam>()) {
         if (out_param.type == ParamType::FLEXENUM) {
-            out_param.SetValue(p_ptr->Value());
+            out_param.SetValue(p_ptr->Value(), set_default_val);
             out_param.SetStorage(p_ptr->getStorage());
         } else {
             type_error = true;
         }
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FloatParam>()) {
         if (out_param.type == ParamType::FLOAT) {
-            out_param.SetValue(p_ptr->Value());
+            out_param.SetValue(p_ptr->Value(), set_default_val);
             out_param.SetMinValue(p_ptr->MinValue());
             out_param.SetMaxValue(p_ptr->MaxValue());
         } else {
@@ -482,7 +483,7 @@ static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
         }
     } else if (auto* p_ptr = in_param_slot.Param<core::param::IntParam>()) {
         if (out_param.type == ParamType::INT) {
-            out_param.SetValue(p_ptr->Value());
+            out_param.SetValue(p_ptr->Value(), set_default_val);
             out_param.SetMinValue(p_ptr->MinValue());
             out_param.SetMaxValue(p_ptr->MaxValue());
         } else {
@@ -490,26 +491,26 @@ static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
         }
     } else if (auto* p_ptr = in_param_slot.Param<core::param::StringParam>()) {
         if (out_param.type == ParamType::STRING) {
-            out_param.SetValue(std::string(p_ptr->Value().PeekBuffer()));
+            out_param.SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val);
         } else {
             type_error = true;
         }
     } else if (auto* p_ptr = in_param_slot.Param<core::param::TernaryParam>()) {
         if (out_param.type == ParamType::TERNARY) {
-            out_param.SetValue(p_ptr->Value());
+            out_param.SetValue(p_ptr->Value(), set_default_val);
         } else {
             type_error = true;
         }
     } else if (auto* p_ptr = in_param_slot.Param<core::param::TransferFunctionParam>()) {
         if (out_param.type == ParamType::TRANSFERFUNCTION) {
-            out_param.SetValue(p_ptr->Value());
+            out_param.SetValue(p_ptr->Value(), set_default_val);
         } else {
             type_error = true;
         }
     } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector2fParam>()) {
         if (out_param.type == ParamType::VECTOR2F) {
             auto val = p_ptr->Value();
-            out_param.SetValue(glm::vec2(val.X(), val.Y()));
+            out_param.SetValue(glm::vec2(val.X(), val.Y()), set_default_val);
             auto min = p_ptr->MinValue();
             out_param.SetMinValue(glm::vec2(min.X(), min.Y()));
             auto max = p_ptr->MaxValue();
@@ -520,7 +521,7 @@ static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
     } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector3fParam>()) {
         if (out_param.type == ParamType::VECTOR3F) {
             auto val = p_ptr->Value();
-            out_param.SetValue(glm::vec3(val.X(), val.Y(), val.Z()));
+            out_param.SetValue(glm::vec3(val.X(), val.Y(), val.Z()), set_default_val);
             auto min = p_ptr->MinValue();
             out_param.SetMinValue(glm::vec3(min.X(), min.Y(), min.Z()));
             auto max = p_ptr->MaxValue();
@@ -531,7 +532,7 @@ static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
     } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector4fParam>()) {
         if (out_param.type == ParamType::VECTOR4F) {
             auto val = p_ptr->Value();
-            out_param.SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()));
+            out_param.SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()), set_default_val);
             auto min = p_ptr->MinValue();
             out_param.SetMinValue(glm::vec4(min.X(), min.Y(), min.Z(), min.W()));
             auto max = p_ptr->MaxValue();
@@ -558,7 +559,7 @@ static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
 
 
 static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
-    std::shared_ptr<megamol::gui::configurator::Parameter>& out_param, const std::string& module_full_name) {
+    std::shared_ptr<megamol::gui::configurator::Parameter>& out_param, bool set_default_val) {
 
     auto parameter_ptr = in_param_slot.Parameter();
     if (parameter_ptr.IsNull()) {
@@ -570,7 +571,7 @@ static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
     if (auto* p_ptr = in_param_slot.template Param<core::param::BoolParam>()) {
         out_param = std::make_shared<configurator::Parameter>(
             megamol::gui::GenerateUniqueID(), ParamType::BOOL, std::monostate(), std::monostate(), std::monostate());
-        out_param->SetValue(p_ptr->Value());
+        out_param->SetValue(p_ptr->Value(), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::ButtonParam>()) {
         out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::BUTTON,
             p_ptr->GetKeyCode(), std::monostate(), std::monostate());
@@ -578,11 +579,11 @@ static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
         out_param = std::make_shared<configurator::Parameter>(
             megamol::gui::GenerateUniqueID(), ParamType::COLOR, std::monostate(), std::monostate(), std::monostate());
         auto value = p_ptr->Value();
-        out_param->SetValue(glm::vec4(value[0], value[1], value[2], value[3]));
+        out_param->SetValue(glm::vec4(value[0], value[1], value[2], value[3]), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::TransferFunctionParam>()) {
         out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(),
             ParamType::TRANSFERFUNCTION, std::monostate(), std::monostate(), std::monostate());
-        out_param->SetValue(p_ptr->Value());
+        out_param->SetValue(p_ptr->Value(), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::EnumParam>()) {
         EnumStorageType map;
         auto param_map = p_ptr->getMap();
@@ -593,33 +594,33 @@ static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
         }
         out_param = std::make_shared<configurator::Parameter>(
             megamol::gui::GenerateUniqueID(), ParamType::ENUM, map, std::monostate(), std::monostate());
-        out_param->SetValue(p_ptr->Value());
+        out_param->SetValue(p_ptr->Value(), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::FlexEnumParam>()) {
         out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::FLEXENUM,
             p_ptr->getStorage(), std::monostate(), std::monostate());
-        out_param->SetValue(p_ptr->Value());
+        out_param->SetValue(p_ptr->Value(), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::FloatParam>()) {
         out_param = std::make_shared<configurator::Parameter>(
             megamol::gui::GenerateUniqueID(), ParamType::FLOAT, std::monostate(), p_ptr->MinValue(), p_ptr->MaxValue());
-        out_param->SetValue(p_ptr->Value());
+        out_param->SetValue(p_ptr->Value(), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::IntParam>()) {
         out_param = std::make_shared<configurator::Parameter>(
             megamol::gui::GenerateUniqueID(), ParamType::INT, std::monostate(), p_ptr->MinValue(), p_ptr->MaxValue());
-        out_param->SetValue(p_ptr->Value());
+        out_param->SetValue(p_ptr->Value(), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector2fParam>()) {
         auto min = p_ptr->MinValue();
         auto max = p_ptr->MaxValue();
         auto val = p_ptr->Value();
         out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::VECTOR2F,
             std::monostate(), glm::vec2(min.X(), min.Y()), glm::vec2(max.X(), max.Y()));
-        out_param->SetValue(glm::vec2(val.X(), val.Y()));
+        out_param->SetValue(glm::vec2(val.X(), val.Y()), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector3fParam>()) {
         auto min = p_ptr->MinValue();
         auto max = p_ptr->MaxValue();
         auto val = p_ptr->Value();
         out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::VECTOR3F,
             std::monostate(), glm::vec3(min.X(), min.Y(), min.Z()), glm::vec3(max.X(), max.Y(), max.Z()));
-        out_param->SetValue(glm::vec3(val.X(), val.Y(), val.Z()));
+        out_param->SetValue(glm::vec3(val.X(), val.Y(), val.Z()), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector4fParam>()) {
         auto min = p_ptr->MinValue();
         auto max = p_ptr->MaxValue();
@@ -627,19 +628,19 @@ static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
         out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::VECTOR4F,
             std::monostate(), glm::vec4(min.X(), min.Y(), min.Z(), min.W()),
             glm::vec4(max.X(), max.Y(), max.Z(), max.W()));
-        out_param->SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()));
+        out_param->SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::TernaryParam>()) {
         out_param = std::make_shared<configurator::Parameter>(
             megamol::gui::GenerateUniqueID(), ParamType::TERNARY, std::monostate(), std::monostate(), std::monostate());
-        out_param->SetValue(p_ptr->Value());
+        out_param->SetValue(p_ptr->Value(), set_default_val);
     } else if (auto* p_ptr = in_param_slot.Param<core::param::StringParam>()) {
         out_param = std::make_shared<configurator::Parameter>(
             megamol::gui::GenerateUniqueID(), ParamType::STRING, std::monostate(), std::monostate(), std::monostate());
-        out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()));
+        out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val);
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
         out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::FILEPATH,
             std::monostate(), std::monostate(), std::monostate());
-        out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()));
+        out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val);
     } else {
         vislib::sys::Log::DefaultLog.WriteError(
             "Found unknown parameter type. Please extend parameter types for the configurator. "
@@ -648,7 +649,7 @@ static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
         return false;
     }
 
-    out_param->full_name = module_full_name + "::" + std::string(in_param_slot.Name().PeekBuffer());
+    out_param->full_name = std::string(in_param_slot.Name().PeekBuffer());
     out_param->description = std::string(in_param_slot.Description().PeekBuffer());
     out_param->present.SetGUIVisible(parameter_ptr->IsGUIVisible());
     out_param->present.SetGUIReadOnly(parameter_ptr->IsGUIReadOnly());

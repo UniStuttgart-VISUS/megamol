@@ -301,12 +301,14 @@ bool TransferFunctionEditor::Draw(bool connected_parameter_mode) {
     if (this->showOptions) {
         ImGui::Separator();
 
+        /*
         if (connected_parameter_mode) {
             ImGui::TextUnformatted("Parameter:");
             ImGui::TextColored(GUI_COLOR_TEXT_WARN,
                 ((this->connected_parameter_ptr == nullptr) ? ("-")
                                                             : (this->connected_parameter_ptr->GetName().c_str())));
         }
+        */
 
         // Legend alignment ---------------------------------------------------
         ImGui::BeginGroup();

@@ -119,6 +119,7 @@ void megamol::gui::configurator::GraphManagerPresentation::SaveProjectToFile(
         confirmed, "Cancel", aborted);
 }
 
+
 // GRAPH MANAGER ##############################################################
 
 megamol::gui::configurator::GraphManager::GraphManager(void)
@@ -549,12 +550,12 @@ bool megamol::gui::configurator::GraphManager::AddProjectFromCore(ImGuiID graph_
                     if (use_stock) {
                         for (auto& parameter : module_ptr->parameters) {
                             if (parameter.full_name == param_full_name) {
-                                megamol::gui::configurator::ReadCoreParameter((*param_slot), parameter, full_name);
+                                megamol::gui::configurator::ReadCoreParameter((*param_slot), parameter, true);
                             }
                         }
                     } else {
                         std::shared_ptr<Parameter> param_ptr;
-                        megamol::gui::configurator::ReadCoreParameter((*param_slot), param_ptr, full_name);
+                        megamol::gui::configurator::ReadCoreParameter((*param_slot), param_ptr, false);
                         if (param_ptr != nullptr) {
                             if (!param_slot->Parameter().IsNull()) {
                                 auto param_ref = &(*param_slot->Parameter());
@@ -607,13 +608,6 @@ bool megamol::gui::configurator::GraphManager::AddProjectFromCore(ImGuiID graph_
                     callslot_ptr->ConnectParentModule(module_ptr);
 
                     module_ptr->AddCallSlot(callslot_ptr);
-                }
-            }
-
-            // Create calls
-            for (auto& callslot_type_list : module_ptr->GetCallSlots()) {
-                for (auto& callslot : callslot_type_list.second) {
-                    callslot->ConnectParentModule(module_ptr);
                 }
             }
         };
@@ -1184,8 +1178,8 @@ bool megamol::gui::configurator::GraphManager::SaveProjectToFile(
                             }
                         }
 
-                        // Only write parameters with other values than the default
-                        if (parameter.DefaultValueMismatch()) {
+                        // Only write parameters with other values than the default - ignore button parameters
+                        if (parameter.DefaultValueMismatch() && (parameter.type != ParamType::BUTTON)) {
                             // Encode to UTF-8 string
                             vislib::StringA valueString;
                             vislib::UTF8Encoder::Encode(
@@ -1499,10 +1493,11 @@ bool megamol::gui::configurator::GraphManager::project_separate_name_and_namespa
 }
 
 
-/// ! Implementation should be duplicate to Core-Version
-/// megamol::gui::GUIWindows::parameters_gui_state_from_json_string()
 bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_string(
     const GraphPtrType& graph_ptr, const std::string& in_json_string) {
+
+    /// ! Implementation should be duplicate to version in
+    /// megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string()
 
     try {
         if (in_json_string.empty()) {
@@ -1619,9 +1614,10 @@ bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_st
 }
 
 
-/// ! Implementation should be duplicate to Core-Version megamol::gui::GUIWindows::parameters_gui_state_to_json()
 bool megamol::gui::configurator::GraphManager::parameters_gui_state_to_json(
     const GraphPtrType& graph_ptr, nlohmann::json& out_json) {
+
+    /// ! Implementation should be duplicate to version in megamol::gui::GUIWindows::gui_and_parameters_state_to_json()
 
     try {
         if (graph_ptr == nullptr) {
@@ -1686,7 +1682,9 @@ bool megamol::gui::configurator::GraphManager::replace_graph_state(
                 return false;
             }
             std::string json_graph_id = graph_ptr->GetFilename(); /// = graph filename
-            json[GUI_JSON_TAG_GRAPHS].erase(json_graph_id);
+            if (!json_graph_id.empty()) {
+                json[GUI_JSON_TAG_GRAPHS].erase(json_graph_id);
+            }
         }
         if (graph_ptr->GUIStateToJSON(json)) {
             out_json_string = json.dump(2);
