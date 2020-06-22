@@ -47,25 +47,26 @@ void megamol::gui::configurator::CallPresentation::Present(megamol::gui::Present
             if ((callerslot_ptr == nullptr) || (calleeslot_ptr == nullptr)) {
                 return;
             }
-            bool visible = ((callerslot_ptr->GUI_IsVisible() || callerslot_ptr->GUI_IsGroupInterface()) &&
-                            (calleeslot_ptr->GUI_IsVisible() || calleeslot_ptr->GUI_IsGroupInterface()));
+            bool visible =
+                ((callerslot_ptr->present.visible || (callerslot_ptr->present.group.interfaceslot_ptr != nullptr)) &&
+                    (calleeslot_ptr->present.visible || (calleeslot_ptr->present.group.interfaceslot_ptr != nullptr)));
             if (visible) {
 
-                ImVec2 caller_position = callerslot_ptr->GUI_GetPosition();
-                ImVec2 callee_position = calleeslot_ptr->GUI_GetPosition();
+                ImVec2 caller_position = callerslot_ptr->present.GetPosition();
+                ImVec2 callee_position = calleeslot_ptr->present.GetPosition();
                 bool connect_interface_slot = true;
                 if (callerslot_ptr->IsParentModuleConnected() && calleeslot_ptr->IsParentModuleConnected()) {
-                    if (callerslot_ptr->GetParentModule()->GUI_GetGroupUID() ==
-                        calleeslot_ptr->GetParentModule()->GUI_GetGroupUID()) {
+                    if (callerslot_ptr->GetParentModule()->present.group.uid ==
+                        calleeslot_ptr->GetParentModule()->present.group.uid) {
                         connect_interface_slot = false;
                     }
                 }
                 if (connect_interface_slot) {
-                    if (callerslot_ptr->GUI_IsGroupInterface()) {
-                        caller_position = callerslot_ptr->GUI_GetGroupInterface()->GUI_GetPosition();
+                    if (callerslot_ptr->present.group.interfaceslot_ptr != nullptr) {
+                        caller_position = callerslot_ptr->present.group.interfaceslot_ptr->GetGUIPosition();
                     }
-                    if (calleeslot_ptr->GUI_IsGroupInterface()) {
-                        callee_position = calleeslot_ptr->GUI_GetGroupInterface()->GUI_GetPosition();
+                    if (calleeslot_ptr->present.group.interfaceslot_ptr != nullptr) {
+                        callee_position = calleeslot_ptr->present.group.interfaceslot_ptr->GetGUIPosition();
                     }
                 }
                 ImVec2 p1 = caller_position;

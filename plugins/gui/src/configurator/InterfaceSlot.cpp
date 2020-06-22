@@ -211,7 +211,7 @@ void megamol::gui::configurator::InterfaceSlotPresentation::Present(PresentPhase
             // Draw Curves
             if (!this->group.collapsed_view) {
                 for (auto& callslot_ptr : inout_interfaceslot.GetCallSlots()) {
-                    draw_list->AddLine(actual_position, callslot_ptr->GUI_GetPosition(), COLOR_INTERFACE_CURVE,
+                    draw_list->AddLine(actual_position, callslot_ptr->present.GetPosition(), COLOR_INTERFACE_CURVE,
                         GUI_LINE_THICKNESS * state.canvas.zooming);
                 }
             }
@@ -253,7 +253,7 @@ ImVec2 megamol::gui::configurator::InterfaceSlotPresentation::GetPosition(Interf
     if ((!this->group.collapsed_view) && (inout_interfaceslot.GetCallSlots().size() > 0)) {
         auto only_callslot_ptr = inout_interfaceslot.GetCallSlots().front();
         ret_position.x = this->position.x;
-        ret_position.y = only_callslot_ptr->GUI_GetPosition().y;
+        ret_position.y = only_callslot_ptr->present.GetPosition().y;
     }
     return ret_position;
 }
@@ -298,7 +298,7 @@ bool megamol::gui::configurator::InterfaceSlot::AddCallSlot(
         if (this->is_callslot_compatible((*callslot_ptr))) {
             this->callslots.emplace_back(callslot_ptr);
 
-            callslot_ptr->GUI_SetGroupInterface(parent_interfaceslot_ptr);
+            callslot_ptr->present.group.interfaceslot_ptr = parent_interfaceslot_ptr;
 #ifdef GUI_VERBOSE
             vislib::sys::Log::DefaultLog.WriteInfo(
                 "[Configurator] Added call slot '%s' to interface slot of group.\n", callslot_ptr->name.c_str());
@@ -326,7 +326,7 @@ bool megamol::gui::configurator::InterfaceSlot::RemoveCallSlot(ImGuiID callslot_
         for (auto iter = this->callslots.begin(); iter != this->callslots.end(); iter++) {
             if ((*iter)->uid == callslot_uid) {
 
-                (*iter)->GUI_SetGroupInterface(nullptr);
+                (*iter)->present.group.interfaceslot_ptr = nullptr;
 #ifdef GUI_VERBOSE
                 vislib::sys::Log::DefaultLog.WriteInfo(
                     "[Configurator] Removed call slot '%s' from interface slot of group.\n", (*iter)->name.c_str());
@@ -366,7 +366,7 @@ bool megamol::gui::configurator::InterfaceSlot::IsConnectionValid(InterfaceSlot&
     CallSlotPtrType callslot_ptr_2;
     if (this->GetCompatibleCallSlot(callslot_ptr_1) && interfaceslot.GetCompatibleCallSlot(callslot_ptr_2)) {
         // Check for different group
-        if (this->GUI_GetGroupUID() != interfaceslot.GUI_GetGroupUID()) {
+        if (this->present.group.uid != interfaceslot.present.group.uid) {
             // Check for compatibility of call slots which are part of the interface slots
             return (callslot_ptr_1->IsConnectionValid((*callslot_ptr_2)));
         }
@@ -387,7 +387,7 @@ bool megamol::gui::configurator::InterfaceSlot::IsConnectionValid(CallSlot& call
             /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-        if (callslot.GetParentModule()->GUI_GetGroupUID() == this->GUI_GetGroupUID()) {
+        if (callslot.GetParentModule()->present.group.uid == this->present.group.uid) {
             /// vislib::sys::Log::DefaultLog.WriteError("Parent module of call slot should not be in same group as the
             /// interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
@@ -456,7 +456,7 @@ bool megamol::gui::configurator::InterfaceSlot::is_callslot_compatible(CallSlot&
         return false;
     }
     // Call slot can only be added if not already part of other interface
-    if (callslot.GUI_IsGroupInterface()) {
+    if (callslot.present.group.interfaceslot_ptr != nullptr) {
         /// vislib::sys::Log::DefaultLog.WriteError("Call slots can only be added if not already part of other
         /// interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -467,7 +467,7 @@ bool megamol::gui::configurator::InterfaceSlot::is_callslot_compatible(CallSlot&
         /// __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    if (callslot.GetParentModule()->GUI_GetGroupUID() != this->GUI_GetGroupUID()) {
+    if (callslot.GetParentModule()->present.group.uid != this->present.group.uid) {
         /// vislib::sys::Log::DefaultLog.WriteError("Parent module of call slot should be in same group as the
         /// interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;

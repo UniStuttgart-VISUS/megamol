@@ -58,6 +58,8 @@ typedef std::shared_ptr<Parameter> ParamPtrType;
  */
 class ParameterPresentation : public megamol::core::param::AbstractParamPresentation {
 public:
+    friend class Parameter;
+
     /*
      * Globally scoped widgets (widget parts) are always called each frame.
      * Locally scoped widgets (widget parts) are only called if respective parameter appears in GUI.
@@ -65,11 +67,11 @@ public:
     enum WidgetScope { GLOBAL, LOCAL };
 
     // VARIABLES --------------------------------------------------------------
-    
+
     bool expert;
-        
+
     // FUCNTIONS --------------------------------------------------------------
-    
+
     ParameterPresentation(ParamType type);
     ~ParameterPresentation(void);
 
@@ -81,7 +83,7 @@ public:
 
 private:
     // VARIABLES --------------------------------------------------------------
-    
+
     std::string help;
     std::string description;
     megamol::gui::GUIUtils utils;
@@ -97,13 +99,9 @@ private:
     size_t tf_editor_hash;
 
     // FUNCTIONS --------------------------------------------------------------
-    
-    friend void Parameter::GUI_Present(ParameterPresentation::WidgetScope scope) ; 
     bool Present(Parameter& inout_param, WidgetScope scope);
-    
-    friend float Parameter::GUI_GetHeight(void);
     float GetHeight(Parameter& inout_param);
-        
+
     bool present_parameter(Parameter& inout_parameter, WidgetScope scope);
 
     bool widget_button(WidgetScope scope, const std::string& labelel, const megamol::core::view::KeyCode& keycode);
@@ -181,17 +179,17 @@ public:
     };
 
     // VARIABLES --------------------------------------------------------------
-    
+
     const ImGuiID uid;
     const ParamType type;
     ParameterPresentation present;
-    
+
     // Init when adding parameter from stock
     std::string full_name;
     std::string description;
 
     // FUNCTIONS --------------------------------------------------------------
-    
+
     Parameter(ImGuiID uid, ParamType type, StroageType store, MinType min, MaxType max);
     ~Parameter(void);
 
@@ -234,7 +232,7 @@ public:
     const size_t GetTransferFunctionHash(void) const { return this->string_hash; }
 
     // SET ----------------------------------
-    
+
     bool SetValueString(const std::string& val_str, bool set_default_val = false);
 
     template <typename T> void SetValue(T val, bool set_default_val = false) {
@@ -299,8 +297,8 @@ public:
 
     // Presentation ----------------------------------------------------
 
-    inline bool GUI_Present(ParameterPresentation::WidgetScope scope) { return this->present.Present(*this, scope); }
-    inline float GUI_GetHeight(void) { return this->present.GetHeight(*this); }
+    inline bool PresentGUI(ParameterPresentation::WidgetScope scope) { return this->present.Present(*this, scope); }
+    inline float GetGUIHeight(void) { return this->present.GetHeight(*this); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -423,9 +421,9 @@ static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
     }
 
     out_param.full_name = module_full_name + "::" + std::string(in_param_slot.Name().PeekBuffer());
-    out_param.GUI_SetVisibility(parameter_ptr->IsGUIVisible());
-    out_param.GUI_SetReadOnly(parameter_ptr->IsGUIReadOnly());
-    out_param.GUI_SetPresentation(parameter_ptr->GetGUIPresentation());
+    out_param.present.SetGUIVisible(parameter_ptr->IsGUIVisible());
+    out_param.present.SetGUIReadOnly(parameter_ptr->IsGUIReadOnly());
+    out_param.present.SetGUIPresentation(parameter_ptr->GetGUIPresentation());
 
     if (auto* p_ptr = in_param_slot.Param<core::param::ButtonParam>()) {
         if (out_param.type == ParamType::BUTTON) {
@@ -651,9 +649,9 @@ static bool ReadCoreParameter(megamol::core::param::ParamSlot& in_param_slot,
 
     out_param->full_name = module_full_name + "::" + std::string(in_param_slot.Name().PeekBuffer());
     out_param->description = std::string(in_param_slot.Description().PeekBuffer());
-    out_param->GUI_SetVisibility(parameter_ptr->IsGUIVisible());
-    out_param->GUI_SetReadOnly(parameter_ptr->IsGUIReadOnly());
-    out_param->GUI_SetPresentation(parameter_ptr->GetGUIPresentation());
+    out_param->present.SetGUIVisible(parameter_ptr->IsGUIVisible());
+    out_param->present.SetGUIReadOnly(parameter_ptr->IsGUIReadOnly());
+    out_param->present.SetGUIPresentation(parameter_ptr->GetGUIPresentation());
 
     return true;
 }
@@ -668,9 +666,9 @@ static bool WriteCoreParameter(
         return false;
     }
 
-    parameter_ptr->SetGUIVisible(in_param.GUI_IsVisible());
-    parameter_ptr->SetGUIReadOnly(in_param.GUI_IsReadOnly());
-    parameter_ptr->SetGUIPresentation(in_param.GUI_GetPresentation());
+    parameter_ptr->SetGUIVisible(in_param.present.IsGUIVisible());
+    parameter_ptr->SetGUIReadOnly(in_param.present.IsGUIReadOnly());
+    parameter_ptr->SetGUIPresentation(in_param.present.GetGUIPresentation());
 
     if (auto* p_ptr = out_param_slot.Param<core::param::ButtonParam>()) {
         if (in_param.type == ParamType::BUTTON) {

@@ -31,14 +31,16 @@ typedef std::vector<Call::StockCall> CallStockVectorType;
  */
 class GraphPresentation {
 public:
+    friend class Graph;
+
     // VARIABLES --------------------------------------------------------------
 
     bool params_visible;
     bool params_readonly;
     bool param_extended_mode;
-    
+
     // FUNCTIONS --------------------------------------------------------------
-    
+
     GraphPresentation(void);
     ~GraphPresentation(void);
 
@@ -86,13 +88,10 @@ private:
     megamol::gui::GraphItemsStateType graph_state;
 
     // FUNCTIONS --------------------------------------------------------------
-    
-    friend void Graph::GUI_Present(GraphStateType& state);
+
     void Present(Graph& inout_graph, GraphStateType& state);
-    
-    friend bool Graph::GUI_StateToJSON(nlohmann::json& out_json);
     bool StateToJSON(Graph& inout_graph, nlohmann::json& out_json);
-        
+
     void present_menu(Graph& inout_graph);
     void present_canvas(Graph& inout_graph, float child_width);
     void present_parameters(Graph& inout_graph, float child_width);
@@ -126,9 +125,9 @@ public:
     const ImGuiID uid;
     std::string name;
     GraphPresentation present;
-    
+
     // FUNCTIONS --------------------------------------------------------------
-    
+
     Graph(const std::string& graph_name);
     ~Graph(void);
 
@@ -161,11 +160,11 @@ public:
 
     // Presentation ----------------------------------------------------
 
-    inline void GUI_Present(GraphStateType& state) { this->present.Present(*this, state); }
-    bool GUI_StateFromJsonString(const std::string& json_string) {
+    inline void PresentGUI(GraphStateType& state) { this->present.Present(*this, state); }
+    bool GUIStateFromJsonString(const std::string& json_string) {
         return this->present.StateFromJsonString(*this, json_string);
     }
-    bool GUI_StateToJSON(nlohmann::json& out_json) { return this->present.StateToJSON(*this, out_json); }
+    bool GUIStateToJSON(nlohmann::json& out_json) { return this->present.StateToJSON(*this, out_json); }
 
 private:
     // VARIABLES --------------------------------------------------------------

@@ -31,13 +31,15 @@ typedef std::vector<GroupPtrType> GroupPtrVectorType;
  */
 class GroupPresentation {
 public:
+    friend class Group;
+
     // VARIABLES --------------------------------------------------------------
-    
+
     // Relative position without considering canvas offset and zooming
     ImVec2 position;
     // Relative size without considering zooming
     ImVec2 size;
-    
+
     // FUNCTIONS --------------------------------------------------------------
 
     GroupPresentation(void);
@@ -48,25 +50,21 @@ public:
     inline bool ModulesVisible(void) { return !this->collapsed_view; }
     inline void ForceUpdate(void) { this->update = true; }
 
-    void SetPosition(Group& inout_group, const GraphCanvasType& in_canvas, ImVec2 pos);
-
 private:
     // VARIABLES --------------------------------------------------------------
-    
+
     GUIUtils utils;
     bool collapsed_view;
     bool allow_selection;
     bool allow_context;
     bool selected;
     bool update;
-    
+
     // FUNCTIONS --------------------------------------------------------------
-    
-    friend void Group::GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state);
+
     void Present(megamol::gui::PresentPhase phase, Group& inout_group, GraphItemsStateType& state);
-    
-    friend void Group::GUI_Update(const GraphCanvasType& in_canvas);
     void UpdatePositionSize(Group& inout_group, const GraphCanvasType& in_canvas);
+    void SetPosition(Group& inout_group, const GraphCanvasType& in_canvas, ImVec2 pos);
 };
 
 
@@ -76,10 +74,10 @@ private:
 class Group {
 public:
     // VARIABLES --------------------------------------------------------------
-    
+
     const ImGuiID uid;
     GroupPresentation present;
-    
+
     // Init when adding group to graph
     std::string name;
 
@@ -87,7 +85,7 @@ public:
 
     Group(ImGuiID uid);
     ~Group();
-    
+
     bool AddModule(const ModulePtrType& module_ptr);
     bool RemoveModule(ImGuiID module_uid);
     bool ContainsModule(ImGuiID module_uid);
@@ -105,10 +103,13 @@ public:
 
     // Presentation ----------------------------------------------------
 
-    inline void GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
+    inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
         this->present.Present(phase, *this, state);
     }
-    inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.UpdatePositionSize(*this, in_canvas); }
+    inline void UpdateGUI(const GraphCanvasType& in_canvas) { this->present.UpdatePositionSize(*this, in_canvas); }
+    inline void SetGUIPosition(const GraphCanvasType& in_canvas, ImVec2 pos) {
+        this->present.SetPosition(*this, in_canvas, pos);
+    }
 
 private:
     // VARIABLES --------------------------------------------------------------

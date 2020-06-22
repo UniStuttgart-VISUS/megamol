@@ -65,7 +65,7 @@ void megamol::gui::configurator::CallSlotPresentation::Present(PresentPhase phas
         bool is_group_interface = (this->group.interfaceslot_ptr != nullptr);
         ImGuiID is_parent_module_group_uid = GUI_INVALID_ID;
         if (inout_callslot.IsParentModuleConnected()) {
-            is_parent_module_group_uid = inout_callslot.GetParentModule()->GUI_GetGroupUID();
+            is_parent_module_group_uid = inout_callslot.GetParentModule()->present.group.uid;
         }
         ImVec2 text_pos_left_upper = ImVec2(0.0f, 0.0f);
         if (this->label_visible) {
@@ -287,13 +287,13 @@ void megamol::gui::configurator::CallSlotPresentation::Update(
         }
 
         float line_height = 0.0f;
-        if (inout_callslot.GetParentModule()->GUI_IsLabelVisible()) {
+        if (inout_callslot.GetParentModule()->present.label_visible) {
             line_height = ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming;
         }
-        auto module_pos = inout_callslot.GetParentModule()->GUI_GetPosition();
+        auto module_pos = inout_callslot.GetParentModule()->present.position;
         module_pos.y += line_height;
         ImVec2 pos = in_canvas.offset + module_pos * in_canvas.zooming;
-        auto module_size = inout_callslot.GetParentModule()->GUI_GetSize();
+        auto module_size = inout_callslot.GetParentModule()->present.GetSize();
         module_size.y -= line_height;
         ImVec2 size = module_size * in_canvas.zooming;
         this->position = ImVec2(pos.x + ((inout_callslot.type == CallSlotType::CALLER) ? (size.x) : (0.0f)),

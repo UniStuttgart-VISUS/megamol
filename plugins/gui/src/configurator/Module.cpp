@@ -80,8 +80,8 @@ void megamol::gui::configurator::ModulePresentation::Present(megamol::gui::Prese
                         if (state.interact.callslot_selected_uid != GUI_INVALID_ID) {
                             if ((connected_callslot_ptr->uid == state.interact.callslot_selected_uid) &&
                                 connected_callslot_ptr->IsParentModuleConnected()) {
-                                ImVec2 module_size = connected_callslot_ptr->GetParentModule()->GUI_GetSize();
-                                ImVec2 module_pos = connected_callslot_ptr->GetParentModule()->GUI_GetPosition();
+                                ImVec2 module_size = connected_callslot_ptr->GetParentModule()->present.GetSize();
+                                ImVec2 module_pos = connected_callslot_ptr->GetParentModule()->present.position;
                                 if (connected_callslot_ptr->type == CallSlotType::CALLEE) {
                                     this->position = module_pos - ImVec2((call_width + this->size.x), 0.0f);
                                 } else {
@@ -90,11 +90,11 @@ void megamol::gui::configurator::ModulePresentation::Present(megamol::gui::Prese
                                 break;
                             }
                         } else if ((state.interact.interfaceslot_selected_uid != GUI_INVALID_ID) &&
-                                   (connected_callslot_ptr->GUI_IsGroupInterface())) {
+                                   (connected_callslot_ptr->present.group.interfaceslot_ptr != nullptr)) {
                             if (state.interact.interfaceslot_selected_uid ==
-                                connected_callslot_ptr->GUI_GetGroupInterface()->uid) {
+                                connected_callslot_ptr->present.group.interfaceslot_ptr->uid) {
                                 ImVec2 interfaceslot_position =
-                                    (connected_callslot_ptr->GUI_GetGroupInterface()->GUI_GetPosition() -
+                                    (connected_callslot_ptr->present.group.interfaceslot_ptr->GetGUIPosition() -
                                         state.canvas.offset) /
                                     state.canvas.zooming;
                                 if (connected_callslot_ptr->type == CallSlotType::CALLEE) {
@@ -120,7 +120,7 @@ void megamol::gui::configurator::ModulePresentation::Present(megamol::gui::Prese
             (this->group.uid == GUI_INVALID_ID) || ((this->group.uid != GUI_INVALID_ID) && this->group.visible);
         for (auto& callslots_map : inout_module.GetCallSlots()) {
             for (auto& callslot_ptr : callslots_map.second) {
-                callslot_ptr->GUI_SetVisibility(visible);
+                callslot_ptr->present.visible = visible;
             }
         }
 
@@ -406,7 +406,7 @@ void megamol::gui::configurator::ModulePresentation::Present(megamol::gui::Prese
 
                         float param_height = 0.0f;
                         for (auto& parameter : inout_module.parameters) {
-                            param_height += parameter.GUI_GetHeight();
+                            param_height += parameter.GetGUIHeight();
                         }
                         param_height += style.ScrollbarSize;
                         float avail_height =
@@ -425,7 +425,7 @@ void megamol::gui::configurator::ModulePresentation::Present(megamol::gui::Prese
                         //}
 
                         for (auto& parameter : inout_module.parameters) {
-                            parameter.GUI_Present(ParameterPresentation::WidgetScope::LOCAL);
+                            parameter.PresentGUI(ParameterPresentation::WidgetScope::LOCAL);
                         }
 
                         ImGui::EndChild();
@@ -442,7 +442,7 @@ void megamol::gui::configurator::ModulePresentation::Present(megamol::gui::Prese
             // CALL SLOTS ------------------------------------------------------
             for (auto& callslots_map : inout_module.GetCallSlots()) {
                 for (auto& callslot_ptr : callslots_map.second) {
-                    callslot_ptr->GUI_Present(phase, state);
+                    callslot_ptr->PresentGUI(phase, state);
                 }
             }
         }
@@ -485,7 +485,7 @@ void megamol::gui::configurator::ModulePresentation::Update(
     float max_slot_name_length = 0.0f;
     for (auto& callslots_map : inout_module.GetCallSlots()) {
         for (auto& callslot_ptr : callslots_map.second) {
-            if (callslot_ptr->GUI_IsLabelVisible()) {
+            if (callslot_ptr->present.label_visible) {
                 max_slot_name_length =
                     std::max(ImGui::CalcTextSize(callslot_ptr->name.c_str()).x, max_slot_name_length);
             }
@@ -512,7 +512,7 @@ void megamol::gui::configurator::ModulePresentation::Update(
     // UPDATE all Call Slots ---------------------
     for (auto& slot_pair : inout_module.GetCallSlots()) {
         for (auto& slot : slot_pair.second) {
-            slot->GUI_Update(in_canvas);
+            slot->UpdateGUI(in_canvas);
         }
     }
 }

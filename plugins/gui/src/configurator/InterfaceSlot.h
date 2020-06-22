@@ -37,26 +37,26 @@ typedef std::map<CallSlotType, InterfaceSlotPtrVectorType> InterfaceSlotPtrMapTy
  */
 class InterfaceSlotPresentation {
 public:
+    friend class InterfaceSlot;
+
     struct GroupState {
         ImGuiID uid;
         bool collapsed_view;
     };
-    
+
     // VARIABLES --------------------------------------------------------------
-    
+
     GroupState group;
     bool label_visible;
-    
     // Absolute position including canvas offset and zooming
     ImVec2 position;
-        
+
     // FUNCTIONS --------------------------------------------------------------
 
     InterfaceSlotPresentation(void);
     ~InterfaceSlotPresentation(void);
 
     std::string GetLabel(void) { return this->label; }
-    ImVec2 GetPosition(InterfaceSlot& inout_interfaceslot);
     inline bool IsGroupViewCollapsed(void) { return this->group.collapsed_view; }
 
     void SetPosition(ImVec2 pos) { this->position = pos; }
@@ -67,18 +67,14 @@ private:
     GUIUtils utils;
     bool selected;
     std::string label;
-
     ImGuiID last_compat_callslot_uid;
     ImGuiID last_compat_interface_uid;
     bool compatible;
 
     // FUNCTIONS --------------------------------------------------------------
 
-    friend void InterfaceSlot::GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state)
-    void Present(megamol::gui::PresentPhase phase, InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state);    
-    
-    friend ImVec2 InterfaceSlot::GUI_GetPosition(void);S
-    inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(*this); }
+    void Present(megamol::gui::PresentPhase phase, InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state);
+    ImVec2 GetPosition(InterfaceSlot& inout_interfaceslot);
 };
 
 
@@ -112,10 +108,10 @@ public:
 
     // Presentation ----------------------------------------------------
 
-    inline void GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
+    inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
         this->present.Present(phase, *this, state);
     }
-    inline ImVec2 GUI_GetPosition(void) { return this->present.GetPosition(*this); }
+    inline ImVec2 GetGUIPosition(void) { return this->present.GetPosition(*this); }
 
 private:
     // VARIABLES --------------------------------------------------------------

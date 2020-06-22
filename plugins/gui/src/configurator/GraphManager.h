@@ -13,8 +13,8 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
-#include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/AbstractParam.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 
 #include "utility/plugins/PluginManager.h"
@@ -30,7 +30,8 @@ class GraphManager;
 // Types
 typedef std::shared_ptr<Graph> GraphPtrType;
 typedef std::vector<GraphPtrType> GraphsType;
-typedef std::map<megamol::core::param::AbstractParam*, std::shared_ptr<megamol::gui::configurator::Parameter>> ParamInterfaceMapType;
+typedef std::map<megamol::core::param::AbstractParam*, std::shared_ptr<megamol::gui::configurator::Parameter>>
+    ParamInterfaceMapType;
 
 
 /** ************************************************************************
@@ -38,6 +39,7 @@ typedef std::map<megamol::core::param::AbstractParam*, std::shared_ptr<megamol::
  */
 class GraphManagerPresentation {
 public:
+    friend class GraphManager;
     // FUNCTIONS --------------------------------------------------------------
 
     GraphManagerPresentation(void);
@@ -51,11 +53,10 @@ private:
     GUIUtils utils;
     megamol::gui::FileUtils file_utils;
     ImGuiID graph_delete_uid;
-    
+
     // FUNCTIONS --------------------------------------------------------------
-    
-    friend void GraphManager::GUI_Present(GraphStateType& state);
-    void Present(GraphManager& inout_graph_manager, GraphStateType& state);    
+
+    void Present(GraphManager& inout_graph_manager, GraphStateType& state);
 };
 
 
@@ -64,13 +65,12 @@ private:
  */
 class GraphManager {
 public:
-
     // VARIABLES --------------------------------------------------------------
 
     GraphManagerPresentation present;
-    
+
     // FUNCTIONS --------------------------------------------------------------
-    
+
     GraphManager(void);
     ~GraphManager(void);
 
@@ -83,8 +83,9 @@ public:
     inline const ModuleStockVectorType& GetModulesStock(void) { return this->modules_stock; }
     inline const CallStockVectorType& GetCallsStock(void) { return this->calls_stock; }
 
-    ImGuiID LoadUpdateProjectFromCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance, ParamInterfaceMapType& inout_param_interface_map);
-    
+    ImGuiID LoadUpdateProjectFromCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance,
+        ParamInterfaceMapType& inout_param_interface_map);
+
     ImGuiID LoadProjectFromCore(megamol::core::CoreInstance* core_instance);
     bool AddProjectFromCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance, bool use_stock);
 
@@ -94,7 +95,7 @@ public:
 
     // Presentation ----------------------------------------------------
 
-    void GUI_Present(GraphStateType& state) { this->present.Present(*this, state); }
+    void PresentGUI(GraphStateType& state) { this->present.Present(*this, state); }
 
 private:
     // VARIABLES --------------------------------------------------------------

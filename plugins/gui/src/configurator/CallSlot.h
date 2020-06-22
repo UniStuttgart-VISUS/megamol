@@ -42,47 +42,42 @@ typedef std::map<CallSlotType, CallSlotPtrVectorType> CallSlotPtrMapType;
  */
 class CallSlotPresentation {
 public:
+    friend class CallSlot;
+
     struct GroupState {
         InterfaceSlotPtrType interfaceslot_ptr;
     };
 
     // VARIABLES --------------------------------------------------------------
-    
+
     GroupState group;
     bool label_visible;
-        
-    // Absolute position including canvas offset and zooming
-    ImVec2 position;
-            
+    bool visible;
+
+
     // FUNCTIONS --------------------------------------------------------------
-        
+
     CallSlotPresentation(void);
     ~CallSlotPresentation(void);
 
     ImVec2 GetPosition(void) { return this->position; }
-    bool IsVisible(void) { return this->visible; }
-
-    void SetVisibility(bool is_visible) { this->visible = is_visible; }
 
 private:
     // VARIABLES --------------------------------------------------------------
-    
+
+    // Absolute position including canvas offset and zooming
+    ImVec2 position;
     GUIUtils utils;
-    bool visible;
     bool selected;
     bool update_once;
     bool show_modulestock;
-
     ImGuiID last_compat_callslot_uid;
     ImGuiID last_compat_interface_uid;
     bool compatible;
-    
-    // FUNCTIONS --------------------------------------------------------------
-        
-    friend void CallSlot::GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state);
-    void Present(megamol::gui::PresentPhase phase, CallSlot& inout_callslot, GraphItemsStateType& state);
 
-    friend void CallSlot::GUI_Update(const GraphCanvasType& in_canvas);
+    // FUNCTIONS --------------------------------------------------------------
+
+    void Present(megamol::gui::PresentPhase phase, CallSlot& inout_callslot, GraphItemsStateType& state);
     void Update(CallSlot& inout_callslot, const GraphCanvasType& in_canvas);
 };
 
@@ -98,20 +93,20 @@ public:
         std::vector<size_t> compatible_call_idxs;
         CallSlotType type;
     };
-    
+
     // VARIABLES --------------------------------------------------------------
-    
+
     const ImGuiID uid;
     CallSlotPresentation present;
-    
+
     // Init when adding call slot from stock
     std::string name;
     std::string description;
     std::vector<size_t> compatible_call_idxs; // Storing only indices of compatible calls for faster comparison.
     CallSlotType type;
-    
+
     // FUNCTIONS --------------------------------------------------------------
-    
+
     CallSlot(ImGuiID uid);
     ~CallSlot();
 
@@ -134,10 +129,10 @@ public:
 
     // Presentation ----------------------------------------------------
 
-    inline void GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
+    inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
         this->present.Present(phase, *this, state);
     }
-    inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.Update(*this, in_canvas); }
+    inline void UpdateGUI(const GraphCanvasType& in_canvas) { this->present.Update(*this, in_canvas); }
 
 private:
     // VARIABLES --------------------------------------------------------------

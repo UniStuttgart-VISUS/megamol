@@ -277,7 +277,7 @@ void megamol::gui::configurator::GraphPresentation::Present(
                     GroupPtrType add_group_ptr;
                     if (inout_graph.GetGroup(group_uid, add_group_ptr)) {
                         // Remove module from previous associated group
-                        ImGuiID module_group_uid = module_ptr->GUI_GetGroupUID();
+                        ImGuiID module_group_uid = module_ptr->present.group.uid;
                         GroupPtrType remove_group_ptr;
                         if (inout_graph.GetGroup(module_group_uid, remove_group_ptr)) {
                             if (remove_group_ptr->uid != add_group_ptr->uid) {
@@ -353,7 +353,7 @@ void megamol::gui::configurator::GraphPresentation::Present(
                             for (auto& call_ptr : callslot_ptr->GetConnectedCalls()) {
                                 CallSlotPtrType other_callslot_ptr = call_ptr->GetCallSlot(other_type);
                                 if (other_callslot_ptr->IsParentModuleConnected()) {
-                                    if (other_callslot_ptr->GetParentModule()->GUI_GetGroupUID() != group->uid) {
+                                    if (other_callslot_ptr->GetParentModule()->present.group.uid != group->uid) {
                                         call_uids.emplace_back(call_ptr->uid);
                                     }
                                 }
@@ -394,8 +394,8 @@ void megamol::gui::configurator::GraphPresentation::Present(
                                 auto caller = call_ptr->GetCallSlot(CallSlotType::CALLER);
                                 auto callee = call_ptr->GetCallSlot(CallSlotType::CALLEE);
                                 if (caller->IsParentModuleConnected() && callee->IsParentModuleConnected()) {
-                                    if (caller->GetParentModule()->GUI_GetGroupUID() !=
-                                        callee->GetParentModule()->GUI_GetGroupUID()) {
+                                    if (caller->GetParentModule()->present.group.uid !=
+                                        callee->GetParentModule()->present.group.uid) {
                                         call_uids.emplace_back(call_ptr->uid);
                                     }
                                 }
@@ -461,8 +461,8 @@ void megamol::gui::configurator::GraphPresentation::Present(
                 if (group_ptr->uid == this->graph_state.interact.group_selected_uid) {
                     ImVec2 init_position = ImVec2(FLT_MAX, FLT_MAX);
                     for (auto& module_ptr : group_ptr->GetModules()) {
-                        init_position.x = std::min(module_ptr->GUI_GetPosition().x, init_position.x);
-                        init_position.y = std::min(module_ptr->GUI_GetPosition().y, init_position.y);
+                        init_position.x = std::min(module_ptr->present.position.x, init_position.x);
+                        init_position.y = std::min(module_ptr->present.position.y, init_position.y);
                     }
                     this->layout(group_ptr->GetModules(), GroupPtrVectorType(), init_position);
                 }
@@ -477,8 +477,8 @@ void megamol::gui::configurator::GraphPresentation::Present(
             for (auto& module_ptr : inout_graph.GetModules()) {
                 for (auto& selected_module_uid : this->graph_state.interact.modules_selected_uids) {
                     if (module_ptr->uid == selected_module_uid) {
-                        init_position.x = std::min(module_ptr->GUI_GetPosition().x, init_position.x);
-                        init_position.y = std::min(module_ptr->GUI_GetPosition().y, init_position.y);
+                        init_position.x = std::min(module_ptr->present.position.x, init_position.x);
+                        init_position.y = std::min(module_ptr->present.position.y, init_position.y);
                         selected_modules.emplace_back(module_ptr);
                     }
                 }
@@ -578,7 +578,7 @@ bool megamol::gui::configurator::GraphPresentation::StateFromJsonString(
                         if (config_state.at("show_call_names").is_boolean()) {
                             config_state.at("show_call_names").get_to(this->show_call_names);
                             for (auto& call : inout_graph.GetCalls()) {
-                                call->GUI_SetLabelVisibility(this->show_call_names);
+                                call->present.label_visible = this->show_call_names;
                             }
                         } else {
                             vislib::sys::Log::DefaultLog.WriteError(
@@ -591,14 +591,14 @@ bool megamol::gui::configurator::GraphPresentation::StateFromJsonString(
                             for (auto& mod : inout_graph.GetModules()) {
                                 for (auto& callslot_types : mod->GetCallSlots()) {
                                     for (auto& callslots : callslot_types.second) {
-                                        callslots->GUI_SetLabelVisibility(this->show_slot_names);
+                                        callslots->present.label_visible = this->show_slot_names;
                                     }
                                 }
                             }
                             for (auto& group_ptr : inout_graph.GetGroups()) {
                                 for (auto& interfaceslots_map : group_ptr->GetInterfaceSlots()) {
                                     for (auto& interfaceslot_ptr : interfaceslots_map.second) {
-                                        interfaceslot_ptr->GUI_SetLabelVisibility(this->show_slot_names);
+                                        interfaceslot_ptr->present.label_visible = this->show_slot_names;
                                     }
                                 }
                             }
@@ -611,7 +611,7 @@ bool megamol::gui::configurator::GraphPresentation::StateFromJsonString(
                         if (config_state.at("show_module_names").is_boolean()) {
                             config_state.at("show_module_names").get_to(this->show_module_names);
                             for (auto& mod : inout_graph.GetModules()) {
-                                mod->GUI_SetLabelVisibility(this->show_module_names);
+                                mod->present.label_visible = this->show_module_names;
                             }
                         } else {
                             vislib::sys::Log::DefaultLog.WriteError(
@@ -641,7 +641,7 @@ bool megamol::gui::configurator::GraphPresentation::StateFromJsonString(
                             config_state.at("param_extended_mode").get_to(this->param_extended_mode);
                             for (auto& module_ptr : inout_graph.GetModules()) {
                                 for (auto& parameter : module_ptr->parameters) {
-                                    parameter.GUI_SetExpert(this->param_extended_mode);
+                                    parameter.present.expert = this->param_extended_mode;
                                 }
                             }
                         } else {
@@ -726,7 +726,7 @@ bool megamol::gui::configurator::GraphPresentation::StateFromJsonString(
                                         bool module_found = false;
                                         for (auto& module_ptr : inout_graph.GetModules()) {
                                             if (module_ptr->FullName() == module_fullname) {
-                                                module_ptr->GUI_SetPosition(module_position);
+                                                module_ptr->present.position = module_position;
                                                 module_found = true;
                                             }
                                         }
@@ -905,7 +905,7 @@ bool megamol::gui::configurator::GraphPresentation::StateToJSON(Graph& inout_gra
             // Module positions
             for (auto& module_ptr : inout_graph.GetModules()) {
                 out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["modules"][module_ptr->FullName()]["graph_position"] = {
-                    module_ptr->GUI_GetPosition().x, module_ptr->GUI_GetPosition().y};
+                    module_ptr->present.position.x, module_ptr->present.position.y};
             }
             // Group interface slots
             size_t interface_number = 0;
@@ -1019,7 +1019,7 @@ void megamol::gui::configurator::GraphPresentation::present_menu(megamol::gui::c
 
     if (ImGui::Checkbox("Call Names", &this->show_call_names)) {
         for (auto& call_ptr : inout_graph.GetCalls()) {
-            call_ptr->GUI_SetLabelVisibility(this->show_call_names);
+            call_ptr->present.label_visible = this->show_call_names;
         }
         this->update = true;
     }
@@ -1027,7 +1027,7 @@ void megamol::gui::configurator::GraphPresentation::present_menu(megamol::gui::c
 
     if (ImGui::Checkbox("Module Names", &this->show_module_names)) {
         for (auto& module_ptr : inout_graph.GetModules()) {
-            module_ptr->GUI_SetLabelVisibility(this->show_module_names);
+            module_ptr->present.label_visible = this->show_module_names;
         }
         this->update = true;
     }
@@ -1037,14 +1037,14 @@ void megamol::gui::configurator::GraphPresentation::present_menu(megamol::gui::c
         for (auto& module_ptr : inout_graph.GetModules()) {
             for (auto& callslot_types : module_ptr->GetCallSlots()) {
                 for (auto& callslots : callslot_types.second) {
-                    callslots->GUI_SetLabelVisibility(this->show_slot_names);
+                    callslots->present.label_visible = this->show_slot_names;
                 }
             }
         }
         for (auto& group_ptr : inout_graph.GetGroups()) {
             for (auto& interfaceslots_map : group_ptr->GetInterfaceSlots()) {
                 for (auto& interfaceslot_ptr : interfaceslots_map.second) {
-                    interfaceslot_ptr->GUI_SetLabelVisibility(this->show_slot_names);
+                    interfaceslot_ptr->present.label_visible = this->show_slot_names;
                 }
             }
         }
@@ -1104,10 +1104,10 @@ void megamol::gui::configurator::GraphPresentation::present_canvas(
     // Update position and size of modules (and  call slots) and groups.
     if (this->update) {
         for (auto& mod : inout_graph.GetModules()) {
-            mod->GUI_Update(this->graph_state.canvas);
+            mod->UpdateGUI(this->graph_state.canvas);
         }
         for (auto& group : inout_graph.GetGroups()) {
-            group->GUI_Update(this->graph_state.canvas);
+            group->UpdateGUI(this->graph_state.canvas);
         }
         this->update = false;
     }
@@ -1133,13 +1133,13 @@ void megamol::gui::configurator::GraphPresentation::present_canvas(
         // 1] GROUPS and INTERFACE SLOTS --------------
         for (auto& group_ptr : inout_graph.GetGroups()) {
 
-            group_ptr->GUI_Present(phase, this->graph_state);
+            group_ptr->PresentGUI(phase, this->graph_state);
 
             // 2] MODULES and CALL SLOTS ----------------
             for (auto& module_ptr : inout_graph.GetModules()) {
-                if (module_ptr->GUI_GetGroupUID() == group_ptr->uid) {
+                if (module_ptr->present.group.uid == group_ptr->uid) {
 
-                    module_ptr->GUI_Present(phase, this->graph_state);
+                    module_ptr->PresentGUI(phase, this->graph_state);
 
                     // 3] CALLS ---------------------------------;
                     /// Check only for calls of caller slots for considering each call only once
@@ -1149,20 +1149,20 @@ void megamol::gui::configurator::GraphPresentation::present_canvas(
                             bool caller_group = false;
                             auto caller_ptr = call_ptr->GetCallSlot(CallSlotType::CALLER);
                             if (caller_ptr->IsParentModuleConnected()) {
-                                if (caller_ptr->GetParentModule()->GUI_GetGroupUID() == group_ptr->uid) {
+                                if (caller_ptr->GetParentModule()->present.group.uid == group_ptr->uid) {
                                     caller_group = true;
                                 }
                             }
                             bool callee_group = false;
                             auto callee_ptr = call_ptr->GetCallSlot(CallSlotType::CALLER);
                             if (callee_ptr->IsParentModuleConnected()) {
-                                if (callee_ptr->GetParentModule()->GUI_GetGroupUID() == group_ptr->uid) {
+                                if (callee_ptr->GetParentModule()->present.group.uid == group_ptr->uid) {
                                     callee_group = true;
                                 }
                             }
                             if (caller_group || callee_group) {
 
-                                call_ptr->GUI_Present(phase, this->graph_state);
+                                call_ptr->PresentGUI(phase, this->graph_state);
                             }
                         }
                     }
@@ -1171,8 +1171,8 @@ void megamol::gui::configurator::GraphPresentation::present_canvas(
         }
         // MODULES (non group members)
         for (auto& module_ptr : inout_graph.GetModules()) {
-            if (!module_ptr->GUI_IsGroupMember()) {
-                module_ptr->GUI_Present(phase, this->graph_state);
+            if (module_ptr->present.group.uid == GUI_INVALID_ID) {
+                module_ptr->PresentGUI(phase, this->graph_state);
             }
         }
         // CALLS (connected to call slots which are not part of module which is group member)
@@ -1180,19 +1180,19 @@ void megamol::gui::configurator::GraphPresentation::present_canvas(
             bool caller_group = false;
             auto caller_ptr = call_ptr->GetCallSlot(CallSlotType::CALLER);
             if (caller_ptr->IsParentModuleConnected()) {
-                if (caller_ptr->GetParentModule()->GUI_IsGroupMember()) {
+                if (caller_ptr->GetParentModule()->present.group.uid != GUI_INVALID_ID) {
                     caller_group = true;
                 }
             }
             bool callee_group = false;
             auto callee_ptr = call_ptr->GetCallSlot(CallSlotType::CALLER);
             if (callee_ptr->IsParentModuleConnected()) {
-                if (callee_ptr->GetParentModule()->GUI_IsGroupMember()) {
+                if (callee_ptr->GetParentModule()->present.group.uid != GUI_INVALID_ID) {
                     callee_group = true;
                 }
             }
             if ((!caller_group) && (!callee_group)) {
-                call_ptr->GUI_Present(phase, this->graph_state);
+                call_ptr->PresentGUI(phase, this->graph_state);
             }
         }
     }
@@ -1291,7 +1291,7 @@ void megamol::gui::configurator::GraphPresentation::present_parameters(
         if (changed) {
             for (auto& module_ptr : inout_graph.GetModules()) {
                 for (auto& parameter : module_ptr->parameters) {
-                    parameter.GUI_SetExpert(this->param_extended_mode);
+                    parameter.present.expert = this->param_extended_mode;
                 }
             }
         }
@@ -1317,7 +1317,7 @@ void megamol::gui::configurator::GraphPresentation::present_parameters(
         if (ImGui::Checkbox("Visibility", &this->params_visible)) {
             for (auto& module_ptr : inout_graph.GetModules()) {
                 for (auto& parameter : module_ptr->parameters) {
-                    parameter.GUI_SetVisibility(this->params_visible);
+                    parameter.present.SetGUIVisible(this->params_visible);
                 }
             }
         }
@@ -1327,7 +1327,7 @@ void megamol::gui::configurator::GraphPresentation::present_parameters(
         if (ImGui::Checkbox("Read-Only", &this->params_readonly)) {
             for (auto& module_ptr : inout_graph.GetModules()) {
                 for (auto& parameter : module_ptr->parameters) {
-                    parameter.GUI_SetReadOnly(this->params_readonly);
+                    parameter.present.SetGUIReadOnly(this->params_readonly);
                 }
             }
         }
@@ -1398,7 +1398,7 @@ void megamol::gui::configurator::GraphPresentation::present_parameters(
 
                             // Draw parameter
                             if (search_filter && param_name_space_open) {
-                                parameter.GUI_Present(ParameterPresentation::WidgetScope::LOCAL);
+                                parameter.PresentGUI(ParameterPresentation::WidgetScope::LOCAL);
                             }
                         }
                         while (param_indent_stack > 0) {
@@ -1484,7 +1484,7 @@ void megamol::gui::configurator::GraphPresentation::present_canvas_dragged_call(
                     }
                 }
                 if (selected_callslot_ptr != nullptr) {
-                    p1 = selected_callslot_ptr->GUI_GetPosition();
+                    p1 = selected_callslot_ptr->present.GetPosition();
                     found_valid_slot = true;
                 }
                 if (!found_valid_slot) {
@@ -1496,7 +1496,7 @@ void megamol::gui::configurator::GraphPresentation::present_canvas_dragged_call(
                         }
                     }
                     if (selected_interfaceslot_ptr != nullptr) {
-                        p1 = selected_interfaceslot_ptr->GUI_GetPosition();
+                        p1 = selected_interfaceslot_ptr->present.position;
                         found_valid_slot = true;
                     }
                 }
@@ -1556,11 +1556,11 @@ void megamol::gui::configurator::GraphPresentation::present_canvas_multiselectio
         ImVec2 module_size;
         this->graph_state.interact.modules_selected_uids.clear();
         for (auto& module_ptr : inout_graph.GetModules()) {
-            bool group_member = (module_ptr->GUI_GetGroupUID() != GUI_INVALID_ID);
-            if (!group_member || (group_member && module_ptr->GUI_IsVisibleInGroup())) {
-                module_size = module_ptr->GUI_GetSize() * this->graph_state.canvas.zooming;
+            bool group_member = (module_ptr->present.group.uid != GUI_INVALID_ID);
+            if (!group_member || (group_member && module_ptr->present.group.visible)) {
+                module_size = module_ptr->present.GetSize() * this->graph_state.canvas.zooming;
                 inner_rect_min =
-                    this->graph_state.canvas.offset + module_ptr->GUI_GetPosition() * this->graph_state.canvas.zooming;
+                    this->graph_state.canvas.offset + module_ptr->present.position * this->graph_state.canvas.zooming;
                 inner_rect_max = inner_rect_min + module_size;
                 if (((outer_rect_min.x < inner_rect_max.x) && (outer_rect_max.x > inner_rect_min.x) &&
                         (outer_rect_min.y < inner_rect_max.y) && (outer_rect_max.y > inner_rect_min.y))) {
@@ -1577,18 +1577,19 @@ void megamol::gui::configurator::GraphPresentation::present_canvas_multiselectio
 
 void megamol::gui::configurator::GraphPresentation::layout_graph(megamol::gui::configurator::Graph& inout_graph) {
 
-    ImVec2 init_position = megamol::gui::configurator::Module::GUI_GetDefaultModulePosition(this->graph_state.canvas);
+    ImVec2 init_position =
+        megamol::gui::configurator::ModulePresentation::GetDefaultModulePosition(this->graph_state.canvas);
 
     /// 1] Layout all grouped modules
     for (auto& group_ptr : inout_graph.GetGroups()) {
         this->layout(group_ptr->GetModules(), GroupPtrVectorType(), init_position);
-        group_ptr->GUI_Update(this->graph_state.canvas);
+        group_ptr->UpdateGUI(this->graph_state.canvas);
     }
 
     /// 2] Layout ungrouped modules and groups
     ModulePtrVectorType ungrouped_modules;
     for (auto& module_ptr : inout_graph.GetModules()) {
-        if (!module_ptr->GUI_IsGroupMember()) {
+        if (module_ptr->present.group.uid == GUI_INVALID_ID) {
             ungrouped_modules.emplace_back(module_ptr);
         }
     }
@@ -1692,8 +1693,8 @@ void megamol::gui::configurator::GraphPresentation::layout(
                                     layers.back().emplace_back(layout_item);
                                     added_item = true;
                                 }
-                            } else if (add_module_ptr->GUI_IsGroupMember()) {
-                                ImGuiID group_uid = add_module_ptr->GUI_GetGroupUID(); // != GUI_INVALID_ID
+                            } else if (add_module_ptr->present.group.uid != GUI_INVALID_ID) {
+                                ImGuiID group_uid = add_module_ptr->present.group.uid; // != GUI_INVALID_ID
                                 if (this->contains_group(groups, group_uid)) {
                                     GroupPtrType add_group_ptr;
                                     for (auto& group_ptr : groups) {
@@ -1839,8 +1840,8 @@ void megamol::gui::configurator::GraphPresentation::layout(
                         }
                     }
                 }
-                layer_item.module_ptr->GUI_SetPosition(pos);
-                auto module_size = layer_item.module_ptr->GUI_GetSize();
+                layer_item.module_ptr->present.position = pos;
+                auto module_size = layer_item.module_ptr->present.GetSize();
                 pos.y += (module_size.y + GUI_GRAPH_BORDER);
                 max_graph_element_width = std::max(module_size.x, max_graph_element_width);
                 found_layer_item = true;
@@ -1859,8 +1860,8 @@ void megamol::gui::configurator::GraphPresentation::layout(
                         }
                     }
                 }
-                layer_item.group_ptr->GUI_SetPosition(this->graph_state.canvas, pos);
-                auto group_size = layer_item.group_ptr->GUI_GetSize();
+                layer_item.group_ptr->SetGUIPosition(this->graph_state.canvas, pos);
+                auto group_size = layer_item.group_ptr->present.GetSize();
                 pos.y += (group_size.y + GUI_GRAPH_BORDER);
                 max_graph_element_width = std::max(group_size.x, max_graph_element_width);
                 found_layer_item = true;
@@ -1886,8 +1887,9 @@ bool megamol::gui::configurator::GraphPresentation::connected_callslot(
                 retval = true;
                 break;
             }
-            if (connected_callslot_ptr->GUI_IsGroupInterface()) {
-                if (this->contains_interfaceslot(groups, connected_callslot_ptr->GUI_GetGroupInterface()->uid)) {
+            if (connected_callslot_ptr->present.group.interfaceslot_ptr != nullptr) {
+                if (this->contains_interfaceslot(
+                        groups, connected_callslot_ptr->present.group.interfaceslot_ptr->uid)) {
                     retval = true;
                     break;
                 }
@@ -1912,8 +1914,9 @@ bool megamol::gui::configurator::GraphPresentation::connected_interfaceslot(cons
                     retval = true;
                     break;
                 }
-                if (connected_callslot_ptr->GUI_IsGroupInterface()) {
-                    if (this->contains_interfaceslot(groups, connected_callslot_ptr->GUI_GetGroupInterface()->uid)) {
+                if (connected_callslot_ptr->present.group.interfaceslot_ptr != nullptr) {
+                    if (this->contains_interfaceslot(
+                            groups, connected_callslot_ptr->present.group.interfaceslot_ptr->uid)) {
                         retval = true;
                         break;
                     }
@@ -2034,7 +2037,7 @@ ImGuiID megamol::gui::configurator::Graph::AddEmptyModule(void) {
         auto mod_ptr = std::make_shared<Module>(mod_uid);
         this->modules.emplace_back(mod_ptr);
         this->dirty_flag = true;
-        
+
 #ifdef GUI_VERBOSE
         vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Added empty module to project.\n");
 #endif // GUI_VERBOSE
@@ -2049,7 +2052,8 @@ ImGuiID megamol::gui::configurator::Graph::AddEmptyModule(void) {
         return GUI_INVALID_ID;
     }
 
-    vislib::sys::Log::DefaultLog.WriteError("Unable to add empty module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    vislib::sys::Log::DefaultLog.WriteError(
+        "Unable to add empty module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return GUI_INVALID_ID;
 }
 
@@ -2068,19 +2072,19 @@ ImGuiID megamol::gui::configurator::Graph::AddModule(
                 mod_ptr->is_view = mod.is_view;
                 mod_ptr->name = this->generate_unique_module_name(mod.class_name);
                 mod_ptr->is_view_instance = false;
-                mod_ptr->GUI_SetLabelVisibility(this->present.GetModuleLabelVisibility());
+                mod_ptr->present.label_visible = this->present.GetModuleLabelVisibility();
 
                 for (auto& p : mod.parameters) {
                     Parameter param_slot(megamol::gui::GenerateUniqueID(), p.type, p.storage, p.minval, p.maxval);
                     param_slot.full_name = p.full_name;
                     param_slot.description = p.description;
                     param_slot.SetValueString(p.default_value, true);
-                    param_slot.GUI_SetVisibility(p.gui_visibility);
-                    param_slot.GUI_SetReadOnly(p.gui_read_only);
-                    param_slot.GUI_SetPresentation(p.gui_presentation);
+                    param_slot.present.SetGUIVisible(p.gui_visibility);
+                    param_slot.present.SetGUIReadOnly(p.gui_read_only);
+                    param_slot.present.SetGUIPresentation(p.gui_presentation);
                     // Apply current global configurator parameter gui settings
                     // Do not apply global read-only and visibility.
-                    param_slot.GUI_SetExpert(this->present.param_extended_mode);
+                    param_slot.present.expert = this->present.param_extended_mode;
 
                     mod_ptr->parameters.emplace_back(param_slot);
                 }
@@ -2092,7 +2096,7 @@ ImGuiID megamol::gui::configurator::Graph::AddModule(
                         callslot.description = c.description;
                         callslot.compatible_call_idxs = c.compatible_call_idxs;
                         callslot.type = c.type;
-                        callslot.GUI_SetLabelVisibility(this->present.GetCallSlotLabelVisibility());
+                        callslot.present.label_visible = this->present.GetCallSlotLabelVisibility();
 
                         mod_ptr->AddCallSlot(std::make_shared<CallSlot>(callslot));
                     }
@@ -2106,7 +2110,7 @@ ImGuiID megamol::gui::configurator::Graph::AddModule(
 
                 this->modules.emplace_back(mod_ptr);
                 this->dirty_flag = true;
-                                
+
 #ifdef GUI_VERBOSE
                 vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Added module '%s' (uid %i) to project '%s'.\n",
                     mod_ptr->class_name.c_str(), mod_ptr->uid, this->name.c_str());
@@ -2230,7 +2234,7 @@ bool megamol::gui::configurator::Graph::AddCall(
         call_ptr->description = call_stock_data.description;
         call_ptr->plugin_name = call_stock_data.plugin_name;
         call_ptr->functions = call_stock_data.functions;
-        call_ptr->GUI_SetLabelVisibility(this->present.GetCallLabelVisibility());
+        call_ptr->present.label_visible = this->present.GetCallLabelVisibility();
 
         // Delete calls when CALLERs should be connected to new call slot
         if ((callslot_1->type == CallSlotType::CALLER) && (callslot_1->CallsConnected())) {
@@ -2263,17 +2267,19 @@ bool megamol::gui::configurator::Graph::AddCall(
 
             // Add connected call slots to interface of group of the parent module
             if (callslot_1->IsParentModuleConnected() && callslot_2->IsParentModuleConnected()) {
-                ImGuiID slot_1_parent_group_uid = callslot_1->GetParentModule()->GUI_GetGroupUID();
-                ImGuiID slot_2_parent_group_uid = callslot_2->GetParentModule()->GUI_GetGroupUID();
+                ImGuiID slot_1_parent_group_uid = callslot_1->GetParentModule()->present.group.uid;
+                ImGuiID slot_2_parent_group_uid = callslot_2->GetParentModule()->present.group.uid;
                 if (slot_1_parent_group_uid != slot_2_parent_group_uid) {
-                    if ((slot_1_parent_group_uid != GUI_INVALID_ID) && !(callslot_1->GUI_IsGroupInterface())) {
+                    if ((slot_1_parent_group_uid != GUI_INVALID_ID) &&
+                        (callslot_1->present.group.interfaceslot_ptr == nullptr)) {
                         for (auto& group_ptr : this->groups) {
                             if (group_ptr->uid == slot_1_parent_group_uid) {
                                 group_ptr->AddInterfaceSlot(callslot_1);
                             }
                         }
                     }
-                    if ((slot_2_parent_group_uid != GUI_INVALID_ID) && !(callslot_2->GUI_IsGroupInterface())) {
+                    if ((slot_2_parent_group_uid != GUI_INVALID_ID) &&
+                        (callslot_2->present.group.interfaceslot_ptr == nullptr)) {
                         for (auto& group_ptr : this->groups) {
                             if (group_ptr->uid == slot_2_parent_group_uid) {
                                 group_ptr->AddInterfaceSlot(callslot_2);
@@ -2352,10 +2358,10 @@ bool megamol::gui::configurator::Graph::AddCall(
                 (drag_interfaceslot_ptr != nullptr) ? (drag_interfaceslot_ptr) : (drop_interfaceslot_ptr);
             CallSlotPtrType callslot_ptr = (drop_callslot_ptr != nullptr) ? (drop_callslot_ptr) : (drag_callslot_ptr);
 
-            ImGuiID interfaceslot_group_uid = interface_ptr->GUI_GetGroupUID();
+            ImGuiID interfaceslot_group_uid = interface_ptr->present.group.uid;
             ImGuiID callslot_group_uid = GUI_INVALID_ID;
             if (callslot_ptr->IsParentModuleConnected()) {
-                callslot_group_uid = callslot_ptr->GetParentModule()->GUI_GetGroupUID();
+                callslot_group_uid = callslot_ptr->GetParentModule()->present.group.uid;
             }
 
             if (interfaceslot_group_uid == callslot_group_uid) {
@@ -2423,16 +2429,14 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
                 auto callee = call_ptr->GetCallSlot(CallSlotType::CALLEE);
                 if (caller != nullptr) {
                     caller_uid = caller->uid;
-                    if (caller->GUI_IsGroupInterface()) {
-                        caller_uid = caller->GUI_GetGroupInterface()->uid;
+                    if (caller->present.group.interfaceslot_ptr != nullptr) {
+                        caller_uid = caller->present.group.interfaceslot_ptr->uid;
                     }
                 }
                 if (callee != nullptr) {
-                    if (callee->GUI_IsGroupInterface()) {
-                        callee_uid = callee->uid;
-                        if (callee->GUI_IsGroupInterface()) {
-                            callee_uid = callee->GUI_GetGroupInterface()->uid;
-                        }
+                    callee_uid = callee->uid;
+                    if (callee->present.group.interfaceslot_ptr != nullptr) {
+                        callee_uid = callee->present.group.interfaceslot_ptr->uid;
                     }
                 }
             }
@@ -2444,15 +2448,15 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
                 auto caller = call_ptr->GetCallSlot(CallSlotType::CALLER);
                 auto callee = call_ptr->GetCallSlot(CallSlotType::CALLEE);
                 if (caller != nullptr) {
-                    if (caller->GUI_IsGroupInterface()) {
-                        caller_fits = (caller_uid == caller->GUI_GetGroupInterface()->uid);
+                    if (caller->present.group.interfaceslot_ptr != nullptr) {
+                        caller_fits = (caller_uid == caller->present.group.interfaceslot_ptr->uid);
                     } else {
                         caller_fits = (caller_uid == caller->uid);
                     }
                 }
                 if (callee != nullptr) {
-                    if (callee->GUI_IsGroupInterface()) {
-                        callee_fits = (callee_uid == callee->GUI_GetGroupInterface()->uid);
+                    if (callee->present.group.interfaceslot_ptr != nullptr) {
+                        callee_fits = (callee_uid == callee->present.group.interfaceslot_ptr->uid);
                     } else {
                         callee_fits = (callee_uid == callee->uid);
                     }

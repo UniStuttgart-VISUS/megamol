@@ -36,6 +36,8 @@ typedef std::vector<ModulePtrType> ModulePtrVectorType;
  */
 class ModulePresentation {
 public:
+    friend class Module;
+
     struct GroupState {
         ImGuiID uid;
         bool visible;
@@ -43,45 +45,41 @@ public:
     };
 
     // VARIABLES --------------------------------------------------------------
-    
+
     GroupState group;
-    bool label_visible; 
+    bool label_visible;
     // Relative position without considering canvas offset and zooming
     ImVec2 position;
-    // Relative size without considering zooming
-    ImVec2 size;   
-    
+
     // FUNCTIONS --------------------------------------------------------------
 
     ModulePresentation(void);
     ~ModulePresentation(void);
 
-    inline ImVec2 GetPosition(void) { return this->position; }
-    inline ImVec2 GetSize(void) { return this->size; }
     static ImVec2 GetDefaultModulePosition(const GraphCanvasType& canvas);
+
+    inline ImVec2 GetSize(void) { return this->size; }
 
     void SetSelectedSlotPosition(void) { this->set_selected_slot_position = true; }
     void SetScreenPosition(ImVec2 pos) { this->set_screen_position = pos; }
-    inline void SetPosition(ImVec2 pos) { this->position = pos; }
 
 private:
     // VARIABLES --------------------------------------------------------------
-    
+
+    // Relative size without considering zooming
+    ImVec2 size;
     GUIUtils utils;
     bool selected;
     bool update;
     bool show_params;
     ImVec2 set_screen_position;
-    bool set_selected_slot_position;  
-    
+    bool set_selected_slot_position;
+
     // FUNCTIONS --------------------------------------------------------------
-    
-    friend void Module::GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state); 
+
     void Present(megamol::gui::PresentPhase phase, Module& inout_module, GraphItemsStateType& state);
-    
-    friend void Module::GUI_Update(const GraphCanvasType& in_canvas);
     void Update(Module& inout_module, const GraphCanvasType& in_canvas);
-    
+
     inline bool found_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {
         return (
             std::find(modules_uid_vector.begin(), modules_uid_vector.end(), module_uid) != modules_uid_vector.end());
@@ -108,7 +106,7 @@ private:
  * Defines module data structure for graph.
  */
 class Module {
-public:    
+public:
     struct StockModule {
         std::string class_name;
         std::string description;
@@ -119,17 +117,17 @@ public:
     };
 
     // VARIABLES --------------------------------------------------------------
-    
+
     const ImGuiID uid;
-    ModulePresentation present; 
-    
+    ModulePresentation present;
+
     // Init when adding module from stock
     std::string class_name;
     std::string description;
     std::string plugin_name;
     bool is_view;
     std::vector<Parameter> parameters;
-    
+
     // Init when adding module to graph
     std::string name;
     bool is_view_instance;
@@ -138,7 +136,7 @@ public:
 
     Module(ImGuiID uid);
     ~Module();
-    
+
     bool AddCallSlot(CallSlotPtrType callslot);
     bool DeleteCallSlots(void);
     bool GetCallSlot(ImGuiID callslot_uid, CallSlotPtrType& out_callslot_ptr);
@@ -154,15 +152,15 @@ public:
     }
 
     // Presentation ----------------------------------------------------
-    
-    inline void GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
+
+    inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
         this->present.Present(phase, *this, state);
     }
-    inline void GUI_Update(const GraphCanvasType& in_canvas) { this->present.Update(*this, in_canvas); }
+    inline void UpdateGUI(const GraphCanvasType& in_canvas) { this->present.Update(*this, in_canvas); }
 
 private:
     // VARIABLES --------------------------------------------------------------
-    
+
     CallSlotPtrMapType callslots;
 };
 

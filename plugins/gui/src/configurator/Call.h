@@ -40,25 +40,25 @@ typedef std::vector<CallPtrType> CallPtrVectorType;
  */
 class CallPresentation {
 public:
+    friend class Call;
 
     // VARIABLES --------------------------------------------------------------
-    
+
     bool label_visible;
-        
+
     // FUNCTIONS --------------------------------------------------------------
-       
+
     CallPresentation(void);
     ~CallPresentation(void);
 
 private:
     // VARIABLES --------------------------------------------------------------
-    
+
     bool selected;
     GUIUtils utils;
-    
+
     // FUNCTIONS --------------------------------------------------------------
-           
-    friend void Call::GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state);
+
     void Present(megamol::gui::PresentPhase phase, Call& inout_call, GraphItemsStateType& state);
 };
 
@@ -74,20 +74,20 @@ public:
         std::string plugin_name;
         std::vector<std::string> functions;
     };
-    
+
     // VARIABLES --------------------------------------------------------------
-        
-    const ImGuiID uid;        
+
+    const ImGuiID uid;
     CallPresentation present;
-    
+
     // Init when adding call from stock
     std::string class_name;
     std::string description;
     std::string plugin_name;
     std::vector<std::string> functions;
-        
+
     // FUNCTIONS --------------------------------------------------------------
-       
+
     Call(ImGuiID uid);
     ~Call();
 
@@ -98,13 +98,13 @@ public:
 
     // Presentation ----------------------------------------------------
 
-    inline void GUI_Present(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
+    inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
         this->present.Present(phase, *this, state);
     }
 
 private:
     // VARIABLES --------------------------------------------------------------
-    
+
     std::map<CallSlotType, CallSlotPtrType> connected_callslots;
 };
 

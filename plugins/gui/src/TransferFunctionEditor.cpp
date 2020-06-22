@@ -535,7 +535,7 @@ bool TransferFunctionEditor::Draw(bool connected_parameter_mode) {
                     if (this->GetTransferFunction(tf)) {
                         if (this->connected_parameter_ptr->type == ParamType::TRANSFERFUNCTION) {
                             this->connected_parameter_ptr->SetValue(tf);
-                            this->connected_parameter_ptr->GUI_SetTransferFunctionEditorHash(
+                            this->connected_parameter_ptr->present.SetTransferFunctionEditorHash(
                                 this->connected_parameter_ptr->GetTransferFunctionHash());
                         }
                     }
