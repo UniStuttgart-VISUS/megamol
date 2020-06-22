@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <future>
 #include <list>
 #include <mutex>
 #include <shared_mutex>
@@ -75,6 +76,15 @@ public:
 
     using CallList_t = std::list<CallInstance_t>;
 
+    using lua_task_result_t = std::tuple<int, std::string>;
+    using lua_task_future_t = std::future<lua_task_result_t>;
+
+    struct lua_task {
+        std::string script;
+        std::optional<lua_task_future_t> future;
+    };
+
+    using lua_tasks_queue_t = std::list<lua_task>;
 
     //////////////////////////// ctor / dtor ///////////////////////////////
 
@@ -168,6 +178,8 @@ public:
     ModuleList_t const& ListModules() const;
 
     std::vector<megamol::core::param::AbstractParam*> ListParameters() const;
+
+    std::optional<lua_task_future_t> QueueLuaScript(std::string const& script, bool want_result);
 
     bool HasPendingRequests();
 

@@ -40,6 +40,7 @@ Call::~Call(void) {
         this->callee->ConnectCall(nullptr);
         this->callee = nullptr; // DO NOT DELETE
     }
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 350, "destructed call \"%s\"\n", typeid(*this).name());
     ARY_SAFE_DELETE(this->funcMap);
 }
 

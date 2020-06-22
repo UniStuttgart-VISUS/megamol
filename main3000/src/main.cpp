@@ -4,7 +4,10 @@
 #include "AbstractRenderAPI.hpp"
 #include "OpenGL_GLFW_RAPI.hpp"
 
-int main() {
+#include "mmcore/LuaAPI.h"
+#include <cxxopts.hpp>
+
+int main(int argc, char *argv[]) {
     megamol::core::CoreInstance core;
     core.Initialise();
 
@@ -25,6 +28,24 @@ int main() {
 
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider, std::move(gl_api), gl_api_name);
 
+#if 0
+    megamol::core::LuaAPI lua_api(graph, true);
+
+    cxxopts::Options options(argv[0], "MegaMol Frontend 3000");
+    options.positional_help("<additional project files>");
+    options.add_options()("project-files", "projects to load", cxxopts::value<std::vector<std::string>>());
+    options.parse_positional({"project-files"});
+    auto parsed_options = options.parse(argc, argv);
+    std::string res;
+    if (parsed_options.count("project-files")) {
+        const auto& v = parsed_options["project-files"].as<std::vector<std::string>>();
+        for (const auto& p : v) {
+            lua_api.RunFile(p, res);
+        }
+    }
+
+#else
+
 	// TODO: verify valid input IDs/names in graph instantiation methods - dont defer validation until executing the changes
 	graph.CreateModule("View3D_2", gl_api_name + "::view");
 	graph.CreateModule("SphereRenderer", gl_api_name + "::spheres");
@@ -32,6 +53,7 @@ int main() {
 	graph.CreateCall("CallRender3D_2", gl_api_name + "::view::rendering", gl_api_name + "::spheres::rendering");
 	graph.CreateCall("MultiParticleDataCall", gl_api_name + "::spheres::getdata", gl_api_name + "::datasource::getData");
 
+#endif
 
 	while (!apiRawPtr->shouldShutdown()) {
         graph.RenderNextFrame();

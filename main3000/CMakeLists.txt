@@ -7,6 +7,9 @@ option(BUILD_MAIN3000 "build main3000" ON)
 
 if(BUILD_MAIN3000)
   project(main3000)
+
+  require_external(libcxxopts)
+
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
   # Check option dependencies: First list item is always the current build option,
@@ -23,7 +26,7 @@ if(BUILD_MAIN3000)
     PROPERTIES #RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
     OUTPUT_NAME ${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME} PRIVATE "src" "include")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core render_api)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core render_api libcxxopts)
 
   target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS})
 
