@@ -193,7 +193,7 @@ void initTraceAndLog() {
     vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
     vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_ALL);
     vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-    vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::StreamTarget(stdout, vislib::sys::Log::LEVEL_ALL));
+    vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::StreamTarget(std::cout, vislib::sys::Log::LEVEL_ALL));
     megamol::console::utility::AboutInfo::LogGreeting();
     megamol::console::utility::AboutInfo::LogVersionInfo();
     megamol::console::utility::AboutInfo::LogStartTime();

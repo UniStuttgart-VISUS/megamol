@@ -160,7 +160,7 @@ megamol::core::CoreInstance::CoreInstance(void)
 #else
     this->log.SetEchoLevel(vislib::sys::Log::LEVEL_ERROR);
 #endif
-    this->log.SetEchoTarget(new vislib::sys::Log::StreamTarget(stdout, vislib::sys::Log::LEVEL_ALL));
+    this->log.SetEchoTarget(new vislib::sys::Log::StreamTarget(std::cout, vislib::sys::Log::LEVEL_ALL));
     this->log.SetOfflineMessageBufferSize(25);
     // redirect default log to instance log of last instance
     //  not perfect, but better than nothing.

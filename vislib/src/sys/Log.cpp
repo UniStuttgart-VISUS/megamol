@@ -64,6 +64,9 @@ void vislib::sys::Log::Target::Flush(void) {
  */
 vislib::sys::Log::DebugOutputTarget::DebugOutputTarget(UINT level)
         : Target(level) {
+    sink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
+    sink->set_pattern(std_pattern);
+    logger = std::make_shared<spdlog::logger>("default_debug", sink);
     // intentionally empty
 }
 
@@ -83,11 +86,12 @@ void vislib::sys::Log::DebugOutputTarget::Msg(UINT level,
         vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
         const char *msg) {
     if (level > this->Level()) return;
-    char tmp[21];
+    /*char tmp[21];
     tmp[0] = tmp[20] = 0;
     _snprintf_s(tmp, 20, 20, "%.4d|", level);
     ::OutputDebugStringA(tmp);
-    ::OutputDebugStringA(msg);
+    ::OutputDebugStringA(msg);*/
+    logger->info("%.4d|%s", level, msg);
 }
 
 #endif /* _WIN32 */
@@ -97,35 +101,40 @@ void vislib::sys::Log::DebugOutputTarget::Msg(UINT level,
  * vislib::sys::Log::FileTarget::FileTarget
  */
 vislib::sys::Log::FileTarget::FileTarget(const char *path, UINT level)
-        : Target(level), stream(NULL) {
+        : Target(level)/*, stream(NULL)*/ {
 
-    int newFile = -1;
-#ifdef _WIN32
-#if (_MSC_VER >= 1400)
-    if (_sopen_s(&newFile, path, _O_APPEND | _O_CREAT | _O_TEXT | _O_TRUNC 
-            | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE) != 0) {
-        newFile = -1;
-    }
-#else /* (_MSC_VER >= 1400) */
-    newFile = _sopen(path, _O_APPEND | _O_CREAT | _O_TEXT | _O_TRUNC
-        | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE);
-#endif /* (_MSC_VER >= 1400) */
-#else /* _WIN32 */
-    newFile = open(path, O_APPEND | O_CREAT | O_LARGEFILE | O_TRUNC
-        | O_WRONLY, S_IRWXU | S_IRWXG);
-#endif /* _WIN32 */
-    this->stream = (newFile == -1) ? NULL : 
-#ifdef _WIN32
-        _fdopen(newFile, "wc");
-#else /* _WIN32 */
-        fdopen(newFile, "w");
-#endif /* _WIN32 */
+    sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path, true);
+    sink->set_pattern(std_pattern);
+    logger = std::make_shared<spdlog::logger>("default_file", sink);
+    filename = path;
 
-    if (this->stream != NULL) {
-        this->filename = path;
-    } else {
-        this->filename.Clear();
-    }
+//    int newFile = -1;
+//#ifdef _WIN32
+//#if (_MSC_VER >= 1400)
+//    if (_sopen_s(&newFile, path, _O_APPEND | _O_CREAT | _O_TEXT | _O_TRUNC 
+//            | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE) != 0) {
+//        newFile = -1;
+//    }
+//#else /* (_MSC_VER >= 1400) */
+//    newFile = _sopen(path, _O_APPEND | _O_CREAT | _O_TEXT | _O_TRUNC
+//        | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE);
+//#endif /* (_MSC_VER >= 1400) */
+//#else /* _WIN32 */
+//    newFile = open(path, O_APPEND | O_CREAT | O_LARGEFILE | O_TRUNC
+//        | O_WRONLY, S_IRWXU | S_IRWXG);
+//#endif /* _WIN32 */
+//    this->stream = (newFile == -1) ? NULL : 
+//#ifdef _WIN32
+//        _fdopen(newFile, "wc");
+//#else /* _WIN32 */
+//        fdopen(newFile, "w");
+//#endif /* _WIN32 */
+//
+//    if (this->stream != NULL) {
+//        this->filename = path;
+//    } else {
+//        this->filename.Clear();
+//    }
 
 }
 
@@ -134,36 +143,41 @@ vislib::sys::Log::FileTarget::FileTarget(const char *path, UINT level)
  * vislib::sys::Log::FileTarget::FileTarget
  */
 vislib::sys::Log::FileTarget::FileTarget(const wchar_t *path, UINT level)
-        : Target(level), stream(NULL) {
+        : Target(level)/*, stream(NULL)*/ {
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> cvt;
+    sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(cvt.to_bytes(path), true);
+    sink->set_pattern(std_pattern);
+    logger = std::make_shared<spdlog::logger>("default_file", sink);
+    filename = path;
 
-    int newFile = -1;
-#ifdef _WIN32
-#if (_MSC_VER >= 1400)
-    if (_wsopen_s(&newFile, path, _O_APPEND | _O_CREAT | _O_TEXT | _O_TRUNC
-            | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE) != 0) {
-        newFile = -1;
-    }
-#else /* (_MSC_VER >= 1400) */
-    newFile = _wsopen(path, _O_APPEND | _O_CREAT | _O_TEXT | _O_TRUNC
-        | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE);
-#endif /* (_MSC_VER >= 1400) */
-#else /* _WIN32 */
-    newFile = open(W2A(path), O_APPEND | O_CREAT | O_LARGEFILE | O_TRUNC
-        | O_WRONLY, S_IRWXU | S_IRWXG);
-#endif /* _WIN32 */
-
-    this->stream = (newFile == -1) ? NULL : 
-#ifdef _WIN32
-        _fdopen(newFile, "wc");
-#else /* _WIN32 */
-        fdopen(newFile, "w");
-#endif /* _WIN32 */
-
-    if (this->stream != NULL) {
-        this->filename = path;
-    } else {
-        this->filename.Clear();
-    }
+//    int newFile = -1;
+//#ifdef _WIN32
+//#if (_MSC_VER >= 1400)
+//    if (_wsopen_s(&newFile, path, _O_APPEND | _O_CREAT | _O_TEXT | _O_TRUNC
+//            | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE) != 0) {
+//        newFile = -1;
+//    }
+//#else /* (_MSC_VER >= 1400) */
+//    newFile = _wsopen(path, _O_APPEND | _O_CREAT | _O_TEXT | _O_TRUNC
+//        | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE);
+//#endif /* (_MSC_VER >= 1400) */
+//#else /* _WIN32 */
+//    newFile = open(W2A(path), O_APPEND | O_CREAT | O_LARGEFILE | O_TRUNC
+//        | O_WRONLY, S_IRWXU | S_IRWXG);
+//#endif /* _WIN32 */
+//
+//    this->stream = (newFile == -1) ? NULL : 
+//#ifdef _WIN32
+//        _fdopen(newFile, "wc");
+//#else /* _WIN32 */
+//        fdopen(newFile, "w");
+//#endif /* _WIN32 */
+//
+//    if (this->stream != NULL) {
+//        this->filename = path;
+//    } else {
+//        this->filename.Clear();
+//    }
 
 }
 
@@ -172,11 +186,12 @@ vislib::sys::Log::FileTarget::FileTarget(const wchar_t *path, UINT level)
  * vislib::sys::Log::FileTarget::~FileTarget
  */
 vislib::sys::Log::FileTarget::~FileTarget(void) {
-    if (this->stream != NULL) {
+    /*if (this->stream != NULL) {
         fflush(this->stream);
         fclose(this->stream);
         this->stream = NULL;
-    }
+    }*/
+    logger->flush();
 }
 
 
@@ -184,9 +199,10 @@ vislib::sys::Log::FileTarget::~FileTarget(void) {
  * vislib::sys::Log::FileTarget::Flush
  */
 void vislib::sys::Log::FileTarget::Flush(void) {
-    if (this->stream != NULL) {
+    /*if (this->stream != NULL) {
         fflush(this->stream);
-    }
+    }*/
+    logger->flush();
 }
 
 
@@ -196,7 +212,7 @@ void vislib::sys::Log::FileTarget::Flush(void) {
 void vislib::sys::Log::FileTarget::Msg(UINT level,
         vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
         const char *msg) {
-    if ((this->stream == NULL) || (level > this->Level())) return;
+    if (/*(this->stream == NULL) || */(level > this->Level())) return;
 
     struct tm *timeStamp;
 #ifdef _WIN32
@@ -214,9 +230,16 @@ void vislib::sys::Log::FileTarget::Msg(UINT level,
     timeStamp = localtime(&time);
 #endif /* _WIN32 */
 
-    fprintf(this->stream, "%2d:%.2d:%.2d|%8x|%4u|%s", 
+    /*fprintf(this->stream, "%2d:%.2d:%.2d|%8x|%4u|%s", 
         timeStamp->tm_hour, timeStamp->tm_min, timeStamp->tm_sec, 
-        static_cast<unsigned int>(sid), level, msg);
+        static_cast<unsigned int>(sid), level, msg);*/
+
+    /*logger->info("%2d:%.2d:%.2d|%8x|%4u|%s", timeStamp->tm_hour, timeStamp->tm_min, timeStamp->tm_sec,
+        static_cast<unsigned int>(sid), level, msg);*/
+    std::string str(msg);
+    str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+    logger->info("{}:{}:{}|{}|{}|{}", timeStamp->tm_hour, timeStamp->tm_min, timeStamp->tm_sec,
+        static_cast<unsigned int>(sid), level, str);
 }
 
 /*****************************************************************************/
@@ -336,7 +359,7 @@ void vislib::sys::Log::RedirectTarget::Msg(UINT level,
  */
 const vislib::SmartPtr<vislib::sys::Log::Target>
 vislib::sys::Log::StreamTarget::StdOut
-    = new vislib::sys::Log::StreamTarget(stdout);
+    = new vislib::sys::Log::StreamTarget(std::cout);
 
 
 /*
@@ -344,14 +367,17 @@ vislib::sys::Log::StreamTarget::StdOut
  */
 const vislib::SmartPtr<vislib::sys::Log::Target>
 vislib::sys::Log::StreamTarget::StdErr
-    = new vislib::sys::Log::StreamTarget(stderr);
+    = new vislib::sys::Log::StreamTarget(std::cerr);
 
 
 /*
  * vislib::sys::Log::StreamTarget::StreamTarget
  */
-vislib::sys::Log::StreamTarget::StreamTarget(FILE *stream, UINT level)
-        : Target(level), stream(stream) {
+vislib::sys::Log::StreamTarget::StreamTarget(std::ostream& stream, UINT level)
+        : Target(level)/*, stream(stream)*/ {
+    sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(stream);
+    sink->set_pattern(std_pattern);
+    logger = std::make_shared<spdlog::logger>("default_stream", sink);
     // intentionally empty
 }
 
@@ -368,9 +394,10 @@ vislib::sys::Log::StreamTarget::~StreamTarget(void) {
  * vislib::sys::Log::StreamTarget::Flush
  */
 void vislib::sys::Log::StreamTarget::Flush(void) {
-    if (this->stream != NULL) {
+    /*if (this->stream != NULL) {
         fflush(this->stream);
-    }
+    }*/
+    logger->flush();
 }
 
 
@@ -380,8 +407,10 @@ void vislib::sys::Log::StreamTarget::Flush(void) {
 void vislib::sys::Log::StreamTarget::Msg(UINT level,
         vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
         const char *msg) {
-    if ((this->stream == NULL) || (level > this->Level())) return;
-    fprintf(this->stream, "%.4u|%s", level, msg);
+    /*if ((this->stream == NULL) || (level > this->Level())) return;
+    fprintf(this->stream, "%.4u|%s", level, msg);*/
+    if ((level > this->Level())) return;
+    logger->info("%.4u|%s", level, msg);
 }
 
 /*****************************************************************************/

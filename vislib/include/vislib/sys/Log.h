@@ -20,7 +20,14 @@
 #include "vislib/StringConverter.h"
 #include <cstdio>
 #include <ctime>
+#include <string>
+#include <iostream>
+#include <codecvt>
 
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/ostream_sink.h"
+#include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/sinks/msvc_sink.h"
 
 namespace vislib {
 namespace sys {
@@ -31,6 +38,8 @@ namespace sys {
      */
     class Log {
     public:
+
+        static constexpr const char* std_pattern = "%v";
 
         /** type for time stamps */
         typedef time_t TimeStamp;
@@ -173,6 +182,9 @@ namespace sys {
                 const char *msg);
 
         private:
+            std::shared_ptr<spdlog::sinks::msvc_sink_mt> sink;
+
+            std::shared_ptr<spdlog::logger> logger;
         };
 #endif /* _WIN32 */
 
@@ -227,10 +239,14 @@ namespace sys {
         private:
 
             /** The log file used by this target */
-            FILE *stream;
+            //FILE *stream;
 
             /** The file name of the log file used */
             vislib::StringW filename;
+
+            std::shared_ptr<spdlog::sinks::basic_file_sink_mt> sink;
+
+            std::shared_ptr<spdlog::logger> logger;
 
         };
 
@@ -406,7 +422,7 @@ namespace sys {
              * @param stream The stream to write the log messages to
              * @param level The log level used for this target
              */
-            StreamTarget(FILE *stream, UINT level = Log::LEVEL_ERROR);
+            StreamTarget(std::ostream& stream, UINT level = Log::LEVEL_ERROR);
 
             /** Dtor */
             virtual ~StreamTarget(void);
@@ -430,23 +446,27 @@ namespace sys {
              *
              * @param log The new targetted log object
              */
-            inline void SetTargetLog(FILE *stream) {
+            /*inline void SetTargetLog(std::ostream& stream) {
                 this->stream = stream;
-            }
+            }*/
 
             /**
              * Answer the targetted log object
              *
              * @return The targetted log object
              */
-            inline FILE* TargetStream(void) const {
-                return this->stream;
-            }
+            /*inline std::ostream TargetStream(void) const {
+                return this->stream.;
+            }*/
 
         private:
 
              /** The stream used by this target */
-             FILE *stream;
+             //std::ostream stream;
+
+             std::shared_ptr<spdlog::sinks::ostream_sink_mt> sink;
+
+             std::shared_ptr<spdlog::logger> logger;
 
         };
 
