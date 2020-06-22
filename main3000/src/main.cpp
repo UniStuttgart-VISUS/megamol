@@ -26,16 +26,30 @@ int main() {
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider, std::move(gl_api), gl_api_name);
 
 	// TODO: verify valid input IDs/names in graph instantiation methods - dont defer validation until executing the changes
-	graph.QueueModuleInstantiation("View3D_2", gl_api_name + "::view");
-	graph.QueueModuleInstantiation("SphereRenderer", gl_api_name + "::spheres");
-	graph.QueueModuleInstantiation("TestSpheresDataSource", gl_api_name + "::datasource");
-	graph.QueueCallInstantiation("CallRender3D_2", gl_api_name + "::view::rendering", gl_api_name + "::spheres::rendering");
-	graph.QueueCallInstantiation("MultiParticleDataCall", gl_api_name + "::spheres::getdata", gl_api_name + "::datasource::getData");
+	graph.CreateModule("View3D_2", gl_api_name + "::view");
+	graph.CreateModule("SphereRenderer", gl_api_name + "::spheres");
+	graph.CreateModule("TestSpheresDataSource", gl_api_name + "::datasource");
+	graph.CreateCall("CallRender3D_2", gl_api_name + "::view::rendering", gl_api_name + "::spheres::rendering");
+	graph.CreateCall("MultiParticleDataCall", gl_api_name + "::spheres::getdata", gl_api_name + "::datasource::getData");
 
-	graph.ExecuteGraphUpdates();
 
 	while (!apiRawPtr->shouldShutdown()) {
         graph.RenderNextFrame();
+
+		// must set paraeter after frame executed,
+		// because module that contains parameter
+		// only becomes created immediately before frame is rendered
+		static bool first_frame_done = false;
+        if (!first_frame_done) {
+            std::string parameter_name(gl_api_name + "::datasource::numSpheres");
+			auto parameterPtr = graph.FindParameter(parameter_name);
+			if (parameterPtr) {
+			    parameterPtr->ParseValue("3");
+            } else {
+                std::cout << "ERROR: could not find parameter: " << parameter_name << std::endl;
+            }
+            first_frame_done = true;
+        }
 	}
 
 	// clean up modules, calls, graph
