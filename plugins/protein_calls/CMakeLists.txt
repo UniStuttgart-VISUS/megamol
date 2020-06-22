@@ -23,7 +23,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core input_events)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

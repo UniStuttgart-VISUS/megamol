@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "../../input_events/include/KeyboardMouseInput.h"
+#include <KeyboardMouseInput.h>
 // TODO: do this include correctly via CMake
 
 namespace megamol {

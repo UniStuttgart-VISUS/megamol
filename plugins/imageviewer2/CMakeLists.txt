@@ -24,7 +24,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core image_calls)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core image_calls input_events)
 
   if(UNIX)
     find_package(JPEG REQUIRED)
