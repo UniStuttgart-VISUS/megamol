@@ -1659,26 +1659,37 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     }
 
     // Save project pop-up
+    /*
     this->state.open_popup_save =
         (this->state.open_popup_save || std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]));
 
     bool confirmed, aborted;
     bool popup_failed = false;
-    std::string project_filename;
-    configurator::GraphPtrType graph_ptr;
-    if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
-        project_filename = graph_ptr->GetFilename();
-    }
-    if (this->file_utils.FileBrowserPopUp(
-            FileUtils::FileBrowserFlag::SAVE, "Save Editor Project", this->state.open_popup_save, project_filename)) {
+    if (this->file_utils.FileBrowserPopUp(FileUtils::FileBrowserFlag::SAVE, "Save Editor Project",
+            this->state.open_popup_save, this->state.project_file)) {
         // Serialize current state to parameter.
         this->save_state_to_parameter();
         // Save to file
-        popup_failed = !this->graph_manager.SaveProjectToFile(this->graph_uid, project_filename);
+        popup_failed = !this->graph_manager.SaveProjectToFile(this->graph_uid, this->state.project_file);
     }
     this->utils.MinimalPopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
 
+    if (this->state.open_popup_save) {
+        this->state.open_popup_save = false;
+        std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]) = false;
+    }
+    */
+    // Save project pop-up
+    this->state.open_popup_save =
+        (this->state.open_popup_save || std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]));
+    if (this->file_utils.FileBrowserPopUp(FileUtils::FileBrowserFlag::SAVE, "Save Running Project",
+            this->state.open_popup_save, this->state.project_file)) {
+        // Serialize current state to parameter.
+        this->save_state_to_parameter();
+        // Serialize project to file
+        FileUtils::SaveProjectToFile(this->state.project_file, this->core_instance);
+    }
     if (this->state.open_popup_save) {
         this->state.open_popup_save = false;
         std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]) = false;
@@ -1811,6 +1822,7 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
         state = window_json.dump(2);
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
 
+        /*
         auto parameter_slot_ptr = this->state_param.Parameter();
         if (parameter_slot_ptr.IsNull()) {
             return;
@@ -1819,6 +1831,7 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
         auto param_ptr = this->param_core_interface_map[param_ref];
         if (param_ptr == nullptr) return;
         megamol::gui::configurator::ReadCoreParameter(this->state_param, (*param_ptr), false);
+        */
     }
 }
 
