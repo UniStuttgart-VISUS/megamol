@@ -3,8 +3,8 @@
 #include "stdafx.h"
 #include "mmcore/MegaMolGraph.h"
 
-#include "mmcore/view/AbstractView_EventConsumption.h"
 #include "mmcore/AbstractSlot.h"
+#include "mmcore/view/AbstractView_EventConsumption.h"
 
 // splits a string of the form "::one::two::three::" into an array of strings {"one", "two", "three"}
 static std::vector<std::string> splitPathName(std::string const& path) {
@@ -20,18 +20,18 @@ static std::vector<std::string> splitPathName(std::string const& path) {
     return result;
 }
 
-static void log(std::string text) {
-	std::cout << "MegaMolGraph: " << text << std::endl;
-}
+static void log(std::string text) { std::cout << "MegaMolGraph: " << text << std::endl; }
 
 static megamol::core::param::AbstractParam* getParameterFromParamSlot(megamol::core::param::ParamSlot* param_slot) {
 
     if (param_slot->GetStatus() == megamol::core::AbstractSlot::STATUS_UNAVAILABLE) {
-        log("error. cannot find parameter: " + std::string(param_slot->Name().PeekBuffer()) + ", slot is not available");
-		return nullptr;
-	}
+        log("error. cannot find parameter: " + std::string(param_slot->Name().PeekBuffer()) +
+            ", slot is not available");
+        return nullptr;
+    }
     if (param_slot->Parameter().IsNull()) {
-        log("error. cannot find parameter: " + std::string(param_slot->Name().PeekBuffer()) + ", slot has no parameter");
+        log("error. cannot find parameter: " + std::string(param_slot->Name().PeekBuffer()) +
+            ", slot has no parameter");
         return nullptr;
     }
 
@@ -168,21 +168,22 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
     factories::ModuleDescription::ptr module_description = this->ModuleProvider().Find(request.className.c_str());
     if (!module_description) {
         log("error. module factory could not find module class name: " + request.className);
-		return false;
+        return false;
     }
 
     const auto path_parts = splitPathName(request.id);
     if (path_parts.empty()) {
-        log("error. requested module name does not seem to have valid namespace format: " + request.id + "\n. valid format is: [::]aa::bb::cc[::]");
-		return false;
-	}
+        log("error. requested module name does not seem to have valid namespace format: " + request.id +
+            "\n. valid format is: [::]aa::bb::cc[::]");
+        return false;
+    }
 
     const auto module_name = vislib::StringA(path_parts.back().c_str());
 
     Module::ptr_type module_ptr = Module::ptr_type(module_description->CreateModule(module_name));
     if (!module_ptr) {
         log("error. could not instantiate module from module description: " + request.className);
-		return false;
+        return false;
     }
 
     this->module_list_.emplace_front(module_ptr, request);
@@ -194,14 +195,16 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         const bool init_ok = module_description->IsAvailable() && module_ptr->Create();
 
         if (!init_ok)
-			log("error. could not create module, IsAvailable() or Create() failed: " + std::string((module_ptr->Name()).PeekBuffer()));
+            log("error. could not create module, IsAvailable() or Create() failed: " +
+                std::string((module_ptr->Name()).PeekBuffer()));
         else
-			log("create module: " + std::string((module_ptr->Name()).PeekBuffer()));
+            log("create module: " + std::string((module_ptr->Name()).PeekBuffer()));
 
         return init_ok;
     };
-    create_module(); // TODO HACK: until some resource-to-module provider mechanism is implemented, module creation and deletion is wrapped in the OpenGL context
-	// this->rapi_commands.emplace_front(create_module); // returns false if something went wrong
+    create_module(); // TODO HACK: until some resource-to-module provider mechanism is implemented, module creation and
+                     // deletion is wrapped in the OpenGL context
+                     // this->rapi_commands.emplace_front(create_module); // returns false if something went wrong
 
     // if the new module is a view module register if with a View Resource Feeder and set it up to get the default
     // resources of the GLFW context plus an empty handler for rendering
@@ -231,33 +234,37 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
                                          std::string const& name) -> std::pair<bool, AbstractSlot*> {
         const auto path = splitPathName(name);
         if (path.empty()) {
-			log("error. encountered invalid namespace format: " + name + "\n. valid format is: [::]aa::bb::cc[::]");
-			return {false, nullptr};
-		}
+            log("error. encountered invalid namespace format: " + name + "\n. valid format is: [::]aa::bb::cc[::]");
+            return {false, nullptr};
+        }
 
         auto module_name = name.substr(0, name.size() - (path.back().size() + 2));
         auto module_it = this->find_module(module_name);
         if (module_it == this->module_list_.end()) {
-			log("error. could not find module named: " + module_name + " to connect requested call: " + call_description->ClassName());
-			return {false, nullptr};
+            log("error. could not find module named: " + module_name +
+                " to connect requested call: " + call_description->ClassName());
+            return {false, nullptr};
         }
 
         Module::ptr_type module_ptr = module_it->first;
         const auto slot_name = vislib::StringA(path.back().c_str());
         AbstractSlot* slot_ptr = module_ptr->FindSlot(slot_name);
         if (!slot_ptr) {
-			log("error. could not find slot named: " + std::string(slot_name.PeekBuffer()) + " to connect requested call: " + std::string(call_description->ClassName()));
-			return {false, nullptr};
+            log("error. could not find slot named: " + std::string(slot_name.PeekBuffer()) +
+                " to connect requested call: " + std::string(call_description->ClassName()));
+            return {false, nullptr};
         }
 
         if (!slot_ptr->IsCallCompatible(call_description)) {
-			log("error. call: " + std::string(call_description->ClassName()) + " is not compatible with slot: " + std::string(slot_name.PeekBuffer()));
-			return {false, nullptr};
+            log("error. call: " + std::string(call_description->ClassName()) +
+                " is not compatible with slot: " + std::string(slot_name.PeekBuffer()));
+            return {false, nullptr};
         }
 
         if (!slot_ptr->GetStatus() == AbstractSlot::STATUS_ENABLED) {
-			log("error. slot: " + std::string(slot_name.PeekBuffer()) + " is not enabled. can not connect call: " + std::string(call_description->ClassName()));
-			return {false, nullptr};
+            log("error. slot: " + std::string(slot_name.PeekBuffer()) +
+                " is not enabled. can not connect call: " + std::string(call_description->ClassName()));
+            return {false, nullptr};
         }
 
         return {true, slot_ptr};
@@ -265,15 +272,17 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
 
     auto from_slot = getCallSlotOfModule(request.from);
     if (from_slot.first == false) {
-		log("error. could not find from-slot: " + request.from + " for call: " + std::string(call_description->ClassName()));
-		return false; // error when looking for from-slot
+        log("error. could not find from-slot: " + request.from +
+            " for call: " + std::string(call_description->ClassName()));
+        return false; // error when looking for from-slot
     }
     CallerSlot* caller = dynamic_cast<CallerSlot*>(from_slot.second);
 
     auto to_slot = getCallSlotOfModule(request.to);
     if (to_slot.first == false) {
-		log("error. could not find to-slot: " + request.to + " for call: " + std::string(call_description->ClassName()));
-		return false; // error when looking for to-slot
+        log("error. could not find to-slot: " + request.to +
+            " for call: " + std::string(call_description->ClassName()));
+        return false; // error when looking for to-slot
     }
     CalleeSlot* callee = dynamic_cast<CalleeSlot*>(to_slot.second);
 
@@ -281,7 +290,8 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
         (callee->GetStatus() == AbstractSlot::STATUS_CONNECTED)) {
         Call* tstCall = caller->IsConnectedTo(callee);
         if (tstCall && call_description->IsDescribing(tstCall)) {
-			log("error. caller (" + request.from + ") and callee (" + request.to + ") are already connected by call: " + std::string(call_description->ClassName()));
+            log("error. caller (" + request.from + ") and callee (" + request.to +
+                ") are already connected by call: " + std::string(call_description->ClassName()));
             return false; // call already exists
         }
     }
@@ -293,7 +303,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
     Call::ptr_type call = Call::ptr_type(call_description->CreateCall());
     if (!callee->ConnectCall(call.get(), call_description)) {
         log("error. connecting call: " + std::string(call_description->ClassName()) + " failed at callee");
-		return false;
+        return false;
     }
     if (!caller->ConnectCall(call.get())) {
         log("error. connecting call: " + std::string(call_description->ClassName()) + " failed at caller");
@@ -326,14 +336,14 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
     auto module_it = find_module(request);
     if (module_it == this->module_list_.end()) {
         log("error. could not find module for deletion: " + request);
-		return false;
+        return false;
     }
 
     auto module_ptr = module_it->first; // is std::shared_ptr, a copy stays alive until rapi_commands got executed and
                                         // the vector gets cleared
     if (!module_ptr) {
         log("error. no object behind pointer when deleting module: " + request);
-		return false;
+        return false;
     }
 
     // delete all outgoing/incoming calls
@@ -345,15 +355,16 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
     });
 
     // call Release() in GL context
-	const auto release_module = [module_ptr]() -> bool {
+    const auto release_module = [module_ptr]() -> bool {
         module_ptr->Release();
         log("release module: " + std::string(module_ptr->Name().PeekBuffer()));
         return true;
         // end of lambda scope deletes last shared_ptr to module
         // thus the module gets deleted after execution and deletion of this command callback
     };
-    release_module();// TODO HACK: until some resource-to-module provider mechanism is implemented, module creation and deletion is wrapped in the OpenGL context
-    //this->rapi_commands.emplace_back(release_module);
+    release_module(); // TODO HACK: until some resource-to-module provider mechanism is implemented, module creation and
+                      // deletion is wrapped in the OpenGL context
+    // this->rapi_commands.emplace_back(release_module);
 
     this->module_list_.erase(module_it);
 
@@ -367,16 +378,16 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
 
     if (call_it == this->call_list_.end()) {
         log("error. could not find call for deletion: " + request.from + " -> " + request.to);
-		return false;
+        return false;
     }
 
     auto target = call_it->first->PeekCalleeSlotNoConst();
     auto source = call_it->first->PeekCallerSlotNoConst();
 
     if (!target || !source) {
-        log("error. could not get callee or caller slot for call deletion of call: " + std::string(call_it->first->ClassName()) 
-			+ "\n(" + request.from + " -> " + request.to + ")");
-		return false;
+        log("error. could not get callee or caller slot for call deletion of call: " +
+            std::string(call_it->first->ClassName()) + "\n(" + request.from + " -> " + request.to + ")");
+        return false;
     }
 
     source->SetCleanupMark(true);
@@ -402,12 +413,11 @@ void megamol::core::MegaMolGraph::RenderNextFrame() {
     this->rapi_commands.clear();
 
     if (some_command_failed) {
-		// TODO
+        // TODO
         // fail and stop execution of MegaMol because without the requested graph modules further execution makes no
         // sense
         for (auto& m : module_list_) {
-            if (!m.first->isCreated())
-				log("error. module not created: " + m.second.id + ", " + m.second.className);
+            if (!m.first->isCreated()) log("error. module not created: " + m.second.id + ", " + m.second.className);
         }
     }
 
@@ -423,22 +433,23 @@ void megamol::core::MegaMolGraph::RenderNextFrame() {
 
 megamol::core::Module::ptr_type megamol::core::MegaMolGraph::FindModule(std::string const& moduleName) const {
     auto module_it = find_module(moduleName);
-	
-	if (module_it == module_list_.end()) {
-		log("error. could not find module: " + moduleName);
-		return nullptr;
-	}
+
+    if (module_it == module_list_.end()) {
+        log("error. could not find module: " + moduleName);
+        return nullptr;
+    }
 
     auto module_ptr = module_it->first;
     return module_ptr;
 }
 
-megamol::core::Call::ptr_type megamol::core::MegaMolGraph::FindCall(std::string const& from, std::string const& to) const {
+megamol::core::Call::ptr_type megamol::core::MegaMolGraph::FindCall(
+    std::string const& from, std::string const& to) const {
     auto call_it = find_call(from, to);
-	
-	if (call_it == call_list_.end()) {
-		log("error. could not find call: " + from + " -> " + to);
-		return nullptr;
+
+    if (call_it == call_list_.end()) {
+        log("error. could not find call: " + from + " -> " + to);
+        return nullptr;
     }
 
     auto call_ptr = call_it->first;
@@ -448,26 +459,29 @@ megamol::core::Call::ptr_type megamol::core::MegaMolGraph::FindCall(std::string 
 megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(std::string const& paramName) const {
     auto names = splitPathName(paramName);
     if (names.size() < 2) {
-		log("error. could not find parameter, parameter name has invalid format: " + paramName + "\n(expected format: [::]aa::bb::cc[::]");
-		return nullptr;
+        log("error. could not find parameter, parameter name has invalid format: " + paramName +
+            "\n(expected format: [::]aa::bb::cc[::]");
+        return nullptr;
     }
 
     auto module_name = paramName.substr(0, paramName.size() - (names.back().size() + 2));
     auto module_it = find_module(module_name);
 
-	if (module_it == module_list_.end()) {
-		log("error. could not find parameter, module name not found: " + module_name + " (parameter name: " + paramName + ")");
-		return nullptr;
-	}
+    if (module_it == module_list_.end()) {
+        log("error. could not find parameter, module name not found: " + module_name +
+            " (parameter name: " + paramName + ")");
+        return nullptr;
+    }
 
     auto& module = *(module_it->first);
     std::string slot_name = names.back();
     AbstractSlot* slot_ptr = module.FindSlot(slot_name.c_str());
     param::ParamSlot* param_slot_ptr = dynamic_cast<param::ParamSlot*>(slot_ptr);
 
-	if (slot_ptr == nullptr || param_slot_ptr == nullptr) {
-		log("error. could not find parameter, slot not found or of wrong type. parameter name: " + paramName + ", slot name: " + slot_name);
-		return nullptr;
+    if (slot_ptr == nullptr || param_slot_ptr == nullptr) {
+        log("error. could not find parameter, slot not found or of wrong type. parameter name: " + paramName +
+            ", slot name: " + slot_name);
+        return nullptr;
     }
 
     return param_slot_ptr;
@@ -484,28 +498,27 @@ std::vector<megamol::core::param::ParamSlot*> megamol::core::MegaMolGraph::Enume
 
     auto module_it = find_module(moduleName);
 
-	if (module_it == module_list_.end()) {
-		log("error. could not find module: " + moduleName);
-		return parameters;
+    if (module_it == module_list_.end()) {
+        log("error. could not find module: " + moduleName);
+        return parameters;
     }
 
-	auto children_begin = module_it->first->ChildList_Begin();
-	auto children_end = module_it->first->ChildList_End();
+    auto children_begin = module_it->first->ChildList_Begin();
+    auto children_end = module_it->first->ChildList_End();
 
-	while (children_begin != children_end) {
+    while (children_begin != children_end) {
         AbstractNamedObject::ptr_type named_object = *children_begin;
         if (named_object != nullptr) {
-			AbstractSlot* slot_ptr = dynamic_cast<AbstractSlot*>(named_object.get());
-			param::ParamSlot* param_slot_ptr = dynamic_cast<param::ParamSlot*>(slot_ptr);
+            AbstractSlot* slot_ptr = dynamic_cast<AbstractSlot*>(named_object.get());
+            param::ParamSlot* param_slot_ptr = dynamic_cast<param::ParamSlot*>(slot_ptr);
 
-			if (slot_ptr && param_slot_ptr)
-				parameters.push_back(param_slot_ptr);
-		}
+            if (slot_ptr && param_slot_ptr) parameters.push_back(param_slot_ptr);
+        }
 
-		children_begin++;
-	}
+        children_begin++;
+    }
 
-	return parameters;
+    return parameters;
 }
 
 std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::EnumerateModuleParameters(
