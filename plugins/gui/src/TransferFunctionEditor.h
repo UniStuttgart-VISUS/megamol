@@ -72,12 +72,12 @@ public:
     /**
      * Set the currently connected parameter.
      */
-    void SetConnectedParameter(configurator::ParamPtrType param_ptr);
+    void SetConnectedParameter(configurator::Parameter* param_ptr, const std::string& param_full_name);
 
     /**
      * Get currently connected parameter.
      */
-    inline const configurator::ParamPtrType GetConnectedParameter(void) const { return this->connected_parameter_ptr; }
+    inline std::string GetConnectedParameterName(void) const { return this->connected_parameter_name; }
 
     /**
      * Returns true if editor is in minimized view.
@@ -115,7 +115,9 @@ private:
     GUIUtils utils;
 
     /** The currently active parameter whose transfer function is currently loaded into this editor. */
-    configurator::ParamPtrType connected_parameter_ptr;
+    configurator::Parameter* connected_parameter_ptr;
+    /** Name of the connected parameter. */
+    std::string connected_parameter_name;
 
     /** Array holding current colors and function values. */
     megamol::core::param::TransferFunctionParam::TFNodeType nodes;

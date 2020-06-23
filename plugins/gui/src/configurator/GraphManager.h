@@ -84,13 +84,10 @@ public:
     inline const ModuleStockVectorType& GetModulesStock(void) { return this->modules_stock; }
     inline const CallStockVectorType& GetCallsStock(void) { return this->calls_stock; }
 
-    ImGuiID LoadUpdateProjectFromCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance,
-        ParamInterfaceMapType& inout_param_interface_map);
+    ImGuiID LoadUpdateProjectFromCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance);
 
     ImGuiID LoadProjectFromCore(megamol::core::CoreInstance* core_instance);
-    bool AddProjectFromCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance);
-    bool AddProjectFromCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance, bool use_stock,
-        ParamInterfaceMapType& inout_param_interface_map);
+    bool AddProjectFromCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance, bool use_stock);
 
     ImGuiID LoadAddProjectFromFile(ImGuiID graph_uid, const std::string& project_filename);
 

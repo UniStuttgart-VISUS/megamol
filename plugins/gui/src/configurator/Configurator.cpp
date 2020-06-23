@@ -225,7 +225,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                 }
                 if (ImGui::MenuItem(
                         "Running", nullptr, false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
-                    this->graph_manager.AddProjectFromCore(this->graph_state.graph_selected_uid, core_instance);
+                    this->graph_manager.AddProjectFromCore(this->graph_state.graph_selected_uid, core_instance, true);
                     // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
                 }
                 ImGui::EndMenu();

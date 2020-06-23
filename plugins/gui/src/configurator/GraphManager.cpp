@@ -190,6 +190,8 @@ bool megamol::gui::configurator::GraphManager::GetGraph(
                 return true;
             }
         }
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "Unable to find graph for gicen graph uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     return false;
 }
@@ -359,7 +361,7 @@ bool megamol::gui::configurator::GraphManager::LoadModuleStock(const megamol::co
 
 
 ImGuiID megamol::gui::configurator::GraphManager::LoadUpdateProjectFromCore(
-    ImGuiID graph_uid, megamol::core::CoreInstance* core_instance, ParamInterfaceMapType& inout_param_interface_map) {
+    ImGuiID graph_uid, megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -385,8 +387,7 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadUpdateProjectFromCore(
         return GUI_INVALID_ID;
     }
 
-    inout_param_interface_map.clear();
-    if (this->AddProjectFromCore(current_graph_id, core_instance, false, inout_param_interface_map)) {
+    if (this->AddProjectFromCore(current_graph_id, core_instance, false)) {
         return graph_ptr->uid;
     }
     return GUI_INVALID_ID;
@@ -417,7 +418,7 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadProjectFromCore(megamol::c
     }
 
 
-    if (this->AddProjectFromCore(new_graph_id, core_instance)) {
+    if (this->AddProjectFromCore(new_graph_id, core_instance, true)) {
         return graph_ptr->uid;
     }
     return GUI_INVALID_ID;
@@ -425,15 +426,7 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadProjectFromCore(megamol::c
 
 
 bool megamol::gui::configurator::GraphManager::AddProjectFromCore(
-    ImGuiID graph_uid, megamol::core::CoreInstance* core_instance) {
-
-    ParamInterfaceMapType unused_dummy;
-    return this->AddProjectFromCore(graph_uid, core_instance, true, unused_dummy);
-}
-
-
-bool megamol::gui::configurator::GraphManager::AddProjectFromCore(ImGuiID graph_uid,
-    megamol::core::CoreInstance* core_instance, bool use_stock, ParamInterfaceMapType& inout_param_interface_map) {
+    ImGuiID graph_uid, megamol::core::CoreInstance* core_instance, bool use_stock) {
 
     try {
         if (core_instance == nullptr) {
@@ -550,20 +543,15 @@ bool megamol::gui::configurator::GraphManager::AddProjectFromCore(ImGuiID graph_
                     if (use_stock) {
                         for (auto& parameter : module_ptr->parameters) {
                             if (parameter.full_name == param_full_name) {
-                                megamol::gui::configurator::ReadCoreParameter((*param_slot), parameter, true);
+                                megamol::gui::configurator::ReadNewCoreParameterToExistingParameter(
+                                    (*param_slot), parameter, true, false);
                             }
                         }
                     } else {
                         std::shared_ptr<Parameter> param_ptr;
-                        megamol::gui::configurator::ReadCoreParameter((*param_slot), param_ptr, false);
-                        if (param_ptr != nullptr) {
-                            if (!param_slot->Parameter().IsNull()) {
-                                auto param_ref = &(*param_slot->Parameter());
-                                inout_param_interface_map.emplace(param_ref, param_ptr);
-                            }
-
-                            module_ptr->parameters.emplace_back((*param_ptr));
-                        }
+                        megamol::gui::configurator::ReadNewCoreParameterToNewParameter(
+                            (*param_slot), param_ptr, false, true);
+                        module_ptr->parameters.emplace_back((*param_ptr));
                     }
                 }
 
@@ -1292,7 +1280,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
         for (std::shared_ptr<core::param::ParamSlot> param_slot : paramSlots) {
             if (param_slot == nullptr) continue;
             Parameter::StockParameter psd;
-            if (megamol::gui::configurator::ReadCoreParameter((*param_slot), psd)) {
+            if (megamol::gui::configurator::ReadNewCoreParameterToStockParameter((*param_slot), psd)) {
                 mod.parameters.emplace_back(psd);
             }
         }

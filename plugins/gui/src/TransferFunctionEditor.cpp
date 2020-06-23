@@ -163,6 +163,7 @@ std::array<std::tuple<std::string, PresetGenerator>, 20> PRESETS = {
 TransferFunctionEditor::TransferFunctionEditor(void)
     : utils()
     , connected_parameter_ptr(nullptr)
+    , connected_parameter_name()
     , nodes()
     , range({0.0f, 1.0f})
     , last_range({0.0f, 1.0f})
@@ -221,8 +222,6 @@ GLuint megamol::gui::TransferFunctionEditor::GetTexture(const std::string& tfs) 
     megamol::gui::TransferFunctionEditor::CreateTexture(
         ret_tex_id, static_cast<GLsizei>(tmp_texture_size), 1, tmp_texture_pixels.data());
 
-    vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Created external texture ...");
-
     return ret_tex_id;
 }
 
@@ -272,11 +271,14 @@ bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
 }
 
 
-void TransferFunctionEditor::SetConnectedParameter(configurator::ParamPtrType param_ptr) {
+void TransferFunctionEditor::SetConnectedParameter(
+    configurator::Parameter* param_ptr, const std::string& param_full_name) {
     this->connected_parameter_ptr = nullptr;
+    this->connected_parameter_name = "";
     if (param_ptr->type == ParamType::TRANSFERFUNCTION) {
         if (this->connected_parameter_ptr != param_ptr) {
             this->connected_parameter_ptr = param_ptr;
+            this->connected_parameter_name = param_full_name;
             this->SetTransferFunction(std::get<std::string>(this->connected_parameter_ptr->GetValue()), true);
         }
     } else {

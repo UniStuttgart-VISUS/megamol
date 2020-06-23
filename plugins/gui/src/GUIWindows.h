@@ -195,9 +195,6 @@ private:
     /** The graph manager holding the graph of the currently running project. */
     configurator::GraphManager graph_manager;
 
-    /** Interface map for fast access of core parameters and parameters in gui graph */
-    configurator::ParamInterfaceMapType param_core_interface_map;
-
     // FUNCTIONS --------------------------------------------------------------
 
     bool createContext(void);
@@ -213,8 +210,9 @@ private:
     void drawConfiguratorWindowCallback(WindowManager::WindowConfiguration& wc);
 
     void drawMenu(void);
-    void drawParameter(std::shared_ptr<megamol::gui::configurator::Parameter> param_ptr,
-        megamol::gui::configurator::ParameterPresentation::WidgetScope scope, bool extended = false);
+    void drawParameter(megamol::gui::configurator::Parameter& param_ptr,
+        megamol::gui::configurator::ParameterPresentation::WidgetScope scope, const std::string& module_full_name,
+        bool extended);
     void drawPopUps(void);
 
     bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);

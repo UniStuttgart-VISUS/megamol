@@ -148,13 +148,13 @@ bool megamol::gui::configurator::ParameterPresentation::Present(
 
 float megamol::gui::configurator::ParameterPresentation::GetHeight(Parameter& inout_parameter) {
 
-    /// TODO Do not consider hidden parameters (basic vs. expert mode).
-    float height = (ImGui::GetFrameHeightWithSpacing() * (1.15f));
-    if (inout_parameter.type == ParamType::TRANSFERFUNCTION) {
-        if (this->show_tf_editor) {
-            height = (ImGui::GetFrameHeightWithSpacing() * (10.0f) + (150.0f + 30.0f));
-        } else {
-            height = (ImGui::GetFrameHeightWithSpacing() * (1.5f));
+    float height = 0.0f;
+    if (this->IsGUIVisible()) {
+        height = (ImGui::GetFrameHeightWithSpacing() * (1.15f));
+        if (inout_parameter.type == ParamType::TRANSFERFUNCTION) {
+            if (this->show_tf_editor) {
+                height = (ImGui::GetFrameHeightWithSpacing() * (10.0f) + (150.0f + 30.0f));
+            }
         }
     }
     return height;
@@ -911,7 +911,7 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
                 __LINE__);
             return false;
         }
-        isActive = (this->tf_editor_ptr->GetConnectedParameter() != nullptr);
+        isActive = !this->tf_editor_ptr->GetConnectedParameterName().empty();
     } else {
         if (this->tf_editor_ptr == nullptr) {
             this->tf_editor_ptr = std::make_shared<megamol::gui::TransferFunctionEditor>();
@@ -1048,8 +1048,6 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
         }
     }
 
-    /// TODO Do not load currently pending editor changes but current value of parameter.
-
     return retval;
 }
 
@@ -1070,7 +1068,8 @@ megamol::gui::configurator::Parameter::Parameter(
     , default_value()
     , default_value_mismatch(false)
     , present(type)
-    , dirty(false) {
+    , dirty(false)
+    , core_param_ptr(nullptr) {
 
     // Initialize variant types which should/can not be changed afterwards.
     // Default ctor of variants initializes std::monostate.
