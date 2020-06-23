@@ -149,7 +149,7 @@ bool megamol::gui::configurator::ParameterPresentation::Present(
 float megamol::gui::configurator::ParameterPresentation::GetHeight(Parameter& inout_parameter) {
 
     float height = 0.0f;
-    if (this->IsGUIVisible()) {
+    if (this->IsGUIVisible() || this->expert) {
         height = (ImGui::GetFrameHeightWithSpacing() * (1.15f));
         if (inout_parameter.type == ParamType::TRANSFERFUNCTION) {
             if (this->show_tf_editor) {
