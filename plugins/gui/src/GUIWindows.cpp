@@ -1086,6 +1086,8 @@ void GUIWindows::drawParamWindowCallback(WindowManager::WindowConfiguration& wc)
     bool param_namespace_open = true;
     auto currentSearchString = this->utils.GetSearchString();
 
+    /// TODO Sort parameters by namespace for each module
+
     configurator::GraphPtrType graph_ptr;
     if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {

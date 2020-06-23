@@ -528,6 +528,10 @@ static bool ReadNewCoreParameterToNewParameter(megamol::core::param::ParamSlot& 
 static bool ReadCoreParameterToParameter(vislib::SmartPtr<megamol::core::param::AbstractParam>& in_param_ptr,
     megamol::gui::configurator::Parameter& out_param, bool set_default_val) {
 
+    out_param.present.SetGUIVisible(in_param_ptr->IsGUIVisible());
+    out_param.present.SetGUIReadOnly(in_param_ptr->IsGUIReadOnly());
+    out_param.present.SetGUIPresentation(in_param_ptr->GetGUIPresentation());
+
     bool type_error = false;
 
     if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::ButtonParam>()) {
@@ -671,9 +675,6 @@ static bool ReadNewCoreParameterToExistingParameter(megamol::core::param::ParamS
 
     out_param.full_name = std::string(in_param_slot.Name().PeekBuffer());
     out_param.description = std::string(in_param_slot.Description().PeekBuffer());
-    out_param.present.SetGUIVisible(parameter_ptr->IsGUIVisible());
-    out_param.present.SetGUIReadOnly(parameter_ptr->IsGUIReadOnly());
-    out_param.present.SetGUIPresentation(parameter_ptr->GetGUIPresentation());
     if (save_core_param_pointer) {
         out_param.core_param_ptr = parameter_ptr;
     }
