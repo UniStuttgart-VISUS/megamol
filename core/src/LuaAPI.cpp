@@ -449,7 +449,7 @@ int megamol::core::LuaAPI::GetProcessID(lua_State* L) {
 int megamol::core::LuaAPI::GetModuleParams(lua_State* L) {
     const auto *moduleName = luaL_checkstring(L, 1);
 
-    auto params = graph_.FindModuleParameters(moduleName);
+    auto params = graph_.EnumerateModuleParameters(moduleName);
     auto mod = graph_.FindModule(moduleName);
     std::stringstream answer;
     if (mod != nullptr) {

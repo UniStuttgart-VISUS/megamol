@@ -235,7 +235,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
 			return {false, nullptr};
 		}
 
-        auto module_name = path[0] + "::" + path[1];
+        auto module_name = name.substr(0, name.size() - (path.back().size() + 2));
         auto module_it = this->find_module(module_name);
         if (module_it == this->module_list_.end()) {
 			log("error. could not find module named: " + module_name + " to connect requested call: " + call_description->ClassName());
@@ -302,6 +302,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
         return false;
     }
 
+    log("create call: " + request.from + " -> " + request.to + " (" + std::string(call_description->ClassName()) + ")");
     this->call_list_.emplace_front(call, request);
 
     return true;
@@ -444,14 +445,14 @@ megamol::core::Call::ptr_type megamol::core::MegaMolGraph::FindCall(std::string 
     return call_ptr;
 }
 
-megamol::core::param::AbstractParam* megamol::core::MegaMolGraph::FindParameter(std::string const& paramName) const {
+megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(std::string const& paramName) const {
     auto names = splitPathName(paramName);
     if (names.size() < 2) {
 		log("error. could not find parameter, parameter name has invalid format: " + paramName + "\n(expected format: [::]aa::bb::cc[::]");
 		return nullptr;
     }
 
-	auto module_name = paramName.substr(0, paramName.size() - (names.back().size() + 2));
+    auto module_name = paramName.substr(0, paramName.size() - (names.back().size() + 2));
     auto module_it = find_module(module_name);
 
 	if (module_it == module_list_.end()) {
@@ -469,11 +470,17 @@ megamol::core::param::AbstractParam* megamol::core::MegaMolGraph::FindParameter(
 		return nullptr;
     }
 
-	return getParameterFromParamSlot(param_slot_ptr);
+    return param_slot_ptr;
 }
 
-std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::FindModuleParameters(std::string const& moduleName) const {
-    std::vector<megamol::core::param::AbstractParam*> parameters;
+megamol::core::param::AbstractParam* megamol::core::MegaMolGraph::FindParameter(std::string const& paramName) const {
+    return getParameterFromParamSlot(this->FindParameterSlot(paramName));
+}
+
+
+std::vector<megamol::core::param::ParamSlot*> megamol::core::MegaMolGraph::EnumerateModuleParameterSlots(
+    std::string const& moduleName) const {
+    std::vector<megamol::core::param::ParamSlot*> parameters;
 
     auto module_it = find_module(moduleName);
 
@@ -492,7 +499,7 @@ std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::F
 			param::ParamSlot* param_slot_ptr = dynamic_cast<param::ParamSlot*>(slot_ptr);
 
 			if (slot_ptr && param_slot_ptr)
-				parameters.push_back(getParameterFromParamSlot(param_slot_ptr));
+				parameters.push_back(param_slot_ptr);
 		}
 
 		children_begin++;
@@ -501,23 +508,43 @@ std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::F
 	return parameters;
 }
 
-megamol::core::MegaMolGraph::CallList_t const& megamol::core::MegaMolGraph::ListCalls() const {
-	return call_list_;
+std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::EnumerateModuleParameters(
+    std::string const& moduleName) const {
+    auto param_slots = EnumerateModuleParameterSlots(moduleName);
+
+    std::vector<megamol::core::param::AbstractParam*> params;
+    params.reserve(param_slots.size());
+
+    for (auto& slot : param_slots) params.push_back(getParameterFromParamSlot(slot));
+
+    return params;
 }
+
+megamol::core::MegaMolGraph::CallList_t const& megamol::core::MegaMolGraph::ListCalls() const { return call_list_; }
 
 megamol::core::MegaMolGraph::ModuleList_t const& megamol::core::MegaMolGraph::ListModules() const {
     return module_list_;
 }
 
-std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::ListParameters() const {
-    std::vector<megamol::core::param::AbstractParam*> parameters;
+std::vector<megamol::core::param::ParamSlot*> megamol::core::MegaMolGraph::ListParameterSlots() const {
+    std::vector<megamol::core::param::ParamSlot*> param_slots;
 
-	for (auto& mod : module_list_) {
-        auto module_params = this->FindModuleParameters(mod.first->Name().PeekBuffer());
+    for (auto& mod : module_list_) {
+        auto module_params = this->EnumerateModuleParameterSlots(mod.first->Name().PeekBuffer());
 
-		parameters.insert(parameters.end(), module_params.begin(), module_params.end());
+        param_slots.insert(param_slots.end(), module_params.begin(), module_params.end());
     }
 
-	return parameters;
+    return param_slots;
 }
 
+std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::ListParameters() const {
+    auto param_slots = this->ListParameterSlots();
+
+    std::vector<megamol::core::param::AbstractParam*> parameters;
+    parameters.reserve(param_slots.size());
+
+    for (auto& slot : param_slots) parameters.push_back(getParameterFromParamSlot(slot));
+
+    return parameters;
+}

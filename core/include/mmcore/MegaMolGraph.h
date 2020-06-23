@@ -24,8 +24,6 @@
 #include "mmcore/deferrable_construction.h"
 #include "mmcore/serializable.h"
 
-#include "AbstractUpdateQueue.h" // TODO: why can't we use std::list? why is this class called abstract when, in fact, its implementation is very concrete?
-
 #include "AbstractRenderAPI.hpp"
 #include "mmcore/RootModuleNamespace.h"
 
@@ -171,13 +169,19 @@ public:
 
     megamol::core::param::AbstractParam* FindParameter(std::string const& paramName) const;
 
-    std::vector<megamol::core::param::AbstractParam*> FindModuleParameters(std::string const& moduleName) const;
+    megamol::core::param::ParamSlot* FindParameterSlot(std::string const& paramName) const;
+
+    std::vector<megamol::core::param::AbstractParam*> EnumerateModuleParameters(std::string const& moduleName) const;
+
+    std::vector<megamol::core::param::ParamSlot*> EnumerateModuleParameterSlots(std::string const& moduleName) const;
 
     CallList_t const& ListCalls() const;
 
     ModuleList_t const& ListModules() const;
 
     std::vector<megamol::core::param::AbstractParam*> ListParameters() const;
+
+    std::vector<megamol::core::param::ParamSlot*> ListParameterSlots() const;
 
     std::optional<lua_task_future_t> QueueLuaScript(std::string const& script, bool want_result);
 
