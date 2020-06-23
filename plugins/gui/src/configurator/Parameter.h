@@ -81,6 +81,8 @@ public:
         this->external_tf_editor = true;
     }
 
+    void SetTransferFunctionTexture(GLuint tex_id) { this->tf_texture = tex_id; }
+
 private:
     // VARIABLES --------------------------------------------------------------
 
@@ -97,6 +99,7 @@ private:
     bool external_tf_editor;
     bool show_tf_editor;
     size_t tf_editor_hash;
+    GLuint tf_texture;
 
     // FUNCTIONS --------------------------------------------------------------
     bool Present(Parameter& inout_param, WidgetScope scope);
@@ -229,7 +232,7 @@ public:
 
     bool DefaultValueMismatch(void) { return this->default_value_mismatch; }
 
-    const size_t GetTransferFunctionHash(void) const { return this->string_hash; }
+    size_t GetTransferFunctionHash(void) const { return this->tf_string_hash; }
 
     // SET ----------------------------------
 
@@ -237,21 +240,25 @@ public:
 
     template <typename T> void SetValue(T val, bool set_default_val = false) {
         if (std::holds_alternative<T>(this->value)) {
+
             // Set value
             if (std::get<T>(this->value) != val) {
                 this->value = val;
                 this->dirty = true;
+
+                // Check for new flex enum entry
+                if (this->type == ParamType::FLEXENUM) {
+                    auto storage = this->GetStorage<megamol::core::param::FlexEnumParam::Storage_t>();
+                    storage.insert(std::get<std::string>(this->value));
+                    this->SetStorage(storage);
+                } else if (this->type == ParamType::TRANSFERFUNCTION) {
+                    if constexpr (std::is_same_v<T, std::string>) {
+                        this->present.SetTransferFunctionTexture(megamol::gui::TransferFunctionEditor::GetTexture(val));
+                        this->tf_string_hash = std::hash<std::string>()(val);
+                    }
+                }
             }
-            // Check for new flex enum entry
-            if (this->type == ParamType::FLEXENUM) {
-                auto storage = this->GetStorage<megamol::core::param::FlexEnumParam::Storage_t>();
-                storage.insert(std::get<std::string>(this->value));
-                this->SetStorage(storage);
-            }
-            // Calculate hash for parameters using string
-            if constexpr (std::is_same_v<T, std::string>) {
-                this->string_hash = std::hash<std::string>()(val);
-            }
+
             // Check default value
             if (set_default_val) {
                 this->dirty = false;
@@ -308,7 +315,7 @@ private:
     MaxType maxval;
     StroageType storage;
     ValueType value;
-    size_t string_hash;
+    size_t tf_string_hash;
     ValueType default_value;
     bool default_value_mismatch;
     bool dirty;

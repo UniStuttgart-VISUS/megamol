@@ -172,8 +172,7 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , textureInvalid(true)
     , pendingChanges(true)
     , texturePixels()
-    , texture_id_vert(0)
-    , texture_id_horiz(0)
+    , texture_id(0)
     , activeChannels{false, false, false, false}
     , currentNode(0)
     , currentChannel(0)
@@ -196,6 +195,37 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     this->widget_buffer.gauss_sigma = zero[5];
     this->widget_buffer.range_value = zero[4];
 }
+
+
+GLuint megamol::gui::TransferFunctionEditor::GetTexture(const std::string& tfs) {
+
+    GLuint ret_tex_id = 0;
+
+    std::vector<float> tmp_texture_pixels;
+    UINT tmp_texture_size;
+    megamol::core::param::TransferFunctionParam::TFNodeType tmp_nodes;
+    std::array<float, 2> tmp_range;
+    megamol::core::param::TransferFunctionParam::InterpolationMode tmp_mode;
+
+    bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
+        tfs, tmp_nodes, tmp_mode, tmp_texture_size, tmp_range);
+    if (!ok) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Could not parse transfer function");
+        return GLuint(0);
+    }
+    if (tmp_mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
+        param::TransferFunctionParam::LinearInterpolation(tmp_texture_pixels, tmp_texture_size, tmp_nodes);
+    } else if (tmp_mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
+        param::TransferFunctionParam::GaussInterpolation(tmp_texture_pixels, tmp_texture_size, tmp_nodes);
+    }
+    megamol::gui::TransferFunctionEditor::CreateTexture(
+        ret_tex_id, static_cast<GLsizei>(tmp_texture_size), 1, tmp_texture_pixels.data());
+
+    vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Created external texture ...");
+
+    return ret_tex_id;
+}
+
 
 void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool connected_parameter_mode) {
 
@@ -492,11 +522,13 @@ bool TransferFunctionEditor::Draw(bool connected_parameter_mode) {
             param::TransferFunctionParam::GaussInterpolation(this->texturePixels, this->textureSize, this->nodes);
         }
 
-        // Always create horizontal and vertical texture for possible external use
-        this->createTexture(
-            this->texture_id_horiz, static_cast<GLsizei>(this->textureSize), 1, this->texturePixels.data());
-        this->createTexture(
-            this->texture_id_vert, 1, static_cast<GLsizei>(this->textureSize), this->texturePixels.data());
+        if (!this->flip_xy) {
+            megamol::gui::TransferFunctionEditor::CreateTexture(
+                this->texture_id, static_cast<GLsizei>(this->textureSize), 1, this->texturePixels.data());
+        } else {
+            megamol::gui::TransferFunctionEditor::CreateTexture(
+                this->texture_id, 1, static_cast<GLsizei>(this->textureSize), this->texturePixels.data());
+        }
 
         this->textureInvalid = false;
     }
@@ -561,19 +593,17 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_xy) {
     ImVec2 pos = ImGui::GetCursorScreenPos();
     const size_t textureSize = this->texturePixels.size() / 4;
 
-    GLuint texture_id = this->texture_id_horiz;
     ImVec2 image_size = size;
     ImVec2 uv0 = ImVec2(0.0f, 0.0f);
     ImVec2 uv1 = ImVec2(1.0f, 1.0f);
     if (flip_xy) {
-        texture_id = this->texture_id_vert;
         image_size.x = size.y;
         image_size.y = size.x;
         uv0 = ImVec2(1.0f, 1.0f);
         uv1 = ImVec2(0.0f, 0.0f);
     }
 
-    if (textureSize == 0 || texture_id == 0) {
+    if (textureSize == 0 || this->texture_id == 0) {
         // Reserve layout space and draw a black background rectangle.
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         ImGui::Dummy(image_size);
@@ -581,8 +611,8 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_xy) {
             pos, ImVec2(pos.x + image_size.x, pos.y + image_size.y), IM_COL32(0, 0, 0, 255), 0.0f, 10);
     } else {
         // Draw texture as image.
-        ImGui::Image(reinterpret_cast<ImTextureID>(texture_id), image_size, uv0, uv1, ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
-            style.Colors[ImGuiCol_Border]);
+        ImGui::Image(reinterpret_cast<ImTextureID>(this->texture_id), image_size, uv0, uv1,
+            ImVec4(1.0f, 1.0f, 1.0f, 1.0f), style.Colors[ImGuiCol_Border]);
     }
 
     // Draw tooltip, if requested.
@@ -923,7 +953,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 }
 
 
-void TransferFunctionEditor::createTexture(GLuint& inout_id, GLsizei width, GLsizei height, float* data) const {
+void TransferFunctionEditor::CreateTexture(GLuint& inout_id, GLsizei width, GLsizei height, float* data) {
 
     if (data == nullptr) return;
 

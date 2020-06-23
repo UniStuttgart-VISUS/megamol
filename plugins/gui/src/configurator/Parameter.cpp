@@ -30,7 +30,8 @@ megamol::gui::configurator::ParameterPresentation::ParameterPresentation(ParamTy
     , tf_editor_ptr(nullptr)
     , external_tf_editor(false)
     , show_tf_editor(false)
-    , tf_editor_hash(0) {
+    , tf_editor_hash(0)
+    , tf_texture(0) {
 
     this->InitPresentation(type);
 }
@@ -148,7 +149,6 @@ bool megamol::gui::configurator::ParameterPresentation::Present(
 float megamol::gui::configurator::ParameterPresentation::GetHeight(Parameter& inout_parameter) {
 
     /// TODO Do not consider hidden parameters (basic vs. expert mode).
-
     float height = (ImGui::GetFrameHeightWithSpacing() * (1.15f));
     if (inout_parameter.type == ParamType::TRANSFERFUNCTION) {
         if (this->show_tf_editor) {
@@ -486,6 +486,7 @@ bool megamol::gui::configurator::ParameterPresentation::widget_button(
     if (scope == WidgetScope::LOCAL) {
         std::string button_hotkey = keycode.ToString();
         std::string hotkey = "";
+
         if (!button_hotkey.empty()) hotkey = "\n Hotkey: " + button_hotkey;
         this->description += hotkey;
 
@@ -928,9 +929,8 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
                 ImGui::SameLine();
             } else {
                 // Draw texture
-                /// TODO Do not load currently pending editor changes but current value of parameter.
-                if (this->tf_editor_ptr->GetHorizontalTexture() != 0) {
-                    ImGui::Image(reinterpret_cast<ImTextureID>(this->tf_editor_ptr->GetHorizontalTexture()),
+                if (this->tf_texture != 0) {
+                    ImGui::Image(reinterpret_cast<ImTextureID>(this->tf_texture),
                         ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight()), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f),
                         ImVec4(1.0f, 1.0f, 1.0f, 1.0f), style.Colors[ImGuiCol_Border]);
                     ImGui::SameLine(ImGui::CalcItemWidth() + style.ItemInnerSpacing.x);
@@ -1048,6 +1048,8 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
         }
     }
 
+    /// TODO Do not load currently pending editor changes but current value of parameter.
+
     return retval;
 }
 
@@ -1064,7 +1066,7 @@ megamol::gui::configurator::Parameter::Parameter(
     , maxval(max)
     , storage(store)
     , value()
-    , string_hash(0)
+    , tf_string_hash(0)
     , default_value()
     , default_value_mismatch(false)
     , present(type)

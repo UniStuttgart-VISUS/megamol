@@ -43,6 +43,12 @@ public:
     ~TransferFunctionEditor(void) = default;
 
     /**
+     * Return texture id of given transfer functione.
+     */
+    static GLuint GetTexture(const std::string& tfs);
+    static void CreateTexture(GLuint& inout_id, GLsizei width, GLsizei height, float* data);
+
+    /**
      * Draws the transfer function editor.
      */
     bool Draw(bool connected_parameter_mode);
@@ -93,11 +99,6 @@ public:
      */
     inline void SetVertical(bool vertical) { this->flip_xy = vertical; }
 
-    /**
-     * Return texture id of horizontal texture.
-     */
-    GLuint GetHorizontalTexture(void) { return this->texture_id_horiz; }
-
 private:
     /** The global input widget state buffer. */
     struct WidgetBuffer {
@@ -142,8 +143,7 @@ private:
     std::vector<float> texturePixels;
 
     /** OpenGL Texture IDs. */
-    GLuint texture_id_vert;
-    GLuint texture_id_horiz;
+    GLuint texture_id;
 
     /** Currently active color channels in plot. */
     std::array<bool, 4> activeChannels;
@@ -176,8 +176,6 @@ private:
     void drawScale(const ImVec2& pos, const ImVec2& size, bool flip_xy);
 
     void drawFunctionPlot(const ImVec2& size);
-
-    void createTexture(GLuint& inout_id, GLsizei width, GLsizei height, float* data) const;
 };
 
 } // namespace gui

@@ -129,8 +129,7 @@ bool GUIWindows::PreDraw(
     this->core_instance->SetCurrentImGuiContext(this->context);
 
     // Loading and/or updating currently running core graph
-    /// TODO Update
-    /// Run only once for now ....
+    /// TODO Update - Run only once for now ....
     if (this->param_core_interface_map.empty()) {
         this->graph_manager.LoadCallStock(core_instance);
         this->graph_uid = this->graph_manager.LoadUpdateProjectFromCore(
@@ -363,7 +362,6 @@ bool GUIWindows::PostDraw(void) {
             auto param_ref = &(*parameter_slot_ptr);
             auto param_ptr = this->param_core_interface_map[param_ref];
             if (param_ptr == nullptr) return;
-            /// TODO GUI changes (visibility, readonly, presentation) are only propagates to core on value change.
             if (param_ptr->IsDirty()) {
                 megamol::gui::configurator::WriteCoreParameter((*param_ptr), slot);
                 param_ptr->ResetDirty();
@@ -500,42 +498,41 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
         return true;
     }
 
-    // Check for parameter hotkeys
-    /// TODO Fix. Use different lists for new parameter windows and module filter.
-    /*
+    // Collect modules which should be considered for parameter hotkey check.
+    bool check_all_modules = false;
     std::vector<std::string> modules_list;
     const auto modfunc = [&](WindowManager::WindowConfiguration& wc) {
         for (auto& m : wc.param_modules_list) {
             modules_list.emplace_back(m);
         }
+        if (wc.param_modules_list.empty()) check_all_modules = true;
     };
     this->window_manager.EnumWindows(modfunc);
-
+    // Check for parameter hotkeys
     bool consider_module = false;
     std::string current_module_fullname = "";
-    */
     hotkeyPressed = false;
     for (auto& pair : this->param_core_interface_map) {
-        /*
-        std::string module_fullname = pair.second->GetNameSpace();
-        if (current_module_fullname != module_fullname) {
-            current_module_fullname = module_fullname;
-            consider_module = this->considerModule(module_fullname, modules_list);
-        }
-        if (consider_module) {
-        */
-        auto param_ptr = pair.second;
-        if (param_ptr == nullptr) continue;
-        if (param_ptr->type == ParamType::BUTTON) {
-            auto keyCode = param_ptr->GetStorage<megamol::core::view::KeyCode>();
-            if (this->isHotkeyPressed(keyCode)) {
-                param_ptr->ForceSetDirty();
-                hotkeyPressed = true;
-                // Break loop after first occurrence of parameter hotkey
-                break;
+        if (!check_all_modules) {
+            std::string module_fullname = pair.second->GetNameSpace();
+            if (current_module_fullname != module_fullname) {
+                current_module_fullname = module_fullname;
+                consider_module = this->considerModule(module_fullname, modules_list);
             }
         }
-        //}
+        if (consider_module || check_all_modules) {
+            auto param_ptr = pair.second;
+            if (param_ptr == nullptr) continue;
+            if (param_ptr->type == ParamType::BUTTON) {
+                auto keyCode = param_ptr->GetStorage<megamol::core::view::KeyCode>();
+                if (this->isHotkeyPressed(keyCode)) {
+                    param_ptr->ForceSetDirty();
+                    hotkeyPressed = true;
+                    // Break loop after first occurrence of parameter hotkey
+                    break;
+                }
+            }
+        }
     }
 
     return hotkeyPressed;
@@ -1103,7 +1100,7 @@ void GUIWindows::drawParamWindowCallback(WindowManager::WindowConfiguration& wc)
             }
         }
     }
-
+    /// TODO Replace below ...
 
     this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
         // Check for new module
@@ -1659,6 +1656,20 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     }
 
     // Save project pop-up
+    this->state.open_popup_save =
+        (this->state.open_popup_save || std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]));
+    if (this->file_utils.FileBrowserPopUp(FileUtils::FileBrowserFlag::SAVE, "Save Running Project",
+            this->state.open_popup_save, this->state.project_file)) {
+        // Serialize current state to parameter.
+        this->save_state_to_parameter();
+        // Serialize project to file
+        FileUtils::SaveProjectToFile(this->state.project_file, this->core_instance);
+    }
+    if (this->state.open_popup_save) {
+        this->state.open_popup_save = false;
+        std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]) = false;
+    }
+    /// TODO ? Use GraphManager for saving - find solution for gui and configurator state overwrite
     /*
     this->state.open_popup_save =
         (this->state.open_popup_save || std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]));
@@ -1680,20 +1691,6 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]) = false;
     }
     */
-    // Save project pop-up
-    this->state.open_popup_save =
-        (this->state.open_popup_save || std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]));
-    if (this->file_utils.FileBrowserPopUp(FileUtils::FileBrowserFlag::SAVE, "Save Running Project",
-            this->state.open_popup_save, this->state.project_file)) {
-        // Serialize current state to parameter.
-        this->save_state_to_parameter();
-        // Serialize project to file
-        FileUtils::SaveProjectToFile(this->state.project_file, this->core_instance);
-    }
-    if (this->state.open_popup_save) {
-        this->state.open_popup_save = false;
-        std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]) = false;
-    }
 }
 
 
@@ -1821,17 +1818,6 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
         std::string state;
         state = window_json.dump(2);
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
-
-        /*
-        auto parameter_slot_ptr = this->state_param.Parameter();
-        if (parameter_slot_ptr.IsNull()) {
-            return;
-        }
-        auto param_ref = &(*parameter_slot_ptr);
-        auto param_ptr = this->param_core_interface_map[param_ref];
-        if (param_ptr == nullptr) return;
-        megamol::gui::configurator::ReadCoreParameter(this->state_param, (*param_ptr), false);
-        */
     }
 }
 
