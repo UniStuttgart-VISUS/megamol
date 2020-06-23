@@ -237,10 +237,7 @@ namespace sys {
                 const char *msg);
 
         private:
-
-            /** The log file used by this target */
-            //FILE *stream;
-
+            
             /** The file name of the log file used */
             vislib::StringW filename;
 
@@ -441,28 +438,7 @@ namespace sys {
             virtual void Msg(UINT level, TimeStamp time, SourceID sid,
                 const char *msg);
 
-            /**
-             * Sets the targetted log object
-             *
-             * @param log The new targetted log object
-             */
-            /*inline void SetTargetLog(std::ostream& stream) {
-                this->stream = stream;
-            }*/
-
-            /**
-             * Answer the targetted log object
-             *
-             * @return The targetted log object
-             */
-            /*inline std::ostream TargetStream(void) const {
-                return this->stream.;
-            }*/
-
         private:
-
-             /** The stream used by this target */
-             //std::ostream stream;
 
              std::shared_ptr<spdlog::sinks::ostream_sink_mt> sink;
 
