@@ -24,10 +24,12 @@
 #include <iostream>
 #include <codecvt>
 
-#include "spdlog/spdlog.h"
-#include "spdlog/sinks/ostream_sink.h"
-#include "spdlog/sinks/basic_file_sink.h"
-#include "spdlog/sinks/msvc_sink.h"
+#ifndef __CUDA_ARCH__
+#    include "spdlog/sinks/basic_file_sink.h"
+#    include "spdlog/sinks/msvc_sink.h"
+#    include "spdlog/sinks/ostream_sink.h"
+#    include "spdlog/spdlog.h"
+#endif
 
 namespace vislib {
 namespace sys {
