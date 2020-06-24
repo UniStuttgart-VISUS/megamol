@@ -7,7 +7,7 @@
 
 #include "cuda_error_check.h"
 #include "vislib/sys/Log.h"
-#include <cuda_runtime.h>
+
 
 bool checkForCudaError(const char *file, const int line) {
 #ifdef CUDA_ERROR_CHECK

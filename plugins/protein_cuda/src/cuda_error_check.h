@@ -11,6 +11,8 @@
 #ifndef MMPROTEINCUDAPLUGIN_CUDA_ERROR_CHECK_H_INCLUDED
 #define MMPROTEINCUDAPLUGIN_CUDA_ERROR_CHECK_H_INCLUDED
 
+#include <cuda_runtime.h>
+
 #define CUDA_ERROR_CHECK // Toggle CUDA error checking
 
 #define CudaSafeCall( err ) cudaSafeCall( err, __FILE__, __LINE__ )
