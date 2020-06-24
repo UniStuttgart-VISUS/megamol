@@ -1086,7 +1086,8 @@ void GUIWindows::drawParamWindowCallback(WindowManager::WindowConfiguration& wc)
     bool param_namespace_open = true;
     auto currentSearchString = this->utils.GetSearchString();
 
-    /// TODO Sort parameters by namespace for each module
+    /// TODO Sort parameters by namespace for each module before drawing widget -> register parameter widget groups
+    /// defined via namespace
 
     configurator::GraphPtrType graph_ptr;
     if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
@@ -1181,6 +1182,7 @@ void GUIWindows::drawParamWindowCallback(WindowManager::WindowConfiguration& wc)
 
 
             if (current_mod_open) {
+                /// XXX ParamWidgetGroups
                 for (auto& param : module_ptr->parameters) {
 
                     std::string param_name = param.GetName();

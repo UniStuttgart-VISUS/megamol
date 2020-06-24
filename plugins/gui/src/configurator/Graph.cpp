@@ -1362,6 +1362,7 @@ void megamol::gui::configurator::GraphPresentation::present_parameters(
                         param_indent_stack++;
                         ImGui::Indent();
 
+                        /// XXX ParamWidgetGroups
                         bool param_name_space_open = true;
                         for (auto& parameter : module_ptr->parameters) {
                             // Filter module by given search string

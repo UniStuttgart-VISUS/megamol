@@ -10,6 +10,7 @@
 
 
 #include "CallSlot.h"
+#include "ParamWidgetGroups.h"
 #include "Parameter.h"
 
 
@@ -50,6 +51,7 @@ public:
     bool label_visible;
     // Relative position without considering canvas offset and zooming
     ImVec2 position;
+    ParamWidgetGroups param_widget_groups;
 
     // FUNCTIONS --------------------------------------------------------------
 

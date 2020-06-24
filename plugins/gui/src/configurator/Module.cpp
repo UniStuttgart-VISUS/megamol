@@ -30,7 +30,8 @@ megamol::gui::configurator::ModulePresentation::ModulePresentation(void)
     , update(true)
     , show_params(false)
     , set_screen_position(ImVec2(FLT_MAX, FLT_MAX))
-    , set_selected_slot_position(false) {
+    , set_selected_slot_position(false)
+    , param_widget_groups() {
 
     this->group.uid = GUI_INVALID_ID;
     this->group.visible = false;
@@ -424,6 +425,7 @@ void megamol::gui::configurator::ModulePresentation::Present(megamol::gui::Prese
                         //    this->show_params = false;
                         //}
 
+                        /// XXX ParamWidgetGroups
                         for (auto& parameter : inout_module.parameters) {
                             parameter.PresentGUI(ParameterPresentation::WidgetScope::LOCAL);
                         }
