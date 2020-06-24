@@ -31,7 +31,7 @@ megamol::gui::configurator::ModulePresentation::ModulePresentation(void)
     , show_params(false)
     , set_screen_position(ImVec2(FLT_MAX, FLT_MAX))
     , set_selected_slot_position(false)
-    , param_widget_groups() {
+    , param_groups() {
 
     this->group.uid = GUI_INVALID_ID;
     this->group.visible = false;

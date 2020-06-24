@@ -275,15 +275,17 @@ void TransferFunctionEditor::SetConnectedParameter(
     configurator::Parameter* param_ptr, const std::string& param_full_name) {
     this->connected_parameter_ptr = nullptr;
     this->connected_parameter_name = "";
-    if (param_ptr->type == ParamType::TRANSFERFUNCTION) {
-        if (this->connected_parameter_ptr != param_ptr) {
-            this->connected_parameter_ptr = param_ptr;
-            this->connected_parameter_name = param_full_name;
-            this->SetTransferFunction(std::get<std::string>(this->connected_parameter_ptr->GetValue()), true);
+    if (param_ptr != nullptr) {
+        if (param_ptr->type == ParamType::TRANSFERFUNCTION) {
+            if (this->connected_parameter_ptr != param_ptr) {
+                this->connected_parameter_ptr = param_ptr;
+                this->connected_parameter_name = param_full_name;
+                this->SetTransferFunction(std::get<std::string>(this->connected_parameter_ptr->GetValue()), true);
+            }
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Wrong parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
-    } else {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Wrong parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 }
 

@@ -46,6 +46,7 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
     , curMVPtransp()
     , renderMode(RenderMode::SIMPLE)
     , greyTF(0)
+    , range()
     , flags_enabled(false)
     , flags_available(false)
     , sphereShader()
@@ -940,20 +941,24 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
 
 bool SphereRenderer::isFlagStorageAvailable(vislib::SmartPtr<ShaderSource::Snippet>& out_flag_snippet) {
 
+    if (out_flag_snippet != nullptr) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Pointer to flag snippet parameter is not nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
     auto flagc = this->readFlagsSlot.CallAs<FlagCallRead_GL>();
 
     // Update parameter visibility
     this->selectColorParam.Param<param::ColorParam>()->SetGUIVisible((bool)(flagc != nullptr));
     this->softSelectColorParam.Param<param::ColorParam>()->SetGUIVisible((bool)(flagc != nullptr));
 
-    if (out_flag_snippet != nullptr) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Pointer to flag snippet parameter is not nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    if (flagc == nullptr) {
+        this->flags_available = false;
+        out_flag_snippet = new ShaderSource::StringSnippet("");
         return false;
     }
-    this->flags_available = true;
-    std::string warnstr;
 
     // Check availbility of flag storage
+    this->flags_available = true;
+    std::string warnstr;
     int major = -1;
     int minor = -1;
     this->getGLSLVersion(major, minor);
@@ -974,13 +979,12 @@ bool SphereRenderer::isFlagStorageAvailable(vislib::SmartPtr<ShaderSource::Snipp
         this->flags_available = false;
     }
 
-    std::string flag_snippet_str;
+    std::string flag_snippet_str = "";
     if (this->flags_available) {
         flag_snippet_str = "#define FLAGS_AVAILABLE \n"
             "#extension GL_ARB_shader_storage_buffer_object : require \n"
             "#extension GL_ARB_gpu_shader_fp64 : enable \n";
     }
-
     out_flag_snippet = new ShaderSource::StringSnippet(flag_snippet_str.c_str());
 
     if (!warnstr.empty()) {
@@ -1057,8 +1061,8 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     const unsigned int frameID = mpdc->FrameID();
     this->stateInvalid = ((hash != this->oldHash) || (frameID != this->oldFrameID));
 
-    // Update data set range (only when new data set is loaded, not when animation is running)
-    if (hash != this->oldHash) {
+    // Update data set range
+    if (this->stateInvalid) {
         this->range[0] = std::numeric_limits<float>::max(); // min
         this->range[1] = std::numeric_limits<float>::min(); // max
         for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {

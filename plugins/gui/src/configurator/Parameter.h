@@ -51,6 +51,7 @@ typedef std::shared_ptr<Module> ModulePtrType;
 
 // Types
 typedef std::shared_ptr<Parameter> ParamPtrType;
+typedef std::vector<Parameter> ParamVectorType;
 
 
 /** ************************************************************************
@@ -76,9 +77,12 @@ public:
     ~ParameterPresentation(void);
 
     void SetTransferFunctionEditorHash(size_t hash) { this->tf_editor_hash = hash; }
+    
     inline void ConnectExternalTransferFunctionEditor(std::shared_ptr<megamol::gui::TransferFunctionEditor> tfe_ptr) {
-        this->tf_editor_ptr = tfe_ptr;
-        this->external_tf_editor = true;
+        if (this->tf_editor_external_ptr != tfe_ptr) {
+            this->tf_editor_external_ptr = tfe_ptr;
+            this->use_external_tf_editor = true;
+        }
     }
 
     void SetTransferFunctionTexture(GLuint tex_id) { this->tf_texture = tex_id; }
@@ -95,8 +99,9 @@ private:
     float height;
     UINT set_focus;
 
-    std::shared_ptr<megamol::gui::TransferFunctionEditor> tf_editor_ptr;
-    bool external_tf_editor;
+    std::shared_ptr<megamol::gui::TransferFunctionEditor> tf_editor_external_ptr;
+    megamol::gui::TransferFunctionEditor tf_editor_internal;
+    bool use_external_tf_editor;
     bool show_tf_editor;
     size_t tf_editor_hash;
     GLuint tf_texture;

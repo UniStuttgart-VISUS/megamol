@@ -10,7 +10,7 @@
 
 
 #include "CallSlot.h"
-#include "ParamWidgetGroups.h"
+#include "ParameterGroupPresentation.h"
 #include "Parameter.h"
 
 
@@ -51,7 +51,7 @@ public:
     bool label_visible;
     // Relative position without considering canvas offset and zooming
     ImVec2 position;
-    ParamWidgetGroups param_widget_groups;
+    ParameterGroupPresentation param_groups;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -128,7 +128,7 @@ public:
     std::string description;
     std::string plugin_name;
     bool is_view;
-    std::vector<Parameter> parameters;
+    ParamVectorType parameters;
 
     // Init when adding module to graph
     std::string name;

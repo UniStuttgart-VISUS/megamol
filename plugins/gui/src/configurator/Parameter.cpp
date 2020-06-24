@@ -27,8 +27,9 @@ megamol::gui::configurator::ParameterPresentation::ParameterPresentation(ParamTy
     , float_format("%.7f")
     , height(0.0f)
     , set_focus(0)
-    , tf_editor_ptr(nullptr)
-    , external_tf_editor(false)
+    , tf_editor_external_ptr(nullptr)
+    , tf_editor_internal()
+    , use_external_tf_editor(false)
     , show_tf_editor(false)
     , tf_editor_hash(0)
     , tf_texture(0) {
@@ -904,25 +905,22 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
 
     ImGuiStyle& style = ImGui::GetStyle();
 
-    if (this->external_tf_editor) {
-        if (this->tf_editor_ptr == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteWarn(
+    if (this->use_external_tf_editor) {
+        if (this->tf_editor_external_ptr == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError(
                 "Pointer to external transfer function editor is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                 __LINE__);
             return false;
         }
-        isActive = !this->tf_editor_ptr->GetConnectedParameterName().empty();
-    } else {
-        if (this->tf_editor_ptr == nullptr) {
-            this->tf_editor_ptr = std::make_shared<megamol::gui::TransferFunctionEditor>();
-        }
+        isActive = !(this->tf_editor_external_ptr->GetConnectedParameterName().empty());
     }
 
     // LOCAL -----------------------------------------------------------
     if (scope == WidgetScope::LOCAL) {
         ImGui::BeginGroup();
 
-        if (this->external_tf_editor) {
+        if (this->use_external_tf_editor) {
+            
             // Reduced display of value and editor state.
             if (value.empty()) {
                 ImGui::TextDisabled("{    (empty)    }");
@@ -943,10 +941,56 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
             // Label
             ImGui::AlignTextToFramePadding();
             ImGui::TextEx(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
-
-            ImGui::Indent();
         }
 
+        // Toggle internal and external editor, if available
+        if (this->tf_editor_external_ptr != nullptr) {
+            if (ImGui::RadioButton("External", this->use_external_tf_editor)) {
+                this->use_external_tf_editor = true;
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Internal", !this->use_external_tf_editor)){
+                this->use_external_tf_editor = false;
+                this->tf_editor_external_ptr->SetConnectedParameter(nullptr, "");
+            }
+        }
+        ImGui::SameLine();
+
+        if (this->use_external_tf_editor) {
+            
+            // Editor
+            ImGui::PushID("Edit_");
+            ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[isActive ? ImGuiCol_ButtonHovered : ImGuiCol_Button]);
+            ImGui::PushStyleColor(
+                ImGuiCol_ButtonHovered, style.Colors[isActive ? ImGuiCol_Button : ImGuiCol_ButtonHovered]);
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
+            if (ImGui::Button("Edit")) {
+                retval = true;
+            }
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
+            
+        } else { // Internal Editor
+            
+            // Editor
+            if (ImGui::Checkbox("Editor ", &this->show_tf_editor)) {
+                // Set once
+                if (this->show_tf_editor) {
+                    updateEditor = true;
+                }
+            }
+            ImGui::SameLine();
+
+            // Indicate unset transfer function state
+            if (value.empty()) {
+                ImGui::TextDisabled(" { empty } ");
+            }
+            ImGui::SameLine();
+
+            // Label
+            ImGui::TextUnformatted(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));       
+        }
+                
         // Copy
         if (ImGui::Button("Copy")) {
 #ifdef GUI_USE_GLFW
@@ -973,65 +1017,46 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
             vislib::sys::Log::DefaultLog.WriteWarn(
                 "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 #endif
-            updateEditor = true;
-        }
-        ImGui::SameLine();
-
-        if (this->external_tf_editor) {
-            // Editor
-            ImGui::PushID("Edit_");
-            ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[isActive ? ImGuiCol_ButtonHovered : ImGuiCol_Button]);
-            ImGui::PushStyleColor(
-                ImGuiCol_ButtonHovered, style.Colors[isActive ? ImGuiCol_Button : ImGuiCol_ButtonHovered]);
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
-            if (ImGui::Button("Edit")) {
-                retval = true;
-            }
-            ImGui::PopStyleColor(3);
-            ImGui::PopID();
-
-            ImGui::Unindent();
-        } else {
-            // Editor
-            if (ImGui::Checkbox("Editor ", &this->show_tf_editor)) {
-                // Set once
-                if (this->show_tf_editor) {
-                    updateEditor = true;
+            value = std::get<std::string>(inout_parameter.GetValue());
+            if (this->use_external_tf_editor) {
+                if (this->tf_editor_external_ptr != nullptr) {
+                    this->tf_editor_external_ptr->SetTransferFunction(value, true);
                 }
             }
-            ImGui::SameLine();
-
-            // Indicate unset transfer function state
-            if (value.empty()) {
-                ImGui::TextDisabled(" { empty } ");
+            else {
+                this->tf_editor_internal.SetTransferFunction(value, false);
             }
-            ImGui::SameLine();
-
-            // Label
-            ImGui::TextUnformatted(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
-
+        }
+        
+        if (!this->use_external_tf_editor) { // Internal Editor
+            
+            if (this->tf_editor_hash != inout_parameter.GetTransferFunctionHash()) {
+                updateEditor = true;
+            }
             // Propagate the transfer function to the editor.
             if (updateEditor) {
-                this->tf_editor_ptr->SetTransferFunction(value, false);
+                this->tf_editor_internal.SetTransferFunction(value, false);
             }
             // Draw transfer function editor
             if (this->show_tf_editor) {
-                if (this->tf_editor_ptr->Draw(false)) {
+                if (this->tf_editor_internal.Draw(false)) {
                     std::string value;
-                    if (this->tf_editor_ptr->GetTransferFunction(value)) {
-                        inout_parameter.SetValue(value);
-                        retval = true;
+                    if (this->tf_editor_internal.GetTransferFunction(value)) {
+                        inout_parameter.SetValue(value);                      
+                        retval = false; /// (Returning true opens external editor)
                     }
                 }
-                ImGui::Separator();
             }
-        }
-
+    
+            this->tf_editor_hash = inout_parameter.GetTransferFunctionHash();   
+        }     
+        
+        ImGui::Separator();
         ImGui::EndGroup();
     }
     // GLOBAL -----------------------------------------------------------
     else if (scope == ParameterPresentation::WidgetScope::GLOBAL) {
-        if (this->external_tf_editor) {
+        if (this->use_external_tf_editor) {
 
             // Check for changed parameter value which should be forced to the editor once.
             if (isActive) {
@@ -1041,7 +1066,7 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
             }
             // Propagate the transfer function to the editor.
             if (isActive && updateEditor) {
-                this->tf_editor_ptr->SetTransferFunction(value, true);
+                this->tf_editor_external_ptr->SetTransferFunction(value, true);
                 retval = true;
             }
             this->tf_editor_hash = inout_parameter.GetTransferFunctionHash();
