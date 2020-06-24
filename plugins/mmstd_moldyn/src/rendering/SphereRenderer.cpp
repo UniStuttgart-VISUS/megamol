@@ -1064,8 +1064,8 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     const unsigned int frameID = mpdc->FrameID();
     this->stateInvalid = ((hash != this->oldHash) || (frameID != this->oldFrameID));
 
-    // Update data set range (only when new data set is loaded, not when animation is running)
-    if (hash != this->oldHash) {
+    // Update data set range
+    if (this->stateInvalid) {
         this->range[0] = std::numeric_limits<float>::max(); // min
         this->range[1] = std::numeric_limits<float>::min(); // max
         for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
