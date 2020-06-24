@@ -245,7 +245,8 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
                 this->show_module_list_sidebar = !this->show_module_list_sidebar;
                 this->show_module_list_child = false;
             }
-            if (ImGui::MenuItem("Parameter Sidebar", nullptr, this->graph_state.show_parameter_sidebar)) {
+            if (ImGui::MenuItem("Parameter Sidebar", nullptr, this->graph_state.show_parameter_sidebar,
+                    (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
                 this->graph_state.show_parameter_sidebar = !this->graph_state.show_parameter_sidebar;
             }
             ImGui::EndMenu();
