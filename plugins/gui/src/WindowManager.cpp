@@ -307,7 +307,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                             __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
-                    // expert_mode
+                    // extended_mode
                     if (config_values.at("param_extended_mode").is_boolean()) {
                         config_values.at("param_extended_mode").get_to(tmp_config.param_extended_mode);
                     } else {

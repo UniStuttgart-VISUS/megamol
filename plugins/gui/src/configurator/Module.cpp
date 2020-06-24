@@ -425,10 +425,11 @@ void megamol::gui::configurator::ModulePresentation::Present(megamol::gui::Prese
                         //    this->show_params = false;
                         //}
 
-                        /// XXX ParamWidgetGroups
-                        for (auto& parameter : inout_module.parameters) {
-                            parameter.PresentGUI(ParameterPresentation::WidgetScope::LOCAL);
-                        }
+                        bool unused_external_tf_editor;
+                        /// XXX ParameterGroupPresentation
+                        inout_module.present.param_groups.PresentGUI(inout_module.parameters, inout_module.FullName(),
+                            "", false, true, configurator::ParameterPresentation::WidgetScope::LOCAL, nullptr,
+                            unused_external_tf_editor);
 
                         ImGui::EndChild();
                         ImGui::PopStyleColor();

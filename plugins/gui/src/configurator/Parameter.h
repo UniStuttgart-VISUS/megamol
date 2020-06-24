@@ -69,7 +69,7 @@ public:
 
     // VARIABLES --------------------------------------------------------------
 
-    bool expert;
+    bool extended;
 
     // FUCNTIONS --------------------------------------------------------------
 
@@ -77,7 +77,7 @@ public:
     ~ParameterPresentation(void);
 
     void SetTransferFunctionEditorHash(size_t hash) { this->tf_editor_hash = hash; }
-    
+
     inline void ConnectExternalTransferFunctionEditor(std::shared_ptr<megamol::gui::TransferFunctionEditor> tfe_ptr) {
         if (this->tf_editor_external_ptr != tfe_ptr) {
             this->tf_editor_external_ptr = tfe_ptr;

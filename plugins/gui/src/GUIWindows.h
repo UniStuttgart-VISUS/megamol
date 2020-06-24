@@ -210,9 +210,6 @@ private:
     void drawConfiguratorWindowCallback(WindowManager::WindowConfiguration& wc);
 
     void drawMenu(void);
-    void drawParameter(megamol::gui::configurator::Parameter& param_ptr,
-        megamol::gui::configurator::ParameterPresentation::WidgetScope scope, const std::string& module_full_name,
-        bool extended);
     void drawPopUps(void);
 
     bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);

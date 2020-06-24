@@ -24,15 +24,14 @@ class ParameterGroupPresentation {
 public:
     ParameterGroupPresentation(void);
     ~ParameterGroupPresentation(void);
-    
-    bool Present(configurator::ParamVectorType& inout_params);
+
+    bool PresentGUI(megamol::gui::configurator::ParamVectorType& inout_params, const std::string& in_module_fullname,
+        const std::string& in_search, bool in_extended, bool in_ignore_extended,
+        megamol::gui::configurator::ParameterPresentation::WidgetScope in_scope,
+        const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor);
 
 
 private:
-
-
-
-
 };
 
 

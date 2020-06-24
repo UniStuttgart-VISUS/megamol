@@ -696,7 +696,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
 
     label_stream.str("");
     label_stream.clear();
-    label_stream << ((this->range[1] - this->range[0]) / 2.0f);
+    label_stream << (this->range[0] + (this->range[1] - this->range[0]) / 2.0f);
     std::string mid_label_str = label_stream.str();
     float mid_item_width = ImGui::CalcTextSize(mid_label_str.c_str()).x;
 

@@ -18,7 +18,7 @@ using namespace megamol::gui::configurator;
 
 megamol::gui::configurator::ParameterPresentation::ParameterPresentation(ParamType type)
     : megamol::core::param::AbstractParamPresentation()
-    , expert(false)
+    , extended(false)
     , help()
     , description()
     , utils()
@@ -60,10 +60,10 @@ bool megamol::gui::configurator::ParameterPresentation::Present(
 
         switch (scope) {
         case (ParameterPresentation::WidgetScope::LOCAL): {
-            if (this->IsGUIVisible() || this->expert) {
+            if (this->IsGUIVisible() || this->extended) {
 
                 ImGui::BeginGroup();
-                if (this->expert) {
+                if (this->extended) {
                     /// PREFIX ---------------------------------------------
 
                     // Visibility
@@ -150,7 +150,7 @@ bool megamol::gui::configurator::ParameterPresentation::Present(
 float megamol::gui::configurator::ParameterPresentation::GetHeight(Parameter& inout_parameter) {
 
     float height = 0.0f;
-    if (this->IsGUIVisible() || this->expert) {
+    if (this->IsGUIVisible() || this->extended) {
         height = (ImGui::GetFrameHeightWithSpacing() * (1.15f));
         if (inout_parameter.type == ParamType::TRANSFERFUNCTION) {
             if (this->show_tf_editor) {
@@ -920,7 +920,7 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
         ImGui::BeginGroup();
 
         if (this->use_external_tf_editor) {
-            
+
             // Reduced display of value and editor state.
             if (value.empty()) {
                 ImGui::TextDisabled("{    (empty)    }");
@@ -947,9 +947,10 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
         if (this->tf_editor_external_ptr != nullptr) {
             if (ImGui::RadioButton("External", this->use_external_tf_editor)) {
                 this->use_external_tf_editor = true;
+                /// TODO XXX this->tf_editor_external_ptr->SetConnectedParameter(&param, full_param_name);
             }
             ImGui::SameLine();
-            if (ImGui::RadioButton("Internal", !this->use_external_tf_editor)){
+            if (ImGui::RadioButton("Internal", !this->use_external_tf_editor)) {
                 this->use_external_tf_editor = false;
                 this->tf_editor_external_ptr->SetConnectedParameter(nullptr, "");
             }
@@ -957,7 +958,7 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
         ImGui::SameLine();
 
         if (this->use_external_tf_editor) {
-            
+
             // Editor
             ImGui::PushID("Edit_");
             ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[isActive ? ImGuiCol_ButtonHovered : ImGuiCol_Button]);
@@ -969,9 +970,9 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
             }
             ImGui::PopStyleColor(3);
             ImGui::PopID();
-            
+
         } else { // Internal Editor
-            
+
             // Editor
             if (ImGui::Checkbox("Editor ", &this->show_tf_editor)) {
                 // Set once
@@ -988,9 +989,9 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
             ImGui::SameLine();
 
             // Label
-            ImGui::TextUnformatted(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));       
+            ImGui::TextUnformatted(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
         }
-                
+
         // Copy
         if (ImGui::Button("Copy")) {
 #ifdef GUI_USE_GLFW
@@ -1022,14 +1023,13 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
                 if (this->tf_editor_external_ptr != nullptr) {
                     this->tf_editor_external_ptr->SetTransferFunction(value, true);
                 }
-            }
-            else {
+            } else {
                 this->tf_editor_internal.SetTransferFunction(value, false);
             }
         }
-        
+
         if (!this->use_external_tf_editor) { // Internal Editor
-            
+
             if (this->tf_editor_hash != inout_parameter.GetTransferFunctionHash()) {
                 updateEditor = true;
             }
@@ -1042,15 +1042,15 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
                 if (this->tf_editor_internal.Draw(false)) {
                     std::string value;
                     if (this->tf_editor_internal.GetTransferFunction(value)) {
-                        inout_parameter.SetValue(value);                      
+                        inout_parameter.SetValue(value);
                         retval = false; /// (Returning true opens external editor)
                     }
                 }
             }
-    
-            this->tf_editor_hash = inout_parameter.GetTransferFunctionHash();   
-        }     
-        
+
+            this->tf_editor_hash = inout_parameter.GetTransferFunctionHash();
+        }
+
         ImGui::Separator();
         ImGui::EndGroup();
     }

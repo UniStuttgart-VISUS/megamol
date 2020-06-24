@@ -265,27 +265,51 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(megamol::gui::FileUtils::FileBrow
 
                 // Only update child paths when path changed.
                 if (this->path_changed) {
+                    // Reset scrolling
+                    ImGui::SetScrollY(0.0f);
+
+                    // Update child paths
                     this->child_paths.clear();
+
+                    std::vector<ChildDataType> paths;
+                    std::vector<ChildDataType> files;
                     try {
                         fsns::path tmp_file_path = static_cast<fsns::path>(this->file_path_str);
                         for (const auto& entry : fsns::directory_iterator(tmp_file_path)) {
                             if (fsns::status_known(fsns::status(entry.path()))) {
-                                this->child_paths.emplace_back(
-                                    ChildDataType(entry.path(), fsns::is_directory(entry.path())));
+                                bool is_directory = fsns::is_directory(entry.path());
+                                if (is_directory) {
+                                    paths.emplace_back(ChildDataType(entry.path(), is_directory));
+                                } else {
+                                    files.emplace_back(ChildDataType(entry.path(), is_directory));
+                                }
                             }
                         }
                     } catch (...) {
                     }
 
                     // Sort path case insensitive alphabetically ascending
-                    std::sort(this->child_paths.begin(), this->child_paths.end(),
-                        [](ChildDataType const& a, ChildDataType const& b) {
-                            std::string a_str = a.first.filename().generic_u8string();
-                            for (auto& c : a_str) c = std::toupper(c);
-                            std::string b_str = b.first.filename().generic_u8string();
-                            for (auto& c : b_str) c = std::toupper(c);
-                            return (a_str < b_str);
-                        });
+                    std::sort(paths.begin(), paths.end(), [](ChildDataType const& a, ChildDataType const& b) {
+                        std::string a_str = a.first.filename().generic_u8string();
+                        for (auto& c : a_str) c = std::toupper(c);
+                        std::string b_str = b.first.filename().generic_u8string();
+                        for (auto& c : b_str) c = std::toupper(c);
+                        return (a_str < b_str);
+                    });
+                    std::sort(files.begin(), files.end(), [](ChildDataType const& a, ChildDataType const& b) {
+                        std::string a_str = a.first.filename().generic_u8string();
+                        for (auto& c : a_str) c = std::toupper(c);
+                        std::string b_str = b.first.filename().generic_u8string();
+                        for (auto& c : b_str) c = std::toupper(c);
+                        return (a_str < b_str);
+                    });
+
+                    for (auto& path : paths) {
+                        this->child_paths.emplace_back(path);
+                    }
+                    for (auto& file : files) {
+                        this->child_paths.emplace_back(file);
+                    }
 
                     this->path_changed = false;
                 }

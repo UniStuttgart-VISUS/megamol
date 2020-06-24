@@ -263,8 +263,8 @@ public:
      * @param source   The string to search in.
      * @param search   The string to search for in the source.
      */
-    inline bool FindCaseInsensitiveSubstring(const std::string& source, const std::string& search) const {
-
+    static bool FindCaseInsensitiveSubstring(const std::string& source, const std::string& search) {
+        if (search.empty()) return true;
         auto it = std::search(source.begin(), source.end(), search.begin(), search.end(),
             [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); });
         return (it != source.end());

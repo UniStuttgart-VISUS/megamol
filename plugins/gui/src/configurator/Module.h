@@ -10,8 +10,8 @@
 
 
 #include "CallSlot.h"
-#include "ParameterGroupPresentation.h"
 #include "Parameter.h"
+#include "ParameterGroupPresentation.h"
 
 
 namespace megamol {

@@ -641,7 +641,7 @@ bool megamol::gui::configurator::GraphPresentation::StateFromJsonString(
                             config_state.at("param_extended_mode").get_to(this->param_extended_mode);
                             for (auto& module_ptr : inout_graph.GetModules()) {
                                 for (auto& parameter : module_ptr->parameters) {
-                                    parameter.present.expert = this->param_extended_mode;
+                                    parameter.present.extended = this->param_extended_mode;
                                 }
                             }
                         } else {
@@ -1284,14 +1284,14 @@ void megamol::gui::configurator::GraphPresentation::present_parameters(
             this->param_extended_mode = false;
             changed = true;
         }
-        if (ImGui::MenuItem("Expert###graph_expert_mode", nullptr, this->param_extended_mode, true)) {
+        if (ImGui::MenuItem("Expert###graph_extended_mode", nullptr, this->param_extended_mode, true)) {
             this->param_extended_mode = true;
             changed = true;
         }
         if (changed) {
             for (auto& module_ptr : inout_graph.GetModules()) {
                 for (auto& parameter : module_ptr->parameters) {
-                    parameter.present.expert = this->param_extended_mode;
+                    parameter.present.extended = this->param_extended_mode;
                 }
             }
         }
@@ -1346,71 +1346,77 @@ void megamol::gui::configurator::GraphPresentation::present_parameters(
             ModulePtrType module_ptr;
             // Get pointer to currently selected module(s)
             if (inout_graph.GetModule(module_uid, module_ptr)) {
-                if (module_ptr->parameters.size() > 0) {
+                ImGui::PushID(module_ptr->uid);
 
-                    ImGui::PushID(module_ptr->uid);
+                // Set default state of header
+                auto headerId = ImGui::GetID(module_ptr->name.c_str());
+                auto headerState = ImGui::GetStateStorage()->GetInt(headerId, 1); // 0=close 1=open
+                ImGui::GetStateStorage()->SetInt(headerId, headerState);
 
-                    // Set default state of header
-                    auto headerId = ImGui::GetID(module_ptr->name.c_str());
-                    auto headerState = ImGui::GetStateStorage()->GetInt(headerId, 1); // 0=close 1=open
-                    ImGui::GetStateStorage()->SetInt(headerId, headerState);
+                if (ImGui::CollapsingHeader(module_ptr->name.c_str(), nullptr, ImGuiTreeNodeFlags_None)) {
+                    unsigned int param_indent_stack = 0;
+                    this->utils.HoverToolTip(
+                        module_ptr->description, ImGui::GetID(module_ptr->name.c_str()), 0.75f, 5.0f);
+                    param_indent_stack++;
+                    ImGui::Indent();
 
-                    if (ImGui::CollapsingHeader(module_ptr->name.c_str(), nullptr, ImGuiTreeNodeFlags_None)) {
-                        unsigned int param_indent_stack = 0;
-                        this->utils.HoverToolTip(
-                            module_ptr->description, ImGui::GetID(module_ptr->name.c_str()), 0.75f, 5.0f);
-                        param_indent_stack++;
-                        ImGui::Indent();
+                    bool unused_external_tf_editor;
+                    /// XXX ParameterGroupPresentation
+                    module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(),
+                        search_string, this->param_extended_mode, false,
+                        configurator::ParameterPresentation::WidgetScope::LOCAL, nullptr, unused_external_tf_editor);
 
-                        /// XXX ParamWidgetGroups
-                        bool param_name_space_open = true;
-                        for (auto& parameter : module_ptr->parameters) {
-                            // Filter module by given search string
-                            bool search_filter = true;
-                            if (!search_string.empty()) {
-                                search_filter =
-                                    this->utils.FindCaseInsensitiveSubstring(parameter.full_name, search_string);
+                    /*
+                    bool param_name_space_open = true;
+                    for (auto& parameter : module_ptr->parameters) {
+                        // Filter module by given search string
+                        bool search_filter = true;
+                        if (!search_string.empty()) {
+                            search_filter =
+                                this->utils.FindCaseInsensitiveSubstring(parameter.full_name, search_string);
+                        }
+
+                        // Add Collapsing header depending on parameter namespace
+                        std::string current_param_namespace = parameter.GetNameSpace();
+                        if (current_param_namespace != this->param_name_space) {
+                            this->param_name_space = current_param_namespace;
+                            while (param_indent_stack > 1) {
+                                param_indent_stack--;
+                                ImGui::Unindent();
                             }
 
-                            // Add Collapsing header depending on parameter namespace
-                            std::string current_param_namespace = parameter.GetNameSpace();
-                            if (current_param_namespace != this->param_name_space) {
-                                this->param_name_space = current_param_namespace;
-                                while (param_indent_stack > 1) {
-                                    param_indent_stack--;
-                                    ImGui::Unindent();
+                            if (!this->param_name_space.empty()) {
+                                std::string label = this->param_name_space + "###" + parameter.full_name;
+                                // Open all namespace headers when parameter search is active
+                                if (!search_string.empty()) {
+                                    auto headerId = ImGui::GetID(label.c_str());
+                                    ImGui::GetStateStorage()->SetInt(headerId, 1);
                                 }
-
-                                if (!this->param_name_space.empty()) {
-                                    std::string label = this->param_name_space + "###" + parameter.full_name;
-                                    // Open all namespace headers when parameter search is active
-                                    if (!search_string.empty()) {
-                                        auto headerId = ImGui::GetID(label.c_str());
-                                        ImGui::GetStateStorage()->SetInt(headerId, 1);
-                                    }
-                                    param_name_space_open =
-                                        ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
-                                    param_indent_stack++;
-                                    ImGui::Indent();
-                                } else {
-                                    param_name_space_open = true;
-                                }
-                            }
-
-                            // Draw parameter
-                            if (search_filter && param_name_space_open) {
-                                parameter.PresentGUI(ParameterPresentation::WidgetScope::LOCAL);
+                                param_name_space_open =
+                                    ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
+                                param_indent_stack++;
+                                ImGui::Indent();
+                            } else {
+                                param_name_space_open = true;
                             }
                         }
-                        while (param_indent_stack > 0) {
-                            param_indent_stack--;
-                            ImGui::Unindent();
+
+                        // Draw parameter
+                        if (search_filter && param_name_space_open) {
+                            parameter.PresentGUI(ParameterPresentation::WidgetScope::LOCAL);
                         }
-                        // Vertical spacing
-                        /// ImGui::Dummy(ImVec2(1.0f, ImGui::GetFrameHeightWithSpacing()));
                     }
-                    ImGui::PopID();
+                    while (param_indent_stack > 0) {
+                        param_indent_stack--;
+                        ImGui::Unindent();
+                    }
+                    // Vertical spacing
+                    /// ImGui::Dummy(ImVec2(1.0f, ImGui::GetFrameHeightWithSpacing()));
+                    */
                 }
+
+
+                ImGui::PopID();
             }
         }
     }
@@ -2085,7 +2091,7 @@ ImGuiID megamol::gui::configurator::Graph::AddModule(
                     param_slot.present.SetGUIPresentation(p.gui_presentation);
                     // Apply current global configurator parameter gui settings
                     // Do not apply global read-only and visibility.
-                    param_slot.present.expert = this->present.param_extended_mode;
+                    param_slot.present.extended = this->present.param_extended_mode;
 
                     mod_ptr->parameters.emplace_back(param_slot);
                 }
