@@ -352,9 +352,6 @@ bool SphereRenderer::resetResources(void) {
     this->bufSize = (32 * 1024 * 1024);
     this->numBuffers = 3;
 
-    this->oldHash = -1;
-    this->oldFrameID = -1;
-
     this->colType = SimpleSphericalParticles::ColourDataType::COLDATA_NONE;
     this->vertType = SimpleSphericalParticles::VertexDataType::VERTDATA_NONE;
 
@@ -413,6 +410,8 @@ bool SphereRenderer::resetResources(void) {
 bool SphereRenderer::createResources() {
 
     this->resetResources();
+
+    this->stateInvalid = true;
 
     this->vertShader = std::make_shared<ShaderSource>();
     this->fragShader = std::make_shared<ShaderSource>();
@@ -1021,6 +1020,15 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
 
     auto cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
 
+    // Get data
+    float scaling = 1.0f;
+    MultiParticleDataCall* mpdc = this->getData(static_cast<unsigned int>(call.Time()), scaling);
+    if (mpdc == nullptr) return false;
+    // Check if we got a new data set
+    const SIZE_T hash = mpdc->DataHash();
+    const unsigned int frameID = mpdc->FrameID();
+    this->stateInvalid = ((hash != this->oldHash) || (frameID != this->oldFrameID));
+
     // Checking for changed render mode
     auto currentRenderMode = static_cast<RenderMode>(this->renderModeParam.Param<param::EnumParam>()->Value());
     if (currentRenderMode != this->renderMode) {
@@ -1030,20 +1038,10 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
         }
     }
 
-    // Get data
-    float scaling = 1.0f;
-    MultiParticleDataCall* mpdc = this->getData(static_cast<unsigned int>(call.Time()), scaling);
-    if (mpdc == nullptr) return false;
-
     // Update current state variables -----------------------------------------
 
-    // Check if we got a new data set
-    const SIZE_T hash = mpdc->DataHash();
-    const unsigned int frameID = mpdc->FrameID();
-    this->stateInvalid = ((hash != this->oldHash) || (frameID != this->oldFrameID));
-
-    // Update data set range
-    if (this->stateInvalid) {
+    // Update data set range (only if new data set was loaded, not on frame loading)
+    if (hash != this->oldHash) {
         this->range[0] = std::numeric_limits<float>::max(); // min
         this->range[1] = std::numeric_limits<float>::min(); // max
         for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
@@ -1732,6 +1730,7 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2& call, MultiPar
 
     // We need to regenerate the shader if certain settings are changed
     if (this->enableLightingSlot.IsDirty() || this->aoConeApexSlot.IsDirty()) {
+
         this->aoConeApexSlot.ResetDirty();
         this->enableLightingSlot.ResetDirty();
 
@@ -2603,7 +2602,6 @@ void SphereRenderer::rebuildWorkingData(view::CallRender3D_2& call, MultiParticl
 
         // Insert all particle lists
         this->volGen->ClearVolume();
-
         this->volGen->StartInsertion(this->curClipBox, glm::vec4(this->curClipDat[0], this->curClipDat[1],
             this->curClipDat[2], this->curClipDat[3]));
         for (unsigned int i = 0; i < this->gpuData.size(); i++) {
