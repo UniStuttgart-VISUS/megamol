@@ -44,10 +44,10 @@
 
 // OpenGL stuff only used for texture =>
 #include "mmcore/misc/PngBitmapCodec.h"
-#include "vislib/graphics/BitMapImage.h"
+#include "vislib/graphics/BitmapImage.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/sys/FastFile.h"
-// <=
+// <= OpenGL stuff only used for texture
 
 
 namespace megamol {
@@ -286,8 +286,6 @@ public:
 
     // Texture ----------------------------------------------------------------
 
-#ifdef GL_VERSION_1_0
-
     /**
      * Load texture from file.
      */
@@ -302,8 +300,6 @@ public:
      * Load texture from data.
      */
     static bool CreateTexture(GLuint& inout_id, GLsizei width, GLsizei height, const float* data);
-
-#endif // GL_VERSION_1_0
 
     // Other utility functions ------------------------------------------------
 

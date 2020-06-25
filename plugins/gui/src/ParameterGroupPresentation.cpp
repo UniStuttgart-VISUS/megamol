@@ -43,7 +43,7 @@ bool megamol::gui::ParameterGroupPresentation::PresentGUI(megamol::gui::configur
         // GLOBAL
 
         for (auto& param : inout_params) {
-            this->drawParameter(
+            this->draw_parameter(
                 param, in_module_fullname, in_scope, in_external_tf_editor, out_open_external_tf_editor);
         }
     } else {
@@ -74,7 +74,7 @@ bool megamol::gui::ParameterGroupPresentation::PresentGUI(megamol::gui::configur
                     group_map[param_namespace].second[param.type]++;
                 } else {
                     // Draw parameters without namespace at the beginning
-                    this->drawParameter(
+                    this->draw_parameter(
                         param, in_module_fullname, in_scope, in_external_tf_editor, out_open_external_tf_editor);
                 }
             }
@@ -109,7 +109,7 @@ bool megamol::gui::ParameterGroupPresentation::PresentGUI(megamol::gui::configur
                     ImGui::Indent();
 
                     for (auto& param : group.second.first) {
-                        this->drawParameter(
+                        this->draw_parameter(
                             (*param), in_module_fullname, in_scope, in_external_tf_editor, out_open_external_tf_editor);
                     }
 
@@ -129,7 +129,7 @@ bool megamol::gui::ParameterGroupPresentation::PresentGUI(megamol::gui::configur
 }
 
 
-void megamol::gui::ParameterGroupPresentation::drawParameter(megamol::gui::configurator::Parameter& inout_param,
+void megamol::gui::ParameterGroupPresentation::draw_parameter(megamol::gui::configurator::Parameter& inout_param,
     const std::string& in_module_fullname, megamol::gui::configurator::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor) {
 
@@ -157,6 +157,7 @@ void megamol::gui::ParameterGroupPresentation::drawParameter(megamol::gui::confi
 void megamol::gui::ParameterGroupPresentation::group_widget_animation(ParamPtrVectorType& params) {
 
     // Check required parameters
+    /// XXX By name because of multiple same types ...
     Parameter* param_play = nullptr;
     Parameter* param_time = nullptr;
     Parameter* param_speed = nullptr;
@@ -178,7 +179,7 @@ void megamol::gui::ParameterGroupPresentation::group_widget_animation(ParamPtrVe
         return;
     }
 
-    // Load button textures
+    // Load button textures (once)
     if (this->button_tex_ids.play == 0) {
         megamol::gui::GUIUtils::LoadTexture("../share/resources/transport_ctrl_play.png", this->button_tex_ids.play);
     }
@@ -206,7 +207,7 @@ void megamol::gui::ParameterGroupPresentation::group_widget_animation(ParamPtrVe
 
     float frame_height = ImGui::GetFrameHeightWithSpacing(); // ImGui::GetFrameHeight();
 
-    float child_height = frame_height * 5.0f;
+    float child_height = frame_height * 4.5f;
     auto child_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration;
     ImGui::BeginChild("group_widget_animation", ImVec2(0.0f, child_height), true, child_flags);
 
@@ -269,32 +270,6 @@ void megamol::gui::ParameterGroupPresentation::group_widget_animation(ParamPtrVe
 
     param_time->PresentGUI(ParameterPresentation::WidgetScope::LOCAL);
     param_speed->PresentGUI(ParameterPresentation::WidgetScope::LOCAL);
-
-    /*
-    ImGui::Value("Time", time, "%.5f");
-    ImGui::SameLine();
-    ImGui::Value("Speed", speed, "%.5f");
-    */
-
-    /*
-    float min_time = param_time->GetMinValue<float>();
-    float max_time = param_time->GetMaxValue<float>();
-    if ((min_time == -FLT_MAX) || (min_time == FLT_MAX)) {
-        min_time = 0.0f;
-    }
-    if ((max_time == -FLT_MAX) || (max_time == FLT_MAX)) {
-        float frac = 10.0f;
-        float tmp_time = time;
-        while (tmp_time > 1.0f) {
-            frac *= 10.0f;
-            tmp_time /= 10.0f;
-        }
-        max_time = frac;
-    }
-    if (ImGui::SliderFloat("Time", &time, min_time, max_time, "%.3f")) {
-        param_time->SetValue(time);
-    }
-    */
 
     ImGui::EndChild();
 }

@@ -338,8 +338,6 @@ bool megamol::gui::GUIUtils::PointCircleButton(const std::string& label, bool di
 }
 
 
-#ifdef GL_VERSION_1_0
-
 bool megamol::gui::GUIUtils::LoadTexture(const std::string& filename, GLuint& inout_id) {
 
     if (filename.empty()) return false;
@@ -440,8 +438,6 @@ bool megamol::gui::GUIUtils::CreateTexture(GLuint& inout_id, GLsizei width, GLsi
     glBindTexture(GL_TEXTURE_2D, 0);
     return true;
 }
-
-#endif // GL_VERSION_1_0
 
 
 void megamol::gui::GUIUtils::ReadOnlyWigetStyle(bool set) {

@@ -662,7 +662,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_name = "All Parameters";
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
-    buf_win.win_flags = ImGuiWindowFlags_HorizontalScrollbar;
+    buf_win.win_flags = ImGuiWindowFlags_NoScrollbar;
     buf_win.win_callback = WindowManager::DrawCallbacks::MAIN_PARAMETERS;
     buf_win.win_reset_size = buf_win.win_size;
     this->window_manager.AddWindowConfiguration(buf_win);
@@ -698,8 +698,8 @@ bool GUIWindows::createContext(void) {
     // viewport size).
     buf_win.win_store_config = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F7);
-    buf_win.win_flags =
-        ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse;
+    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                        ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar;
     buf_win.win_callback = WindowManager::DrawCallbacks::CONFIGURATOR;
     // buf_win.win_size is set to current viewport later
     this->window_manager.AddWindowConfiguration(buf_win);
@@ -1120,7 +1120,7 @@ void GUIWindows::drawParamWindowCallback(WindowManager::WindowConfiguration& wc)
                     WindowManager::WindowConfiguration buf_win;
                     buf_win.win_name = window_name;
                     buf_win.win_show = true;
-                    buf_win.win_flags = ImGuiWindowFlags_HorizontalScrollbar;
+                    buf_win.win_flags = ImGuiWindowFlags_NoScrollbar;
                     buf_win.win_callback = WindowManager::DrawCallbacks::PARAMETERS;
                     buf_win.param_show_hotkeys = false;
                     buf_win.win_position = ImVec2(0.0f, ImGui::GetTextLineHeightWithSpacing());
