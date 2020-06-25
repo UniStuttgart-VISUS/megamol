@@ -6,6 +6,7 @@
 
 #include "mmcore/LuaAPI.h"
 #include <cxxopts.hpp>
+#include <filesystem>
 
 int main(int argc, char *argv[]) {
     megamol::core::CoreInstance core;
@@ -41,7 +42,13 @@ int main(int argc, char *argv[]) {
     if (parsed_options.count("project-files")) {
         const auto& v = parsed_options["project-files"].as<std::vector<std::string>>();
         for (const auto& p : v) {
-            lua_api.RunFile(p, res);
+            if (std::filesystem::exists(p)) {
+                if (!lua_api.RunFile(p, res)) {
+                    std::cout << "Project file \"" << p << "\" did not execute correctly: " << res << std::endl;
+                }
+            } else {
+                std::cout << "Project file \"" << p << "\" does not exist!" << std::endl;
+            }
         }
     }
 

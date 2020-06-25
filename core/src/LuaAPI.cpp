@@ -161,7 +161,7 @@ std::string megamol::core::LuaAPI::GetScriptPath(void) { return this->currentScr
 bool megamol::core::LuaAPI::RunFile(const std::string& envName, const std::string& fileName, std::string& result) {
     std::ifstream input(fileName, std::ios::in);
     if (!input.fail()) {
-        std::stringstream buffer;
+        std::ostringstream buffer;
         buffer << input.rdbuf();
         return RunString(envName, buffer.str(), result, fileName);
     } else {
@@ -349,7 +349,7 @@ int megamol::core::LuaAPI::SetConfigValue(lua_State* L) {
 
 
 int megamol::core::LuaAPI::GetConfigValue(lua_State* L) {
-    std::stringstream out;
+    std::ostringstream out;
     auto name = luaL_checkstring(L, 1);
     mmcValueType t;
     // TODO
@@ -449,14 +449,22 @@ int megamol::core::LuaAPI::GetProcessID(lua_State* L) {
 int megamol::core::LuaAPI::GetModuleParams(lua_State* L) {
     const auto *moduleName = luaL_checkstring(L, 1);
 
-    auto params = graph_.EnumerateModuleParameters(moduleName);
+    auto slots = graph_.EnumerateModuleParameterSlots(moduleName);
     auto mod = graph_.FindModule(moduleName);
-    std::stringstream answer;
+    std::ostringstream answer;
     if (mod != nullptr) {
         answer << mod->FullName() << "\1";
-        for (auto &p: params) {
-            // TODO need the slots as well
-            //p->ValueString();
+        for (auto &ps: slots) {
+            answer << ps->Name() << "\1";
+            answer << ps->Description() << "\1";
+            auto par = ps->Parameter();
+            if (par.IsNull()) {
+                std::ostringstream err;
+                err << MMC_LUA_MMGETMODULEPARAMS ": ParamSlot " << ps->FullName()
+                    << " does not seem to hold a parameter!";
+                luaApiInterpreter_.ThrowError(err.str());
+            }
+            answer << par->ValueString() << "\1";
         }
         lua_pushstring(L, answer.str().c_str());
         return 1;
@@ -465,61 +473,6 @@ int megamol::core::LuaAPI::GetModuleParams(lua_State* L) {
         luaApiInterpreter_.ThrowError(answer.str());
         return 0;
     }
-
-    //auto ret =
-    //    this->coreInst->EnumerateParameterSlotsNoLock<megamol::core::Module>(moduleName, [L, this](param::ParamSlot& ps) {
-    //        
-    //        Module* mod = dynamic_cast<Module*>(ps.Parent().get());
-    //        if (mod != nullptr) {
-    //            vislib::StringA name(mod->FullName());
-    //            answer << name << "\1";
-    //            AbstractNamedObjectContainer::child_list_type::iterator si, se;
-    //            se = mod->ChildList_End();
-    //            for (si = mod->ChildList_Begin(); si != se; ++si) {
-    //                param::ParamSlot* slot = dynamic_cast<param::ParamSlot*>((*si).get());
-    //                if (slot != NULL) {
-    //                    // name.Append("::");
-    //                    // name.Append(slot->Name());
-
-    //                    answer << slot->Name() << "\1";
-
-    //                    vislib::StringA descUTF8;
-    //                    vislib::UTF8Encoder::Encode(descUTF8, slot->Description());
-    //                    answer << descUTF8 << "\1";
-
-    //                    auto psp = slot->Parameter();
-    //                    if (psp.IsNull()) {
-    //                        std::ostringstream err;
-    //                        err << MMC_LUA_MMGETMODULEPARAMS ": ParamSlot " << slot->FullName()
-    //                            << " does seem to hold no parameter";
-    //                        luaApiInterpreter_.ThrowError(err.str());
-    //                    }
-
-    //                    vislib::RawStorage pspdef;
-    //                    psp->Definition(pspdef);
-    //                    // not nice, but we make HEX (base64 would be better, but I don't care)
-    //                    std::string answer2(pspdef.GetSize() * 2, ' ');
-    //                    for (SIZE_T i = 0; i < pspdef.GetSize(); ++i) {
-    //                        uint8_t b = *pspdef.AsAt<uint8_t>(i);
-    //                        uint8_t bh[2] = {static_cast<uint8_t>(b / 16), static_cast<uint8_t>(b % 16)};
-    //                        for (unsigned int j = 0; j < 2; ++j)
-    //                            answer2[i * 2 + j] = (bh[j] < 10u) ? ('0' + bh[j]) : ('A' + (bh[j] - 10u));
-    //                    }
-    //                    answer << answer2 << "\1";
-
-    //                    vislib::StringA valUTF8;
-    //                    vislib::UTF8Encoder::Encode(valUTF8, psp->ValueString());
-
-    //                    answer << valUTF8 << "\1";
-    //                }
-    //            }
-    //            lua_pushstring(L, answer.str().c_str());
-    //        } else {
-    //            vislib::sys::Log::DefaultLog.WriteError(
-    //                "LuaState: ParamSlot %s has a parent which is not a Module!", ps.FullName().PeekBuffer());
-    //        }
-    //    });
-    //return ret ? 1 : 0;
 }
 
 
@@ -573,7 +526,7 @@ int megamol::core::LuaAPI::GetParamValue(lua_State* L) {
 
     const auto *param = graph_.FindParameter(paramName);
     if (param == nullptr) {
-        std::stringstream out;
+        std::ostringstream out;
         out << "could not find parameter \"";
         out << paramName;
         out << "\".";
@@ -593,7 +546,7 @@ int megamol::core::LuaAPI::SetParamValue(lua_State* L) {
 
     auto *param = graph_.FindParameter(paramName);
     if (param == nullptr) {
-        std::stringstream out;
+        std::ostringstream out;
         out << "could not find parameter \"";
         out << paramName;
         out << "\".";
@@ -601,7 +554,7 @@ int megamol::core::LuaAPI::SetParamValue(lua_State* L) {
         return 0;
     }
     if (!param->ParseValue(paramValue)) {
-        std::stringstream out;
+        std::ostringstream out;
         out << "could not set \"";
         out << paramName;
         out << "\" to \"";
@@ -620,7 +573,7 @@ int megamol::core::LuaAPI::CreateParamGroup(lua_State* L) {
     //auto groupSize = luaL_checkinteger(L, 2);
 
     //if (!this->coreInst->CreateParamGroup(groupName, groupSize)) {
-    //    std::stringstream out;
+    //    std::ostringstream out;
     //    out << "could not create param group \"";
     //    out << groupName;
     //    out << "\" with size \"";
@@ -640,7 +593,7 @@ int megamol::core::LuaAPI::SetParamGroupValue(lua_State* L) {
     //auto paramValue = luaL_checkstring(L, 3);
 
     //if (!this->coreInst->RequestParamGroupValue(paramGroup, paramName, paramValue)) {
-    //    std::stringstream out;
+    //    std::ostringstream out;
     //    out << "could not set \"";
     //    out << paramName;
     //    out << "\" in group \"";
@@ -665,7 +618,7 @@ int megamol::core::LuaAPI::CreateModule(lua_State* L) {
         return 0;
     }
     if (!graph_.CreateModule(className, instanceName)) {
-        std::stringstream out;
+        std::ostringstream out;
         out << "could not create \"";
         out << className;
         out << "\" module (check MegaMol log)";
@@ -691,7 +644,7 @@ int megamol::core::LuaAPI::CreateCall(lua_State* L) {
     const auto *to = luaL_checkstring(L, 3);
 
     if (!graph_.CreateCall(className, from, to)) {
-        std::stringstream out;
+        std::ostringstream out;
         out << "could not create \"";
         out << className;
         out << "\" call (check MegaMol log)";
@@ -716,7 +669,7 @@ int megamol::core::LuaAPI::CreateChainCall(lua_State* L) {
     //auto slotName = chainStart.substr(pos + 1, -1);
 
     //if (!this->coreInst->RequestChainCallInstantiation(className, chainStart.c_str(), to.c_str())) {
-    //    std::stringstream out;
+    //    std::ostringstream out;
     //    out << "could not create \"";
     //    out << className;
     //    out << "\" call (check MegaMol log)";
@@ -740,7 +693,7 @@ int megamol::core::LuaAPI::DeleteCall(lua_State* L) {
 
 int megamol::core::LuaAPI::QueryModuleGraph(lua_State* L) {
 
-    std::stringstream answer;
+    std::ostringstream answer;
 
     // TODO
 
@@ -800,7 +753,7 @@ int megamol::core::LuaAPI::QueryModuleGraph(lua_State* L) {
 int megamol::core::LuaAPI::ListCalls(lua_State* L) {
 
     const int n = lua_gettop(L);
-    std::stringstream answer;
+    std::ostringstream answer;
 
     // TODO
 
@@ -839,7 +792,7 @@ int megamol::core::LuaAPI::ListCalls(lua_State* L) {
 int megamol::core::LuaAPI::ListModules(lua_State* L) {
     const int n = lua_gettop(L);
 
-    std::stringstream answer;
+    std::ostringstream answer;
 
     // TODO
 
@@ -863,7 +816,7 @@ int megamol::core::LuaAPI::ListModules(lua_State* L) {
 
 int megamol::core::LuaAPI::ListInstatiations(lua_State* L) {
 
-    std::stringstream answer;
+    std::ostringstream answer;
 
     // TODO
 
@@ -896,7 +849,7 @@ int megamol::core::LuaAPI::ListParameters(lua_State* L) {
 
     const int n = lua_gettop(L);
 
-    std::stringstream answer;
+    std::ostringstream answer;
 
     // TODO
 
@@ -938,7 +891,7 @@ int megamol::core::LuaAPI::ReadTextFile(lua_State* L) {
         const auto filename = luaL_checkstring(L, 1);
         std::ifstream t(filename);
         if (t.good()) {
-            std::stringstream buffer;
+            std::ostringstream buffer;
             buffer << t.rdbuf();
 
             // vislib::sys::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": read from file '%s':\n%s\n", filename,
