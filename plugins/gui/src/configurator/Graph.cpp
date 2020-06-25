@@ -1354,67 +1354,14 @@ void megamol::gui::configurator::GraphPresentation::present_parameters(
                 ImGui::GetStateStorage()->SetInt(headerId, headerState);
 
                 if (ImGui::CollapsingHeader(module_ptr->name.c_str(), nullptr, ImGuiTreeNodeFlags_None)) {
-                    unsigned int param_indent_stack = 0;
-                    this->utils.HoverToolTip(
-                        module_ptr->description, ImGui::GetID(module_ptr->name.c_str()), 0.75f, 5.0f);
-                    param_indent_stack++;
-                    ImGui::Indent();
 
+                    // Draw parameters
                     bool unused_external_tf_editor;
-                    /// XXX ParameterGroupPresentation
                     module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(),
                         search_string, this->param_extended_mode, false,
                         configurator::ParameterPresentation::WidgetScope::LOCAL, nullptr, unused_external_tf_editor);
-
-                    /*
-                    bool param_name_space_open = true;
-                    for (auto& parameter : module_ptr->parameters) {
-                        // Filter module by given search string
-                        bool search_filter = true;
-                        if (!search_string.empty()) {
-                            search_filter =
-                                this->utils.FindCaseInsensitiveSubstring(parameter.full_name, search_string);
-                        }
-
-                        // Add Collapsing header depending on parameter namespace
-                        std::string current_param_namespace = parameter.GetNameSpace();
-                        if (current_param_namespace != this->param_name_space) {
-                            this->param_name_space = current_param_namespace;
-                            while (param_indent_stack > 1) {
-                                param_indent_stack--;
-                                ImGui::Unindent();
-                            }
-
-                            if (!this->param_name_space.empty()) {
-                                std::string label = this->param_name_space + "###" + parameter.full_name;
-                                // Open all namespace headers when parameter search is active
-                                if (!search_string.empty()) {
-                                    auto headerId = ImGui::GetID(label.c_str());
-                                    ImGui::GetStateStorage()->SetInt(headerId, 1);
-                                }
-                                param_name_space_open =
-                                    ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
-                                param_indent_stack++;
-                                ImGui::Indent();
-                            } else {
-                                param_name_space_open = true;
-                            }
-                        }
-
-                        // Draw parameter
-                        if (search_filter && param_name_space_open) {
-                            parameter.PresentGUI(ParameterPresentation::WidgetScope::LOCAL);
-                        }
-                    }
-                    while (param_indent_stack > 0) {
-                        param_indent_stack--;
-                        ImGui::Unindent();
-                    }
-                    // Vertical spacing
-                    /// ImGui::Dummy(ImVec2(1.0f, ImGui::GetFrameHeightWithSpacing()));
-                    */
                 }
-
+                this->utils.HoverToolTip(module_ptr->description, ImGui::GetID(module_ptr->name.c_str()), 0.75f, 5.0f);
 
                 ImGui::PopID();
             }

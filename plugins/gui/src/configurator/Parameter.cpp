@@ -32,7 +32,8 @@ megamol::gui::configurator::ParameterPresentation::ParameterPresentation(ParamTy
     , use_external_tf_editor(false)
     , show_tf_editor(false)
     , tf_editor_hash(0)
-    , tf_texture(0) {
+    , tf_texture(0)
+    , guistate_dirty(false) {
 
     this->InitPresentation(type);
 }
@@ -69,8 +70,7 @@ bool megamol::gui::configurator::ParameterPresentation::Present(
                     // Visibility
                     if (ImGui::RadioButton("###visible", this->IsGUIVisible())) {
                         this->SetGUIVisible(!this->IsGUIVisible());
-                        inout_parameter.ForceSetDirty();
-                        retval = true;
+                        this->ForceSetGUIStateDirty();
                     }
                     this->utils.HoverToolTip("Visibility", ImGui::GetItemID(), 0.5f);
 
@@ -80,8 +80,7 @@ bool megamol::gui::configurator::ParameterPresentation::Present(
                     bool read_only = this->IsGUIReadOnly();
                     if (ImGui::Checkbox("###readonly", &read_only)) {
                         this->SetGUIReadOnly(read_only);
-                        inout_parameter.ForceSetDirty();
-                        retval = true;
+                        this->ForceSetGUIStateDirty();
                     }
                     this->utils.HoverToolTip("Read-Only", ImGui::GetItemID(), 0.5f);
 
@@ -95,8 +94,7 @@ bool megamol::gui::configurator::ParameterPresentation::Present(
                                 if (ImGui::MenuItem(present_name_pair.second.c_str(), nullptr,
                                         (present_name_pair.first == this->GetGUIPresentation()))) {
                                     this->SetGUIPresentation(present_name_pair.first);
-                                    inout_parameter.ForceSetDirty();
-                                    retval = true;
+                                    this->ForceSetGUIStateDirty();
                                 }
                             }
                         }
@@ -331,7 +329,7 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
                 case (ParamType::BUTTON): {
                     if (this->widget_button(
                             scope, param_label, inout_parameter.GetStorage<megamol::core::view::KeyCode>())) {
-                        inout_parameter.ForceSetDirty();
+                        inout_parameter.ForceSetValueDirty();
                         retval = true;
                     }
                     error = false;
@@ -487,15 +485,23 @@ bool megamol::gui::configurator::ParameterPresentation::widget_button(
     if (scope == WidgetScope::LOCAL) {
         std::string button_hotkey = keycode.ToString();
         std::string hotkey = "";
+        std::string edit_label = label;
 
-        if (!button_hotkey.empty()) hotkey = "\n Hotkey: " + button_hotkey;
-        this->description += hotkey;
+        bool hotkey_in_tooltip = false;
+        bool hotkey_in_label = true;
 
-        // if (!button_hotkey.empty()) hotkey = " (" + button_hotkey + ")";
-        // std::string edit_label = label + hotkey;
-        // retval = ImGui::Button(edit_label.c_str());
+        // Add hotkey to hover tooltip
+        if (hotkey_in_tooltip) {
+            if (!button_hotkey.empty()) hotkey = "\n Hotkey: " + button_hotkey;
+            this->description += hotkey;
+        }
+        // Add hotkey to param label
+        if (hotkey_in_label) {
+            if (!button_hotkey.empty()) hotkey = " [" + button_hotkey + "]";
+            edit_label += hotkey;
+        }
 
-        retval = ImGui::Button(label.c_str());
+        retval = ImGui::Button(edit_label.c_str());
     }
     return retval;
 }
@@ -1093,7 +1099,7 @@ megamol::gui::configurator::Parameter::Parameter(
     , default_value()
     , default_value_mismatch(false)
     , present(type)
-    , dirty(false)
+    , value_dirty(false)
     , core_param_ptr(nullptr) {
 
     // Initialize variant types which should/can not be changed afterwards.

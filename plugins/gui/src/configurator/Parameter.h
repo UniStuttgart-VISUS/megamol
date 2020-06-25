@@ -76,6 +76,10 @@ public:
     ParameterPresentation(ParamType type);
     ~ParameterPresentation(void);
 
+    bool IsGUIStateDirty(void) { return this->guistate_dirty; }
+    void ResetGUIStateDirty(void) { this->guistate_dirty = false; }
+    void ForceSetGUIStateDirty(void) { this->guistate_dirty = true; }
+
     void SetTransferFunctionEditorHash(size_t hash) { this->tf_editor_hash = hash; }
 
     inline void ConnectExternalTransferFunctionEditor(std::shared_ptr<megamol::gui::TransferFunctionEditor> tfe_ptr) {
@@ -98,6 +102,7 @@ private:
     const std::string float_format;
     float height;
     UINT set_focus;
+    bool guistate_dirty;
 
     std::shared_ptr<megamol::gui::TransferFunctionEditor> tf_editor_external_ptr;
     megamol::gui::TransferFunctionEditor tf_editor_internal;
@@ -203,9 +208,9 @@ public:
     Parameter(ImGuiID uid, ParamType type, StroageType store, MinType min, MaxType max);
     ~Parameter(void);
 
-    bool IsDirty(void) { return this->dirty; }
-    void ResetDirty(void) { this->dirty = false; }
-    void ForceSetDirty(void) { this->dirty = true; }
+    bool IsValueDirty(void) { return this->value_dirty; }
+    void ResetValueDirty(void) { this->value_dirty = false; }
+    void ForceSetValueDirty(void) { this->value_dirty = true; }
 
     // Get ----------------------------------
 
@@ -251,7 +256,7 @@ public:
             // Set value
             if (std::get<T>(this->value) != val) {
                 this->value = val;
-                this->dirty = true;
+                this->value_dirty = true;
 
                 // Check for new flex enum entry
                 if (this->type == ParamType::FLEXENUM) {
@@ -268,7 +273,7 @@ public:
 
             // Check default value
             if (set_default_val) {
-                this->dirty = false;
+                this->value_dirty = false;
                 this->default_value = val;
                 this->default_value_mismatch = false;
             } else {
@@ -325,7 +330,7 @@ private:
     size_t tf_string_hash;
     ValueType default_value;
     bool default_value_mismatch;
-    bool dirty;
+    bool value_dirty;
 };
 
 
@@ -688,13 +693,20 @@ static bool ReadNewCoreParameterToExistingParameter(megamol::core::param::ParamS
 }
 
 
-static bool WriteCoreParameter(megamol::gui::configurator::Parameter& in_param,
+static bool WriteCoreParameterGUIState(megamol::gui::configurator::Parameter& in_param,
     vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr) {
-    bool type_error = false;
 
     out_param_ptr->SetGUIVisible(in_param.present.IsGUIVisible());
     out_param_ptr->SetGUIReadOnly(in_param.present.IsGUIReadOnly());
     out_param_ptr->SetGUIPresentation(in_param.present.GetGUIPresentation());
+
+    return true;
+}
+
+
+static bool WriteCoreParameterValue(megamol::gui::configurator::Parameter& in_param,
+    vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr) {
+    bool type_error = false;
 
     if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::ButtonParam>()) {
         if (in_param.type == ParamType::BUTTON) {

@@ -420,18 +420,20 @@ void megamol::gui::configurator::ModulePresentation::Present(megamol::gui::Prese
                         ImGui::BeginChild(
                             "module_parameter_child", ImVec2(child_width, child_height), true, child_flags);
 
-                        // Close parameter window when clicked outside
+                        /// Close parameter window when clicked outside
                         // if (mouse_clicked_anywhere && !ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
                         //    this->show_params = false;
                         //}
 
+                        // Draw parameters
                         bool unused_external_tf_editor;
-                        /// XXX ParameterGroupPresentation
-                        inout_module.present.param_groups.PresentGUI(inout_module.parameters, inout_module.FullName(),
-                            "", false, true, configurator::ParameterPresentation::WidgetScope::LOCAL, nullptr,
+                        /// Use extended mode currently set in parameter
+                        this->param_groups.PresentGUI(inout_module.parameters, inout_module.FullName(), "", false, true,
+                            configurator::ParameterPresentation::WidgetScope::LOCAL, nullptr,
                             unused_external_tf_editor);
 
                         ImGui::EndChild();
+
                         ImGui::PopStyleColor();
                         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
                             this->show_params = false;

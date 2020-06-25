@@ -205,10 +205,12 @@ bool megamol::gui::configurator::GraphManager::LoadCallStock(const megamol::core
         return false;
     }
 
+    // Load only once
     if (!this->calls_stock.empty()) {
-        vislib::sys::Log::DefaultLog.WriteWarn("Call stock already exists. Deleting exiting stock and "
-                                               "recreating new one. [%s, %s, line %d]\n",
-            __FILE__, __FUNCTION__, __LINE__);
+        return true;
+        // vislib::sys::Log::DefaultLog.WriteWarn("Call stock already exists. Deleting exiting stock and "
+        //                                       "recreating new one. [%s, %s, line %d]\n",
+        //    __FILE__, __FUNCTION__, __LINE__);
     }
 
     bool retval = true;
@@ -285,10 +287,13 @@ bool megamol::gui::configurator::GraphManager::LoadModuleStock(const megamol::co
             __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+
+    // Load only once
     if (!this->modules_stock.empty()) {
-        vislib::sys::Log::DefaultLog.WriteWarn("Module stock already exists. Deleting exiting stock and "
-                                               "recreating new one. [%s, %s, line %d]\n",
-            __FILE__, __FUNCTION__, __LINE__);
+        return true;
+        // vislib::sys::Log::DefaultLog.WriteWarn("Module stock already exists. Deleting exiting stock and "
+        //                                       "recreating new one. [%s, %s, line %d]\n",
+        //    __FILE__, __FUNCTION__, __LINE__);
     }
 
     bool retval = true;
@@ -369,6 +374,9 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadUpdateProjectFromCore(
         return false;
     }
 
+    /// TODO Update graph
+    if (graph_uid != GUI_INVALID_ID) return graph_uid;
+
     GraphPtrType graph_ptr;
     ImGuiID current_graph_id = graph_uid;
 
@@ -442,6 +450,14 @@ bool megamol::gui::configurator::GraphManager::AddProjectFromCore(
             return false;
         }
 
+        /// TODO
+        /// Check if only module changes should be considered
+        // bool update_modules = false;
+        // if (!graph_ptr->GetModules().empty()) {
+        //    update_modules = true;
+        //    /// TODO Delete removed modules
+        //}
+
         // Temporary data structure holding call connection data
         struct CallData {
             std::string call_class_name;
@@ -470,6 +486,15 @@ bool megamol::gui::configurator::GraphManager::AddProjectFromCore(
         // connected.
         const auto module_func = [&, this](megamol::core::Module* mod) {
             std::string full_name = std::string(mod->FullName().PeekBuffer());
+
+            /// TODO
+            /// Skip if module already exists
+            // if (update_modules) {
+            //    for (auto& module_ptr : graph_ptr->GetModules()) {
+            //        if (module_ptr->FullName() == full_name) return;
+            //    }
+            //}
+
             std::string class_name = std::string(mod->ClassName());
             std::string module_name;
             std::string module_namespace;
@@ -1556,6 +1581,7 @@ bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_st
                                     parameter.present.SetGUIVisible(gui_visibility);
                                     parameter.present.SetGUIReadOnly(gui_read_only);
                                     parameter.present.SetGUIPresentation(gui_presentation_mode);
+                                    parameter.present.ForceSetGUIStateDirty();
                                 }
                             }
                         }
