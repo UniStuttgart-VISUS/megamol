@@ -124,14 +124,14 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
     // Initialising enum param with all possible modes (needed for configurator)
     // (Removing not available render modes later in create function)
     param::EnumParam* rmp = new param::EnumParam(this->renderMode);
-    rmp->SetTypePair(RenderMode::SIMPLE, "Simple");
-    rmp->SetTypePair(RenderMode::SIMPLE_CLUSTERED, "Simple_Clustered");
-    rmp->SetTypePair(RenderMode::GEOMETRY_SHADER, "Geometry_Shader");
-    rmp->SetTypePair(RenderMode::SSBO_STREAM, "SSBO_Stream");
-    rmp->SetTypePair(RenderMode::BUFFER_ARRAY, "Buffer_Array");
-    rmp->SetTypePair(RenderMode::SPLAT, "Splat");
-    rmp->SetTypePair(RenderMode::AMBIENT_OCCLUSION, "Ambient_Occlusion");
-    rmp->SetTypePair(RenderMode::OUTLINE, "Outline");
+    rmp->SetTypePair(RenderMode::SIMPLE, this->getRenderModeString(RenderMode::SIMPLE).c_str());
+    rmp->SetTypePair(RenderMode::SIMPLE_CLUSTERED, this->getRenderModeString(RenderMode::SIMPLE_CLUSTERED).c_str());
+    rmp->SetTypePair(RenderMode::GEOMETRY_SHADER, this->getRenderModeString(RenderMode::GEOMETRY_SHADER).c_str());
+    rmp->SetTypePair(RenderMode::SSBO_STREAM, this->getRenderModeString(RenderMode::SSBO_STREAM).c_str());
+    rmp->SetTypePair(RenderMode::BUFFER_ARRAY, this->getRenderModeString(RenderMode::BUFFER_ARRAY).c_str());
+    rmp->SetTypePair(RenderMode::SPLAT, this->getRenderModeString(RenderMode::SPLAT).c_str());
+    rmp->SetTypePair(RenderMode::AMBIENT_OCCLUSION, this->getRenderModeString(RenderMode::AMBIENT_OCCLUSION).c_str());
+    rmp->SetTypePair(RenderMode::OUTLINE, this->getRenderModeString(RenderMode::OUTLINE).c_str());
     this->renderModeParam << rmp;
     this->MakeSlotAvailable(&this->renderModeParam);
     rmp = nullptr;
@@ -240,36 +240,36 @@ bool SphereRenderer::create(void) {
     // Reduce to available render modes
     this->SetSlotUnavailable(&this->renderModeParam);
     this->renderModeParam.Param<param::EnumParam>()->ClearTypePairs();
-    this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SIMPLE, "Simple");
+    this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SIMPLE, this->getRenderModeString(RenderMode::SIMPLE).c_str());
     if (this->isRenderModeAvailable(RenderMode::SIMPLE_CLUSTERED)) {
-        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SIMPLE_CLUSTERED, "Simple_Clustered");
+        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SIMPLE_CLUSTERED, this->getRenderModeString(RenderMode::SIMPLE_CLUSTERED).c_str());
     }
     if (this->isRenderModeAvailable(RenderMode::GEOMETRY_SHADER)) {
-        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::GEOMETRY_SHADER, "Geometry_Shader");
+        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::GEOMETRY_SHADER, this->getRenderModeString(RenderMode::GEOMETRY_SHADER).c_str());
     }
     if (this->isRenderModeAvailable(RenderMode::SSBO_STREAM)) {
-        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SSBO_STREAM, "SSBO_Stream");
+        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SSBO_STREAM, this->getRenderModeString(RenderMode::SSBO_STREAM).c_str());
     }
     if (this->isRenderModeAvailable(RenderMode::SPLAT)) {
-        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SPLAT, "Splat");
+        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SPLAT, this->getRenderModeString(RenderMode::SPLAT).c_str());
     }
     if (this->isRenderModeAvailable(RenderMode::BUFFER_ARRAY)) {
-        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::BUFFER_ARRAY, "Buffer_Array");
+        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::BUFFER_ARRAY, this->getRenderModeString(RenderMode::BUFFER_ARRAY).c_str());
     }
     if (this->isRenderModeAvailable(RenderMode::AMBIENT_OCCLUSION)) {
         this->renderModeParam.Param<param::EnumParam>()->SetTypePair(
-            RenderMode::AMBIENT_OCCLUSION, "Ambient_Occlusion");
+            RenderMode::AMBIENT_OCCLUSION, this->getRenderModeString(RenderMode::AMBIENT_OCCLUSION).c_str());
     }
     if (this->isRenderModeAvailable(RenderMode::OUTLINE)) {
-        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::OUTLINE, "Outline");
+        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::OUTLINE, this->getRenderModeString(RenderMode::OUTLINE).c_str());
     }
     this->MakeSlotAvailable(&this->renderModeParam);
 
     // Check initial render mode
     if (!this->isRenderModeAvailable(this->renderMode)) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-            "[SphereRenderer] Render mode: %s is not available - falling back to SIMPLE render mode.",
-            (this->getRenderModeString(this->renderMode)).c_str());
+            "[SphereRenderer] Render mode '%s' is not available - falling back to render mode '%s'.",
+            (this->getRenderModeString(this->renderMode)).c_str(), (this->getRenderModeString(RenderMode::SIMPLE)).c_str());
         // Always available fallback render mode
         this->renderMode = RenderMode::SIMPLE;
     }
@@ -423,12 +423,12 @@ bool SphereRenderer::createResources() {
 
     if (!this->isRenderModeAvailable(this->renderMode)) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-            "[SphereRenderer] Render mode: %s is not available - falling back to SIMPLE render mode.",
-            (this->getRenderModeString(this->renderMode)).c_str());
+            "[SphereRenderer] Render mode: '%s' is not available - falling back to render mode '%s'.",
+            (this->getRenderModeString(this->renderMode)).c_str(), (this->getRenderModeString(RenderMode::SIMPLE)).c_str());
         this->renderMode = RenderMode::SIMPLE; // Fallback render mode ...
         return false;
     } else {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "[SphereRenderer] Using render mode: %s",
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "[SphereRenderer] Using render mode '%s'.",
             (this->getRenderModeString(this->renderMode)).c_str());
     }
 
@@ -822,108 +822,90 @@ void SphereRenderer::getClipData(glm::vec4& out_clipDat, glm::vec4& out_clipCol)
 bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
 
     std::string warnstr;
+    std::string warnmode = "[SphereRenderer] Render Mode '" + SphereRenderer::getRenderModeString(rm) + "' is not available. ";
 
     // Check additonal requirements for each render mode separatly
     switch (rm) {
     case (RenderMode::SIMPLE):
         if (ogl_IsVersionGEQ(1, 4) == 0) {
-            warnstr +=
-                "[SphereRenderer] Render Mode 'SIMPLE' is not available. OpenGL version 1.4 or greater is required.\n";
+            warnstr += warnmode + "OpenGL version 1.4 or greater is required.\n";
         }
         break;
     case (RenderMode::SIMPLE_CLUSTERED):
         if (ogl_IsVersionGEQ(1, 4) == 0) {
-            warnstr += "[SphereRenderer] Render Mode 'SIMPLE_CLUSTERED' is not available. OpenGL version 1.4 or "
-                       "greater is required.\n";
+            warnstr += warnmode + "OpenGL version 1.4 or greater is required.\n";
         }
         break;
     case (RenderMode::GEOMETRY_SHADER):
         if (ogl_IsVersionGEQ(3, 2) == 0) {
-            warnstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. OpenGL version 3.2 or greater "
-                       "is required.\n";
+            warnstr += warnmode + "OpenGL version 3.2 or greater is required.\n";
         }
         if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
-            warnstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Geometry shader extensions "
-                       "are required. \n";
+            warnstr += warnmode + "Geometry shader extensions are required. \n";
         }
         if (!isExtAvailable("GL_EXT_geometry_shader4")) {
-            warnstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension "
-                       "GL_EXT_geometry_shader4 is required. \n";
+            warnstr += warnmode + "Extension GL_EXT_geometry_shader4 is required. \n";
         }
         if (!isExtAvailable("GL_EXT_gpu_shader4")) {
-            warnstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_EXT_gpu_shader4 "
-                       "is required. \n";
+            warnstr += warnmode + "Extension GL_EXT_gpu_shader4 is required. \n";
         }
         if (!isExtAvailable("GL_EXT_bindable_uniform")) {
-            warnstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension "
-                       "GL_EXT_bindable_uniform is required. \n";
+            warnstr += warnmode + "Extension GL_EXT_bindable_uniform is required. \n";
         }
         if (!isExtAvailable("GL_ARB_shader_objects")) {
-            warnstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension "
-                       "GL_ARB_shader_objects is required. \n";
+            warnstr += warnmode + "Extension GL_ARB_shader_objects is required. \n";
         }
         break;
     case (RenderMode::SSBO_STREAM):
         if (ogl_IsVersionGEQ(4, 2) == 0) {
-            warnstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. OpenGL version 4.2 or greater is "
-                       "required. \n";
+            warnstr += warnmode + "OpenGL version 4.2 or greater is required. \n";
         }
         if (!isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
-            warnstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension "
-                       "GL_ARB_shader_storage_buffer_object is required. \n";
+            warnstr += warnmode + "Extension GL_ARB_shader_storage_buffer_object is required. \n";
         }
         if (!isExtAvailable("GL_ARB_gpu_shader5")) {
-            warnstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_gpu_shader5 is "
-                       "required. \n";
+            warnstr += warnmode + "Extension GL_ARB_gpu_shader5 is required. \n";
         }
         if (!isExtAvailable("GL_ARB_gpu_shader_fp64")) {
-            warnstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_gpu_shader_fp64 "
-                       "is required. \n";
+            warnstr += warnmode + "Extension GL_ARB_gpu_shader_fp64 is required. \n";
         }
         break;
     case (RenderMode::SPLAT):
         if (ogl_IsVersionGEQ(4, 5) == 0) {
-            warnstr +=
-                "[SphereRenderer] Render Mode 'SPLAT' is not available. OpenGL version 4.5 or greater is required. \n";
+            warnstr += warnmode + "OpenGL version 4.5 or greater is required. \n";
         }
         if (!isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
-            warnstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. Extension "
-                       "GL_ARB_shader_storage_buffer_object is required. \n";
+            warnstr += warnmode + "Extension GL_ARB_shader_storage_buffer_object is required. \n";
         }
         if (!isExtAvailable("GL_EXT_gpu_shader4")) {
-            warnstr +=
-                "[SphereRenderer] Render Mode 'SPLAT' is not available. Extension GL_EXT_gpu_shader4 is required. \n";
+            warnstr += warnmode + "Extension GL_EXT_gpu_shader4 is required. \n";
         }
         break;
     case (RenderMode::BUFFER_ARRAY):
         if (ogl_IsVersionGEQ(4, 5) == 0) {
-            warnstr += "[SphereRenderer] Render Mode 'BUFFER_ARRAY' is not available. OpenGL version 4.5 or greater is "
-                       "required. \n";
+            warnstr += warnmode + "OpenGL version 4.5 or greater is required. \n";
         }
         break;
     case (RenderMode::AMBIENT_OCCLUSION):
         if (ogl_IsVersionGEQ(4, 2) == 0) {
-            warnstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. OpenGL version 4.2 or "
-                       "greater is required. \n";
+            warnstr += warnmode + "OpenGL version 4.2 or greater is required. \n";
         }
         if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
-            warnstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Geometry shader extensions "
-                       "are required. \n";
+            warnstr += warnmode + "Geometry shader extensions are required. \n";
         }
         if (!isExtAvailable("GL_EXT_geometry_shader4")) {
-            warnstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Extension GL_EXT_geometry_shader4 is required. \n";
+            warnstr += warnmode + "Extension GL_EXT_geometry_shader4 is required. \n";
         }
         if (!isExtAvailable("GL_ARB_gpu_shader_fp64")) {
-            warnstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Extension "
-                       "GL_ARB_gpu_shader_fp64 is required. \n";
+            warnstr += warnmode + "Extension GL_ARB_gpu_shader_fp64 is required. \n";
         }
         if (!isExtAvailable("GL_ARB_compute_shader")) {
-            warnstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Extension GL_ARB_compute_shader is required. \n";
+            warnstr += warnmode + "Extension GL_ARB_compute_shader is required. \n";
         }
         break;
     case (RenderMode::OUTLINE):
         if (ogl_IsVersionGEQ(1, 4) == 0) { 
-            warnstr += "[SphereRenderer] Render Mode 'OUTLINE' is not available. Minimum OpenGL version is 1.4 \n";
+            warnstr += warnmode + "Minimum OpenGL version is 1.4 \n";
         }
         break;
     default:
@@ -1001,28 +983,28 @@ std::string SphereRenderer::getRenderModeString(RenderMode rm) {
 
     switch (rm) {
     case (RenderMode::SIMPLE):
-        mode = "SIMPLE";
+        mode = "Simple";
         break;
     case (RenderMode::SIMPLE_CLUSTERED):
-        mode = "SIMPLE CLUSTERED";
+        mode = "Simple_Clustered";
         break;
     case (RenderMode::GEOMETRY_SHADER):
-        mode = "SIMPLE GEOMETRY SHADER";
+        mode = "Geometry_Shader";
         break;
     case (RenderMode::SSBO_STREAM):
-        mode = "SSBO STREAM";
+        mode = "SSBO_Stream";
         break;
     case (RenderMode::SPLAT):
-        mode = "SPLAT";
+        mode = "Splat";
         break;
     case (RenderMode::BUFFER_ARRAY):
-        mode = "BUFFER ARRAY";
+        mode = "Buffer_Array";
         break;
     case (RenderMode::AMBIENT_OCCLUSION):
-        mode = "AMBIENT OCCLUSION";
+        mode = "Ambient_Occlusion";
         break;
     case (RenderMode::OUTLINE):
-        mode = "OUTLINE";
+        mode = "Outline";
         break;
     default:
         mode = "unknown";
@@ -1031,7 +1013,6 @@ std::string SphereRenderer::getRenderModeString(RenderMode rm) {
 
     return mode;
 }
-
 
 
 bool SphereRenderer::Render(view::CallRender3D_2& call) {
@@ -2543,9 +2524,7 @@ bool SphereRenderer::rebuildGBuffer() {
 
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 
-    if (this->triggerRebuildGBuffer) {
-        this->triggerRebuildGBuffer = false;
-    }
+    this->triggerRebuildGBuffer = false;
 
     return true;
 }
@@ -2560,11 +2539,9 @@ void SphereRenderer::rebuildWorkingData(view::CallRender3D_2& call, MultiParticl
         // Add buffers if neccessary
         for (unsigned int i = static_cast<unsigned int>(this->gpuData.size()); i < partsCount; i++) {
             gpuParticleDataType data;
-
             glGenVertexArrays(1, &(data.vertexArray));
             glGenBuffers(1, &(data.vertexVBO));
             glGenBuffers(1, &(data.colorVBO));
-
             this->gpuData.push_back(data);
         }
 
@@ -2604,7 +2581,7 @@ void SphereRenderer::rebuildWorkingData(view::CallRender3D_2& call, MultiParticl
             break;
         }
     }
-    if (volGen != nullptr && (stateInvalid || this->aoVolSizeSlot.IsDirty() || !equalClipData)) {
+    if ((volGen != nullptr) && (stateInvalid || this->aoVolSizeSlot.IsDirty() || !equalClipData)) {
         int volSize = this->aoVolSizeSlot.Param<param::IntParam>()->Value();
 
         vislib::math::Dimension<float, 3> dims = this->curClipBox.GetSize();
