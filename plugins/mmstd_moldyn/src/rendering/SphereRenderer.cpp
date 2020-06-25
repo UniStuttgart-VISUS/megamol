@@ -2635,6 +2635,7 @@ void SphereRenderer::rebuildWorkingData(view::CallRender3D_2& call, MultiParticl
         this->volGen->ClearVolume();
         this->volGen->StartInsertion(this->curClipBox, glm::vec4(this->curClipDat[0], this->curClipDat[1],
             this->curClipDat[2], this->curClipDat[3]));
+
         for (unsigned int i = 0; i < this->gpuData.size(); i++) {
             float globalRadius = 0.0f;
             if (mpdc->AccessParticles(i).GetVertexDataType() !=
