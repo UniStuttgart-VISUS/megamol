@@ -173,18 +173,6 @@ bool megamol::gui::GUIUtils::RenamePopUp(const std::string& caption, bool open_p
 }
 
 
-void megamol::gui::GUIUtils::ReadOnlyWigetStyle(bool set) {
-
-    if (set) {
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-    } else {
-        ImGui::PopItemFlag();
-        ImGui::PopStyleVar();
-    }
-}
-
-
 bool GUIUtils::Utf8Decode(std::string& str) {
     vislib::StringA dec_tmp;
     if (vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(str.c_str()))) {
@@ -347,4 +335,122 @@ bool megamol::gui::GUIUtils::PointCircleButton(const std::string& label, bool di
     ImGui::PopStyleColor();
 
     return retval;
+}
+
+
+#ifdef GL_VERSION_1_0
+
+bool megamol::gui::GUIUtils::LoadTexture(const std::string& filename, GLuint& inout_id) {
+
+    if (filename.empty()) return false;
+    bool retval = false;
+
+    static vislib::graphics::BitmapImage img;
+    static sg::graphics::PngBitmapCodec pbc;
+    pbc.Image() = &img;
+    void* buf = nullptr;
+    size_t size = 0;
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    size = megamol::gui::GUIUtils::LoadRawFile(filename, &buf);
+    if (size > 0) {
+        if (pbc.Load(buf, size)) {
+            img.Convert(vislib::graphics::BitmapImage::TemplateFloatRGBA);
+            retval =
+                megamol::gui::GUIUtils::CreateTexture(inout_id, img.Width(), img.Height(), img.PeekDataAs<FLOAT>());
+        } else {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Unable to read texture: %s [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            retval = false;
+        }
+    } else {
+        retval = false;
+    }
+
+    ARY_SAFE_DELETE(buf);
+    return retval;
+}
+
+
+size_t megamol::gui::GUIUtils::LoadRawFile(std::string name, void** outData) {
+
+    *outData = nullptr;
+
+    vislib::StringW filename = static_cast<vislib::StringW>(name.c_str());
+    if (filename.IsEmpty()) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Unable to load file: No file name given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return 0;
+    }
+
+    if (!vislib::sys::File::Exists(filename)) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to load file \"%s\": Not existing. [%s, %s, line %d]\n",
+            name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        return 0;
+    }
+
+    size_t size = static_cast<size_t>(vislib::sys::File::GetSize(filename));
+    if (size < 1) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to load file \"%s\": File is empty. [%s, %s, line %d]\n",
+            name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        return 0;
+    }
+
+    vislib::sys::FastFile f;
+    if (!f.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to load file \"%s\": Unable to open file. [%s, %s, line %d]\n",
+            name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        return 0;
+    }
+
+    *outData = new BYTE[size];
+    size_t num = static_cast<size_t>(f.Read(*outData, size));
+    if (num != size) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Unable to load file \"%s\": Unable to read whole file. [%s, %s, line %d]\n", name.c_str(), __FILE__,
+            __FUNCTION__, __LINE__);
+        ARY_SAFE_DELETE(*outData);
+        return 0;
+    }
+
+    return num;
+}
+
+
+bool megamol::gui::GUIUtils::CreateTexture(GLuint& inout_id, GLsizei width, GLsizei height, const float* data) {
+    if (data == nullptr) return false;
+
+    // Delete old texture.
+    if (inout_id != 0) {
+        glDeleteTextures(1, &inout_id);
+    }
+    inout_id = 0;
+
+    // Upload texture.
+    glGenTextures(1, &inout_id);
+    glBindTexture(GL_TEXTURE_2D, inout_id);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, data);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return true;
+}
+
+#endif // GL_VERSION_1_0
+
+
+void megamol::gui::GUIUtils::ReadOnlyWigetStyle(bool set) {
+
+    if (set) {
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+    } else {
+        ImGui::PopItemFlag();
+        ImGui::PopStyleVar();
+    }
 }

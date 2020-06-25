@@ -1337,3 +1337,492 @@ bool megamol::gui::configurator::Parameter::SetValueString(const std::string& va
 
     return retval;
 }
+
+
+bool megamol::gui::configurator::Parameter::ReadNewCoreParameterToStockParameter(
+    megamol::core::param::ParamSlot& in_param_slot, megamol::gui::configurator::Parameter::StockParameter& out_param) {
+
+    auto parameter_ptr = in_param_slot.Parameter();
+    if (parameter_ptr.IsNull()) {
+        return false;
+    }
+
+    out_param.full_name = std::string(in_param_slot.Name().PeekBuffer());
+    out_param.description = std::string(in_param_slot.Description().PeekBuffer());
+    out_param.gui_visibility = parameter_ptr->IsGUIVisible();
+    out_param.gui_read_only = parameter_ptr->IsGUIReadOnly();
+    auto core_param_presentation = static_cast<size_t>(parameter_ptr->GetGUIPresentation());
+    out_param.gui_presentation = static_cast<PresentType>(core_param_presentation);
+
+    if (auto* p_ptr = in_param_slot.Param<core::param::ButtonParam>()) {
+        out_param.type = ParamType::BUTTON;
+        out_param.storage = p_ptr->GetKeyCode();
+    } else if (auto* p_ptr = in_param_slot.Param<core::param::BoolParam>()) {
+        out_param.type = ParamType::BOOL;
+        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+    } else if (auto* p_ptr = in_param_slot.Param<core::param::ColorParam>()) {
+        out_param.type = ParamType::COLOR;
+        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+    } else if (auto* p_ptr = in_param_slot.Param<core::param::EnumParam>()) {
+        out_param.type = ParamType::ENUM;
+        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        EnumStorageType map;
+        auto psd_map = p_ptr->getMap();
+        auto iter = psd_map.GetConstIterator();
+        while (iter.HasNext()) {
+            auto pair = iter.Next();
+            map.emplace(pair.Key(), std::string(pair.Value().PeekBuffer()));
+        }
+        out_param.storage = map;
+    } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
+        out_param.type = ParamType::FILEPATH;
+        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+    } else if (auto* p_ptr = in_param_slot.Param<core::param::FlexEnumParam>()) {
+        out_param.type = ParamType::FLEXENUM;
+        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        out_param.storage = p_ptr->getStorage();
+    } else if (auto* p_ptr = in_param_slot.Param<core::param::FloatParam>()) {
+        out_param.type = ParamType::FLOAT;
+        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        out_param.minval = p_ptr->MinValue();
+        out_param.maxval = p_ptr->MaxValue();
+    } else if (auto* p_ptr = in_param_slot.Param<core::param::IntParam>()) {
+        out_param.type = ParamType::INT;
+        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        out_param.minval = p_ptr->MinValue();
+        out_param.maxval = p_ptr->MaxValue();
+    } else if (auto* p_ptr = in_param_slot.Param<core::param::StringParam>()) {
+        out_param.type = ParamType::STRING;
+        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+    } else if (auto* p_ptr = in_param_slot.Param<core::param::TernaryParam>()) {
+        out_param.type = ParamType::TERNARY;
+        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+    } else if (auto* p_ptr = in_param_slot.Param<core::param::TransferFunctionParam>()) {
+        out_param.type = ParamType::TRANSFERFUNCTION;
+        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+    } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector2fParam>()) {
+        out_param.type = ParamType::VECTOR2F;
+        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        auto min = p_ptr->MinValue();
+        out_param.minval = glm::vec2(min.X(), min.Y());
+        auto max = p_ptr->MaxValue();
+        out_param.maxval = glm::vec2(max.X(), max.Y());
+    } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector3fParam>()) {
+        out_param.type = ParamType::VECTOR3F;
+        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        auto min = p_ptr->MinValue();
+        out_param.minval = glm::vec3(min.X(), min.Y(), min.Z());
+        auto max = p_ptr->MaxValue();
+        out_param.maxval = glm::vec3(max.X(), max.Y(), max.Z());
+    } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector4fParam>()) {
+        out_param.type = ParamType::VECTOR4F;
+        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        auto min = p_ptr->MinValue();
+        out_param.minval = glm::vec4(min.X(), min.Y(), min.Z(), min.W());
+        auto max = p_ptr->MaxValue();
+        out_param.maxval = glm::vec4(max.X(), max.Y(), max.Z(), max.W());
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError("Found unknown parameter type. Please extend parameter types "
+                                                "for the configurator. [%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
+        out_param.type = ParamType::UNKNOWN;
+        return false;
+    }
+
+    return true;
+}
+
+
+bool megamol::gui::configurator::Parameter::ReadNewCoreParameterToNewParameter(
+    megamol::core::param::ParamSlot& in_param_slot, std::shared_ptr<megamol::gui::configurator::Parameter>& out_param,
+    bool set_default_val, bool save_core_param_pointer) {
+
+    auto parameter_ptr = in_param_slot.Parameter();
+    if (parameter_ptr.IsNull()) {
+        return false;
+    }
+
+    out_param.reset();
+
+    if (auto* p_ptr = in_param_slot.template Param<core::param::BoolParam>()) {
+        out_param = std::make_shared<configurator::Parameter>(
+            megamol::gui::GenerateUniqueID(), ParamType::BOOL, std::monostate(), std::monostate(), std::monostate());
+        out_param->SetValue(p_ptr->Value(), set_default_val);
+    } else if (auto* p_ptr = in_param_slot.template Param<core::param::ButtonParam>()) {
+        out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::BUTTON,
+            p_ptr->GetKeyCode(), std::monostate(), std::monostate());
+    } else if (auto* p_ptr = in_param_slot.template Param<core::param::ColorParam>()) {
+        out_param = std::make_shared<configurator::Parameter>(
+            megamol::gui::GenerateUniqueID(), ParamType::COLOR, std::monostate(), std::monostate(), std::monostate());
+        auto value = p_ptr->Value();
+        out_param->SetValue(glm::vec4(value[0], value[1], value[2], value[3]), set_default_val);
+    } else if (auto* p_ptr = in_param_slot.template Param<core::param::TransferFunctionParam>()) {
+        out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(),
+            ParamType::TRANSFERFUNCTION, std::monostate(), std::monostate(), std::monostate());
+        out_param->SetValue(p_ptr->Value(), set_default_val);
+    } else if (auto* p_ptr = in_param_slot.template Param<core::param::EnumParam>()) {
+        EnumStorageType map;
+        auto param_map = p_ptr->getMap();
+        auto iter = param_map.GetConstIterator();
+        while (iter.HasNext()) {
+            auto pair = iter.Next();
+            map.emplace(pair.Key(), std::string(pair.Value().PeekBuffer()));
+        }
+        out_param = std::make_shared<configurator::Parameter>(
+            megamol::gui::GenerateUniqueID(), ParamType::ENUM, map, std::monostate(), std::monostate());
+        out_param->SetValue(p_ptr->Value(), set_default_val);
+    } else if (auto* p_ptr = in_param_slot.template Param<core::param::FlexEnumParam>()) {
+        out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::FLEXENUM,
+            p_ptr->getStorage(), std::monostate(), std::monostate());
+        out_param->SetValue(p_ptr->Value(), set_default_val);
+    } else if (auto* p_ptr = in_param_slot.template Param<core::param::FloatParam>()) {
+        out_param = std::make_shared<configurator::Parameter>(
+            megamol::gui::GenerateUniqueID(), ParamType::FLOAT, std::monostate(), p_ptr->MinValue(), p_ptr->MaxValue());
+        out_param->SetValue(p_ptr->Value(), set_default_val);
+    } else if (auto* p_ptr = in_param_slot.template Param<core::param::IntParam>()) {
+        out_param = std::make_shared<configurator::Parameter>(
+            megamol::gui::GenerateUniqueID(), ParamType::INT, std::monostate(), p_ptr->MinValue(), p_ptr->MaxValue());
+        out_param->SetValue(p_ptr->Value(), set_default_val);
+    } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector2fParam>()) {
+        auto min = p_ptr->MinValue();
+        auto max = p_ptr->MaxValue();
+        auto val = p_ptr->Value();
+        out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::VECTOR2F,
+            std::monostate(), glm::vec2(min.X(), min.Y()), glm::vec2(max.X(), max.Y()));
+        out_param->SetValue(glm::vec2(val.X(), val.Y()), set_default_val);
+    } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector3fParam>()) {
+        auto min = p_ptr->MinValue();
+        auto max = p_ptr->MaxValue();
+        auto val = p_ptr->Value();
+        out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::VECTOR3F,
+            std::monostate(), glm::vec3(min.X(), min.Y(), min.Z()), glm::vec3(max.X(), max.Y(), max.Z()));
+        out_param->SetValue(glm::vec3(val.X(), val.Y(), val.Z()), set_default_val);
+    } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector4fParam>()) {
+        auto min = p_ptr->MinValue();
+        auto max = p_ptr->MaxValue();
+        auto val = p_ptr->Value();
+        out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::VECTOR4F,
+            std::monostate(), glm::vec4(min.X(), min.Y(), min.Z(), min.W()),
+            glm::vec4(max.X(), max.Y(), max.Z(), max.W()));
+        out_param->SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()), set_default_val);
+    } else if (auto* p_ptr = in_param_slot.template Param<core::param::TernaryParam>()) {
+        out_param = std::make_shared<configurator::Parameter>(
+            megamol::gui::GenerateUniqueID(), ParamType::TERNARY, std::monostate(), std::monostate(), std::monostate());
+        out_param->SetValue(p_ptr->Value(), set_default_val);
+    } else if (auto* p_ptr = in_param_slot.Param<core::param::StringParam>()) {
+        out_param = std::make_shared<configurator::Parameter>(
+            megamol::gui::GenerateUniqueID(), ParamType::STRING, std::monostate(), std::monostate(), std::monostate());
+        out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val);
+    } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
+        out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::FILEPATH,
+            std::monostate(), std::monostate(), std::monostate());
+        out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val);
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Found unknown parameter type. Please extend parameter types for the configurator. "
+            "[%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    out_param->full_name = std::string(in_param_slot.Name().PeekBuffer());
+    out_param->description = std::string(in_param_slot.Description().PeekBuffer());
+    out_param->present.SetGUIVisible(parameter_ptr->IsGUIVisible());
+    out_param->present.SetGUIReadOnly(parameter_ptr->IsGUIReadOnly());
+    out_param->present.SetGUIPresentation(parameter_ptr->GetGUIPresentation());
+    if (save_core_param_pointer) {
+        out_param->core_param_ptr = parameter_ptr;
+    }
+
+    return true;
+}
+
+
+bool megamol::gui::configurator::Parameter::ReadCoreParameterToParameter(
+    vislib::SmartPtr<megamol::core::param::AbstractParam>& in_param_ptr,
+    megamol::gui::configurator::Parameter& out_param, bool set_default_val) {
+
+    out_param.present.SetGUIVisible(in_param_ptr->IsGUIVisible());
+    out_param.present.SetGUIReadOnly(in_param_ptr->IsGUIReadOnly());
+    out_param.present.SetGUIPresentation(in_param_ptr->GetGUIPresentation());
+
+    bool type_error = false;
+
+    if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::ButtonParam>()) {
+        if (out_param.type == ParamType::BUTTON) {
+            out_param.SetStorage(p_ptr->GetKeyCode());
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::BoolParam>()) {
+        if (out_param.type == ParamType::BOOL) {
+            out_param.SetValue(p_ptr->Value(), set_default_val);
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::ColorParam>()) {
+        if (out_param.type == ParamType::COLOR) {
+            auto value = p_ptr->Value();
+            out_param.SetValue(glm::vec4(value[0], value[1], value[2], value[3]), set_default_val);
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::EnumParam>()) {
+        if (out_param.type == ParamType::ENUM) {
+            out_param.SetValue(p_ptr->Value(), set_default_val);
+            EnumStorageType map;
+            auto param_map = p_ptr->getMap();
+            auto iter = param_map.GetConstIterator();
+            while (iter.HasNext()) {
+                auto pair = iter.Next();
+                map.emplace(pair.Key(), std::string(pair.Value().PeekBuffer()));
+            }
+            out_param.SetStorage(map);
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::FilePathParam>()) {
+        if (out_param.type == ParamType::FILEPATH) {
+            out_param.SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val);
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::FlexEnumParam>()) {
+        if (out_param.type == ParamType::FLEXENUM) {
+            out_param.SetValue(p_ptr->Value(), set_default_val);
+            out_param.SetStorage(p_ptr->getStorage());
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::FloatParam>()) {
+        if (out_param.type == ParamType::FLOAT) {
+            out_param.SetValue(p_ptr->Value(), set_default_val);
+            out_param.SetMinValue(p_ptr->MinValue());
+            out_param.SetMaxValue(p_ptr->MaxValue());
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::IntParam>()) {
+        if (out_param.type == ParamType::INT) {
+            out_param.SetValue(p_ptr->Value(), set_default_val);
+            out_param.SetMinValue(p_ptr->MinValue());
+            out_param.SetMaxValue(p_ptr->MaxValue());
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::StringParam>()) {
+        if (out_param.type == ParamType::STRING) {
+            out_param.SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val);
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::TernaryParam>()) {
+        if (out_param.type == ParamType::TERNARY) {
+            out_param.SetValue(p_ptr->Value(), set_default_val);
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::TransferFunctionParam>()) {
+        if (out_param.type == ParamType::TRANSFERFUNCTION) {
+            out_param.SetValue(p_ptr->Value(), set_default_val);
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::Vector2fParam>()) {
+        if (out_param.type == ParamType::VECTOR2F) {
+            auto val = p_ptr->Value();
+            out_param.SetValue(glm::vec2(val.X(), val.Y()), set_default_val);
+            auto min = p_ptr->MinValue();
+            out_param.SetMinValue(glm::vec2(min.X(), min.Y()));
+            auto max = p_ptr->MaxValue();
+            out_param.SetMaxValue(glm::vec2(max.X(), max.Y()));
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::Vector3fParam>()) {
+        if (out_param.type == ParamType::VECTOR3F) {
+            auto val = p_ptr->Value();
+            out_param.SetValue(glm::vec3(val.X(), val.Y(), val.Z()), set_default_val);
+            auto min = p_ptr->MinValue();
+            out_param.SetMinValue(glm::vec3(min.X(), min.Y(), min.Z()));
+            auto max = p_ptr->MaxValue();
+            out_param.SetMaxValue(glm::vec3(max.X(), max.Y(), max.Z()));
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::Vector4fParam>()) {
+        if (out_param.type == ParamType::VECTOR4F) {
+            auto val = p_ptr->Value();
+            out_param.SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()), set_default_val);
+            auto min = p_ptr->MinValue();
+            out_param.SetMinValue(glm::vec4(min.X(), min.Y(), min.Z(), min.W()));
+            auto max = p_ptr->MaxValue();
+            out_param.SetMaxValue(glm::vec4(max.X(), max.Y(), max.Z(), max.W()));
+        } else {
+            type_error = true;
+        }
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Found unknown parameter type. Please extend parameter types for the configurator. "
+            "[%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    if (type_error) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Mismatch of parameter types. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return true;
+}
+
+
+bool megamol::gui::configurator::Parameter::ReadNewCoreParameterToExistingParameter(
+    megamol::core::param::ParamSlot& in_param_slot, megamol::gui::configurator::Parameter& out_param,
+    bool set_default_val, bool save_core_param_pointer) {
+
+    auto parameter_ptr = in_param_slot.Parameter();
+    if (parameter_ptr.IsNull()) {
+        return false;
+    }
+
+    out_param.full_name = std::string(in_param_slot.Name().PeekBuffer());
+    out_param.description = std::string(in_param_slot.Description().PeekBuffer());
+    if (save_core_param_pointer) {
+        out_param.core_param_ptr = parameter_ptr;
+    }
+
+    return megamol::gui::configurator::Parameter::ReadCoreParameterToParameter(
+        parameter_ptr, out_param, set_default_val);
+}
+
+
+bool megamol::gui::configurator::Parameter::WriteCoreParameterGUIState(megamol::gui::configurator::Parameter& in_param,
+    vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr) {
+
+    out_param_ptr->SetGUIVisible(in_param.present.IsGUIVisible());
+    out_param_ptr->SetGUIReadOnly(in_param.present.IsGUIReadOnly());
+    out_param_ptr->SetGUIPresentation(in_param.present.GetGUIPresentation());
+
+    return true;
+}
+
+
+bool megamol::gui::configurator::Parameter::WriteCoreParameterValue(megamol::gui::configurator::Parameter& in_param,
+    vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr) {
+    bool type_error = false;
+
+    if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::ButtonParam>()) {
+        if (in_param.type == ParamType::BUTTON) {
+            p_ptr->setDirty();
+            // KeyCode can not be changed
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::BoolParam>()) {
+        if (in_param.type == ParamType::BOOL) {
+            p_ptr->SetValue(std::get<bool>(in_param.GetValue()));
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::ColorParam>()) {
+        if (in_param.type == ParamType::COLOR) {
+            auto value = std::get<glm::vec4>(in_param.GetValue());
+            p_ptr->SetValue(core::param::ColorParam::ColorType{value[0], value[1], value[2], value[3]});
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::EnumParam>()) {
+        if (in_param.type == ParamType::ENUM) {
+            p_ptr->SetValue(std::get<int>(in_param.GetValue()));
+            // Map can not be changed
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::FilePathParam>()) {
+        if (in_param.type == ParamType::FILEPATH) {
+            p_ptr->SetValue(vislib::StringA(std::get<std::string>(in_param.GetValue()).c_str()));
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::FlexEnumParam>()) {
+        if (in_param.type == ParamType::FLEXENUM) {
+            p_ptr->SetValue(std::get<std::string>(in_param.GetValue()));
+            // Storage can not be changed
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::FloatParam>()) {
+        if (in_param.type == ParamType::FLOAT) {
+            p_ptr->SetValue(std::get<float>(in_param.GetValue()));
+            // Min and Max can not be changed
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::IntParam>()) {
+        if (in_param.type == ParamType::INT) {
+            p_ptr->SetValue(std::get<int>(in_param.GetValue()));
+            // Min and Max can not be changed
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::StringParam>()) {
+        if (in_param.type == ParamType::STRING) {
+            p_ptr->SetValue(vislib::StringA(std::get<std::string>(in_param.GetValue()).c_str()));
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::TernaryParam>()) {
+        if (in_param.type == ParamType::TERNARY) {
+            p_ptr->SetValue(std::get<vislib::math::Ternary>(in_param.GetValue()));
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::TransferFunctionParam>()) {
+        if (in_param.type == ParamType::TRANSFERFUNCTION) {
+            p_ptr->SetValue(std::get<std::string>(in_param.GetValue()).c_str());
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::Vector2fParam>()) {
+        if (in_param.type == ParamType::VECTOR2F) {
+            auto value = std::get<glm::vec2>(in_param.GetValue());
+            p_ptr->SetValue(vislib::math::Vector<float, 2>(value[0], value[1]));
+            // Min and Max can not be changed
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::Vector3fParam>()) {
+        if (in_param.type == ParamType::VECTOR3F) {
+            auto value = std::get<glm::vec3>(in_param.GetValue());
+            p_ptr->SetValue(vislib::math::Vector<float, 3>(value[0], value[1], value[2]));
+            // Min and Max can not be changed
+        } else {
+            type_error = true;
+        }
+    } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::Vector4fParam>()) {
+        if (in_param.type == ParamType::VECTOR4F) {
+            auto value = std::get<glm::vec4>(in_param.GetValue());
+            p_ptr->SetValue(vislib::math::Vector<float, 4>(value[0], value[1], value[2], value[3]));
+            // Min and Max can not be changed
+        } else {
+            type_error = true;
+        }
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Found unknown parameter type. Please extend parameter types for the configurator. "
+            "[%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    if (type_error) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Mismatch of parameter types. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return true;
+}

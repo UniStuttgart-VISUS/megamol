@@ -366,15 +366,16 @@ bool GUIWindows::PostDraw(void) {
                 if (!param.core_param_ptr.IsNull()) {
 
                     if (param.present.IsGUIStateDirty()) {
-                        megamol::gui::configurator::WriteCoreParameterGUIState(param, param.core_param_ptr);
+                        megamol::gui::configurator::Parameter::WriteCoreParameterGUIState(param, param.core_param_ptr);
                         param.present.ResetGUIStateDirty();
                     }
 
                     if (param.IsValueDirty()) {
-                        megamol::gui::configurator::WriteCoreParameterValue(param, param.core_param_ptr);
+                        megamol::gui::configurator::Parameter::WriteCoreParameterValue(param, param.core_param_ptr);
                         param.ResetValueDirty();
                     } else {
-                        megamol::gui::configurator::ReadCoreParameterToParameter(param.core_param_ptr, param, false);
+                        megamol::gui::configurator::Parameter::ReadCoreParameterToParameter(
+                            param.core_param_ptr, param, false);
                     }
                 }
             }

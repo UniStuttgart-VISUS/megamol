@@ -46,7 +46,6 @@ public:
      * Return texture id of given transfer functione.
      */
     static GLuint GetTexture(const std::string& tfs);
-    static void CreateTexture(GLuint& inout_id, GLsizei width, GLsizei height, float* data);
 
     /**
      * Draws the transfer function editor.

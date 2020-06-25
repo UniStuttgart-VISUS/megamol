@@ -42,6 +42,13 @@
 #include "vislib/UTF8Encoder.h"
 #include "vislib/sys/Log.h"
 
+// OpenGL stuff only used for texture =>
+#include "mmcore/misc/PngBitmapCodec.h"
+#include "vislib/graphics/BitMapImage.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib/sys/FastFile.h"
+// <=
+
 
 namespace megamol {
 namespace gui {
@@ -276,6 +283,27 @@ public:
     /** Set keyboard focus to search text input. */
     inline std::string GetSearchString(void) const { return this->search_string; }
 
+
+    // Texture ----------------------------------------------------------------
+
+#ifdef GL_VERSION_1_0
+
+    /**
+     * Load texture from file.
+     */
+    static bool LoadTexture(const std::string& filename, GLuint& inout_id);
+
+    /**
+     * Load raw data from file (e.g. texture data)
+     */
+    static size_t LoadRawFile(std::string name, void** outData);
+
+    /**
+     * Load texture from data.
+     */
+    static bool CreateTexture(GLuint& inout_id, GLsizei width, GLsizei height, const float* data);
+
+#endif // GL_VERSION_1_0
 
     // Other utility functions ------------------------------------------------
 

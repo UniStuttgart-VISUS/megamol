@@ -43,12 +43,24 @@ private:
 
     // VARIABLES --------------------------------------------------------------
 
+    GUIUtils utils;
     std::map<std::string, std::pair<GroupWidgetType, GroupWidgetCallbackFunc>> group_widget_ids;
+
+#ifdef GL_VERSION_1_0
+
+    struct {
+        GLuint play;
+        GLuint pause;
+        GLuint fastforward;
+        GLuint fastrewind;
+    } button_tex_ids;
+
+#endif // GL_VERSION_1_0
 
     // FUCNTIONS --------------------------------------------------------------
 
     void drawParameter(megamol::gui::configurator::Parameter& inout_param, const std::string& in_module_fullname,
-        const std::string& in_search, bool in_extended, bool in_ignore_extended,
+
         megamol::gui::configurator::ParameterPresentation::WidgetScope in_scope,
         const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor);
 

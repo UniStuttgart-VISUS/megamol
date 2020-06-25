@@ -568,13 +568,13 @@ bool megamol::gui::configurator::GraphManager::AddProjectFromCore(
                     if (use_stock) {
                         for (auto& parameter : module_ptr->parameters) {
                             if (parameter.full_name == param_full_name) {
-                                megamol::gui::configurator::ReadNewCoreParameterToExistingParameter(
+                                megamol::gui::configurator::Parameter::ReadNewCoreParameterToExistingParameter(
                                     (*param_slot), parameter, true, false);
                             }
                         }
                     } else {
                         std::shared_ptr<Parameter> param_ptr;
-                        megamol::gui::configurator::ReadNewCoreParameterToNewParameter(
+                        megamol::gui::configurator::Parameter::ReadNewCoreParameterToNewParameter(
                             (*param_slot), param_ptr, false, true);
                         module_ptr->parameters.emplace_back((*param_ptr));
                     }
@@ -1305,7 +1305,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
         for (std::shared_ptr<core::param::ParamSlot> param_slot : paramSlots) {
             if (param_slot == nullptr) continue;
             Parameter::StockParameter psd;
-            if (megamol::gui::configurator::ReadNewCoreParameterToStockParameter((*param_slot), psd)) {
+            if (megamol::gui::configurator::Parameter::ReadNewCoreParameterToStockParameter((*param_slot), psd)) {
                 mod.parameters.emplace_back(psd);
             }
         }

@@ -219,7 +219,7 @@ GLuint megamol::gui::TransferFunctionEditor::GetTexture(const std::string& tfs) 
     } else if (tmp_mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
         param::TransferFunctionParam::GaussInterpolation(tmp_texture_pixels, tmp_texture_size, tmp_nodes);
     }
-    megamol::gui::TransferFunctionEditor::CreateTexture(
+    megamol::gui::GUIUtils::CreateTexture(
         ret_tex_id, static_cast<GLsizei>(tmp_texture_size), 1, tmp_texture_pixels.data());
 
     return ret_tex_id;
@@ -527,10 +527,10 @@ bool TransferFunctionEditor::Draw(bool connected_parameter_mode) {
         }
 
         if (!this->flip_xy) {
-            megamol::gui::TransferFunctionEditor::CreateTexture(
+            megamol::gui::GUIUtils::CreateTexture(
                 this->texture_id, static_cast<GLsizei>(this->textureSize), 1, this->texturePixels.data());
         } else {
-            megamol::gui::TransferFunctionEditor::CreateTexture(
+            megamol::gui::GUIUtils::CreateTexture(
                 this->texture_id, 1, static_cast<GLsizei>(this->textureSize), this->texturePixels.data());
         }
 
@@ -954,29 +954,4 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
     this->utils.HelpMarkerToolTip(
         "First and last node are always present\nwith fixed value 0 and 1.\n[Left-Click] Select "
         "Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");
-}
-
-
-void TransferFunctionEditor::CreateTexture(GLuint& inout_id, GLsizei width, GLsizei height, float* data) {
-
-    if (data == nullptr) return;
-
-    // Delete old texture.
-    if (inout_id != 0) {
-        glDeleteTextures(1, &inout_id);
-    }
-    inout_id = 0;
-
-    // Upload texture.
-    glGenTextures(1, &inout_id);
-    glBindTexture(GL_TEXTURE_2D, inout_id);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, data);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
 }
