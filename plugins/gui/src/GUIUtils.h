@@ -246,10 +246,6 @@ public:
     enum FixedSplitterSide { LEFT, RIGHT };
     bool VerticalSplitter(FixedSplitterSide fixed_side, float& size_left, float& size_right);
 
-    /** "Point in Circle" Button */
-    bool PointCircleButton(const std::string& label = "", bool dirty = false);
-
-
     // Static UTF8 String En-/Decoding ----------------------------------------
 
     /** Decode string from UTF-8. */

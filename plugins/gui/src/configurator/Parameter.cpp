@@ -87,7 +87,7 @@ bool megamol::gui::configurator::ParameterPresentation::Present(
                     ImGui::SameLine();
 
                     // Presentation
-                    this->utils.PointCircleButton("", (this->GetGUIPresentation() != PresentType::Basic));
+                    ParameterPresentation::PointCircleButton("", (this->GetGUIPresentation() != PresentType::Basic));
                     if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) {
                         for (auto& present_name_pair : this->GetPresentationNameMap()) {
                             if (this->IsPresentationCompatible(present_name_pair.first)) {
@@ -157,6 +157,75 @@ float megamol::gui::configurator::ParameterPresentation::GetHeight(Parameter& in
         }
     }
     return height;
+}
+
+
+bool megamol::gui::configurator::ParameterPresentation::PointCircleButton(const std::string& label, bool dirty) {
+
+    bool retval = false;
+
+    assert(ImGui::GetCurrentContext() != nullptr);
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    float edge_length = ImGui::GetFrameHeight();
+    float half_edge_length = edge_length / 2.0f;
+    ImVec2 widget_start_pos = ImGui::GetCursorScreenPos();
+
+    if (!label.empty()) {
+        float text_x_offset_pos = edge_length + style.ItemInnerSpacing.x;
+        ImGui::SetCursorScreenPos(widget_start_pos + ImVec2(text_x_offset_pos, 0.0f));
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted(label.c_str());
+        ImGui::SetCursorScreenPos(widget_start_pos);
+    }
+
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]));
+    auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
+    ImGui::BeginChild("special_button_background", ImVec2(edge_length, edge_length), false, child_flags);
+
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
+
+    float thickness = edge_length / 5.0f;
+    ImVec2 center = widget_start_pos + ImVec2(half_edge_length, half_edge_length);
+    ImU32 color_front = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
+    if (dirty) {
+        color_front = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_BUTTON_MODIFIED);
+    }
+    draw_list->AddCircleFilled(center, thickness, color_front, 12);
+    draw_list->AddCircle(center, 2.0f * thickness, color_front, 12, (thickness / 2.0f));
+
+    ImVec2 rect = ImVec2(edge_length, edge_length);
+    retval = ImGui::InvisibleButton("special_button", rect);
+
+    ImGui::EndChild();
+    ImGui::PopStyleColor();
+
+    return retval;
+}
+
+
+bool megamol::gui::configurator::ParameterPresentation::ParameterExtendedModeButton(bool& inout_extended_mode) {
+
+    bool retval = false;
+    ImGui::BeginGroup();
+
+    megamol::gui::configurator::ParameterPresentation::PointCircleButton("Mode");
+    if (ImGui::BeginPopupContextItem("graph_param_mode_button_context", 0)) { // 0 = left mouse button
+        bool changed = false;
+        if (ImGui::MenuItem("Basic###graph_basic_mode", nullptr, !inout_extended_mode, true)) {
+            inout_extended_mode = false;
+            retval = true;
+        }
+        if (ImGui::MenuItem("Expert###graph_extended_mode", nullptr, inout_extended_mode, true)) {
+            inout_extended_mode = true;
+            retval = true;
+        }
+        ImGui::EndPopup();
+    }
+    ImGui::EndGroup();
+
+    return retval;
 }
 
 

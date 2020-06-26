@@ -921,18 +921,8 @@ void GUIWindows::drawConfiguratorWindowCallback(WindowManager::WindowConfigurati
 void GUIWindows::drawParamWindowCallback(WindowManager::WindowConfiguration& wc) {
 
     // Mode
-    ImGui::BeginGroup();
-    this->utils.PointCircleButton("Mode");
-    if (ImGui::BeginPopupContextItem("gui_param_mode_button_context", 0)) { // 0 = left mouse button
-        if (ImGui::MenuItem("Basic###gui_basic_mode", nullptr, !wc.param_extended_mode, true)) {
-            wc.param_extended_mode = false;
-        }
-        if (ImGui::MenuItem("Expert###gui_extended_mode", nullptr, wc.param_extended_mode, true)) {
-            wc.param_extended_mode = true;
-        }
-        ImGui::EndPopup();
-    }
-    ImGui::EndGroup();
+    megamol::gui::configurator::ParameterPresentation::ParameterExtendedModeButton(wc.param_extended_mode);
+
     // std::string mode_help = "Expert mode enables buttons for additional parameter presentation options.";
     // this->utils.HelpMarkerToolTip(mode_help);
     ImGui::SameLine();

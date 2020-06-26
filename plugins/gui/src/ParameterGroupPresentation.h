@@ -10,7 +10,9 @@
 
 
 #include "GUIUtils.h"
-#include "configurator/Parameter.h"
+#include "configurator/Parameter.h" S
+
+#include "mmcore/param/AbstractParamPresentation.h"
 
 
 namespace megamol {
@@ -24,7 +26,6 @@ class ParameterGroupPresentation {
 public:
     // FUCNTIONS --------------------------------------------------------------
 
-
     ParameterGroupPresentation(void);
     ~ParameterGroupPresentation(void);
 
@@ -33,18 +34,25 @@ public:
         megamol::gui::configurator::ParameterPresentation::WidgetScope in_scope,
         const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor);
 
-
 private:
-    typedef std::map<megamol::gui::ParamType, unsigned int> GroupWidgetType;
     typedef std::vector<megamol::gui::configurator::Parameter*> ParamPtrVectorType;
+    typedef std::map<megamol::gui::ParamType, unsigned int> GroupWidgetType;
     typedef std::function<void(ParamPtrVectorType& params)> GroupWidgetCallbackFunc;
-    typedef std::map<std::string, std::pair<std::vector<megamol::gui::configurator::Parameter*>, GroupWidgetType>>
-        ParamGroupType;
+    typedef std::map<std::string, std::pair<ParamPtrVectorType, GroupWidgetType>> ParamGroupType;
+
+    // Data needed for group widgets
+    class GroupWidgetData : public megamol::core::param::AbstractParamPresentation {
+    public:
+        GroupWidgetData(void) { this->InitPresentation(AbstractParamPresentation::ParamType::GROUP_ANIMATION); }
+        ~GroupWidgetData(void) {}
+        GroupWidgetType type;
+        GroupWidgetCallbackFunc callback;
+    };
 
     // VARIABLES --------------------------------------------------------------
 
     GUIUtils utils;
-    std::map<std::string, std::pair<GroupWidgetType, GroupWidgetCallbackFunc>> group_widget_ids;
+    std::map<std::string, GroupWidgetData> group_widget_ids;
 
     struct {
         GLuint play;
@@ -53,11 +61,13 @@ private:
         GLuint fastrewind;
     } button_tex_ids;
 
-
     // FUCNTIONS --------------------------------------------------------------
 
-    void draw_parameter(megamol::gui::configurator::Parameter& inout_param, const std::string& in_module_fullname,
+    void draw_group(const std::string& in_group_name, GroupWidgetData& group_data, ParamPtrVectorType& input_params,
+        bool in_extended);
 
+    void draw_parameter(megamol::gui::configurator::Parameter& inout_param, const std::string& in_module_fullname,
+        const std::string& in_search, bool in_extended, bool in_ignore_extended,
         megamol::gui::configurator::ParameterPresentation::WidgetScope in_scope,
         const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor);
 

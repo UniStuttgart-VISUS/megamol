@@ -27,6 +27,7 @@ const std::string AbstractParamPresentation::GetTypeName(ParamType type){
     case(VECTOR2F)          : return "Vector2fParam";
     case(VECTOR3F)          : return "Vector3fParam";
     case(VECTOR4F)          : return "Vector4fParam";
+    case(GROUP_ANIMATION)   : return "AnimationGroup";
     default                 : return "UNKNOWN";
     }
 }
@@ -47,6 +48,7 @@ AbstractParamPresentation::AbstractParamPresentation(void)
     this->presentation_name_map.emplace(Presentation::FilePath, "File Path");
     this->presentation_name_map.emplace(Presentation::TransferFunction, "Transfer Function");
     this->presentation_name_map.emplace(Presentation::PinValueToMouse, "Pin Value To Mouse");
+    this->presentation_name_map.emplace(Presentation::Group_Animation, "Animation");
 }
 
 
@@ -114,6 +116,10 @@ bool AbstractParamPresentation::InitPresentation(AbstractParamPresentation::Para
         case (ParamType::VECTOR4F): {
             this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse | Presentation::Color;
             this->SetGUIPresentation(Presentation::Basic);
+        } break;
+        case (ParamType::GROUP_ANIMATION): {
+            this->compatible = Presentation::Group_Animation;
+            this->SetGUIPresentation(Presentation::Group_Animation);
         } break;
         default:
             break;

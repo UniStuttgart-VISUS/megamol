@@ -41,18 +41,20 @@ public:
         VECTOR2F,
         VECTOR3F,
         VECTOR4F,
+        GROUP_ANIMATION,
         UNKNOWN
     };
          
     /// ! Add new widget presentation to name map in ctor.
     enum Presentation : int {  /// (limited to 32 options)
         NONE                = 0,
-        Basic               = 1 << 1,       // Basic widget (is supported for all parameter types) -> Default
+        Basic               = 1 << 1,       // Basic widget (is supported for all parameter types - not for groups) -> Default
         String              = 1 << 2,       // String widget (is supported for all types, uses ValueString function of parameters)
         Color               = 1 << 3,       // Color editor widget
         FilePath            = 1 << 4,       // File path widget
         TransferFunction    = 1 << 5,       // Transfer function editor widget
-        PinValueToMouse     = 1 << 6        // Pin parameter value to mouse position
+        PinValueToMouse     = 1 << 6,       // Pin parameter value to mouse position
+        Group_Animation     = 1 << 7        // Animation widget group
     };
 
     /**

@@ -91,6 +91,12 @@ public:
 
     void SetTransferFunctionTexture(GLuint tex_id) { this->tf_texture = tex_id; }
 
+    /** "Point in Circle" Button */
+    static bool PointCircleButton(const std::string& label = "", bool dirty = false);
+
+    /** Extended parameter mode button. */
+    static bool ParameterExtendedModeButton(bool& inout_extended_mode);
+
 private:
     // VARIABLES --------------------------------------------------------------
 

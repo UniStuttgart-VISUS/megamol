@@ -293,51 +293,6 @@ bool megamol::gui::GUIUtils::VerticalSplitter(FixedSplitterSide fixed_side, floa
 }
 
 
-bool megamol::gui::GUIUtils::PointCircleButton(const std::string& label, bool dirty) {
-
-    bool retval = false;
-
-    assert(ImGui::GetCurrentContext() != nullptr);
-    ImGuiStyle& style = ImGui::GetStyle();
-
-    float edge_length = ImGui::GetFrameHeight();
-    float half_edge_length = edge_length / 2.0f;
-    ImVec2 widget_start_pos = ImGui::GetCursorScreenPos();
-
-    if (!label.empty()) {
-        float text_x_offset_pos = edge_length + style.ItemInnerSpacing.x;
-        ImGui::SetCursorScreenPos(widget_start_pos + ImVec2(text_x_offset_pos, 0.0f));
-        ImGui::AlignTextToFramePadding();
-        ImGui::TextUnformatted(label.c_str());
-        ImGui::SetCursorScreenPos(widget_start_pos);
-    }
-
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]));
-    auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
-    ImGui::BeginChild("special_button_background", ImVec2(edge_length, edge_length), false, child_flags);
-
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    assert(draw_list != nullptr);
-
-    float thickness = edge_length / 5.0f;
-    ImVec2 center = widget_start_pos + ImVec2(half_edge_length, half_edge_length);
-    ImU32 color_front = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
-    if (dirty) {
-        color_front = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_BUTTON_MODIFIED);
-    }
-    draw_list->AddCircleFilled(center, thickness, color_front, 12);
-    draw_list->AddCircle(center, 2.0f * thickness, color_front, 12, (thickness / 2.0f));
-
-    ImVec2 rect = ImVec2(edge_length, edge_length);
-    retval = ImGui::InvisibleButton("special_button", rect);
-
-    ImGui::EndChild();
-    ImGui::PopStyleColor();
-
-    return retval;
-}
-
-
 bool megamol::gui::GUIUtils::LoadTexture(const std::string& filename, GLuint& inout_id) {
 
     if (filename.empty()) return false;

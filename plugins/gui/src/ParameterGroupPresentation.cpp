@@ -17,12 +17,13 @@ using namespace megamol::gui::configurator;
 megamol::gui::ParameterGroupPresentation::ParameterGroupPresentation(void)
     : utils(), group_widget_ids(), button_tex_ids{0, 0, 0, 0} {
 
-    // Add group widget id for animation
-    group_widget_ids["animation"].first.emplace(ParamType::BOOL, 1);
-    group_widget_ids["animation"].first.emplace(ParamType::BUTTON, 3);
-    group_widget_ids["animation"].first.emplace(ParamType::FLOAT, 2);
-    group_widget_ids["animation"].second = [&, this](
-                                               ParamPtrVectorType& params) { this->group_widget_animation(params); };
+    // Add group widget data for animation
+    GroupWidgetData animation;
+    animation.type.emplace(ParamType::BOOL, 1);
+    animation.type.emplace(ParamType::BUTTON, 3);
+    animation.type.emplace(ParamType::FLOAT, 2);
+    animation.callback = [&, this](ParamPtrVectorType& params) { this->group_widget_animation(params); };
+    group_widget_ids["animation"] = animation;
 }
 
 
@@ -43,40 +44,26 @@ bool megamol::gui::ParameterGroupPresentation::PresentGUI(megamol::gui::configur
         // GLOBAL
 
         for (auto& param : inout_params) {
-            this->draw_parameter(
-                param, in_module_fullname, in_scope, in_external_tf_editor, out_open_external_tf_editor);
+            this->draw_parameter(param, in_module_fullname, in_search, in_extended, in_ignore_extended, in_scope,
+                in_external_tf_editor, out_open_external_tf_editor);
         }
     } else {
         // LOCAL
-
         ImGui::BeginGroup();
         ImGui::Indent();
 
         ParamGroupType group_map;
         for (auto& param : inout_params) {
-            auto param_name = param.full_name;
             auto param_namespace = param.GetNameSpace();
 
-            // Handle visibility of parameter as soon as possible!
-            if (!in_ignore_extended) {
-                param.present.extended = in_extended;
-            }
-            bool param_searched = true;
-            if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
-                param_searched = megamol::gui::GUIUtils::FindCaseInsensitiveSubstring(param_name, in_search);
-            }
-            bool visible = (param.present.IsGUIVisible() && param_searched) || param.present.extended;
-
-            if (visible) {
-                if (!param_namespace.empty()) {
-                    // Sort parameters with namespace to group
-                    group_map[param_namespace].first.emplace_back(&param);
-                    group_map[param_namespace].second[param.type]++;
-                } else {
-                    // Draw parameters without namespace at the beginning
-                    this->draw_parameter(
-                        param, in_module_fullname, in_scope, in_external_tf_editor, out_open_external_tf_editor);
-                }
+            if (!param_namespace.empty()) {
+                // Sort parameters with namespace to group
+                group_map[param_namespace].first.emplace_back(&param);
+                group_map[param_namespace].second[param.type]++;
+            } else {
+                // Draw parameters without namespace at the beginning
+                this->draw_parameter(param, in_module_fullname, in_search, in_extended, in_ignore_extended, in_scope,
+                    in_external_tf_editor, out_open_external_tf_editor);
             }
         }
 
@@ -85,34 +72,37 @@ bool megamol::gui::ParameterGroupPresentation::PresentGUI(megamol::gui::configur
             auto group_name = group.first;
             bool found_group_widget = false;
 
-            // Check for exisiting group widget
+            // Draw group widget
             for (auto& group_widget_id : this->group_widget_ids) {
-
                 // Check for same group name and count of different parameter types
                 /// XXX Is this check too expensive (also check group_name?) - Alternative?
-                if (group_widget_id.second.first == group.second.second) {
+                if (group_widget_id.second.type == group.second.second) {
                     found_group_widget = true;
-                    // Call group widget draw function
-                    group_widget_id.second.second(group.second.first);
+                    this->draw_group(group_widget_id.first, group_widget_id.second, group.second.first, in_extended);
                 }
             }
 
-            // Draw group parameters with no custom group widget
+            // Draw grouped parameters with no custom group widget
             if (!found_group_widget) {
+
+                // Skip if no parameter is visible
+                bool header_visible = false;
+                for (auto& param : group.second.first) {
+                    header_visible = header_visible || param->present.IsGUIVisible();
+                }
+                if (!header_visible) continue;
+
                 // Open namespace header when parameter search is active
                 if (!in_search.empty()) {
                     auto headerId = ImGui::GetID(group_name.c_str());
                     ImGui::GetStateStorage()->SetInt(headerId, 1);
                 }
-
                 if (ImGui::CollapsingHeader(group_name.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
                     ImGui::Indent();
-
                     for (auto& param : group.second.first) {
-                        this->draw_parameter(
-                            (*param), in_module_fullname, in_scope, in_external_tf_editor, out_open_external_tf_editor);
+                        this->draw_parameter((*param), in_module_fullname, in_search, in_extended, in_ignore_extended,
+                            in_scope, in_external_tf_editor, out_open_external_tf_editor);
                     }
-
                     // Vertical spacing
                     /// ImGui::Dummy(ImVec2(1.0f, ImGui::GetFrameHeightWithSpacing()));
                     ImGui::Unindent();
@@ -129,8 +119,65 @@ bool megamol::gui::ParameterGroupPresentation::PresentGUI(megamol::gui::configur
 }
 
 
+void megamol::gui::ParameterGroupPresentation::draw_group(
+    const std::string& in_group_name, GroupWidgetData& group_data, ParamPtrVectorType& input_params, bool in_extended) {
+
+    ImGui::PushID(in_group_name.c_str());
+
+    if (in_extended) {
+        // Visibility
+        bool visible = group_data.IsGUIVisible();
+        if (ImGui::RadioButton("###visibile", visible)) {
+            group_data.SetGUIVisible(!visible);
+        }
+        this->utils.HoverToolTip("Visibility", ImGui::GetItemID(), 0.5f);
+        ImGui::SameLine();
+
+        // Read-only option
+        bool readonly = group_data.IsGUIReadOnly();
+        if (ImGui::Checkbox("###readonly", &readonly)) {
+            group_data.SetGUIReadOnly(readonly);
+        }
+        this->utils.HoverToolTip("Read-Only", ImGui::GetItemID(), 0.5f);
+        ImGui::SameLine();
+
+        ParameterPresentation::PointCircleButton("", (group_data.GetGUIPresentation() != PresentType::Basic));
+        if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) {
+            for (auto& present_name_pair : group_data.GetPresentationNameMap()) {
+                if (group_data.IsPresentationCompatible(present_name_pair.first)) {
+                    if (ImGui::MenuItem(present_name_pair.second.c_str(), nullptr,
+                            (present_name_pair.first == group_data.GetGUIPresentation()))) {
+                        group_data.SetGUIPresentation(present_name_pair.first);
+                    }
+                }
+            }
+            ImGui::EndPopup();
+        }
+        this->utils.HoverToolTip("Presentation", ImGui::GetItemID(), 0.5f);
+        ImGui::SameLine();
+    }
+
+    // Call group widget draw function
+    if (group_data.IsGUIVisible() || in_extended) {
+
+        if (group_data.IsGUIReadOnly()) {
+            GUIUtils::ReadOnlyWigetStyle(true);
+        }
+
+        group_data.callback(input_params);
+
+        if (group_data.IsGUIReadOnly()) {
+            GUIUtils::ReadOnlyWigetStyle(false);
+        }
+    }
+
+    ImGui::PopID();
+}
+
+
 void megamol::gui::ParameterGroupPresentation::draw_parameter(megamol::gui::configurator::Parameter& inout_param,
-    const std::string& in_module_fullname, megamol::gui::configurator::ParameterPresentation::WidgetScope in_scope,
+    const std::string& in_module_fullname, const std::string& in_search, bool in_extended, bool in_ignore_extended,
+    megamol::gui::configurator::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor) {
 
     if ((inout_param.type == ParamType::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {
@@ -142,12 +189,23 @@ void megamol::gui::ParameterGroupPresentation::draw_parameter(megamol::gui::conf
         inout_param.PresentGUI(in_scope);
     } else {
         // LOCAL
-        if (inout_param.PresentGUI(in_scope)) {
-            // Open window calling the transfer function editor callback
-            if ((inout_param.type == ParamType::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {
-                out_open_external_tf_editor = true;
-                auto param_fullname = std::string(in_module_fullname.c_str()) + "::" + inout_param.full_name;
-                in_external_tf_editor->SetConnectedParameter(&inout_param, param_fullname);
+        auto param_name = inout_param.full_name;
+        if (!in_ignore_extended) {
+            inout_param.present.extended = in_extended;
+        }
+        bool param_searched = true;
+        if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
+            param_searched = megamol::gui::GUIUtils::FindCaseInsensitiveSubstring(param_name, in_search);
+        }
+        bool visible = (inout_param.present.IsGUIVisible() && param_searched) || inout_param.present.extended;
+        if (visible) {
+            if (inout_param.PresentGUI(in_scope)) {
+                // Open window calling the transfer function editor callback
+                if ((inout_param.type == ParamType::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {
+                    out_open_external_tf_editor = true;
+                    auto param_fullname = std::string(in_module_fullname.c_str()) + "::" + inout_param.full_name;
+                    in_external_tf_editor->SetConnectedParameter(&inout_param, param_fullname);
+                }
             }
         }
     }
@@ -161,15 +219,15 @@ void megamol::gui::ParameterGroupPresentation::group_widget_animation(ParamPtrVe
     Parameter* param_play = nullptr;
     Parameter* param_time = nullptr;
     Parameter* param_speed = nullptr;
-    for (auto& param : params) {
-        if ((param->GetName() == "play") && (param->type == ParamType::BOOL)) {
-            param_play = param;
+    for (auto& param_ptr : params) {
+        if ((param_ptr->GetName() == "play") && (param_ptr->type == ParamType::BOOL)) {
+            param_play = param_ptr;
         }
-        if ((param->GetName() == "time") && (param->type == ParamType::FLOAT)) {
-            param_time = param;
+        if ((param_ptr->GetName() == "time") && (param_ptr->type == ParamType::FLOAT)) {
+            param_time = param_ptr;
         }
-        if ((param->GetName() == "speed") && (param->type == ParamType::FLOAT)) {
-            param_speed = param;
+        if ((param_ptr->GetName() == "speed") && (param_ptr->type == ParamType::FLOAT)) {
+            param_speed = param_ptr;
         }
     }
     if ((param_play == nullptr) || (param_time == nullptr) || (param_speed == nullptr)) {
@@ -228,7 +286,7 @@ void megamol::gui::ParameterGroupPresentation::group_widget_animation(ParamPtrVe
     button_label = "Play";
     button_tex = reinterpret_cast<ImTextureID>(this->button_tex_ids.play);
     if (play) {
-        std::string play_label = "Pause";
+        button_label = "Pause";
         button_tex = reinterpret_cast<ImTextureID>(this->button_tex_ids.pause);
     }
 
@@ -236,7 +294,7 @@ void megamol::gui::ParameterGroupPresentation::group_widget_animation(ParamPtrVe
             style.Colors[ImGuiCol_Button], style.Colors[ImGuiCol_ButtonActive])) {
         play = !play;
     }
-    this->utils.HoverToolTip(button_label, ImGui::GetID(button_label.c_str()), 1.0f, 5.0f);
+    this->utils.HoverToolTip(button_label, ImGui::GetItemID(), 1.0f, 5.0f);
     ImGui::SameLine();
 
     /// SLOWER
@@ -247,7 +305,7 @@ void megamol::gui::ParameterGroupPresentation::group_widget_animation(ParamPtrVe
         // play = true;
         speed /= 1.5f;
     }
-    this->utils.HoverToolTip(button_label, ImGui::GetID(button_label.c_str()), 1.0f, 5.0f);
+    this->utils.HoverToolTip(button_label, ImGui::GetItemID(), 1.0f, 5.0f);
     ImGui::SameLine();
 
     /// FASTER
@@ -258,7 +316,7 @@ void megamol::gui::ParameterGroupPresentation::group_widget_animation(ParamPtrVe
         // play = true;
         speed *= 1.5f;
     }
-    this->utils.HoverToolTip(button_label, ImGui::GetID(button_label.c_str()), 1.0f, 5.0f);
+    this->utils.HoverToolTip(button_label, ImGui::GetItemID(), 1.0f, 5.0f);
 
     ImGui::PopStyleColor(3);
 
