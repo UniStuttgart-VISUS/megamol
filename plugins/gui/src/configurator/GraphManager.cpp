@@ -11,20 +11,19 @@
 
 using namespace megamol;
 using namespace megamol::gui;
-using namespace megamol::gui::configurator;
 
 
 // GRAPH MANAGER PRESENTATION ####################################################
 
-megamol::gui::configurator::GraphManagerPresentation::GraphManagerPresentation(void)
+megamol::gui::GraphManagerPresentation::GraphManagerPresentation(void)
     : utils(), file_utils(), graph_delete_uid(GUI_INVALID_ID) {}
 
 
-megamol::gui::configurator::GraphManagerPresentation::~GraphManagerPresentation(void) {}
+megamol::gui::GraphManagerPresentation::~GraphManagerPresentation(void) {}
 
 
-void megamol::gui::configurator::GraphManagerPresentation::Present(
-    megamol::gui::configurator::GraphManager& inout_graph_manager, GraphStateType& state) {
+void megamol::gui::GraphManagerPresentation::Present(
+    megamol::gui::GraphManager& inout_graph_manager, GraphStateType& state) {
 
     try {
         if (ImGui::GetCurrentContext() == nullptr) {
@@ -101,7 +100,7 @@ void megamol::gui::configurator::GraphManagerPresentation::Present(
 }
 
 
-void megamol::gui::configurator::GraphManagerPresentation::SaveProjectToFile(
+void megamol::gui::GraphManagerPresentation::SaveProjectToFile(
     bool open_popup, GraphManager& inout_graph_manager, GraphStateType& state) {
 
     bool confirmed, aborted;
@@ -122,14 +121,13 @@ void megamol::gui::configurator::GraphManagerPresentation::SaveProjectToFile(
 
 // GRAPH MANAGER ##############################################################
 
-megamol::gui::configurator::GraphManager::GraphManager(void)
-    : graphs(), modules_stock(), calls_stock(), graph_name_uid(0) {}
+megamol::gui::GraphManager::GraphManager(void) : graphs(), modules_stock(), calls_stock(), graph_name_uid(0) {}
 
 
-megamol::gui::configurator::GraphManager::~GraphManager(void) {}
+megamol::gui::GraphManager::~GraphManager(void) {}
 
 
-ImGuiID megamol::gui::configurator::GraphManager::AddGraph(void) {
+ImGuiID megamol::gui::GraphManager::AddGraph(void) {
 
     ImGuiID retval = GUI_INVALID_ID;
 
@@ -156,7 +154,7 @@ ImGuiID megamol::gui::configurator::GraphManager::AddGraph(void) {
 }
 
 
-bool megamol::gui::configurator::GraphManager::DeleteGraph(ImGuiID graph_uid) {
+bool megamol::gui::GraphManager::DeleteGraph(ImGuiID graph_uid) {
 
     for (auto iter = this->graphs.begin(); iter != this->graphs.end(); iter++) {
         if ((*iter)->uid == graph_uid) {
@@ -180,8 +178,7 @@ bool megamol::gui::configurator::GraphManager::DeleteGraph(ImGuiID graph_uid) {
 }
 
 
-bool megamol::gui::configurator::GraphManager::GetGraph(
-    ImGuiID graph_uid, megamol::gui::configurator::GraphPtrType& out_graph_ptr) {
+bool megamol::gui::GraphManager::GetGraph(ImGuiID graph_uid, megamol::gui::GraphPtrType& out_graph_ptr) {
 
     if (graph_uid != GUI_INVALID_ID) {
         for (auto& graph_ptr : this->graphs) {
@@ -197,7 +194,7 @@ bool megamol::gui::configurator::GraphManager::GetGraph(
 }
 
 
-bool megamol::gui::configurator::GraphManager::LoadCallStock(const megamol::core::CoreInstance* core_instance) {
+bool megamol::gui::GraphManager::LoadCallStock(const megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -274,7 +271,7 @@ bool megamol::gui::configurator::GraphManager::LoadCallStock(const megamol::core
 }
 
 
-bool megamol::gui::configurator::GraphManager::LoadModuleStock(const megamol::core::CoreInstance* core_instance) {
+bool megamol::gui::GraphManager::LoadModuleStock(const megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -365,7 +362,7 @@ bool megamol::gui::configurator::GraphManager::LoadModuleStock(const megamol::co
 }
 
 
-ImGuiID megamol::gui::configurator::GraphManager::LoadUpdateProjectFromCore(
+ImGuiID megamol::gui::GraphManager::LoadUpdateProjectFromCore(
     ImGuiID graph_uid, megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
@@ -402,7 +399,7 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadUpdateProjectFromCore(
 }
 
 
-ImGuiID megamol::gui::configurator::GraphManager::LoadProjectFromCore(megamol::core::CoreInstance* core_instance) {
+ImGuiID megamol::gui::GraphManager::LoadProjectFromCore(megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -433,7 +430,7 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadProjectFromCore(megamol::c
 }
 
 
-bool megamol::gui::configurator::GraphManager::AddProjectFromCore(
+bool megamol::gui::GraphManager::AddProjectFromCore(
     ImGuiID graph_uid, megamol::core::CoreInstance* core_instance, bool use_stock) {
 
     try {
@@ -568,13 +565,13 @@ bool megamol::gui::configurator::GraphManager::AddProjectFromCore(
                     if (use_stock) {
                         for (auto& parameter : module_ptr->parameters) {
                             if (parameter.full_name == param_full_name) {
-                                megamol::gui::configurator::Parameter::ReadNewCoreParameterToExistingParameter(
+                                megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
                                     (*param_slot), parameter, true, false);
                             }
                         }
                     } else {
                         std::shared_ptr<Parameter> param_ptr;
-                        megamol::gui::configurator::Parameter::ReadNewCoreParameterToNewParameter(
+                        megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(
                             (*param_slot), param_ptr, false, true);
                         module_ptr->parameters.emplace_back((*param_ptr));
                     }
@@ -669,8 +666,7 @@ bool megamol::gui::configurator::GraphManager::AddProjectFromCore(
 }
 
 
-ImGuiID megamol::gui::configurator::GraphManager::LoadAddProjectFromFile(
-    ImGuiID graph_uid, const std::string& project_filename) {
+ImGuiID megamol::gui::GraphManager::LoadAddProjectFromFile(ImGuiID graph_uid, const std::string& project_filename) {
 
     std::string projectstr;
     if (!FileUtils::ReadFile(project_filename, projectstr)) return false;
@@ -1107,8 +1103,7 @@ ImGuiID megamol::gui::configurator::GraphManager::LoadAddProjectFromFile(
 }
 
 
-bool megamol::gui::configurator::GraphManager::SaveProjectToFile(
-    ImGuiID graph_uid, const std::string& project_filename) {
+bool megamol::gui::GraphManager::SaveProjectToFile(ImGuiID graph_uid, const std::string& project_filename) {
 
     std::string projectstr;
     std::stringstream confInstances, confModules, confCalls, confParams;
@@ -1248,7 +1243,7 @@ bool megamol::gui::configurator::GraphManager::SaveProjectToFile(
 }
 
 
-bool megamol::gui::configurator::GraphManager::get_module_stock_data(
+bool megamol::gui::GraphManager::get_module_stock_data(
     Module::StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc) {
 
     mod.class_name = std::string(mod_desc->ClassName());
@@ -1305,7 +1300,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
         for (std::shared_ptr<core::param::ParamSlot> param_slot : paramSlots) {
             if (param_slot == nullptr) continue;
             Parameter::StockParameter psd;
-            if (megamol::gui::configurator::Parameter::ReadNewCoreParameterToStockParameter((*param_slot), psd)) {
+            if (megamol::gui::Parameter::ReadNewCoreParameterToStockParameter((*param_slot), psd)) {
                 mod.parameters.emplace_back(psd);
             }
         }
@@ -1352,7 +1347,7 @@ bool megamol::gui::configurator::GraphManager::get_module_stock_data(
 }
 
 
-bool megamol::gui::configurator::GraphManager::get_call_stock_data(
+bool megamol::gui::GraphManager::get_call_stock_data(
     Call::StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc) {
 
     try {
@@ -1377,7 +1372,7 @@ bool megamol::gui::configurator::GraphManager::get_call_stock_data(
 }
 
 
-bool megamol::gui::configurator::GraphManager::read_project_command_arguments(
+bool megamol::gui::GraphManager::read_project_command_arguments(
     const std::string& line, size_t arg_count, std::vector<std::string>& out_args) {
 
     /// Can be used for mmCreateView, mmCreateModule and mmCreateCall lua commands
@@ -1438,7 +1433,7 @@ bool megamol::gui::configurator::GraphManager::read_project_command_arguments(
 }
 
 
-ImVec2 megamol::gui::configurator::GraphManager::project_read_confpos(const std::string& line) {
+ImVec2 megamol::gui::GraphManager::project_read_confpos(const std::string& line) {
 
     ImVec2 conf_pos(FLT_MAX, FLT_MAX);
 
@@ -1476,7 +1471,7 @@ ImVec2 megamol::gui::configurator::GraphManager::project_read_confpos(const std:
 }
 
 
-bool megamol::gui::configurator::GraphManager::project_separate_name_and_namespace(
+bool megamol::gui::GraphManager::project_separate_name_and_namespace(
     const std::string& full_name, std::string& name_space, std::string& name) {
 
     name = full_name;
@@ -1506,7 +1501,7 @@ bool megamol::gui::configurator::GraphManager::project_separate_name_and_namespa
 }
 
 
-bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_string(
+bool megamol::gui::GraphManager::parameters_gui_state_from_json_string(
     const GraphPtrType& graph_ptr, const std::string& in_json_string) {
 
     /// ! Implementation should be duplicate to version in
@@ -1628,8 +1623,7 @@ bool megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_st
 }
 
 
-bool megamol::gui::configurator::GraphManager::parameters_gui_state_to_json(
-    const GraphPtrType& graph_ptr, nlohmann::json& out_json) {
+bool megamol::gui::GraphManager::parameters_gui_state_to_json(const GraphPtrType& graph_ptr, nlohmann::json& out_json) {
 
     /// ! Implementation should be duplicate to version in megamol::gui::GUIWindows::gui_and_parameters_state_to_json()
 
@@ -1683,7 +1677,7 @@ bool megamol::gui::configurator::GraphManager::parameters_gui_state_to_json(
 }
 
 
-bool megamol::gui::configurator::GraphManager::replace_graph_state(
+bool megamol::gui::GraphManager::replace_graph_state(
     const GraphPtrType& graph_ptr, const std::string& in_json_string, std::string& out_json_string) {
 
     try {
@@ -1732,7 +1726,7 @@ bool megamol::gui::configurator::GraphManager::replace_graph_state(
 }
 
 
-bool megamol::gui::configurator::GraphManager::replace_parameter_gui_state(
+bool megamol::gui::GraphManager::replace_parameter_gui_state(
     const GraphPtrType& graph_ptr, const std::string& in_json_string, std::string& out_json_string) {
 
     try {
@@ -1778,7 +1772,7 @@ bool megamol::gui::configurator::GraphManager::replace_parameter_gui_state(
 }
 
 
-std::vector<size_t> megamol::gui::configurator::GraphManager::get_compatible_callee_idxs(
+std::vector<size_t> megamol::gui::GraphManager::get_compatible_callee_idxs(
     std::shared_ptr<megamol::core::CalleeSlot> callee_slot) {
 
     std::vector<size_t> retval;
@@ -1839,7 +1833,7 @@ std::vector<size_t> megamol::gui::configurator::GraphManager::get_compatible_cal
 }
 
 
-std::vector<size_t> megamol::gui::configurator::GraphManager::get_compatible_caller_idxs(
+std::vector<size_t> megamol::gui::GraphManager::get_compatible_caller_idxs(
     std::shared_ptr<megamol::core::CallerSlot> caller_slot) {
 
     std::vector<size_t> retval;

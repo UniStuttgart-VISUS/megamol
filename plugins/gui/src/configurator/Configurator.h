@@ -24,7 +24,7 @@
 
 namespace megamol {
 namespace gui {
-namespace configurator {
+
 
 class Configurator {
 public:
@@ -110,7 +110,7 @@ private:
 #endif
 };
 
-} // namespace configurator
+
 } // namespace gui
 } // namespace megamol
 

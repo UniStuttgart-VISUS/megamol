@@ -14,7 +14,7 @@
 
 namespace megamol {
 namespace gui {
-namespace configurator {
+
 
 // Forward declarations
 class CallSlot;
@@ -141,7 +141,7 @@ private:
     std::vector<CallPtrType> connected_calls;
 };
 
-} // namespace configurator
+
 } // namespace gui
 } // namespace megamol
 

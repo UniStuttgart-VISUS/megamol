@@ -15,12 +15,11 @@
 
 using namespace megamol;
 using namespace megamol::gui;
-using namespace megamol::gui::configurator;
 
 
 // MODULE PRESENTATION ####################################################
 
-megamol::gui::configurator::ModulePresentation::ModulePresentation(void)
+megamol::gui::ModulePresentation::ModulePresentation(void)
     : group()
     , label_visible(true)
     , position(ImVec2(FLT_MAX, FLT_MAX))
@@ -39,11 +38,11 @@ megamol::gui::configurator::ModulePresentation::ModulePresentation(void)
 }
 
 
-megamol::gui::configurator::ModulePresentation::~ModulePresentation(void) {}
+megamol::gui::ModulePresentation::~ModulePresentation(void) {}
 
 
-void megamol::gui::configurator::ModulePresentation::Present(megamol::gui::PresentPhase phase,
-    megamol::gui::configurator::Module& inout_module, megamol::gui::GraphItemsStateType& state) {
+void megamol::gui::ModulePresentation::Present(
+    megamol::gui::PresentPhase phase, megamol::gui::Module& inout_module, megamol::gui::GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -429,8 +428,7 @@ void megamol::gui::configurator::ModulePresentation::Present(megamol::gui::Prese
                         bool unused_external_tf_editor;
                         /// Use extended mode currently set in parameter
                         this->param_groups.PresentGUI(inout_module.parameters, inout_module.FullName(), "", false, true,
-                            configurator::ParameterPresentation::WidgetScope::LOCAL, nullptr,
-                            unused_external_tf_editor);
+                            ParameterPresentation::WidgetScope::LOCAL, nullptr, unused_external_tf_editor);
 
                         ImGui::EndChild();
 
@@ -463,7 +461,7 @@ void megamol::gui::configurator::ModulePresentation::Present(megamol::gui::Prese
 }
 
 
-ImVec2 megamol::gui::configurator::ModulePresentation::GetDefaultModulePosition(const GraphCanvasType& canvas) {
+ImVec2 megamol::gui::ModulePresentation::GetDefaultModulePosition(const GraphCanvasType& canvas) {
 
     return ((ImVec2((2.0f * GUI_GRAPH_BORDER), (2.0f * GUI_GRAPH_BORDER)) + // ImGui::GetTextLineHeightWithSpacing()) +
                 (canvas.position - canvas.offset)) /
@@ -471,8 +469,7 @@ ImVec2 megamol::gui::configurator::ModulePresentation::GetDefaultModulePosition(
 }
 
 
-void megamol::gui::configurator::ModulePresentation::Update(
-    megamol::gui::configurator::Module& inout_module, const GraphCanvasType& in_canvas) {
+void megamol::gui::ModulePresentation::Update(megamol::gui::Module& inout_module, const GraphCanvasType& in_canvas) {
 
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -525,7 +522,7 @@ void megamol::gui::configurator::ModulePresentation::Update(
 
 // MODULE #####################################################################
 
-megamol::gui::configurator::Module::Module(ImGuiID uid)
+megamol::gui::Module::Module(ImGuiID uid)
     : uid(uid)
     , class_name()
     , description()
@@ -537,19 +534,19 @@ megamol::gui::configurator::Module::Module(ImGuiID uid)
     , callslots()
     , present() {
 
-    this->callslots.emplace(megamol::gui::configurator::CallSlotType::CALLER, std::vector<CallSlotPtrType>());
-    this->callslots.emplace(megamol::gui::configurator::CallSlotType::CALLEE, std::vector<CallSlotPtrType>());
+    this->callslots.emplace(megamol::gui::CallSlotType::CALLER, std::vector<CallSlotPtrType>());
+    this->callslots.emplace(megamol::gui::CallSlotType::CALLEE, std::vector<CallSlotPtrType>());
 }
 
 
-megamol::gui::configurator::Module::~Module() {
+megamol::gui::Module::~Module() {
 
     // Delete all call slots
     this->DeleteCallSlots();
 }
 
 
-bool megamol::gui::configurator::Module::AddCallSlot(megamol::gui::configurator::CallSlotPtrType callslot) {
+bool megamol::gui::Module::AddCallSlot(megamol::gui::CallSlotPtrType callslot) {
 
     if (callslot == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn(
@@ -570,7 +567,7 @@ bool megamol::gui::configurator::Module::AddCallSlot(megamol::gui::configurator:
 }
 
 
-bool megamol::gui::configurator::Module::DeleteCallSlots(void) {
+bool megamol::gui::Module::DeleteCallSlots(void) {
 
     try {
         for (auto& callslots_map : this->callslots) {
@@ -601,8 +598,7 @@ bool megamol::gui::configurator::Module::DeleteCallSlots(void) {
 }
 
 
-bool megamol::gui::configurator::Module::GetCallSlot(
-    ImGuiID callslot_uid, megamol::gui::configurator::CallSlotPtrType& out_callslot_ptr) {
+bool megamol::gui::Module::GetCallSlot(ImGuiID callslot_uid, megamol::gui::CallSlotPtrType& out_callslot_ptr) {
 
     if (callslot_uid != GUI_INVALID_ID) {
         for (auto& callslot_map : this->GetCallSlots()) {

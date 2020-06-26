@@ -29,13 +29,13 @@ public:
     ParameterGroupPresentation(void);
     ~ParameterGroupPresentation(void);
 
-    bool PresentGUI(megamol::gui::configurator::ParamVectorType& inout_params, const std::string& in_module_fullname,
+    bool PresentGUI(megamol::gui::ParamVectorType& inout_params, const std::string& in_module_fullname,
         const std::string& in_search, bool in_extended, bool in_ignore_extended,
-        megamol::gui::configurator::ParameterPresentation::WidgetScope in_scope,
+        megamol::gui::ParameterPresentation::WidgetScope in_scope,
         const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor);
 
 private:
-    typedef std::vector<megamol::gui::configurator::Parameter*> ParamPtrVectorType;
+    typedef std::vector<megamol::gui::Parameter*> ParamPtrVectorType;
     typedef std::map<megamol::gui::ParamType, unsigned int> GroupWidgetType;
     typedef std::function<void(ParamPtrVectorType& params)> GroupWidgetCallbackFunc;
     typedef std::map<std::string, std::pair<ParamPtrVectorType, GroupWidgetType>> ParamGroupType;
@@ -66,9 +66,9 @@ private:
     void draw_group(const std::string& in_group_name, GroupWidgetData& group_data, ParamPtrVectorType& input_params,
         bool in_extended);
 
-    void draw_parameter(megamol::gui::configurator::Parameter& inout_param, const std::string& in_module_fullname,
+    void draw_parameter(megamol::gui::Parameter& inout_param, const std::string& in_module_fullname,
         const std::string& in_search, bool in_extended, bool in_ignore_extended,
-        megamol::gui::configurator::ParameterPresentation::WidgetScope in_scope,
+        megamol::gui::ParameterPresentation::WidgetScope in_scope,
         const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor);
 
     void group_widget_animation(ParamPtrVectorType& params);

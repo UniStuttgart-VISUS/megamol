@@ -38,7 +38,7 @@
 
 namespace megamol {
 namespace gui {
-namespace configurator {
+
 
 // Forward declarations
 class Parameter;
@@ -218,24 +218,23 @@ public:
     void ResetValueDirty(void) { this->value_dirty = false; }
     void ForceSetValueDirty(void) { this->value_dirty = true; }
 
-    static bool ReadNewCoreParameterToStockParameter(megamol::core::param::ParamSlot& in_param_slot,
-        megamol::gui::configurator::Parameter::StockParameter& out_param);
+    static bool ReadNewCoreParameterToStockParameter(
+        megamol::core::param::ParamSlot& in_param_slot, megamol::gui::Parameter::StockParameter& out_param);
 
     static bool ReadNewCoreParameterToNewParameter(megamol::core::param::ParamSlot& in_param_slot,
-        std::shared_ptr<megamol::gui::configurator::Parameter>& out_param, bool set_default_val,
-        bool save_core_param_pointer);
+        std::shared_ptr<megamol::gui::Parameter>& out_param, bool set_default_val, bool save_core_param_pointer);
 
     static bool ReadCoreParameterToParameter(vislib::SmartPtr<megamol::core::param::AbstractParam>& in_param_ptr,
-        megamol::gui::configurator::Parameter& out_param, bool set_default_val);
+        megamol::gui::Parameter& out_param, bool set_default_val);
 
     static bool ReadNewCoreParameterToExistingParameter(megamol::core::param::ParamSlot& in_param_slot,
-        megamol::gui::configurator::Parameter& out_param, bool set_default_val, bool save_core_param_pointer);
+        megamol::gui::Parameter& out_param, bool set_default_val, bool save_core_param_pointer);
 
-    static bool WriteCoreParameterGUIState(megamol::gui::configurator::Parameter& in_param,
-        vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr);
+    static bool WriteCoreParameterGUIState(
+        megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr);
 
-    static bool WriteCoreParameterValue(megamol::gui::configurator::Parameter& in_param,
-        vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr);
+    static bool WriteCoreParameterValue(
+        megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr);
 
     // Get ----------------------------------
 
@@ -359,7 +358,6 @@ private:
 };
 
 
-} // namespace configurator
 } // namespace gui
 } // namespace megamol
 

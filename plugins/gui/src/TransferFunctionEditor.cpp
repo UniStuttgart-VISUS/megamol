@@ -271,8 +271,7 @@ bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
 }
 
 
-void TransferFunctionEditor::SetConnectedParameter(
-    configurator::Parameter* param_ptr, const std::string& param_full_name) {
+void TransferFunctionEditor::SetConnectedParameter(Parameter* param_ptr, const std::string& param_full_name) {
     this->connected_parameter_ptr = nullptr;
     this->connected_parameter_name = "";
     if (param_ptr != nullptr) {

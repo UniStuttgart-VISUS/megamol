@@ -14,7 +14,7 @@
 
 namespace megamol {
 namespace gui {
-namespace configurator {
+
 
 // Forward declarations
 class Call;
@@ -109,7 +109,6 @@ private:
 };
 
 
-} // namespace configurator
 } // namespace gui
 } // namespace megamol
 

@@ -12,12 +12,11 @@
 
 using namespace megamol;
 using namespace megamol::gui;
-using namespace megamol::gui::configurator;
 
 
 // GROUP PRESENTATION ####################################################
 
-megamol::gui::configurator::GroupPresentation::GroupPresentation(void)
+megamol::gui::GroupPresentation::GroupPresentation(void)
     : position(ImVec2(FLT_MAX, FLT_MAX))
     , size(ImVec2(0.0f, 0.0f))
     , utils()
@@ -28,11 +27,11 @@ megamol::gui::configurator::GroupPresentation::GroupPresentation(void)
     , update(true) {}
 
 
-megamol::gui::configurator::GroupPresentation::~GroupPresentation(void) {}
+megamol::gui::GroupPresentation::~GroupPresentation(void) {}
 
 
-void megamol::gui::configurator::GroupPresentation::Present(
-    megamol::gui::PresentPhase phase, megamol::gui::configurator::Group& inout_group, GraphItemsStateType& state) {
+void megamol::gui::GroupPresentation::Present(
+    megamol::gui::PresentPhase phase, megamol::gui::Group& inout_group, GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -254,8 +253,7 @@ void megamol::gui::configurator::GroupPresentation::Present(
 }
 
 
-void megamol::gui::configurator::GroupPresentation::SetPosition(
-    Group& inout_group, const GraphCanvasType& in_canvas, ImVec2 pos) {
+void megamol::gui::GroupPresentation::SetPosition(Group& inout_group, const GraphCanvasType& in_canvas, ImVec2 pos) {
 
     ImVec2 pos_delta = (pos - this->position);
 
@@ -271,8 +269,8 @@ void megamol::gui::configurator::GroupPresentation::SetPosition(
 }
 
 
-void megamol::gui::configurator::GroupPresentation::UpdatePositionSize(
-    megamol::gui::configurator::Group& inout_group, const GraphCanvasType& in_canvas) {
+void megamol::gui::GroupPresentation::UpdatePositionSize(
+    megamol::gui::Group& inout_group, const GraphCanvasType& in_canvas) {
 
     float line_height = ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming;
 
@@ -290,7 +288,7 @@ void megamol::gui::configurator::GroupPresentation::UpdatePositionSize(
         pos_minY -= (GUI_GRAPH_BORDER + line_height);
         this->position = ImVec2(pos_minX, pos_minY);
     } else {
-        this->position = megamol::gui::configurator::ModulePresentation::GetDefaultModulePosition(in_canvas);
+        this->position = megamol::gui::ModulePresentation::GetDefaultModulePosition(in_canvas);
     }
 
     // SIZE
@@ -372,10 +370,10 @@ void megamol::gui::configurator::GroupPresentation::UpdatePositionSize(
 
 // GROUP ######################################################################
 
-megamol::gui::configurator::Group::Group(ImGuiID uid) : uid(uid), name(), modules(), interfaceslots(), present() {}
+megamol::gui::Group::Group(ImGuiID uid) : uid(uid), name(), modules(), interfaceslots(), present() {}
 
 
-megamol::gui::configurator::Group::~Group() {
+megamol::gui::Group::~Group() {
 
     // Remove all modules from group
     std::vector<ImGuiID> module_uids;
@@ -393,7 +391,7 @@ megamol::gui::configurator::Group::~Group() {
 }
 
 
-bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_ptr) {
+bool megamol::gui::Group::AddModule(const ModulePtrType& module_ptr) {
 
     if (module_ptr == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -429,7 +427,7 @@ bool megamol::gui::configurator::Group::AddModule(const ModulePtrType& module_pt
 }
 
 
-bool megamol::gui::configurator::Group::RemoveModule(ImGuiID module_uid) {
+bool megamol::gui::Group::RemoveModule(ImGuiID module_uid) {
 
     try {
         for (auto mod_iter = this->modules.begin(); mod_iter != this->modules.end(); mod_iter++) {
@@ -473,7 +471,7 @@ bool megamol::gui::configurator::Group::RemoveModule(ImGuiID module_uid) {
 }
 
 
-bool megamol::gui::configurator::Group::ContainsModule(ImGuiID module_uid) {
+bool megamol::gui::Group::ContainsModule(ImGuiID module_uid) {
 
     for (auto& mod : this->modules) {
         if (mod->uid == module_uid) {
@@ -484,7 +482,7 @@ bool megamol::gui::configurator::Group::ContainsModule(ImGuiID module_uid) {
 }
 
 
-ImGuiID megamol::gui::configurator::Group::AddInterfaceSlot(const CallSlotPtrType& callslot_ptr, bool auto_add) {
+ImGuiID megamol::gui::Group::AddInterfaceSlot(const CallSlotPtrType& callslot_ptr, bool auto_add) {
 
     if (callslot_ptr == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -540,7 +538,7 @@ ImGuiID megamol::gui::configurator::Group::AddInterfaceSlot(const CallSlotPtrTyp
 }
 
 
-bool megamol::gui::configurator::Group::InterfaceSlot_RemoveCallSlot(ImGuiID callslots_uid, bool force) {
+bool megamol::gui::Group::InterfaceSlot_RemoveCallSlot(ImGuiID callslots_uid, bool force) {
 
     bool retval = false;
     try {
@@ -573,7 +571,7 @@ bool megamol::gui::configurator::Group::InterfaceSlot_RemoveCallSlot(ImGuiID cal
 }
 
 
-bool megamol::gui::configurator::Group::InterfaceSlot_ContainsCallSlot(ImGuiID callslot_uid) {
+bool megamol::gui::Group::InterfaceSlot_ContainsCallSlot(ImGuiID callslot_uid) {
 
     for (auto& interfaceslots_map : this->interfaceslots) {
         for (auto& interfaceslot_ptr : interfaceslots_map.second) {
@@ -586,8 +584,7 @@ bool megamol::gui::configurator::Group::InterfaceSlot_ContainsCallSlot(ImGuiID c
 }
 
 
-bool megamol::gui::configurator::Group::GetInterfaceSlot(
-    ImGuiID interfaceslot_uid, InterfaceSlotPtrType& interfaceslot_ptr) {
+bool megamol::gui::Group::GetInterfaceSlot(ImGuiID interfaceslot_uid, InterfaceSlotPtrType& interfaceslot_ptr) {
 
     if (interfaceslot_uid != GUI_INVALID_ID) {
         for (auto& interfaceslots_map : this->interfaceslots) {
@@ -603,7 +600,7 @@ bool megamol::gui::configurator::Group::GetInterfaceSlot(
 }
 
 
-bool megamol::gui::configurator::Group::DeleteInterfaceSlot(ImGuiID interfaceslot_uid) {
+bool megamol::gui::Group::DeleteInterfaceSlot(ImGuiID interfaceslot_uid) {
 
     if (interfaceslot_uid != GUI_INVALID_ID) {
         for (auto& interfaceslot_map : this->interfaceslots) {
@@ -643,7 +640,7 @@ bool megamol::gui::configurator::Group::DeleteInterfaceSlot(ImGuiID interfaceslo
 }
 
 
-bool megamol::gui::configurator::Group::ContainsInterfaceSlot(ImGuiID interfaceslot_uid) {
+bool megamol::gui::Group::ContainsInterfaceSlot(ImGuiID interfaceslot_uid) {
 
     if (interfaceslot_uid != GUI_INVALID_ID) {
         for (auto& interfaceslots_map : this->interfaceslots) {
@@ -658,7 +655,7 @@ bool megamol::gui::configurator::Group::ContainsInterfaceSlot(ImGuiID interfaces
 }
 
 
-void megamol::gui::configurator::Group::restore_callslots_interfaceslot_state(void) {
+void megamol::gui::Group::restore_callslots_interfaceslot_state(void) {
 
     /// 1] REMOVE connected call slots of group interface if connected module is part of same group
     for (auto& module_ptr : this->modules) {

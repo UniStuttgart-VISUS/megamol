@@ -11,7 +11,6 @@
 
 using namespace megamol;
 using namespace megamol::gui;
-using namespace megamol::gui::configurator;
 
 
 megamol::gui::ParameterGroupPresentation::ParameterGroupPresentation(void)
@@ -30,9 +29,9 @@ megamol::gui::ParameterGroupPresentation::ParameterGroupPresentation(void)
 megamol::gui::ParameterGroupPresentation::~ParameterGroupPresentation(void) {}
 
 
-bool megamol::gui::ParameterGroupPresentation::PresentGUI(megamol::gui::configurator::ParamVectorType& inout_params,
+bool megamol::gui::ParameterGroupPresentation::PresentGUI(megamol::gui::ParamVectorType& inout_params,
     const std::string& in_module_fullname, const std::string& in_search, bool in_extended, bool in_ignore_extended,
-    megamol::gui::configurator::ParameterPresentation::WidgetScope in_scope,
+    megamol::gui::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor) {
 
     out_open_external_tf_editor = false;
@@ -175,9 +174,9 @@ void megamol::gui::ParameterGroupPresentation::draw_group(
 }
 
 
-void megamol::gui::ParameterGroupPresentation::draw_parameter(megamol::gui::configurator::Parameter& inout_param,
+void megamol::gui::ParameterGroupPresentation::draw_parameter(megamol::gui::Parameter& inout_param,
     const std::string& in_module_fullname, const std::string& in_search, bool in_extended, bool in_ignore_extended,
-    megamol::gui::configurator::ParameterPresentation::WidgetScope in_scope,
+    megamol::gui::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor) {
 
     if ((inout_param.type == ParamType::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {

@@ -15,12 +15,11 @@
 
 using namespace megamol;
 using namespace megamol::gui;
-using namespace megamol::gui::configurator;
 
 
 // GROUP INTERFACE SLOT PRESENTATION ###########################################
 
-megamol::gui::configurator::InterfaceSlotPresentation::InterfaceSlotPresentation(void)
+megamol::gui::InterfaceSlotPresentation::InterfaceSlotPresentation(void)
     : group()
     , label_visible(false)
     , position(ImVec2(FLT_MAX, FLT_MAX))
@@ -37,11 +36,11 @@ megamol::gui::configurator::InterfaceSlotPresentation::InterfaceSlotPresentation
 }
 
 
-megamol::gui::configurator::InterfaceSlotPresentation::~InterfaceSlotPresentation(void) {}
+megamol::gui::InterfaceSlotPresentation::~InterfaceSlotPresentation(void) {}
 
 
-void megamol::gui::configurator::InterfaceSlotPresentation::Present(PresentPhase phase,
-    megamol::gui::configurator::InterfaceSlot& inout_interfaceslot, megamol::gui::GraphItemsStateType& state) {
+void megamol::gui::InterfaceSlotPresentation::Present(
+    PresentPhase phase, megamol::gui::InterfaceSlot& inout_interfaceslot, megamol::gui::GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -247,7 +246,7 @@ void megamol::gui::configurator::InterfaceSlotPresentation::Present(PresentPhase
 }
 
 
-ImVec2 megamol::gui::configurator::InterfaceSlotPresentation::GetPosition(InterfaceSlot& inout_interfaceslot) {
+ImVec2 megamol::gui::InterfaceSlotPresentation::GetPosition(InterfaceSlot& inout_interfaceslot) {
 
     ImVec2 ret_position = this->position;
     if ((!this->group.collapsed_view) && (inout_interfaceslot.GetCallSlots().size() > 0)) {
@@ -261,11 +260,10 @@ ImVec2 megamol::gui::configurator::InterfaceSlotPresentation::GetPosition(Interf
 
 // GROUP INTERFACE SLOT #######################################################
 
-megamol::gui::configurator::InterfaceSlot::InterfaceSlot(ImGuiID uid, bool auto_create)
-    : uid(uid), auto_created(auto_create) {}
+megamol::gui::InterfaceSlot::InterfaceSlot(ImGuiID uid, bool auto_create) : uid(uid), auto_created(auto_create) {}
 
 
-megamol::gui::configurator::InterfaceSlot::~InterfaceSlot(void) {
+megamol::gui::InterfaceSlot::~InterfaceSlot(void) {
 
     // Remove all call slots from interface slot
     std::vector<ImGuiID> callslots_uids;
@@ -279,7 +277,7 @@ megamol::gui::configurator::InterfaceSlot::~InterfaceSlot(void) {
 }
 
 
-bool megamol::gui::configurator::InterfaceSlot::AddCallSlot(
+bool megamol::gui::InterfaceSlot::AddCallSlot(
     const CallSlotPtrType& callslot_ptr, const InterfaceSlotPtrType& parent_interfaceslot_ptr) {
 
     try {
@@ -320,7 +318,7 @@ bool megamol::gui::configurator::InterfaceSlot::AddCallSlot(
 }
 
 
-bool megamol::gui::configurator::InterfaceSlot::RemoveCallSlot(ImGuiID callslot_uid) {
+bool megamol::gui::InterfaceSlot::RemoveCallSlot(ImGuiID callslot_uid) {
 
     try {
         for (auto iter = this->callslots.begin(); iter != this->callslots.end(); iter++) {
@@ -349,7 +347,7 @@ bool megamol::gui::configurator::InterfaceSlot::RemoveCallSlot(ImGuiID callslot_
 }
 
 
-bool megamol::gui::configurator::InterfaceSlot::ContainsCallSlot(ImGuiID callslot_uid) {
+bool megamol::gui::InterfaceSlot::ContainsCallSlot(ImGuiID callslot_uid) {
 
     for (auto& callslot : this->callslots) {
         if (callslot_uid == callslot->uid) {
@@ -360,7 +358,7 @@ bool megamol::gui::configurator::InterfaceSlot::ContainsCallSlot(ImGuiID callslo
 }
 
 
-bool megamol::gui::configurator::InterfaceSlot::IsConnectionValid(InterfaceSlot& interfaceslot) {
+bool megamol::gui::InterfaceSlot::IsConnectionValid(InterfaceSlot& interfaceslot) {
 
     CallSlotPtrType callslot_ptr_1;
     CallSlotPtrType callslot_ptr_2;
@@ -376,7 +374,7 @@ bool megamol::gui::configurator::InterfaceSlot::IsConnectionValid(InterfaceSlot&
 }
 
 
-bool megamol::gui::configurator::InterfaceSlot::IsConnectionValid(CallSlot& callslot) {
+bool megamol::gui::InterfaceSlot::IsConnectionValid(CallSlot& callslot) {
 
     if (this->is_callslot_compatible(callslot)) {
         return true;
@@ -404,7 +402,7 @@ bool megamol::gui::configurator::InterfaceSlot::IsConnectionValid(CallSlot& call
 }
 
 
-bool megamol::gui::configurator::InterfaceSlot::GetCompatibleCallSlot(CallSlotPtrType& out_callslot_ptr) {
+bool megamol::gui::InterfaceSlot::GetCompatibleCallSlot(CallSlotPtrType& out_callslot_ptr) {
 
     out_callslot_ptr.reset();
     if (!this->callslots.empty()) {
@@ -415,7 +413,7 @@ bool megamol::gui::configurator::InterfaceSlot::GetCompatibleCallSlot(CallSlotPt
 }
 
 
-bool megamol::gui::configurator::InterfaceSlot::IsConnected(void) {
+bool megamol::gui::InterfaceSlot::IsConnected(void) {
 
     for (auto& callslot_ptr : this->callslots) {
         if (callslot_ptr->CallsConnected()) {
@@ -426,7 +424,7 @@ bool megamol::gui::configurator::InterfaceSlot::IsConnected(void) {
 }
 
 
-CallSlotType megamol::gui::configurator::InterfaceSlot::GetCallSlotType(void) {
+CallSlotType megamol::gui::InterfaceSlot::GetCallSlotType(void) {
 
     CallSlotType ret_type = CallSlotType::CALLER;
     if (!this->callslots.empty()) {
@@ -436,10 +434,10 @@ CallSlotType megamol::gui::configurator::InterfaceSlot::GetCallSlotType(void) {
 }
 
 
-bool megamol::gui::configurator::InterfaceSlot::IsEmpty(void) { return (this->callslots.empty()); }
+bool megamol::gui::InterfaceSlot::IsEmpty(void) { return (this->callslots.empty()); }
 
 
-bool megamol::gui::configurator::InterfaceSlot::is_callslot_compatible(CallSlot& callslot) {
+bool megamol::gui::InterfaceSlot::is_callslot_compatible(CallSlot& callslot) {
 
     // Callee interface slots can only have one call slot
     if (this->callslots.size() > 0) {

@@ -103,15 +103,13 @@ enum HotkeyIndex : size_t {
 typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyDataType;
 typedef std::array<megamol::gui::HotkeyDataType, megamol::gui::HotkeyIndex::INDEX_COUNT> HotkeyArrayType;
 
-namespace configurator {
 
 // Forward declaration
 class CallSlot;
 class InterfaceSlot;
-typedef std::shared_ptr<megamol::gui::configurator::CallSlot> CallSlotPtrType;
-typedef std::shared_ptr<megamol::gui::configurator::InterfaceSlot> InterfaceSlotPtrType;
+typedef std::shared_ptr<megamol::gui::CallSlot> CallSlotPtrType;
+typedef std::shared_ptr<megamol::gui::InterfaceSlot> InterfaceSlotPtrType;
 
-} // namespace configurator
 
 typedef std::array<float, 5> FontScalingArrayType;
 
@@ -157,15 +155,15 @@ typedef struct _interact_state_ {
 
     ImGuiID slot_dropped_uid; // in out
 
-    ImGuiID callslot_selected_uid;                     // in out
-    ImGuiID callslot_hovered_uid;                      // in out
-    UIDPairType callslot_add_group_uid;                // in out
-    UIDPairType callslot_remove_group_uid;             // in out
-    configurator::CallSlotPtrType callslot_compat_ptr; // in
+    ImGuiID callslot_selected_uid;         // in out
+    ImGuiID callslot_hovered_uid;          // in out
+    UIDPairType callslot_add_group_uid;    // in out
+    UIDPairType callslot_remove_group_uid; // in out
+    CallSlotPtrType callslot_compat_ptr;   // in
 
-    ImGuiID interfaceslot_selected_uid;                          // in out
-    ImGuiID interfaceslot_hovered_uid;                           // in out
-    configurator::InterfaceSlotPtrType interfaceslot_compat_ptr; // in
+    ImGuiID interfaceslot_selected_uid;            // in out
+    ImGuiID interfaceslot_hovered_uid;             // in out
+    InterfaceSlotPtrType interfaceslot_compat_ptr; // in
 
 } GraphItemsInteractType;
 

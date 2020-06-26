@@ -11,12 +11,11 @@
 
 using namespace megamol;
 using namespace megamol::gui;
-using namespace megamol::gui::configurator;
 
 
 // GRAPH PRESENTATION ####################################################
 
-megamol::gui::configurator::GraphPresentation::GraphPresentation(void)
+megamol::gui::GraphPresentation::GraphPresentation(void)
     : params_visible(true)
     , params_readonly(false)
     , param_extended_mode(false)
@@ -80,11 +79,10 @@ megamol::gui::configurator::GraphPresentation::GraphPresentation(void)
 }
 
 
-megamol::gui::configurator::GraphPresentation::~GraphPresentation(void) {}
+megamol::gui::GraphPresentation::~GraphPresentation(void) {}
 
 
-void megamol::gui::configurator::GraphPresentation::Present(
-    megamol::gui::configurator::Graph& inout_graph, GraphStateType& state) {
+void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, GraphStateType& state) {
 
     try {
         if (ImGui::GetCurrentContext() == nullptr) {
@@ -511,8 +509,7 @@ void megamol::gui::configurator::GraphPresentation::Present(
 }
 
 
-bool megamol::gui::configurator::GraphPresentation::StateFromJsonString(
-    Graph& inout_graph, const std::string& in_json_string) {
+bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, const std::string& in_json_string) {
 
     try {
         if (in_json_string.empty()) {
@@ -877,7 +874,7 @@ bool megamol::gui::configurator::GraphPresentation::StateFromJsonString(
 }
 
 
-bool megamol::gui::configurator::GraphPresentation::StateToJSON(Graph& inout_graph, nlohmann::json& out_json) {
+bool megamol::gui::GraphPresentation::StateToJSON(Graph& inout_graph, nlohmann::json& out_json) {
 
     try {
         /// Append to given json
@@ -963,7 +960,7 @@ bool megamol::gui::configurator::GraphPresentation::StateToJSON(Graph& inout_gra
 }
 
 
-void megamol::gui::configurator::GraphPresentation::present_menu(megamol::gui::configurator::Graph& inout_graph) {
+void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_graph) {
 
     const float child_height = ImGui::GetFrameHeightWithSpacing() * 1.0f;
     auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened;
@@ -1060,8 +1057,7 @@ void megamol::gui::configurator::GraphPresentation::present_menu(megamol::gui::c
 }
 
 
-void megamol::gui::configurator::GraphPresentation::present_canvas(
-    megamol::gui::configurator::Graph& inout_graph, float graph_width) {
+void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_graph, float graph_width) {
 
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
@@ -1262,8 +1258,7 @@ void megamol::gui::configurator::GraphPresentation::present_canvas(
 }
 
 
-void megamol::gui::configurator::GraphPresentation::present_parameters(
-    megamol::gui::configurator::Graph& inout_graph, float graph_width) {
+void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& inout_graph, float graph_width) {
 
     ImGui::BeginGroup();
 
@@ -1276,7 +1271,7 @@ void megamol::gui::configurator::GraphPresentation::present_parameters(
     ImGui::Separator();
 
     // Mode
-    if (megamol::gui::configurator::ParameterPresentation::ParameterExtendedModeButton(this->param_extended_mode)) {
+    if (megamol::gui::ParameterPresentation::ParameterExtendedModeButton(this->param_extended_mode)) {
         for (auto& module_ptr : inout_graph.GetModules()) {
             for (auto& parameter : module_ptr->parameters) {
                 parameter.present.extended = this->param_extended_mode;
@@ -1344,8 +1339,8 @@ void megamol::gui::configurator::GraphPresentation::present_parameters(
                     // Draw parameters
                     bool unused_external_tf_editor;
                     module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(),
-                        search_string, this->param_extended_mode, false,
-                        configurator::ParameterPresentation::WidgetScope::LOCAL, nullptr, unused_external_tf_editor);
+                        search_string, this->param_extended_mode, false, ParameterPresentation::WidgetScope::LOCAL,
+                        nullptr, unused_external_tf_editor);
                 }
                 this->utils.HoverToolTip(module_ptr->description, ImGui::GetID(module_ptr->name.c_str()), 0.75f, 5.0f);
 
@@ -1359,7 +1354,7 @@ void megamol::gui::configurator::GraphPresentation::present_parameters(
 }
 
 
-void megamol::gui::configurator::GraphPresentation::present_canvas_grid(void) {
+void megamol::gui::GraphPresentation::present_canvas_grid(void) {
 
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -1384,8 +1379,7 @@ void megamol::gui::configurator::GraphPresentation::present_canvas_grid(void) {
 }
 
 
-void megamol::gui::configurator::GraphPresentation::present_canvas_dragged_call(
-    megamol::gui::configurator::Graph& inout_graph) {
+void megamol::gui::GraphPresentation::present_canvas_dragged_call(megamol::gui::Graph& inout_graph) {
 
     if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
         if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE)) {
@@ -1459,7 +1453,7 @@ void megamol::gui::configurator::GraphPresentation::present_canvas_dragged_call(
 }
 
 
-void megamol::gui::configurator::GraphPresentation::present_canvas_multiselection(Graph& inout_graph) {
+void megamol::gui::GraphPresentation::present_canvas_multiselection(Graph& inout_graph) {
 
     bool no_graph_item_selected = ((this->graph_state.interact.callslot_selected_uid == GUI_INVALID_ID) &&
                                    (this->graph_state.interact.call_selected_uid == GUI_INVALID_ID) &&
@@ -1515,10 +1509,9 @@ void megamol::gui::configurator::GraphPresentation::present_canvas_multiselectio
 }
 
 
-void megamol::gui::configurator::GraphPresentation::layout_graph(megamol::gui::configurator::Graph& inout_graph) {
+void megamol::gui::GraphPresentation::layout_graph(megamol::gui::Graph& inout_graph) {
 
-    ImVec2 init_position =
-        megamol::gui::configurator::ModulePresentation::GetDefaultModulePosition(this->graph_state.canvas);
+    ImVec2 init_position = megamol::gui::ModulePresentation::GetDefaultModulePosition(this->graph_state.canvas);
 
     /// 1] Layout all grouped modules
     for (auto& group_ptr : inout_graph.GetGroups()) {
@@ -1539,7 +1532,7 @@ void megamol::gui::configurator::GraphPresentation::layout_graph(megamol::gui::c
 }
 
 
-void megamol::gui::configurator::GraphPresentation::layout(
+void megamol::gui::GraphPresentation::layout(
     const ModulePtrVectorType& modules, const GroupPtrVectorType& groups, ImVec2 init_position) {
 
     struct LayoutItem {
@@ -1814,7 +1807,7 @@ void megamol::gui::configurator::GraphPresentation::layout(
 }
 
 
-bool megamol::gui::configurator::GraphPresentation::connected_callslot(
+bool megamol::gui::GraphPresentation::connected_callslot(
     const ModulePtrVectorType& modules, const GroupPtrVectorType& groups, const CallSlotPtrType& callslot_ptr) {
 
     bool retval = false;
@@ -1840,7 +1833,7 @@ bool megamol::gui::configurator::GraphPresentation::connected_callslot(
 }
 
 
-bool megamol::gui::configurator::GraphPresentation::connected_interfaceslot(const ModulePtrVectorType& modules,
+bool megamol::gui::GraphPresentation::connected_interfaceslot(const ModulePtrVectorType& modules,
     const GroupPtrVectorType& groups, const InterfaceSlotPtrType& interfaceslot_ptr) {
 
     bool retval = false;
@@ -1868,8 +1861,7 @@ bool megamol::gui::configurator::GraphPresentation::connected_interfaceslot(cons
 }
 
 
-bool megamol::gui::configurator::GraphPresentation::contains_callslot(
-    const ModulePtrVectorType& modules, ImGuiID callslot_uid) {
+bool megamol::gui::GraphPresentation::contains_callslot(const ModulePtrVectorType& modules, ImGuiID callslot_uid) {
 
     for (auto& module_ptr : modules) {
         for (auto& callslots_map : module_ptr->GetCallSlots()) {
@@ -1884,7 +1876,7 @@ bool megamol::gui::configurator::GraphPresentation::contains_callslot(
 }
 
 
-bool megamol::gui::configurator::GraphPresentation::contains_interfaceslot(
+bool megamol::gui::GraphPresentation::contains_interfaceslot(
     const GroupPtrVectorType& groups, ImGuiID interfaceslot_uid) {
 
     for (auto& group_ptr : groups) {
@@ -1900,8 +1892,7 @@ bool megamol::gui::configurator::GraphPresentation::contains_interfaceslot(
 }
 
 
-bool megamol::gui::configurator::GraphPresentation::contains_module(
-    const ModulePtrVectorType& modules, ImGuiID module_uid) {
+bool megamol::gui::GraphPresentation::contains_module(const ModulePtrVectorType& modules, ImGuiID module_uid) {
 
     for (auto& module_ptr : modules) {
         if (module_ptr->uid == module_uid) {
@@ -1912,8 +1903,7 @@ bool megamol::gui::configurator::GraphPresentation::contains_module(
 }
 
 
-bool megamol::gui::configurator::GraphPresentation::contains_group(
-    const GroupPtrVectorType& groups, ImGuiID group_uid) {
+bool megamol::gui::GraphPresentation::contains_group(const GroupPtrVectorType& groups, ImGuiID group_uid) {
 
     for (auto& group_ptr : groups) {
         if (group_ptr->uid == group_uid) {
@@ -1926,7 +1916,7 @@ bool megamol::gui::configurator::GraphPresentation::contains_group(
 
 // GRAPH ######################################################################
 
-megamol::gui::configurator::Graph::Graph(const std::string& graph_name)
+megamol::gui::Graph::Graph(const std::string& graph_name)
     : uid(megamol::gui::GenerateUniqueID())
     , name(graph_name)
     , group_name_uid(0)
@@ -1937,7 +1927,7 @@ megamol::gui::configurator::Graph::Graph(const std::string& graph_name)
     , present() {}
 
 
-megamol::gui::configurator::Graph::~Graph(void) {
+megamol::gui::Graph::~Graph(void) {
 
     this->present.ResetStatePointers();
 
@@ -1970,7 +1960,7 @@ megamol::gui::configurator::Graph::~Graph(void) {
 }
 
 
-ImGuiID megamol::gui::configurator::Graph::AddEmptyModule(void) {
+ImGuiID megamol::gui::Graph::AddEmptyModule(void) {
 
     try {
         ImGuiID mod_uid = megamol::gui::GenerateUniqueID();
@@ -1998,7 +1988,7 @@ ImGuiID megamol::gui::configurator::Graph::AddEmptyModule(void) {
 }
 
 
-ImGuiID megamol::gui::configurator::Graph::AddModule(
+ImGuiID megamol::gui::Graph::AddModule(
     const ModuleStockVectorType& stock_modules, const std::string& module_class_name) {
 
     try {
@@ -2069,7 +2059,7 @@ ImGuiID megamol::gui::configurator::Graph::AddModule(
 }
 
 
-bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
+bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
 
     try {
         for (auto iter = this->modules.begin(); iter != this->modules.end(); iter++) {
@@ -2129,8 +2119,7 @@ bool megamol::gui::configurator::Graph::DeleteModule(ImGuiID module_uid) {
 }
 
 
-bool megamol::gui::configurator::Graph::GetModule(
-    ImGuiID module_uid, megamol::gui::configurator::ModulePtrType& out_module_ptr) {
+bool megamol::gui::Graph::GetModule(ImGuiID module_uid, megamol::gui::ModulePtrType& out_module_ptr) {
 
     if (module_uid != GUI_INVALID_ID) {
         for (auto& module_ptr : this->modules) {
@@ -2144,8 +2133,7 @@ bool megamol::gui::configurator::Graph::GetModule(
 }
 
 
-bool megamol::gui::configurator::Graph::AddCall(
-    const CallStockVectorType& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid) {
+bool megamol::gui::Graph::AddCall(const CallStockVectorType& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid) {
 
     try {
         if ((slot_1_uid == GUI_INVALID_ID) || (slot_2_uid == GUI_INVALID_ID)) {
@@ -2250,7 +2238,7 @@ bool megamol::gui::configurator::Graph::AddCall(
 }
 
 
-bool megamol::gui::configurator::Graph::AddCall(
+bool megamol::gui::Graph::AddCall(
     const CallStockVectorType& stock_calls, CallSlotPtrType callslot_1, CallSlotPtrType callslot_2) {
 
     try {
@@ -2290,8 +2278,7 @@ bool megamol::gui::configurator::Graph::AddCall(
 }
 
 
-bool megamol::gui::configurator::Graph::AddCall(
-    CallPtrType& call_ptr, CallSlotPtrType callslot_1, CallSlotPtrType callslot_2) {
+bool megamol::gui::Graph::AddCall(CallPtrType& call_ptr, CallSlotPtrType callslot_1, CallSlotPtrType callslot_2) {
 
     if (call_ptr == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -2368,7 +2355,7 @@ bool megamol::gui::configurator::Graph::AddCall(
 }
 
 
-bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
+bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
 
     try {
         std::vector<ImGuiID> delete_calls_uids;
@@ -2460,7 +2447,7 @@ bool megamol::gui::configurator::Graph::DeleteCall(ImGuiID call_uid) {
 }
 
 
-ImGuiID megamol::gui::configurator::Graph::AddGroup(const std::string& group_name) {
+ImGuiID megamol::gui::Graph::AddGroup(const std::string& group_name) {
 
     try {
         ImGuiID group_id = megamol::gui::GenerateUniqueID();
@@ -2486,8 +2473,7 @@ ImGuiID megamol::gui::configurator::Graph::AddGroup(const std::string& group_nam
 }
 
 
-bool megamol::gui::configurator::Graph::GetGroup(
-    ImGuiID group_uid, megamol::gui::configurator::GroupPtrType& out_group_ptr) {
+bool megamol::gui::Graph::GetGroup(ImGuiID group_uid, megamol::gui::GroupPtrType& out_group_ptr) {
 
     if (group_uid != GUI_INVALID_ID) {
         for (auto& group_ptr : this->groups) {
@@ -2501,7 +2487,7 @@ bool megamol::gui::configurator::Graph::GetGroup(
 }
 
 
-bool megamol::gui::configurator::Graph::DeleteGroup(ImGuiID group_uid) {
+bool megamol::gui::Graph::DeleteGroup(ImGuiID group_uid) {
 
     try {
         for (auto iter = this->groups.begin(); iter != this->groups.end(); iter++) {
@@ -2540,8 +2526,7 @@ bool megamol::gui::configurator::Graph::DeleteGroup(ImGuiID group_uid) {
 }
 
 
-ImGuiID megamol::gui::configurator::Graph::AddGroupModule(
-    const std::string& group_name, const ModulePtrType& module_ptr) {
+ImGuiID megamol::gui::Graph::AddGroupModule(const std::string& group_name, const ModulePtrType& module_ptr) {
 
     try {
         // Only create new group if given name is not empty
@@ -2579,7 +2564,7 @@ ImGuiID megamol::gui::configurator::Graph::AddGroupModule(
 }
 
 
-bool megamol::gui::configurator::Graph::UniqueModuleRename(const std::string& module_name) {
+bool megamol::gui::Graph::UniqueModuleRename(const std::string& module_name) {
 
     for (auto& mod : this->modules) {
         if (module_name == mod->name) {
@@ -2592,7 +2577,7 @@ bool megamol::gui::configurator::Graph::UniqueModuleRename(const std::string& mo
 }
 
 
-bool megamol::gui::configurator::Graph::IsMainViewSet(void) {
+bool megamol::gui::Graph::IsMainViewSet(void) {
 
     for (auto& mod : this->modules) {
         if (mod->is_view_instance) {
@@ -2603,7 +2588,7 @@ bool megamol::gui::configurator::Graph::IsMainViewSet(void) {
 }
 
 
-bool megamol::gui::configurator::Graph::delete_disconnected_calls(void) {
+bool megamol::gui::Graph::delete_disconnected_calls(void) {
 
     bool retval = false;
     try {
@@ -2631,7 +2616,7 @@ bool megamol::gui::configurator::Graph::delete_disconnected_calls(void) {
 }
 
 
-const std::string megamol::gui::configurator::Graph::generate_unique_group_name(void) {
+const std::string megamol::gui::Graph::generate_unique_group_name(void) {
 
     int new_name_id = 0;
     std::string new_name_prefix = "Group_";
@@ -2649,7 +2634,7 @@ const std::string megamol::gui::configurator::Graph::generate_unique_group_name(
 }
 
 
-const std::string megamol::gui::configurator::Graph::generate_unique_module_name(const std::string& module_name) {
+const std::string megamol::gui::Graph::generate_unique_module_name(const std::string& module_name) {
 
     int new_name_id = 0;
     std::string new_name_prefix = module_name + "_";

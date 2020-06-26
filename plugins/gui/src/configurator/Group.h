@@ -16,7 +16,7 @@
 
 namespace megamol {
 namespace gui {
-namespace configurator {
+
 
 // Forward declarations
 class Group;
@@ -123,7 +123,6 @@ private:
 };
 
 
-} // namespace configurator
 } // namespace gui
 } // namespace megamol
 

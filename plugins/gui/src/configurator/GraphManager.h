@@ -22,7 +22,7 @@
 
 namespace megamol {
 namespace gui {
-namespace configurator {
+
 
 // Forward declarations
 class GraphManager;
@@ -30,8 +30,7 @@ class GraphManager;
 // Types
 typedef std::shared_ptr<Graph> GraphPtrType;
 typedef std::vector<GraphPtrType> GraphsType;
-typedef std::map<megamol::core::param::AbstractParam*, std::shared_ptr<megamol::gui::configurator::Parameter>>
-    ParamInterfaceMapType;
+typedef std::map<megamol::core::param::AbstractParam*, std::shared_ptr<megamol::gui::Parameter>> ParamInterfaceMapType;
 
 
 /** ************************************************************************
@@ -132,7 +131,7 @@ private:
     std::vector<size_t> get_compatible_caller_idxs(std::shared_ptr<megamol::core::CallerSlot> caller_slot);
 };
 
-} // namespace configurator
+
 } // namespace gui
 } // namespace megamol
 

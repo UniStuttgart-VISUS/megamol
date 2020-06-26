@@ -16,7 +16,7 @@
 
 namespace megamol {
 namespace gui {
-namespace configurator {
+
 
 // Forward declarations
 class Module;
@@ -167,7 +167,6 @@ private:
 };
 
 
-} // namespace configurator
 } // namespace gui
 } // namespace megamol
 

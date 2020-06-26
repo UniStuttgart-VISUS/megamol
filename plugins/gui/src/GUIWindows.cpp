@@ -263,7 +263,7 @@ bool GUIWindows::PostDraw(void) {
             this->tf_editor_ptr->SetMinimized(wc.tfe_view_minimized);
             this->tf_editor_ptr->SetVertical(wc.tfe_view_vertical);
 
-            configurator::GraphPtrType graph_ptr;
+            GraphPtrType graph_ptr;
             if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
                 for (auto& module_ptr : graph_ptr->GetModules()) {
                     std::string module_full_name = module_ptr->FullName();
@@ -349,13 +349,12 @@ bool GUIWindows::PostDraw(void) {
     this->window_manager.EnumWindows(func);
 
     // Draw global parameter widgets -------------------------------------------
-    configurator::GraphPtrType graph_ptr;
+    GraphPtrType graph_ptr;
     if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
             bool unused_external_tf_editor;
             module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(), "", false, true,
-                configurator::ParameterPresentation::WidgetScope::GLOBAL, this->tf_editor_ptr,
-                unused_external_tf_editor);
+                ParameterPresentation::WidgetScope::GLOBAL, this->tf_editor_ptr, unused_external_tf_editor);
         }
     }
 
@@ -366,16 +365,15 @@ bool GUIWindows::PostDraw(void) {
                 if (!param.core_param_ptr.IsNull()) {
 
                     if (param.present.IsGUIStateDirty()) {
-                        megamol::gui::configurator::Parameter::WriteCoreParameterGUIState(param, param.core_param_ptr);
+                        megamol::gui::Parameter::WriteCoreParameterGUIState(param, param.core_param_ptr);
                         param.present.ResetGUIStateDirty();
                     }
 
                     if (param.IsValueDirty()) {
-                        megamol::gui::configurator::Parameter::WriteCoreParameterValue(param, param.core_param_ptr);
+                        megamol::gui::Parameter::WriteCoreParameterValue(param, param.core_param_ptr);
                         param.ResetValueDirty();
                     } else {
-                        megamol::gui::configurator::Parameter::ReadCoreParameterToParameter(
-                            param.core_param_ptr, param, false);
+                        megamol::gui::Parameter::ReadCoreParameterToParameter(param.core_param_ptr, param, false);
                     }
                 }
             }
@@ -518,7 +516,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     this->window_manager.EnumWindows(modfunc);
     // Check for parameter hotkeys
     hotkeyPressed = false;
-    configurator::GraphPtrType graph_ptr;
+    GraphPtrType graph_ptr;
     if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
             if (check_all_modules || this->considerModule(module_ptr->FullName(), modules_list)) {
@@ -921,7 +919,7 @@ void GUIWindows::drawConfiguratorWindowCallback(WindowManager::WindowConfigurati
 void GUIWindows::drawParamWindowCallback(WindowManager::WindowConfiguration& wc) {
 
     // Mode
-    megamol::gui::configurator::ParameterPresentation::ParameterExtendedModeButton(wc.param_extended_mode);
+    megamol::gui::ParameterPresentation::ParameterExtendedModeButton(wc.param_extended_mode);
 
     // std::string mode_help = "Expert mode enables buttons for additional parameter presentation options.";
     // this->utils.HelpMarkerToolTip(mode_help);
@@ -1069,7 +1067,7 @@ void GUIWindows::drawParamWindowCallback(WindowManager::WindowConfiguration& wc)
 
     const size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
     auto currentSearchString = this->utils.GetSearchString();
-    configurator::GraphPtrType graph_ptr;
+    GraphPtrType graph_ptr;
     // Listing modules and their parameters
     if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
@@ -1150,8 +1148,8 @@ void GUIWindows::drawParamWindowCallback(WindowManager::WindowConfiguration& wc)
 
                 bool out_open_external_tf_editor;
                 module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, currentSearchString,
-                    wc.param_extended_mode, false, configurator::ParameterPresentation::WidgetScope::LOCAL,
-                    this->tf_editor_ptr, out_open_external_tf_editor);
+                    wc.param_extended_mode, false, ParameterPresentation::WidgetScope::LOCAL, this->tf_editor_ptr,
+                    out_open_external_tf_editor);
 
                 if (out_open_external_tf_editor) {
                     const auto func = [](WindowManager::WindowConfiguration& wc) {
@@ -1597,7 +1595,7 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
             hotkeylist.emplace_back(std::get<0>(h));
         }
 
-        configurator::GraphPtrType graph_ptr;
+        GraphPtrType graph_ptr;
         if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 for (auto& param : module_ptr->parameters) {
@@ -1717,7 +1715,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
                 }
             } else if (header_item.key() == GUI_JSON_TAG_GUISTATE_PARAMETERS) {
                 /// XXX ! Implementation should be duplicate to Configurator-Version
-                /// XXX megamol::gui::configurator::GraphManager::parameters_gui_state_from_json_string()
+                /// XXX megamol::gui::GraphManager::parameters_gui_state_from_json_string()
 
                 found_parameters = true;
                 for (auto& config_item : header_item.value().items()) {
@@ -1760,7 +1758,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
                     }
 
                     if (valid) {
-                        configurator::GraphPtrType graph_ptr;
+                        GraphPtrType graph_ptr;
                         if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
                             for (auto& module_ptr : graph_ptr->GetModules()) {
                                 std::string module_full_name = module_ptr->FullName();
@@ -1827,8 +1825,8 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_to_json(nlohmann::json& 
         out_json[GUI_JSON_TAG_GUISTATE]["menu_visible"] = this->state.menu_visible;
 
         /// XXX ! Implementation should be duplicate to Configurator-Version
-        /// XXX megamol::gui::configurator::GraphManager::parameters_gui_state_to_json()
-        configurator::GraphPtrType graph_ptr;
+        /// XXX megamol::gui::GraphManager::parameters_gui_state_to_json()
+        GraphPtrType graph_ptr;
         if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 std::string module_full_name = module_ptr->FullName();

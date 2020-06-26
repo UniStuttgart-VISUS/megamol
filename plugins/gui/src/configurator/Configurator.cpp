@@ -20,13 +20,12 @@
 
 using namespace megamol;
 using namespace megamol::gui;
-using namespace megamol::gui::configurator;
 
 
-std::vector<std::string> megamol::gui::configurator::Configurator::dropped_files;
+std::vector<std::string> megamol::gui::Configurator::dropped_files;
 
 
-megamol::gui::configurator::Configurator::Configurator()
+megamol::gui::Configurator::Configurator()
     : param_slots()
     , state_param(GUI_CONFIGURATOR_STATE_PARAM_NAME, "State of the configurator.")
     , graph_manager()
@@ -72,7 +71,7 @@ megamol::gui::configurator::Configurator::Configurator()
 Configurator::~Configurator() {}
 
 
-bool megamol::gui::configurator::Configurator::Draw(
+bool megamol::gui::Configurator::Draw(
     WindowManager::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
@@ -142,17 +141,17 @@ bool megamol::gui::configurator::Configurator::Draw(
 
         // Clear dropped file list (when configurator window is opened, after it was closed)
         if (ImGui::IsWindowAppearing()) {
-            megamol::gui::configurator::Configurator::dropped_files.clear();
+            megamol::gui::Configurator::dropped_files.clear();
         }
         // Process dropped files
-        if (!megamol::gui::configurator::Configurator::dropped_files.empty()) {
+        if (!megamol::gui::Configurator::dropped_files.empty()) {
             // ... only if configurator is focused.
             if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
-                for (auto& dropped_file : megamol::gui::configurator::Configurator::dropped_files) {
+                for (auto& dropped_file : megamol::gui::Configurator::dropped_files) {
                     this->graph_manager.LoadAddProjectFromFile(this->graph_state.graph_selected_uid, dropped_file);
                 }
             }
-            megamol::gui::configurator::Configurator::dropped_files.clear();
+            megamol::gui::Configurator::dropped_files.clear();
         }
 
         // Draw Windows -------------------------------------------------------
@@ -178,7 +177,7 @@ bool megamol::gui::configurator::Configurator::Draw(
 }
 
 
-void megamol::gui::configurator::Configurator::UpdateStateParameter(void) {
+void megamol::gui::Configurator::UpdateStateParameter(void) {
 
     // Save current state of configurator to state parameter
     nlohmann::json configurator_json;
@@ -190,7 +189,7 @@ void megamol::gui::configurator::Configurator::UpdateStateParameter(void) {
 }
 
 
-void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::CoreInstance* core_instance) {
+void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -277,7 +276,7 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 }
 
 
-void megamol::gui::configurator::Configurator::draw_window_module_list(float width) {
+void megamol::gui::Configurator::draw_window_module_list(float width) {
 
     ImGui::BeginGroup();
 
@@ -456,7 +455,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
 }
 
 
-void megamol::gui::configurator::Configurator::add_empty_project(void) {
+void megamol::gui::Configurator::add_empty_project(void) {
 
     ImGuiID graph_uid = this->graph_manager.AddGraph();
     if (graph_uid != GUI_INVALID_ID) {
@@ -486,7 +485,7 @@ void megamol::gui::configurator::Configurator::add_empty_project(void) {
 }
 
 
-bool megamol::gui::configurator::Configurator::configurator_state_from_json_string(const std::string& in_json_string) {
+bool megamol::gui::Configurator::configurator_state_from_json_string(const std::string& in_json_string) {
 
     try {
         if (in_json_string.empty()) {
@@ -588,7 +587,7 @@ bool megamol::gui::configurator::Configurator::configurator_state_from_json_stri
 }
 
 
-bool megamol::gui::configurator::Configurator::configurator_state_to_json(nlohmann::json& out_json) {
+bool megamol::gui::Configurator::configurator_state_to_json(nlohmann::json& out_json) {
 
     try {
         /// Append to given json
@@ -630,7 +629,7 @@ bool megamol::gui::configurator::Configurator::configurator_state_to_json(nlohma
 }
 
 
-void megamol::gui::configurator::Configurator::drawPopUps(void) {
+void megamol::gui::Configurator::drawPopUps(void) {
 
     bool confirmed, aborted;
 
@@ -699,12 +698,11 @@ void megamol::gui::configurator::Configurator::drawPopUps(void) {
 
 
 #ifdef GUI_USE_GLFW
-void megamol::gui::configurator::Configurator::file_drop_callback(
-    ::GLFWwindow* window, int count, const char* paths[]) {
+void megamol::gui::Configurator::file_drop_callback(::GLFWwindow* window, int count, const char* paths[]) {
 
     int i;
     for (i = 0; i < count; i++) {
-        megamol::gui::configurator::Configurator::dropped_files.emplace_back(std::string(paths[i]));
+        megamol::gui::Configurator::dropped_files.emplace_back(std::string(paths[i]));
     }
 }
 #endif

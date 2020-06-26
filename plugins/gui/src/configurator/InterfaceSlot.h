@@ -14,7 +14,6 @@
 
 namespace megamol {
 namespace gui {
-namespace configurator {
 
 
 // Forward declarations
@@ -124,7 +123,7 @@ private:
     bool is_callslot_compatible(CallSlot& callslot);
 };
 
-} // namespace configurator
+
 } // namespace gui
 } // namespace megamol
 

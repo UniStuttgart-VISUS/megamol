@@ -24,13 +24,10 @@
 namespace megamol {
 namespace gui {
 
-namespace configurator {
 
 // Forward declarations
 class Parameter;
 typedef std::shared_ptr<Parameter> ParamPtrType;
-
-} // namespace configurator
 
 
 /**
@@ -71,7 +68,7 @@ public:
     /**
      * Set the currently connected parameter.
      */
-    void SetConnectedParameter(configurator::Parameter* param_ptr, const std::string& param_full_name);
+    void SetConnectedParameter(Parameter* param_ptr, const std::string& param_full_name);
 
     /**
      * Get currently connected parameter.
@@ -114,7 +111,7 @@ private:
     GUIUtils utils;
 
     /** The currently active parameter whose transfer function is currently loaded into this editor. */
-    configurator::Parameter* connected_parameter_ptr;
+    Parameter* connected_parameter_ptr;
     /** Name of the connected parameter. */
     std::string connected_parameter_name;
 

@@ -16,7 +16,7 @@
 
 namespace megamol {
 namespace gui {
-namespace configurator {
+
 
 // Forward declarations
 class Graph;
@@ -185,7 +185,7 @@ private:
     const std::string generate_unique_module_name(const std::string& name);
 };
 
-} // namespace configurator
+
 } // namespace gui
 } // namespace megamol
 

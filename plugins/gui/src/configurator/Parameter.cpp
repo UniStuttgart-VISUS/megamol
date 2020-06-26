@@ -11,12 +11,11 @@
 
 using namespace megamol;
 using namespace megamol::gui;
-using namespace megamol::gui::configurator;
 
 
 // PARAMETER PRESENTATION ####################################################
 
-megamol::gui::configurator::ParameterPresentation::ParameterPresentation(ParamType type)
+megamol::gui::ParameterPresentation::ParameterPresentation(ParamType type)
     : megamol::core::param::AbstractParamPresentation()
     , extended(false)
     , help()
@@ -39,11 +38,10 @@ megamol::gui::configurator::ParameterPresentation::ParameterPresentation(ParamTy
 }
 
 
-megamol::gui::configurator::ParameterPresentation::~ParameterPresentation(void) {}
+megamol::gui::ParameterPresentation::~ParameterPresentation(void) {}
 
 
-bool megamol::gui::configurator::ParameterPresentation::Present(
-    megamol::gui::configurator::Parameter& inout_parameter, WidgetScope scope) {
+bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout_parameter, WidgetScope scope) {
 
     bool retval = false;
 
@@ -145,7 +143,7 @@ bool megamol::gui::configurator::ParameterPresentation::Present(
 }
 
 
-float megamol::gui::configurator::ParameterPresentation::GetHeight(Parameter& inout_parameter) {
+float megamol::gui::ParameterPresentation::GetHeight(Parameter& inout_parameter) {
 
     float height = 0.0f;
     if (this->IsGUIVisible() || this->extended) {
@@ -160,7 +158,7 @@ float megamol::gui::configurator::ParameterPresentation::GetHeight(Parameter& in
 }
 
 
-bool megamol::gui::configurator::ParameterPresentation::PointCircleButton(const std::string& label, bool dirty) {
+bool megamol::gui::ParameterPresentation::PointCircleButton(const std::string& label, bool dirty) {
 
     bool retval = false;
 
@@ -205,12 +203,12 @@ bool megamol::gui::configurator::ParameterPresentation::PointCircleButton(const 
 }
 
 
-bool megamol::gui::configurator::ParameterPresentation::ParameterExtendedModeButton(bool& inout_extended_mode) {
+bool megamol::gui::ParameterPresentation::ParameterExtendedModeButton(bool& inout_extended_mode) {
 
     bool retval = false;
     ImGui::BeginGroup();
 
-    megamol::gui::configurator::ParameterPresentation::PointCircleButton("Mode");
+    megamol::gui::ParameterPresentation::PointCircleButton("Mode");
     if (ImGui::BeginPopupContextItem("graph_param_mode_button_context", 0)) { // 0 = left mouse button
         bool changed = false;
         if (ImGui::MenuItem("Basic###graph_basic_mode", nullptr, !inout_extended_mode, true)) {
@@ -229,8 +227,8 @@ bool megamol::gui::configurator::ParameterPresentation::ParameterExtendedModeBut
 }
 
 
-bool megamol::gui::configurator::ParameterPresentation::present_parameter(
-    megamol::gui::configurator::Parameter& inout_parameter, WidgetScope scope) {
+bool megamol::gui::ParameterPresentation::present_parameter(
+    megamol::gui::Parameter& inout_parameter, WidgetScope scope) {
 
     bool retval = false;
     bool error = true;
@@ -545,9 +543,8 @@ bool megamol::gui::configurator::ParameterPresentation::present_parameter(
 }
 
 
-bool megamol::gui::configurator::ParameterPresentation::widget_button(
-    megamol::gui::configurator::ParameterPresentation::WidgetScope scope, const std::string& label,
-    const megamol::core::view::KeyCode& keycode) {
+bool megamol::gui::ParameterPresentation::widget_button(megamol::gui::ParameterPresentation::WidgetScope scope,
+    const std::string& label, const megamol::core::view::KeyCode& keycode) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -576,8 +573,8 @@ bool megamol::gui::configurator::ParameterPresentation::widget_button(
 }
 
 
-bool megamol::gui::configurator::ParameterPresentation::widget_bool(
-    megamol::gui::configurator::ParameterPresentation::WidgetScope scope, const std::string& label, bool& value) {
+bool megamol::gui::ParameterPresentation::widget_bool(
+    megamol::gui::ParameterPresentation::WidgetScope scope, const std::string& label, bool& value) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -588,9 +585,8 @@ bool megamol::gui::configurator::ParameterPresentation::widget_bool(
 }
 
 
-bool megamol::gui::configurator::ParameterPresentation::widget_string(
-    megamol::gui::configurator::ParameterPresentation::WidgetScope scope, const std::string& label,
-    std::string& value) {
+bool megamol::gui::ParameterPresentation::widget_string(
+    megamol::gui::ParameterPresentation::WidgetScope scope, const std::string& label, std::string& value) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -639,8 +635,8 @@ bool megamol::gui::configurator::ParameterPresentation::widget_string(
 }
 
 
-bool megamol::gui::configurator::ParameterPresentation::widget_color(
-    megamol::gui::configurator::ParameterPresentation::WidgetScope scope, const std::string& label, glm::vec4& value) {
+bool megamol::gui::ParameterPresentation::widget_color(
+    megamol::gui::ParameterPresentation::WidgetScope scope, const std::string& label, glm::vec4& value) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -656,9 +652,8 @@ bool megamol::gui::configurator::ParameterPresentation::widget_color(
 }
 
 
-bool megamol::gui::configurator::ParameterPresentation::widget_enum(
-    megamol::gui::configurator::ParameterPresentation::WidgetScope scope, const std::string& label, int& value,
-    EnumStorageType storage) {
+bool megamol::gui::ParameterPresentation::widget_enum(megamol::gui::ParameterPresentation::WidgetScope scope,
+    const std::string& label, int& value, EnumStorageType storage) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -683,9 +678,8 @@ bool megamol::gui::configurator::ParameterPresentation::widget_enum(
 }
 
 
-bool megamol::gui::configurator::ParameterPresentation::widget_flexenum(
-    megamol::gui::configurator::ParameterPresentation::WidgetScope scope, const std::string& label, std::string& value,
-    megamol::core::param::FlexEnumParam::Storage_t storage) {
+bool megamol::gui::ParameterPresentation::widget_flexenum(megamol::gui::ParameterPresentation::WidgetScope scope,
+    const std::string& label, std::string& value, megamol::core::param::FlexEnumParam::Storage_t storage) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -744,9 +738,8 @@ bool megamol::gui::configurator::ParameterPresentation::widget_flexenum(
 }
 
 
-bool megamol::gui::configurator::ParameterPresentation::widget_filepath(
-    megamol::gui::configurator::ParameterPresentation::WidgetScope scope, const std::string& label,
-    std::string& value) {
+bool megamol::gui::ParameterPresentation::widget_filepath(
+    megamol::gui::ParameterPresentation::WidgetScope scope, const std::string& label, std::string& value) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -780,9 +773,8 @@ bool megamol::gui::configurator::ParameterPresentation::widget_filepath(
 }
 
 
-bool megamol::gui::configurator::ParameterPresentation::widget_ternary(
-    megamol::gui::configurator::ParameterPresentation::WidgetScope scope, const std::string& label,
-    vislib::math::Ternary& value) {
+bool megamol::gui::ParameterPresentation::widget_ternary(
+    megamol::gui::ParameterPresentation::WidgetScope scope, const std::string& label, vislib::math::Ternary& value) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -812,9 +804,8 @@ bool megamol::gui::configurator::ParameterPresentation::widget_ternary(
 }
 
 
-bool megamol::gui::configurator::ParameterPresentation::widget_int(
-    megamol::gui::configurator::ParameterPresentation::WidgetScope scope, const std::string& label, int& value, int min,
-    int max) {
+bool megamol::gui::ParameterPresentation::widget_int(
+    megamol::gui::ParameterPresentation::WidgetScope scope, const std::string& label, int& value, int min, int max) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -835,9 +826,8 @@ bool megamol::gui::configurator::ParameterPresentation::widget_int(
 }
 
 
-bool megamol::gui::configurator::ParameterPresentation::widget_float(
-    megamol::gui::configurator::ParameterPresentation::WidgetScope scope, const std::string& label, float& value,
-    float min, float max) {
+bool megamol::gui::ParameterPresentation::widget_float(megamol::gui::ParameterPresentation::WidgetScope scope,
+    const std::string& label, float& value, float min, float max) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -859,9 +849,8 @@ bool megamol::gui::configurator::ParameterPresentation::widget_float(
 }
 
 
-bool megamol::gui::configurator::ParameterPresentation::widget_vector2f(
-    megamol::gui::configurator::ParameterPresentation::WidgetScope scope, const std::string& label, glm::vec2& value,
-    glm::vec2 min, glm::vec2 max) {
+bool megamol::gui::ParameterPresentation::widget_vector2f(megamol::gui::ParameterPresentation::WidgetScope scope,
+    const std::string& label, glm::vec2& value, glm::vec2 min, glm::vec2 max) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -885,9 +874,8 @@ bool megamol::gui::configurator::ParameterPresentation::widget_vector2f(
 }
 
 
-bool megamol::gui::configurator::ParameterPresentation::widget_vector3f(
-    megamol::gui::configurator::ParameterPresentation::WidgetScope scope, const std::string& label, glm::vec3& value,
-    glm::vec3 min, glm::vec3 max) {
+bool megamol::gui::ParameterPresentation::widget_vector3f(megamol::gui::ParameterPresentation::WidgetScope scope,
+    const std::string& label, glm::vec3& value, glm::vec3 min, glm::vec3 max) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -912,9 +900,8 @@ bool megamol::gui::configurator::ParameterPresentation::widget_vector3f(
 }
 
 
-bool megamol::gui::configurator::ParameterPresentation::widget_vector4f(
-    megamol::gui::configurator::ParameterPresentation::WidgetScope scope, const std::string& label, glm::vec4& value,
-    glm::vec4 min, glm::vec4 max) {
+bool megamol::gui::ParameterPresentation::widget_vector4f(megamol::gui::ParameterPresentation::WidgetScope scope,
+    const std::string& label, glm::vec4& value, glm::vec4 min, glm::vec4 max) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -940,9 +927,8 @@ bool megamol::gui::configurator::ParameterPresentation::widget_vector4f(
 }
 
 
-bool megamol::gui::configurator::ParameterPresentation::widget_pinvaluetomouse(
-    megamol::gui::configurator::ParameterPresentation::WidgetScope scope, const std::string& label,
-    const std::string& value) {
+bool megamol::gui::ParameterPresentation::widget_pinvaluetomouse(
+    megamol::gui::ParameterPresentation::WidgetScope scope, const std::string& label, const std::string& value) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -969,8 +955,8 @@ bool megamol::gui::configurator::ParameterPresentation::widget_pinvaluetomouse(
 }
 
 
-bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function_editor(
-    WidgetScope scope, megamol::gui::configurator::Parameter& inout_parameter) {
+bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
+    WidgetScope scope, megamol::gui::Parameter& inout_parameter) {
 
     bool retval = false;
     bool isActive = false;
@@ -1154,8 +1140,7 @@ bool megamol::gui::configurator::ParameterPresentation::widget_transfer_function
 
 // PARAMETER ##################################################################
 
-megamol::gui::configurator::Parameter::Parameter(
-    ImGuiID uid, ParamType type, StroageType store, MinType min, MaxType max)
+megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType type, StroageType store, MinType min, MaxType max)
     : uid(uid)
     , type(type)
     , full_name()
@@ -1224,10 +1209,10 @@ megamol::gui::configurator::Parameter::Parameter(
 }
 
 
-megamol::gui::configurator::Parameter::~Parameter(void) {}
+megamol::gui::Parameter::~Parameter(void) {}
 
 
-std::string megamol::gui::configurator::Parameter::GetValueString(void) {
+std::string megamol::gui::Parameter::GetValueString(void) {
     std::string value_string = "UNKNOWN PARAMETER TYPE";
     auto visitor = [this, &value_string](auto&& arg) {
         using T = std::decay_t<decltype(arg)>;
@@ -1317,7 +1302,7 @@ std::string megamol::gui::configurator::Parameter::GetValueString(void) {
 }
 
 
-bool megamol::gui::configurator::Parameter::SetValueString(const std::string& val_str, bool set_default_val) {
+bool megamol::gui::Parameter::SetValueString(const std::string& val_str, bool set_default_val) {
 
     bool retval = false;
     vislib::TString val_tstr(val_str.c_str());
@@ -1408,8 +1393,8 @@ bool megamol::gui::configurator::Parameter::SetValueString(const std::string& va
 }
 
 
-bool megamol::gui::configurator::Parameter::ReadNewCoreParameterToStockParameter(
-    megamol::core::param::ParamSlot& in_param_slot, megamol::gui::configurator::Parameter::StockParameter& out_param) {
+bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
+    megamol::core::param::ParamSlot& in_param_slot, megamol::gui::Parameter::StockParameter& out_param) {
 
     auto parameter_ptr = in_param_slot.Parameter();
     if (parameter_ptr.IsNull()) {
@@ -1502,9 +1487,8 @@ bool megamol::gui::configurator::Parameter::ReadNewCoreParameterToStockParameter
 }
 
 
-bool megamol::gui::configurator::Parameter::ReadNewCoreParameterToNewParameter(
-    megamol::core::param::ParamSlot& in_param_slot, std::shared_ptr<megamol::gui::configurator::Parameter>& out_param,
-    bool set_default_val, bool save_core_param_pointer) {
+bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::param::ParamSlot& in_param_slot,
+    std::shared_ptr<megamol::gui::Parameter>& out_param, bool set_default_val, bool save_core_param_pointer) {
 
     auto parameter_ptr = in_param_slot.Parameter();
     if (parameter_ptr.IsNull()) {
@@ -1514,20 +1498,20 @@ bool megamol::gui::configurator::Parameter::ReadNewCoreParameterToNewParameter(
     out_param.reset();
 
     if (auto* p_ptr = in_param_slot.template Param<core::param::BoolParam>()) {
-        out_param = std::make_shared<configurator::Parameter>(
+        out_param = std::make_shared<Parameter>(
             megamol::gui::GenerateUniqueID(), ParamType::BOOL, std::monostate(), std::monostate(), std::monostate());
         out_param->SetValue(p_ptr->Value(), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::ButtonParam>()) {
-        out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::BUTTON,
+        out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType::BUTTON,
             p_ptr->GetKeyCode(), std::monostate(), std::monostate());
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::ColorParam>()) {
-        out_param = std::make_shared<configurator::Parameter>(
+        out_param = std::make_shared<Parameter>(
             megamol::gui::GenerateUniqueID(), ParamType::COLOR, std::monostate(), std::monostate(), std::monostate());
         auto value = p_ptr->Value();
         out_param->SetValue(glm::vec4(value[0], value[1], value[2], value[3]), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::TransferFunctionParam>()) {
-        out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(),
-            ParamType::TRANSFERFUNCTION, std::monostate(), std::monostate(), std::monostate());
+        out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType::TRANSFERFUNCTION,
+            std::monostate(), std::monostate(), std::monostate());
         out_param->SetValue(p_ptr->Value(), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::EnumParam>()) {
         EnumStorageType map;
@@ -1537,54 +1521,53 @@ bool megamol::gui::configurator::Parameter::ReadNewCoreParameterToNewParameter(
             auto pair = iter.Next();
             map.emplace(pair.Key(), std::string(pair.Value().PeekBuffer()));
         }
-        out_param = std::make_shared<configurator::Parameter>(
+        out_param = std::make_shared<Parameter>(
             megamol::gui::GenerateUniqueID(), ParamType::ENUM, map, std::monostate(), std::monostate());
         out_param->SetValue(p_ptr->Value(), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::FlexEnumParam>()) {
-        out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::FLEXENUM,
+        out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType::FLEXENUM,
             p_ptr->getStorage(), std::monostate(), std::monostate());
         out_param->SetValue(p_ptr->Value(), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::FloatParam>()) {
-        out_param = std::make_shared<configurator::Parameter>(
+        out_param = std::make_shared<Parameter>(
             megamol::gui::GenerateUniqueID(), ParamType::FLOAT, std::monostate(), p_ptr->MinValue(), p_ptr->MaxValue());
         out_param->SetValue(p_ptr->Value(), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::IntParam>()) {
-        out_param = std::make_shared<configurator::Parameter>(
+        out_param = std::make_shared<Parameter>(
             megamol::gui::GenerateUniqueID(), ParamType::INT, std::monostate(), p_ptr->MinValue(), p_ptr->MaxValue());
         out_param->SetValue(p_ptr->Value(), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector2fParam>()) {
         auto min = p_ptr->MinValue();
         auto max = p_ptr->MaxValue();
         auto val = p_ptr->Value();
-        out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::VECTOR2F,
-            std::monostate(), glm::vec2(min.X(), min.Y()), glm::vec2(max.X(), max.Y()));
+        out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType::VECTOR2F, std::monostate(),
+            glm::vec2(min.X(), min.Y()), glm::vec2(max.X(), max.Y()));
         out_param->SetValue(glm::vec2(val.X(), val.Y()), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector3fParam>()) {
         auto min = p_ptr->MinValue();
         auto max = p_ptr->MaxValue();
         auto val = p_ptr->Value();
-        out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::VECTOR3F,
-            std::monostate(), glm::vec3(min.X(), min.Y(), min.Z()), glm::vec3(max.X(), max.Y(), max.Z()));
+        out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType::VECTOR3F, std::monostate(),
+            glm::vec3(min.X(), min.Y(), min.Z()), glm::vec3(max.X(), max.Y(), max.Z()));
         out_param->SetValue(glm::vec3(val.X(), val.Y(), val.Z()), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector4fParam>()) {
         auto min = p_ptr->MinValue();
         auto max = p_ptr->MaxValue();
         auto val = p_ptr->Value();
-        out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::VECTOR4F,
-            std::monostate(), glm::vec4(min.X(), min.Y(), min.Z(), min.W()),
-            glm::vec4(max.X(), max.Y(), max.Z(), max.W()));
+        out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType::VECTOR4F, std::monostate(),
+            glm::vec4(min.X(), min.Y(), min.Z(), min.W()), glm::vec4(max.X(), max.Y(), max.Z(), max.W()));
         out_param->SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::TernaryParam>()) {
-        out_param = std::make_shared<configurator::Parameter>(
+        out_param = std::make_shared<Parameter>(
             megamol::gui::GenerateUniqueID(), ParamType::TERNARY, std::monostate(), std::monostate(), std::monostate());
         out_param->SetValue(p_ptr->Value(), set_default_val);
     } else if (auto* p_ptr = in_param_slot.Param<core::param::StringParam>()) {
-        out_param = std::make_shared<configurator::Parameter>(
+        out_param = std::make_shared<Parameter>(
             megamol::gui::GenerateUniqueID(), ParamType::STRING, std::monostate(), std::monostate(), std::monostate());
         out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val);
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
-        out_param = std::make_shared<configurator::Parameter>(megamol::gui::GenerateUniqueID(), ParamType::FILEPATH,
-            std::monostate(), std::monostate(), std::monostate());
+        out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType::FILEPATH, std::monostate(),
+            std::monostate(), std::monostate());
         out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val);
     } else {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -1607,9 +1590,9 @@ bool megamol::gui::configurator::Parameter::ReadNewCoreParameterToNewParameter(
 }
 
 
-bool megamol::gui::configurator::Parameter::ReadCoreParameterToParameter(
-    vislib::SmartPtr<megamol::core::param::AbstractParam>& in_param_ptr,
-    megamol::gui::configurator::Parameter& out_param, bool set_default_val) {
+bool megamol::gui::Parameter::ReadCoreParameterToParameter(
+    vislib::SmartPtr<megamol::core::param::AbstractParam>& in_param_ptr, megamol::gui::Parameter& out_param,
+    bool set_default_val) {
 
     out_param.present.SetGUIVisible(in_param_ptr->IsGUIVisible());
     out_param.present.SetGUIReadOnly(in_param_ptr->IsGUIReadOnly());
@@ -1748,9 +1731,8 @@ bool megamol::gui::configurator::Parameter::ReadCoreParameterToParameter(
 }
 
 
-bool megamol::gui::configurator::Parameter::ReadNewCoreParameterToExistingParameter(
-    megamol::core::param::ParamSlot& in_param_slot, megamol::gui::configurator::Parameter& out_param,
-    bool set_default_val, bool save_core_param_pointer) {
+bool megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(megamol::core::param::ParamSlot& in_param_slot,
+    megamol::gui::Parameter& out_param, bool set_default_val, bool save_core_param_pointer) {
 
     auto parameter_ptr = in_param_slot.Parameter();
     if (parameter_ptr.IsNull()) {
@@ -1763,13 +1745,12 @@ bool megamol::gui::configurator::Parameter::ReadNewCoreParameterToExistingParame
         out_param.core_param_ptr = parameter_ptr;
     }
 
-    return megamol::gui::configurator::Parameter::ReadCoreParameterToParameter(
-        parameter_ptr, out_param, set_default_val);
+    return megamol::gui::Parameter::ReadCoreParameterToParameter(parameter_ptr, out_param, set_default_val);
 }
 
 
-bool megamol::gui::configurator::Parameter::WriteCoreParameterGUIState(megamol::gui::configurator::Parameter& in_param,
-    vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr) {
+bool megamol::gui::Parameter::WriteCoreParameterGUIState(
+    megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr) {
 
     out_param_ptr->SetGUIVisible(in_param.present.IsGUIVisible());
     out_param_ptr->SetGUIReadOnly(in_param.present.IsGUIReadOnly());
@@ -1779,8 +1760,8 @@ bool megamol::gui::configurator::Parameter::WriteCoreParameterGUIState(megamol::
 }
 
 
-bool megamol::gui::configurator::Parameter::WriteCoreParameterValue(megamol::gui::configurator::Parameter& in_param,
-    vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr) {
+bool megamol::gui::Parameter::WriteCoreParameterValue(
+    megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr) {
     bool type_error = false;
 
     if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::ButtonParam>()) {

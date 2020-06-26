@@ -172,7 +172,7 @@ private:
     std::shared_ptr<TransferFunctionEditor> tf_editor_ptr;
 
     /** The configurator. */
-    megamol::gui::configurator::Configurator configurator;
+    megamol::gui::Configurator configurator;
 
     /** Utils being used all over the place */
     megamol::gui::GUIUtils utils;
@@ -193,7 +193,7 @@ private:
     ImGuiID graph_uid;
 
     /** The graph manager holding the graph of the currently running project. */
-    configurator::GraphManager graph_manager;
+    GraphManager graph_manager;
 
     // FUNCTIONS --------------------------------------------------------------
 
