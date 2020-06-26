@@ -532,11 +532,10 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
 
                     // Load graph from file
                     // ImGuiID graph_uid =
-                    this->graph_manager.LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
+                    auto graph_uid = this->graph_manager.LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
 
-                    /// XXX Disabled (Ignoring graph state stored in this project)
-                    /*
                     // Overwrite graph states with the one found in this project
+                    /// TODO Comment for ignoring graph state stored in this project
                     if (graph_uid != GUI_INVALID_ID) {
                         GraphPtrType graph_ptr;
                         if (this->graph_manager.GetGraph(graph_uid, graph_ptr)) {
@@ -544,7 +543,6 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
                             graph_ptr->GUIStateFromJsonString(in_json_string);
                         }
                     }
-                    */
                 }
             }
         }

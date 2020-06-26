@@ -1008,7 +1008,8 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
         if (this->tf_editor_external_ptr != nullptr) {
             if (ImGui::RadioButton("External", this->use_external_tf_editor)) {
                 this->use_external_tf_editor = true;
-                /// TODO XXX this->tf_editor_external_ptr->SetConnectedParameter(&param, full_param_name);
+                /// If not this->tf_editor_external_ptr->SetConnectedParameter(&param, full_param_name); additional
+                /// click on edit is required.
             }
             ImGui::SameLine();
             if (ImGui::RadioButton("Internal", !this->use_external_tf_editor)) {

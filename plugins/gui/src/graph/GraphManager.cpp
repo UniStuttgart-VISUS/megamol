@@ -371,7 +371,7 @@ ImGuiID megamol::gui::GraphManager::LoadUpdateProjectFromCore(
         return false;
     }
 
-    /// TODO Update graph
+    /// TODO Do update graph
     if (graph_uid != GUI_INVALID_ID) return graph_uid;
 
     GraphPtrType graph_ptr;
@@ -447,7 +447,7 @@ bool megamol::gui::GraphManager::AddProjectFromCore(
             return false;
         }
 
-        /// TODO
+        /// TODO ...
         /// Check if only module changes should be considered
         // bool update_modules = false;
         // if (!graph_ptr->GetModules().empty()) {
@@ -484,7 +484,7 @@ bool megamol::gui::GraphManager::AddProjectFromCore(
         const auto module_func = [&, this](megamol::core::Module* mod) {
             std::string full_name = std::string(mod->FullName().PeekBuffer());
 
-            /// TODO
+            /// TODO ...
             /// Skip if module already exists
             // if (update_modules) {
             //    for (auto& module_ptr : graph_ptr->GetModules()) {

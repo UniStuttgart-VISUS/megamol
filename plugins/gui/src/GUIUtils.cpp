@@ -274,7 +274,7 @@ bool megamol::gui::GUIUtils::VerticalSplitter(FixedSplitterSide fixed_side, floa
     bool retval = ImGui::SplitterBehavior(
         bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, &size_left, &size_right, min_size, min_size, 0.0f, 0.0f);
 
-    /// XXX Left mouse button (= 0) is not recognized poperly!? ...
+    /// TODO Left mouse button (= 0) is not recognized poperly!? ...
     if (ImGui::IsMouseDoubleClicked(1) && ImGui::IsItemHovered()) {
         float consider_width = ((fixed_side == GUIUtils::FixedSplitterSide::LEFT) ? size_left : size_right);
         if (consider_width <= min_size) {

@@ -248,7 +248,7 @@ bool GUIView::OnRenderView(megamol::core::Call& call) {
     ::ZeroMemory(&context, sizeof(context));
     context.Time = crv->Time();
     context.InstanceTime = crv->InstanceTime();
-    // TODO: Affinity
+    // XXX: Affinity
     this->Render(context);
 
     this->overrideCall = nullptr;

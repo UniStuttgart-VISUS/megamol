@@ -109,7 +109,7 @@ bool GUIWindows::PreDraw(
 
     if (this->impl == Implementation::NONE) {
         vislib::sys::Log::DefaultLog.WriteError(
-            "Found no initialized ImGui implementation. First call CreateContext_XXX() once. [%s, %s, line %d]\n",
+            "Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -128,10 +128,9 @@ bool GUIWindows::PreDraw(
     this->core_instance->SetCurrentImGuiContext(this->context);
 
     // Loading and/or updating currently running core graph
-    /// XXX No update is done yet
+    /// TODO No update is done yet
     this->graph_manager.LoadCallStock(core_instance);
     this->graph_uid = this->graph_manager.LoadUpdateProjectFromCore(this->graph_uid, this->core_instance);
-
 
     // Checking global hotkeys
     if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM])) {
@@ -208,7 +207,7 @@ bool GUIWindows::PostDraw(void) {
 
     if (this->impl == Implementation::NONE) {
         vislib::sys::Log::DefaultLog.WriteError(
-            "Found no initialized ImGui implementation. First call CreateContext_XXX() once. [%s, %s, line %d]\n",
+            "Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -652,6 +651,7 @@ bool GUIWindows::createContext(void) {
 
     // Create window configurations
     WindowManager::WindowConfiguration buf_win;
+    buf_win.win_store_config = true;
     buf_win.win_reset = true;
     buf_win.win_position = ImVec2(0.0f, 0.0f);
     buf_win.win_size = ImVec2(400.0f, 600.0f);
@@ -692,15 +692,16 @@ bool GUIWindows::createContext(void) {
     // CONFIGURATOR Window -----------------------------------------------
     buf_win.win_name = "Configurator";
     buf_win.win_show = false;
-    // State of configurator should not be stored (visibility is configured via auto load parameter and will always be
-    // viewport size).
-    buf_win.win_store_config = false;
+    // State of configurator not needed to be stored
+    //(visibility is configured via auto load parameter and will always be viewport size).
+    /// buf_win.win_store_config = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F7);
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                         ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar;
     buf_win.win_callback = WindowManager::DrawCallbacks::CONFIGURATOR;
     // buf_win.win_size is set to current viewport later
     this->window_manager.AddWindowConfiguration(buf_win);
+
 
     // Style settings ---------------------------------------------------------
     ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_DisplayRGB |

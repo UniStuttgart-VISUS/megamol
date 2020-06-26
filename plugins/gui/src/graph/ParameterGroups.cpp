@@ -78,7 +78,7 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVectorType& in
             // Draw group widget
             for (auto& group_widget_id : this->group_widget_ids) {
                 // Check for same group name and count of different parameter types
-                /// XXX Is this check too expensive (also check group_name?) - Alternative?
+                /// TODO Is this check too expensive (also check group_name?) - Alternative?
                 if (group_widget_id.second.type == group.second.second) {
                     found_group_widget = true;
                     group_widget_id.second.active = true;
@@ -250,7 +250,7 @@ void megamol::gui::ParameterGroups::draw_parameter(megamol::gui::Parameter& inou
 void megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& params) {
 
     // Check required parameters
-    /// XXX By name because of multiple same types ...
+    /// TODO Get specific parameters by name because of multiple same types
     Parameter* param_play = nullptr;
     Parameter* param_time = nullptr;
     Parameter* param_speed = nullptr;
