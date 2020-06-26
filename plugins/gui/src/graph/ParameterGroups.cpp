@@ -5,6 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
+/* HOWTO add your own parameter group:
+ * 1] Add function drawing the new group widget: void group_widget_NEW-NAME(ParamPtrVectorType& params);
+ * 2] Add group widget data in CTOR: GroupWidgetData NEW_NAME and add new function as callback
+ */
+
 #include "stdafx.h"
 #include "ParameterGroups.h"
 
@@ -22,7 +27,7 @@ megamol::gui::ParameterGroups::ParameterGroups(void) : utils(), group_widget_ids
     animation.type.emplace(ParamType::BUTTON, 3);
     animation.type.emplace(ParamType::FLOAT, 2);
     animation.callback = [&, this](ParamPtrVectorType& params) { this->group_widget_animation(params); };
-    group_widget_ids["animation"] = animation;
+    group_widget_ids["anim"] = animation;
 }
 
 
@@ -41,7 +46,6 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVectorType& in
 
     if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
         // GLOBAL
-
         for (auto& param : inout_params) {
             this->draw_parameter(
                 param, in_module_fullname, in_search, in_scope, in_external_tf_editor, out_open_external_tf_editor);
@@ -51,6 +55,7 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVectorType& in
         ImGui::BeginGroup();
         ImGui::Indent();
 
+        // Analyse parameter group membership and draw ungrouped parameters
         ParamGroupType group_map;
         for (auto& param : inout_params) {
             auto param_namespace = param.GetNameSpace();
@@ -64,7 +69,7 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVectorType& in
                 group_map[param_namespace].first.emplace_back(&param);
                 group_map[param_namespace].second[param.type]++;
             } else {
-                // Draw parameters without namespace at the beginning
+                // Draw parameters without namespace directly at the beginning
                 this->draw_parameter(
                     param, in_module_fullname, in_search, in_scope, in_external_tf_editor, out_open_external_tf_editor);
             }
@@ -75,21 +80,21 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVectorType& in
             auto group_name = group.first;
             bool found_group_widget = false;
 
-            // Draw group widget
+            // Draw group widget (if defined) ...
             for (auto& group_widget_id : this->group_widget_ids) {
                 // Check for same group name and count of different parameter types
-                /// TODO Is this check too expensive (also check group_name?) - Alternative?
-                if (group_widget_id.second.type == group.second.second) {
+                /// TODO Is this check too expensive (remove check for group_name?) ...
+                if ((group_widget_id.second.type == group.second.second) && (group_widget_id.first == group.first)) {
                     found_group_widget = true;
                     group_widget_id.second.active = true;
                     this->draw_group(group_widget_id.first, group_widget_id.second, group.second.first, in_extended);
                 }
             }
 
-            // Draw grouped parameters with no custom group widget
+            // ... else draw grouped parameters with no custom group widget using namespace header.
             if (!found_group_widget) {
 
-                // Skip if no parameter is visible and extended mode is unset
+                // Skip if no parameter is visible and extended mode is not set.
                 bool visible = false;
                 bool extended = false;
                 for (auto& param : group.second.first) {
@@ -98,7 +103,7 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVectorType& in
                 }
                 if (!visible && !extended) continue;
 
-                // Open namespace header when parameter search is active
+                // Open namespace header when parameter search is active.
                 if (!in_search.empty()) {
                     auto headerId = ImGui::GetID(group_name.c_str());
                     ImGui::GetStateStorage()->SetInt(headerId, 1);
@@ -297,13 +302,12 @@ void megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
 
     // ------------------------------------------------------------------------
     ImGuiStyle& style = ImGui::GetStyle();
-
     float frame_height = ImGui::GetFrameHeightWithSpacing(); // ImGui::GetFrameHeight();
-
     float child_height = frame_height * 4.5f;
     auto child_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration;
     ImGui::BeginChild("group_widget_animation", ImVec2(0.0f, child_height), true, child_flags);
 
+    // Caption
     ImGui::TextUnformatted("Animation");
 
     // Transport Buttons ------------------------------------------------------
@@ -362,6 +366,9 @@ void megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
     // Time -------------------------------------------------------------------
 
     param_time->PresentGUI(ParameterPresentation::WidgetScope::LOCAL);
+
+    // Speed -------------------------------------------------------------------
+
     param_speed->PresentGUI(ParameterPresentation::WidgetScope::LOCAL);
 
     ImGui::EndChild();
