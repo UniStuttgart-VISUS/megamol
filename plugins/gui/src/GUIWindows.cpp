@@ -1655,6 +1655,17 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
         state = window_json.dump(2);
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
     }
+
+    GraphPtrType graph_ptr;
+    if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
+        for (auto& module_ptr : graph_ptr->GetModules()) {
+            for (auto& param : module_ptr->parameters) {
+                if (!param.core_param_ptr.IsNull()) {
+                    megamol::gui::Parameter::ReadCoreParameterToParameter(param.core_param_ptr, param, false);
+                }
+            }
+        }
+    }
 }
 
 
@@ -1664,6 +1675,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
     if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
             std::string module_full_name = module_ptr->FullName();
+            module_ptr->present.param_groups.ParameterGroupGUIStateFromJSONString(in_json_string, module_full_name);
             for (auto& param : module_ptr->parameters) {
                 std::string full_param_name = module_full_name + "::" + param.full_name;
                 param.present.ParameterGUIStateFromJSONString(in_json_string, full_param_name);
@@ -1761,6 +1773,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_to_json(nlohmann::json& 
         if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 std::string module_full_name = module_ptr->FullName();
+                module_ptr->present.param_groups.ParameterGroupGUIStateToJSON(inout_json, module_full_name);
                 for (auto& param : module_ptr->parameters) {
                     std::string full_param_name = module_full_name + "::" + param.full_name;
                     param.present.ParameterGUIStateToJSON(inout_json, full_param_name);

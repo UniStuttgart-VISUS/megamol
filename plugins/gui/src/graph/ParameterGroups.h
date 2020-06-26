@@ -34,6 +34,10 @@ public:
         megamol::gui::ParameterPresentation::WidgetScope in_scope,
         const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor);
 
+    bool ParameterGroupGUIStateFromJSONString(const std::string& in_json_string, const std::string& module_fullname);
+    bool ParameterGroupGUIStateToJSON(nlohmann::json& inout_json, const std::string& module_fullname);
+
+
 private:
     typedef std::vector<megamol::gui::Parameter*> ParamPtrVectorType;
     typedef std::map<megamol::gui::ParamType, unsigned int> GroupWidgetType;

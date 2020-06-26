@@ -1083,6 +1083,8 @@ ImGuiID megamol::gui::GraphManager::LoadAddProjectFromFile(ImGuiID graph_uid, co
                 if (!parameter_gui_state_json.empty()) {
                     for (auto& module_ptr : graph_ptr->GetModules()) {
                         std::string module_full_name = module_ptr->FullName();
+                        module_ptr->present.param_groups.ParameterGroupGUIStateFromJSONString(
+                            parameter_gui_state_json, module_full_name);
                         for (auto& param : module_ptr->parameters) {
                             std::string full_param_name = module_full_name + "::" + param.full_name;
                             param.present.ParameterGUIStateFromJSONString(parameter_gui_state_json, full_param_name);
@@ -1116,7 +1118,7 @@ ImGuiID megamol::gui::GraphManager::LoadAddProjectFromFile(ImGuiID graph_uid, co
 
 
 bool megamol::gui::GraphManager::SaveProjectToFile(
-    ImGuiID graph_uid, const std::string& project_filename, bool overwrite_configurator_state) {
+    ImGuiID graph_uid, const std::string& project_filename, bool overwrite_states) {
 
     std::string projectstr;
     std::stringstream confInstances, confModules, confCalls, confParams;
@@ -1175,7 +1177,7 @@ bool megamol::gui::GraphManager::SaveProjectToFile(
 
                     for (auto& parameter : module_ptr->parameters) {
 
-                        if (overwrite_configurator_state) {
+                        if (overwrite_states) {
                             // Writing state parameters
                             /// ! Needs filename set for graph because this is how the graph state is found
                             /// inside the JSON state
@@ -1190,6 +1192,7 @@ bool megamol::gui::GraphManager::SaveProjectToFile(
                                     wrote_graph_state = true;
                                 }
                             }
+
                             // Store parameter gui states to state parameter of gui
                             if (!wrote_parameter_gui_state && (parameter.full_name == GUI_GUI_STATE_PARAM_NAME)) {
                                 // Replacing exisiting parameter gui state with new one and leaving rest untouched
@@ -1582,6 +1585,7 @@ bool megamol::gui::GraphManager::replace_parameter_gui_state(
 
         for (auto& module_ptr : graph_ptr->GetModules()) {
             std::string module_full_name = module_ptr->FullName();
+            module_ptr->present.param_groups.ParameterGroupGUIStateToJSON(json, module_full_name);
             for (auto& param : module_ptr->parameters) {
                 std::string full_param_name = module_full_name + "::" + param.full_name;
                 param.present.ParameterGUIStateToJSON(json, full_param_name);

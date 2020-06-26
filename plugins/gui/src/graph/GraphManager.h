@@ -90,7 +90,7 @@ public:
 
     ImGuiID LoadAddProjectFromFile(ImGuiID graph_uid, const std::string& project_filename);
 
-    bool SaveProjectToFile(ImGuiID graph_uid, const std::string& project_filename, bool overwrite_configurator_state);
+    bool SaveProjectToFile(ImGuiID graph_uid, const std::string& project_filename, bool overwrite_states);
 
     // Presentation ----------------------------------------------------
 

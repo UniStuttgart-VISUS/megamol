@@ -125,6 +125,36 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVectorType& in
 }
 
 
+bool megamol::gui::ParameterGroups::ParameterGroupGUIStateToJSON(
+    nlohmann::json& inout_json, const std::string& module_fullname) {
+
+    for (auto& group_widget_id : group_widget_ids) {
+        if (group_widget_id.second.active) {
+            std::string param_fullname = module_fullname + "::" + "PARAMGROUP_" + group_widget_id.first;
+
+            group_widget_id.second.ParameterGUIStateToJSON(inout_json, param_fullname);
+        }
+    }
+
+    return false;
+}
+
+
+bool megamol::gui::ParameterGroups::ParameterGroupGUIStateFromJSONString(
+    const std::string& in_json_string, const std::string& module_fullname) {
+
+    for (auto& group_widget_id : group_widget_ids) {
+        std::string param_fullname = module_fullname + "::" + "PARAMGROUP_" + group_widget_id.first;
+
+        if (group_widget_id.second.ParameterGUIStateFromJSONString(in_json_string, param_fullname)) {
+            group_widget_id.second.active = true;
+        }
+    }
+
+    return false;
+}
+
+
 void megamol::gui::ParameterGroups::draw_group(
     const std::string& in_group_name, GroupWidgetData& group_data, ParamPtrVectorType& input_params, bool in_extended) {
 
