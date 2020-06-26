@@ -90,7 +90,7 @@ public:
 
     ImGuiID LoadAddProjectFromFile(ImGuiID graph_uid, const std::string& project_filename);
 
-    bool SaveProjectToFile(ImGuiID graph_uid, const std::string& project_filename);
+    bool SaveProjectToFile(ImGuiID graph_uid, const std::string& project_filename, bool overwrite_configurator_state);
 
     // Presentation ----------------------------------------------------
 
@@ -119,9 +119,6 @@ private:
         const GraphPtrType& graph_ptr, const std::string& in_json_string, std::string& out_json_string);
     bool replace_parameter_gui_state(
         const GraphPtrType& graph_ptr, const std::string& in_json_string, std::string& out_json_string);
-
-    bool parameters_gui_state_from_json_string(const GraphPtrType& graph_ptr, const std::string& in_json_string);
-    bool parameters_gui_state_to_json(const GraphPtrType& graph_ptr, nlohmann::json& out_json);
 
     inline const std::string generate_unique_graph_name(void) {
         return ("Project_" + std::to_string(++graph_name_uid));

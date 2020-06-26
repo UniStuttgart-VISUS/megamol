@@ -1,16 +1,16 @@
 /*
- * ParameterGroupPresentation.h
+ * ParameterGroups.h
  *
  * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_PARAMETERGROUPPRESENTATION_H_INCLUDED
-#define MEGAMOL_GUI_PARAMETERGROUPPRESENTATION_H_INCLUDED
+#ifndef MEGAMOL_GUI_PARAMETERGROUPS_H_INCLUDED
+#define MEGAMOL_GUI_PARAMETERGROUPS_H_INCLUDED
 
 
 #include "GUIUtils.h"
-#include "configurator/Parameter.h" S
+#include "graph/Parameter.h"
 
 #include "mmcore/param/AbstractParamPresentation.h"
 
@@ -22,12 +22,12 @@ namespace gui {
 /** ************************************************************************
  * Defines parameter widget groups depending on parameter namespaces.
  */
-class ParameterGroupPresentation {
+class ParameterGroups {
 public:
     // FUCNTIONS --------------------------------------------------------------
 
-    ParameterGroupPresentation(void);
-    ~ParameterGroupPresentation(void);
+    ParameterGroups(void);
+    ~ParameterGroups(void);
 
     bool PresentGUI(megamol::gui::ParamVectorType& inout_params, const std::string& in_module_fullname,
         const std::string& in_search, bool in_extended, bool in_ignore_extended,
@@ -45,6 +45,7 @@ private:
     public:
         GroupWidgetData(void) { this->InitPresentation(AbstractParamPresentation::ParamType::GROUP_ANIMATION); }
         ~GroupWidgetData(void) {}
+        bool active;
         GroupWidgetType type;
         GroupWidgetCallbackFunc callback;
     };
@@ -67,8 +68,7 @@ private:
         bool in_extended);
 
     void draw_parameter(megamol::gui::Parameter& inout_param, const std::string& in_module_fullname,
-        const std::string& in_search, bool in_extended, bool in_ignore_extended,
-        megamol::gui::ParameterPresentation::WidgetScope in_scope,
+        const std::string& in_search, megamol::gui::ParameterPresentation::WidgetScope in_scope,
         const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor);
 
     void group_widget_animation(ParamPtrVectorType& params);
@@ -78,4 +78,4 @@ private:
 } // namespace gui
 } // namespace megamol
 
-#endif // MEGAMOL_GUI_PARAMETERGROUPPRESENTATION_H_INCLUDED
+#endif // MEGAMOL_GUI_PARAMETERGROUPS_H_INCLUDED

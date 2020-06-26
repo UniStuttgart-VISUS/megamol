@@ -1,23 +1,23 @@
 /*
- * ParameterGroupPresentation.cpp
+ * ParameterGroups.cpp
  *
  * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "ParameterGroupPresentation.h"
+#include "ParameterGroups.h"
 
 
 using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::ParameterGroupPresentation::ParameterGroupPresentation(void)
-    : utils(), group_widget_ids(), button_tex_ids{0, 0, 0, 0} {
+megamol::gui::ParameterGroups::ParameterGroups(void) : utils(), group_widget_ids(), button_tex_ids{0, 0, 0, 0} {
 
     // Add group widget data for animation
     GroupWidgetData animation;
+    animation.active = false;
     animation.type.emplace(ParamType::BOOL, 1);
     animation.type.emplace(ParamType::BUTTON, 3);
     animation.type.emplace(ParamType::FLOAT, 2);
@@ -26,10 +26,10 @@ megamol::gui::ParameterGroupPresentation::ParameterGroupPresentation(void)
 }
 
 
-megamol::gui::ParameterGroupPresentation::~ParameterGroupPresentation(void) {}
+megamol::gui::ParameterGroups::~ParameterGroups(void) {}
 
 
-bool megamol::gui::ParameterGroupPresentation::PresentGUI(megamol::gui::ParamVectorType& inout_params,
+bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVectorType& inout_params,
     const std::string& in_module_fullname, const std::string& in_search, bool in_extended, bool in_ignore_extended,
     megamol::gui::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor) {
@@ -43,8 +43,8 @@ bool megamol::gui::ParameterGroupPresentation::PresentGUI(megamol::gui::ParamVec
         // GLOBAL
 
         for (auto& param : inout_params) {
-            this->draw_parameter(param, in_module_fullname, in_search, in_extended, in_ignore_extended, in_scope,
-                in_external_tf_editor, out_open_external_tf_editor);
+            this->draw_parameter(
+                param, in_module_fullname, in_search, in_scope, in_external_tf_editor, out_open_external_tf_editor);
         }
     } else {
         // LOCAL
@@ -55,14 +55,18 @@ bool megamol::gui::ParameterGroupPresentation::PresentGUI(megamol::gui::ParamVec
         for (auto& param : inout_params) {
             auto param_namespace = param.GetNameSpace();
 
+            if (!in_ignore_extended) {
+                param.present.extended = in_extended;
+            }
+
             if (!param_namespace.empty()) {
                 // Sort parameters with namespace to group
                 group_map[param_namespace].first.emplace_back(&param);
                 group_map[param_namespace].second[param.type]++;
             } else {
                 // Draw parameters without namespace at the beginning
-                this->draw_parameter(param, in_module_fullname, in_search, in_extended, in_ignore_extended, in_scope,
-                    in_external_tf_editor, out_open_external_tf_editor);
+                this->draw_parameter(
+                    param, in_module_fullname, in_search, in_scope, in_external_tf_editor, out_open_external_tf_editor);
             }
         }
 
@@ -77,6 +81,7 @@ bool megamol::gui::ParameterGroupPresentation::PresentGUI(megamol::gui::ParamVec
                 /// XXX Is this check too expensive (also check group_name?) - Alternative?
                 if (group_widget_id.second.type == group.second.second) {
                     found_group_widget = true;
+                    group_widget_id.second.active = true;
                     this->draw_group(group_widget_id.first, group_widget_id.second, group.second.first, in_extended);
                 }
             }
@@ -84,12 +89,14 @@ bool megamol::gui::ParameterGroupPresentation::PresentGUI(megamol::gui::ParamVec
             // Draw grouped parameters with no custom group widget
             if (!found_group_widget) {
 
-                // Skip if no parameter is visible
-                bool header_visible = false;
+                // Skip if no parameter is visible and extended mode is unset
+                bool visible = false;
+                bool extended = false;
                 for (auto& param : group.second.first) {
-                    header_visible = header_visible || param->present.IsGUIVisible();
+                    visible = visible || param->present.IsGUIVisible();
+                    extended = extended || param->present.extended;
                 }
-                if (!header_visible) continue;
+                if (!visible && !extended) continue;
 
                 // Open namespace header when parameter search is active
                 if (!in_search.empty()) {
@@ -99,8 +106,8 @@ bool megamol::gui::ParameterGroupPresentation::PresentGUI(megamol::gui::ParamVec
                 if (ImGui::CollapsingHeader(group_name.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
                     ImGui::Indent();
                     for (auto& param : group.second.first) {
-                        this->draw_parameter((*param), in_module_fullname, in_search, in_extended, in_ignore_extended,
-                            in_scope, in_external_tf_editor, out_open_external_tf_editor);
+                        this->draw_parameter((*param), in_module_fullname, in_search, in_scope, in_external_tf_editor,
+                            out_open_external_tf_editor);
                     }
                     // Vertical spacing
                     /// ImGui::Dummy(ImVec2(1.0f, ImGui::GetFrameHeightWithSpacing()));
@@ -118,7 +125,7 @@ bool megamol::gui::ParameterGroupPresentation::PresentGUI(megamol::gui::ParamVec
 }
 
 
-void megamol::gui::ParameterGroupPresentation::draw_group(
+void megamol::gui::ParameterGroups::draw_group(
     const std::string& in_group_name, GroupWidgetData& group_data, ParamPtrVectorType& input_params, bool in_extended) {
 
     ImGui::PushID(in_group_name.c_str());
@@ -174,8 +181,8 @@ void megamol::gui::ParameterGroupPresentation::draw_group(
 }
 
 
-void megamol::gui::ParameterGroupPresentation::draw_parameter(megamol::gui::Parameter& inout_param,
-    const std::string& in_module_fullname, const std::string& in_search, bool in_extended, bool in_ignore_extended,
+void megamol::gui::ParameterGroups::draw_parameter(megamol::gui::Parameter& inout_param,
+    const std::string& in_module_fullname, const std::string& in_search,
     megamol::gui::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor) {
 
@@ -189,16 +196,15 @@ void megamol::gui::ParameterGroupPresentation::draw_parameter(megamol::gui::Para
     } else {
         // LOCAL
         auto param_name = inout_param.full_name;
-        if (!in_ignore_extended) {
-            inout_param.present.extended = in_extended;
-        }
         bool param_searched = true;
         if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
             param_searched = megamol::gui::GUIUtils::FindCaseInsensitiveSubstring(param_name, in_search);
         }
         bool visible = (inout_param.present.IsGUIVisible() && param_searched) || inout_param.present.extended;
+
         if (visible) {
             if (inout_param.PresentGUI(in_scope)) {
+
                 // Open window calling the transfer function editor callback
                 if ((inout_param.type == ParamType::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {
                     out_open_external_tf_editor = true;
@@ -211,7 +217,7 @@ void megamol::gui::ParameterGroupPresentation::draw_parameter(megamol::gui::Para
 }
 
 
-void megamol::gui::ParameterGroupPresentation::group_widget_animation(ParamPtrVectorType& params) {
+void megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& params) {
 
     // Check required parameters
     /// XXX By name because of multiple same types ...

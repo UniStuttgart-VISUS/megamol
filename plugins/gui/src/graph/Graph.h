@@ -152,6 +152,7 @@ public:
 
     inline bool IsDirty(void) const { return this->dirty_flag; }
     inline void ResetDirty(void) { this->dirty_flag = false; }
+    inline void ForceSetDirty(void) { this->dirty_flag = true; }
 
     bool IsMainViewSet(void);
 

@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "TransferFunctionEditor.h"
-#include "configurator/Parameter.h"
+#include "graph/Parameter.h"
 
 
 using namespace megamol;

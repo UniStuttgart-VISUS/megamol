@@ -9,13 +9,13 @@
 #define MEGAMOL_GUI_GUIWINDOWS_H_INCLUDED
 
 
+#include "Configurator.h"
 #include "CorporateGreyStyle.h"
 #include "CorporateWhiteStyle.h"
 #include "FileUtils.h"
 #include "TransferFunctionEditor.h"
 #include "WindowManager.h"
-#include "configurator/Configurator.h"
-#include "configurator/GraphManager.h"
+#include "graph/GraphManager.h"
 
 #include "mmcore/CoreInstance.h"
 
@@ -219,7 +219,7 @@ private:
 
     void save_state_to_parameter(void);
     bool gui_and_parameters_state_from_json_string(const std::string& in_json_string);
-    bool gui_and_parameters_state_to_json(nlohmann::json& out_json);
+    bool gui_and_parameters_state_to_json(nlohmann::json& inout_json);
 };
 
 } // namespace gui

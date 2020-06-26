@@ -25,7 +25,7 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
     , show_call_names(true)
     , show_slot_names(false)
     , show_module_names(true)
-    , show_parameter_sidebar(false)
+    , show_parameter_sidebar(true)
     , change_show_parameter_sidebar(false)
     , graph_layout(0)
     , parameter_sidebar_width(300.0f)
@@ -284,6 +284,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                         }
                         // Add module to group
                         add_group_ptr->AddModule(module_ptr);
+                        inout_graph.ForceSetDirty();
                     }
                 }
             }
@@ -295,6 +296,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                 for (auto& remove_group_ptr : inout_graph.GetGroups()) {
                     if (remove_group_ptr->ContainsModule(module_uid)) {
                         remove_group_ptr->RemoveModule(module_uid);
+                        inout_graph.ForceSetDirty();
                     }
                 }
             }
@@ -319,6 +321,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                     for (auto& group : inout_graph.GetGroups()) {
                         if (group->ContainsModule(module_uid)) {
                             group->AddInterfaceSlot(callslot_ptr, false);
+                            inout_graph.ForceSetDirty();
                         }
                     }
                 }
@@ -343,6 +346,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                 for (auto& group : inout_graph.GetGroups()) {
                     if (group->ContainsModule(module_uid)) {
                         if (group->InterfaceSlot_RemoveCallSlot(callslot_uid, true)) {
+                            inout_graph.ForceSetDirty();
                             // Delete call which are connected outside the group
                             std::vector<ImGuiID> call_uids;
                             CallSlotType other_type = (callslot_ptr->type == CallSlotType::CALLEE)
@@ -405,6 +409,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                         interfaceslot_ptr.reset();
 
                         group_ptr->DeleteInterfaceSlot(this->graph_state.interact.interfaceslot_selected_uid);
+                        inout_graph.ForceSetDirty();
                     }
                 }
             }
@@ -483,7 +488,6 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             }
             this->layout(selected_modules, GroupPtrVectorType(), init_position);
             this->graph_state.interact.modules_layout = false;
-            this->update = true;
         }
         // Set delete flag if tab was closed
         if (!open) {
@@ -494,7 +498,9 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         state.hotkeys = this->graph_state.hotkeys;
 
         // Rename pop-up
-        this->utils.RenamePopUp("Rename Project", popup_rename, inout_graph.name);
+        if (this->utils.RenamePopUp("Rename Project", popup_rename, inout_graph.name)) {
+            inout_graph.ForceSetDirty();
+        }
 
         ImGui::PopID();
 
@@ -543,11 +549,8 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                         this->change_show_parameter_sidebar = false;
                         if (config_state.at("show_parameter_sidebar").is_boolean()) {
                             config_state.at("show_parameter_sidebar").get_to(tmp_show_parameter_sidebar);
-                            if (this->show_parameter_sidebar != tmp_show_parameter_sidebar) {
-                                this->change_show_parameter_sidebar = true;
-                                this->show_parameter_sidebar = tmp_show_parameter_sidebar;
-                            }
-
+                            this->change_show_parameter_sidebar = true;
+                            this->show_parameter_sidebar = tmp_show_parameter_sidebar;
                         } else {
                             vislib::sys::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'show_parameter_sidebar' as boolean. [%s, %s, line %d]\n",
@@ -1010,7 +1013,9 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
     }
     ImGui::SameLine();
 
-    ImGui::Checkbox("Grid", &this->show_grid);
+    if (ImGui::Checkbox("Grid", &this->show_grid)) {
+        inout_graph.ForceSetDirty();
+    }
 
     ImGui::SameLine();
 
@@ -1099,6 +1104,7 @@ void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_
 
     // Update position and size of modules (and  call slots) and groups.
     if (this->update) {
+        inout_graph.ForceSetDirty();
         for (auto& mod : inout_graph.GetModules()) {
             mod->UpdateGUI(this->graph_state.canvas);
         }
@@ -1272,6 +1278,7 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
 
     // Mode
     if (megamol::gui::ParameterPresentation::ParameterExtendedModeButton(this->param_extended_mode)) {
+        inout_graph.ForceSetDirty();
         for (auto& module_ptr : inout_graph.GetModules()) {
             for (auto& parameter : module_ptr->parameters) {
                 parameter.present.extended = this->param_extended_mode;
@@ -1284,6 +1291,7 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
 
         // Visibility
         if (ImGui::Checkbox("Visibility", &this->params_visible)) {
+            inout_graph.ForceSetDirty();
             for (auto& module_ptr : inout_graph.GetModules()) {
                 for (auto& parameter : module_ptr->parameters) {
                     parameter.present.SetGUIVisible(this->params_visible);
@@ -1294,6 +1302,7 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
 
         // Read-only option
         if (ImGui::Checkbox("Read-Only", &this->params_readonly)) {
+            inout_graph.ForceSetDirty();
             for (auto& module_ptr : inout_graph.GetModules()) {
                 for (auto& parameter : module_ptr->parameters) {
                     parameter.present.SetGUIReadOnly(this->params_readonly);
@@ -1966,7 +1975,7 @@ ImGuiID megamol::gui::Graph::AddEmptyModule(void) {
         ImGuiID mod_uid = megamol::gui::GenerateUniqueID();
         auto mod_ptr = std::make_shared<Module>(mod_uid);
         this->modules.emplace_back(mod_ptr);
-        this->dirty_flag = true;
+        this->ForceSetDirty();
 
 #ifdef GUI_VERBOSE
         vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Added empty module to project.\n");
@@ -2034,7 +2043,7 @@ ImGuiID megamol::gui::Graph::AddModule(
                 }
 
                 this->modules.emplace_back(mod_ptr);
-                this->dirty_flag = true;
+                this->ForceSetDirty();
 
 #ifdef GUI_VERBOSE
                 vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Added module '%s' (uid %i) to project '%s'.\n",
@@ -2100,7 +2109,7 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
                 (*iter).reset();
                 this->modules.erase(iter);
 
-                this->dirty_flag = true;
+                this->ForceSetDirty();
                 return true;
             }
         }
@@ -2315,6 +2324,8 @@ bool megamol::gui::Graph::AddCall(CallPtrType& call_ptr, CallSlotPtrType callslo
         callslot_2->ConnectCall(call_ptr)) {
 
         this->calls.emplace_back(call_ptr);
+        this->ForceSetDirty();
+
 #ifdef GUI_VERBOSE
         vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Added call '%s' (uid %i) to project '%s'.\n",
             call_ptr->class_name.c_str(), call_ptr->uid, this->name.c_str());
@@ -2344,7 +2355,6 @@ bool megamol::gui::Graph::AddCall(CallPtrType& call_ptr, CallSlotPtrType callslo
             }
         }
 
-        this->dirty_flag = true;
         return true;
     } else {
         this->DeleteCall(call_ptr->uid);
@@ -2430,7 +2440,7 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
                     (*iter).reset();
                     this->calls.erase(iter);
 
-                    this->dirty_flag = true;
+                    this->ForceSetDirty();
                     break;
                 }
             }
@@ -2454,6 +2464,8 @@ ImGuiID megamol::gui::Graph::AddGroup(const std::string& group_name) {
         auto group_ptr = std::make_shared<Group>(group_id);
         group_ptr->name = (group_name.empty()) ? (this->generate_unique_group_name()) : (group_name);
         this->groups.emplace_back(group_ptr);
+        this->ForceSetDirty();
+
 #ifdef GUI_VERBOSE
         vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Added group '%s' (uid %i) to project '%s'.\n",
             group_ptr->name.c_str(), group_ptr->uid, this->name.c_str());
@@ -2508,6 +2520,8 @@ bool megamol::gui::Graph::DeleteGroup(ImGuiID group_uid) {
                 (*iter).reset();
                 this->groups.erase(iter);
 
+                this->ForceSetDirty();
+
                 this->present.ForceUpdate();
                 return true;
             }
@@ -2546,6 +2560,7 @@ ImGuiID megamol::gui::Graph::AddGroupModule(const std::string& group_name, const
             for (auto& group_ptr : this->groups) {
                 if (group_ptr->uid == existing_group_uid) {
                     if (group_ptr->AddModule(module_ptr)) {
+                        this->ForceSetDirty();
                         return existing_group_uid;
                     }
                 }

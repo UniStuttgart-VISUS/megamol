@@ -11,7 +11,7 @@
 
 #include "CallSlot.h"
 #include "Parameter.h"
-#include "ParameterGroupPresentation.h"
+#include "ParameterGroups.h"
 
 
 namespace megamol {
@@ -51,7 +51,7 @@ public:
     bool label_visible;
     // Relative position without considering canvas offset and zooming
     ImVec2 position;
-    ParameterGroupPresentation param_groups;
+    ParameterGroups param_groups;
 
     // FUNCTIONS --------------------------------------------------------------
 

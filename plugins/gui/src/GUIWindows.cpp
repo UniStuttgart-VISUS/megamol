@@ -1506,38 +1506,23 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     // Save project pop-up
     this->state.open_popup_save =
         (this->state.open_popup_save || std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]));
-    if (this->file_utils.FileBrowserPopUp(FileUtils::FileBrowserFlag::SAVE, "Save Running Project",
+
+    bool confirmed, aborted;
+    bool popup_failed = false;
+    if (this->file_utils.FileBrowserPopUp(FileUtils::FileBrowserFlag::SAVE, "Save Editor Project",
             this->state.open_popup_save, this->state.project_file)) {
-        // Serialize current state to parameter.
+        /// Serialize current state to parameter.
         this->save_state_to_parameter();
-        // Serialize project to file
-        FileUtils::SaveProjectToFile(this->state.project_file, this->core_instance);
+        /// Save to file
+        popup_failed = !this->graph_manager.SaveProjectToFile(this->graph_uid, this->state.project_file, false);
     }
+    this->utils.MinimalPopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
+        confirmed, "Cancel", aborted);
+
     if (this->state.open_popup_save) {
         this->state.open_popup_save = false;
         std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]) = false;
     }
-    /// TODO Use GraphManager for saving? Resolve gui and configurator state overwrite ...
-    // this->state.open_popup_save =
-    //    (this->state.open_popup_save || std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]));
-
-    // bool confirmed, aborted;
-    // bool popup_failed = false;
-    // if (this->file_utils.FileBrowserPopUp(FileUtils::FileBrowserFlag::SAVE, "Save Editor Project",
-    //        this->state.open_popup_save, this->state.project_file)) {
-    //    /// Serialize current state to parameter.
-    //    this->save_state_to_parameter();
-    //    /// Save to file
-    //    popup_failed = !this->graph_manager.SaveProjectToFile(this->graph_uid, this->state.project_file);
-    //}
-    // this->utils.MinimalPopUp("Failed to Save Project", popup_failed, "See console log output for more information.",
-    // "",
-    //    confirmed, "Cancel", aborted);
-
-    // if (this->state.open_popup_save) {
-    //    this->state.open_popup_save = false;
-    //    std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]) = false;
-    //}
 }
 
 
@@ -1675,12 +1660,23 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
 
 bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const std::string& in_json_string) {
 
+    GraphPtrType graph_ptr;
+    if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
+        for (auto& module_ptr : graph_ptr->GetModules()) {
+            std::string module_full_name = module_ptr->FullName();
+            for (auto& param : module_ptr->parameters) {
+                std::string full_param_name = module_full_name + "::" + param.full_name;
+                param.present.ParameterGUIStateFromJSONString(in_json_string, full_param_name);
+                param.present.ForceSetGUIStateDirty();
+            }
+        }
+    }
+
     try {
         if (in_json_string.empty()) {
             return false;
         }
 
-        bool found_parameters = false;
         bool found_gui = false;
         bool valid = true;
         nlohmann::json json;
@@ -1713,77 +1709,15 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
                         "JSON state: Failed to read 'project_file' as string. [%s, %s, line %d]\n", __FILE__,
                         __FUNCTION__, __LINE__);
                 }
-            } else if (header_item.key() == GUI_JSON_TAG_GUISTATE_PARAMETERS) {
-                /// XXX ! Implementation should be duplicate to Configurator-Version
-                /// XXX megamol::gui::GraphManager::parameters_gui_state_from_json_string()
-
-                found_parameters = true;
-                for (auto& config_item : header_item.value().items()) {
-                    std::string json_param_name = config_item.key();
-                    auto gui_state = config_item.value();
-                    valid = true;
-
-                    // gui_visibility
-                    bool gui_visibility;
-                    if (gui_state.at("gui_visibility").is_boolean()) {
-                        gui_state.at("gui_visibility").get_to(gui_visibility);
-                    } else {
-                        vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'gui_visibility' as boolean. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-
-                    // gui_read-only
-                    bool gui_read_only;
-                    if (gui_state.at("gui_read-only").is_boolean()) {
-                        gui_state.at("gui_read-only").get_to(gui_read_only);
-                    } else {
-                        vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'gui_read-only' as boolean. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-
-                    // gui_presentation_mode
-                    PresentType gui_presentation_mode;
-                    if (gui_state.at("gui_presentation_mode").is_number_integer()) {
-                        gui_presentation_mode =
-                            static_cast<PresentType>(gui_state.at("gui_presentation_mode").get<int>());
-                    } else {
-                        vislib::sys::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'gui_presentation_mode' as integer. [%s, %s, line %d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-
-                    if (valid) {
-                        GraphPtrType graph_ptr;
-                        if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
-                            for (auto& module_ptr : graph_ptr->GetModules()) {
-                                std::string module_full_name = module_ptr->FullName();
-                                for (auto& param : module_ptr->parameters) {
-                                    std::string full_param_name = module_full_name + "::" + param.full_name;
-                                    if (json_param_name == full_param_name) {
-                                        param.present.SetGUIVisible(gui_visibility);
-                                        param.present.SetGUIReadOnly(gui_read_only);
-                                        param.present.SetGUIPresentation(gui_presentation_mode);
-                                        param.present.ForceSetGUIStateDirty();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
             }
         }
 
-        if (found_parameters && found_gui) {
+        if (found_gui) {
 #ifdef GUI_VERBOSE
-            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Read gui and parameter state from JSON string.");
+            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Read gui state from JSON string.");
 #endif // GUI_VERBOSE
         } else {
-            /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find gui or parameter state in JSON. [%s, %s, line
+            /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find gui state in JSON. [%s, %s, line
             /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
@@ -1814,30 +1748,22 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
 }
 
 
-bool megamol::gui::GUIWindows::gui_and_parameters_state_to_json(nlohmann::json& out_json) {
+bool megamol::gui::GUIWindows::gui_and_parameters_state_to_json(nlohmann::json& inout_json) {
 
     try {
-        /// Append to given json
-        // out_json.clear();
+        // Append to given json
 
         this->utils.Utf8Encode(this->state.project_file);
-        out_json[GUI_JSON_TAG_GUISTATE]["project_file"] = this->state.project_file;
-        out_json[GUI_JSON_TAG_GUISTATE]["menu_visible"] = this->state.menu_visible;
+        inout_json[GUI_JSON_TAG_GUISTATE]["project_file"] = this->state.project_file;
+        inout_json[GUI_JSON_TAG_GUISTATE]["menu_visible"] = this->state.menu_visible;
 
-        /// XXX ! Implementation should be duplicate to Configurator-Version
-        /// XXX megamol::gui::GraphManager::parameters_gui_state_to_json()
         GraphPtrType graph_ptr;
         if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 std::string module_full_name = module_ptr->FullName();
                 for (auto& param : module_ptr->parameters) {
                     std::string full_param_name = module_full_name + "::" + param.full_name;
-                    out_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][full_param_name]["gui_visibility"] =
-                        param.present.IsGUIVisible();
-                    out_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][full_param_name]["gui_read-only"] =
-                        param.present.IsGUIReadOnly();
-                    out_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][full_param_name]["gui_presentation_mode"] =
-                        static_cast<int>(param.present.GetGUIPresentation());
+                    param.present.ParameterGUIStateToJSON(inout_json, full_param_name);
                 }
             }
         }

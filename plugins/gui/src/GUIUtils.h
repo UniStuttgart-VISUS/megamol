@@ -73,7 +73,6 @@ namespace gui {
 
 #define GUI_JSON_TAG_WINDOW_CONFIGURATIONS ("WindowConfigurations")
 #define GUI_JSON_TAG_GUISTATE ("GUI")
-#define GUI_JSON_TAG_GUISTATE_PARAMETERS ("Parameters")
 #define GUI_JSON_TAG_CONFIGURATOR ("Configurator")
 #define GUI_JSON_TAG_GRAPHS ("Graphs")
 

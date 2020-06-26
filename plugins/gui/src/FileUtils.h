@@ -29,8 +29,6 @@ namespace fsns = std::experimental::filesystem;
 
 #include "GUIUtils.h"
 
-#include "mmcore/CoreInstance.h"
-
 #include <fstream>
 #include <iostream>
 
@@ -74,16 +72,6 @@ public:
      */
     template <typename T, typename S>
     static std::string SearchFileRecursive(const T& search_path_str, const S& search_file_str);
-
-    /**
-     * Save currently loaded project to lua file.
-     *
-     * @param project_filename The file name for the project.
-     * @param core_instance    The pointer to the core instance.
-     *
-     * @return True on success, false otherwise.
-     */
-    static bool SaveProjectToFile(const std::string& project_filename, megamol::core::CoreInstance* core_instance);
 
     /**
      * Writes content to file.

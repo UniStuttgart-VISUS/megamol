@@ -15,10 +15,15 @@
 #include <string>
 #include <map>
 
+#include "json.hpp"
+
 
 namespace megamol {
 namespace core {
 namespace param {
+
+
+#define GUI_JSON_TAG_GUISTATE_PARAMETERS ("Parameters")
 
 
 class MEGAMOLCORE_API AbstractParamPresentation {
@@ -152,6 +157,10 @@ public:
     */   
      static const std::string GetTypeName(AbstractParamPresentation::ParamType type);
                
+     /** De-/Serialization of parameters GUi state. */
+     bool ParameterGUIStateFromJSONString(const std::string& in_json_string, const std::string& param_fullname);
+     bool ParameterGUIStateToJSON(nlohmann::json& inout_json, const std::string& param_fullname);
+
 protected:
 
     AbstractParamPresentation(void);

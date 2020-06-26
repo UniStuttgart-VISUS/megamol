@@ -34,48 +34,6 @@ megamol::gui::FileUtils::FileUtils(void)
 }
 
 
-bool megamol::gui::FileUtils::SaveProjectToFile(
-    const std::string& project_filename, megamol::core::CoreInstance* core_instance) {
-#ifdef GUI_USE_FILESYSTEM
-    if (core_instance == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Pointer to CoreInstance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    std::string serInstances, serModules, serCalls, serParams;
-    core_instance->SerializeGraph(serInstances, serModules, serCalls, serParams);
-    auto confstr = serInstances + "\n" + serModules + "\n" + serCalls + "\n" + serParams + "\n";
-
-    try {
-        std::ofstream file;
-        file.open(project_filename);
-        if (file.good()) {
-            file << confstr.c_str();
-            file.close();
-        } else {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "Unable to create project file. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            file.close();
-            return false;
-        }
-    } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    vislib::sys::Log::DefaultLog.WriteInfo(
-        "[GUI] Successfully saved running MegaMol project to file '%s'.\n", project_filename.c_str());
-    return true;
-#else
-    return false;
-#endif // GUI_USE_FILESYSTEM
-}
-
-
 bool megamol::gui::FileUtils::WriteFile(const std::string& filename, const std::string& in_content) {
 #ifdef GUI_USE_FILESYSTEM
     try {

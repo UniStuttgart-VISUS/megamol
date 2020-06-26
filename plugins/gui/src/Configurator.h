@@ -9,8 +9,8 @@
 #define MEGAMOL_GUI_CONFIGURATOR_H_INCLUDED
 
 
-#include "GraphManager.h"
 #include "WindowManager.h"
+#include "graph/GraphManager.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/ParamSlot.h"
