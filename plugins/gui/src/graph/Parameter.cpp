@@ -1190,7 +1190,8 @@ bool megamol::gui::ParameterPresentation::widget_knob(
         assert(ImGui::GetCurrentContext() != nullptr);
         ImGuiStyle& style = ImGui::GetStyle();
 
-        const float edge_length = 3.0f * ImGui::GetTextLineHeightWithSpacing();
+        const float edge_length =
+            (1.0f * ImGui::GetTextLineHeightWithSpacing()) + (1.0f * ImGui::GetFrameHeightWithSpacing());
         const float thickness = edge_length / 15.0f;
         const float knob_radius = thickness * 2.0f;
 
@@ -1251,14 +1252,18 @@ bool megamol::gui::ParameterPresentation::widget_knob(
         ImGui::EndChild();
         ImGui::PopStyleColor();
 
-        // Draw Text
-        ImVec2 cursor_pos = widget_start_pos + ImVec2(edge_length + style.ItemSpacing.x, 0.0f);
+        // Draw Value
+        std::string value_label;
+        float other_widget_x_offset = edge_length + style.ItemInnerSpacing.x;
+        ImVec2 cursor_pos = widget_start_pos + ImVec2(other_widget_x_offset, 0.0f);
         ImGui::SetCursorScreenPos(cursor_pos);
         float pos_x = ImGui::GetCursorPosX();
-        ImGui::TextUnformatted(label.c_str());
-        ImGui::SetCursorPosX(pos_x);
-        std::string value_label = "Value: " + this->float_format;
-        ImGui::Text(value_label.c_str(), value);
+        ImGui::PushItemWidth(ImGui::CalcItemWidth() - other_widget_x_offset);
+        if (this->widget_float(scope, label, value, minval, maxval)) {
+            retval = true;
+        }
+        ImGui::PopItemWidth();
+        // Draw min max
         ImGui::SetCursorPosX(pos_x);
         if (minval > -FLT_MAX) {
             value_label = "Min: " + this->float_format;

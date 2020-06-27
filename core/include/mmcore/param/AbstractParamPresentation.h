@@ -18,192 +18,191 @@
 #include "json.hpp"
 
 
-namespace megamol {
-    namespace core {
-        namespace param {
-
-
 #define GUI_JSON_TAG_GUISTATE_PARAMETERS ("Parameters")
 
 
-            class MEGAMOLCORE_API AbstractParamPresentation {
-            public:
+namespace megamol {
+namespace core {
+namespace param {
 
-                // Available parameter types
-                /// ! Add new type to name function.
-                enum ParamType {
-                    BOOL,
-                    BUTTON,
-                    COLOR,
-                    ENUM,
-                    FILEPATH,
-                    FLEXENUM,
-                    FLOAT,
-                    INT,
-                    STRING,
-                    TERNARY,
-                    TRANSFERFUNCTION,
-                    VECTOR2F,
-                    VECTOR3F,
-                    VECTOR4F,
-                    GROUP_ANIMATION,
-                    UNKNOWN
-                };
+class MEGAMOLCORE_API AbstractParamPresentation {
+public:
 
-                /// ! Add new widget presentation to name map in ctor.
-                enum Presentation : int {  /// (limited to 32 options)
-                    NONE = 0,
-                    Basic = 1 << 1,                 // Basic widget (is supported for all parameter types - not for groups) -> Default
-                    String = 1 << 2,                // String widget (is supported for all types, uses ValueString function of parameters)
-                    Color = 1 << 3,                 // Color editor widget
-                    FilePath = 1 << 4,              // File path widget
-                    TransferFunction = 1 << 5,      // Transfer function editor widget
-                    Knob = 1 << 6,                  // Knob widget for int and float
-                    PinValueToMouse = 1 << 7,       // Pin parameter value to mouse position
-                    Group_Animation = 1 << 8        // Animation widget group
-                };
+    // Available parameter types
+    /// ! Add new type to name function.
+    enum ParamType {
+        BOOL,
+        BUTTON,
+        COLOR,
+        ENUM,
+        FILEPATH,
+        FLEXENUM,
+        FLOAT,
+        INT,
+        STRING,
+        TERNARY,
+        TRANSFERFUNCTION,
+        VECTOR2F,
+        VECTOR3F,
+        VECTOR4F,
+        GROUP_ANIMATION,
+        UNKNOWN
+    };
 
-                /**
-                * Initalise presentation for parameter once.
-                *
-                * @param param_type   The parameters type.
-                */
-                bool InitPresentation(AbstractParamPresentation::ParamType param_type);
+    /// ! Add new widget presentation to name map in ctor.
+    enum Presentation : int {  /// (limited to 32 options)
+        NONE = 0,
+        Basic = 1 << 1,                 // Basic widget (is supported for all parameter types - not for groups) -> Default
+        String = 1 << 2,                // String widget (is supported for all types, uses ValueString function of parameters)
+        Color = 1 << 3,                 // Color editor widget
+        FilePath = 1 << 4,              // File path widget
+        TransferFunction = 1 << 5,      // Transfer function editor widget
+        Knob = 1 << 6,                  // Knob widget for int and float
+        PinValueToMouse = 1 << 7,       // Pin parameter value to mouse position
+        Group_Animation = 1 << 8        // Animation widget group
+    };
 
-                /**
-                * Answer visibility in GUI.
-                *
-                * @return GUI visibility
-                */
-                inline bool IsGUIVisible(void) const {
-                    return this->visible;
-                }
+    /**
+    * Initalise presentation for parameter once.
+    *
+    * @param param_type   The parameters type.
+    */
+    bool InitPresentation(AbstractParamPresentation::ParamType param_type);
 
-                /**
-                * Set visibility in GUI.
-                *
-                * @param visible True: visible in GUI, false: invisible
-                */
-                inline void SetGUIVisible(bool visible) {
-                    this->visible = visible;
-                }
+    /**
+    * Answer visibility in GUI.
+    *
+    * @return GUI visibility
+    */
+    inline bool IsGUIVisible(void) const {
+        return this->visible;
+    }
 
-                /**
-                * Answer accessibility in GUI.
-                *
-                * @return GUI accessibility
-                */
-                inline bool IsGUIReadOnly(void) const {
-                    return this->read_only;
-                }
+    /**
+    * Set visibility in GUI.
+    *
+    * @param visible True: visible in GUI, false: invisible
+    */
+    inline void SetGUIVisible(bool visible) {
+        this->visible = visible;
+    }
 
-                /**
-                * Set accessibility in GUI.
-                *
-                * @param read_only True: read-only in GUI, false: writable
-                */
-                inline void SetGUIReadOnly(bool read_only) {
-                    this->read_only = read_only;
-                }
+    /**
+    * Answer accessibility in GUI.
+    *
+    * @return GUI accessibility
+    */
+    inline bool IsGUIReadOnly(void) const {
+        return this->read_only;
+    }
 
-                /**
-                * Set presentation of parameter in GUI.
-                *
-                * @param presentation Presentation of parameter in GUI.
-                *
-                * @return True if given presentation is compatible, false otherwise.
-                */
-                void SetGUIPresentation(AbstractParamPresentation::Presentation presentS);
+    /**
+    * Set accessibility in GUI.
+    *
+    * @param read_only True: read-only in GUI, false: writable
+    */
+    inline void SetGUIReadOnly(bool read_only) {
+        this->read_only = read_only;
+    }
 
-                /**
-                * Answer parameter presentation in GUI.
-                *
-                * @return Parameter presentation.
-                */
-                inline AbstractParamPresentation::Presentation GetGUIPresentation(void) const {
-                    return this->presentation;
-                }
+    /**
+    * Set presentation of parameter in GUI.
+    *
+    * @param presentation Presentation of parameter in GUI.
+    *
+    * @return True if given presentation is compatible, false otherwise.
+    */
+    void SetGUIPresentation(AbstractParamPresentation::Presentation presentS);
 
-                /**
-                * Answer whether given presentation is compatible with parameter.
-                *
-                * @return True if given presentation is compatible, false otherwise.
-                */
-                inline bool IsPresentationCompatible(AbstractParamPresentation::Presentation present) const {
-                    return (AbstractParamPresentation::Presentation::NONE != (present & this->compatible));
-                }
+    /**
+    * Answer parameter presentation in GUI.
+    *
+    * @return Parameter presentation.
+    */
+    inline AbstractParamPresentation::Presentation GetGUIPresentation(void) const {
+        return this->presentation;
+    }
 
-                /**
-                * Get presentation name map.
-                *
-                * @return The presentation name map.
-                */
-                std::map<AbstractParamPresentation::Presentation, std::string>& GetPresentationNameMap(void) { return this->presentation_name_map; }
+    /**
+    * Answer whether given presentation is compatible with parameter.
+    *
+    * @return True if given presentation is compatible, false otherwise.
+    */
+    inline bool IsPresentationCompatible(AbstractParamPresentation::Presentation present) const {
+        return (AbstractParamPresentation::Presentation::NONE != (present & this->compatible));
+    }
 
-                /**
-                * Get presentation name.
-                *
-                * @param presentation Presentation of parameter in GUI.
-                *
-                * @return The human readable name of the given presentation.
-                */
-                std::string GetPresentationName(AbstractParamPresentation::Presentation present) { return this->presentation_name_map[present]; }
+    /**
+    * Get presentation name map.
+    *
+    * @return The presentation name map.
+    */
+    std::map<AbstractParamPresentation::Presentation, std::string>& GetPresentationNameMap(void) { return this->presentation_name_map; }
 
-                /**
-                * Get human readable parameter type.
-                *
-                * @param type The parameter type.
-                *
-                * @return The human readable name of the given parameter type.
-                */
-                static const std::string GetTypeName(AbstractParamPresentation::ParamType type);
+    /**
+    * Get presentation name.
+    *
+    * @param presentation Presentation of parameter in GUI.
+    *
+    * @return The human readable name of the given presentation.
+    */
+    std::string GetPresentationName(AbstractParamPresentation::Presentation present) { return this->presentation_name_map[present]; }
 
-                /** De-/Serialization of parameters GUi state. */
-                bool ParameterGUIStateFromJSONString(const std::string& in_json_string, const std::string& param_fullname);
-                bool ParameterGUIStateToJSON(nlohmann::json& inout_json, const std::string& param_fullname);
+    /**
+    * Get human readable parameter type.
+    *
+    * @param type The parameter type.
+    *
+    * @return The human readable name of the given parameter type.
+    */
+    static const std::string GetTypeName(AbstractParamPresentation::ParamType type);
 
-            protected:
+    /** De-/Serialization of parameters GUi state. */
+    bool ParameterGUIStateFromJSONString(const std::string& in_json_string, const std::string& param_fullname);
+    bool ParameterGUIStateToJSON(nlohmann::json& inout_json, const std::string& param_fullname);
 
-                AbstractParamPresentation(void);
+protected:
 
-                virtual ~AbstractParamPresentation(void) = default;
+    AbstractParamPresentation(void);
 
-            private:
+    virtual ~AbstractParamPresentation(void) = default;
 
-                // VARIABLES --------------------------------------------------------------
+private:
 
-                /* Show or hide the parameter in the GUI.
-                   Parameter is implicitly hidden in GUI if other than raw value view is selected. */
-                bool visible;
+    // VARIABLES --------------------------------------------------------------
 
-                /* Make parameter read-only in the GUI. */
-                bool read_only;
+    /* Show or hide the parameter in the GUI.
+        Parameter is implicitly hidden in GUI if other than raw value view is selected. */
+    bool visible;
 
-                /* Presentation (= widget representation) of parameter in the GUI. */
-                AbstractParamPresentation::Presentation presentation;
+    /* Make parameter read-only in the GUI. */
+    bool read_only;
 
-                /* Compatible presentations */
-                AbstractParamPresentation::Presentation compatible;
+    /* Presentation (= widget representation) of parameter in the GUI. */
+    AbstractParamPresentation::Presentation presentation;
 
-                /* Falg ensuring that initialisation can only be applied once. */
-                bool initialised;
+    /* Compatible presentations */
+    AbstractParamPresentation::Presentation compatible;
 
-                /* Presentation name map */
-                std::map<Presentation, std::string> presentation_name_map;
-            };
+    /* Falg ensuring that initialisation can only be applied once. */
+    bool initialised;
 
-
-            inline AbstractParamPresentation::Presentation operator|(AbstractParamPresentation::Presentation a, AbstractParamPresentation::Presentation b) {
-                return static_cast<AbstractParamPresentation::Presentation>(static_cast<int>(a) | static_cast<int>(b));
-            }
-
-            inline AbstractParamPresentation::Presentation operator&(AbstractParamPresentation::Presentation a, AbstractParamPresentation::Presentation b) {
-                return static_cast<AbstractParamPresentation::Presentation>(static_cast<int>(a) & static_cast<int>(b));
-            }
+    /* Presentation name map */
+    std::map<Presentation, std::string> presentation_name_map;
+};
 
 
-        } /* end namespace param */
-    } /* end namespace core */
+inline AbstractParamPresentation::Presentation operator|(AbstractParamPresentation::Presentation a, AbstractParamPresentation::Presentation b) {
+    return static_cast<AbstractParamPresentation::Presentation>(static_cast<int>(a) | static_cast<int>(b));
+}
+
+inline AbstractParamPresentation::Presentation operator&(AbstractParamPresentation::Presentation a, AbstractParamPresentation::Presentation b) {
+    return static_cast<AbstractParamPresentation::Presentation>(static_cast<int>(a) & static_cast<int>(b));
+}
+
+
+} /* end namespace param */
+} /* end namespace core */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_ABSTRACTPARAMPRESENTATION_H_INCLUDED */
