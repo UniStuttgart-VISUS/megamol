@@ -1533,7 +1533,10 @@ bool megamol::gui::GraphManager::replace_graph_state(
             }
             std::string json_graph_id = graph_ptr->GetFilename(); /// = graph filename
             if (!json_graph_id.empty()) {
-                json[GUI_JSON_TAG_GRAPHS].erase(json_graph_id);
+                try {
+                    json[GUI_JSON_TAG_GRAPHS].erase(json_graph_id);
+                } catch (...) {
+                }
             }
         }
         if (graph_ptr->GUIStateToJSON(json)) {

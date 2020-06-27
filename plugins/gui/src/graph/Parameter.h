@@ -124,28 +124,36 @@ private:
     size_t tf_editor_hash;
     GLuint tf_texture;
 
+    ImVec2 knob_position;
+
     // FUNCTIONS --------------------------------------------------------------
     bool Present(Parameter& inout_param, WidgetScope scope);
     float GetHeight(Parameter& inout_param);
 
     bool present_parameter(Parameter& inout_parameter, WidgetScope scope);
 
-    bool widget_button(WidgetScope scope, const std::string& labelel, const megamol::core::view::KeyCode& keycode);
-    bool widget_bool(WidgetScope scope, const std::string& labelel, bool& value);
-    bool widget_string(WidgetScope scope, const std::string& labelel, std::string& value);
-    bool widget_color(WidgetScope scope, const std::string& labelel, glm::vec4& value);
-    bool widget_enum(WidgetScope scope, const std::string& labelel, int& value, EnumStorageType storage);
+    bool widget_button(WidgetScope scope, const std::string& label, const megamol::core::view::KeyCode& keycode);
+    bool widget_bool(WidgetScope scope, const std::string& label, bool& value);
+    bool widget_string(WidgetScope scope, const std::string& label, std::string& value);
+    bool widget_color(WidgetScope scope, const std::string& label, glm::vec4& value);
+    bool widget_enum(WidgetScope scope, const std::string& label, int& value, EnumStorageType storage);
     bool widget_flexenum(WidgetScope scope, const std::string& label, std::string& value,
         megamol::core::param::FlexEnumParam::Storage_t storage);
-    bool widget_filepath(WidgetScope scope, const std::string& labelel, std::string& value);
-    bool widget_ternary(WidgetScope scope, const std::string& labelel, vislib::math::Ternary& value);
-    bool widget_int(WidgetScope scope, const std::string& labelel, int& value, int min, int max);
-    bool widget_float(WidgetScope scope, const std::string& labelel, float& value, float min, float max);
-    bool widget_vector2f(WidgetScope scope, const std::string& labelel, glm::vec2& value, glm::vec2 min, glm::vec2 max);
-    bool widget_vector3f(WidgetScope scope, const std::string& labelel, glm::vec3& value, glm::vec3 min, glm::vec3 max);
-    bool widget_vector4f(WidgetScope scope, const std::string& labelel, glm::vec4& value, glm::vec4 min, glm::vec4 max);
+    bool widget_filepath(WidgetScope scope, const std::string& label, std::string& value);
+    bool widget_ternary(WidgetScope scope, const std::string& label, vislib::math::Ternary& value);
+    bool widget_int(WidgetScope scope, const std::string& label, int& value, int minval, int maxval);
+    bool widget_float(WidgetScope scope, const std::string& label, float& value, float minval, float maxval);
+    bool widget_vector2f(
+        WidgetScope scope, const std::string& label, glm::vec2& value, glm::vec2 minval, glm::vec2 maxval);
+    bool widget_vector3f(
+        WidgetScope scope, const std::string& label, glm::vec3& value, glm::vec3 minval, glm::vec3 maxval);
+    bool widget_vector4f(
+        WidgetScope scope, const std::string& label, glm::vec4& value, glm::vec4 minval, glm::vec4 maxval);
     bool widget_pinvaluetomouse(WidgetScope scope, const std::string& label, const std::string& value);
     bool widget_transfer_function_editor(WidgetScope scope, Parameter& inout_parameter);
+
+    bool widget_knob(WidgetScope scope, const std::string& label, int& value, int minval, int maxval);
+    bool widget_knob(WidgetScope scope, const std::string& label, float& value, float minval, float maxval);
 };
 
 
@@ -218,7 +226,7 @@ public:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    Parameter(ImGuiID uid, ParamType type, StroageType store, MinType min, MaxType max);
+    Parameter(ImGuiID uid, ParamType type, StroageType store, MinType minval, MaxType maxval);
     ~Parameter(void);
 
     bool IsValueDirty(void) { return this->value_dirty; }
@@ -319,18 +327,18 @@ public:
         }
     }
 
-    template <typename T> void SetMinValue(T min) {
+    template <typename T> void SetMinValue(T minval) {
         if (std::holds_alternative<T>(this->minval)) {
-            this->minval = min;
+            this->minval = minval;
         } else {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
 
-    template <typename T> void SetMaxValue(T max) {
+    template <typename T> void SetMaxValue(T maxval) {
         if (std::holds_alternative<T>(this->maxval)) {
-            this->maxval = max;
+            this->maxval = maxval;
         } else {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);

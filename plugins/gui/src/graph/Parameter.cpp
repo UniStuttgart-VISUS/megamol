@@ -32,7 +32,8 @@ megamol::gui::ParameterPresentation::ParameterPresentation(ParamType type)
     , show_tf_editor(false)
     , tf_editor_hash(0)
     , tf_texture(0)
-    , guistate_dirty(false) {
+    , guistate_dirty(false)
+    , knob_position(0.0f, 0.0f) {
 
     this->InitPresentation(type);
 }
@@ -515,6 +516,34 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 error = false;
             }
         } break;
+            // KNOB //////////////////////////////////////////////////
+        case (PresentType::Knob): {
+            // FLOAT -----------------------------------------------
+            if constexpr (std::is_same_v<T, float>) {
+                auto value = arg;
+                if (this->widget_knob(scope, param_label, value, inout_parameter.GetMinValue<T>(),
+                        inout_parameter.GetMaxValue<T>())) {
+                    inout_parameter.SetValue(value);
+                    retval = true;
+                }
+                error = false;
+            } else if constexpr (std::is_same_v<T, int>) {
+                switch (inout_parameter.type) {
+                    // INT ---------------------------------------------
+                case (ParamType::INT): {
+                    auto value = arg;
+                    if (this->widget_knob(scope, param_label, value, inout_parameter.GetMinValue<T>(),
+                            inout_parameter.GetMaxValue<T>())) {
+                        inout_parameter.SetValue(value);
+                        retval = true;
+                    }
+                    error = false;
+                } break;
+                default:
+                    break;
+                }
+            }
+        } break;
         default:
             break;
         }
@@ -804,8 +833,8 @@ bool megamol::gui::ParameterPresentation::widget_ternary(
 }
 
 
-bool megamol::gui::ParameterPresentation::widget_int(
-    megamol::gui::ParameterPresentation::WidgetScope scope, const std::string& label, int& value, int min, int max) {
+bool megamol::gui::ParameterPresentation::widget_int(megamol::gui::ParameterPresentation::WidgetScope scope,
+    const std::string& label, int& value, int minval, int maxval) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -815,7 +844,7 @@ bool megamol::gui::ParameterPresentation::widget_int(
         }
         ImGui::InputInt(label.c_str(), &std::get<int>(this->widget_store), 1, 10, ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            this->widget_store = std::max(min, std::min(std::get<int>(this->widget_store), max));
+            this->widget_store = std::max(minval, std::min(std::get<int>(this->widget_store), maxval));
             value = std::get<int>(this->widget_store);
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
@@ -827,7 +856,7 @@ bool megamol::gui::ParameterPresentation::widget_int(
 
 
 bool megamol::gui::ParameterPresentation::widget_float(megamol::gui::ParameterPresentation::WidgetScope scope,
-    const std::string& label, float& value, float min, float max) {
+    const std::string& label, float& value, float minval, float maxval) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -838,7 +867,7 @@ bool megamol::gui::ParameterPresentation::widget_float(megamol::gui::ParameterPr
         ImGui::InputFloat(label.c_str(), &std::get<float>(this->widget_store), 1.0f, 10.0f, this->float_format.c_str(),
             ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            this->widget_store = std::max(min, std::min(std::get<float>(this->widget_store), max));
+            this->widget_store = std::max(minval, std::min(std::get<float>(this->widget_store), maxval));
             value = std::get<float>(this->widget_store);
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
@@ -850,7 +879,7 @@ bool megamol::gui::ParameterPresentation::widget_float(megamol::gui::ParameterPr
 
 
 bool megamol::gui::ParameterPresentation::widget_vector2f(megamol::gui::ParameterPresentation::WidgetScope scope,
-    const std::string& label, glm::vec2& value, glm::vec2 min, glm::vec2 max) {
+    const std::string& label, glm::vec2& value, glm::vec2 minval, glm::vec2 maxval) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -861,8 +890,8 @@ bool megamol::gui::ParameterPresentation::widget_vector2f(megamol::gui::Paramete
         ImGui::InputFloat2(label.c_str(), glm::value_ptr(std::get<glm::vec2>(this->widget_store)),
             this->float_format.c_str(), ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            auto x = std::max(min.x, std::min(std::get<glm::vec2>(this->widget_store).x, max.x));
-            auto y = std::max(min.y, std::min(std::get<glm::vec2>(this->widget_store).y, max.y));
+            auto x = std::max(minval.x, std::min(std::get<glm::vec2>(this->widget_store).x, maxval.x));
+            auto y = std::max(minval.y, std::min(std::get<glm::vec2>(this->widget_store).y, maxval.y));
             this->widget_store = glm::vec2(x, y);
             value = std::get<glm::vec2>(this->widget_store);
             retval = true;
@@ -875,7 +904,7 @@ bool megamol::gui::ParameterPresentation::widget_vector2f(megamol::gui::Paramete
 
 
 bool megamol::gui::ParameterPresentation::widget_vector3f(megamol::gui::ParameterPresentation::WidgetScope scope,
-    const std::string& label, glm::vec3& value, glm::vec3 min, glm::vec3 max) {
+    const std::string& label, glm::vec3& value, glm::vec3 minval, glm::vec3 maxval) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -886,9 +915,9 @@ bool megamol::gui::ParameterPresentation::widget_vector3f(megamol::gui::Paramete
         ImGui::InputFloat3(label.c_str(), glm::value_ptr(std::get<glm::vec3>(this->widget_store)),
             this->float_format.c_str(), ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            auto x = std::max(min.x, std::min(std::get<glm::vec3>(this->widget_store).x, max.x));
-            auto y = std::max(min.y, std::min(std::get<glm::vec3>(this->widget_store).y, max.y));
-            auto z = std::max(min.z, std::min(std::get<glm::vec3>(this->widget_store).z, max.z));
+            auto x = std::max(minval.x, std::min(std::get<glm::vec3>(this->widget_store).x, maxval.x));
+            auto y = std::max(minval.y, std::min(std::get<glm::vec3>(this->widget_store).y, maxval.y));
+            auto z = std::max(minval.z, std::min(std::get<glm::vec3>(this->widget_store).z, maxval.z));
             this->widget_store = glm::vec3(x, y, z);
             value = std::get<glm::vec3>(this->widget_store);
             retval = true;
@@ -901,7 +930,7 @@ bool megamol::gui::ParameterPresentation::widget_vector3f(megamol::gui::Paramete
 
 
 bool megamol::gui::ParameterPresentation::widget_vector4f(megamol::gui::ParameterPresentation::WidgetScope scope,
-    const std::string& label, glm::vec4& value, glm::vec4 min, glm::vec4 max) {
+    const std::string& label, glm::vec4& value, glm::vec4 minval, glm::vec4 maxval) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -912,10 +941,10 @@ bool megamol::gui::ParameterPresentation::widget_vector4f(megamol::gui::Paramete
         ImGui::InputFloat4(label.c_str(), glm::value_ptr(std::get<glm::vec4>(this->widget_store)),
             this->float_format.c_str(), ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            auto x = std::max(min.x, std::min(std::get<glm::vec4>(this->widget_store).x, max.x));
-            auto y = std::max(min.y, std::min(std::get<glm::vec4>(this->widget_store).y, max.y));
-            auto z = std::max(min.z, std::min(std::get<glm::vec4>(this->widget_store).z, max.z));
-            auto w = std::max(min.w, std::min(std::get<glm::vec4>(this->widget_store).w, max.w));
+            auto x = std::max(minval.x, std::min(std::get<glm::vec4>(this->widget_store).x, maxval.x));
+            auto y = std::max(minval.y, std::min(std::get<glm::vec4>(this->widget_store).y, maxval.y));
+            auto z = std::max(minval.z, std::min(std::get<glm::vec4>(this->widget_store).z, maxval.z));
+            auto w = std::max(minval.w, std::min(std::get<glm::vec4>(this->widget_store).w, maxval.w));
             this->widget_store = glm::vec4(x, y, z, w);
             value = std::get<glm::vec4>(this->widget_store);
             retval = true;
@@ -1139,15 +1168,131 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
 }
 
 
+bool megamol::gui::ParameterPresentation::widget_knob(
+    WidgetScope scope, const std::string& label, int& value, int minval, int maxval) {
+
+    float float_value = static_cast<float>(value);
+    float float_minval = (minval > INT_MIN) ? (static_cast<float>(minval)) : (-FLT_MAX);
+    float float_maxval = (maxval < INT_MAX) ? static_cast<float>(maxval) : (FLT_MAX);
+    bool retval = this->widget_knob(scope, label, float_value, float_minval, float_maxval);
+    value = static_cast<int>(round(float_value));
+    return retval;
+}
+
+
+bool megamol::gui::ParameterPresentation::widget_knob(
+    WidgetScope scope, const std::string& label, float& value, float minval, float maxval) {
+    bool retval = false;
+
+    // LOCAL -----------------------------------------------------------
+    if (scope == ParameterPresentation::WidgetScope::LOCAL) {
+
+        assert(ImGui::GetCurrentContext() != nullptr);
+        ImGuiStyle& style = ImGui::GetStyle();
+
+        const float edge_length = 3.0f * ImGui::GetTextLineHeightWithSpacing();
+        const float thickness = edge_length / 15.0f;
+        const float knob_radius = thickness * 2.0f;
+
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]));
+        auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
+        ImGui::BeginChild("knob_widget_background", ImVec2(edge_length, edge_length), false, child_flags);
+
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        assert(draw_list != nullptr);
+
+        // Draw Outline
+        float half_edge_length = edge_length / 2.0f;
+        ImVec2 widget_start_pos = ImGui::GetCursorScreenPos();
+        ImVec2 widget_center = widget_start_pos + ImVec2(half_edge_length, half_edge_length);
+        float half_thickness = (thickness / 2.0f);
+        ImU32 outline_color_front = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonHovered]);
+        ImU32 outline_color_shadow = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBgHovered]);
+        ImVec2 outline_offset_shadow = ImVec2(half_thickness, half_thickness);
+
+        draw_list->AddCircle(widget_center + outline_offset_shadow, half_edge_length - half_thickness,
+            outline_color_shadow, 24, thickness);
+        draw_list->AddCircle(widget_center, half_edge_length - half_thickness, outline_color_front, 24, half_thickness);
+
+        /// TODO Limit circle when minval and maxval are known
+
+        // Draw knob
+        ImU32 knob_line_color = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Button]);
+        ImU32 knob_color = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonHovered]);
+        ImVec2 rect = ImVec2(knob_radius * 2.0f, knob_radius * 2.0f);
+        ImVec2 half_rect = ImVec2(knob_radius, knob_radius);
+        float knob_center_dist = (half_edge_length - knob_radius - half_thickness);
+        if ((this->knob_position.x == 0.0f) && (this->knob_position.y == 0.0f)) {
+            this->knob_position = ImVec2(0.0f, -(knob_center_dist));
+        }
+        ImVec2 knob_button_pos = widget_center + this->knob_position - half_rect;
+        ImGui::SetCursorScreenPos(knob_button_pos);
+        ImGui::InvisibleButton("special_button", rect);
+
+        if (ImGui::IsItemActive()) {
+            knob_color = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
+            ImVec2 p1 = this->knob_position;
+            float d1 = sqrtf((p1.x * p1.x) + (p1.y * p1.y));
+            p1 /= d1;
+            ImVec2 p2 = ImGui::GetMousePos() - widget_center;
+            float d2 = sqrtf((p2.x * p2.x) + (p2.y * p2.y));
+            p2 /= d2;
+            float dot = (p1.x * p2.x) + (p1.y * p2.y); // dot product
+            float det = (p1.x * p2.y) - (p1.y * p2.x); // determinant
+            float angle = atan2(det, dot);
+            float b = angle / (2.0f * 3.14159265358f); // b in[0,1]
+            value = std::min(maxval, (std::max(minval, value + b)));
+            this->knob_position = (p2 * knob_center_dist);
+            retval = true;
+        }
+        draw_list->AddLine(widget_center, widget_center + this->knob_position, knob_line_color, thickness);
+        draw_list->AddCircleFilled(widget_center + this->knob_position, knob_radius, knob_color, 12);
+
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+
+        // Draw Text
+        ImVec2 cursor_pos = widget_start_pos + ImVec2(edge_length + style.ItemSpacing.x, 0.0f);
+        ImGui::SetCursorScreenPos(cursor_pos);
+        float pos_x = ImGui::GetCursorPosX();
+        ImGui::TextUnformatted(label.c_str());
+        ImGui::SetCursorPosX(pos_x);
+        std::string value_label = "Value: " + this->float_format;
+        ImGui::Text(value_label.c_str(), value);
+        ImGui::SetCursorPosX(pos_x);
+        if (minval > -FLT_MAX) {
+            value_label = "Min: " + this->float_format;
+            ImGui::Text(value_label.c_str(), minval);
+        } else {
+            ImGui::TextUnformatted("Min: -inf");
+        }
+        ImGui::SameLine();
+        if (maxval < FLT_MAX) {
+            value_label = "Max: " + this->float_format;
+            ImGui::Text(value_label.c_str(), maxval);
+        } else {
+            ImGui::TextUnformatted("Max: inf");
+        }
+    }
+    // GLOBAL -----------------------------------------------------------
+    else if (scope == ParameterPresentation::WidgetScope::GLOBAL) {
+
+        // no global implementation ...
+    }
+
+    return retval;
+}
+
+
 // PARAMETER ##################################################################
 
-megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType type, StroageType store, MinType min, MaxType max)
+megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType type, StroageType store, MinType minval, MaxType maxval)
     : uid(uid)
     , type(type)
     , full_name()
     , description()
-    , minval(min)
-    , maxval(max)
+    , minval(minval)
+    , maxval(maxval)
     , storage(store)
     , value()
     , tf_string_hash(0)
@@ -1458,24 +1603,24 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
     } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector2fParam>()) {
         out_param.type = ParamType::VECTOR2F;
         out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-        auto min = p_ptr->MinValue();
-        out_param.minval = glm::vec2(min.X(), min.Y());
-        auto max = p_ptr->MaxValue();
-        out_param.maxval = glm::vec2(max.X(), max.Y());
+        auto minval = p_ptr->MinValue();
+        out_param.minval = glm::vec2(minval.X(), minval.Y());
+        auto maxval = p_ptr->MaxValue();
+        out_param.maxval = glm::vec2(maxval.X(), maxval.Y());
     } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector3fParam>()) {
         out_param.type = ParamType::VECTOR3F;
         out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-        auto min = p_ptr->MinValue();
-        out_param.minval = glm::vec3(min.X(), min.Y(), min.Z());
-        auto max = p_ptr->MaxValue();
-        out_param.maxval = glm::vec3(max.X(), max.Y(), max.Z());
+        auto minval = p_ptr->MinValue();
+        out_param.minval = glm::vec3(minval.X(), minval.Y(), minval.Z());
+        auto maxval = p_ptr->MaxValue();
+        out_param.maxval = glm::vec3(maxval.X(), maxval.Y(), maxval.Z());
     } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector4fParam>()) {
         out_param.type = ParamType::VECTOR4F;
         out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-        auto min = p_ptr->MinValue();
-        out_param.minval = glm::vec4(min.X(), min.Y(), min.Z(), min.W());
-        auto max = p_ptr->MaxValue();
-        out_param.maxval = glm::vec4(max.X(), max.Y(), max.Z(), max.W());
+        auto minval = p_ptr->MinValue();
+        out_param.minval = glm::vec4(minval.X(), minval.Y(), minval.Z(), minval.W());
+        auto maxval = p_ptr->MaxValue();
+        out_param.maxval = glm::vec4(maxval.X(), maxval.Y(), maxval.Z(), maxval.W());
     } else {
         vislib::sys::Log::DefaultLog.WriteError("Found unknown parameter type. Please extend parameter types "
                                                 "for the configurator. [%s, %s, line %d]\n",
@@ -1538,25 +1683,26 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
             megamol::gui::GenerateUniqueID(), ParamType::INT, std::monostate(), p_ptr->MinValue(), p_ptr->MaxValue());
         out_param->SetValue(p_ptr->Value(), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector2fParam>()) {
-        auto min = p_ptr->MinValue();
-        auto max = p_ptr->MaxValue();
+        auto minval = p_ptr->MinValue();
+        auto maxval = p_ptr->MaxValue();
         auto val = p_ptr->Value();
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType::VECTOR2F, std::monostate(),
-            glm::vec2(min.X(), min.Y()), glm::vec2(max.X(), max.Y()));
+            glm::vec2(minval.X(), minval.Y()), glm::vec2(maxval.X(), maxval.Y()));
         out_param->SetValue(glm::vec2(val.X(), val.Y()), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector3fParam>()) {
-        auto min = p_ptr->MinValue();
-        auto max = p_ptr->MaxValue();
+        auto minval = p_ptr->MinValue();
+        auto maxval = p_ptr->MaxValue();
         auto val = p_ptr->Value();
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType::VECTOR3F, std::monostate(),
-            glm::vec3(min.X(), min.Y(), min.Z()), glm::vec3(max.X(), max.Y(), max.Z()));
+            glm::vec3(minval.X(), minval.Y(), minval.Z()), glm::vec3(maxval.X(), maxval.Y(), maxval.Z()));
         out_param->SetValue(glm::vec3(val.X(), val.Y(), val.Z()), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector4fParam>()) {
-        auto min = p_ptr->MinValue();
-        auto max = p_ptr->MaxValue();
+        auto minval = p_ptr->MinValue();
+        auto maxval = p_ptr->MaxValue();
         auto val = p_ptr->Value();
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType::VECTOR4F, std::monostate(),
-            glm::vec4(min.X(), min.Y(), min.Z(), min.W()), glm::vec4(max.X(), max.Y(), max.Z(), max.W()));
+            glm::vec4(minval.X(), minval.Y(), minval.Z(), minval.W()),
+            glm::vec4(maxval.X(), maxval.Y(), maxval.Z(), maxval.W()));
         out_param->SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()), set_default_val);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::TernaryParam>()) {
         out_param = std::make_shared<Parameter>(
@@ -1685,10 +1831,10 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         if (out_param.type == ParamType::VECTOR2F) {
             auto val = p_ptr->Value();
             out_param.SetValue(glm::vec2(val.X(), val.Y()), set_default_val);
-            auto min = p_ptr->MinValue();
-            out_param.SetMinValue(glm::vec2(min.X(), min.Y()));
-            auto max = p_ptr->MaxValue();
-            out_param.SetMaxValue(glm::vec2(max.X(), max.Y()));
+            auto minval = p_ptr->MinValue();
+            out_param.SetMinValue(glm::vec2(minval.X(), minval.Y()));
+            auto maxval = p_ptr->MaxValue();
+            out_param.SetMaxValue(glm::vec2(maxval.X(), maxval.Y()));
         } else {
             type_error = true;
         }
@@ -1696,10 +1842,10 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         if (out_param.type == ParamType::VECTOR3F) {
             auto val = p_ptr->Value();
             out_param.SetValue(glm::vec3(val.X(), val.Y(), val.Z()), set_default_val);
-            auto min = p_ptr->MinValue();
-            out_param.SetMinValue(glm::vec3(min.X(), min.Y(), min.Z()));
-            auto max = p_ptr->MaxValue();
-            out_param.SetMaxValue(glm::vec3(max.X(), max.Y(), max.Z()));
+            auto minval = p_ptr->MinValue();
+            out_param.SetMinValue(glm::vec3(minval.X(), minval.Y(), minval.Z()));
+            auto maxval = p_ptr->MaxValue();
+            out_param.SetMaxValue(glm::vec3(maxval.X(), maxval.Y(), maxval.Z()));
         } else {
             type_error = true;
         }
@@ -1707,10 +1853,10 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         if (out_param.type == ParamType::VECTOR4F) {
             auto val = p_ptr->Value();
             out_param.SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()), set_default_val);
-            auto min = p_ptr->MinValue();
-            out_param.SetMinValue(glm::vec4(min.X(), min.Y(), min.Z(), min.W()));
-            auto max = p_ptr->MaxValue();
-            out_param.SetMaxValue(glm::vec4(max.X(), max.Y(), max.Z(), max.W()));
+            auto minval = p_ptr->MinValue();
+            out_param.SetMinValue(glm::vec4(minval.X(), minval.Y(), minval.Z(), minval.W()));
+            auto maxval = p_ptr->MaxValue();
+            out_param.SetMaxValue(glm::vec4(maxval.X(), maxval.Y(), maxval.Z(), maxval.W()));
         } else {
             type_error = true;
         }
