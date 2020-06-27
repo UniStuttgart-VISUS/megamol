@@ -118,13 +118,6 @@ namespace cinematic {
 		*/
 		virtual bool GetExtents(megamol::core::view::CallRender3D_2& call);
 
-        /**
-         * Method that gets called before the rendering is started for all changed modules
-         *
-         * @param call The rendering call that contains the camera
-         */
-        void PreRender(megamol::core::view::CallRender3D_2& call);
-
 		/**
 		* The render callback.
 		*
@@ -150,16 +143,15 @@ namespace cinematic {
         * variables
         **********************************************************************/
 
-        KeyframeManipulators                    manipulators;
-        CinematicUtils                          utils;
-        vislib::graphics::gl::FramebufferObject fbo;
-        float                                   mouseX;
-        float                                   mouseY;
-        GLuint                                  texture;
-        bool                                    manipulatorGrabbed;
-        unsigned int                            interpolSteps;
-        bool                                    showHelpText;
-        float                                   lineWidth;
+        KeyframeManipulators    manipulators;
+        CinematicUtils          utils;
+        float                   mouseX;
+        float                   mouseY;
+        GLuint                  texture;
+        bool                    manipulatorGrabbed;
+        unsigned int            interpolSteps;
+        bool                    showHelpText;
+        float                   lineWidth;
 
         /**********************************************************************
         * callbacks

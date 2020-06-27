@@ -447,22 +447,19 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     auto bc = Base::BkgndColour();
     glClearColor(bc[0], bc[1], bc[2], 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    int fbovp[4] = { 0, 0, fboWidth, fboHeight };
+    glViewport(fbovp[0], fbovp[1], fbovp[2], fbovp[3]);
 
-    // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
-    cr3d->SetOutputBuffer(&this->fbo);
+    ///XXX Requires View3D_2 line 377 to be deleted/commented!
+
+    /// ! Set override call for using currrent fbo ond current viewport
     Base::overrideCall = cr3d;
-
-    // Set override viewport of view (otherwise viewport is overwritten in Base::Render(context))
-    int fboVp[4] = {0, 0, fboWidth, fboHeight};
-    Base::overrideViewport = fboVp;
 
     // Call Render-Function of parent View3D_2
     Base::Render(context);
 
     // Reset override render call
     Base::overrideCall = nullptr;
-    // Reset override viewport
-    Base::overrideViewport = nullptr;
 
     if (this->fbo.IsEnabled()) {
         this->fbo.Disable();
@@ -488,6 +485,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
     glClearColor(bc[0], bc[1], bc[2], 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // Restoring previous viewport
+    glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
     // Push fbo texture -------------------------------------------------------
     float right = (vp_fw + static_cast<float>(texWidth)) / 2.0f;
