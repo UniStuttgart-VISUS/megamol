@@ -9,6 +9,7 @@
 #include "WindowManager.h"
 
 
+using namespace megamol;
 using namespace megamol::gui;
 
 
@@ -16,24 +17,23 @@ void WindowManager::SoftResetWindowSizePos(const std::string& window_name, Windo
     assert(ImGui::GetCurrentContext() != nullptr);
 
     ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
 
     float width = window_config.win_reset_size.x;
     float height = window_config.win_reset_size.y;
 
     if (width > io.DisplaySize.x) {
-        width = io.DisplaySize.x - (2.0f * style.DisplayWindowPadding.x);
+        width = io.DisplaySize.x; // -(2.0f * style.DisplayWindowPadding.x);
     }
     if (height > io.DisplaySize.y) {
-        height = io.DisplaySize.y - (2.0f * style.DisplayWindowPadding.y);
+        height = io.DisplaySize.y; // - (2.0f * style.DisplayWindowPadding.y);
     }
 
     auto win_pos = ImGui::GetWindowPos();
     if (win_pos.x < 0) {
-        win_pos.x = style.DisplayWindowPadding.x;
+        win_pos.x = 0.0f; // style.DisplayWindowPadding.x;
     }
     if (win_pos.y < 0) {
-        win_pos.y = style.DisplayWindowPadding.y;
+        win_pos.y = 0.0f; // style.DisplayWindowPadding.y;
     }
 
     ImVec2 win_size;
@@ -43,13 +43,13 @@ void WindowManager::SoftResetWindowSizePos(const std::string& window_name, Windo
         win_size = ImVec2(width, height);
     }
 
-    float win_width = io.DisplaySize.x - (win_pos.x + style.DisplayWindowPadding.x);
+    float win_width = io.DisplaySize.x - (win_pos.x); // +style.DisplayWindowPadding.x);
     if (win_width < win_size.x) {
-        win_pos.x = io.DisplaySize.x - (win_size.x + style.DisplayWindowPadding.x);
+        win_pos.x = io.DisplaySize.x - (win_size.x); // + style.DisplayWindowPadding.x);
     }
-    float win_height = io.DisplaySize.y - (win_pos.y + style.DisplayWindowPadding.y);
+    float win_height = io.DisplaySize.y - (win_pos.y); // + style.DisplayWindowPadding.y);
     if (win_height < win_size.y) {
-        win_pos.y = io.DisplaySize.y - (win_size.y + style.DisplayWindowPadding.y);
+        win_pos.y = io.DisplaySize.y - (win_size.y); //+ style.DisplayWindowPadding.y);
     }
 
     ImGui::SetWindowSize(window_name.c_str(), ImVec2(width, height), ImGuiCond_Always);
@@ -234,7 +234,7 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
             // main_project_file (supports UTF-8)
             if (config_values.at("main_project_file").is_string()) {
                 config_values.at("main_project_file").get_to(tmp_config.main_project_file);
-                this->utils.utf8Decode(tmp_config.main_project_file);
+                this->utils.Utf8Decode(tmp_config.main_project_file);
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
                     "[WindowManager] JSON state: Failed to read 'main_project_file' as string.");
@@ -279,42 +279,42 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
             }
             // FpsMsConfig --------------------------------------------
             // show_options
-            if (config_values.at("fpsms_show_options").is_boolean()) {
-                config_values.at("fpsms_show_options").get_to(tmp_config.fpsms_show_options);
+            if (config_values.at("ms_show_options").is_boolean()) {
+                config_values.at("ms_show_options").get_to(tmp_config.ms_show_options);
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
-                    "[WindowManager] JSON state: Failed to read 'fpsms_show_options' as boolean.");
+                    "[WindowManager] JSON state: Failed to read 'ms_show_options' as boolean.");
                 valid = false;
             }
             // max_value_count
-            if (config_values.at("fpsms_max_history_count").is_number_integer()) {
-                config_values.at("fpsms_max_history_count").get_to(tmp_config.fpsms_max_history_count);
+            if (config_values.at("ms_max_history_count").is_number_integer()) {
+                config_values.at("ms_max_history_count").get_to(tmp_config.ms_max_history_count);
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
-                    "[WindowManager] JSON state: Failed to read 'fpsms_max_history_count' as integer.");
+                    "[WindowManager] JSON state: Failed to read 'ms_max_history_count' as integer.");
                 valid = false;
             }
             // max_delay
-            if (config_values.at("fpsms_refresh_rate").is_number_float()) {
-                config_values.at("fpsms_refresh_rate").get_to(tmp_config.fpsms_refresh_rate);
+            if (config_values.at("ms_refresh_rate").is_number_float()) {
+                config_values.at("ms_refresh_rate").get_to(tmp_config.ms_refresh_rate);
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
-                    "[WindowManager] JSON state: Failed to read 'fpsms_refresh_rate' as float.");
+                    "[WindowManager] JSON state: Failed to read 'ms_refresh_rate' as float.");
                 valid = false;
             }
             // mode
-            if (config_values.at("fpsms_mode").is_number_integer()) {
-                tmp_config.fpsms_mode = static_cast<TimingModes>(config_values.at("fpsms_mode").get<int>());
+            if (config_values.at("ms_mode").is_number_integer()) {
+                tmp_config.ms_mode = static_cast<TimingModes>(config_values.at("ms_mode").get<int>());
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
-                    "[WindowManager] JSON state: Failed to read 'fpsms_mode' as integer.");
+                    "[WindowManager] JSON state: Failed to read 'ms_mode' as integer.");
                 valid = false;
             }
             // FontConfig ---------------------------------------------
             // font_name (supports UTF-8)
             if (config_values.at("font_name").is_string()) {
                 config_values.at("font_name").get_to(tmp_config.font_name);
-                this->utils.utf8Decode(tmp_config.font_name);
+                this->utils.Utf8Decode(tmp_config.font_name);
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
                     "[WindowManager] JSON state: Failed to read 'font_name' as string.");
@@ -322,16 +322,12 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
             }
 
             // set reset flags
-            tmp_config.buf_win_reset = true;
+            tmp_config.win_reset = true;
 
             tmp_config.buf_font_reset = false;
             if (!tmp_config.font_name.empty()) {
                 tmp_config.buf_font_reset = true;
             }
-            // Apply current values to corresponding tmp values
-            tmp_config.buf_max_history_count = tmp_config.fpsms_max_history_count;
-            tmp_config.buf_refresh_rate = tmp_config.fpsms_refresh_rate;
-
             tmp_windows.emplace(window_name, tmp_config);
         }
 
@@ -340,21 +336,33 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
             return false;
         }
 
-        this->windows.clear();
-        this->windows = tmp_windows;
+        // Replace existing window configurations and add new windows.
+        for (auto& new_win : tmp_windows) {
+            bool found_existing = false;
+            for (auto& win : this->windows) {
+                // Check for same name
+                if (win.first == new_win.first) {
+                    win.second = new_win.second;
+                    found_existing = true;
+                }
+            }
+            if (!found_existing) {
+                this->windows.emplace(new_win);
+            }
+        }
 
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
-    } catch (nlohmann::json::exception& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::parse_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
+        //} catch (nlohmann::json::exception& e) {
+        //    vislib::sys::Log::DefaultLog.WriteError(
+        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        //    return false;
+        //} catch (nlohmann::json::parse_error& e) {
+        //    vislib::sys::Log::DefaultLog.WriteError(
+        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        //    return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
@@ -383,32 +391,34 @@ bool WindowManager::StateToJSON(std::string& json_string) {
         nlohmann::json json;
 
         for (auto& w : this->windows) {
-            std::string window_name = w.first;
-            WindowConfiguration window_config = w.second;
-            json[window_name]["win_show"] = window_config.win_show;
-            json[window_name]["win_flags"] = static_cast<int>(window_config.win_flags);
-            json[window_name]["win_callback"] = static_cast<int>(window_config.win_callback);
-            json[window_name]["win_hotkey"] = {
-                static_cast<int>(window_config.win_hotkey.GetKey()), window_config.win_hotkey.GetModifiers().toInt()};
-            json[window_name]["win_position"] = {window_config.win_position.x, window_config.win_position.y};
-            json[window_name]["win_size"] = {window_config.win_size.x, window_config.win_size.y};
-            json[window_name]["win_soft_reset"] = window_config.win_soft_reset;
-            json[window_name]["win_reset_size"] = {window_config.win_reset_size.x, window_config.win_reset_size.y};
+            if (w.second.win_store_config) {
+                std::string window_name = w.first;
+                WindowConfiguration window_config = w.second;
+                json[window_name]["win_show"] = window_config.win_show;
+                json[window_name]["win_flags"] = static_cast<int>(window_config.win_flags);
+                json[window_name]["win_callback"] = static_cast<int>(window_config.win_callback);
+                json[window_name]["win_hotkey"] = {
+                    static_cast<int>(window_config.win_hotkey.key), window_config.win_hotkey.mods.toInt()};
+                json[window_name]["win_position"] = {window_config.win_position.x, window_config.win_position.y};
+                json[window_name]["win_size"] = {window_config.win_size.x, window_config.win_size.y};
+                json[window_name]["win_soft_reset"] = window_config.win_soft_reset;
+                json[window_name]["win_reset_size"] = {window_config.win_reset_size.x, window_config.win_reset_size.y};
 
-            this->utils.utf8Encode(window_config.main_project_file);
-            json[window_name]["main_project_file"] = window_config.main_project_file;
+                this->utils.Utf8Encode(window_config.main_project_file);
+                json[window_name]["main_project_file"] = window_config.main_project_file;
 
-            json[window_name]["param_show_hotkeys"] = window_config.param_show_hotkeys;
-            json[window_name]["param_modules_list"] = window_config.param_modules_list;
-            json[window_name]["param_module_filter"] = static_cast<int>(window_config.param_module_filter);
+                json[window_name]["param_show_hotkeys"] = window_config.param_show_hotkeys;
+                json[window_name]["param_modules_list"] = window_config.param_modules_list;
+                json[window_name]["param_module_filter"] = static_cast<int>(window_config.param_module_filter);
 
-            json[window_name]["fpsms_show_options"] = window_config.fpsms_show_options;
-            json[window_name]["fpsms_max_history_count"] = window_config.fpsms_max_history_count;
-            json[window_name]["fpsms_refresh_rate"] = window_config.fpsms_refresh_rate;
-            json[window_name]["fpsms_mode"] = static_cast<int>(window_config.fpsms_mode);
+                json[window_name]["ms_show_options"] = window_config.ms_show_options;
+                json[window_name]["ms_max_history_count"] = window_config.ms_max_history_count;
+                json[window_name]["ms_refresh_rate"] = window_config.ms_refresh_rate;
+                json[window_name]["ms_mode"] = static_cast<int>(window_config.ms_mode);
 
-            this->utils.utf8Encode(window_config.font_name);
-            json[window_name]["font_name"] = window_config.font_name;
+                this->utils.Utf8Encode(window_config.font_name);
+                json[window_name]["font_name"] = window_config.font_name;
+            }
         }
 
         json_string = json.dump(2); // Dump with indent of 2 spaces and new lines.
@@ -417,14 +427,14 @@ bool WindowManager::StateToJSON(std::string& json_string) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
-    } catch (nlohmann::json::exception& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::parse_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
+        //} catch (nlohmann::json::exception& e) {
+        //    vislib::sys::Log::DefaultLog.WriteError(
+        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        //    return false;
+        //} catch (nlohmann::json::parse_error& e) {
+        //    vislib::sys::Log::DefaultLog.WriteError(
+        //        "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        //    return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);

@@ -29,7 +29,7 @@ public:
               "gui",
 
               /* human-readable plugin description */
-              "Graphical user interface plugin"){
+              "Graphical User Interface Plugin"){
 
               // here we could perform addition initialization
           };

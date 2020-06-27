@@ -1,7 +1,7 @@
 /*
  * CoreInstance.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2008, 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -1429,6 +1429,10 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
             pg.Requests.Clear();
         }
     }
+
+    // notify ParamUpdateListeners
+    this->NotifyParamUpdateListener();
+    this->paramUpdates.clear();
 }
 
 
@@ -2486,6 +2490,18 @@ void megamol::core::CoreInstance::ParameterValueUpdate(megamol::core::param::Par
     vislib::SingleLinkedList<param::ParamUpdateListener*>::Iterator i = this->paramUpdateListeners.GetIterator();
     while (i.HasNext()) {
         i.Next()->ParamUpdated(slot);
+    }
+    this->paramUpdates.emplace_back(slot.FullName(), slot.Param<param::AbstractParam>()->ValueString());
+}
+
+
+/*
+ * megamol::core::CoreInstance::NotifyParamUpdateListener
+ */
+void megamol::core::CoreInstance::NotifyParamUpdateListener() {
+    vislib::SingleLinkedList<param::ParamUpdateListener*>::Iterator i = this->paramUpdateListeners.GetIterator();
+    while (i.HasNext()) {
+        i.Next()->BatchParamUpdated(this->paramUpdates);
     }
 }
 

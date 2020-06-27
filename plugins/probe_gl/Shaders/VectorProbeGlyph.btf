@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="VectorProbeGlyph">
+    <include file="common"/>
+
+    <shader name="vertex">
+        <snippet type="version">450</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Extensions"       type="file">glyphs/extensions.glsl</snippet>
+        <snippet name="MeshParamStruct"  type="file">glyphs/vector_probe_struct.glsl</snippet>
+        <snippet name="Main"             type="file">glyphs/vector_probe_glyph_vertex.glsl</snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">450</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Extensions"       type="file">glyphs/extensions.glsl</snippet>
+        <snippet name="MeshParamStruct"  type="file">glyphs/vector_probe_struct.glsl</snippet>
+        <snippet name="Main"             type="file">glyphs/vector_probe_glyph_fragment.glsl</snippet>
+    </shader>
+
+</btf>

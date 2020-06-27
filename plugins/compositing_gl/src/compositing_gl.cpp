@@ -14,6 +14,7 @@
 
 #include "compositing/CompositingCalls.h"
 #include "DrawToScreen.h"
+#include "InteractionRenderTarget.h"
 #include "LocalLighting.h"
 #include "ScreenSpaceEffect.h"
 #include "SimpleRenderTarget.h"
@@ -54,6 +55,7 @@ namespace {
             //   ...
             //
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::DrawToScreen>();
+            this->module_descriptions.RegisterAutoDescription<megamol::compositing::InteractionRenderTarget>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::LocalLighting>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::ScreenSpaceEffect>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::SimpleRenderTarget>();

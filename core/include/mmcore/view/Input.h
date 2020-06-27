@@ -299,16 +299,6 @@ public:
         this->key = key;
     }
 
-    /** Return key. */
-    core::view::Key GetKey(void) {
-        return this->key;
-    }
-
-    /** Return modifiers. */
-    core::view::Modifiers GetModifiers(void) {
-        return this->mods;
-    }
-
     /**
      * Generates a human-readable ASCII String representing the key code.
      *

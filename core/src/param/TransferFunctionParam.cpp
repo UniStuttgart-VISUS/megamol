@@ -18,6 +18,7 @@ using namespace megamol::core::param;
 TransferFunctionParam::TransferFunctionParam(const std::string& initVal) : AbstractParam() {
     if (this->CheckTransferFunctionString(initVal)) {
         this->val = initVal;
+        this->hash = std::hash<std::string>()(this->val);
     } else {
         vislib::sys::Log::DefaultLog.WriteError(
             "[TransferFunctionParam] No valid parameter value for constructor given.");
@@ -31,6 +32,7 @@ TransferFunctionParam::TransferFunctionParam(const std::string& initVal) : Abstr
 TransferFunctionParam::TransferFunctionParam(const char* initVal) : AbstractParam() {
     if (this->CheckTransferFunctionString(std::string(initVal))) {
         this->val = std::string(initVal);
+        this->hash = std::hash<std::string>()(this->val);
     } else {
         vislib::sys::Log::DefaultLog.WriteError(
             "[TransferFunctionParam] No valid parameter value for constructor given.");
@@ -44,6 +46,7 @@ TransferFunctionParam::TransferFunctionParam(const char* initVal) : AbstractPara
 TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal) : AbstractParam() {
     if (this->CheckTransferFunctionString(std::string(initVal.PeekBuffer()))) {
         this->val = std::string(initVal.PeekBuffer());
+        this->hash = std::hash<std::string>()(this->val);
     } else {
         vislib::sys::Log::DefaultLog.WriteError(
             "[TransferFunctionParam] No valid parameter value for constructor given.");
@@ -73,6 +76,7 @@ bool TransferFunctionParam::ParseValue(vislib::TString const& v) {
 
     if (this->CheckTransferFunctionString(std::string(v.PeekBuffer()))) {
         this->val = std::string(v.PeekBuffer());
+        this->hash = std::hash<std::string>()(this->val);
         return true;
     }
 
@@ -88,6 +92,8 @@ void TransferFunctionParam::SetValue(const std::string& v, bool setDirty) {
     if (v != this->val) {
         if (this->CheckTransferFunctionString(v)) {
             this->val = v;
+            this->hash = std::hash<std::string>()(this->val);
+            this->indicateChange();
             if (setDirty) this->setDirty();
         }
     }

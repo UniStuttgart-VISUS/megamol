@@ -42,7 +42,9 @@ GlyphRenderer::GlyphRenderer(void)
     , glyphParam("glyph", "which glyph to render")
     , scaleParam("scaling", "scales the glyph radii")
     , colorInterpolationParam(
-          "colorInterpolation", "interpolate between directional coloring (0) and glyph color (1)") {
+          "colorInterpolation", "interpolate between directional coloring (0) and glyph color (1)") 
+    , colorModeParam("colorMode","switch between global glyph and per axis color")
+{
 
     this->getDataSlot.SetCompatibleCall<core::moldyn::EllipsoidalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -69,6 +71,13 @@ GlyphRenderer::GlyphRenderer(void)
 
     colorInterpolationParam << new param::FloatParam(1.0f, 0.0, 1.0f);
     this->MakeSlotAvailable(&this->colorInterpolationParam);
+
+
+    param::EnumParam* gcm = new param::EnumParam(0);
+    gcm->SetTypePair(0, "GlyphGlobal");
+    gcm->SetTypePair(1, "PerAxis");
+    this->colorModeParam << gcm;
+    this->MakeSlotAvailable(&this->colorModeParam);
 }
 
 
@@ -296,6 +305,18 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
         use_clip = true;
     }
 
+    bool use_per_axis_color = false;
+    switch (this->colorModeParam.Param<core::param::EnumParam>()->Value()) {
+    case 0:
+        use_per_axis_color = false;
+        break;
+    case 1:
+        use_per_axis_color = true;
+        break;
+    default:
+        break;
+    }
+
     view::Camera_2 cam;
     call.GetCamera(cam);
     cam_type::snapshot_type snapshot;
@@ -473,6 +494,7 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
         }
         if (use_flags) options = options | glyph_options::USE_FLAGS;
         if (use_clip) options = options | glyph_options::USE_CLIP;
+        if (use_per_axis_color) options = options | glyph_options::USE_PER_AXIS;
         glUniform1ui(shader->ParameterLocation("options"), options);
 
         switch (elParts.GetVertexDataType()) {

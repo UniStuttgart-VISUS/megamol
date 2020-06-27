@@ -27,7 +27,11 @@ TransferFunction::TransferFunction(void)
     , tex()
     , texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGBA)
     , interpolMode(param::TransferFunctionParam::InterpolationMode::LINEAR)
-    , range({0.0f, 1.0f}) {
+    , range({0.0f, 1.0f})
+    , tfparam_check_init_value(true)
+    , tfparam_skip_changes_once(false)
+    , version(0)
+    , last_frame_id(0) {
 
     CallGetTransferFunctionDescription cgtfd;
     this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(0), &TransferFunction::requestTF);
@@ -71,6 +75,32 @@ bool TransferFunction::requestTF(Call& call) {
     CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
     if (cgtf == nullptr) return false;
 
+    // Skip changes propagated by call once to apply initial value of transfer function parameter set from project file.
+    this->tfparam_skip_changes_once = false;
+    if (this->tfparam_check_init_value) {
+        if (!this->tfParam.Param<param::TransferFunctionParam>()->Value().empty()) {
+            this->tfparam_skip_changes_once = true;
+        }
+        this->tfparam_check_init_value = false;
+    }
+    // Update changed data set range for transfer function parameter
+    if (!this->tfparam_skip_changes_once) {
+        if (cgtf->ConsumeRangeUpdate()) {
+            // Get current values from parameter string 
+            auto tmp_range = this->range;
+            auto tmp_interpol = this->interpolMode;
+            auto tmp_tex_size = this->texSize;
+            param::TransferFunctionParam::TFNodeType tmp_nodes;
+            if (megamol::core::param::TransferFunctionParam::ParseTransferFunction(this->tfParam.Param<param::TransferFunctionParam>()->Value(), tmp_nodes, tmp_interpol, tmp_tex_size, tmp_range)) {
+                std::string tf_str;
+                // Set transfer function parameter value using updated range
+                if (megamol::core::param::TransferFunctionParam::DumpTransferFunction(tf_str, tmp_nodes, tmp_interpol, tmp_tex_size, cgtf->Range())) {
+                    this->tfParam.Param<param::TransferFunctionParam>()->SetValue(tf_str);
+                }
+            }
+        }
+    }
+
     if ((this->texID == 0) || this->tfParam.IsDirty()) {
         this->tfParam.ResetDirty();
 
@@ -101,7 +131,7 @@ bool TransferFunction::requestTF(Call& call) {
         glGetIntegerv(GL_TEXTURE_BINDING_1D, &otid);
         glBindTexture(GL_TEXTURE_1D, (GLuint)this->texID);
 
-        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, this->texSize, 0, GL_RGBA, GL_FLOAT, this->tex.data());
+        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, this->texSize, 0, this->texFormat, GL_FLOAT, this->tex.data());
 
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -112,6 +142,7 @@ bool TransferFunction::requestTF(Call& call) {
         if (!t1de) glDisable(GL_TEXTURE_1D);
         ++this->version;
     }
+
     cgtf->SetTexture(this->texID, this->texSize, this->tex.data(), this->texFormat,
         this->range, this->version);
 
