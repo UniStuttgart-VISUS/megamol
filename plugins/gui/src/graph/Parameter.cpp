@@ -527,21 +527,6 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                     retval = true;
                 }
                 error = false;
-            } else if constexpr (std::is_same_v<T, int>) {
-                switch (inout_parameter.type) {
-                    // INT ---------------------------------------------
-                case (ParamType::INT): {
-                    auto value = arg;
-                    if (this->widget_knob(scope, param_label, value, inout_parameter.GetMinValue<T>(),
-                            inout_parameter.GetMaxValue<T>())) {
-                        inout_parameter.SetValue(value);
-                        retval = true;
-                    }
-                    error = false;
-                } break;
-                default:
-                    break;
-                }
             }
         } break;
         default:
@@ -1164,18 +1149,6 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
         }
     }
 
-    return retval;
-}
-
-
-bool megamol::gui::ParameterPresentation::widget_knob(
-    WidgetScope scope, const std::string& label, int& value, int minval, int maxval) {
-
-    float float_value = static_cast<float>(value);
-    float float_minval = (minval > INT_MIN) ? (static_cast<float>(minval)) : (-FLT_MAX);
-    float float_maxval = (maxval < INT_MAX) ? static_cast<float>(maxval) : (FLT_MAX);
-    bool retval = this->widget_knob(scope, label, float_value, float_minval, float_maxval);
-    value = static_cast<int>(round(float_value));
     return retval;
 }
 
