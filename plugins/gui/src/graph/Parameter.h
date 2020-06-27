@@ -5,6 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
+/* HOWTO add your own parameter widget:
+ * 1] Add new 'Presentation' in core/param/AbstractParamPresentation.h (and add name to presentation_name_map in CTOR)
+ * 2] Add 'Presentation' to ParamType in AbstractParamPresentation::InitPresentation()
+ * 3] Add new case in ParameterPresentation::present_parameter()
+ * 4] Add new function widget_...() implementing the new widget to ParameterPresentation and call in case defined in 3]
+ */
+
 #ifndef MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
 #define MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
 

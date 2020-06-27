@@ -11,27 +11,27 @@
 using namespace megamol::core::param;
 
 
-const std::string AbstractParamPresentation::GetTypeName(ParamType type){
+const std::string AbstractParamPresentation::GetTypeName(ParamType type) {
     switch (type) {
-    case(BOOL)              : return "BoolParam";
-    case(BUTTON)            : return "ButtonParam";
-    case(COLOR)             : return "ColorParam";
-    case(ENUM)              : return "EnumParam";
-    case(FILEPATH)          : return "FilePathParam";
-    case(FLEXENUM)          : return "FlexEnumParam";
-    case(FLOAT)             : return "FloatParam";
-    case(INT)               : return "IntParam";
-    case(STRING)            : return "StringParam";
-    case(TERNARY)           : return "TernaryParam";
-    case(TRANSFERFUNCTION)  : return "TransferFunctionParam";
-    case(VECTOR2F)          : return "Vector2fParam";
-    case(VECTOR3F)          : return "Vector3fParam";
-    case(VECTOR4F)          : return "Vector4fParam";
-    case(GROUP_ANIMATION)   : return "AnimationGroup";
-    default                 : return "UNKNOWN";
+    case(BOOL): return "BoolParam";
+    case(BUTTON): return "ButtonParam";
+    case(COLOR): return "ColorParam";
+    case(ENUM): return "EnumParam";
+    case(FILEPATH): return "FilePathParam";
+    case(FLEXENUM): return "FlexEnumParam";
+    case(FLOAT): return "FloatParam";
+    case(INT): return "IntParam";
+    case(STRING): return "StringParam";
+    case(TERNARY): return "TernaryParam";
+    case(TRANSFERFUNCTION): return "TransferFunctionParam";
+    case(VECTOR2F): return "Vector2fParam";
+    case(VECTOR3F): return "Vector3fParam";
+    case(VECTOR4F): return "Vector4fParam";
+    case(GROUP_ANIMATION): return "AnimationGroup";
+    default: return "UNKNOWN";
     }
 }
-     
+
 
 AbstractParamPresentation::AbstractParamPresentation(void)
     : visible(true)
@@ -40,7 +40,7 @@ AbstractParamPresentation::AbstractParamPresentation(void)
     , compatible(Presentation::Basic)
     , initialised(false)
     , presentation_name_map() {
-        
+
     this->presentation_name_map.clear();
     this->presentation_name_map.emplace(Presentation::Basic, "Basic");
     this->presentation_name_map.emplace(Presentation::String, "String");
@@ -118,7 +118,7 @@ bool AbstractParamPresentation::InitPresentation(AbstractParamPresentation::Para
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::GROUP_ANIMATION): {
-            this->compatible = Presentation::Group_Animation;
+            this->compatible = Presentation::Basic | Presentation::Group_Animation;
             this->SetGUIPresentation(Presentation::Group_Animation);
         } break;
         default:
@@ -273,7 +273,7 @@ bool AbstractParamPresentation::ParameterGUIStateToJSON(nlohmann::json& inout_js
             this->IsGUIReadOnly();
         inout_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_fullname]["gui_presentation_mode"] =
             static_cast<int>(this->GetGUIPresentation());
-      
+
 #ifdef GUI_VERBOSE
         vislib::sys::Log::DefaultLog.WriteInfo("[AbstractParamPresentation] Wrote parameter state to JSON.");
 #endif // GUI_VERBOSE
