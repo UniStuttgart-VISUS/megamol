@@ -12,11 +12,12 @@
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 
+#include "glowl/FramebufferObject.hpp"
 #include "vislib/graphics/gl/FramebufferObject.h"
 
 #include "Renderer2D.h"
 
-#include <glm/matrix.hpp>
+#include "glm/matrix.hpp"
 #include <map>
 
 namespace megamol {
@@ -227,8 +228,8 @@ private:
 
     GLuint columnCount;
     GLuint itemCount;
-    glm::mat4 modelViewMatrix_column;
-    glm::mat4 projMatrix_column;
+    GLfloat modelViewMatrix_column[16];
+    GLfloat projMatrix_column[16];
 
     vislib::graphics::gl::GLSLShader drawAxesProgram;
     vislib::graphics::gl::GLSLShader drawScalesProgram;
@@ -283,6 +284,32 @@ private:
     GLint maxWorkgroupCount[3];
 
     megamol::core::utility::SDFFont font;
+
+    core::param::ParamSlot halveRes;
+
+    core::param::ParamSlot xMinOffset;
+    core::param::ParamSlot xMaxOffset;
+    core::param::ParamSlot yMinOffset;
+    core::param::ParamSlot yMaxOffset;
+
+    GLint origFBO = 0;
+    GLint origFBOr = 0;
+    GLuint imStoreI;
+    GLuint imStoreI2;
+    std::shared_ptr<glowl::FramebufferObject> nuFB;
+    GLuint nuFBb;
+    GLuint nuFBb2;
+    //glowl::FramebufferObject nuFB2 = glowl::FramebufferObject(1, 1, false, false);
+    GLuint nuDRB;
+    std::unique_ptr<vislib::graphics::gl::GLSLShader> m_render_to_framebuffer_shdr;
+
+    // float xMinOffset;
+    // float yMinOffset;
+    // float xMaxOffset;
+    // float xMaxOffset;
+
+    vislib::graphics::gl::ShaderSource vertex_shader_src;
+    vislib::graphics::gl::ShaderSource fragment_shader_src;
 };
 
 } /* end namespace infovis */

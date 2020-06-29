@@ -12,6 +12,7 @@
 #include "mmcore/view/CallRenderView.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/StringParam.h"
@@ -34,7 +35,12 @@ view::View2D::View2D(void) : view::AbstractRenderingView(),
 		bboxCol{1.0f, 1.0f, 1.0f, 0.625f},
 		bboxColSlot("bboxCol", "Sets the colour for the bounding box"),
         resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change"),
-        viewX(0.0f), viewY(0.0f), viewZoom(1.0f), viewUpdateCnt(0),
+
+     halveRes("halve Resolution", "halve Resolution for FPS test")
+    , xCamOffset("xcam offset", "Camera Offset in x direction")
+    , yCamOffset("ycam offset", "Camera Offset in y direction"),
+    
+    viewX(0.0f), viewY(0.0f), viewZoom(1.0f), viewUpdateCnt(0),
         width(1.0f), incomingCall(NULL), overrideViewTile(NULL), timeCtrl() {
 
     this->rendererSlot.SetCompatibleCall<CallRender2DDescription>();
@@ -56,6 +62,15 @@ view::View2D::View2D(void) : view::AbstractRenderingView(),
     for (unsigned int i = 0; this->timeCtrl.GetSlot(i) != NULL; i++) {
         this->MakeSlotAvailable(this->timeCtrl.GetSlot(i));
     }
+
+    this->halveRes << new param::BoolParam(false);
+    this->MakeSlotAvailable(&halveRes);
+
+    this->xCamOffset << new param::FloatParam(0.0);
+    this->MakeSlotAvailable(&xCamOffset);
+
+    this->yCamOffset << new param::FloatParam(0.0);
+    this->MakeSlotAvailable(&yCamOffset);
 
     this->ResetView();
 }
@@ -269,6 +284,26 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
         ::glVertex2f(0.0f, 0.0f);
         ::glVertex2f(this->mouseX, this->mouseY);
         ::glEnd();
+    }
+
+    // setup of camera & resolution
+    cr2d->frametype = 0;
+    if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
+        cr2d->SetTgtRes(cr2d->GetViewport().Width(), cr2d->GetViewport().Height() / 2);
+        float viewOffsetY = bbox.Height() / cr2d->tgtResY;
+
+        if (frameIsEven) {
+            // viewY += viewOffsetY;
+            cr2d->SetFrametype(2);
+            cr2d->setIntOffset(0, 0);
+            cr2d->frametype = 2;
+        } else {
+            // viewY -= viewOffsetY;
+            cr2d->SetFrametype(1);
+            cr2d->setIntOffset(1, 0);
+            cr2d->frametype = 1;
+        }
+        frameIsEven = !frameIsEven;
     }
 
     AbstractRenderingView::endFrame();

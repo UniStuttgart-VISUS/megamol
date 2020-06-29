@@ -170,7 +170,48 @@ namespace view {
             return *this;
         }
 
+        /*
+    Saving original FBOs for rendering in lower resolutions
+    */
+        inline void SetOriginalFBO(vislib::graphics::gl::FramebufferObject* in) { originalFBO = in; }
+
+        vislib::graphics::gl::FramebufferObject* getOriginalFBO() { return originalFBO; }
+
+        inline void setHR(bool b) { hr = b; }
+
+        inline void setFloatOffset(float x, float y) {
+            xOffsetFloat = x;
+            yOffsetFloat = y;
+        }
+
+        inline void setIntOffset(float x, float y) {
+            xOffsetInt = x;
+            yOffsetInt = y;
+        }
+
+        inline void SetFrametype(int x) { frametype = x; }
+
+        inline void SetTgtRes(int x, int y) {
+            tgtResX = x;
+            tgtResY = y;
+        }
+
+        inline bool getHR() { return hr; }
+
+        bool hr;
+        int frametype;
+        float xOffsetFloat;
+        float yOffsetFloat;
+        int xOffsetInt;
+        int yOffsetInt;
+        int tgtResX;
+        int tgtResY;
+
     private:
+
+        // original FBO for rendering in lower resolutions
+        vislib::graphics::gl::FramebufferObject* originalFBO;
+
 
 #ifdef _WIN32
 #pragma warning (disable: 4251)

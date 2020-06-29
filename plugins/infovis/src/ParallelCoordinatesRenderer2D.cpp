@@ -16,6 +16,8 @@
 #include "mmstd_datatools/table/TableDataCall.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/ShaderSource.h"
+#include "glm/gtc/functions.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 #include <array>
 #include <glm/gtc/type_ptr.hpp>
@@ -60,6 +62,13 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     //, resetFlagsSlot("resetFlags", "Reset item flags to initial state")
     , resetFiltersSlot("resetFilters", "Reset dimension filters to initial state")
     , filterStateSlot("filterState", "stores filter state for serialization")
+
+    , halveRes("halve Resolution", "halve Resolution for FPS test")
+    , xMinOffset("x Min Offset", "xmin")
+    , xMaxOffset("x Max Offset", "xmax")
+    , yMinOffset("y Min Offset", "ymin")
+    , yMaxOffset("y Max Offset", "ymax")
+
     , numTicks(5)
     , columnCount(0)
     , itemCount(0)
@@ -166,6 +175,17 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     // filterStateSlot.Param<core::param::StringParam>()->SetGUIVisible(false);
     this->MakeSlotAvailable(&filterStateSlot);
 
+    this->halveRes << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&halveRes);
+
+    this->xMinOffset << new core::param::FloatParam(0);
+    this->MakeSlotAvailable(&xMinOffset);
+    this->yMinOffset << new core::param::FloatParam(0);
+    this->MakeSlotAvailable(&yMinOffset);
+    this->xMaxOffset << new core::param::FloatParam(0);
+    this->MakeSlotAvailable(&xMaxOffset);
+    this->yMaxOffset << new core::param::FloatParam(0);
+    this->MakeSlotAvailable(&yMaxOffset);
 
     fragmentMinMax.resize(2);
 }
@@ -185,8 +205,8 @@ bool ParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl::G
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, minmaxBuffer);
 
     glUniform2f(program.ParameterLocation("scaling"), 1.0f, 1.0f); // scaling, whatever
-    glUniformMatrix4fv(program.ParameterLocation("modelView"), 1, GL_FALSE, glm::value_ptr(modelViewMatrix_column));
-    glUniformMatrix4fv(program.ParameterLocation("projection"), 1, GL_FALSE, glm::value_ptr(projMatrix_column));
+    glUniformMatrix4fv(program.ParameterLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
+    glUniformMatrix4fv(program.ParameterLocation("projection"), 1, GL_FALSE, projMatrix_column);
     glUniform1ui(program.ParameterLocation("dimensionCount"), this->columnCount);
     glUniform1ui(program.ParameterLocation("itemCount"), this->itemCount);
 
@@ -205,6 +225,40 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glGenBuffers(1, &filtersBuffer);
     glGenBuffers(1, &minmaxBuffer);
     glGenBuffers(1, &counterBuffer);
+
+    nuFB = std::make_shared<glowl::FramebufferObject>(1, 1, true);
+    nuFB->createColorAttachment(GL_RGB32F, GL_RGB, GL_FLOAT);
+      //  vislib::sys::Log::DefaultLog.WriteInfo(
+      //      "WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED ");
+    
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
+    glGenFramebuffers(1, &nuFBb);
+    glGenFramebuffers(1, &nuFBb2);
+    glGenTextures(1, &imStoreI);
+    glGenTextures(1, &imStoreI2);
+    glGenRenderbuffers(1, &nuDRB);
+    glBindFramebuffer(GL_FRAMEBUFFER, nuFBb);
+    glBindTexture(GL_TEXTURE_2D, imStoreI);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    glBindFramebuffer(GL_TEXTURE_2D, nuFBb2);
+    glBindTexture(GL_TEXTURE_2D, imStoreI2);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI2, 0);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
+
+    instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::vert", vertex_shader_src);
+    instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::frag", fragment_shader_src);
+    m_render_to_framebuffer_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
+    m_render_to_framebuffer_shdr->Compile(
+        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
+    m_render_to_framebuffer_shdr->Link();
 
 #ifndef REMOVE_TEXT
     if (!font.Initialise(this->GetCoreInstance())) return false;
@@ -244,6 +298,8 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkgroupCount[2]);
 
     // this->filterStateSlot.ForceSetDirty();
+
+
 
     return true;
 }
@@ -939,12 +995,9 @@ void ParallelCoordinatesRenderer2D::load_filters() {
 
 
 bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
-    windowAspect = static_cast<float>(call.GetViewport().AspectRatio());
+    int w = call.GetViewport().Width();
+    int h = call.GetViewport().Height()/2;
 
-    // this is the apex of suck and must die
-    glGetFloatv(GL_MODELVIEW_MATRIX, glm::value_ptr(modelViewMatrix_column));
-    glGetFloatv(GL_PROJECTION_MATRIX, glm::value_ptr(projMatrix_column));
-    // end suck
     windowWidth = call.GetViewport().Width();
     windowHeight = call.GetViewport().Height();
     auto bg = call.GetBackgroundColour();
@@ -952,6 +1005,78 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     backgroundColor[1] = bg[1] / 255.0f;
     backgroundColor[2] = bg[2] / 255.0f;
     backgroundColor[3] = bg[3] / 255.0f;
+    
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
+    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &origFBOr);
+
+    if (false) {
+        nuFB->bind();
+        nuFB->getColorAttachment(0)->bindTexture();
+        nuFB->resize(w, h);
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, nuFB->getColorAttachment(0)->getName(), 0);
+        glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
+        //nuFB->createColorAttachment(GL_RGBA, GL_RGBA, GL_FLOAT);
+        nuFB->bindColorbuffer(0);
+
+        glViewport(0, 0, w, h);
+    }
+
+    if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
+
+        glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &origFBO);
+        glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &origFBOr);   
+
+        if (call.frametype == 1 || call.frametype == 0) {
+            glBindFramebuffer(GL_FRAMEBUFFER, nuFBb);
+            glBindTexture(GL_TEXTURE_2D, imStoreI);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
+            glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
+            glClear(GL_COLOR_BUFFER_BIT);
+        }
+        if (call.frametype == 2) {
+            glBindFramebuffer(GL_FRAMEBUFFER, nuFBb2);
+            glBindTexture(GL_TEXTURE_2D, imStoreI2);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI2, 0);
+            glClearColor(0.2,0,0,1);
+            glClear(GL_COLOR_BUFFER_BIT);
+        }
+        
+            // ^^COLOR ATTACHMENT
+        //glBindRenderbuffer(GL_RENDERBUFFER, nuDRB);
+       // glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, w, h);
+       // glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, nuDRB);
+        //^^DEPTH
+
+        glViewport(0, 0, w, h);
+    }
+
+    windowAspect = static_cast<float>(call.GetViewport().AspectRatio());
+
+    // this is the apex of suck and must die
+    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
+    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+    // end suck
+    glm::mat4 pm;
+    for (int i = 0; i < 4; i++) {
+       for (int j = 0; j < 4; j++) {
+            pm[j][i] = projMatrix_column[i+j*4];
+        }
+    }
+    if (call.frametype == 1) {
+        auto jit = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0.0, 0));
+        pm = jit * pm;
+    }
+    if (call.frametype == 2) {
+        auto jit = glm::translate(glm::mat4(1.0f), glm::vec3(0, 2.0/call.GetViewport().Height(), 0));
+        pm = jit * pm;    
+    }
+    
+    for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];
+    
+    
+    
 
     this->assertData(call);
 
@@ -1054,6 +1179,97 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glDepthMask(GL_TRUE);
+
+    if (false) {
+        glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
+
+        if (glGetError() == GL_INVALID_ENUM) {
+            vislib::sys::Log::DefaultLog.WriteInfo("A INVALID ENUM");
+        }
+        if (glGetError() == GL_INVALID_VALUE) {
+            vislib::sys::Log::DefaultLog.WriteInfo("A INVALID VALUE");
+        }
+        if (glGetError() == GL_NO_ERROR) {
+            vislib::sys::Log::DefaultLog.WriteInfo("A NO ERROR");
+        }
+        if (glGetError() == GL_INVALID_OPERATION) {
+            vislib::sys::Log::DefaultLog.WriteInfo("A INVAL OP");
+        }
+        if (glGetError() == GL_INVALID_FRAMEBUFFER_OPERATION) {
+            vislib::sys::Log::DefaultLog.WriteInfo("A INVAL FB OP");
+        }
+        if (glGetError() == GL_OUT_OF_MEMORY) {
+            vislib::sys::Log::DefaultLog.WriteInfo("A OOM");
+        }
+
+        m_render_to_framebuffer_shdr->Enable();
+
+        glActiveTexture(GL_TEXTURE0);
+        nuFB->getColorAttachment(0)->bindTexture();
+        //vislib::sys::Log::DefaultLog.WriteInfo("%i", nuFB->getColorAttachment(0)->getName());
+        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2D"), 0);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
+        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("h"), call.GetViewport().Height());
+
+        if (glGetError() == GL_INVALID_ENUM) {
+            vislib::sys::Log::DefaultLog.WriteInfo("INVALID ENUM");
+        }
+        if (glGetError() == GL_INVALID_VALUE) {
+            vislib::sys::Log::DefaultLog.WriteInfo("INVALID VALUE");
+        }
+        if (glGetError() == GL_NO_ERROR) {
+            vislib::sys::Log::DefaultLog.WriteInfo("NO ERROR");
+        }
+        if (glGetError() == GL_INVALID_OPERATION) {
+            vislib::sys::Log::DefaultLog.WriteInfo("INVAL OP");
+        }
+        if (glGetError() == GL_INVALID_FRAMEBUFFER_OPERATION) {
+            vislib::sys::Log::DefaultLog.WriteInfo("INVAL FB OP");
+        }
+        if (glGetError() == GL_OUT_OF_MEMORY) {
+            vislib::sys::Log::DefaultLog.WriteInfo("OOM");
+        }
+
+
+        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("frametype"), call.frametype);
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        m_render_to_framebuffer_shdr->Disable();
+    }
+
+    if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
+
+        glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
+
+        m_render_to_framebuffer_shdr->Enable();
+        
+        if (call.frametype == 0 || call.frametype == 1) {
+            glActiveTexture(GL_TEXTURE10);
+            glBindTexture(GL_TEXTURE_2D, imStoreI);
+            glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2D"), 10);
+        }
+        if (call.frametype == 2) {
+            glActiveTexture(GL_TEXTURE11);
+            glBindTexture(GL_TEXTURE_2D, imStoreI2);
+            glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2Db"), 11);
+        }
+        
+        
+        glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
+        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("h"), call.GetViewport().Height());
+
+        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("frametype"), call.frametype);
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        m_render_to_framebuffer_shdr->Disable();
+        // glDeleteTextures(1, &imStoreI);
+        // glDeleteTextures(1, &imStoreI2);
+        // glDeleteFramebuffers(1, &nuFB);
+        // glDeleteFramebuffers(1, &nuDRB);
+        // vislib::sys::Log::DefaultLog.WriteInfo("x: %d , y: %d , xM: %d , yM: %d ", call.GetBoundingBox().GetLeft(),
+        //    call.GetBoundingBox().GetTop(), call.GetBoundingBox().GetRight(), call.GetBoundingBox().GetBottom());
+    }
 
     return true;
 }
