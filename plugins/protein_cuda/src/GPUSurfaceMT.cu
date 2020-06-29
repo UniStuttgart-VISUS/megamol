@@ -26,6 +26,8 @@
 #include <thrust/device_ptr.h>
 #include <thrust/reduce.h>
 
+#include "vislib/sys/Log.h"
+
 using namespace megamol;
 using namespace megamol::protein_cuda;
 
