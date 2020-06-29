@@ -14,7 +14,12 @@ using namespace megamol::core;
 using namespace megamol::gui;
 
 
-megamol::gui::ParameterGroups::ParameterGroups(void) : utils(), group_widget_ids(), button_tex_ids{0, 0, 0, 0} {
+megamol::gui::ParameterGroups::ParameterGroups(void)
+    : utils()
+    , group_widget_ids()
+    , button_tex_ids{0, 0, 0, 0}
+    , speed_knob_pos(ImVec2(0.0f, 0.0f))
+    , time_knob_pos(ImVec2(0.0f, 0.0f)) {
 
     // Add group widget data for animation widget group
     /// View3D_2::anim
@@ -106,8 +111,8 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVectorType& in
                         this->utils.HoverToolTip("Read-Only", ImGui::GetItemID(), 0.5f);
                         ImGui::SameLine();
 
-                        ParameterPresentation::PointCircleButton(
-                            "", (group_widget_id.second.GetGUIPresentation() != PresentType::Basic));
+                        ParameterPresentation::OptionButton(
+                            "param_groups", "", (group_widget_id.second.GetGUIPresentation() != PresentType::Basic));
                         if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) {
                             for (auto& present_name_pair : group_widget_id.second.GetPresentationNameMap()) {
                                 if (group_widget_id.second.IsPresentationCompatible(present_name_pair.first)) {
@@ -299,13 +304,14 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
 
     ImGuiStyle& style = ImGui::GetStyle();
     const std::string group_label = "Aimation";
-    const float frame_height = ImGui::GetFrameHeightWithSpacing(); // ImGui::GetFrameHeight();
+    const float button_size = 1.5f * ImGui::GetFrameHeightWithSpacing();
+    const float knob_size = 2.5f * ImGui::GetFrameHeightWithSpacing();
 
     if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
         // LOCAL
 
         ImGui::TextDisabled(group_label.c_str());
-        return false;
+        return true;
     }
 
     // Check required parameters
@@ -359,22 +365,20 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
     if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
         // GLOBAL
 
-        ImGui::SetNextWindowSize(ImVec2(frame_height * 10.0f, frame_height * 5.0f), ImGuiCond_Always);
-
         ImGui::Begin(group_label.c_str(), nullptr,
-            ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
-
-        // ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar |
+                ImGuiWindowFlags_NoCollapse);
 
     } else { // if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
         /// LOCAL
-
+        /*
         float child_height = frame_height * 4.5f;
         auto child_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration;
         ImGui::BeginChild("group_widget_animation", ImVec2(0.0f, child_height), true, child_flags);
 
         // Caption
         ImGui::TextUnformatted(group_label.c_str());
+        */
     }
 
     // Transport Buttons ------------------------------------------------------
@@ -395,8 +399,7 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
         button_label = "Pause";
         button_tex = reinterpret_cast<ImTextureID>(this->button_tex_ids.pause);
     }
-
-    if (ImGui::ImageButton(button_tex, ImVec2(frame_height, frame_height), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), 1,
+    if (ImGui::ImageButton(button_tex, ImVec2(button_size, button_size), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), 1,
             style.Colors[ImGuiCol_Button], style.Colors[ImGuiCol_ButtonActive])) {
         play = !play;
     }
@@ -406,7 +409,7 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
     /// SLOWER
     button_label = "Slower";
     button_tex = reinterpret_cast<ImTextureID>(this->button_tex_ids.fastrewind);
-    if (ImGui::ImageButton(button_tex, ImVec2(frame_height, frame_height), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), 1,
+    if (ImGui::ImageButton(button_tex, ImVec2(button_size, button_size), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), 1,
             style.Colors[ImGuiCol_Button], style.Colors[ImGuiCol_ButtonActive])) {
         // play = true;
         speed /= 1.5f;
@@ -417,7 +420,7 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
     /// FASTER
     button_label = "Faster";
     button_tex = reinterpret_cast<ImTextureID>(this->button_tex_ids.fastforward);
-    if (ImGui::ImageButton(button_tex, ImVec2(frame_height, frame_height), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), 1,
+    if (ImGui::ImageButton(button_tex, ImVec2(button_size, button_size), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), 1,
             style.Colors[ImGuiCol_Button], style.Colors[ImGuiCol_ButtonActive])) {
         // play = true;
         speed *= 1.5f;
@@ -426,29 +429,47 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
 
     ImGui::PopStyleColor(3);
 
+    // ImGui::SameLine();
+    ImVec2 cursor_pos = ImGui::GetCursorPos();
+
+    // Time -------------------------------------------------------------------
+    ImGui::BeginGroup();
+    std::string label = "time";
+    float font_size = ImGui::CalcTextSize(label.c_str()).x;
+    ImGui::SetCursorPosX(cursor_pos.x + (knob_size - font_size) / 2.0f);
+    ImGui::TextUnformatted(label.c_str());
+    ParameterPresentation::KnobButton(
+        label, knob_size, time, param_time->GetMinValue<float>(), param_time->GetMaxValue<float>());
+    ImGui::Text(param_time->present.float_format.c_str(), time);
+    ImGui::EndGroup();
+    ImGui::SameLine();
+
+    // Speed -------------------------------------------------------------------
+    ImGui::BeginGroup();
+    label = "speed";
+    font_size = ImGui::CalcTextSize(label.c_str()).x;
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (knob_size - font_size) / 2.0f);
+    ImGui::TextUnformatted(label.c_str());
+    ParameterPresentation::KnobButton(
+        label, knob_size, speed, param_speed->GetMinValue<float>(), param_speed->GetMaxValue<float>());
+    ImGui::Text(param_speed->present.float_format.c_str(), speed);
+    ImGui::EndGroup();
+
+    // ------------------------------------------------------------------------
+
     param_play->SetValue(play);
     param_time->SetValue(time);
     param_speed->SetValue(speed);
 
-    // Time -------------------------------------------------------------------
-
-    param_time->PresentGUI(ParameterPresentation::WidgetScope::LOCAL);
-
-    // Speed -------------------------------------------------------------------
-
-    param_speed->PresentGUI(ParameterPresentation::WidgetScope::LOCAL);
-
-    // ------------------------------------------------------------------------
-
     if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
         /// GLOBAL
 
-        // ImGui::PopItemWidth();
         ImGui::End();
     } else { // if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
         /// LOCAL
-
+        /*
         ImGui::EndChild();
+        */
     }
 
     return true;

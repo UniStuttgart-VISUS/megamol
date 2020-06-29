@@ -70,6 +70,7 @@ public:
     // VARIABLES --------------------------------------------------------------
 
     bool extended;
+    const std::string float_format;
 
     // FUCNTIONS --------------------------------------------------------------
 
@@ -91,8 +92,11 @@ public:
 
     void SetTransferFunctionTexture(GLuint tex_id) { this->tf_texture = tex_id; }
 
-    /** "Point in Circle" Button */
-    static bool PointCircleButton(const std::string& label = "", bool dirty = false);
+    /** "Point in Circle" Button for additional drop down Options. */
+    static bool OptionButton(const std::string& id, const std::string& label = "", bool dirty = false);
+
+    /** Knob button for 'circular' float value manipulation. */
+    static bool KnobButton(const std::string& id, float size, float& inout_value, float minval, float maxval);
 
     /** Extended parameter mode button. */
     static bool ParameterExtendedModeButton(bool& inout_extended_mode);
@@ -105,7 +109,6 @@ private:
     megamol::gui::GUIUtils utils;
     megamol::gui::FileUtils file_utils;
     std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
-    const std::string float_format;
     float height;
     UINT set_focus;
     bool guistate_dirty;
@@ -116,8 +119,6 @@ private:
     bool show_tf_editor;
     size_t tf_editor_hash;
     GLuint tf_texture;
-
-    ImVec2 knob_position;
 
     // FUNCTIONS --------------------------------------------------------------
     bool Present(Parameter& inout_param, WidgetScope scope);

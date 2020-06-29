@@ -63,12 +63,19 @@ private:
     GUIUtils utils;
     std::map<std::string, GroupWidgetData> group_widget_ids;
 
+
+    // Variables used by group widgets ----------
+
+    // group_widget_animation //
     struct {
         GLuint play;
         GLuint pause;
         GLuint fastforward;
         GLuint fastrewind;
     } button_tex_ids;
+    ImVec2 speed_knob_pos;
+    ImVec2 time_knob_pos;
+    // ---------------------- //
 
     // FUCNTIONS --------------------------------------------------------------
 
