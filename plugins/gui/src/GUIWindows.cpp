@@ -921,7 +921,6 @@ void GUIWindows::drawParamWindowCallback(WindowManager::WindowConfiguration& wc)
 
     // Mode
     megamol::gui::ParameterPresentation::ParameterExtendedModeButton(wc.param_extended_mode);
-
     // std::string mode_help = "Expert mode enables buttons for additional parameter presentation options.";
     // this->utils.HelpMarkerToolTip(mode_help);
     ImGui::SameLine();

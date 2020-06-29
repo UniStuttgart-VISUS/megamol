@@ -2,6 +2,8 @@
 
 This is the plugin providing the GUI for MegaMol.
 
+![gui](gui.png)
+
 ---
 
 ## Modules

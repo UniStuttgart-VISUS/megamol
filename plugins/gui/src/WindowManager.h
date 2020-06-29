@@ -180,8 +180,10 @@ public:
      * @param cb  The function to call for enumerated windows.
      */
     inline void EnumWindows(std::function<void(WindowConfiguration&)> cb) {
-        for (auto& wc : this->windows) {
-            cb(wc);
+        // Needs fixed size if window is added while looping
+        auto window_count = this->windows.size();
+        for (size_t i = 0; i < window_count; i++) {
+            cb(this->windows[i]);
         }
     }
 
