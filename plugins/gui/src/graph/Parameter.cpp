@@ -1184,8 +1184,9 @@ bool megamol::gui::ParameterPresentation::widget_knob(
         ImU32 outline_color_shadow = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBgHovered]);
         ImVec2 outline_offset_shadow = ImVec2(half_thickness, half_thickness);
 
-        draw_list->AddCircle(widget_center + outline_offset_shadow, half_edge_length - half_thickness,
-            outline_color_shadow, 24, thickness);
+        // Shadow
+        draw_list->AddCircle(widget_center, half_edge_length - thickness, outline_color_shadow, 24, thickness);
+        // Outline
         draw_list->AddCircle(widget_center, half_edge_length - half_thickness, outline_color_front, 24, half_thickness);
 
         /// TODO Limit circle when minval and maxval are known
@@ -1215,6 +1216,9 @@ bool megamol::gui::ParameterPresentation::widget_knob(
             float det = (p1.x * p2.y) - (p1.y * p2.x); // determinant
             float angle = atan2(det, dot);
             float b = angle / (2.0f * 3.14159265358f); // b in[0,1]
+
+            /// TODO Adapt b depending on min max delta
+
             value = std::min(maxval, (std::max(minval, value + b)));
             this->knob_position = (p2 * knob_center_dist);
             retval = true;

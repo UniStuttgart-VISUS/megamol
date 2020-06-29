@@ -195,6 +195,34 @@ Interface slots are stored in project files as part of the configurators state p
 
 ---
 
-## Plugin Class Dependencies
+## Developers
+
+### Parameter Widgets
+
+Parameter widgets can be defined for the `local` or the `global` scope. The widgets of the local scope are shown inside the parameter list in the `All Parameters` window. The global scope of a parameter widget can contain arbitrary ImGui code.
+There are widgets for the basic parameter types defined in `gui/src/graph/Parameter.h`and there are group widgets bundling parameters of the same namespace in `gui/src/graph/ParameterGroups.h`. The parameters namespace is a prefix in its name delimited with '::'.
+
+#### How to add a new parameter widget
+
+In order to add a new custom widget for a basic parameter type, the following steps are required:
+
+ * Add a new `Presentation` to `core/include/mmcore/param/AbstractParamPresentation.h` and add a human readable name to the `presentation_name_map` in the ctor.
+ * Add the new `Presentation` to the `compatible` presentation of a specific `ParamType` in `AbstractParamPresentation::InitPresentation()`.
+ * Add a new function implementing the new widget in `local` and/or `global` scope to the class `ParameterPresentation` of the pattern `widget_<NEW_WIDGET_NAME>(...)`.
+    This function must return true if the parameters value has been modified!
+ * Register this new function in the parameter type map in `ParameterPresentation::present_parameter()` for the respective parameter type(s) - for details see existing code.
+
+#### How to add a new parameter group widget
+
+In order to add a new custom widget for a group of parameters sharing the same namespace within a module, the following steps are required:
+
+ * Add a new `ParamType` for new widget group in `core/include/mmcore/param/AbstractParamPresentation.h`.
+ * Add a new `Presentation` for new widget group in `core/include/mmcore/param/AbstractParamPresentation.h` and add a human readable name to the `presentation_name_map` in the ctor.
+ * Add a new case for the `ParamType`  in `AbstractParamPresentation::InitPresentation()` and add the new `Presentation` to its `compatible` presentation.
+ * Add a new function implementing the new group widget in `local` and/or `global` scope to the class `ParameterGroups`. The function must have the following signature:
+    `void group_widget_<NEW_WIDGET_NAME>(ParamPtrVectorType& params, param::AbstractParamPresentation::Presentation presentation)`
+ * Add a new group widget data set of the type `GroupWidgetData` in the ctor and register above function as callback.
+ 
+### Plugin Class Dependencies
 
 ![gui plugin class dependencies](class_dependencies.png)

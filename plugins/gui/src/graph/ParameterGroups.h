@@ -5,15 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-/* HOWTO add your own parameter group:
- * 1] Add new 'ParamType' for new widget group in core/param/AbstractParamPresentation.h
- * 2] Add new 'Presentation' for new widget group in core/param/AbstractParamPresentation.h (and add name to
- * presentation_name_map in CTOR) 3] Add 'Presentation' to ParamType in AbstractParamPresentation::InitPresentation() 4]
- * Add function drawing the new group widget: void group_widget_NEW-NAME(ParamPtrVectorType& params,
- * megamol::core::param::AbstractParamPresentation::Presentation presentation); 5] Add group widget data in CTOR:
- * GroupWidgetData NEW_NAME and add new function as callback
- */
-
 #ifndef MEGAMOL_GUI_PARAMETERGROUPS_H_INCLUDED
 #define MEGAMOL_GUI_PARAMETERGROUPS_H_INCLUDED
 
