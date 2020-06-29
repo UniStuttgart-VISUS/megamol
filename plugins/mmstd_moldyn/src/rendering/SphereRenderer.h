@@ -295,8 +295,8 @@ namespace rendering {
         GLuint                                   greyTF;
         std::array<float, 2>                     range;
 
+        bool                                     flags_enabled; 
         bool                                     flags_available;
-        bool                                     flags_enabled;
 
         GLSLShader                               sphereShader;
         GLSLGeometryShader                       sphereGeometryShader;
