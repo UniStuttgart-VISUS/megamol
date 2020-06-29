@@ -240,15 +240,15 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glBindFramebuffer(GL_FRAMEBUFFER, nuFBb);
     glBindTexture(GL_TEXTURE_2D, imStoreI);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     glBindFramebuffer(GL_TEXTURE_2D, nuFBb2);
     glBindTexture(GL_TEXTURE_2D, imStoreI2);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI2, 0);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
@@ -996,7 +996,7 @@ void ParallelCoordinatesRenderer2D::load_filters() {
 
 bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     int w = call.GetViewport().Width();
-    int h = call.GetViewport().Height()/2;
+    int h = call.GetViewport().Height();
 
     windowWidth = call.GetViewport().Width();
     windowHeight = call.GetViewport().Height();
