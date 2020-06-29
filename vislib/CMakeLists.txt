@@ -36,9 +36,10 @@ if(BUILD_VISLIB)
 
   # Target definition
   add_library(vislib STATIC ${public_header_files} ${header_files} ${source_files} ${version_files})
-  target_link_libraries(vislib PUBLIC spdlog PRIVATE glad ${CMAKE_THREAD_LIBS_INIT} ${OPENGL_LIBRARIES})
+  target_link_libraries(vislib PUBLIC spdlog fmt PRIVATE glad ${CMAKE_THREAD_LIBS_INIT} ${OPENGL_LIBRARIES})
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src"
     "${CMAKE_CURRENT_SOURCE_DIR}/glad/include")
+  target_compile_definitions(vislib PUBLIC SPDLOG_FMT_EXTERNAL)
     
   if(UNIX)
     set(CURSES_NEED_NCURSES True)
