@@ -303,7 +303,7 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
     if (presentation != param::AbstractParamPresentation::Presentation::Group_Animation) return false;
 
     ImGuiStyle& style = ImGui::GetStyle();
-    const std::string group_label = "Aimation";
+    const std::string group_label = "Animation";
     const float button_size = 1.5f * ImGui::GetFrameHeightWithSpacing();
     const float knob_size = 2.5f * ImGui::GetFrameHeightWithSpacing();
 
