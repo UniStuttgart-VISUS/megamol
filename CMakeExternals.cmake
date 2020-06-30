@@ -709,7 +709,6 @@ function(require_external NAME)
       CMAKE_ARGS
         -DSPDLOG_BUILD_EXAMPLE=OFF
         -DSPDLOG_BUILD_TESTS=OFF
-        -DSPDLOG_WCHAR_FILENAMES=ON
         -DSPDLOG_FMT_EXTERNAL=ON
         -Dfmt_DIR=${BINARY_DIR})
   

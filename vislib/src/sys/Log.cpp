@@ -108,13 +108,8 @@ vislib::sys::Log::FileTarget::FileTarget(const char *path, UINT level)
 /*
  * vislib::sys::Log::FileTarget::FileTarget
  */
-vislib::sys::Log::FileTarget::FileTarget(const wchar_t *path, UINT level)
-        : Target(level)/*, stream(NULL)*/ {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> cvt;
-    sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(cvt.to_bytes(path), true);
-    sink->set_pattern(std_pattern);
-    logger = std::make_shared<spdlog::logger>("default_file", sink);
-    filename = path;
+vislib::sys::Log::FileTarget::FileTarget(const wchar_t *path, UINT level) : Target(level) /*, stream(NULL)*/ {
+    throw std::runtime_error("wchar is not supported");
 }
 
 
@@ -327,7 +322,7 @@ void vislib::sys::Log::StreamTarget::Msg(UINT level,
         vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
         const char *msg) {
     if ((level > this->Level())) return;
-    logger->info("%.4u|%s", level, msg);
+    logger->info("{}|{}", level, msg);
 }
 
 /*****************************************************************************/
