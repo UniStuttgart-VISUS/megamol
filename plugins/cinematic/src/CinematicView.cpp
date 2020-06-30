@@ -44,8 +44,6 @@ CinematicView::CinematicView(void) : View3D_2()
     , playAnim(false)
     , cineWidth(1920)
     , cineHeight(1080)
-    , vp_lastw(0)
-    , vp_lasth(0)
     , sbSide(CinematicView::SkyboxSides::SKYBOX_NONE)
     , rendering(false)
     , fps(24)
@@ -148,7 +146,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Initialise render utils once
     if (!this->utils.Initialized()) {
         if (!this->utils.Initialise(this->GetCoreInstance())) {
-            vislib::sys::Log::DefaultLog.WriteError("[TRACKINGSHOT RENDERER] [create] Couldn't initialize render utils.");
+            vislib::sys::Log::DefaultLog.WriteError("[TRACKINGSHOT RENDERER] [create] Couldn't initialize render utils. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return;
         }
     }
@@ -257,11 +255,11 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     animTimeParam->Param<param::FloatParam>()->SetValue(simTime * static_cast<float>(cr3d->TimeFramesCount()), true);
 
     // Viewport ---------------------------------------------------------------
-    /// Viewport of camera will only be set when Base::Render(context) was called, so we have tot grab it from OpenGL (?)
+    /// Viewport of camera will only be set when Base::Render(context) was called, so we have tot grab it from OpenGL (!?)
     glm::ivec4 viewport;
     glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
     const int vp_iw = viewport[2];
-    const int vp_ih = viewport[3]; ;
+    const int vp_ih = viewport[3];
     const int vp_ih_reduced = vp_ih - static_cast<int>(this->utils.GetTextLineHeight());
     const float vp_fw = static_cast<float>(vp_iw);
     const float vp_fh = static_cast<float>(vp_ih);
@@ -275,11 +273,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         fboHeight = this->cineHeight;
     } else {
         float vpRatio = vp_fw / vp_fh_reduced;
-        // Check for viewport changes
-        if ((this->vp_lastw != vp_iw) || (this->vp_lasth != vp_ih_reduced)) {
-            this->vp_lastw = vp_iw;
-            this->vp_lasth = vp_ih_reduced;
-        }
         // Calculate reduced fbo width and height
         if ((this->cineWidth < vp_iw) && (this->cineHeight < vp_ih_reduced)) {
             fboWidth = this->cineWidth;
@@ -287,7 +280,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         } else {
             fboWidth = vp_iw;
             fboHeight = vp_ih_reduced;
-
             if (cineRatio > vpRatio) {
                 fboHeight = (static_cast<int>(vp_fw / cineRatio));
             } else if (cineRatio < vpRatio) {
@@ -450,9 +442,9 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     int fbovp[4] = { 0, 0, fboWidth, fboHeight };
     glViewport(fbovp[0], fbovp[1], fbovp[2], fbovp[3]);
 
-    ///XXX Requires View3D_2 line 377 to be deleted/commented!
+    ///XXX Requires View3D_2 line 394 to be deleted/commented! (//this->overrideCall->EnableOutputBuffer();)
 
-    /// ! Set override call for using currrent fbo ond current viewport
+    /// ! Set override call for using currrent fbo and current viewport
     Base::overrideCall = cr3d;
 
     // Call Render-Function of parent View3D_2
@@ -774,13 +766,13 @@ bool CinematicView::render_to_file_cleanup() {
     ARY_SAFE_DELETE(this->png_data.buffer);
 
     if (this->png_data.buffer != nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render_to_file_cleanup] pngdata.buffer is not nullptr.");
+        vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render_to_file_cleanup] pngdata.buffer is not nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     if (this->png_data.structptr != nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render_to_file_cleanup] pngdata.structptr is not nullptr.");
+        vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render_to_file_cleanup] pngdata.structptr is not nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     if (this->png_data.infoptr != nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render_to_file_cleanup] pngdata.infoptr is not nullptr.");
+        vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render_to_file_cleanup] pngdata.infoptr is not nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
     vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STOPPED rendering.");

@@ -137,8 +137,6 @@ namespace cinematic {
         bool                                    playAnim;
         int                                     cineWidth;
         int                                     cineHeight;
-        float                                   vp_lastw;
-        float                                   vp_lasth;
         SkyboxSides                             sbSide;
         bool                                    rendering;
         unsigned int                            fps;
