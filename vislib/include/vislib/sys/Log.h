@@ -208,6 +208,7 @@ namespace sys {
              * @param path The path to the physical log file
              * @param level The log level used for this target
              */
+            [[deprecated("use char* version instead")]]
             FileTarget(const wchar_t *path, UINT level = Log::LEVEL_ERROR);
 
             /** Dtor */
