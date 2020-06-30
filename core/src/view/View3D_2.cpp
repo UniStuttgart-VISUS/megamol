@@ -659,21 +659,23 @@ bool view::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modifier
     }
 
     if (key == view::Key::KEY_LEFT_ALT || key == view::Key::KEY_RIGHT_ALT) {
-        if (action == view::KeyAction::PRESS) {
+        if (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT) {
             this->modkeys.set(view::Modifier::ALT);
+            cameraControlOverrideActive = true;
         } else if (action == view::KeyAction::RELEASE) {
             this->modkeys.reset(view::Modifier::ALT);
+            cameraControlOverrideActive = false;
         }
     }
     if (key == view::Key::KEY_LEFT_SHIFT || key == view::Key::KEY_RIGHT_SHIFT) {
-        if (action == view::KeyAction::PRESS) {
+        if (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT) {
             this->modkeys.set(view::Modifier::SHIFT);
         } else if (action == view::KeyAction::RELEASE) {
             this->modkeys.reset(view::Modifier::SHIFT);
         }
     }
     if (key == view::Key::KEY_LEFT_CONTROL || key == view::Key::KEY_RIGHT_CONTROL) {
-        if (action == view::KeyAction::PRESS) {
+        if (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT) {
             this->modkeys.set(view::Modifier::CTRL);
             cameraControlOverrideActive = true;
         } else if (action == view::KeyAction::RELEASE) {
@@ -729,7 +731,11 @@ bool view::View3D_2::OnChar(unsigned int codePoint) {
  */
 bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
 
-    if (!cameraControlOverrideActive) {
+    bool anyManipulatorActive = arcballManipulator.manipulating() || translateManipulator.manipulating() ||
+                                rotateManipulator.manipulating() || turntableManipulator.manipulating() ||
+                                orbitAltitudeManipulator.manipulating();
+
+    if (!cameraControlOverrideActive && !anyManipulatorActive) {
         auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
         if (cr != nullptr) {
             view::InputEvent evt;
@@ -750,12 +756,8 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
 
     // This mouse handling/mapping is so utterly weird and should die!
     auto down = action == view::MouseButtonAction::PRESS;
-    bool altPressed = this->modkeys.test(view::Modifier::ALT);
-    bool ctrlPressed = this->modkeys.test(view::Modifier::CTRL);
-
-    bool anyManipulatorActive = arcballManipulator.manipulating() || translateManipulator.manipulating() ||
-                                rotateManipulator.manipulating() || turntableManipulator.manipulating() ||
-                                orbitAltitudeManipulator.manipulating();
+    bool altPressed = mods.test(view::Modifier::ALT); // this->modkeys.test(view::Modifier::ALT);
+    bool ctrlPressed = mods.test(view::Modifier::CTRL); // this->modkeys.test(view::Modifier::CTRL);
 
     // get window resolution to help computing mouse coordinates
     auto wndSize = this->cam.resolution_gate();
@@ -778,6 +780,8 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
                 } else {
                     this->rotateManipulator.setActive();
+                    this->translateManipulator.setActive(
+                        wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
                 }
             }
 
@@ -832,14 +836,20 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
     this->mouseX = (float)static_cast<int>(x);
     this->mouseY = (float)static_cast<int>(y);
 
-    auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
-    if (cr != nullptr) {
-        view::InputEvent evt;
-        evt.tag = view::InputEvent::Tag::MouseMove;
-        evt.mouseMoveData.x = x;
-        evt.mouseMoveData.y = y;
-        cr->SetInputEvent(evt);
-        if ((*cr)(CallRender3D_2::FnOnMouseMove)) return true;
+    bool anyManipulatorActive = arcballManipulator.manipulating() || translateManipulator.manipulating() ||
+                                rotateManipulator.manipulating() || turntableManipulator.manipulating() ||
+                                orbitAltitudeManipulator.manipulating();
+
+    if (!anyManipulatorActive) {
+        auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
+        if (cr != nullptr) {
+            view::InputEvent evt;
+            evt.tag = view::InputEvent::Tag::MouseMove;
+            evt.mouseMoveData.x = x;
+            evt.mouseMoveData.y = y;
+            cr->SetInputEvent(evt);
+            if ((*cr)(CallRender3D_2::FnOnMouseMove)) return true;
+        }
     }
 
     // This mouse handling/mapping is so utterly weird and should die!
@@ -1127,8 +1137,7 @@ void View3D_2::handleCameraMovement(void) {
     glm::vec3 currCamPos(static_cast<glm::vec4>(this->cam.eye_position()));
     float orbitalAltitude = glm::length(currCamPos - rotCenter);
 
-    if (!(this->arcballDefault ^ this->modkeys.test(view::Modifier::ALT)) &&
-        !(this->modkeys.test(view::Modifier::CTRL))) {
+    if (this->translateManipulator.manipulating()) {
 
         if (this->pressedKeyMap.count(view::Key::KEY_W) > 0 && this->pressedKeyMap[view::Key::KEY_W]) {
             this->translateManipulator.move_forward(step);

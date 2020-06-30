@@ -29,6 +29,7 @@
 #include "IColSelectClassify.h"
 #include "IColToIdentity.h"
 #include "IndexListIndexColor.h"
+#include "LocalBoundingBoxExtractor.h"
 #include "MPDCListsConcatenate.h"
 #include "MPIParticleCollector.h"
 #include "MPIVolumeAggregator.h"
@@ -241,6 +242,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::SyncedMMPLDProvider>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableManipulator>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::CPERAWDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::LocalBoundingBoxExtractor>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();
