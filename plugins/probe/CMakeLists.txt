@@ -20,7 +20,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     set(QUHULL_LIB "lib/libqhull.so")
   endif()
 
-  add_external_project(qhull SHARED
+  add_external_project(qhull STATIC
     GIT_REPOSITORY https://github.com/qhull/qhull.git
     GIT_TAG "v7.3.2"
     BUILD_BYPRODUCTS "<INSTALL_DIR>/${QHULL_IMPORT_LIB}" "<INSTALL_DIR>/${QHULL_LIB}"
@@ -48,7 +48,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   endif()
 
   external_get_property(asmjit SOURCE_DIR)
-  add_external_project(blend2d SHARED
+  add_external_project(blend2d STATIC
     GIT_REPOSITORY https://github.com/blend2d/blend2d.git
     GIT_TAG "c102cd5ce8c4ab999e54ab7359d2189c72233bc7"
     BUILD_BYPRODUCTS "<INSTALL_DIR>/${BLEND2D_IMPORT_LIB}" "<INSTALL_DIR>/${BLEND2D_LIB}"
@@ -79,11 +79,11 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   
 
   # Target definition
-  #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
+  #add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${shader_files} ${source_files})
   if(BUILD_OSPRAY_PLUGIN_PLUGIN)
-    add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files} ${third} ${ospray_sources} ${ospray_headers} ${ospray_public_headers})
+    add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files} ${third} ${ospray_sources} ${ospray_headers} ${ospray_public_headers})
   else()
-    add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files} ${third})
+    add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files} ${third})
   endif()
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
