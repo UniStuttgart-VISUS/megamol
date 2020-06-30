@@ -216,12 +216,12 @@ function(require_external NAME)
       set(GLFW_LIB3 "${CMAKE_INSTALL_LIBDIR}/libglfw.so.3.3")
     endif()
 
-    add_external_project(glfw SHARED
+    add_external_project(glfw STATIC
       GIT_REPOSITORY https://github.com/glfw/glfw.git
       GIT_TAG "3.3.2"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_LIB}" "<INSTALL_DIR>/${GLFW_LIB2}" "<INSTALL_DIR>/${GLFW_LIB3}" "<INSTALL_DIR>/${GLFW_IMPORT_LIB}"
       CMAKE_ARGS
-        -DBUILD_SHARED_LIBS=ON
+        -DBUILD_SHARED_LIBS=OFF
         -DGLFW_BUILD_EXAMPLES=OFF
         -DGLFW_BUILD_TESTS=OFF
         -DGLFW_BUILD_DOCS=OFF)
@@ -251,12 +251,12 @@ function(require_external NAME)
       set(ICET_MPI_LIB "lib/libIceTMPI.so")
     endif()
     
-    add_external_project(IceT SHARED
+    add_external_project(IceT STATIC
       GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ICET_CORE_LIB}" "<INSTALL_DIR>/${ICET_GL_LIB}" "<INSTALL_DIR>/${ICET_MPI_LIB}"
                        "<INSTALL_DIR>/${ICET_CORE_IMPORT_LIB}" "<INSTALL_DIR>/${ICET_GL_IMPORT_LIB}" "<INSTALL_DIR>/${ICET_MPI_IMPORT_LIB}"
       CMAKE_ARGS
-        -DBUILD_SHARED_LIBS=ON
+        -DBUILD_SHARED_LIBS=OFF
         -DICET_BUILD_TESTING=OFF
         -DMPI_GUESS_LIBRARY_NAME=${MPI_GUESS_LIBRARY_NAME})
 
@@ -384,7 +384,7 @@ function(require_external NAME)
       set(ZMQ_LIB2 "${CMAKE_INSTALL_LIBDIR}/libzmq.so.5")
     endif()
 
-    add_external_project(libzmq SHARED
+    add_external_project(libzmq STATIC
       GIT_REPOSITORY https://github.com/zeromq/libzmq.git
       GIT_TAG 56ace6d03f521b9abb5a50176ec7763c1b77afa9
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZMQ_LIB}" "<INSTALL_DIR>/${ZMQ_LIB2}" "<INSTALL_DIR>/${ZMQ_IMPORT_LIB}"
@@ -414,7 +414,7 @@ function(require_external NAME)
       set(QUICKHULL_LIB "lib/libquickhull.so")
     endif()
 
-    add_external_project(quickhull SHARED
+    add_external_project(quickhull STATIC
       GIT_REPOSITORY https://github.com/akuukka/quickhull.git
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_LIB}" "<INSTALL_DIR>/${QUICKHULL_IMPORT_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
@@ -442,12 +442,12 @@ function(require_external NAME)
       set(SNAPPY_LIB "${CMAKE_INSTALL_LIBDIR}/libsnappy.so")
     endif()
 
-    add_external_project(snappy SHARED
+    add_external_project(snappy STATIC
       GIT_REPOSITORY https://github.com/google/snappy.git
       GIT_TAG "1.1.7"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${SNAPPY_LIB}" "<INSTALL_DIR>/${SNAPPY_IMPORT_LIB}"
       CMAKE_ARGS
-        -DBUILD_SHARED_LIBS=ON
+        -DBUILD_SHARED_LIBS=OFF
         -DSNAPPY_BUILD_TESTS=OFF
         -DCMAKE_BUILD_TYPE=Release)
 
@@ -492,12 +492,12 @@ function(require_external NAME)
       set(TNY_LIB "lib/libtinyply.so")
     endif()
 
-    add_external_project(tinyply SHARED
+    add_external_project(tinyply STATIC
       GIT_REPOSITORY https://github.com/ddiakopoulos/tinyply.git
       GIT_TAG "2.1"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${TNY_LIB}" "<INSTALL_DIR>/${TNY_IMPORT_LIB}"
       CMAKE_ARGS
-        -DSHARED_LIB=ON)
+        -DSHARED_LIB=OFF)
 
     add_external_library(tinyply
       IMPORT_LIBRARY ${TNY_IMPORT_LIB}
@@ -518,7 +518,7 @@ function(require_external NAME)
     set(TRACKING_NATNET_LIB "bin/NatNetLib.dll")
     set(TRACKING_NATNET_IMPORT_LIB "lib/NatNetLib.lib")
 
-    add_external_project(tracking SHARED
+    add_external_project(tracking STATIC
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking
       GIT_TAG "v2.0"
       BUILD_BYPRODUCTS
@@ -559,7 +559,7 @@ function(require_external NAME)
       GIT_TAG "0.5.2"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZFP_LIB}"
       CMAKE_ARGS
-        -DBUILD_SHARED_LIBS=ON
+        -DBUILD_SHARED_LIBS=OFF
         -DBUILD_UTILITIES=OFF
         -DBUILD_TESTING=OFF
         -DZFP_WITH_ALIGNED_ALLOC=ON

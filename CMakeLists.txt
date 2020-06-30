@@ -1,19 +1,18 @@
 #
-# MegaMol™ Core
-# Copyright 2017, by MegaMol Team
-# Alle Rechte vorbehalten. All rights reserved.
+# MegaMol
+# Copyright 2020, by MegaMol Team
+# All rights reserved.
 #
 
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
-if(POLICY CMP0054)
-  cmake_policy(SET CMP0054 NEW)
-endif()
+cmake_policy(SET CMP0054 NEW)
 
 project(megamol)
 
+# Default to install to source directory
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}
     CACHE PATH "default install path" FORCE)
