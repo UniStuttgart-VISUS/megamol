@@ -205,30 +205,24 @@ function(require_external NAME)
 
     include(GNUInstallDirs)
 
-    if(WIN32)
-      set(GLFW_IMPORT_LIB "${CMAKE_INSTALL_LIBDIR}/glfw3dll.lib")
-      set(GLFW_LIB "bin/glfw3.dll")
-    else()
-      set(GLFW_LIB "${CMAKE_INSTALL_LIBDIR}/libglfw.so")
-      # This is a try to fix #544 at least for GLFW. I found no nicer solution, probably this needs some major refactoring of the externals system.
-      # It is probably a very ugly hack, but hopefully this whole dynamic linking stuff dies anytime soon.
-      set(GLFW_LIB2 "${CMAKE_INSTALL_LIBDIR}/libglfw.so.3")
-      set(GLFW_LIB3 "${CMAKE_INSTALL_LIBDIR}/libglfw.so.3.3")
-    endif()
+    if (WIN32)
+      set(GLFW_LIB "${CMAKE_INSTALL_LIBDIR}/glfw3.lib")
+    else ()
+      set(GLFW_LIB "${CMAKE_INSTALL_LIBDIR}/libglfw3.a")
+    endif ()
 
     add_external_project(glfw STATIC
       GIT_REPOSITORY https://github.com/glfw/glfw.git
       GIT_TAG "3.3.2"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_LIB}" "<INSTALL_DIR>/${GLFW_LIB2}" "<INSTALL_DIR>/${GLFW_LIB3}" "<INSTALL_DIR>/${GLFW_IMPORT_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
+        -DGLFW_BUILD_DOCS=OFF
         -DGLFW_BUILD_EXAMPLES=OFF
-        -DGLFW_BUILD_TESTS=OFF
-        -DGLFW_BUILD_DOCS=OFF)
+        -DGLFW_BUILD_TESTS=OFF)
 
     add_external_library(glfw3
       PROJECT glfw
-      IMPORT_LIBRARY ${GLFW_IMPORT_LIB}
       LIBRARY ${GLFW_LIB})
 
   # IceT
@@ -485,23 +479,27 @@ function(require_external NAME)
       return()
     endif()
 
+    include(GNUInstallDirs)
+
     if(WIN32)
-      set(TNY_IMPORT_LIB "lib/tinyply.lib")
-      set(TNY_LIB "bin/tinyply.dll")
+      set(TNY_LIB "${CMAKE_INSTALL_LIBDIR}/tinyply.lib")
     else()
-      set(TNY_LIB "lib/libtinyply.so")
+      set(TNY_LIB "${CMAKE_INSTALL_LIBDIR}/libtinyply<SUFFIX>.a")
     endif()
 
     add_external_project(tinyply STATIC
       GIT_REPOSITORY https://github.com/ddiakopoulos/tinyply.git
       GIT_TAG "2.1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TNY_LIB}" "<INSTALL_DIR>/${TNY_IMPORT_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TNY_LIB}"
+      DEBUG_SUFFIX d
       CMAKE_ARGS
-        -DSHARED_LIB=OFF)
+        -DSHARED_LIB=OFF
+        -DCMAKE_C_FLAGS=-fPIC
+        -DCMAKE_CXX_FLAGS=-fPIC)
 
     add_external_library(tinyply
-      IMPORT_LIBRARY ${TNY_IMPORT_LIB}
-      LIBRARY ${TNY_LIB})
+      LIBRARY ${TNY_LIB}
+      DEBUG_SUFFIX d)
 
   # tracking
   elseif(NAME STREQUAL "tracking")
