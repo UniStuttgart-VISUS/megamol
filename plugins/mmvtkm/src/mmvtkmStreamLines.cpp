@@ -30,11 +30,11 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     , upperSeedBound(1, 1, 1)
     , old_version(0)
     , new_version(0) {
-    this->meshCalleeSlot.SetCallback(mesh::CallMesh::ClassName(),
-        mesh::CallMesh::FunctionName(0), // used to be mesh::CallMesh
+    this->meshCalleeSlot.SetCallback(mesh::CallGPUMeshData::ClassName(),
+        mesh::CallGPUMeshData::FunctionName(0), // used to be mesh::CallGPUMeshData
         &mmvtkmStreamLines::getDataCallback);
     this->meshCalleeSlot.SetCallback(
-        mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(1), &mmvtkmStreamLines::getMetaDataCallback);
+        mesh::CallGPUMeshData::ClassName(), mesh::CallGPUMeshData::FunctionName(1), &mmvtkmStreamLines::getMetaDataCallback);
     this->MakeSlotAvailable(&this->meshCalleeSlot);
 
     this->vtkCallerSlot.SetCompatibleCall<mmvtkmDataCallDescription>();
@@ -166,10 +166,10 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         core::param::Vector3fParam max({(float)b.X.Max, (float)b.Y.Max, (float)b.Z.Max});
 		// det jet nisch
 		// mach det anders
-        this->lowerStreamlineSeedBound.SetParameter(new core::param::Vector3fParam(min, min, max));
-        this->upperStreamlineSeedBound.SetParameter(new core::param::Vector3fParam(max, min, max));
+        //this->lowerStreamlineSeedBound.SetParameter(new core::param::Vector3fParam(min, min, max));
+        //this->upperStreamlineSeedBound.SetParameter(new core::param::Vector3fParam(max, min, max));
 
-        mesh::CallMesh* mesh_dc = dynamic_cast<mesh::CallMesh*>(&caller);
+        mesh::CallGPUMeshData* mesh_dc = dynamic_cast<mesh::CallGPUMeshData*>(&caller);
         if (mesh_dc == nullptr) {
             vislib::sys::Log::DefaultLog.WriteError("mesh_dc is nullptr. In %s at line %d", __FILE__, __LINE__);
             return false;
@@ -232,17 +232,18 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         }
 
         // get the indices for the points of the polylines
-        std::vector<std::vector<vtkm::IdComponent>> polylinePointIds(numPolylines);
+        std::vector<std::vector<vtkm::Id>> polylinePointIds(numPolylines);
         for (int i = 0; i < numPolylines; ++i) {
 
             int numPoints = numPointsInPolyline[i];
             //vtkm::Id* pointIds = new vtkm::Id(numPoints);
-            std::vector<vtkm::IdComponent> pointIds(numPoints);
+            std::vector<vtkm::Id> pointIds(numPoints);
 
-            polylineSetBase->GetCellPointIds(i, (vtkm::Id*)pointIds.data());
+            polylineSetBase->GetCellPointIds(i, pointIds.data());
 
             polylinePointIds[i] = pointIds;
         }
+
         
         // there most probably will only be one coordinate system which name isn't specifically set
         // so this should be sufficient
@@ -252,43 +253,52 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         vtkm::ArrayPortalRef<vtkm::Vec<vtkm::FloatDefault, 3>> coords = coordDataVirtual.GetPortalConstControl();
 
 
-        // build polylines for megamol mesh
-		using MDAC = megamol::mesh::MeshDataAccessCollection;
-        std::shared_ptr<MDAC> mdac = std::make_shared<MDAC>();
+		using GMC = megamol::mesh::GPUMeshCollection;
+        std::shared_ptr<GMC> gmc = std::make_shared<GMC>();
 
-        for (int i = 0; i < numPolylines; ++i) {
+		// one mesh with numPolylines attributes?
+		// or numPolylines meshes with one attribute each
+		for (int i = 0; i < numPolylines; ++i) {
             int numPoints = numPointsInPolyline[i];
+            std::vector<float> points(3 * numPoints);
 
-            std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> points(numPoints);
+            for (int j = 0; j < numPoints; ++j) {
+                vtkm::Vec<vtkm::FloatDefault, 3> crnt = coords.Get(polylinePointIds[i][j]);
+                points[3 * j + 0] = crnt[0];
+                points[3 * j + 1] = crnt[1];
+                points[3 * j + 2] = crnt[2];
+            }
 
-			for (int j = 0; j < numPoints; ++j) {
-                points[j] = coords.Get(polylinePointIds[i][j]);
+			// calc indices
+            int numLineSegments = numPoints - 1;
+            int numIndices = 2 * numLineSegments;
+            std::vector<int> indices(numIndices);
+            for (int j = 0; j < numLineSegments; ++j) {
+                int idx = 2 * j;
+                indices[idx + 0] = (int)polylinePointIds[i][idx + 0];
+                indices[idx + 1] = (int)polylinePointIds[i][idx + 1];
 			}
 
-            MDAC::VertexAttribute va;
-            va.data = (uint8_t*)points.data();					// uint8_t* data;
-            va.byte_size = 4;									// size_t byte_size;
-            va.component_cnt = 3 * numPoints;					// unsigned int component_cnt;
-            va.component_type = MDAC::ValueType::FLOAT;			// ValueType component_type;
-            va.stride = 0;										// size_t stride;
-            va.offset = 0;                                      // size_t offset;
-            va.semantic = MDAC::AttributeSemanticType::POSITION; // AttributeSemanticType semantic;
-
-			MDAC::IndexData idxData;
-            idxData.data = (uint8_t*)polylinePointIds[i].data(); // uint8_t* data;
-            idxData.byte_size = 4;                               // size_t byte_size;
-            idxData.type = MDAC::ValueType::UNSIGNED_INT;        // ValueType type;
-
-			MDAC::PrimitiveType pt = MDAC::PrimitiveType::LINES;
-
-            mdac->addMesh({ va }, idxData, pt);
+            glowl::VertexLayout vertex_descriptor;
+            glowl::VertexLayout::Attribute attrib(sizeof(float) * 3 * numPoints, GL_FLOAT, false, 0);
+            vertex_descriptor.attributes.push_back(attrib);
+            vertex_descriptor.byte_size = sizeof(float);
+            std::vector<std::pair<uint8_t*, uint8_t*>> vertex_buffers = {
+                {(uint8_t*)points.data(), (uint8_t*)points.data() + (uint8_t)sizeof(float)}};
+            std::pair<uint8_t*, uint8_t*> index_buffer = {
+                (uint8_t*)indices.data(), (uint8_t*)indices.data() + (uint8_t)sizeof(int)};
+            GLenum index_type = GL_INT;
+            GLenum usage = GL_STATIC_DRAW;
+            GLenum primitive_type = GL_LINES;
+            bool store_seperate = false;
+			
+            gmc->addMesh(vertex_descriptor, vertex_buffers, index_buffer, index_type, usage, primitive_type);
         }
+
+		mesh_dc->setData(gmc, this->new_version);
 
 
         this->new_version++;
-
-
-        mesh_dc->setData(mdac, this->new_version);
 
 
         this->old_version = this->new_version;
@@ -307,7 +317,7 @@ bool mmvtkmStreamLines::getMetaDataCallback(core::Call& caller) {
         return false;
     }
 
-    mesh::CallMesh* mesh_dc = dynamic_cast<mesh::CallMesh*>(&caller);
+    mesh::CallGPUMeshData* mesh_dc = dynamic_cast<mesh::CallGPUMeshData*>(&caller);
     if (mesh_dc == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError("mesh_dc is nullptr. In %s at line %d", __FILE__, __LINE__);
         return false;
