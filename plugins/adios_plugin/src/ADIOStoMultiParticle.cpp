@@ -11,8 +11,7 @@
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "vislib/sys/Log.h"
 #include <numeric>
-#include <complex.h>
-#include <complex.h>
+#include <complex>
 
 
 namespace megamol {
