@@ -679,7 +679,9 @@ function(require_external NAME)
       DEBUG_SUFFIX "d"
       CMAKE_ARGS
         -DFMT_DOC=OFF
-        -DFMT_TEST=OFF)
+        -DFMT_TEST=OFF
+        -DCMAKE_C_FLAGS=-fPIC
+        -DCMAKE_CXX_FLAGS=-fPIC)
   
     add_external_library(fmt
       LIBRARY ${FMT_LIB}
