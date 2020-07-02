@@ -1,20 +1,20 @@
 #include "stdafx.h"
-#include "Grid.h"
+#include "MPDCGrid.h"
 
 #include "mmcore/param/IntParam.h"
 
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 
 
-megamol::ospray::Grid::Grid()
+megamol::stdplugin::datatools::MPDCGrid::MPDCGrid()
     : data_out_slot_("dataOut", "")
     , data_in_slot_("dataIn", "")
     , max_size_slot_("maxSize", "Maximum size of each cell")
     , data_out_hash_(std::numeric_limits<size_t>::max()) {
     data_out_slot_.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(0), &Grid::getDataCallback);
+        core::moldyn::MultiParticleDataCall::FunctionName(0), &MPDCGrid::getDataCallback);
     data_out_slot_.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(1), &Grid::getExtentCallback);
+        core::moldyn::MultiParticleDataCall::FunctionName(1), &MPDCGrid::getExtentCallback);
     MakeSlotAvailable(&data_out_slot_);
 
     data_in_slot_.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
@@ -25,16 +25,16 @@ megamol::ospray::Grid::Grid()
 }
 
 
-megamol::ospray::Grid::~Grid() { this->Release(); }
+megamol::stdplugin::datatools::MPDCGrid::~MPDCGrid() { this->Release(); }
 
 
-bool megamol::ospray::Grid::create() { return true; }
+bool megamol::stdplugin::datatools::MPDCGrid::create() { return true; }
 
 
-void megamol::ospray::Grid::release() {}
+void megamol::stdplugin::datatools::MPDCGrid::release() {}
 
 
-bool megamol::ospray::Grid::getDataCallback(core::Call& c) {
+bool megamol::stdplugin::datatools::MPDCGrid::getDataCallback(core::Call& c) {
     auto outData = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
     if (outData == nullptr) return false;
 
@@ -100,7 +100,7 @@ bool megamol::ospray::Grid::getDataCallback(core::Call& c) {
 }
 
 
-bool megamol::ospray::Grid::getExtentCallback(core::Call& c) {
+bool megamol::stdplugin::datatools::MPDCGrid::getExtentCallback(core::Call& c) {
     auto outData = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
     if (outData == nullptr) return false;
 
@@ -119,9 +119,9 @@ bool megamol::ospray::Grid::getExtentCallback(core::Call& c) {
 }
 
 
-std::vector<megamol::ospray::Grid::BrickLet> megamol::ospray::Grid::gridify(
-    std::vector<megamol::ospray::Grid::Particle>& particles, Box const& bbox, size_t maxSize, size_t begin,
-    size_t end) {
+std::vector<megamol::stdplugin::datatools::MPDCGrid::BrickLet> megamol::stdplugin::datatools::MPDCGrid::gridify(
+    std::vector<megamol::stdplugin::datatools::MPDCGrid::Particle>& particles, Box const& bbox, size_t maxSize,
+    size_t begin, size_t end) {
     auto const pcount = end - begin;
 
     std::vector<BrickLet> ret;
@@ -158,9 +158,9 @@ std::vector<megamol::ospray::Grid::BrickLet> megamol::ospray::Grid::gridify(
 }
 
 
-std::vector<megamol::core::moldyn::SimpleSphericalParticles> megamol::ospray::Grid::separate(
-    std::vector<megamol::ospray::Grid::Particle> const& particles,
-    std::vector<megamol::ospray::Grid::BrickLet> const& bricks, float radius) {
+std::vector<megamol::core::moldyn::SimpleSphericalParticles> megamol::stdplugin::datatools::MPDCGrid::separate(
+    std::vector<megamol::stdplugin::datatools::MPDCGrid::Particle> const& particles,
+    std::vector<megamol::stdplugin::datatools::MPDCGrid::BrickLet> const& bricks, float radius) {
     std::vector<core::moldyn::SimpleSphericalParticles> ret(bricks.size());
     auto vert_base = reinterpret_cast<char const*>(particles.data());
     auto col_base = vert_base + sizeof(vislib::math::Point<float, 3>);

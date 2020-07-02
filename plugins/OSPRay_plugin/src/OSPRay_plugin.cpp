@@ -39,7 +39,6 @@
 #include "OSPRayVelvetMaterial.h"
 #include "OSPRay_plugin/CallOSPRayMaterial.h"
 #include "Pkd.h"
-#include "Grid.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -92,7 +91,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayPKDGeometry>();
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayAOVSphereGeometry>();
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayTransform>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::Grid>();
 
         // register calls here:
 

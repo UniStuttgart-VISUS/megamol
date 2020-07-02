@@ -88,6 +88,7 @@
 #include "table/TableSampler.h"
 #include "table/TableToLines.h"
 #include "table/TableToParticles.h"
+#include "MPDCGrid.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -243,6 +244,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableManipulator>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::CPERAWDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::LocalBoundingBoxExtractor>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPDCGrid>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();

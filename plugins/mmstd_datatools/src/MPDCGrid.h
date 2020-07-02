@@ -13,9 +13,10 @@
 
 
 namespace megamol {
-namespace ospray {
+namespace stdplugin {
+namespace datatools {
 
-class Grid : public core::Module {
+class MPDCGrid : public core::Module {
 public:
     struct Particle {
         vislib::math::Point<float, 3> pos;
@@ -42,14 +43,16 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "Grid"; }
+    static const char* ClassName(void) { return "MPDCGrid"; }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Converts a MPDC in to a regular grid"; }
+    static const char* Description(void) {
+        return "Converts a MPDC in to a regular grid (cells exposed as individual particle list entries)";
+    }
 
     /**
      * Answers whether this module is available on the current system.
@@ -58,9 +61,9 @@ public:
      */
     static bool IsAvailable(void) { return true; }
 
-    Grid();
+    MPDCGrid();
 
-    virtual ~Grid();
+    virtual ~MPDCGrid();
 
 protected:
     bool create() override;
@@ -91,7 +94,7 @@ private:
     std::vector<std::vector<Particle>> data_;
 
     std::vector<core::moldyn::SimpleSphericalParticles> output_;
-}; // class Grid
+}; // class MPDCGrid
 
 inline vislib::math::Vector<float, 3> span(vislib::math::Cuboid<float> const& box) {
     return vislib::math::Vector<float, 3>(box.Width(), box.Height(), box.Depth());
@@ -113,5 +116,6 @@ inline int arg_max(vislib::math::Vector<float, 3> const& vec) {
     }
 }
 
-} // namespace ospray
+} // namespace datatools
+} // namespace stdplugin
 } // namespace megamol
