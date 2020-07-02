@@ -874,7 +874,7 @@ void KeyframeKeeper::refreshInterpolCamPos(unsigned int s) {
 }
 
 
-bool KeyframeKeeper::replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool undo) {
+bool KeyframeKeeper::replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool add_undo) {
 
     if (!this->keyframes.empty()) {
         // Both are equal ... nothing to do
@@ -897,7 +897,7 @@ bool KeyframeKeeper::replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool undo) 
                 }
                 this->addKeyframe(newkf, false);
             }
-            if (undo) {
+            if (add_undo) {
                 // ADD UNDO
                 this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, newkf, oldkf);
             }
@@ -912,7 +912,7 @@ bool KeyframeKeeper::replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool undo) 
 }
 
 
-bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool undo) {
+bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool add_undo) {
 
     if (!this->keyframes.empty()) {
         // Get index of keyframe to delete
@@ -921,22 +921,16 @@ bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool undo) {
         if (selIndex >= 0) {
             // DELETE UNDO
             this->keyframes.erase(this->keyframes.begin() + selIndex);
-            if (undo) {
+            if (add_undo) {
                 // ADD UNDO
                 this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_DELETE, kf, kf);
-                // Adjust first/last control point position - ONLY if it is a "real" delete and no replace
+                // Reset first/last control point position - ONLY if it is a "real" delete and no replace
                 if (this->keyframes.size() > 1) {
                     if (selIndex == 0) {
-                        auto p0 = this->keyframes[0].GetCameraState().position;
-                        auto p1 = this->keyframes[1].GetCameraState().position;
-                        glm::vec3 tmpV = glm::normalize(glm::vec3(p0[0], p0[1], p0[2]) - glm::vec3(p1[0], p1[1], p1[2]));
-                        this->startCtrllPos = glm::vec3(p0[0], p0[1], p0[2]) + tmpV;
+                        this->startCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
                     }
                     if (selIndex == this->keyframes.size()) { // Element is already removed so the index is now: (this->keyframes.size() - 1) + 1
-                        auto p0 = this->keyframes.back().GetCameraState().position;
-                        auto p1 = this->keyframes[(int)this->keyframes.size() - 2].GetCameraState().position;
-                        glm::vec3 tmpV = glm::normalize(glm::vec3(p0[0], p0[1], p0[2]) - glm::vec3(p1[0], p1[1], p1[2]));
-                        this->endCtrllPos = glm::vec3(p0[0], p0[1], p0[2]) + tmpV;
+                        this->endCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
                     }
                 }
             }
@@ -959,7 +953,7 @@ bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool undo) {
 }
 
 
-bool KeyframeKeeper::addKeyframe(Keyframe kf, bool undo) {
+bool KeyframeKeeper::addKeyframe(Keyframe kf, bool add_undo) {
 
     float time = kf.GetAnimTime();
 
@@ -973,24 +967,25 @@ bool KeyframeKeeper::addKeyframe(Keyframe kf, bool undo) {
 
     // Sort new keyframe to keyframe array
     if (this->keyframes.empty() || (this->keyframes.back().GetAnimTime() < time)) {
-        this->keyframes.emplace_back(kf);
-        // Adjust first/last control point position - ONLY if it is a "real" add and no replace
-        if (undo && this->keyframes.size() > 1) {
-            auto p0 = this->keyframes.back().GetCameraState().position;
-            auto p1 = this->keyframes[(int)this->keyframes.size() - 2].GetCameraState().position;
-            glm::vec3 tmpV = glm::normalize(glm::vec3(p0[0], p0[1], p0[2]) - glm::vec3(p1[0], p1[1], p1[2]));
-            this->endCtrllPos = glm::vec3(p0[0], p0[1], p0[2]) + tmpV;
+        // Reset first/last control point position - ONLY if it is a "real" add and no replace
+        if (add_undo) {
+            if (this->keyframes.empty()) {
+                this->startCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
+                this->endCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
+            }
+            this->endCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
         }
+        this->keyframes.emplace_back(kf);
     }
     else if (time < this->keyframes.front().GetAnimTime()) {
-        this->keyframes.insert(this->keyframes.begin(), kf);
-        // Adjust first/last control point position - ONLY if it is a "real" add and no replace
-        if (undo && this->keyframes.size() > 1) {
-            auto p0 = this->keyframes.back().GetCameraState().position;
-            auto p1 = this->keyframes[(int)this->keyframes.size() - 2].GetCameraState().position;
-            glm::vec3 tmpV = glm::normalize(glm::vec3(p0[0], p0[1], p0[2]) - glm::vec3(p1[0], p1[1], p1[2]));
-            this->endCtrllPos = glm::vec3(p0[0], p0[1], p0[2]) + tmpV;
+        // Reset first/last control point position - ONLY if it is a "real" add and no replace
+        if (add_undo) {
+             if (this->keyframes.empty()) {
+                this->startCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
+            }
+            this->endCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
         }
+        this->keyframes.insert(this->keyframes.begin(), kf);
     }
     else { // Insert keyframe in-between existing keyframes
         unsigned int insertIdx = 0;
@@ -1004,7 +999,7 @@ bool KeyframeKeeper::addKeyframe(Keyframe kf, bool undo) {
     }
 
     // ADD UNDO 
-    if (undo) {
+    if (add_undo) {
         this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_ADD, kf, kf);
     }
 

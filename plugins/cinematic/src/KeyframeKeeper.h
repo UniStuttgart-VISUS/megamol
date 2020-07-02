@@ -175,11 +175,11 @@ namespace cinematic {
 
         Keyframe interpolateKeyframe(float time);
 
-        bool addKeyframe(Keyframe kf, bool undo);
+        bool addKeyframe(Keyframe kf, bool add_undo);
 
-        bool replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool undo);
+        bool replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool add_undo);
 
-        bool deleteKeyframe(Keyframe kf, bool undo);
+        bool deleteKeyframe(Keyframe kf, bool add_undo);
 
         bool loadKeyframes(void);
 

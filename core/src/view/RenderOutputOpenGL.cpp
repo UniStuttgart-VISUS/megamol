@@ -67,9 +67,17 @@ vislib::graphics::gl::FramebufferObject *view::RenderOutputOpenGL::FrameBufferOb
  * view::RenderOutputOpenGL::GetViewport
  */
 const vislib::math::Rectangle<int>& view::RenderOutputOpenGL::GetViewport(void) const {
-    GLint vp[4];
-    ::glGetIntegerv(GL_VIEWPORT, vp);
-    this->outputViewport.SetFromSize(vp[0], vp[1], vp[2], vp[3]);
+    if (this->outputViewport.IsEmpty()) {
+        // sort of lazy evaluation
+        if (this->outputFBO != NULL) {
+            this->outputViewport.SetFromSize(0, 0,
+                this->outputFBO->GetWidth(), this->outputFBO->GetHeight());
+        } else {
+            GLint vp[4];
+            ::glGetIntegerv(GL_VIEWPORT, vp);
+            this->outputViewport.SetFromSize(vp[0], vp[1], vp[2], vp[3]);
+        }
+    }
     return this->outputViewport;
 }
 

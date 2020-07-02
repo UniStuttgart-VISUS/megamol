@@ -391,7 +391,7 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
                 *static_cast<view::RenderOutputOpenGL*>(cr3d) = *ro;
             }
         }
-        //this->overrideCall->EnableOutputBuffer();
+        this->overrideCall->EnableOutputBuffer();
     } else if (cr3d != nullptr) {
         cr3d->SetOutputBuffer(GL_BACK);
         cr3d->GetViewport(); // access the viewport to enforce evaluation TODO is this still necessary

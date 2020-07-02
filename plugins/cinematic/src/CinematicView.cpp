@@ -439,10 +439,26 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     auto bc = Base::BkgndColour();
     glClearColor(bc[0], bc[1], bc[2], 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    /* Using FBO buffer in call. */
+    
+    // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
+    cr3d->SetOutputBuffer(&this->fbo);
+    // Set override viewport of view (otherwise viewport is overwritten in Base::Render(context))
+    int fboVp[4] = { 0, 0, fboWidth, fboHeight };
+    Base::overrideViewport = fboVp;
+    
+    //ALTERNATIVE
+    /// XXX Requires View3D_2 line 394 to be deleted/commented! 
+        //this->overrideCall->EnableOutputBuffer();
+    /// XXX Requires view::RenderOutputOpenGL::GetViewport() to get viewport always from:
+        /// GLint vp[4];
+        /// ::glGetIntegerv(GL_VIEWPORT, vp);
+        /// this->outputViewport.SetFromSize(vp[0], vp[1], vp[2], vp[3]);
+    /*
     int fbovp[4] = { 0, 0, fboWidth, fboHeight };
     glViewport(fbovp[0], fbovp[1], fbovp[2], fbovp[3]);
-
-    ///XXX Requires View3D_2 line 394 to be deleted/commented! (//this->overrideCall->EnableOutputBuffer();)
+    */
 
     /// ! Set override call for using currrent fbo and current viewport
     Base::overrideCall = cr3d;
