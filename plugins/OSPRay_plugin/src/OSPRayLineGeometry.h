@@ -65,6 +65,7 @@ private:
 
     /** The call for data */
     core::CallerSlot getDataSlot;
+    core::CallerSlot getLineDataSlot;
 
     core::param::ParamSlot globalRadiusSlot;
 

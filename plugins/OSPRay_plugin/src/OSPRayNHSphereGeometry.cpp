@@ -45,6 +45,9 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
     // fill material container
     this->processMaterial();
 
+    // get transformation parameter
+    this->processTransformation();
+
     // read Data, calculate  shape parameters, fill data vectors
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
     megamol::core::moldyn::MultiParticleDataCall *cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
@@ -158,7 +161,8 @@ bool OSPRayNHSphereGeometry::getExtends(megamol::core::Call &call) {
     cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
     // if (!(*cd)(1)) return false; // table returns flase at first attempt and breaks everything
     (*cd)(1);
-    this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes>(cd->AccessBoundingBoxes());
+    this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes_2>();
+    this->extendContainer.boundingBox->SetBoundingBox(cd->AccessBoundingBoxes().ObjectSpaceBBox());
     this->extendContainer.timeFramesCount = cd->FrameCount();
     this->extendContainer.isValid = true;
 

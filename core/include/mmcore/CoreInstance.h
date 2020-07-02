@@ -1,7 +1,7 @@
 /*
  * CoreInstance.h
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2008, 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -681,6 +681,11 @@ public:
     void ParameterValueUpdate(param::ParamSlot& slot);
 
     /**
+     * Fired to notify all listeners with a batch of updates.
+     */
+    void NotifyParamUpdateListener();
+
+    /**
      * Adds a ParamUpdateListener to the list of registered listeners
      *
      * @param pul The ParamUpdateListener to add
@@ -793,6 +798,27 @@ public:
      * @return The installed service object with the provided ID or null if no such service exists.
      */
     AbstractService* GetInstalledService(unsigned int id);
+
+    /**
+     * sets the current ImGui context, i.e. the one that was last touched when traversing the graph
+     */
+    inline void SetCurrentImGuiContext(void* ctx) { this->lastImGuiContext = ctx; }
+
+    /**
+     * gets the current ImGui context, i.e. the one that was last touched when traversing the graph
+     */
+    inline void* GetCurrentImGuiContext() const { return this->lastImGuiContext; }
+
+    /**
+     * get the number of the currently rendered frame
+     */
+    inline uint32_t GetFrameID(void) { return this->frameID; }
+
+    /**
+     * Set the number of the currently rendered frame. Whatever you think you are doing, don't: it's wrong.
+     * This method is for use by the frontend only.
+     */
+    inline void SetFrameID(uint32_t frameID) { this->frameID = frameID; }
 
 private:
     /**
@@ -1165,6 +1191,9 @@ private:
     /** The Lua state */
     megamol::core::LuaState* lua;
 
+    /** illegal hack: the last ImGui context */
+    void* lastImGuiContext = nullptr;
+
     /**
      * All of the verbatim loaded project files. We need to keep them to send them
      * to interested parties, like the simpleclusterclient, so they can interpret
@@ -1259,8 +1288,14 @@ private:
     /** the time offset */
     double timeOffset;
 
+    /** the count of rendered frames */
+    uint32_t frameID;
+
     /** List of registered param update listeners */
     vislib::SingleLinkedList<param::ParamUpdateListener*> paramUpdateListeners;
+
+    /** Vector storing param updates per frame */
+    param::ParamUpdateListener::param_updates_vec_t paramUpdates;
 
     /** The manager of loaded plugins */
     utility::plugins::PluginManager* plugins;

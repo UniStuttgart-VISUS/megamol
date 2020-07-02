@@ -94,7 +94,7 @@ namespace gl {
         }
         void RequestClose();
 
-        void Update();
+        void Update(uint32_t frameID);
 
     private:
 
@@ -126,6 +126,7 @@ namespace gl {
         GLuint primsQuery;
         bool showFragmentsInTitle;
         bool showPrimsInTitle;
+        bool firstUpdate;
     };
 
 } /* end namespace gl */

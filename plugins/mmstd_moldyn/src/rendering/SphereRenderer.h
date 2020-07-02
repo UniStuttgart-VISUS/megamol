@@ -14,8 +14,8 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/FlagStorage.h"
-#include "mmcore/FlagCall.h"
+#include "mmcore/FlagStorage_GL.h"
+#include "mmcore/FlagCall_GL.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/param/EnumParam.h"
@@ -82,10 +82,10 @@
 #define SPHERE_MIN_OGL_GEOMETRY_SHADER
 #endif // GL_VERSION_3_2
 
-#ifdef GL_VERSION_4_3
+#ifdef GL_VERSION_4_2
 #define SPHERE_MIN_OGL_SSBO_STREAM
 #define SPHERE_MIN_OGL_AMBIENT_OCCLUSION
-#endif // GL_VERSION_4_3
+#endif // GL_VERSION_4_2
 
 #ifdef GL_VERSION_4_5
 #define SPHERE_MIN_OGL_SPLAT
@@ -293,12 +293,10 @@ namespace rendering {
 
         RenderMode                               renderMode;
         GLuint                                   greyTF;
+        std::array<float, 2>                     range;
 
-        bool                                     flagsEnabled;
-        GLuint                                   flagsBuffer;
-        bool                                     flagsUseSSBO;
-        FlagStorage::FlagVersionType             flagsCurrentVersion;
-        std::shared_ptr<FlagStorage::FlagVectorType> flagsData;
+        bool                                     flags_enabled; 
+        bool                                     flags_available;
 
         GLSLShader                               sphereShader;
         GLSLGeometryShader                       sphereGeometryShader;
@@ -351,14 +349,13 @@ namespace rendering {
         megamol::core::CallerSlot getDataSlot;
         megamol::core::CallerSlot getClipPlaneSlot;
         megamol::core::CallerSlot getTFSlot;
-        megamol::core::CallerSlot getFlagsSlot;
+        megamol::core::CallerSlot readFlagsSlot;
 
         /*********************************************************************/
         /* PARAMETERS                                                        */
         /*********************************************************************/
 
         megamol::core::param::ParamSlot renderModeParam;
-        megamol::core::param::ParamSlot colIdxRangeInfoParam;
         megamol::core::param::ParamSlot radiusScalingParam;
         megamol::core::param::ParamSlot forceTimeSlot;
         megamol::core::param::ParamSlot useLocalBBoxParam;
@@ -424,6 +421,15 @@ namespace rendering {
         static bool isRenderModeAvailable(RenderMode rm, bool silent = false);
 
         /**
+         * Check if specified render mode or all render mode are available.
+         *
+         * @param out_flag_snippet   The vertex shader snippet defining the usage of the flag storage depending on its availability.
+         *
+         * @return 'True' on success, 'false' otherwise.
+         */
+        bool isFlagStorageAvailable(vislib::SmartPtr<ShaderSource::Snippet>& out_flag_snippet);
+
+        /**
          * Create shaders for given render mode.
          *
          * @return 'True' on success, 'false' otherwise.
@@ -468,7 +474,7 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool setBufferData(const GLSLShader& shader, const MultiParticleDataCall::Particles &parts, 
+        bool enableBufferData(const GLSLShader& shader, const MultiParticleDataCall::Particles &parts, 
             GLuint vertBuf, const void *vertPtr, GLuint colBuf,  const void *colPtr, bool createBufferData = false);
 
         /**
@@ -478,7 +484,7 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool unsetBufferData(const GLSLShader& shader);
+        bool disableBufferData(const GLSLShader& shader);
 
         /**
          * Set pointers to vertex and color buffers and corresponding shader variables.
@@ -488,14 +494,14 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool setShaderData(GLSLShader& shader, const MultiParticleDataCall::Particles &parts);
+        bool enableShaderData(GLSLShader& shader, const MultiParticleDataCall::Particles &parts);
 
         /**
          * Unset pointers to vertex and color buffers.
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool unsetShaderData(void);
+        bool disableShaderData(void);
 
         /**
          * Enables the transfer function texture.
@@ -504,14 +510,14 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool setTransferFunctionTexture(GLSLShader& shader);
+        bool enableTransferFunctionTexture(GLSLShader& shader);
 
         /**
          * Disables the transfer function texture.
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool unsetTransferFunctionTexture(void);
+        bool disableTransferFunctionTexture(void);
 
         /**
          * Enable flag storage.
@@ -521,7 +527,7 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool setFlagStorage(const GLSLShader& shader, MultiParticleDataCall* mpdc);
+        bool enableFlagStorage(const GLSLShader& shader, MultiParticleDataCall* mpdc);
 
         /**
          * Enable flag storage.
@@ -530,7 +536,7 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool unsetFlagStorage(const GLSLShader& shader);
+        bool disableFlagStorage(const GLSLShader& shader);
 
         /**
          * Get bytes and stride.

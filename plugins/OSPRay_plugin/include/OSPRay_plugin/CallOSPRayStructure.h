@@ -14,6 +14,8 @@
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mesh/MeshCalls.h"
+#include "CallOSPRayTransformation.h"
 
 namespace megamol {
 namespace ospray {
@@ -26,8 +28,7 @@ enum geometryTypeEnum {
     TRIANGLES,
     STREAMLINES,
     CYLINDERS,
-    PBS,
-    PKD
+    QUADS
 };
 
 enum volumeTypeEnum { STRUCTUREDVOLUME, BLOCKBRICKEDVOLUME, GHOSTBLOCKBRICKEDVOLUME };
@@ -57,10 +58,11 @@ public:
     volumeTypeEnum volumeType;
     volumeRepresentationType volRepType;
 
+    std::shared_ptr<OSPRayTransformationContainer> transformationContainer = nullptr;
+    bool transformationChanged = false;
+
     std::shared_ptr<std::vector<float>> vertexData;
     std::shared_ptr<std::vector<float>> colorData;
-    std::shared_ptr<std::vector<float>> normalData;
-    std::shared_ptr<std::vector<float>> texData;
     std::shared_ptr<std::vector<unsigned int>> indexData;
     void* voxels;
     std::shared_ptr<std::vector<float>> gridOrigin;
@@ -85,9 +87,11 @@ public:
 
     std::pair<std::vector<void*>,structureTypeEnum> ospStructures;
 
+    std::shared_ptr<mesh::MeshDataAccessCollection> mesh;
+    std::shared_ptr<mesh::ImageDataAccessCollection> mesh_textures;
+
     unsigned int voxelCount;
     unsigned int maxDim;
-    unsigned int triangleCount;
     unsigned int vertexCount;
     unsigned int vertexLength;
     unsigned int vertexStride;
@@ -126,7 +130,7 @@ public:
 
 class OSPRayExtendContainer {
 public:
-    std::shared_ptr<megamol::core::BoundingBoxes> boundingBox;
+    std::shared_ptr<megamol::core::BoundingBoxes_2> boundingBox;
     unsigned int timeFramesCount;
     bool isValid;
 

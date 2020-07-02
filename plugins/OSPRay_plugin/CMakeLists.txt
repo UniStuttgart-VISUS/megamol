@@ -11,7 +11,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_OSPRAY_PLUGIN BUILD_CORE BUILD_GEOMETRY_CALLS_PLUGIN BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_PROTEIN_CALLS_PLUGIN" CACHE INTERNAL "")
+  set(DEP_LIST "${DEP_LIST};BUILD_OSPRAY_PLUGIN BUILD_CORE BUILD_GEOMETRY_CALLS_PLUGIN BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_PROTEIN_CALLS_PLUGIN BUILD_MESH_PLUGIN" CACHE INTERNAL "")
 
   find_package(ospray CONFIG REQUIRED)
  
@@ -26,7 +26,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src" ${OSPRAY_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} 
-    PRIVATE core geometry_calls mmstd_datatools protein_calls
+    PRIVATE core geometry_calls mmstd_datatools protein_calls mesh
     PUBLIC ${OSPRAY_LIBRARIES})
 
   # Installation rules for generated files

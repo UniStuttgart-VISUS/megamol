@@ -79,6 +79,8 @@ protected:
 private:
     typedef vislib::graphics::gl::GLSLComputeShader GLSLComputeShader;
 
+    uint32_t m_version;
+
     /** Shader program for texture add */
     std::unique_ptr<GLSLComputeShader> m_add_prgm;
 
@@ -87,9 +89,6 @@ private:
 
     /** Texture that the combination result will be written to */
     std::shared_ptr<glowl::Texture2D>  m_output_texture;
-
-    /** Hash value to keep track of update to the output texture */
-    size_t                             m_output_texture_hash;
 
     /** Parameter for selecting the texture combination mode, e.g. add, multiply */
     megamol::core::param::ParamSlot    m_mode;

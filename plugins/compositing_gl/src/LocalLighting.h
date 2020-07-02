@@ -87,6 +87,8 @@ protected:
 private:
     typedef vislib::graphics::gl::GLSLComputeShader GLSLComputeShader;
 
+    uint32_t m_version;
+
     /** Shader program for texture add */
     std::unique_ptr<GLSLComputeShader> m_lighting_prgm;
 

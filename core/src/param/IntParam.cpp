@@ -88,6 +88,7 @@ void IntParam::SetValue(int v, bool setDirty) {
     else if (v > this->maxVal) v = this->maxVal;
     if (this->val != v) {
         this->val = v;
+        this->indicateChange();
         if (setDirty) this->setDirty();
     }
 }

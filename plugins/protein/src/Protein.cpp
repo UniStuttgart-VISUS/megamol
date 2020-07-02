@@ -85,6 +85,7 @@
 #include "HydroBondFilter.h"
 #include "IntSelection.h"
 #include "MSMSMeshLoader.h"
+#include "MSMSGenus0Generator.h"
 #include "MolecularNeighborhood.h"
 #include "MultiParticleDataFilter.h"
 #include "PDBInterpolator.h"
@@ -184,6 +185,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::HydroBondFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventCounter>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MSMSMeshLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein::MSMSGenus0Generator>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinAligner>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CaverTunnelResidueLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MSMSCavityFinder>();

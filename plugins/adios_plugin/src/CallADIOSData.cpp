@@ -6,7 +6,7 @@
 */
 
 #include "stdafx.h"
-#include "CallADIOSData.h"
+#include "adios_plugin/CallADIOSData.h"
 #include "vislib/sys/Log.h"
 #include <algorithm>
 
@@ -42,24 +42,27 @@ float CallADIOSData::getTime() const { return this->time; }
 
 
 /**
- * \brief 
- * \param varname 
+ * \brief Sets variable to inquire.
+ * \param varname: The name of the variable.
+ * \return Returns false if variable is not available, true otherwise.
  */
-void CallADIOSData::inquire(const std::string &varname) {
+bool CallADIOSData::inquire(const std::string &varname) {
     if (!this->availableVars.empty()) {
         if (std::find(this->availableVars.begin(), this->availableVars.end(), varname) != this->availableVars.end()) {
             this->inqVars.push_back(varname);
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("Variable %s is not in available varialbes", varname.c_str());
+            vislib::sys::Log::DefaultLog.WriteError("[CallADIOSData] Variable %s is not in available varialbes", varname.c_str());
+            return false;
         }
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("No available Vars. Read header first.");
-        return;
+        vislib::sys::Log::DefaultLog.WriteError("[CallADIOSData] No available Vars. Read header first.");
+        return false;
     }
     // erase non-unique occurrences
     std::sort(this->inqVars.begin(), this->inqVars.end());
     const auto last = std::unique(this->inqVars.begin(), this->inqVars.end());
     this->inqVars.erase(last, this->inqVars.end());
+    return true;
 }
 
 std::vector<std::string> CallADIOSData::getVarsToInquire() const { return inqVars; }

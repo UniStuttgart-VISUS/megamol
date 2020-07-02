@@ -392,7 +392,9 @@ bool OSPRayAOVSphereGeometry::getExtendsCallback(megamol::core::Call& call) {
     if (cd == nullptr) return false;
     cd->SetFrameID(os->FrameID());
     (*cd)(1);
-    os->SetExtent(cd->FrameCount(), cd->AccessBoundingBoxes());
+    core::BoundingBoxes_2 box;
+    box.SetBoundingBox(cd->AccessBoundingBoxes().ObjectSpaceBBox());
+    os->SetExtent(cd->FrameCount(), box);
 
     return true;
 }

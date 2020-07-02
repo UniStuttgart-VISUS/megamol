@@ -34,8 +34,8 @@ OSPRayThinGlassMaterial::~OSPRayThinGlassMaterial(void) {
 void OSPRayThinGlassMaterial::readParams() {
     materialContainer.materialType = materialTypeEnum::THINGLASS;
 
-    auto transmission = this->thinglassTransmission.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.thinglassTransmission.assign(transmission, transmission + 3);
+    auto transmission = this->thinglassTransmission.Param<core::param::Vector3fParam>();
+    materialContainer.thinglassTransmission = transmission->getArray();
 
     materialContainer.thinglassEta = this->thinglassEta.Param<core::param::FloatParam>()->Value();
 
