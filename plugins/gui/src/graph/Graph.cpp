@@ -2076,7 +2076,13 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
 
                 this->present.ResetStatePointers();
 
-                // First reset module and call slot pointers in groups
+                // 1)  Remove call slots
+                (*iter)->DeleteCallSlots();
+
+                // 2) Delete calls which are no longer connected
+                this->delete_disconnected_calls();
+
+                // 3) Reset module and call slot pointers in groups
                 ImGuiID delete_empty_group = GUI_INVALID_ID;
                 for (auto& group_ptr : this->groups) {
                     if (group_ptr->ContainsModule(module_uid)) {
@@ -2090,22 +2096,16 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
                     this->DeleteGroup(delete_empty_group);
                 }
 
-                // Second remove call slots
-                (*iter)->DeleteCallSlots();
-
-                // Delete calls which are no longer connected
-                this->delete_disconnected_calls();
-
-                if ((*iter).use_count() > 1) {
-                    vislib::sys::Log::DefaultLog.WriteError(
-                        "Unclean deletion. Found %i references pointing to module. [%s, %s, line %d]\n",
-                        (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
-                }
 #ifdef GUI_VERBOSE
                 vislib::sys::Log::DefaultLog.WriteInfo(
                     "[Configurator] Deleted module '%s' (uid %i) from  project '%s'.\n", (*iter)->class_name.c_str(),
                     (*iter)->uid, this->name.c_str());
 #endif // GUI_VERBOSE
+                if ((*iter).use_count() > 1) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "Unclean deletion. Found %i references pointing to module. [%s, %s, line %d]\n",
+                        (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
+                }
                 (*iter).reset();
                 this->modules.erase(iter);
 
