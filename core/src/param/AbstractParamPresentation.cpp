@@ -120,7 +120,7 @@ bool AbstractParamPresentation::InitPresentation(AbstractParamPresentation::Para
         } break;
         case (ParamType::GROUP_ANIMATION): {
             this->compatible = Presentation::Basic | Presentation::Group_Animation;
-            this->SetGUIPresentation(Presentation::Group_Animation);
+            this->SetGUIPresentation(Presentation::Basic);
         } break;
         default:
             break;
