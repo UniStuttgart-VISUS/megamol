@@ -23,6 +23,8 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #endif
 
+#include "OpenGL_Context.h"
+
 using namespace megamol::core;
 
 
@@ -49,7 +51,19 @@ Module::~Module(void) {
 /*
  * Module::Create
  */
-bool Module::Create(void) {
+bool Module::Create(std::vector<megamol::render_api::RenderResource> dependencies) {
+
+	const megamol::input_events::IOpenGL_Context* opengl_context = nullptr;
+    auto opengl_context_it = std::find_if(dependencies.begin(), dependencies.end(),
+        [&](megamol::render_api::RenderResource& dep) { return dep.getIdentifier() == "IOpenGL_Context"; });
+
+    if (opengl_context_it != dependencies.end() &&  opengl_context_it->getResource<megamol::input_events::IOpenGL_Context>().has_value()) {
+        opengl_context = &opengl_context_it->getResource<megamol::input_events::IOpenGL_Context>().value().get();
+    }
+
+	if (opengl_context)
+		opengl_context->activate();
+
     using vislib::sys::Log;
     ASSERT(this->instance() != NULL);
     if (!this->created) {
@@ -74,6 +88,10 @@ bool Module::Create(void) {
         // Now reregister parents at children
         this->fixParentBackreferences();
     }
+
+	if (opengl_context)
+		opengl_context->close();
+
     return this->created;
 }
 
@@ -111,7 +129,20 @@ vislib::StringA Module::GetDemiRootName() const {
 /*
  * Module::Release
  */
-void Module::Release(void) {
+void Module::Release(std::vector<megamol::render_api::RenderResource> dependencies) {
+
+    auto opengl_context_it = std::find_if(dependencies.begin(), dependencies.end(),
+        [&](megamol::render_api::RenderResource& dep) { return dep.getIdentifier() == "IOpenGL_Context"; });
+
+	const megamol::input_events::IOpenGL_Context* opengl_context = nullptr;
+
+    if (opengl_context_it != dependencies.end() &&  opengl_context_it->getResource<megamol::input_events::IOpenGL_Context>().has_value()) {
+        opengl_context = &opengl_context_it->getResource<megamol::input_events::IOpenGL_Context>().value().get();
+    }
+
+	if (opengl_context)
+		opengl_context->activate();
+
     using vislib::sys::Log;
     if (this->created) {
         this->release();
@@ -119,6 +150,9 @@ void Module::Release(void) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 350,
             "Released module \"%s\"\n", typeid(*this).name());
     }
+
+	if (opengl_context)
+		opengl_context->close();
 }
 
 

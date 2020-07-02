@@ -23,10 +23,10 @@ if(BUILD_MAIN3000)
   # Add target
   add_executable(${PROJECT_NAME} ${header_files} ${source_files})
   set_target_properties(${PROJECT_NAME}
-    PROPERTIES #RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT_NAME ${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME} PRIVATE "src" "include")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core render_api libcxxopts)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core render_api libcxxopts input_events)
 
   target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS})
 

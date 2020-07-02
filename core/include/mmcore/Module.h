@@ -11,8 +11,12 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <string>
+#include <vector>
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include "mmcore/api/MegaMolCore.std.h"
+
+#include "RenderResource.h"
 
 
 namespace megamol {
@@ -44,6 +48,10 @@ namespace core {
  */
 class MEGAMOLCORE_API Module : public AbstractNamedObjectContainer {
 public:
+    virtual std::vector<std::string> requested_lifetime_dependencies() { 
+		return {"IOpenGL_Context"}; 
+	}
+
     friend class ::megamol::core::factories::ModuleDescription;
 
     /** Shared ptr type alias */
@@ -104,7 +112,7 @@ public:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool Create(void);
+    bool Create(std::vector<megamol::render_api::RenderResource> dependencies = {});
 
     /**
      * Finds the slot with the given name.
@@ -131,7 +139,7 @@ public:
      * Releases the module and all resources. Do not overwrite this method!
      * Overwrite 'release'!
      */
-    void Release(void);
+    void Release(std::vector<megamol::render_api::RenderResource> dependencies = {});
 
     /**
      * Clears the cleanup mark for this and all dependent objects.

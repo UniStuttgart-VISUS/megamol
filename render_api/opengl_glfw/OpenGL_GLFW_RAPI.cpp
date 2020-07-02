@@ -177,6 +177,20 @@ void outer_glfw_onFramebufferSize_func(GLFWwindow* wnd, int widthpx, int heightp
 #define m_sharedData ((m_data.sharedDataPtr) ? (*m_data.sharedDataPtr) : (m_data.sharedData))
 #define m_glfwWindowPtr (m_data.glfwContextWindowPtr)
 
+void OpenGL_GLFW_RAPI::OpenGL_Context::activate() const {
+    if (!ptr) return;
+
+	glfwMakeContextCurrent(static_cast<GLFWwindow*>(ptr));
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
+}
+
+void OpenGL_GLFW_RAPI::OpenGL_Context::close() const {
+    if (!ptr) return;
+
+	glfwMakeContextCurrent(nullptr);
+}
+
+
 struct OpenGL_GLFW_RAPI::PimplData {
     SharedData sharedData;              // personal data we share with other RAPIs
     SharedData* sharedDataPtr{nullptr}; // if we get shared data from another OGL RAPI object, we access it using this
@@ -203,7 +217,6 @@ struct OpenGL_GLFW_RAPI::PimplData {
     // glGenQueries(1, &m_data.primsQuery);
     // m_data.fpsSyncTime = std::chrono::system_clock::now();
 };
-
 
 OpenGL_GLFW_RAPI::~OpenGL_GLFW_RAPI() {
     if (m_pimpl) this->closeAPI(); // cleans up pimpl
@@ -316,6 +329,8 @@ bool OpenGL_GLFW_RAPI::initAPI(const Config& config) {
 
     m_glfwWindowPtr = ::glfwCreateWindow(m_data.currentWidth, m_data.currentHeight,
         m_data.initialConfig.windowTitlePrefix.c_str(), nullptr, m_sharedData.borrowed_glfwContextWindowPtr);
+    m_opengl_context_impl.ptr = m_glfwWindowPtr;
+    m_opengl_context = &m_opengl_context_impl;
 
     if (!m_glfwWindowPtr) {
         vislib::sys::Log::DefaultLog.WriteInfo("OpenGL_GLFW_RAPI: Failed to create GLFW window.");
@@ -408,7 +423,8 @@ bool OpenGL_GLFW_RAPI::initAPI(const Config& config) {
 		{"KeyboardEvents", m_keyboardEvents},
 		{"MouseEvents", m_mouseEvents},
 		{"WindowEvents", m_windowEvents},
-		{"FramebufferEvents", m_framebufferEvents}
+		{"FramebufferEvents", m_framebufferEvents},
+		{"IOpenGL_Context", *m_opengl_context}
 	};
 
     return true;
@@ -451,11 +467,6 @@ void OpenGL_GLFW_RAPI::preViewRender() {
     if (this->m_windowEvents.should_close_events.size() && this->m_windowEvents.should_close_events.back())
         this->setShutdown(true); // cleanup of this RAPI and dependent GL stuff is triggered via this shutdown hint
 
-    // set OpenGL context for renderering
-    ::glfwMakeContextCurrent(m_glfwWindowPtr);
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
-
     // start frame timer
 
     // rendering via MegaMol View is called after this function finishes
@@ -473,24 +484,9 @@ void OpenGL_GLFW_RAPI::postViewRender() {
     // m_data.uiLayers.OnDraw();
 
     ::glfwSwapBuffers(m_glfwWindowPtr);
-
-    // TODO: in gl::Window::Update() this only got called every second or so. was there an important reason to do so?
-#ifdef _WIN32
-    // TODO fix this for EGL + Win
-    if (m_data.initialConfig.windowPlacement.topMost) {
-        vislib::sys::Log::DefaultLog.WriteInfo("Periodic reordering of windows.");
-        SetWindowPos(glfwGetWin32Window(m_glfwWindowPtr), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
-    }
-#endif
-	
     ::glfwMakeContextCurrent(nullptr);
 
-	/*
-	m_keyboardEvents.clear();
-	m_mouseEvents.clear();
-	m_windowEvents.clear();
-	m_framebufferEvents.clear();
-	*/
+	this->clearResources();
 }
 
 void OpenGL_GLFW_RAPI::clearResources() {

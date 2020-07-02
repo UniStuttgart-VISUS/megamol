@@ -7,6 +7,11 @@
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
+#include "Framebuffer_Events.h"
+#include "KeyboardMouse_Events.h"
+#include "Window_Events.h"
+#include "OpenGL_Context.h"
+
 namespace megamol {
 namespace core {
 namespace view {
@@ -69,9 +74,23 @@ void view_consume_framebuffer_events(AbstractView& view, megamol::render_api::Re
 }
 
 void view_poke_rendering(AbstractView& view, megamol::render_api::RenderResource const& resource) {
-	// incoming RenderResource will be empty
-	_mmcRenderViewContext dummyRenderViewContext; // doesn't do anything, really
-	view.Render(dummyRenderViewContext);
+    auto optional_resource = resource.getResource<megamol::input_events::IOpenGL_Context>();
+
+	const auto render = [&]() {
+		_mmcRenderViewContext dummyRenderViewContext; // doesn't do anything, really
+		view.Render(dummyRenderViewContext);
+	};
+
+    if (optional_resource.has_value()) {
+		megamol::input_events::IOpenGL_Context const& gl_context = optional_resource.value().get();
+		gl_context.activate(); // makes GL context current
+
+		render();
+
+		gl_context.close();
+	} else {
+		render();
+	}
 }
 
 } /* end namespace view */

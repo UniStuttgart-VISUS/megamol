@@ -14,6 +14,7 @@
 #include "KeyboardMouse_Events.h"
 #include "Framebuffer_Events.h"
 #include "Window_Events.h"
+#include "OpenGL_Context.h"
 
 #include <memory>
 
@@ -101,6 +102,12 @@ public:
     void glfw_onFramebufferSize_func(const int widthpx, const int heightpx);
 
 private:
+	struct OpenGL_Context : public megamol::input_events::IOpenGL_Context {
+        void* ptr = nullptr;
+
+		void activate() const override;
+	    void close() const override;
+	};
 
     // abstract away GLFW library details behind pointer-to-implementation. only use GLFW header in .cpp
     struct PimplData;
@@ -112,6 +119,8 @@ private:
     MouseEvents m_mouseEvents;
     WindowEvents m_windowEvents;
     FramebufferEvents m_framebufferEvents;
+	OpenGL_Context m_opengl_context_impl;
+	input_events::IOpenGL_Context* m_opengl_context;
 
 public:
     void clearResources();

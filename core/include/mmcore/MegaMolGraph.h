@@ -66,7 +66,13 @@ public:
 
     using CallInstantiationRequest_t = CallInstantiationRequest;
 
-    using ModuleInstance_t = std::pair<Module::ptr_type, ModuleInstantiationRequest>;
+	struct ModuleInstance_t {
+        Module::ptr_type modulePtr = nullptr;
+        ModuleInstantiationRequest request;
+        bool isGraphEntryPoint = false;
+        std::vector<std::string> lifetime_dependencies_requests;
+        std::vector<megamol::render_api::RenderResource> lifetime_dependencies;
+	};
 
     using ModuleList_t = std::list<ModuleInstance_t>;
 
@@ -74,25 +80,13 @@ public:
 
     using CallList_t = std::list<CallInstance_t>;
 
-    using lua_task_result_t = std::tuple<int, std::string>;
-    using lua_task_future_t = std::future<lua_task_result_t>;
-
-    struct lua_task {
-        std::string script;
-        std::optional<lua_task_future_t> future;
-    };
-
-    using lua_tasks_queue_t = std::list<lua_task>;
-
     //////////////////////////// ctor / dtor ///////////////////////////////
 
     /**
      * Bare construction as stub for deserialization
      */
     MegaMolGraph(megamol::core::CoreInstance& core, factories::ModuleDescriptionManager const& moduleProvider,
-        factories::CallDescriptionManager const& callProvider,
-		std::unique_ptr<render_api::AbstractRenderAPI> rapi,
-		std::string rapi_name);
+        factories::CallDescriptionManager const& callProvider);
 
     /**
      * No copy-construction. This can only be a legal operation, if we allow deep-copy of Modules in graph.
@@ -183,11 +177,16 @@ public:
 
     std::vector<megamol::core::param::ParamSlot*> ListParameterSlots() const;
 
-    std::optional<lua_task_future_t> QueueLuaScript(std::string const& script, bool want_result);
+	using EntryPointExecutionCallback =
+        std::function<void(Module::ptr_type, std::vector<megamol::render_api::RenderResource>)>;
 
-    bool HasPendingRequests();
+	bool SetGraphEntryPoint(std::string moduleName, std::vector<std::string> execution_dependencies, EntryPointExecutionCallback callback);
+
+	bool RemoveGraphEntryPoint(std::string moduleName);
 
     void RenderNextFrame();
+
+	void AddModuleDependencies(std::vector<megamol::render_api::RenderResource> const& dependencies);
 
 	// Create View ?
 
@@ -213,6 +212,8 @@ private:
 
     bool delete_call(CallDeletionRequest_t const& request);
 
+    std::vector<megamol::render_api::RenderResource> get_requested_dependencies(std::vector<std::string> dependency_requests);
+
 
     /** List of modules that this graph owns */
     ModuleList_t module_list_;
@@ -224,62 +225,20 @@ private:
     /** List of call that this graph owns */
     CallList_t call_list_;
 
-    // Render APIs (RAPIs) provide rendering or other resources (e.g. OpenGL context, user inputs)
-    // that are used by MegaMol for rendering. We may use many RAPIs simultaneously that provide data to MegaMol,
-    // but we need at least one RAPI that provides data like rendering context and rendering configuration (i.e. framebuffer memory and size).
-    // Views (e.g. View3D) are the entry point from where the MegaMol graph is evaluated. 
-    // Views are fed with resources and events that are provided by RAPIs.
-    // things get compilcated when we try to model having many different Views that depend on many different resources coming from different RAPIs.
-    // because of this, for now we only have one RAPI object in the feeding events to Views and we expect only one View object to be present in the graph.
-    std::unique_ptr<render_api::AbstractRenderAPI> rapi_;
-    std::string rapi_root_name;
-    std::list<std::function<bool()>> rapi_commands;
+	std::vector<megamol::render_api::RenderResource> provided_dependencies;
 
-	struct RapiAutoExecution {
-        render_api::AbstractRenderAPI* ptr = nullptr;
-
-        RapiAutoExecution(std::unique_ptr<render_api::AbstractRenderAPI>& rapi);
-        ~RapiAutoExecution();
+	// for each View in the MegaMol graph we create a GraphEntryPoint with corresponding callback for resource/input consumption
+	// the graph makes sure that the (lifetime and rendering) dependencies requested by the module are satisfied,
+	// which means that the execute() callback for the entry point is provided the requested dependencies/resources for rendering
+	// and the Create() and Release() mehods of all modules receive the dependencies/resources they request for their lifetime
+	struct GraphEntryPoint {
+        std::string moduleName;
+        Module::ptr_type modulePtr = nullptr;
+        std::vector<megamol::render_api::RenderResource> entry_point_dependencies;
+		
+		EntryPointExecutionCallback execute;
 	};
-
-	// this struct feeds a view instance with requested render resources like keyboard events or framebuffer resizes
-	// resources are identified by name (a string). when a requested resource name is found 
-	// the resource is passed to a handler function that is registered with the ViewResourceFeeder
-	// the handler function is supposed to pass the resource to the AbstractView object in some way (e.g. pass keyboard inputs to OnKey callbacks of the View)
-	// one may register 'empty' handlers that dont expect any resource but should be executed anyway. those ResourceHandlers use the empty string "" as resource identification.
-	// currently empty handlers are used to tell a View to render itself after all input events have been processed.
-    struct ViewResourceFeeder {
-        view::AbstractView* view;
-
-		using ResourceHandler =
-            std::pair<std::string, std::function<void(view::AbstractView&, const megamol::render_api::RenderResource&)>>;
-
-        std::vector<ResourceHandler> resourceConsumption;
-
-        void consume(const std::vector<megamol::render_api::RenderResource>& resources) {
-            if (!view)
-				return; // TODO: big fail
-
-            std::for_each(resourceConsumption.begin(), resourceConsumption.end(), 
-				[&](const ResourceHandler& resource_handler) {
-					auto resource_it = std::find_if(resources.begin(), resources.end(), 
-						[&](const megamol::render_api::RenderResource& resource) { return resource_handler.first == resource.getIdentifier() || resource_handler.first == "" || resource_handler.first.empty(); });
-
-					if (resource_it != resources.end() && resource_it->getIdentifier() == resource_handler.first) {
-                        resource_handler.second(*view, *resource_it);
-                    } 
-					if(resource_handler.first == "" || resource_handler.first.empty()) {
-                        resource_handler.second(*view, megamol::render_api::RenderResource{"", std::nullopt});
-                    }
-				});
-		}
-    };
-
-	// for each View in the MegaMol graph we create a ViewResourceFeeder with corresponding ResourceHandlers for resource/input consumption
-	// currently the setup of the ResourceHandlers happens when the graph recognizes that a newly created module is a view.
-	// right now this happens in MegaMolGraph::add_module(), but it may be automated or configured from outside, 
-	// for example by passing resource handler names that should be passed to the View when requesting a View module in the config file
-    std::list<ViewResourceFeeder> view_feeders;
+    std::list<GraphEntryPoint> graph_entry_points;
 
 
     ////////////////////////// old interface stuff //////////////////////////////////////////////

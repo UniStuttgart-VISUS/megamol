@@ -39,29 +39,13 @@ static megamol::core::param::AbstractParam* getParameterFromParamSlot(megamol::c
 }
 
 megamol::core::MegaMolGraph::MegaMolGraph(megamol::core::CoreInstance& core,
-    factories::ModuleDescriptionManager const& moduleProvider, factories::CallDescriptionManager const& callProvider,
-    std::unique_ptr<render_api::AbstractRenderAPI> rapi, std::string rapi_name)
+    factories::ModuleDescriptionManager const& moduleProvider, factories::CallDescriptionManager const& callProvider)
     : moduleProvider_ptr{&moduleProvider}
     , callProvider_ptr{&callProvider}
-    , rapi_{std::move(rapi)}
-    , rapi_root_name{rapi_name}
     , dummy_namespace{std::make_shared<RootModuleNamespace>()} {
     // the Core Instance is a parasite that needs to be passed to all modules
     // TODO: make it so there is no more core instance
     dummy_namespace->SetCoreInstance(core);
-}
-
-megamol::core::MegaMolGraph::RapiAutoExecution::RapiAutoExecution(
-    std::unique_ptr<render_api::AbstractRenderAPI>& rapi) {
-    this->ptr = rapi.get();
-
-    if (ptr) ptr->preViewRender();
-}
-
-megamol::core::MegaMolGraph::RapiAutoExecution::~RapiAutoExecution() {
-    if (ptr) ptr->postViewRender();
-
-    ptr = nullptr;
 }
 
 /**
@@ -82,8 +66,6 @@ megamol::core::MegaMolGraph& megamol::core::MegaMolGraph::operator=(MegaMolGraph
 
 /** dtor */
 megamol::core::MegaMolGraph::~MegaMolGraph() {
-    if (this->rapi_) rapi_->closeAPI();
-
     moduleProvider_ptr = nullptr;
     callProvider_ptr = nullptr;
 }
@@ -97,38 +79,27 @@ const megamol::core::factories::CallDescriptionManager& megamol::core::MegaMolGr
 }
 
 bool megamol::core::MegaMolGraph::DeleteModule(std::string const& id) {
-    RapiAutoExecution rapi(rapi_); // TODO fix OpenGL hack!
-
     return delete_module(id);
 }
 
 
 bool megamol::core::MegaMolGraph::CreateModule(std::string const& className, std::string const& id) {
-    RapiAutoExecution rapi(rapi_); // TODO fix OpenGL hack!
-
     return add_module(ModuleInstantiationRequest{className, id});
 }
 
 bool megamol::core::MegaMolGraph::DeleteCall(std::string const& from, std::string const& to) {
-    RapiAutoExecution rapi(rapi_); // TODO fix OpenGL hack!
-
     return delete_call(CallDeletionRequest{from, to});
 }
 
 
 bool megamol::core::MegaMolGraph::CreateCall(
     std::string const& className, std::string const& from, std::string const& to) {
-    RapiAutoExecution rapi(rapi_); // TODO fix OpenGL hack!
-
     return add_call(CallInstantiationRequest{className, from, to});
 }
 
-
-bool megamol::core::MegaMolGraph::HasPendingRequests() { return this->rapi_commands.size() > 0; }
-
 megamol::core::MegaMolGraph::ModuleList_t::iterator megamol::core::MegaMolGraph::find_module(std::string const& name) {
     auto it = std::find_if(this->module_list_.begin(), this->module_list_.end(),
-        [&name](megamol::core::MegaMolGraph::ModuleInstance_t const& el) { return el.second.id == name; });
+        [&name](megamol::core::MegaMolGraph::ModuleInstance_t const& el) { return el.request.id == name; });
 
     return it;
 }
@@ -137,7 +108,7 @@ megamol::core::MegaMolGraph::ModuleList_t::const_iterator megamol::core::MegaMol
     std::string const& name) const {
 
     auto it = std::find_if(this->module_list_.cbegin(), this->module_list_.cend(),
-        [&name](megamol::core::MegaMolGraph::ModuleInstance_t const& el) { return el.second.id == name; });
+        [&name](megamol::core::MegaMolGraph::ModuleInstance_t const& el) { return el.request.id == name; });
 
     return it;
 }
@@ -186,13 +157,28 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         return false;
     }
 
-    this->module_list_.emplace_front(module_ptr, request);
+	auto module_lifetime_dependencies_request = module_ptr->requested_lifetime_dependencies();
+
+	auto module_lifetime_dependencies = get_requested_dependencies(module_lifetime_dependencies_request);
+
+	if (module_lifetime_dependencies.size() != module_lifetime_dependencies_request.size()) {
+        std::string requested_deps = "";
+        std::string found_deps = "";
+        for (auto& req : module_lifetime_dependencies_request) requested_deps += " " + req;
+        for (auto& dep : module_lifetime_dependencies) found_deps += " " + dep.getIdentifier();
+        log("error. could not create module, not all requested dependencies available: ");
+        log("requested: " + requested_deps);
+        log("found: " + found_deps);
+
+		return false;
+    }
+
+    this->module_list_.push_front({module_ptr, request, false, module_lifetime_dependencies_request, module_lifetime_dependencies});
 
     module_ptr->setParent(this->dummy_namespace);
 
-    // execute IsAvailable() and Create() in GL context
-    const auto create_module = [module_description, module_ptr]() {
-        const bool init_ok = module_description->IsAvailable() && module_ptr->Create();
+    const auto create_module = [module_description, module_ptr](auto& module_lifetime_dependencies) {
+        const bool init_ok = module_ptr->Create(module_lifetime_dependencies); // seems like Create() internally checks IsAvailable()
 
         if (!init_ok)
             log("error. could not create module, IsAvailable() or Create() failed: " +
@@ -202,28 +188,14 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
 
         return init_ok;
     };
-    create_module(); // TODO HACK: until some resource-to-module provider mechanism is implemented, module creation and
-                     // deletion is wrapped in the OpenGL context
-                     // this->rapi_commands.emplace_front(create_module); // returns false if something went wrong
 
-    // if the new module is a view module register if with a View Resource Feeder and set it up to get the default
-    // resources of the GLFW context plus an empty handler for rendering
-    megamol::core::view::AbstractView* view_ptr = nullptr;
-    if (view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get())) {
-        this->view_feeders.push_back(ViewResourceFeeder{
-            view_ptr, {
-                          // rendering resource handlers are executed in the order defined here
-                          std::make_pair("KeyboardEvents", megamol::core::view::view_consume_keyboard_events),
-                          std::make_pair("MouseEvents", megamol::core::view::view_consume_mouse_events),
-                          std::make_pair("WindowEvents", megamol::core::view::view_consume_window_events),
-                          std::make_pair("FramebufferEvents", megamol::core::view::view_consume_framebuffer_events),
-                          std::make_pair("", megamol::core::view::view_poke_rendering),
-                      }});
-    }
+	bool isCreateOk = create_module(this->module_list_.front().lifetime_dependencies);
 
-    // TODO: make sure that requested rendering resources or inputs for the view are provided by some RAPI
+	if (!isCreateOk) {
+        this->module_list_.pop_front();
+	}
 
-    return true;
+    return isCreateOk;
 }
 
 bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& request) {
@@ -246,7 +218,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
             return {false, nullptr};
         }
 
-        Module::ptr_type module_ptr = module_it->first;
+        Module::ptr_type module_ptr = module_it->modulePtr;
         const auto slot_name = vislib::StringA(path.back().c_str());
         AbstractSlot* slot_ptr = module_ptr->FindSlot(slot_name);
         if (!slot_ptr) {
@@ -339,8 +311,8 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
         return false;
     }
 
-    auto module_ptr = module_it->first; // is std::shared_ptr, a copy stays alive until rapi_commands got executed and
-                                        // the vector gets cleared
+    auto module_ptr = module_it->modulePtr;
+
     if (!module_ptr) {
         log("error. no object behind pointer when deleting module: " + request);
         return false;
@@ -354,17 +326,18 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
         delete_call(CallDeletionRequest_t{call_it->second.from, call_it->second.to});
     });
 
-    // call Release() in GL context
-    const auto release_module = [module_ptr]() -> bool {
-        module_ptr->Release();
+	if (module_it->isGraphEntryPoint)
+		this->RemoveGraphEntryPoint(request);
+
+    const auto release_module = [module_ptr](auto& module_lifetime_dependencies) -> bool {
+        module_ptr->Release(module_lifetime_dependencies);
         log("release module: " + std::string(module_ptr->Name().PeekBuffer()));
         return true;
         // end of lambda scope deletes last shared_ptr to module
         // thus the module gets deleted after execution and deletion of this command callback
     };
-    release_module(); // TODO HACK: until some resource-to-module provider mechanism is implemented, module creation and
-                      // deletion is wrapped in the OpenGL context
-    // this->rapi_commands.emplace_back(release_module);
+
+    release_module(module_it->lifetime_dependencies);
 
     this->module_list_.erase(module_it);
 
@@ -402,33 +375,9 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
 
 
 void megamol::core::MegaMolGraph::RenderNextFrame() {
-
-    if (this->rapi_) this->rapi_->preViewRender();
-
-    // OpenGL context for module Create() provided here by preViewRender() of RAPI with GL context
-    bool some_command_failed = false;
-    for (auto& command : this->rapi_commands)
-        some_command_failed |= !command(); // module Create() or Release() called here
-
-    this->rapi_commands.clear();
-
-    if (some_command_failed) {
-        // TODO
-        // fail and stop execution of MegaMol because without the requested graph modules further execution makes no
-        // sense
-        for (auto& m : module_list_) {
-            if (!m.first->isCreated()) log("error. module not created: " + m.second.id + ", " + m.second.className);
-        }
+	for (auto& entry : graph_entry_points) {
+        entry.execute(entry.modulePtr, entry.entry_point_dependencies);
     }
-
-    // process ui events and other resources
-    // this also contains a handler that tells the view to render itself
-    auto& resources = this->rapi_->getRenderResources();
-    for (auto& view_feeder : view_feeders) view_feeder.consume(resources);
-
-    // TODO: handle 'stop rendering' requests
-
-    if (this->rapi_) this->rapi_->postViewRender();
 }
 
 megamol::core::Module::ptr_type megamol::core::MegaMolGraph::FindModule(std::string const& moduleName) const {
@@ -439,8 +388,7 @@ megamol::core::Module::ptr_type megamol::core::MegaMolGraph::FindModule(std::str
         return nullptr;
     }
 
-    auto module_ptr = module_it->first;
-    return module_ptr;
+    return module_it->modulePtr;
 }
 
 megamol::core::Call::ptr_type megamol::core::MegaMolGraph::FindCall(
@@ -473,7 +421,7 @@ megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(
         return nullptr;
     }
 
-    auto& module = *(module_it->first);
+    auto& module = *module_it->modulePtr;
     std::string slot_name = names.back();
     AbstractSlot* slot_ptr = module.FindSlot(slot_name.c_str());
     param::ParamSlot* param_slot_ptr = dynamic_cast<param::ParamSlot*>(slot_ptr);
@@ -503,8 +451,8 @@ std::vector<megamol::core::param::ParamSlot*> megamol::core::MegaMolGraph::Enume
         return parameters;
     }
 
-    auto children_begin = module_it->first->ChildList_Begin();
-    auto children_end = module_it->first->ChildList_End();
+    auto children_begin = module_it->modulePtr->ChildList_Begin();
+    auto children_end = module_it->modulePtr->ChildList_End();
 
     while (children_begin != children_end) {
         AbstractNamedObject::ptr_type named_object = *children_begin;
@@ -543,7 +491,7 @@ std::vector<megamol::core::param::ParamSlot*> megamol::core::MegaMolGraph::ListP
     std::vector<megamol::core::param::ParamSlot*> param_slots;
 
     for (auto& mod : module_list_) {
-        auto module_params = this->EnumerateModuleParameterSlots(mod.first->Name().PeekBuffer());
+        auto module_params = this->EnumerateModuleParameterSlots(mod.modulePtr->Name().PeekBuffer());
 
         param_slots.insert(param_slots.end(), module_params.begin(), module_params.end());
     }
@@ -561,3 +509,64 @@ std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::L
 
     return parameters;
 }
+
+bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName, std::vector<std::string> execution_dependencies, EntryPointExecutionCallback callback) {
+    auto module_it = find_module(moduleName);
+
+    if (module_it == module_list_.end()) {
+        log("error. could not find module: " + moduleName);
+        return false;
+    }
+
+    auto module_ptr = module_it->modulePtr;
+
+	auto dependencies = get_requested_dependencies(execution_dependencies);
+
+	this->graph_entry_points.push_back({moduleName, module_ptr, dependencies, callback});
+
+    return true;
+}
+
+bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string moduleName) {
+    auto module_it = find_module(moduleName);
+
+    if (module_it == module_list_.end()) {
+        log("error. could not find module: " + moduleName);
+        return false;
+    }
+
+    auto module_ptr = module_it->modulePtr;
+    megamol::core::view::AbstractView* view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
+
+    if (!view_ptr) {
+        log("error. module: " + moduleName + " is not a view module. could not set as graph rendering entry point.");
+        return false;
+    }
+
+	this->graph_entry_points.remove_if([&](GraphEntryPoint& entry) { return entry.moduleName == moduleName; });
+
+    module_it->isGraphEntryPoint = false;
+
+    return true;
+}
+
+void megamol::core::MegaMolGraph::AddModuleDependencies(std::vector<megamol::render_api::RenderResource> const& dependencies) {
+    this->provided_dependencies.insert(provided_dependencies.end(), dependencies.begin(), dependencies.end());
+}
+
+std::vector<megamol::render_api::RenderResource> megamol::core::MegaMolGraph::get_requested_dependencies(std::vector<std::string> dependency_requests) {
+    std::vector<megamol::render_api::RenderResource> result;
+    result.reserve(dependency_requests.size());
+
+    for (auto& request : dependency_requests) {
+        auto dependency_it = std::find_if(this->provided_dependencies.begin(), this->provided_dependencies.end(), [&](megamol::render_api::RenderResource& dependency){
+			return request == dependency.getIdentifier();
+		});
+
+		if (dependency_it != provided_dependencies.end())
+			result.push_back(*dependency_it);
+    }
+
+	return result;
+}
+
