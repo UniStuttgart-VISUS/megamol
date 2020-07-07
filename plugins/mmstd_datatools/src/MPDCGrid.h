@@ -89,6 +89,8 @@ private:
 
     size_t data_out_hash_;
 
+    size_t data_in_hash_;
+
     int out_frame_id_;
 
     std::vector<std::vector<Particle>> data_;

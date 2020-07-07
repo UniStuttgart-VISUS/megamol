@@ -10,7 +10,9 @@ megamol::stdplugin::datatools::MPDCGrid::MPDCGrid()
     : data_out_slot_("dataOut", "")
     , data_in_slot_("dataIn", "")
     , max_size_slot_("maxSize", "Maximum size of each cell")
-    , data_out_hash_(std::numeric_limits<size_t>::max()) {
+    , data_out_hash_(std::numeric_limits<size_t>::max())
+    , data_in_hash_(std::numeric_limits<size_t>::max())
+    , out_frame_id_(-1) {
     data_out_slot_.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
         core::moldyn::MultiParticleDataCall::FunctionName(0), &MPDCGrid::getDataCallback);
     data_out_slot_.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
@@ -35,14 +37,15 @@ void megamol::stdplugin::datatools::MPDCGrid::release() {}
 
 
 bool megamol::stdplugin::datatools::MPDCGrid::getDataCallback(core::Call& c) {
+
     auto outData = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
     if (outData == nullptr) return false;
 
     auto inData = data_in_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
     if (inData == nullptr) return false;
 
-    if (data_out_hash_ != inData->DataHash() || out_frame_id_ != inData->FrameID()) {
-        data_out_hash_ = inData->DataHash();
+    if (data_in_hash_ != inData->DataHash() || out_frame_id_ != inData->FrameID()) {
+        data_in_hash_ = inData->DataHash();
         out_frame_id_ = inData->FrameID();
 
         if (!(*inData)(0)) return false;
@@ -91,10 +94,12 @@ bool megamol::stdplugin::datatools::MPDCGrid::getDataCallback(core::Call& c) {
         for (size_t plidx = 0; plidx < output_.size(); ++plidx) {
             outData->AccessParticles(plidx) = output_[plidx];
         }
+
+        ++data_out_hash_;
     }
 
     outData->SetDataHash(data_out_hash_);
-    outData->SetFrameID(out_frame_id_);
+    outData->SetFrameID(inData->FrameID());
 
     return true;
 }
@@ -111,10 +116,13 @@ bool megamol::stdplugin::datatools::MPDCGrid::getExtentCallback(core::Call& c) {
     if (!(*inData)(1)) return false;
 
     outData->SetFrameCount(inData->FrameCount());
+    outData->SetFrameID(inData->FrameID());
 
     outData->AccessBoundingBoxes().SetObjectSpaceBBox(inData->AccessBoundingBoxes().ObjectSpaceBBox());
     outData->AccessBoundingBoxes().SetObjectSpaceClipBox(inData->AccessBoundingBoxes().ObjectSpaceClipBox());
 
+    outData->SetDataHash(data_out_hash_);
+    
     return true;
 }
 
