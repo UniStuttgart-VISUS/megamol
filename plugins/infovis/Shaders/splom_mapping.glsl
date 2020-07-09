@@ -5,6 +5,8 @@ uniform vec2 valueColumnMinMax;
 
 uniform float alphaScaling;
 
+uniform vec4 pickColor = vec4(1.0, 0.0, 0.0, 1.0);
+
 // Normalize value to [0;1].
 float normalizeValue(float value) {
     return (value - valueColumnMinMax.x) / (valueColumnMinMax.y - valueColumnMinMax.x);
@@ -13,7 +15,7 @@ float normalizeValue(float value) {
 // Adjusts the color based on flags.
 vec4 flagifyColor(vec4 color, uint flags) {
     if (bitflag_test(flags, FLAG_SELECTED, FLAG_SELECTED)) {
-        return vec4(1.0, 0.0, 0.0, 1.0); //TODO: param?
+        return pickColor;
     } else {
         return color;
     }

@@ -214,12 +214,16 @@ function(require_external NAME)
       set(GLFW_LIB "bin/glfw3.dll")
     else()
       set(GLFW_LIB "${CMAKE_INSTALL_LIBDIR}/libglfw.so")
+      # This is a try to fix #544 at least for GLFW. I found no nicer solution, probably this needs some major refactoring of the externals system.
+      # It is probably a very ugly hack, but hopefully this whole dynamic linking stuff dies anytime soon.
+      set(GLFW_LIB2 "${CMAKE_INSTALL_LIBDIR}/libglfw.so.3")
+      set(GLFW_LIB3 "${CMAKE_INSTALL_LIBDIR}/libglfw.so.3.3")
     endif()
 
     add_external_project(glfw SHARED
       GIT_REPOSITORY https://github.com/glfw/glfw.git
       GIT_TAG "3.3.2"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_LIB}" "<INSTALL_DIR>/${GLFW_IMPORT_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_LIB}" "<INSTALL_DIR>/${GLFW_LIB2}" "<INSTALL_DIR>/${GLFW_LIB3}" "<INSTALL_DIR>/${GLFW_IMPORT_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DGLFW_BUILD_EXAMPLES=OFF
@@ -381,12 +385,13 @@ function(require_external NAME)
     else()
       include(GNUInstallDirs)
       set(ZMQ_LIB "${CMAKE_INSTALL_LIBDIR}/libzmq.so")
+      set(ZMQ_LIB2 "${CMAKE_INSTALL_LIBDIR}/libzmq.so.5")
     endif()
 
     add_external_project(libzmq SHARED
       GIT_REPOSITORY https://github.com/zeromq/libzmq.git
       GIT_TAG 56ace6d03f521b9abb5a50176ec7763c1b77afa9
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZMQ_LIB}" "<INSTALL_DIR>/${ZMQ_IMPORT_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZMQ_LIB}" "<INSTALL_DIR>/${ZMQ_LIB2}" "<INSTALL_DIR>/${ZMQ_IMPORT_LIB}"
       CMAKE_ARGS
         -DZMQ_BUILD_TESTS=OFF
         -DENABLE_PRECOMPILED=OFF)
@@ -488,7 +493,6 @@ function(require_external NAME)
       set(TNY_IMPORT_LIB "lib/tinyply.lib")
       set(TNY_LIB "bin/tinyply.dll")
     else()
-      include(GNUInstallDirs)
       set(TNY_LIB "lib/libtinyply.so")
     endif()
 

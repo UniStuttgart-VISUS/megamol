@@ -32,7 +32,15 @@ class WindowManager {
 
 public:
     /** Identifiers for the window draw callbacks. */
-    enum DrawCallbacks { NONE = 0, MAIN = 1, PARAM = 2, FPSMS = 3, FONT = 4, TF = 5, CONFIGURATOR = 6 };
+    enum DrawCallbacks {
+        NONE = 0,
+        MAIN = 1,
+        PARAMETERS = 2,
+        PERFORMANCE = 3,
+        FONT = 4,
+        TRANSFER_FUNCTION = 5,
+        CONFIGURATOR = 6
+    };
 
     /** Performance mode for fps/ms windows. */
     enum TimingModes { FPS = 0, MS = 1 };
