@@ -3,7 +3,11 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
+#include "mesh/MeshCalls.h"
+
 #pragma once
+
+using namespace megamol::mesh;
 
 namespace megamol {
 namespace mmvtkm {
@@ -91,36 +95,40 @@ private:
 	bool seedBoundCheck();
 
     /** Gets converted vtk streamline data as megamol mesh */
-    core::CalleeSlot meshCalleeSlot;
+    core::CalleeSlot meshCalleeSlot_;
 
     /** Callerslot from which the vtk data is coming from */
-    core::CallerSlot vtkCallerSlot;
+    core::CallerSlot vtkCallerSlot_;
 
     /** Paramslot to specify the field name of streamline vector field */
-    core::param::ParamSlot fieldName;
+    core::param::ParamSlot fieldName_;
 
 	/** Paramslot to specify the seeds for the streamline */
-    core::param::ParamSlot numStreamlineSeed;
+    core::param::ParamSlot numStreamlineSeed_;
 
 	/** Paramslot to specify the seeds for the streamline */
-    core::param::ParamSlot lowerStreamlineSeedBound;
+    core::param::ParamSlot lowerStreamlineSeedBound_;
 
 	/** Paramslot to specify the seeds for the streamline */
-    core::param::ParamSlot upperStreamlineSeedBound;
+    core::param::ParamSlot upperStreamlineSeedBound_;
 
 	/** Paramslot to specify the step size of the streamline */
-    core::param::ParamSlot streamlineStepSize;
+    core::param::ParamSlot streamlineStepSize_;
 
 	/** Paramslot to specify the number of steps of the streamline */
-    core::param::ParamSlot numStreamlineSteps;
+    core::param::ParamSlot numStreamlineSteps_;
 
 	/** Used for conversion seed bounding param type to vtkm vec type */
-    Vec3f lowerSeedBound;
-    Vec3f upperSeedBound;
+    Vec3f lowerSeedBound_;
+    Vec3f upperSeedBound_;
 
 	/** Used for data version control, same as 'hash_data' */
-	uint32_t old_version;
-    uint32_t new_version;
+	uint32_t old_version_;
+    uint32_t new_version_;
+
+	/** Used for mesh data call */
+    std::shared_ptr<MeshDataAccessCollection> mesh_data_access_;
+    core::Spatial3DMetaData meta_data_;
 };
 
 } // end namespace mmvtkm

@@ -648,6 +648,7 @@ function(require_external NAME)
         -DVTKm_ENABLE_DEVELOPER_FLAGS:BOOL=OFF
         -DVTKm_ENABLE_EXAMPLES:BOOL=OFF
         -DVTKm_INSTALL_ONLY_LIBRARIES:BOOL=ON
+        -DVTKm_USE_64BIT_IDS:BOOL=OFF
         #-DCMAKE_BUILD_TYPE=Release
         )
 
