@@ -144,12 +144,14 @@ in Interface
       <snippet type="string">
         <![CDATA[
 layout(location = 0) out vec4 fragColor;
+layout(early_fragment_tests) in;
 
 void main()
 {
   if (bitflag_test(flags[in_.itemID], fragmentTestMask, fragmentPassMask)) {
   //if (bitflag_test(flags[in_.itemID], 5, 1)) {
-    fragColor = in_.color;
+    //fragColor = vec4(vec3(gl_FragCoord.z), 1.0);
+	fragColor = in_.color;
   } else {
     discard;
     //fragColor = vec4(vec3(0.2), 1.0);
@@ -165,7 +167,7 @@ void main()
     <snippet name="uniforms" type="string">
       <![CDATA[
 layout(binding = 1) uniform sampler2D fragCount;
-
+layout(early_fragment_tests) in;
 uniform vec4 clearColor = vec4(0.0);
       ]]>
     </snippet>
@@ -283,7 +285,7 @@ void main()
       <snippet type="string">
         <![CDATA[
 smooth in vec2 texCoord;
-
+layout(early_fragment_tests) in;
 layout(location = 0) out vec4 fragColor;
 
 void main()
@@ -295,6 +297,7 @@ void main()
     float value = (frags.r - minFragmentCount) / (maxFragmentCount - minFragmentCount);
     value = clamp(value, 0.0, 1.0);
     fragColor = tflookup(value);
+    //fragColor = vec4(vec3(gl_FragCoord.z), 1.0);
   }
   else
   {
@@ -310,7 +313,7 @@ void main()
     <snippet name="uniforms" type="string">
       <![CDATA[
 layout(binding = 1) uniform sampler2D fragCount;
-
+layout(early_fragment_tests) in;
 uniform vec4 clearColor = vec4(0.0);
       ]]>
     </snippet>
@@ -366,7 +369,7 @@ void main()
       <snippet type="string">
         <![CDATA[
 smooth in vec2 texCoord;
-
+layout(early_fragment_tests) in;
 layout(location = 0) out vec4 fragColor;
 
 void main()
@@ -386,7 +389,8 @@ void main()
   {
     float value = (frags.r - minFragmentCount) / (maxFragmentCount - minFragmentCount);
     value = clamp(value, 0.0, 1.0);
-    fragColor = tflookup(value);
+    //fragColor = tflookup(value);
+    fragColor = vec4(vec3(gl_FragCoord.z), 1.0);
   }
   else
   {
@@ -472,20 +476,22 @@ in Interface
       <snippet type="string">
         <![CDATA[
 layout(location = 0) out vec4 fragColor;
-
+layout(early_fragment_tests) in;
 void main()
 {
 #if 0
   if (bitflag_test(flags[in_.itemID], fragmentTestMask, fragmentPassMask)) {
   //if (bitflag_test(flags[in_.itemID], 5, 1)) {
     fragColor = in_.color;
+    //fragColor = vec4(vec3(gl_FragCoord.z), 1.0);
   } else {
     discard;
     //fragColor = vec4(vec3(0.2), 1.0);
   }
 #endif
   
-  fragColor = in_.color;
+  //fragColor = in_.color;
+  fragColor = vec4(vec3(gl_FragCoord.z), 1.0);
   
 }
       ]]>
@@ -646,18 +652,20 @@ struct Interface
   uint itemID;
   vec4 color;
 };
+layout(early_fragment_tests) in;
 layout(location = 0) flat in Interface in_;
         ]]>
       </snippet>
       <snippet type="string">
         <![CDATA[
 layout(location = 0) out vec4 fragColor;
-
+layout(early_fragment_tests) in;
 void main()
 {
   if (bitflag_test(flags[in_.itemID], fragmentTestMask, fragmentPassMask)) {
   //if (true) {
     fragColor = in_.color;
+    //fragColor = vec4(vec3(gl_FragCoord.z), 1.0);;
   } else {
     discard;
     //fragColor = vec4(vec3(0.2), 1.0);

@@ -292,10 +292,16 @@ private:
     core::param::ParamSlot yMinOffset;
     core::param::ParamSlot yMaxOffset;
 
+
+    std::vector<GLfloat> tex;
+    std::vector<GLfloat> tex2;
+    GLboolean why = GL_FALSE;
     GLint origFBO = 0;
     GLint origFBOr = 0;
     GLuint imStoreI;
     GLuint imStoreI2;
+    GLuint depthStore;
+    GLuint depthStore2;
     std::shared_ptr<glowl::FramebufferObject> nuFB;
     GLuint nuFBb;
     GLuint nuFBb2;
