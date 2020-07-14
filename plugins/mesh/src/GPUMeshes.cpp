@@ -51,10 +51,20 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
         for (auto& mesh : meshes) {
 
             // check if primtives type
-            GLenum primtive_type = GL_TRIANGLES;
-            if (mesh.primitive_type == MeshDataAccessCollection::QUADS) {
-                primtive_type = GL_PATCHES;
-            }
+            GLenum primitive_type = GL_NONE;
+			switch (mesh.primitive_type) {
+            case 0:
+                primitive_type = GL_TRIANGLES;
+                break;
+            case 1:
+                primitive_type = GL_PATCHES;
+                break;
+            case 2:
+                primitive_type = GL_LINES;
+                break;
+            default:
+                vislib::sys::Log::DefaultLog.WriteError("There was no matching primitive type found!");
+			}
 
             std::vector<glowl::VertexLayout::Attribute> attribs;
             std::vector<std::pair<uint8_t*, uint8_t*>> vb_iterators;
@@ -74,7 +84,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
             glowl::VertexLayout vertex_descriptor(0, attribs);
             mesh_collection->addMesh(vertex_descriptor, vb_iterators, ib_iterators,
-                MeshDataAccessCollection::convertToGLType(mesh.indices.type), GL_STATIC_DRAW, primtive_type);
+                MeshDataAccessCollection::convertToGLType(mesh.indices.type), GL_STATIC_DRAW, primitive_type);
         }
     }
 

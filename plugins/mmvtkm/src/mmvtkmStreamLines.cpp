@@ -181,7 +181,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
         // for non-temporal data (steady flow) it holds that streamlines = streaklines = pathlines
         // therefore we can calculate the pathlines via the streamline filter
-        vtkm::filter::Streamline streamlines;
+        vtkm::filter::Streamline vtkm_streamlines;
 
         // specify the seeds
         vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> seedArray;
@@ -193,7 +193,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
         vtkm::Id numSeeds = this->numStreamlineSeed_.Param<core::param::IntParam>()->Value();
 
-        for (int i = 0; i < numSeeds; i++) {
+        for (int i = 0; i < 5; i++) {
             vtkm::Vec<vtkm::FloatDefault, 3> p;
             vtkm::FloatDefault rx = (vtkm::FloatDefault)rand() / (vtkm::FloatDefault)RAND_MAX;
             vtkm::FloatDefault ry = (vtkm::FloatDefault)rand() / (vtkm::FloatDefault)RAND_MAX;
@@ -208,118 +208,114 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
         std::string activeField =
             "hs1"; // static_cast<std::string>(this->fieldName.Param<core::param::StringParam>()->ValueString());
-        streamlines.SetActiveField(activeField);
-        streamlines.SetStepSize(0.1f);     // this->streamlineStepSize.Param<core::param::FloatParam>()->Value());
-        streamlines.SetNumberOfSteps(100); // this->numStreamlineSteps.Param<core::param::IntParam>()->Value());
-        streamlines.SetSeeds(seedArray);
+        vtkm_streamlines.SetActiveField(activeField);
+        vtkm_streamlines.SetStepSize(0.1f); // this->streamlineStepSize.Param<core::param::FloatParam>()->Value());
+        vtkm_streamlines.SetNumberOfSteps(500); // this->numStreamlineSteps.Param<core::param::IntParam>()->Value());
+        vtkm_streamlines.SetSeeds(seedArray);
         
         // get parallel computing
         // atm just single core --> slow af
-  //      vtkm::cont::DataSet output = streamlines.Execute(*vtkm_mesh);
-  //      vtkm::io::writer::VTKDataSetWriter writer("streamlines.vtk");
-  //      writer.WriteDataSet(output);
+        vtkm::cont::DataSet output = vtkm_streamlines.Execute(*vtkm_mesh);
+        vtkm::io::writer::VTKDataSetWriter writer("streamlines.vtk");
+        writer.WriteDataSet(output);
 
-		//
-  //      // get polylines
-  //      vtkm::cont::DynamicCellSet polylineSet = output.GetCellSet(0);
-  //      vtkm::cont::CellSet* polylineSetBase = polylineSet.GetCellSetBase();
-  //      int numPolylines = polylineSetBase->GetNumberOfCells();
-  //      
-  //      // number of points used to create the polylines (may be different for each polyline)
-  //      std::vector<vtkm::IdComponent> numPointsInPolyline;
-  //      for (int i = 0; i < numPolylines; ++i) {
-  //          numPointsInPolyline.emplace_back(polylineSetBase->GetNumberOfPointsInCell(i));
-  //      }
-
-  //      // get the indices for the points of the polylines
-  //      std::vector<std::vector<vtkm::Id>> polylinePointIds(numPolylines);
-  //      for (int i = 0; i < numPolylines; ++i) {
-
-  //          int numPoints = numPointsInPolyline[i];
-  //          std::vector<vtkm::Id> pointIds(numPoints);
-
-  //          polylineSetBase->GetCellPointIds(i, pointIds.data());
-
-  //          polylinePointIds[i] = pointIds;
-  //      }
-
-  //      
-  //      // there most probably will only be one coordinate system which name isn't specifically set
-  //      // so this should be sufficient
-  //      vtkm::cont::CoordinateSystem coordData = output.GetCoordinateSystem(0);
-  //      vtkm::cont::ArrayHandleVirtualCoordinates coordDataVirtual =
-  //          vtkm::cont::make_ArrayHandleVirtual(coordData.GetData());
-  //      vtkm::ArrayPortalRef<vtkm::Vec<vtkm::FloatDefault, 3>> coords = coordDataVirtual.GetPortalConstControl();
-
-
-		//// build polylines for megamol mesh
-  //      for (int i = 0; i < numPolylines; ++i) {
-  //          int numPoints = numPointsInPolyline[i];
-  //          std::vector<float> points(3 * numPoints);
-
-  //          for (int j = 0; j < numPoints; ++j) {
-  //              vtkm::Vec<vtkm::FloatDefault, 3> crnt = coords.Get(polylinePointIds[i][j]);
-  //              points[3 * j + 0] = crnt[0];
-  //              points[3 * j + 1] = crnt[1];
-  //              points[3 * j + 2] = crnt[2];
-  //          }
-
-  //          // calc indices
-  //          int numLineSegments = numPoints - 1;
-  //          int numIndices = 2 * numLineSegments;
-  //          std::vector<int> indices(numIndices);
-  //          for (int j = 0; j < numLineSegments; ++j) {
-  //              int idx = 2 * j;
-  //              indices[idx + 0] = (int)polylinePointIds[i][j + 0];
-  //              indices[idx + 1] = (int)polylinePointIds[i][j + 1];
-  //          }
-
-  //          MeshDataAccessCollection::VertexAttribute va;
-  //          va.data = reinterpret_cast<uint8_t*>(points.data());	// uint8_t* data;
-  //          va.byte_size = 3 * numPoints * sizeof(float);			// size_t byte_size;       Buffergröße
-  //          va.component_cnt = 3;									// unsigned int component_cnt;    3 für vec4  4 für vec4
-  //          va.component_type = MeshDataAccessCollection::ValueType::FLOAT; // ValueType component_type;
-  //          va.stride = 0;											// size_t stride;
-  //          va.offset = 0;											// size_t offset;
-  //          va.semantic = MeshDataAccessCollection::AttributeSemanticType::POSITION; // AttributeSemanticType semantic
-
-  //          MeshDataAccessCollection::IndexData idxData;
-  //          idxData.data = reinterpret_cast<uint8_t*>(indices.data());	// uint8_t* data;
-  //          idxData.byte_size = numIndices * sizeof(int);               // size_t byte_size;
-  //          idxData.type = MeshDataAccessCollection::ValueType::INT;    // ValueType type
-
-  //          MeshDataAccessCollection::PrimitiveType pt = MeshDataAccessCollection::PrimitiveType::LINES;
-  //          //this->mesh_data_access_->addMesh({va}, idxData, pt);
-  //      }
-
-		std::vector<float> test = {-1.f, -1.f, 0.5f, 1.f, -1.f, 0.5f, 0.f, 1.f, 0.5f};
-		MeshDataAccessCollection::VertexAttribute va2;
-        va2.data = reinterpret_cast<uint8_t*>(test.data());							// uint8_t* data;
-        va2.byte_size =
-            3 * 3 *
-            MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::FLOAT); // size_t byte_size; Buffergröße
-        va2.component_cnt = 3;														// unsigned int component_cnt;    3 für vec4  4 für vec4
-        va2.component_type = MeshDataAccessCollection::ValueType::FLOAT;			// ValueType component_type;
-        va2.stride = 0;																// size_t stride;
-        va2.offset = 0;																// size_t offset;
-        va2.semantic = MeshDataAccessCollection::AttributeSemanticType::POSITION;	// AttributeSemanticType semantic
 		
-        MeshDataAccessCollection::IndexData idxData2;
-        std::vector<int> ti = {0, 1, 2};
-        idxData2.data = reinterpret_cast<uint8_t*>(ti.data());
-        idxData2.byte_size = 3 * MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::INT);
-        idxData2.type = MeshDataAccessCollection::ValueType::INT;
+        // get polylines
+        vtkm::cont::DynamicCellSet polylineSet = output.GetCellSet(0);
+        vtkm::cont::CellSet* polylineSetBase = polylineSet.GetCellSetBase();
+        int numPolylines = polylineSetBase->GetNumberOfCells();
+        
+        // number of points used to create the polylines (may be different for each polyline)
+        std::vector<vtkm::IdComponent> numPointsInPolyline;
+        for (int i = 0; i < numPolylines; ++i) {
+            numPointsInPolyline.emplace_back(polylineSetBase->GetNumberOfPointsInCell(i));
+        }
 
-        MeshDataAccessCollection::PrimitiveType pt2 = MeshDataAccessCollection::PrimitiveType::TRIANGLES;
-        this->mesh_data_access_->addMesh({ va2 }, idxData2, pt2);
+        // get the indices for the points of the polylines
+        std::vector<std::vector<vtkm::Id>> polylinePointIds(numPolylines);
+        for (int i = 0; i < numPolylines; ++i) {
+
+            int numPoints = numPointsInPolyline[i];
+            std::vector<vtkm::Id> pointIds(numPoints);
+
+            polylineSetBase->GetCellPointIds(i, pointIds.data());
+
+            polylinePointIds[i] = pointIds;
+        }
+
+        
+        // there most probably will only be one coordinate system which name isn't specifically set
+        // so this should be sufficient
+        vtkm::cont::CoordinateSystem coordData = output.GetCoordinateSystem(0);
+        vtkm::cont::ArrayHandleVirtualCoordinates coordDataVirtual =
+            vtkm::cont::make_ArrayHandleVirtual(coordData.GetData());
+        vtkm::ArrayPortalRef<vtkm::Vec<vtkm::FloatDefault, 3>> coords = coordDataVirtual.GetPortalConstControl();
+
+
+
+		// delete pointers, clear and resize streamline data
+        streamline_data_.clear();
+        streamline_data_.resize(numPolylines);
+        streamline_indices_.clear();
+        streamline_indices_.resize(numPolylines);
+
+		// build polylines for megamol mesh
+        for (int i = 0; i < numPolylines; ++i) {
+            int numPoints = numPointsInPolyline[i];
+
+			// calc data
+			// how is this handeld when new data comes? memory leak?
+            streamline_data_[i].clear();
+            streamline_data_[i].resize(3 * numPoints);
+
+            for (int j = 0; j < numPoints; ++j) {
+                vtkm::Vec<vtkm::FloatDefault, 3> crnt = coords.Get(polylinePointIds[i][j]);
+                streamline_data_[i][3 * j + 0] = crnt[0];
+                streamline_data_[i][3 * j + 1] = crnt[1];
+                streamline_data_[i][3 * j + 2] = crnt[2];
+            }
+
+
+            // calc indices
+            int numLineSegments = numPoints - 1;
+            int numIndices = 2 * numLineSegments;
+
+			streamline_indices_[i].clear();
+            streamline_indices_[i].resize(numIndices);
+
+            for (int j = 0; j < numLineSegments; ++j) {
+                int idx = 2 * j;
+                streamline_indices_[i][idx + 0] = (unsigned int)polylinePointIds[i][j + 0];
+                streamline_indices_[i][idx + 1] = (unsigned int)polylinePointIds[i][j + 1];
+            }
+
+
+			// build meshdata for corresponding call
+            MeshDataAccessCollection::VertexAttribute va;
+            va.data = reinterpret_cast<uint8_t*>(streamline_data_[i].data()); // uint8_t* data;
+            va.byte_size = 3 * numPoints * sizeof(float);			// size_t byte_size;       Buffergröße
+            va.component_cnt = 3;									// unsigned int component_cnt;    3 für vec4  4 für vec4
+            va.component_type = MeshDataAccessCollection::ValueType::FLOAT; // ValueType component_type;
+            va.stride = 0;											// size_t stride;
+            va.offset = 0;											// size_t offset;
+            va.semantic = MeshDataAccessCollection::AttributeSemanticType::POSITION; // AttributeSemanticType semantic
+
+            MeshDataAccessCollection::IndexData idxData;
+            idxData.data = reinterpret_cast<uint8_t*>(streamline_indices_[i].data()); // uint8_t* data;
+            idxData.byte_size = numIndices * sizeof(unsigned int);               // size_t byte_size;
+            idxData.type = MeshDataAccessCollection::ValueType::UNSIGNED_INT;    // ValueType type
+
+            MeshDataAccessCollection::PrimitiveType pt = MeshDataAccessCollection::PrimitiveType::LINES;
+            this->mesh_data_access_->addMesh({va}, idxData, pt);
+        }
 
 		std::array<float, 6> bbox;
-        bbox[0] = -1.f;
-        bbox[1] = -1.f;
-        bbox[2] = 0.f;
-        bbox[3] = 1.f;
-        bbox[4] = 1.f;
-        bbox[5] = 1.f;
+        bbox[0] = bounds.X.Min;
+        bbox[1] = bounds.Y.Min;
+        bbox[2] = bounds.Z.Min;
+        bbox[3] = bounds.X.Max;
+        bbox[4] = bounds.Y.Max;
+        bbox[5] = bounds.Z.Max;
 
 		this->meta_data_.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
 		this->meta_data_.m_bboxs.SetClipBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
@@ -335,7 +331,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         return true;
     }
 
-    return false;
+    return true;
 }
 
 

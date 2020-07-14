@@ -129,6 +129,10 @@ private:
 	/** Used for mesh data call */
     std::shared_ptr<MeshDataAccessCollection> mesh_data_access_;
     core::Spatial3DMetaData meta_data_;
+
+	/** Pointers to streamline data */
+    std::vector<std::vector<float>> streamline_data_;
+    std::vector<std::vector<unsigned int>> streamline_indices_;
 };
 
 } // end namespace mmvtkm

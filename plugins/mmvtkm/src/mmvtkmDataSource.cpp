@@ -301,7 +301,7 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
 
 	c2->UpdateDataChanges(false);
 
-    return false;
+    return true;
 }
 
 
