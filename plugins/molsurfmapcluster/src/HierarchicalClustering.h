@@ -138,7 +138,7 @@ private:
 
     void calculatePCA(std::vector<HierarchicalClustering::CLUSTERNODE*>*);
 
-    void loadValueImage(const std::filesystem::path& originalPicture, std::vector<float>& outValueImage);
+    std::pair<float, float> loadValueImage(const std::filesystem::path& originalPicture, std::vector<float>& outValueImage);
 
     static uint32_t bla;
 };

@@ -530,6 +530,9 @@ void Clustering::fillPictureDataVector(image_calls::Image2DCall& imc) {
         this->picdata[id].texture = nullptr;
         this->picdata[id].image = &p.second;
         this->loadValueImageForGivenPicture(std::filesystem::path(p.first), this->picdata[id].valueImage);
+        auto minmax = std::minmax_element(this->picdata[id].valueImage.begin(), this->picdata[id].valueImage.end());
+        this->picdata[id].minValue = (*minmax.first);
+        this->picdata[id].maxValue = (*minmax.second);
         ++id;
     }
 }

@@ -152,6 +152,9 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
         auto imcount = call.second->GetImagePtr()->size();
         pictures.resize(imcount);
         uint32_t id = 0;
+        float globalmin = std::numeric_limits<float>::max();
+        float globalmax = std::numeric_limits<float>::lowest();
+
         for (auto& p : *call.second->GetImagePtr()) {
             pictures[id].width = p.second.Width();
             pictures[id].height = p.second.Height();
@@ -161,7 +164,12 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
             pictures[id].popup = false;
             pictures[id].texture = nullptr;
             pictures[id].image = &p.second;
-            this->loadValueImage(std::filesystem::path(p.first), pictures[id].valueImage);
+            auto minmax = this->loadValueImage(std::filesystem::path(p.first), pictures[id].valueImage);
+            pictures[id].minValue = minmax.first;
+            pictures[id].maxValue = minmax.second;
+
+            if (minmax.first < globalmin) globalmin = minmax.first;
+            if (minmax.second > globalmax) globalmax = minmax.second;
 
             if (first) {
                 CLUSTERNODE* node = new CLUSTERNODE();
@@ -190,6 +198,12 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
                 leaves->at(id)->pic = &(pictures[id]);
             }
             ++id;
+        }
+
+        // normalize the value pictures
+        for (auto& p : pictures) {
+            std::for_each(p.valueImage.begin(), p.valueImage.end(),
+                [globalmin, globalmax](auto& n) { n = (n - globalmin) / (globalmax - globalmin); });
         }
 
         if (first) {
@@ -484,7 +498,7 @@ double HierarchicalClustering::nodeDistance(
     double distance = 0.0;
 
     if (node1 != nullptr && node2 != nullptr) {
-        
+
         // we only have to check one direction as both directions are set != null at the same times
         if (node1->left == nullptr && node2->left == nullptr) { // case 2
             if (this->mode == DISTANCEMODE) {
@@ -592,8 +606,7 @@ HierarchicalClustering::CLUSTERNODE* HierarchicalClustering::mergeCluster(
         case 1:
             // Centroide Linkage
             if (this->mode == DISTANCEMODE) {
-                newnode->distances->push_back(
-                    std::make_tuple(node, this->nodeDistance(newnode, node, distancemethod)));
+                newnode->distances->push_back(std::make_tuple(node, this->nodeDistance(newnode, node, distancemethod)));
             } else if (this->mode == SIMILARITYMODE) {
                 newnode->distances->push_back(
                     std::make_tuple(node, this->nodeDistance(newnode, node, similaritymethod)));
@@ -1161,16 +1174,15 @@ bool HierarchicalClustering::parentIs(
 double HierarchicalClustering::getMaxDistanceOfLeavesToRoot() {
     double max = DBL_MAX * -1;
     for (CLUSTERNODE* node1 : *this->leaves) {
-        double dist = this->nodeDistance(node1, this->getRoot()); 
-        if (max < dist)
-            max = dist;
+        double dist = this->nodeDistance(node1, this->getRoot());
+        if (max < dist) max = dist;
     }
     return max;
 }
 
 void HierarchicalClustering::setDistanceMultiplier(float multiplier) { this->distancemultiplier = multiplier; }
 
-void HierarchicalClustering::loadValueImage(
+std::pair<float, float> HierarchicalClustering::loadValueImage(
     const std::filesystem::path& originalPicture, std::vector<float>& outValueImage) {
     auto newpath = originalPicture;
     newpath = newpath.parent_path();
@@ -1190,8 +1202,9 @@ void HierarchicalClustering::loadValueImage(
             v += minele;
             v = std::abs(v); // paranoia
         }
+        auto newminmax = std::minmax_element(outValueImage.begin(), outValueImage.end());
+        return std::make_pair(*newminmax.first, *newminmax.second);
     } else {
         vislib::sys::Log::DefaultLog.WriteError("The file \"%s\" could not be opened for reading", newpath.c_str());
     }
 }
-

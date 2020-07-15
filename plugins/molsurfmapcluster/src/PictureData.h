@@ -17,6 +17,8 @@ namespace molsurfmapcluster {
         uint32_t height;
         bool render;
         bool popup;
+        float minValue;
+        float maxValue;
         //vislib::graphics::gl::OpenGLTexture2D* texture;
         std::unique_ptr<glowl::Texture2D> texture;
         vislib::graphics::BitmapImage* image;
