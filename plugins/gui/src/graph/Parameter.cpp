@@ -114,7 +114,7 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
 
                 /// POSTFIX ------------------------------------------------
                 this->tooltip.ToolTip(this->description, ImGui::GetItemID(), 0.5f);
-                this->tooltip.HelpMarker(this->help);
+                this->tooltip.Marker(this->help);
 
                 ImGui::EndGroup();
             }
@@ -869,7 +869,7 @@ bool megamol::gui::ParameterPresentation::widget_filepath(
         ImGuiStyle& style = ImGui::GetStyle();
         float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
         ImGui::PushItemWidth(widget_width);
-        bool button_edit = this->file_browser.FileBrowserButton(std::get<std::string>(this->widget_store));
+        bool button_edit = this->file_browser.Button(std::get<std::string>(this->widget_store));
         ImGui::SameLine();
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->widget_store), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
@@ -1216,7 +1216,7 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
             }
             // Draw transfer function editor
             if (this->show_tf_editor) {
-                if (this->tf_editor_internal.Draw(false)) {
+                if (this->tf_editor_internal.Widget(false)) {
                     std::string value;
                     if (this->tf_editor_internal.GetTransferFunction(value)) {
                         inout_parameter.SetValue(value);

@@ -21,7 +21,7 @@ namespace gui {
  */
 class MinimalPopUp {
 public:
-    static bool Draw(const std::string& label_id, bool open_popup, const std::string& info_text,
+    static bool PopUp(const std::string& label_id, bool open_popup, const std::string& info_text,
         const std::string& confirm_btn_text, bool& confirmed, const std::string& abort_btn_text, bool& aborted);
 
 private:

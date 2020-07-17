@@ -39,7 +39,7 @@ public:
         return (it != source.end());
     }
 
-    bool Draw(const std::string& label, const std::string& help);
+    bool Widget(const std::string& label, const std::string& help);
 
     inline void SetSearchFocus(bool focus) { this->search_focus = focus; }
 

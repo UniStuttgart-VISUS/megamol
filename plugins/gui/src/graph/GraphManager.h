@@ -10,7 +10,7 @@
 
 
 #include "Graph.h"
-#include "widgets/FileBrowserPopUp.h"
+#include "widgets/FileBrowserWidget.h"
 #include "widgets/MinimalPopUp.h"
 
 #include "mmcore/CoreInstance.h"
@@ -51,7 +51,7 @@ public:
 private:
     // VARIABLES --------------------------------------------------------------
 
-    FileBrowserPopUp file_browser;
+    FileBrowserWidget file_browser;
     ImGuiID graph_delete_uid;
 
     // FUNCTIONS --------------------------------------------------------------

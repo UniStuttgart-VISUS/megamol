@@ -195,7 +195,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
 
             float graph_width_auto = 0.0f;
             if (this->show_parameter_sidebar) {
-                this->splitter_widget.Draw(
+                this->splitter_widget.Widget(
                     SplitterWidget::FixedSplitterSide::RIGHT, graph_width_auto, this->parameter_sidebar_width);
             }
 
@@ -501,7 +501,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         state.hotkeys = this->graph_state.hotkeys;
 
         // Rename pop-up
-        if (this->rename_popup.Draw("Rename Project", popup_rename, inout_graph.name)) {
+        if (this->rename_popup.PopUp("Rename Project", popup_rename, inout_graph.name)) {
             inout_graph.ForceSetDirty();
         }
 
@@ -1322,7 +1322,7 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
         "[" + std::get<0>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH]).ToString() +
         "] Set keyboard focus to search input field.\n"
         "Case insensitive substring search in parameter names.";
-    this->search_widget.Draw("graph_parameter_search", help_text);
+    this->search_widget.Widget("graph_parameter_search", help_text);
     auto search_string = this->search_widget.GetSearchString();
 
     ImGui::Separator();

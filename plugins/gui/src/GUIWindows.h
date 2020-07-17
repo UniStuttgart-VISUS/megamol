@@ -15,7 +15,7 @@
 #include "FileUtils.h"
 #include "WindowManager.h"
 #include "graph/GraphManager.h"
-#include "widgets/FileBrowserPopUp.h"
+#include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/MinimalPopUp.h"
 #include "widgets/StringSearchWidget.h"
@@ -186,7 +186,7 @@ private:
     GraphManager graph_manager;
 
     // Widgets
-    FileBrowserPopUp file_browser;
+    FileBrowserWidget file_browser;
     StringSearchWidget search_widget;
     std::shared_ptr<TransferFunctionEditor> tf_editor_ptr;
     HoverToolTip tooltip;

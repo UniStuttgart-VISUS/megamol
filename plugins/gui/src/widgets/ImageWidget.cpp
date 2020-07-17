@@ -13,10 +13,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-ImageWidget::ImageWidget(void) 
-    : texture {
-}
-
+ImageWidget::ImageWidget(void) : tex_ptr(nullptr) {}
 
 
 bool megamol::gui::ImageWidget::LoadTextureFromFile(const std::string& filename) {
@@ -35,16 +32,13 @@ bool megamol::gui::ImageWidget::LoadTextureFromFile(const std::string& filename)
     if (size > 0) {
         if (pbc.Load(buf, size)) {
             img.Convert(vislib::graphics::BitmapImage::TemplateFloatRGBA);
-            retval = megamol::gui::ImageWidget::CreateTexture(
-                inout_id, img.Width(), img.Height(), img.PeekDataAs<FLOAT>());
-        }
-        else {
+            retval = megamol::gui::ImageWidget::LoadTextureFromData(img.Width(), img.Height(), img.PeekDataAs<FLOAT>());
+        } else {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
                 "Unable to read texture: %s [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
             retval = false;
         }
-    }
-    else {
+    } else {
         retval = false;
     }
 
@@ -53,9 +47,10 @@ bool megamol::gui::ImageWidget::LoadTextureFromFile(const std::string& filename)
 }
 
 
-bool megamol::gui::ImageWidget::CreateTexture(GLuint& inout_id, GLsizei width, GLsizei height, const float* data) {
+bool megamol::gui::ImageWidget::LoadTextureFromData(GLsizei width, GLsizei height, const float* data) {
     if (data == nullptr) return false;
 
+    /*
     // Delete old texture.
     if (inout_id != 0) {
         glDeleteTextures(1, &inout_id);
@@ -74,5 +69,6 @@ bool megamol::gui::ImageWidget::CreateTexture(GLuint& inout_id, GLsizei width, G
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, data);
 
     glBindTexture(GL_TEXTURE_2D, 0);
+    */
     return true;
 }

@@ -124,7 +124,7 @@ void megamol::gui::GroupPresentation::Present(
             } /// else { this->allow_context = false; }
 
             // Rename pop-up
-            if (this->rename_popup.Draw("Rename Group", popup_rename, inout_group.name)) {
+            if (this->rename_popup.PopUp("Rename Group", popup_rename, inout_group.name)) {
                 for (auto& module_ptr : inout_group.GetModules()) {
                     module_ptr->present.group.name = inout_group.name;
                     module_ptr->UpdateGUI(state.canvas);

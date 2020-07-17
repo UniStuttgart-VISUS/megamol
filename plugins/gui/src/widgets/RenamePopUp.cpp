@@ -16,7 +16,7 @@ using namespace megamol::gui;
 RenamePopUp::RenamePopUp(void) : rename_string() {}
 
 
-bool megamol::gui::RenamePopUp::Draw(const std::string& label_id, bool open_popup, std::string& rename) {
+bool megamol::gui::RenamePopUp::PopUp(const std::string& label_id, bool open_popup, std::string& rename) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
 

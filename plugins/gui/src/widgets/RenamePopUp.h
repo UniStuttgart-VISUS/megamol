@@ -25,7 +25,7 @@ public:
 
     ~RenamePopUp(void) = default;
 
-    bool Draw(const std::string& caption, bool open_popup, std::string& rename);
+    bool PopUp(const std::string& caption, bool open_popup, std::string& rename);
 
 private:
     std::string rename_string;

@@ -31,7 +31,7 @@ public:
      * Draw draggable splitter between two child windows, relative to parent window size.
      * https://github.com/ocornut/imgui/issues/319
      */
-    bool Draw(FixedSplitterSide fixed_side, float& size_left, float& size_right);
+    bool Widget(FixedSplitterSide fixed_side, float& size_left, float& size_right);
 
 private:
     // VARIABLES --------------------------------------------------------------

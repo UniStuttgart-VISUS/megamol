@@ -16,7 +16,7 @@ using namespace megamol::gui;
 StringSearchWidget::StringSearchWidget(void) : search_focus(false), search_string(), tooltip() {}
 
 
-bool megamol::gui::StringSearchWidget::Draw(const std::string& id, const std::string& help) {
+bool megamol::gui::StringSearchWidget::Widget(const std::string& id, const std::string& help) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();

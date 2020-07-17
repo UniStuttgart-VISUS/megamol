@@ -911,7 +911,7 @@ void GUIWindows::validateParameters() {
 
 void GUIWindows::drawTransferFunctionWindowCallback(WindowManager::WindowConfiguration& wc) {
 
-    this->tf_editor_ptr->Draw(true);
+    this->tf_editor_ptr->Widget(true);
     wc.tfe_active_param = this->tf_editor_ptr->GetConnectedParameterName();
 }
 
@@ -969,7 +969,7 @@ void GUIWindows::drawParamWindowCallback(WindowManager::WindowConfiguration& wc)
             "[" + std::get<0>(this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH]).ToString() +
             "] Set keyboard focus to search input field.\n"
             "Case insensitive substring search in\nparameter names.\nGlobally in all parameter views.\n";
-        this->search_widget.Draw("guiwindow_parameter_earch", help_test);
+        this->search_widget.Widget("guiwindow_parameter_earch", help_test);
     }
 
     ImGui::Separator();
@@ -1223,7 +1223,7 @@ void GUIWindows::drawFpsWindowCallback(WindowManager::WindowConfiguration& wc) {
         ImGui::SameLine();
         ImGui::TextUnformatted("Copy to Clipborad");
         std::string help = "Values are copied in chronological order (newest first)";
-        this->tooltip.HelpMarker(help);
+        this->tooltip.Marker(help);
     }
 }
 
@@ -1248,7 +1248,7 @@ void GUIWindows::drawFontWindowCallback(WindowManager::WindowConfiguration& wc) 
     ImGui::Separator();
     ImGui::TextUnformatted("Load Font from File");
     std::string help = "Same font can be loaded multiple times with different font size.";
-    this->tooltip.HelpMarker(help);
+    this->tooltip.Marker(help);
 
     std::string label = "Font Size";
     ImGui::InputFloat(label.c_str(), &wc.buf_font_size, 1.0f, 10.0f, "%.2f", ImGuiInputTextFlags_None);
@@ -1314,7 +1314,7 @@ void GUIWindows::drawMenu(void) {
                 this->tooltip.ToolTip("[Right-Click] Open Context Menu for Deleting Window Permanently.");
             } else {
                 this->tooltip.ToolTip("['Window Hotkey'] Show/Hide Window.\n[Shift]+['Window Hotkey'] Reset Size "
-                                   "and Position of Window.");
+                                      "and Position of Window.");
             }
         };
         this->window_manager.EnumWindows(func);
@@ -1421,14 +1421,14 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
 
     bool confirmed, aborted;
     bool popup_failed = false;
-    if (this->file_browser.Draw(FileBrowserPopUp::FileBrowserFlag::SAVE, "Save Editor Project",
+    if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::SAVE, "Save Editor Project",
             this->state.open_popup_save, this->state.project_file)) {
         /// Serialize current state to parameter.
         this->save_state_to_parameter();
         /// Save to file
         popup_failed = !this->graph_manager.SaveProjectToFile(this->graph_uid, this->state.project_file, false);
     }
-    MinimalPopUp::Draw("Failed to Save Project", popup_failed, "See console log output for more information.", "",
+    MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
 
     if (this->state.open_popup_save) {

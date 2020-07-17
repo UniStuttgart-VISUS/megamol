@@ -11,10 +11,10 @@
 
 #include "FileUtils.h"
 #include "GUIUtils.h"
-#include "widgets/FileBrowserPopUp.h"
+#include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
-#include "widgets/TransferFunctionEditor.h"
 #include "widgets/ImageWidget.h"
+#include "widgets/TransferFunctionEditor.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -122,7 +122,7 @@ private:
     GLuint tf_texture;
 
     // Widgets
-    FileBrowserPopUp file_browser;
+    FileBrowserWidget file_browser;
     HoverToolTip tooltip;
     ImageWidget image_widget;
 

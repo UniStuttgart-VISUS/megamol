@@ -1,19 +1,19 @@
 /*
- * FileBrowserPopUp.cpp
+ * FileBrowserWidget.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "FileBrowserPopUp.h"
+#include "FileBrowserWidget.h"
 
 
 using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::FileBrowserPopUp::FileBrowserPopUp(void)
+megamol::gui::FileBrowserWidget::FileBrowserWidget(void)
 #ifdef GUI_USE_FILESYSTEM
     : search_widget()
     , file_name_str()
@@ -34,7 +34,7 @@ megamol::gui::FileBrowserPopUp::FileBrowserPopUp(void)
 }
 
 
-bool megamol::gui::FileBrowserPopUp::Draw(megamol::gui::FileBrowserPopUp::FileBrowserFlag flag,
+bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::FileBrowserFlag flag,
     const std::string& label_id, bool open_popup, std::string& inout_filename) {
 
     bool retval = false;
@@ -94,7 +94,7 @@ bool megamol::gui::FileBrowserPopUp::Draw(megamol::gui::FileBrowserPopUp::FileBr
 
             // Search -------------------------------
             std::string help_test = "Case insensitive substring search in\nlisted file and directory names.";
-            this->search_widget.Draw("guiwindow_parameter_earch", help_test);
+            this->search_widget.Widget("guiwindow_parameter_earch", help_test);
             auto currentSearchString = this->search_widget.GetSearchString();
 
             // File browser selectables ---------------------------------------
@@ -298,7 +298,7 @@ bool megamol::gui::FileBrowserPopUp::Draw(megamol::gui::FileBrowserPopUp::FileBr
 }
 
 
-bool megamol::gui::FileBrowserPopUp::FileBrowserButton(std::string& inout_filename) {
+bool megamol::gui::FileBrowserWidget::Button(std::string& inout_filename) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -337,7 +337,7 @@ bool megamol::gui::FileBrowserPopUp::FileBrowserButton(std::string& inout_filena
     ImGui::EndChild();
     ImGui::PopStyleColor();
 
-    bool retval = this->Draw(FileBrowserFlag::SELECT, "Select File", popup_select_file, inout_filename);
+    bool retval = this->PopUp(FileBrowserFlag::SELECT, "Select File", popup_select_file, inout_filename);
 
     return retval;
 }
@@ -345,7 +345,7 @@ bool megamol::gui::FileBrowserPopUp::FileBrowserButton(std::string& inout_filena
 
 #ifdef GUI_USE_FILESYSTEM
 
-bool megamol::gui::FileBrowserPopUp::splitPath(
+bool megamol::gui::FileBrowserWidget::splitPath(
     const fsns::path& in_file_path, std::string& out_path, std::string& out_file) {
 
     // Splitting path into path string and file string
@@ -370,7 +370,7 @@ bool megamol::gui::FileBrowserPopUp::splitPath(
 }
 
 
-void megamol::gui::FileBrowserPopUp::validateDirectory(const std::string& path_str) {
+void megamol::gui::FileBrowserWidget::validateDirectory(const std::string& path_str) {
 
     // Validating directory
     try {
@@ -384,8 +384,8 @@ void megamol::gui::FileBrowserPopUp::validateDirectory(const std::string& path_s
 }
 
 
-void megamol::gui::FileBrowserPopUp::validateFile(
-    const std::string& file_str, megamol::gui::FileBrowserPopUp::FileBrowserFlag flag) {
+void megamol::gui::FileBrowserWidget::validateFile(
+    const std::string& file_str, megamol::gui::FileBrowserWidget::FileBrowserFlag flag) {
 
     // Validating file
     try {

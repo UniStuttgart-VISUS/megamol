@@ -13,7 +13,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-bool megamol::gui::MinimalPopUp::Draw(const std::string& label_id, bool open_popup, const std::string& info_text,
+bool megamol::gui::MinimalPopUp::PopUp(const std::string& label_id, bool open_popup, const std::string& info_text,
     const std::string& confirm_btn_text, bool& confirmed, const std::string& abort_btn_text, bool& aborted) {
 
     assert(ImGui::GetCurrentContext() != nullptr);

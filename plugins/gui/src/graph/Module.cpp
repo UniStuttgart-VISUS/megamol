@@ -249,7 +249,7 @@ void megamol::gui::ModulePresentation::Present(
                     }
 
                     // Rename pop-up
-                    if (this->rename_popup.Draw("Rename Project", popup_rename, inout_module.name)) {
+                    if (this->rename_popup.PopUp("Rename Project", popup_rename, inout_module.name)) {
                         this->Update(inout_module, state.canvas);
                     }
                 } else if (phase == megamol::gui::PresentPhase::RENDERING) {

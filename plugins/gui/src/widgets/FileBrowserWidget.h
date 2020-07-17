@@ -1,5 +1,5 @@
 /*
- * FileBrowserPopUp.h
+ * FileBrowserWidget.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -21,11 +21,11 @@ namespace gui {
 /**
  * String search widget.
  */
-class FileBrowserPopUp {
+class FileBrowserWidget {
 public:
-    FileBrowserPopUp(void);
+    FileBrowserWidget(void);
 
-    ~FileBrowserPopUp(void) = default;
+    ~FileBrowserWidget(void) = default;
 
     enum FileBrowserFlag { SAVE, LOAD, SELECT };
 
@@ -39,7 +39,7 @@ public:
      *
      * @return True on success, false otherwise.
      */
-    bool Draw(FileBrowserFlag flag, const std::string& label_id, bool open_popup, std::string& inout_filename);
+    bool PopUp(FileBrowserFlag flag, const std::string& label_id, bool open_popup, std::string& inout_filename);
 
     /**
      * ImGui file browser button opening this file browser pop-up.
@@ -48,7 +48,7 @@ public:
      *
      * @return True on success, false otherwise.
      */
-    bool FileBrowserButton(std::string& inout_filename);
+    bool Button(std::string& inout_filename);
 
 private:
 #ifdef GUI_USE_FILESYSTEM

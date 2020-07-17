@@ -41,7 +41,7 @@ public:
      * @param text   The help tooltip text.
      * @param label  The visible text for which the tooltip is enabled.
      */
-    bool HelpMarker(const std::string& text, std::string label = "(?)");
+    bool Marker(const std::string& text, std::string label = "(?)");
 
     /**
      * Reset toopltip time and widget id.

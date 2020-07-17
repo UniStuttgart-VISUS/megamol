@@ -11,7 +11,7 @@
 
 #include "WindowManager.h"
 #include "graph/GraphManager.h"
-#include "widgets/FileBrowserPopUp.h"
+#include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/SplitterWidget.h"
 #include "widgets/StringSearchWidget.h"
@@ -92,7 +92,7 @@ private:
     bool open_popup_load;
 
     // Widgets
-    FileBrowserPopUp file_browser;
+    FileBrowserWidget file_browser;
     StringSearchWidget search_widget;
     SplitterWidget splitter_widget;
     HoverToolTip tooltip;

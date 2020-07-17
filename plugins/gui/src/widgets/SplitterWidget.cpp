@@ -16,7 +16,7 @@ using namespace megamol::gui;
 SplitterWidget::SplitterWidget(void) : splitter_last_width(0.0f) {}
 
 
-bool megamol::gui::SplitterWidget::Draw(FixedSplitterSide fixed_side, float& size_left, float& size_right) {
+bool megamol::gui::SplitterWidget::Widget(FixedSplitterSide fixed_side, float& size_left, float& size_right) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
 

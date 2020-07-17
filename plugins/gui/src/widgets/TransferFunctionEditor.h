@@ -42,14 +42,9 @@ public:
     ~TransferFunctionEditor(void) = default;
 
     /**
-     * Return texture id of given transfer functione.
-     */
-    static bool GetTextureData(const std::string& in_tfs, std::vector<float>& out_tex_data);
-
-    /**
      * Draws the transfer function editor.
      */
-    bool Draw(bool connected_parameter_mode);
+    bool Widget(bool connected_parameter_mode);
 
     /**
      * Set transfer function data to use in editor.
@@ -78,6 +73,11 @@ public:
     inline std::string GetConnectedParameterName(void) const { return this->connected_parameter_name; }
 
     /**
+     * Return texture id of given transfer functione.
+     */
+    static bool GetTextureData(const std::string& in_tfs, std::vector<float>& out_tex_data);
+
+    /**
      * Returns true if editor is in minimized view.
      */
     inline bool IsMinimized(void) const { return !this->showOptions; }
@@ -90,12 +90,12 @@ public:
     /**
      * Returns true if editor is in vertical view.
      */
-    inline bool IsVertical(void) const { return this->flip_xy; }
+    inline bool IsVertical(void) const { return this->flip_legend; }
 
     /**
      * Set vertical view.
      */
-    inline void SetVertical(bool vertical) { this->flip_xy = vertical; }
+    inline void SetVertical(bool vertical) { this->flip_legend = vertical; }
 
 private:
     /** The global input widget state buffer. */

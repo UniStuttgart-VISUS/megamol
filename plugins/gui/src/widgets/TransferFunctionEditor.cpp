@@ -285,7 +285,7 @@ void TransferFunctionEditor::SetConnectedParameter(Parameter* param_ptr, const s
 }
 
 
-bool TransferFunctionEditor::Draw(bool connected_parameter_mode) {
+bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
 
     std::string help;
 
@@ -408,7 +408,7 @@ bool TransferFunctionEditor::Draw(bool connected_parameter_mode) {
         }
         help = "[Enable] for overwriting value range propagated from connected module(s).\n"
                "[Disable] for recovery of last value range or last value range propagated from connected module(s).";
-        this->tooltip.HelpMarker(help);
+        this->tooltip.Marker(help);
 
         // Value slider -------------------------------------------------------
         this->widget_buffer.range_value =
@@ -428,7 +428,7 @@ bool TransferFunctionEditor::Draw(bool connected_parameter_mode) {
             this->textureInvalid = true;
         }
         help = "[Ctrl-Click] for keyboard input";
-        this->tooltip.HelpMarker(help);
+        this->tooltip.Marker(help);
 
         // Sigma slider -------------------------------------------------------
         if (this->mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
@@ -437,7 +437,7 @@ bool TransferFunctionEditor::Draw(bool connected_parameter_mode) {
                 this->textureInvalid = true;
             }
             help = "[Ctrl-Click] for keyboard input";
-            this->tooltip.HelpMarker(help);
+            this->tooltip.Marker(help);
         }
 
         // Plot ---------------------------------------------------------------
@@ -471,7 +471,7 @@ bool TransferFunctionEditor::Draw(bool connected_parameter_mode) {
         help = "[Click] on the colored square to open a color picker.\n"
                "[CTRL+Click] on individual component to input value.\n"
                "[Right-Click] on the individual color widget to show options.";
-        this->tooltip.HelpMarker(help);
+        this->tooltip.Marker(help);
 
         // Interpolation mode -------------------------------------------------
         std::map<param::TransferFunctionParam::InterpolationMode, std::string> opts;
@@ -945,6 +945,6 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
     }
     ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
     ImGui::TextUnformatted("Function Plot");
-    this->tooltip.HelpMarker("First and last node are always present\nwith fixed value 0 and 1.\n[Left-Click] Select "
-                             "Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");
+    this->tooltip.Marker("First and last node are always present\nwith fixed value 0 and 1.\n[Left-Click] Select "
+                         "Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");
 }

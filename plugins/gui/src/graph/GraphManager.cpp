@@ -75,7 +75,7 @@ void megamol::gui::GraphManagerPresentation::Present(
         // Delete selected graph when tab is closed and unsaved changes should be discarded.
         bool confirmed = false;
         bool aborted = false;
-        bool popup_open = MinimalPopUp::Draw(
+        bool popup_open = MinimalPopUp::PopUp(
             "Closing unsaved Project", popup_close_unsaved, "Discard changes?", "Yes", confirmed, "No", aborted);
         if (this->graph_delete_uid != GUI_INVALID_ID) {
             if (aborted) {
@@ -110,11 +110,11 @@ void megamol::gui::GraphManagerPresentation::SaveProjectToFile(
     if (inout_graph_manager.GetGraph(state.graph_selected_uid, graph_ptr)) {
         project_filename = graph_ptr->GetFilename();
     }
-    if (this->file_browser.Draw(
-            FileBrowserPopUp::FileBrowserFlag::SAVE, "Save Editor Project", open_popup, project_filename)) {
+    if (this->file_browser.PopUp(
+            FileBrowserWidget::FileBrowserFlag::SAVE, "Save Editor Project", open_popup, project_filename)) {
         popup_failed = !inout_graph_manager.SaveProjectToFile(state.graph_selected_uid, project_filename, true);
     }
-    MinimalPopUp::Draw("Failed to Save Project", popup_failed, "See console log output for more information.", "",
+    MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
 }
 

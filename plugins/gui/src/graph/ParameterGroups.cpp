@@ -338,24 +338,20 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
     }
 
     // Load button textures (once)
-    if (this->button_tex_ids.play == 0) {
-        megamol::gui::GraphicsAPIUtils::LoadTexture(
-            "../share/resources/transport_ctrl_play.png", this->button_tex_ids.play);
+    if (!this->image_buttons.play.IsLoaded()) {
+        this->image_buttons.play.LoadTextureFromFile("../share/resources/transport_ctrl_play.png");
     }
-    if (this->button_tex_ids.pause == 0) {
-        megamol::gui::GraphicsAPIUtils::LoadTexture(
-            "../share/resources/transport_ctrl_pause.png", this->button_tex_ids.pause);
+    if (!this->image_buttons.pause.IsLoaded()) {
+        this->image_buttons.pause.LoadTextureFromFile("../share/resources/transport_ctrl_pause.png");
     }
-    if (this->button_tex_ids.fastforward == 0) {
-        megamol::gui::GraphicsAPIUtils::LoadTexture(
-            "../share/resources/transport_ctrl_fast-forward.png", this->button_tex_ids.fastforward);
+    if (!this->image_buttons.fastforward.IsLoaded()) {
+        this->image_buttons.fastforward.LoadTextureFromFile("../share/resources/transport_ctrl_fast-forward.png");
     }
-    if (this->button_tex_ids.fastrewind == 0) {
-        megamol::gui::GraphicsAPIUtils::LoadTexture(
-            "../share/resources/transport_ctrl_fast-rewind.png", this->button_tex_ids.fastrewind);
+    if (!this->image_buttons.fastrewind.IsLoaded()) {
+        this->image_buttons.fastrewind.LoadTextureFromFile("../share/resources/transport_ctrl_fast-rewind.png");
     }
-    if ((this->button_tex_ids.play == 0) || (this->button_tex_ids.pause == 0) ||
-        (this->button_tex_ids.fastforward == 0) || (this->button_tex_ids.fastrewind == 0)) {
+    if ((!this->image_buttons.play.IsLoaded()) || (!this->image_buttons.pause.IsLoaded()) ||
+        (!this->image_buttons.fastforward.IsLoaded()) || (!this->image_buttons.fastrewind.IsLoaded())) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Unable to load all required button textures for animation group widget. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);

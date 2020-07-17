@@ -9,19 +9,16 @@
 #define MEGAMOL_GUI_IMAGEWIDGET_INCLUDED
 
 
-#include "GUIUtils.h"
 #include "glowl/Texture2D.hpp"
 
-
-
 #include "FileUtils.h"
+#include "GUIUtils.h"
 
 #include "mmcore/misc/PngBitmapCodec.h"
 
 #include "vislib/graphics/BitmapImage.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+//#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/sys/Log.h"
-
 
 
 namespace megamol {
@@ -37,6 +34,11 @@ public:
 
     ~ImageWidget(void) = default;
 
+    bool IsLoaded(void) {
+        if (this->tex_ptr == nullptr) return false;
+        return (this->tex_ptr->getName() != 0);
+    }
+
     /**
      * Load texture from file.
      */
@@ -45,23 +47,23 @@ public:
     /**
      * Load texture from data.
      */
-    static bool CreateTexture(GLuint& inout_id, GLsizei width, GLsizei height, const float* data);
+    static bool LoadTextureFromData(GLsizei width, GLsizei height, const float* data);
 
     /**
      * ...
      */
-    bool Image(void);
+    bool Widget(void);
 
     /**
      * ...
      */
-    bool Button(void);
+    bool Button(const std::string& label);
 
 
 private:
     // VARIABLES --------------------------------------------------------------
 
-    glowl::Texture2D texture;
+    std::shared_ptr<glowl::Texture2D> tex_ptr;
 };
 
 
