@@ -425,10 +425,9 @@ void megamol::gui::ModulePresentation::Present(
                         //}
 
                         // Draw parameters
-                        bool unused_external_tf_editor;
                         /// Use extended mode currently set in parameter
                         this->param_groups.PresentGUI(inout_module.parameters, inout_module.FullName(), "", false, true,
-                            ParameterPresentation::WidgetScope::LOCAL, nullptr, unused_external_tf_editor);
+                            ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr);
 
                         ImGui::EndChild();
 

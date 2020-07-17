@@ -31,7 +31,7 @@ GUIWindows::GUIWindows()
     , state_param(GUI_GUI_STATE_PARAM_NAME, "Current state of all windows.")
     , autostart_configurator("autostart_configurator", "Start the configurator at start up automatically. ")
     , context(nullptr)
-    , impl(Implementation::NONE)
+    , api(GUIImGuiAPI::NONE)
     , window_manager()
     , tf_editor_ptr(nullptr)
     , configurator()
@@ -93,9 +93,9 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 
     if (this->createContext()) {
         // Init OpenGL for ImGui
-        const char* glsl_version = "#version 130"; /// "#version 150"
+        const char* glsl_version = "#version 130"; /// "#version 150" or nullptr
         if (ImGui_ImplOpenGL3_Init(glsl_version)) {
-            this->impl = Implementation::OpenGL;
+            this->api = GUIImGuiAPI::OpenGL;
             return true;
         }
     }
@@ -107,7 +107,7 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 bool GUIWindows::PreDraw(
     const std::string& module_fullname, vislib::math::Rectangle<int> viewport, double instanceTime) {
 
-    if (this->impl == Implementation::NONE) {
+    if (this->api == GUIImGuiAPI::NONE) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
@@ -132,7 +132,6 @@ bool GUIWindows::PreDraw(
     this->graph_manager.LoadCallStock(core_instance);
     this->graph_uid = this->graph_manager.LoadUpdateProjectFromCore(this->graph_uid, this->core_instance);
 
-    // Checking global hotkeys
     if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM])) {
         this->shutdown();
         return true;
@@ -145,10 +144,10 @@ bool GUIWindows::PreDraw(
     this->checkMultipleHotkeyAssignement();
     this->parent_module_fullname = module_fullname;
 
+    // Set IO stuff for next frame --------------------------------------------
     auto viewportWidth = viewport.Width();
     auto viewportHeight = viewport.Height();
 
-    // Set IO stuff for next frame --------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
@@ -189,7 +188,7 @@ bool GUIWindows::PreDraw(
         this->state.font_index = GUI_INVALID_ID;
     }
 
-    // Deleting window
+    // Delete window
     if (!this->state.win_delete.empty()) {
         this->window_manager.DeleteWindowConfiguration(this->state.win_delete);
         this->state.win_delete.clear();
@@ -205,7 +204,7 @@ bool GUIWindows::PreDraw(
 
 bool GUIWindows::PostDraw(void) {
 
-    if (this->impl == Implementation::NONE) {
+    if (this->api == GUIImGuiAPI::NONE) {
         vislib::sys::Log::DefaultLog.WriteError(
             "Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
@@ -348,14 +347,22 @@ bool GUIWindows::PostDraw(void) {
     this->window_manager.EnumWindows(func);
 
     // Draw global parameter widgets -------------------------------------------
+
+    /// TODO Enable global picking buffer
+
     GraphPtrType graph_ptr;
     if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
-            bool unused_external_tf_editor;
+
+            /// TODO Pass picked UID to parameters
+
             module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(), "", false, true,
-                ParameterPresentation::WidgetScope::GLOBAL, this->tf_editor_ptr, unused_external_tf_editor);
+                ParameterPresentation::WidgetScope::GLOBAL, this->tf_editor_ptr, nullptr);
         }
     }
+
+    /// TODO Disable global picking buffer
+
 
     // Synchronizing parameter values -----------------------------------------
     if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
@@ -836,10 +843,10 @@ bool GUIWindows::destroyContext(void) {
 
     this->core_instance = nullptr;
 
-    if (this->impl != Implementation::NONE) {
+    if (this->api != GUIImGuiAPI::NONE) {
         if (this->context != nullptr) {
-            switch (this->impl) {
-            case (Implementation::OpenGL):
+            switch (this->api) {
+            case (GUIImGuiAPI::OpenGL):
                 ImGui_ImplOpenGL3_Shutdown();
                 break;
             default:
@@ -848,7 +855,7 @@ bool GUIWindows::destroyContext(void) {
             ImGui::DestroyContext(this->context);
         }
     }
-    this->impl = Implementation::NONE;
+    this->api = GUIImGuiAPI::NONE;
 
     return true;
 }
@@ -1149,7 +1156,7 @@ void GUIWindows::drawParamWindowCallback(WindowManager::WindowConfiguration& wc)
                 bool out_open_external_tf_editor;
                 module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, currentSearchString,
                     wc.param_extended_mode, false, ParameterPresentation::WidgetScope::LOCAL, this->tf_editor_ptr,
-                    out_open_external_tf_editor);
+                    &out_open_external_tf_editor);
 
                 if (out_open_external_tf_editor) {
                     const auto func = [](WindowManager::WindowConfiguration& wc) {

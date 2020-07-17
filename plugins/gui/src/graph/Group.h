@@ -101,6 +101,8 @@ public:
     bool InterfaceSlot_RemoveCallSlot(ImGuiID callslot_uid, bool force = false);
     bool InterfaceSlot_ContainsCallSlot(ImGuiID callslot_uid);
 
+    void RestoreInterfaceslots(void);
+
     // Presentation ----------------------------------------------------
 
     inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
@@ -116,10 +118,6 @@ private:
 
     ModulePtrVectorType modules;
     InterfaceSlotPtrMapType interfaceslots;
-
-    // FUNCTIONS --------------------------------------------------------------
-
-    void restore_callslots_interfaceslot_state(void);
 };
 
 

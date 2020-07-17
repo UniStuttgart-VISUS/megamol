@@ -42,12 +42,12 @@
 #include "vislib/UTF8Encoder.h"
 #include "vislib/sys/Log.h"
 
-// OpenGL stuff only used for texture =>
+// OpenGL stuff only used for textured widgets =>
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "vislib/graphics/BitmapImage.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/sys/FastFile.h"
-// <= OpenGL stuff only used for texture
+// <=
 
 
 namespace megamol {
@@ -86,6 +86,9 @@ namespace gui {
 #define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.75f, 1.0f, 0.25f, 1.0f))
 
 /********** Types **********/
+
+/** Available ImGui APIs */
+enum GUIImGuiAPI { NONE, OpenGL };
 
 typedef megamol::core::param::AbstractParamPresentation::Presentation PresentType;
 typedef megamol::core::param::AbstractParamPresentation::ParamType ParamType;

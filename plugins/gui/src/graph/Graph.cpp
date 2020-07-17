@@ -1346,10 +1346,9 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
                 if (ImGui::CollapsingHeader(module_ptr->name.c_str(), nullptr, ImGuiTreeNodeFlags_None)) {
 
                     // Draw parameters
-                    bool unused_external_tf_editor;
                     module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(),
                         search_string, this->param_extended_mode, false, ParameterPresentation::WidgetScope::LOCAL,
-                        nullptr, unused_external_tf_editor);
+                        nullptr, nullptr);
                 }
                 this->utils.HoverToolTip(module_ptr->description, ImGui::GetID(module_ptr->name.c_str()), 0.75f, 5.0f);
 
@@ -2076,17 +2075,13 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
 
                 this->present.ResetStatePointers();
 
-                // 1)  Remove call slots
-                (*iter)->DeleteCallSlots();
-
-                // 2) Delete calls which are no longer connected
-                this->delete_disconnected_calls();
-
-                // 3) Reset module and call slot pointers in groups
+                // 1) Reset module and call slot pointers in groups
+                GroupPtrType module_group_ptr = nullptr;
                 ImGuiID delete_empty_group = GUI_INVALID_ID;
                 for (auto& group_ptr : this->groups) {
                     if (group_ptr->ContainsModule(module_uid)) {
                         group_ptr->RemoveModule(module_uid);
+                        module_group_ptr = group_ptr;
                     }
                     if (group_ptr->Empty()) {
                         delete_empty_group = group_ptr->uid;
@@ -2094,6 +2089,17 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
                 }
                 if (delete_empty_group != GUI_INVALID_ID) {
                     this->DeleteGroup(delete_empty_group);
+                }
+
+                // 2)  Remove call slots
+                (*iter)->DeleteCallSlots();
+
+                // 3) Delete calls which are no longer connected
+                this->delete_disconnected_calls();
+
+                // 4) Automatically restore interfaceslots
+                if (module_group_ptr != nullptr) {
+                    module_group_ptr->RestoreInterfaceslots();
                 }
 
 #ifdef GUI_VERBOSE

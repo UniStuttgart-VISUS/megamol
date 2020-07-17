@@ -43,9 +43,9 @@ megamol::gui::ParameterGroups::~ParameterGroups(void) {}
 bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVectorType& inout_params,
     const std::string& in_module_fullname, const std::string& in_search, bool in_extended, bool in_ignore_extended,
     megamol::gui::ParameterPresentation::WidgetScope in_scope,
-    const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor) {
+    const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor) {
 
-    out_open_external_tf_editor = false;
+    if (out_open_external_tf_editor != nullptr) (*out_open_external_tf_editor) = false;
 
     // Nothing to do if there are no parameters
     if (inout_params.empty()) return true;
@@ -231,7 +231,7 @@ bool megamol::gui::ParameterGroups::ParameterGroupGUIStateFromJSONString(
 void megamol::gui::ParameterGroups::draw_parameter(megamol::gui::Parameter& inout_param,
     const std::string& in_module_fullname, const std::string& in_search,
     megamol::gui::ParameterPresentation::WidgetScope in_scope,
-    const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor) {
+    const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor) {
 
     if ((inout_param.type == ParamType::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {
         inout_param.present.ConnectExternalTransferFunctionEditor(in_external_tf_editor);
@@ -256,7 +256,7 @@ void megamol::gui::ParameterGroups::draw_parameter(megamol::gui::Parameter& inou
 
                 // Open window calling the transfer function editor callback
                 if ((inout_param.type == ParamType::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {
-                    out_open_external_tf_editor = true;
+                    if (out_open_external_tf_editor != nullptr) (*out_open_external_tf_editor) = true;
                     auto param_fullname = std::string(in_module_fullname.c_str()) + "::" + inout_param.full_name;
                     in_external_tf_editor->SetConnectedParameter(&inout_param, param_fullname);
                 }
@@ -269,7 +269,7 @@ void megamol::gui::ParameterGroups::draw_parameter(megamol::gui::Parameter& inou
 void megamol::gui::ParameterGroups::draw_grouped_parameters(const std::string& in_group_name,
     ParamPtrVectorType& params, const std::string& in_module_fullname, const std::string& in_search,
     megamol::gui::ParameterPresentation::WidgetScope in_scope,
-    const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor) {
+    const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor) {
 
     // Skip if no parameter is visible and extended mode is not set.
     bool visible = false;
@@ -315,7 +315,7 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
     }
 
     // Check required parameters
-    /// TODO Get specific parameters by name because of multiple same types
+    /// Find specific parameters of group by name because of parameter type can occure multiple times.
     Parameter* param_play = nullptr;
     Parameter* param_time = nullptr;
     Parameter* param_speed = nullptr;

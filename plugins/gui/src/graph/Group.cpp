@@ -417,7 +417,7 @@ bool megamol::gui::Group::AddModule(const ModulePtrType& module_ptr) {
     module_ptr->present.group.name = this->name;
 
     this->present.ForceUpdate();
-    this->restore_callslots_interfaceslot_state();
+    this->RestoreInterfaceslots();
 
 #ifdef GUI_VERBOSE
     vislib::sys::Log::DefaultLog.WriteInfo(
@@ -452,7 +452,8 @@ bool megamol::gui::Group::RemoveModule(ImGuiID module_uid) {
                 this->modules.erase(mod_iter);
 
                 this->present.ForceUpdate();
-                this->restore_callslots_interfaceslot_state();
+
+                // ! Restore interfaceslots only after callslots of module have been deleted !
 
                 return true;
             }
@@ -655,7 +656,7 @@ bool megamol::gui::Group::ContainsInterfaceSlot(ImGuiID interfaceslot_uid) {
 }
 
 
-void megamol::gui::Group::restore_callslots_interfaceslot_state(void) {
+void megamol::gui::Group::RestoreInterfaceslots(void) {
 
     /// 1] REMOVE connected call slots of group interface if connected module is part of same group
     for (auto& module_ptr : this->modules) {

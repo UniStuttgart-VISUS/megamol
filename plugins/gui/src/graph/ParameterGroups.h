@@ -32,7 +32,7 @@ public:
     bool PresentGUI(megamol::gui::ParamVectorType& inout_params, const std::string& in_module_fullname,
         const std::string& in_search, bool in_extended, bool in_ignore_extended,
         megamol::gui::ParameterPresentation::WidgetScope in_scope,
-        const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor);
+        const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor);
 
     bool ParameterGroupGUIStateFromJSONString(const std::string& in_json_string, const std::string& module_fullname);
     bool ParameterGroupGUIStateToJSON(nlohmann::json& inout_json, const std::string& module_fullname);
@@ -81,12 +81,12 @@ private:
 
     void draw_parameter(megamol::gui::Parameter& inout_param, const std::string& in_module_fullname,
         const std::string& in_search, megamol::gui::ParameterPresentation::WidgetScope in_scope,
-        const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor);
+        const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor);
 
     void draw_grouped_parameters(const std::string& in_group_name, ParamPtrVectorType& params,
         const std::string& in_module_fullname, const std::string& in_search,
         megamol::gui::ParameterPresentation::WidgetScope in_scope,
-        const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool& out_open_external_tf_editor);
+        const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor);
 
     bool group_widget_animation(ParamPtrVectorType& params,
         megamol::core::param::AbstractParamPresentation::Presentation presentation,

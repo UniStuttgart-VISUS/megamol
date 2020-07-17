@@ -102,9 +102,6 @@ public:
     inline const std::vector<megamol::core::param::ParamSlot*> GetParams(void) const { return this->param_slots; }
 
 private:
-    /** Available ImGui implementations */
-    enum Implementation { NONE, OpenGL };
-
     /** Available GUI styles. */
     enum Styles {
         CorporateGray,
@@ -162,8 +159,8 @@ private:
     /** The ImGui context created and used by this GUIWindows */
     ImGuiContext* context;
 
-    /** The currently initialized ImGui implementation */
-    Implementation impl;
+    /** The currently initialized ImGui API */
+    GUIImGuiAPI api;
 
     /** The window manager. */
     WindowManager window_manager;
@@ -184,6 +181,7 @@ private:
     StateBuffer state;
 
     /** The full name of the parent module incorporating this GUI. */
+    /// Only required for feature which is currently disabled ...
     std::string parent_module_fullname;
 
     /** Numer of fonts reserved for the configurator graph canvas. */
