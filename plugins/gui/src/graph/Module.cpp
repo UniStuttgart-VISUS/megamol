@@ -24,13 +24,14 @@ megamol::gui::ModulePresentation::ModulePresentation(void)
     , label_visible(true)
     , position(ImVec2(FLT_MAX, FLT_MAX))
     , size(ImVec2(0.0f, 0.0f))
-    , utils()
     , selected(false)
     , update(true)
     , show_params(false)
     , set_screen_position(ImVec2(FLT_MAX, FLT_MAX))
     , set_selected_slot_position(false)
-    , param_groups() {
+    , param_groups()
+    , tooltip()
+    , rename_popup() {
 
     this->group.uid = GUI_INVALID_ID;
     this->group.visible = false;
@@ -242,13 +243,13 @@ void megamol::gui::ModulePresentation::Present(
 
                     // Hover Tooltip
                     if ((state.interact.module_hovered_uid == inout_module.uid) && !this->label_visible) {
-                        this->utils.HoverToolTip(inout_module.name, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
+                        this->tooltip.ToolTip(inout_module.name, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
                     } else {
-                        this->utils.ResetHoverToolTip();
+                        this->tooltip.Reset();
                     }
 
                     // Rename pop-up
-                    if (this->utils.RenamePopUp("Rename Project", popup_rename, inout_module.name)) {
+                    if (this->rename_popup.Draw("Rename Project", popup_rename, inout_module.name)) {
                         this->Update(inout_module, state.canvas);
                     }
                 } else if (phase == megamol::gui::PresentPhase::RENDERING) {
@@ -372,7 +373,7 @@ void megamol::gui::ModulePresentation::Present(
                                 }
                                 ImGui::SetItemAllowOverlap();
                                 if (hovered) {
-                                    other_item_hovered = other_item_hovered || this->utils.HoverToolTip("Main View");
+                                    other_item_hovered = other_item_hovered || this->tooltip.ToolTip("Main View");
                                 }
                                 ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
                             }
@@ -388,7 +389,7 @@ void megamol::gui::ModulePresentation::Present(
                                 }
                                 ImGui::SetItemAllowOverlap();
                                 if (hovered) {
-                                    other_item_hovered = other_item_hovered || this->utils.HoverToolTip("Parameters");
+                                    other_item_hovered = other_item_hovered || this->tooltip.ToolTip("Parameters");
                                 }
                             }
                         }

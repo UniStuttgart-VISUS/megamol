@@ -13,9 +13,13 @@
 #include "CorporateGreyStyle.h"
 #include "CorporateWhiteStyle.h"
 #include "FileUtils.h"
-#include "TransferFunctionEditor.h"
 #include "WindowManager.h"
 #include "graph/GraphManager.h"
+#include "widgets/FileBrowserPopUp.h"
+#include "widgets/HoverToolTip.h"
+#include "widgets/MinimalPopUp.h"
+#include "widgets/StringSearchWidget.h"
+#include "widgets/TransferFunctionEditor.h"
 
 #include "mmcore/CoreInstance.h"
 
@@ -62,7 +66,7 @@ public:
      * @param viewport          The currently available viewport.
      * @param instanceTime      The current instance time.
      */
-    bool PreDraw(const std::string& module_fullname, vislib::math::Rectangle<int> viewport, double instanceTime);
+    bool PreDraw(vislib::math::Rectangle<int> viewport, double instanceTime);
 
 
     /**
@@ -146,6 +150,7 @@ private:
 
     /** List of pointers to all paramters. */
     std::vector<megamol::core::param::ParamSlot*> param_slots;
+
     /** A parameter to select the style */
     megamol::core::param::ParamSlot style_param;
     /** A parameter to store the profile */
@@ -165,24 +170,11 @@ private:
     /** The window manager. */
     WindowManager window_manager;
 
-    /** The transfer function editor. */
-    std::shared_ptr<TransferFunctionEditor> tf_editor_ptr;
-
     /** The configurator. */
     megamol::gui::Configurator configurator;
 
-    /** Utils being used all over the place */
-    megamol::gui::GUIUtils utils;
-
-    /** File utils providing stuff interacting with files */
-    megamol::gui::FileUtils file_utils;
-
     /** The current local state of the gui. */
     StateBuffer state;
-
-    /** The full name of the parent module incorporating this GUI. */
-    /// Only required for feature which is currently disabled ...
-    std::string parent_module_fullname;
 
     /** Numer of fonts reserved for the configurator graph canvas. */
     unsigned int graph_fonts_reserved;
@@ -192,6 +184,12 @@ private:
 
     /** The graph manager holding the graph of the currently running project. */
     GraphManager graph_manager;
+
+    // Widgets
+    FileBrowserPopUp file_browser;
+    StringSearchWidget search_widget;
+    std::shared_ptr<TransferFunctionEditor> tf_editor_ptr;
+    HoverToolTip tooltip;
 
     // FUNCTIONS --------------------------------------------------------------
 

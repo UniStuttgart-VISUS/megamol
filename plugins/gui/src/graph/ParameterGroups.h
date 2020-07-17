@@ -11,6 +11,8 @@
 
 #include "GUIUtils.h"
 #include "graph/Parameter.h"
+#include "widgets/HoverToolTip.h"
+#include "widgets/ImageWidget.h"
 
 #include "mmcore/param/AbstractParamPresentation.h"
 
@@ -60,22 +62,20 @@ private:
 
     // VARIABLES --------------------------------------------------------------
 
-    GUIUtils utils;
     std::map<std::string, GroupWidgetData> group_widget_ids;
 
+    // Widgets
+    HoverToolTip tooltip;
 
-    // Variables used by group widgets ----------
-
-    // group_widget_animation //
-    struct {
-        GLuint play;
-        GLuint pause;
-        GLuint fastforward;
-        GLuint fastrewind;
-    } button_tex_ids;
+    // ANIM group widget
     ImVec2 speed_knob_pos;
     ImVec2 time_knob_pos;
-    // ---------------------- //
+    struct {
+        ImageWidget play;
+        ImageWidget pause;
+        ImageWidget fastforward;
+        ImageWidget fastrewind;
+    } image_buttons;
 
     // FUCNTIONS --------------------------------------------------------------
 

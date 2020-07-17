@@ -26,11 +26,9 @@ std::vector<std::string> megamol::gui::Configurator::dropped_files;
 
 
 megamol::gui::Configurator::Configurator()
-    : param_slots()
+    : graph_manager()
+    , param_slots()
     , state_param(GUI_CONFIGURATOR_STATE_PARAM_NAME, "State of the configurator.")
-    , graph_manager()
-    , file_utils()
-    , utils()
     , init_state(0)
     , module_list_sidebar_width(250.0f)
     , selected_list_module_uid(GUI_INVALID_ID)
@@ -41,7 +39,11 @@ megamol::gui::Configurator::Configurator()
     , module_list_popup_pos()
     , last_selected_callslot_uid(GUI_INVALID_ID)
     , graph_state()
-    , open_popup_load(false) {
+    , open_popup_load(false)
+    , file_browser()
+    , search_widget()
+    , splitter_widget()
+    , tooltip() {
 
     this->state_param << new core::param::StringParam("");
     this->state_param.Parameter()->SetGUIVisible(false);
@@ -158,8 +160,8 @@ bool megamol::gui::Configurator::Draw(
         this->draw_window_menu(core_instance);
         this->graph_state.graph_width = 0.0f;
         if (this->show_module_list_sidebar) {
-            this->utils.VerticalSplitter(
-                GUIUtils::FixedSplitterSide::LEFT, this->module_list_sidebar_width, this->graph_state.graph_width);
+            this->splitter_widget.Draw(SplitterWidget::FixedSplitterSide::LEFT, this->module_list_sidebar_width,
+                this->graph_state.graph_width);
             this->draw_window_module_list(this->module_list_sidebar_width);
             ImGui::SameLine();
         }
@@ -289,14 +291,14 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
     ImGui::Separator();
 
     if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
-        this->utils.SetSearchFocus(true);
+        this->search_widget.SetSearchFocus(true);
     }
     std::string help_text =
         "[" + std::get<0>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]).ToString() +
         "] Set keyboard focus to search input field.\n"
         "Case insensitive substring search in module names.";
-    this->utils.StringSearch("configurator_module_search", help_text);
-    auto search_string = this->utils.GetSearchString();
+    this->search_widget.Draw("configurator_module_search", help_text);
+    auto search_string = this->search_widget.GetSearchString();
 
     ImGui::EndChild();
 
@@ -342,7 +344,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
         // Filter module by given search string
         search_filter = true;
         if (!search_string.empty()) {
-            search_filter = this->utils.FindCaseInsensitiveSubstring(mod.class_name, search_string);
+            search_filter = StringSearchWidget::FindCaseInsensitiveSubstring(mod.class_name, search_string);
         }
 
         // Filter module by compatible call slots
@@ -442,7 +444,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
                 }
             }
             // Hover tool tip
-            this->utils.HoverToolTip(mod.description, id, 0.5f, 5.0f);
+            this->tooltip.ToolTip(mod.description, id, 0.5f, 5.0f);
 
             ImGui::PopID();
         }
@@ -639,12 +641,12 @@ void megamol::gui::Configurator::drawPopUps(void) {
     if (this->graph_manager.GetGraph(this->add_project_graph_uid, graph_ptr)) {
         project_filename = graph_ptr->GetFilename();
     }
-    if (this->file_utils.FileBrowserPopUp(
-            FileUtils::FileBrowserFlag::LOAD, "Load Project", this->open_popup_load, project_filename)) {
+    if (this->file_browser.Draw(
+            FileBrowserPopUp::FileBrowserFlag::LOAD, "Load Project", this->open_popup_load, project_filename)) {
         popup_failed = !this->graph_manager.LoadAddProjectFromFile(this->add_project_graph_uid, project_filename);
         this->add_project_graph_uid = GUI_INVALID_ID;
     }
-    this->utils.MinimalPopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
+    MinimalPopUp::Draw("Failed to Load Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
     this->open_popup_load = false;
 

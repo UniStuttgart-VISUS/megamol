@@ -12,6 +12,8 @@
 #include "CallSlot.h"
 #include "Parameter.h"
 #include "ParameterGroups.h"
+#include "widgets/HoverToolTip.h"
+#include "widgets/RenamePopUp.h"
 
 
 namespace megamol {
@@ -70,12 +72,15 @@ private:
 
     // Relative size without considering zooming
     ImVec2 size;
-    GUIUtils utils;
     bool selected;
     bool update;
     bool show_params;
     ImVec2 set_screen_position;
     bool set_selected_slot_position;
+
+    // Widgets
+    HoverToolTip tooltip;
+    RenamePopUp rename_popup;
 
     // FUNCTIONS --------------------------------------------------------------
 

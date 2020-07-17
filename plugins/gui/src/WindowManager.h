@@ -234,9 +234,6 @@ private:
 
     // VARIABLES ------------------------------------------------------
 
-    /** Utils being used all over the place */
-    GUIUtils utils;
-
     /** The list of the window names and their configurations. */
     std::map<DrawCallbacks, GuiCallbackFunc> callbacks;
 

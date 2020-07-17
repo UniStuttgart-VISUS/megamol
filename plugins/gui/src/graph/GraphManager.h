@@ -10,6 +10,8 @@
 
 
 #include "Graph.h"
+#include "widgets/FileBrowserPopUp.h"
+#include "widgets/MinimalPopUp.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
@@ -49,8 +51,7 @@ public:
 private:
     // VARIABLES --------------------------------------------------------------
 
-    GUIUtils utils;
-    megamol::gui::FileUtils file_utils;
+    FileBrowserPopUp file_browser;
     ImGuiID graph_delete_uid;
 
     // FUNCTIONS --------------------------------------------------------------

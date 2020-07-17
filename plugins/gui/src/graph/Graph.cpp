@@ -19,7 +19,6 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
     : params_visible(true)
     , params_readonly(false)
     , param_extended_mode(false)
-    , utils()
     , update(true)
     , show_grid(false)
     , show_call_names(true)
@@ -36,7 +35,11 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
     , multiselect_done(false)
     , canvas_hovered(false)
     , current_font_scaling(1.0f)
-    , graph_state() {
+    , graph_state()
+    , search_widget()
+    , splitter_widget()
+    , rename_popup()
+    , tooltip() {
 
     this->graph_state.canvas.position = ImVec2(0.0f, 0.0f);
     this->graph_state.canvas.size = ImVec2(1.0f, 1.0f);
@@ -192,8 +195,8 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
 
             float graph_width_auto = 0.0f;
             if (this->show_parameter_sidebar) {
-                this->utils.VerticalSplitter(
-                    GUIUtils::FixedSplitterSide::RIGHT, graph_width_auto, this->parameter_sidebar_width);
+                this->splitter_widget.Draw(
+                    SplitterWidget::FixedSplitterSide::RIGHT, graph_width_auto, this->parameter_sidebar_width);
             }
 
             // Load font for canvas
@@ -498,7 +501,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         state.hotkeys = this->graph_state.hotkeys;
 
         // Rename pop-up
-        if (this->utils.RenamePopUp("Rename Project", popup_rename, inout_graph.name)) {
+        if (this->rename_popup.Draw("Rename Project", popup_rename, inout_graph.name)) {
             inout_graph.ForceSetDirty();
         }
 
@@ -1313,14 +1316,14 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
 
     // Parameter Search
     if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH])) {
-        this->utils.SetSearchFocus(true);
+        this->search_widget.SetSearchFocus(true);
     }
     std::string help_text =
         "[" + std::get<0>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH]).ToString() +
         "] Set keyboard focus to search input field.\n"
         "Case insensitive substring search in parameter names.";
-    this->utils.StringSearch("graph_parameter_search", help_text);
-    auto search_string = this->utils.GetSearchString();
+    this->search_widget.Draw("graph_parameter_search", help_text);
+    auto search_string = this->search_widget.GetSearchString();
 
     ImGui::Separator();
 
@@ -1350,7 +1353,7 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
                         search_string, this->param_extended_mode, false, ParameterPresentation::WidgetScope::LOCAL,
                         nullptr, nullptr);
                 }
-                this->utils.HoverToolTip(module_ptr->description, ImGui::GetID(module_ptr->name.c_str()), 0.75f, 5.0f);
+                this->tooltip.ToolTip(module_ptr->description, ImGui::GetID(module_ptr->name.c_str()), 0.75f, 5.0f);
 
                 ImGui::PopID();
             }

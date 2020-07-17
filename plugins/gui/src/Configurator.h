@@ -11,6 +11,10 @@
 
 #include "WindowManager.h"
 #include "graph/GraphManager.h"
+#include "widgets/FileBrowserPopUp.h"
+#include "widgets/HoverToolTip.h"
+#include "widgets/SplitterWidget.h"
+#include "widgets/StringSearchWidget.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/ParamSlot.h"
@@ -68,14 +72,13 @@ public:
 private:
     // VARIABLES --------------------------------------------------------------
 
+    GraphManager graph_manager;
+
     std::vector<megamol::core::param::ParamSlot*> param_slots;
     megamol::core::param::ParamSlot state_param;
 
     static std::vector<std::string> dropped_files;
 
-    GraphManager graph_manager;
-    megamol::gui::FileUtils file_utils;
-    megamol::gui::GUIUtils utils;
     int init_state;
     float module_list_sidebar_width;
     ImGuiID selected_list_module_uid;
@@ -87,6 +90,12 @@ private:
     ImGuiID last_selected_callslot_uid;
     megamol::gui::GraphStateType graph_state;
     bool open_popup_load;
+
+    // Widgets
+    FileBrowserPopUp file_browser;
+    StringSearchWidget search_widget;
+    SplitterWidget splitter_widget;
+    HoverToolTip tooltip;
 
     // FUNCTIONS --------------------------------------------------------------
 

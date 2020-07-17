@@ -15,6 +15,8 @@
 #include "mmcore/view/TransferFunction.h"
 
 #include "GUIUtils.h"
+#include "widgets/HoverToolTip.h"
+#include "widgets/ImageWidget.h"
 
 #include <cmath>
 #include <iomanip>
@@ -42,7 +44,7 @@ public:
     /**
      * Return texture id of given transfer functione.
      */
-    static GLuint GetTexture(const std::string& tfs);
+    static bool GetTextureData(const std::string& in_tfs, std::vector<float>& out_tex_data);
 
     /**
      * Draws the transfer function editor.
@@ -107,11 +109,9 @@ private:
 
     // VARIABLES -----------------------------------------------------------
 
-    /** Utils being used all over the place */
-    GUIUtils utils;
-
     /** The currently active parameter whose transfer function is currently loaded into this editor. */
     Parameter* connected_parameter_ptr;
+
     /** Name of the connected parameter. */
     std::string connected_parameter_name;
 
@@ -128,20 +128,11 @@ private:
     /** Current interpolation option. */
     megamol::core::param::TransferFunctionParam::InterpolationMode mode;
 
-    /** Current texture size. */
-    UINT textureSize;
-
     /** Indicating modified transfer function. Recalculate texture data. */
     bool textureInvalid;
 
     /** Indicates whether changes are already applied or not. */
     bool pendingChanges;
-
-    /** Current texture data. */
-    std::vector<float> texturePixels;
-
-    /** OpenGL Texture IDs. */
-    GLuint texture_id;
 
     /** Currently active color channels in plot. */
     std::array<bool, 4> activeChannels;
@@ -165,7 +156,11 @@ private:
     WidgetBuffer widget_buffer;
 
     /** Legend alignment flag. */
-    bool flip_xy;
+    bool flip_legend;
+
+    // Widgets
+    HoverToolTip tooltip;
+    ImageWidget image_widget;
 
     // FUNCTIONS -----------------------------------------------------------
 

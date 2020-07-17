@@ -13,26 +13,27 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-// PARAMETER PRESENTATION ####################################################
+// PARAMETER PRESENTATION ###############################S#####################
 
 megamol::gui::ParameterPresentation::ParameterPresentation(ParamType type)
     : megamol::core::param::AbstractParamPresentation()
     , extended(false)
+    , float_format("%.7f")
     , help()
     , description()
-    , utils()
-    , file_utils()
     , widget_store()
-    , float_format("%.7f")
     , height(0.0f)
     , set_focus(0)
+    , guistate_dirty(false)
     , tf_editor_external_ptr(nullptr)
     , tf_editor_internal()
     , use_external_tf_editor(false)
     , show_tf_editor(false)
     , tf_editor_hash(0)
     , tf_texture(0)
-    , guistate_dirty(false) {
+    , file_browser()
+    , tooltip()
+    , image_widget() {
 
     this->InitPresentation(type);
 }
@@ -70,7 +71,7 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
                         this->SetGUIVisible(!this->IsGUIVisible());
                         this->ForceSetGUIStateDirty();
                     }
-                    this->utils.HoverToolTip("Visibility", ImGui::GetItemID(), 0.5f);
+                    this->tooltip.ToolTip("Visibility", ImGui::GetItemID(), 0.5f);
 
                     ImGui::SameLine();
 
@@ -80,7 +81,7 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
                         this->SetGUIReadOnly(read_only);
                         this->ForceSetGUIStateDirty();
                     }
-                    this->utils.HoverToolTip("Read-Only", ImGui::GetItemID(), 0.5f);
+                    this->tooltip.ToolTip("Read-Only", ImGui::GetItemID(), 0.5f);
 
                     ImGui::SameLine();
 
@@ -99,7 +100,7 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
                         }
                         ImGui::EndPopup();
                     }
-                    this->utils.HoverToolTip("Presentation", ImGui::GetItemID(), 0.5f);
+                    this->tooltip.ToolTip("Presentation", ImGui::GetItemID(), 0.5f);
 
                     ImGui::SameLine();
                 }
@@ -112,8 +113,8 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
                 ImGui::SameLine();
 
                 /// POSTFIX ------------------------------------------------
-                this->utils.HoverToolTip(this->description, ImGui::GetItemID(), 0.5f);
-                this->utils.HelpMarkerToolTip(this->help);
+                this->tooltip.ToolTip(this->description, ImGui::GetItemID(), 0.5f);
+                this->tooltip.HelpMarker(this->help);
 
                 ImGui::EndGroup();
             }
@@ -868,7 +869,7 @@ bool megamol::gui::ParameterPresentation::widget_filepath(
         ImGuiStyle& style = ImGui::GetStyle();
         float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
         ImGui::PushItemWidth(widget_width);
-        bool button_edit = this->file_utils.FileBrowserButton(std::get<std::string>(this->widget_store));
+        bool button_edit = this->file_browser.FileBrowserButton(std::get<std::string>(this->widget_store));
         ImGui::SameLine();
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->widget_store), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {

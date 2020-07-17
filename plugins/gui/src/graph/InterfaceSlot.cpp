@@ -23,12 +23,12 @@ megamol::gui::InterfaceSlotPresentation::InterfaceSlotPresentation(void)
     : group()
     , label_visible(false)
     , position(ImVec2(FLT_MAX, FLT_MAX))
-    , utils()
     , selected(false)
     , label()
     , last_compat_callslot_uid(GUI_INVALID_ID)
     , last_compat_interface_uid(GUI_INVALID_ID)
-    , compatible(false) {
+    , compatible(false)
+    , tooltip() {
 
     this->group.uid = GUI_INVALID_ID;
     this->group.collapsed_view = false;
@@ -120,9 +120,9 @@ void megamol::gui::InterfaceSlotPresentation::Present(
 
             // Hover Tooltip
             if ((state.interact.interfaceslot_hovered_uid == inout_interfaceslot.uid) && !this->label_visible) {
-                this->utils.HoverToolTip(this->label, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
+                this->tooltip.ToolTip(this->label, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
             } else {
-                this->utils.ResetHoverToolTip();
+                this->tooltip.Reset();
             }
         } else if (phase == megamol::gui::PresentPhase::RENDERING) {
 

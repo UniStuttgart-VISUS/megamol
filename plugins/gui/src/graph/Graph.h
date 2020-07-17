@@ -12,6 +12,10 @@
 #include "Call.h"
 #include "Group.h"
 #include "Module.h"
+#include "widgets/HoverToolTip.h"
+#include "widgets/RenamePopUp.h"
+#include "widgets/SplitterWidget.h"
+#include "widgets/StringSearchWidget.h"
 
 
 namespace megamol {
@@ -67,7 +71,6 @@ public:
 private:
     // VARIABLES --------------------------------------------------------------
 
-    GUIUtils utils;
     bool update;
     bool show_grid;
     bool show_call_names;
@@ -86,6 +89,12 @@ private:
     float current_font_scaling;
     // State propagated and shared by all graph items.
     megamol::gui::GraphItemsStateType graph_state;
+
+    // Widgets
+    StringSearchWidget search_widget;
+    SplitterWidget splitter_widget;
+    RenamePopUp rename_popup;
+    HoverToolTip tooltip;
 
     // FUNCTIONS --------------------------------------------------------------
 

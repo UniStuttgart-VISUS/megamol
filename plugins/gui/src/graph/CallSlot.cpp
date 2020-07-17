@@ -23,13 +23,13 @@ megamol::gui::CallSlotPresentation::CallSlotPresentation(void)
     : group()
     , label_visible(false)
     , position()
-    , utils()
     , selected(false)
     , update_once(true)
     , show_modulestock(false)
     , last_compat_callslot_uid(GUI_INVALID_ID)
     , last_compat_interface_uid(GUI_INVALID_ID)
-    , compatible(false) {
+    , compatible(false)
+    , tooltip() {
 
     this->group.interfaceslot_ptr.reset();
 }
@@ -164,9 +164,9 @@ void megamol::gui::CallSlotPresentation::Present(
 
                 // Hover Tooltip
                 if ((state.interact.callslot_hovered_uid == inout_callslot.uid) && !this->label_visible) {
-                    this->utils.HoverToolTip(inout_callslot.name, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
+                    this->tooltip.ToolTip(inout_callslot.name, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
                 } else {
-                    this->utils.ResetHoverToolTip();
+                    this->tooltip.Reset();
                 }
             } else if (phase == megamol::gui::PresentPhase::RENDERING) {
 

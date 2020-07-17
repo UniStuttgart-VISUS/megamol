@@ -358,7 +358,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                     // font_name (supports UTF-8)
                     if (config_values.at("font_name").is_string()) {
                         config_values.at("font_name").get_to(tmp_config.font_name);
-                        this->utils.Utf8Decode(tmp_config.font_name);
+                        GUIUtils::Utf8Decode(tmp_config.font_name);
 
                         if (!tmp_config.font_name.empty()) {
                             tmp_config.buf_font_reset = true;
@@ -395,7 +395,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
                     // tfe_active_param (supports UTF-8)
                     if (config_values.at("tfe_active_param").is_string()) {
                         config_values.at("tfe_active_param").get_to(tmp_config.tfe_active_param);
-                        this->utils.Utf8Decode(tmp_config.tfe_active_param);
+                        GUIUtils::Utf8Decode(tmp_config.tfe_active_param);
 
                         if (!tmp_config.font_name.empty()) {
                             tmp_config.buf_tfe_reset = true;
@@ -518,7 +518,7 @@ bool WindowManager::StateToJSON(nlohmann::json& out_json) {
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["ms_mode"] =
                     static_cast<int>(window_config.ms_mode);
 
-                this->utils.Utf8Encode(window_config.font_name);
+                GUIUtils::Utf8Encode(window_config.font_name);
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["font_name"] = window_config.font_name;
 
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["tfe_view_minimized"] =

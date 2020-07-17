@@ -19,7 +19,7 @@ using namespace megamol::gui;
 
 // CALL PRESENTATION #########################################################
 
-megamol::gui::CallPresentation::CallPresentation(void) : label_visible(true), selected(false), utils() {}
+megamol::gui::CallPresentation::CallPresentation(void) : label_visible(true), selected(false), tooltip() {}
 
 
 megamol::gui::CallPresentation::~CallPresentation(void) {}
@@ -162,9 +162,9 @@ void megamol::gui::CallPresentation::Present(
                         // Hover Tooltip
                         if (state.interact.call_hovered_uid == inout_call.uid) {
                             std::string tooltip = callerslot_ptr->name + " > " + calleeslot_ptr->name;
-                            this->utils.HoverToolTip(tooltip, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
+                            this->tooltip.ToolTip(tooltip, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
                         } else {
-                            this->utils.ResetHoverToolTip();
+                            this->tooltip.Reset();
                         }
 
                     } else if (phase == megamol::gui::PresentPhase::RENDERING) {

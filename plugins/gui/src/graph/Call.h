@@ -10,6 +10,7 @@
 
 
 #include "GUIUtils.h"
+#include "widgets/HoverToolTip.h"
 
 
 namespace megamol {
@@ -55,7 +56,9 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     bool selected;
-    GUIUtils utils;
+
+    // Widgets
+    HoverToolTip tooltip;
 
     // FUNCTIONS --------------------------------------------------------------
 

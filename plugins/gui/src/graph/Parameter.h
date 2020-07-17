@@ -11,7 +11,10 @@
 
 #include "FileUtils.h"
 #include "GUIUtils.h"
-#include "TransferFunctionEditor.h"
+#include "widgets/FileBrowserPopUp.h"
+#include "widgets/HoverToolTip.h"
+#include "widgets/TransferFunctionEditor.h"
+#include "widgets/ImageWidget.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -106,8 +109,6 @@ private:
 
     std::string help;
     std::string description;
-    megamol::gui::GUIUtils utils;
-    megamol::gui::FileUtils file_utils;
     std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
     float height;
     UINT set_focus;
@@ -119,6 +120,11 @@ private:
     bool show_tf_editor;
     size_t tf_editor_hash;
     GLuint tf_texture;
+
+    // Widgets
+    FileBrowserPopUp file_browser;
+    HoverToolTip tooltip;
+    ImageWidget image_widget;
 
     // FUNCTIONS --------------------------------------------------------------
     bool Present(Parameter& inout_param, WidgetScope scope);

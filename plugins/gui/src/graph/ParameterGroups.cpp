@@ -15,11 +15,11 @@ using namespace megamol::gui;
 
 
 megamol::gui::ParameterGroups::ParameterGroups(void)
-    : utils()
-    , group_widget_ids()
-    , button_tex_ids{0, 0, 0, 0}
+    : group_widget_ids()
+    , tooltip()
     , speed_knob_pos(ImVec2(0.0f, 0.0f))
-    , time_knob_pos(ImVec2(0.0f, 0.0f)) {
+    , time_knob_pos(ImVec2(0.0f, 0.0f))
+    , image_buttons() {
 
     // Add group widget data for animation widget group
     /// View3D_2::anim
@@ -100,7 +100,7 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVectorType& in
                         if (ImGui::RadioButton("###visibile", visible)) {
                             group_widget_id.second.SetGUIVisible(!visible);
                         }
-                        this->utils.HoverToolTip("Visibility", ImGui::GetItemID(), 0.5f);
+                        this->tooltip.ToolTip("Visibility", ImGui::GetItemID(), 0.5f);
                         ImGui::SameLine();
 
                         // Read-only option
@@ -108,7 +108,7 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVectorType& in
                         if (ImGui::Checkbox("###readonly", &readonly)) {
                             group_widget_id.second.SetGUIReadOnly(readonly);
                         }
-                        this->utils.HoverToolTip("Read-Only", ImGui::GetItemID(), 0.5f);
+                        this->tooltip.ToolTip("Read-Only", ImGui::GetItemID(), 0.5f);
                         ImGui::SameLine();
 
                         ParameterPresentation::OptionButton(
@@ -124,7 +124,7 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVectorType& in
                             }
                             ImGui::EndPopup();
                         }
-                        this->utils.HoverToolTip("Presentation", ImGui::GetItemID(), 0.5f);
+                        this->tooltip.ToolTip("Presentation", ImGui::GetItemID(), 0.5f);
                         ImGui::SameLine();
                     }
 
@@ -247,7 +247,7 @@ void megamol::gui::ParameterGroups::draw_parameter(megamol::gui::Parameter& inou
         auto param_name = inout_param.full_name;
         bool param_searched = true;
         if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
-            param_searched = megamol::gui::GUIUtils::FindCaseInsensitiveSubstring(param_name, in_search);
+            param_searched = megamol::gui::StringSearchWidget::FindCaseInsensitiveSubstring(param_name, in_search);
         }
         bool visible = (inout_param.present.IsGUIVisible() && param_searched) || inout_param.present.extended;
 
@@ -339,17 +339,19 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
 
     // Load button textures (once)
     if (this->button_tex_ids.play == 0) {
-        megamol::gui::GUIUtils::LoadTexture("../share/resources/transport_ctrl_play.png", this->button_tex_ids.play);
+        megamol::gui::GraphicsAPIUtils::LoadTexture(
+            "../share/resources/transport_ctrl_play.png", this->button_tex_ids.play);
     }
     if (this->button_tex_ids.pause == 0) {
-        megamol::gui::GUIUtils::LoadTexture("../share/resources/transport_ctrl_pause.png", this->button_tex_ids.pause);
+        megamol::gui::GraphicsAPIUtils::LoadTexture(
+            "../share/resources/transport_ctrl_pause.png", this->button_tex_ids.pause);
     }
     if (this->button_tex_ids.fastforward == 0) {
-        megamol::gui::GUIUtils::LoadTexture(
+        megamol::gui::GraphicsAPIUtils::LoadTexture(
             "../share/resources/transport_ctrl_fast-forward.png", this->button_tex_ids.fastforward);
     }
     if (this->button_tex_ids.fastrewind == 0) {
-        megamol::gui::GUIUtils::LoadTexture(
+        megamol::gui::GraphicsAPIUtils::LoadTexture(
             "../share/resources/transport_ctrl_fast-rewind.png", this->button_tex_ids.fastrewind);
     }
     if ((this->button_tex_ids.play == 0) || (this->button_tex_ids.pause == 0) ||
@@ -403,7 +405,7 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
             style.Colors[ImGuiCol_Button], style.Colors[ImGuiCol_ButtonActive])) {
         play = !play;
     }
-    this->utils.HoverToolTip(button_label, ImGui::GetItemID(), 1.0f, 5.0f);
+    this->tooltip.ToolTip(button_label, ImGui::GetItemID(), 1.0f, 5.0f);
     ImGui::SameLine();
 
     /// SLOWER
@@ -414,7 +416,7 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
         // play = true;
         speed /= 1.5f;
     }
-    this->utils.HoverToolTip(button_label, ImGui::GetItemID(), 1.0f, 5.0f);
+    this->tooltip.ToolTip(button_label, ImGui::GetItemID(), 1.0f, 5.0f);
     ImGui::SameLine();
 
     /// FASTER
@@ -425,7 +427,7 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
         // play = true;
         speed *= 1.5f;
     }
-    this->utils.HoverToolTip(button_label, ImGui::GetItemID(), 1.0f, 5.0f);
+    this->tooltip.ToolTip(button_label, ImGui::GetItemID(), 1.0f, 5.0f);
 
     ImGui::PopStyleColor(3);
 

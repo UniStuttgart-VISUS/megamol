@@ -12,6 +12,7 @@
 #include "Call.h"
 #include "InterfaceSlot.h"
 #include "Module.h"
+#include "widgets/RenamePopUp.h"
 
 
 namespace megamol {
@@ -53,12 +54,14 @@ public:
 private:
     // VARIABLES --------------------------------------------------------------
 
-    GUIUtils utils;
     bool collapsed_view;
     bool allow_selection;
     bool allow_context;
     bool selected;
     bool update;
+
+    // Widgets
+    RenamePopUp rename_popup;
 
     // FUNCTIONS --------------------------------------------------------------
 

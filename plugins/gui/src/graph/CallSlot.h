@@ -10,6 +10,7 @@
 
 
 #include "GUIUtils.h"
+#include "widgets/HoverToolTip.h"
 
 
 namespace megamol {
@@ -67,13 +68,15 @@ private:
 
     // Absolute position including canvas offset and zooming
     ImVec2 position;
-    GUIUtils utils;
     bool selected;
     bool update_once;
     bool show_modulestock;
     ImGuiID last_compat_callslot_uid;
     ImGuiID last_compat_interface_uid;
     bool compatible;
+
+    // Widgets
+    HoverToolTip tooltip;
 
     // FUNCTIONS --------------------------------------------------------------
 

@@ -79,26 +79,25 @@ void GUIView::Render(const mmcRenderViewContext& context) {
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
     }
-    auto module_name = std::string(this->FullName().PeekBuffer());
     if (crv) {
         crv->SetOutputBuffer(GL_BACK);
         crv->SetInstanceTime(context.InstanceTime);
         crv->SetTime(
             -1.0f); // Should be negative to trigger animation! (see View3D.cpp line ~660 | View2D.cpp line ~350)
-        this->gui.PreDraw(module_name, crv->GetViewport(), crv->InstanceTime());
+        this->gui.PreDraw(crv->GetViewport(), crv->InstanceTime());
         (*crv)(core::view::AbstractCallRender::FnRender);
         this->gui.PostDraw();
     } else {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         if (this->overrideCall != nullptr) {
-            this->gui.PreDraw(module_name, this->overrideCall->GetViewport(), context.InstanceTime);
+            this->gui.PreDraw(this->overrideCall->GetViewport(), context.InstanceTime);
             this->gui.PostDraw();
         } else {
             GLint vp[4];
             glGetIntegerv(GL_VIEWPORT, vp);
             vislib::math::Rectangle<int> viewport(vp[0], vp[1], vp[2], vp[3]);
-            this->gui.PreDraw(module_name, viewport, context.InstanceTime);
+            this->gui.PreDraw(viewport, context.InstanceTime);
             this->gui.PostDraw();
         }
     }

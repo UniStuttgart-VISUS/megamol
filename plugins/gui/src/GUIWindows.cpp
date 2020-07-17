@@ -35,13 +35,13 @@ GUIWindows::GUIWindows()
     , window_manager()
     , tf_editor_ptr(nullptr)
     , configurator()
-    , utils()
-    , file_utils()
     , state()
-    , parent_module_fullname()
     , graph_fonts_reserved(0)
     , graph_uid(GUI_INVALID_ID)
-    , graph_manager() {
+    , graph_manager()
+    , file_browser()
+    , search_widget()
+    , tooltip() {
 
     core::param::EnumParam* styles = new core::param::EnumParam((int)(Styles::DarkColors));
     styles->SetTypePair(Styles::CorporateGray, "Corporate Gray");
@@ -104,8 +104,7 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 }
 
 
-bool GUIWindows::PreDraw(
-    const std::string& module_fullname, vislib::math::Rectangle<int> viewport, double instanceTime) {
+bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceTime) {
 
     if (this->api == GUIImGuiAPI::NONE) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -142,7 +141,6 @@ bool GUIWindows::PreDraw(
     }
     this->validateParameters();
     this->checkMultipleHotkeyAssignement();
-    this->parent_module_fullname = module_fullname;
 
     // Set IO stuff for next frame --------------------------------------------
     auto viewportWidth = viewport.Width();
@@ -929,7 +927,7 @@ void GUIWindows::drawParamWindowCallback(WindowManager::WindowConfiguration& wc)
     // Mode
     megamol::gui::ParameterPresentation::ParameterExtendedModeButton(wc.param_extended_mode);
     // std::string mode_help = "Expert mode enables buttons for additional parameter presentation options.";
-    // this->utils.HelpMarkerToolTip(mode_help);
+    // this->tooltip.HelpMarker(mode_help);
     ImGui::SameLine();
 
     // Options
@@ -959,113 +957,20 @@ void GUIWindows::drawParamWindowCallback(WindowManager::WindowConfiguration& wc)
                              "[Enter],[Tab],[Left-Click outside Widget] Confirm input changes";
     ImGui::AlignTextToFramePadding();
     ImGui::TextDisabled(help_marker.c_str());
-    this->utils.HoverToolTip(param_help);
+    this->tooltip.ToolTip(param_help);
 
     // Paramter substring name filtering (only for main parameter view)
     if (wc.win_callback == WindowManager::DrawCallbacks::MAIN_PARAMETERS) {
         if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH])) {
-            this->utils.SetSearchFocus(true);
+            this->search_widget.SetSearchFocus(true);
             std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH]) = false;
         }
         std::string help_test =
             "[" + std::get<0>(this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH]).ToString() +
             "] Set keyboard focus to search input field.\n"
             "Case insensitive substring search in\nparameter names.\nGlobally in all parameter views.\n";
-        this->utils.StringSearch("guiwindow_parameter_earch", help_test);
+        this->search_widget.Draw("guiwindow_parameter_earch", help_test);
     }
-
-    /// DISABLED --- Does anybody use this?
-    /// Module filtering (only for main parameter view)
-    /*   if ((this->core_instance != nullptr) && (wc.win_callback == WindowManager::DrawCallbacks::MAIN_PARAMETERS)) {
-           std::map<int, std::string> opts;
-           opts[static_cast<int>(WindowManager::FilterModes::ALL)] = "All";
-           opts[static_cast<int>(WindowManager::FilterModes::INSTANCE)] = "Instance";
-           opts[static_cast<int>(WindowManager::FilterModes::VIEW)] = "View";
-           unsigned int opts_cnt = (unsigned int)opts.size();
-           if (ImGui::BeginCombo("Filter Modules", opts[(int)wc.param_module_filter].c_str())) {
-               for (unsigned int i = 0; i < opts_cnt; ++i) {
-                   if (ImGui::Selectable(opts[i].c_str(), (static_cast<int>(wc.param_module_filter) == i))) {
-                       wc.param_module_filter = static_cast<WindowManager::FilterModes>(i);
-                       wc.param_modules_list.clear();
-                       if ((wc.param_module_filter == WindowManager::FilterModes::INSTANCE) ||
-                           (wc.param_module_filter == WindowManager::FilterModes::VIEW)) {
-                           std::string viewname;
-                           /// The goal is to find view module with shortest call connection path to this module.
-                           /// Since enumeration of modules goes bottom up, result for first abstract view is
-                           /// stored and following hits are ignored.
-                           if (!this->parent_module_fullname.empty()) {
-                               const auto view_func = [&, this](core::Module* viewmod) {
-                                   auto v = dynamic_cast<core::view::AbstractView*>(viewmod);
-                                   if (v != nullptr) {
-                                       std::string vname = v->FullName().PeekBuffer();
-                                       bool found = false;
-                                       const auto find_func = [&, this](core::Module* guimod) {
-                                           std::string modname = guimod->FullName().PeekBuffer();
-                                           if (this->parent_module_fullname == modname) {
-                                               found = true;
-                                           }
-                                       };
-                                       this->core_instance->EnumModulesNoLock(viewmod, find_func);
-                                       if (found && viewname.empty()) {
-                                           viewname = vname;
-                                       }
-                                   }
-                               };
-                               this->core_instance->EnumModulesNoLock(nullptr, view_func);
-                           }
-                           if (!viewname.empty()) {
-                               if (wc.param_module_filter == WindowManager::FilterModes::INSTANCE) {
-                                   /// Considering modules depending on the INSTANCE NAME of the first view this module
-       is
-                                   /// connected to.
-                                   std::string instname = "";
-                                   auto instance_idx = viewname.rfind("::");
-                                   if (instance_idx != std::string::npos) {
-                                       instname = viewname.substr(0, instance_idx + 2);
-                                   }
-                                   if (!instname.empty()) { /// Consider all modules if view is not assigned to any
-       instance const auto func = [&, this](core::Module* mod) { std::string modname = mod->FullName().PeekBuffer();
-                                           bool foundInstanceName = (modname.find(instname) != std::string::npos);
-                                           bool noInstanceNamePresent =
-                                               false; /// Always consider modules with no namspace (modname.find("::",
-       2)
-                                                      /// == std::string::npos);
-                                           if (foundInstanceName || noInstanceNamePresent) {
-                                               wc.param_modules_list.emplace_back(modname);
-                                           }
-                                       };
-                                       this->core_instance->EnumModulesNoLock(nullptr, func);
-                                   }
-                               } else { /// (wc.param_module_filter == WindowManager::FilterModes::VIEW)
-                                   /// Considering modules depending on their connection to the VIEW MODULE this GUI is
-                                   /// incorporated.
-                                   const auto add_func = [&, this](core::Module* mod) {
-                                       std::string modname = mod->FullName().PeekBuffer();
-                                       wc.param_modules_list.emplace_back(modname);
-                                   };
-                                   this->core_instance->EnumModulesNoLock(viewname, add_func);
-                               }
-                           } else {
-                               vislib::sys::Log::DefaultLog.WriteWarn(
-                                   "Could not find abstract view "
-                                   "module this gui is connected to. [%s, %s, line %d]\n",
-                                   __FILE__, __FUNCTION__, __LINE__);
-                           }
-                       }
-                   }
-                   std::string hover = "Show all Modules."; /// == WindowManager::FilterModes::ALL
-                   if (i == static_cast<int>(WindowManager::FilterModes::INSTANCE)) {
-                       hover = "Show Modules with same Instance Name as current View and Modules with no Instance
-       Name."; } else if (i == static_cast<int>(WindowManager::FilterModes::VIEW)) { hover = "Show Modules subsequently
-       connected to the View Module the Gui Module is connected to.";
-                   }
-                   this->utils.HoverToolTip(hover);
-               }
-               ImGui::EndCombo();
-           }
-           this->utils.HelpMarkerToolTip("Selected filter is not refreshed on graph changes.\n"
-                                         "Select filter again to trigger refresh.");
-       }*/
 
     ImGui::Separator();
 
@@ -1073,7 +978,7 @@ void GUIWindows::drawParamWindowCallback(WindowManager::WindowConfiguration& wc)
     ImGui::BeginChild("###ParameterList", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_HorizontalScrollbar);
 
     const size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
-    auto currentSearchString = this->utils.GetSearchString();
+    auto currentSearchString = this->search_widget.GetSearchString();
     GraphPtrType graph_ptr;
     // Listing modules and their parameters
     if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
@@ -1104,7 +1009,7 @@ void GUIWindows::drawParamWindowCallback(WindowManager::WindowConfiguration& wc)
             }
 
             // Module description as hover tooltip
-            this->utils.HoverToolTip(module_ptr->description, ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
+            this->tooltip.ToolTip(module_ptr->description, ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
 
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
@@ -1318,7 +1223,7 @@ void GUIWindows::drawFpsWindowCallback(WindowManager::WindowConfiguration& wc) {
         ImGui::SameLine();
         ImGui::TextUnformatted("Copy to Clipborad");
         std::string help = "Values are copied in chronological order (newest first)";
-        this->utils.HelpMarkerToolTip(help);
+        this->tooltip.HelpMarker(help);
     }
 }
 
@@ -1343,7 +1248,7 @@ void GUIWindows::drawFontWindowCallback(WindowManager::WindowConfiguration& wc) 
     ImGui::Separator();
     ImGui::TextUnformatted("Load Font from File");
     std::string help = "Same font can be loaded multiple times with different font size.";
-    this->utils.HelpMarkerToolTip(help);
+    this->tooltip.HelpMarker(help);
 
     std::string label = "Font Size";
     ImGui::InputFloat(label.c_str(), &wc.buf_font_size, 1.0f, 10.0f, "%.2f", ImGuiInputTextFlags_None);
@@ -1406,10 +1311,10 @@ void GUIWindows::drawMenu(void) {
                     }
                     ImGui::EndPopup();
                 }
-                this->utils.HoverToolTip("[Right-Click] Open Context Menu for Deleting Window Permanently.");
+                this->tooltip.ToolTip("[Right-Click] Open Context Menu for Deleting Window Permanently.");
             } else {
-                this->utils.HoverToolTip("['Window Hotkey'] Show/Hide Window.\n[Shift]+['Window Hotkey'] Reset Size "
-                                         "and Position of Window.");
+                this->tooltip.ToolTip("['Window Hotkey'] Show/Hide Window.\n[Shift]+['Window Hotkey'] Reset Size "
+                                   "and Position of Window.");
             }
         };
         this->window_manager.EnumWindows(func);
@@ -1516,14 +1421,14 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
 
     bool confirmed, aborted;
     bool popup_failed = false;
-    if (this->file_utils.FileBrowserPopUp(FileUtils::FileBrowserFlag::SAVE, "Save Editor Project",
+    if (this->file_browser.Draw(FileBrowserPopUp::FileBrowserFlag::SAVE, "Save Editor Project",
             this->state.open_popup_save, this->state.project_file)) {
         /// Serialize current state to parameter.
         this->save_state_to_parameter();
         /// Save to file
         popup_failed = !this->graph_manager.SaveProjectToFile(this->graph_uid, this->state.project_file, false);
     }
-    this->utils.MinimalPopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
+    MinimalPopUp::Draw("Failed to Save Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
 
     if (this->state.open_popup_save) {
@@ -1722,7 +1627,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
                 // project_file (supports UTF-8)
                 if (gui_state.at("project_file").is_string()) {
                     gui_state.at("project_file").get_to(this->state.project_file);
-                    this->utils.Utf8Decode(this->state.project_file);
+                    GUIUtils::Utf8Decode(this->state.project_file);
                 } else {
                     vislib::sys::Log::DefaultLog.WriteError(
                         "JSON state: Failed to read 'project_file' as string. [%s, %s, line %d]\n", __FILE__,
@@ -1772,7 +1677,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_to_json(nlohmann::json& 
     try {
         // Append to given json
 
-        this->utils.Utf8Encode(this->state.project_file);
+        GUIUtils::Utf8Encode(this->state.project_file);
         inout_json[GUI_JSON_TAG_GUISTATE]["project_file"] = this->state.project_file;
         inout_json[GUI_JSON_TAG_GUISTATE]["menu_visible"] = this->state.menu_visible;
 
