@@ -64,10 +64,12 @@ void vislib::sys::Log::Target::Flush(void) {
  */
 vislib::sys::Log::DebugOutputTarget::DebugOutputTarget(UINT level)
         : Target(level) {
-    sink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
-    sink->set_pattern(std_pattern);
-    logger = std::make_shared<spdlog::logger>("default_debug", sink);
-    // intentionally empty
+    logger = spdlog::get("default_debug");
+    if (logger == nullptr) {
+        sink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
+        sink->set_pattern(std_pattern);
+        logger = std::make_shared<spdlog::logger>("default_debug", sink);
+    }
 }
 
 
@@ -97,10 +99,12 @@ void vislib::sys::Log::DebugOutputTarget::Msg(UINT level,
  */
 vislib::sys::Log::FileTarget::FileTarget(const char *path, UINT level)
         : Target(level)/*, stream(NULL)*/ {
-
-    sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path, true);
-    sink->set_pattern(std_pattern);
-    logger = std::make_shared<spdlog::logger>("default_file", sink);
+    logger = spdlog::get(std::string("default_file_") + std::string(path));
+    if (logger == nullptr) {
+        sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path, true);
+        sink->set_pattern(std_pattern);
+        logger = std::make_shared<spdlog::logger>(std::string("default_file_") + std::string(path), sink);
+    }
     filename = path;
 }
 
@@ -284,10 +288,12 @@ vislib::sys::Log::StreamTarget::StdErr
  */
 vislib::sys::Log::StreamTarget::StreamTarget(std::ostream& stream, UINT level)
         : Target(level)/*, stream(stream)*/ {
-    sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(stream);
-    sink->set_pattern(std_pattern);
-    logger = std::make_shared<spdlog::logger>("default_stream", sink);
-    // intentionally empty
+    logger = spdlog::get("default_stream");
+    if (logger == nullptr) {
+        sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(stream);
+        sink->set_pattern(std_pattern);
+        logger = std::make_shared<spdlog::logger>("default_stream", sink);
+    }
 }
 
 
