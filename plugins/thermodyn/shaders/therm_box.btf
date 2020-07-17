@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="therm_box">
+    
+    <shader name="vertex">
+        <snippet type="version">150</snippet>
+        <snippet name="MainEnd"          type="file">therm_box/therm_box.vert.glsl</snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">150</snippet>
+        <snippet name="MainEnd"          type="file">therm_box/therm_box.frag.glsl</snippet>
+    </shader>
+
+</btf>
