@@ -316,7 +316,7 @@ void megamol::core::CoreInstance::Initialise(void) {
             this->config.logFilenameLocked = true;
         } else {
             if (this->preInit->IsLogFileSet()) {
-                this->log.SetLogFileName(this->preInit->GetLogFile(), false);
+                this->log.SetLogFileName(this->preInit->GetLogFile().c_str(), false);
                 this->config.logFilenameLocked = true;
             } else {
                 this->log.SetLogFileName(static_cast<char*>(NULL), false);
@@ -606,7 +606,7 @@ mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key, mmcValu
             if (!utility::APIValueUtil::IsStringType(type)) {
                 return MMC_ERR_TYPE;
             }
-            this->preInit->SetLogFile(utility::APIValueUtil::AsStringW(type, value));
+            this->preInit->SetLogFile(utility::APIValueUtil::AsStringA(type, value).PeekBuffer());
             break;
         case MMC_INITVAL_LOGLEVEL:
             if (!utility::APIValueUtil::IsIntType(type)) {

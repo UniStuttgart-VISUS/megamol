@@ -202,15 +202,6 @@ namespace sys {
              */
             FileTarget(const char *path, UINT level = Log::LEVEL_ERROR);
 
-            /**
-             * Opens a physical log file
-             *
-             * @param path The path to the physical log file
-             * @param level The log level used for this target
-             */
-            [[deprecated("use char* version instead")]]
-            FileTarget(const wchar_t *path, UINT level = Log::LEVEL_ERROR);
-
             /** Dtor */
             virtual ~FileTarget(void);
 
@@ -469,18 +460,6 @@ namespace sys {
         Log(UINT level, const char *filename, bool addSuffix);
 
         /**
-         * Ctor. Constructs a new log file with the specified physical file.
-         *
-         * @param level Sets the current log level.
-         * @param filename The name of the physical log file.
-         * @param addSuffix If true a automatically generated suffix is added
-         *                  to the name of the physical log file, consisting of
-         *                  the name of the computer name, the current date and
-         *                  time.
-         */
-        Log(UINT level, const wchar_t *filename, bool addSuffix);
-
-        /**
          * Copy ctor.
          *
          * @param source The object which will be copied from.
@@ -646,23 +625,6 @@ namespace sys {
          *         false otherwise.
          */
         bool SetLogFileName(const char *filename, bool addSuffix);
-
-        /**
-         * Specifies the location of the physical log file. Any physical log
-         * file currently in use will be closed.
-         *
-         * @param filename The name of the physical log file. If this parameter
-         *                 is NULL, the current physical log file is closed,
-         *                 but no new file will be opened.
-         * @param addSuffix If true a automatically generated suffix is added
-         *                  to the name of the physical log file, consisting of
-         *                  the name of the computer name, the current date and
-         *                  time.
-         *
-         * @return true if the log file name had been successfully changes,
-         *         false otherwise.
-         */
-        bool SetLogFileName(const wchar_t *filename, bool addSuffix);
 
         /**
          * Sets the new main log target
