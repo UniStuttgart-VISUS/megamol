@@ -392,7 +392,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
         logSettings->logFileNameValid = false;
         logSettings->logLevelValid = false;
         logSettings->echoLevelValid = false;
-        logSettings->logFileNameValue.Clear();
+        logSettings->logFileNameValue.clear();
         logSettings->logLevelValue = vislib::sys::Log::LEVEL_ERROR;
         logSettings->echoLevelValue = vislib::sys::Log::LEVEL_ERROR;
 
@@ -450,7 +450,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
             if ((!megamol::core::utility::Configuration::logFilenameLocked)
                     && (logSettings->logFileNameValid)) {
                 this->config.instanceLog->SetLogFileName(
-                    logSettings->logFileNameValue, USE_LOG_SUFFIX);
+                    logSettings->logFileNameValue.c_str(), USE_LOG_SUFFIX);
             }
         }
         delete logSettings;

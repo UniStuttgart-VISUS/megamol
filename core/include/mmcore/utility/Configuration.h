@@ -22,6 +22,8 @@
 #include "vislib/SingleLinkedList.h"
 #include "mmcore/LuaState.h"
 
+#include <string>
+
 namespace megamol {
 namespace core {
 
@@ -449,7 +451,7 @@ namespace xml {
             bool echoLevelValid : 1;
 
             /** file name of the log file */
-            vislib::StringW logFileNameValue;
+            std::string logFileNameValue;
 
             /** log level */
             unsigned int logLevelValue;

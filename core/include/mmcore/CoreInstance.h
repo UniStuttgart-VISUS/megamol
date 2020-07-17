@@ -55,6 +55,7 @@
 #include <functional>
 #include <memory>
 #include <unordered_map>
+#include <string>
 
 namespace megamol {
 namespace core {
@@ -848,7 +849,7 @@ private:
          *
          * @return The log file to use.
          */
-        inline const vislib::StringW& GetLogFile(void) const { return this->logFile; }
+        inline const std::string& GetLogFile(void) const { return this->logFile; }
 
         /**
          * Answer the log level to use.
@@ -925,7 +926,7 @@ private:
          *
          * @param logFile The log file to use.
          */
-        inline void SetLogFile(const vislib::StringW& logFile) {
+        inline void SetLogFile(const std::string& logFile) {
             this->logFile = logFile;
             this->logFileSet = true;
         }
@@ -970,7 +971,7 @@ private:
         vislib::StringW cfgFile;
 
         /** The log file name. */
-        vislib::StringW logFile;
+        std::string logFile;
 
         /** A serialized list of config key-value overrides */
         vislib::StringW cfgOverrides;

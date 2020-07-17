@@ -106,14 +106,6 @@ vislib::sys::Log::FileTarget::FileTarget(const char *path, UINT level)
 
 
 /*
- * vislib::sys::Log::FileTarget::FileTarget
- */
-vislib::sys::Log::FileTarget::FileTarget(const wchar_t *path, UINT level) : Target(level) /*, stream(NULL)*/ {
-    throw std::runtime_error("wchar is not supported");
-}
-
-
-/*
  * vislib::sys::Log::FileTarget::~FileTarget
  */
 vislib::sys::Log::FileTarget::~FileTarget(void) {
@@ -412,17 +404,6 @@ vislib::sys::Log::Log(UINT level, const char *filename, bool addSuffix)
 /*
  * vislib::sys::Log::Log
  */
-vislib::sys::Log::Log(UINT level, const wchar_t *filename, bool addSuffix)
-        : mainTarget(NULL), echoTarget(NULL), autoflush(true) {
-    VLTRACE(TRACE_LVL, "Log[%lu]::Log[%d]()\n",
-        reinterpret_cast<unsigned long>(this), __LINE__);
-    this->SetLogFileName(filename, addSuffix);
-}
-
-
-/*
- * vislib::sys::Log::Log
- */
 vislib::sys::Log::Log(const Log& source) : mainTarget(NULL),
         echoTarget(NULL), autoflush(true) {
     VLTRACE(TRACE_LVL, "Log[%lu]::Log[%d]()\n",
@@ -579,33 +560,6 @@ bool vislib::sys::Log::SetLogFileName(const char *filename, bool addSuffix) {
         }
     } else {
         vislib::StringA path(filename);
-        if (addSuffix) {
-            path += this->getFileNameSuffix();
-        }
-        *this->mainTarget = new FileTarget(path.PeekBuffer(), omt->Level());
-        if (ot != NULL) {
-            ot->Reecho(**this->mainTarget);
-        }
-    }
-    // ot will be deleted by SFX of omt
-
-    return true;
-}
-
-
-/*
- * vislib::sys::Log::SetLogFileName
- */
-bool vislib::sys::Log::SetLogFileName(const wchar_t *filename, bool addSuffix) {
-    SmartPtr<Target> omt = *this->mainTarget;
-    OfflineTarget *ot = omt.DynamicCast<OfflineTarget>();
-
-    if (filename == NULL) {
-        if (ot == NULL) {
-            *this->mainTarget = new OfflineTarget(20U, omt->Level());
-        }
-    } else {
-        vislib::StringW path(filename);
         if (addSuffix) {
             path += this->getFileNameSuffix();
         }
