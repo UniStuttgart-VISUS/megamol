@@ -22,7 +22,6 @@
 #include <ctime>
 #include <string>
 #include <iostream>
-#include <codecvt>
 
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/msvc_sink.h"
