@@ -171,7 +171,6 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , textureSize(256)
     , textureInvalid(true)
     , pendingChanges(true)
-    , texturePixels()
     , activeChannels{false, false, false, false}
     , currentNode(0)
     , currentChannel(0)
@@ -192,16 +191,17 @@ TransferFunctionEditor::TransferFunctionEditor(void)
 
     this->widget_buffer.min_range = this->range[0];
     this->widget_buffer.max_range = this->range[1];
-    this->widget_buffer.tex_size = textureSize;
+    this->widget_buffer.tex_size = this->textureSize;
     this->widget_buffer.gauss_sigma = zero[5];
     this->widget_buffer.range_value = zero[4];
 }
 
 
-bool megamol::gui::TransferFunctionEditor::GetTextureData(const std::string& in_tfs, std::vector<float>& out_tex_data) {
+bool megamol::gui::TransferFunctionEditor::GetTextureData(
+    const std::string& in_tfs, std::vector<float>& out_tex_data, glm::ivec2& out_size) {
 
     out_tex_data.clear();
-    UINT tmp_texture_size;
+    unsigned int tmp_texture_size;
     megamol::core::param::TransferFunctionParam::TFNodeType tmp_nodes;
     std::array<float, 2> tmp_range;
     megamol::core::param::TransferFunctionParam::InterpolationMode tmp_mode;
@@ -218,6 +218,8 @@ bool megamol::gui::TransferFunctionEditor::GetTextureData(const std::string& in_
         param::TransferFunctionParam::GaussInterpolation(out_tex_data, tmp_texture_size, tmp_nodes);
     }
 
+    out_size = glm::ivec2(static_cast<int>(tmp_texture_size), 1);
+
     return true;
 }
 
@@ -230,8 +232,10 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
     }
 
     std::array<float, 2> new_range;
+    unsigned int tex_size = 0;
     bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
-        tfs, this->nodes, this->mode, this->textureSize, new_range);
+        tfs, this->nodes, this->mode, tex_size, new_range);
+
     if (!ok) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Could not parse transfer function");
         return;
@@ -242,7 +246,7 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
 
     this->currentNode = 0;
     this->currentChannel = 0;
-    this->currentDragChange = ImVec2(0.0f, 0.0f);
+    this->currentDragChange = glm::vec2(0.0f, 0.0f);
 
     if (!this->range_overwrite) {
         this->range = new_range;
@@ -252,7 +256,7 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
 
     this->widget_buffer.min_range = this->range[0];
     this->widget_buffer.max_range = this->range[1];
-    this->widget_buffer.tex_size = this->textureSize;
+    this->widget_buffer.tex_size = static_cast<int>(tex_size);
     this->widget_buffer.range_value =
         (this->nodes[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
 
@@ -263,7 +267,7 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
 
 bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
     return param::TransferFunctionParam::DumpTransferFunction(
-        tfs, this->nodes, this->mode, this->textureSize, this->range);
+        tfs, this->nodes, this->mode, static_cast<unsigned int>(this->textureSize), this->range);
 }
 
 
@@ -503,7 +507,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         // Texture size -------------------------------------------------------
         ImGui::InputInt("Texture Size", &this->widget_buffer.tex_size, 1, 10, ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            this->textureSize = (UINT)std::max(1, this->widget_buffer.tex_size);
+            this->textureSize = std::max(1, this->widget_buffer.tex_size);
             this->widget_buffer.tex_size = this->textureSize;
             this->textureInvalid = true;
         }
@@ -513,19 +517,19 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
     // Create current texture data
     if (this->textureInvalid) {
         this->pendingChanges = true;
-
+        std::vector<float> texture_data;
         if (this->mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
-            param::TransferFunctionParam::LinearInterpolation(this->texturePixels, this->textureSize, this->nodes);
+            param::TransferFunctionParam::LinearInterpolation(
+                texture_data, static_cast<unsigned int>(this->textureSize), this->nodes);
         } else if (this->mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
-            param::TransferFunctionParam::GaussInterpolation(this->texturePixels, this->textureSize, this->nodes);
+            param::TransferFunctionParam::GaussInterpolation(
+                texture_data, static_cast<unsigned int>(this->textureSize), this->nodes);
         }
 
         if (!this->flip_legend) {
-            megamol::gui::GraphicsAPIUtils::CreateTexture(
-                this->texture_id, static_cast<GLsizei>(this->textureSize), 1, this->texturePixels.data());
+            this->image_widget.LoadTextureFromData(this->textureSize, 1, texture_data.data());
         } else {
-            megamol::gui::GraphicsAPIUtils::CreateTexture(
-                this->texture_id, 1, static_cast<GLsizei>(this->textureSize), this->texturePixels.data());
+            this->image_widget.LoadTextureFromData(1, this->textureSize, texture_data.data());
         }
 
         this->textureInvalid = false;
@@ -589,7 +593,6 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_legend
 
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec2 pos = ImGui::GetCursorScreenPos();
-    const size_t textureSize = this->texturePixels.size() / 4;
 
     ImVec2 image_size = size;
     ImVec2 uv0 = ImVec2(0.0f, 0.0f);
@@ -601,7 +604,7 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_legend
         uv1 = ImVec2(0.0f, 0.0f);
     }
 
-    if (textureSize == 0 || this->texture_id == 0) {
+    if (textureSize == 0 || !this->image_widget.IsLoaded()) {
         // Reserve layout space and draw a black background rectangle.
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         ImGui::Dummy(image_size);
@@ -609,8 +612,10 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_legend
             pos, ImVec2(pos.x + image_size.x, pos.y + image_size.y), IM_COL32(0, 0, 0, 255), 0.0f, 10);
     } else {
         // Draw texture as image.
-        ImGui::Image(reinterpret_cast<ImTextureID>(this->texture_id), image_size, uv0, uv1,
-            ImVec4(1.0f, 1.0f, 1.0f, 1.0f), style.Colors[ImGuiCol_Border]);
+        this->image_widget.Widget(image_size);
+        /// XXX
+        /// ImGui::Image(reinterpret_cast<ImTextureID>(this->texture_id), image_size, uv0, uv1,
+        ///    ImVec4(1.0f, 1.0f, 1.0f, 1.0f), style.Colors[ImGuiCol_Border]);
     }
 
     // Draw tooltip, if requested.
@@ -776,7 +781,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
     ImGuiID selected_node = GUI_INVALID_ID;
     ImGuiID selected_chan = GUI_INVALID_ID;
-    ImVec2 selected_delta = ImVec2(0.0f, 0.0f);
+    glm::vec2 selected_delta = glm::vec2(0.0f, 0.0f);
     // For each enabled color channel
     for (size_t c = 0; c < channelColors.size(); ++c) {
         if (!this->activeChannels[c]) continue;
@@ -809,7 +814,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
             }
 
             // Test for intersection of mouse position with node.
-            ImVec2 d = ImVec2(point.x - mouse_cur_pos.x, point.y - mouse_cur_pos.y);
+            glm::vec2 d = glm::vec2(point.x - mouse_cur_pos.x, point.y - mouse_cur_pos.y);
             if (sqrtf((d.x * d.x) + (d.y * d.y)) <= pointAndBorderRadius) {
                 selected_node = static_cast<ImGuiID>(i);
                 selected_chan = static_cast<ImGuiID>(c);

@@ -30,7 +30,6 @@ megamol::gui::ParameterPresentation::ParameterPresentation(ParamType type)
     , use_external_tf_editor(false)
     , show_tf_editor(false)
     , tf_editor_hash(0)
-    , tf_texture(0)
     , file_browser()
     , tooltip()
     , image_widget() {
@@ -157,6 +156,13 @@ float megamol::gui::ParameterPresentation::GetHeight(Parameter& inout_parameter)
         }
     }
     return height;
+}
+
+
+void megamol::gui::ParameterPresentation::LoadTransferFunctionTexture(
+    std::vector<float>& in_texture_data, glm::ivec2& in_texture_size) {
+
+    image_widget.LoadTextureFromData(in_texture_size.x, in_texture_size.y, in_texture_data.data());
 }
 
 
@@ -1103,10 +1109,8 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
                 ImGui::SameLine();
             } else {
                 // Draw texture
-                if (this->tf_texture != 0) {
-                    ImGui::Image(reinterpret_cast<ImTextureID>(this->tf_texture),
-                        ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight()), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f),
-                        ImVec4(1.0f, 1.0f, 1.0f, 1.0f), style.Colors[ImGuiCol_Border]);
+                if (this->image_widget.IsLoaded()) {
+                    this->image_widget.Widget(ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight()));
                     ImGui::SameLine(ImGui::CalcItemWidth() + style.ItemInnerSpacing.x);
                 } else {
                     ImGui::TextUnformatted("{ ............. }");

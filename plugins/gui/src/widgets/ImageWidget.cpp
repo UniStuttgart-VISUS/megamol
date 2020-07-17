@@ -13,7 +13,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-ImageWidget::ImageWidget(void) : tex_ptr(nullptr) {}
+ImageWidget::ImageWidget(void) : tex_ptr(nullptr), tooltip() {}
 
 
 bool megamol::gui::ImageWidget::LoadTextureFromFile(const std::string& filename) {
@@ -47,28 +47,53 @@ bool megamol::gui::ImageWidget::LoadTextureFromFile(const std::string& filename)
 }
 
 
-bool megamol::gui::ImageWidget::LoadTextureFromData(GLsizei width, GLsizei height, const float* data) {
+bool megamol::gui::ImageWidget::LoadTextureFromData(int width, int height, float* data) {
+
     if (data == nullptr) return false;
 
-    /*
-    // Delete old texture.
-    if (inout_id != 0) {
-        glDeleteTextures(1, &inout_id);
+    glowl::TextureLayout tex_layout(GL_RGBA32F, width, height, 1, GL_RGBA, GL_FLOAT, 1);
+    if (this->tex_ptr == nullptr) {
+        this->tex_ptr =
+            std::make_shared<glowl::Texture2D>("image_widget", tex_layout, static_cast<GLvoid*>(data), false);
+    } else {
+        // Reload data
+        this->tex_ptr->reload(tex_layout, static_cast<GLvoid*>(data), false);
     }
-    inout_id = 0;
 
-    // Upload texture.
-    glGenTextures(1, &inout_id);
-    glBindTexture(GL_TEXTURE_2D, inout_id);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, data);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-    */
     return true;
+}
+
+
+void megamol::gui::ImageWidget::Widget(ImVec2 size) {
+
+    assert(ImGui::GetCurrentContext() != nullptr);
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    if (!this->IsLoaded()) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "No texture loaded. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
+
+    ImGui::Image(reinterpret_cast<ImTextureID>(this->tex_ptr->getName()), size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f),
+        ImVec4(1.0f, 1.0f, 1.0f, 1.0f), style.Colors[ImGuiCol_Border]);
+}
+
+
+bool megamol::gui::ImageWidget::Button(const std::string& tooltip, ImVec2 size) {
+
+    assert(ImGui::GetCurrentContext() != nullptr);
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    if (!this->IsLoaded()) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "No texture loaded. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    bool retval = ImGui::ImageButton(reinterpret_cast<ImTextureID>(this->tex_ptr->getName()), size, ImVec2(0.0f, 0.0f),
+        ImVec2(1.0f, 1.0f), 1, style.Colors[ImGuiCol_Button], style.Colors[ImGuiCol_ButtonActive]);
+    this->tooltip.ToolTip(tooltip, ImGui::GetItemID(), 1.0f, 5.0f);
+
+    return retval;
 }

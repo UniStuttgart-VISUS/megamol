@@ -304,7 +304,8 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
 
     ImGuiStyle& style = ImGui::GetStyle();
     const std::string group_label = "Animation";
-    const float button_size = 1.5f * ImGui::GetFrameHeightWithSpacing();
+    const ImVec2 button_size =
+        ImVec2(1.5f * ImGui::GetFrameHeightWithSpacing(), 1.5f * ImGui::GetFrameHeightWithSpacing());
     const float knob_size = 2.5f * ImGui::GetFrameHeightWithSpacing();
 
     if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
@@ -380,7 +381,6 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
     }
 
     // Transport Buttons ------------------------------------------------------
-    ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[ImGuiCol_Button]);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.Colors[ImGuiCol_ButtonActive]);
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonHovered]);
 
@@ -391,24 +391,19 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
     ImTextureID button_tex;
 
     /// PLAY - PAUSE
-    button_label = "Play";
-    button_tex = reinterpret_cast<ImTextureID>(this->button_tex_ids.play);
-    if (play) {
-        button_label = "Pause";
-        button_tex = reinterpret_cast<ImTextureID>(this->button_tex_ids.pause);
+    if (!play) {
+        if (this->image_buttons.play.Button("Play", button_size)) {
+            play = !play;
+        }
+    } else {
+        if (this->image_buttons.pause.Button("Pause", button_size)) {
+            play = !play;
+        }
     }
-    if (ImGui::ImageButton(button_tex, ImVec2(button_size, button_size), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), 1,
-            style.Colors[ImGuiCol_Button], style.Colors[ImGuiCol_ButtonActive])) {
-        play = !play;
-    }
-    this->tooltip.ToolTip(button_label, ImGui::GetItemID(), 1.0f, 5.0f);
     ImGui::SameLine();
 
     /// SLOWER
-    button_label = "Slower";
-    button_tex = reinterpret_cast<ImTextureID>(this->button_tex_ids.fastrewind);
-    if (ImGui::ImageButton(button_tex, ImVec2(button_size, button_size), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), 1,
-            style.Colors[ImGuiCol_Button], style.Colors[ImGuiCol_ButtonActive])) {
+    if (this->image_buttons.fastrewind.Button("Slower", button_size)) {
         // play = true;
         speed /= 1.5f;
     }
@@ -416,14 +411,10 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
     ImGui::SameLine();
 
     /// FASTER
-    button_label = "Faster";
-    button_tex = reinterpret_cast<ImTextureID>(this->button_tex_ids.fastforward);
-    if (ImGui::ImageButton(button_tex, ImVec2(button_size, button_size), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), 1,
-            style.Colors[ImGuiCol_Button], style.Colors[ImGuiCol_ButtonActive])) {
+    if (this->image_buttons.fastforward.Button("Faster", button_size)) {
         // play = true;
         speed *= 1.5f;
     }
-    this->tooltip.ToolTip(button_label, ImGui::GetItemID(), 1.0f, 5.0f);
 
     ImGui::PopStyleColor(3);
 

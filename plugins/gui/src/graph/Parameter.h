@@ -93,7 +93,7 @@ public:
         }
     }
 
-    void SetTransferFunctionTexture(GLuint tex_id) { this->tf_texture = tex_id; }
+    void LoadTransferFunctionTexture(std::vector<float>& in_texture_data, glm::ivec2& in_texture_size);
 
     /** "Point in Circle" Button for additional drop down Options. */
     static bool OptionButton(const std::string& id, const std::string& label = "", bool dirty = false);
@@ -111,7 +111,7 @@ private:
     std::string description;
     std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
     float height;
-    UINT set_focus;
+    unsigned int set_focus;
     bool guistate_dirty;
 
     std::shared_ptr<megamol::gui::TransferFunctionEditor> tf_editor_external_ptr;
@@ -119,7 +119,6 @@ private:
     bool use_external_tf_editor;
     bool show_tf_editor;
     size_t tf_editor_hash;
-    GLuint tf_texture;
 
     // Widgets
     FileBrowserWidget file_browser;
@@ -302,7 +301,11 @@ public:
                     this->SetStorage(storage);
                 } else if (this->type == ParamType::TRANSFERFUNCTION) {
                     if constexpr (std::is_same_v<T, std::string>) {
-                        this->present.SetTransferFunctionTexture(megamol::gui::TransferFunctionEditor::GetTexture(val));
+                        glm::ivec2 texture_size;
+                        std::vector<float> texture_data;
+                        if (megamol::gui::TransferFunctionEditor::GetTextureData(val, texture_data, texture_size)) {
+                            this->present.LoadTransferFunctionTexture(texture_data, texture_size);
+                        }
                         this->tf_string_hash = std::hash<std::string>()(val);
                     }
                 }

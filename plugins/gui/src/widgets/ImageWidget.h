@@ -13,11 +13,11 @@
 
 #include "FileUtils.h"
 #include "GUIUtils.h"
+#include "widgets/HoverToolTip.h"
 
 #include "mmcore/misc/PngBitmapCodec.h"
 
 #include "vislib/graphics/BitmapImage.h"
-//#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/sys/Log.h"
 
 
@@ -36,34 +36,36 @@ public:
 
     bool IsLoaded(void) {
         if (this->tex_ptr == nullptr) return false;
-        return (this->tex_ptr->getName() != 0);
+        return (this->tex_ptr->getName() != 0); // OpenGL texture id
     }
 
     /**
      * Load texture from file.
      */
-    static bool LoadTextureFromFile(const std::string& filename);
+    bool LoadTextureFromFile(const std::string& filename);
 
     /**
      * Load texture from data.
      */
-    static bool LoadTextureFromData(GLsizei width, GLsizei height, const float* data);
+    bool LoadTextureFromData(int width, int height, float* data);
 
     /**
-     * ...
+     * Draw texture as simple image.
      */
-    bool Widget(void);
+    void Widget(ImVec2 size);
 
     /**
-     * ...
+     * Draw texture as button.
      */
-    bool Button(const std::string& label);
-
+    bool Button(const std::string& tooltip, ImVec2 size);
 
 private:
     // VARIABLES --------------------------------------------------------------
 
     std::shared_ptr<glowl::Texture2D> tex_ptr;
+
+    // Widgets
+    HoverToolTip tooltip;
 };
 
 

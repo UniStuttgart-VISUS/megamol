@@ -75,7 +75,7 @@ public:
     /**
      * Return texture id of given transfer functione.
      */
-    static bool GetTextureData(const std::string& in_tfs, std::vector<float>& out_tex_data);
+    static bool GetTextureData(const std::string& in_tfs, std::vector<float>& out_tex_data, glm::ivec2& out_size);
 
     /**
      * Returns true if editor is in minimized view.
@@ -131,6 +131,9 @@ private:
     /** Indicating modified transfer function. Recalculate texture data. */
     bool textureInvalid;
 
+    /** Current texture size. */
+    int textureSize;
+
     /** Indicates whether changes are already applied or not. */
     bool pendingChanges;
 
@@ -144,7 +147,7 @@ private:
     unsigned int currentChannel;
 
     /** Offset from center of point to initial drag position. */
-    ImVec2 currentDragChange;
+    glm::vec2 currentDragChange;
 
     /** Flag for applying all changes immediately. */
     bool immediateMode;
