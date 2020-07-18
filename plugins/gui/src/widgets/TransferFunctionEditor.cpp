@@ -197,33 +197,6 @@ TransferFunctionEditor::TransferFunctionEditor(void)
 }
 
 
-bool megamol::gui::TransferFunctionEditor::GetTextureData(
-    const std::string& in_tfs, std::vector<float>& out_tex_data, glm::ivec2& out_size) {
-
-    out_tex_data.clear();
-    unsigned int tmp_texture_size;
-    megamol::core::param::TransferFunctionParam::TFNodeType tmp_nodes;
-    std::array<float, 2> tmp_range;
-    megamol::core::param::TransferFunctionParam::InterpolationMode tmp_mode;
-
-    bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
-        in_tfs, tmp_nodes, tmp_mode, tmp_texture_size, tmp_range);
-    if (!ok) {
-        vislib::sys::Log::DefaultLog.WriteWarn("Could not parse transfer function.");
-        return false;
-    }
-    if (tmp_mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
-        param::TransferFunctionParam::LinearInterpolation(out_tex_data, tmp_texture_size, tmp_nodes);
-    } else if (tmp_mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
-        param::TransferFunctionParam::GaussInterpolation(out_tex_data, tmp_texture_size, tmp_nodes);
-    }
-
-    out_size = glm::ivec2(static_cast<int>(tmp_texture_size), 1);
-
-    return true;
-}
-
-
 void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool connected_parameter_mode) {
 
     if (connected_parameter_mode && (this->connected_parameter_ptr == nullptr)) {

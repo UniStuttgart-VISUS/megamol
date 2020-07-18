@@ -236,9 +236,6 @@ private:
 };
 
 
-ImGuiID megamol::gui::gui_generated_uid = 0;
-
-
 } // namespace gui
 } // namespace megamol
 

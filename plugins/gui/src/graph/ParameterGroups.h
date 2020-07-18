@@ -12,7 +12,7 @@
 #include "GUIUtils.h"
 #include "graph/Parameter.h"
 #include "widgets/HoverToolTip.h"
-#include "widgets/ImageWidget.h"
+#include "widgets/ImageWidget_gl.h"
 
 #include "mmcore/param/AbstractParamPresentation.h"
 

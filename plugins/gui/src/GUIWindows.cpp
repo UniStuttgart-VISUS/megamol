@@ -41,7 +41,8 @@ GUIWindows::GUIWindows()
     , graph_manager()
     , file_browser()
     , search_widget()
-    , tooltip() {
+    , tooltip()
+    , widget_picking() {
 
     core::param::EnumParam* styles = new core::param::EnumParam((int)(Styles::DarkColors));
     styles->SetTypePair(Styles::CorporateGray, "Corporate Gray");
@@ -347,6 +348,7 @@ bool GUIWindows::PostDraw(void) {
     // Draw global parameter widgets -------------------------------------------
 
     /// TODO Enable global picking buffer
+    // this->widget_picking.Enable();
 
     GraphPtrType graph_ptr;
     if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
@@ -360,6 +362,7 @@ bool GUIWindows::PostDraw(void) {
     }
 
     /// TODO Disable global picking buffer
+    // this->widget_picking.Disable();
 
 
     // Synchronizing parameter values -----------------------------------------

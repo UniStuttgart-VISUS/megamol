@@ -249,7 +249,7 @@ void megamol::gui::ParameterGroups::draw_parameter(megamol::gui::Parameter& inou
         if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
             param_searched = megamol::gui::StringSearchWidget::FindCaseInsensitiveSubstring(param_name, in_search);
         }
-        bool visible = (inout_param.present.IsGUIVisible() && param_searched) || inout_param.present.extended;
+        bool visible = (inout_param.present.IsGUIVisible() || inout_param.present.extended) && param_searched;
 
         if (visible) {
             if (inout_param.PresentGUI(in_scope)) {

@@ -1,12 +1,12 @@
 /*
- * ImageWidget.cpp
+ * ImageWidget_gl.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "ImageWidget.h"
+#include "ImageWidget_gl.h"
 
 
 using namespace megamol;

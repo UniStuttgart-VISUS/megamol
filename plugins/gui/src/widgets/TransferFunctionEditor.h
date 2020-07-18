@@ -16,7 +16,7 @@
 
 #include "GUIUtils.h"
 #include "widgets/HoverToolTip.h"
-#include "widgets/ImageWidget.h"
+#include "widgets/ImageWidget_gl.h"
 
 #include <cmath>
 #include <iomanip>
@@ -71,11 +71,6 @@ public:
      * Get currently connected parameter.
      */
     inline std::string GetConnectedParameterName(void) const { return this->connected_parameter_name; }
-
-    /**
-     * Return texture id of given transfer functione.
-     */
-    static bool GetTextureData(const std::string& in_tfs, std::vector<float>& out_tex_data, glm::ivec2& out_size);
 
     /**
      * Returns true if editor is in minimized view.

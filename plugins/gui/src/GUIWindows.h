@@ -20,6 +20,7 @@
 #include "widgets/MinimalPopUp.h"
 #include "widgets/StringSearchWidget.h"
 #include "widgets/TransferFunctionEditor.h"
+#include "widgets/WidgetPicking_gl.h"
 
 #include "mmcore/CoreInstance.h"
 
@@ -190,6 +191,7 @@ private:
     StringSearchWidget search_widget;
     std::shared_ptr<TransferFunctionEditor> tf_editor_ptr;
     HoverToolTip tooltip;
+    WidgetPicking widget_picking;
 
     // FUNCTIONS --------------------------------------------------------------
 

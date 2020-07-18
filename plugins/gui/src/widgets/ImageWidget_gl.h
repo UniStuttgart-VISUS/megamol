@@ -1,12 +1,12 @@
 /*
- * ImageWidget.h
+ * ImageWidget_gl.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_IMAGEWIDGET_INCLUDED
-#define MEGAMOL_GUI_IMAGEWIDGET_INCLUDED
+#ifndef MEGAMOL_GUI_IMAGEWIDGET_GL_INCLUDED
+#define MEGAMOL_GUI_IMAGEWIDGET_GL_INCLUDED
 
 
 #include "glowl/Texture2D.hpp"
@@ -26,7 +26,7 @@ namespace gui {
 
 
 /**
- * String search widget.
+ * OpenGL implementation of textured image widget.
  */
 class ImageWidget {
 public:
@@ -72,4 +72,4 @@ private:
 } // namespace gui
 } // namespace megamol
 
-#endif // MEGAMOL_GUI_IMAGEWIDGET_INCLUDED
+#endif // MEGAMOL_GUI_IMAGEWIDGET_GL_INCLUDED

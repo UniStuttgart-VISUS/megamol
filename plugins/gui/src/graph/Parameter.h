@@ -13,7 +13,7 @@
 #include "GUIUtils.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
-#include "widgets/ImageWidget.h"
+#include "widgets/ImageWidget_gl.h"
 #include "widgets/TransferFunctionEditor.h"
 
 #include "mmcore/param/BoolParam.h"
@@ -93,7 +93,8 @@ public:
         }
     }
 
-    void LoadTransferFunctionTexture(std::vector<float>& in_texture_data, glm::ivec2& in_texture_size);
+    void LoadTransferFunctionTexture(
+        std::vector<float>& in_texture_data, int& in_texture_width, int& in_texture_height);
 
     /** "Point in Circle" Button for additional drop down Options. */
     static bool OptionButton(const std::string& id, const std::string& label = "", bool dirty = false);
@@ -301,10 +302,11 @@ public:
                     this->SetStorage(storage);
                 } else if (this->type == ParamType::TRANSFERFUNCTION) {
                     if constexpr (std::is_same_v<T, std::string>) {
-                        glm::ivec2 texture_size;
+                        int texture_width, texture_height;
                         std::vector<float> texture_data;
-                        if (megamol::gui::TransferFunctionEditor::GetTextureData(val, texture_data, texture_size)) {
-                            this->present.LoadTransferFunctionTexture(texture_data, texture_size);
+                        if (megamol::core::param::TransferFunctionParam::GetTextureData(
+                                val, texture_data, texture_width, texture_height)) {
+                            this->present.LoadTransferFunctionTexture(texture_data, texture_width, texture_height);
                         }
                         this->tf_string_hash = std::hash<std::string>()(val);
                     }

@@ -160,9 +160,9 @@ float megamol::gui::ParameterPresentation::GetHeight(Parameter& inout_parameter)
 
 
 void megamol::gui::ParameterPresentation::LoadTransferFunctionTexture(
-    std::vector<float>& in_texture_data, glm::ivec2& in_texture_size) {
+    std::vector<float>& in_texture_data, int& in_texture_width, int& in_texture_height) {
 
-    image_widget.LoadTextureFromData(in_texture_size.x, in_texture_size.y, in_texture_data.data());
+    image_widget.LoadTextureFromData(in_texture_width, in_texture_height, in_texture_data.data());
 }
 
 
