@@ -14,3 +14,16 @@ using namespace megamol::gui;
 
 
 megamol::gui::WidgetPicking::WidgetPicking(void) {}
+
+
+void megamol::gui::WidgetPicking::ProcessMouseMove(double x, double y) {}
+
+
+void megamol::gui::WidgetPicking::ProcessMouseClick(megamol::core::view::MouseButton button,
+    megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {}
+
+
+bool megamol::gui::WidgetPicking::Enable(void) { return false; }
+
+
+bool megamol::gui::WidgetPicking::Disable(void) { return false; }

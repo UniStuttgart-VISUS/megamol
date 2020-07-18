@@ -52,7 +52,7 @@ public:
     /**
      * Draw texture as simple image.
      */
-    void Widget(ImVec2 size);
+    void Widget(ImVec2 size, ImVec2 uv0 = ImVec2(0.0f, 0.0f), ImVec2 uv1 = ImVec2(1.0f, 1.0f));
 
     /**
      * Draw texture as button.

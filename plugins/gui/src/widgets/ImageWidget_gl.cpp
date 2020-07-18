@@ -64,7 +64,7 @@ bool megamol::gui::ImageWidget::LoadTextureFromData(int width, int height, float
 }
 
 
-void megamol::gui::ImageWidget::Widget(ImVec2 size) {
+void megamol::gui::ImageWidget::Widget(ImVec2 size, ImVec2 uv0, ImVec2 uv1) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -75,7 +75,7 @@ void megamol::gui::ImageWidget::Widget(ImVec2 size) {
         return;
     }
 
-    ImGui::Image(reinterpret_cast<ImTextureID>(this->tex_ptr->getName()), size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f),
+    ImGui::Image(reinterpret_cast<ImTextureID>(this->tex_ptr->getName()), size, uv0, uv1,
         ImVec4(1.0f, 1.0f, 1.0f, 1.0f), style.Colors[ImGuiCol_Border]);
 }
 

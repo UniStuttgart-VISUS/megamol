@@ -585,10 +585,7 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_legend
             pos, ImVec2(pos.x + image_size.x, pos.y + image_size.y), IM_COL32(0, 0, 0, 255), 0.0f, 10);
     } else {
         // Draw texture as image.
-        this->image_widget.Widget(image_size);
-        /// XXX
-        /// ImGui::Image(reinterpret_cast<ImTextureID>(this->texture_id), image_size, uv0, uv1,
-        ///    ImVec4(1.0f, 1.0f, 1.0f, 1.0f), style.Colors[ImGuiCol_Border]);
+        this->image_widget.Widget(image_size, uv0, uv1);
     }
 
     // Draw tooltip, if requested.

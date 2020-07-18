@@ -11,6 +11,8 @@
 
 #include "GUIUtils.h"
 
+#include "mmcore/view/Input.h"
+
 #include "vislib/sys/Log.h"
 
 
@@ -27,6 +29,14 @@ public:
 
     ~WidgetPicking(void) = default;
 
+    void ProcessMouseMove(double x, double y);
+
+    void ProcessMouseClick(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action,
+        megamol::core::view::Modifiers mods);
+
+    bool Enable(void);
+
+    bool Disable(void);
 
 private:
     // VARIABLES --------------------------------------------------------------
