@@ -86,13 +86,14 @@ void main()
     gl_ClipDistance[0] = -1.0;
   }
   gl_Position = projection * modelView * vertex;
+  gl_Position.z = 0.7;//new
 }
     ]]>
   </snippet>
 
   <namespace name="discrete">
     <shader name="vert">
-      <snippet type="version">430</snippet>
+      <snippet type="version">440</snippet>
       <snippet name="::core_utils::tflookup" />
       <snippet name="::core_utils::tfconvenience" />
       <snippet name="::pc::extensions" />
@@ -120,7 +121,7 @@ out Interface
     </shader>
 
     <shader name="frag">
-      <snippet type="version">430</snippet>
+      <snippet type="version">440</snippet>
       <snippet name="::pc::extensions" />
       <snippet name="::pc::useLineStrip" />
       <snippet name="::pc::earlyFragmentTests" />
@@ -145,12 +146,15 @@ in Interface
         <![CDATA[
 layout(location = 0) out vec4 fragColor;
 layout(early_fragment_tests) in;
+//out float gl_FragDepth;
 
 void main()
 {
   if (bitflag_test(flags[in_.itemID], fragmentTestMask, fragmentPassMask)) {
   //if (bitflag_test(flags[in_.itemID], 5, 1)) {
-    //fragColor = vec4(vec3(gl_FragCoord.z), 1.0);
+    //gl_FragDepth = 0.0;
+	
+	//fragColor = vec4(vec3(gl_FragCoord.z), 1.0);
 	fragColor = in_.color;
   } else {
     discard;
@@ -173,7 +177,7 @@ uniform vec4 clearColor = vec4(0.0);
     </snippet>
 
     <shader name="comp">
-      <snippet type="version">430</snippet>
+      <snippet type="version">440</snippet>
       <snippet name="::pc::extensions" />
       <snippet name="::pc::useLineStrip" />
       <snippet name="::pc::buffers" />
@@ -235,7 +239,7 @@ void main()
     </shader>
 
     <shader name="vert">
-      <snippet type="version">430</snippet>
+      <snippet type="version">440</snippet>
       <snippet name="::pc::extensions" />
       <snippet name="::pc::uniforms" />
       <snippet name="::pc_item_draw::continuous::uniforms" />
@@ -275,7 +279,7 @@ void main()
     </shader>
 
     <shader name="frag">
-      <snippet type="version">430</snippet>
+      <snippet type="version">440</snippet>
       <snippet name="::core_utils::tflookup" />
       <snippet name="::core_utils::tfconvenience" />
       <snippet name="::pc::extensions" />
@@ -359,7 +363,7 @@ void main()
     </shader>
 
     <shader name="frag">
-      <snippet type="version">430</snippet>
+      <snippet type="version">440</snippet>
       <snippet name="::core_utils::tflookup" />
       <snippet name="::core_utils::tfconvenience" />
       <snippet name="::pc::extensions" />
@@ -389,8 +393,8 @@ void main()
   {
     float value = (frags.r - minFragmentCount) / (maxFragmentCount - minFragmentCount);
     value = clamp(value, 0.0, 1.0);
-    //fragColor = tflookup(value);
-    fragColor = vec4(vec3(gl_FragCoord.z), 1.0);
+    fragColor = tflookup(value);
+    //fragColor = vec4(vec3(gl_FragCoord.z), 1.0);
   }
   else
   {
@@ -404,7 +408,7 @@ void main()
 
   <namespace name="muhaha">
     <shader name="vert">
-      <snippet type="version">430</snippet>
+      <snippet type="version">440</snippet>
       <snippet name="::core_utils::tflookup" />
       <snippet name="::core_utils::tfconvenience" />
       <snippet name="::pc::extensions" />
@@ -452,7 +456,7 @@ void main() {
     </shader>
 
     <shader name="frag">
-      <snippet type="version">430</snippet>
+      <snippet type="version">440</snippet>
       <snippet name="::pc::extensions" />
       <snippet name="::pc::useLineStrip" />
       <snippet name="::pc::earlyFragmentTests" />

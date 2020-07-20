@@ -2,6 +2,8 @@
 #include "ParallelCoordinatesRenderer2D.h"
 
 #include <algorithm>
+#include "glm/gtc/functions.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/FlagCall_GL.h"
 #include "mmcore/param/BoolParam.h"
@@ -16,19 +18,17 @@
 #include "mmstd_datatools/table/TableDataCall.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "glm/gtc/functions.hpp"
-#include "glm/gtc/matrix_transform.hpp"
 
 #include <array>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include "vislib/graphics/InputModifiers.h"
 
-//#define FUCK_THE_PIPELINE
-//#define USE_TESSELLATION
-//#define REMOVE_TEXT
+                              //#define FUCK_THE_PIPELINE
+                              //#define USE_TESSELLATION
+                              //#define REMOVE_TEXT
 
-using namespace megamol;
+                              using namespace megamol;
 using namespace megamol::infovis;
 using namespace megamol::stdplugin::datatools;
 
@@ -228,15 +228,16 @@ bool ParallelCoordinatesRenderer2D::create(void) {
 
     nuFB = std::make_shared<glowl::FramebufferObject>(1, 1, true);
     nuFB->createColorAttachment(GL_RGB32F, GL_RGB, GL_FLOAT);
-      //  vislib::sys::Log::DefaultLog.WriteInfo(
-      //      "WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED ");
-    
+    //  vislib::sys::Log::DefaultLog.WriteInfo(
+    //      "WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED ");
+
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
     glGenFramebuffers(1, &nuFBb);
     glGenFramebuffers(1, &nuFBb2);
     glGenTextures(1, &imStoreI);
     glGenTextures(1, &imStoreI2);
     glGenTextures(1, &depthStore);
+    glGenTextures(1, &stenStore);
     glGenTextures(1, &depthStore2);
     glGenRenderbuffers(1, &nuDRB);
     glBindFramebuffer(GL_FRAMEBUFFER, nuFBb);
@@ -247,11 +248,15 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     glBindTexture(GL_TEXTURE_2D, depthStore);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, 1, 1, 0, GL_DEPTH, GL_FLOAT, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_STENCIL, 1, 1, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthStore, 0);
-    //glReadBuffer(GL_DEPTH_ATTACHMENT);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_STENCIL, 1, 1, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depthStore, 0);
+    
+    // glReadBuffer(GL_DEPTH_ATTACHMENT);
 
 
     glBindFramebuffer(GL_TEXTURE_2D, nuFBb2);
@@ -308,7 +313,6 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkgroupCount[2]);
 
     // this->filterStateSlot.ForceSetDirty();
-
 
 
     return true;
@@ -790,9 +794,9 @@ void ParallelCoordinatesRenderer2D::drawPickIndicator(float x, float y, float pi
     glUniform1f(program.ParameterLocation("pickRadius"), pickRadius);
 
     glUniform4fv(program.ParameterLocation("indicatorColor"), 1, color);
-    //glDisable(GL_DEPTH_TEST);
+    // glDisable(GL_DEPTH_TEST);
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    //glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_DEPTH_TEST);
     program.Disable();
 }
 
@@ -805,9 +809,9 @@ void ParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, floa
     glUniform2f(prog.ParameterLocation("mouseReleased"), x1, y1);
 
     glUniform4fv(prog.ParameterLocation("indicatorColor"), 1, color);
-    //glDisable(GL_DEPTH_TEST);
+    // glDisable(GL_DEPTH_TEST);
     glDrawArrays(GL_LINES, 0, 2);
-    //glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_DEPTH_TEST);
     prog.Disable();
 }
 
@@ -953,7 +957,7 @@ void ParallelCoordinatesRenderer2D::drawParcos(void) {
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             //::glDisable(GL_ALPHA_TEST);
-            //glDisable(GL_DEPTH_TEST);
+            // glDisable(GL_DEPTH_TEST);
             glEnable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ONE);
             glBlendEquation(GL_FUNC_ADD);
@@ -1015,7 +1019,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     backgroundColor[1] = bg[1] / 255.0f;
     backgroundColor[2] = bg[2] / 255.0f;
     backgroundColor[3] = bg[3] / 255.0f;
-    
+
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
     glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &origFBOr);
 
@@ -1023,32 +1027,36 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         nuFB->resize(w, h);
         nuFB->bind();
         nuFB->getColorAttachment(0)->bindTexture();
-        //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, nuFB->getColorAttachment(0)->getName(), 0);
+        // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, nuFB->getColorAttachment(0)->getName(), 0);
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
-        //nuFB->createColorAttachment(GL_RGBA, GL_RGBA, GL_FLOAT);
+        // nuFB->createColorAttachment(GL_RGBA, GL_RGBA, GL_FLOAT);
         nuFB->bindColorbuffer(0);
 
         glViewport(0, 0, w, h);
     }
-    
+
     if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
         glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &origFBO);
         glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &origFBOr);
 
-        if (tex.size() != w*h) {
+        if (tex.size() != w * h) {
             tex.clear();
             tex.resize(w * h);
+            tex2.clear();
+            tex2.resize(w * h);
 
             bool test = true;
             for (int i = 0; i < call.GetViewport().Height(); i++) {
                 for (int j = 0; j < call.GetViewport().Width(); j++) {
                     test = !test;
                     if (test) {
-                        //vislib::sys::Log::DefaultLog.WriteInfo("N");
+                        // vislib::sys::Log::DefaultLog.WriteInfo("N");
                         tex[i * w + j] = 1.0;
+                        tex2[i * w + j] = 200u;
                     } else {
-                        //vislib::sys::Log::DefaultLog.WriteInfo("J");
+                        // vislib::sys::Log::DefaultLog.WriteInfo("J");
                         tex[i * w + j] = 0.0;
+                        tex2[i * w + j] = 0u;
                     }
                 }
             }
@@ -1056,14 +1064,14 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             glDepthMask(GL_TRUE);
             glClear(GL_DEPTH_BUFFER_BIT);
             glBindTexture(GL_TEXTURE_2D, depthStore);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, &tex[0]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, &tex[0]);
             glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthStore, 0);
             glDepthMask(GL_FALSE);
             glBindFramebuffer(GL_FRAMEBUFFER, nuFBb2);
             glDepthMask(GL_TRUE);
             glClear(GL_DEPTH_BUFFER_BIT);
             glBindTexture(GL_TEXTURE_2D, depthStore);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, &tex[0]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, &tex[0]);
             glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthStore, 0);
             glDepthMask(GL_FALSE);
         }
@@ -1080,17 +1088,17 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             glBindTexture(GL_TEXTURE_2D, imStoreI2);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
             glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI2, 0);
-            glClearColor(0.2,0,0,1);
+            glClearColor(0.2, 0, 0, 1);
             glClear(GL_COLOR_BUFFER_BIT);
         }
-        
+
         //^^COLOR ATTACHMENT
-        
+
         glEnable(GL_DEPTH_TEST);
-        
+
 
         glBindTexture(GL_TEXTURE_2D, imStoreI);
-        glDepthFunc(GL_LESS);
+        glDepthFunc(GL_LEQUAL);
         glDepthMask(GL_FALSE);
 
         glViewport(0, 0, w, h);
@@ -1104,8 +1112,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     // end suck
     glm::mat4 pm;
     for (int i = 0; i < 4; i++) {
-       for (int j = 0; j < 4; j++) {
-            pm[j][i] = projMatrix_column[i+j*4];
+        for (int j = 0; j < 4; j++) {
+            pm[j][i] = projMatrix_column[i + j * 4];
         }
     }
     if (call.frametype == 1) {
@@ -1113,13 +1121,12 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         pm = jit * pm;
     }
     if (call.frametype == 2) {
-        auto jit = glm::translate(glm::mat4(1.0f), glm::vec3(2.0 / call.GetViewport().Width() , 0, 0));
-        pm = jit * pm;    
+        auto jit = glm::translate(glm::mat4(1.0f), glm::vec3(2.0 / call.GetViewport().Width(), 0, 0));
+        pm = jit * pm;
     }
-    
+
     for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];
-    
-    
+
 
     this->assertData(call);
 
@@ -1132,8 +1139,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         return false;
     }
 
-    //glDisable(GL_DEPTH_TEST);
-    //glDepthMask(GL_FALSE);
+    // glDisable(GL_DEPTH_TEST);
+    // glDepthMask(GL_FALSE);
 
     if (this->filterStateSlot.IsDirty()) {
         load_filters();
@@ -1162,8 +1169,9 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
         this->needFlagsUpdate = true;
     }
-
+    glDepthMask(GL_TRUE);
     drawParcos();
+    glDepthMask(GL_FALSE);
 
     // Draw stroking/picking indicator
     if (this->drawSelectionIndicatorSlot.Param<core::param::BoolParam>()->Value()) {
@@ -1220,10 +1228,10 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     if (this->drawAxesSlot.Param<core::param::BoolParam>()->Value()) {
         drawAxes();
     }
-    //glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_DEPTH_TEST);
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    //glDepthMask(GL_TRUE);
+    // glDepthMask(GL_TRUE);
 
     if (false && this->halveRes.Param<core::param::BoolParam>()->Value()) {
         glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
@@ -1259,13 +1267,13 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             nuFB->getColorAttachment(0)->bindTexture();
             glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2Db"), 11);
         }
-        
-        //vislib::sys::Log::DefaultLog.WriteInfo("%i", nuFB->getColorAttachment(0)->getName());
-        
-        
+
+        // vislib::sys::Log::DefaultLog.WriteInfo("%i", nuFB->getColorAttachment(0)->getName());
+
+
         glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
         glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("h"), call.GetViewport().Height());
-        
+
         if (glGetError() == GL_INVALID_ENUM) {
             vislib::sys::Log::DefaultLog.WriteInfo("INVALID ENUM");
         }
@@ -1298,46 +1306,52 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
 
         m_render_to_framebuffer_shdr->Enable();
-        
-        
-        //glReadPixels(0, 0, w, h, GL_RED, GL_FLOAT, &tex[0]);
+
+
+        // glReadPixels(0, 0, w, h, GL_RED, GL_FLOAT, &tex[0]);
         if (call.frametype == 0 || call.frametype == 1) {
             glActiveTexture(GL_TEXTURE10);
             glBindTexture(GL_TEXTURE_2D, imStoreI);
-            //glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-            //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w,h,0, GL_RGB, GL_FLOAT, 0);
+            // glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+            // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w,h,0, GL_RGB, GL_FLOAT, 0);
+            //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_GREEN, GL_UNSIGNED_BYTE, &tex2[0]);
             glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2D"), 10);
         }
         if (call.frametype == 2) {
             glActiveTexture(GL_TEXTURE11);
             glBindTexture(GL_TEXTURE_2D, imStoreI2);
-            //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, &tex2);
+            // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, &tex2);
             glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2Db"), 11);
         }
-        
-        
+
+
         glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
         glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("h"), call.GetViewport().Width());
 
         glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("frametype"), call.frametype);
-        
-        glDisable(GL_DEPTH_TEST);
-        //glDepthMask(GL_TRUE);
-        //glClear(GL_DEPTH_BUFFER_BIT);
-        //glBindTexture(GL_TEXTURE_2D, depthStore);
-        //glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, &tex[0]);
-        //glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthStore, 0);
 
-        //glBindTexture(GL_TEXTURE_2D, imStoreI);
-        //glDepthFunc(GL_LESS);
-        //glDepthMask(GL_FALSE);
-        float f = 99.0;
-        float g = 99.0;
+        //glEnable(GL_STENCIL_TEST);
+        glStencilMask(0xFF); 
+        glStencilFunc(GL_NEVER, 0, 0xFF);
+        glDisable(GL_DEPTH_TEST);
+        // glDepthMask(GL_TRUE);
+        // glClear(GL_DEPTH_BUFFER_BIT);
+        glBindTexture(GL_TEXTURE_2D, depthStore);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, &tex[0]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthStore, 0);
+
         
-        //glClearDepth(0.44);
+        glStencilMask(0x00);
+        glBindTexture(GL_TEXTURE_2D, imStoreI);
+        // glDepthFunc(GL_LESS);
+        // glDepthMask(GL_FALSE);
+
+        // glClearDepth(0.44);
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        //vislib::sys::Log::DefaultLog.WriteInfo("h %i", glIsEnabled(GL_DEPTH_TEST));
+        // vislib::sys::Log::DefaultLog.WriteInfo("h %i", glIsEnabled(GL_DEPTH_TEST));
         m_render_to_framebuffer_shdr->Disable();
+        glDisable(GL_STENCIL_TEST);
         // glDeleteTextures(1, &imStoreI);
         // glDeleteTextures(1, &imStoreI2);
         // glDeleteFramebuffers(1, &nuFB);
