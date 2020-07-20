@@ -21,11 +21,13 @@ function(add_clang_format TARGET)
       OUTPUT_VARIABLE CLANG_FORMAT_VERSION
       OUTPUT_STRIP_TRAILING_WHITESPACE)
     string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" CLANG_FORMAT_VERSION ${CLANG_FORMAT_VERSION})
+    string(REPLACE "." ";" CLANG_SPLIT_VERSION ${CLANG_FORMAT_VERSION})
+    list(GET CLANG_SPLIT_VERSION 0 CLANG_FORMAT_MAJOR)
+    list(GET CLANG_SPLIT_VERSION 1 CLANG_FORMAT_MINOR)
+    list(GET CLANG_SPLIT_VERSION 2 CLANG_FORMAT_PATCH)
   endif()
 
-  set(CLANG_FORMAT_VERSION_PATTERN "[6789].[0-9]+.[0-9]+")
-
-  if(CLANG_FORMAT AND CLANG_FORMAT_VERSION MATCHES ${CLANG_FORMAT_VERSION_PATTERN})
+  if(CLANG_FORMAT AND ${CLANG_FORMAT_MAJOR} VERSION_GREATER_EQUAL 6)
     add_custom_target("${TARGET}_clangformat"
       COMMAND ${CLANG_FORMAT}
         "-i"
@@ -37,7 +39,7 @@ function(add_clang_format TARGET)
       VERBATIM)
     add_dependencies(${TARGET} "${TARGET}_clangformat")
   elseif(CLANG_FORMAT)
-    message(WARNING "clang-format version ${CLANG_FORMAT_VERSION} is unsuitable.\n"
+    message(WARNING "clang-format version ${CLANG_FORMAT_VERSION} (major version ${CLANG_FORMAT_MAJOR}) is too old.\n"
       "Please download and install a version matching ${CLANG_FORMAT_VERSION_PATTERN}"
       " from http://releases.llvm.org/download.html\n"
 	  "Also adjust Visual Studio options and PATH variable as necessary!")
