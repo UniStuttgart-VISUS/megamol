@@ -87,7 +87,7 @@ view::View3D::View3D(void)
     , viewKeyRunFactorSlot("viewKey::RunFactor", "The factor for step size multiplication when running (shift)")
     , viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees")
     , mouseSensitivitySlot("viewKey::MouseSensitivity", "used for WASD mode")
-    , viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be roateted")
+    , viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be rotated")
     ,
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
     toggleBBoxSlot("toggleBBox", "Button to toggle the bounding box")
@@ -1143,9 +1143,9 @@ void view::View3D::renderBBoxBackside(void) {
 
     ::glCullFace(GL_BACK);
 
-    glEnable(GL_LIGHTING);
+    //glEnable(GL_LIGHTING);
     glDisable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glBlendFunc(GL_ONE, GL_ZERO);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LINE_SMOOTH);
     glLineWidth(1.0f);

@@ -6,77 +6,252 @@
 */
 
 #include "stdafx.h"
-
 #include "Keyframe.h"
+
 
 using namespace megamol::cinematic;
 
-Keyframe::Keyframe() :
-    animTime(0.0f),
-    simTime(0.0f),
-    camera()
-{
-    this->camera.position      = vislib::math::Point<float, 3>(1.0f, 0.0f, 0.0f);
-    this->camera.lookat        = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
-    this->camera.up            = vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f);
-    this->camera.apertureangle = 30.0f;
+
+Keyframe::Keyframe()
+    : anim_time(0.0f)
+    , sim_time(0.0f)
+    , camera_state() {
+
+    camera_state.half_aperture_angle_radians = glm::radians(30.0f);
 }
 
 
-Keyframe::Keyframe(float at, float st, vislib::math::Point<float, 3> pos, vislib::math::Vector<float, 3> up, vislib::math::Point<float, 3> lookat, float aperture) : 
-    animTime(at),
-    simTime(st),
-    camera() 
-{
-    this->camera.position       = pos;
-    this->camera.lookat         = lookat;
-    this->camera.up             = up;
-    this->camera.apertureangle  = aperture;
+Keyframe::Keyframe(float anim_time, float sim_time, camera_state_type cam_state)
+    : anim_time(anim_time)
+    , sim_time(sim_time)
+    , camera_state(cam_state) {
+
 }
 
 
 Keyframe::~Keyframe() {
 
-    // nothing to do here ...
 }
 
 
-void Keyframe::Serialise(vislib::Serialiser& serialiser) {
+bool Keyframe::Serialise(nlohmann::json& inout_json, size_t index) {
 
-    serialiser.Serialise((float)this->animTime, "AnimationTime");
-    serialiser.Serialise((float)this->simTime, "SimulationTime");
-    serialiser.Serialise((float)this->camera.apertureangle, "ApertureAngle");
-    serialiser.Serialise((float)this->camera.position.X(), "PositionX");
-    serialiser.Serialise((float)this->camera.position.Y(), "PositionY");
-    serialiser.Serialise((float)this->camera.position.Z(), "PositionZ");
-    serialiser.Serialise((float)this->camera.lookat.X(), "LookAtX");
-    serialiser.Serialise((float)this->camera.lookat.Y(), "LookAtY");
-    serialiser.Serialise((float)this->camera.lookat.Z(), "LookAtZ");
-    serialiser.Serialise((float)this->camera.up.X(), "UpX");
-    serialiser.Serialise((float)this->camera.up.Y(), "UpY");
-    serialiser.Serialise((float)this->camera.up.Z(), "UpZ");
+    inout_json["keyframes"][index]["animation_time"]                              = this->anim_time;
+    inout_json["keyframes"][index]["simulation_time"]                             = this->sim_time;
+    inout_json["keyframes"][index]["camera_state"]["centre_offset"]               = this->camera_state.centre_offset;
+    inout_json["keyframes"][index]["camera_state"]["convergence_plane"]           = this->camera_state.convergence_plane;
+    inout_json["keyframes"][index]["camera_state"]["eye"]                         = static_cast<int>(this->camera_state.eye);
+    inout_json["keyframes"][index]["camera_state"]["far_clipping_plane"]          = this->camera_state.far_clipping_plane;
+    inout_json["keyframes"][index]["camera_state"]["film_gate"]                   = this->camera_state.film_gate;
+    inout_json["keyframes"][index]["camera_state"]["gate_scaling"]                = static_cast<int>(this->camera_state.gate_scaling);
+    inout_json["keyframes"][index]["camera_state"]["half_aperture_angle_radians"] = this->camera_state.half_aperture_angle_radians;
+    inout_json["keyframes"][index]["camera_state"]["half_disparity"]              = this->camera_state.half_disparity;
+    inout_json["keyframes"][index]["camera_state"]["image_tile"]                  = this->camera_state.image_tile;
+    inout_json["keyframes"][index]["camera_state"]["near_clipping_plane"]         = this->camera_state.near_clipping_plane;
+    inout_json["keyframes"][index]["camera_state"]["orientation"]                 = this->camera_state.orientation;
+    inout_json["keyframes"][index]["camera_state"]["position"]                    = this->camera_state.position;
+    inout_json["keyframes"][index]["camera_state"]["projection_type"]             = static_cast<int>(this->camera_state.projection_type);
+    inout_json["keyframes"][index]["camera_state"]["resolution_gate"]             = this->camera_state.resolution_gate;
+
+    return true;
 }
 
 
-void Keyframe::Deserialise(vislib::Serialiser& serialiser) {
+bool Keyframe::Deserialise(const nlohmann::json& in_json) {
 
-    float f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11;
-    serialiser.Deserialise(f0, "AnimationTime");
-    serialiser.Deserialise(f1, "SimulationTime");
-    serialiser.Deserialise(f2, "ApertureAngle");
-    serialiser.Deserialise(f3, "PositionX");
-    serialiser.Deserialise(f4, "PositionY");
-    serialiser.Deserialise(f5, "PositionZ");
-    serialiser.Deserialise(f6, "LookAtX");
-    serialiser.Deserialise(f7, "LookAtY");
-    serialiser.Deserialise(f8, "LookAtZ");
-    serialiser.Deserialise(f9, "UpX");
-    serialiser.Deserialise(f10, "UpY");
-    serialiser.Deserialise(f11, "UpZ");
-    this->animTime = f0;
-    this->simTime = f1;
-    this->camera.apertureangle = f2;
-    this->camera.position = vislib::math::Point<float, 3>(f3, f4, f5);
-    this->camera.lookat = vislib::math::Point<float, 3>(f6, f7, f8);
-    this->camera.up = vislib::math::Vector<float, 3>(f9, f10, f11);
+    if (in_json.at("animation_time").is_number()) {
+        in_json.at("animation_time").get_to(this->anim_time);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'animation_time': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("simulation_time").is_number()) {
+        in_json.at("simulation_time").get_to(this->sim_time);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'simulation_time': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("centre_offset").is_array()) {
+        if (in_json.at("camera_state").at("centre_offset").size() != 2) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Array of 'camera_state' - 'centre_offset' should have size 2: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+            return false;
+        }
+        for (size_t i = 0; i < in_json.at("camera_state").at("centre_offset").size(); i++) {
+            if (!in_json.at("camera_state").at("centre_offset")[i].is_number()) {
+                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Elements of array 'camera_state' - 'centre_offset' should be numbers: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                return false;
+            }
+        }
+        in_json.at("camera_state").at("centre_offset").get_to(this->camera_state.centre_offset);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'centre_offset': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("convergence_plane").is_number()) {
+        in_json.at("camera_state").at("convergence_plane").get_to(this->camera_state.convergence_plane);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'convergence_plane': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("eye").is_number()) {
+        int eye;
+        in_json.at("camera_state").at("eye").get_to(eye);
+        this->camera_state.eye = static_cast<megamol::core::thecam::Eye>(eye);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'eye': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("far_clipping_plane").is_number()) {
+        in_json.at("camera_state").at("far_clipping_plane").get_to(this->camera_state.far_clipping_plane);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'far_clipping_plane': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("film_gate").is_array()) {
+        if (in_json.at("camera_state").at("film_gate").size() != 2) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Array of 'camera_state' - 'film_gate' should have size 2: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+            return false;
+        }
+        for (size_t i = 0; i < in_json.at("camera_state").at("film_gate").size(); i++) {
+            if (!in_json.at("camera_state").at("film_gate")[i].is_number()) {
+                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Elements of array 'camera_state' - 'film_gate' should be numbers: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                return false;
+            }
+        }
+        in_json.at("camera_state").at("film_gate").get_to(this->camera_state.film_gate);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'film_gate': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("gate_scaling").is_number()) {
+        int gate_scaling;
+        in_json.at("camera_state").at("gate_scaling").get_to(gate_scaling);
+        this->camera_state.gate_scaling = static_cast<megamol::core::thecam::Gate_scaling>(gate_scaling);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'gate_scaling': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("half_aperture_angle_radians").is_number()) {
+        in_json.at("camera_state").at("half_aperture_angle_radians").get_to(this->camera_state.half_aperture_angle_radians);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'half_aperture_angle_radians': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("half_disparity").is_number()) {
+        in_json.at("camera_state").at("half_disparity").get_to(this->camera_state.half_disparity);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'half_disparity': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("image_tile").is_array()) {
+        if (in_json.at("camera_state").at("image_tile").size() != 4) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Array of 'camera_state' - 'image_tile' should have size 2: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+            return false;
+        }
+        for (size_t i = 0; i < in_json.at("camera_state").at("image_tile").size(); i++) {
+            if (!in_json.at("camera_state").at("image_tile")[i].is_number()) {
+                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Elements of array 'camera_state' - 'image_tile' should be numbers: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                return false;
+            }
+        }
+        in_json.at("camera_state").at("image_tile").get_to(this->camera_state.image_tile);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'image_tile': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("near_clipping_plane").is_number()) {
+        in_json.at("camera_state").at("near_clipping_plane").get_to(this->camera_state.near_clipping_plane);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'near_clipping_plane': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("orientation").is_array()) {
+        if (in_json.at("camera_state").at("orientation").size() != 4) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Array of 'camera_state' - 'orientation' should have size 2: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+            return false;
+        }
+        for (size_t i = 0; i < in_json.at("camera_state").at("orientation").size(); i++) {
+            if (!in_json.at("camera_state").at("orientation")[i].is_number()) {
+                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Elements of array 'camera_state' - 'orientation' should be numbers: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                return false;
+            }
+        }
+        in_json.at("camera_state").at("orientation").get_to(this->camera_state.orientation);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'orientation': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("position").is_array()) {
+        if (in_json.at("camera_state").at("position").size() != 3) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Array of 'camera_state' - 'position' should have size 2: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+            return false;
+        }
+        for (size_t i = 0; i < in_json.at("camera_state").at("position").size(); i++) {
+            if (!in_json.at("camera_state").at("position")[i].is_number()) {
+                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Elements of array 'camera_state' - 'position' should be numbers: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                return false;
+            }
+        }
+        in_json.at("camera_state").at("position").get_to(this->camera_state.position);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'position': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("projection_type").is_number()) {
+        int projection_type;
+        in_json.at("camera_state").at("projection_type").get_to(projection_type);
+        this->camera_state.projection_type = static_cast<megamol::core::thecam::Projection_type>(projection_type);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'projection_type': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("resolution_gate").is_array()) {
+        if (in_json.at("camera_state").at("resolution_gate").size() != 2) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Array of 'camera_state' - 'resolution_gate' should have size 2: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+            return false;
+        }
+        for (size_t i = 0; i < in_json.at("camera_state").at("resolution_gate").size(); i++) {
+            if (!in_json.at("camera_state").at("resolution_gate")[i].is_number()) {
+                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Elements of array 'camera_state' - 'resolution_gate' should be numbers: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                return false;
+            }
+        }
+        in_json.at("camera_state").at("resolution_gate").get_to(this->camera_state.resolution_gate);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'resolution_gate': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    return true;
 }

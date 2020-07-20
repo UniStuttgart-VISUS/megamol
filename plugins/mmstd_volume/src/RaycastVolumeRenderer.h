@@ -1,7 +1,7 @@
 /*
  * RaycastVolumeRenderer.h
  *
- * Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
+ * Copyright (C) 2018-2019 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
 
@@ -29,7 +29,7 @@ namespace megamol {
 namespace stdplugin {
 namespace volume {
 
-class RaycastVolumeRenderer : public megamol::core::view::Renderer3DModule {
+class RaycastVolumeRenderer : public core::view::Renderer3DModule_2 {
 public:
     /**
      * Answer the name of this module.
@@ -71,12 +71,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    virtual bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    virtual void release() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -87,7 +87,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::Call& call);
+    virtual bool GetExtents(core::view::CallRender3D_2& call) override;
 
     /**
      * The render callback.
@@ -96,11 +96,9 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core::Call& call);
+    virtual bool Render(core::view::CallRender3D_2& call) override;
 
     bool updateVolumeData(const unsigned int frameID);
-
-    bool updateTransferFunction();
 
 private:
     vislib::graphics::gl::GLSLComputeShader m_raycast_volume_compute_shdr;
@@ -120,9 +118,9 @@ private:
     size_t m_volume_datahash = std::numeric_limits<size_t>::max();
     int m_frame_id = -1;
 
-    float m_volume_origin[3];
-    float m_volume_extents[3];
-    float m_volume_resolution[3];
+    glm::vec3 m_volume_origin;
+    glm::vec3 m_volume_extents;
+    glm::vec3 m_volume_resolution;
 
     /** Parameters for changing the behavior */
     core::param::ParamSlot m_mode;

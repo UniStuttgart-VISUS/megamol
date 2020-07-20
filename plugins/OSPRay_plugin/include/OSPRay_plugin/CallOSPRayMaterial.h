@@ -9,7 +9,7 @@
 
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/Call.h"
-#include <vector>
+#include <array>
 #include "OSPRay_plugin/OSPRay_plugin.h"
 
 namespace megamol {
@@ -28,56 +28,61 @@ enum materialTypeEnum {
     VELVET
 };
 
-class OSPRayMaterialContainer {
-public:
-    materialTypeEnum materialType;
+struct OSPRayMaterialContainer {
+    materialTypeEnum materialType = materialTypeEnum::OBJMATERIAL;
+
     // OBJMaterial/ScivisMaterial
-    std::vector<float> Kd;
-    std::vector<float> Ks;
-    float Ns;
-    float d;
-    std::vector<float> Tf;
+    std::array<float,3> Kd;
+    std::array<float,3> Ks;
+    float Ns = 0.0f;
+    float d = 0.0f;
+    std::array<float,3> Tf;
+    
     // LUMINOUS
-    std::vector<float> lumColor;
-    float lumIntensity;
-    float lumTransparency;
+    std::array<float,3> lumColor;
+    float lumIntensity = 0.0f;
+    float lumTransparency = 0.0f;
+
     // VELVET
-    std::vector<float> velvetReflectance;
-    float velvetBackScattering;
-    std::vector<float> velvetHorizonScatteringColor;
-    float velvetHorizonScatteringFallOff;
+    std::array<float,3> velvetReflectance;
+    float velvetBackScattering = 0.0f;
+    std::array<float,3> velvetHorizonScatteringColor;
+    float velvetHorizonScatteringFallOff = 0.0f;
+
     // MATTE
-    std::vector<float> matteReflectance;
+    std::array<float,3> matteReflectance;
+
     // METAL
-    std::vector<float> metalReflectance;
-    std::vector<float> metalEta;
-    std::vector<float> metalK;
-    float metalRoughness;
+    std::array<float,3> metalReflectance;
+    std::array<float,3> metalEta;
+    std::array<float,3> metalK;
+    float metalRoughness = 0.0f;
+
     // METALLICPAINT
-    std::vector<float> metallicShadeColor;
-    std::vector<float> metallicGlitterColor;
-    float metallicGlitterSpread;
-    float metallicEta;
+    std::array<float, 3> metallicShadeColor;
+    std::array<float, 3> metallicGlitterColor;
+    float metallicGlitterSpread = 0.0f;
+    float metallicEta = 0.0f;
+
     // GLASS
-    float glassEtaInside;
-    float glassEtaOutside;
-    std::vector<float> glassAttenuationColorInside;
-    std::vector<float> glassAttenuationColorOutside;
-    float glassAttenuationDistance;
+    float glassEtaInside = 0.0f;
+    float glassEtaOutside = 0.0f;
+    std::array<float, 3> glassAttenuationColorInside;
+    std::array<float, 3> glassAttenuationColorOutside;
+    float glassAttenuationDistance = 0.0f;
+
     //THINGLASS
-    std::vector<float> thinglassTransmission;
-    float thinglassEta;
-    float thinglassThickness;
+    std::array<float, 3> thinglassTransmission;
+    float thinglassEta = 0.0f;
+    float thinglassThickness = 0.0f;
+
     // PLASTIC
-    std::vector<float> plasticPigmentColor;
-    float plasticEta;
-    float plasticRoughness;
-    float plasticThickness;
+    std::array<float, 3> plasticPigmentColor;
+    float plasticEta = 0.0f;
+    float plasticRoughness = 0.0f;
+    float plasticThickness = 0.0f;
 
-    bool isValid;
-
-    OSPRayMaterialContainer();
-    ~OSPRayMaterialContainer();
+    bool isValid = false;
 
 };
 

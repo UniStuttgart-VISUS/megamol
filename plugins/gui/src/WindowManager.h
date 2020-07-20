@@ -8,17 +8,18 @@
 #ifndef MEGAMOL_GUI_WINDOWMANAGER_INCLUDED
 #define MEGAMOL_GUI_WINDOWMANAGER_INCLUDED
 
+
 #include "mmcore/view/Input.h"
 
-#include "json.hpp"
 #include "vislib/sys/Log.h"
-
-#include <imgui.h>
-#include "GUIUtils.h"
 
 #include <list>
 #include <map>
 #include <string>
+
+#include "json.hpp"
+
+#include "GUIUtils.h"
 
 
 namespace megamol {
@@ -31,7 +32,15 @@ class WindowManager {
 
 public:
     /** Identifiers for the window draw callbacks. */
-    enum DrawCallbacks { NONE = 0, MAIN = 1, PARAM = 2, FPSMS = 3, FONT = 4, TF = 5 };
+    enum DrawCallbacks {
+        NONE = 0,
+        MAIN = 1,
+        PARAMETERS = 2,
+        PERFORMANCE = 3,
+        FONT = 4,
+        TRANSFER_FUNCTION = 5,
+        CONFIGURATOR = 6
+    };
 
     /** Performance mode for fps/ms windows. */
     enum TimingModes { FPS = 0, MS = 1 };
@@ -42,6 +51,7 @@ public:
     /** Struct holding a window configuration. */
     struct WindowConfiguration {
         bool win_show;                  // show/hide window
+        bool win_store_config;          // flag indicates whether consiguration of window should be stored or not
         ImGuiWindowFlags win_flags;     // imgui window flags
         DrawCallbacks win_callback;     // id of the callback drawing the window content
         core::view::KeyCode win_hotkey; // hotkey for opening/closing window
@@ -49,7 +59,7 @@ public:
         ImVec2 win_size;                // size for reset on state loading (current size)
         bool win_soft_reset;            // soft reset of window position and size
         ImVec2 win_reset_size;          // minimum window size for soft reset
-        bool buf_win_reset; // flag for reset window position and size on state loading  (not saved in state)
+        bool win_reset; // flag for reset window position and size on state loading  (not saved in state)
         // ---------- Main window configuration ----------
         std::string main_project_file; // project file name
         // ---------- Parameter specific configuration ----------
@@ -57,17 +67,14 @@ public:
         std::vector<std::string> param_modules_list; // modules to show in a parameter window (show all if empty)
         FilterModes param_module_filter;             // module filter
         // ---------- FPS/MS specific configuration ----------
-        bool fpsms_show_options;           // show/hide fps/ms options.
-        int fpsms_max_history_count;       // maximum count of values in value array
-        float fpsms_refresh_rate;          // maximum delay when fps/ms value should be renewed.
-        TimingModes fpsms_mode;            // mode for displaying either FPS or MS
-        int buf_max_history_count;         // temporary buffer for maximum count input widget (not saved in state)
-        float buf_refresh_rate;            // temporary buffer for maximum delay input widget (not saved in state)
-        float buf_current_delay;           // current delay between frames (not saved in state)
-        std::vector<float> buf_fps_values; // current fps values (not saved in state)
-        std::vector<float> buf_ms_values;  // current ms values (not saved in state)
-        float buf_fps_scale;               // current scaling factor for fps values (not saved in state)
-        float buf_ms_scale;                // current scaling factor for ms values (not saved in state)
+        bool ms_show_options;          // show/hide fps/ms options.
+        int ms_max_history_count;      // maximum count of values in value array
+        float ms_refresh_rate;         // maximum delay when fps/ms value should be renewed.
+        TimingModes ms_mode;           // mode for displaying either FPS or MS
+        float buf_current_delay;       // current delay between frames (not saved in state)
+        std::vector<float> buf_values; // current ms values (not saved in state)
+        float buf_plot_ms_scaling;     // current ms plot scaling factor (not saved in state)
+        float buf_plot_fps_scaling;    // current fps plot scaling factor (not saved in state)
         // ---------- Font specific configuration ---------
         std::string font_name;     // font name (only already loaded font names will be restored)
         bool buf_font_reset;       // flag for reset of font on state loading  (not saved in state)
@@ -77,30 +84,28 @@ public:
         // Ctor for default values
         WindowConfiguration(void)
             : win_show(false)
+            , win_store_config(true)
             , win_flags(0)
             , win_callback(DrawCallbacks::NONE)
             , win_hotkey(megamol::core::view::KeyCode())
             , win_position(ImVec2(0.0f, 0.0f))
             , win_size(ImVec2(0.0f, 0.0f))
             , win_soft_reset(true)
-            , win_reset_size(ImVec2(500.0f, 300.0f))
-            , buf_win_reset(true)
+            , win_reset_size(ImVec2(0.0f, 0.0f))
+            , win_reset(true)
             // Window specific configurations
             , main_project_file("")
             , param_show_hotkeys(false)
             , param_modules_list()
             , param_module_filter(FilterModes::ALL)
-            , fpsms_show_options(false)
-            , fpsms_max_history_count(20)
-            , fpsms_refresh_rate(2.0f)
-            , fpsms_mode(TimingModes::FPS)
-            , buf_max_history_count(20)
+            , ms_show_options(false)
+            , ms_max_history_count(20)
+            , ms_refresh_rate(2.0f)
+            , ms_mode(TimingModes::FPS)
             , buf_current_delay(0.0f)
-            , buf_refresh_rate(2.0f)
-            , buf_fps_values()
-            , buf_ms_values()
-            , buf_fps_scale(1.0f)
-            , buf_ms_scale(1.0f)
+            , buf_values()
+            , buf_plot_ms_scaling(1.0f)
+            , buf_plot_fps_scaling(1.0f)
             , font_name()
             , buf_font_reset(false)
             , buf_font_file()

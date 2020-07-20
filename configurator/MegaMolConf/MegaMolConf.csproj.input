@@ -483,6 +483,9 @@
     <None Include="${CONFIGURATOR_SOURCE}\Resources\StatusAnnotations_Complete_and_ok_32xLG_color.png">
       <Link>Resources\StatusAnnotations_Complete_and_ok_32xLG_color.png</Link>
     </None>
+    <None Include="${CONFIGURATOR_SOURCE}\Resources\lines_Text_code_16xMD.png">
+      <Link>Resources\lines_Text_code_16xMD.png</Link>
+    </None>
     <None Include="${CONFIGURATOR_SOURCE}\Resources\mmconfig.rc">
 	  <Link>Resources\mmconfig.rc</Link>
       <SubType>Designer</SubType>

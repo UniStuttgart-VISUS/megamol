@@ -10,13 +10,15 @@
 
 #include "Cinematic/Cinematic.h"
 
-#include "vislib/graphics/Camera.h"
-#include "vislib/math/Point.h"
-#include "vislib/Serialisable.h"
-#include "vislib/math/Vector.h"
+#include "json.hpp"
+#include <glm/glm.hpp>
+
+#include "CinematicUtils.h"
+
 
 namespace megamol {
 namespace cinematic {
+
 
     /**
     * Keyframe Keeper.
@@ -27,155 +29,62 @@ namespace cinematic {
 		/** CTOR */
         Keyframe();
 
-        Keyframe(float at, float st, vislib::math::Point<float, 3> pos, vislib::math::Vector<float, 3> up,
-                    vislib::math::Point<float, 3> lookat, float aperture);
+        Keyframe(float at, float st, camera_state_type cam);
 
 		/** DTOR */
 		~Keyframe();
 
-        /**
-        *
-        */
-        inline bool operator==(Keyframe const& rhs){
-			return ((this->camera == rhs.camera) && (this->animTime == rhs.animTime) && (this->simTime == rhs.simTime));
+        inline bool operator ==(Keyframe const& rhs){
+			return ((this->camera_state ==  rhs.camera_state) && (this->anim_time == rhs.anim_time) && (this->sim_time == rhs.sim_time));
 		}
 
-        /**
-        *
-        */
-        inline bool operator!=(Keyframe const& rhs) {
-            return (!(this->camera == rhs.camera) || (this->animTime != rhs.animTime) || (this->simTime != rhs.simTime));
+        inline bool operator !=(Keyframe const& rhs) {
+            return (!((*this) == rhs));
         }
 
-        ///// GET /////
-
-        /**
-        *
-        */     
-        inline float GetAnimTime() {
-            return this->animTime;
+        // GET ----------------------------------------------------------------
+ 
+        inline float GetAnimTime() const {
+            return this->anim_time;
         }
 
-        /**
-        *
-        */
-        inline float GetSimTime() {
-            return (this->simTime == 1.0f)?(1.0f-0.0000001f):(this->simTime);
+        inline float GetSimTime() const {
+            return this->sim_time; // (this->sim_time == 1.0f) ? (1.0f - 0.0000001f) : (this->sim_time);
         }
 
-        /**
-        *
-        */
-        inline vislib::math::Point<float, 3> GetCamPosition(){
-            return this->camera.position;
+        inline camera_state_type GetCameraState() const {
+            return this->camera_state;
 		}
 
-        /**
-        *
-        */
-        inline vislib::math::Point<float, 3> GetCamLookAt(){
-            return this->camera.lookat;
-		}
+        // SET ----------------------------------------------------------------
 
-        /**
-        *
-        */
-        inline vislib::math::Vector<float, 3> GetCamUp(){
-            return this->camera.up;
-		}
-
-        /**
-        *
-        */
-        inline float GetCamApertureAngle(){
-            return this->camera.apertureangle;
-		}
-
-        ///// SET /////
-
-        /**
-        *
-        */
         inline void SetAnimTime(float t) {
-            this->animTime = (t < 0.0f)?(0.0f):(t);
+            this->anim_time = (t < 0.0f)?(0.0f):(t);
         }
 
-        /**
-        *
-        */
         inline void SetSimTime(float t) {
-            this->simTime = vislib::math::Clamp(t, 0.0f, 1.0f);
+            this->sim_time = glm::clamp(t, 0.0f, 1.0f);
         }
 
-        /**
-        *
-        */
-        inline void SetCameraPosition(vislib::math::Point <float, 3> pos){
-            this->camera.position = pos;
+        inline void SetCameraState(const camera_state_type& cam){
+            this->camera_state = cam;
 		}
+    
+        // SERIALISATION ------------------------------------------------------
 
-        /**
-        *
-        */
-        inline void SetCameraLookAt(vislib::math::Point <float, 3> look){
-            this->camera.lookat = look;
-		}
+        bool Serialise(nlohmann::json& inout_json, size_t index);
 
-        /**
-        *
-        */
-        inline void SetCameraUp(vislib::math::Vector<float, 3> up){
-            this->camera.up = up;
-		}
-
-        /**
-        *
-        */
-        inline void SetCameraApertureAngele(float apertureangle){
-            this->camera.apertureangle = vislib::math::Clamp(apertureangle, 0.0f, 180.0f);
-		}
-
-        ///// SERIALISATION /////
-
-        /**
-        *
-        */
-        void Serialise(vislib::Serialiser& serialiser);
-
-        /**
-        *
-        */
-        void Deserialise(vislib::Serialiser& serialiser);
+        bool Deserialise(const nlohmann::json& in_json);
 
 	private:
-
-        /**********************************************************************
-        * classes
-        **********************************************************************/
-
-        // Hard copy of camera parameters
-        class Camera {
-        public:
-            bool operator==(Keyframe::Camera const& rhs) {
-                return ((this->lookat == rhs.lookat) && (this->position == rhs.position) && 
-                        (this->apertureangle == rhs.apertureangle) && (this->up == rhs.up));
-            }
-            vislib::math::Vector<float, 3> up;
-            vislib::math::Point<float, 3>  position;
-            vislib::math::Point<float, 3>  lookat;
-            float                          apertureangle;
-        };
 
         /**********************************************************************
         * variables
         **********************************************************************/
 
-        // Simulation time is always in [0,1] and is relative to absolute total simulation time.
-        float                    simTime;
-        // Animation time [in seconds]
-		float                    animTime;
-        Keyframe::Camera         camera;
-
+        camera_state_type camera_state;
+        float sim_time; // Simulation time value is relative (always in [0,1])
+		float anim_time;    
 	};
 
 } /* end namespace cinematic */

@@ -1,6 +1,7 @@
 #ifndef MEGAMOL_INFOVIS_PARALLELCOORDINATESRENDERER2D_H_INCLUDED
 #define MEGAMOL_INFOVIS_PARALLELCOORDINATESRENDERER2D_H_INCLUDED
 
+#include "json.hpp"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/FlagStorage.h"
@@ -90,11 +91,6 @@ protected:
 
     bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) override;
 
-    bool selectedItemsColorSlotCallback(core::param::ParamSlot& caller);
-    bool otherItemsColorSlotCallback(core::param::ParamSlot& caller);
-    bool axesColorSlotCallback(core::param::ParamSlot& caller);
-    bool filterIndicatorColorSlotCallback(core::param::ParamSlot& caller);
-    bool selectionIndicatorColorSlotCallback(core::param::ParamSlot& caller);
     bool scalingChangedCallback(core::param::ParamSlot& caller);
     bool resetFlagsSlotCallback(core::param::ParamSlot& caller);
     bool resetFiltersSlotCallback(core::param::ParamSlot& caller);
@@ -111,6 +107,17 @@ private:
         float lower;
         float upper;
         uint32_t flags;
+
+        static inline void to_json(nlohmann::json& j, const DimensionFilter& d) {
+            j = nlohmann::json{{"dim", d.dimension}, {"lower", d.lower}, {"upper", d.upper}, {"flags", d.flags}};
+        }
+
+        static inline void from_json(const nlohmann::json& j, DimensionFilter& d) {
+            j.at("dim").get_to(d.dimension);
+            j.at("lower").get_to(d.lower);
+            j.at("upper").get_to(d.upper);
+            j.at("flags").get_to(d.flags);
+        }
     };
 
     inline float relToAbsValue(int axis, float val) {
@@ -144,6 +151,8 @@ private:
     void doFragmentCount();
 
     void drawParcos(void);
+    void store_filters();
+    void load_filters();
 
     int mouseXtoAxis(float x);
 
@@ -153,7 +162,9 @@ private:
 
     core::CallerSlot getTFSlot;
 
-    core::CallerSlot getFlagsSlot;
+    core::CallerSlot readFlagsSlot;
+
+    core::CallerSlot writeFlagsSlot;
 
     size_t currentHash;
 
@@ -165,26 +176,19 @@ private:
 
     core::param::ParamSlot drawSelectedItemsSlot;
     core::param::ParamSlot selectedItemsColorSlot;
-    core::param::ParamSlot selectedItemsAlphaSlot;
-    float selectedItemsColor[4];
 
     core::param::ParamSlot drawOtherItemsSlot;
     core::param::ParamSlot otherItemsColorSlot;
-    core::param::ParamSlot otherItemsAlphaSlot;
-    float otherItemsColor[4];
+    core::param::ParamSlot otherItemsAttribSlot;
 
     core::param::ParamSlot drawAxesSlot;
     core::param::ParamSlot axesColorSlot;
-    float axesColor[4];
 
     core::param::ParamSlot filterIndicatorColorSlot;
-    float filterIndicatorColor[4];
-
 
     core::param::ParamSlot selectionModeSlot;
     core::param::ParamSlot drawSelectionIndicatorSlot;
     core::param::ParamSlot selectionIndicatorColorSlot;
-    float selectionIndicatorColor[4];
 
     core::param::ParamSlot pickRadiusSlot;
 
@@ -203,8 +207,10 @@ private:
     core::param::ParamSlot glLineWidthSlot;
     core::param::ParamSlot sqrtDensitySlot;
 
-    core::param::ParamSlot resetFlagsSlot;
+    // core::param::ParamSlot resetFlagsSlot;
     core::param::ParamSlot resetFiltersSlot;
+
+    core::param::ParamSlot filterStateSlot;
 
     float marginX, marginY;
     float axisDistance;
@@ -241,7 +247,7 @@ private:
     vislib::graphics::gl::GLSLComputeShader pickProgram;
     vislib::graphics::gl::GLSLComputeShader strokeProgram;
 
-    GLuint dataBuffer, flagsBuffer, minimumsBuffer, maximumsBuffer, axisIndirectionBuffer, filtersBuffer, minmaxBuffer;
+    GLuint dataBuffer, minimumsBuffer, maximumsBuffer, axisIndirectionBuffer, filtersBuffer, minmaxBuffer;
     GLuint counterBuffer;
 
     std::vector<GLuint> axisIndirection;
@@ -264,6 +270,7 @@ private:
     float strokeEndY;
     bool needSelectionUpdate;
     bool needFlagsUpdate;
+    std::map<std::string, uint32_t> columnIndex;
 
     GLint maxAxes;
     GLint isoLinesPerInvocation;

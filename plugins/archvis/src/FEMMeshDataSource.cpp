@@ -3,7 +3,7 @@
 #include "glowl/VertexLayout.hpp"
 
 #include "FEMDataCall.h"
-#include "mesh/CallGPUMeshData.h"
+#include "mesh/MeshCalls.h"
 
 megamol::archvis::FEMMeshDataSource::FEMMeshDataSource()
     : m_fem_callerSlot("getFEMFile", "Connects the data source with loaded FEM data"), m_FEM_model_hash(0) {
@@ -12,14 +12,6 @@ megamol::archvis::FEMMeshDataSource::FEMMeshDataSource()
 }
 
 megamol::archvis::FEMMeshDataSource::~FEMMeshDataSource() {}
-
-bool megamol::archvis::FEMMeshDataSource::create() {
-    m_gpu_meshes = std::make_shared<mesh::GPUMeshCollection>();
-
-    m_bbox = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
-
-    return true;
-}
 
 bool megamol::archvis::FEMMeshDataSource::getDataCallback(core::Call& caller) {
     mesh::CallGPUMeshData* mc = dynamic_cast<mesh::CallGPUMeshData*>(&caller);
@@ -36,13 +28,6 @@ bool megamol::archvis::FEMMeshDataSource::getDataCallback(core::Call& caller) {
 
     m_gpu_meshes->clear();
 
-    m_bbox[0] = std::numeric_limits<float>::max();
-    m_bbox[1] = std::numeric_limits<float>::max();
-    m_bbox[2] = std::numeric_limits<float>::max();
-    m_bbox[3] = std::numeric_limits<float>::min();
-    m_bbox[4] = std::numeric_limits<float>::min();
-    m_bbox[5] = std::numeric_limits<float>::min();
-
     auto fem_data = fem_call->getFEMData();
 
     // TODO generate vertex and index data
@@ -54,13 +39,6 @@ bool megamol::archvis::FEMMeshDataSource::getDataCallback(core::Call& caller) {
         vbs[0].push_back(node.X()); // position data buffer
         vbs[0].push_back(node.Y());
         vbs[0].push_back(node.Z());
-
-        m_bbox[0] = std::min(m_bbox[0], static_cast<float>(node.X()));
-        m_bbox[1] = std::min(m_bbox[1], static_cast<float>(node.Y()));
-        m_bbox[2] = std::min(m_bbox[2], static_cast<float>(node.Z()));
-        m_bbox[3] = std::max(m_bbox[3], static_cast<float>(node.X()));
-        m_bbox[4] = std::max(m_bbox[4], static_cast<float>(node.Y()));
-        m_bbox[5] = std::max(m_bbox[5], static_cast<float>(node.Z()));
     }
     // Create std-container holding vertex attribute descriptions
     std::vector<glowl::VertexLayout::Attribute> attribs = {
@@ -118,9 +96,11 @@ bool megamol::archvis::FEMMeshDataSource::getDataCallback(core::Call& caller) {
     m_gpu_meshes->addMesh(
         vertex_descriptor, vb_iterators, ib_iterators, GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_TRIANGLES);
 
-    mc->setGPUMeshes(m_gpu_meshes);
+    mc->setData(m_gpu_meshes);
     
     this->m_FEM_model_hash = fem_call->DataHash();
 
     return true;
 }
+
+bool megamol::archvis::FEMMeshDataSource::getMetaDataCallback(core::Call& caller) { return false; }

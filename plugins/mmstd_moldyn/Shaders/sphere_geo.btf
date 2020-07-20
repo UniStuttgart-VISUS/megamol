@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_geo">
+
+    <include file="core_utils"/>
+    <include file="bitflags"/>
+    <include file="sphere_flags"/>
+
+
+    <shader name="vertex">
+        <snippet type="version">130</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>         
+        <snippet name="bitflags::main"/>            
+        <snippet name="sphere_flags::vertex_attributes"/>       
+        <snippet name="sphere_flags::vertex_attributes_geo"/>           
+        <snippet name="MainStart"        type="file">sphere/geometry_vertex_mainstart.glsl</snippet>
+        <snippet name="sphere_flags::vertex_getflag"/>
+        <snippet name="sphere_flags::vertex_getflag_geometry"/>                             
+        <snippet name="MainEnd"          type="file">sphere/simple_mainend.glsl</snippet>
+    </shader>
+
+
+    <shader name="geometry">
+        <snippet type="version">150</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet> 
+        <snippet name="Attributes"       type="file">sphere/vertex_attributes.glsl</snippet>
+        <snippet name="bitflags::main"/>            
+        <snippet name="core_utils::tflookup"/>
+        <snippet name="core_utils::tfconvenience" />
+        <snippet name="sphere_flags::geometry_attributes"/>           
+        <snippet name="MainStart"        type="file">sphere/geometry_geometry_mainstart.glsl</snippet>
+        <snippet name="sphere_flags::geometry_getflag"/>
+        <snippet name="PosTrans"         type="file">sphere/vertex_postrans.glsl</snippet>            
+        <snippet name="Color"            type="file">sphere/vertex_color.glsl</snippet>         
+        <snippet name="SphereTouchPlane" type="file">sphere/vertex_spheretouchplane.glsl</snippet>
+        <snippet name="ClippingPlane"    type="file">sphere/vertex_clipping.glsl</snippet>         
+        <snippet name="MainEnd"          type="file">sphere/geometry_geometry_mainend.glsl</snippet>
+    </shader>
+
+
+    <shader name="fragment">
+        <snippet type="version">130</snippet>
+        <snippet name="Extensions"       type="file">sphere/fragment_extensions.glsl</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Attributes"       type="file">sphere/fragment_attributes.glsl</snippet>          
+        <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>   
+        <snippet name="MainStart"        type="file">sphere/geometry_fragment_mainstart.glsl</snippet>
+        <snippet name="MainEnd"          type="file">sphere/geometry_fragment_mainend.glsl</snippet>
+    </shader>
+        
+</btf>

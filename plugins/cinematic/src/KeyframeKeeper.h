@@ -10,19 +10,37 @@
 
 #include "Cinematic/Cinematic.h"
 
-#include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/Vector3fParam.h"
+#include "mmcore/AbstractSlot.h"
+#include "mmcore/utility/xml/XmlParser.h"
+#include "mmcore/utility/xml/XmlReader.h"
 
-#include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
+#include "vislib/assert.h"
+
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <ctime>
 
 #include "Keyframe.h"
+#include "CallKeyframeKeeper.h"
+#include "CinematicUtils.h"
+
 
 namespace megamol {
 namespace cinematic {
+
 
 	/**
 	* Keyframe Keeper.
@@ -72,204 +90,136 @@ namespace cinematic {
 	private:
 
         /**********************************************************************
-        * typedefs
-        **********************************************************************/
-
-        typedef vislib::math::Vector<float, 3> v3f;
-        typedef vislib::math::Point<float, 3>  p3f;
-
-        /**********************************************************************
         * variables
         **********************************************************************/
 
-        // Variables shared/updated with call
-        vislib::Array<p3f >          interpolCamPos;
-        vislib::Array<Keyframe>      keyframes;
-        vislib::math::Cuboid<float>  boundingBox;
+        // Variables shared/updated with call ---------------------------------
+        camera_state_type            cameraState;
+		std::vector<glm::vec3 >      interpolCamPos;
+		std::vector<Keyframe>        keyframes;
         Keyframe                     selectedKeyframe;
         Keyframe                     dragDropKeyframe;
-        v3f                          startCtrllPos;
-        v3f                          endCtrllPos;
+        glm::vec3                    startCtrllPos;
+        glm::vec3                    endCtrllPos;
         float                        totalAnimTime;
         float                        totalSimTime;
         unsigned int                 interpolSteps;
-        p3f                          modelBboxCenter;
+        glm::vec3                    modelBboxCenter;
         unsigned int                 fps;
-
-        v3f                          camViewUp;
-        p3f                          camViewPosition;
-        p3f                          camViewLookat;
-        float                        camViewApertureangle;
             
-        // Variables only used in keyframe keeper
-        vislib::StringA             filename;
-        bool                        simTangentStatus;
-        float                       tl; // Global interpolation spline tangent length of keyframes
-
-        // undo queue stuff -----------------------------------------------
-
-        enum UndoActionEnum {
-            UNDO_NONE      = 0,
-            UNDO_KF_ADD    = 1,
-            UNDO_KF_DELETE = 2,
-            UNDO_KF_MODIFY = 3,
-            UNDO_CP_MODIFY = 4
-        };
-
-        class UndoAction {  
+        // Undo queue  --------------------------------------------------------
+        class Undo {  
             public:
-                /** functions **/
-                UndoAction() {
-                    this->action        = KeyframeKeeper::UndoActionEnum::UNDO_NONE;
-                    this->keyframe      = Keyframe();
-                    this->prev_keyframe = Keyframe();
-                    this->startcp       = v3f();
-                    this->endcp         = v3f();
-                    this->prev_startcp  = v3f();
-                    this->prev_endcp    = v3f();
-                }
 
-                UndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prev_kf, v3f scp, v3f ecp, v3f prev_scp, v3f prev_ecp) {
-                    this->action        = act;
-                    this->keyframe      = kf;
-                    this->prev_keyframe = prev_kf;
-                    this->startcp       = scp;
-                    this->endcp         = ecp;
-                    this->prev_startcp  = prev_scp;
-                    this->prev_endcp    = prev_ecp;
-                }
+            enum Action {
+                UNDO_NONE = 0,
+                UNDO_KEYFRAME_ADD = 1,
+                UNDO_KEYFRAME_DELETE = 2,
+                UNDO_KEYFRAME_MODIFY = 3,
+                UNDO_CONTROLPOINT_MODIFY = 4
+            };
 
-                ~UndoAction() { }
+            Undo() {
+                this->action = Action::UNDO_NONE;
+                this->keyframe = Keyframe();
+                this->previous_keyframe = Keyframe();
+                this->first_controlpoint = glm::vec3();
+                this->last_controlpoint = glm::vec3();
+                this->previous_first_controlpoint = glm::vec3();
+                this->previous_last_controlpoint = glm::vec3();
+            }
 
-                inline bool operator==(UndoAction const& rhs) {
-                    return ((this->action == rhs.action) && (this->keyframe == rhs.keyframe) && (this->prev_keyframe == rhs.prev_keyframe) && 
-                            (this->startcp == rhs.startcp) && (this->endcp == rhs.endcp) && (this->prev_startcp == rhs.prev_startcp) && (this->prev_endcp == rhs.prev_endcp));
-                }
+            Undo(Action act, Keyframe kf, Keyframe prev_kf, glm::vec3 fcp, glm::vec3 lcp, glm::vec3 prev_fcp, glm::vec3 prev_lcp) {
+                this->action = act;
+                this->keyframe = kf;
+                this->previous_keyframe = prev_kf;
+                this->first_controlpoint = fcp;
+                this->last_controlpoint = lcp;
+                this->previous_first_controlpoint = prev_fcp;
+                this->previous_last_controlpoint = prev_lcp;
+            }
 
-                inline bool operator!=(UndoAction const& rhs) {
-                    return (!(this->action == rhs.action) || (this->keyframe != rhs.keyframe) || (this->prev_keyframe != rhs.prev_keyframe) || 
-                                (this->startcp != rhs.startcp) || (this->endcp != rhs.endcp) || (this->prev_startcp != rhs.prev_startcp) || (this->prev_endcp != rhs.prev_endcp));
-                }
+            ~Undo() { }
 
-                /** variables **/
-                UndoActionEnum action;
-                Keyframe       keyframe;
-                Keyframe       prev_keyframe;
-                v3f            startcp;
-                v3f            endcp;
-                v3f            prev_startcp;
-                v3f            prev_endcp;
+            inline bool operator==(Undo const& rhs) {
+                return ((this->action == rhs.action) && (this->keyframe == rhs.keyframe) && (this->previous_keyframe == rhs.previous_keyframe) && 
+                        (this->first_controlpoint == rhs.first_controlpoint) && (this->last_controlpoint == rhs.last_controlpoint) && 
+                        (this->previous_first_controlpoint == rhs.previous_first_controlpoint) && (this->previous_last_controlpoint == rhs.previous_last_controlpoint));
+            }
+
+            inline bool operator!=(Undo const& rhs) {
+                return (!(this->action == rhs.action) || (this->keyframe != rhs.keyframe) || (this->previous_keyframe != rhs.previous_keyframe) || 
+                         (this->first_controlpoint != rhs.first_controlpoint) || (this->last_controlpoint != rhs.last_controlpoint) || 
+                         (this->previous_first_controlpoint != rhs.previous_first_controlpoint) || (this->previous_last_controlpoint != rhs.previous_last_controlpoint));
+            }
+
+            Action action;
+            Keyframe       keyframe;
+            Keyframe       previous_keyframe;
+            glm::vec3      first_controlpoint;
+            glm::vec3      previous_first_controlpoint;
+            glm::vec3      last_controlpoint;
+            glm::vec3      previous_last_controlpoint;
         };
 
-        vislib::Array<UndoAction> undoQueue;
-
-        int undoQueueIndex;
-
+        // Variables only used in keyframe keeper -----------------------------
+        std::string       filename;
+        bool              simTangentStatus;
+        float             splineTangentLength;
+        int               undoQueueIndex;
+        std::vector<Undo> undoQueue;
+          
         /**********************************************************************
         * functions
         ***********************************************************************/
 
-        /** 
-        * Get an interpolated keyframe at specific time. 
-        */
         Keyframe interpolateKeyframe(float time);
 
-        /**  
-        * Add new keyframe to keyframe array. 
-        */
         bool addKeyframe(Keyframe kf, bool undo);
 
-        /**  
-        * Replace existing keyframe in keyframe array.
-        */
         bool replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool undo);
 
-        /**  
-        * Delete keyframe from keyframe array.
-        */
         bool deleteKeyframe(Keyframe kf, bool undo);
 
-        /**  
-        * Load keyframes from file.
-        */
-        void loadKeyframes(void);
+        bool loadKeyframes(void);
 
-        /**  
-        * Save keyframes to file.
-        */
-        void saveKeyframes(void);
+        bool saveKeyframes(void);
 
-        /**  
-        * Refresh interpolated camera positions (called when keyframe array changes). 
-        */
         void refreshInterpolCamPos(unsigned int s);
 
-        /**  
-        * Updating edit parameters without setting them dirty.
-        */
         void updateEditParameters(Keyframe kf);
 
-        /** 
-        * Set speed between all keyframes to same speed 
-        * Uses interpolSteps for approximation of path between keyframe positions 
-        */
         void setSameSpeed(void);
 
-        /**
-        *
-        */
-        void linearizeSimTangent(Keyframe stkf);
+        void linearizeSimTangent(Keyframe kf);
 
-        /**
-        *
-        */
-        void snapKeyframe2AnimFrame(Keyframe *kf);
+        void snapKeyframe2AnimFrame(Keyframe& inout_kf);
 
-        /**
-        *
-        */
-        void snapKeyframe2SimFrame(Keyframe *kf);
+        void snapKeyframe2SimFrame(Keyframe& inout_kf);
 
-        /**
-        *
-        */
-        bool undoAction();
+        bool undoAction(void);
 
-        /**
-        *
-        */
-        bool redoAction();
+        bool redoAction(void);
 
-        /**
-        *
-        */
-        bool addUndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prev_kf, v3f startcp, v3f endcp, v3f prev_startcp, v3f prev_endcp);
+        bool addUndoAction(KeyframeKeeper::Undo::Action act, Keyframe kf, Keyframe prev_kf, glm::vec3 first_controlpoint, glm::vec3 last_controlpoint, glm::vec3 previous_first_controlpoint, glm::vec3 previous_last_controlpoint);
 
-        /**
-        *
-        */
-        bool addKfUndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe pre_vkf);
+        bool addKeyframeUndoAction(KeyframeKeeper::Undo::Action act, Keyframe kf, Keyframe pre_kf);
 
-        /**
-        *
-        */
-        bool addCpUndoAction(KeyframeKeeper::UndoActionEnum act, v3f startcp, v3f endcp, v3f prev_startcp, v3f prev_endcp);
+        bool addControlPointUndoAction(KeyframeKeeper::Undo::Action act, glm::vec3 first_controlpoint, glm::vec3 last_controlpoint, glm::vec3 previous_first_controlpoint, glm::vec3 previous_last_controlpoint);
 
-        /**
-        *
-        */
-        float interpolate_f(float u, float f0, float f1, float f2, float f3);
+        float float_interpolation(float u, float f0, float f1, float f2, float f3);
 
-        /**
-        *
-        */
-        vislib::math::Vector<float, 3> interpolate_v3f(float u, v3f v0, v3f v1, v3f v2, v3f v3);
+        glm::vec3 vec3_interpolation(float u, glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3);
+
+        glm::quat quaternion_interpolation(float u, glm::quat q0, glm::quat q1);
+
+        int getKeyframeIndex(std::vector<Keyframe>& keyframes, Keyframe keyframe);
 
         /**********************************************************************
-        * callback stuff
+        * callbacks
         **********************************************************************/
 
-        megamol::core::CalleeSlot cinematicCallSlot;
+        megamol::core::CalleeSlot keyframeCallSlot;
 
 		bool CallForGetUpdatedKeyframeData(core::Call& c);
 		bool CallForSetSimulationData(core::Call& c);
@@ -290,23 +240,18 @@ namespace cinematic {
         core::param::ParamSlot redoChangesParam;
         core::param::ParamSlot deleteSelectedKeyframeParam;
         core::param::ParamSlot setTotalAnimTimeParam;
-        core::param::ParamSlot  snapAnimFramesParam;
-        core::param::ParamSlot  snapSimFramesParam;
-        core::param::ParamSlot  simTangentParam;
-        core::param::ParamSlot  interpolTangentParam;
+        core::param::ParamSlot snapAnimFramesParam;
+        core::param::ParamSlot snapSimFramesParam;
+        core::param::ParamSlot simTangentParam;
+        core::param::ParamSlot interpolTangentParam;
         core::param::ParamSlot setKeyframesToSameSpeed;
-		/**param for current keyframe aniamtion time */
 		core::param::ParamSlot editCurrentAnimTimeParam;
-        /**param for current keyframe simulation time */
         core::param::ParamSlot editCurrentSimTimeParam;
-		/**param for current keyframe Position */
 		core::param::ParamSlot editCurrentPosParam;
-		/**param for current keyframe LookAt */
-		core::param::ParamSlot editCurrentLookAtParam;
-        core::param::ParamSlot  resetLookAtParam;
-		/**param for current keyframe Up */
+        core::param::ParamSlot resetViewParam;
+        core::param::ParamSlot editCurrentViewParam;
 		core::param::ParamSlot editCurrentUpParam;
-        core::param::ParamSlot  editCurrentApertureParam;
+        core::param::ParamSlot editCurrentApertureParam;
         core::param::ParamSlot fileNameParam;
         core::param::ParamSlot saveKeyframesParam;
         core::param::ParamSlot loadKeyframesParam;

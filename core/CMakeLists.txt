@@ -3,20 +3,15 @@
 # Copyright 2017, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-
 option(BUILD_CORE "Build core" ON)
 
 if(BUILD_CORE)
   project(core)
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_CORE BUILD_VISLIB" CACHE INTERNAL "")
-  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-
-  # Add threading.
-  set(CMAKE_THREAD_PREFER_PTHREAD)
-  find_package(Threads REQUIRED)
 
   # Add expat.
   if(WIN32)
@@ -40,17 +35,11 @@ if(BUILD_CORE)
   require_external(libcppzmq)
   require_external(zlib)
   require_external(libpng)
-  require_external(zfp)
   require_external(glm)
   require_external(glowl)
   require_external(json)
-  if(WIN32)
-    option(USE_TRACKING "use tracking" OFF)
-    if(USE_TRACKING)
-      require_external(tracking)
-    endif()
-  endif()
 
+  # Collect source files
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.inl")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
@@ -74,6 +63,13 @@ if(BUILD_CORE)
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${version_files})
+  target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
+  target_include_directories(${PROJECT_NAME}
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
+    PUBLIC ${EXPAT_INCLUDE_DIRS})
+  target_link_libraries(${PROJECT_NAME} 
+    PUBLIC vislib glad glm glowl zlib libpng json lua ${EXPAT_LIBRARIES}
+    PRIVATE libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
   # Add libunwind.
   if(UNIX)
@@ -92,23 +88,13 @@ if(BUILD_CORE)
     endif()
   endif()
   
-  target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
-  target_include_directories(${PROJECT_NAME}
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
-    PUBLIC ${EXPAT_INCLUDE_DIRS})
-  target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glad glm glowl zlib libpng json lua ${EXPAT_LIBRARIES}
-    PRIVATE libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
   if(WIN32)
-    if(USE_TRACKING)
-      target_link_libraries(${PROJECT_NAME} PUBLIC tracking natnet)
-    endif()
     set_target_properties(${PROJECT_NAME} PROPERTIES
       LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
   endif()
+
   if(MPI_C_FOUND)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${MPI_C_INCLUDE_PATH})
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${MPI_C_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif()
 
   # Source groups in Visual Studio
@@ -139,7 +125,6 @@ if(BUILD_CORE)
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION "share/resources")
-  install_external(TARGETS libzmq)
   get_target_property(zmqcpp_include libcppzmq INTERFACE_INCLUDE_DIRECTORIES)
   install(DIRECTORY ${zmqcpp_include} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/libzmq FILES_MATCHING PATTERN "*.hpp")
   if(WIN32)

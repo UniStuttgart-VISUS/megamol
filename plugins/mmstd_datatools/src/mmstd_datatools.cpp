@@ -29,6 +29,7 @@
 #include "IColSelectClassify.h"
 #include "IColToIdentity.h"
 #include "IndexListIndexColor.h"
+#include "LocalBoundingBoxExtractor.h"
 #include "MPDCListsConcatenate.h"
 #include "MPIParticleCollector.h"
 #include "MPIVolumeAggregator.h"
@@ -71,6 +72,7 @@
 #include "io/PlyWriter.h"
 #include "io/STLDataSource.h"
 #include "io/TriMeshSTLWriter.h"
+#include "io/CPERAWDataSource.h"
 #include "mmstd_datatools/GraphDataCall.h"
 #include "mmstd_datatools/MultiIndexListDataCall.h"
 #include "mmstd_datatools/ParticleFilterMapDataCall.h"
@@ -80,8 +82,10 @@
 #include "table/MMFTDataWriter.h"
 #include "table/TableColumnFilter.h"
 #include "table/TableColumnScaler.h"
+#include "table/TableFlagFilter.h"
 #include "table/TableJoin.h"
 #include "table/TableObserverPlane.h"
+#include "table/TableSampler.h"
 #include "table/TableToLines.h"
 #include "table/TableToParticles.h"
 
@@ -212,6 +216,8 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableObserverPlane>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableJoin>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableColumnFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSampler>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableFlagFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocities>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleNeighborhood>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermodyn>();
@@ -235,6 +241,8 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::StaticMMPLDProvider>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::SyncedMMPLDProvider>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableManipulator>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::CPERAWDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::LocalBoundingBoxExtractor>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();

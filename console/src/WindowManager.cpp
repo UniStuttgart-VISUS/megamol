@@ -23,11 +23,6 @@
 #include "ViewUILayer.h"
 #include "gl/WindowEscapeHotKeysUILayer.h"
 
- #ifdef HAS_ANTTWEAKBAR
- #include "gl/ATBUILayer.h"
- #include "gl/ATBToggleHotKeyUILayer.h"
- #endif /* HAS_ANTTWEAKBAR */
-
 const char* const megamol::console::WindowManager::TitlePrefix = "MegaMol - ";
 const int megamol::console::WindowManager::TitlePrefixLength = 10;
 
@@ -51,7 +46,7 @@ megamol::console::WindowManager::WindowManager(void) : windows() {}
 
 bool megamol::console::WindowManager::IsAlive(void) const { return !windows.empty(); }
 
-void megamol::console::WindowManager::Update(void) {
+void megamol::console::WindowManager::Update(uint32_t frameID) {
     if (windows.empty()) return;
 
     bool cleaning = false;
@@ -64,7 +59,7 @@ void megamol::console::WindowManager::Update(void) {
             continue;
         }
 
-        win->Update();
+        win->Update(frameID);
         if (windows.empty()) return;
     }
 
@@ -86,7 +81,8 @@ void megamol::console::WindowManager::Shutdown(void) {
         if (win->IsAlive()) win->RequestClose();
     }
     megamol::console::JobManager::Instance().Shutdown();
-    while (!windows.empty()) Update();
+    // this frameID is broken, but it should not matter since we are shutting down anyway
+    while (!windows.empty()) Update(0);
 }
 
 bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
@@ -199,11 +195,7 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     }
 
     // get an existing window to share context resources
-#ifndef USE_EGL
     GLFWwindow* share = nullptr;
-#else
-    EGLContext* share = nullptr;
-#endif
     if (!windows.empty()) share = windows[0]->WindowHandle();
     // TODO: share GL context from outside? no GL at all? responsibility of WindowManager?
 
@@ -221,40 +213,11 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     ::mmcInstantiatePendingView(hCore, w->Handle()); // pending view is instantiated and linked to windows w->Handle(), which is a core handle hView
     ::mmcRegisterViewCloseRequestFunction(w->Handle(), &gl::Window::RequestCloseCallback, w.get());
 
-#ifdef HAS_ANTTWEAKBAR
-    bool showConGui = true;
-    ::mmcValueType conGuiDataType = MMC_TYPE_VOIDP;
-    const void* conGuiData = ::mmcGetConfigurationValue(hCore, MMC_CFGID_VARIABLE, _T("consolegui"), &conGuiDataType);
-    if (conGuiData != nullptr) {
-        try {
-            if (conGuiDataType == MMC_TYPE_CSTR) {
-                showConGui = vislib::CharTraitsA::ParseBool(static_cast<const char*>(conGuiData));
-            }
-            else if (conGuiDataType == MMC_TYPE_WSTR) {
-                showConGui = vislib::CharTraitsW::ParseBool(static_cast<const wchar_t*>(conGuiData));
-            }
-        }
-        catch (...) {
-        }
-    }
-    auto atbLayer = std::make_shared<gl::ATBUILayer>(pendInstName, w->Handle(), hCore);
-    w->AddUILayer(atbLayer);
-    if (!showConGui) {
-        atbLayer->ToggleEnable();
-    }
-
-    auto atbthkLayer = std::make_shared<gl::ATBToggleHotKeyUILayer>(*atbLayer.get());
-    w->AddUILayer(atbthkLayer);
-#endif /* HAS_ANTTWEAKBAR */
-
     auto viewLayer = std::make_shared<ViewUILayer>(w->Handle());
     w->AddUILayer(viewLayer);
 
     auto btnLayer = std::make_shared<ButtonParamUILayer>(hCore, w->Handle());
     w->AddUILayer(btnLayer);
-#ifdef HAS_ANTTWEAKBAR
-    btnLayer->SetMaskingLayer(atbLayer.get());
-#endif /* HAS_ANTTWEAKBAR */
 
     auto wehkLayer = std::make_shared<gl::WindowEscapeHotKeysUILayer>(*w.get());
     w->AddUILayer(wehkLayer); // add as last. This allows MegaMol module buttons to use 'q' (and 'ESC') as hotkeys, overriding this hotkey

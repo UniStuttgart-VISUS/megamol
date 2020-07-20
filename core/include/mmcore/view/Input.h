@@ -215,7 +215,7 @@ public:
 
     inline Modifiers& reset(Modifier mod) {
         Modifiers mask(mod);
-        bits ^= mask.bits;
+        bits &= ~mask.bits;
         return *this;
     }
 
@@ -297,16 +297,6 @@ public:
     KeyCode(Key key, Modifiers mods) {
         this->mods = mods;
         this->key = key;
-    }
-
-    /** Return key. */
-    core::view::Key GetKey(void) {
-        return this->key;
-    }
-
-    /** Return modifiers. */
-    core::view::Modifiers GetModifiers(void) {
-        return this->mods;
     }
 
     /**

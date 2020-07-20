@@ -7,13 +7,13 @@
 
 #pragma once
 
-#include "mmcore/view/Renderer3DModuleDS.h"
+#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/Array.h"
-#include "mmcore/view/AbstractCallRender3D.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "protein_calls/MolecularDataCall.h"
 
@@ -24,7 +24,7 @@ namespace demos {
     /**
      * Renderer for simple sphere glyphs
      */
-    class AOSphereRenderer : public megamol::core::view::Renderer3DModuleDS {
+    class AOSphereRenderer : public megamol::core::view::Renderer3DModule_2 {
     public:
 
         /**
@@ -78,7 +78,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(megamol::core::Call& call);
+        virtual bool GetExtents(megamol::core::view::CallRender3D_2& call);
 
         /**
          * Implementation of 'Release'.
@@ -92,7 +92,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(megamol::core::Call& call);
+        virtual bool Render(megamol::core::view::CallRender3D_2& call);
 
     private:
 
@@ -100,16 +100,11 @@ namespace demos {
          * TODO: Document
          */
         void resizeVolume();
-        void renderParticles(megamol::core::view::AbstractCallRender3D *cr,
-                             megamol::core::moldyn::MultiParticleDataCall *c2,
-                             float scaling);
-        void renderParticles(megamol::core::view::AbstractCallRender3D *cr, protein_calls::MolecularDataCall *mol,
-                             float scaling);
-        void renderParticlesVBO(megamol::core::view::AbstractCallRender3D *cr,
-                                megamol::core::moldyn::MultiParticleDataCall *c2,
-                                float scaling);
-        void renderParticlesVBO(megamol::core::view::AbstractCallRender3D *cr, protein_calls::MolecularDataCall *mol,
-                                float scaling);
+        void uploadCameraUniforms(megamol::core::view::CallRender3D_2& call, vislib::graphics::gl::GLSLShader* sphereShader);
+        void renderParticles(megamol::core::view::CallRender3D_2& call, megamol::core::moldyn::MultiParticleDataCall *c2);
+        void renderParticles(megamol::core::view::CallRender3D_2& call, protein_calls::MolecularDataCall *mol);
+        void renderParticlesVBO(megamol::core::view::CallRender3D_2& call, megamol::core::moldyn::MultiParticleDataCall *c2);
+        void renderParticlesVBO(megamol::core::view::CallRender3D_2& call, protein_calls::MolecularDataCall *mol);
 
 
         /**

@@ -5,12 +5,10 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Matrix.h"
 
-#include "mesh/CallGPURenderTaskData.h"
-#include "mesh/CallGPUMaterialData.h"
-#include "mesh/CallGPUMeshData.h"
+#include "mesh/MeshCalls.h"
 
 megamol::mesh::GlTFRenderTasksDataSource::GlTFRenderTasksDataSource()
-	: m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file")
+	: m_glTF_callerSlot("CallGlTFData", "Connects the data source with a loaded glTF file")
 {
 	this->m_glTF_callerSlot.SetCompatibleCall<CallGlTFDataDescription>();
 	this->MakeSlotAvailable(&this->m_glTF_callerSlot);
@@ -28,21 +26,20 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & call
 
     std::shared_ptr<GPURenderTaskCollection> rt_collection(nullptr);
     
-    if (lhs_rtc->getRenderTaskData() == nullptr){
+    if (lhs_rtc->getData() == nullptr){
         rt_collection = this->m_gpu_render_tasks;
-        lhs_rtc->setRenderTaskData(rt_collection);
     } else {
-        rt_collection = lhs_rtc->getRenderTaskData();
+        rt_collection = lhs_rtc->getData();
     }
 
-	CallGPUMaterialData* mtlc = this->m_material_callerSlot.CallAs<CallGPUMaterialData>();
+	CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<CallGPUMaterialData>();
 	if (mtlc == NULL)
 		return false;
 
 	if (!(*mtlc)(0))
 		return false;
 
-	CallGPUMeshData* mc = this->m_mesh_callerSlot.CallAs<CallGPUMeshData>();
+	CallGPUMeshData* mc = this->m_mesh_slot.CallAs<CallGPUMeshData>();
 	if (mc == NULL)
 		return false;
 
@@ -56,13 +53,15 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & call
 	if (!(*gltf_call)(0))
 		return false;
 
-	auto gpu_mtl_storage = mtlc->getMaterialStorage();
-	auto gpu_mesh_storage = mc->getGPUMeshes();
+	auto gpu_mtl_storage = mtlc->getData();
+	auto gpu_mesh_storage = mc->getData();
 
 	//TODO nullptr check
 
-	if (gltf_call->getUpdateFlag())
-	{
+	if (gltf_call->hasUpdate())
+    {
+        ++m_version;
+
 		//rt_collection->clear();
         if (!m_rt_collection_indices.empty())
         {
@@ -75,7 +74,7 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & call
             m_rt_collection_indices.clear();
         }
 
-		auto model = gltf_call->getGlTFModel();
+		auto model = gltf_call->getData();
 
 		for (size_t node_idx = 0; node_idx < model->nodes.size(); node_idx++)
 		{
@@ -162,17 +161,30 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & call
 		lights.push_back({-5000.0,5000.0,-5000.0,1000.0f});
 
 		rt_collection->addPerFrameDataBuffer(lights,1);
+    }
 
-		gltf_call->clearUpdateFlag();
-	}
+    if (lhs_rtc->version() < m_version) {
+        lhs_rtc->setData(rt_collection, m_version);
+    }
 
 
-    CallGPURenderTaskData* rhs_rtc = this->m_renderTask_callerSlot.CallAs<CallGPURenderTaskData>();
+    CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
-        rhs_rtc->setRenderTaskData(rt_collection);
+        rhs_rtc->setData(rt_collection,0);
 
         (*rhs_rtc)(0);
     }
 
 	return true;
+}
+
+bool megamol::mesh::GlTFRenderTasksDataSource::getMetaDataCallback(core::Call& caller) {
+
+    AbstractGPURenderTaskDataSource::getMetaDataCallback(caller);
+
+    auto gltf_call = m_glTF_callerSlot.CallAs<CallGlTFData>();
+    if (!(*gltf_call)(1)) return false;
+    //auto gltf_meta_data = gltf_call->getMetaData();
+
+    return true;
 }

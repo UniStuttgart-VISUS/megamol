@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "MultiParticletoADIOS.h"
 #include <algorithm>
-#include "CallADIOSData.h"
+#include "adios_plugin/CallADIOSData.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "vislib/sys/Log.h"
@@ -468,7 +468,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
     if (list0.HasID()) {
         if (list0.GetIDDataType() == core::moldyn::MultiParticleDataCall::Particles::IDDATA_UINT64) {
             auto idCont = std::make_shared<UInt64Container>(UInt64Container());
-            std::vector<unsigned long long int>& tmp_id = idCont->getVec();
+            std::vector<uint64_t>& tmp_id = idCont->getVec();
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
                 core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
@@ -481,7 +481,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             dataMap["id"] = std::move(idCont);
         } else if (list0.GetIDDataType() == core::moldyn::MultiParticleDataCall::Particles::IDDATA_UINT32) {
             auto idCont = std::make_shared<UInt32Container>(UInt32Container());
-            std::vector<unsigned int>& tmp_id = idCont->getVec();
+            std::vector<uint32_t>& tmp_id = idCont->getVec();
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
                 core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
@@ -496,11 +496,11 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
     }
     if (cad->isInVars("list_offset")) {
         auto listCont = std::make_shared<UInt64Container>(UInt64Container());
-        std::vector<unsigned long long int>& tmp_list = listCont->getVec();
+        std::vector<uint64_t>& tmp_list = listCont->getVec();
         tmp_list.reserve(mpdc->GetParticleListCount());
         size_t old_num = 0;
 
-        for (unsigned long long int i = 0; i < mpdc->GetParticleListCount(); i++) {
+        for (uint64_t i = 0; i < mpdc->GetParticleListCount(); i++) {
             core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
             const size_t num = parts.GetCount();
 
@@ -512,7 +512,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
 
     // Particle Count
     auto ic_pcount = std::make_shared<UInt64Container>(UInt64Container());
-    std::vector<unsigned long long int>& tmp_pcount = ic_pcount->getVec();
+    std::vector<uint64_t>& tmp_pcount = ic_pcount->getVec();
     tmp_pcount.resize(1);
     tmp_pcount[0] = pCount;
     dataMap["count"] = std::move(ic_pcount);

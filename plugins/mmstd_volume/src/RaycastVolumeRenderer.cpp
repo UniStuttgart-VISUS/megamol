@@ -1,7 +1,7 @@
 /*
- * RaycastVolumeRenderer.h
+ * RaycastVolumeRenderer.cpp
  *
- * Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
+ * Copyright (C) 2018-2019 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
 
@@ -65,7 +65,7 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     this->m_volumetricData_callerSlot.SetCompatibleCall<megamol::core::misc::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->m_volumetricData_callerSlot);
 
-    this->m_transferFunction_callerSlot.SetCompatibleCall<megamol::core::view::CallGetTransferFunctionDescription>();
+    this->m_transferFunction_callerSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->m_transferFunction_callerSlot);
 
     this->m_mode << new megamol::core::param::EnumParam(0);
@@ -196,12 +196,11 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core::Call& call) {
     auto cd = m_volumetricData_callerSlot.CallAs<megamol::core::misc::VolumetricDataCall>();
     auto ci = m_renderer_callerSlot.CallAs<megamol::core::view::CallRender3D>();
 
-    if (cr == nullptr) return false;
     if (cd == nullptr) return false;
 
     // TODO Do something about time/framecount ?
 
-    int const req_frame = static_cast<int>(cr->Time());
+    int const req_frame = static_cast<int>(cr.Time());
 
     cd->SetFrameID(req_frame);
 
@@ -225,9 +224,8 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core::Call& call) {
     return true;
 }
 
-bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
-    megamol::core::view::CallRender3D* cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
+bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
+    if (!updateVolumeData()) return false;
 
     // Chain renderer
     auto ci = m_renderer_callerSlot.CallAs<megamol::core::view::CallRender3D>();
@@ -335,7 +333,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     box_min[0] = m_volume_origin[0];
     box_min[1] = m_volume_origin[1];
     box_min[2] = m_volume_origin[2];
-    vec3 box_max;
+    glm::vec3 box_max;
     box_max[0] = m_volume_origin[0] + m_volume_extents[0];
     box_max[1] = m_volume_origin[1] + m_volume_extents[1];
     box_max[2] = m_volume_origin[2] + m_volume_extents[2];

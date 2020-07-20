@@ -93,11 +93,11 @@ namespace moldyn {
         /**
          * Sets the quaternion data
          *
-         * @param p The pointer to the quaternion data (must not be NULL)
+         * @param p The pointer to the quaternion data
          * @param s The stride of the direction data
          */
         void SetQuatData(const float *p, unsigned int s = 0) {
-            assert(p != nullptr);
+            //assert(p != nullptr);
             this->quatPtr = p;
             this->quatStride = s;
         }
@@ -106,11 +106,11 @@ namespace moldyn {
         /**
         * Sets the radii data
         *
-        * @param p The pointer to the radii data (must not be NULL)
+        * @param p The pointer to the radii data
         * @param s The stride of the radii data
         */
         void SetRadData(const float *p, unsigned int s = 0) {
-            assert(p != nullptr);
+            //assert(p != nullptr);
             this->radPtr = p;
             this->radStride = s;
         }

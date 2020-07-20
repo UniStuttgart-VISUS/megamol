@@ -45,6 +45,8 @@ public:
 protected:
     virtual bool getDataCallback(core::Call& caller);
 
+    virtual bool getMetaDataCallback(core::Call& caller) override;
+
 private:
     megamol::core::CallerSlot m_MSM_callerSlot;
 

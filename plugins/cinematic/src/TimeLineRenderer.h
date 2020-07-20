@@ -10,19 +10,33 @@
 
 #include "Cinematic/Cinematic.h"
 
-#include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
+#include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore/misc/PngBitmapCodec.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/EnumParam.h"
 
-#include "vislib/graphics/InputModifiers.h"
-#include "vislib/graphics/Cursor2D.h"
+#include "vislib/String.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
-
-#include "vislib/Array.h"
+#include "vislib/graphics/BitmapImage.h"
+#include "vislib/graphics/Cursor2D.h"
+#include "vislib/graphics/InputModifiers.h"
+#include "vislib/math/ShallowMatrix.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/sys/Log.h"
 
 #include "Keyframe.h"
+#include "CallKeyframeKeeper.h"
+#include "CinematicUtils.h"
+
 
 namespace megamol {
 namespace cinematic {
@@ -116,86 +130,68 @@ namespace cinematic {
         * variables
         **********************************************************************/
 
-        megamol::core::utility::SDFFont theFont;
+        struct AxisData {
+            glm::vec2   startPos;
+            glm::vec2   endPos;
+            float       length;
+            float       maxValue;
+            float       segmSize; // the world space size of one segment
+            float       segmValue; // value of on segment on the ruler 
+            float       scaleFactor; 
+            float       scaleOffset; // negative offset to keep position on the ruler during scaling in focus
+            float       scaleDelta; // scaleOffset for new scalePos to get new scaleOffset for new scaling factor
+            float       valueFractionLength; // the scaled fraction of the axis length and the max value
+            float       rulerPos; 
+            std::string formatStr; // string with adapted floating point formatting
+        };
 
-        vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;
+        enum Axis : size_t {
+            X     = 0,
+            Y     = 1,
+            COUNT = 2
+        };
 
-        vislib::math::Vector<float, 2> axisStartPos;       // joint start position for both axis
+        enum ActiveParam : size_t {
+            SIMULATION_TIME
+        };
 
-        vislib::math::Vector<float, 2> animAxisEndPos;     // end position of animation axis
-        float                          animAxisLen;        // length of the animation axis
-        float                          animTotalTime;      // the total animation time
-        float                          animSegmSize;       // the world space size of one segment of the animation time ruler
-        float                          animSegmValue;      // the animation time value of on segment on the ruler 
-        float                          animScaleFac;       // the scaling factor of the animation axis
-        float                          animScaleOffset;    // (negative) offset to keep position on the ruler during scaling in focus 
-        float                          animLenTimeFrac;    // the scaled fraction of the animation axis length and the total animation time
-        float                          animScalePos;       // the ruler position to be kept in focus during scaling
-        float                          animScaleDelta;     // animScaleOffset for new animScalePos to get new animScaleOffset for new scaling factor
-        vislib::StringA                animFormatStr;      // string with adapted floating point formatting
-
-        vislib::math::Vector<float, 2> simAxisEndPos;
-        float                          simAxisLen;
-        float                          simTotalTime;
-        float                          simSegmSize;
-        float                          simSegmValue;
-        float                          simScaleFac;
-        float                          simScaleOffset;
-        float                          simLenTimeFrac;
-        float                          simScalePos;
-        float                          simScaleDelta;
-        vislib::StringA                simFormatStr;
-
-        unsigned int                   scaleAxis;
-
-        Keyframe                       dragDropKeyframe;
-        bool                           dragDropActive;
-        unsigned int                   dragDropAxis;
-
-        float                          fontSize;
-        float                          keyfMarkSize;
-        float                          rulerMarkSize;
-        unsigned int                   fps;
-        vislib::math::Vector<float, 2> viewport;
-
-        /*** INPUT ********************************************************/
-
-        /** The current mouse coordinates */
-        float mouseX;
-        float mouseY;
-
-        /** The last mouse coordinates */
-        float lastMouseX;
-        float lastMouseY;
-
-        core::view::MouseButton       mouseButton;
-        core::view::MouseButtonAction mouseAction;
+        std::array<AxisData, Axis::COUNT> axes;
+        CinematicUtils                    utils;
+        GLuint                            texture;
+        ActiveParam                       yAxisParam;
+        Keyframe                          dragDropKeyframe;
+        bool                              dragDropActive;
+        unsigned int                      axisDragDropMode;
+        unsigned int                      axisScaleMode;
+        float                             keyframeMarkHeight;
+        float                             rulerMarkHeight;
+        glm::vec2                         viewport;
+        unsigned int                      fps;
+        float                             mouseX;
+        float                             mouseY;
+        float                             lastMouseX;
+        float                             lastMouseY;
+        core::view::MouseButton           mouseButton;
+        core::view::MouseButtonAction     mouseAction;
 
         /**********************************************************************
         * functions
         **********************************************************************/
 
-        /** Loading texture for keyframe marker. */
-        bool loadTexture(vislib::StringA filename);
+        bool recalcAxesData(void);
 
-        /** Draw the keyframe marker. */
-        void drawKeyframeMarker(float posX, float posY);
-
-        /** Adapt axis scaling. */
-        void axisAdaptation(void);
+        void pushMarkerTexture(float pos_x, float pos_y, float size, glm::vec4 color);
 
         /**********************************************************************
-        * callback stuff
+        * callbacks
         **********************************************************************/
 
-		/** The call for keyframe data */
         core::CallerSlot keyframeKeeperSlot;
 
         /**********************************************************************
-        * parameter
+        * parameters
         **********************************************************************/
 
-        megamol::core::param::ParamSlot rulerFontParam;
         megamol::core::param::ParamSlot moveRightFrameParam;
         megamol::core::param::ParamSlot moveLeftFrameParam;
         megamol::core::param::ParamSlot resetPanScaleParam;

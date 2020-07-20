@@ -9,19 +9,9 @@ option(BUILD_REMOTECONSOLE "Build remote Lua console" ON)
 if(BUILD_REMOTECONSOLE)
   project(remoteconsole)
 
-  # Add libcxxopts.
-  set(CXXOPTS_TAG "v2.1.1")
-  add_external_project(libcxxopts_ext
-    GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
-    GIT_TAG ${CXXOPTS_TAG}
-    DEPENDS libzmq core
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    TEST_COMMAND "")
-  add_external_library(libcxxopts INTERFACE
-    DEPENDS libcxxopts_ext
-    INCLUDE_DIR "src/libcxxopts_ext/include/")
+  require_external(libzmq)
+  require_external(libcppzmq)
+  require_external(libcxxopts)
 
   # Glob remote console files.
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -41,9 +31,7 @@ if(BUILD_REMOTECONSOLE)
   # Installation rules for generated files
   if(UNIX)
     include(GNUInstallDirs)
-    set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")
-    set(cfg_EXTERNAL_LIB_PATH "${CMAKE_INSTALL_LIBDIR}")
-    set(cfg_REMOTE "${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}")
+    set(cfg_LIB_PATH "../lib") # relative path from bin to lib dir
     set(MEGAMOL_REMOTECONSOLE_SCRIPT "remoteconsole.sh")
     configure_file(extra/remoteconsole.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_REMOTECONSOLE_SCRIPT} @ONLY)
     install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_REMOTECONSOLE_SCRIPT} DESTINATION "bin")

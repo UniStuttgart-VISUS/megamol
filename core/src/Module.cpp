@@ -4,7 +4,9 @@
  * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
+
 #include "stdafx.h"
+#include "mmcore/RigRendering.h"
 #include "mmcore/Module.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/CoreInstance.h"
@@ -14,6 +16,12 @@
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/sys/Log.h"
+
+#ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
+#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer3DModule.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
+#endif
 
 using namespace megamol::core;
 
@@ -45,7 +53,19 @@ bool Module::Create(void) {
     using vislib::sys::Log;
     ASSERT(this->instance() != NULL);
     if (!this->created) {
+#ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
+        auto p3 = dynamic_cast<core::view::Renderer3DModule*>(this);
+        auto p2 = dynamic_cast<core::view::Renderer2DModule*>(this);
+        if (p2 || p3) {
+            std::string output = this->ClassName();
+            output += "::create";
+            glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, output.c_str());
+        }
+#endif
         this->created = this->create();
+#ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
+        if (p2 || p3) glPopDebugGroup();
+#endif
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 350,
             "%s module \"%s\"\n", ((this->created) ? "Created"
             : "Failed to create"), typeid(*this).name());

@@ -352,8 +352,12 @@ MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcCreateCore(void *hCore) {
         return MMC_ERR_MEMORY; // out of memory or initialisation failed.
     }
 
-    return megamol::core::ApiHandle::CreateHandle(hCore, inst) 
-        ? MMC_ERR_NO_ERROR : MMC_ERR_UNKNOWN;
+    if (megamol::core::ApiHandle::CreateHandle(hCore, inst)) {
+        return MMC_ERR_NO_ERROR;
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError("mmcCreateCore: could not create ApiHandle");
+        return MMC_ERR_UNKNOWN;
+    }
 }
 
 
@@ -376,6 +380,7 @@ MEGAMOLCORE_CALL mmcSetInitialisationValue(void *hCore, mmcInitValue key,
     } catch(vislib::IllegalStateException) {
         return MMC_ERR_STATE;
     } catch(...) {
+        vislib::sys::Log::DefaultLog.WriteError("mmcSetInitialisationValue: exception");
         return MMC_ERR_UNKNOWN;
     }
 
@@ -395,14 +400,13 @@ MEGAMOLCORE_CALL mmcInitialiseCoreInstance(void *hCore) {
     try {
         inst->Initialise();
         return MMC_ERR_NO_ERROR;
-    } catch(vislib::Exception ex) {
-        VLTRACE(VISLIB_TRCELVL_ERROR,
-            "Failed to initialise core instance: %s (%s; %i)\n",
-            ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+    } catch (vislib::Exception ex) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Failed to initialise core instance: %s (%s; %i)\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
     } catch (...) {
-        VLTRACE(VISLIB_TRCELVL_ERROR,
-            "Failed to initialise core instance: %s\n", "unknown exception");
+        vislib::sys::Log::DefaultLog.WriteError("Failed to initialise core instance: %s\n", "unknown exception");
     }
+    vislib::sys::Log::DefaultLog.WriteError("mmcInitialiseCoreInstance: exception");
     return MMC_ERR_UNKNOWN;
 }
 
@@ -599,7 +603,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingJob(void *hCore,
  * mmcRenderView
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
-        mmcRenderViewContext *context) {
+        mmcRenderViewContext *context, uint32_t frameID) {
     megamol::core::ViewInstance *view
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
@@ -647,7 +651,9 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
             //    }
             //}
 
-            double it = view->View()->GetCoreInstance()->GetCoreInstanceTime();
+            auto core = view->View()->GetCoreInstance();
+            core->SetFrameID(frameID);
+            double it = core->GetCoreInstanceTime();
             context->Time = view->View()->DefaultTime(it);
             context->InstanceTime = it; 
 
