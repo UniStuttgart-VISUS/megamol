@@ -1942,6 +1942,15 @@ megamol::gui::Graph::~Graph(void) {
 
     this->present.ResetStatePointers();
 
+    // Delete all groups
+    std::vector<ImGuiID> group_uids;
+    for (auto& group_ptr : this->groups) {
+        group_uids.emplace_back(group_ptr->uid);
+    }
+    for (auto& group_uid : group_uids) {
+        this->DeleteGroup(group_uid);
+    }
+
     // Delete all modules
     std::vector<ImGuiID> module_uids;
     for (auto& module_ptr : this->modules) {
@@ -1958,15 +1967,6 @@ megamol::gui::Graph::~Graph(void) {
     }
     for (auto& call_uid : call_uids) {
         this->DeleteCall(call_uid);
-    }
-
-    // Delete all groups
-    std::vector<ImGuiID> group_uids;
-    for (auto& group_ptr : this->groups) {
-        group_uids.emplace_back(group_ptr->uid);
-    }
-    for (auto& group_uid : group_uids) {
-        this->DeleteGroup(group_uid);
     }
 }
 
@@ -2090,9 +2090,6 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
                         delete_empty_group = group_ptr->uid;
                     }
                 }
-                if (delete_empty_group != GUI_INVALID_ID) {
-                    this->DeleteGroup(delete_empty_group);
-                }
 
                 // 2)  Remove call slots
                 (*iter)->DeleteCallSlots();
@@ -2110,6 +2107,8 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
                     "[Configurator] Deleted module '%s' (uid %i) from  project '%s'.\n", (*iter)->class_name.c_str(),
                     (*iter)->uid, this->name.c_str());
 #endif // GUI_VERBOSE
+
+                // 5) Delete module
                 if ((*iter).use_count() > 1) {
                     vislib::sys::Log::DefaultLog.WriteError(
                         "Unclean deletion. Found %i references pointing to module. [%s, %s, line %d]\n",
@@ -2117,6 +2116,11 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
                 }
                 (*iter).reset();
                 this->modules.erase(iter);
+
+                // 6) Delete empty groups
+                if (delete_empty_group != GUI_INVALID_ID) {
+                    this->DeleteGroup(delete_empty_group);
+                }
 
                 this->ForceSetDirty();
                 return true;

@@ -1504,7 +1504,7 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
                         auto keyCode = param.GetStorage<megamol::core::view::KeyCode>();
                         // Ignore not set hotekey
                         if (keyCode.key == core::view::Key::KEY_UNKNOWN) {
-                            return;
+                            break;
                         }
                         // Check in hotkey map
                         bool found = false;
