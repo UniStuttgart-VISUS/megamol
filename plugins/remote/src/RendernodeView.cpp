@@ -22,7 +22,7 @@ megamol::remote::RendernodeView::RendernodeView()
     : request_mpi_slot_("requestMPI", "Requests initialization of MPI and the communicator for the view.")
     , sync_data_slot_("syncData", "Requests synchronization of data sources in the MPI world.")
     , BCastRankSlot_("BCastRank", "Set which MPI rank is the broadcast master")
-    , address_slot_("address", "Address of headnode in ZMQ syntax (e.g. \"tcp://127.0.0.1:33333\")")
+    , port_slot_("port", "Sets to port to listen to.")
     , recv_comm_(std::make_unique<ZMQCommFabric>(zmq::socket_type::pull))
     , run_threads(false)
 #ifdef WITH_MPI
@@ -43,9 +43,8 @@ megamol::remote::RendernodeView::RendernodeView()
     BCastRankSlot_.SetUpdateCallback(&RendernodeView::onBCastRankChanged);
     this->MakeSlotAvailable(&BCastRankSlot_);
 
-    address_slot_ << new core::param::StringParam("tcp://127.0.0.1:66566");
-    address_slot_.SetUpdateCallback(&RendernodeView::onAddressChanged);
-    this->MakeSlotAvailable(&address_slot_);
+    port_slot_ << new core::param::IntParam(62562);
+    this->MakeSlotAvailable(&port_slot_);
 
     data_has_changed_.store(false);
 }
@@ -61,12 +60,17 @@ bool megamol::remote::RendernodeView::create(void) { return true; }
 
 
 bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
+    static uint64_t old_msg_id = -1;
+
     auto ibegin = msgs.cbegin();
     auto const iend = msgs.cend();
 
     while (ibegin < iend) {
         auto const type = static_cast<MessageType>(*ibegin);
         auto size = 0;
+#ifdef RV_DEBUG_OUTPUT
+        uint64_t msg_id = 0;
+#endif
         switch (type) {
         case MessageType::PRJ_FILE_MSG: {
             auto const call = this->getCallRenderView();
@@ -78,7 +82,18 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
         case MessageType::PARAM_UPD_MSG: {
 
             if (std::distance(ibegin, iend) > MessageHeaderSize) {
-                std::copy(ibegin + MessageTypeSize, ibegin + MessageHeaderSize, reinterpret_cast<char*>(&size));
+                std::copy(ibegin + MessageTypeSize, ibegin + MessageTypeSize + MessageSizeSize,
+                    reinterpret_cast<char*>(&size));
+#ifdef RV_DEBUG_OUTPUT
+                std::copy(ibegin + MessageTypeSize + MessageSizeSize, ibegin + MessageHeaderSize,
+                    reinterpret_cast<char*>(&msg_id));
+                if (msg_id - old_msg_id == 1) {
+                    vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Got message with id: %d", msg_id);
+                } else {
+                    vislib::sys::Log::DefaultLog.WriteError("RendernodeView: Unexpected id: %d", msg_id);
+                }
+                old_msg_id = msg_id;
+#endif
             }
             Message_t msg;
             if (std::distance(ibegin, iend) >= MessageHeaderSize + size) {
@@ -127,7 +142,16 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
 
 void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context) {
 #ifdef WITH_MPI
+    static bool first_frame = true;
+
     this->initMPI();
+
+    if (first_frame) {
+        this->initTileViewParameters();
+        this->checkParameters();
+        first_frame = false;
+    }
+
     // 0 time, 1 instanceTime
     std::array<double, 2> timestamps = {0.0, 0.0};
 
@@ -250,7 +274,7 @@ bool megamol::remote::RendernodeView::OnRenderView(core::Call& call) {
 
     this->Render(context);
 
-	return true;
+    return true;
 }
 
 
@@ -260,27 +284,13 @@ void megamol::remote::RendernodeView::recv_loop() {
     try {
         while (run_threads) {
             Message_t buf = {'r', 'e', 'q'};
-            auto start = std::chrono::high_resolution_clock::now();
-            if (!recv_comm_.Send(buf, send_type::SEND)) {
-#ifdef RV_DEBUG_OUTPUT
-                vislib::sys::Log::DefaultLog.WriteWarn("RendernodeView: Failed to send request.");
-#endif
-            }
-            // vislib::sys::Log::DefaultLog.WriteInfo(
-            //     "RendernodeView: MSG Send took %d ms", (std::chrono::duration_cast<std::chrono::milliseconds>(
-            //                                                 std::chrono::high_resolution_clock::now() - start))
-            //                                                .count());
 
-            start = std::chrono::high_resolution_clock::now();
             while (!recv_comm_.Recv(buf, recv_type::RECV) && run_threads) {
 #ifdef RV_DEBUG_OUTPUT
                 vislib::sys::Log::DefaultLog.WriteWarn("RendernodeView: Failed to recv message.");
 #endif
             }
-            // vislib::sys::Log::DefaultLog.WriteInfo(
-            //     "RendernodeView: MSG Recv took %d ms", (std::chrono::duration_cast<std::chrono::milliseconds>(
-            //                                                 std::chrono::high_resolution_clock::now() - start))
-            //                                                .count());
+
             if (!run_threads) break;
 
 #ifdef RV_DEBUG_OUTPUT
@@ -296,13 +306,13 @@ void megamol::remote::RendernodeView::recv_loop() {
 
             data_has_changed_.store(true);
 
-            std::this_thread::sleep_for(1000ms / 60);
+            // std::this_thread::sleep_for(1000ms / 60);
         }
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("RendernodeView: Error during communication.");
+        // vislib::sys::Log::DefaultLog.WriteError("RendernodeView: Error during communication.");
     }
 
-    vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Exiting recv_loop.");
+    // vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Exiting recv_loop.");
 }
 
 
@@ -318,9 +328,11 @@ bool megamol::remote::RendernodeView::shutdown_threads() {
 
 bool megamol::remote::RendernodeView::init_threads() {
     shutdown_threads();
-    this->recv_comm_ = FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::req));
-    auto const address = std::string(this->address_slot_.Param<core::param::StringParam>()->Value());
-    this->recv_comm_.Connect(address);
+    this->recv_comm_ = FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::pull));
+    auto const port = std::to_string(this->port_slot_.Param<core::param::IntParam>()->Value());
+    vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Starting listener on port %s.\n", port.c_str());
+    std::string const address = "tcp://*:" + port;
+    this->recv_comm_.Bind(address);
     run_threads = true;
     receiver_thread_ = std::thread(&RendernodeView::recv_loop, this);
     threads_initialized_ = true;
