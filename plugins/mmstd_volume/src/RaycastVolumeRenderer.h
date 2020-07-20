@@ -1,7 +1,7 @@
 /*
  * RaycastVolumeRenderer.h
  *
- * Copyright (C) 2018-2019 by Universitaet Stuttgart (VISUS).
+ * Copyright (C) 2018-2020 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
 
@@ -12,7 +12,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/GLSLComputeShader.h"
@@ -29,7 +29,7 @@ namespace megamol {
 namespace stdplugin {
 namespace volume {
 
-class RaycastVolumeRenderer : public core::view::Renderer3DModule_2 {
+class RaycastVolumeRenderer : public megamol::core::view::Renderer3DModule_2 {
 public:
     /**
      * Answer the name of this module.
@@ -71,12 +71,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create() override;
+    bool create();
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release() override;
+    void release();
 
     /**
      * The get extents callback. The module should set the members of
@@ -87,7 +87,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::view::CallRender3D_2& call) override;
+    bool GetExtents(core::view::CallRender3D_2& call) override;
 
     /**
      * The render callback.
@@ -96,9 +96,11 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core::view::CallRender3D_2& call) override;
+    bool Render(core::view::CallRender3D_2& call) override;
 
     bool updateVolumeData(const unsigned int frameID);
+
+    bool updateTransferFunction();
 
 private:
     vislib::graphics::gl::GLSLComputeShader m_raycast_volume_compute_shdr;
@@ -118,9 +120,9 @@ private:
     size_t m_volume_datahash = std::numeric_limits<size_t>::max();
     int m_frame_id = -1;
 
-    glm::vec3 m_volume_origin;
-    glm::vec3 m_volume_extents;
-    glm::vec3 m_volume_resolution;
+    float m_volume_origin[3];
+    float m_volume_extents[3];
+    float m_volume_resolution[3];
 
     /** Parameters for changing the behavior */
     core::param::ParamSlot m_mode;
