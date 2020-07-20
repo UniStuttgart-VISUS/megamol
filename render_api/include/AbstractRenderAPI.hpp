@@ -1,5 +1,5 @@
 /*
- * AbstractRenderAPI.hpp
+ * AbstractFrontendService.hpp
  *
  * Copyright (C) 2019 by MegaMol Team
  * Alle Rechte vorbehalten.
@@ -9,12 +9,12 @@
 #include <string>
 
 #include <vector>
-#include "RenderResource.h"
+#include "ModuleResource.h"
 
 namespace megamol {
-namespace render_api {
+namespace frontend {
 
-class AbstractRenderAPI {
+class AbstractFrontendService {
 private:
     // creation/deletion of render APIs may depend on other RAPI instances, since they may share data or context state.
     // using individual priorities, one can schedule RAPI instances of lower priorities
@@ -36,26 +36,20 @@ public:
     void setShutdown(const bool s = true) { m_shouldShutdown = s; }
 
 public:
-    virtual ~AbstractRenderAPI() = default;
+    virtual ~AbstractFrontendService() = default;
 
-    // TODO: need to look up API Name+Version without instantiating subclass object? do with statics somehow?
-    virtual std::string getAPIName() const = 0;
+    virtual bool init(void* configPtr) = 0; // init API, e.g. init GLFW with OpenGL and open window with certain decorations/hints
+    virtual void close() = 0;
 
-    struct RenderAPIVersion {
-        int major = 0, minor = 0;
-    };
-    // TODO: think about support for different versions / compatability
-    virtual RenderAPIVersion getAPIVersion() const = 0;
-
-    virtual bool initAPI(void* configPtr) = 0; // init API, e.g. init GLFW with OpenGL and open window with certain decorations/hints
-    virtual void closeAPI() = 0;
-
-    virtual const void* getAPISharedDataPtr() const {
+    virtual const void* getSharedDataPtr() const {
         return nullptr;
     } // ptr non-owning, share data should be only borrowed
+	
+    virtual void updateResources() = 0;
+    virtual void digestChangedResources() = 0;
 
-    virtual void preViewRender() = 0;  // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
-    virtual void postViewRender() = 0; // clean up after rendering, e.g. stop and show frame-timers in GLFW window
+    virtual void preGraphRender() = 0;  // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
+    virtual void postGraphRender() = 0; // clean up after rendering, e.g. stop and show frame-timers in GLFW window
 
     // we assume that render apis have different kinds of resources they need/want to share with the MegaMol View or Renderers.
     // different kinds of resources are: Keyboard Input Events, Mouse Input Events, Window Resize/Input
@@ -63,14 +57,10 @@ public:
     // looked up via this function and given to the Views that request them. the matching of correct resource to the
     // Views that request them is done by the identifier of the resource (i.e. by a std::string) followed by a cast to
     // the expected type
-    virtual const std::vector<RenderResource>& getRenderResources() const = 0;
-
-    // TODO: how to force/allow subclasses to interop with other APIs?
-
-    // TODO: API-specific options in subclasses?
+    virtual const std::vector<ModuleResource>& getModuleResources() const = 0;
 };
 
 
-} // namespace render_api
+} // namespace frontend
 } // namespace megamol
 

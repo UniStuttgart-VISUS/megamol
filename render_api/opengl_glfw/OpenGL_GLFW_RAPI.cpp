@@ -1,5 +1,5 @@
 /*
- * OpenGL_GLFW_RAPI.cpp
+ * OpenGL_GLFW_Service.cpp
  *
  * Copyright (C) 2019 by MegaMol Team
  * Alle Rechte vorbehalten.
@@ -111,7 +111,7 @@ static void APIENTRY opengl_debug_message_callback(GLenum source, GLenum type, G
 }
 
 namespace megamol {
-namespace render_api {
+namespace frontend {
 
 namespace {
 // the idea is that we only borrow, but _do not_ manipulate shared data somebody else gave us
@@ -127,7 +127,7 @@ void initSharedContext(SharedData& context) {
 }
 
 // indirection to not spam header file with GLFW inclucde
-#define that static_cast<OpenGL_GLFW_RAPI*>(::glfwGetWindowUserPointer(wnd))
+#define that static_cast<OpenGL_GLFW_Service*>(::glfwGetWindowUserPointer(wnd))
 
 // keyboard events
 void outer_glfw_onKey_func(GLFWwindow* wnd, int key, int scancode, int action, int mods) {
@@ -177,27 +177,27 @@ void outer_glfw_onFramebufferSize_func(GLFWwindow* wnd, int widthpx, int heightp
 #define m_sharedData ((m_data.sharedDataPtr) ? (*m_data.sharedDataPtr) : (m_data.sharedData))
 #define m_glfwWindowPtr (m_data.glfwContextWindowPtr)
 
-void OpenGL_GLFW_RAPI::OpenGL_Context::activate() const {
+void OpenGL_GLFW_Service::OpenGL_Context::activate() const {
     if (!ptr) return;
 
 	glfwMakeContextCurrent(static_cast<GLFWwindow*>(ptr));
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
 }
 
-void OpenGL_GLFW_RAPI::OpenGL_Context::close() const {
+void OpenGL_GLFW_Service::OpenGL_Context::close() const {
     if (!ptr) return;
 
 	glfwMakeContextCurrent(nullptr);
 }
 
 
-struct OpenGL_GLFW_RAPI::PimplData {
+struct OpenGL_GLFW_Service::PimplData {
     SharedData sharedData;              // personal data we share with other RAPIs
     SharedData* sharedDataPtr{nullptr}; // if we get shared data from another OGL RAPI object, we access it using this
                                         // ptr and leave our own shared data un-initialized
 
     GLFWwindow* glfwContextWindowPtr{nullptr}; // _my own_ gl context!
-    OpenGL_GLFW_RAPI::Config initialConfig;    // keep copy of user-provided config
+    OpenGL_GLFW_Service::Config initialConfig;    // keep copy of user-provided config
 
     std::string fullWindowTitle;
 
@@ -218,17 +218,17 @@ struct OpenGL_GLFW_RAPI::PimplData {
     // m_data.fpsSyncTime = std::chrono::system_clock::now();
 };
 
-OpenGL_GLFW_RAPI::~OpenGL_GLFW_RAPI() {
-    if (m_pimpl) this->closeAPI(); // cleans up pimpl
+OpenGL_GLFW_Service::~OpenGL_GLFW_Service() {
+    if (m_pimpl) this->close(); // cleans up pimpl
 }
 
-bool OpenGL_GLFW_RAPI::initAPI(void* configPtr) {
+bool OpenGL_GLFW_Service::init(void* configPtr) {
     if (configPtr == nullptr) return false;
 
-    return initAPI(*static_cast<Config*>(configPtr));
+    return init(*static_cast<Config*>(configPtr));
 }
 
-bool OpenGL_GLFW_RAPI::initAPI(const Config& config) {
+bool OpenGL_GLFW_Service::init(const Config& config) {
     if (m_pimpl) return false; // this API object is already initialized
 
     // TODO: check config for sanity?
@@ -333,11 +333,11 @@ bool OpenGL_GLFW_RAPI::initAPI(const Config& config) {
     m_opengl_context = &m_opengl_context_impl;
 
     if (!m_glfwWindowPtr) {
-        vislib::sys::Log::DefaultLog.WriteInfo("OpenGL_GLFW_RAPI: Failed to create GLFW window.");
+        vislib::sys::Log::DefaultLog.WriteInfo("OpenGL_GLFW_Service: Failed to create GLFW window.");
         return false;
     }
     vislib::sys::Log::DefaultLog.WriteInfo(
-        "OpenGL_GLFW_RAPI: Create window with size w: %d, h: %d\n", m_data.currentWidth, m_data.currentHeight);
+        "OpenGL_GLFW_Service: Create window with size w: %d, h: %d\n", m_data.currentWidth, m_data.currentHeight);
 
     ::glfwMakeContextCurrent(m_glfwWindowPtr);
 
@@ -353,7 +353,8 @@ bool OpenGL_GLFW_RAPI::initAPI(const Config& config) {
     //     ::glfwSetInputMode(m_glfwWindowPtr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     // }
 
-    gladLoadGL();
+    if(gladLoadGL() == 0)
+		vislib::sys::Log::DefaultLog.WriteInfo("OpenGL_GLFW_Service: failed to load GL via glad\n");
 #ifdef _WIN32
     gladLoadWGL(wglGetCurrentDC());
 #else
@@ -430,7 +431,7 @@ bool OpenGL_GLFW_RAPI::initAPI(const Config& config) {
     return true;
 }
 
-void OpenGL_GLFW_RAPI::closeAPI() {
+void OpenGL_GLFW_Service::close() {
     if (!m_pimpl) // this API object is not initialized
         return;
 
@@ -450,12 +451,15 @@ void OpenGL_GLFW_RAPI::closeAPI() {
         glfwTerminate();
     }
 }
-
-void OpenGL_GLFW_RAPI::preViewRender() {
+	
+void OpenGL_GLFW_Service::updateResources() {
     if (m_glfwWindowPtr == nullptr) return;
+
+	this->clearResources();
 
     // poll events for all GLFW windows shared by this context. this also issues the callbacks.
     // note at this point there is no GL context active.
+	// event struct get filled via GLFW callbacks when new input events come in during glfwPollEvents()
     if (m_data.sharedDataPtr == nullptr) // nobody shared context with us, so we must be primary context provider
 		::glfwPollEvents(); // may only be called from main thread
     // from GLFW Docs:
@@ -463,9 +467,17 @@ void OpenGL_GLFW_RAPI::preViewRender() {
     // While it is necessary to process events in the event queue,
     // some window systems will send some events directly to the application,
     // which in turn causes callbacks to be called outside of regular event processing.
+}
+
+void OpenGL_GLFW_Service::digestChangedResources() {
+    if (m_glfwWindowPtr == nullptr) return;
 
     if (this->m_windowEvents.should_close_events.size() && this->m_windowEvents.should_close_events.back())
         this->setShutdown(true); // cleanup of this RAPI and dependent GL stuff is triggered via this shutdown hint
+}
+
+void OpenGL_GLFW_Service::preGraphRender() {
+    if (m_glfwWindowPtr == nullptr) return;
 
     // start frame timer
 
@@ -474,7 +486,7 @@ void OpenGL_GLFW_RAPI::preViewRender() {
     // which leads to view.Render()
 }
 
-void OpenGL_GLFW_RAPI::postViewRender() {
+void OpenGL_GLFW_Service::postGraphRender() {
     if (m_glfwWindowPtr == nullptr) return;
 
     // end frame timer
@@ -485,35 +497,24 @@ void OpenGL_GLFW_RAPI::postViewRender() {
 
     ::glfwSwapBuffers(m_glfwWindowPtr);
     ::glfwMakeContextCurrent(nullptr);
-
-	this->clearResources();
 }
 
-void OpenGL_GLFW_RAPI::clearResources() {
+void OpenGL_GLFW_Service::clearResources() {
 	m_keyboardEvents.clear();
 	m_mouseEvents.clear();
 	m_windowEvents.clear();
 	m_framebufferEvents.clear();
 }
 
-const std::vector<RenderResource>& OpenGL_GLFW_RAPI::getRenderResources() const {
+const std::vector<ModuleResource>& OpenGL_GLFW_Service::getModuleResources() const {
 	return m_renderResourceReferences;
 }
 
-const void* OpenGL_GLFW_RAPI::getAPISharedDataPtr() const { return &m_sharedData; }
+const void* OpenGL_GLFW_Service::getSharedDataPtr() const { return &m_sharedData; }
 
-void OpenGL_GLFW_RAPI::updateWindowTitle() {}
+void OpenGL_GLFW_Service::updateWindowTitle() {}
 
-// void OpenGL_GLFW_RAPI::AddUILayer(std::shared_ptr<AbstractUILayer> uiLayer) { m_data.uiLayers.AddUILayer(uiLayer); }
-// 
-// void OpenGL_GLFW_RAPI::RemoveUILayer(std::shared_ptr<AbstractUILayer> uiLayer) {
-//     m_data.uiLayers.RemoveUILayer(uiLayer);
-// }
-// 
-// OpenGL_GLFW_RAPI::UIEvents& OpenGL_GLFW_RAPI::getUIEvents() { return this->ui_events; }
-
-void OpenGL_GLFW_RAPI::glfw_onKey_func(const int key, const int scancode, const int action, const int mods) {
-    //::glfwMakeContextCurrent(m_glfwWindowPtr);
+void OpenGL_GLFW_Service::glfw_onKey_func(const int key, const int scancode, const int action, const int mods) {
 
     input_events::Key key_ = static_cast<input_events::Key>(key);
     input_events::KeyAction action_(input_events::KeyAction::RELEASE);
@@ -539,14 +540,14 @@ void OpenGL_GLFW_RAPI::glfw_onKey_func(const int key, const int scancode, const 
     //this->ui_events.onKey_list.emplace_back(std::make_tuple(key_, action_, mods_));
 }
 
-void OpenGL_GLFW_RAPI::glfw_onChar_func(const unsigned int codepoint) {
+void OpenGL_GLFW_Service::glfw_onChar_func(const unsigned int codepoint) {
     //::glfwMakeContextCurrent(m_glfwWindowPtr);
     // m_data.uiLayers.OnChar(charcode);
     //this->ui_events.onChar_list.emplace_back(charcode);
     this->m_keyboardEvents.codepoint_events.emplace_back(codepoint);
 }
 
-void OpenGL_GLFW_RAPI::glfw_onMouseCursorPosition_func(const double xpos, const double ypos) {
+void OpenGL_GLFW_Service::glfw_onMouseCursorPosition_func(const double xpos, const double ypos) {
 
     this->m_mouseEvents.position_events.emplace_back(std::make_tuple(xpos, ypos));
     //::glfwMakeContextCurrent(m_glfwWindowPtr);
@@ -558,7 +559,7 @@ void OpenGL_GLFW_RAPI::glfw_onMouseCursorPosition_func(const double xpos, const 
     //this->ui_events.onMouseMove_list.emplace_back(std::make_tuple(xpos, ypos));
 }
 
-void OpenGL_GLFW_RAPI::glfw_onMouseButton_func(const int button, const int action, const int mods) {
+void OpenGL_GLFW_Service::glfw_onMouseButton_func(const int button, const int action, const int mods) {
     input_events::MouseButton btn = static_cast<input_events::MouseButton>(button);
     input_events::MouseButtonAction btnaction =
         (action == GLFW_PRESS) ? input_events::MouseButtonAction::PRESS : input_events::MouseButtonAction::RELEASE;
@@ -576,7 +577,7 @@ void OpenGL_GLFW_RAPI::glfw_onMouseButton_func(const int button, const int actio
     //    m_data.mouseCapture->OnMouseButton(btn, action, mods);
     //} else {
     //    if (m_data.uiLayers.OnMouseButton(btn, action, mods))
-    //        if (action == render_api::MouseButtonAction::PRESS)
+    //        if (action == frontend::MouseButtonAction::PRESS)
     //            m_data.mouseCapture = m_data.uiLayers.lastEventCaptureUILayer();
     //}
 
@@ -597,7 +598,7 @@ void OpenGL_GLFW_RAPI::glfw_onMouseButton_func(const int button, const int actio
     //}
 }
 
-void OpenGL_GLFW_RAPI::glfw_onMouseScroll_func(const double xoffset, const double yoffset) {
+void OpenGL_GLFW_Service::glfw_onMouseScroll_func(const double xoffset, const double yoffset) {
 
 	this->m_mouseEvents.scroll_events.emplace_back(std::make_tuple(xoffset, yoffset));
 
@@ -609,35 +610,35 @@ void OpenGL_GLFW_RAPI::glfw_onMouseScroll_func(const double xoffset, const doubl
     //}
 }
 
-void OpenGL_GLFW_RAPI::glfw_onMouseCursorEnter_func(const bool entered) {
+void OpenGL_GLFW_Service::glfw_onMouseCursorEnter_func(const bool entered) {
 	this->m_mouseEvents.enter_events.emplace_back(entered);
 }
 
-void OpenGL_GLFW_RAPI::glfw_onFramebufferSize_func(const int widthpx, const int heightpx) {
+void OpenGL_GLFW_Service::glfw_onFramebufferSize_func(const int widthpx, const int heightpx) {
     this->m_framebufferEvents.size_events.emplace_back(input_events::FramebufferState{widthpx, heightpx});
 }
 
-void OpenGL_GLFW_RAPI::glfw_onWindowSize_func(const int width, const int height) { // in screen coordinates, of the window
+void OpenGL_GLFW_Service::glfw_onWindowSize_func(const int width, const int height) { // in screen coordinates, of the window
     this->m_windowEvents.size_events.emplace_back(std::tuple(width, height));
 }
 
-void OpenGL_GLFW_RAPI::glfw_onWindowFocus_func(const bool focused) {
+void OpenGL_GLFW_Service::glfw_onWindowFocus_func(const bool focused) {
 	this->m_windowEvents.is_focused_events.emplace_back(focused);
 }
 
-void OpenGL_GLFW_RAPI::glfw_onWindowShouldClose_func(const bool shouldclose) {
+void OpenGL_GLFW_Service::glfw_onWindowShouldClose_func(const bool shouldclose) {
     this->m_windowEvents.should_close_events.emplace_back(shouldclose);
 }
 
-void OpenGL_GLFW_RAPI::glfw_onWindowIconified_func(const bool iconified) {
+void OpenGL_GLFW_Service::glfw_onWindowIconified_func(const bool iconified) {
     this->m_windowEvents.is_iconified_events.emplace_back(iconified);
 }
 
-void OpenGL_GLFW_RAPI::glfw_onWindowContentScale_func(const float xscale, const float yscale) {
+void OpenGL_GLFW_Service::glfw_onWindowContentScale_func(const float xscale, const float yscale) {
     this->m_windowEvents.content_scale_events.emplace_back(std::tuple(xscale, yscale));
 }
 
-void OpenGL_GLFW_RAPI::glfw_onPathDrop_func(const int path_count, const char* paths[]) {
+void OpenGL_GLFW_Service::glfw_onPathDrop_func(const int path_count, const char* paths[]) {
     std::vector<std::string> paths_;
     paths_.reserve(path_count);
 
@@ -647,5 +648,5 @@ void OpenGL_GLFW_RAPI::glfw_onPathDrop_func(const int path_count, const char* pa
     this->m_windowEvents.dropped_path_events.push_back(paths_);
 }
 
-} // namespace render_api
+} // namespace frontend
 } // namespace megamol

@@ -1,5 +1,5 @@
 /*
- * OpenGL_GLFW_RAPI.hpp
+ * OpenGL_GLFW_Service.hpp
  *
  * Copyright (C) 2019 by MegaMol Team
  * Alle Rechte vorbehalten.
@@ -19,7 +19,7 @@
 #include <memory>
 
 namespace megamol {
-namespace render_api {
+namespace frontend {
 
 struct WindowPlacement {
     int x = 100, y = 100, w = 800, h = 600, mon = 0;
@@ -30,20 +30,14 @@ struct WindowPlacement {
     bool topMost = false;
 };
 
-class OpenGL_GLFW_RAPI final : public AbstractRenderAPI {
+class OpenGL_GLFW_Service final : public AbstractFrontendService {
     using KeyboardEvents = megamol::input_events::KeyboardEvents;
     using MouseEvents = megamol::input_events::MouseEvents;
     using WindowEvents = megamol::input_events::WindowEvents;
     using FramebufferEvents = megamol::input_events::FramebufferEvents;
 
 public:
-    // make capabilities of OpenGL/GLFW RAPI statically query-able (we would like to force this from the abstract
-    // class, but this is not possible?)
-    std::string getAPIName() const override { return std::string{"OpenGL GLFW"}; };
-    RenderAPIVersion getAPIVersion() const override { return RenderAPIVersion{0, 0}; };
 
-    // TODO: how to force RAPI subclasses to implement a Config struct which should be passed to constructor??
-    // set sane defaults for all options here, so usage is as simple as possible
     struct Config {
         int versionMajor = 4;
         int versionMinor = 6;
@@ -56,24 +50,27 @@ public:
                                            // TODO: request OpenGL context version, extensions?
     };
 
-    OpenGL_GLFW_RAPI() = default;
-    ~OpenGL_GLFW_RAPI() override;
+    OpenGL_GLFW_Service() = default;
+    ~OpenGL_GLFW_Service() override;
     // TODO: delete copy/move/assign?
 
     // init API, e.g. init GLFW with OpenGL and open window with certain decorations/hints
-    bool initAPI(const Config& config);
-    bool initAPI(void* configPtr) override;
-    void closeAPI() override;
+    bool init(const Config& config);
+    bool init(void* configPtr) override;
+    void close() override;
+	
+    void updateResources() override;
+    void digestChangedResources() override;
 
-    void preViewRender() override;  // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
-    void postViewRender() override; // clean up after rendering, e.g. stop and show frame-timers in GLFW window
+    void preGraphRender() override;  // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
+    void postGraphRender() override; // clean up after rendering, e.g. stop and show frame-timers in GLFW window
 
     // expose the resources and input events this RAPI provides: Keyboard inputs, Mouse inputs, GLFW Window events, Framebuffer resize events
-    const std::vector<RenderResource>& getRenderResources() const override;
+    const std::vector<ModuleResource>& getModuleResources() const override;
 
-    const void* getAPISharedDataPtr() const override; // ptr non-owning, share data should be only borrowed
+    const void* getSharedDataPtr() const override; // ptr non-owning, share data should be only borrowed
 
-    // from AbstractRenderAPI:
+    // from AbstractFrontendService:
     // int setPriority(const int p) // priority initially 0
     // int getPriority() const;
     // bool shouldShutdown() const; // shutdown initially false
@@ -127,11 +124,11 @@ public:
 private:
 
     // this holds references to the event structs we fill. the events are passed to the renderers/views using
-    // const std::vector<RenderResource>& getRenderResources() override
-    std::vector<RenderResource> m_renderResourceReferences;
+    // const std::vector<ModuleResource>& getModuleResources() override
+    std::vector<ModuleResource> m_renderResourceReferences;
 };
 
-} // namespace render_api
+} // namespace frontend
 } // namespace megamol
 
 #endif MEGAMOL_OPENGL_GLFW_RAPI_HPP_INCLUDED

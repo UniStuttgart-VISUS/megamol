@@ -17,13 +17,16 @@ int main(int argc, char* argv[]) {
     const megamol::core::factories::ModuleDescriptionManager& moduleProvider = core.GetModuleDescriptionManager();
     const megamol::core::factories::CallDescriptionManager& callProvider = core.GetCallDescriptionManager();
 
-    megamol::render_api::OpenGL_GLFW_RAPI gl_service;
+    megamol::frontend::OpenGL_GLFW_Service gl_service;
 
-    megamol::render_api::OpenGL_GLFW_RAPI::Config openglConfig;
+    megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
     openglConfig.windowTitlePrefix = openglConfig.windowTitlePrefix + " ~ Main3000";
     openglConfig.versionMajor = 4;
     openglConfig.versionMinor = 6;
-    gl_service.initAPI(&openglConfig);
+    gl_service.init(&openglConfig);
+
+    auto services;
+    services.add(gl_service);
 
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
@@ -50,26 +53,32 @@ int main(int argc, char* argv[]) {
     }
 
 #else
+	// for_all services: register render resources
+	// graph.addResources(all_resources)
 
-    graph.AddModuleDependencies(gl_service.getRenderResources());
+	// lua_service.set_zmq( central_resources.request(zmq_instance) )
 
+    graph.AddModuleDependencies(gl_service.getModuleResources());
+
+    graph.CreateModule("GUIView", "::guiview");
     graph.CreateModule("View3D_2", "::view");
     graph.CreateModule("SphereRenderer", "::spheres");
     graph.CreateModule("TestSpheresDataSource", "::datasource");
     graph.CreateCall("CallRender3D_2", "::view::rendering", "::spheres::rendering");
     graph.CreateCall("MultiParticleDataCall", "::spheres::getdata", "::datasource::getData");
+    graph.CreateCall("CallRenderView", "::guiview::renderview", "::view::render");
 
-    std::vector<std::string> view_dependency_requests = {
-        "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context"};
+    std::vector<std::string> view_resource_requests = {
+        "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context" };
 
 	// callback executed by the graph for each frame
 	// knows how to make a view module process input events and start the rendering
     auto view_rendering_execution = [&](megamol::core::Module::ptr_type module_ptr,
-                                        std::vector<megamol::render_api::RenderResource> dependencies) {
+                                        std::vector<megamol::frontend::ModuleResource> resources) {
         megamol::core::view::AbstractView* view_ptr =
             dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
 
-        assert(view_dependency_requests.size() == dependencies.size());
+        assert(view_resource_requests.size() == resources.size());
 
         if (!view_ptr) {
             std::cout << "error. module is not a view module. could not set as graph rendering entry point."
@@ -79,28 +88,35 @@ int main(int argc, char* argv[]) {
 
         megamol::core::view::AbstractView& view = *view_ptr;
 
-        for (auto& dep : dependencies) {
-            auto& depId = dep.getIdentifier();
+		int i = 0;
+		// resources are in order of initial requests
+        megamol::core::view::view_consume_keyboard_events(view, resources[i++]);
+        megamol::core::view::view_consume_mouse_events(view, resources[i++]);
+        megamol::core::view::view_consume_window_events(view, resources[i++]);
+        megamol::core::view::view_consume_framebuffer_events(view, resources[i++]);
+        megamol::core::view::view_poke_rendering(view, resources[i++]);
+        //for (auto& dep : resources) {
+        //    auto& depId = dep.getIdentifier();
 
-            if (depId == "KeyboardEvents") {
-                megamol::core::view::view_consume_keyboard_events(view, dep);
-            }
-            if (depId == "MouseEvents") {
-                megamol::core::view::view_consume_mouse_events(view, dep);
-            }
-            if (depId == "WindowEvents") {
-                megamol::core::view::view_consume_window_events(view, dep);
-            }
-            if (depId == "FramebufferEvents") {
-                megamol::core::view::view_consume_framebuffer_events(view, dep);
-            }
-            if (depId == "IOpenGL_Context") {
-                megamol::core::view::view_poke_rendering(view, dep);
-            }
-        }
+        //    if (depId == "KeyboardEvents") {
+        //        megamol::core::view::view_consume_keyboard_events(view, dep);
+        //    }
+        //    if (depId == "MouseEvents") {
+        //        megamol::core::view::view_consume_mouse_events(view, dep);
+        //    }
+        //    if (depId == "WindowEvents") {
+        //        megamol::core::view::view_consume_window_events(view, dep);
+        //    }
+        //    if (depId == "FramebufferEvents") {
+        //        megamol::core::view::view_consume_framebuffer_events(view, dep);
+        //    }
+        //    if (depId == "IOpenGL_Context") {
+        //        megamol::core::view::view_poke_rendering(view, dep);
+        //    }
+        //}
     };
 
-    graph.SetGraphEntryPoint("::view", view_dependency_requests, view_rendering_execution);
+    graph.SetGraphEntryPoint("::guiview", view_resource_requests, view_rendering_execution);
 
     std::string parameter_name("::datasource::numSpheres");
     auto parameterPtr = graph.FindParameter(parameter_name);
@@ -111,19 +127,31 @@ int main(int argc, char* argv[]) {
     }
 #endif
 
-    while (!gl_service.shouldShutdown()) {
-        gl_service.preViewRender(); // glfw poll input events
-		// the graph holds references to the input events structs filled by glfw
-		// we should probably make this more explicit, i.e.: new_events = [gl_]service.preViewRender(); graph.UpdateEvents(new_events); graph.Render();
+    while (true) {
+		// services: receive inputs (GLFW poll events [keyboard, mouse, window], network, lua) 
+		services.updateResources();
 
-        graph.RenderNextFrame();
+		// services: digest new inputs via ModuleResources (GUI digest user inputs, lua digest inputs, network ?)
+		// e.g. graph updates via lua and GUI happen here
+		services.digestChangedResources();
 
-        gl_service.postViewRender(); // swap buffers, clear input events
+		// services tell us wheter we should shut down megamol
+		if (services.shouldShutdown())
+			break;
+
+		{ // put this in render function so LUA can call it
+			services.preGraphRender(); // glfw poll input events
+			// the graph holds references to the input events structs filled by glfw
+			// we should probably make this more explicit, i.e.: new_events = [gl_]service.preGraphRender(); graph.UpdateEvents(new_events); graph.Render();
+
+			graph.RenderNextFrame();
+			services.postGraphRender(); // swap buffers, clear input events
+		}
     }
 
     // clean up modules, calls, graph
 
-    gl_service.closeAPI();
+    services.close();
 
     // TODO: implement graph destructor
 

@@ -28,7 +28,7 @@
 #include "mmcore/RootModuleNamespace.h"
 
 #include "mmcore/view/AbstractView.h"
-#include "RenderResource.h"
+#include "ModuleResource.h"
 
 namespace megamol {
 namespace core {
@@ -70,8 +70,8 @@ public:
         Module::ptr_type modulePtr = nullptr;
         ModuleInstantiationRequest request;
         bool isGraphEntryPoint = false;
-        std::vector<std::string> lifetime_dependencies_requests;
-        std::vector<megamol::render_api::RenderResource> lifetime_dependencies;
+        std::vector<std::string> lifetime_resource_requests;
+        std::vector<megamol::frontend::ModuleResource> lifetime_resources;
 	};
 
     using ModuleList_t = std::list<ModuleInstance_t>;
@@ -178,15 +178,15 @@ public:
     std::vector<megamol::core::param::ParamSlot*> ListParameterSlots() const;
 
 	using EntryPointExecutionCallback =
-        std::function<void(Module::ptr_type, std::vector<megamol::render_api::RenderResource>)>;
+        std::function<void(Module::ptr_type, std::vector<megamol::frontend::ModuleResource>)>;
 
-	bool SetGraphEntryPoint(std::string moduleName, std::vector<std::string> execution_dependencies, EntryPointExecutionCallback callback);
+	bool SetGraphEntryPoint(std::string moduleName, std::vector<std::string> execution_resources, EntryPointExecutionCallback callback);
 
 	bool RemoveGraphEntryPoint(std::string moduleName);
 
     void RenderNextFrame();
 
-	void AddModuleDependencies(std::vector<megamol::render_api::RenderResource> const& dependencies);
+	void AddModuleDependencies(std::vector<megamol::frontend::ModuleResource> const& resources);
 
 	// Create View ?
 
@@ -212,7 +212,7 @@ private:
 
     bool delete_call(CallDeletionRequest_t const& request);
 
-    std::vector<megamol::render_api::RenderResource> get_requested_dependencies(std::vector<std::string> dependency_requests);
+    std::vector<megamol::frontend::ModuleResource> get_requested_resources(std::vector<std::string> resource_requests);
 
 
     /** List of modules that this graph owns */
@@ -225,16 +225,16 @@ private:
     /** List of call that this graph owns */
     CallList_t call_list_;
 
-	std::vector<megamol::render_api::RenderResource> provided_dependencies;
+	std::vector<megamol::frontend::ModuleResource> provided_resources;
 
 	// for each View in the MegaMol graph we create a GraphEntryPoint with corresponding callback for resource/input consumption
-	// the graph makes sure that the (lifetime and rendering) dependencies requested by the module are satisfied,
+	// the graph makes sure that the (lifetime and rendering) resources/dependencies requested by the module are satisfied,
 	// which means that the execute() callback for the entry point is provided the requested dependencies/resources for rendering
 	// and the Create() and Release() mehods of all modules receive the dependencies/resources they request for their lifetime
 	struct GraphEntryPoint {
         std::string moduleName;
         Module::ptr_type modulePtr = nullptr;
-        std::vector<megamol::render_api::RenderResource> entry_point_dependencies;
+        std::vector<megamol::frontend::ModuleResource> entry_point_resources;
 		
 		EntryPointExecutionCallback execute;
 	};

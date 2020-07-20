@@ -51,14 +51,14 @@ Module::~Module(void) {
 /*
  * Module::Create
  */
-bool Module::Create(std::vector<megamol::render_api::RenderResource> dependencies) {
+bool Module::Create(std::vector<megamol::frontend::ModuleResource> resources) {
 
 	const megamol::input_events::IOpenGL_Context* opengl_context = nullptr;
-    auto opengl_context_it = std::find_if(dependencies.begin(), dependencies.end(),
-        [&](megamol::render_api::RenderResource& dep) { return dep.getIdentifier() == "IOpenGL_Context"; });
+    auto opengl_context_it = std::find_if(resources.begin(), resources.end(),
+        [&](megamol::frontend::ModuleResource& dep) { return dep.getIdentifier() == "IOpenGL_Context"; });
 
-    if (opengl_context_it != dependencies.end() &&  opengl_context_it->getResource<megamol::input_events::IOpenGL_Context>().has_value()) {
-        opengl_context = &opengl_context_it->getResource<megamol::input_events::IOpenGL_Context>().value().get();
+    if (opengl_context_it != resources.end()) {
+        opengl_context = &opengl_context_it->getResource<megamol::input_events::IOpenGL_Context>();
     }
 
 	if (opengl_context)
@@ -129,15 +129,15 @@ vislib::StringA Module::GetDemiRootName() const {
 /*
  * Module::Release
  */
-void Module::Release(std::vector<megamol::render_api::RenderResource> dependencies) {
+void Module::Release(std::vector<megamol::frontend::ModuleResource> resources) {
 
-    auto opengl_context_it = std::find_if(dependencies.begin(), dependencies.end(),
-        [&](megamol::render_api::RenderResource& dep) { return dep.getIdentifier() == "IOpenGL_Context"; });
+    auto opengl_context_it = std::find_if(resources.begin(), resources.end(),
+        [&](megamol::frontend::ModuleResource& dep) { return dep.getIdentifier() == "IOpenGL_Context"; });
 
 	const megamol::input_events::IOpenGL_Context* opengl_context = nullptr;
 
-    if (opengl_context_it != dependencies.end() &&  opengl_context_it->getResource<megamol::input_events::IOpenGL_Context>().has_value()) {
-        opengl_context = &opengl_context_it->getResource<megamol::input_events::IOpenGL_Context>().value().get();
+    if (opengl_context_it != resources.end()) {
+        opengl_context = &opengl_context_it->getResource<megamol::input_events::IOpenGL_Context>();
     }
 
 	if (opengl_context)

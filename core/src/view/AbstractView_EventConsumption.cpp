@@ -16,27 +16,18 @@ namespace megamol {
 namespace core {
 namespace view {
 
-
 using namespace megamol::input_events;
 
-// shorthand notation to unpack a RenderResource to some type. 
+// shorthand notation to unpack a ModuleResource to some type. 
 // if the type is present in the resource is made available as an 'events' variable in the if statemtnt.
 // note that when using this macro there is no visible opening bracket { for the if statements because it is hidden inside the macro
-#define IF(TYPENAME) \
-    auto optional_resource = resource.getResource<TYPENAME>();    \
-    if (optional_resource.has_value()) {                          \
-		TYPENAME const& events = optional_resource.value().get();
+#define GET_RESOURCE(TYPENAME) \
+    { \
+		TYPENAME const& events = resource.getResource<TYPENAME>();
 
 
-void view_consume_keyboard_events(AbstractView& view, megamol::render_api::RenderResource const& resource) {
-//    auto optional_resource = resource.getResource<KeyboardEvents>();
-//    if (optional_resource.has_value()) {
-//		const KeyboardEvents& events = optional_resource.value().get();
-//
-//		for (auto& e : events.key_events)
-//			view.OnKey(std::get<0>(e), std::get<1>(e), std::get<2>(e));
-//    }
-    IF(KeyboardEvents)//{
+void view_consume_keyboard_events(AbstractView& view, megamol::render_api::ModuleResource const& resource) {
+    GET_RESOURCE(KeyboardEvents)//{
 		for (auto& e : events.key_events)
 			view.OnKey(std::get<0>(e), std::get<1>(e), std::get<2>(e));
 
@@ -45,8 +36,8 @@ void view_consume_keyboard_events(AbstractView& view, megamol::render_api::Rende
 	}
 }
 
-void view_consume_mouse_events(AbstractView& view, megamol::render_api::RenderResource const& resource) {
-    IF(MouseEvents)//{
+void view_consume_mouse_events(AbstractView& view, megamol::render_api::ModuleResource const& resource) {
+    GET_RESOURCE(MouseEvents)//{
 		for (auto& e : events.buttons_events) 
 			view.OnMouseButton(std::get<0>(e), std::get<1>(e), std::get<2>(e));
 
@@ -60,34 +51,36 @@ void view_consume_mouse_events(AbstractView& view, megamol::render_api::RenderRe
 	}
 }
 
-void view_consume_window_events(AbstractView& view, megamol::render_api::RenderResource const& resource) {
-    IF(WindowEvents)//{
+void view_consume_window_events(AbstractView& view, megamol::render_api::ModuleResource const& resource) {
+    GET_RESOURCE(WindowEvents)//{
 		events.is_focused_events;
 	}
 }
 
-void view_consume_framebuffer_events(AbstractView& view, megamol::render_api::RenderResource const& resource) {
-    IF(FramebufferEvents)//{
+void view_consume_framebuffer_events(AbstractView& view, megamol::render_api::ModuleResource const& resource) {
+    GET_RESOURCE(FramebufferEvents)//{
 		for (auto& e: events.size_events)
 			view.Resize(static_cast<unsigned int>(e.width), static_cast<unsigned int>(e.height));
     }
 }
 
-void view_poke_rendering(AbstractView& view, megamol::render_api::RenderResource const& resource) {
-    auto optional_resource = resource.getResource<megamol::input_events::IOpenGL_Context>();
+void view_poke_rendering(AbstractView& view, megamol::render_api::ModuleResource const& resource) {
+    megamol::input_events::IOpenGL_Context const * maybe_opengl = nullptr;
+
+    if (resource.getIdentifier() == "IOpenGL_Context")
+		maybe_opengl = &resource.getResource<megamol::input_events::IOpenGL_Context>();
 
 	const auto render = [&]() {
 		_mmcRenderViewContext dummyRenderViewContext; // doesn't do anything, really
 		view.Render(dummyRenderViewContext);
 	};
 
-    if (optional_resource.has_value()) {
-		megamol::input_events::IOpenGL_Context const& gl_context = optional_resource.value().get();
-		gl_context.activate(); // makes GL context current
+    if (maybe_opengl) {
+		maybe_opengl->activate(); // makes GL context current
 
 		render();
 
-		gl_context.close();
+		maybe_opengl->close();
 	} else {
 		render();
 	}

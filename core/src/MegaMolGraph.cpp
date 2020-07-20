@@ -157,23 +157,23 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         return false;
     }
 
-	auto module_lifetime_dependencies_request = module_ptr->requested_lifetime_dependencies();
+	auto module_lifetime_resource_request = module_ptr->requested_lifetime_resources();
 
-	auto module_lifetime_dependencies = get_requested_dependencies(module_lifetime_dependencies_request);
+	auto module_lifetime_dependencies = get_requested_resources(module_lifetime_resource_request);
 
-	if (module_lifetime_dependencies.size() != module_lifetime_dependencies_request.size()) {
+	if (module_lifetime_dependencies.size() != module_lifetime_resource_request.size()) {
         std::string requested_deps = "";
         std::string found_deps = "";
-        for (auto& req : module_lifetime_dependencies_request) requested_deps += " " + req;
+        for (auto& req : module_lifetime_resource_request) requested_deps += " " + req;
         for (auto& dep : module_lifetime_dependencies) found_deps += " " + dep.getIdentifier();
-        log("error. could not create module, not all requested dependencies available: ");
+        log("error. could not create module, not all requested resources available: ");
         log("requested: " + requested_deps);
         log("found: " + found_deps);
 
 		return false;
     }
 
-    this->module_list_.push_front({module_ptr, request, false, module_lifetime_dependencies_request, module_lifetime_dependencies});
+    this->module_list_.push_front({module_ptr, request, false, module_lifetime_resource_request, module_lifetime_dependencies});
 
     module_ptr->setParent(this->dummy_namespace);
 
@@ -189,7 +189,7 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         return init_ok;
     };
 
-	bool isCreateOk = create_module(this->module_list_.front().lifetime_dependencies);
+	bool isCreateOk = create_module(this->module_list_.front().lifetime_resources);
 
 	if (!isCreateOk) {
         this->module_list_.pop_front();
@@ -337,7 +337,7 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
         // thus the module gets deleted after execution and deletion of this command callback
     };
 
-    release_module(module_it->lifetime_dependencies);
+    release_module(module_it->lifetime_resources);
 
     this->module_list_.erase(module_it);
 
@@ -376,7 +376,7 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
 
 void megamol::core::MegaMolGraph::RenderNextFrame() {
 	for (auto& entry : graph_entry_points) {
-        entry.execute(entry.modulePtr, entry.entry_point_dependencies);
+        entry.execute(entry.modulePtr, entry.entry_point_resources);
     }
 }
 
@@ -510,7 +510,7 @@ std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::L
     return parameters;
 }
 
-bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName, std::vector<std::string> execution_dependencies, EntryPointExecutionCallback callback) {
+bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName, std::vector<std::string> execution_resource_requests, EntryPointExecutionCallback callback) {
     auto module_it = find_module(moduleName);
 
     if (module_it == module_list_.end()) {
@@ -520,9 +520,9 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName, std
 
     auto module_ptr = module_it->modulePtr;
 
-	auto dependencies = get_requested_dependencies(execution_dependencies);
+	auto resources = get_requested_resources(execution_resource_requests);
 
-	this->graph_entry_points.push_back({moduleName, module_ptr, dependencies, callback});
+	this->graph_entry_points.push_back({moduleName, module_ptr, resources, callback});
 
     return true;
 }
@@ -550,20 +550,20 @@ bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string moduleName) 
     return true;
 }
 
-void megamol::core::MegaMolGraph::AddModuleDependencies(std::vector<megamol::render_api::RenderResource> const& dependencies) {
-    this->provided_dependencies.insert(provided_dependencies.end(), dependencies.begin(), dependencies.end());
+void megamol::core::MegaMolGraph::AddModuleDependencies(std::vector<megamol::frontend::ModuleResource> const& resources) {
+    this->provided_resources.insert(provided_resources.end(), resources.begin(), resources.end());
 }
 
-std::vector<megamol::render_api::RenderResource> megamol::core::MegaMolGraph::get_requested_dependencies(std::vector<std::string> dependency_requests) {
-    std::vector<megamol::render_api::RenderResource> result;
-    result.reserve(dependency_requests.size());
+std::vector<megamol::frontend::ModuleResource> megamol::core::MegaMolGraph::get_requested_resources(std::vector<std::string> resource_requests) {
+    std::vector<megamol::frontend::ModuleResource> result;
+    result.reserve(resource_requests.size());
 
-    for (auto& request : dependency_requests) {
-        auto dependency_it = std::find_if(this->provided_dependencies.begin(), this->provided_dependencies.end(), [&](megamol::render_api::RenderResource& dependency){
+    for (auto& request : resource_requests) {
+        auto dependency_it = std::find_if(this->provided_resources.begin(), this->provided_resources.end(), [&](megamol::frontend::ModuleResource& dependency){
 			return request == dependency.getIdentifier();
 		});
 
-		if (dependency_it != provided_dependencies.end())
+		if (dependency_it != provided_resources.end())
 			result.push_back(*dependency_it);
     }
 

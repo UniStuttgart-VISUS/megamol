@@ -1,5 +1,5 @@
 /*
- * RenderResource.h
+ * ModuleResource.h
  *
  * Copyright (C) 2020 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
@@ -16,19 +16,18 @@ namespace megamol {
 namespace render_api {
 
 
-class RenderResource {
-template <typename T> using OptionalConstReference = std::optional<std::reference_wrapper<const T>>;
+class ModuleResource {
 public:
-    RenderResource()
+    ModuleResource()
 		: identifier{""}
 		, resource{}
 	{}
 
     template <typename T>
-    RenderResource(const char* identifier, const T& resource) : RenderResource(std::string{identifier}, resource) {}
+    ModuleResource(const char* identifier, const T& resource) : ModuleResource(std::string{identifier}, resource) {}
 
     template <typename T>
-    RenderResource(const std::string& identifier, const T& resource)
+    ModuleResource(const std::string& identifier, const T& resource)
         : identifier{identifier}, resource{std::reference_wrapper<const T>(resource)} {}
 
     const std::string& getIdentifier() const { return identifier; }
@@ -37,12 +36,12 @@ public:
         this->resource = std::reference_wrapper<const T>(resource);
     }
 
-    template <typename T> OptionalConstReference<T> getResource() const {
-        try {
-            return std::make_optional( std::any_cast<std::reference_wrapper<const T>>(resource) );
-        } catch (const std::bad_any_cast& e) {
-            return std::nullopt;
-        }
+    template <typename T> T const& getResource() const {
+        //try {
+            return std::any_cast<std::reference_wrapper<const T>>(resource).get();
+        //} catch (const std::bad_any_cast& e) {
+        //    return std::nullopt;
+        //}
     }
 
 private:
