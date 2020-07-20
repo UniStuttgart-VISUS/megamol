@@ -488,7 +488,7 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
     if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         vislib::sys::SystemMessage err(::GetLastError());
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "Unable to open VTF-File \"%s\": %s", vislib::StringA(
             this->filename.Param<param::FilePathParam>()->Value()).PeekBuffer(),
             static_cast<const char*>(err));
@@ -501,7 +501,7 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
     }
 
     if (!this->parseHeaderAndFrameIndices(this->filename.Param<param::FilePathParam>()->Value())) {
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "Unable to read VTF-Header from file \"%s\". Wrong format?", vislib::StringA(
             this->filename.Param<param::FilePathParam>()->Value()).PeekBuffer());
 
@@ -531,12 +531,12 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n",
             CACHE_SIZE_MIN, cacheSize);
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_WARN, msg);
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_INFO, msg);
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, msg);
     }
 
     this->initFrameCache(cacheSize);
@@ -648,7 +648,7 @@ bool io::VTFDataSource::parseHeaderAndFrameIndices(const vislib::TString& filena
                 }
                 element = NULL;
             } catch(...) {
-                this->GetCoreInstance()->Log().WriteMsg(50, "Error parsing type line.");
+                vislib::sys::Log::DefaultLog.WriteMsg(50, "Error parsing type line.");
             }
             SAFE_DELETE(element);
         } else if (line[0] == '>') {

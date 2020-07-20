@@ -1258,7 +1258,7 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
     ASSERT(this->filename.Param<core::param::FilePathParam>() != NULL);
 
     if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value(), File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-        this->GetCoreInstance()->Log().WriteMsg(Log::LEVEL_ERROR, "Unable to open MMSPD-File \"%s\".", vislib::StringA(
+        vislib::sys::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMSPD-File \"%s\".", vislib::StringA(
             this->filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
 
         SAFE_DELETE(this->file);

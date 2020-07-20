@@ -295,7 +295,7 @@ bool moldyn::MMPLDDataSource::filenameChanged(param::ParamSlot& slot) {
     ASSERT(this->filename.Param<param::FilePathParam>() != NULL);
 
     if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value(), File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-        this->GetCoreInstance()->Log().WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPLD-File \"%s\".", vislib::StringA(
+        vislib::sys::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPLD-File \"%s\".", vislib::StringA(
             this->filename.Param<param::FilePathParam>()->Value()).PeekBuffer());
 
         SAFE_DELETE(this->file);
@@ -365,12 +365,12 @@ bool moldyn::MMPLDDataSource::filenameChanged(param::ParamSlot& slot) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n",
             CACHE_SIZE_MIN, cacheSize);
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_WARN, msg);
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_INFO, msg);
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, msg);
     }
 
     this->setFrameCount(frmCnt);

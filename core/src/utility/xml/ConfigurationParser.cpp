@@ -436,20 +436,20 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
             }
         }
 
-        if ((logSettings) && (this->config.instanceLog != NULL)) {
+        if (logSettings) {
             if ((!megamol::core::utility::Configuration::logEchoLevelLocked)
                     && (logSettings->echoLevelValid)) {
-                this->config.instanceLog->SetEchoLevel(
+                vislib::sys::Log::DefaultLog.SetEchoLevel(
                     logSettings->echoLevelValue);
                 //this->config.instanceLog->EchoOfflineMessages(true);
             }
             if ((!megamol::core::utility::Configuration::logLevelLocked)
                     && (logSettings->logLevelValid)) {
-                this->config.instanceLog->SetLevel(logSettings->logLevelValue);
+                vislib::sys::Log::DefaultLog.SetLevel(logSettings->logLevelValue);
             }
             if ((!megamol::core::utility::Configuration::logFilenameLocked)
                     && (logSettings->logFileNameValid)) {
-                this->config.instanceLog->SetLogFileName(
+                vislib::sys::Log::DefaultLog.SetLogFileName(
                     logSettings->logFileNameValue.c_str(), USE_LOG_SUFFIX);
             }
         }

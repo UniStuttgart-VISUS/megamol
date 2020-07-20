@@ -409,7 +409,7 @@ bool VisIttDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        this->GetCoreInstance()->Log().WriteError("Unable to open VisItt-File \"%s\".",
+        vislib::sys::Log::DefaultLog.WriteError("Unable to open VisItt-File \"%s\".",
             vislib::StringA(this->filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
 
         SAFE_DELETE(this->file);
@@ -427,7 +427,7 @@ bool VisIttDataSource::filenameChanged(core::param::ParamSlot& slot) {
     this->file->SeekToBegin();
     vislib::StringA header = vislib::sys::ReadLineFromFileA(*this->file);
     if (!this->parseHeader(header)) {
-        this->GetCoreInstance()->Log().WriteError("Unable to parse VisItt-file header line");
+        vislib::sys::Log::DefaultLog.WriteError("Unable to parse VisItt-file header line");
 
         this->file->Close();
         SAFE_DELETE(this->file);
@@ -487,12 +487,12 @@ bool VisIttDataSource::filenameChanged(core::param::ParamSlot& slot) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n",
             CACHE_SIZE_MIN, cacheSize);
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_WARN, msg);
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_INFO, msg);
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, msg);
     }
     if (this->frameTable.Count() > 0) {
         // refine bounding box using more frames

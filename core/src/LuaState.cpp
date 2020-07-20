@@ -353,9 +353,7 @@ int megamol::core::LuaState::SetLogFile(lua_State* L) {
         // TODO do we need to make an OS-dependent path here?
         auto p = luaL_checkstring(L, 1);
         if (!megamol::core::utility::Configuration::logFilenameLocked) {
-            if (this->conf->instanceLog != nullptr) {
-                this->conf->instanceLog->SetLogFileName(vislib::sys::Path::Resolve(p), USE_LOG_SUFFIX);
-            }
+            vislib::sys::Log::DefaultLog.SetLogFileName(vislib::sys::Path::Resolve(p), USE_LOG_SUFFIX);
         }
     }
     return 0;
@@ -366,9 +364,7 @@ int megamol::core::LuaState::SetLogLevel(lua_State* L) {
     if (this->checkConfiguring(MMC_LUA_MMSETLOGLEVEL)) {
         auto l = luaL_checkstring(L, 1);
         if (!megamol::core::utility::Configuration::logLevelLocked) {
-            if (this->conf->instanceLog != nullptr) {
-                this->conf->instanceLog->SetLevel(parseLevelAttribute(l));
-            }
+            vislib::sys::Log::DefaultLog.SetLevel(parseLevelAttribute(l));
         }
     }
     return 0;
@@ -379,9 +375,7 @@ int megamol::core::LuaState::SetEchoLevel(lua_State* L) {
     if (this->checkConfiguring(MMC_LUA_MMSETECHOLEVEL)) {
         auto l = luaL_checkstring(L, 1);
         if (!megamol::core::utility::Configuration::logEchoLevelLocked) {
-            if (this->conf->instanceLog != nullptr) {
-                this->conf->instanceLog->SetEchoLevel(parseLevelAttribute(l));
-            }
+            vislib::sys::Log::DefaultLog.SetEchoLevel(parseLevelAttribute(l));
         }
     }
     return 0;

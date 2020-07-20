@@ -134,7 +134,7 @@ public:
      *
      * @return The log object of the instance.
      */
-    inline vislib::sys::Log& Log(void) { return this->log; }
+    //inline vislib::sys::Log& Log(void) { return this->log; }
 
     /**
      * Answer whether this instance is initialised or not.
@@ -1187,7 +1187,7 @@ private:
     utility::ShaderSourceFactory shaderSourceFactory;
 
     /** The log object */
-    vislib::sys::Log log;
+    //vislib::sys::Log log;
 
     /** The Lua state */
     megamol::core::LuaState* lua;

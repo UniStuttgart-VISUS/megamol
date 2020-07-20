@@ -130,7 +130,6 @@ megamol::core::CoreInstance::CoreInstance(void)
     , preInit(new PreInit)
     , config()
     , shaderSourceFactory(config)
-    , log()
     , lua(nullptr)
     , builtinViewDescs()
     , projViewDescs()
@@ -152,22 +151,13 @@ megamol::core::CoreInstance::CoreInstance(void)
     , all_call_descriptions()
     , all_module_descriptions()
     , parameterHash(1) {
-    // setup log as early as possible.
-    this->log.SetLogFileName(static_cast<const char*>(NULL), false);
-    this->log.SetLevel(vislib::sys::Log::LEVEL_ALL);
-#ifdef _DEBUG
-    this->log.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-#else
-    this->log.SetEchoLevel(vislib::sys::Log::LEVEL_ERROR);
-#endif
-    this->log.SetEchoTarget(new vislib::sys::Log::StreamTarget(std::cout, vislib::sys::Log::LEVEL_ALL));
-    this->log.SetOfflineMessageBufferSize(25);
-    // redirect default log to instance log of last instance
-    //  not perfect, but better than nothing.
     vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
-    vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_NONE);
+    vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_ALL);
+#ifdef _DEBUG
     vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-    vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(&this->log));
+#else
+    vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ERROR);
+#endif
 
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
@@ -187,7 +177,6 @@ megamol::core::CoreInstance::CoreInstance(void)
 
     profiler::Manager::Instance().SetCoreInstance(this);
     this->namespaceRoot->SetCoreInstance(*this);
-    this->config.instanceLog = &this->log;
     factories::register_module_classes(this->module_descriptions);
     for (auto md : this->module_descriptions) this->all_module_descriptions.Register(md);
     factories::register_call_classes(this->call_descriptions);
@@ -209,7 +198,7 @@ megamol::core::CoreInstance::CoreInstance(void)
     this->timeOffset += 100.0 * static_cast<double>(::rand()) / static_cast<double>(RAND_MAX);
     //#endif
 
-    this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Core Instance created");
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Core Instance created");
 
     // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO+42, "GraphUpdateLock address: %x\n",
     // std::addressof(this->graphUpdateLock));
@@ -220,9 +209,8 @@ megamol::core::CoreInstance::CoreInstance(void)
  * megamol::core::CoreInstance::~CoreInstance
  */
 megamol::core::CoreInstance::~CoreInstance(void) {
-    this->config.instanceLog = NULL;
     SAFE_DELETE(this->preInit);
-    this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Core Instance destroyed");
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Core Instance destroyed");
 
     // Shutdown all views and jobs, which might still run
     {
@@ -302,24 +290,24 @@ void megamol::core::CoreInstance::Initialise(void) {
 
     // logging mechanism
     if (this->preInit->IsLogEchoLevelSet()) {
-        this->log.SetEchoLevel(this->preInit->GetLogEchoLevel());
+        vislib::sys::Log::DefaultLog.SetEchoLevel(this->preInit->GetLogEchoLevel());
         this->config.logEchoLevelLocked = true;
         if (this->preInit->GetLogEchoLevel() != 0) {
-            this->log.EchoOfflineMessages(true);
+            vislib::sys::Log::DefaultLog.EchoOfflineMessages(true);
         }
     }
     if (this->preInit->IsLogLevelSet()) {
-        this->log.SetLevel(this->preInit->GetLogLevel());
+        vislib::sys::Log::DefaultLog.SetLevel(this->preInit->GetLogLevel());
         this->config.logLevelLocked = true;
         if (this->preInit->GetLogLevel() == 0) {
-            this->log.SetLogFileName(static_cast<char*>(NULL), false);
+            vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<char*>(NULL), false);
             this->config.logFilenameLocked = true;
         } else {
             if (this->preInit->IsLogFileSet()) {
-                this->log.SetLogFileName(this->preInit->GetLogFile().c_str(), false);
+                vislib::sys::Log::DefaultLog.SetLogFileName(this->preInit->GetLogFile().c_str(), false);
                 this->config.logFilenameLocked = true;
             } else {
-                this->log.SetLogFileName(static_cast<char*>(NULL), false);
+                vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<char*>(NULL), false);
             }
         }
     }
@@ -625,7 +613,7 @@ mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key, mmcValu
             // vislib::sys::Log *log = static_cast<vislib::sys::Log*>(
             //    const_cast<void*>(value));
             // log->SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-            // log->SetEchoTarget(&this->logRedirection);
+            // log->SetEchoTarget(&vislib::sys::Log::DefaultLogRedirection);
             // log->EchoOfflineMessages(true);
             // log->SetLogFileName(static_cast<const char*>(NULL), false);
             // log->SetLevel(vislib::sys::Log::LEVEL_NONE);
@@ -636,13 +624,13 @@ mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key, mmcValu
                 return MMC_ERR_TYPE;
             }
             vislib::sys::Log** log = static_cast<vislib::sys::Log**>(const_cast<void*>(value));
-            *log = &this->log;
+            *log = &vislib::sys::Log::DefaultLog;
         } break;
         case MMC_INITVAL_LOGECHOFUNC:
             if (type != MMC_TYPE_VOIDP) {
                 return MMC_ERR_TYPE;
             }
-            this->log.SetEchoTarget(
+            vislib::sys::Log::DefaultLog.SetEchoTarget(
                 new utility::LogEchoTarget(function_cast<mmcLogEchoFunction>(const_cast<void*>(value))));
             break;
         case MMC_INITVAL_CFGOVERRIDE:
@@ -3497,7 +3485,7 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString& filename) {
             this->plugins->LoadPlugin(filename.PeekBuffer(), *this);
 
         for (auto new_plugin : new_plugins) {
-            this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                 "Plugin \"%s\" (%s) loaded: %d Modules, %d Calls registered\n", new_plugin->GetAssemblyName().c_str(),
                 vislib::StringA(filename).PeekBuffer(), new_plugin->GetModuleDescriptionManager().Count(),
                 new_plugin->GetCallDescriptionManager().Count());
@@ -3506,23 +3494,23 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString& filename) {
                 try {
                     this->all_module_descriptions.Register(md);
                 } catch (const vislib::AlreadyExistsException&) {
-                    this->log.WriteError("Failed to load module description \"%s\": Naming conflict", md->ClassName());
+                    vislib::sys::Log::DefaultLog.WriteError("Failed to load module description \"%s\": Naming conflict", md->ClassName());
                 }
             }
             for (auto cd : new_plugin->GetCallDescriptionManager()) {
                 try {
                     this->all_call_descriptions.Register(cd);
                 } catch (const vislib::AlreadyExistsException&) {
-                    this->log.WriteError("Failed to load call description \"%s\": Naming conflict", cd->ClassName());
+                    vislib::sys::Log::DefaultLog.WriteError("Failed to load call description \"%s\": Naming conflict", cd->ClassName());
                 }
             }
         }
 
     } catch (const vislib::Exception& vex) {
-        this->log.WriteMsg(loadFailedLevel, "Unable to load Plugin \"%s\": %s (%s, &d)",
+        vislib::sys::Log::DefaultLog.WriteMsg(loadFailedLevel, "Unable to load Plugin \"%s\": %s (%s, &d)",
             vislib::StringA(filename).PeekBuffer(), vex.GetMsgA(), vex.GetFile(), vex.GetLine());
     } catch (...) {
-        this->log.WriteMsg(
+        vislib::sys::Log::DefaultLog.WriteMsg(
             loadFailedLevel, "Unable to load Plugin \"%s\": unknown exception", vislib::StringA(filename).PeekBuffer());
     }
 }

@@ -358,7 +358,7 @@ void CSVDataSource::assertData(void) {
 
         // Report invalid data if present (note: do not drop data!)
         if (hasInvalids) {
-            this->GetCoreInstance()->Log().WriteWarn("CSV file contains invalid data:");
+            vislib::sys::Log::DefaultLog.WriteWarn("CSV file contains invalid data:");
             for (size_t c = 0; c < colCnt; ++c) {
                 std::stringstream ss;
                 bool invalidColumn = true;
@@ -373,9 +373,9 @@ void CSVDataSource::assertData(void) {
                 }
                 std::string lines = ss.str();
                 if (invalidColumn) {
-                    this->GetCoreInstance()->Log().WriteWarn("  lines in column %d: all", 1 + c);
+                    vislib::sys::Log::DefaultLog.WriteWarn("  lines in column %d: all", 1 + c);
                 } else if (!lines.empty()) {
-                    this->GetCoreInstance()->Log().WriteWarn("  lines in column %d: %s", 1 + c, lines.c_str());
+                    vislib::sys::Log::DefaultLog.WriteWarn("  lines in column %d: %s", 1 + c, lines.c_str());
                 }
             }
         }
@@ -423,11 +423,11 @@ void CSVDataSource::assertData(void) {
 
         // 5. All done... report summary
         //////////////////////////////////////////////////////////////////////
-        this->GetCoreInstance()->Log().WriteInfo("Tabular data loaded: %u dimensions; %u samples\n",
+        vislib::sys::Log::DefaultLog.WriteInfo("Tabular data loaded: %u dimensions; %u samples\n",
             static_cast<unsigned int>(colCnt), static_cast<unsigned int>(rowCnt));
 
     } catch (const vislib::Exception& ex) {
-        this->GetCoreInstance()->Log().WriteError("Could not load \"%s\": %s [%s, %d]", filename.PeekBuffer(), ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+        vislib::sys::Log::DefaultLog.WriteError("Could not load \"%s\": %s [%s, %d]", filename.PeekBuffer(), ex.GetMsgA(), ex.GetFile(), ex.GetLine());
         this->columns.clear();
         this->values.clear();
     } catch (...) {
