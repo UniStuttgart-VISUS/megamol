@@ -13,7 +13,7 @@
 #include <optional>
 
 namespace megamol {
-namespace render_api {
+namespace frontend {
 
 
 class ModuleResource {
@@ -50,7 +50,7 @@ private:
 };
 
 
-} /* end namespace render_api */
+} /* end namespace frontend */
 
 } /* end namespace megamol */
 
