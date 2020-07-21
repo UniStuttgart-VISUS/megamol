@@ -36,7 +36,7 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
         : glfw(), 
         hView(), hWnd(nullptr), width(-1), height(-1), renderContext(), uiLayers(), mouseCapture(),
         name(title), fpsCntr(), fps(1000.0f), fpsList(), showFpsInTitle(true), fpsSyncTime(), topMost(false),
-        fragmentQuery(0), showFragmentsInTitle(false), showPrimsInTitle(false) {
+        fragmentQuery(0), showFragmentsInTitle(false), showPrimsInTitle(false), firstUpdate(true) {
 
     if (::memcmp(name.c_str(), WindowManager::TitlePrefix, WindowManager::TitlePrefixLength) == 0) {
         name = name.substr(WindowManager::TitlePrefixLength);
@@ -73,8 +73,22 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
         
         if (!placement.fullScreen) {
             // window mode
-            ::glfwWindowHint(GLFW_DECORATED, placement.noDec ? GL_FALSE : GL_TRUE);
-            ::glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+            ::glfwWindowHint(GLFW_DECORATED, placement.noDec ? GLFW_FALSE : GLFW_TRUE);
+            ::glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+
+            // Hack for window size larger than screen:
+            // The width and height for glfwCreateWindow is just a hint for the underlying window manager. Most window
+            // managers (Windows + Linux/X11) will just resize and maximise the window on the screen, when a size
+            // larger than the screen is requested. When we do not allow resizing, the window managers seems to use the
+            // wanted size.
+            // But we want a resizable window, therefore we need to set the window resizable again. But the second
+            // problem with window managers is, that window creation is an async task (at least with X11). When we
+            // immediately after window creation set the window to be resizable again, the automatic resize will happen
+            // again. We need to delay this to a later point in time (i.e. rendering of first frame).
+            // The async task problem holds (of course) also for querying the window size with glfwGetWindowSize.
+            // Calling this right after glfwCreateWindow will just return our values, not the actual window size.
+            // Therefore here we cannot test for correct window size.
+            ::glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
             int w = placement.w;
             int h = placement.h;
@@ -85,6 +99,7 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
                 h = mode->height * 3 / 4;
             }
 
+            // According to glfw docs width and height means the content area of the window without window decorations.
             hWnd = ::glfwCreateWindow(w, h, title, nullptr, share);
             vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", w, h);
             if (hWnd != nullptr) {
@@ -106,16 +121,16 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
             }
             if (placement.noDec) vislib::sys::Log::DefaultLog.WriteWarn("Ignoring no-decorations setting when requesting fullscreen.");
 
-            ::glfwWindowHint(GLFW_DECORATED, GL_FALSE);
-            ::glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+            ::glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+            ::glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
             ::glfwWindowHint(GLFW_RED_BITS, mode->redBits);
             ::glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
             ::glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
             ::glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
             // this only works since we are NOT setting a monitor
-            ::glfwWindowHint(GLFW_FLOATING, GL_TRUE);
+            ::glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
 
-            /* note we do not use a real fullscrene mode, since then we would have focus-iconify problems */
+            /* note we do not use a real fullscreen mode, since then we would have focus-iconify problems */
             hWnd = ::glfwCreateWindow(mode->width, mode->height, title, nullptr, share);
             vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", mode->width, mode->height);
             int x, y;
@@ -136,6 +151,17 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
             ::glfwSetCursorPosCallback(hWnd, &Window::glfw_onMouseMove_func);
             ::glfwSetScrollCallback(hWnd, &Window::glfw_onMouseWheel_func);
             ::glfwSetCharCallback(hWnd, &Window::glfw_onChar_func);
+
+            GLint vp[4];
+            glGetIntegerv(GL_VIEWPORT, vp);
+            vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: viewport size w: %d, h: %d\n", vp[2], vp[3]);
+
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Could not create GLFW Window. You probably do not have OpenGL support. Your graphics hardware might "
+                "be very old, your drivers could be outdated or you are running in a remote desktop session.");
+            // we should do a proper shutdown now, but that is too expensive given the expected lifetime of this front end.
+            exit(-1);
         }
 
         glGenQueries(1, &fragmentQuery);
@@ -192,8 +218,19 @@ void gl::Window::RequestClose() {
     }
 }
 
-void gl::Window::Update() {
+void gl::Window::Update(uint32_t frameID) {
     if (hWnd == nullptr) return;
+
+    // See comment above window creation on window size.
+    if (firstUpdate) {
+        firstUpdate = false;
+
+        int actualw = 0, actualh = 0;
+        glfwGetWindowSize(hWnd, &actualw, &actualh);
+        vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Actual window size: w: %d, h: %d\n", actualw, actualh);
+
+        glfwSetWindowAttrib(hWnd, GLFW_RESIZABLE, GLFW_TRUE);
+    }
 
     // this also issues the callbacks, which might close this window
     ::glfwPollEvents();
@@ -222,7 +259,7 @@ void gl::Window::Update() {
     if ((width > 0) && (height > 0)) {
         if (showFragmentsInTitle) glBeginQuery(GL_SAMPLES_PASSED, fragmentQuery);
         if (showPrimsInTitle) glBeginQuery(GL_PRIMITIVES_GENERATED, primsQuery);
-        ::mmcRenderView(hView, &renderContext);
+        ::mmcRenderView(hView, &renderContext, frameID);
         if (showFragmentsInTitle) glEndQuery(GL_SAMPLES_PASSED);
         if (showPrimsInTitle) glEndQuery(GL_PRIMITIVES_GENERATED);
     }
@@ -263,12 +300,39 @@ void gl::Window::glfw_onKey_func(GLFWwindow* wnd, int k, int s, int a, int m) {
 
     core::view::Modifiers mods;
     // Parameter m is not platform independent, see https://github.com/glfw/glfw/issues/1630.
-    // Therefore set modifiers by checking key status for platform independent uniform behavior.
-    if (glfwGetKey(wnd, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) mods |= core::view::Modifier::SHIFT;
-    if (glfwGetKey(wnd, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS) mods |= core::view::Modifier::CTRL;
-    if (glfwGetKey(wnd, GLFW_KEY_LEFT_ALT) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS) mods |= core::view::Modifier::ALT;
+    // We want here consistent modifier state, in the sense that the modifier is evaluated on the keyboard state after
+    // the current key event. A simple solution for this would be to just check glfwGetKey() key here and set the
+    // modifiers based on this. The problem with this is, that glfwGetKey only returns a cached state and therefore
+    // does not know when the modifier key was pressed outside of the window, when it is not in focus.
+    // The new solution is, that we keep using the GLFW modifier state, but in addition we will evaluate the current
+    // event to overwrite modifiers when have a event the modifier keys itself.
+    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods |= core::view::Modifier::SHIFT;
+    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= core::view::Modifier::CTRL;
+    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= core::view::Modifier::ALT;
 
-	that->uiLayers.OnKey(key, action, mods);
+    if (k == GLFW_KEY_LEFT_SHIFT || k == GLFW_KEY_RIGHT_SHIFT) {
+        if (a == GLFW_RELEASE) {
+            mods.reset(core::view::Modifier::SHIFT);
+        } else {
+            mods.set(core::view::Modifier::SHIFT);
+        }
+    }
+    if (k == GLFW_KEY_LEFT_CONTROL || k == GLFW_KEY_RIGHT_CONTROL) {
+        if (a == GLFW_RELEASE) {
+            mods.reset(core::view::Modifier::CTRL);
+        } else {
+            mods.set(core::view::Modifier::CTRL);
+        }
+    }
+    if (k == GLFW_KEY_LEFT_ALT || k == GLFW_KEY_RIGHT_ALT) {
+        if (a == GLFW_RELEASE) {
+            mods.reset(core::view::Modifier::ALT);
+        } else {
+            mods.set(core::view::Modifier::ALT);
+        }
+    }
+
+    that->uiLayers.OnKey(key, action, mods);
 }
 
 void gl::Window::glfw_onChar_func(GLFWwindow* wnd, unsigned int charcode) {
@@ -299,10 +363,11 @@ void gl::Window::glfw_onMouseButton_func(GLFWwindow* wnd, int b, int a, int m) {
 
     core::view::Modifiers mods;
     // Parameter m is not platform independent, see https://github.com/glfw/glfw/issues/1630.
-    // Therefore set modifiers by checking key status for platform independent uniform behavior.
-    if (glfwGetKey(wnd, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) mods |= core::view::Modifier::SHIFT;
-    if (glfwGetKey(wnd, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS) mods |= core::view::Modifier::CTRL;
-    if (glfwGetKey(wnd, GLFW_KEY_LEFT_ALT) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS) mods |= core::view::Modifier::ALT;
+    // But this should only play a role on the key events of the modifier keys itself.
+    // Therefore we can ignore this here. See comment in keyboard callback for more details.
+    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods |= core::view::Modifier::SHIFT;
+    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= core::view::Modifier::CTRL;
+    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= core::view::Modifier::ALT;
 
     if (that->mouseCapture) {
         that->mouseCapture->OnMouseButton(btn, action, mods);

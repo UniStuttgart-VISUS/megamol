@@ -10,6 +10,7 @@
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#include <cstdint>
 
 /*
  * The MegaMolCore API is exported using ansi-c functions only, to allow the
@@ -581,9 +582,9 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingJob(void *hCore,
  * @param context Context structure to transfer data from and to the view. 
  *                Please ensure that the 'Size' parameter has been initialised
  *                with sizeof(mmcRenderViewContext) before the call is made.
+ * @param frameID the count of rendered frames so far               
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
-    mmcRenderViewContext *context);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView, mmcRenderViewContext* context, uint32_t frameID);
 
 /**
  * Registers a view close request function for the view. This function will be

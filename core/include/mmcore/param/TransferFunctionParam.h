@@ -240,22 +240,13 @@ public:
         return this->val;
     }
 
-    /** 
-     * Set flag indicating that current parameter value changes 
-     * should be applied in the transfer function editor.
-     */
-    inline void ForceEditorUpdate(void) {
-        this->update_editor = true;
-    }
-
     /**
-     * Get and reset flag indicating that current parameter value changes 
-     * should be applied only once(!) in the transfer function editor.
+     * Gets the hash of the current value
+     *
+     * @return The hash of the parameter value
      */
-    inline bool UpdateEditor(void) {
-        bool retval = this->update_editor;
-        this->update_editor = false;
-        return retval;
+    inline const size_t ValueHash(void) const {
+        return this->hash;
     }
 
 private:
@@ -267,8 +258,8 @@ private:
     /** The value of the parameter */
     std::string val;
 
-    /** Flag indicating updates which should be considered in the editor. */
-    bool update_editor;
+    /** Has of current parameter value. */
+    size_t hash;
 
 #ifdef _WIN32
 #pragma warning (disable: 4251)

@@ -82,7 +82,8 @@ PresetGenerator CubeHelixAdapter(double start, double rots, double hue, double g
     };
 }
 
-template <size_t PaletteSize> PresetGenerator ColormapAdapter(const float palette[PaletteSize][3]) {
+template <size_t PaletteSize, bool NearestNeighbor = false>
+PresetGenerator ColormapAdapter(const float palette[PaletteSize][3]) {
     const double LastIndex = static_cast<double>(PaletteSize - 1);
     return [=](auto& nodes, auto n) {
         nodes.clear();
@@ -92,7 +93,12 @@ template <size_t PaletteSize> PresetGenerator ColormapAdapter(const float palett
             // Linear interpolation from palette.
             size_t i0 = static_cast<size_t>(std::floor(t * LastIndex));
             size_t i1 = static_cast<size_t>(std::ceil(t * LastIndex));
-            double it = std::fmod(t * LastIndex, LastIndex);
+            double unused;
+            double it = std::modf(t * LastIndex, &unused);
+            if (NearestNeighbor) {
+                it = std::round(it);
+            }
+
             double r[2] = {static_cast<double>(palette[i0][0]), static_cast<double>(palette[i1][0])};
             double g[2] = {static_cast<double>(palette[i0][1]), static_cast<double>(palette[i1][1])};
             double b[2] = {static_cast<double>(palette[i0][2]), static_cast<double>(palette[i1][2])};
@@ -133,8 +139,9 @@ void RainbowAdapter(param::TransferFunctionParam::TFNodeType& nodes, size_t n) {
     }
 }
 
-std::array<std::tuple<std::string, PresetGenerator>, 12> PRESETS = {
-    std::make_tuple("Select...", [](auto& nodes, auto n) {}), std::make_tuple("Ramp", RampAdapter),
+std::array<std::tuple<std::string, PresetGenerator>, 20> PRESETS = {
+    std::make_tuple("Select...", [](auto& nodes, auto n) {}),
+    std::make_tuple("Ramp", RampAdapter),
     std::make_tuple("Hue rotation (rainbow, harmful)", RainbowAdapter),
     std::make_tuple("Inferno", ColormapAdapter<256>(InfernoColorMap)),
     std::make_tuple("Magma", ColormapAdapter<256>(MagmaColorMap)),
@@ -144,7 +151,16 @@ std::array<std::tuple<std::string, PresetGenerator>, 12> PRESETS = {
     std::make_tuple("Cubehelix (default)", CubeHelixAdapter(0.5, -1.5, 1.0, 1.0)),
     std::make_tuple("Cubehelix (default, colorful)", CubeHelixAdapter(0.5, -1.5, 1.5, 1.0)),
     std::make_tuple("Cubehelix (default, de-pinked)", CubeHelixAdapter(0.5, -1.0, 1.0, 1.0)),
-    std::make_tuple("Cool-Warm (diverging)", ColormapAdapter<257>(CoolWarmColorMap))};
+    std::make_tuple("Cool-Warm (diverging)", ColormapAdapter<257>(CoolWarmColorMap)),
+    std::make_tuple("8-class Accent", ColormapAdapter<8, true>(AccentMap)),
+    std::make_tuple("8-class Dark2", ColormapAdapter<8, true>(Dark2Map)),
+    std::make_tuple("12-class Paired", ColormapAdapter<12, true>(PairedMap)),
+    std::make_tuple("9-class Pastel1", ColormapAdapter<9, true>(Pastel1Map)),
+    std::make_tuple("8-class Pastel2", ColormapAdapter<8, true>(Pastel2Map)),
+    std::make_tuple("9-class Set1", ColormapAdapter<9, true>(Set1Map)),
+    std::make_tuple("8-class Set2", ColormapAdapter<8, true>(Set2Map)),
+    std::make_tuple("12-class Set3", ColormapAdapter<12, true>(Set3Map)),
+};
 
 
 TransferFunctionEditor::TransferFunctionEditor(void)
@@ -152,13 +168,15 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , active_parameter(nullptr)
     , nodes()
     , range({0.0f, 1.0f})
+    , last_range({0.0f, 1.0f})
     , range_overwrite(false)
     , mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , textureSize(256)
     , textureInvalid(true)
     , pendingChanges(true)
     , texturePixels()
-    , textureId(0)
+    , texture_id_vert(0)
+    , texture_id_horiz(0)
     , activeChannels{false, false, false, false}
     , currentNode(0)
     , currentChannel(0)
@@ -166,7 +184,7 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , immediateMode(false)
     , showOptions(true)
     , widget_buffer()
-    , switch_legend_xy(false) {
+    , flip_xy(false) {
 
     // Init transfer function colors
     this->nodes.clear();
@@ -195,7 +213,7 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool ac
     bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
         tfs, this->nodes, this->mode, this->textureSize, new_range);
     if (!ok) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Could parse transfer function");
+        vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Could not parse transfer function");
         return;
     }
 
@@ -209,6 +227,9 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool ac
     if (!this->range_overwrite) {
         this->range = new_range;
     }
+    // Save new range propagated by renderers for later recovery
+    this->last_range = new_range;
+
     this->widget_buffer.min_range = this->range[0];
     this->widget_buffer.max_range = this->range[1];
     this->widget_buffer.tex_size = this->textureSize;
@@ -225,9 +246,10 @@ bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
         tfs, this->nodes, this->mode, this->textureSize, this->range);
 }
 
-bool TransferFunctionEditor::DrawTransferFunctionEditor(bool active_parameter_mode) {
+bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
 
     ImGui::BeginGroup();
+    ImGui::PushID("TransferFunctionEditor");
 
     if (active_parameter_mode) {
         if (this->active_parameter == nullptr) {
@@ -255,26 +277,29 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool active_parameter_mo
         if (image_size.x < 300.0f) image_size.x = 300.0f;
     }
 
-    this->drawTextureBox(image_size, this->switch_legend_xy);
+    ImGui::BeginGroup();
+    this->drawTextureBox(image_size, this->flip_xy);
+    this->drawScale(ImGui::GetCursorScreenPos(), image_size, this->flip_xy);
+    ImGui::EndGroup();
 
-    // if (!this->switch_legend_xy) {
     ImGui::SameLine();
-    //}
-    if (ImGui::ArrowButton("Options", this->showOptions ? ImGuiDir_Down : ImGuiDir_Up)) {
+
+    if (ImGui::ArrowButton("Options_", this->showOptions ? ImGuiDir_Down : ImGuiDir_Up)) {
         this->showOptions = !this->showOptions;
     }
 
     if (this->showOptions) {
+        ImGui::Separator();
 
         // Legend alignment ---------------------------------------------------
         ImGui::BeginGroup();
-        if (ImGui::RadioButton("Vertical", this->switch_legend_xy)) {
-            this->switch_legend_xy = true;
+        if (ImGui::RadioButton("Vertical", this->flip_xy)) {
+            this->flip_xy = true;
             this->textureInvalid = true;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton("Horizontal", !this->switch_legend_xy)) {
-            this->switch_legend_xy = false;
+        if (ImGui::RadioButton("Horizontal", !this->flip_xy)) {
+            this->flip_xy = false;
             this->textureInvalid = true;
         }
         ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x);
@@ -319,7 +344,20 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool active_parameter_mo
         ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
         ImGui::TextUnformatted("Value Range");
 
-        ImGui::Checkbox("Overwrite Value Range", &this->range_overwrite);
+        if (ImGui::Checkbox("Overwrite Value Range", &this->range_overwrite)) {
+            if (this->range_overwrite) {
+                // Save last range before overwrite
+                this->last_range = this->range;
+            } else {
+                // Reset range to last range before overwrite was enabled
+                this->range = this->last_range;
+                this->widget_buffer.min_range = this->range[0];
+                this->widget_buffer.max_range = this->range[1];
+                this->widget_buffer.range_value =
+                    (this->nodes[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
+                this->textureInvalid = true;
+            }
+        }
 
         // Value slider -------------------------------------------------------
         this->widget_buffer.range_value =
@@ -432,34 +470,13 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool active_parameter_mo
             param::TransferFunctionParam::GaussInterpolation(this->texturePixels, this->textureSize, this->nodes);
         }
 
-        // Delete old texture.
-        if (this->textureId != 0) {
-            glDeleteTextures(1, &this->textureId);
-        }
-        this->textureId = 0;
-
-        // Upload texture.
-        glGenTextures(1, &this->textureId);
-        glBindTexture(GL_TEXTURE_2D, this->textureId);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-        GLuint width = textureSize;
-        GLuint height = 1;
-        if (this->switch_legend_xy) {
-            width = 1;
-            height = textureSize;
-        }
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, this->texturePixels.data());
-
-        glBindTexture(GL_TEXTURE_2D, 0);
+        this->CreateTexture(
+            this->texture_id_horiz, static_cast<GLsizei>(this->textureSize), 1, this->texturePixels.data());
+        this->CreateTexture(
+            this->texture_id_vert, 1, static_cast<GLsizei>(this->textureSize), this->texturePixels.data());
 
         this->textureInvalid = false;
     }
-
 
     // Apply -------------------------------------------------------
     bool apply_changes = false;
@@ -504,27 +521,68 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(bool active_parameter_mo
     }
 
     ImGui::PopItemWidth();
+
+    ImGui::PopID();
     ImGui::EndGroup();
 
     return apply_changes;
 }
 
 
-void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool switch_xy) {
+bool TransferFunctionEditor::ActiveParamterValueHash(size_t& out_tf_value_hash) {
+
+    if (this->active_parameter != nullptr) {
+        out_tf_value_hash = this->active_parameter->ValueHash();
+        return true;
+    }
+    return false;
+}
+
+
+void TransferFunctionEditor::CreateTexture(GLuint& inout_id, GLsizei width, GLsizei height, float* data) const {
+
+    if (data == nullptr) return;
+
+    // Delete old texture.
+    if (inout_id != 0) {
+        glDeleteTextures(1, &inout_id);
+    }
+    inout_id = 0;
+
+    // Upload texture.
+    glGenTextures(1, &inout_id);
+    glBindTexture(GL_TEXTURE_2D, inout_id);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, data);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+
+void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_xy) {
+
+    ImGuiStyle& style = ImGui::GetStyle();
     ImVec2 pos = ImGui::GetCursorScreenPos();
     const size_t textureSize = this->texturePixels.size() / 4;
 
-    ImGui::BeginGroup();
-
+    GLuint texture_id = this->texture_id_horiz;
     ImVec2 image_size = size;
     ImVec2 uv0 = ImVec2(0.0f, 0.0f);
     ImVec2 uv1 = ImVec2(1.0f, 1.0f);
-    if (switch_xy) {
+    if (flip_xy) {
+        texture_id = this->texture_id_vert;
         image_size.x = size.y;
         image_size.y = size.x;
+        uv0 = ImVec2(1.0f, 1.0f);
+        uv1 = ImVec2(0.0f, 0.0f);
     }
 
-    if (textureSize == 0 || this->textureId == 0) {
+    if (textureSize == 0 || texture_id == 0) {
         // Reserve layout space and draw a black background rectangle.
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         ImGui::Dummy(image_size);
@@ -532,7 +590,8 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool switch_xy) 
             pos, ImVec2(pos.x + image_size.x, pos.y + image_size.y), IM_COL32(0, 0, 0, 255), 0.0f, 10);
     } else {
         // Draw texture as image.
-        ImGui::Image(reinterpret_cast<ImTextureID>(this->textureId), image_size, uv0, uv1);
+        ImGui::Image(reinterpret_cast<ImTextureID>(texture_id), image_size, uv0, uv1, ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
+            style.Colors[ImGuiCol_Border]);
     }
 
     // Draw tooltip, if requested.
@@ -544,16 +603,10 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool switch_xy) 
         ImGui::Text("%f Absolute Value\n%f Normalized Value", xValue, xU);
         ImGui::EndTooltip();
     }
-
-    /// if (!this->showOptions) {
-    this->drawScale(ImGui::GetCursorScreenPos(), size, switch_xy);
-    /// }
-
-    ImGui::EndGroup();
 }
 
 
-void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bool switch_xy) {
+void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bool flip_xy) {
 
     ImGuiStyle& style = ImGui::GetStyle();
     ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -564,7 +617,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
 
     float width = size.x;
     float height = size.y;
-    if (switch_xy) {
+    if (flip_xy) {
         width = size.y;
         height = size.x;
     }
@@ -579,7 +632,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     ImVec2 init_pos = pos;
     float width_delta = 0.0f;
     float height_delta = 0.0f;
-    if (switch_xy) {
+    if (flip_xy) {
         init_pos.x += width;
         init_pos.y -= (height + item_y_spacing);
         height_delta = height / static_cast<float>(scale_count - 1);
@@ -589,16 +642,16 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     }
 
     for (unsigned int i = 0; i < scale_count; i++) {
-        if (switch_xy) {
+        if (flip_xy) {
             float y = height_delta * static_cast<float>(i);
-            if (i == 0) y += line_thickness;
-            if (i == (scale_count - 1)) y -= line_thickness;
+            if (i == 0) y += (line_thickness / 2.0f);
+            if (i == (scale_count - 1)) y -= (line_thickness / 2.0f);
             drawList->AddLine(
                 init_pos + ImVec2(0.0f, y), init_pos + ImVec2(line_length, y), line_color, line_thickness);
         } else {
             float x = width_delta * static_cast<float>(i);
-            if (i == 0) x += line_thickness;
-            if (i == (scale_count - 1)) x -= line_thickness;
+            if (i == 0) x += (line_thickness / 2.0f);
+            if (i == (scale_count - 1)) x -= (line_thickness / 2.0f);
             drawList->AddLine(
                 init_pos + ImVec2(x, 0.0f), init_pos + ImVec2(x, line_length), line_color, line_thickness);
         }
@@ -622,24 +675,24 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     std::string mid_label_str = label_stream.str();
     float mid_item_width = GUIUtils::TextWidgetWidth(mid_label_str);
 
-    if (switch_xy) {
+    if (flip_xy) {
         float font_size = ImGui::GetFontSize();
         ImVec2 text_pos = init_pos + ImVec2(item_y_spacing + line_length, 0.0f);
-        // Start Value
+        // Max Value
         ImGui::SetCursorScreenPos(text_pos);
-        ImGui::TextUnformatted(min_label_str.c_str());
+        ImGui::TextUnformatted(max_label_str.c_str());
         // Middle Values
         float mid_value_height = (height - (2.0f * font_size) - (2.0f * item_y_spacing));
         if ((mid_value_height > font_size)) {
             ImGui::SetCursorScreenPos(text_pos + ImVec2(0.0f, (height / 2.0f) - (font_size / 2.0f)));
             ImGui::TextUnformatted(mid_label_str.c_str());
         }
-        // End Value
+        // Min Value
         ImGui::SetCursorScreenPos(text_pos + ImVec2(0.0f, (height - font_size)));
-        ImGui::TextUnformatted(max_label_str.c_str());
+        ImGui::TextUnformatted(min_label_str.c_str());
     } else {
         ImGui::SetCursorScreenPos(pos + ImVec2(0.0f, line_length));
-        // Start Value
+        // Min Value
         ImGui::TextUnformatted(min_label_str.c_str());
         // Middle Values
         float mid_value_width = (width - min_item_width - max_item_width - (2.0f * item_x_spacing));
@@ -647,12 +700,12 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
             ImGui::SameLine((width / 2.0f) - (mid_item_width / 2.0f));
             ImGui::TextUnformatted(mid_label_str.c_str());
         }
-        // End Value
+        // Max Value
         ImGui::SameLine(width - max_item_width);
         ImGui::TextUnformatted(max_label_str.c_str());
     }
 
-    if (switch_xy) {
+    if (flip_xy) {
         ImGui::SetCursorScreenPos(reset_pos);
     }
 }

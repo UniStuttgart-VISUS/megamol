@@ -1,4 +1,10 @@
 
+void main(void) {
+
+    vec4 coord;
+    vec3 ray;
+    float lambda;
+
 	// transform fragment coordinates from window coordinates to view coordinates.
 	coord = gl_FragCoord 
 		* vec4(viewAttr.z, viewAttr.w, 2.0, 0.0)
