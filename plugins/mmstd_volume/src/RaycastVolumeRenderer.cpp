@@ -15,7 +15,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/AbstractRenderingView.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender3D.h"
 
 #include "vislib/graphics/gl/ShaderSource.h"
 
@@ -211,7 +210,7 @@ bool RaycastVolumeRenderer::GetExtents(core::view::CallRender3D_2& cr) {
     if (ci != nullptr) {
         *ci = cr;
 
-        if (!(*ci)(core::view::CallRender3D::FnGetExtents)) return false;
+        if (!(*ci)(core::view::CallRender3D_2::FnGetExtents)) return false;
 
         bbox.Union(ci->AccessBoundingBoxes().BoundingBox());
         cbox.Union(ci->AccessBoundingBoxes().ClipBox());
@@ -242,7 +241,7 @@ bool RaycastVolumeRenderer::Render(core::view::CallRender3D_2& cr) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ci->SetTime(cr.Time());
-        if (!(*ci)(core::view::CallRender3D::FnRender)) return false;
+        if (!(*ci)(core::view::CallRender3D_2::FnRender)) return false;
 
         if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
             this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
