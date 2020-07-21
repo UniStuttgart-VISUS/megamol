@@ -36,6 +36,7 @@ public:
     void setShutdown(const bool s = true) { m_shouldShutdown = s; }
 
 public:
+    virtual std::string serviceName() = 0;
     virtual ~AbstractFrontendService() = default;
 
     virtual bool init(void* configPtr) = 0; // init API, e.g. init GLFW with OpenGL and open window with certain decorations/hints
@@ -45,8 +46,9 @@ public:
         return nullptr;
     } // ptr non-owning, share data should be only borrowed
 	
-    virtual void updateResources() = 0;
-    virtual void digestChangedResources() = 0;
+    virtual void updateProvidedResources() = 0;
+    virtual void digestChangedRequestedResources() = 0;
+    virtual void resetProvidedResources() = 0;
 
     virtual void preGraphRender() = 0;  // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
     virtual void postGraphRender() = 0; // clean up after rendering, e.g. stop and show frame-timers in GLFW window
@@ -57,7 +59,10 @@ public:
     // looked up via this function and given to the Views that request them. the matching of correct resource to the
     // Views that request them is done by the identifier of the resource (i.e. by a std::string) followed by a cast to
     // the expected type
-    virtual const std::vector<ModuleResource>& getModuleResources() const = 0;
+    virtual std::vector<ModuleResource>& getProvidedResources() = 0;
+
+    virtual const std::vector<std::string> getRequestedResourceNames() const = 0;
+    virtual void setRequestedResources(std::vector<ModuleResource>& resources) = 0;
 };
 
 

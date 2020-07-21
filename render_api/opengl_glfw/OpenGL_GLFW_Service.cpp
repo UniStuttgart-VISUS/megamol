@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "OpenGL_GLFW_RAPI.hpp"
+#include "OpenGL_GLFW_Service.hpp"
 
 #include <array>
 #include <chrono>
@@ -452,10 +452,8 @@ void OpenGL_GLFW_Service::close() {
     }
 }
 	
-void OpenGL_GLFW_Service::updateResources() {
+void OpenGL_GLFW_Service::updateProvidedResources() {
     if (m_glfwWindowPtr == nullptr) return;
-
-	this->clearResources();
 
     // poll events for all GLFW windows shared by this context. this also issues the callbacks.
     // note at this point there is no GL context active.
@@ -469,11 +467,18 @@ void OpenGL_GLFW_Service::updateResources() {
     // which in turn causes callbacks to be called outside of regular event processing.
 }
 
-void OpenGL_GLFW_Service::digestChangedResources() {
+void OpenGL_GLFW_Service::digestChangedRequestedResources() {
     if (m_glfwWindowPtr == nullptr) return;
 
     if (this->m_windowEvents.should_close_events.size() && this->m_windowEvents.should_close_events.back())
         this->setShutdown(true); // cleanup of this RAPI and dependent GL stuff is triggered via this shutdown hint
+}
+
+void OpenGL_GLFW_Service::resetProvidedResources() {
+	m_keyboardEvents.clear();
+	m_mouseEvents.clear();
+	m_windowEvents.clear();
+	m_framebufferEvents.clear();
 }
 
 void OpenGL_GLFW_Service::preGraphRender() {
@@ -499,15 +504,15 @@ void OpenGL_GLFW_Service::postGraphRender() {
     ::glfwMakeContextCurrent(nullptr);
 }
 
-void OpenGL_GLFW_Service::clearResources() {
-	m_keyboardEvents.clear();
-	m_mouseEvents.clear();
-	m_windowEvents.clear();
-	m_framebufferEvents.clear();
+std::vector<ModuleResource>& OpenGL_GLFW_Service::getProvidedResources() {
+	return m_renderResourceReferences;
 }
 
-const std::vector<ModuleResource>& OpenGL_GLFW_Service::getModuleResources() const {
-	return m_renderResourceReferences;
+const std::vector<std::string> OpenGL_GLFW_Service::getRequestedResourceNames() const {
+	return {};
+}
+
+void OpenGL_GLFW_Service::setRequestedResources(std::vector<ModuleResource>& resources) {
 }
 
 const void* OpenGL_GLFW_Service::getSharedDataPtr() const { return &m_sharedData; }

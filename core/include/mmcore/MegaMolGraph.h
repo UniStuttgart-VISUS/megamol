@@ -24,7 +24,7 @@
 #include "mmcore/deferrable_construction.h"
 #include "mmcore/serializable.h"
 
-#include "AbstractRenderAPI.hpp"
+#include "AbstractFrontendService.hpp"
 #include "mmcore/RootModuleNamespace.h"
 
 #include "mmcore/view/AbstractView.h"

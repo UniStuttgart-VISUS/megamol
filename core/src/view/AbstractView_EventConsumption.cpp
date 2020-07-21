@@ -26,7 +26,7 @@ using namespace megamol::input_events;
 		TYPENAME const& events = resource.getResource<TYPENAME>();
 
 
-void view_consume_keyboard_events(AbstractView& view, megamol::render_api::ModuleResource const& resource) {
+void view_consume_keyboard_events(AbstractView& view, megamol::frontend::ModuleResource const& resource) {
     GET_RESOURCE(KeyboardEvents)//{
 		for (auto& e : events.key_events)
 			view.OnKey(std::get<0>(e), std::get<1>(e), std::get<2>(e));
@@ -36,7 +36,7 @@ void view_consume_keyboard_events(AbstractView& view, megamol::render_api::Modul
 	}
 }
 
-void view_consume_mouse_events(AbstractView& view, megamol::render_api::ModuleResource const& resource) {
+void view_consume_mouse_events(AbstractView& view, megamol::frontend::ModuleResource const& resource) {
     GET_RESOURCE(MouseEvents)//{
 		for (auto& e : events.buttons_events) 
 			view.OnMouseButton(std::get<0>(e), std::get<1>(e), std::get<2>(e));
@@ -51,20 +51,20 @@ void view_consume_mouse_events(AbstractView& view, megamol::render_api::ModuleRe
 	}
 }
 
-void view_consume_window_events(AbstractView& view, megamol::render_api::ModuleResource const& resource) {
+void view_consume_window_events(AbstractView& view, megamol::frontend::ModuleResource const& resource) {
     GET_RESOURCE(WindowEvents)//{
 		events.is_focused_events;
 	}
 }
 
-void view_consume_framebuffer_events(AbstractView& view, megamol::render_api::ModuleResource const& resource) {
+void view_consume_framebuffer_events(AbstractView& view, megamol::frontend::ModuleResource const& resource) {
     GET_RESOURCE(FramebufferEvents)//{
 		for (auto& e: events.size_events)
 			view.Resize(static_cast<unsigned int>(e.width), static_cast<unsigned int>(e.height));
     }
 }
 
-void view_poke_rendering(AbstractView& view, megamol::render_api::ModuleResource const& resource) {
+void view_poke_rendering(AbstractView& view, megamol::frontend::ModuleResource const& resource) {
     megamol::input_events::IOpenGL_Context const * maybe_opengl = nullptr;
 
     if (resource.getIdentifier() == "IOpenGL_Context")

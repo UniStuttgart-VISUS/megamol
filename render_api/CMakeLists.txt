@@ -14,15 +14,15 @@ if(BUILD_RAPI)
   # afterwards list the dependencies.
   #set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
-  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.hpp" "opengl_glfw/*.h"  "opengl_glfw/*.hpp")
-  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "opengl_glfw/*.cpp")
+  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.hpp" "opengl_glfw/*.h"  "opengl_glfw/*.hpp" "service_collection/*.hpp")
+  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "opengl_glfw/*.cpp" "service_collection/*.cpp")
 
   # Add target
   add_library(${PROJECT_NAME} STATIC ${header_files} ${source_files})
   set_target_properties(${PROJECT_NAME}
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT_NAME ${PROJECT_NAME})
-  target_include_directories(${PROJECT_NAME} PUBLIC "opengl_glfw" "include")
+  target_include_directories(${PROJECT_NAME} PUBLIC "opengl_glfw" "include" "service_collection")
 
   add_library(abstract_render_api INTERFACE)
   target_include_directories(abstract_render_api INTERFACE

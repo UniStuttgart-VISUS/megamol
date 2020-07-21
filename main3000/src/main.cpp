@@ -1,14 +1,17 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 
-#include "AbstractRenderAPI.hpp"
-#include "OpenGL_GLFW_RAPI.hpp"
+#include "AbstractFrontendService.hpp"
+#include "FrontendServiceCollection.hpp"
+#include "OpenGL_GLFW_Service.hpp"
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
-#include "mmcore/LuaAPI.h"
 #include <cxxopts.hpp>
 #include <filesystem>
+#include "mmcore/LuaAPI.h"
+
+bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::frontend::ModuleResource>& module_resources);
 
 int main(int argc, char* argv[]) {
     megamol::core::CoreInstance core;
@@ -18,18 +21,65 @@ int main(int argc, char* argv[]) {
     const megamol::core::factories::CallDescriptionManager& callProvider = core.GetCallDescriptionManager();
 
     megamol::frontend::OpenGL_GLFW_Service gl_service;
-
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
     openglConfig.windowTitlePrefix = openglConfig.windowTitlePrefix + " ~ Main3000";
     openglConfig.versionMajor = 4;
     openglConfig.versionMinor = 6;
-    gl_service.init(&openglConfig);
 
-    auto services;
-    services.add(gl_service);
+    bool run_megamol = true;
+    megamol::frontend::FrontendServiceCollection services;
+    services.add(gl_service, &openglConfig);
+
+    services.init(); // runs init(config_ptr) on all services with provided config sructs
+
+    const bool resources_ok = services.assignRequestedResources();
+    if (!resources_ok) {
+        std::cout << "ERROR: frontend could not assign requested service resources. abort. " << std::endl;
+        run_megamol = false;
+    }
 
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
+    const bool graph_ok = set_up_graph(graph, services.getProvidedResources());
+    if (!graph_ok) {
+        std::cout << "ERROR: frontend could not build graph. abort. " << std::endl;
+        run_megamol = false;
+    }
+
+    while (run_megamol) {
+        // services: receive inputs (GLFW poll events [keyboard, mouse, window], network, lua)
+        services.updateProvidedResources();
+
+        // aka simulation step
+        // services: digest new inputs via ModuleResources (GUI digest user inputs, lua digest inputs, network ?)
+        // e.g. graph updates, module and call creation via lua and GUI happen here
+        services.digestChangedRequestedResources();
+
+        // services tell us wheter we should shut down megamol
+        if (services.shouldShutdown()) break;
+
+        {                              // put this in render function so LUA can call it
+            services.preGraphRender(); // e.g. start frame timer, clear render buffers
+
+            graph.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
+
+            services.postGraphRender(); // render GUI, glfw swap buffers, stop frame timer
+            // problem: guarantee correct order of post-render jobs, i.e. render gui before swapping buffers
+        }
+
+        services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
+    }
+
+    // close glfw context, network connections, other system resources
+    services.close();
+
+    // clean up modules, calls in graph
+    // TODO: implement graph destructor
+
+    return 0;
+}
+
+bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::frontend::ModuleResource>& module_resources) {
 #if 0
     megamol::core::LuaAPI lua_api(graph, true);
 
@@ -53,26 +103,28 @@ int main(int argc, char* argv[]) {
     }
 
 #else
-	// for_all services: register render resources
-	// graph.addResources(all_resources)
+    // for_all services: register render resources
+    // graph.addResources(all_resources)
 
-	// lua_service.set_zmq( central_resources.request(zmq_instance) )
+    // lua_service.set_zmq( central_resources.request(zmq_instance) )
 
-    graph.AddModuleDependencies(gl_service.getModuleResources());
+	#    define check(X) if (!X) return false;
 
-    graph.CreateModule("GUIView", "::guiview");
-    graph.CreateModule("View3D_2", "::view");
-    graph.CreateModule("SphereRenderer", "::spheres");
-    graph.CreateModule("TestSpheresDataSource", "::datasource");
-    graph.CreateCall("CallRender3D_2", "::view::rendering", "::spheres::rendering");
-    graph.CreateCall("MultiParticleDataCall", "::spheres::getdata", "::datasource::getData");
-    graph.CreateCall("CallRenderView", "::guiview::renderview", "::view::render");
+    graph.AddModuleDependencies(module_resources);
 
-    std::vector<std::string> view_resource_requests = {
-        "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context" };
+    // check(graph.CreateModule("GUIView", "::guiview");
+    check(graph.CreateModule("View3D_2", "::view"));
+    check(graph.CreateModule("SphereRenderer", "::spheres"));
+    check(graph.CreateModule("TestSpheresDataSource", "::datasource"));
+    check(graph.CreateCall("CallRender3D_2", "::view::rendering", "::spheres::rendering"));
+    check(graph.CreateCall("MultiParticleDataCall", "::spheres::getdata", "::datasource::getData"));
+    // check(graph.CreateCall("CallRenderView", "::guiview::renderview", "::view::render"));
 
-	// callback executed by the graph for each frame
-	// knows how to make a view module process input events and start the rendering
+    static std::vector<std::string> view_resource_requests = {
+        "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context"};
+
+    // callback executed by the graph for each frame
+    // knows how to make a view module process input events and start the rendering
     auto view_rendering_execution = [&](megamol::core::Module::ptr_type module_ptr,
                                         std::vector<megamol::frontend::ModuleResource> resources) {
         megamol::core::view::AbstractView* view_ptr =
@@ -88,14 +140,14 @@ int main(int argc, char* argv[]) {
 
         megamol::core::view::AbstractView& view = *view_ptr;
 
-		int i = 0;
-		// resources are in order of initial requests
+        int i = 0;
+        // resources are in order of initial requests
         megamol::core::view::view_consume_keyboard_events(view, resources[i++]);
         megamol::core::view::view_consume_mouse_events(view, resources[i++]);
         megamol::core::view::view_consume_window_events(view, resources[i++]);
         megamol::core::view::view_consume_framebuffer_events(view, resources[i++]);
         megamol::core::view::view_poke_rendering(view, resources[i++]);
-        //for (auto& dep : resources) {
+        // for (auto& dep : resources) {
         //    auto& depId = dep.getIdentifier();
 
         //    if (depId == "KeyboardEvents") {
@@ -116,7 +168,7 @@ int main(int argc, char* argv[]) {
         //}
     };
 
-    graph.SetGraphEntryPoint("::guiview", view_resource_requests, view_rendering_execution);
+    check(graph.SetGraphEntryPoint("::view", view_resource_requests, view_rendering_execution));
 
     std::string parameter_name("::datasource::numSpheres");
     auto parameterPtr = graph.FindParameter(parameter_name);
@@ -124,36 +176,9 @@ int main(int argc, char* argv[]) {
         parameterPtr->ParseValue("3");
     } else {
         std::cout << "ERROR: could not find parameter: " << parameter_name << std::endl;
+        return false;
     }
 #endif
 
-    while (true) {
-		// services: receive inputs (GLFW poll events [keyboard, mouse, window], network, lua) 
-		services.updateResources();
-
-		// services: digest new inputs via ModuleResources (GUI digest user inputs, lua digest inputs, network ?)
-		// e.g. graph updates via lua and GUI happen here
-		services.digestChangedResources();
-
-		// services tell us wheter we should shut down megamol
-		if (services.shouldShutdown())
-			break;
-
-		{ // put this in render function so LUA can call it
-			services.preGraphRender(); // glfw poll input events
-			// the graph holds references to the input events structs filled by glfw
-			// we should probably make this more explicit, i.e.: new_events = [gl_]service.preGraphRender(); graph.UpdateEvents(new_events); graph.Render();
-
-			graph.RenderNextFrame();
-			services.postGraphRender(); // swap buffers, clear input events
-		}
-    }
-
-    // clean up modules, calls, graph
-
-    services.close();
-
-    // TODO: implement graph destructor
-
-    return 0;
+    return true;
 }

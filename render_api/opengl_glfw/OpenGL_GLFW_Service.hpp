@@ -9,7 +9,7 @@
 #define MEGAMOL_OPENGL_GLFW_RAPI_HPP_INCLUDED
 #pragma once
 
-#include "AbstractRenderAPI.hpp"
+#include "AbstractFrontendService.hpp"
 
 #include "KeyboardMouse_Events.h"
 #include "Framebuffer_Events.h"
@@ -50,6 +50,8 @@ public:
                                            // TODO: request OpenGL context version, extensions?
     };
 
+	std::string serviceName() override { return "OpenGL_GLFW_Service"; }
+
     OpenGL_GLFW_Service() = default;
     ~OpenGL_GLFW_Service() override;
     // TODO: delete copy/move/assign?
@@ -59,14 +61,17 @@ public:
     bool init(void* configPtr) override;
     void close() override;
 	
-    void updateResources() override;
-    void digestChangedResources() override;
+    void updateProvidedResources() override;
+    void digestChangedRequestedResources() override;
+    void resetProvidedResources() override;
 
     void preGraphRender() override;  // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
     void postGraphRender() override; // clean up after rendering, e.g. stop and show frame-timers in GLFW window
 
     // expose the resources and input events this RAPI provides: Keyboard inputs, Mouse inputs, GLFW Window events, Framebuffer resize events
-    const std::vector<ModuleResource>& getModuleResources() const override;
+    std::vector<ModuleResource>& getProvidedResources() override;
+    const std::vector<std::string> getRequestedResourceNames() const override;
+    void setRequestedResources(std::vector<ModuleResource>& resources) override;
 
     const void* getSharedDataPtr() const override; // ptr non-owning, share data should be only borrowed
 
@@ -118,10 +123,6 @@ private:
     FramebufferEvents m_framebufferEvents;
 	OpenGL_Context m_opengl_context_impl;
 	input_events::IOpenGL_Context* m_opengl_context;
-
-public:
-    void clearResources();
-private:
 
     // this holds references to the event structs we fill. the events are passed to the renderers/views using
     // const std::vector<ModuleResource>& getModuleResources() override
