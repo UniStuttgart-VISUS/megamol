@@ -48,6 +48,7 @@ public:
         bool enableKHRDebug = true;        // max error reporting
         bool enableVsync = false;          // max frame rate
                                            // TODO: request OpenGL context version, extensions?
+        bool glContextCoreProfile = false;
     };
 
 	std::string serviceName() override { return "OpenGL_GLFW_Service"; }

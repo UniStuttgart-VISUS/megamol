@@ -240,8 +240,8 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     // from here on, access pimpl data using "m_data.member", as in m_pimpl->member minus the  void-ptr casting
 
     // init (shared) context data for this object or use provided
-    if (config.sharedContextPtr) {
-        m_data.sharedDataPtr = reinterpret_cast<SharedData*>(config.sharedContextPtr);
+    if (m_data.initialConfig.sharedContextPtr) {
+        m_data.sharedDataPtr = reinterpret_cast<SharedData*>(m_data.initialConfig.sharedContextPtr);
     } else {
         initSharedContext(m_data.sharedData);
     }
@@ -258,7 +258,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     // init glfw window and OpenGL Context
     ::glfwWindowHint(GLFW_ALPHA_BITS, 8);
     ::glfwWindowHint(GLFW_DECORATED,
-        (config.windowPlacement.fullScreen) ? (GL_FALSE) : (config.windowPlacement.noDec ? GL_FALSE : GL_TRUE));
+        (m_data.initialConfig.windowPlacement.fullScreen) ? (GL_FALSE) : (m_data.initialConfig.windowPlacement.noDec ? GL_FALSE : GL_TRUE));
     ::glfwWindowHint(GLFW_VISIBLE, GL_FALSE); // initially invisible
 
     int monCnt = 0;
@@ -268,9 +268,9 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     // in fullscreen, use last available monitor as to not block primary monitor, where the user may have important
     // stuff he wants to look at
     int monitorNr =
-        (config.windowPlacement.fullScreen)
+        (m_data.initialConfig.windowPlacement.fullScreen)
             ? std::max<int>(0, std::min<int>(monCnt - 1,
-                                   config.windowPlacement.mon)) // if fullscreen, use last or user-provided monitor
+                                   m_data.initialConfig.windowPlacement.mon)) // if fullscreen, use last or user-provided monitor
             : (0);                                              // if windowed, use primary monitor
     GLFWmonitor* selectedMonitor = monitors[monitorNr];
     if (!selectedMonitor) return false; // selected monitor not valid for some reason; abort
@@ -279,10 +279,10 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     if (!mode) return false; // error while receiving monitor mode; abort
 
     // window size for windowed mode
-    if (!config.windowPlacement.fullScreen) {
-        if (config.windowPlacement.size && (config.windowPlacement.w > 0) && (config.windowPlacement.h > 0)) {
-            m_data.currentWidth = config.windowPlacement.w;
-            m_data.currentHeight = config.windowPlacement.h;
+    if (!m_data.initialConfig.windowPlacement.fullScreen) {
+        if (m_data.initialConfig.windowPlacement.size && (m_data.initialConfig.windowPlacement.w > 0) && (m_data.initialConfig.windowPlacement.h > 0)) {
+            m_data.currentWidth = m_data.initialConfig.windowPlacement.w;
+            m_data.currentHeight = m_data.initialConfig.windowPlacement.h;
         } else {
             vislib::sys::Log::DefaultLog.WriteWarn("No useful window size given. Making one up");
             // no useful window size given, derive one from monitor resolution
@@ -292,15 +292,15 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     }
 
     // options for fullscreen mode
-    if (config.windowPlacement.fullScreen) {
-        if (config.windowPlacement.pos)
+    if (m_data.initialConfig.windowPlacement.fullScreen) {
+        if (m_data.initialConfig.windowPlacement.pos)
             vislib::sys::Log::DefaultLog.WriteWarn("Ignoring window placement position when requesting fullscreen.");
 
-        if (config.windowPlacement.size &&
-            ((config.windowPlacement.w != mode->width) || (config.windowPlacement.h != mode->height)))
+        if (m_data.initialConfig.windowPlacement.size &&
+            ((m_data.initialConfig.windowPlacement.w != mode->width) || (m_data.initialConfig.windowPlacement.h != mode->height)))
             vislib::sys::Log::DefaultLog.WriteWarn("Changing screen resolution is currently not supported.");
 
-        if (config.windowPlacement.noDec)
+        if (m_data.initialConfig.windowPlacement.noDec)
             vislib::sys::Log::DefaultLog.WriteWarn("Ignoring no-decorations setting when requesting fullscreen.");
 
         /* note we do not use a real fullscrene mode, since then we would have focus-iconify problems */
@@ -324,8 +324,8 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     // TODO: OpenGL context hints? version? core profile?
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, m_data.initialConfig.versionMajor);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, m_data.initialConfig.versionMinor);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, m_data.initialConfig.glContextCoreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE);
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, m_data.initialConfig.enableKHRDebug ? GLFW_TRUE : GLFW_FALSE);
 
     m_glfwWindowPtr = ::glfwCreateWindow(m_data.currentWidth, m_data.currentHeight,
         m_data.initialConfig.windowTitlePrefix.c_str(), nullptr, m_sharedData.borrowed_glfwContextWindowPtr);
@@ -341,8 +341,8 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
 
     ::glfwMakeContextCurrent(m_glfwWindowPtr);
 
-    if (config.windowPlacement.pos ||
-        config.windowPlacement
+    if (m_data.initialConfig.windowPlacement.pos ||
+        m_data.initialConfig.windowPlacement
             .fullScreen) // note the m_data window position got overwritten with monitor position for fullscreen mode
         ::glfwSetWindowPos(
             m_glfwWindowPtr, m_data.initialConfig.windowPlacement.x, m_data.initialConfig.windowPlacement.y);
@@ -363,9 +363,11 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     XCloseDisplay(display);
 #endif
 
-    glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    glDebugMessageCallback(opengl_debug_message_callback, nullptr);
+	if (m_data.initialConfig.enableKHRDebug) {
+		glEnable(GL_DEBUG_OUTPUT);
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		glDebugMessageCallback(opengl_debug_message_callback, nullptr);
+    }
 
     ::glfwSetWindowUserPointer(m_glfwWindowPtr, this); // this is ok, as long as no one derives from this RAPI
 
@@ -414,7 +416,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     // if (config.enableKHRDebug)
     //    megamol::core::utility::KHR::startDebug();
 
-    if (config.enableVsync) ::glfwSwapInterval(0);
+    if (m_data.initialConfig.enableVsync) ::glfwSwapInterval(0);
 
     ::glfwShowWindow(m_glfwWindowPtr);
     ::glfwMakeContextCurrent(nullptr);
