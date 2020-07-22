@@ -187,7 +187,7 @@ bool RaycastVolumeRenderer::create() {
 
 void RaycastVolumeRenderer::release() {}
 
-bool RaycastVolumeRenderer::GetExtents(core::view::CallRender3D_2& cr) {
+bool RaycastVolumeRenderer::GetExtents(megamol::core::view::CallRender3D_2& cr) {
     auto cd = m_volumetricData_callerSlot.CallAs<megamol::core::misc::VolumetricDataCall>();
     auto ci = m_renderer_callerSlot.CallAs<megamol::core::view::CallRender3D_2>();
 
@@ -222,7 +222,7 @@ bool RaycastVolumeRenderer::GetExtents(core::view::CallRender3D_2& cr) {
     return true;
 }
 
-bool RaycastVolumeRenderer::Render(core::view::CallRender3D_2& cr) {
+bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     // Chain renderer
     auto ci = m_renderer_callerSlot.CallAs<megamol::core::view::CallRender3D_2>();
 
