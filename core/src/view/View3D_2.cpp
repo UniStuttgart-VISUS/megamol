@@ -801,10 +801,8 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
             this->cursor2d.SetButtonState(2, down);
 
             if (!anyManipulatorActive) {
-                if ((altPressed ^ this->arcballDefault) || ctrlPressed) {
-                    this->translateManipulator.setActive(
-                        wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
-                }
+                this->translateManipulator.setActive(
+                    wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
             }
 
             break;
@@ -875,7 +873,7 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
                 static_cast<int>(this->mouseY), glm::vec4(rotCenter, 1.0));
         }
 
-        if (this->translateManipulator.manipulating()) {
+        if (this->translateManipulator.manipulating() && !this->rotateManipulator.manipulating() ) {
 
             // compute proper step size by computing pixel world size at distance to rotCenter
             glm::vec3 currCamPos(static_cast<glm::vec4>(this->cam.position()));

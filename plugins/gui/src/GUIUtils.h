@@ -34,8 +34,8 @@
 
 #include "mmcore/view/Input.h"
 
-#include "vislib/UTF8Encoder.h"
 #include "mmcore/utility/log/Log.h"
+#include "vislib/UTF8Encoder.h"
 
 
 namespace megamol {

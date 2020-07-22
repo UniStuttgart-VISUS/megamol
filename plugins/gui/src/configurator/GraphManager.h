@@ -16,8 +16,8 @@
 
 #include "utility/plugins/PluginManager.h"
 
-#include "vislib/UTF8Encoder.h"
 #include "mmcore/utility/log/Log.h"
+#include "vislib/UTF8Encoder.h"
 
 #include <map>
 #include <vector>

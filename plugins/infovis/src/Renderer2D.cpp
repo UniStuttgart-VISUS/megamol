@@ -3,8 +3,8 @@
 
 #include "mmcore/CoreInstance.h"
 
-#include "vislib/graphics/gl/ShaderSource.h"
 #include "mmcore/utility/log/Log.h"
+#include "vislib/graphics/gl/ShaderSource.h"
 
 using namespace megamol;
 using namespace megamol::infovis;
