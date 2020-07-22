@@ -17,7 +17,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/Vector.h"
 
 using namespace megamol;

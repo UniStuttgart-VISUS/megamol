@@ -4,7 +4,7 @@
 #include "protein_calls/BindingSiteCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/IntParam.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "vislib/sys/BufferedFile.h"

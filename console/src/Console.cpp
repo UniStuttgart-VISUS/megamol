@@ -300,10 +300,10 @@ void setupCore(megamol::console::utility::CmdLineParser *& parser) {
     // instead inquire the core log
     vislib::sys::Log *corelog = nullptr;
     MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore, MMC_INITVAL_CORELOG, MMC_TYPE_VOIDP, static_cast<void*>(&corelog)));
-    if (corelog != nullptr) {
+    /*if (corelog != nullptr) {
         vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(corelog, vislib::sys::Log::LEVEL_ALL));
         vislib::sys::Log::DefaultLog.EchoOfflineMessages(true);
-    }
+    }*/
 
     void (MEGAMOLCORE_CALLBACK *echoFunc)(unsigned int level, const char* message)
 #ifdef _WIN32

@@ -21,9 +21,9 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/FilePathParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Vector.h"
 

@@ -7,7 +7,7 @@
 #ifndef MMPROTEINPLUGIN_ATOMWEIGHTS_H_INCLUDED
 #define MMPROTEINPLUGIN_ATOMWEIGHTS_H_INCLUDED
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <string>
 #include <algorithm>

@@ -9,7 +9,7 @@
 #include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include <chrono>
 
 using namespace megamol;

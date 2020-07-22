@@ -12,7 +12,7 @@
 #include "mmcore/view/CallRenderDeferred3D.h"
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/view/BlinnPhongRendererDeferred.h"
 
 using namespace megamol;

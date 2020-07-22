@@ -6,7 +6,7 @@
  */
 #include "stdafx.h"
 #include "NullParticleWriter.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <thread>
 #include <cstdint>
 #include "mmcore/moldyn/MultiParticleDataCall.h"

@@ -11,10 +11,10 @@
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "rendering/ParticleGridDataCall.h"
 #include "mmcore/CoreInstance.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/String.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 
 using namespace megamol::stdplugin::moldyn::io;
 using namespace megamol::stdplugin::moldyn;

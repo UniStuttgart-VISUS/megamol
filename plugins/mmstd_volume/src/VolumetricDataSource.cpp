@@ -17,7 +17,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 #define STATIC_ARRAY_COUNT(ary) (sizeof(ary) / sizeof(*(ary)))

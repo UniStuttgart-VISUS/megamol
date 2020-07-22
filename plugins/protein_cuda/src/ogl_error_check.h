@@ -10,7 +10,7 @@
 #ifndef MMPROTEINCUDAPLUGIN_OGL_ERROR_CHECK_H_INCLUDED
 #define MMPROTEINCUDAPLUGIN_OGL_ERROR_CHECK_H_INCLUDED
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <GL/glu.h>
 
 #define OGL_ERROR_CHECK // Toggle OpenGL error checking

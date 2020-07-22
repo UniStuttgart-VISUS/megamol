@@ -23,7 +23,7 @@
 #include "vislib/String.h"
 #include "vislib/assert.h"
 #include "vislib/math/Quaternion.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 using namespace megamol::core;

@@ -26,10 +26,10 @@
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/net/NetworkInformation.h"
-#include "vislib/net/ShallowSimpleMessage.h"
+#include "mmcore/utility/net/ShallowSimpleMessage.h"
 #include "vislib/net/SimpleMessageHeaderData.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 
 using namespace megamol::core;
 

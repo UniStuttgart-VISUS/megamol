@@ -17,9 +17,9 @@
 #include "ospcommon/box.h"
 #include "ospray/ospray.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/Path.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 
 
 #include <stdio.h>

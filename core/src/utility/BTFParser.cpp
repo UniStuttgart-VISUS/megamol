@@ -13,7 +13,7 @@
 //#include "vislib/memutils.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/VersionNumber.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/xmlUtils.h"
 #include <sstream>
 #include <fstream>

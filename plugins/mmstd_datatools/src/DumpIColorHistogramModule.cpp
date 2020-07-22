@@ -2,7 +2,7 @@
 #include "DumpIColorHistogramModule.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <vector>
 #include <fstream>
 #include <algorithm>

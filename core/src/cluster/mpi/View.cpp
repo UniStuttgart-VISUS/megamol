@@ -35,11 +35,11 @@
 #include "vislib/net/DNS.h"
 #include "vislib/net/IPHostEntry.h"
 #include "vislib/net/NetworkInformation.h"
-#include "vislib/net/ShallowSimpleMessage.h"
+#include "mmcore/utility/net/ShallowSimpleMessage.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/CmdLineProvider.h"
-#include "vislib/sys/SystemInformation.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/sys/SystemInformation.h"
+#include "mmcore/utility/sys/Thread.h"
 #include "vislib/tchar.h"
 
 

@@ -21,7 +21,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "vislib/sys/File.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol;

@@ -16,7 +16,7 @@
 #include "mmcore/param/IntParam.h"
 
 #include "vislib/math/ShallowVector.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 using namespace megamol::core;

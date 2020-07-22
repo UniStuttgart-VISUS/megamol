@@ -6,8 +6,8 @@
 #include "mmcore/param/EnumParam.h"
 #include "vislib/Trace.h"
 #include "vislib/sys/CmdLineProvider.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 
 namespace megamol {
 namespace adios {

@@ -19,7 +19,7 @@
 #include "vislib/sys/File.h"
 #include "vislib/sys/Path.h"
 #include "vislib/sys/sysfunctions.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/String.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/Trace.h"

@@ -15,7 +15,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "omp.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #define _USE_MATH_DEFINES
 #include <chrono>
 #include <functional>

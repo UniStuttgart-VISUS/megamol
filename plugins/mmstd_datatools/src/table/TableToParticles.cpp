@@ -15,7 +15,7 @@
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "vislib/Trace.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/PerformanceCounter.h"
 
 using namespace megamol::stdplugin::datatools;

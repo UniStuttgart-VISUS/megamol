@@ -12,7 +12,7 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/graphicsfunctions.h"
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/Vector.h"
 
 

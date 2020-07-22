@@ -14,7 +14,7 @@
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/assert.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/memutils.h"
 #include "vislib/math/Quaternion.h"
@@ -23,7 +23,7 @@
 #include "vislib/String.h"
 #ifdef WITH_VRPN
 #include "vislib/StringConverter.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #endif /* WITH_VRPN */
 #include "vislib/math/Vector.h"
 #include <GL/gl.h>

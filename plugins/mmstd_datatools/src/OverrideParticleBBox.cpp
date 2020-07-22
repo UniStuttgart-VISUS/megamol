@@ -13,7 +13,7 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/ShallowPoint.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;

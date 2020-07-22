@@ -13,7 +13,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol::ospray;

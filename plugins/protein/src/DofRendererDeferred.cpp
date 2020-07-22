@@ -18,7 +18,7 @@
 #include <algorithm>
 
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/Vector.h"
 
 #include "DofRendererDeferred.h"

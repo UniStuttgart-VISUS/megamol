@@ -16,7 +16,7 @@
 
 #include "vislib/math/Matrix.h"
 #include "vislib/math/Vector.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 /*
  * PhantomDeviceWrapper::PhantomDeviceWrapper

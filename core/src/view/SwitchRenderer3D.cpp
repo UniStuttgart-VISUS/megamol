@@ -10,7 +10,7 @@
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/ButtonParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol::core;

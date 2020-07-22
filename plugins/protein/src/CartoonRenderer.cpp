@@ -25,7 +25,7 @@
 #include "vislib/Trace.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
 #include "vislib/math/Matrix.h"
 #include <GL/glu.h>

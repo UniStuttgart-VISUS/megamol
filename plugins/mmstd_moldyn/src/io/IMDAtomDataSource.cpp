@@ -27,7 +27,7 @@
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/FastFile.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/SystemMessage.h"
 #include "vislib/sys/sysfunctions.h"
 

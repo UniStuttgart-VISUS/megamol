@@ -9,7 +9,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/ModuleNamespace.h"
 #include "vislib/sys/AutoLock.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;
 

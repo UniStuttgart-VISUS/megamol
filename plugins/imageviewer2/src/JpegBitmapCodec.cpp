@@ -14,7 +14,7 @@
 #include "vislib/graphics/BitmapImage.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/RawStorage.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <fstream>
 
 using namespace sg::graphics;

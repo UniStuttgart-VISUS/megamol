@@ -10,7 +10,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <cstdint>
 #include <algorithm>
 #include <cfloat>

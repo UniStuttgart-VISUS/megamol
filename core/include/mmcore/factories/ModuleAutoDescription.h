@@ -12,7 +12,7 @@
 
 #include <typeinfo>
 #include "mmcore/factories/ModuleDescription.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol {
 namespace core {

@@ -22,7 +22,7 @@ typedef vislib::math::Vector<float, 3> Vec3f;
 
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 typedef unsigned int uint;
 

@@ -15,7 +15,7 @@
 #    include "mmcore/view/Renderer3DModule.h"
 #    include "vislib/graphics/gl/IncludeAllGL.h"
 #endif
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;
 

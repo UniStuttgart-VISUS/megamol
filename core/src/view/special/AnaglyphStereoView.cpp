@@ -11,7 +11,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/CallRenderView.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/Trace.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 

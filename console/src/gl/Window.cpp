@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "gl/Window.h"
 #include "utility/HotFixes.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "WindowManager.h"
 #include <cassert>
 #include <algorithm>

@@ -9,7 +9,7 @@
 #include "mmcore/cluster/simple/HeartbeatClient.h"
 #include "vislib/assert.h"
 #include "vislib/net/IPCommEndPoint.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/net/Socket.h"
 
 using namespace megamol::core;

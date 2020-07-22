@@ -11,10 +11,10 @@
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/DataWriterCtrlCall.h"
 #include "mmcore/param/FilePathParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/String.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/sys/Thread.h"
 
 using namespace megamol::stdplugin::moldyn::io;
 using namespace megamol::stdplugin::moldyn::rendering;

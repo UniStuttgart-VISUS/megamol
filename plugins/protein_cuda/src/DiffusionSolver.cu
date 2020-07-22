@@ -17,7 +17,7 @@
 #include "helper_cuda.h"
 #include "helper_math.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 using namespace megamol::protein_cuda;

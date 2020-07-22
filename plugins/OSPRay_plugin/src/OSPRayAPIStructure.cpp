@@ -7,7 +7,7 @@
 #include "stdafx.h"
 #include "OSPRayAPIStructure.h"
 #include "OSPRay_plugin/CallOSPRayAPIObject.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/Call.h"
 
 

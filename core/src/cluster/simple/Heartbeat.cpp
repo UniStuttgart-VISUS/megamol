@@ -13,7 +13,7 @@
 #include "mmcore/CoreInstance.h"
 #include "vislib/assert.h"
 #include "vislib/sys/AutoLock.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/net/IPCommEndPoint.h"
 #include "vislib/net/TcpCommChannel.h"
 #include "vislib/Trace.h"

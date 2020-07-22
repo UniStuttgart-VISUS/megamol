@@ -9,7 +9,7 @@
 #include "imageviewer2/ImageRenderer.h"
 #include "imageviewer2/JpegBitmapCodec.h"
 #include "mmcore/misc/PngBitmapCodec.h"
-#include "vislib/graphics/BitmapCodecCollection.h"
+#include "mmcore/utility/graphics/BitmapCodecCollection.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 //#define _USE_MATH_DEFINES
@@ -23,8 +23,8 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/AbstractRenderingView.h"
 #include "mmcore/view/CallRender3D_2.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 //#include <cmath>
 
 using namespace megamol::core;

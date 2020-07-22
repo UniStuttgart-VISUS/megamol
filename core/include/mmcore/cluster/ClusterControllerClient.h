@@ -16,7 +16,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib/net/cluster/DiscoveryService.h"
+#include "mmcore/utility/net/DiscoveryService.h"
 #include "vislib/Listenable.h"
 
 

@@ -13,7 +13,7 @@
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/Camera_2.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "snappy.h"
 

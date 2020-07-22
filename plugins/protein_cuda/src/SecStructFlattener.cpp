@@ -18,7 +18,7 @@
 
 #include "vislib/math/Matrix.h"
 #include "vislib/math/ShallowVector.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <limits>
 

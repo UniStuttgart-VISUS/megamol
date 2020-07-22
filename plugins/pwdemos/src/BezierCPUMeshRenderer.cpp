@@ -16,7 +16,7 @@
 #include "vislib/math/BezierCurve.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/ShallowPoint.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol {
 namespace demos {

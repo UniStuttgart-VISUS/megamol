@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "adios_plugin/CallADIOSData.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <algorithm>
 
 namespace megamol {

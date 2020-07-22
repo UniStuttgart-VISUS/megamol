@@ -8,7 +8,7 @@
 #include "AmbientOcclusionCalculator.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/math/AbstractPolynomImpl.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <array>
 #include <omp.h>
@@ -156,7 +156,7 @@ void AmbientOcclusionCalculator::calcLevels(float aoWidthX, float aoWidthY, floa
  */
 const std::vector<float> * AmbientOcclusionCalculator::calculateVertexShadows(AmbientOcclusionCalculator::AOSettings settings) {
 	if (this->vertices == nullptr) return nullptr;
-	if (this->vertex_normals == nullptr) return false;
+	if (this->vertex_normals == nullptr) return nullptr;
 	if (this->mdc == nullptr) return nullptr;
 
 	// allocate enough space for the result

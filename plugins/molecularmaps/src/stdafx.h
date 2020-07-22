@@ -40,7 +40,7 @@
 #include "vislib/types.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/Matrix.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 // C++ includes
 #include <array>

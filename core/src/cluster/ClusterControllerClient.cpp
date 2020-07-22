@@ -9,7 +9,7 @@
 #include "mmcore/cluster/ClusterControllerClient.h"
 #include "mmcore/cluster/CallRegisterAtController.h"
 #include "mmcore/param/StringParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/net/IPEndPoint.h"
 #include "vislib/net/NetworkInformation.h"
 

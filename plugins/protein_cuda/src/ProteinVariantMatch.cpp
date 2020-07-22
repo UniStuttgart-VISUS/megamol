@@ -38,7 +38,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "RMS.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <ctime>
 
 

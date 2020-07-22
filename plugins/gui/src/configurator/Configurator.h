@@ -12,7 +12,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view//Input.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <map>
 #include <math.h> // fmodf

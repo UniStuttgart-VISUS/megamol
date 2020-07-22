@@ -23,10 +23,10 @@
 #if defined(DEBUG) || defined(_DEBUG)
 #include "vislib/sys/AutoLock.h"
 #endif
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/Stack.h"
 #include "vislib/String.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/sys/Thread.h"
 #include "vislib/Trace.h"
 #include "vislib/UTF8Encoder.h"
 #include <memory>

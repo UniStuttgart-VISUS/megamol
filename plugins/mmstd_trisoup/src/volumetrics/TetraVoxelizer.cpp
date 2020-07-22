@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "TetraVoxelizer.h"
 #include "JobStructures.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/ShallowPoint.h"
 #include "MarchingCubeTables.h"
 #include "vislib/math/Vector.h"

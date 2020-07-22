@@ -9,7 +9,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include <nanoflann.hpp>
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/math/ShallowPoint.h"
 #include <cstdint>

@@ -30,8 +30,8 @@
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/File.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/Thread.h"
 
 
 namespace megamol {

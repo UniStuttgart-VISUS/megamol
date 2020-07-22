@@ -42,7 +42,7 @@
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/KeyCode.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/sysfunctions.h"
 #include <glm/gtx/string_cast.hpp>
 

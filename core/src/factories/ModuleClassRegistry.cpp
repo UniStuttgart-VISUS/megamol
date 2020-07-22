@@ -14,7 +14,6 @@
 
 #include "mmcore/cluster/ClusterController.h"
 #include "mmcore/cluster/ClusterViewMaster.h"
-#include "mmcore/cluster/PowerwallView.h"
 #include "mmcore/cluster/mpi/MpiProvider.h"
 #include "mmcore/cluster/mpi/View.h"
 #include "mmcore/cluster/simple/Client.h"
@@ -91,7 +90,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
 
     instance.RegisterAutoDescription<cluster::ClusterController>();
     instance.RegisterAutoDescription<cluster::ClusterViewMaster>();
-    instance.RegisterAutoDescription<cluster::PowerwallView>();
     instance.RegisterAutoDescription<cluster::simple::Client>();
     instance.RegisterAutoDescription<cluster::simple::Heartbeat>();
     instance.RegisterAutoDescription<cluster::simple::Server>();

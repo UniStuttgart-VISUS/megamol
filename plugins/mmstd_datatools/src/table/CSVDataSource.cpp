@@ -16,7 +16,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/CoreInstance.h"
 
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/StringTokeniser.h"
 #include <sstream>
 #include <vector>

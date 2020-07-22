@@ -10,7 +10,7 @@
 #include "mmcore/view/CallRenderView.h"
 #include "mmcore/view/HeadView.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/Trace.h"
 
 #include <memory>

@@ -14,7 +14,7 @@
 #include "mmcore/param/IntParam.h"
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/Pair.h"
 #include "vislib/PtrArray.h"
 #include "vislib/RawStorageWriter.h"

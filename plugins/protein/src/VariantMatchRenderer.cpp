@@ -20,7 +20,7 @@
 #include "vislib/graphics/gl/SimpleFont.h"
 #include "vislib/graphics/gl/OutlineFont.h"
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 using namespace megamol::protein;

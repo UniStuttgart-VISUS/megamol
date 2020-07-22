@@ -13,7 +13,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "vislib/forceinline.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <ospray.h>
 #include "OSPRay_plugin/CallOSPRayAPIObject.h"

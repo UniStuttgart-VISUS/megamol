@@ -8,11 +8,11 @@
 
 #include "stdafx.h"
 #include "MDDriverConnector.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/net/SocketException.h"
 #include "vislib/net/IPEndPoint.h"
 #include "vislib/net/DNS.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/sys/Thread.h"
 
 using namespace megamol;
 using namespace megamol::protein;

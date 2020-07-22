@@ -10,18 +10,18 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/ShallowShallowTriangle.h"
 #include "vislib/math/Vector.h"
 #include "vislib/graphics/NamedColours.h"
-#include "vislib/sys/Thread.h"
-#include "vislib/sys/ThreadPool.h"
+#include "mmcore/utility/sys/Thread.h"
+#include "mmcore/utility/sys/ThreadPool.h"
 #include "MarchingCubeTables.h"
 #include "TetraVoxelizer.h"
 #include "vislib/sys/sysfunctions.h"
-#include "vislib/sys/ConsoleProgressBar.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/ConsoleProgressBar.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include <climits>
 #include <cfloat>
 

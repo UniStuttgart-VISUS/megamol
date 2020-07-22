@@ -9,7 +9,7 @@
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/versioninfo.h"
 #include "versioninfo.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/String.h"
 #include "vislib/UnsupportedOperationException.h"
 #include <iostream>

@@ -13,7 +13,8 @@
 
 
 #include "mmcore/api/MegaMolCore.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
+
 
 
 namespace megamol {

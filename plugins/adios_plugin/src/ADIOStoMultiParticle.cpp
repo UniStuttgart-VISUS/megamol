@@ -9,7 +9,7 @@
 #include "ADIOStoMultiParticle.h"
 #include "adios_plugin/CallADIOSData.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <numeric>
 
 

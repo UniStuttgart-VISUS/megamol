@@ -8,8 +8,8 @@
 #include "stdafx.h"
 #include "TriSoupDataSource.h"
 #include "vislib/assert.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Vector.h"
 

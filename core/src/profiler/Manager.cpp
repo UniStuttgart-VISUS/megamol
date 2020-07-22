@@ -6,7 +6,7 @@
  */
 #include "stdafx.h"
 #include "mmcore/profiler/Manager.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/Stack.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include "mmcore/CallerSlot.h"

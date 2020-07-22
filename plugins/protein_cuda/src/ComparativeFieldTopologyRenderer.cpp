@@ -23,7 +23,7 @@
 #include "mmcore/param/BoolParam.h"
 
 #include "vislib/math/Matrix.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/mathfunctions.h"
 
 #include "protein_calls/VTIDataCall.h"

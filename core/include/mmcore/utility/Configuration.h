@@ -15,7 +15,7 @@
 #include "mmcore/ParamValueSetRequest.h"
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/utility/xml/ConditionalParser.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/Map.h"
 #include "vislib/Pair.h"
 #include "vislib/String.h"

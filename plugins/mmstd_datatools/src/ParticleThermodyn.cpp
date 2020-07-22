@@ -18,8 +18,8 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "vislib/sys/ConsoleProgressBar.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/sys/ConsoleProgressBar.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "MinSphereWrapper.h"
 

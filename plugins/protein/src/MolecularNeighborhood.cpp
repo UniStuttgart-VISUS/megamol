@@ -11,7 +11,7 @@
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/param/FloatParam.h"
 #include "vislib/math/Point.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "GridNeighbourFinder.h"
 

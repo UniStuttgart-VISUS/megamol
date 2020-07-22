@@ -36,7 +36,7 @@
 #include <cmath>
 #include <sstream>
 
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 
 using namespace megamol;
 using namespace megamol::protein_cuda;

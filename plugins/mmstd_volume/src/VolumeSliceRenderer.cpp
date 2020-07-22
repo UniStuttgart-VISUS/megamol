@@ -20,7 +20,7 @@
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/math/Plane.h"
 #include "vislib/math/Point.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "glowl/Texture.hpp"
 #include "glowl/Texture2D.hpp"

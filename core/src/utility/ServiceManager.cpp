@@ -6,7 +6,7 @@
  */
 #include "stdafx.h"
 #include "utility/ServiceManager.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 using namespace megamol::core;

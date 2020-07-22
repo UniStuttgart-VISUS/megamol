@@ -12,7 +12,7 @@
 #include "vislib/Array.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/sys/BufferedFile.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/sys/SystemException.h"
 #include <string>

@@ -26,13 +26,18 @@
 #include "vislib/UTF8Encoder.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/Environment.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/Path.h"
-#include "vislib/sys/Process.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/sys/sysfunctions.h"
 
 #include "lua.hpp"
+
+#ifdef _WIN32
+#    include <Windows.h>
+#else /* _WIN32 */
+#    include <unistd.h>
+#endif /* _WIN32 */
 
 //#define LUA_FULL_ENVIRONMENT
 
@@ -485,7 +490,11 @@ UINT megamol::core::LuaState::parseLevelAttribute(const std::string attr) {
 int megamol::core::LuaState::GetProcessID(lua_State* L) {
     //    if (this->checkRunning("mmGetProcessID")) {
     vislib::StringA str;
-    unsigned int id = vislib::sys::Process::CurrentID();
+#ifdef _WIN32
+    unsigned int id = GetCurrentProcessId();
+#else /* _WIN32 */
+    unsigned int id = getpid();
+#endif /* _WIN32 */
     str.Format("%u", id);
     lua_pushstring(L, str.PeekBuffer());
     return 1;

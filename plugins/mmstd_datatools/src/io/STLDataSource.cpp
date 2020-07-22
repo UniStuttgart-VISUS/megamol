@@ -20,7 +20,7 @@
 #include "ng_mesh/CallNGMeshRenderBatches.h"
 #endif
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <array>
 #include <algorithm>

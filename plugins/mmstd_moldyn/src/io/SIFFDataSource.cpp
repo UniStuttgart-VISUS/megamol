@@ -11,7 +11,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"

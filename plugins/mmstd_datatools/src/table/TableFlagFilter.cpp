@@ -9,7 +9,7 @@
 #include "TableFlagFilter.h"
 
 #include "mmcore/param/EnumParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol::stdplugin::datatools;
 using namespace megamol::stdplugin::datatools::table;

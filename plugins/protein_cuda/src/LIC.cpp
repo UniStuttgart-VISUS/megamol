@@ -13,7 +13,7 @@
 
 #include "helper_math.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/Array.h"
 
 using namespace megamol;

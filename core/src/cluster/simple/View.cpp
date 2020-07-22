@@ -22,7 +22,7 @@
 #include "vislib/net/IPHostEntry.h"
 #include "vislib/net/NetworkInformation.h"
 #include "vislib/RawStorageSerialiser.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/sys/Thread.h"
 #include <climits>
 
 

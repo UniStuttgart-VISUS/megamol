@@ -36,7 +36,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/ColourParser.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/Matrix.h"

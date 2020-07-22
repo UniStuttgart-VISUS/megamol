@@ -18,7 +18,7 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "CUDAQuickSurf.h"
 
 #include <thrust/device_vector.h>

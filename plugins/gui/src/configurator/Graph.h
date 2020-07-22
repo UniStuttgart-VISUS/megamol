@@ -8,7 +8,7 @@
 #ifndef MEGAMOL_GUI_GRAPH_GRAPH_H_INCLUDED
 #define MEGAMOL_GUI_GRAPH_GRAPH_H_INCLUDED
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <map>
 #include <vector>

@@ -16,7 +16,7 @@
 #include "mmcore/CoreInstance.h"
 
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "ToonRendererDeferred.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"

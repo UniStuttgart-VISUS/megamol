@@ -7,7 +7,7 @@
 
 #include "snappy.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
@@ -23,7 +23,7 @@
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/View3D.h"
 #include "vislib/Trace.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 
 #ifdef __unix__
 #    include <limits.h>

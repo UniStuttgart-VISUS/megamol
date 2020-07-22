@@ -50,7 +50,7 @@
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/DynamicLinkLibrary.h"
 #include "vislib/sys/Lockable.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <functional>
 #include <memory>

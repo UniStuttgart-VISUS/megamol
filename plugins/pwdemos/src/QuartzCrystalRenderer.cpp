@@ -11,7 +11,7 @@
 #include "mmcore/view/CallRender3D_2.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol {
 namespace demos {

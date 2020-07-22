@@ -10,9 +10,9 @@
 #include "mmcore/param/BoolParam.h"
 #include <cstdint>
 #include <algorithm>
-#include "vislib/sys/Log.h"
-#include "vislib/sys/ConsoleProgressBar.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/ConsoleProgressBar.h"
+#include "mmcore/utility/sys/Thread.h"
 #include <cassert>
 
 using namespace megamol;

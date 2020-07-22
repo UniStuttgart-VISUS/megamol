@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "mmcore/job/JobThread.h"
 #include "mmcore/CoreInstance.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;
 

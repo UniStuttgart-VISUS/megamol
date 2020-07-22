@@ -8,7 +8,7 @@
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include <cstring>
 #include "vislib/assert.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/String.h"
 #include <algorithm>
 #include "mmcore/Module.h"

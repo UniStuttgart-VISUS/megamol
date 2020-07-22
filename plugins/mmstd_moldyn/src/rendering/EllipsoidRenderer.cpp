@@ -14,7 +14,7 @@
 #include "vislib/String.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/OutOfRangeException.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "inttypes.h"
 #include <iostream>
 #include <cstring>

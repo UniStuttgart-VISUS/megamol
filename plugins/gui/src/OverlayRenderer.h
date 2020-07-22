@@ -33,7 +33,7 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/sys/File.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <chrono>
 #include <glm/gtc/matrix_transform.hpp>

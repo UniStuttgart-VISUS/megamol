@@ -9,7 +9,7 @@
 
 #include "gl/glfwInst.h"
 #include "GLFW/glfw3.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 //#include <mutex>
 
 using namespace megamol;

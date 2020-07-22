@@ -16,10 +16,10 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/String.h"
 #include "vislib/sys/sysfunctions.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/graphics/ColourRGBAu8.h"
 #include <algorithm>
 

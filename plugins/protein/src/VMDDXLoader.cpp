@@ -15,8 +15,8 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/String.h"
 #include "vislib/Exception.h"
 #include <string>

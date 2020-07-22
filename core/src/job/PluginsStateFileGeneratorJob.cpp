@@ -9,7 +9,7 @@
 #include "job/PluginsStateFileGeneratorJob.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/Path.h"
 #include "vislib/xmlUtils.h"
 #include "vislib/UTF8Encoder.h"

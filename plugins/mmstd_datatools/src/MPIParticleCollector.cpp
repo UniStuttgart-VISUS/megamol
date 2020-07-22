@@ -7,7 +7,7 @@
 #include "stdafx.h"
 #include "MPIParticleCollector.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;

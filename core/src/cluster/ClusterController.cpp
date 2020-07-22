@@ -18,13 +18,13 @@
 #include "mmcore/utility/Configuration.h"
 #include "vislib/assert.h"
 #include "vislib/sys/AutoLock.h"
-#include "vislib/net/cluster/DiscoveryService.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/net/DiscoveryService.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/net/NetworkInformation.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/net/Socket.h"
 #include "vislib/StringConverter.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/Trace.h"
 
 using namespace megamol::core;

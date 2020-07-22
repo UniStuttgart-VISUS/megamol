@@ -12,7 +12,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "vislib/math/BezierCurve.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/ShallowPoint.h"

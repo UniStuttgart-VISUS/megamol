@@ -11,7 +11,7 @@
 #include "mmcore/param/StringParam.h"
 
 #include "vislib/StringTokeniser.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <limits>
 
 using namespace megamol::stdplugin::datatools;

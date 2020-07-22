@@ -6,7 +6,7 @@
 //
 
 #include "cuda_error_check.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 bool checkForCudaError(const char *file, const int line) {

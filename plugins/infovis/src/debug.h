@@ -11,7 +11,7 @@
 #include <iomanip>
 #include <ostream>
 #include <vector>
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace zen {
 namespace gl {

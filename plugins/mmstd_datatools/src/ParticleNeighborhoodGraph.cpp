@@ -9,7 +9,7 @@
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/ShallowVector.h"
 #include <cfloat>
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/param/IntParam.h"
 #include <chrono>
 #include <omp.h>

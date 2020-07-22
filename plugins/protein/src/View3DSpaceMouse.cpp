@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "View3DSpaceMouse.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/Cuboid.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"

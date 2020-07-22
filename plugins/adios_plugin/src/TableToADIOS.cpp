@@ -12,7 +12,7 @@
 #include "mmstd_datatools/table/TableDataCall.h"
 #include "mmcore/param/EnumParam.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol {
 namespace adios {

@@ -28,7 +28,7 @@
 #include "vislib/math/Point.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/sysfunctions.h"
 #ifdef ENABLE_KEYBOARD_VIEW_CONTROL
 #    include "mmcore/view/Input.h"

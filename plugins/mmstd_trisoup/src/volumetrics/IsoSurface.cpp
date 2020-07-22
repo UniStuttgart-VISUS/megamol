@@ -14,7 +14,7 @@
 #include <climits>
 #include <cfloat>
 #include <cmath>
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/RawStorageWriter.h"
 #include "volumetrics/MarchingCubeTables.h"
 #include "vislib/math/Plane.h"
