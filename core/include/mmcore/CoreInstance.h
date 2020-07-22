@@ -707,30 +707,6 @@ public:
     }
 
     /**
-     * Tries to perform a quickstart with the given data file
-     *
-     * @param filename The file to quickstart
-     */
-    void Quickstart(const vislib::TString& filename);
-
-    /**
-     * Registers a file type for quickstart if supported by the OS
-     *
-     * @param frontend Path to the front end to be called
-     * @param feparams The parameter string to be used when calling the frontend.
-     *                 use '$(FILENAME)' to specify the position of the data file name.
-     * @param filetype Semicolor separated list of file type extensions to register
-     *                 or "*" if all known file type extensions should be used
-     * @param unreg If true, the file types will be removed from the quickstart registry instead of added
-     * @param overwrite If true, any previous registration will be overwritten.
-     *                  If false, previous registrations will be placed as alternative start commands.
-     *                  When unregistering and true, all registrations will be removed,
-     *                  if false only registrations to this binary will be removed.
-     */
-    void QuickstartRegistry(const vislib::TString& frontend, const vislib::TString& feparams,
-        const vislib::TString& filetype, bool unreg, bool overwrite);
-
-    /**
      * Answer the root object of the module graph.
      * Used for internal computations only
      *
@@ -1124,29 +1100,6 @@ private:
      */
     void quickConnectUpStepInfo(factories::ModuleDescription::ptr from, vislib::Array<quickStepInfo>& step);
 
-    /**
-     * Registers a single file type for quickstarting
-     *
-     * @param frontend The full path to the frontend to call
-     * @param feparams The frontend command line parameter string
-     * @param fnext The data file name extension
-     * @param fnname The data file type name
-     * @param keepothers If true, other open options will not be overwritten.
-     */
-    void registerQuickstart(const vislib::TString& frontend, const vislib::TString& feparams,
-        const vislib::TString& fnext, const vislib::TString& fnname, bool keepothers);
-
-    /**
-     * Removes the registration for a single file type for quickstarting
-     *
-     * @param frontend The full path to the frontend to call
-     * @param feparams The frontend command line parameter string
-     * @param fnext The data file name extension
-     * @param fnname The data file type name
-     * @param keepothers If true, other open options will not be deleted.
-     */
-    void unregisterQuickstart(const vislib::TString& frontend, const vislib::TString& feparams,
-        const vislib::TString& fnext, const vislib::TString& fnname, bool keepothers);
 
     /**
      * Updates flush index list after flush has been performed
