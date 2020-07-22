@@ -49,7 +49,6 @@
 #include "vislib/sys/AutoLock.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/sys/PerformanceCounter.h"
-#include "vislib/sys/RegistryKey.h"
 #include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/vislibversion.h"
 
