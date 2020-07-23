@@ -26,8 +26,7 @@ TableSelectionTx::TableSelectionTx()
     , senderThreadQuit_(false)
     , senderThreadNotified_(false)
     , receiverThreadQuit_(false)
-    , oldName_(0)
-    , newName_(0)
+    , receivedSelectionUpdate_(false)
 {
     this->tableInSlot.SetCompatibleCall<TableDataCallDescription>();
     this->MakeSlotAvailable(&this->tableInSlot);
@@ -199,12 +198,12 @@ bool TableSelectionTx::validateCalls() {
 }
 
 bool TableSelectionTx::validateSelectionUpdate() {
-    std::lock_guard<std::mutex> lock(newNameMutex_);
-    if (newName_ == oldName_) {
+    std::lock_guard<std::mutex> lock(receivedSelectionMutex_);
+    if (!receivedSelectionUpdate_) {
         return true;
     }
 
-    oldName_ = newName_;
+    receivedSelectionUpdate_ = false;
 
     if (!this->updateSelectionParam.Param<core::param::BoolParam>()->Value()) {
         return true;
@@ -221,25 +220,13 @@ bool TableSelectionTx::validateSelectionUpdate() {
     (*tableInCall)(0);
 
     size_t numberOfRows = tableInCall->GetRowsCount();
-    size_t numberOfCols = tableInCall->GetColumnsCount();
-    const float *tableInData = tableInCall->GetData();
-
-    if (numberOfCols < 2) {
-        return false;
-    }
 
     std::vector<uint32_t> flags_data(numberOfRows, core::FlagStorage::ENABLED);
 
-    // find index of selected row
-    if (newName_ > 0) {
-        for (size_t i = 0; i < numberOfRows; ++i) {
-            auto rowTime = static_cast<uint32_t>(tableInData[numberOfCols * i + 0]);   // 0 = id of time column
-            auto rowNumber = static_cast<uint32_t>(tableInData[numberOfCols * i + 1]); // 1 = id of number column
-            uint64_t rowName = (static_cast<uint64_t>(rowTime) << 32u) + static_cast<uint64_t>(rowNumber);
-            if (rowName == newName_) {
-                flags_data[i] = core::FlagStorage::ENABLED | core::FlagStorage::SELECTED;
-                break;
-            }
+    // Select received rows
+    for (auto id : receivedSelection_) {
+        if (id >= 0 && id < numberOfRows) {
+            flags_data[id] = core::FlagStorage::ENABLED | core::FlagStorage::SELECTED;
         }
     }
 
@@ -292,12 +279,12 @@ void TableSelectionTx::selectionReceiver() {
             zmq::message_t request;
             socket.recv(request, zmq::recv_flags::none);
             size_t size = request.size() / sizeof(uint64_t);
-            uint64_t* data_ptr = static_cast<uint64_t*>(request.data());
-            std::vector<uint64_t> data(data_ptr, data_ptr + size);
 
-            if (data.size() > 0) {
-                std::lock_guard<std::mutex> lock(newNameMutex_);
-                newName_ = data[0];
+            if (size > 0) {
+                std::lock_guard<std::mutex> lock(receivedSelectionMutex_);
+                uint64_t* data_ptr = static_cast<uint64_t*>(request.data());
+                receivedSelection_ = std::vector<uint64_t>(data_ptr, data_ptr + size);
+                receivedSelectionUpdate_ = true;
             }
 
             zmq::message_t reply{okString.cbegin(), okString.cend()};

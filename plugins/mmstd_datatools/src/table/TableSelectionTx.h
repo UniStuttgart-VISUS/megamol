@@ -85,9 +85,9 @@ private:
     bool senderThreadNotified_;
     bool receiverThreadQuit_;
 
-    uint64_t oldName_;
-    uint64_t newName_;
-    std::mutex newNameMutex_;
+    std::vector<uint64_t> receivedSelection_;
+    bool receivedSelectionUpdate_;
+    std::mutex receivedSelectionMutex_;
 };
 
 } /* end namespace table */
