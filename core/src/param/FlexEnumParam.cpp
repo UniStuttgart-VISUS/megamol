@@ -106,6 +106,7 @@ FlexEnumParam* FlexEnumParam::AddValue(const std::string& name) {
 void FlexEnumParam::SetValue(const std::string& v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
+        this->indicateChange();
         if (setDirty) this->setDirty();
     }
 }

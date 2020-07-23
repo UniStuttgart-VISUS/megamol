@@ -205,6 +205,8 @@ private:
 
     core::param::ParamSlot pickRadiusParam;
 
+    core::param::ParamSlot pickColorParam;
+
     core::param::ParamSlot resetSelectionParam;
 
     core::param::ParamSlot drawPickIndicatorParam;

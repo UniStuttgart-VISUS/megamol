@@ -6,7 +6,6 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/job/AbstractJob.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/ParamUpdateListener.h"
 
@@ -16,7 +15,7 @@
 namespace megamol {
 namespace remote {
 
-class HeadnodeServer : public core::Module, public core::job::AbstractJob, public core::param::ParamUpdateListener {
+class HeadnodeServer : public core::Module, public core::param::ParamUpdateListener {
 public:
     HeadnodeServer();
     ~HeadnodeServer() override;
@@ -48,36 +47,15 @@ public:
      * @return false
      */
     static bool SupportQuickstart(void) { return false; }
-    
+
 protected:
-    /**
-     * Answers whether or not this job is still running.
-     *
-     * @return 'true' if this job is still running, 'false' if it has
-     *         finished.
-     */
-    bool IsRunning(void) const override;
-
-    /**
-     * Starts the job thread.
-     *
-     * @return true if the job has been successfully started.
-     */
-    bool Start(void) override;
-
-    /**
-     * Terminates the job thread.
-     *
-     * @return true to acknowledge that the job will finish as soon
-     *         as possible, false if termination is not possible.
-     */
-    bool Terminate(void) override;
-
     bool create() override;
 
     void release() override;
 
     void ParamUpdated(core::param::ParamSlot& slot) override;
+
+    void BatchParamUpdated(param_updates_vec_t const& updates) override;
 
 private:
     bool onStartServer(core::param::ParamSlot& param);
@@ -94,10 +72,10 @@ private:
 
     core::CallerSlot view_slot_;
 
-    core::param::ParamSlot renderhead_port_slot_;
+    core::param::ParamSlot address_slot_;
 
     core::param::ParamSlot start_server_slot_;
-    
+
     core::param::ParamSlot lua_command_slot_;
 
     core::param::ParamSlot deploy_project_slot_;
@@ -117,6 +95,8 @@ private:
     bool is_job_running_;
 
     std::atomic<bool> buffer_has_changed_;
+
+    uint64_t msg_id_;
 
 }; // end class HeadnodeServer
 

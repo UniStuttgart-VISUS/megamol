@@ -39,15 +39,14 @@
     //gl_Position = vec4((mins + maxs) * 0.5, projPos.z, (od > clipDat.w) ? 0.0 : 1.0);
     
     // Set gl_Position depending on flags (no fragment test required for visibility test)
-    if (!(bool(flagsAvailable)) || (bool(flagsAvailable) && bitflag_isVisible(flag))) {
-    
+    if (!(bool(flags_enabled)) || (bool(flags_enabled) && bitflag_isVisible(flag))) {
         gl_Position = vec4(mins.x, maxs.y, projPos.z, 1.0); EmitVertex();
         gl_Position = vec4(mins.x, mins.y, projPos.z, 1.0); EmitVertex();
         gl_Position = vec4(maxs.x, maxs.y, projPos.z, 1.0); EmitVertex();
         gl_Position = vec4(maxs.x, mins.y, projPos.z, 1.0); EmitVertex();
     }
     else {
-        gl_Position  = vec4(0.0); EmitVertex();
+        gl_ClipDistance[0] = -1.0;
     }
     EndPrimitive();
 }
