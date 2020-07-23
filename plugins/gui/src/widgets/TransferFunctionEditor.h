@@ -9,22 +9,28 @@
 #define MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED
 
 
+#include "ColorPalettes.h"
+
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/view/TransferFunction.h"
 
-#include "vislib/sys/Log.h"
+#include "GUIUtils.h"
+#include "widgets/HoverToolTip.h"
+#include "widgets/ImageWidget_gl.h"
 
 #include <cmath>
 #include <iomanip>
 #include <sstream>
-#include <string>
-#include <vector>
-
-#include "GUIUtils.h"
 
 
 namespace megamol {
 namespace gui {
+
+
+// Forward declarations
+class Parameter;
+typedef std::shared_ptr<Parameter> ParamPtrType;
+
 
 /**
  * 1D Transfer Function Editor.
@@ -36,13 +42,18 @@ public:
     ~TransferFunctionEditor(void) = default;
 
     /**
+     * Draws the transfer function editor.
+     */
+    bool Widget(bool connected_parameter_mode);
+
+    /**
      * Set transfer function data to use in editor.
      *
      * @param tfs The transfer function encoded as string in JSON format.
      *
      * @return True if string was successfully converted into transfer function data, false otherwise.
      */
-    void SetTransferFunction(const std::string& tfs, bool active_parameter_mode);
+    void SetTransferFunction(const std::string& tfs, bool connected_parameter_mode);
 
     /**
      * Get current transfer function data.
@@ -52,24 +63,14 @@ public:
     bool GetTransferFunction(std::string& tfs);
 
     /**
-     * Set the currently active parameter.
+     * Set the currently connected parameter.
      */
-    void SetActiveParameter(core::param::TransferFunctionParam* param) { this->active_parameter = param; }
+    void SetConnectedParameter(Parameter* param_ptr, const std::string& param_full_name);
 
     /**
-     * Get the currently active parameter.
+     * Get currently connected parameter.
      */
-    core::param::TransferFunctionParam* GetActiveParameter(void) { return this->active_parameter; }
-
-    /**
-     * Draws the transfer function editor.
-     */
-    bool Draw(bool active_parameter_mode);
-
-    /**
-     * Return current value ahsh of active parameter.
-     */
-    bool ActiveParamterValueHash(size_t& out_tf_value_hash);
+    inline std::string GetConnectedParameterName(void) const { return this->connected_parameter_name; }
 
     /**
      * Returns true if editor is in minimized view.
@@ -77,17 +78,21 @@ public:
     inline bool IsMinimized(void) const { return !this->showOptions; }
 
     /**
-     * Create texture.
+     * Set minimized view.
      */
-    void CreateTexture(GLuint& inout_id, GLsizei width, GLsizei height, float* data) const;
+    inline void SetMinimized(bool minimized) { this->showOptions = !minimized; }
+
+    /**
+     * Returns true if editor is in vertical view.
+     */
+    inline bool IsVertical(void) const { return this->flip_legend; }
+
+    /**
+     * Set vertical view.
+     */
+    inline void SetVertical(bool vertical) { this->flip_legend = vertical; }
 
 private:
-    void drawTextureBox(const ImVec2& size, bool flip_xy);
-
-    void drawScale(const ImVec2& pos, const ImVec2& size, bool flip_xy);
-
-    void drawFunctionPlot(const ImVec2& size);
-
     /** The global input widget state buffer. */
     struct WidgetBuffer {
         float min_range;
@@ -99,11 +104,11 @@ private:
 
     // VARIABLES -----------------------------------------------------------
 
-    /** Utils being used all over the place */
-    GUIUtils utils;
-
     /** The currently active parameter whose transfer function is currently loaded into this editor. */
-    core::param::TransferFunctionParam* active_parameter;
+    Parameter* connected_parameter_ptr;
+
+    /** Name of the connected parameter. */
+    std::string connected_parameter_name;
 
     /** Array holding current colors and function values. */
     megamol::core::param::TransferFunctionParam::TFNodeType nodes;
@@ -118,21 +123,14 @@ private:
     /** Current interpolation option. */
     megamol::core::param::TransferFunctionParam::InterpolationMode mode;
 
-    /** Current texture size. */
-    UINT textureSize;
-
     /** Indicating modified transfer function. Recalculate texture data. */
     bool textureInvalid;
 
+    /** Current texture size. */
+    int textureSize;
+
     /** Indicates whether changes are already applied or not. */
     bool pendingChanges;
-
-    /** Current texture data. */
-    std::vector<float> texturePixels;
-
-    /** OpenGL Texture IDs. */
-    GLuint texture_id_vert;
-    GLuint texture_id_horiz;
 
     /** Currently active color channels in plot. */
     std::array<bool, 4> activeChannels;
@@ -144,7 +142,7 @@ private:
     unsigned int currentChannel;
 
     /** Offset from center of point to initial drag position. */
-    ImVec2 currentDragChange;
+    glm::vec2 currentDragChange;
 
     /** Flag for applying all changes immediately. */
     bool immediateMode;
@@ -156,7 +154,19 @@ private:
     WidgetBuffer widget_buffer;
 
     /** Legend alignment flag. */
-    bool flip_xy;
+    bool flip_legend;
+
+    // Widgets
+    HoverToolTip tooltip;
+    ImageWidget image_widget;
+
+    // FUNCTIONS -----------------------------------------------------------
+
+    void drawTextureBox(const ImVec2& size, bool flip_xy);
+
+    void drawScale(const ImVec2& pos, const ImVec2& size, bool flip_xy);
+
+    void drawFunctionPlot(const ImVec2& size);
 };
 
 } // namespace gui
