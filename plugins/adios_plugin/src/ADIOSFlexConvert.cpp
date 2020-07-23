@@ -7,7 +7,6 @@
 
 #include "stdafx.h"
 #include "ADIOSFlexConvert.h"
-#include <complex.h>
 #include <numeric>
 #include "adios_plugin/CallADIOSData.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
