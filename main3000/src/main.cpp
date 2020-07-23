@@ -28,7 +28,15 @@ int main(int argc, char* argv[]) {
 
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
-    bool run_megamol = true;
+	// the main loop is organized around services that can 'do something' in different parts of the main loop
+	// a service is something that implements the AbstractFrontendService interface from 'megamol\render_api\include'
+	// a central mechanism that allows services to communicate with each other and with graph modules are _resources_ (see ModuleResource in 'megamol\render_api\include')
+	// services may provide resources to the system and they may request resources they need themselves for functioning.
+	// think of a resource as a struct (or some type of your choice) that gets wrapped by a helper structure and gets a name attached to it.
+	// the fronend makes sure (at least attempts to) to hand each service the resources it requested, or else fail execution of megamol with an error message.
+	// resource assignment is done by the name of the resource, so this is a very loose interface based on trust.
+	// type safety of resources is ensured in the sense that extracting the wrong type from a ModuleResource will lead to an unhandled bad type cast exception, 
+	// leading to the shutdown of megamol.
     megamol::frontend::FrontendServiceCollection services;
     services.add(gl_service, &openglConfig);
 
@@ -39,13 +47,19 @@ int main(int argc, char* argv[]) {
     // TODO: graph manipulation during execution of graph modules is problematic, undefined?
     services.getProvidedResources().push_back({"MegaMolGraph", graph});
 
+    bool run_megamol = true;
+	// distribute registered resources among registered services. 
     const bool resources_ok = services.assignRequestedResources();
+	// for each service we call their resource callbacks here:
+	//    std::vector<ModuleResource>& getProvidedResources()
+	//    std::vector<std::string> getRequestedResourceNames()
+	//    void setRequestedResources(std::vector<ModuleResource>& resources)
     if (!resources_ok) {
         std::cout << "ERROR: frontend could not assign requested service resources. abort. " << std::endl;
         run_megamol = false;
     }
 
-    const bool graph_ok = set_up_graph(graph, services.getProvidedResources());
+    const bool graph_ok = set_up_graph(graph, services.getProvidedResources()); // fill graph with modules and calls
     if (!graph_ok) {
         std::cout << "ERROR: frontend could not build graph. abort. " << std::endl;
         run_megamol = false;
@@ -61,7 +75,9 @@ int main(int argc, char* argv[]) {
         services.digestChangedRequestedResources();
 
         // services tell us wheter we should shut down megamol
-        if (services.shouldShutdown()) break;
+		// TODO: service needs to mark intself as shutdown by calling this->setShutdown() during digestChangedRequestedResources()
+        if (services.shouldShutdown())
+			break;
 
         {// put this in render function so LUA can call it
             services.preGraphRender(); // e.g. start frame timer, clear render buffers
@@ -69,7 +85,7 @@ int main(int argc, char* argv[]) {
             graph.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
 
             services.postGraphRender(); // render GUI, glfw swap buffers, stop frame timer
-            // problem: guarantee correct order of post-render jobs, i.e. render gui before swapping buffers
+            // problem: guarantee correct order of pre- and post-render jobs, i.e. render gui before swapping buffers
         }
 
         services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
