@@ -48,8 +48,7 @@ public:
 
     GroupState group;
     bool label_visible;
-    // Absolute position including canvas offset and zooming
-    ImVec2 position;
+
 
     // Widgets
     HoverToolTip tooltip;
@@ -60,6 +59,7 @@ public:
     ~InterfaceSlotPresentation(void);
 
     std::string GetLabel(void) { return this->label; }
+    ImVec2 GetPosition(InterfaceSlot& inout_interfaceslot);
     inline bool IsGroupViewCollapsed(void) { return this->group.collapsed_view; }
 
     void SetPosition(ImVec2 pos) { this->position = pos; }
@@ -72,11 +72,12 @@ private:
     ImGuiID last_compat_callslot_uid;
     ImGuiID last_compat_interface_uid;
     bool compatible;
+    // Absolute position including canvas offset and zooming
+    ImVec2 position;
 
     // FUNCTIONS --------------------------------------------------------------
 
     void Present(megamol::gui::PresentPhase phase, InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state);
-    ImVec2 GetPosition(InterfaceSlot& inout_interfaceslot);
 };
 
 

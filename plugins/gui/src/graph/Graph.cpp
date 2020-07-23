@@ -280,14 +280,20 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                         // Remove module from previous associated group
                         ImGuiID module_group_uid = module_ptr->present.group.uid;
                         GroupPtrType remove_group_ptr;
+                        bool restore_interfaceslots = false;
                         if (inout_graph.GetGroup(module_group_uid, remove_group_ptr)) {
                             if (remove_group_ptr->uid != add_group_ptr->uid) {
                                 remove_group_ptr->RemoveModule(module_ptr->uid);
+                                restore_interfaceslots = true;
                             }
                         }
                         // Add module to group
                         add_group_ptr->AddModule(module_ptr);
                         inout_graph.ForceSetDirty();
+                        // Restore interface slots after adding module to new group
+                        if (restore_interfaceslots) {
+                            remove_group_ptr->RestoreInterfaceslots();
+                        }
                     }
                 }
             }
@@ -1441,7 +1447,7 @@ void megamol::gui::GraphPresentation::present_canvas_dragged_call(megamol::gui::
                         }
                     }
                     if (selected_interfaceslot_ptr != nullptr) {
-                        p1 = selected_interfaceslot_ptr->present.position;
+                        p1 = selected_interfaceslot_ptr->present.GetPosition((*selected_interfaceslot_ptr));
                         found_valid_slot = true;
                     }
                 }
@@ -2118,6 +2124,7 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
                 this->modules.erase(iter);
 
                 // 6) Delete empty groups
+                module_group_ptr.reset();
                 if (delete_empty_group != GUI_INVALID_ID) {
                     this->DeleteGroup(delete_empty_group);
                 }

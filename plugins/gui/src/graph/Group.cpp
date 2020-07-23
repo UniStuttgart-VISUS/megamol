@@ -304,10 +304,8 @@ void megamol::gui::GroupPresentation::UpdatePositionSize(
     if (this->collapsed_view) {
         for (auto& interfaceslot_map : inout_group.GetInterfaceSlots()) {
             for (auto& interfaceslot_ptr : interfaceslot_map.second) {
-                if (interfaceslot_ptr->present.label_visible) {
-                    max_label_length = std::max(
-                        ImGui::CalcTextSize(interfaceslot_ptr->present.GetLabel().c_str()).x, max_label_length);
-                }
+                max_label_length =
+                    std::max(ImGui::CalcTextSize(interfaceslot_ptr->present.GetLabel().c_str()).x, max_label_length);
             }
         }
         if (max_label_length > 0.0f) {
@@ -452,8 +450,6 @@ bool megamol::gui::Group::RemoveModule(ImGuiID module_uid) {
                 this->modules.erase(mod_iter);
 
                 this->present.ForceUpdate();
-
-                // ! Restore interfaceslots only after callslots of module have been deleted !
 
                 return true;
             }
