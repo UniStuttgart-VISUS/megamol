@@ -52,13 +52,13 @@ megamol::gui::Configurator::Configurator()
     this->param_slots.clear();
     this->param_slots.push_back(&this->state_param);
 
-    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH] = megamol::gui::HotkeyDataType(
+    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH] = megamol::gui::HotkeyData_t(
         core::view::KeyCode(core::view::Key::KEY_M, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false);
-    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH] = megamol::gui::HotkeyDataType(
+    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH] = megamol::gui::HotkeyData_t(
         core::view::KeyCode(core::view::Key::KEY_P, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false);
     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM] =
-        megamol::gui::HotkeyDataType(core::view::KeyCode(core::view::Key::KEY_DELETE), false);
-    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT] = megamol::gui::HotkeyDataType(
+        megamol::gui::HotkeyData_t(core::view::KeyCode(core::view::Key::KEY_DELETE), false);
+    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT] = megamol::gui::HotkeyData_t(
         megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
         false);
     this->graph_state.font_scalings = {0.85f, 0.95f, 1.0f, 1.5f, 2.5f};
@@ -310,14 +310,14 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
 
     bool interfaceslot_selected = false;
     std::string compat_callslot_name;
-    CallSlotPtrType selected_callslot_ptr;
-    GraphPtrType selected_graph_ptr;
+    CallSlotPtr_t selected_callslot_ptr;
+    GraphPtr_t selected_graph_ptr;
     if (this->graph_manager.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
 
         auto callslot_id = selected_graph_ptr->present.GetSelectedCallSlot();
         if (callslot_id != GUI_INVALID_ID) {
             for (auto& module_ptr : selected_graph_ptr->GetModules()) {
-                CallSlotPtrType callslot_ptr;
+                CallSlotPtr_t callslot_ptr;
                 if (module_ptr->GetCallSlot(callslot_id, callslot_ptr)) {
                     selected_callslot_ptr = callslot_ptr;
                 }
@@ -326,9 +326,9 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
         auto interfaceslot_id = selected_graph_ptr->present.GetSelectedInterfaceSlot();
         if (interfaceslot_id != GUI_INVALID_ID) {
             for (auto& group_ptr : selected_graph_ptr->GetGroups()) {
-                InterfaceSlotPtrType interfaceslot_ptr;
+                InterfaceSlotPtr_t interfaceslot_ptr;
                 if (group_ptr->GetInterfaceSlot(interfaceslot_id, interfaceslot_ptr)) {
-                    CallSlotPtrType callslot_ptr;
+                    CallSlotPtr_t callslot_ptr;
                     if (interfaceslot_ptr->GetCompatibleCallSlot(callslot_ptr)) {
                         selected_callslot_ptr = callslot_ptr;
                         interfaceslot_selected = true;
@@ -389,7 +389,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
                 if (selected_graph_ptr != nullptr) {
                     ImGuiID module_uid =
                         selected_graph_ptr->AddModule(this->graph_manager.GetModulesStock(), mod.class_name);
-                    ModulePtrType module_ptr;
+                    ModulePtr_t module_ptr;
                     if (selected_graph_ptr->GetModule(module_uid, module_ptr)) {
 
                         // If there is a call slot selected, create call to compatible call slot of new module
@@ -463,11 +463,11 @@ void megamol::gui::Configurator::add_empty_project(void) {
     if (graph_uid != GUI_INVALID_ID) {
 
         // Add initial GUIView and set as view instance
-        GraphPtrType graph_ptr;
+        GraphPtr_t graph_ptr;
         if (this->graph_manager.GetGraph(graph_uid, graph_ptr)) {
             std::string guiview_class_name = "GUIView";
             ImGuiID module_uid = graph_ptr->AddModule(this->graph_manager.GetModulesStock(), guiview_class_name);
-            ModulePtrType module_ptr;
+            ModulePtr_t module_ptr;
             if (graph_ptr->GetModule(module_uid, module_ptr)) {
                 auto graph_module = graph_ptr->GetModules().back();
                 graph_module->is_view_instance = true;
@@ -539,7 +539,7 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
                     // Overwrite graph states with the one found in this project
                     /// TODO Comment for ignoring graph state stored in this project
                     if (graph_uid != GUI_INVALID_ID) {
-                        GraphPtrType graph_ptr;
+                        GraphPtr_t graph_ptr;
                         if (this->graph_manager.GetGraph(graph_uid, graph_ptr)) {
                             // Let graph search for his configurator state
                             graph_ptr->GUIStateFromJsonString(in_json_string);
@@ -637,7 +637,7 @@ void megamol::gui::Configurator::drawPopUps(void) {
     // LOAD
     bool popup_failed = false;
     std::string project_filename;
-    GraphPtrType graph_ptr;
+    GraphPtr_t graph_ptr;
     if (this->graph_manager.GetGraph(this->add_project_graph_uid, graph_ptr)) {
         project_filename = graph_ptr->GetFilename();
     }
@@ -651,7 +651,7 @@ void megamol::gui::Configurator::drawPopUps(void) {
     this->open_popup_load = false;
 
     // Module Stock List Child Window ------------------------------------------
-    GraphPtrType selected_graph_ptr;
+    GraphPtr_t selected_graph_ptr;
     if (this->graph_manager.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
 
         ImGuiID selected_callslot_uid = selected_graph_ptr->present.GetSelectedCallSlot();

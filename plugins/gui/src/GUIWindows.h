@@ -160,7 +160,7 @@ private:
     megamol::core::param::ParamSlot autostart_configurator;
 
     /** Hotkeys */
-    std::array<megamol::gui::HotkeyDataType, GuiHotkeyIndex::INDEX_COUNT> hotkeys;
+    std::array<megamol::gui::HotkeyData_t, GuiHotkeyIndex::INDEX_COUNT> hotkeys;
 
     /** The ImGui context created and used by this GUIWindows */
     ImGuiContext* context;

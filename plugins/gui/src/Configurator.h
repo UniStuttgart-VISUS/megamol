@@ -47,7 +47,7 @@ public:
      *
      * @return Hotkeys of configurator.
      */
-    megamol::gui::HotkeyArrayType& GetHotkeys(void) { return this->graph_state.hotkeys; }
+    megamol::gui::HotkeyArray_t& GetHotkeys(void) { return this->graph_state.hotkeys; }
 
     /**
      * Draw configurator window.
@@ -57,7 +57,7 @@ public:
     /**
      * Returns required font scalings for graph canvas
      */
-    inline const FontScalingArrayType& GetGraphFontScalings(void) const { return this->graph_state.font_scalings; }
+    inline const FontScalingArray_t& GetGraphFontScalings(void) const { return this->graph_state.font_scalings; }
 
     /**
      * Return list of parameter slots provided by this class. Make available in module which uses this class.
@@ -88,7 +88,7 @@ private:
     bool show_module_list_child;
     ImVec2 module_list_popup_pos;
     ImGuiID last_selected_callslot_uid;
-    megamol::gui::GraphStateType graph_state;
+    megamol::gui::GraphState_t graph_state;
     bool open_popup_load;
 
     // Widgets

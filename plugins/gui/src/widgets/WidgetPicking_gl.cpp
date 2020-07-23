@@ -37,10 +37,12 @@ bool megamol::gui::PickingBuffer::ProcessMouseMove(double x, double y) {
     this->cursor_x = x;
     this->cursor_y = y;
 
-    // if (this->fbo != nullptr) {
-    //    dx = dx / this->fbo->getWidth();
-    //    dy = -dy / this->fbo->getHeight();
-    //}
+    double dx_fbo = x - this->cursor_x;
+    double dy_fbo = y - this->cursor_y;
+    if (this->fbo != nullptr) {
+        dx_fbo = dx / this->fbo->getWidth();
+        dy_fbo = -dy / this->fbo->getHeight();
+    }
 
     if (this->active_interaction_obj.first) {
 

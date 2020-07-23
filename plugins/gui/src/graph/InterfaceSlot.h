@@ -24,12 +24,12 @@ class CallSlot;
 enum CallSlotType { CALLEE, CALLER };
 #    define _CALL_SLOT_TYPE_
 #endif
-typedef std::vector<CallSlotPtrType> CallSlotPtrVectorType;
+typedef std::vector<CallSlotPtr_t> CallSlotPtrVector_t;
 
 // Types
-typedef std::shared_ptr<InterfaceSlot> InterfaceSlotPtrType;
-typedef std::vector<InterfaceSlotPtrType> InterfaceSlotPtrVectorType;
-typedef std::map<CallSlotType, InterfaceSlotPtrVectorType> InterfaceSlotPtrMapType;
+typedef std::shared_ptr<InterfaceSlot> InterfaceSlotPtr_t;
+typedef std::vector<InterfaceSlotPtr_t> InterfaceSlotPtrVector_t;
+typedef std::map<CallSlotType, InterfaceSlotPtrVector_t> InterfaceSlotPtrMap_t;
 
 
 /** ************************************************************************
@@ -77,7 +77,7 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    void Present(megamol::gui::PresentPhase phase, InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state);
+    void Present(megamol::gui::PresentPhase phase, InterfaceSlot& inout_interfaceslot, GraphItemsState_t& state);
 };
 
 
@@ -97,13 +97,13 @@ public:
     InterfaceSlot(ImGuiID uid, bool auto_create);
     ~InterfaceSlot();
 
-    bool AddCallSlot(const CallSlotPtrType& callslot_ptr, const InterfaceSlotPtrType& parent_interfaceslot_ptr);
+    bool AddCallSlot(const CallSlotPtr_t& callslot_ptr, const InterfaceSlotPtr_t& parent_interfaceslot_ptr);
     bool RemoveCallSlot(ImGuiID callslot_uid);
     bool ContainsCallSlot(ImGuiID callslot_uid);
     bool IsConnectionValid(CallSlot& callslot);
     bool IsConnectionValid(InterfaceSlot& interfaceslot);
-    bool GetCompatibleCallSlot(CallSlotPtrType& out_callslot_ptr);
-    CallSlotPtrVectorType& GetCallSlots(void) { return this->callslots; }
+    bool GetCompatibleCallSlot(CallSlotPtr_t& out_callslot_ptr);
+    CallSlotPtrVector_t& GetCallSlots(void) { return this->callslots; }
     bool IsConnected(void);
     CallSlotType GetCallSlotType(void);
     bool IsEmpty(void);
@@ -111,7 +111,7 @@ public:
 
     // Presentation ----------------------------------------------------
 
-    inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
+    inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsState_t& state) {
         this->present.Present(phase, *this, state);
     }
     inline ImVec2 GetGUIPosition(void) { return this->present.GetPosition(*this); }
@@ -120,7 +120,7 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     bool auto_created;
-    CallSlotPtrVectorType callslots;
+    CallSlotPtrVector_t callslots;
 
     // FUNCTIONS --------------------------------------------------------------
 

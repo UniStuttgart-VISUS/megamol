@@ -68,13 +68,13 @@ GUIWindows::GUIWindows()
         this->param_slots.push_back(configurator_param);
     }
 
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = megamol::gui::HotkeyDataType(
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = megamol::gui::HotkeyData_t(
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] = megamol::gui::HotkeyDataType(
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] = megamol::gui::HotkeyData_t(
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false);
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT] = megamol::gui::HotkeyDataType(
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT] = megamol::gui::HotkeyData_t(
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false);
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU] = megamol::gui::HotkeyDataType(
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU] = megamol::gui::HotkeyData_t(
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false);
 
     this->tf_editor_ptr = std::make_shared<TransferFunctionEditor>();
@@ -261,13 +261,13 @@ bool GUIWindows::PostDraw(void) {
             this->tf_editor_ptr->SetMinimized(wc.tfe_view_minimized);
             this->tf_editor_ptr->SetVertical(wc.tfe_view_vertical);
 
-            GraphPtrType graph_ptr;
+            GraphPtr_t graph_ptr;
             if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
                 for (auto& module_ptr : graph_ptr->GetModules()) {
                     std::string module_full_name = module_ptr->FullName();
                     for (auto& param : module_ptr->parameters) {
                         std::string full_param_name = module_full_name + "::" + param.full_name;
-                        if ((wc.tfe_active_param == full_param_name) && (param.type == ParamType::TRANSFERFUNCTION)) {
+                        if ((wc.tfe_active_param == full_param_name) && (param.type == Param_t::TRANSFERFUNCTION)) {
                             this->tf_editor_ptr->SetConnectedParameter(&param, full_param_name);
                             this->tf_editor_ptr->SetTransferFunction(std::get<std::string>(param.GetValue()), true);
                         }
@@ -349,10 +349,10 @@ bool GUIWindows::PostDraw(void) {
     // Draw global parameter widgets -------------------------------------------
 
     /// DEBUG picking
-    // auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
-    // this->picking_buffer.EnableInteraction(viewport_dim);
+    auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
+    this->picking_buffer.EnableInteraction(viewport_dim);
 
-    GraphPtrType graph_ptr;
+    GraphPtr_t graph_ptr;
     if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
 
@@ -364,11 +364,11 @@ bool GUIWindows::PostDraw(void) {
     }
 
     /// DEBUG picking
-    // unsigned int id = 5;
-    // this->picking_buffer.AddInteractionObject(id, this->triangle_widget.GetInteractions(id));
-    // this->triangle_widget.Draw(
-    //    id, glm::vec2(0.0f, 200.0f), viewport_dim, this->picking_buffer.GetPendingManipulations());
-    // this->picking_buffer.DisableInteraction();
+    unsigned int id = 5;
+    this->picking_buffer.AddInteractionObject(id, this->triangle_widget.GetInteractions(id));
+    this->triangle_widget.Draw(
+        id, glm::vec2(0.0f, 200.0f), viewport_dim, this->picking_buffer.GetPendingManipulations());
+    this->picking_buffer.DisableInteraction();
 
     // Synchronizing parameter values -----------------------------------------
     if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
@@ -528,12 +528,12 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     this->window_manager.EnumWindows(modfunc);
     // Check for parameter hotkeys
     hotkeyPressed = false;
-    GraphPtrType graph_ptr;
+    GraphPtr_t graph_ptr;
     if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
             if (check_all_modules || this->considerModule(module_ptr->FullName(), modules_list)) {
                 for (auto& param : module_ptr->parameters) {
-                    if (param.type == ParamType::BUTTON) {
+                    if (param.type == Param_t::BUTTON) {
                         auto keyCode = param.GetStorage<megamol::core::view::KeyCode>();
                         if (this->isHotkeyPressed(keyCode)) {
                             param.ForceSetValueDirty();
@@ -995,7 +995,7 @@ void GUIWindows::drawParamWindowCallback(WindowManager::WindowConfiguration& wc)
 
     const size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
     auto currentSearchString = this->search_widget.GetSearchString();
-    GraphPtrType graph_ptr;
+    GraphPtr_t graph_ptr;
     // Listing modules and their parameters
     if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
@@ -1507,12 +1507,12 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
             hotkeylist.emplace_back(std::get<0>(h));
         }
 
-        GraphPtrType graph_ptr;
+        GraphPtr_t graph_ptr;
         if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 for (auto& param : module_ptr->parameters) {
 
-                    if (param.type == ParamType::BUTTON) {
+                    if (param.type == Param_t::BUTTON) {
                         auto keyCode = param.GetStorage<megamol::core::view::KeyCode>();
                         // Ignore not set hotekey
                         if (keyCode.key == core::view::Key::KEY_UNKNOWN) {
@@ -1583,7 +1583,7 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
     }
 
-    GraphPtrType graph_ptr;
+    GraphPtr_t graph_ptr;
     if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
             for (auto& param : module_ptr->parameters) {
@@ -1598,7 +1598,7 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
 
 bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const std::string& in_json_string) {
 
-    GraphPtrType graph_ptr;
+    GraphPtr_t graph_ptr;
     if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
             std::string module_full_name = module_ptr->FullName();
@@ -1696,7 +1696,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_to_json(nlohmann::json& 
         inout_json[GUI_JSON_TAG_GUISTATE]["project_file"] = this->state.project_file;
         inout_json[GUI_JSON_TAG_GUISTATE]["menu_visible"] = this->state.menu_visible;
 
-        GraphPtrType graph_ptr;
+        GraphPtr_t graph_ptr;
         if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 std::string module_full_name = module_ptr->FullName();
