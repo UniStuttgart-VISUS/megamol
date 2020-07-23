@@ -26,19 +26,24 @@ int main(int argc, char* argv[]) {
     openglConfig.versionMajor = 4;
     openglConfig.versionMinor = 6;
 
+    megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
+
     bool run_megamol = true;
     megamol::frontend::FrontendServiceCollection services;
     services.add(gl_service, &openglConfig);
 
     services.init(); // runs init(config_ptr) on all services with provided config sructs
 
+    // graph is also a resource that may be accessed by services
+    // TODO: how to solve const and non-const resources?
+    // TODO: graph manipulation during execution of graph modules is problematic, undefined?
+    services.getProvidedResources().push_back({"MegaMolGraph", graph});
+
     const bool resources_ok = services.assignRequestedResources();
     if (!resources_ok) {
         std::cout << "ERROR: frontend could not assign requested service resources. abort. " << std::endl;
         run_megamol = false;
     }
-
-    megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
     const bool graph_ok = set_up_graph(graph, services.getProvidedResources());
     if (!graph_ok) {
@@ -58,7 +63,7 @@ int main(int argc, char* argv[]) {
         // services tell us wheter we should shut down megamol
         if (services.shouldShutdown()) break;
 
-        {                              // put this in render function so LUA can call it
+        {// put this in render function so LUA can call it
             services.preGraphRender(); // e.g. start frame timer, clear render buffers
 
             graph.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
@@ -112,13 +117,13 @@ bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::front
 
     graph.AddModuleDependencies(module_resources);
 
-    // check(graph.CreateModule("GUIView", "::guiview");
+    check(graph.CreateModule("GUIView", "::guiview"));
     check(graph.CreateModule("View3D_2", "::view"));
     check(graph.CreateModule("SphereRenderer", "::spheres"));
     check(graph.CreateModule("TestSpheresDataSource", "::datasource"));
     check(graph.CreateCall("CallRender3D_2", "::view::rendering", "::spheres::rendering"));
     check(graph.CreateCall("MultiParticleDataCall", "::spheres::getdata", "::datasource::getData"));
-    // check(graph.CreateCall("CallRenderView", "::guiview::renderview", "::view::render"));
+    check(graph.CreateCall("CallRenderView", "::guiview::renderview", "::view::render"));
 
     static std::vector<std::string> view_resource_requests = {
         "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context"};
@@ -168,7 +173,7 @@ bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::front
         //}
     };
 
-    check(graph.SetGraphEntryPoint("::view", view_resource_requests, view_rendering_execution));
+    check(graph.SetGraphEntryPoint("::guiview", view_resource_requests, view_rendering_execution));
 
     std::string parameter_name("::datasource::numSpheres");
     auto parameterPtr = graph.FindParameter(parameter_name);
