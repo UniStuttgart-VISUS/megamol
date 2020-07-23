@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
+#include "mmcore/CoreInstance.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
@@ -124,7 +125,16 @@ namespace view {
         /** The value range */
         std::array<float, 2> range;
 
-        uint32_t version = 0;
+        /** Flag indicating that there should be no changes applied if the 
+         * parameter has an inital value loaded from project file. */
+        bool tfparam_check_init_value;
+        bool tfparam_skip_changes_once;
+
+        /** Version of texture */
+        uint32_t version;
+
+        /** Global frame ID */
+        uint32_t last_frame_id;
 
 #ifdef _WIN32
 #pragma warning (default: 4251)

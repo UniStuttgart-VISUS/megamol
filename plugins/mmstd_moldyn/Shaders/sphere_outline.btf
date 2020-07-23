@@ -27,12 +27,11 @@
 
     <shader name="fragment">
         <snippet type="version">130</snippet>
+        <snippet name="Extensions"       type="file">sphere/fragment_extensions.glsl</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
-        <snippet name="Attributes"       type="file">sphere/fragment_attributes.glsl</snippet>
-        <snippet name="sphere_flags::fragment_attributes"/>                 
+        <snippet name="Attributes"       type="file">sphere/fragment_attributes.glsl</snippet>       
         <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>        
-        <snippet name="MainStart"        type="file">sphere/fragment_mainstart.glsl</snippet>
-        <snippet name="sphere_flags::fragment_discardtest"/>                
+        <snippet name="MainStart"        type="file">sphere/fragment_mainstart.glsl</snippet>         
         <snippet name="CutOut"           type="file">sphere/outline_fragment_cutout.glsl</snippet>
         <snippet name="NoLighting"       type="file">sphere/outline_fragment_nolighting.glsl</snippet>
         <snippet name="OutDepth"         type="file">sphere/fragment_out-depth.glsl</snippet>

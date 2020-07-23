@@ -240,6 +240,15 @@ public:
         return this->val;
     }
 
+    /**
+     * Gets the hash of the current value
+     *
+     * @return The hash of the parameter value
+     */
+    inline const size_t ValueHash(void) const {
+        return this->hash;
+    }
+
 private:
 
 #ifdef _WIN32
@@ -248,6 +257,9 @@ private:
 
     /** The value of the parameter */
     std::string val;
+
+    /** Has of current parameter value. */
+    size_t hash;
 
 #ifdef _WIN32
 #pragma warning (disable: 4251)

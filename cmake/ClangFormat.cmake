@@ -23,9 +23,7 @@ function(add_clang_format TARGET)
     string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" CLANG_FORMAT_VERSION ${CLANG_FORMAT_VERSION})
   endif()
 
-  set(CLANG_FORMAT_VERSION_PATTERN "[6789].[0-9]+.[0-9]+")
-
-  if(CLANG_FORMAT AND CLANG_FORMAT_VERSION MATCHES ${CLANG_FORMAT_VERSION_PATTERN})
+  if(CLANG_FORMAT AND ${CLANG_FORMAT_VERSION} VERSION_GREATER_EQUAL "6.0.0")
     add_custom_target("${TARGET}_clangformat"
       COMMAND ${CLANG_FORMAT}
         "-i"
@@ -37,7 +35,7 @@ function(add_clang_format TARGET)
       VERBATIM)
     add_dependencies(${TARGET} "${TARGET}_clangformat")
   elseif(CLANG_FORMAT)
-    message(WARNING "clang-format version ${CLANG_FORMAT_VERSION} is unsuitable.\n"
+    message(WARNING "clang-format version ${CLANG_FORMAT_VERSION} is too old.\n"
       "Please download and install a version matching ${CLANG_FORMAT_VERSION_PATTERN}"
       " from http://releases.llvm.org/download.html\n"
 	  "Also adjust Visual Studio options and PATH variable as necessary!")

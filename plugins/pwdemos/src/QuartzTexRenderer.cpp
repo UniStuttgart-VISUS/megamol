@@ -39,6 +39,9 @@ showClipAxesSlot("showClipAxes", "Shows/Hides the axes (x and y) of the clipping
     this->MakeSlotAvailable(&this->showClipPlanePolySlot);
     this->MakeSlotAvailable(&this->showClipAxesSlot);
     this->MakeSlotAvailable(&this->correctPBCSlot);
+
+	ssboLights = 0;
+    vbo = 0;
 }
 
 
@@ -95,9 +98,8 @@ bool QuartzTexRenderer::Render(core::view::CallRender3D_2& call) {
     glm::vec4 viewport = glm::vec4(0, 0, cam.resolution_gate().width(), cam.resolution_gate().height());
     if (viewport.z < 1.0f) viewport.z = 1.0f;
     if (viewport.w < 1.0f) viewport.w = 1.0f;
+    float shaderPointSize = vislib::math::Max(viewport.z, viewport.w);
     viewport = glm::vec4(0, 0, 2.f / viewport.z, 2.f / viewport.w);
-    float shaderPointSize = 1.f;
-    vislib::math::Max(viewport.z, viewport.w);
 
     glm::vec4 camView = snapshot.view_vector;
     glm::vec4 camRight = snapshot.right_vector;
@@ -119,21 +121,21 @@ bool QuartzTexRenderer::Render(core::view::CallRender3D_2& call) {
 
     // light setup
     this->GetLights();
-    
-    float lightIntensity = 1.f;
-    glm::vec4 lightPos = {0.f, 0.f, 0.f, 1.f};
-    glm::vec4 lightCol = {0.f, 0.f, 0.f, 1.f};
+    std::vector<float> lights;
+    int numLights = 0;
 
-    // TODO use e.g. SSBOs to store lights and edit shader accordingly to support multiple lights
+    float lightIntensity = 1.f;
+    std::array<float, 4> lightPos = {0.f, 0.f, 0.f, 1.f};
+    std::array<float, 4> lightCol = {0.f, 0.f, 0.f, 1.f};
+
     if (this->lightMap.size() < 1) { // #lights added in configurator
         vislib::sys::Log::DefaultLog.WriteWarn("No lights available in lightmap");
     } else {
         for (auto light : this->lightMap) {
-            auto lc = this->lightMap.begin()->second.lightColor;
-            lightCol = glm::vec4(lc[0], lc[1], lc[2], lc[3]);
-            lightIntensity = this->lightMap.begin()->second.lightIntensity;
+            lightCol = light.second.lightColor;
+            lightIntensity = light.second.lightIntensity;
 
-            auto lightPosTemp = this->lightMap.begin()->second.pl_position;
+            auto lightPosTemp = light.second.pl_position;
             if (lightPosTemp.size() == 3) {
                 lightPos[0] = lightPosTemp[0];
                 lightPos[1] = lightPosTemp[1];
@@ -145,17 +147,27 @@ bool QuartzTexRenderer::Render(core::view::CallRender3D_2& call) {
                 lightPos[2] = lightPosTemp[2];
                 lightPos[3] = lightPosTemp[3];
             }
+
+            lights.insert(lights.end(), std::begin(lightPos), std::end(lightPos));
+            lights.insert(lights.end(), std::begin(lightCol), std::end(lightCol));
+            lights.push_back(lightIntensity);
+            ++numLights;
         }
     }
+
+    ::glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboLights);
+    ::glBufferData(GL_SHADER_STORAGE_BUFFER, lights.size() * sizeof(float), lights.data(), GL_STATIC_READ);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssboLights);
+    ::glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     ::glDisable(GL_BLEND);
     ::glEnable(GL_DEPTH_TEST);
     ::glEnable(GL_CULL_FACE);
     ::glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-	::glBindBuffer(GL_ARRAY_BUFFER, 0); // TODO IMO necessary, but Karsten might have fixed it
-    ::glEnableClientState(GL_VERTEX_ARRAY); // xyzr
-    ::glEnableClientState(GL_TEXTURE_COORD_ARRAY); // quart
+    ::glBindBuffer(GL_ARRAY_BUFFER, 0); // TODO IMO necessary, but Karsten might have fixed it
+    //::glEnableClientState(GL_VERTEX_ARRAY);        // xyzr
+    //::glEnableClientState(GL_TEXTURE_COORD_ARRAY); // quart
 
     vislib::math::Cuboid<float> bbox(pgdc->GetBoundingBoxes().ObjectSpaceBBox());
     vislib::math::Point<float, 3> bboxmin(
@@ -179,14 +191,14 @@ bool QuartzTexRenderer::Render(core::view::CallRender3D_2& call) {
     this->cryShader.SetParameterArray3("camRight", 1, glm::value_ptr(camRight));
     this->cryShader.SetParameterArray3("camUp", 1, glm::value_ptr(camUp));
     this->cryShader.SetParameterArray4("camPosInit", 1, glm::value_ptr(camPos));
-    this->cryShader.SetParameterArray4("lightPos", 1, glm::value_ptr(lightPos));
     this->cryShader.SetParameterArray4("color", 1, glm::value_ptr(grainColor));
     this->cryShader.SetParameterArray4("ambientCol", 1, glm::value_ptr(ambient));
     this->cryShader.SetParameterArray4("diffuseCol", 1, glm::value_ptr(diffuse));
     this->cryShader.SetParameterArray4("specularCol", 1, glm::value_ptr(specular));
-    this->cryShader.SetParameter("lightIntensity", lightIntensity);
-    ::glUniformMatrix4fv(this->cryShader.ParameterLocation("ModelViewMatrixInverse"), 1, 
-		GL_FALSE, glm::value_ptr(MVinv));
+    this->cryShader.SetParameter("numLights", numLights);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssboLights);
+    //::glUniformMatrix4fv(this->cryShader.ParameterLocation("ModelViewMatrixInverse"), 1, 
+	//	GL_FALSE, glm::value_ptr(MVinv));
     ::glUniformMatrix4fv(this->cryShader.ParameterLocation("ModelViewMatrixInverseTranspose"), 1,
 		GL_FALSE, glm::value_ptr(glm::transpose(MVinv)));
     ::glUniformMatrix4fv(this->cryShader.ParameterLocation("ModelViewProjectionMatrix"), 1, 
@@ -307,19 +319,30 @@ bool QuartzTexRenderer::Render(core::view::CallRender3D_2& call) {
                     this->cryShader.SetParameter("outerRad",
                         tdc->GetCrystals()[list.Type()].GetBoundingRadius());
 
-                    ::glVertexPointer(4, GL_FLOAT, 8 * sizeof(float), list.Data());
-                    ::glTexCoordPointer(4, GL_FLOAT, 8 * sizeof(float), list.Data() + 4);
-                    ::glDrawArrays(GL_POINTS, 0, list.Count());
-                }
+					::glBindBuffer(GL_ARRAY_BUFFER, vbo);
+                    ::glBufferData(GL_ARRAY_BUFFER, list.Count() * 8 * sizeof(float), list.Data(), GL_STATIC_DRAW);
+                    ::glEnableVertexAttribArray(0);
+                    ::glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+                    ::glEnableVertexAttribArray(1);
+                    ::glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)16);
 
+                    //::glVertexPointer(4, GL_FLOAT, 8 * sizeof(float), list.Data());
+                    //::glTexCoordPointer(4, GL_FLOAT, 8 * sizeof(float), list.Data() + 4);
+                    ::glDrawArrays(GL_POINTS, 0, list.Count());
+
+					::glDisableVertexAttribArray(0);
+                    ::glDisableVertexAttribArray(1);
+                    ::glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+                    ::glBindBuffer(GL_ARRAY_BUFFER, 0);
+                }
             }
         }
     }
 
     this->cryShader.Disable();
     ::glBindTexture(GL_TEXTURE_2D, 0);
-    ::glDisableClientState(GL_VERTEX_ARRAY); // xyzr
-    ::glDisableClientState(GL_TEXTURE_COORD_ARRAY); // quart
+    //::glDisableClientState(GL_VERTEX_ARRAY); // xyzr
+    //::glDisableClientState(GL_TEXTURE_COORD_ARRAY); // quart
 
     if ((ccp != NULL) && (
         (this->showClipPlanePolySlot.Param<core::param::BoolParam>()->Value())
@@ -445,6 +468,28 @@ bool QuartzTexRenderer::create(void) {
         return false;
     }
 
+	::glDeleteBuffers(1, &ssboLights);
+    ::glGenBuffers(1, &ssboLights);
+    ::glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboLights);
+    if (!::glIsBuffer(ssboLights)) {
+        vislib::sys::Log::DefaultLog.WriteWarn("Failed generating SSBO for lights");
+        ::glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+        ::glDeleteBuffers(1, &ssboLights);
+        return false;
+    }
+    ::glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    ::glDeleteBuffers(1, &vbo);
+    ::glGenBuffers(1, &vbo);
+    ::glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    if (!::glIsBuffer(vbo)) {
+        vislib::sys::Log::DefaultLog.WriteWarn("Failed generating vbo");
+        ::glBindBuffer(GL_ARRAY_BUFFER, 0);
+        ::glDeleteBuffers(1, &vbo);
+        return false;
+    }
+    ::glBindBuffer(GL_ARRAY_BUFFER, 0);
+
     return true;
 }
 
@@ -454,6 +499,12 @@ bool QuartzTexRenderer::create(void) {
  */
 void QuartzTexRenderer::release(void) {
     AbstractTexQuartzRenderer::releaseTypeTexture();
+
+	::glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    ::glDeleteBuffers(1, &ssboLights);
+
+    ::glBindBuffer(GL_ARRAY_BUFFER, 0);
+    ::glDeleteBuffers(1, &vbo);
 }
 
 } /* end namespace demos */

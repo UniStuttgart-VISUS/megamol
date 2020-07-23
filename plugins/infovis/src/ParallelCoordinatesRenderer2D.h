@@ -91,11 +91,6 @@ protected:
 
     bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) override;
 
-    bool selectedItemsColorSlotCallback(core::param::ParamSlot& caller);
-    bool otherItemsColorSlotCallback(core::param::ParamSlot& caller);
-    bool axesColorSlotCallback(core::param::ParamSlot& caller);
-    bool filterIndicatorColorSlotCallback(core::param::ParamSlot& caller);
-    bool selectionIndicatorColorSlotCallback(core::param::ParamSlot& caller);
     bool scalingChangedCallback(core::param::ParamSlot& caller);
     bool resetFlagsSlotCallback(core::param::ParamSlot& caller);
     bool resetFiltersSlotCallback(core::param::ParamSlot& caller);
@@ -181,26 +176,19 @@ private:
 
     core::param::ParamSlot drawSelectedItemsSlot;
     core::param::ParamSlot selectedItemsColorSlot;
-    core::param::ParamSlot selectedItemsAlphaSlot;
-    float selectedItemsColor[4];
 
     core::param::ParamSlot drawOtherItemsSlot;
     core::param::ParamSlot otherItemsColorSlot;
-    core::param::ParamSlot otherItemsAlphaSlot;
-    float otherItemsColor[4];
+    core::param::ParamSlot otherItemsAttribSlot;
 
     core::param::ParamSlot drawAxesSlot;
     core::param::ParamSlot axesColorSlot;
-    float axesColor[4];
 
     core::param::ParamSlot filterIndicatorColorSlot;
-    float filterIndicatorColor[4];
-
 
     core::param::ParamSlot selectionModeSlot;
     core::param::ParamSlot drawSelectionIndicatorSlot;
     core::param::ParamSlot selectionIndicatorColorSlot;
-    float selectionIndicatorColor[4];
 
     core::param::ParamSlot pickRadiusSlot;
 
@@ -282,6 +270,7 @@ private:
     float strokeEndY;
     bool needSelectionUpdate;
     bool needFlagsUpdate;
+    std::map<std::string, uint32_t> columnIndex;
 
     GLint maxAxes;
     GLint isoLinesPerInvocation;
