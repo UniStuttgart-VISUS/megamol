@@ -1942,7 +1942,7 @@ megamol::gui::Graph::~Graph(void) {
 
     this->present.ResetStatePointers();
 
-    // Delete all groups
+    // 1) ! Delete all groups
     std::vector<ImGuiID> group_uids;
     for (auto& group_ptr : this->groups) {
         group_uids.emplace_back(group_ptr->uid);
@@ -1951,7 +1951,7 @@ megamol::gui::Graph::~Graph(void) {
         this->DeleteGroup(group_uid);
     }
 
-    // Delete all modules
+    // 2) Delete all modules
     std::vector<ImGuiID> module_uids;
     for (auto& module_ptr : this->modules) {
         module_uids.emplace_back(module_ptr->uid);
@@ -1960,7 +1960,7 @@ megamol::gui::Graph::~Graph(void) {
         this->DeleteModule(module_uid);
     }
 
-    // Delete all calls
+    // 3) Delete all calls
     std::vector<ImGuiID> call_uids;
     for (auto& call_ptr : this->calls) {
         call_uids.emplace_back(call_ptr->uid);

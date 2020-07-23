@@ -191,7 +191,8 @@ private:
     StringSearchWidget search_widget;
     std::shared_ptr<TransferFunctionEditor> tf_editor_ptr;
     HoverToolTip tooltip;
-    WidgetPicking widget_picking;
+    PickingBuffer picking_buffer;
+    PickableTriangle triangle_widget;
 
     // FUNCTIONS --------------------------------------------------------------
 

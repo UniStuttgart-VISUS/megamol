@@ -11,58 +11,159 @@
 
 #include "GUIUtils.h"
 
-#include "glowl/FramebufferObject.hpp"
-
 #include "mmcore/view/Input.h"
 
 #include "vislib/sys/Log.h"
+
+#include <glm/gtc/matrix_transform.hpp>
+#include <queue>
+#include "glowl/FramebufferObject.hpp"
+#include "glowl/GLSLProgram.hpp"
 
 
 namespace megamol {
 namespace gui {
 
 
+enum InteractionType {
+    MOVE_ALONG_AXIS_SCREEN,
+    MOVE_ALONG_AXIS_3D,
+    MOVE_IN_3D_PLANE,
+    ROTATE_AROUND_AXIS,
+    SELECT,
+    DESELECT,
+    HIGHLIGHT
+};
+
+struct Interaction {
+    InteractionType type;
+    uint32_t obj_id;
+    float axis_x;
+    float axis_y;
+    float axis_z;
+    float origin_x;
+    float origin_y;
+    float origin_z;
+};
+
+struct Manipulation {
+    InteractionType type;
+    uint32_t obj_id;
+    float axis_x;
+    float axis_y;
+    float axis_Z;
+    float value;
+};
+
+typedef std::shared_ptr<glowl::GLSLProgram> ShaderPtr;
+typedef std::vector<Interaction> InteractVector;
+typedef std::vector<Manipulation> ManipVector;
+
 /**
  * OpenGL implementation of widget picking.
  *
- * Code adapted from megamol::mesh::Render3DUI
+ * (Code adapted from megamol::mesh::Render3DUI)
  *
  */
-class WidgetPicking {
+class PickingBuffer {
 public:
-    WidgetPicking(void);
-
-    ~WidgetPicking(void);
+    PickingBuffer(void);
+    ~PickingBuffer(void);
 
     bool ProcessMouseMove(double x, double y);
 
     bool ProcessMouseClick(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action,
         megamol::core::view::Modifiers mods);
 
-    bool Enable(void);
+    bool EnableInteraction(glm::vec2 vp_dim);
 
-    bool Disable(void);
+    bool DisableInteraction(void);
 
-    static void DrawPickalbleCircle(unsigned int id);
+    void AddInteractionObject(uint32_t obj_id, std::vector<Interaction> const& interactions) {
+        this->available_interactions.insert({obj_id, interactions});
+    }
+
+    ManipVector& GetPendingManipulations(void) { return this->pending_manipulations; }
+
+    static bool CreatShader(ShaderPtr& shader_ptr, const std::string& vertex_src, const std::string& fragment_src);
 
 private:
     // VARIABLES --------------------------------------------------------------
 
-    double m_cursor_x, m_cursor_y;
+    double cursor_x, cursor_y;
+    glm::vec2 viewport_dim;
 
     /**
-     * Set to true if cursor on interactable object during current frame with respective obj id as second value
-     * Set to fale false if cursor on "background" during current frame with -1 as second value
+     * Set to true if cursor is on interactable object during current frame with respective obj id as second value
+     * Set to fale if cursor is on "background" during current frame with -1 as second value
      */
-    std::pair<bool, int> m_cursor_on_interaction_obj;
+    std::pair<bool, int> cursor_on_interaction_obj;
 
     /**
-     * Set to true if  with respective obj id as second value
-     * Set to fale false if cursor on "background" during current frame with -1 as second value
+     * Set to true if cursor is on interactable object and mouse interaction (click, move) is ongoing with respective
+     * obj id as second value Set to fale if cursor is on "background" during current frame with -1 as second value
      */
-    std::pair<bool, int> m_active_interaction_obj;
+    std::pair<bool, int> active_interaction_obj;
 
-    std::unique_ptr<glowl::FramebufferObject> m_fbo;
+    std::map<uint32_t, std::vector<Interaction>> available_interactions;
+    ManipVector pending_manipulations;
+
+    std::unique_ptr<glowl::FramebufferObject> fbo;
+
+    bool enabled;
+
+    std::shared_ptr<glowl::GLSLProgram> fbo_tex_shader;
+
+    // FUNCTIONS --------------------------------------------------------------
+
+    std::vector<Interaction> get_available_interactions(uint32_t obj_id) {
+        std::vector<Interaction> retval;
+        auto query = this->available_interactions.find(obj_id);
+        if (query != this->available_interactions.end()) {
+            retval = query->second;
+        }
+        return retval;
+    }
+
+    inline void check_opengl_errors(void) const {
+        auto err = glGetError();
+        if (err != 0) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "OpenGL Error: %i. [%s, %s, line %d]\n", err, __FILE__, __FUNCTION__, __LINE__);
+        }
+    }
+};
+
+
+class PickableTriangle {
+public:
+    PickableTriangle(void);
+    ~PickableTriangle(void) = default;
+
+    void Draw(unsigned int id, glm::vec2 pixel_dir, glm::vec2 vp_dim, ManipVector& pending_manipulations);
+
+    InteractVector GetInteractions(unsigned int id) {
+        InteractVector interactions;
+        interactions.emplace_back(Interaction(
+            {InteractionType::MOVE_ALONG_AXIS_SCREEN, static_cast<uint32_t>(id), 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+        interactions.emplace_back(Interaction(
+            {InteractionType::MOVE_ALONG_AXIS_SCREEN, static_cast<uint32_t>(id), 0.0f, 1.0f, 0.0f, 0.0f, 0.0f}));
+        interactions.emplace_back(
+            Interaction({InteractionType::SELECT, static_cast<uint32_t>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+        interactions.emplace_back(
+            Interaction({InteractionType::DESELECT, static_cast<uint32_t>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+        interactions.emplace_back(
+            Interaction({InteractionType::HIGHLIGHT, static_cast<uint32_t>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+        return interactions;
+    }
+
+private:
+    // VARIABLES --------------------------------------------------------------
+
+    std::shared_ptr<glowl::GLSLProgram> shader;
+
+    glm::vec4 color;
+    glm::vec2 pixel_direction;
 };
 
 

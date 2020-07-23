@@ -42,7 +42,8 @@ GUIWindows::GUIWindows()
     , file_browser()
     , search_widget()
     , tooltip()
-    , widget_picking() {
+    , picking_buffer()
+    , triangle_widget() {
 
     core::param::EnumParam* styles = new core::param::EnumParam((int)(Styles::DarkColors));
     styles->SetTypePair(Styles::CorporateGray, "Corporate Gray");
@@ -223,7 +224,7 @@ bool GUIWindows::PostDraw(void) {
     }
 
     ImGuiIO& io = ImGui::GetIO();
-    ImVec2 viewport = ImVec2(io.DisplaySize.x, io.DisplaySize.y);
+    ImVec2 viewport = io.DisplaySize;
 
     // Main Menu ---------------------------------------------------------------
     if (this->state.menu_visible) {
@@ -347,8 +348,9 @@ bool GUIWindows::PostDraw(void) {
 
     // Draw global parameter widgets -------------------------------------------
 
-    /// TODO Enable global picking buffer
-    // this->widget_picking.Enable();
+    /// DEBUG picking
+    // auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
+    // this->picking_buffer.EnableInteraction(viewport_dim);
 
     GraphPtrType graph_ptr;
     if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
@@ -361,9 +363,12 @@ bool GUIWindows::PostDraw(void) {
         }
     }
 
-    /// TODO Disable global picking buffer
-    // this->widget_picking.Disable();
-
+    /// DEBUG picking
+    // unsigned int id = 5;
+    // this->picking_buffer.AddInteractionObject(id, this->triangle_widget.GetInteractions(id));
+    // this->triangle_widget.Draw(
+    //    id, glm::vec2(0.0f, 200.0f), viewport_dim, this->picking_buffer.GetPendingManipulations());
+    // this->picking_buffer.DisableInteraction();
 
     // Synchronizing parameter values -----------------------------------------
     if (this->graph_manager.GetGraph(this->graph_uid, graph_ptr)) {
@@ -490,7 +495,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
         if (windowHotkeyPressed) {
             wc.win_show = !wc.win_show;
         }
-        hotkeyPressed = (hotkeyPressed || windowHotkeyPressed);
+        hotkeyPressed |= windowHotkeyPressed;
 
         auto window_hotkey = wc.win_hotkey;
         auto mods = window_hotkey.mods;
@@ -500,7 +505,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
         if (windowHotkeyPressed) {
             wc.win_soft_reset = true;
         }
-        hotkeyPressed = (hotkeyPressed || windowHotkeyPressed);
+        hotkeyPressed |= windowHotkeyPressed;
     };
     this->window_manager.EnumWindows(windows_func);
     if (hotkeyPressed) return true;
@@ -570,6 +575,10 @@ bool GUIWindows::OnMouseMove(double x, double y) {
 
     // Always consumed if any imgui windows is hovered.
     bool consumed = ImGui::IsWindowHovered(hoverFlags);
+    if (!consumed) {
+        consumed = this->picking_buffer.ProcessMouseMove(x, y);
+    }
+
     return consumed;
 }
 
@@ -597,6 +606,10 @@ bool GUIWindows::OnMouseButton(
 
     // Always consumed if any imgui windows is hovered.
     bool consumed = ImGui::IsWindowHovered(hoverFlags);
+    if (!consumed) {
+        consumed = this->picking_buffer.ProcessMouseClick(button, action, mods);
+    }
+
     return consumed;
 }
 
@@ -1419,8 +1432,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     }
 
     // Save project pop-up
-    this->state.open_popup_save =
-        (this->state.open_popup_save || std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]));
+    this->state.open_popup_save |= std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]);
 
     bool confirmed, aborted;
     bool popup_failed = false;
