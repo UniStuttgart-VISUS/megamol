@@ -12,6 +12,8 @@
 #include "Window_Events.h"
 #include "OpenGL_Context.h"
 
+#include <chrono>
+
 namespace megamol {
 namespace core {
 namespace view {
@@ -64,14 +66,30 @@ void view_consume_framebuffer_events(AbstractView& view, megamol::frontend::Modu
     }
 }
 
+// this is a weird place to measure passed program time, but we do it here so we satisfy _mmcRenderViewContext and nobody else needs to know
+static std::chrono::high_resolution_clock::time_point render_view_context_timer_start;
+
 void view_poke_rendering(AbstractView& view, megamol::frontend::ModuleResource const& resource) {
     megamol::input_events::IOpenGL_Context const * maybe_opengl = nullptr;
 
     if (resource.getIdentifier() == "IOpenGL_Context")
 		maybe_opengl = &resource.getResource<megamol::input_events::IOpenGL_Context>();
+	
+	static bool started_timer = false;
+	if (!started_timer) {
+		render_view_context_timer_start = std::chrono::high_resolution_clock::now();
+        started_timer = true;
+	}
 
 	const auto render = [&]() {
 		_mmcRenderViewContext dummyRenderViewContext; // doesn't do anything, really
+
+        const double time = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::high_resolution_clock::now() - render_view_context_timer_start)
+            .count() / static_cast<double>(1000);
+
+        dummyRenderViewContext.InstanceTime = time;
+
 		view.Render(dummyRenderViewContext);
 	};
 
