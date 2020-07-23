@@ -7,10 +7,7 @@
 
 #include "stdafx.h"
 #include "TransferFunctionEditor.h"
-#include "ColorPalettes.h"
-
-#include <array>
-#include <cmath>
+#include "graph/Parameter.h"
 
 
 using namespace megamol;
@@ -31,7 +28,7 @@ using namespace megamol::core;
  * @param gamma Set the gamma correction for intensity.
  */
 std::array<double, 3> CubeHelixRGB(double t, double start, double rots, double hue, double gamma) {
-    const double PI = 3.141592653589793238463; // Fuck C++!
+    const double PI = 3.141592653589793238463;
 
     double angle = 2.0 * PI * (start / 3.0 + 1 + rots * t);
     double fract = std::pow(t, gamma);
@@ -164,8 +161,8 @@ std::array<std::tuple<std::string, PresetGenerator>, 20> PRESETS = {
 
 
 TransferFunctionEditor::TransferFunctionEditor(void)
-    : utils()
-    , active_parameter(nullptr)
+    : connected_parameter_ptr(nullptr)
+    , connected_parameter_name()
     , nodes()
     , range({0.0f, 1.0f})
     , last_range({0.0f, 1.0f})
@@ -174,9 +171,6 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , textureSize(256)
     , textureInvalid(true)
     , pendingChanges(true)
-    , texturePixels()
-    , texture_id_vert(0)
-    , texture_id_horiz(0)
     , activeChannels{false, false, false, false}
     , currentNode(0)
     , currentChannel(0)
@@ -184,7 +178,9 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , immediateMode(false)
     , showOptions(true)
     , widget_buffer()
-    , flip_xy(false) {
+    , flip_legend(false)
+    , tooltip()
+    , image_widget() {
 
     // Init transfer function colors
     this->nodes.clear();
@@ -195,23 +191,24 @@ TransferFunctionEditor::TransferFunctionEditor(void)
 
     this->widget_buffer.min_range = this->range[0];
     this->widget_buffer.max_range = this->range[1];
-    this->widget_buffer.tex_size = textureSize;
+    this->widget_buffer.tex_size = this->textureSize;
     this->widget_buffer.gauss_sigma = zero[5];
     this->widget_buffer.range_value = zero[4];
 }
 
-void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool active_parameter_mode) {
 
-    if (active_parameter_mode) {
-        if (active_parameter == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Missing active parameter to edit");
-            return;
-        }
+void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool connected_parameter_mode) {
+
+    if (connected_parameter_mode && (this->connected_parameter_ptr == nullptr)) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Missing active parameter to edit");
+        return;
     }
 
     std::array<float, 2> new_range;
+    unsigned int tex_size = 0;
     bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
-        tfs, this->nodes, this->mode, this->textureSize, new_range);
+        tfs, this->nodes, this->mode, tex_size, new_range);
+
     if (!ok) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Could not parse transfer function");
         return;
@@ -222,7 +219,7 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool ac
 
     this->currentNode = 0;
     this->currentChannel = 0;
-    this->currentDragChange = ImVec2(0.0f, 0.0f);
+    this->currentDragChange = glm::vec2(0.0f, 0.0f);
 
     if (!this->range_overwrite) {
         this->range = new_range;
@@ -232,7 +229,7 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool ac
 
     this->widget_buffer.min_range = this->range[0];
     this->widget_buffer.max_range = this->range[1];
-    this->widget_buffer.tex_size = this->textureSize;
+    this->widget_buffer.tex_size = static_cast<int>(tex_size);
     this->widget_buffer.range_value =
         (this->nodes[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
 
@@ -243,20 +240,39 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool ac
 
 bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
     return param::TransferFunctionParam::DumpTransferFunction(
-        tfs, this->nodes, this->mode, this->textureSize, this->range);
+        tfs, this->nodes, this->mode, static_cast<unsigned int>(this->textureSize), this->range);
 }
 
-bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
+
+void TransferFunctionEditor::SetConnectedParameter(Parameter* param_ptr, const std::string& param_full_name) {
+    this->connected_parameter_ptr = nullptr;
+    this->connected_parameter_name = "";
+    if (param_ptr != nullptr) {
+        if (param_ptr->type == ParamType::TRANSFERFUNCTION) {
+            if (this->connected_parameter_ptr != param_ptr) {
+                this->connected_parameter_ptr = param_ptr;
+                this->connected_parameter_name = param_full_name;
+                this->SetTransferFunction(std::get<std::string>(this->connected_parameter_ptr->GetValue()), true);
+            }
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Wrong parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        }
+    }
+}
+
+
+bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
+
+    std::string help;
 
     ImGui::BeginGroup();
     ImGui::PushID("TransferFunctionEditor");
 
-    if (active_parameter_mode) {
-        if (this->active_parameter == nullptr) {
-            const char* message = "Changes have no effect.\n"
-                                  "Please set a transfer function parameter.\n";
-            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), message);
-        }
+    if (connected_parameter_mode && (this->connected_parameter_ptr == nullptr)) {
+        const char* message = "Changes have no effect.\n"
+                              "No transfer function parameter connected for edit.\n";
+        ImGui::TextColored(GUI_COLOR_TEXT_WARN, message);
     }
 
     assert(ImGui::GetCurrentContext() != nullptr);
@@ -278,8 +294,8 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
     }
 
     ImGui::BeginGroup();
-    this->drawTextureBox(image_size, this->flip_xy);
-    this->drawScale(ImGui::GetCursorScreenPos(), image_size, this->flip_xy);
+    this->drawTextureBox(image_size, this->flip_legend);
+    this->drawScale(ImGui::GetCursorScreenPos(), image_size, this->flip_legend);
     ImGui::EndGroup();
 
     ImGui::SameLine();
@@ -291,15 +307,24 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
     if (this->showOptions) {
         ImGui::Separator();
 
+        /*
+        if (connected_parameter_mode) {
+            ImGui::TextUnformatted("Parameter:");
+            ImGui::TextColored(GUI_COLOR_TEXT_WARN,
+                ((this->connected_parameter_ptr == nullptr) ? ("-")
+                                                            : (this->connected_parameter_ptr->GetName().c_str())));
+        }
+        */
+
         // Legend alignment ---------------------------------------------------
         ImGui::BeginGroup();
-        if (ImGui::RadioButton("Vertical", this->flip_xy)) {
-            this->flip_xy = true;
+        if (ImGui::RadioButton("Vertical", this->flip_legend)) {
+            this->flip_legend = true;
             this->textureInvalid = true;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton("Horizontal", !this->flip_xy)) {
-            this->flip_xy = false;
+        if (ImGui::RadioButton("Horizontal", !this->flip_legend)) {
+            this->flip_legend = false;
             this->textureInvalid = true;
         }
         ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x);
@@ -358,6 +383,9 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
                 this->textureInvalid = true;
             }
         }
+        help = "[Enable] for overwriting value range propagated from connected module(s).\n"
+               "[Disable] for recovery of last value range or last value range propagated from connected module(s).";
+        this->tooltip.Marker(help);
 
         // Value slider -------------------------------------------------------
         this->widget_buffer.range_value =
@@ -376,8 +404,8 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
             this->nodes[this->currentNode][4] = new_x;
             this->textureInvalid = true;
         }
-        std::string help = "[Ctrl-Click] for keyboard input";
-        this->utils.HelpMarkerToolTip(help);
+        help = "[Ctrl-Click] for keyboard input";
+        this->tooltip.Marker(help);
 
         // Sigma slider -------------------------------------------------------
         if (this->mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
@@ -385,8 +413,8 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
                 this->nodes[this->currentNode][5] = this->widget_buffer.gauss_sigma;
                 this->textureInvalid = true;
             }
-            std::string help = "[Ctrl-Click] for keyboard input";
-            this->utils.HelpMarkerToolTip(help);
+            help = "[Ctrl-Click] for keyboard input";
+            this->tooltip.Marker(help);
         }
 
         // Plot ---------------------------------------------------------------
@@ -420,8 +448,7 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
         help = "[Click] on the colored square to open a color picker.\n"
                "[CTRL+Click] on individual component to input value.\n"
                "[Right-Click] on the individual color widget to show options.";
-        this->utils.HelpMarkerToolTip(help);
-
+        this->tooltip.Marker(help);
 
         // Interpolation mode -------------------------------------------------
         std::map<param::TransferFunctionParam::InterpolationMode, std::string> opts;
@@ -453,7 +480,7 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
         // Texture size -------------------------------------------------------
         ImGui::InputInt("Texture Size", &this->widget_buffer.tex_size, 1, 10, ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            this->textureSize = (UINT)std::max(1, this->widget_buffer.tex_size);
+            this->textureSize = std::max(1, this->widget_buffer.tex_size);
             this->widget_buffer.tex_size = this->textureSize;
             this->textureInvalid = true;
         }
@@ -463,17 +490,20 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
     // Create current texture data
     if (this->textureInvalid) {
         this->pendingChanges = true;
-
+        std::vector<float> texture_data;
         if (this->mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
-            param::TransferFunctionParam::LinearInterpolation(this->texturePixels, this->textureSize, this->nodes);
+            param::TransferFunctionParam::LinearInterpolation(
+                texture_data, static_cast<unsigned int>(this->textureSize), this->nodes);
         } else if (this->mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
-            param::TransferFunctionParam::GaussInterpolation(this->texturePixels, this->textureSize, this->nodes);
+            param::TransferFunctionParam::GaussInterpolation(
+                texture_data, static_cast<unsigned int>(this->textureSize), this->nodes);
         }
 
-        this->CreateTexture(
-            this->texture_id_horiz, static_cast<GLsizei>(this->textureSize), 1, this->texturePixels.data());
-        this->CreateTexture(
-            this->texture_id_vert, 1, static_cast<GLsizei>(this->textureSize), this->texturePixels.data());
+        if (!this->flip_legend) {
+            this->image_widget.LoadTextureFromData(this->textureSize, 1, texture_data.data());
+        } else {
+            this->image_widget.LoadTextureFromData(1, this->textureSize, texture_data.data());
+        }
 
         this->textureInvalid = false;
     }
@@ -483,11 +513,10 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
     if (this->showOptions) {
 
         // Return true for current changes being applied
-        const auto err_btn_color = ImVec4(0.6f, 0.0f, 0.0f, 1.0f);
-        const auto er_btn_hov_color = ImVec4(0.9f, 0.0f, 0.0f, 1.0f);
-        ImGui::PushStyleColor(ImGuiCol_Button, this->pendingChanges ? err_btn_color : style.Colors[ImGuiCol_Button]);
         ImGui::PushStyleColor(
-            ImGuiCol_ButtonHovered, this->pendingChanges ? er_btn_hov_color : style.Colors[ImGuiCol_ButtonHovered]);
+            ImGuiCol_Button, this->pendingChanges ? GUI_COLOR_BUTTON_MODIFIED : style.Colors[ImGuiCol_Button]);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+            this->pendingChanges ? GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT : style.Colors[ImGuiCol_ButtonHovered]);
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
         if (ImGui::Button("Apply")) {
             apply_changes = true;
@@ -508,12 +537,16 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
             this->pendingChanges = false;
         }
 
-        if (active_parameter_mode) {
+        if (connected_parameter_mode) {
             if (apply_changes) {
-                if (this->active_parameter != nullptr) {
+                if (this->connected_parameter_ptr != nullptr) {
                     std::string tf;
                     if (this->GetTransferFunction(tf)) {
-                        this->active_parameter->SetValue(tf);
+                        if (this->connected_parameter_ptr->type == ParamType::TRANSFERFUNCTION) {
+                            this->connected_parameter_ptr->SetValue(tf);
+                            this->connected_parameter_ptr->present.SetTransferFunctionEditorHash(
+                                this->connected_parameter_ptr->GetTransferFunctionHash());
+                        }
                     }
                 }
             }
@@ -529,60 +562,22 @@ bool TransferFunctionEditor::Draw(bool active_parameter_mode) {
 }
 
 
-bool TransferFunctionEditor::ActiveParamterValueHash(size_t& out_tf_value_hash) {
-
-    if (this->active_parameter != nullptr) {
-        out_tf_value_hash = this->active_parameter->ValueHash();
-        return true;
-    }
-    return false;
-}
-
-
-void TransferFunctionEditor::CreateTexture(GLuint& inout_id, GLsizei width, GLsizei height, float* data) const {
-
-    if (data == nullptr) return;
-
-    // Delete old texture.
-    if (inout_id != 0) {
-        glDeleteTextures(1, &inout_id);
-    }
-    inout_id = 0;
-
-    // Upload texture.
-    glGenTextures(1, &inout_id);
-    glBindTexture(GL_TEXTURE_2D, inout_id);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, data);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-
-void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_xy) {
+void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_legend) {
 
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec2 pos = ImGui::GetCursorScreenPos();
-    const size_t textureSize = this->texturePixels.size() / 4;
 
-    GLuint texture_id = this->texture_id_horiz;
     ImVec2 image_size = size;
     ImVec2 uv0 = ImVec2(0.0f, 0.0f);
     ImVec2 uv1 = ImVec2(1.0f, 1.0f);
-    if (flip_xy) {
-        texture_id = this->texture_id_vert;
+    if (flip_legend) {
         image_size.x = size.y;
         image_size.y = size.x;
         uv0 = ImVec2(1.0f, 1.0f);
         uv1 = ImVec2(0.0f, 0.0f);
     }
 
-    if (textureSize == 0 || texture_id == 0) {
+    if (textureSize == 0 || !this->image_widget.IsLoaded()) {
         // Reserve layout space and draw a black background rectangle.
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         ImGui::Dummy(image_size);
@@ -590,8 +585,7 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_xy) {
             pos, ImVec2(pos.x + image_size.x, pos.y + image_size.y), IM_COL32(0, 0, 0, 255), 0.0f, 10);
     } else {
         // Draw texture as image.
-        ImGui::Image(reinterpret_cast<ImTextureID>(texture_id), image_size, uv0, uv1, ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
-            style.Colors[ImGuiCol_Border]);
+        this->image_widget.Widget(image_size, uv0, uv1);
     }
 
     // Draw tooltip, if requested.
@@ -606,7 +600,7 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_xy) {
 }
 
 
-void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bool flip_xy) {
+void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bool flip_legend) {
 
     ImGuiStyle& style = ImGui::GetStyle();
     ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -617,7 +611,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
 
     float width = size.x;
     float height = size.y;
-    if (flip_xy) {
+    if (flip_legend) {
         width = size.y;
         height = size.x;
     }
@@ -632,7 +626,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     ImVec2 init_pos = pos;
     float width_delta = 0.0f;
     float height_delta = 0.0f;
-    if (flip_xy) {
+    if (flip_legend) {
         init_pos.x += width;
         init_pos.y -= (height + item_y_spacing);
         height_delta = height / static_cast<float>(scale_count - 1);
@@ -642,7 +636,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     }
 
     for (unsigned int i = 0; i < scale_count; i++) {
-        if (flip_xy) {
+        if (flip_legend) {
             float y = height_delta * static_cast<float>(i);
             if (i == 0) y += (line_thickness / 2.0f);
             if (i == (scale_count - 1)) y -= (line_thickness / 2.0f);
@@ -661,21 +655,21 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     std::stringstream label_stream; /// String stream offers much better float formatting
     label_stream << this->range[0];
     std::string min_label_str = label_stream.str();
-    float min_item_width = GUIUtils::TextWidgetWidth(min_label_str);
+    float min_item_width = ImGui::CalcTextSize(min_label_str.c_str()).x;
 
     label_stream.str("");
     label_stream.clear();
     label_stream << this->range[1];
     std::string max_label_str = label_stream.str();
-    float max_item_width = GUIUtils::TextWidgetWidth(max_label_str);
+    float max_item_width = ImGui::CalcTextSize(max_label_str.c_str()).x;
 
     label_stream.str("");
     label_stream.clear();
-    label_stream << ((this->range[1] - this->range[0]) / 2.0f);
+    label_stream << (this->range[0] + (this->range[1] - this->range[0]) / 2.0f);
     std::string mid_label_str = label_stream.str();
-    float mid_item_width = GUIUtils::TextWidgetWidth(mid_label_str);
+    float mid_item_width = ImGui::CalcTextSize(mid_label_str.c_str()).x;
 
-    if (flip_xy) {
+    if (flip_legend) {
         float font_size = ImGui::GetFontSize();
         ImVec2 text_pos = init_pos + ImVec2(item_y_spacing + line_length, 0.0f);
         // Max Value
@@ -705,7 +699,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
         ImGui::TextUnformatted(max_label_str.c_str());
     }
 
-    if (flip_xy) {
+    if (flip_legend) {
         ImGui::SetCursorScreenPos(reset_pos);
     }
 }
@@ -757,7 +751,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
     ImGuiID selected_node = GUI_INVALID_ID;
     ImGuiID selected_chan = GUI_INVALID_ID;
-    ImVec2 selected_delta = ImVec2(0.0f, 0.0f);
+    glm::vec2 selected_delta = glm::vec2(0.0f, 0.0f);
     // For each enabled color channel
     for (size_t c = 0; c < channelColors.size(); ++c) {
         if (!this->activeChannels[c]) continue;
@@ -790,7 +784,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
             }
 
             // Test for intersection of mouse position with node.
-            ImVec2 d = ImVec2(point.x - mouse_cur_pos.x, point.y - mouse_cur_pos.y);
+            glm::vec2 d = glm::vec2(point.x - mouse_cur_pos.x, point.y - mouse_cur_pos.y);
             if (sqrtf((d.x * d.x) + (d.y * d.y)) <= pointAndBorderRadius) {
                 selected_node = static_cast<ImGuiID>(i);
                 selected_chan = static_cast<ImGuiID>(c);
@@ -926,7 +920,6 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
     }
     ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
     ImGui::TextUnformatted("Function Plot");
-    this->utils.HelpMarkerToolTip(
-        "First and last node are always present\nwith fixed value 0 and 1.\n[Left-Click] Select "
-        "Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");
+    this->tooltip.Marker("First and last node are always present\nwith fixed value 0 and 1.\n[Left-Click] Select "
+                         "Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");
 }
