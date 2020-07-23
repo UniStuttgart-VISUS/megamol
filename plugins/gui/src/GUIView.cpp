@@ -22,7 +22,7 @@ GUIView::GUIView()
     this->render_view_slot.SetCompatibleCall<core::view::CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->render_view_slot);
 
-    for (auto slot : this->gui.GetParams()) {
+    for (auto& slot : this->gui.GetParams()) {
         this->MakeSlotAvailable(slot);
     }
 }
@@ -247,7 +247,7 @@ bool GUIView::OnRenderView(megamol::core::Call& call) {
     ::ZeroMemory(&context, sizeof(context));
     context.Time = crv->Time();
     context.InstanceTime = crv->InstanceTime();
-    // TODO: Affinity
+    // XXX: Affinity
     this->Render(context);
 
     this->overrideCall = nullptr;
