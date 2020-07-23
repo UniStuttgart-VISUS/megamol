@@ -128,10 +128,11 @@ bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::front
     static std::vector<std::string> view_resource_requests = {
         "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context"};
 
+	// note: this is work in progress and more of a working prototype than a final design
     // callback executed by the graph for each frame
     // knows how to make a view module process input events and start the rendering
     auto view_rendering_execution = [&](megamol::core::Module::ptr_type module_ptr,
-                                        std::vector<megamol::frontend::ModuleResource> resources) {
+                                        std::vector<megamol::frontend::ModuleResource> const& resources) {
         megamol::core::view::AbstractView* view_ptr =
             dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
 
@@ -152,25 +153,6 @@ bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::front
         megamol::core::view::view_consume_window_events(view, resources[i++]);
         megamol::core::view::view_consume_framebuffer_events(view, resources[i++]);
         megamol::core::view::view_poke_rendering(view, resources[i++]);
-        // for (auto& dep : resources) {
-        //    auto& depId = dep.getIdentifier();
-
-        //    if (depId == "KeyboardEvents") {
-        //        megamol::core::view::view_consume_keyboard_events(view, dep);
-        //    }
-        //    if (depId == "MouseEvents") {
-        //        megamol::core::view::view_consume_mouse_events(view, dep);
-        //    }
-        //    if (depId == "WindowEvents") {
-        //        megamol::core::view::view_consume_window_events(view, dep);
-        //    }
-        //    if (depId == "FramebufferEvents") {
-        //        megamol::core::view::view_consume_framebuffer_events(view, dep);
-        //    }
-        //    if (depId == "IOpenGL_Context") {
-        //        megamol::core::view::view_poke_rendering(view, dep);
-        //    }
-        //}
     };
 
     check(graph.SetGraphEntryPoint("::guiview", view_resource_requests, view_rendering_execution));

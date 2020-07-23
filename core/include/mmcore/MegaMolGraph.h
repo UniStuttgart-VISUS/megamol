@@ -178,7 +178,7 @@ public:
     std::vector<megamol::core::param::ParamSlot*> ListParameterSlots() const;
 
 	using EntryPointExecutionCallback =
-        std::function<void(Module::ptr_type, std::vector<megamol::frontend::ModuleResource>)>;
+        std::function<void(Module::ptr_type, std::vector<megamol::frontend::ModuleResource> const&)>;
 
 	bool SetGraphEntryPoint(std::string moduleName, std::vector<std::string> execution_resources, EntryPointExecutionCallback callback);
 
