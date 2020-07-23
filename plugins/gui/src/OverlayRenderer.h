@@ -128,7 +128,7 @@ private:
     // Explicit numbering required as indices in transpctrl_icons array.
     enum TranspCtrlIcon : size_t {
         PLAY = 0,
-        STOP = 1, /// unused
+        STOP = 1, /// so far unused
         PAUSE = 2,
         FAST_REWIND = 3,
         FAST_FORWARD = 4,

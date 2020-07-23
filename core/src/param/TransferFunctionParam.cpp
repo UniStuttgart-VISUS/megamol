@@ -23,6 +23,7 @@ TransferFunctionParam::TransferFunctionParam(const std::string& initVal) : Abstr
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[TransferFunctionParam] No valid parameter value for constructor given.");
     }
+    this->InitPresentation(AbstractParamPresentation::ParamType::TRANSFERFUNCTION);
 }
 
 
@@ -37,6 +38,7 @@ TransferFunctionParam::TransferFunctionParam(const char* initVal) : AbstractPara
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[TransferFunctionParam] No valid parameter value for constructor given.");
     }
+    this->InitPresentation(AbstractParamPresentation::ParamType::TRANSFERFUNCTION);
 }
 
 
@@ -51,6 +53,7 @@ TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal) : A
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[TransferFunctionParam] No valid parameter value for constructor given.");
     }
+    this->InitPresentation(AbstractParamPresentation::ParamType::TRANSFERFUNCTION);
 }
 
 
@@ -562,3 +565,31 @@ void TransferFunctionParam::GaussInterpolation(
         }
     }
 }
+
+
+ bool megamol::core::param::TransferFunctionParam::GetTextureData(const std::string & in_tfs, std::vector<float>& out_tex_data, int & out_width, int & out_height)  {
+
+    out_tex_data.clear();
+    unsigned int tmp_texture_size;
+    megamol::core::param::TransferFunctionParam::TFNodeType tmp_nodes;
+    std::array<float, 2> tmp_range;
+    megamol::core::param::TransferFunctionParam::InterpolationMode tmp_mode;
+
+    bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
+        in_tfs, tmp_nodes, tmp_mode, tmp_texture_size, tmp_range);
+    if (!ok) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Could not parse transfer function.");
+        return false;
+    }
+    if (tmp_mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
+        param::TransferFunctionParam::LinearInterpolation(out_tex_data, tmp_texture_size, tmp_nodes);
+    }
+    else if (tmp_mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
+        param::TransferFunctionParam::GaussInterpolation(out_tex_data, tmp_texture_size, tmp_nodes);
+    }
+
+    out_width = tmp_texture_size;
+    out_height = 1;
+
+    return true;
+ }
