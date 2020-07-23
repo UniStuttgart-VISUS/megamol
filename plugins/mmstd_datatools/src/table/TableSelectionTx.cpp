@@ -138,19 +138,16 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
     auto flags = flagsWriteOutCall->getData()->flags;
     size_t numberOfFlags = flags->getByteSize() / sizeof(uint32_t);
     size_t numberOfRows = tableInCall->GetRowsCount();
-    size_t numberOfCols = tableInCall->GetColumnsCount();
 
-    // validateFlagCount() only increases the buffer
+    // validateFlagCount() only increases the buffer, therefore numberOfFlags > numberOfRows is also valid.
     if (numberOfFlags < numberOfRows) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "TableSelectionTx: invalid table/flag storage size!");
         return false;
     }
 
-    const float *tableInData = tableInCall->GetData();
-
-    uint32_t *flagsData = new uint32_t[numberOfFlags];
+    std::vector<uint32_t> flagsData(numberOfFlags);
     flags->bind();
-    glGetBufferSubData(flags->getTarget(), 0, flags->getByteSize(), flagsData);
+    glGetBufferSubData(flags->getTarget(), 0, flags->getByteSize(), flagsData.data());
 
     core::FlagStorage::FlagItemType testMask = core::FlagStorage::ENABLED | core::FlagStorage::FILTERED;
     core::FlagStorage::FlagItemType passMask = core::FlagStorage::ENABLED;
@@ -159,11 +156,8 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
     selected_.clear();
     for (size_t i = 0; i < numberOfRows; ++i) {
         if ((flagsData[i] & testMask) == passMask) {
-            uint32_t time = static_cast<uint32_t>(tableInData[numberOfCols * i + 0]); // 0 = id of time column
-            uint32_t number = static_cast<uint32_t>(tableInData[numberOfCols * i + 1]); // 1 = id of number column
-            uint64_t name = (static_cast<uint64_t>(time) << 32u) + static_cast<uint64_t>(number);
             if (flagsData[i] & core::FlagStorage::SELECTED) {
-                selected_.push_back(name);
+                selected_.push_back(static_cast<uint64_t>(i));
             } else {
                 // not selected
             }
@@ -172,8 +166,6 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
     senderThreadNotified_ = true;
     condVar_.notify_one();
     lock.unlock();
-
-    delete[] flagsData;
 
     return true;
 }
