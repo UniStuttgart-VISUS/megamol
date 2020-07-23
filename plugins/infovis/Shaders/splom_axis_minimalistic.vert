@@ -31,6 +31,7 @@ vec2 corner(const Plot plot, const uint vertexIndex) {
         // Top-right.
         return vec2(plot.offsetX + plot.sizeX, plot.offsetY + plot.sizeY);
     }
+    return vec2(0.0f);
 }
 
 vec2 tick(const Plot plot, const uint vertexIndex) {
