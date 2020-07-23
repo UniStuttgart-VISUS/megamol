@@ -684,12 +684,6 @@ namespace xml {
         /** the shader sourcecode directories */
         vislib::Array<vislib::StringW> shaderDirs;
 
-        /**
-         * temporary pointer to the log object of the instance. This pointer 
-         * is only valid under certain conditions.
-         */
-        //vislib::sys::Log *instanceLog;
-
         /** map of generic configuration values */
         vislib::Map<ConfigValueName, vislib::StringW> configValues;
 

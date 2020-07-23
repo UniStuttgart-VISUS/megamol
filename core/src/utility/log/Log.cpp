@@ -90,7 +90,7 @@ void vislib::sys::Log::DebugOutputTarget::Msg(UINT level,
         vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
         const char *msg) {
     if (level > this->Level()) return;
-    logger->info("%.4d|%s", level, msg);
+    logger->info("{}|{}", level, msg);
 }
 
 #endif /* _WIN32 */
@@ -133,7 +133,7 @@ void vislib::sys::Log::FileTarget::Flush(void) {
 void vislib::sys::Log::FileTarget::Msg(UINT level,
         vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
         const char *msg) {
-    if (/*(this->stream == NULL) || */(level > this->Level())) return;
+    if (level > this->Level()) return;
 
     struct tm *timeStamp;
 #ifdef _WIN32
@@ -239,36 +239,6 @@ void vislib::sys::Log::OfflineTarget::SetBufferSize(unsigned int bufferSize) {
 
 /*****************************************************************************/
 
-///*
-// * vislib::sys::Log::RedirectTarget::RedirectTarget
-// */
-//vislib::sys::Log::RedirectTarget::RedirectTarget(vislib::sys::Log *log,
-//        UINT level) : Target(level), log(log) {
-//    // intentionally empty
-//}
-//
-//
-///*
-// * vislib::sys::Log::RedirectTarget::~RedirectTarget
-// */
-//vislib::sys::Log::RedirectTarget::~RedirectTarget(void) {
-//    // intentionally empty
-//}
-//
-//
-///*
-// * vislib::sys::Log::RedirectTarget::Msg
-// */
-//void vislib::sys::Log::RedirectTarget::Msg(UINT level,
-//        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
-//        const char *msg) {
-//    // Do not check the level. We redirect ALL messages
-//    if (this->log == NULL) return;
-//    this->log->WriteMessage(level, time, sid, msg);
-//}
-
-/*****************************************************************************/
-
 /*
  * vislib::sys::Log::StreamTarget::StdOut
  */
@@ -289,7 +259,7 @@ vislib::sys::Log::StreamTarget::StdErr
  * vislib::sys::Log::StreamTarget::StreamTarget
  */
 vislib::sys::Log::StreamTarget::StreamTarget(std::ostream& stream, UINT level)
-        : Target(level)/*, stream(stream)*/ {
+        : Target(level) {
     logger = spdlog::get("default_stream");
     if (logger == nullptr) {
         sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(stream);

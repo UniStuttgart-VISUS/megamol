@@ -344,59 +344,6 @@ namespace sys {
         /**
          * Target class echoing the log messages into a stream
          */
-        //class MEGAMOLCORE_API RedirectTarget : public Target {
-        //public:
-
-        //    /**
-        //     * Ctor
-        //     *
-        //     * @param log The log to redirect all messages to
-        //     * @param level The log level used for this target
-        //     */
-        //    RedirectTarget(Log *log, UINT level = Log::LEVEL_ERROR);
-
-        //    /** Dtor */
-        //    virtual ~RedirectTarget(void);
-
-        //    /**
-        //     * Writes a message to the log target
-        //     *
-        //     * @param level The level of the message
-        //     * @param time The time stamp of the message
-        //     * @param sid The object id of the source of the message
-        //     * @param msg The message text itself
-        //     */
-        //    virtual void Msg(UINT level, TimeStamp time, SourceID sid,
-        //        const char *msg);
-
-        //    /**
-        //     * Sets the targetted log object
-        //     *
-        //     * @param log The new targetted log object
-        //     */
-        //    inline void SetTargetLog(vislib::sys::Log *log) {
-        //        this->log = log;
-        //    }
-
-        //    /**
-        //     * Answer the targetted log object
-        //     *
-        //     * @return The targetted log object
-        //     */
-        //    inline Log* TargetLog(void) const {
-        //        return this->log;
-        //    }
-
-        //private:
-
-        //    /** The log to redirect all messages to */
-        //    Log *log;
-
-        //};
-
-        /**
-         * Target class echoing the log messages into a stream
-         */
         class MEGAMOLCORE_API StreamTarget : public Target {
         public:
 
