@@ -204,7 +204,8 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool ac
 
     if (active_parameter_mode) {
         if (active_parameter == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Missing active parameter to edit");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[TransferFunctionEditor] Missing active parameter to edit");
             return;
         }
     }
@@ -213,7 +214,8 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool ac
     bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
         tfs, this->nodes, this->mode, this->textureSize, new_range);
     if (!ok) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Could not parse transfer function");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[TransferFunctionEditor] Could not parse transfer function");
         return;
     }
 

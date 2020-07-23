@@ -90,7 +90,7 @@ void SIFFDataSource::release(void) {
  */
 bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
     using vislib::sys::File;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::sys::FastFile file;
 
     if (!file.Open(this->filenameSlot.Param<core::param::FilePathParam>()->Value(),

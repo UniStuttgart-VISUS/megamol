@@ -418,7 +418,7 @@ vislib::math::Point<double, 3> PhantomDeviceWrapper::ModelToWorkspaceTransform(
 
     vislib::math::Point<double, 3> retval(0.0, 0.0, 0.0); // return value
     if (this->modelviewMatrix.IsIdentity()) {
-        vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_ERROR, "No Modelview matrix set in phantom device wrapper.");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_ERROR, "No Modelview matrix set in phantom device wrapper.");
         return retval;
     }
 

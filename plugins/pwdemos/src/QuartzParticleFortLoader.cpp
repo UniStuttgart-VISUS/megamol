@@ -158,7 +158,7 @@ void ParticleFortLoader::release(void) {
  * ParticleFortLoader::assertData
  */
 void ParticleFortLoader::assertData(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     if (this->positionFileNameSlot.IsDirty()
         || this->attributeFileNameSlot.IsDirty()) {

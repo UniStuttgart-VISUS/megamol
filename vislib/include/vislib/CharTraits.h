@@ -37,11 +37,6 @@
 
 namespace vislib {
 
-    /** forward declaration of a friend from another namespace */
-    namespace sys {
-        class Log;
-    }
-
 
     /**
      * This is an identifier for the currently supported char traits. It is used
@@ -653,7 +648,6 @@ namespace vislib {
         /* Declare our friends. */
         template<class T> friend class String;
         template<class S, class T, INT32 B> friend class StringConverter;
-        friend class vislib::sys::Log;
 
     }; /* end class CharTraits<char> */
 
@@ -1036,7 +1030,6 @@ namespace vislib {
         /* Declare our friends. */
         template<class T> friend class String;
         template<class S, class T, INT32 B> friend class StringConverter;
-        friend class vislib::sys::Log;
 
     }; /* end class CharTraits<WCHAR> */
 

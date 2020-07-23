@@ -25,7 +25,7 @@ ServiceManager::~ServiceManager() {
 }
 
 unsigned int ServiceManager::InstallServiceObject(AbstractService* service, ServiceDeletor deletor) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     if (service == nullptr) {
         Log::DefaultLog.WriteError("Service \"NULL\" cannot be installed.");
         return 0;

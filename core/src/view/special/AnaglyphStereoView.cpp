@@ -218,12 +218,12 @@ bool view::special::AnaglyphStereoView::create(void) {
     ASSERT(IsAvailable());
 
     if (!this->leftBuffer.Create(1, 1)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to initialize left FBO");
         return false;
     }
     if (!this->rightBuffer.Create(1, 1)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to initialize right FBO");
         return false;
     }
@@ -246,12 +246,12 @@ void main() {\n\
     gl_FragColor = vec4(leftcol * llum + rightcol * rlum, 1.0);\n\
 }\n\
 ")) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile shader");
             return false;
         }
     } catch(vislib::Exception ex) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile shader: %s", ex.GetMsgA());
         return false;
     }

@@ -107,7 +107,7 @@ bool protein::CCP4VolumeData::create(void) {
  *protein::CCP4VolumeData::tryLoadFile
  */
 bool protein::CCP4VolumeData::tryLoadFile(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
 	// clear all containers
 	this->ClearData();

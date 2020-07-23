@@ -56,7 +56,7 @@ ParticleWorker::~ParticleWorker(void) {
  */
 bool ParticleWorker::create(void) {
 	
-	using namespace vislib::sys;
+	using namespace megamol::core::utility::log;
     using namespace vislib::graphics::gl;
 
     ASSERT(IsAvailable());

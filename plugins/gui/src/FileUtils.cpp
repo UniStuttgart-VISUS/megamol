@@ -28,7 +28,7 @@ megamol::gui::FileUtils::FileUtils(void)
     , additional_lines(0) {
 #else
 {
-    vislib::sys::Log::DefaultLog.WriteWarn(
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
         "Filesystem functionality is not available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 #endif // GUI_USE_FILESYSTEM
 }
@@ -38,7 +38,7 @@ bool megamol::gui::FileUtils::SaveProjectFile(
     const std::string& project_filename, megamol::core::CoreInstance* core_instance) {
 #ifdef GUI_USE_FILESYSTEM
     if (core_instance == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Pointer to CoreInstance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -53,17 +53,18 @@ bool megamol::gui::FileUtils::SaveProjectFile(
             file << confstr.c_str();
             file.close();
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to create project file. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             file.close();
             return false;
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return true;
@@ -82,17 +83,18 @@ bool megamol::gui::FileUtils::WriteFile(const std::string& filename, const std::
             file << in_content.c_str();
             file.close();
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to create file. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             file.close();
             return false;
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -112,17 +114,18 @@ bool megamol::gui::FileUtils::ReadFile(const std::string& filename, std::string&
             out_content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
             file.close();
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to open file. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             file.close();
             return false;
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -201,7 +204,7 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(megamol::gui::FileUtils::FileBrow
             // Set initial window size of pop up
             ImGui::SetNextWindowSize(ImVec2(600.0f, 300.0f));
 #else
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "Filesystem functionality is not available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 #endif // GUI_USE_FILESYSTEM
         }
@@ -402,11 +405,12 @@ bool megamol::gui::FileUtils::FileBrowserPopUp(megamol::gui::FileUtils::FileBrow
         ImGui::PopID();
 
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -432,7 +436,7 @@ bool megamol::gui::FileUtils::splitPath(const fsns::path& in_file_path, std::str
             out_file.clear();
         }
     } catch (fsns::filesystem_error e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -447,7 +451,7 @@ void megamol::gui::FileUtils::validateDirectory(const std::string& path_str) {
         fsns::path tmp_path = static_cast<fsns::path>(path_str);
         this->valid_directory = (fsns::status_known(fsns::status(tmp_path)) && fsns::is_directory(tmp_path));
     } catch (fsns::filesystem_error e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
     }
@@ -512,7 +516,7 @@ void megamol::gui::FileUtils::validateFile(const std::string& file_str, megamol:
         }
 
     } catch (fsns::filesystem_error e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
     }

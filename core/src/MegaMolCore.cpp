@@ -257,10 +257,10 @@ MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcCreateCore(void *hCore) {
 //            if ((t > 0) && (t < d)) d = t;
 //        }
 //#ifdef _LOG_CORE_HASH_INFO
-//        UINT logLevel = vislib::sys::Log::DefaultLog.GetLevel();
-//        vislib::sys::Log::DefaultLog.SetLevel(800);
-//        vislib::sys::Log::DefaultLog.WriteMsg(800, "Calculating core Hash using %d bytes\n", d);
-//        vislib::sys::Log::DefaultLog.SetLevel(logLevel);
+//        UINT logLevel = megamol::core::utility::log::Log::DefaultLog.GetLevel();
+//        megamol::core::utility::log::Log::DefaultLog.SetLevel(800);
+//        megamol::core::utility::log::Log::DefaultLog.WriteMsg(800, "Calculating core Hash using %d bytes\n", d);
+//        megamol::core::utility::log::Log::DefaultLog.SetLevel(logLevel);
 //#endif /* _LOG_CORE_HASH_INFO */
 //        hash.Initialise();
 //        hash.ComputeHash(NULL, r, static_cast<BYTE*>(rp), d);
@@ -304,10 +304,10 @@ MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcCreateCore(void *hCore) {
 //        tmp.ToLowerCase();
 //
 //#ifdef _LOG_CORE_HASH_INFO
-//        logLevel = vislib::sys::Log::DefaultLog.GetLevel();
-//        vislib::sys::Log::DefaultLog.SetLevel(800);
-//        vislib::sys::Log::DefaultLog.WriteMsg(800, "Core Hash: %s\n", tmp.PeekBuffer() + 1);
-//        vislib::sys::Log::DefaultLog.SetLevel(logLevel);
+//        logLevel = megamol::core::utility::log::Log::DefaultLog.GetLevel();
+//        megamol::core::utility::log::Log::DefaultLog.SetLevel(800);
+//        megamol::core::utility::log::Log::DefaultLog.WriteMsg(800, "Core Hash: %s\n", tmp.PeekBuffer() + 1);
+//        megamol::core::utility::log::Log::DefaultLog.SetLevel(logLevel);
 //#endif /* _LOG_CORE_HASH_INFO */
 //
 //#ifdef _SEND_CORE_HASH_INFO
@@ -355,7 +355,7 @@ MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcCreateCore(void *hCore) {
     if (megamol::core::ApiHandle::CreateHandle(hCore, inst)) {
         return MMC_ERR_NO_ERROR;
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("mmcCreateCore: could not create ApiHandle");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("mmcCreateCore: could not create ApiHandle");
         return MMC_ERR_UNKNOWN;
     }
 }
@@ -380,7 +380,7 @@ MEGAMOLCORE_CALL mmcSetInitialisationValue(void *hCore, mmcInitValue key,
     } catch(vislib::IllegalStateException) {
         return MMC_ERR_STATE;
     } catch(...) {
-        vislib::sys::Log::DefaultLog.WriteError("mmcSetInitialisationValue: exception");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("mmcSetInitialisationValue: exception");
         return MMC_ERR_UNKNOWN;
     }
 
@@ -401,12 +401,12 @@ MEGAMOLCORE_CALL mmcInitialiseCoreInstance(void *hCore) {
         inst->Initialise();
         return MMC_ERR_NO_ERROR;
     } catch (vislib::Exception ex) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Failed to initialise core instance: %s (%s; %i)\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Failed to initialise core instance: %s\n", "unknown exception");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to initialise core instance: %s\n", "unknown exception");
     }
-    vislib::sys::Log::DefaultLog.WriteError("mmcInitialiseCoreInstance: exception");
+    megamol::core::utility::log::Log::DefaultLog.WriteError("mmcInitialiseCoreInstance: exception");
     return MMC_ERR_UNKNOWN;
 }
 
@@ -495,7 +495,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceA(
         return;
     }
 
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
         "Unable to queue instantiation of \"%s\": "
         "Description \"%s\" has not been found.", id, name);
 }
@@ -838,14 +838,14 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueA(void *hParam,
         vislib::StringA name;
         param->GetIDString(name);
         // TODO: Change text if it is a button parameter
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
             "Setting parameter \"%s\" to \"%s\"",
             name.PeekBuffer(), vislib::StringA(
             param->GetParameter()->ValueString()).PeekBuffer());
     } else {
         vislib::StringA name;
         param->GetIDString(name);
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to set parameter \"%s\": Failed to parse value \"%s\"",
             name.PeekBuffer(), value);
     }
@@ -865,14 +865,14 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueW(void *hParam,
         vislib::StringA name;
         param->GetIDString(name);
         // TODO: Change text if it is a button parameter
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
             "Setting parameter \"%s\" to \"%s\"",
             name.PeekBuffer(), vislib::StringA(
             param->GetParameter()->ValueString()).PeekBuffer());
     } else {
         vislib::StringA name;
         param->GetIDString(name);
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to set parameter \"%s\": Failed to parse value \"%s\"",
             name.PeekBuffer(), vislib::StringA(value).PeekBuffer());
     }

@@ -20,7 +20,7 @@ using namespace megamol;
 using namespace megamol::infovis;
 using namespace megamol::stdplugin::datatools;
 
-using vislib::sys::Log;
+using megamol::core::utility::log::Log;
 
 const GLuint PlotSSBOBindingPoint = 2;
 const GLuint ValueSSBOBindingPoint = 3;

@@ -117,7 +117,7 @@ namespace {
  * job::PluginsStateFileGeneratorJob::Run
  */
 DWORD job::PluginsStateFileGeneratorJob::Run(void *userData) {
-    auto& log = vislib::sys::Log::DefaultLog;
+    auto& log = megamol::core::utility::log::Log::DefaultLog;
     log.WriteInfo("Collecting information for Plugins State File for MegaMol Configurator.");
     vislib::TString path = fileNameSlot.Param<param::FilePathParam>()->Value();
     path = vislib::sys::Path::Resolve(path);

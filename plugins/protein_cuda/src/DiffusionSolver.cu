@@ -491,7 +491,7 @@ bool DiffusionSolver::CalcGVF(
         unsigned int maxIt,
         float scl) {
 
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
     int volsize = volDim.x*volDim.y*volDim.z;
     uint3 voldim = make_uint3(volDim.x, volDim.y, volDim.z);
@@ -582,7 +582,7 @@ bool DiffusionSolver::CalcTwoWayGVF(
         unsigned int maxIt,
         float scl) {
 
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
     int volsize = volDim.x*volDim.y*volDim.z;
     uint3 voldim = make_uint3(volDim.x, volDim.y, volDim.z);

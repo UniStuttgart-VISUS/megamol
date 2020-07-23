@@ -139,7 +139,7 @@ OSPRayPKDGeometry::~OSPRayPKDGeometry() { this->Release(); }
 bool OSPRayPKDGeometry::create() {
     auto error = ospLoadModule("pkd");
     if (error != OSPError::OSP_NO_ERROR) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to load OSPRay module: PKD. Error occured in %s:%d", __FILE__, __LINE__);
     }
     return true;

@@ -65,6 +65,6 @@
 static clock_t begin, end;
 #define TIME_START begin = clock();
 #define TIME_END(name) end = clock(); \
-vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "%s took %f seconds.", name, double(end - begin) / CLOCKS_PER_SEC);
+megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "%s took %f seconds.", name, double(end - begin) / CLOCKS_PER_SEC);
 
 #endif /* MOLECULARMAPS_STDAFX_H_INCLUDED */

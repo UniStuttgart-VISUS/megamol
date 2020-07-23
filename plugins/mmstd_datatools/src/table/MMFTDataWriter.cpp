@@ -45,7 +45,7 @@ void MMFTDataWriter::release(void) {
 
 
 bool MMFTDataWriter::run(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::TString filename(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
     if (filename.IsEmpty()) {
         Log::DefaultLog.WriteError("No file name specified. Abort.");

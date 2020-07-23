@@ -183,7 +183,7 @@ void SombreroMeshRenderer::release(void) {
 bool SombreroMeshRenderer::MouseEvent(float x, float y, megamol::core::view::MouseFlags flags) {
     bool consume = false;
 
-    // vislib::sys::Log::DefaultLog.WriteInfo("%s %f %f", this->Name(), x, y);
+    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("%s %f %f", this->Name(), x, y);
 
     auto flagsc = this->getFlagDataSlot.CallAs<core::FlagCall>();
     if (flagsc == nullptr) {

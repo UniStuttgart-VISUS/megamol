@@ -491,7 +491,7 @@ bool MSMSMeshLoader::getExtentCallback(core::Call& caller) {
  * MSMSMeshLoader::load
  */
 bool MSMSMeshLoader::load(const vislib::TString& filename, unsigned int frameID) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     vislib::StringA vertFilename(filename);
     vertFilename.Append(".vert");

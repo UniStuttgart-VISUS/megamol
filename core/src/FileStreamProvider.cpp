@@ -43,7 +43,7 @@ namespace core {
 
             if (!this->stream.good())
             {
-                vislib::sys::Log::DefaultLog.WriteWarn("Unable to open file '%s' for writing!",
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("Unable to open file '%s' for writing!",
                     this->filePath.Param<core::param::FilePathParam>()->Value());
             }
         }

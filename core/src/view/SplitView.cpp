@@ -18,7 +18,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using vislib::sys::Log;
+using megamol::core::utility::log::Log;
 
 enum Orientation { HORIZONTAL = 0, VERTICAL = 1 };
 

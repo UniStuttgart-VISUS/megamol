@@ -176,7 +176,7 @@ void View3DSpaceMouse::On3DMouseButton(unsigned long keyState) {
     if (keyState > 0) {
         // if the keyState is still larger than 0, there are buttons that weren't checked but that exist
         // this likely means an incorrect button count was set (i.e. the 3d mouse used has more than 2 buttons)
-        vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_ERROR,
             "Button press not recorded because button number is larger than button count.");
     }
 }

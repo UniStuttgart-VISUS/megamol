@@ -59,12 +59,12 @@ void MMFTDataSource::assertData(void) {
 
     vislib::sys::FastFile file;
     if (!file.Open(filenameSlot.Param<core::param::FilePathParam>()->Value(), vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to open file \"%s\". Abort.", vislib::StringA(filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open file \"%s\". Abort.", vislib::StringA(filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
         return;
     }
 
 #define ABORT_ERROR(...) { \
-        vislib::sys::Log::DefaultLog.WriteError(__VA_ARGS__); \
+        megamol::core::utility::log::Log::DefaultLog.WriteError(__VA_ARGS__); \
         file.Close(); \
         this->columns.clear(); \
         this->values.clear(); \

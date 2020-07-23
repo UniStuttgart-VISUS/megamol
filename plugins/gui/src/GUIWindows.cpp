@@ -84,7 +84,7 @@ GUIWindows::~GUIWindows() { this->destroyContext(); }
 bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 
     if (instance == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -108,7 +108,7 @@ bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceT
     ImGui::SetCurrentContext(this->context);
     this->core_instance->SetCurrentImGuiContext(this->context);
     if (this->context == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -131,7 +131,7 @@ bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceT
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
 
     if ((instanceTime - this->state.last_instance_time) < 0.0) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
             __LINE__);
     }
@@ -183,13 +183,13 @@ bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceT
 bool GUIWindows::PostDraw(void) {
 
     if (ImGui::GetCurrentContext() != this->context) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Unknown ImGui context ... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     ImGui::SetCurrentContext(this->context);
     if (this->context == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -212,7 +212,7 @@ bool GUIWindows::PostDraw(void) {
                     }
                 }
                 if (this->state.font_index == GUI_INVALID_ID) {
-                    vislib::sys::Log::DefaultLog.WriteWarn(
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                         "Could not find font '%s' for loaded state. [%s, %s, line %d]\n", wc.font_name.c_str(),
                         __FILE__, __FUNCTION__, __LINE__);
                 }
@@ -262,7 +262,7 @@ bool GUIWindows::PostDraw(void) {
             if (cb) {
                 cb(wn, wc);
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Missing valid callback for WindowDrawCallback: '%d'.[%s, %s, line %d]\n", (int)wc.win_callback,
                     __FILE__, __FUNCTION__, __LINE__);
             }
@@ -429,7 +429,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
             }
         });
     } else {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     return hotkeyPressed;
@@ -519,7 +519,7 @@ bool GUIWindows::createContext(void) {
     IMGUI_CHECKVERSION();
     this->context = ImGui::CreateContext(current_fonts);
     if (this->context == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to create ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -662,7 +662,7 @@ bool GUIWindows::createContext(void) {
                 }
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
         // Configurator Graph Font: Add default font at first indices for exclusive use in configurator graph.
@@ -925,7 +925,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
                                 this->GetCoreInstance()->EnumModulesNoLock(viewname, add_func);
                             }
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteWarn(
+                            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                                 "Could not find abstract view "
                                 "module this gui is connected to. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
@@ -1095,7 +1095,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
             }
         });
     } else {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
@@ -1225,9 +1225,10 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
 #elif _WIN32
             ImGui::SetClipboardText(overlay.c_str());
 #else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("Current Performance Monitor Value:\n%s", overlay.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "Current Performance Monitor Value:\n%s", overlay.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1245,9 +1246,10 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
 #elif _WIN32
             ImGui::SetClipboardText(stream.str().c_str());
 #else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("All Performance Monitor Values:\n%s", stream.str().c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "All Performance Monitor Values:\n%s", stream.str().c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1393,9 +1395,9 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 #elif _WIN32
             ImGui::SetClipboardText(eMail.c_str());
 #else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("E-Mail address:\n%s", eMail.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("E-Mail address:\n%s", eMail.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1409,9 +1411,9 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 #elif _WIN32
             ImGui::SetClipboardText(webLink.c_str());
 #else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("Website link:\n%s", webLink.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Website link:\n%s", webLink.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1424,9 +1426,9 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 #elif _WIN32
             ImGui::SetClipboardText(gitLink.c_str());
 #else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("GitHub link:\n%s", gitLink.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("GitHub link:\n%s", gitLink.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1695,7 +1697,7 @@ void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& 
             }
             ImGui::PopItemWidth();
         } else {
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "Unknown Parameter Type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return;
         }
@@ -1768,9 +1770,9 @@ void GUIWindows::drawTransferFunctionEdit(
 #elif _WIN32
         ImGui::SetClipboardText(p.Value().c_str());
 #else // LINUX
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        vislib::sys::Log::DefaultLog.WriteInfo("Transfer Function JSON String:\n%s", p.Value().c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Transfer Function JSON String:\n%s", p.Value().c_str());
 #endif
     }
     ImGui::SameLine();
@@ -1783,7 +1785,7 @@ void GUIWindows::drawTransferFunctionEdit(
 #elif _WIN32
         p.SetValue(ImGui::GetClipboardText());
 #else // LINUX
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 #endif
         updateEditor = true;
@@ -1916,7 +1918,7 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
                         if (!found) {
                             hotkeylist.emplace_back(hotkey);
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteWarn(
+                            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                                 "The hotkey [%s] of the parameter \"%s::%s\" has already been assigned. "
                                 ">>> If this hotkey is pressed, there will be no effect on this parameter!",
                                 hotkey.ToString().c_str(), mod.FullName().PeekBuffer(), slot.Name().PeekBuffer());
@@ -1925,7 +1927,7 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
                 }
             });
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
 
@@ -1947,10 +1949,10 @@ bool megamol::gui::GUIWindows::hotkeyPressed(megamol::core::view::KeyCode keycod
 void GUIWindows::shutdown(void) {
 
     if (this->core_instance != nullptr) {
-        vislib::sys::Log::DefaultLog.WriteInfo("GUIWindows: Triggering MegaMol instance shutdown.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUIWindows: Triggering MegaMol instance shutdown.");
         this->core_instance->Shutdown();
     } else {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 }

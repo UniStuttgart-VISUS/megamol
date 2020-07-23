@@ -32,6 +32,7 @@
 using namespace megamol;
 using namespace megamol::protein_cuda;
 using namespace megamol::protein_calls;
+using namespace megamol::core::utility::log;
 
 typedef unsigned int uint;
 
@@ -312,7 +313,6 @@ void PotentialCalculator::initGridParams(gridParams &grid, MolecularDataCall *dc
  * PotentialCalculator::computeChargeDistribution
  */
 bool PotentialCalculator::computeChargeDistribution(const MolecularDataCall *mol) {
-    using namespace vislib::sys;
     using namespace vislib::math;
 
     unsigned int volSize;
@@ -390,7 +390,6 @@ bool PotentialCalculator::computeChargeDistribution(const MolecularDataCall *mol
  */
 bool PotentialCalculator::computePotentialMap(const MolecularDataCall *mol) {
 #ifdef _WIN64
-    using namespace vislib::sys;
 
     size_t volSize = this->potentialGrid.size[0]*
             this->potentialGrid.size[1]*

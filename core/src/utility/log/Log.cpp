@@ -1,7 +1,8 @@
 /*
  * Log.cpp
  *
- * Copyright (C) 2006 - 2010 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2010 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2020 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
@@ -28,33 +29,33 @@
 #endif /* _WIN32 */
 
 
-#define TRACE_LVL Trace::LEVEL_INFO
+#define TRACE_LVL vislib::Trace::LEVEL_INFO
 
-const char vislib::sys::Log::std_pattern[3] = "%v";
+const char megamol::core::utility::log::Log::std_pattern[3] = "%v";
 
 
 /*****************************************************************************/
 
 /*
- * vislib::sys::Log::Target::~Target
+ * megamol::core::utility::log::Log::Target::~Target
  */
-vislib::sys::Log::Target::~Target(void) {
+megamol::core::utility::log::Log::Target::~Target(void) {
     // intentionally empty
 }
 
 
 /*
- * vislib::sys::Log::Target::Target
+ * megamol::core::utility::log::Log::Target::Target
  */
-vislib::sys::Log::Target::Target(UINT level) : level(level) {
+megamol::core::utility::log::Log::Target::Target(UINT level) : level(level) {
     // intentionally empty
 }
 
 
 /*
- * vislib::sys::Log::Target::Flush
+ * megamol::core::utility::log::Log::Target::Flush
  */
-void vislib::sys::Log::Target::Flush(void) {
+void megamol::core::utility::log::Log::Target::Flush(void) {
     // intentionally empty
 }
 
@@ -62,9 +63,9 @@ void vislib::sys::Log::Target::Flush(void) {
 #ifdef _WIN32
 
 /*
- * vislib::sys::Log::DebugOutputTarget::DebugOutputTarget
+ * megamol::core::utility::log::Log::DebugOutputTarget::DebugOutputTarget
  */
-vislib::sys::Log::DebugOutputTarget::DebugOutputTarget(UINT level)
+megamol::core::utility::log::Log::DebugOutputTarget::DebugOutputTarget(UINT level)
         : Target(level) {
     logger = spdlog::get("default_debug");
     if (logger == nullptr) {
@@ -76,18 +77,18 @@ vislib::sys::Log::DebugOutputTarget::DebugOutputTarget(UINT level)
 
 
 /*
- * vislib::sys::Log::DebugOutputTarget::~DebugOutputTarget
+ * megamol::core::utility::log::Log::DebugOutputTarget::~DebugOutputTarget
  */
-vislib::sys::Log::DebugOutputTarget::~DebugOutputTarget(void) {
+megamol::core::utility::log::Log::DebugOutputTarget::~DebugOutputTarget(void) {
     // intentionally empty
 }
 
 
 /*
- * vislib::sys::Log::DebugOutputTarget::Msg
+ * megamol::core::utility::log::Log::DebugOutputTarget::Msg
  */
-void vislib::sys::Log::DebugOutputTarget::Msg(UINT level,
-        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+void megamol::core::utility::log::Log::DebugOutputTarget::Msg(UINT level,
+        megamol::core::utility::log::Log::TimeStamp time, megamol::core::utility::log::Log::SourceID sid,
         const char *msg) {
     if (level > this->Level()) return;
     logger->info("{}|{}", level, msg);
@@ -97,9 +98,9 @@ void vislib::sys::Log::DebugOutputTarget::Msg(UINT level,
 /*****************************************************************************/
 
 /*
- * vislib::sys::Log::FileTarget::FileTarget
+ * megamol::core::utility::log::Log::FileTarget::FileTarget
  */
-vislib::sys::Log::FileTarget::FileTarget(const char *path, UINT level)
+megamol::core::utility::log::Log::FileTarget::FileTarget(const char *path, UINT level)
         : Target(level)/*, stream(NULL)*/ {
     logger = spdlog::get(std::string("default_file_") + std::string(path));
     if (logger == nullptr) {
@@ -112,26 +113,26 @@ vislib::sys::Log::FileTarget::FileTarget(const char *path, UINT level)
 
 
 /*
- * vislib::sys::Log::FileTarget::~FileTarget
+ * megamol::core::utility::log::Log::FileTarget::~FileTarget
  */
-vislib::sys::Log::FileTarget::~FileTarget(void) {
+megamol::core::utility::log::Log::FileTarget::~FileTarget(void) {
     logger->flush();
 }
 
 
 /*
- * vislib::sys::Log::FileTarget::Flush
+ * megamol::core::utility::log::Log::FileTarget::Flush
  */
-void vislib::sys::Log::FileTarget::Flush(void) {
+void megamol::core::utility::log::Log::FileTarget::Flush(void) {
     logger->flush();
 }
 
 
 /*
- * vislib::sys::Log::FileTarget::Msg
+ * megamol::core::utility::log::Log::FileTarget::Msg
  */
-void vislib::sys::Log::FileTarget::Msg(UINT level,
-        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+void megamol::core::utility::log::Log::FileTarget::Msg(UINT level,
+        megamol::core::utility::log::Log::TimeStamp time, megamol::core::utility::log::Log::SourceID sid,
         const char *msg) {
     if (level > this->Level()) return;
 
@@ -160,9 +161,9 @@ void vislib::sys::Log::FileTarget::Msg(UINT level,
 /*****************************************************************************/
 
 /*
- * vislib::sys::Log::OfflineTarget::OfflineTarget
+ * megamol::core::utility::log::Log::OfflineTarget::OfflineTarget
  */
-vislib::sys::Log::OfflineTarget::OfflineTarget(unsigned int bufferSize,
+megamol::core::utility::log::Log::OfflineTarget::OfflineTarget(unsigned int bufferSize,
         UINT level) : Target(level), bufSize(bufferSize), msgCnt(0),
         msgs(new OfflineMessage[bufferSize]), omittedCnt(0) {
     // intentionally empty
@@ -170,9 +171,9 @@ vislib::sys::Log::OfflineTarget::OfflineTarget(unsigned int bufferSize,
 
 
 /*
- * vislib::sys::Log::OfflineTarget::~OfflineTarget
+ * megamol::core::utility::log::Log::OfflineTarget::~OfflineTarget
  */
-vislib::sys::Log::OfflineTarget::~OfflineTarget(void) {
+megamol::core::utility::log::Log::OfflineTarget::~OfflineTarget(void) {
     ARY_SAFE_DELETE(this->msgs);
     this->bufSize = 0;
     this->msgCnt = 0;
@@ -180,10 +181,10 @@ vislib::sys::Log::OfflineTarget::~OfflineTarget(void) {
 
 
 /*
- * vislib::sys::Log::OfflineTarget::Msg
+ * megamol::core::utility::log::Log::OfflineTarget::Msg
  */
-void vislib::sys::Log::OfflineTarget::Msg(UINT level,
-        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+void megamol::core::utility::log::Log::OfflineTarget::Msg(UINT level,
+        megamol::core::utility::log::Log::TimeStamp time, megamol::core::utility::log::Log::SourceID sid,
         const char *msg) {
     // Do not check the level. We store ALL messages
     if (this->msgCnt < this->bufSize) {
@@ -199,9 +200,9 @@ void vislib::sys::Log::OfflineTarget::Msg(UINT level,
 
 
 /*
- * vislib::sys::Log::OfflineTarget::Reecho
+ * megamol::core::utility::log::Log::OfflineTarget::Reecho
  */
-void vislib::sys::Log::OfflineTarget::Reecho(vislib::sys::Log::Target &target,
+void megamol::core::utility::log::Log::OfflineTarget::Reecho(megamol::core::utility::log::Log::Target &target,
         bool remove) {
     for (unsigned int i = 0; i < this->msgCnt; i++) {
         target.Msg(this->msgs[i].level, this->msgs[i].time, this->msgs[i].sid,
@@ -220,9 +221,9 @@ void vislib::sys::Log::OfflineTarget::Reecho(vislib::sys::Log::Target &target,
 
 
 /*
- * vislib::sys::Log::OfflineTarget::SetBufferSize
+ * megamol::core::utility::log::Log::OfflineTarget::SetBufferSize
  */
-void vislib::sys::Log::OfflineTarget::SetBufferSize(unsigned int bufferSize) {
+void megamol::core::utility::log::Log::OfflineTarget::SetBufferSize(unsigned int bufferSize) {
     OfflineMessage *om = this->msgs;
     this->msgs = new OfflineMessage[bufferSize];
     unsigned int cnt = vislib::math::Min(this->msgCnt, bufferSize);
@@ -240,25 +241,25 @@ void vislib::sys::Log::OfflineTarget::SetBufferSize(unsigned int bufferSize) {
 /*****************************************************************************/
 
 /*
- * vislib::sys::Log::StreamTarget::StdOut
+ * megamol::core::utility::log::Log::StreamTarget::StdOut
  */
-const vislib::SmartPtr<vislib::sys::Log::Target>
-vislib::sys::Log::StreamTarget::StdOut
-    = new vislib::sys::Log::StreamTarget(std::cout);
+const vislib::SmartPtr<megamol::core::utility::log::Log::Target>
+megamol::core::utility::log::Log::StreamTarget::StdOut
+    = new megamol::core::utility::log::Log::StreamTarget(std::cout);
 
 
 /*
- * vislib::sys::Log::StreamTarget::StdErr
+ * megamol::core::utility::log::Log::StreamTarget::StdErr
  */
-const vislib::SmartPtr<vislib::sys::Log::Target>
-vislib::sys::Log::StreamTarget::StdErr
-    = new vislib::sys::Log::StreamTarget(std::cerr);
+const vislib::SmartPtr<megamol::core::utility::log::Log::Target>
+megamol::core::utility::log::Log::StreamTarget::StdErr
+    = new megamol::core::utility::log::Log::StreamTarget(std::cerr);
 
 
 /*
- * vislib::sys::Log::StreamTarget::StreamTarget
+ * megamol::core::utility::log::Log::StreamTarget::StreamTarget
  */
-vislib::sys::Log::StreamTarget::StreamTarget(std::ostream& stream, UINT level)
+megamol::core::utility::log::Log::StreamTarget::StreamTarget(std::ostream& stream, UINT level)
         : Target(level) {
     logger = spdlog::get("default_stream");
     if (logger == nullptr) {
@@ -270,26 +271,26 @@ vislib::sys::Log::StreamTarget::StreamTarget(std::ostream& stream, UINT level)
 
 
 /*
- * vislib::sys::Log::StreamTarget::~StreamTarget
+ * megamol::core::utility::log::Log::StreamTarget::~StreamTarget
  */
-vislib::sys::Log::StreamTarget::~StreamTarget(void) {
+megamol::core::utility::log::Log::StreamTarget::~StreamTarget(void) {
     // intentionally empty
 }
 
 
 /*
- * vislib::sys::Log::StreamTarget::Flush
+ * megamol::core::utility::log::Log::StreamTarget::Flush
  */
-void vislib::sys::Log::StreamTarget::Flush(void) {
+void megamol::core::utility::log::Log::StreamTarget::Flush(void) {
     logger->flush();
 }
 
 
 /*
- * vislib::sys::Log::StreamTarget::Msg
+ * megamol::core::utility::log::Log::StreamTarget::Msg
  */
-void vislib::sys::Log::StreamTarget::Msg(UINT level,
-        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+void megamol::core::utility::log::Log::StreamTarget::Msg(UINT level,
+        megamol::core::utility::log::Log::TimeStamp time, megamol::core::utility::log::Log::SourceID sid,
         const char *msg) {
     if ((level > this->Level())) return;
     logger->info("{}|{}", level, msg);
@@ -298,67 +299,67 @@ void vislib::sys::Log::StreamTarget::Msg(UINT level,
 /*****************************************************************************/
 
 /*
- * vislib::sys::Log::LEVEL_ALL
+ * megamol::core::utility::log::Log::LEVEL_ALL
  */
-const UINT vislib::sys::Log::LEVEL_ALL = UINT_MAX;
+const UINT megamol::core::utility::log::Log::LEVEL_ALL = UINT_MAX;
 
 
 /*
- * vislib::sys::Log::LEVEL_ERROR
+ * megamol::core::utility::log::Log::LEVEL_ERROR
  */
-const UINT vislib::sys::Log::LEVEL_ERROR = 1;
+const UINT megamol::core::utility::log::Log::LEVEL_ERROR = 1;
 
 
 /*
- * vislib::sys::Log::LEVEL_INFO
+ * megamol::core::utility::log::Log::LEVEL_INFO
  */
-const UINT vislib::sys::Log::LEVEL_INFO = 200;
+const UINT megamol::core::utility::log::Log::LEVEL_INFO = 200;
 
 
 /*
- * vislib::sys::Log::LEVEL_NONE
+ * megamol::core::utility::log::Log::LEVEL_NONE
  */
-const UINT vislib::sys::Log::LEVEL_NONE = 0;
+const UINT megamol::core::utility::log::Log::LEVEL_NONE = 0;
 
 
 /*
- * vislib::sys::Log::LEVEL_WARN
+ * megamol::core::utility::log::Log::LEVEL_WARN
  */
-const UINT vislib::sys::Log::LEVEL_WARN = 100;
+const UINT megamol::core::utility::log::Log::LEVEL_WARN = 100;
 
 
 /*
  * __vl_log_defaultlog
  */
-static vislib::sys::Log __vl_log_defaultlog;
+static megamol::core::utility::log::Log __vl_log_defaultlog;
 
 
 /*
- * vislib::sys::Log::DefaultLog
+ * megamol::core::utility::log::Log::DefaultLog
  */
-vislib::sys::Log& vislib::sys::Log::DefaultLog(__vl_log_defaultlog);
+megamol::core::utility::log::Log& megamol::core::utility::log::Log::DefaultLog(__vl_log_defaultlog);
 
 
 /*
- * vislib::sys::Log::CurrentTimeStamp
+ * megamol::core::utility::log::Log::CurrentTimeStamp
  */
-vislib::sys::Log::TimeStamp vislib::sys::Log::CurrentTimeStamp(void) {
+megamol::core::utility::log::Log::TimeStamp megamol::core::utility::log::Log::CurrentTimeStamp(void) {
     return time(NULL);
 }
 
 
 /*
- * vislib::sys::Log::CurrentSourceID
+ * megamol::core::utility::log::Log::CurrentSourceID
  */
-vislib::sys::Log::SourceID vislib::sys::Log::CurrentSourceID(void) {
+megamol::core::utility::log::Log::SourceID megamol::core::utility::log::Log::CurrentSourceID(void) {
     return static_cast<SourceID>(vislib::sys::Thread::CurrentID());
 }
 
 
 /*
- * vislib::sys::Log::Log
+ * megamol::core::utility::log::Log::Log
  */
-vislib::sys::Log::Log(UINT level, unsigned int msgbufsize)
+megamol::core::utility::log::Log::Log(UINT level, unsigned int msgbufsize)
         : mainTarget(new vislib::SmartPtr<Target>(
             new OfflineTarget(msgbufsize, level))),
         echoTarget(new vislib::SmartPtr<Target>(
@@ -369,9 +370,9 @@ vislib::sys::Log::Log(UINT level, unsigned int msgbufsize)
 }
 
 /*
- * vislib::sys::Log::Log
+ * megamol::core::utility::log::Log::Log
  */
-vislib::sys::Log::Log(UINT level, const char *filename, bool addSuffix)
+megamol::core::utility::log::Log::Log(UINT level, const char *filename, bool addSuffix)
         : mainTarget(NULL), echoTarget(NULL), autoflush(true) {
     VLTRACE(TRACE_LVL, "Log[%lu]::Log[%d]()\n",
         reinterpret_cast<unsigned long>(this), __LINE__);
@@ -380,9 +381,9 @@ vislib::sys::Log::Log(UINT level, const char *filename, bool addSuffix)
 
 
 /*
- * vislib::sys::Log::Log
+ * megamol::core::utility::log::Log::Log
  */
-vislib::sys::Log::Log(const Log& source) : mainTarget(NULL),
+megamol::core::utility::log::Log::Log(const Log& source) : mainTarget(NULL),
         echoTarget(NULL), autoflush(true) {
     VLTRACE(TRACE_LVL, "Log[%lu]::Log[%d]()\n",
         reinterpret_cast<unsigned long>(this), __LINE__);
@@ -391,9 +392,9 @@ vislib::sys::Log::Log(const Log& source) : mainTarget(NULL),
 
 
 /*
- * vislib::sys::Log::~Log
+ * megamol::core::utility::log::Log::~Log
  */
-vislib::sys::Log::~Log(void) {
+megamol::core::utility::log::Log::~Log(void) {
     VLTRACE(TRACE_LVL, "Log[%lu]::~Log()\n",
         reinterpret_cast<unsigned long>(this));
     // Intentionally empty
@@ -401,9 +402,9 @@ vislib::sys::Log::~Log(void) {
 
 
 /*
- * vislib::sys::Log::EchoOfflineMessages
+ * megamol::core::utility::log::Log::EchoOfflineMessages
  */
-void vislib::sys::Log::EchoOfflineMessages(bool remove) {
+void megamol::core::utility::log::Log::EchoOfflineMessages(bool remove) {
     OfflineTarget *mot = this->mainTarget->DynamicCast<OfflineTarget>();
     OfflineTarget *eot = this->echoTarget->DynamicCast<OfflineTarget>();
 
@@ -416,9 +417,9 @@ void vislib::sys::Log::EchoOfflineMessages(bool remove) {
 
 
 /*
- * vislib::sys::Log::FlushLog
+ * megamol::core::utility::log::Log::FlushLog
  */
-void vislib::sys::Log::FlushLog(void) {
+void megamol::core::utility::log::Log::FlushLog(void) {
     if (!this->mainTarget.IsNull() && !this->mainTarget->IsNull()) {
         this->mainTarget->operator->()->Flush();
     }
@@ -429,9 +430,9 @@ void vislib::sys::Log::FlushLog(void) {
 
 
 /*
- * vislib::sys::Log::GetEchoLevel
+ * megamol::core::utility::log::Log::GetEchoLevel
  */
-UINT vislib::sys::Log::GetEchoLevel(void) const {
+UINT megamol::core::utility::log::Log::GetEchoLevel(void) const {
     if (!this->echoTarget.IsNull() && !this->echoTarget->IsNull()) {
         return this->echoTarget->operator->()->Level();
     }
@@ -440,9 +441,9 @@ UINT vislib::sys::Log::GetEchoLevel(void) const {
 
 
 /*
- * vislib::sys::Log::GetLevel
+ * megamol::core::utility::log::Log::GetLevel
  */
-UINT vislib::sys::Log::GetLevel(void) const {
+UINT megamol::core::utility::log::Log::GetLevel(void) const {
     if (!this->mainTarget.IsNull() && !this->mainTarget->IsNull()) {
         return this->mainTarget->operator->()->Level();
     }
@@ -451,27 +452,27 @@ UINT vislib::sys::Log::GetLevel(void) const {
 
 
 /*
- * vislib::sys::Log::GetLogFileNameA
+ * megamol::core::utility::log::Log::GetLogFileNameA
  */
-vislib::StringA vislib::sys::Log::GetLogFileNameA(void) const {
+vislib::StringA megamol::core::utility::log::Log::GetLogFileNameA(void) const {
     const FileTarget *ft = this->mainTarget->DynamicCast<FileTarget>();
-    return (ft != NULL) ? StringA(ft->Filename()) : StringA::EMPTY;
+    return (ft != NULL) ? vislib::StringA(ft->Filename()) : vislib::StringA::EMPTY;
 }
 
 
 /*
- * vislib::sys::Log::GetLogFileNameW
+ * megamol::core::utility::log::Log::GetLogFileNameW
  */
-vislib::StringW vislib::sys::Log::GetLogFileNameW(void) const {
+vislib::StringW megamol::core::utility::log::Log::GetLogFileNameW(void) const {
     const FileTarget *ft = this->mainTarget->DynamicCast<FileTarget>();
-    return (ft != NULL) ? ft->Filename() : StringW::EMPTY;
+    return (ft != NULL) ? ft->Filename() : vislib::StringW::EMPTY;
 }
 
 
 /*
- * vislib::sys::Log::GetOfflineMessageBufferSize
+ * megamol::core::utility::log::Log::GetOfflineMessageBufferSize
  */
-unsigned int vislib::sys::Log::GetOfflineMessageBufferSize(void) const {
+unsigned int megamol::core::utility::log::Log::GetOfflineMessageBufferSize(void) const {
     const OfflineTarget *mot = this->mainTarget->DynamicCast<OfflineTarget>();
     const OfflineTarget *eot = this->echoTarget->DynamicCast<OfflineTarget>();
 
@@ -486,9 +487,9 @@ unsigned int vislib::sys::Log::GetOfflineMessageBufferSize(void) const {
 
 
 /*
- * vislib::sys::Log::SetEchoLevel
+ * megamol::core::utility::log::Log::SetEchoLevel
  */
-void vislib::sys::Log::SetEchoLevel(UINT level) {
+void megamol::core::utility::log::Log::SetEchoLevel(UINT level) {
     if (!this->echoTarget.IsNull() && !this->echoTarget->IsNull()) {
         this->echoTarget->operator->()->SetLevel(level);
     }
@@ -496,11 +497,11 @@ void vislib::sys::Log::SetEchoLevel(UINT level) {
 
 
 /*
- * vislib::sys::Log::SetEchoTarget
+ * megamol::core::utility::log::Log::SetEchoTarget
  */
-void vislib::sys::Log::SetEchoTarget(
-        vislib::SmartPtr<vislib::sys::Log::Target> target) {
-    SmartPtr<Target> oet = *this->echoTarget;
+void megamol::core::utility::log::Log::SetEchoTarget(
+        vislib::SmartPtr<megamol::core::utility::log::Log::Target> target) {
+    vislib::SmartPtr<Target> oet = *this->echoTarget;
     OfflineTarget *ot = oet.DynamicCast<OfflineTarget>();
 
     *this->echoTarget = target;
@@ -516,9 +517,9 @@ void vislib::sys::Log::SetEchoTarget(
 
 
 /*
- * vislib::sys::Log::SetLevel
+ * megamol::core::utility::log::Log::SetLevel
  */
-void vislib::sys::Log::SetLevel(UINT level) {
+void megamol::core::utility::log::Log::SetLevel(UINT level) {
     if (!this->mainTarget.IsNull() && !this->mainTarget->IsNull()) {
         this->mainTarget->operator->()->SetLevel(level);
     }
@@ -526,10 +527,10 @@ void vislib::sys::Log::SetLevel(UINT level) {
 
 
 /*
- * vislib::sys::Log::SetLogFileName
+ * megamol::core::utility::log::Log::SetLogFileName
  */
-bool vislib::sys::Log::SetLogFileName(const char *filename, bool addSuffix) {
-    SmartPtr<Target> omt = *this->mainTarget;
+bool megamol::core::utility::log::Log::SetLogFileName(const char *filename, bool addSuffix) {
+    vislib::SmartPtr<Target> omt = *this->mainTarget;
     OfflineTarget *ot = omt.DynamicCast<OfflineTarget>();
 
     if (filename == NULL) {
@@ -553,11 +554,11 @@ bool vislib::sys::Log::SetLogFileName(const char *filename, bool addSuffix) {
 
 
 /*
- * vislib::sys::Log::SetMainTarget
+ * megamol::core::utility::log::Log::SetMainTarget
  */
-void vislib::sys::Log::SetMainTarget(
-        vislib::SmartPtr<vislib::sys::Log::Target> target) {
-    SmartPtr<Target> omt = *this->mainTarget;
+void megamol::core::utility::log::Log::SetMainTarget(
+        vislib::SmartPtr<megamol::core::utility::log::Log::Target> target) {
+    vislib::SmartPtr<Target> omt = *this->mainTarget;
     OfflineTarget *ot = omt.DynamicCast<OfflineTarget>();
 
     *this->mainTarget = target;
@@ -569,9 +570,9 @@ void vislib::sys::Log::SetMainTarget(
 
 
 /*
- * vislib::sys::Log::SetOfflineMessageBufferSize
+ * megamol::core::utility::log::Log::SetOfflineMessageBufferSize
  */
-void vislib::sys::Log::SetOfflineMessageBufferSize(unsigned int msgbufsize) {
+void megamol::core::utility::log::Log::SetOfflineMessageBufferSize(unsigned int msgbufsize) {
     OfflineTarget *mot = this->mainTarget->DynamicCast<OfflineTarget>();
     OfflineTarget *eot = this->echoTarget->DynamicCast<OfflineTarget>();
 
@@ -585,18 +586,18 @@ void vislib::sys::Log::SetOfflineMessageBufferSize(unsigned int msgbufsize) {
 
 
 /*
- * vislib::sys::Log::ShareTargetStorage
+ * megamol::core::utility::log::Log::ShareTargetStorage
  */
-void vislib::sys::Log::ShareTargetStorage(const vislib::sys::Log& master) {
+void megamol::core::utility::log::Log::ShareTargetStorage(const megamol::core::utility::log::Log& master) {
     this->mainTarget = master.mainTarget;
     this->echoTarget = master.echoTarget;
 }
 
 
 /*
- * vislib::sys::Log::WriteError
+ * megamol::core::utility::log::Log::WriteError
  */
-void vislib::sys::Log::WriteError(const char *fmt, ...) {
+void megamol::core::utility::log::Log::WriteError(const char *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
     this->WriteMessageVaA(LEVEL_ERROR, Log::CurrentTimeStamp(),
@@ -606,9 +607,9 @@ void vislib::sys::Log::WriteError(const char *fmt, ...) {
 
 
 /*
- * vislib::sys::Log::WriteError
+ * megamol::core::utility::log::Log::WriteError
  */
-void vislib::sys::Log::WriteError(const wchar_t *fmt, ...) {
+void megamol::core::utility::log::Log::WriteError(const wchar_t *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
     this->WriteMessageVaW(LEVEL_ERROR, Log::CurrentTimeStamp(),
@@ -618,9 +619,9 @@ void vislib::sys::Log::WriteError(const wchar_t *fmt, ...) {
 
 
 /*
- * vislib::sys::Log::WriteError
+ * megamol::core::utility::log::Log::WriteError
  */
-void vislib::sys::Log::WriteError(int lvlOff, const char *fmt, ...) {
+void megamol::core::utility::log::Log::WriteError(int lvlOff, const char *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
     this->WriteMessageVaA(
@@ -631,9 +632,9 @@ void vislib::sys::Log::WriteError(int lvlOff, const char *fmt, ...) {
 
 
 /*
- * vislib::sys::Log::WriteError
+ * megamol::core::utility::log::Log::WriteError
  */
-void vislib::sys::Log::WriteError(int lvlOff, const wchar_t *fmt, ...) {
+void megamol::core::utility::log::Log::WriteError(int lvlOff, const wchar_t *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
     this->WriteMessageVaW(
@@ -644,9 +645,9 @@ void vislib::sys::Log::WriteError(int lvlOff, const wchar_t *fmt, ...) {
 
 
 /*
- * vislib::sys::Log::WriteInfo
+ * megamol::core::utility::log::Log::WriteInfo
  */
-void vislib::sys::Log::WriteInfo(const char *fmt, ...) {
+void megamol::core::utility::log::Log::WriteInfo(const char *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
     this->WriteMessageVaA(LEVEL_INFO, Log::CurrentTimeStamp(),
@@ -656,9 +657,9 @@ void vislib::sys::Log::WriteInfo(const char *fmt, ...) {
 
 
 /*
- * vislib::sys::Log::WriteInfo
+ * megamol::core::utility::log::Log::WriteInfo
  */
-void vislib::sys::Log::WriteInfo(const wchar_t *fmt, ...) {
+void megamol::core::utility::log::Log::WriteInfo(const wchar_t *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
     this->WriteMessageVaW(LEVEL_INFO, Log::CurrentTimeStamp(),
@@ -668,9 +669,9 @@ void vislib::sys::Log::WriteInfo(const wchar_t *fmt, ...) {
 
 
 /*
- * vislib::sys::Log::WriteInfo
+ * megamol::core::utility::log::Log::WriteInfo
  */
-void vislib::sys::Log::WriteInfo(int lvlOff, const char *fmt, ...) {
+void megamol::core::utility::log::Log::WriteInfo(int lvlOff, const char *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
     this->WriteMessageVaA(
@@ -681,9 +682,9 @@ void vislib::sys::Log::WriteInfo(int lvlOff, const char *fmt, ...) {
 
 
 /*
- * vislib::sys::Log::WriteInfo
+ * megamol::core::utility::log::Log::WriteInfo
  */
-void vislib::sys::Log::WriteInfo(int lvlOff, const wchar_t *fmt, ...) {
+void megamol::core::utility::log::Log::WriteInfo(int lvlOff, const wchar_t *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
     this->WriteMessageVaW(
@@ -694,10 +695,10 @@ void vislib::sys::Log::WriteInfo(int lvlOff, const wchar_t *fmt, ...) {
 
 
 /*
- * vislib::sys::Log::WriteMessage
+ * megamol::core::utility::log::Log::WriteMessage
  */
-void vislib::sys::Log::WriteMessage(UINT level,
-        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+void megamol::core::utility::log::Log::WriteMessage(UINT level,
+        megamol::core::utility::log::Log::TimeStamp time, megamol::core::utility::log::Log::SourceID sid,
         const vislib::StringA& msg) {
     if (!msg.EndsWith('\n')) {
         this->WriteMessage(level, time, sid, msg + "\n");
@@ -719,10 +720,10 @@ void vislib::sys::Log::WriteMessage(UINT level,
 
 
 /*
- * vislib::sys::Log::WriteMessage
+ * megamol::core::utility::log::Log::WriteMessage
  */
-void vislib::sys::Log::WriteMessageVaA(UINT level,
-        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+void megamol::core::utility::log::Log::WriteMessageVaA(UINT level,
+        megamol::core::utility::log::Log::TimeStamp time, megamol::core::utility::log::Log::SourceID sid,
         const char *fmt, va_list argptr) {
     vislib::StringA msg;
     if (fmt != NULL) {
@@ -735,10 +736,10 @@ void vislib::sys::Log::WriteMessageVaA(UINT level,
 
 
 /*
- * vislib::sys::Log::WriteMessage
+ * megamol::core::utility::log::Log::WriteMessage
  */
-void vislib::sys::Log::WriteMessageVaW(UINT level,
-        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+void megamol::core::utility::log::Log::WriteMessageVaW(UINT level,
+        megamol::core::utility::log::Log::TimeStamp time, megamol::core::utility::log::Log::SourceID sid,
         const wchar_t *fmt, va_list argptr) {
     vislib::StringW msg;
     if (fmt != NULL) {
@@ -752,9 +753,9 @@ void vislib::sys::Log::WriteMessageVaW(UINT level,
 
 
 /*
- * vislib::sys::Log::WriteMsg
+ * megamol::core::utility::log::Log::WriteMsg
  */
-void vislib::sys::Log::WriteMsg(const UINT level, const char *fmt, ...) {
+void megamol::core::utility::log::Log::WriteMsg(const UINT level, const char *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
     this->WriteMessageVaA(level, Log::CurrentTimeStamp(),
@@ -764,9 +765,9 @@ void vislib::sys::Log::WriteMsg(const UINT level, const char *fmt, ...) {
 
 
 /*
- * vislib::sys::Log::WriteMsg
+ * megamol::core::utility::log::Log::WriteMsg
  */
-void vislib::sys::Log::WriteMsg(const UINT level, const wchar_t *fmt, ...) {
+void megamol::core::utility::log::Log::WriteMsg(const UINT level, const wchar_t *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
     this->WriteMessageVaW(level, Log::CurrentTimeStamp(),
@@ -776,9 +777,9 @@ void vislib::sys::Log::WriteMsg(const UINT level, const wchar_t *fmt, ...) {
 
 
 /*
- * vislib::sys::Log::WriteWarn
+ * megamol::core::utility::log::Log::WriteWarn
  */
-void vislib::sys::Log::WriteWarn(const char *fmt, ...) {
+void megamol::core::utility::log::Log::WriteWarn(const char *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
     this->WriteMessageVaA(LEVEL_WARN, Log::CurrentTimeStamp(),
@@ -788,9 +789,9 @@ void vislib::sys::Log::WriteWarn(const char *fmt, ...) {
 
 
 /*
- * vislib::sys::Log::WriteWarn
+ * megamol::core::utility::log::Log::WriteWarn
  */
-void vislib::sys::Log::WriteWarn(const wchar_t *fmt, ...) {
+void megamol::core::utility::log::Log::WriteWarn(const wchar_t *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
     this->WriteMessageVaW(LEVEL_WARN, Log::CurrentTimeStamp(),
@@ -800,9 +801,9 @@ void vislib::sys::Log::WriteWarn(const wchar_t *fmt, ...) {
 
 
 /*
- * vislib::sys::Log::WriteWarn
+ * megamol::core::utility::log::Log::WriteWarn
  */
-void vislib::sys::Log::WriteWarn(int lvlOff, const char *fmt, ...) {
+void megamol::core::utility::log::Log::WriteWarn(int lvlOff, const char *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
     this->WriteMessageVaA(
@@ -813,9 +814,9 @@ void vislib::sys::Log::WriteWarn(int lvlOff, const char *fmt, ...) {
 
 
 /*
- * vislib::sys::Log::WriteWarn
+ * megamol::core::utility::log::Log::WriteWarn
  */
-void vislib::sys::Log::WriteWarn(int lvlOff, const wchar_t *fmt, ...) {
+void megamol::core::utility::log::Log::WriteWarn(int lvlOff, const wchar_t *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
     this->WriteMessageVaW(
@@ -827,9 +828,9 @@ void vislib::sys::Log::WriteWarn(int lvlOff, const wchar_t *fmt, ...) {
 
 
 /*
- * vislib::sys::Log::operator=
+ * megamol::core::utility::log::Log::operator=
  */
-vislib::sys::Log& vislib::sys::Log::operator=(const Log& rhs) {
+megamol::core::utility::log::Log& megamol::core::utility::log::Log::operator=(const Log& rhs) {
     this->mainTarget = rhs.mainTarget;
     this->echoTarget = rhs.echoTarget;
     this->autoflush = rhs.autoflush;
@@ -838,12 +839,12 @@ vislib::sys::Log& vislib::sys::Log::operator=(const Log& rhs) {
 
 
 /*
- * vislib::sys::Log::getFileNameSuffix
+ * megamol::core::utility::log::Log::getFileNameSuffix
  */
-vislib::StringA vislib::sys::Log::getFileNameSuffix(void) {
+vislib::StringA megamol::core::utility::log::Log::getFileNameSuffix(void) {
     vislib::StringA suffix;
 
-    TimeStamp timestamp = vislib::sys::Log::CurrentTimeStamp();
+    TimeStamp timestamp = megamol::core::utility::log::Log::CurrentTimeStamp();
     struct tm *t;
 #ifdef _WIN32
 #if (_MSC_VER >= 1400)

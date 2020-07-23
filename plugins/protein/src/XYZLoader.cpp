@@ -74,7 +74,7 @@ bool XYZLoader::create(void) {
  * XYZLoader::getData
  */
 bool XYZLoader::getData( core::Call& call) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     using namespace megamol::core::moldyn;
 
     ParticleDataCall *dc = dynamic_cast<ParticleDataCall*>( &call);
@@ -157,7 +157,7 @@ void XYZLoader::release(void) {
  * XYZLoader::loadFile
  */
 void XYZLoader::loadFile( const vislib::TString& filename, bool doElectrostatics) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     this->bbox.Set( 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 

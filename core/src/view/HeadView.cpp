@@ -17,7 +17,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using vislib::sys::Log;
+using megamol::core::utility::log::Log;
 
 /*
  * view::HeadView::HeadView

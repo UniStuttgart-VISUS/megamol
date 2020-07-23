@@ -147,7 +147,7 @@ void SolPathDataSource::clear(void) {
  */
 void SolPathDataSource::loadData(void) {
     using vislib::sys::File;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::sys::MemmappedFile file;
 
     this->filenameslot.ResetDirty();

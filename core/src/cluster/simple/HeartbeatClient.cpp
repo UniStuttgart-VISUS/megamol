@@ -84,11 +84,11 @@ bool cluster::simple::HeartbeatClient::Sync(unsigned char tier, vislib::RawStora
             return true;
         }
     } catch(vislib::Exception ex) {
-        vislib::sys::Log::DefaultLog.WriteError("HeartbeatClient: %s [%s, %u]\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("HeartbeatClient: %s [%s, %u]\n",
             ex.GetMsgA(), ex.GetFile(), ex.GetLine());
 
     } catch(...) {
-        vislib::sys::Log::DefaultLog.WriteError("HeartbeatClient: Unexpected Exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("HeartbeatClient: Unexpected Exception\n");
     }
 
     return false;
@@ -99,7 +99,7 @@ bool cluster::simple::HeartbeatClient::Sync(unsigned char tier, vislib::RawStora
  * cluster::simple::HeartbeatClient::connector
  */
 DWORD cluster::simple::HeartbeatClient::connector(void *userData) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     HeartbeatClient *that = static_cast<HeartbeatClient*>(userData);
     ASSERT(that != NULL);
 

@@ -132,7 +132,7 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
             if (attrIdx >= cvd->AttributeCount()) {
                 recalc = false;
             } else if (cvd->Attribute(attrIdx).Type() != core::CallVolumeData::TYPE_FLOAT) {
-                vislib::sys::Log::DefaultLog.WriteError("Only float volumes are supported ATM");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Only float volumes are supported ATM");
                 recalc = false;
             }
         }

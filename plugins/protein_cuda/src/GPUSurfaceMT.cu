@@ -30,6 +30,7 @@
 
 using namespace megamol;
 using namespace megamol::protein_cuda;
+using namespace megamol::core::utility::log;
 
 
 
@@ -840,8 +841,6 @@ bool GPUSurfaceMT::ComputeTriangleNeighbors(
         float3 volOrg,
         float3 volDelta,
         float isovalue) {
-
-    using namespace vislib::sys;
 
     /// Init grid parameters for all files ///
 
@@ -1980,7 +1979,6 @@ bool GPUSurfaceMT::ComputeConnectivity(
 
     CheckForCudaErrorSync();
 
-    using namespace vislib::sys;
 
     /// Init grid parameters for all files ///
 
@@ -2059,7 +2057,6 @@ bool GPUSurfaceMT::ComputeEdgeList(
         float3 volOrg,
         float3 volDelta) {
 
-    using namespace vislib::sys;
 
     const uint blockSize = 256;
     //const uint cellCnt = (volDim.x-1)*(volDim.y-1)*(volDim.z-1);
@@ -2258,7 +2255,7 @@ bool GPUSurfaceMT::ComputeNormals(
         float3 volDelta,
         float isovalue) {
 
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     if (!this->triangleIdxReady) { // We need the triangles mesh info
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -2493,7 +2490,6 @@ bool GPUSurfaceMT::ComputeTriangles(
         float3 volDelta,
         float isovalue) {
 
-    using namespace vislib::sys;
 
 #ifdef USE_TIMER
     float dt_ms;
@@ -2750,7 +2746,7 @@ bool GPUSurfaceMT::ComputeVertexPositions(
         float3 volDelta,
         float isovalue) {
 
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     size_t gridCellCnt = (volDim.x-1)*(volDim.y-1)*(volDim.z-1);
 

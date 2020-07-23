@@ -56,12 +56,12 @@ namespace sys {
          * Log echo output target implementation using special functions of the
          * console, like coloured text.
          */
-        class ConsoleLogTarget : public vislib::sys::Log::Target {
+        class ConsoleLogTarget : public megamol::core::utility::log::Log::Target {
         public:
 
             /** ctor */
-            ConsoleLogTarget(unsigned int level = vislib::sys::Log::LEVEL_ERROR)
-                    : vislib::sys::Log::Target(level) {
+            ConsoleLogTarget(unsigned int level = megamol::core::utility::log::Log::LEVEL_ERROR)
+                    : megamol::core::utility::log::Log::Target(level) {
                 // intentionally empty
             }
 
@@ -79,8 +79,8 @@ namespace sys {
              * @param msg The message text itself
              */
             virtual void Msg(unsigned int level,
-                vislib::sys::Log::TimeStamp time,
-                vislib::sys::Log::SourceID sid,
+                megamol::core::utility::log::Log::TimeStamp time,
+                megamol::core::utility::log::Log::SourceID sid,
                 const char *msg);
 
         };

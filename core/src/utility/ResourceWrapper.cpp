@@ -18,7 +18,7 @@ using namespace megamol::core::utility;
  */
 vislib::StringW ResourceWrapper::getFileName(const Configuration& config, 
             const vislib::StringA & name) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     vislib::StringW filename;
     const vislib::Array<vislib::StringW>& searchPaths = config.ResourceDirectories();
@@ -40,7 +40,7 @@ vislib::StringW ResourceWrapper::getFileName(const Configuration& config,
  * ResourceWrapper::LoadResource
  */
 SIZE_T ResourceWrapper::LoadResource(const Configuration& config, const vislib::StringA & name, void **outData) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     *outData = NULL;
 
@@ -85,7 +85,7 @@ SIZE_T ResourceWrapper::LoadResource(const Configuration& config, const vislib::
  * ResourceWrapper::LoadTextResource
  */
 SIZE_T ResourceWrapper::LoadTextResource(const Configuration& config, const vislib::StringA & name, char **outData) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     *outData = NULL;
     vislib::StringW filename = ResourceWrapper::getFileName(config, name);

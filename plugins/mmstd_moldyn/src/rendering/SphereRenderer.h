@@ -139,11 +139,11 @@ namespace rendering {
             HDC dc = ::wglGetCurrentDC();
             HGLRC rc = ::wglGetCurrentContext();
             if (dc == nullptr) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, 
                     "[SphereRenderer] There is no OpenGL rendering context available.");
             }
             if (rc == nullptr) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, 
                     "[SphereRenderer] There is no current OpenGL rendering context available from the calling thread.");
             }
             ASSERT(dc != nullptr);
@@ -155,13 +155,13 @@ namespace rendering {
 
             // Minimum requirements for all render modes
             if (!GLSLShader::AreExtensionsAvailable()) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, 
                     "[SphereRenderer] No render mode is available. Shader extensions are not available.");
                 retval = false;
             }
             // (OpenGL Version and GLSL Version might not correlate, see Mesa 3D on Stampede ...)
             if (ogl_IsVersionGEQ(1, 4) == 0) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, 
                     "[SphereRenderer] No render mode available. OpenGL version 1.4 or greater is required.");
                 retval = false;
             }
@@ -174,23 +174,23 @@ namespace rendering {
                 minor = std::atoi(glslVerStr.substr(found+1, 1).c_str());
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "[SphereRenderer] No valid GL_SHADING_LANGUAGE_VERSION string: %s", glslVerStr.c_str());
             }
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                 "[SphereRenderer] Found GLSL version %d.%d (%s).", major, minor, glslVerStr.c_str());
             if ((major < (int)(SPHERE_MIN_GLSL_MAJOR)) || (major == (int)(SPHERE_MIN_GLSL_MAJOR) && minor < (int)(SPHERE_MIN_GLSL_MINOR))) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, 
                     "[SphereRenderer] No render mode available. OpenGL Shading Language version 1.3 or greater is required.");
                 retval = false; 
             }
             if (!isExtAvailable("GL_ARB_explicit_attrib_location")) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                     "[SphereRenderer] No render mode is available. Extension GL_ARB_explicit_attrib_location is not available.");
                 retval = false;
             }
             if (!isExtAvailable("GL_ARB_conservative_depth")) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                     "[SphereRenderer] No render mode is available. Extension GL_ARB_conservative_depth is not available.");
                 retval = false;
             }

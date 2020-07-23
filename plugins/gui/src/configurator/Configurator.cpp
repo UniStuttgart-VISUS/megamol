@@ -62,7 +62,7 @@ Configurator::~Configurator() {}
 bool megamol::gui::configurator::Configurator::CheckHotkeys(void) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -88,12 +88,12 @@ bool megamol::gui::configurator::Configurator::Draw(
     WindowManager::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if (ImGui::GetCurrentContext() == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -200,7 +200,7 @@ bool megamol::gui::configurator::Configurator::Draw(
 void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
@@ -308,9 +308,9 @@ void megamol::gui::configurator::Configurator::draw_window_menu(megamol::core::C
 #elif _WIN32
                 ImGui::SetClipboardText(docu_link.c_str());
 #else // LINUX
-                vislib::sys::Log::DefaultLog.WriteWarn(
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                vislib::sys::Log::DefaultLog.WriteInfo("Readme Link:\n%s", docu_link.c_str());
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("Readme Link:\n%s", docu_link.c_str());
 #endif
             }
             ImGui::EndMenu();
@@ -465,7 +465,7 @@ void megamol::gui::configurator::Configurator::draw_window_module_list(float wid
                     }
                     this->show_module_list_child = false;
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "No project loaded. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 }
             }
@@ -498,16 +498,16 @@ void megamol::gui::configurator::Configurator::add_empty_project(void) {
                 auto graph_module = graph_ptr->GetModules().back();
                 graph_module->is_view_instance = true;
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Unable to add initial gui view module: '%s'. [%s, %s, line %d]\n", guiview_class_name.c_str(),
                     __FILE__, __FUNCTION__, __LINE__);
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to get last added graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     } else {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 }

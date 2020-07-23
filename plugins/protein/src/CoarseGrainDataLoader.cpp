@@ -129,7 +129,7 @@ void CoarseGrainDataLoader::release(void) {
  * CoarseGrainDataLoader::loadFile
  */
 void CoarseGrainDataLoader::loadFile( const vislib::TString& filename) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     this->bbox.Set( 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
     this->sphereCount = 0;

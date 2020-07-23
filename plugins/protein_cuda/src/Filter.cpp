@@ -166,7 +166,7 @@ void Filter::release(void) {
  */
 bool Filter::getData(megamol::core::Call& call) {
     
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     
     int cnt;
     

@@ -33,7 +33,7 @@ void NullParticleWriter::release(void) {
 }
 
 bool NullParticleWriter::run(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     using core::moldyn::MultiParticleDataCall;
 
     MultiParticleDataCall *mpdc = this->dataSlot.CallAs<MultiParticleDataCall>();

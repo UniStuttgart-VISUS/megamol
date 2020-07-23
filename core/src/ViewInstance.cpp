@@ -92,7 +92,7 @@ void ViewInstance::ClearCleanupMark(void) {
 void ViewInstance::PerformCleanup(void) {
     if (this->CleanupMark()) {
         // this should never happen!
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
             "Internal Error: ViewInstance marked for cleanup.\n");
     }
     ModuleNamespace::PerformCleanup();

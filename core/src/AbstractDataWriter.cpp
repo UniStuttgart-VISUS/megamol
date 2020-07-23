@@ -83,7 +83,7 @@ bool AbstractDataWriter::onCallAbort(Call &call) {
  */
 bool AbstractDataWriter::triggerManualRun(param::ParamSlot& slot) {
     // happy trigger finger hit button action happend
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     ASSERT(&slot == &this->manualRunSlot);
 
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100,

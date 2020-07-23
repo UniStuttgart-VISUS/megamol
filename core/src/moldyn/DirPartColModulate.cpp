@@ -126,12 +126,12 @@ bool moldyn::DirPartColModulate::getData(Call& call) {
         switch (outDpdc->AccessParticles(i).GetVertexDataType()) {
             case MultiParticleDataCall::Particles::VERTDATA_NONE:            // falls through
             case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: // falls through
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "DirPartColModulate: cannot use this module on data without postions or quantized positions!");
                 return false;
         }
         if (outDpdc->AccessParticles(i).GetDirDataType() == SimpleSphericalParticles::DIRDATA_NONE) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "DirPartColModulate: cannot use this module on data without directions!");
             return false;
         }

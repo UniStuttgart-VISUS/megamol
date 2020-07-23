@@ -1,7 +1,8 @@
 /*
  * Log.h
  *
- * Copyright (C) 2006 - 2010 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2010 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2020 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
@@ -30,8 +31,10 @@
 #include "spdlog/sinks/ostream_sink.h"
 #include "spdlog/spdlog.h"
 
-namespace vislib {
-namespace sys {
+namespace megamol {
+namespace core {
+namespace utility {
+namespace log {
 
 
     /**
@@ -348,10 +351,10 @@ namespace sys {
         public:
 
             /** Stream target to stdout */
-            static const SmartPtr<Target> StdOut;
+            static const vislib::SmartPtr<Target> StdOut;
 
             /** Stream target to stderr */
-            static const SmartPtr<Target> StdErr;
+            static const vislib::SmartPtr<Target> StdErr;
 
             /**
              * Ctor
@@ -417,39 +420,21 @@ namespace sys {
         /** Dtor. */
         ~Log(void);
 
-        ///**
-        // * Access the echo log target
-        // *
-        // * @return The echo log target
-        // */
-        //inline SmartPtr<SmartPtr<Target> > AccessEchoTarget(void) {
-        //    return this->echoTarget;
-        //}
-
         /**
          * Access the echo log target
          *
          * @return The echo log target
          */
-        inline const SmartPtr<SmartPtr<Target> > AccessEchoTarget(void) const {
+        inline const vislib::SmartPtr<vislib::SmartPtr<Target> > AccessEchoTarget(void) const {
             return this->echoTarget;
         }
-
-        ///**
-        // * Access the main log target
-        // *
-        // * @return The main log target
-        // */
-        //inline SmartPtr<SmartPtr<Target> > AccessMainTarget(void) {
-        //    return this->mainTarget;
-        //}
 
         /**
          * Access the main log target
          *
          * @return The main log target
          */
-        inline const SmartPtr<SmartPtr<Target> > AccessMainTarget(void) const {
+        inline const vislib::SmartPtr<vislib::SmartPtr<Target> > AccessMainTarget(void) const {
             return this->mainTarget;
         }
 
@@ -784,21 +769,23 @@ namespace sys {
          *
          * @return A file name suffix for log files
          */
-        StringA getFileNameSuffix(void);
+        vislib::StringA getFileNameSuffix(void);
 
         /** The main log target */
-        SmartPtr<SmartPtr<Target> > mainTarget;
+        vislib::SmartPtr<vislib::SmartPtr<Target> > mainTarget;
 
         /** The log echo target */
-        SmartPtr<SmartPtr<Target> > echoTarget;
+        vislib::SmartPtr<vislib::SmartPtr<Target> > echoTarget;
 
         /** Flag whether or not to flush any targets after each message */
         bool autoflush;
 
     };
     
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace log
+} // namespace utility
+} // namespace core
+} // namespace megamol
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

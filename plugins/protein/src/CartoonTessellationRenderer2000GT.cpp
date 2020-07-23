@@ -27,6 +27,7 @@ using namespace megamol::core;
 using namespace megamol::core::view;
 using namespace megamol::protein;
 using namespace megamol::protein_calls;
+using namespace megamol::core::utility::log;
 
 #define RENDER_ATOMS_AS_SPHERES 0
 
@@ -129,7 +130,6 @@ void CartoonTessellationRenderer2000GT::waitSignal(GLsync& syncObj) {
  * moldyn::SimpleSphereRenderer2000GT::create
  */
 bool CartoonTessellationRenderer2000GT::create(void) {
-    using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
     if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) return false;
@@ -167,18 +167,18 @@ bool CartoonTessellationRenderer2000GT::create(void) {
             throw vislib::Exception("Could not link spline shader", __FILE__, __LINE__);
         }
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile tessellation shader (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile tessellation shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile tessellation shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile tessellation shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile tessellation shader: Unknown exception\n");
         return false;
     }
 
@@ -216,18 +216,18 @@ bool CartoonTessellationRenderer2000GT::create(void) {
             throw vislib::Exception("Could not link tube shader", __FILE__, __LINE__);
         }
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile tessellation shader (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile tessellation shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile tessellation shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile tessellation shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile tessellation shader: Unknown exception\n");
         return false;
     }
 
@@ -407,18 +407,18 @@ bool CartoonTessellationRenderer2000GT::Render(view::CallRender3D_2& call) {
                 throw vislib::Exception("Could not link tube shader", __FILE__, __LINE__);
             }
         } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile tessellation shader (@%s): %s\n",
                 vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
                 ce.GetMsgA());
             return false;
         } catch (vislib::Exception e) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to compile tessellation shader: %s\n", e.GetMsgA());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile tessellation shader: %s\n", e.GetMsgA());
             return false;
         } catch (...) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to compile tessellation shader: Unknown exception\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile tessellation shader: Unknown exception\n");
             return false;
         }
     }
@@ -718,9 +718,9 @@ bool CartoonTessellationRenderer2000GT::Render(view::CallRender3D_2& call) {
         auto ls = this->lightMap.size();
         std::array<float,3> lightPos = {0.0f, 0.0f, 0.0f};
         if (this->lightMap.size() != 1) {
-            vislib::sys::Log::DefaultLog.WriteWarn("Only single point light sources are supported by this renderer");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("Only single point light sources are supported by this renderer");
         } else if (this->lightMap.begin()->second.lightType != core::view::light::POINTLIGHT) {
-            vislib::sys::Log::DefaultLog.WriteWarn("Only single point light sources are supported by this renderer");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("Only single point light sources are supported by this renderer");
         } else {
             lightPos = this->lightMap.begin()->second.pl_position;
             std::cout << lightPos[0] << " " << lightPos[1] << " " << lightPos[2] << std::endl;

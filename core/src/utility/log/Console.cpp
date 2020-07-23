@@ -39,14 +39,14 @@
  * vislib::sys::Console::ConsoleLogTarget::Msg
  */
 void vislib::sys::Console::ConsoleLogTarget::Msg(unsigned int level,
-        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+        megamol::core::utility::log::Log::TimeStamp time, megamol::core::utility::log::Log::SourceID sid,
                 const char *msg) {
     if (vislib::sys::Console::ColorsEnabled()) {
         vislib::sys::Console::ColorType color;
 
-        if (level <= vislib::sys::Log::LEVEL_ERROR) color = vislib::sys::Console::RED; // error
-        else if (level <= vislib::sys::Log::LEVEL_WARN) color = vislib::sys::Console::YELLOW; // warning
-        else if (level <= vislib::sys::Log::LEVEL_INFO) color = vislib::sys::Console::WHITE; // info
+        if (level <= megamol::core::utility::log::Log::LEVEL_ERROR) color = vislib::sys::Console::RED; // error
+        else if (level <= megamol::core::utility::log::Log::LEVEL_WARN) color = vislib::sys::Console::YELLOW; // warning
+        else if (level <= megamol::core::utility::log::Log::LEVEL_INFO) color = vislib::sys::Console::WHITE; // info
         else color = vislib::sys::Console::UNKNOWN_COLOR;
 
         if (color != vislib::sys::Console::UNKNOWN_COLOR) {

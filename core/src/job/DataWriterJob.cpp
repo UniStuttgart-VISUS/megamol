@@ -67,7 +67,7 @@ bool job::DataWriterJob::Terminate(void) {
  * job::DataWriterJob::Run
  */
 DWORD job::DataWriterJob::Run(void *userData) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     DataWriterCtrlCall *dwcc = this->writerSlot.CallAs<DataWriterCtrlCall>();
 
     if (dwcc == NULL) {

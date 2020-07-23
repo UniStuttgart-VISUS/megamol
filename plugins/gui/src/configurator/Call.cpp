@@ -37,7 +37,7 @@ bool megamol::gui::configurator::Call::IsConnected(void) {
         }
     }
     if (not_connected == 1) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Only one call slot is connected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -49,23 +49,23 @@ bool megamol::gui::configurator::Call::ConnectCallSlots(
     megamol::gui::configurator::CallSlotPtrType call_slot_1, megamol::gui::configurator::CallSlotPtrType call_slot_2) {
 
     if ((call_slot_1 == nullptr) || (call_slot_2 == nullptr)) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Pointer to given call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if (call_slot_1->type == call_slot_2->type) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Call slots must have different type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if (call_slot_1->GetParentModule() == call_slot_2->GetParentModule()) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Call slots must have different parent module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if ((this->connected_call_slots[call_slot_1->type] != nullptr) ||
         (this->connected_call_slots[call_slot_2->type] != nullptr)) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Call is already connected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -82,7 +82,7 @@ bool megamol::gui::configurator::Call::DisConnectCallSlots(void) {
     try {
         for (auto& call_slot_map : this->connected_call_slots) {
             if (call_slot_map.second == nullptr) {
-                // vislib::sys::Log::DefaultLog.WriteWarn(
+                // megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 //    "Call slot is already disconnected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             } else {
                 call_slot_map.second->DisConnectCall(this->uid, true);
@@ -90,11 +90,12 @@ bool megamol::gui::configurator::Call::DisConnectCallSlots(void) {
             }
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return true;
@@ -105,7 +106,7 @@ const megamol::gui::configurator::CallSlotPtrType& megamol::gui::configurator::C
     megamol::gui::configurator::CallSlotType type) {
 
     if (this->connected_call_slots[type] == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Returned pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     return this->connected_call_slots[type];
@@ -124,7 +125,7 @@ void megamol::gui::configurator::Call::Presentation::Present(
     megamol::gui::configurator::Call& inout_call, megamol::gui::GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
@@ -258,11 +259,12 @@ void megamol::gui::configurator::Call::Presentation::Present(
             }
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 }

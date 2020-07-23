@@ -59,18 +59,21 @@ float GUIView::DefaultTime(double instTime) const {
 
 
 unsigned int GUIView::GetCameraSyncNumber(void) const {
-    vislib::sys::Log::DefaultLog.WriteWarn("Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+        "Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return 0u;
 }
 
 
 void GUIView::SerialiseCamera(vislib::Serialiser& serialiser) const {
-    vislib::sys::Log::DefaultLog.WriteWarn("Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+        "Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 }
 
 
 void GUIView::DeserialiseCamera(vislib::Serialiser& serialiser) {
-    vislib::sys::Log::DefaultLog.WriteWarn("Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+        "Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 }
 
 

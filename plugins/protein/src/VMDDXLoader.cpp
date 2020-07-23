@@ -32,6 +32,7 @@ typedef vislib::math::Cuboid<float> Cubef;
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
+using namespace megamol::core::utility::log;
 
 
 /*
@@ -177,11 +178,10 @@ bool VMDDXLoader::getExtent(core::Call& call) {
  * VMDDXLoader::loadFile
  */
 bool VMDDXLoader::loadFile(const vislib::StringA& filename) {
-    using namespace vislib::sys;
     using namespace vislib;
 
-    File testFile;
-    ASCIIFileBuffer file(ASCIIFileBuffer::PARSING_WORDS);
+    vislib::sys::File testFile;
+    vislib::sys::ASCIIFileBuffer file(vislib::sys::ASCIIFileBuffer::PARSING_WORDS);
     StringA word;
     uint lineCnt;
 
@@ -198,7 +198,7 @@ bool VMDDXLoader::loadFile(const vislib::StringA& filename) {
         return false;
     }
 
-    File::FileSize fileSize = File::GetSize(filename);
+    vislib::sys::File::FileSize fileSize = vislib::sys::File::GetSize(filename);
 
     time_t t = clock(); // DEBUG
 
@@ -339,11 +339,10 @@ void VMDDXLoader::readDataAscii2Float(char *buffIn, float* buffOut,
  */
 void VMDDXLoader::scanFolder() {
     using namespace vislib;
-    using namespace vislib::sys;
 
     TString filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
 
-    File testFile;
+    vislib::sys::File testFile;
 
     // Generate filename pattern
     this->filenamesDigits = 0;

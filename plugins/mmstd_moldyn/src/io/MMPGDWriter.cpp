@@ -62,7 +62,7 @@ void MMPGDWriter::release(void) {
  * MMPGDWriter::run
  */
 bool MMPGDWriter::run(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::TString filename(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
     if (filename.IsEmpty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -209,7 +209,7 @@ bool MMPGDWriter::getCapabilities(DataWriterCtrlCall& call) {
  * MMPGDWriter::writeFrame
  */
 bool MMPGDWriter::writeFrame(vislib::sys::File& file, ParticleGridDataCall& data) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     UINT32 typeCnt = static_cast<UINT32>(data.TypesCount());
     ASSERT_WRITEOUT(&typeCnt, 4);

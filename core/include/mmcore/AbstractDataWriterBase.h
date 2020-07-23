@@ -76,7 +76,7 @@ namespace core {
          * @return True on success
          */
         virtual bool run(void) {
-            using vislib::sys::Log;
+            using megamol::core::utility::log::Log;
             vislib::TString filename(this->filenameSlot.template Param<param::FilePathParam>()->Value());
             if (filename.IsEmpty()) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No file name specified. Abort.");

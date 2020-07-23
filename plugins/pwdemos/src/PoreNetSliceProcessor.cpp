@@ -65,7 +65,7 @@ PoreNetSliceProcessor::~PoreNetSliceProcessor(void) {
  * PoreNetSliceProcessor::Run
  */
 DWORD PoreNetSliceProcessor::Run(void *userData) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     ASSERT(this->inputBuffers != NULL);
     ASSERT(this->outputBuffers != NULL);
     Log::DefaultLog.WriteInfo("PoreNetSliceProcessing Thread started");
@@ -530,7 +530,7 @@ void PoreNetSliceProcessor::workOnBuffer(ArxelBuffer& buffer, LoopBuffer& outBuf
     if (orphanedWhites > 0) {
         // TODO: BugBugBugBugBugBugBugBugHeck
         outBuffer.SetBlackArxels(outBuffer.BlackArxels() - orphanedWhites);
-        vislib::sys::Log::DefaultLog.WriteWarn("Found %u orphaned non-black Arxels.",
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Found %u orphaned non-black Arxels.",
             orphanedWhites);
     }
 #ifdef DEBUG_SLICE_FILE_WRITE

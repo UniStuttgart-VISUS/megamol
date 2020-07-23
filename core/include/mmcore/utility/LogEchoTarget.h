@@ -24,7 +24,7 @@ namespace utility {
     /*
      * internal helper class of external echo targets.
      */
-    class LogEchoTarget : public vislib::sys::Log::Target {
+    class LogEchoTarget : public megamol::core::utility::log::Log::Target {
     public:
 
         /** ctor */
@@ -55,8 +55,8 @@ namespace utility {
             * @param sid The object id of the source of the message
             * @param msg The message text itself
             */
-        virtual void Msg(UINT level, vislib::sys::Log::TimeStamp time,
-            vislib::sys::Log::SourceID sid, const char *msg);
+        virtual void Msg(UINT level, megamol::core::utility::log::Log::TimeStamp time,
+            megamol::core::utility::log::Log::SourceID sid, const char *msg);
 
     private:
 

@@ -76,7 +76,7 @@ void SIFFWriter::release(void) {
  * SIFFWriter::run
  */
 bool SIFFWriter::run(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     using vislib::Exception;
 
     vislib::TString filename(this->filenameSlot.Param<core::param::FilePathParam>()->Value());

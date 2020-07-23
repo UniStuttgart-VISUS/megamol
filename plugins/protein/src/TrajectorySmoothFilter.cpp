@@ -87,7 +87,7 @@ void TrajectorySmoothFilter::release(void) {
  * TrajectorySmoothFilter::getData
  */
 bool TrajectorySmoothFilter::getData(megamol::core::Call& call) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     uint firstFrame = 0;
 

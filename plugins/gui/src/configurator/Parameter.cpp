@@ -277,7 +277,7 @@ megamol::gui::configurator::Parameter::Presentation::~Presentation(void) {}
 bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::configurator::Parameter& inout_param) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -314,11 +314,12 @@ bool megamol::gui::configurator::Parameter::Presentation::Present(megamol::gui::
             ImGui::EndGroup();
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -732,7 +733,7 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
 
     if ((inout_param.type != Parameter::ParamType::TRANSFERFUNCTION) ||
         (!std::holds_alternative<std::string>(inout_param.GetValue()))) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Transfer Function Editor is called for incompatible parameter type. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
         return;
@@ -769,9 +770,9 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
 #elif _WIN32
         ImGui::SetClipboardText(value.c_str());
 #else // LINUX
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        vislib::sys::Log::DefaultLog.WriteInfo("Transfer Function JSON String:\n%s", value.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Transfer Function JSON String:\n%s", value.c_str());
 #endif
     }
     ImGui::SameLine();
@@ -784,7 +785,7 @@ void megamol::gui::configurator::Parameter::Presentation::transfer_function_edit
 #elif _WIN32
         inout_param.SetValue(std::string(ImGui::GetClipboardText()));
 #else // LINUX
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 #endif
         updateEditor = true;

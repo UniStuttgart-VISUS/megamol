@@ -121,7 +121,7 @@ bool misc::SiffCSplineFitter::getExtentCallback(Call& caller) {
  * misc::SiffCSplineFitter::assertData
  */
 void misc::SiffCSplineFitter::assertData(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     moldyn::MultiParticleDataCall *mpdc = this->inDataSlot.CallAs<moldyn::MultiParticleDataCall>();
     if (mpdc == NULL) return;

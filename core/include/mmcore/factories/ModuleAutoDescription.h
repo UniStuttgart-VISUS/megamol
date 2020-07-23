@@ -112,15 +112,15 @@ namespace factories {
                 m->SetClassName(this->ClassName());
                 return m;
             } catch (vislib::Exception& ex) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Exception while creating module %s: %s\n",
                     C::ClassName(), ex.GetMsgA());
             } catch (std::exception& ex) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Exception while creating module %s: %s\n",
                     C::ClassName(), ex.what());
             } catch(...) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Exception while creating module %s: Unknown exception\n",
                     C::ClassName());
             }

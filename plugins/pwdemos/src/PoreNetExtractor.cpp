@@ -170,7 +170,7 @@ bool PoreNetExtractor::Render(core::Call& call) {
  */
 bool PoreNetExtractor::create(void) {
     using vislib::graphics::gl::GLSLShader;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     using vislib::graphics::gl::ShaderSource;
 
     if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
@@ -234,7 +234,7 @@ void PoreNetExtractor::release(void) {
  * PoreNetExtractor::onExtractBtnClicked
  */
 bool PoreNetExtractor::onExtractBtnClicked(core::param::ParamSlot& slot) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     if (this->isExtractionRunning()) {
         this->abortExtraction();
@@ -488,7 +488,7 @@ bool PoreNetExtractor::onExtractBtnClicked(core::param::ParamSlot& slot) {
  * PoreNetExtractor::onLoadBtnClicked
  */
 bool PoreNetExtractor::onLoadBtnClicked(core::param::ParamSlot& slot) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     // TODO: Implement
     Log::DefaultLog.WriteWarn("Loading not implemented yet.");
@@ -501,7 +501,7 @@ bool PoreNetExtractor::onLoadBtnClicked(core::param::ParamSlot& slot) {
  * PoreNetExtractor::onSaveBtnClicked
  */
 bool PoreNetExtractor::onSaveBtnClicked(core::param::ParamSlot& slot) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     // TODO: Implement
     Log::DefaultLog.WriteWarn("Saving not implemented yet.");
@@ -523,7 +523,7 @@ bool PoreNetExtractor::isExtractionRunning(void) {
  * PoreNetExtractor::abortExtraction
  */
 void PoreNetExtractor::abortExtraction(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     // TODO: Implement
 
@@ -557,7 +557,7 @@ void PoreNetExtractor::abortExtraction(void) {
  * PoreNetExtractor::performExtraction
  */
 void PoreNetExtractor::performExtraction(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     if (this->slice == UINT_MAX) {
         this->slicesBuffers.EndOfDataClose(); // we are done with rendering

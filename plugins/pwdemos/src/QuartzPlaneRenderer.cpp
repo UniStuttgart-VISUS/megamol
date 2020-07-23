@@ -53,11 +53,11 @@ QuartzPlaneRenderer::~QuartzPlaneRenderer(void) {
  */
 bool QuartzPlaneRenderer::create(void) {
     using vislib::graphics::gl::GLSLShader;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     using vislib::graphics::gl::ShaderSource;
 
     if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        vislib::sys::Log::DefaultLog.WriteError("Failed to initialise OpenGL GLSL Shader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to initialise OpenGL GLSL Shader");
         return false;
     }
 
@@ -435,7 +435,7 @@ bool QuartzPlaneRenderer::Render(core::view::CallRender2D& call) {
  */
 vislib::graphics::gl::GLSLShader* QuartzPlaneRenderer::makeShader(const CrystalDataCall::Crystal& c) {
     using vislib::graphics::gl::GLSLShader;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     using vislib::graphics::gl::ShaderSource;
 
     GLSLShader *s = new GLSLShader();

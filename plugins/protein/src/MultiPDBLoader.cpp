@@ -105,7 +105,7 @@ bool MultiPDBLoader::getData(core::Call& caller) {
 }
 
 void MultiPDBLoader::assertData(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     if (!this->filenameSlot.IsDirty()) return;  // nothing to do
     this->filenameSlot.ResetDirty();    

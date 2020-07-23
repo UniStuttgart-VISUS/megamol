@@ -377,7 +377,7 @@ bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
         uint vertexLvlAttrib = UINT_MAX;
         uint bsDistAttrib = UINT_MAX;
         if (attribCount < 3) {
-            vislib::sys::Log::DefaultLog.WriteError("Too few vertex attributes detected. The input mesh for the "
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Too few vertex attributes detected. The input mesh for the "
                                                     "Sombrero warper needs at least three UINT32 vertex attributes.");
             return false;
         }
@@ -393,7 +393,7 @@ bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
             }
         }
         if (atomIndexAttrib == UINT_MAX || vertexLvlAttrib == UINT_MAX || bsDistAttrib == UINT_MAX) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Not enough UINT32 vertex attributes detected. The input mesh for the Sombrero warper needs at least "
                 "three UINT32 vertex attributes.");
             return false;
@@ -514,7 +514,7 @@ bool SombreroWarper::findSombreroBorder(void) {
 #endif
         // we need at least 1 border vertex with level > 0 to start an outer border and brim
         if (maxVal < 1) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "No region growing was performed and therefore no brim can be specified");
             return false;
         }
@@ -525,7 +525,7 @@ bool SombreroWarper::findSombreroBorder(void) {
         if (maxBrimVal < 0) maxBrim = maxVal;
 
         if (minBrim > maxBrim) {
-            vislib::sys::Log::DefaultLog.WriteError("The minBrim value is larger than the maxBrim value");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("The minBrim value is larger than the maxBrim value");
             return false;
         }
 
@@ -601,7 +601,7 @@ bool SombreroWarper::findSombreroBorder(void) {
         }
 
         if (localBorder.size() < 1) {
-            vislib::sys::Log::DefaultLog.WriteError("No brim border found. No calculation possible!");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("No brim border found. No calculation possible!");
             return false;
         }
 
@@ -835,7 +835,7 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
         if (bsIt != this->bsDistanceAttachment[i].end()) {
             bsVertex = static_cast<uint>(bsIt - this->bsDistanceAttachment[i].begin());
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("No binding site vertex present. No computation possible!");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("No binding site vertex present. No computation possible!");
             return false;
         }
 
@@ -934,8 +934,8 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
         }
         this->brimWidth[i] = avg / static_cast<float>(this->brimIndices.size());
 
-        // vislib::sys::Log::DefaultLog.WriteWarn("Radius of %i is %f", static_cast<int>(i), this->sombreroRadius[i]);
-        // vislib::sys::Log::DefaultLog.WriteWarn("Brim width of %i is %f", static_cast<int>(i), this->brimWidth[i]);
+        // megamol::core::utility::log::Log::DefaultLog.WriteWarn("Radius of %i is %f", static_cast<int>(i), this->sombreroRadius[i]);
+        // megamol::core::utility::log::Log::DefaultLog.WriteWarn("Brim width of %i is %f", static_cast<int>(i), this->brimWidth[i]);
 
 #ifdef SOMBRERO_TIMING
         auto timeend = std::chrono::steady_clock::now();
@@ -1166,7 +1166,7 @@ bool SombreroWarper::recomputeVertexDistances(void) {
         if (it != this->bsDistanceAttachment[i].end()) {
             bsIndex = static_cast<uint>(it - this->bsDistanceAttachment[i].begin());
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("No binding site index found!");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("No binding site index found!");
             return false;
         }
 
@@ -1226,7 +1226,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         if (it != this->bsDistanceAttachment[i].end()) {
             startIndex = static_cast<uint>(it - this->bsDistanceAttachment[i].begin());
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("No start binding site index found!");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("No start binding site index found!");
             return false;
         }
 
@@ -1343,7 +1343,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         float sombrad = lengthSum / (2.0f * thePi);
         this->sombreroRadiusNew[i] = sombrad;
 
-        // vislib::sys::Log::DefaultLog.WriteWarn("New radius of %i is %f", static_cast<int>(i), sombrad);
+        // megamol::core::utility::log::Log::DefaultLog.WriteWarn("New radius of %i is %f", static_cast<int>(i), sombrad);
 
 #if 0 // switch for the colouring of the sweatedges
         vislib::math::Vector<float, 3> red(255.0f, 0.0f, 0.0f);
@@ -1365,7 +1365,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             meridianSet.begin(), meridianSet.end(), sweatSet.begin(), sweatSet.end(), std::back_inserter(intRes));
 
         if (intRes.size() != 1) {
-            vislib::sys::Log::DefaultLog.WriteError("The sweatband and the meridian do not intersect properly");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("The sweatband and the meridian do not intersect properly");
             return false;
         }
 
@@ -1406,7 +1406,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             }
             k++;
             if (!found) {
-                vislib::sys::Log::DefaultLog.WriteError("The brim of the sombrero is not continous. Aborting...");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("The brim of the sombrero is not continous. Aborting...");
                 return false;
             }
         }
@@ -1485,7 +1485,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
                 reverse++;
             }
             if (targets.size() == 0) {
-                vislib::sys::Log::DefaultLog.WriteError("No target vertex for the sweatband computation found");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("No target vertex for the sweatband computation found");
                 return false;
             }
 
@@ -1550,7 +1550,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         uint v1Idx = static_cast<uint>(sortedBrim.size() / 4);
         uint v2Idx = static_cast<uint>(sortedBrim.size() / 2);
         if (endIndex == v1Idx || endIndex == v2Idx || v1Idx == v2Idx) {
-            vislib::sys::Log::DefaultLog.WriteError("The brim is too small to compute further");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("The brim is too small to compute further");
             return false;
         }
         v1 = vislib::math::Vector<float, 3>(&this->vertices[i][3 * v1Idx]);
@@ -1693,7 +1693,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             }
         }
         if (meridian.size() < 2) {
-            vislib::sys::Log::DefaultLog.WriteError("The meridian is not long enough to proceed with the computation");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("The meridian is not long enough to proceed with the computation");
             return false;
         }
 
@@ -1775,7 +1775,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             reverse++;
         }
         if (bsVertices.size() < 3) {
-            vislib::sys::Log::DefaultLog.WriteError("The binding site vertex lies in a degenerate region. Aborting...");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("The binding site vertex lies in a degenerate region. Aborting...");
             return false;
         }
         std::vector<uint> bsVertexCircle;
@@ -1786,7 +1786,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             }
         }
         if (bsVertexCircle.size() != 2) {
-            vislib::sys::Log::DefaultLog.WriteError("Something went wrong during the circle computation. Aborting...");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Something went wrong during the circle computation. Aborting...");
             return false;
         }
         std::set<uint> doneset = std::set<uint>(bsVertexCircle.begin(), bsVertexCircle.end());
@@ -1905,7 +1905,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         bool ret = this->cuda_kernels->CreatePhiValues(
             0.01f, this->rahiAngles[i], validVertices, vertex_edge_offset_local, offsetDepth, vTypes);
         if (!ret) {
-            vislib::sys::Log::DefaultLog.WriteError("The CUDA angle diffusion failed");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("The CUDA angle diffusion failed");
             return false;
         }
 
@@ -2126,7 +2126,7 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
         bool kernelRes =
             this->cuda_kernels->CreateZValues(20000, zValues, zValidity, zEdgeOffset, zEdgeOffsetDepth, zVertexWeights);
         if (!kernelRes) {
-            vislib::sys::Log::DefaultLog.WriteError("The z-values kernel of the height computation failed!");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("The z-values kernel of the height computation failed!");
             return false;
         }
 
@@ -2159,7 +2159,7 @@ bool SombreroWarper::computeXZCoordinatePerVertex(TunnelResidueDataCall& tunnelC
                 minRad = tunnelCall.getTunnelDescriptions()[0].bottleneckRadius *
                          this->radiusScalingParam.Param<param::FloatParam>()->Value();
             } else {
-                vislib::sys::Log::DefaultLog.WriteWarn(
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "No tunnel descriptions given, falling back to geometry-based radius computation");
                 minRad = this->sombreroRadiusNew[i] * this->radiusScalingParam.Param<param::FloatParam>()->Value();
             }
@@ -2250,7 +2250,7 @@ bool SombreroWarper::computeXZCoordinatePerVertex(TunnelResidueDataCall& tunnelC
         bool kernelRes =
             this->cuda_kernels->CreateZValues(20000, zValues, zValidity, zEdgeOffset, zEdgeOffsetDepth, zVertexWeights);
         if (!kernelRes) {
-            vislib::sys::Log::DefaultLog.WriteError("The z-values kernel of the radius computation failed!");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("The z-values kernel of the radius computation failed!");
             return false;
         }
 
@@ -2330,7 +2330,7 @@ bool SombreroWarper::recomputeVertexNormals(TunnelResidueDataCall& tunnelCall) {
                 s_radius = tunnelCall.getTunnelDescriptions()[0].bottleneckRadius *
                            this->radiusScalingParam.Param<param::FloatParam>()->Value();
             } else {
-                vislib::sys::Log::DefaultLog.WriteWarn(
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "No tunnel descriptions given, falling back to geometry-based radius computation");
                 s_radius = this->sombreroRadiusNew[i] * this->radiusScalingParam.Param<param::FloatParam>()->Value();
             }

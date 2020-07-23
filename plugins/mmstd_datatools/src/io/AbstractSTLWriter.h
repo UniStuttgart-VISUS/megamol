@@ -406,7 +406,7 @@ namespace megamol
 						// Sanity checks
 						if (num_triangles == 0)
 						{
-							vislib::sys::Log::DefaultLog.WriteWarn("Cannot write STL file. Number of triangles is zero");
+							megamol::core::utility::log::Log::DefaultLog.WriteWarn("Cannot write STL file. Number of triangles is zero");
 							return;
 						}
 
@@ -415,19 +415,19 @@ namespace megamol
 
 						if (vertices == nullptr || normals == nullptr)
 						{
-							vislib::sys::Log::DefaultLog.WriteWarn("Cannot write STL file. No vertices or normals given");
+							megamol::core::utility::log::Log::DefaultLog.WriteWarn("Cannot write STL file. No vertices or normals given");
 							return;
 						}
 
 						// Decide file type
 						if (this->ascii_binary_slot.template Param<core::param::EnumParam>()->Value() == 0)
 						{
-							vislib::sys::Log::DefaultLog.WriteInfo("Writing binary STL file '%s'", filename.c_str());
+							megamol::core::utility::log::Log::DefaultLog.WriteInfo("Writing binary STL file '%s'", filename.c_str());
 							write_binary(filename, static_cast<uint32_t>(num_triangles), vertices, normals, pointer_or_identity<IT>(indices));
 						}
 						else
 						{
-							vislib::sys::Log::DefaultLog.WriteInfo("Writing ASCII STL file '%s'", filename.c_str());
+							megamol::core::utility::log::Log::DefaultLog.WriteInfo("Writing ASCII STL file '%s'", filename.c_str());
 							write_ascii(filename, num_triangles, vertices, normals, pointer_or_identity<IT>(indices));
 						}
 					}

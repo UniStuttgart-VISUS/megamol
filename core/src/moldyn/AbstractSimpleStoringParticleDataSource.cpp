@@ -48,9 +48,9 @@ void AbstractSimpleStoringParticleDataSource::assertData(bool needLoad) {
             }
             this->datahash++;
         } catch(vislib::Exception ex) {
-            vislib::sys::Log::DefaultLog.WriteError("Exception: %s [%s, %d]\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Exception: %s [%s, %d]\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
         } catch(...) {
-            vislib::sys::Log::DefaultLog.WriteError("Unexpected exception");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Unexpected exception");
         }
     }
 }

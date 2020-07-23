@@ -28,7 +28,7 @@
 #include "vislib/Trace.h"
 
 using namespace megamol::core;
-using vislib::sys::Log;
+using megamol::core::utility::log::Log;
 using vislib::net::cluster::DiscoveryService;
 using vislib::net::IPAgnosticAddress;
 using vislib::net::IPEndPoint;
@@ -110,7 +110,7 @@ cluster::ClusterController::~ClusterController() {
  */
 void cluster::ClusterController::SendUserMsg(const UINT32 msgType,
         const BYTE *msgBody, const SIZE_T msgSize) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     try {
         UINT rv = this->discoveryService.SendUserMessage(
             msgType, msgBody, msgSize);
@@ -137,7 +137,7 @@ void cluster::ClusterController::SendUserMsg(const UINT32 msgType,
 void cluster::ClusterController::SendUserMsg(
         const cluster::ClusterController::PeerHandle& hPeer,
         const UINT32 msgType, const BYTE *msgBody, const SIZE_T msgSize) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     try {
         UINT rv = this->discoveryService.SendUserMessage(
             hPeer, msgType, msgBody, msgSize);

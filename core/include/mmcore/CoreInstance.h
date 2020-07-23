@@ -448,7 +448,7 @@ public:
             }
         }
         if (!success) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "EnumModulesNoLock: Unable to find module nor namespace \"%s\" as entry point", entry_point.c_str());
         }
     }
@@ -483,8 +483,8 @@ public:
             cb(vi);
             return true;
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
             return false;
         }
     }
@@ -513,12 +513,12 @@ public:
                 }
             }
             if (!found) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Unable to find a ParamSlot in module \"%s\" for processing", module_name.c_str());
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
         }
         return found;
     }
@@ -552,12 +552,12 @@ public:
                 }
             }
             if (!found) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Unable to find a CallerSlot in module \"%s\" for processing", module_name.c_str());
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
         }
         return found;
     }

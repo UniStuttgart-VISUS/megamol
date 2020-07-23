@@ -24,6 +24,7 @@
 #include "helper_math.h"
 
 using namespace megamol;
+using namespace megamol::core::utility::log;
 using namespace vislib;
 using namespace vislib::math;
 
@@ -35,7 +36,6 @@ vislib::Array<float> protein_cuda::CritPoints::GetCritPoints(UniGrid3D<float3> &
         vislib::math::Vector<float, 3> maxCoord) {
 
     using namespace vislib;
-    using namespace vislib::sys;
     using namespace vislib::math;
 
     time_t t = clock();
@@ -111,7 +111,6 @@ vislib::Array<float> protein_cuda::CritPoints::GetCritPointsGreene(
         float cellSize) {
 
     using namespace vislib;
-    using namespace vislib::sys;
     using namespace vislib::math;
 
     Array<float> critPoints;

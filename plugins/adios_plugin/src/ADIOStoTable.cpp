@@ -58,13 +58,13 @@ bool ADIOStoTable::getData(core::Call& call) {
         
         for (auto var : availVars) {
             if (!cad->inquire(var)) {
-                vislib::sys::Log::DefaultLog.WriteError("[ADIOStoTable] variable \"%s\" does not exist.", var.c_str());
+                megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOStoTable] variable \"%s\" does not exist.", var.c_str());
             }
         }
 
 
         if (!(*cad)(0)) {
-            vislib::sys::Log::DefaultLog.WriteError("[ADIOStoTable] Error during GetData");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOStoTable] Error during GetData");
             return false;
         }
 

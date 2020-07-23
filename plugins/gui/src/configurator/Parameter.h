@@ -183,7 +183,7 @@ public:
                 }
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
@@ -192,7 +192,7 @@ public:
         if (std::holds_alternative<T>(this->minval)) {
             this->minval = min;
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
@@ -201,7 +201,7 @@ public:
         if (std::holds_alternative<T>(this->maxval)) {
             this->maxval = max;
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
@@ -210,7 +210,7 @@ public:
         if (std::holds_alternative<T>(this->storage)) {
             this->storage = store;
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }

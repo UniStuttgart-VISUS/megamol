@@ -69,8 +69,8 @@ bool megamol::compositing::TextureDepthCompositing::create() {
         prgm_err |= !m_depthComp_prgm->link();
 
 		if (prgm_err) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-				vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+				megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Error during shader program creation of %s\n %s\n", 
 				m_depthComp_prgm->getDebugLabel().c_str(),
                 m_depthComp_prgm->getLog().c_str()
@@ -79,12 +79,12 @@ bool megamol::compositing::TextureDepthCompositing::create() {
         }
 
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
         return false;
     }
 

@@ -48,7 +48,7 @@ WavefrontObjDataSource::~WavefrontObjDataSource(void) {
  * WavefrontObjDataSource::load
  */
 bool WavefrontObjDataSource::load(const vislib::TString& filename) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     if (filename.IsEmpty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Filename is empty");
@@ -385,7 +385,7 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
  * WavefrontObjDataSource::loadMaterialLibrary
  */
 void WavefrontObjDataSource::loadMaterialLibrary(const vislib::TString& filename, vislib::Array<vislib::StringA>& names) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     ASSERT(names.Count() == this->mats.Count());
 
     if (filename.IsEmpty()) {

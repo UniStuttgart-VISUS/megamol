@@ -83,7 +83,7 @@ void CrystalDataSource::release(void) {
  * CrystalDataSource::loadFile
  */
 void CrystalDataSource::loadFile(const vislib::TString& filename) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::sys::ASCIIFileBuffer file(vislib::sys::ASCIIFileBuffer::PARSING_WORDS);
     if (!file.LoadFile(filename)) {
         Log::DefaultLog.WriteError("Unable to read file \"%s\"", vislib::StringA(filename).PeekBuffer());

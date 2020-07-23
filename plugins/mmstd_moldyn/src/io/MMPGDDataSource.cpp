@@ -234,7 +234,7 @@ bool MMPGDDataSource::create(void) {
  */
 void MMPGDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
         unsigned int idx) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     Frame *f = dynamic_cast<Frame*>(frame);
     if (f == NULL) return;
     if (this->file == NULL) {
@@ -270,7 +270,7 @@ void MMPGDDataSource::release(void) {
  * MMPGDDataSource::filenameChanged
  */
 bool MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     using vislib::sys::File;
     this->resetFrameCache();
     this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
@@ -284,7 +284,7 @@ bool MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
     ASSERT(this->filename.Param<param::FilePathParam>() != NULL);
 
     if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value(), File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPGD-File \"%s\".", vislib::StringA(
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPGD-File \"%s\".", vislib::StringA(
             this->filename.Param<param::FilePathParam>()->Value()).PeekBuffer());
 
         SAFE_DELETE(this->file);
@@ -348,12 +348,12 @@ bool MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n",
             CACHE_SIZE_MIN, cacheSize);
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, msg);
     }
 
     this->setFrameCount(frmCnt);

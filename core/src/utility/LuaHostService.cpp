@@ -19,7 +19,7 @@ megamol::core::utility::LuaHostService::LuaHostService(core::CoreInstance& core)
 megamol::core::utility::LuaHostService::~LuaHostService() { assert(!this->IsEnabled()); }
 
 bool megamol::core::utility::LuaHostService::Initalize(bool& autoEnable) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     context = ZMQContextUser::Instance();
 
     // fetch configuration
@@ -131,7 +131,7 @@ bool megamol::core::utility::LuaHostService::disableImpl() {
 
 
 void megamol::core::utility::LuaHostService::serve() {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     zmq::socket_t socket(*context, ZMQ_REP);
 
@@ -170,7 +170,7 @@ void megamol::core::utility::LuaHostService::serve() {
 }
 
 void core::utility::LuaHostService::servePair() {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     auto socket = zmq::socket_t(*context, zmq::socket_type::pair);
     socket.bind("tcp://*:0");
@@ -198,9 +198,9 @@ void core::utility::LuaHostService::servePair() {
             const auto num_sent = socket.send(reply.data(), reply.size());
 #ifdef LRH_ANNOYING_DETAILS
             if (num_sent == reply.size()) {
-                vislib::sys::Log::DefaultLog.WriteInfo("LRH: sending looks OK");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("LRH: sending looks OK");
             } else {
-                vislib::sys::Log::DefaultLog.WriteError("LRH: send failed");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("LRH: send failed");
             }
 #endif
         }
@@ -233,7 +233,7 @@ std::string megamol::core::utility::LuaHostService::makeAnswer(const std::string
     }
 
 
-    vislib::sys::Log::DefaultLog.WriteInfo("LRH: generated PAIR socket on port %i", port);
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("LRH: generated PAIR socket on port %i", port);
     return std::to_string(port);
 }
 
@@ -242,15 +242,15 @@ std::string megamol::core::utility::LuaHostService::makePairAnswer(const std::st
 
     std::string result;
 #ifdef LRH_ANNOYING_DETAILS
-    vislib::sys::Log::DefaultLog.WriteInfo("LRH: got request: \"%s\"", req.c_str());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("LRH: got request: \"%s\"", req.c_str());
 #endif
     const bool ok = this->GetCoreInstance().GetLuaState()->RunString(req, result);
     if (ok) {
 #ifdef LRH_ANNOYING_DETAILS
-        vislib::sys::Log::DefaultLog.WriteInfo("LRH: execution is OK and returned\n\"%s\", sending.", result.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("LRH: execution is OK and returned\n\"%s\", sending.", result.c_str());
 #endif
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("LRH: execution is NOT OK and returned Error \"%s\"", result.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("LRH: execution is NOT OK and returned Error \"%s\"", result.c_str());
         result = "Error: " + result;
     }
     return result;

@@ -69,7 +69,7 @@ void io::TclMolSelectionLoader::load(void) {
 
     vislib::sys::ASCIIFileBuffer file;
     if (!file.LoadFile(filenameSlot.Param<core::param::FilePathParam>()->Value(), vislib::sys::ASCIIFileBuffer::PARSING_WORDS)) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to read file \"%s\"", vislib::StringA(filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to read file \"%s\"", vislib::StringA(filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
         return;
     }
 
