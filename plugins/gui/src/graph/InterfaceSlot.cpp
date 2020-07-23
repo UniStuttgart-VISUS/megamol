@@ -216,7 +216,7 @@ void megamol::gui::InterfaceSlotPresentation::Present(
             }
 
             // Text
-            if (this->label_visible && this->group.collapsed_view) {
+            if (this->group.collapsed_view) {
                 auto type = inout_interfaceslot.GetCallSlotType();
                 ImVec2 text_pos_left_upper = ImVec2(0.0f, 0.0f);
                 text_pos_left_upper.y = actual_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
