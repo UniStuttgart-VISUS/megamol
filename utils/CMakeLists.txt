@@ -1,6 +1,7 @@
 file(GLOB utils RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ *)
 foreach(util ${utils})
   if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${util}/CMakeLists.txt AND NOT "${util}" STREQUAL "tableselection")
+    message("Found util with CMakeLists.txt: ${util}")
     add_subdirectory(${util})
   endif()
 endforeach()
