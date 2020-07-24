@@ -162,8 +162,8 @@ private:
 
     std::shared_ptr<glowl::GLSLProgram> shader;
 
-    glm::vec4 color;
     glm::vec2 pixel_direction;
+    bool selected;
 };
 
 

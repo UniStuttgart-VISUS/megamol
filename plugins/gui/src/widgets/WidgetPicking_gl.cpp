@@ -52,8 +52,7 @@ bool megamol::gui::PickingBuffer::ProcessMouseMove(double x, double y) {
 
             if (interaction.type == InteractionType::MOVE_ALONG_AXIS_SCREEN) {
 
-                glm::vec2 mouse_move = glm::vec2(static_cast<float>(dx), static_cast<float>(dy));
-                // auto mm_norm = glm::normalize(mouse_move);
+                glm::vec2 mouse_move = glm::vec2(static_cast<float>(dx), -static_cast<float>(dy));
 
                 auto axis = glm::vec2(interaction.axis_x, interaction.axis_y);
                 auto axis_norm = glm::normalize(axis);
@@ -131,10 +130,11 @@ bool megamol::gui::PickingBuffer::ProcessMouseClick(megamol::core::view::MouseBu
         }
     } else if ((button == megamol::core::view::MouseButton::BUTTON_LEFT) &&
                (action == megamol::core::view::MouseButtonAction::RELEASE)) {
-        this->active_interaction_obj = {false, -1};
 
         this->pending_manipulations.emplace_back(Manipulation{InteractionType::DESELECT,
             static_cast<uint32_t>(this->active_interaction_obj.second), 0.0f, 0.0f, 0.0f, 0.0f});
+
+        this->active_interaction_obj = {false, -1};
     }
 
     return false;
@@ -290,7 +290,7 @@ bool megamol::gui::PickingBuffer::CreatShader(
 // Pickable Triangle ##########################################################
 
 megamol::gui::PickableTriangle::PickableTriangle(void)
-    : shader(nullptr), pixel_direction(100.0f, 200.0f), color(0.0f, 0.0f, 1.0, 1.0f) {}
+    : shader(nullptr), pixel_direction(100.0f, 200.0f), selected(false) {}
 
 
 void megamol::gui::PickableTriangle::Draw(
@@ -298,30 +298,31 @@ void megamol::gui::PickableTriangle::Draw(
 
     // Shader data
     glm::mat4 ortho = glm::ortho(0.0f, vp_dim.x, 0.0f, vp_dim.y, -1.0f, 1.0f);
-    glm::vec4 color = glm::vec4(0.0f, 0.0f, 1.0, 1.0f);
     glm::vec2 dir0 = this->pixel_direction;
     glm::vec2 dir1 = glm::vec2(dir0.y, -dir0.x) * 0.5f;
     glm::vec2 dir2 = glm::vec2(-dir0.y, dir0.x) * 0.5f;
     dir0 = vp_dim / 2.0f + dir0;
     dir1 = vp_dim / 2.0f + dir1;
     dir2 = vp_dim / 2.0f + dir2;
+    glm::vec4 color = glm::vec4(0.0f, 0.0f, 1.0, 1.0f);
 
     // Process pending manipulations
     bool highlighted = false;
-    bool selected = false;
     for (auto& manip : pending_manipulations) {
         if (id == manip.obj_id) {
             if (manip.type == InteractionType::MOVE_ALONG_AXIS_SCREEN) {
                 this->pixel_direction += glm::vec2(manip.axis_x, manip.axis_y) * manip.value;
             } else if (manip.type == InteractionType::SELECT) {
-                color = glm::vec4(0.0f, 1.0f, 0.0, 1.0f);
+                this->selected = true;
             } else if (manip.type == InteractionType::DESELECT) {
-                color = glm::vec4(0.0f, 0.0f, 1.0, 1.0f);
+                this->selected = false;
             } else if (manip.type == InteractionType::HIGHLIGHT) {
-                highlighted = true;
-                color = glm::vec4(1.0f, 0.0f, 0.0, 1.0f);
+                color = glm::vec4(1.0f, 0.0f, 1.0, 1.0f);
             }
         }
+    }
+    if (selected) {
+        color = glm::vec4(0.0f, 1.0f, 1.0, 1.0f);
     }
 
     // Create shader once
