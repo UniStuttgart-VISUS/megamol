@@ -1,25 +1,23 @@
 ---
-#
-# Requires clang-format 6.0.0+
-#
 BasedOnStyle: LLVM
-AccessModifierOffset: '-4'
-AlignTrailingComments: true
-AlignAfterOpenBracket: DontAlign
-AllowShortFunctionsOnASingleLine: true
-AllowShortIfStatementsOnASingleLine: true
-AllowShortLoopsOnASingleLine: true
-BreakBeforeBraces: Attach
-BreakConstructorInitializersBeforeComma: true
-ColumnLimit: '120'
-ConstructorInitializerAllOnOneLineOrOnePerLine: 'true'
-Cpp11BracedListStyle: true
-IndentWidth: '4'
-MaxEmptyLinesToKeep: '2'
-PointerBindsToType: true
-TabWidth: 4
-UseTab: Never
-IndentPPDirectives: AfterHash
+Language: Cpp
+
+#
+# Commented out points needs to be discussed.
+#
+AccessModifierOffset: -4
+#AlignAfterOpenBracket: DontAlign
+AlignEscapedNewlines: Left
+AllowShortBlocksOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: Empty
+#AllowShortIfStatementsOnASingleLine: Always
+#AllowShortLoopsOnASingleLine: true
+AlwaysBreakTemplateDeclarations: Yes
+#BreakBeforeBraces: Attach
+BreakConstructorInitializers: BeforeComma
+ColumnLimit: 120
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+DerivePointerAlignment: false
 IncludeCategories:
   - Regex:           '^"(stdafx|PrecompiledHeader)'
     Priority:        -1
@@ -27,5 +25,13 @@ IncludeCategories:
     Priority:        1
   - Regex:           '^"'
     Priority:        2
-
+#IndentPPDirectives: AfterHash
+IndentWidth: 4
+#MaxEmptyLinesToKeep: 2
+NamespaceIndentation: Inner
+PointerAlignment: Left
+SpaceAfterCStyleCast: true
+SpaceAfterTemplateKeyword: false
+Standard: c++17
+UseTab: Never
 ...
