@@ -686,7 +686,7 @@ void megamol::core::utility::log::Log::WriteMessageVaA(UINT level,
     if (fmt != nullptr) {
         va_list tmp;
         va_copy(tmp, argptr);
-        msg.resize(1 + std::vsnprintf(nullptr, 0, fmt, argptr));
+        msg.resize(1ull + std::vsnprintf(nullptr, 0, fmt, argptr));
         std::vsnprintf(msg.data(), msg.size(), fmt, tmp);
         va_end(tmp);
         msg.resize(msg.size() - 1);
