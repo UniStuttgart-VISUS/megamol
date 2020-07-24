@@ -52,14 +52,14 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     core::param::Vector3fParam lowerMin = core::param::Vector3fParam({0, 0, 0});
     core::param::Vector3fParam lowerMax = core::param::Vector3fParam({1, 1, 1});
     this->lowerStreamlineSeedBound_.SetParameter(new core::param::Vector3fParam({0, 0, 0}, lowerMin, lowerMax));
-    this->lowerStreamlineSeedBound_.SetUpdateCallback(&mmvtkmStreamLines::lowerBoundChanged);
+    this->lowerStreamlineSeedBound_.SetUpdateCallback(&mmvtkmStreamLines::dataChanged);
     this->MakeSlotAvailable(&this->lowerStreamlineSeedBound_);
 
     // lower bound <= upper bound <= 1
     core::param::Vector3fParam upperMin = lowerMax;
     core::param::Vector3fParam upperMax = core::param::Vector3fParam({1, 1, 1});
     this->upperStreamlineSeedBound_.SetParameter(new core::param::Vector3fParam({1, 1, 1}, upperMin, upperMax));
-    this->upperStreamlineSeedBound_.SetUpdateCallback(&mmvtkmStreamLines::upperBoundChanged);
+    this->upperStreamlineSeedBound_.SetUpdateCallback(&mmvtkmStreamLines::dataChanged);
     this->MakeSlotAvailable(&this->upperStreamlineSeedBound_);
 
     this->streamlineStepSize_.SetParameter(new core::param::FloatParam(0.1f, 0.f));
@@ -85,6 +85,7 @@ bool mmvtkmStreamLines::create() {
 
 
 bool mmvtkmStreamLines::dataChanged(core::param::ParamSlot& slot) {
+    vislib::sys::Log::DefaultLog.WriteInfo("changed");
     this->new_version_++;
 
     return true;
@@ -155,21 +156,19 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         return false;
     }
 
-    // update data only when we have a new data
-    if (vtkm_dc->HasUpdate() || this->old_version_ < this->new_version_) {
-        ++this->new_version_;
+	bool local_update = this->old_version_ < this->new_version_;
+    bool vtkm_update = vtkm_dc->HasUpdate();
+    // update data only when we have new data
+    if (vtkm_update || local_update) {
 
-		if (!(*vtkm_dc)(1)) {
-            return false;
-		}
+		if (vtkm_update) {
+            if (!(*vtkm_dc)(1)) {
+                return false;
+            }
 
-		vtkm::Bounds bounds = vtkm_dc->GetBounds();
-        core::param::Vector3fParam min({(float)bounds.X.Min, (float)bounds.Y.Min, (float)bounds.Z.Min});
-        core::param::Vector3fParam max({(float)bounds.X.Max, (float)bounds.Y.Max, (float)bounds.Z.Max});
-		// det jet nisch
-		// mach det anders
-        //this->lowerStreamlineSeedBound.SetParameter(new core::param::Vector3fParam(min, min, max));
-        //this->upperStreamlineSeedBound.SetParameter(new core::param::Vector3fParam(max, min, max));
+            ++this->new_version_;
+        }
+		
 
         mesh::CallMesh* mesh_dc = dynamic_cast<mesh::CallMesh*>(&caller);
         if (mesh_dc == nullptr) {
@@ -190,10 +189,10 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         // (maybe along a line or within a plane, cf. custom source in paraview)
 
         std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> seeds;
-
         vtkm::Id numSeeds = this->numStreamlineSeed_.Param<core::param::IntParam>()->Value();
+		vtkm::Bounds bounds = vtkm_dc->GetBounds();
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < numSeeds; i++) {
             vtkm::Vec<vtkm::FloatDefault, 3> p;
             vtkm::FloatDefault rx = (vtkm::FloatDefault)rand() / (vtkm::FloatDefault)RAND_MAX;
             vtkm::FloatDefault ry = (vtkm::FloatDefault)rand() / (vtkm::FloatDefault)RAND_MAX;
@@ -206,11 +205,10 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
         seedArray = vtkm::cont::make_ArrayHandle(seeds);
 
-        std::string activeField =
-            "hs1"; // static_cast<std::string>(this->fieldName.Param<core::param::StringParam>()->ValueString());
+        std::string activeField = static_cast<std::string>(this->fieldName_.Param<core::param::StringParam>()->ValueString());
         vtkm_streamlines.SetActiveField(activeField);
-        vtkm_streamlines.SetStepSize(0.1f); // this->streamlineStepSize.Param<core::param::FloatParam>()->Value());
-        vtkm_streamlines.SetNumberOfSteps(500); // this->numStreamlineSteps.Param<core::param::IntParam>()->Value());
+        vtkm_streamlines.SetStepSize(this->streamlineStepSize_.Param<core::param::FloatParam>()->Value());
+        vtkm_streamlines.SetNumberOfSteps(this->numStreamlineSteps_.Param<core::param::IntParam>()->Value());
         vtkm_streamlines.SetSeeds(seedArray);
         
         // get parallel computing
@@ -252,19 +250,20 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         vtkm::ArrayPortalRef<vtkm::Vec<vtkm::FloatDefault, 3>> coords = coordDataVirtual.GetPortalConstControl();
 
 
-
-		// delete pointers, clear and resize streamline data
+		// clear and resize streamline data
         streamline_data_.clear();
         streamline_data_.resize(numPolylines);
         streamline_indices_.clear();
         streamline_indices_.resize(numPolylines);
+
+		// in case new streamlines should be calculated
+		this->mesh_data_access_->accessMesh().clear();
 
 		// build polylines for megamol mesh
         for (int i = 0; i < numPolylines; ++i) {
             int numPoints = numPointsInPolyline[i];
 
 			// calc data
-			// how is this handeld when new data comes? memory leak?
             streamline_data_[i].clear();
             streamline_data_[i].resize(3 * numPoints);
 
@@ -273,6 +272,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
                 streamline_data_[i][3 * j + 0] = crnt[0];
                 streamline_data_[i][3 * j + 1] = crnt[1];
                 streamline_data_[i][3 * j + 2] = crnt[2];
+                // (crnt[2] - bounds.Z.Min) / (bounds.Z.Max - bounds.Z.Min); // convert to [0, 1]
             }
 
 
@@ -352,18 +352,11 @@ bool mmvtkmStreamLines::getMetaDataCallback(core::Call& caller) {
         return false;
 	}
 
-	/*vtkm::Bounds b = vtkm_dc->GetBounds();
-    core::param::Vector3fParam min({(float)b.X.Min, (float)b.Y.Min, (float)b.Z.Min});
-    core::param::Vector3fParam max({(float)b.X.Max, (float)b.Y.Max, (float)b.Z.Max});
-    this->lowerStreamlineSeedBound_.SetParameter(new core::param::Vector3fParam(min, min, max));
-    this->upperStreamlineSeedBound_.SetParameter(new core::param::Vector3fParam(max, min, max));*/
-
     // only set it once
     if (this->old_version_ == 0) {
         auto md = mesh_dc->getMetaData();
         md.m_frame_cnt = 1;
         mesh_dc->setMetaData(md);
-        //++this->old_version_;
     }
 
     return true;

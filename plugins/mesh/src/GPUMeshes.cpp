@@ -64,6 +64,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
                 break;
             default:
                 vislib::sys::Log::DefaultLog.WriteError("There was no matching primitive type found!");
+                return false;
 			}
 
             std::vector<glowl::VertexLayout::Attribute> attribs;
