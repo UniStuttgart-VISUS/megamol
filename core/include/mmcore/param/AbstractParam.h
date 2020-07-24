@@ -12,6 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/param/AbstractParamPresentation.h"
+
 #include "vislib/RawStorage.h"
 #include "vislib/String.h"
 #include "vislib/tchar.h"
@@ -29,7 +31,7 @@ namespace param {
     /**
      * Abstract base class for all parameter objects
      */
-    class MEGAMOLCORE_API AbstractParam {
+    class MEGAMOLCORE_API AbstractParam : public AbstractParamPresentation {
     public:
         friend class AbstractParamSlot;
 
@@ -90,42 +92,6 @@ namespace param {
         }
 
         /**
-        * Answer visibility in GUI.
-        *
-        * @return GUI visibility
-        */
-        inline bool IsGUIVisible() const {
-            return this->gui_visible;
-        }
-
-        /**
-        * Set visibility in GUI.
-        *
-        * @param visible True: visible in GUI, false: invisible
-        */
-        inline void SetGUIVisible(const bool visible) {
-            this->gui_visible = visible;
-        }
-
-        /**
-        * Answer accessibility in GUI.
-        *
-        * @return GUI accessibility
-        */
-        inline bool IsGUIReadOnly() const {
-            return this->gui_read_only;
-        }
-
-        /**
-        * Set accessibility in GUI.
-        *
-        * @param read_only True: read-only in GUI, false: writable
-        */
-        inline void SetGUIReadOnly(const bool read_only) {
-            this->gui_read_only = read_only;
-        }
-
-        /**
          * Returns the has_changed flag and resets the flag to false.
          *
          * @return has_changed
@@ -168,20 +134,9 @@ namespace param {
         size_t hash;
 
         /**
-        * Show or hide the parameter in the GUI.
-        */
-        bool gui_visible;
-
-        /**
-        * Make parameter read-only in the GUI.
-        */
-        bool gui_read_only;
-
-        /**
          * Indicating that the value has changed.
          */
         bool has_changed;
-
     };
 
 

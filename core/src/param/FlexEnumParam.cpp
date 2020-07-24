@@ -21,7 +21,7 @@ using namespace megamol::core::param;
  */
 FlexEnumParam::FlexEnumParam(const std::string& initVal)
         : AbstractParam(), val(initVal), values() {
-    // intentionally empty
+    this->InitPresentation(AbstractParamPresentation::ParamType::FLEXENUM);
 }
 
 
