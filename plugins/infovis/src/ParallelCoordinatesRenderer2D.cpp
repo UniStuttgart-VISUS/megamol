@@ -1052,7 +1052,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
                     if (test) {
                         // vislib::sys::Log::DefaultLog.WriteInfo("N");
                         tex[i * w + j] = 1.0;
-                        tex2[i * w + j] = 200u;
+                        tex2[i * w + j] = 1u;
                     } else {
                         // vislib::sys::Log::DefaultLog.WriteInfo("J");
                         tex[i * w + j] = 0.0;
@@ -1064,15 +1064,15 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             glDepthMask(GL_TRUE);
             glClear(GL_DEPTH_BUFFER_BIT);
             glBindTexture(GL_TEXTURE_2D, depthStore);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, &tex[0]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
             glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthStore, 0);
             glDepthMask(GL_FALSE);
-            glBindFramebuffer(GL_FRAMEBUFFER, nuFBb2);
-            glDepthMask(GL_TRUE);
-            glClear(GL_DEPTH_BUFFER_BIT);
-            glBindTexture(GL_TEXTURE_2D, depthStore);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, &tex[0]);
-            glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthStore, 0);
+            //glBindFramebuffer(GL_FRAMEBUFFER, nuFBb2);
+            //glDepthMask(GL_TRUE);
+            //glClear(GL_DEPTH_BUFFER_BIT);
+            //glBindTexture(GL_TEXTURE_2D, depthStore);
+           // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, &tex[0]);
+            //glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthStore, 0);
             glDepthMask(GL_FALSE);
         }
         if (call.frametype == 1 || call.frametype == 0) {
@@ -1094,7 +1094,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
         //^^COLOR ATTACHMENT
 
-        glEnable(GL_DEPTH_TEST);
+        //glEnable(GL_DEPTH_TEST);
 
 
         glBindTexture(GL_TEXTURE_2D, imStoreI);
@@ -1330,17 +1330,18 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
         glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("frametype"), call.frametype);
 
-        //glEnable(GL_STENCIL_TEST);
+        glEnable(GL_STENCIL_TEST);
         glStencilMask(0xFF); 
-        glStencilFunc(GL_NEVER, 0, 0xFF);
+        glStencilFunc(GL_EQUAL, 0, 0xFF);
         glDisable(GL_DEPTH_TEST);
         // glDepthMask(GL_TRUE);
         // glClear(GL_DEPTH_BUFFER_BIT);
         glBindTexture(GL_TEXTURE_2D, depthStore);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, &tex[0]);
+        glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_STENCIL_TEXTURE_MODE, GL_STENCIL_INDEX);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
-        glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthStore, 0);
-
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depthStore, 0);
+        glDrawPixels(w, h, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
         
         glStencilMask(0x00);
         glBindTexture(GL_TEXTURE_2D, imStoreI);
@@ -1349,6 +1350,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
         // glClearDepth(0.44);
         glDrawArrays(GL_TRIANGLES, 0, 6);
+        
+
         // vislib::sys::Log::DefaultLog.WriteInfo("h %i", glIsEnabled(GL_DEPTH_TEST));
         m_render_to_framebuffer_shdr->Disable();
         glDisable(GL_STENCIL_TEST);

@@ -294,7 +294,7 @@ private:
 
 
     std::vector<GLfloat> tex;
-    std::vector<unsigned short> tex2;
+    std::vector<unsigned char> tex2;
     GLboolean why = GL_FALSE;
     GLint origFBO = 0;
     GLint origFBOr = 0;
