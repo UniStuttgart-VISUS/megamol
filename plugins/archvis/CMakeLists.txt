@@ -21,7 +21,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Target definition
   add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files})
-  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src" "external")
   target_link_libraries(${PROJECT_NAME} PRIVATE core mesh mmstd_datatools)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)

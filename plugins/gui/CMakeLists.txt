@@ -29,7 +29,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Target definition
   add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files} ${imgui_files} ${shader_files} ${resource_files})
-  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
     
   # Add C++ filesystem support, except for "stampede".
   if(UNIX)
@@ -62,9 +61,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
-    if (MSVC)
-      install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
-    endif()
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()

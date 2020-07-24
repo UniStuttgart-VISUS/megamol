@@ -22,7 +22,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Target definition
   add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src" ${OSPRAY_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} 
@@ -36,9 +35,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
     install(DIRECTORY "${OSPRAY_ROOT}/bin/" DESTINATION "bin" FILES_MATCHING PATTERN "*.dll")
-    if(MSVC)
-      install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
-    endif()
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
     if (TARGET ospray::ospray)

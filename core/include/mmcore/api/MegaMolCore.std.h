@@ -27,10 +27,10 @@ typedef struct _mmplg_compatibilityvalues_t {
  * defines to control the export and import of functions
  */
 #   ifdef MEGAMOLCORE_EXPORTS
-#       define MEGAMOLCORE_API __declspec(dllexport)
+#       define MEGAMOLCORE_API /*__declspec(dllexport)*/
 #       define MEGAMOLCORE_APIEXT
 #   else /* MEGAMOLCORE_EXPORTS */
-#       define MEGAMOLCORE_API __declspec(dllimport)
+#       define MEGAMOLCORE_API /*__declspec(dllimport)*/
 #       define MEGAMOLCORE_APIEXT extern
 #   endif /* MEGAMOLCORE_EXPORTS */
 #   define MEGAMOLCORE_CALL __stdcall

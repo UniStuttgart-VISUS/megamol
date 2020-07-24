@@ -232,23 +232,19 @@ function(require_external NAME)
     endif()
 
     if(WIN32)
-      set(ICET_CORE_IMPORT_LIB "lib/IceTCore.lib")
-      set(ICET_GL_IMPORT_LIB "lib/IceTGL.lib")
-      set(ICET_MPI_IMPORT_LIB "lib/IceTMPI.lib")
-      set(ICET_CORE_LIB "bin/IceTCore.dll")
-      set(ICET_GL_LIB "bin/IceTGL.dll")
-      set(ICET_MPI_LIB "bin/IceTMPI.dll")
+      set(ICET_CORE_LIB "lib/IceTCore.lib")
+      set(ICET_GL_LIB "lib/IceTGL.lib")
+      set(ICET_MPI_LIB "lib/IceTMPI.lib")
     else()
       include(GNUInstallDirs)
-      set(ICET_CORE_LIB "lib/libIceTCore.so")
-      set(ICET_GL_LIB "lib/libIceTGL.so")
-      set(ICET_MPI_LIB "lib/libIceTMPI.so")
+      set(ICET_CORE_LIB "lib/libIceTCore.a")
+      set(ICET_GL_LIB "lib/libIceTGL.a")
+      set(ICET_MPI_LIB "lib/libIceTMPI.a")
     endif()
     
     add_external_project(IceT STATIC
       GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ICET_CORE_LIB}" "<INSTALL_DIR>/${ICET_GL_LIB}" "<INSTALL_DIR>/${ICET_MPI_LIB}"
-                       "<INSTALL_DIR>/${ICET_CORE_IMPORT_LIB}" "<INSTALL_DIR>/${ICET_GL_IMPORT_LIB}" "<INSTALL_DIR>/${ICET_MPI_IMPORT_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
         -DICET_BUILD_TESTING=OFF
@@ -256,17 +252,14 @@ function(require_external NAME)
 
     add_external_library(IceTCore
       PROJECT IceT
-      IMPORT_LIBRARY ${ICET_CORE_IMPORT_LIB}
       LIBRARY ${ICET_CORE_LIB})
 
     add_external_library(IceTGL
       PROJECT IceT
-      IMPORT_LIBRARY ${ICET_GL_IMPORT_LIB}
       LIBRARY ${ICET_GL_LIB})
 
     add_external_library(IceTMPI
       PROJECT IceT
-      IMPORT_LIBRARY ${ICET_MPI_IMPORT_LIB}
       LIBRARY ${ICET_MPI_LIB})
 
   # imgui
@@ -369,31 +362,37 @@ function(require_external NAME)
       set(MSVC_TOOLSET "")
     endif()
 
+    include(GNUInstallDirs)
+
     if(WIN32)
-      set(ZMQ_IMPORT_LIB "lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib")
-      set(ZMQ_LIB "bin/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.dll")
+      set(ZMQ_LIB "${CMAKE_INSTALL_LIBDIR}/libzmq${MSVC_TOOLSET}-mt-s<SUFFIX>-${ZMQ_VER}.lib")
     else()
-      include(GNUInstallDirs)
-      set(ZMQ_LIB "${CMAKE_INSTALL_LIBDIR}/libzmq.so")
-      set(ZMQ_LIB2 "${CMAKE_INSTALL_LIBDIR}/libzmq.so.5")
+      set(ZMQ_LIB "${CMAKE_INSTALL_LIBDIR}/libzmq.lib")
     endif()
 
     add_external_project(libzmq STATIC
       GIT_REPOSITORY https://github.com/zeromq/libzmq.git
       GIT_TAG 56ace6d03f521b9abb5a50176ec7763c1b77afa9
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZMQ_LIB}" "<INSTALL_DIR>/${ZMQ_LIB2}" "<INSTALL_DIR>/${ZMQ_IMPORT_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZMQ_LIB}"
+      DEBUG_SUFFIX gd
       CMAKE_ARGS
+        -DBUILD_SHARED=OFF
+        -DBUILD_TESTS=OFF
         -DZMQ_BUILD_TESTS=OFF
-        -DENABLE_PRECOMPILED=OFF)
+        -DENABLE_PRECOMPILED=OFF
+        -DWITH_DOCS=OFF)
 
     add_external_library(libzmq
-      IMPORT_LIBRARY ${ZMQ_IMPORT_LIB}
-      LIBRARY ${ZMQ_LIB})
+      LIBRARY ${ZMQ_LIB}
+      DEBUG_SUFFIX gd)
+
+    set_target_properties(libzmq PROPERTIES
+      INTERFACE_COMPILE_DEFINITIONS "ZMQ_STATIC")
 
     add_external_headeronly_project(libcppzmq
       DEPENDS libzmq
       GIT_REPOSITORY https://github.com/zeromq/cppzmq.git
-      GIT_TAG "v4.4.1")
+      GIT_TAG "v4.6.0")
 
   # quickhull
   elseif(NAME STREQUAL "quickhull")
@@ -402,15 +401,14 @@ function(require_external NAME)
     endif()
 
     if(WIN32)
-      set(QUICKHULL_IMPORT_LIB "lib/quickhull.lib")
-      set(QUICKHULL_LIB "bin/quickhull.dll")
+      set(QUICKHULL_LIB "lib/quickhull.lib")
     else()
-      set(QUICKHULL_LIB "lib/libquickhull.so")
+      set(QUICKHULL_LIB "lib/libquickhull.a")
     endif()
 
     add_external_project(quickhull STATIC
       GIT_REPOSITORY https://github.com/akuukka/quickhull.git
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_LIB}" "<INSTALL_DIR>/${QUICKHULL_IMPORT_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/cmake/quickhull/CMakeLists.txt"
         "<SOURCE_DIR>/CMakeLists.txt"
@@ -419,7 +417,6 @@ function(require_external NAME)
         -DCMAKE_CXX_FLAGS=-fPIC)
 
     add_external_library(quickhull
-      IMPORT_LIBRARY ${QUICKHULL_IMPORT_LIB}
       LIBRARY ${QUICKHULL_LIB})
 
   # snappy
@@ -429,24 +426,22 @@ function(require_external NAME)
     endif()
 
     if(WIN32)
-      set(SNAPPY_IMPORT_LIB "lib/snappy.lib")
-      set(SNAPPY_LIB "bin/snappy.dll")
+      set(SNAPPY_LIB "lib/snappy.lib")
     else()
       include(GNUInstallDirs)
-      set(SNAPPY_LIB "${CMAKE_INSTALL_LIBDIR}/libsnappy.so")
+      set(SNAPPY_LIB "${CMAKE_INSTALL_LIBDIR}/libsnappy.a")
     endif()
 
     add_external_project(snappy STATIC
       GIT_REPOSITORY https://github.com/google/snappy.git
       GIT_TAG "1.1.7"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${SNAPPY_LIB}" "<INSTALL_DIR>/${SNAPPY_IMPORT_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${SNAPPY_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
         -DSNAPPY_BUILD_TESTS=OFF
         -DCMAKE_BUILD_TYPE=Release)
 
     add_external_library(snappy
-      IMPORT_LIBRARY ${SNAPPY_IMPORT_LIB}
       LIBRARY ${SNAPPY_LIB})
 
   # tinyobjloader
@@ -482,7 +477,7 @@ function(require_external NAME)
     include(GNUInstallDirs)
 
     if(WIN32)
-      set(TNY_LIB "${CMAKE_INSTALL_LIBDIR}/tinyply.lib")
+      set(TNY_LIB "${CMAKE_INSTALL_LIBDIR}/tinyply<SUFFIX>.lib")
     else()
       set(TNY_LIB "${CMAKE_INSTALL_LIBDIR}/libtinyply<SUFFIX>.a")
     endif()
@@ -511,29 +506,23 @@ function(require_external NAME)
       message(WARNING "External 'tracking' requested, but not available on non-Windows systems")
     endif()
 
-    set(TRACKING_LIB "bin/tracking.dll")
-    set(TRACKING_IMPORT_LIB "lib/tracking.lib")
-    set(TRACKING_NATNET_LIB "bin/NatNetLib.dll")
-    set(TRACKING_NATNET_IMPORT_LIB "lib/NatNetLib.lib")
+    set(TRACKING_LIB "lib/tracking.lib")
+    set(TRACKING_NATNET_LIB "lib/NatNetLib.lib")
 
     add_external_project(tracking STATIC
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking
       GIT_TAG "v2.0"
       BUILD_BYPRODUCTS
         "<INSTALL_DIR>/${TRACKING_LIB}"
-        "<INSTALL_DIR>/${TRACKING_IMPORT_LIB}"
         "<INSTALL_DIR>/${TRACKING_NATNET_LIB}"
-        "<INSTALL_DIR>/${TRACKING_NATNET_IMPORT_LIB}"
       CMAKE_ARGS
         -DCREATE_TRACKING_TEST_PROGRAM=OFF)
 
     add_external_library(tracking
-      IMPORT_LIBRARY ${TRACKING_IMPORT_LIB}
       LIBRARY ${TRACKING_LIB})
 
     add_external_library(natnet
       PROJECT tracking
-      IMPORT_LIBRARY ${TRACKING_NATNET_IMPORT_LIB}
       LIBRARY ${TRACKING_NATNET_LIB})
 
     external_get_property(tracking SOURCE_DIR)
