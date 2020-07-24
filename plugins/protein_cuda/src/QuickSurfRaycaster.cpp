@@ -33,6 +33,7 @@ using namespace megamol::core::moldyn;
 using namespace megamol::protein_cuda;
 using namespace megamol::protein_calls;
 using namespace megamol::core::misc;
+using namespace megamol::core::utility::log;
 
 /*
  *	QuickSurfRaycaster::QuickSurfRaycaster
@@ -534,7 +535,6 @@ bool QuickSurfRaycaster::initOpenGL() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	using namespace vislib::sys;
 	using namespace vislib::graphics::gl;
 
 	ShaderSource vertSrc;

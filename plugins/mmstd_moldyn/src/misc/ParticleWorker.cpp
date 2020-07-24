@@ -15,7 +15,7 @@
 #include <cfloat>
 #include "vislib/StringTokeniser.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "mmcore/CoreInstance.h"
 
@@ -56,7 +56,7 @@ ParticleWorker::~ParticleWorker(void) {
  */
 bool ParticleWorker::create(void) {
 	
-	using namespace vislib::sys;
+	using namespace megamol::core::utility::log;
     using namespace vislib::graphics::gl;
 
     ASSERT(IsAvailable());

@@ -13,7 +13,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/BoundingBoxes_2.h"
 
 
@@ -121,7 +121,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
                 break;
             // case geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
             default:
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[OSPRayTriangleMesh] Vertex: No other data types than FLOAT are supported.");
                 return false;
             }
@@ -138,7 +138,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
                         mesh::MeshDataAccessCollection::AttributeSemanticType::NORMAL});
                     break;
                 default:
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[OSPRayTriangleMesh] Normals: No other data types than FLOAT are supported.");
                     return false;
                 }
@@ -168,7 +168,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
                     }
                     break;
                 default:
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[OSPRayTriangleMesh] Color: No other data types than BYTE or FLOAT are supported.");
                     return false;
                 }
@@ -194,7 +194,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
                         mesh::MeshDataAccessCollection::AttributeSemanticType::TEXCOORD});
                     break;
                 default:
-                    vislib::sys::Log::DefaultLog.WriteError("[OSPRayTriangleMesh] TextureCoordinate: No other data "
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("[OSPRayTriangleMesh] TextureCoordinate: No other data "
                                                             "types than BYTE or FLOAT are supported.");
                     return false;
                 }
@@ -214,7 +214,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
                     break;
 
                 default:
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[OSPRayTriangleMesh] Index: No other data types than BYTE or FLOAT are supported.");
                     return false;
                 }

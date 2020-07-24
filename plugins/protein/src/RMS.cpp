@@ -46,7 +46,7 @@
 #include "stdafx.h"
 #include "RMS.h"
 #include <cmath>
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 
@@ -75,7 +75,7 @@ int protein::DiagEsort(double *mat, double *Emat, double *Evec[], double *Eigenv
 
     if(!Jacobi3(mat, Eigenvalue, eigenvector, &njrot)) 
     {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "RMS: DiagEsort - convergence failed! \n");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "RMS: DiagEsort - convergence failed! \n");
         return(0);
     }
 
@@ -200,7 +200,7 @@ int protein::Jacobi3(double *a, double *d, double *v, int *nrot)
             z[ip] = 0.0;
         }
     }
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "RMS: Jacobi3 - there are too many iterations! \n");
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "RMS: Jacobi3 - there are too many iterations! \n");
     return(0);
 }
 
@@ -287,7 +287,7 @@ float protein::CalculateRMS(unsigned int n, bool fit, unsigned int mode, float *
     {
         if((rotation == NULL) || (translation == NULL))
         {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "RMS: CalculateRMS - rotation matrix and translation vector are NULL ? \n");
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "RMS: CalculateRMS - rotation matrix and translation vector are NULL ? \n");
         }
     }
 
@@ -564,7 +564,7 @@ float protein::CalculateRMS(unsigned int n, bool fit, unsigned int mode, float *
                      err = "Illegal weights"; break;
             default: err = "Unknown error"; break;
         }
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "RMS: CalculateRMS - error: %s\n", err);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "RMS: CalculateRMS - error: %s\n", err);
     }
     delete []weights;
     return (float) rms_return;

@@ -9,10 +9,10 @@
 //#define DEBUG_BMP
 #include "PoreNetSliceProcessor.h"
 #include "vislib/Array.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/Point.h"
-#include "vislib/sys/Thread.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "mmcore/utility/sys/Thread.h"
+#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/math/mathfunctions.h"
 #ifdef DEBUG_BMP
 #include "vislib/graphics/BitmapImage.h"
@@ -65,7 +65,7 @@ PoreNetSliceProcessor::~PoreNetSliceProcessor(void) {
  * PoreNetSliceProcessor::Run
  */
 DWORD PoreNetSliceProcessor::Run(void *userData) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     ASSERT(this->inputBuffers != NULL);
     ASSERT(this->outputBuffers != NULL);
     Log::DefaultLog.WriteInfo("PoreNetSliceProcessing Thread started");
@@ -530,7 +530,7 @@ void PoreNetSliceProcessor::workOnBuffer(ArxelBuffer& buffer, LoopBuffer& outBuf
     if (orphanedWhites > 0) {
         // TODO: BugBugBugBugBugBugBugBugHeck
         outBuffer.SetBlackArxels(outBuffer.BlackArxels() - orphanedWhites);
-        vislib::sys::Log::DefaultLog.WriteWarn("Found %u orphaned non-black Arxels.",
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Found %u orphaned non-black Arxels.",
             orphanedWhites);
     }
 #ifdef DEBUG_SLICE_FILE_WRITE

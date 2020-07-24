@@ -23,7 +23,7 @@
 #include "mmcore/param/TransferFunctionParam.h"
 
 #include "vislib/sys/sysfunctions.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 namespace megamol {

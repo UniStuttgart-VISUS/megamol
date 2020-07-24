@@ -12,7 +12,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/Call.h"
 
 #include "mmcore/view/CallGetTransferFunction.h"
@@ -107,7 +107,7 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
 
     if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE &&
         parts.GetColourDataType() != core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
-        vislib::sys::Log::DefaultLog.WriteError("Only color data is not allowed.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Only color data is not allowed.");
     }
 
     // Write stuff into the structureContainer

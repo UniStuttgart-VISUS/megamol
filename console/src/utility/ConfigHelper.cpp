@@ -37,7 +37,7 @@ bool utility::WindowPlacement::Parse(const vislib::TString& str) {
             vi = 4;
         } else {
             /*Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_WARN,
+            megamol::core::utility::log::Log::LEVEL_WARN,
             "Unexpected character %s in window position definition.\n",
             vislib::StringA(vislib::StringA(v)[0], 1).PeekBuffer());*/
             break;

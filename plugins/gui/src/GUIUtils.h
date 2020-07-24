@@ -39,8 +39,8 @@
 #include "mmcore/param/AbstractParamPresentation.h"
 #include "mmcore/view/Input.h"
 
+#include "mmcore/utility/log/Log.h"
 #include "vislib/UTF8Encoder.h"
-#include "vislib/sys/Log.h"
 
 
 namespace megamol {

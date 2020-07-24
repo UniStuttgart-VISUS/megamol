@@ -9,7 +9,7 @@
 #include "mmcore/job/DataWriterJob.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/DataWriterCtrlCall.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;
 
@@ -67,7 +67,7 @@ bool job::DataWriterJob::Terminate(void) {
  * job::DataWriterJob::Run
  */
 DWORD job::DataWriterJob::Run(void *userData) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     DataWriterCtrlCall *dwcc = this->writerSlot.CallAs<DataWriterCtrlCall>();
 
     if (dwcc == NULL) {

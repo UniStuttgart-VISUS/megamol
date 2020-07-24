@@ -21,11 +21,12 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/CoreInstance.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
+using namespace megamol::core::utility::log;
 
 
 /*
@@ -140,7 +141,6 @@ SecPlaneRenderer::~SecPlaneRenderer(void) {
  * SecPlaneRenderer::create
  */
 bool SecPlaneRenderer::create(void) {
-    using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
     // Init extensions
@@ -287,8 +287,6 @@ void SecPlaneRenderer::release(void) {
  * SecPlaneRenderer::Render
  */
 bool SecPlaneRenderer::Render(megamol::core::Call& call) {
-    using namespace vislib::sys;
-
     // Get render call
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
     if (cr3d == NULL) {

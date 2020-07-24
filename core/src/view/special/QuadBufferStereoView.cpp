@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "mmcore/view/special/QuadBufferStereoView.h"
 #include "mmcore/view/CallRenderView.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;
 
@@ -76,10 +76,10 @@ bool view::special::QuadBufferStereoView::create(void) {
     this->hasQuadBuffer = (stereo == GL_TRUE);
 
     if (this->hasQuadBuffer) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
            "Stereo Buffers supported!\n");
     } else {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
             "No Stereo Buffers for you!\n");
     }
     return true;

@@ -19,7 +19,7 @@
 #include "vislib/UnsupportedOperationException.h"
 
 using namespace megamol::core;
-using vislib::sys::Log;
+using megamol::core::utility::log::Log;
 
 
 /*
@@ -91,7 +91,7 @@ bool view::AbstractView::DesiredWindowPosition(int *x, int *y, int *w,
         vislib::StringA name(tm->GetDemiRootName());
 
         if (name.IsEmpty()) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 1200,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 1200,
                 "View does not seem to have a name. Odd.");
         } else {
             name.Append("-Window");
@@ -100,15 +100,15 @@ bool view::AbstractView::DesiredWindowPosition(int *x, int *y, int *w,
                 if (this->desiredWindowPosition(
                         tm->GetCoreInstance()->Configuration().ConfigValue(name),
                         x, y, w, h, nd)) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 200,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 200,
                         "Loaded desired window geometry from \"%s\"", name.PeekBuffer());
                     return true;
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 200,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 200,
                         "Unable to load desired window geometry from \"%s\"", name.PeekBuffer());
                 }
             } else {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 1200,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 1200,
                     "Unable to find window geometry settings \"%s\"", name.PeekBuffer());
             }
         }
@@ -119,15 +119,15 @@ bool view::AbstractView::DesiredWindowPosition(int *x, int *y, int *w,
             if (this->desiredWindowPosition(
                     tm->GetCoreInstance()->Configuration().ConfigValue(name),
                     x, y, w, h, nd)) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 200,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 200,
                     "Loaded desired window geometry from \"%s\"", name.PeekBuffer());
                 return true;
             } else {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 200,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 200,
                     "Unable to load desired window geometry from \"%s\"", name.PeekBuffer());
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 1200,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 1200,
                 "Unable to find window geometry settings \"%s\"", name.PeekBuffer());
         }
     }
@@ -177,7 +177,7 @@ bool view::AbstractView::desiredWindowPosition(const vislib::StringW& str,
             vi = 4;
         } else {
             Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_WARN,
+                megamol::core::utility::log::Log::LEVEL_WARN,
                 "Unexpected character %s in window position definition.\n",
                 vislib::StringA(vislib::StringA(v)[0], 1).PeekBuffer());
             break;
@@ -224,7 +224,7 @@ bool view::AbstractView::desiredWindowPosition(const vislib::StringW& str,
                 }
                 vi = -1;
                 Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_WARN,
+                    megamol::core::utility::log::Log::LEVEL_WARN,
                     "Unable to parse value for %s.\n", str);
             }
 

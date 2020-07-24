@@ -9,7 +9,7 @@
 #include "TableFlagFilter.h"
 
 #include "mmcore/param/EnumParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol::stdplugin::datatools;
 using namespace megamol::stdplugin::datatools::table;
@@ -94,14 +94,14 @@ bool TableFlagFilter::handleCall(core::Call &call) {
     }
 
     if (tableInCall == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "TableFlagFilter requires a table!");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "TableFlagFilter requires a table!");
         return false;
     }
 
     if (flagsInCall == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "TableFlagFilter requires a flag storage!");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "TableFlagFilter requires a flag storage!");
         return false;
     }
 
@@ -111,7 +111,7 @@ bool TableFlagFilter::handleCall(core::Call &call) {
     (*flagsInCall)(core::FlagCallRead_GL::CallGetData);
 
     if (this->tableInFrameCount != tableInCall->GetFrameCount() || this->tableInDataHash != tableInCall->DataHash() || flagsInCall->hasUpdate()) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "TableFlagFilter: Filter table.");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "TableFlagFilter: Filter table.");
 
         this->dataHash++;
 

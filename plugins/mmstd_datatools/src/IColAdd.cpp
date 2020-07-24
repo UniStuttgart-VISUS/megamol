@@ -81,7 +81,7 @@ bool IColAdd::manipulateData(
         stdplugin::datatools::MultiParticleDataAdaptor b(inDataB);
 
         if (a.get_count() != b.get_count()) {
-            vislib::sys::Log::DefaultLog.WriteError("Data streams of A and B are not of same size");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Data streams of A and B are not of same size");
             inDataB.Unlock();
             return false;
         }

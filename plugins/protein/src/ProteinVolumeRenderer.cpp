@@ -35,7 +35,7 @@
 #include "vislib/Trace.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
@@ -48,6 +48,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
 using namespace megamol::protein_calls;
+using namespace megamol::core::utility::log;
 
 #pragma push_macro("min")
 #undef min
@@ -261,7 +262,6 @@ bool ProteinVolumeRenderer::create ( void ) {
     glEnable( GL_VERTEX_PROGRAM_TWO_SIDE );
     glEnable( GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
     ShaderSource vertSrc;
@@ -668,13 +668,13 @@ bool ProteinVolumeRenderer::Render( Call& call ) {
     if( !this->stopSegmentation ) {
         float z = fabsf( float( this->oldVoxelCount) - float( this->segmentedVoxels.size()));
         float n = float( std::max( 1U, this->oldVoxelCount));
-        vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, 
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_INFO, 
             "Total # of voxels: %5.i, old # of voxels: %5.i, difference: %6.2f", 
             this->segmentedVoxels.size(), this->oldVoxelCount, 
             ( z / n) * 100.0f );
         if( ( z / n) > ( this->segmentationDeltaParam.Param<param::FloatParam>()->Value() - 1.0f) ) {
 
-            vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_WARN, "Difference greater than 100 per cent!");
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_WARN, "Difference greater than 100 per cent!");
             // get and set play param
             vislib::StringA paramSlotName( cr3d->PeekCallerSlot()->Parent()->FullName());
             paramSlotName += "::anim::play";

@@ -8,7 +8,7 @@
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include <cstring>
 #include "vislib/assert.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/String.h"
 #include <algorithm>
 #include "mmcore/Module.h"
@@ -31,7 +31,7 @@ AbstractNamedObjectContainer::~AbstractNamedObjectContainer(void) {
             ano = ano->Parent();
         }
         msg.Format("Possible memory problem detected: NamedObjectContainer (%s) with children destructed", name.PeekBuffer());
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, msg.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg.PeekBuffer());
         this->children.clear();
     }
     // The child list should already be empty at this time

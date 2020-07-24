@@ -52,7 +52,7 @@ PluginManager::collection_type Plugin100Instance::ContinueLoad(
     bool (*mmplgConnectStatics)(int, void*) = function_cast<bool (*)(int, void*)>(lib->GetProcAddress("mmplgConnectStatics"));
     if (mmplgConnectStatics != NULL) {
         bool rv;
-        rv = mmplgConnectStatics(1, static_cast<void*>(&vislib::sys::Log::DefaultLog));
+        rv = mmplgConnectStatics(1, static_cast<void*>(&megamol::core::utility::log::Log::DefaultLog));
         VLTRACE(VISLIB_TRCELVL_INFO, "Plug-in connect log: %s\n", rv ? "true" : "false");
     }
 

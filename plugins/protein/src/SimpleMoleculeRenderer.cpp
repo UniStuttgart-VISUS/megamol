@@ -27,7 +27,7 @@
 #include "vislib/Trace.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
 #include "vislib/math/Matrix.h"
 #include <GL/glu.h>
@@ -37,6 +37,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
 using namespace megamol::protein_calls;
+using namespace megamol::core::utility::log;
 
 /*
  * protein::SimpleMoleculeRenderer::SimpleMoleculeRenderer (CTOR)
@@ -212,7 +213,6 @@ bool SimpleMoleculeRenderer::create(void) {
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
-    using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
     ShaderSource vertSrc;
@@ -2301,7 +2301,7 @@ void SimpleMoleculeRenderer::RenderStickFilter(const MolecularDataCall *mol,
 
     //int n;
     //glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n);
-    //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+    //megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
     //  "Maximum num of generic vertex attributes: %i\n", n);
 
     // ----- prepare stick raycasting -----
@@ -2587,7 +2587,7 @@ void SimpleMoleculeRenderer::RenderStickFilter(const MolecularDataCall *mol,
 
      if ((errCode = glGetError()) != GL_NO_ERROR) {
      errString = gluErrorString(errCode);
-     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+     megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
      "OpenGL Error: %s\n", errString);
      //fprintf (stderr, "OpenGL Error: %s\n", errString);
      }*/

@@ -167,11 +167,11 @@ namespace math {
             : value(Float16::FromFloat32(static_cast<float>(value))) {}
 
         /**
-         * Cast ctor. from INT32.
+         * Cast ctor. from VL_INT32.
          *
          * @param value The initial value of the half float.
          */
-        inline Float16(const INT32 value)
+        inline Float16(const VL_INT32 value)
             : value(Float16::FromFloat32(static_cast<float>(value))) {}
 
         /**
@@ -285,12 +285,12 @@ namespace math {
         }
 
         /**
-         * Cast to INT32.
+         * Cast to VL_INT32.
          *
          * @return The value of this half.
          */
-        inline operator INT32(void) const {
-            return static_cast<INT32>(Float16::ToFloat32(this->value));
+        inline operator VL_INT32(void) const {
+            return static_cast<VL_INT32>(Float16::ToFloat32(this->value));
         }
 
         /**

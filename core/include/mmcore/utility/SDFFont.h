@@ -32,9 +32,9 @@
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/Matrix.h"
 
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/FastFile.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/File.h"
 #include "vislib/Trace.h"
 

@@ -10,8 +10,8 @@
 #include "stdafx.h"
 #include "CCP4VolumeData.h"
 #include "mmcore/param/FilePathParam.h"
-#include "vislib/sys/MemmappedFile.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/sys/MemmappedFile.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/math/mathfunctions.h"
@@ -107,7 +107,7 @@ bool protein::CCP4VolumeData::create(void) {
  *protein::CCP4VolumeData::tryLoadFile
  */
 bool protein::CCP4VolumeData::tryLoadFile(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
 	// clear all containers
 	this->ClearData();

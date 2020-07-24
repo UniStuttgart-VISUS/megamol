@@ -12,7 +12,7 @@
 #include "mmcore/param/StringParam.h"
 
 #include "vislib/StringTokeniser.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <limits>
 
 using namespace megamol::stdplugin::datatools;
@@ -112,7 +112,7 @@ bool TableColumnScaler::processData(core::Call &c) {
             auto selectors = st.Split(selectionString, vislib::TString(";"));
 
             if (selectors.Count() == 0) {
-                vislib::sys::Log::DefaultLog.WriteError(_T("%hs: No valid selectors have been given\n"),
+                megamol::core::utility::log::Log::DefaultLog.WriteError(_T("%hs: No valid selectors have been given\n"),
                     ModuleName.c_str());
                 return false;
             }
@@ -128,12 +128,12 @@ bool TableColumnScaler::processData(core::Call &c) {
                     }
                 }
                 //// if we reach this, no match has been found
-                //vislib::sys::Log::DefaultLog.WriteInfo(_T("%hs: No match has been found for selector %s\n"),
+                //megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("%hs: No match has been found for selector %s\n"),
                 //    ModuleName.c_str(), selectors[sel].PeekBuffer());
             }
 
             if (indexMask.size() == 0) {
-                vislib::sys::Log::DefaultLog.WriteError(_T("%hs: No matches for selectors have been found\n"),
+                megamol::core::utility::log::Log::DefaultLog.WriteError(_T("%hs: No matches for selectors have been found\n"),
                     ModuleName.c_str());
                 /*this->columnInfos.clear();
                 this->data.clear();*/
@@ -172,7 +172,7 @@ bool TableColumnScaler::processData(core::Call &c) {
             outCall->Set(0, 0, NULL, NULL);
         }
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(_T("Failed to execute %hs::processData\n"), ModuleName.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Failed to execute %hs::processData\n"), ModuleName.c_str());
         return false;
     }
 
@@ -198,7 +198,7 @@ bool TableColumnScaler::getExtent(core::Call &c) {
         //outCall->SetFrameID(this->frameID);
         outCall->SetDataHash(this->datahash);
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(_T("Failed to execute %hs::getExtent\n"), ModuleName.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Failed to execute %hs::getExtent\n"), ModuleName.c_str());
         return false;
     }
 

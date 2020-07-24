@@ -13,7 +13,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol::ospray;
@@ -103,7 +103,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     this->structureContainer.dataChanged = false;
     if (cd == nullptr) return false;
     if (cgtf == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("[OSPRayStructuredVolume] No transferfunction connected.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[OSPRayStructuredVolume] No transferfunction connected.");
         return false;
     }
 
@@ -132,7 +132,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     auto const metadata = cd->GetMetadata();
 
     if (!metadata->GridType == core::misc::CARTESIAN) {
-        vislib::sys::Log::DefaultLog.WriteError("OSPRayStructuredVolume only works with cartesian grids (for now)");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRayStructuredVolume only works with cartesian grids (for now)");
         return false;
     }
 
@@ -174,7 +174,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
         } else if (metadata->ScalarLength == 2) {
             voxelType = voxelDataType::USHORT;
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("Unsigned integers with a length greater than 2 are invalid.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Unsigned integers with a length greater than 2 are invalid.");
             return false;
         }
         break;
@@ -182,12 +182,12 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
         if (metadata->ScalarLength == 2) {
             voxelType = voxelDataType::SHORT;
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("Integers with a length != 2 are invalid.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Integers with a length != 2 are invalid.");
             return false;
         }
         break;
     case core::misc::BITS:
-        vislib::sys::Log::DefaultLog.WriteError("Invalid datatype.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Invalid datatype.");
         return false;
         break;
     }
@@ -222,11 +222,11 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
                 rgb[i * 3 + 2] = texture[i * 4 + 2];
                 a[i] = i / (numColors - 1.0f);
             }
-            vislib::sys::Log::DefaultLog.WriteWarn("OSPRayStructuredVolume: No alpha channel in transfer function "
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("OSPRayStructuredVolume: No alpha channel in transfer function "
                                                    "connected to module. Adding alpha ramp to RGB colors.\n");
         }
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("OSPRayStructuredVolume: No transfer function connected to module");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRayStructuredVolume: No transfer function connected to module");
         return false;
     }
     cgtf->ResetDirty();

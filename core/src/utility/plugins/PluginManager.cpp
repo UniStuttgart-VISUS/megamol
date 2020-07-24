@@ -169,7 +169,7 @@ PluginManager::collection_type PluginManager::ContinueLoad200(
                 if ((v.GetMajorVersionNumber() != mmcoreVer.GetMajorVersionNumber())
                     && (v.GetMinorVersionNumber() != mmcoreVer.GetMinorVersionNumber())
                     && (v.GetRevisionNumber() != mmcoreVer.GetRevisionNumber())) {
-                    coreInst.Log().WriteError("Plugin %s seems incompatible with MegaMolCore: core \"%s\" != plugin \"%s\" ",
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("Plugin %s seems incompatible with MegaMolCore: core \"%s\" != plugin \"%s\" ",
                         vislib::StringA(path.c_str()).PeekBuffer(),
                         mmcoreVer.ToStringA().PeekBuffer(),
                         v.ToStringA().PeekBuffer());
@@ -185,7 +185,7 @@ PluginManager::collection_type PluginManager::ContinueLoad200(
                 if ((v.GetMajorVersionNumber() != vislibVer.GetMajorVersionNumber())
                     && (v.GetMinorVersionNumber() != vislibVer.GetMinorVersionNumber())
                     && (v.GetRevisionNumber() != vislibVer.GetRevisionNumber())) {
-                    coreInst.Log().WriteError("Plugin %s seems incompatible with vislib: vislib \"%s\" != plugin \"%s\" ",
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("Plugin %s seems incompatible with vislib: vislib \"%s\" != plugin \"%s\" ",
                         vislib::StringA(path.c_str()).PeekBuffer(),
                         vislibVer.ToStringA().PeekBuffer(),
                         v.ToStringA().PeekBuffer());
@@ -193,20 +193,20 @@ PluginManager::collection_type PluginManager::ContinueLoad200(
                 }
 
             } else {
-                coreInst.Log().WriteInfo("Plugin %s compatibility with %s is not checked",
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("Plugin %s compatibility with %s is not checked",
                     vislib::StringA(path.c_str()).PeekBuffer(), lvi.name);
             }
         }
 
         if (!MegaMolCore_compatibility_checked) {
-            coreInst.Log().WriteWarn("Plugin %s compatibility with MegaMolCore is not checked", vislib::StringA(path.c_str()).PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("Plugin %s compatibility with MegaMolCore is not checked", vislib::StringA(path.c_str()).PeekBuffer());
         }
         if (!vislib_compatibility_checked) {
-            coreInst.Log().WriteWarn("Plugin %s compatibility with vislib is not checked", vislib::StringA(path.c_str()).PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("Plugin %s compatibility with vislib is not checked", vislib::StringA(path.c_str()).PeekBuffer());
         }
 
     } else {
-        coreInst.Log().WriteWarn("Plugin %s did not provide compatibility information", vislib::StringA(path.c_str()).PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Plugin %s did not provide compatibility information", vislib::StringA(path.c_str()).PeekBuffer());
     }
 
     // compatibility is given!
@@ -231,20 +231,20 @@ PluginManager::collection_type PluginManager::ContinueLoad200(
 
     // check plugin instance
     if (!plugin) {
-        coreInst.Log().WriteError("Unable to create an instance of plugin %s.", vislib::StringA(path.c_str()).PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to create an instance of plugin %s.", vislib::StringA(path.c_str()).PeekBuffer());
         throw vislib::Exception("Plugin instantation error", __FILE__, __LINE__);
     }
     if (plugin200 == nullptr) {
-        coreInst.Log().WriteError("Plugin %s created an instance object of incompatible type version (Not 200).", vislib::StringA(path.c_str()).PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Plugin %s created an instance object of incompatible type version (Not 200).", vislib::StringA(path.c_str()).PeekBuffer());
         throw vislib::Exception("Plugin instantation error", __FILE__, __LINE__);
     }
 
     plugin200->SetAssemblyFileName(path);
 
     // connect static objects
-    //plugin200->connectStatics(Plugin200Instance::StaticConnectorType::Log, static_cast<void*>(&vislib::sys::Log::DefaultLog));
+    //plugin200->connectStatics(Plugin200Instance::StaticConnectorType::Log, static_cast<void*>(&megamol::core::utility::log::Log::DefaultLog));
     plugin200->connectStatics(
-        Plugin200Instance::StaticConnectorType::Log, static_cast<void*>(&coreInst.Log()));
+        Plugin200Instance::StaticConnectorType::Log, static_cast<void*>(&megamol::core::utility::log::Log::DefaultLog));
 
     // initialize factories
     plugin200->GetModuleDescriptionManager();
@@ -254,7 +254,7 @@ PluginManager::collection_type PluginManager::ContinueLoad200(
 
     // report success
     rv.push_back(plugin);
-    coreInst.Log().WriteInfo("Plugin %s loaded: %u Modules, %u Calls",
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Plugin %s loaded: %u Modules, %u Calls",
         plugin->GetAssemblyName().c_str(),
         plugin->GetModuleDescriptionManager().Count(),
         plugin->GetCallDescriptionManager().Count());

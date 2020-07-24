@@ -12,7 +12,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/CallRenderView.h"
 #include "vislib/sys/File.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 /*
@@ -85,7 +85,7 @@ megamol::core::param::ParamSlot * megamol::stdplugin::datatools::DataFileSequenc
  * megamol::stdplugin::datatools::DataFileSequenceStepper::GetFilename
  */
 bool megamol::stdplugin::datatools::DataFileSequenceStepper::GetFilename(megamol::core::param::ParamSlot& slot, vislib::TString& outName) const {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     core::param::StringParam *sp = slot.Param<core::param::StringParam>();
     core::param::FilePathParam *fpp = slot.Param<core::param::FilePathParam>();
     if ((sp == NULL) && (fpp == NULL)) {
@@ -137,7 +137,7 @@ bool megamol::stdplugin::datatools::DataFileSequenceStepper::GetFormat(vislib::T
  * megamol::stdplugin::datatools::DataFileSequenceStepper::onNextFile
  */
 bool megamol::stdplugin::datatools::DataFileSequenceStepper::onNextFile(core::param::ParamSlot& param) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     core::param::ParamSlot *fnps = this->findFilenameSlot();
     if (fnps == NULL) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -195,7 +195,7 @@ bool megamol::stdplugin::datatools::DataFileSequenceStepper::onNextFile(core::pa
  * megamol::stdplugin::datatools::DataFileSequenceStepper::onPrevFile
  */
 bool megamol::stdplugin::datatools::DataFileSequenceStepper::onPrevFile(core::param::ParamSlot& param) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     const int MAX_FILE_NUM = 10000000;
     core::param::ParamSlot *fnps = this->findFilenameSlot();
     if (fnps == NULL) {
@@ -263,7 +263,7 @@ void megamol::stdplugin::datatools::DataFileSequenceStepper::release(void) {
  * megamol::stdplugin::datatools::DataFileSequenceStepper::SetFilename
  */
 bool megamol::stdplugin::datatools::DataFileSequenceStepper::SetFilename(core::param::ParamSlot& slot, const vislib::TString& name) const {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     core::param::StringParam *sp = slot.Param<core::param::StringParam>();
     core::param::FilePathParam *fpp = slot.Param<core::param::FilePathParam>();
     if ((sp == NULL) && (fpp == NULL)) {

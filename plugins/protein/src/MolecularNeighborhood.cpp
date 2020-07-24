@@ -11,7 +11,7 @@
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/param/FloatParam.h"
 #include "vislib/math/Point.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "GridNeighbourFinder.h"
 
@@ -90,7 +90,7 @@ bool MolecularNeighborhood::getData(core::Call& call) {
 		lastDataHash = inCall->DataHash();
 		this->neighRadiusParam.ResetDirty();
 		std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Neighborhood search took %f seconds.", static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()) / 1000.0f);
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Neighborhood search took %f seconds.", static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()) / 1000.0f);
 
 		if (lastHashSent != outCall->DataHash() + 5) {
 			outCall->SetDataHash(outCall->DataHash() + 5);

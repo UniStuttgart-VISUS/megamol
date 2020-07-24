@@ -15,7 +15,7 @@
 
 #include "mmcore/Module.h"
 #include "vislib/sys/CriticalSection.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/sys/Thread.h"
 
 
 namespace megamol {

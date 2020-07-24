@@ -297,7 +297,7 @@ inline void GPURenderTaskCollection::updatePerDrawData(
     size_t rt_base_idx,
     PerDrawDataContainer const& per_draw_data) {
     if (rt_base_idx > m_render_task_meta_data.size()) {
-        vislib::sys::Log::DefaultLog.WriteError("RenderTask update error: Index out of bounds.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("RenderTask update error: Index out of bounds.");
         return;
     }
 

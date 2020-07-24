@@ -9,7 +9,7 @@
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/ShallowVector.h"
 #include <cfloat>
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/param/IntParam.h"
 #include <chrono>
 #include <omp.h>
@@ -189,7 +189,7 @@ void ParticleNeighborhoodGraph::calcData(core::moldyn::MultiParticleDataCall* da
         std::uniform_int_distribution<size_t> rnd_dist(0, d.get_count() - 1);
 
         int sample_cnt = autoRadiusSamplesSlot.Param<core::param::IntParam>()->Value();
-        vislib::sys::Log::DefaultLog.WriteInfo("PNhG detecting radius from %d samples...", sample_cnt);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("PNhG detecting radius from %d samples...", sample_cnt);
 
         float mean_dist = 0.0f;
 
@@ -215,7 +215,7 @@ void ParticleNeighborhoodGraph::calcData(core::moldyn::MultiParticleDataCall* da
         float dist_fac = autoRadiusFactorSlot.Param<core::param::FloatParam>()->Value();
         neiRad = dist_fac * mean_dist;
         end = high_resolution_clock::now();
-        vislib::sys::Log::DefaultLog.WriteInfo("PNhG detecting radius (in %u ms) %f * %f => %f",
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("PNhG detecting radius (in %u ms) %f * %f => %f",
             std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count(),
             mean_dist, dist_fac, neiRad);
         start = end;
@@ -248,7 +248,7 @@ void ParticleNeighborhoodGraph::calcData(core::moldyn::MultiParticleDataCall* da
     std::vector<size_t> grid(d.get_count());
     std::vector<size_t*> gridCell(x_size * y_size * z_size);
 
-    vislib::sys::Log::DefaultLog.WriteInfo("PNhG search grid : (%u, %u, %u)", x_size, y_size, z_size);
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("PNhG search grid : (%u, %u, %u)", x_size, y_size, z_size);
 
     std::vector<vislib::math::Vector<unsigned int, 3> > cell(d.get_count());
     for (size_t i = 0; i < d.get_count(); ++i) {
@@ -287,7 +287,7 @@ void ParticleNeighborhoodGraph::calcData(core::moldyn::MultiParticleDataCall* da
     }
 
     end = high_resolution_clock::now();
-    vislib::sys::Log::DefaultLog.WriteInfo("PNhG search grid constructed in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("PNhG search grid constructed in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
     start = end;
 
     edges.reserve(d.get_count() * 2 * 4); // something
@@ -406,7 +406,7 @@ void ParticleNeighborhoodGraph::calcData(core::moldyn::MultiParticleDataCall* da
     }
 
     end = high_resolution_clock::now();
-    vislib::sys::Log::DefaultLog.WriteInfo("PNhG edges computed in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("PNhG edges computed in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
     start = end;
 
     //if (forceConnectIsolatedSlot.Param<core::param::BoolParam>()->Value()) {
@@ -447,7 +447,7 @@ void ParticleNeighborhoodGraph::calcData(core::moldyn::MultiParticleDataCall* da
     //    }
 
     //    end = high_resolution_clock::now();
-    //    vislib::sys::Log::DefaultLog.WriteInfo("Neighborhood graph computed #2.1 in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    //    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Neighborhood graph computed #2.1 in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
     //    start = end;
 
     //    if (next_comp > 2) {
@@ -549,6 +549,6 @@ void ParticleNeighborhoodGraph::calcData(core::moldyn::MultiParticleDataCall* da
     edges.shrink_to_fit();
 
     end = high_resolution_clock::now();
-    vislib::sys::Log::DefaultLog.WriteInfo("PNhG completed in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("PNhG completed in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 
 }

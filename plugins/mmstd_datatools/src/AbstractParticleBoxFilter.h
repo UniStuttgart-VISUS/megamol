@@ -137,7 +137,7 @@ template <class T> bool AbstractParticleBoxFilter<T>::manipulateData(T& outData,
         auto const ddt = part.GetDirDataType();
 
         if (vdt == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "ParticleBoxFilter: Box filter cannot be applied on list entry %d containing no vertex information.\n",
                 plidx);
             continue;
@@ -157,7 +157,7 @@ template <class T> bool AbstractParticleBoxFilter<T>::manipulateData(T& outData,
         auto const& stride = 0 == part.GetVertexDataStride() ? vs : part.GetVertexDataStride();
 
         if ((max_ptr - base_ptr) > stride) {
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "ParticleBoxFilter: Data of list entry %d is not interleaved. Skipping entry.\n", plidx);
             continue;
         }

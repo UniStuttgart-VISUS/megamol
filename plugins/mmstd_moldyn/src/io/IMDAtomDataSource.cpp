@@ -27,7 +27,7 @@
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/FastFile.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/SystemMessage.h"
 #include "vislib/sys/sysfunctions.h"
 
@@ -923,7 +923,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
             this->defCol[2] =
                 static_cast<unsigned char>(vislib::math::Clamp<int>(static_cast<int>(b * 255.0f), 0, 255));
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to parse default colour \"%s\"\n",
                 vislib::StringA(this->colourSlot.Param<core::param::StringParam>()->Value()).PeekBuffer());
         }
@@ -947,7 +947,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
             this->dirdefCol[2] =
                 static_cast<unsigned char>(vislib::math::Clamp<int>(static_cast<int>(b * 255.0f), 0, 255));
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to parse default dir::colour \"%s\"\n",
                 vislib::StringA(this->dircolourSlot.Param<core::param::StringParam>()->Value()).PeekBuffer());
         }
@@ -967,7 +967,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
             if (this->allDirData[idx]->GetSize() > 0) {
                 unsigned int fpp = (dircolMode == 1) ? 7 : ((dircolMode == 2) ? 9 : 6); // floats per particle
                 if (this->allDirData[idx]->GetSize() / (fpp * sizeof(float)) != mpdc->AccessParticles(idx).GetCount()) {
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "IMDAtomDataSource: inconsistent positions and directions, disabling data");
                     mpdc->AccessParticles(idx).SetVertexData(
                         core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE, NULL);
@@ -1101,7 +1101,7 @@ void IMDAtomDataSource::clear(void) {
  * IMDAtomDataSource::assertData
  */
 void IMDAtomDataSource::assertData(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     if (!this->filenameSlot.IsDirty() && !this->colourModeSlot.IsDirty() && !this->colourColumnSlot.IsDirty() &&
         !this->splitLoadDiredDataSlot.IsDirty() && !this->dirXColNameSlot.IsDirty() &&
         !this->dirYColNameSlot.IsDirty() && !this->dirZColNameSlot.IsDirty() && !this->dircolourModeSlot.IsDirty() &&
@@ -1239,7 +1239,7 @@ void IMDAtomDataSource::assertData(void) {
  */
 bool IMDAtomDataSource::readHeader(vislib::sys::File& file, IMDAtomDataSource::HeaderData& header) {
     using vislib::sys::File;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::StringA line;
     bool windowsNewline = false;
     char nlb[2];
@@ -1516,7 +1516,7 @@ bool IMDAtomDataSource::readData(
             try {
                 typecolumn = vislib::CharTraitsA::ParseInt(typecolname);
                 if (typecolumn >= static_cast<unsigned int>(header.captions.Count())) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                         "The parsed type column index is out of range (%u not in 0..%d)\n", typecolumn,
                         static_cast<int>(header.captions.Count()) - 1);
                     typecolumn = UINT_MAX;
@@ -1527,8 +1527,8 @@ bool IMDAtomDataSource::readData(
         }
 
         if (typecolumn == UINT_MAX) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Failed to parse type column selection: %s\n", typecolname.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Failed to parse type column selection: %s\n", typecolname.PeekBuffer());
         }
     }
 
@@ -1559,7 +1559,7 @@ bool IMDAtomDataSource::readData(
             try {
                 colcolumn = vislib::CharTraitsA::ParseInt(colcolname);
                 if (colcolumn >= static_cast<unsigned int>(header.captions.Count())) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                         "The parsed colouring column index is out of range (%u not in 0..%d)\n", colcolumn,
                         static_cast<int>(header.captions.Count()) - 1);
                     colcolumn = UINT_MAX;
@@ -1570,7 +1570,7 @@ bool IMDAtomDataSource::readData(
         }
 
         if (colcolumn == UINT_MAX) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Failed to parse colour column selection: %s\n", colcolname.PeekBuffer());
         }
     }
@@ -1599,7 +1599,7 @@ bool IMDAtomDataSource::readData(
             try {
                 dircolcolumn = vislib::CharTraitsA::ParseInt(dircolcolname);
                 if (dircolcolumn >= static_cast<unsigned int>(header.captions.Count())) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                         "The parsed dir colouring column index is out of range (%u not in 0..%d)\n", dircolcolumn,
                         static_cast<int>(header.captions.Count()) - 1);
                     dircolcolumn = UINT_MAX;
@@ -1609,7 +1609,7 @@ bool IMDAtomDataSource::readData(
             }
         }
         if (dircolcolumn == UINT_MAX) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Failed to parse dir colour column selection: %s\n", dircolcolname.PeekBuffer());
         }
     }
@@ -1876,7 +1876,7 @@ bool IMDAtomDataSource::readData(
  * IMDAtomDataSource::posXFilterUpdate
  */
 bool IMDAtomDataSource::posXFilterUpdate(core::param::ParamSlot& slot) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     if (!this->posXFilter.Param<core::param::BoolParam>()->Value()) {
         //        Log::DefaultLog.WriteInfo("PosX-Filter not enabled");
         return true;

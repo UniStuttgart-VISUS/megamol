@@ -12,10 +12,10 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/String.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 
 using namespace megamol::core;
 
@@ -241,7 +241,7 @@ bool moldyn::MMPLDDataSource::create(void) {
  */
 void moldyn::MMPLDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
         unsigned int idx) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     Frame *f = dynamic_cast<Frame*>(frame);
     if (f == NULL) return;
     if (this->file == NULL) {
@@ -280,7 +280,7 @@ void moldyn::MMPLDDataSource::release(void) {
  * moldyn::MMPLDDataSource::filenameChanged
  */
 bool moldyn::MMPLDDataSource::filenameChanged(param::ParamSlot& slot) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     using vislib::sys::File;
     this->resetFrameCache();
     this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
@@ -295,7 +295,7 @@ bool moldyn::MMPLDDataSource::filenameChanged(param::ParamSlot& slot) {
     ASSERT(this->filename.Param<param::FilePathParam>() != NULL);
 
     if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value(), File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-        this->GetCoreInstance()->Log().WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPLD-File \"%s\".", vislib::StringA(
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPLD-File \"%s\".", vislib::StringA(
             this->filename.Param<param::FilePathParam>()->Value()).PeekBuffer());
 
         SAFE_DELETE(this->file);
@@ -365,12 +365,12 @@ bool moldyn::MMPLDDataSource::filenameChanged(param::ParamSlot& slot) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n",
             CACHE_SIZE_MIN, cacheSize);
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_WARN, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_INFO, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, msg);
     }
 
     this->setFrameCount(frmCnt);

@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "mmcore/job/AbstractJob.h"
 #include "mmcore/AbstractNamedObject.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol::core;
@@ -54,7 +54,7 @@ void job::AbstractJob::signalStart(void) {
         name = ano->Name();
     }
 
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
         "Job \"%s\" started ...\n", name.PeekBuffer());
 }
 
@@ -69,7 +69,7 @@ void job::AbstractJob::signalEnd(bool wasTerminated) {
         name = ano->Name();
     }
 
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
         "Job \"%s\" %s\n", name.PeekBuffer(),
         wasTerminated ? "terminated" : "finished");
 

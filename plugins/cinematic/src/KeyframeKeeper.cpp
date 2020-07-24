@@ -213,7 +213,7 @@ bool KeyframeKeeper::CallForSetSelectedKeyframe(core::Call& c) {
     if (!appliedChanges) {
         this->selectedKeyframe = this->interpolateKeyframe(ccc->GetSelectedKeyframe().GetAnimTime());
         ccc->SetSelectedKeyframe(this->selectedKeyframe);
-        //vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForSetSelectedKeyframe] Selected keyframe doesn't exist. Changes are omitted.");
+        //megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForSetSelectedKeyframe] Selected keyframe doesn't exist. Changes are omitted.");
     }
     this->updateEditParameters(this->selectedKeyframe);
 
@@ -290,7 +290,7 @@ bool KeyframeKeeper::CallForSetCtrlPoints(core::Call& c) {
     this->endCtrllPos = ccc->GetEndControlPointPosition();
     if ((prev_StartCP != this->startCtrllPos) || (prev_EndCP != this->endCtrllPos)) {
         this->addControlPointUndoAction(KeyframeKeeper::Undo::Action::UNDO_CONTROLPOINT_MODIFY, this->startCtrllPos, this->endCtrllPos, prev_StartCP, prev_EndCP);
-        //vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForSetCtrlPoints] ADDED undo for CTRL POINT ......");
+        //megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForSetCtrlPoints] ADDED undo for CTRL POINT ......");
     }
     this->refreshInterpolCamPos(this->interpolSteps);
     ccc->SetControlPointPosition(this->startCtrllPos, this->endCtrllPos);
@@ -324,7 +324,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         // Try adding keyframe to array
         if (!this->addKeyframe(tmp_kf, true)) {
             if (!this->replaceKeyframe(this->selectedKeyframe, tmp_kf, true)) {
-                vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Unable to apply settings to new/selected keyframe.");
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Unable to apply settings to new/selected keyframe.");
             }
         }
     }
@@ -355,7 +355,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             if (tt < this->keyframes.back().GetAnimTime()) {
                 tt = this->keyframes.back().GetAnimTime();
                 this->setTotalAnimTimeParam.Param<param::FloatParam>()->SetValue(tt, false);
-                vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Total time is smaller than time of last keyframe. Delete Keyframe(s) to reduce total time to desired value.");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Total time is smaller than time of last keyframe. Delete Keyframe(s) to reduce total time to desired value.");
             }
         }
         this->totalAnimTime = tt;
@@ -423,7 +423,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             this->refreshInterpolCamPos(this->interpolSteps);
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentPosParam] No existing keyframe selected.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentPosParam] No existing keyframe selected.");
         }
     }
     // resetViewParam -------------------------------------------------------
@@ -450,7 +450,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [ResetViewParam] No existing keyframe selected.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [ResetViewParam] No existing keyframe selected.");
         }
     }
     // editCurrentViewParam -------------------------------------------------
@@ -476,7 +476,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentViewParam] No existing keyframe selected.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentViewParam] No existing keyframe selected.");
         }
     }
     // editCurrentUpParam -----------------------------------------------------
@@ -502,7 +502,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentUpParam] No existing keyframe selected.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentUpParam] No existing keyframe selected.");
         }
     }
     // editCurrentApertureParam -----------------------------------------------------
@@ -518,7 +518,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentApertureParam] No existing keyframe selected.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentApertureParam] No existing keyframe selected.");
         }
     }
     // fileNameParam ----------------------------------------------------------
@@ -606,7 +606,7 @@ bool KeyframeKeeper::addUndoAction(KeyframeKeeper::Undo::Action act, Keyframe kf
     retVal = true;
 
     if (!retVal) {
-        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [addUndoAction] Failed to add new undo action.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [addUndoAction] Failed to add new undo action.");
     }
 
     return retVal;
@@ -655,10 +655,10 @@ bool KeyframeKeeper::undoAction(void) {
             default: break;
         }
     }    
-    //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [undoAction] Undo queue index: %d - Undo queue size: %d", this->undoQueueIndex, this->undoQueue.size());
+    //megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [undoAction] Undo queue index: %d - Undo queue size: %d", this->undoQueueIndex, this->undoQueue.size());
 
     if (!retVal) {
-        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [undoAction] Failed to undo changes.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [undoAction] Failed to undo changes.");
     }
 
     return retVal;
@@ -706,10 +706,10 @@ bool KeyframeKeeper::redoAction(void) {
         default: break;
         }
     }
-    //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Undo queue index: %d - Undo queue size: %d", this->undoQueueIndex, this->undoQueue.size());
+    //megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Undo queue index: %d - Undo queue size: %d", this->undoQueueIndex, this->undoQueue.size());
 
     if (!retVal) {
-        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [redoAction] Failed to redo changes.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [redoAction] Failed to redo changes.");
     }
 
     return retVal;
@@ -722,7 +722,7 @@ void KeyframeKeeper::linearizeSimTangent(Keyframe stkf) {
     if (this->simTangentStatus) {
         // Linearize tangent only between existing keyframes
         if (this->getKeyframeIndex(this->keyframes, stkf) < 0) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [linearizeSimTangent] Select existing keyframe before trying to linearize the tangent.");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [linearizeSimTangent] Select existing keyframe before trying to linearize the tangent.");
             this->simTangentStatus = false;
         }
         else if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
@@ -758,7 +758,7 @@ void KeyframeKeeper::linearizeSimTangent(Keyframe stkf) {
             this->simTangentStatus = false;
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [linearizeSimTangent] Select existing keyframe to finish linearizing the tangent.");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [linearizeSimTangent] Select existing keyframe to finish linearizing the tangent.");
         }
     }
 }
@@ -767,7 +767,7 @@ void KeyframeKeeper::linearizeSimTangent(Keyframe stkf) {
 void KeyframeKeeper::snapKeyframe2AnimFrame(Keyframe& inout_kf) {
 
     if (this->fps == 0) {
-        vislib::sys::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [snapKeyframe2AnimFrame] FPS is ZERO.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [snapKeyframe2AnimFrame] FPS is ZERO.");
         return;
     }
 
@@ -806,7 +806,7 @@ void KeyframeKeeper::setSameSpeed() {
         // Get total values
         float totTime = this->keyframes.back().GetAnimTime() - this->keyframes.front().GetAnimTime();
         if (totTime == 0.0f) {
-            vislib::sys::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [setSameSpeed] totTime is ZERO.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [setSameSpeed] totTime is ZERO.");
             return;
         }
         float totDist = 0.0f;
@@ -848,7 +848,7 @@ void KeyframeKeeper::setSameSpeed() {
 void KeyframeKeeper::refreshInterpolCamPos(unsigned int s) {
 
     if (s == 0) {
-        vislib::sys::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [refreshInterpolCamPos] Interpolation step count should be greater than zero.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [refreshInterpolCamPos] Interpolation step count should be greater than zero.");
         return;
     }
 
@@ -903,7 +903,7 @@ bool KeyframeKeeper::replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool undo) 
             }
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [replace Keyframe] Could not find keyframe which should be replaced.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [replace Keyframe] Could not find keyframe which should be replaced.");
             return false;
         }
     }
@@ -950,7 +950,7 @@ bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool undo) {
             this->updateEditParameters(this->selectedKeyframe);
         }
         else {
-            //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [deleteKeyframe] No existing keyframe selected.");
+            //megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [deleteKeyframe] No existing keyframe selected.");
             return false;
         }
     }
@@ -966,7 +966,7 @@ bool KeyframeKeeper::addKeyframe(Keyframe kf, bool undo) {
     // Check if keyframe already exists
     for (unsigned int i = 0; i < this->keyframes.size(); i++) {
         if (this->keyframes[i].GetAnimTime() == time) {
-            //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [addKeyframe] Keyframe already exists.");
+            //megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [addKeyframe] Keyframe already exists.");
             return false;
         }
     }
@@ -1182,7 +1182,7 @@ glm::vec3 KeyframeKeeper::vec3_interpolation(float u, glm::vec3 v0, glm::vec3 v1
 bool KeyframeKeeper::saveKeyframes() {
 
     if (this->filename.empty()) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [saveKeyframes] No filename given. Using default filename.");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [saveKeyframes] No filename given. Using default filename.");
         time_t t = std::time(0);  // get time now
         struct tm *now = nullptr;
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
@@ -1208,7 +1208,7 @@ bool KeyframeKeeper::saveKeyframes() {
         std::ofstream outfile;
         outfile.open(this->filename.c_str(), std::ios::binary);
         if (!outfile.good()) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] Failed to create keyframe file.");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] Failed to create keyframe file.");
             return false;
         }
 
@@ -1233,42 +1233,42 @@ bool KeyframeKeeper::saveKeyframes() {
             outfile << json.dump(2); 
         }
         catch (nlohmann::json::type_error& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (nlohmann::json::exception& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (nlohmann::json::parse_error& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (nlohmann::json::invalid_iterator& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (nlohmann::json::out_of_range& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (nlohmann::json::other_error& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (...) {
-            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: Unknown Error (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: Unknown Error (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
             return false;
         }
 
         outfile.close();
-        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully stored keyframes to file: %s", this->filename.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully stored keyframes to file: %s", this->filename.c_str());
         return true;
     } 
     catch (...) {
@@ -1280,14 +1280,14 @@ bool KeyframeKeeper::saveKeyframes() {
 bool KeyframeKeeper::loadKeyframes() {
 
     if (this->filename.empty()) {
-        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] No filename given.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] No filename given.");
         return false;
     }
     else {
         std::ifstream infile;
         infile.open(this->filename.c_str());
         if (!infile.good()) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] Failed to open keyframe file.");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] Failed to open keyframe file.");
             return false;
         }
 
@@ -1301,7 +1301,7 @@ bool KeyframeKeeper::loadKeyframes() {
             json = nlohmann::json::parse(content);
             // Check for valid JSON object
             if (!json.is_object()) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[KEYFRAME KEEPER] Given string is no valid JSON object.");
                 return false;
             }
@@ -1311,49 +1311,49 @@ bool KeyframeKeeper::loadKeyframes() {
                 json.at("total_animation_time").get_to(this->totalAnimTime);
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'total_animation_time': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'total_animation_time': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
             }
             if (json.at("spline_tangent_length").is_number()) {
                 json.at("spline_tangent_length").get_to(this->splineTangentLength);
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'spline_tangent_length': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'spline_tangent_length': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
             }
             if (json.at("first_ctrl_point").at("x").is_number()) {
                 json.at("first_ctrl_point").at("x").get_to(this->startCtrllPos.x);
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'x': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'x': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
             }
             if (json.at("first_ctrl_point").at("y").is_number()) {
                 json.at("first_ctrl_point").at("y").get_to(this->startCtrllPos.y);
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'y': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'y': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
             }
             if (json.at("first_ctrl_point").at("z").is_number()) {
                 json.at("first_ctrl_point").at("z").get_to(this->startCtrllPos.z);
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'z': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'z': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
             }
             if (json.at("last_ctrl_point").at("x").is_number()) {
                 json.at("last_ctrl_point").at("x").get_to(this->endCtrllPos.x);
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'x': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'x': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
             }
             if (json.at("last_ctrl_point").at("y").is_number()) {
                 json.at("last_ctrl_point").at("y").get_to(this->endCtrllPos.y);
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'y': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'y': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
             }
             if (json.at("last_ctrl_point").at("z").is_number()) {
                 json.at("last_ctrl_point").at("z").get_to(this->endCtrllPos.z);
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'z': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'z': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
             }
 
             // Get keyframe data
@@ -1366,45 +1366,45 @@ bool KeyframeKeeper::loadKeyframes() {
                     valid = valid && this->keyframes[i].Deserialise(json.at("keyframes").at(i));
                 }
                 if (!valid) {
-                    vislib::sys::Log::DefaultLog.WriteWarn("JSON ERROR - Could not deserialise keyframes.");
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn("JSON ERROR - Could not deserialise keyframes.");
                 }
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'keyframes' array: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'keyframes' array: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
             }
         }
         catch (nlohmann::json::type_error& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (nlohmann::json::exception& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (nlohmann::json::parse_error& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (nlohmann::json::invalid_iterator& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (nlohmann::json::out_of_range& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (nlohmann::json::other_error& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (...) {
-            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: Unknown Error (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: Unknown Error (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
             return false;
         }
 
@@ -1415,7 +1415,7 @@ bool KeyframeKeeper::loadKeyframes() {
         }
 
         infile.close();
-        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully loaded keyframes from file: %s", this->filename.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully loaded keyframes from file: %s", this->filename.c_str());
     }
     return true;
 }

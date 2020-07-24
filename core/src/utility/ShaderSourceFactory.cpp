@@ -10,7 +10,7 @@
 #include "mmcore/utility/BTFParser.h"
 #include "mmcore/utility/xml/XmlReader.h"
 #include "vislib/StringTokeniser.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/Path.h"
 
 using namespace megamol::core;
@@ -64,7 +64,7 @@ utility::ShaderSourceFactory::~ShaderSourceFactory(void) {
  * utility::ShaderSourceFactory::LoadBTF
  */
 bool utility::ShaderSourceFactory::LoadBTF(const vislib::StringA & name, bool forceReload) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     if (name.Find("::") != vislib::StringA::INVALID_POS) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "BTF root namespace \"%s\" is illegal: contains \"::\"",
@@ -190,7 +190,7 @@ utility::ShaderSourceFactory::MakeShaderSnippet(const vislib::StringA& name,
 bool utility::ShaderSourceFactory::MakeShaderSource(const vislib::StringA& name,
         vislib::graphics::gl::ShaderSource& outShaderSrc,
         UINT32 flags) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::SmartPtr<BTFParser::BTFElement> el = this->getBTFElement(name);
     BTFParser::BTFShader *s = el.DynamicCast<BTFParser::BTFShader>();
     outShaderSrc.Clear();
@@ -228,7 +228,7 @@ int utility::ShaderSourceFactory::fileNo(const vislib::StringA& name) {
  */
 vislib::SmartPtr<utility::BTFParser::BTFElement>
 utility::ShaderSourceFactory::getBTFElement(const vislib::StringA& name) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::Array<vislib::StringA> namepath = vislib::StringTokeniserA::Split(name, "::");
     if ((namepath.Count() > 0) && namepath[0].IsEmpty()) {
         namepath.RemoveFirst(); // allow operator global namespace
@@ -264,7 +264,7 @@ bool utility::ShaderSourceFactory::makeShaderSource(
     while (i.HasNext()) {
         vislib::SmartPtr<BTFParser::BTFElement> e = i.Next();
         if (e.IsNull()) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                 "Ignoring empty shader element.");
             idx++;
             continue;
@@ -282,7 +282,7 @@ bool utility::ShaderSourceFactory::makeShaderSource(
                 o.Append(snip);
             } else {
                 if (keys.Count() > 1) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                         "Multiple shader snippet names encountered. Choosing \"%s\"",
                         keys.First().PeekBuffer());
                 }
@@ -295,7 +295,7 @@ bool utility::ShaderSourceFactory::makeShaderSource(
                     return false;
                 }
             } else {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                     "Ignoring unknown shader element \"%s\".",
                     e->Name().PeekBuffer());
             }
@@ -319,13 +319,13 @@ utility::ShaderSourceFactory::makeSnippet(utility::BTFParser::BTFSnippet *s, UIN
             return new vislib::graphics::gl::ShaderSource::VersionSnippet(
                 vislib::CharTraitsA::ParseInt(s->Content()));
         } catch(...) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to create version shader code snippet.\n");
         }
     }
 
     if (s->Type() == BTFParser::BTFSnippet::EMPTY_SNIPPET) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
             "Empty shader code snippet encountered.\n");
     }
 

@@ -34,7 +34,7 @@ bool megamol::gui::ImageWidget::LoadTextureFromFile(const std::string& filename)
             img.Convert(vislib::graphics::BitmapImage::TemplateFloatRGBA);
             retval = megamol::gui::ImageWidget::LoadTextureFromData(img.Width(), img.Height(), img.PeekDataAs<FLOAT>());
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to read texture: %s [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
             retval = false;
         }
@@ -70,7 +70,7 @@ void megamol::gui::ImageWidget::Widget(ImVec2 size, ImVec2 uv0, ImVec2 uv1) {
     ImGuiStyle& style = ImGui::GetStyle();
 
     if (!this->IsLoaded()) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "No texture loaded. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
@@ -86,7 +86,7 @@ bool megamol::gui::ImageWidget::Button(const std::string& tooltip, ImVec2 size) 
     ImGuiStyle& style = ImGui::GetStyle();
 
     if (!this->IsLoaded()) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "No texture loaded. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }

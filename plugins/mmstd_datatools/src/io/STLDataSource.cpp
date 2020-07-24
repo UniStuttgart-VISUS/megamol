@@ -20,7 +20,7 @@
 #include "ng_mesh/CallNGMeshRenderBatches.h"
 #endif
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <array>
 #include <algorithm>
@@ -100,7 +100,7 @@ namespace megamol
 						}
 						catch (const std::runtime_error& ex)
 						{
-							vislib::sys::Log::DefaultLog.WriteError("Request for extent of plugin 'STL Reader' failed: %s", ex.what());
+							megamol::core::utility::log::Log::DefaultLog.WriteError("Request for extent of plugin 'STL Reader' failed: %s", ex.what());
 
 							return false;
 						}
@@ -126,7 +126,7 @@ namespace megamol
 							this->max_z = std::max(this->max_z, z);
 						}
 
-						vislib::sys::Log::DefaultLog.WriteInfo("Extent: [%.2f, %.2f, %.2f] x [%.2f, %.2f, %.2f]",
+						megamol::core::utility::log::Log::DefaultLog.WriteInfo("Extent: [%.2f, %.2f, %.2f] x [%.2f, %.2f, %.2f]",
 							this->min_x, this->min_y, this->min_z, this->max_x, this->max_y, this->max_z);
 					}
 
@@ -323,7 +323,7 @@ namespace megamol
 							throw std::runtime_error("File size does not match the number of triangles.");
 						}
 
-						vislib::sys::Log::DefaultLog.WriteInfo("Number of triangles from binary STL file: %d", this->num_triangles);
+						megamol::core::utility::log::Log::DefaultLog.WriteInfo("Number of triangles from binary STL file: %d", this->num_triangles);
 
 						// Read data
 						ifs.seekg(80 * sizeof(uint8_t) + sizeof(uint32_t));
@@ -616,14 +616,14 @@ namespace megamol
 									break;
 								case EXPECT_EOF:
 								default:
-									vislib::sys::Log::DefaultLog.WriteWarn("Found more text after keyword 'endsolid' in ASCII STL file. %s",
+									megamol::core::utility::log::Log::DefaultLog.WriteWarn("Found more text after keyword 'endsolid' in ASCII STL file. %s",
 										"Maybe more than one object is stored in the file. This is not supported by this reader.");
 								}
 							}
 						}
 
 						this->num_triangles = static_cast<uint32_t>(vertices.size() / 9);
-						vislib::sys::Log::DefaultLog.WriteInfo("Number of triangles from ASCII STL file: %d", this->num_triangles);
+						megamol::core::utility::log::Log::DefaultLog.WriteInfo("Number of triangles from ASCII STL file: %d", this->num_triangles);
 
 						// Fill buffer
 						this->vertex_normal_buffer.resize(2 * sizeof(uint32_t) + 18 * this->num_triangles * sizeof(float));
