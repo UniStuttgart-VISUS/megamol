@@ -4,6 +4,7 @@
 #include "AbstractFrontendService.hpp"
 #include "FrontendServiceCollection.hpp"
 #include "OpenGL_GLFW_Service.hpp"
+#include "GUI_Service.hpp"
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
@@ -26,6 +27,10 @@ int main(int argc, char* argv[]) {
     openglConfig.versionMajor = 4;
     openglConfig.versionMinor = 6;
 
+    megamol::frontend::GUI_Service gui_service;
+    megamol::frontend::GUI_Service::Config guiConfig;
+    //guiConfig.imgui_api = ;
+
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
 	// the main loop is organized around services that can 'do something' in different parts of the main loop
@@ -39,6 +44,7 @@ int main(int argc, char* argv[]) {
 	// leading to the shutdown of megamol.
     megamol::frontend::FrontendServiceCollection services;
     services.add(gl_service, &openglConfig);
+    services.add(gui_service, &guiConfig);
 
     services.init(); // runs init(config_ptr) on all services with provided config sructs
 

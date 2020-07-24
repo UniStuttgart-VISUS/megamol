@@ -97,6 +97,12 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
         // Init OpenGL for ImGui
         const char* glsl_version = "#version 130"; /// "#version 150" or nullptr
         if (ImGui_ImplOpenGL3_Init(glsl_version)) {
+
+            /// TODO: imgui and new frontend are linked against different GLAD targets, fix this via reorganizing CMake
+            /// targets megamol\build\_deps\imgui - src\examples\imgui_impl_opengl3.cpp comment line 138:
+            /// //glGetIntegerv(GL_TEXTURE_BINDING_2D, &current_texture);
+
+
             this->api = GUIImGuiAPI::OpenGL;
             return true;
         }
