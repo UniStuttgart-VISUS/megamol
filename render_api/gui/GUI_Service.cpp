@@ -63,7 +63,7 @@ void GUI_Service::postGraphRender() {
 
 
 std::vector<ModuleResource>& GUI_Service::getProvidedResources() {
-    // return empty list
+    // unused - returning empty list
 	return m_providedResourceReferences;
 }
 
@@ -73,8 +73,6 @@ const std::vector<std::string> GUI_Service::getRequestedResourceNames() const {
         {"MegaMolGraph"},
         {"KeyboardEvents"},
         {"MouseEvents"},
-        {"WindowEvents"},
-        {"FramebufferEvents"},
         {"IOpenGL_Context"}   
     };
 }

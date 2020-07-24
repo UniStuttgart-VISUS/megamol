@@ -19,8 +19,12 @@ class GUI_Service final : public AbstractFrontendService {
 
 public:
 
+    enum ImGuiAPI {
+        OPEN_GL
+    };
+
     struct Config {
-        // imgui api: open_gl 
+        ImGuiAPI imgui_api = OPEN_GL;
     };
 
 	std::string serviceName() override { return "GUI_Service"; }

@@ -29,7 +29,9 @@ int main(int argc, char* argv[]) {
 
     megamol::frontend::GUI_Service gui_service;
     megamol::frontend::GUI_Service::Config guiConfig;
-    //guiConfig.imgui_api = ;
+    guiConfig.imgui_api = megamol::frontend::GUI_Service::ImGuiAPI::OPEN_GL;
+    // priority must be higher than priority of gl_service (=0)
+    gui_service.setPriority(23); 
 
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
