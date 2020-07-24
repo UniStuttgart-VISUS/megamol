@@ -300,12 +300,39 @@ void gl::Window::glfw_onKey_func(GLFWwindow* wnd, int k, int s, int a, int m) {
 
     core::view::Modifiers mods;
     // Parameter m is not platform independent, see https://github.com/glfw/glfw/issues/1630.
-    // Therefore set modifiers by checking key status for platform independent uniform behavior.
-    if (glfwGetKey(wnd, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) mods |= core::view::Modifier::SHIFT;
-    if (glfwGetKey(wnd, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS) mods |= core::view::Modifier::CTRL;
-    if (glfwGetKey(wnd, GLFW_KEY_LEFT_ALT) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS) mods |= core::view::Modifier::ALT;
+    // We want here consistent modifier state, in the sense that the modifier is evaluated on the keyboard state after
+    // the current key event. A simple solution for this would be to just check glfwGetKey() key here and set the
+    // modifiers based on this. The problem with this is, that glfwGetKey only returns a cached state and therefore
+    // does not know when the modifier key was pressed outside of the window, when it is not in focus.
+    // The new solution is, that we keep using the GLFW modifier state, but in addition we will evaluate the current
+    // event to overwrite modifiers when have a event the modifier keys itself.
+    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods |= core::view::Modifier::SHIFT;
+    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= core::view::Modifier::CTRL;
+    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= core::view::Modifier::ALT;
 
-	that->uiLayers.OnKey(key, action, mods);
+    if (k == GLFW_KEY_LEFT_SHIFT || k == GLFW_KEY_RIGHT_SHIFT) {
+        if (a == GLFW_RELEASE) {
+            mods.reset(core::view::Modifier::SHIFT);
+        } else {
+            mods.set(core::view::Modifier::SHIFT);
+        }
+    }
+    if (k == GLFW_KEY_LEFT_CONTROL || k == GLFW_KEY_RIGHT_CONTROL) {
+        if (a == GLFW_RELEASE) {
+            mods.reset(core::view::Modifier::CTRL);
+        } else {
+            mods.set(core::view::Modifier::CTRL);
+        }
+    }
+    if (k == GLFW_KEY_LEFT_ALT || k == GLFW_KEY_RIGHT_ALT) {
+        if (a == GLFW_RELEASE) {
+            mods.reset(core::view::Modifier::ALT);
+        } else {
+            mods.set(core::view::Modifier::ALT);
+        }
+    }
+
+    that->uiLayers.OnKey(key, action, mods);
 }
 
 void gl::Window::glfw_onChar_func(GLFWwindow* wnd, unsigned int charcode) {
@@ -336,10 +363,11 @@ void gl::Window::glfw_onMouseButton_func(GLFWwindow* wnd, int b, int a, int m) {
 
     core::view::Modifiers mods;
     // Parameter m is not platform independent, see https://github.com/glfw/glfw/issues/1630.
-    // Therefore set modifiers by checking key status for platform independent uniform behavior.
-    if (glfwGetKey(wnd, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) mods |= core::view::Modifier::SHIFT;
-    if (glfwGetKey(wnd, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS) mods |= core::view::Modifier::CTRL;
-    if (glfwGetKey(wnd, GLFW_KEY_LEFT_ALT) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS) mods |= core::view::Modifier::ALT;
+    // But this should only play a role on the key events of the modifier keys itself.
+    // Therefore we can ignore this here. See comment in keyboard callback for more details.
+    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods |= core::view::Modifier::SHIFT;
+    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= core::view::Modifier::CTRL;
+    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= core::view::Modifier::ALT;
 
     if (that->mouseCapture) {
         that->mouseCapture->OnMouseButton(btn, action, mods);
