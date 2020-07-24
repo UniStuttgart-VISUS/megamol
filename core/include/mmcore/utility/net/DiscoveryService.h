@@ -789,8 +789,8 @@ namespace cluster {
          */
         //inline void SetRequestInterval(const UINT requestInterval) {
         //    sys::Interlocked::Exchange(
-        //        reinterpret_cast<INT32 *>(&this->requestInterval),
-        //        static_cast<INT32>(requestInterval));
+        //        reinterpret_cast<VL_INT32 *>(&this->requestInterval),
+        //        static_cast<VL_INT32>(requestInterval));
         //}
 
         /**
@@ -1015,7 +1015,7 @@ namespace cluster {
         private:
 
             /** Flag for terminating the thread safely. */
-            INT32 isRunning;
+            VL_INT32 isRunning;
 
             /** The socket used for receiving messages. */
             Socket socket;
@@ -1170,7 +1170,7 @@ namespace cluster {
         private:
 
             /** Flag for terminating the thread safely. */
-            INT32 isRunning;
+            VL_INT32 isRunning;
 
         }; /* end class Sender */
 

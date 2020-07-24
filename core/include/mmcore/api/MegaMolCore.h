@@ -179,7 +179,7 @@ typedef struct _mmcRenderViewContext {
      * The size of this structure (Must remain first member in any future 
      * version and must always be four-byte integer).
      */
-    INT32 Size;
+    VL_INT32 Size;
 
     /**
      * Boolean to receive whether or not a continuous redraw of this view is 

@@ -75,7 +75,7 @@ namespace vislib {
         typedef T Char;
 
         /** Define a string size type. */
-        typedef INT32 Size;
+        typedef VL_INT32 Size;
 
         /**
          * Answer the size of a single character in bytes.
@@ -647,7 +647,7 @@ namespace vislib {
 
         /* Declare our friends. */
         template<class T> friend class String;
-        template<class S, class T, INT32 B> friend class StringConverter;
+        template<class S, class T, VL_INT32 B> friend class StringConverter;
 
     }; /* end class CharTraits<char> */
 
@@ -1029,7 +1029,7 @@ namespace vislib {
 
         /* Declare our friends. */
         template<class T> friend class String;
-        template<class S, class T, INT32 B> friend class StringConverter;
+        template<class S, class T, VL_INT32 B> friend class StringConverter;
 
     }; /* end class CharTraits<WCHAR> */
 
