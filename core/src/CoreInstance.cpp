@@ -34,6 +34,7 @@
 #include "mmcore/profiler/Manager.h"
 #include "mmcore/utility/APIValueUtil.h"
 #include "mmcore/utility/ProjectParser.h"
+#include "mmcore/utility/plugins/PluginRegister.h"
 #include "mmcore/utility/xml/XmlReader.h"
 #include "mmcore/versioninfo.h"
 #include "vislib/GUID.h"
@@ -371,22 +372,9 @@ void megamol::core::CoreInstance::Initialise(void) {
     megamol::core::utility::LuaHostService::ID = this->InstallService<megamol::core::utility::LuaHostService>();
 
     // loading plugins
-    // printf("Log: %d:\n", (long)(&vislib::sys::Log::DefaultLog));
-    // printf("\tAutoflush: %s\n", vislib::sys::Log::DefaultLog.IsAutoFlushEnabled() ? "enabled" : "disabled");
-    // printf("\tLevel: %u\n", vislib::sys::Log::DefaultLog.GetLevel());
-    // printf("\tEcho-Level: %u\n", vislib::sys::Log::DefaultLog.GetEchoLevel());
-    // printf("\tEcho-Target: %d\n", (long)(vislib::sys::Log::DefaultLog.GetEchoOutTarget()));
-    vislib::SingleLinkedList<vislib::TString> plugins_paths;
-    this->config.ListPluginsToLoad(plugins_paths);
-    vislib::SingleLinkedList<vislib::TString>::Iterator iter = plugins_paths.GetIterator();
-    while (iter.HasNext()) {
-        this->loadPlugin(iter.Next());
+    for (const auto& plugin : utility::plugins::PluginRegister::getAll()) {
+        this->loadPlugin(plugin);
     }
-    // printf("Log: %d:\n", (long)(&vislib::sys::Log::DefaultLog));
-    // printf("\tAutoflush: %s\n", vislib::sys::Log::DefaultLog.IsAutoFlushEnabled() ? "enabled" : "disabled");
-    // printf("\tLevel: %u\n", vislib::sys::Log::DefaultLog.GetLevel());
-    // printf("\tEcho-Level: %u\n", vislib::sys::Log::DefaultLog.GetEchoLevel());
-    // printf("\tEcho-Target: %d\n", (long)(vislib::sys::Log::DefaultLog.GetEchoOutTarget()));
 
     // set up profiling manager
     if (this->config.IsConfigValueSet("profiling")) {
@@ -3470,7 +3458,7 @@ void megamol::core::CoreInstance::applyConfigParams(
 /*
  * megamol::core::CoreInstance::loadPlugin
  */
-void megamol::core::CoreInstance::loadPlugin(const vislib::TString& filename) {
+void megamol::core::CoreInstance::loadPlugin(const std::shared_ptr<utility::plugins::AbstractPluginDescriptor>& pluginDescriptor) {
 
     // select log level for plugin loading errors
     unsigned int loadFailedLevel = vislib::sys::Log::LEVEL_ERROR;
@@ -3493,37 +3481,32 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString& filename) {
 
     try {
 
-        utility::plugins::PluginManager::collection_type new_plugins =
-            this->plugins->LoadPlugin(filename.PeekBuffer(), *this);
+        auto new_plugin = this->plugins->LoadPlugin(pluginDescriptor, *this);
 
-        for (auto new_plugin : new_plugins) {
-            this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-                "Plugin \"%s\" (%s) loaded: %d Modules, %d Calls registered\n", new_plugin->GetAssemblyName().c_str(),
-                vislib::StringA(filename).PeekBuffer(), new_plugin->GetModuleDescriptionManager().Count(),
-                new_plugin->GetCallDescriptionManager().Count());
+        this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            "Plugin \"%s\" loaded: %d Modules, %d Calls registered\n", new_plugin->GetAssemblyName().c_str(),
+            new_plugin->GetModuleDescriptionManager().Count(), new_plugin->GetCallDescriptionManager().Count());
 
-            for (auto md : new_plugin->GetModuleDescriptionManager()) {
-                try {
-                    this->all_module_descriptions.Register(md);
-                } catch (const vislib::AlreadyExistsException&) {
-                    this->log.WriteError("Failed to load module description \"%s\": Naming conflict", md->ClassName());
-                }
+        for (auto md : new_plugin->GetModuleDescriptionManager()) {
+            try {
+                this->all_module_descriptions.Register(md);
+            } catch (const vislib::AlreadyExistsException&) {
+                this->log.WriteError("Failed to load module description \"%s\": Naming conflict", md->ClassName());
             }
-            for (auto cd : new_plugin->GetCallDescriptionManager()) {
-                try {
-                    this->all_call_descriptions.Register(cd);
-                } catch (const vislib::AlreadyExistsException&) {
-                    this->log.WriteError("Failed to load call description \"%s\": Naming conflict", cd->ClassName());
-                }
+        }
+        for (auto cd : new_plugin->GetCallDescriptionManager()) {
+            try {
+                this->all_call_descriptions.Register(cd);
+            } catch (const vislib::AlreadyExistsException&) {
+                this->log.WriteError("Failed to load call description \"%s\": Naming conflict", cd->ClassName());
             }
         }
 
     } catch (const vislib::Exception& vex) {
-        this->log.WriteMsg(loadFailedLevel, "Unable to load Plugin \"%s\": %s (%s, &d)",
-            vislib::StringA(filename).PeekBuffer(), vex.GetMsgA(), vex.GetFile(), vex.GetLine());
+        this->log.WriteMsg(loadFailedLevel, "Unable to load Plugin: %s (%s, &d)",
+            vex.GetMsgA(), vex.GetFile(), vex.GetLine());
     } catch (...) {
-        this->log.WriteMsg(
-            loadFailedLevel, "Unable to load Plugin \"%s\": unknown exception", vislib::StringA(filename).PeekBuffer());
+        this->log.WriteMsg(loadFailedLevel, "Unable to load Plugin: unknown exception");
     }
 }
 

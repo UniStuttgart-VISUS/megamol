@@ -857,6 +857,7 @@ const vislib::StringW& megamol::core::utility::Configuration::ConfigValue(
 
 /*
  * megamol::core::utility::Configuration::ListPluginsToLoad
+ * TODO: old plugin system, remove?
  */
 void megamol::core::utility::Configuration::ListPluginsToLoad(
         vislib::SingleLinkedList<vislib::TString> &plugins) {

@@ -59,4 +59,15 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   add_clang_format(${PROJECT_NAME}
     STYLE "${CMAKE_SOURCE_DIR}/.clang-format"
     FILES ${public_header_files} ${header_files} ${source_files})
+
+  # Register plugin
+  if (WIN32)
+    target_link_libraries(mmconsole PRIVATE ${PROJECT_NAME})
+    target_link_options(mmconsole PRIVATE "/WHOLEARCHIVE:${PROJECT_NAME}")
+  else ()
+    target_link_libraries(mmconsole PRIVATE
+      -Wl,--whole-archive
+      ${PROJECT_NAME}
+      -Wl,--no-whole-archive)
+  endif ()
 endif()
