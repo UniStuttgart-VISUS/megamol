@@ -108,8 +108,8 @@ DWORD cluster::simple::HeartbeatClient::connector(void *userData) {
     unsigned short port = static_cast<unsigned short>(that->port);
     if (port == 0) return 0;
 
-    Log::DefaultLog.WriteInfo(L"Establishing connection to heartbeat server %s:%u\n",
-        server.PeekBuffer(), port);
+    Log::DefaultLog.WriteInfo("Establishing connection to heartbeat server %s:%u\n",
+        vislib::StringA(server), port);
 
     try {
         vislib::SmartRef<vislib::net::TcpCommChannel> c = vislib::net::TcpCommChannel::Create(vislib::net::TcpCommChannel::FLAG_NODELAY);

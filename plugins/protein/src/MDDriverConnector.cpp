@@ -13,6 +13,7 @@
 #include "vislib/net/IPEndPoint.h"
 #include "vislib/net/DNS.h"
 #include "mmcore/utility/sys/Thread.h"
+#include "vislib/StringConverter.h"
 
 using namespace megamol;
 using namespace megamol::protein;

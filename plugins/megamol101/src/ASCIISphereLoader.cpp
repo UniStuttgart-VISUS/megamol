@@ -12,6 +12,7 @@
 #include "CallSpheres.h"
 #include "mmcore/param/FilePathParam.h"
 #include "vislib/StringTokeniser.h"
+#include "vislib/StringConverter.h"
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol;

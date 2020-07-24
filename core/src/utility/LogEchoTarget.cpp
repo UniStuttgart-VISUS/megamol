@@ -53,3 +53,12 @@ void megamol::core::utility::LogEchoTarget::Msg(UINT level, megamol::core::utili
         this->target(level, msg);
     }
 }
+
+
+/*
+ * megamol::core::utility::LogEchoTarget::Msg
+ */
+void megamol::core::utility::LogEchoTarget::Msg(UINT level, megamol::core::utility::log::Log::TimeStamp time,
+    megamol::core::utility::log::Log::SourceID sid, std::string const& msg) {
+    Msg(level, time, sid, msg.c_str());
+}

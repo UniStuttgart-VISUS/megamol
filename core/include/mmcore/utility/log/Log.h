@@ -6,25 +6,17 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_LOG_H_INCLUDED
-#define VISLIB_LOG_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-#if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(push, off)
-#endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "mmcore/api/MegaMolCore.std.h"
 
-#include "vislib/CharTraits.h"
-#include "vislib/SmartPtr.h"
-#include "vislib/String.h"
-#include "vislib/StringConverter.h"
 #include <cstdio>
 #include <ctime>
 #include <string>
 #include <iostream>
+#include <thread>
+
+#define SPDLOG_EOL ""
 
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/msvc_sink.h"
@@ -43,13 +35,17 @@ namespace log {
     class MEGAMOLCORE_API Log {
     public:
 
+        /** Default log message pattern for spdlog */
         static const char std_pattern[3];
 
         /** type for time stamps */
-        typedef time_t TimeStamp;
+        using TimeStamp = time_t;
 
         /** type for the id of the source object */
-        typedef int SourceID;
+        using SourceID = size_t;
+
+        /** unsigned int alias */
+        using UINT = unsigned int;
 
         /** 
          * Set this level to log all messages. If you use this constant for 
@@ -133,6 +129,16 @@ namespace log {
                 const char *msg) = 0;
 
             /**
+             * Writes a message to the log target
+             *
+             * @param level The level of the message
+             * @param time The time stamp of the message
+             * @param sid The object id of the source of the message
+             * @param msg The message text itself
+             */
+            virtual void Msg(UINT level, TimeStamp time, SourceID sid, std::string const& msg) = 0;
+
+            /**
              * Sets the log level for this target
              *
              * @param level The new log level
@@ -182,8 +188,18 @@ namespace log {
              * @param sid The object id of the source of the message
              * @param msg The message text itself
              */
-            virtual void Msg(UINT level, TimeStamp time, SourceID sid,
-                const char *msg);
+            void Msg(UINT level, TimeStamp time, SourceID sid,
+                const char *msg) override;
+
+            /**
+             * Writes a message to the log target
+             *
+             * @param level The level of the message
+             * @param time The time stamp of the message
+             * @param sid The object id of the source of the message
+             * @param msg The message text itself
+             */
+            void Msg(UINT level, TimeStamp time, SourceID sid, std::string const& msg) override;
 
         private:
             std::shared_ptr<spdlog::sinks::msvc_sink_mt> sink;
@@ -204,20 +220,20 @@ namespace log {
              * @param path The path to the physical log file
              * @param level The log level used for this target
              */
-            FileTarget(const char *path, UINT level = Log::LEVEL_ERROR);
+            FileTarget(std::string const& path, UINT level = Log::LEVEL_ERROR);
 
             /** Dtor */
             virtual ~FileTarget(void);
 
             /** Flushes any buffer */
-            virtual void Flush(void);
+            void Flush(void) override;
 
             /**
              * Answer the path to the physical log file
              *
              * @return The path to the physical log file
              */
-            inline const vislib::StringW& Filename(void) const {
+            inline const std::string& Filename(void) const {
                 return this->filename;
             }
 
@@ -229,13 +245,23 @@ namespace log {
              * @param sid The object id of the source of the message
              * @param msg The message text itself
              */
-            virtual void Msg(UINT level, TimeStamp time, SourceID sid,
-                const char *msg);
+            void Msg(UINT level, TimeStamp time, SourceID sid,
+                const char *msg) override;
+
+            /**
+             * Writes a message to the log target
+             *
+             * @param level The level of the message
+             * @param time The time stamp of the message
+             * @param sid The object id of the source of the message
+             * @param msg The message text itself
+             */
+            void Msg(UINT level, TimeStamp time, SourceID sid, std::string const& msg) override;
 
         private:
             
             /** The file name of the log file used */
-            vislib::StringW filename;
+            std::string filename;
 
             std::shared_ptr<spdlog::sinks::basic_file_sink_mt> sink;
 
@@ -280,8 +306,18 @@ namespace log {
              * @param sid The object id of the source of the message
              * @param msg The message text itself
              */
-            virtual void Msg(UINT level, TimeStamp time, SourceID sid,
-                const char *msg);
+            void Msg(UINT level, TimeStamp time, SourceID sid,
+                const char *msg) override;
+
+            /**
+             * Writes a message to the log target
+             *
+             * @param level The level of the message
+             * @param time The time stamp of the message
+             * @param sid The object id of the source of the message
+             * @param msg The message text itself
+             */
+            void Msg(UINT level, TimeStamp time, SourceID sid, std::string const& msg) override;
 
             /**
              * Answer the number of omitted messages
@@ -326,7 +362,7 @@ namespace log {
                 SourceID sid;
 
                 /** The message text */
-                vislib::StringA msg;
+                std::string msg;
 
             } OfflineMessage;
 
@@ -351,10 +387,10 @@ namespace log {
         public:
 
             /** Stream target to stdout */
-            static const vislib::SmartPtr<Target> StdOut;
+            static const std::shared_ptr<Target> StdOut;
 
             /** Stream target to stderr */
-            static const vislib::SmartPtr<Target> StdErr;
+            static const std::shared_ptr<Target> StdErr;
 
             /**
              * Ctor
@@ -368,7 +404,7 @@ namespace log {
             virtual ~StreamTarget(void);
 
             /** Flushes any buffer */
-            virtual void Flush(void);
+            void Flush(void) override;
 
             /**
              * Writes a message to the log target
@@ -378,8 +414,18 @@ namespace log {
              * @param sid The object id of the source of the message
              * @param msg The message text itself
              */
-            virtual void Msg(UINT level, TimeStamp time, SourceID sid,
-                const char *msg);
+            void Msg(UINT level, TimeStamp time, SourceID sid,
+                const char *msg) override;
+
+            /**
+             * Writes a message to the log target
+             *
+             * @param level The level of the message
+             * @param time The time stamp of the message
+             * @param sid The object id of the source of the message
+             * @param msg The message text itself
+             */
+            void Msg(UINT level, TimeStamp time, SourceID sid, std::string const& msg) override;
 
         private:
 
@@ -425,7 +471,7 @@ namespace log {
          *
          * @return The echo log target
          */
-        inline const vislib::SmartPtr<vislib::SmartPtr<Target> > AccessEchoTarget(void) const {
+        inline const std::shared_ptr<Target> AccessEchoTarget(void) const {
             return this->echoTarget;
         }
 
@@ -434,7 +480,7 @@ namespace log {
          *
          * @return The main log target
          */
-        inline const vislib::SmartPtr<vislib::SmartPtr<Target> > AccessMainTarget(void) const {
+        inline const std::shared_ptr<Target> AccessMainTarget(void) const {
             return this->mainTarget;
         }
 
@@ -482,14 +528,7 @@ namespace log {
          *
          * @return The name of the current physical log file as ANSI string.
          */
-        vislib::StringA GetLogFileNameA(void) const;
-
-        /**
-         * Answer the file name of the log file as unicode string.
-         *
-         * @return The name of the current physical log file as unicode string.
-         */
-        vislib::StringW GetLogFileNameW(void) const;
+        std::string GetLogFileNameA(void) const;
 
         /**
          * Answer the number of messages that will be stored in memory if no 
@@ -533,7 +572,7 @@ namespace log {
          *
          * @param The new echo log target
          */
-        void SetEchoTarget(vislib::SmartPtr<Target> target);
+        void SetEchoTarget(std::shared_ptr<Target> target);
 
         /**
          * Set a new log level. Messages above this level will be ignored.
@@ -564,7 +603,7 @@ namespace log {
          *
          * @param The new main log target
          */
-        void SetMainTarget(vislib::SmartPtr<Target> target);
+        void SetMainTarget(std::shared_ptr<Target> target);
 
         /**
          * Sets the number of messages that will be stored in memory if no 
@@ -596,14 +635,6 @@ namespace log {
 
         /**
          * Writes a formatted error message to the log. The level will be
-         * 'LEVEL_ERROR'.
-         *
-         * @param fmt The log message
-         */
-        void WriteError(const wchar_t *fmt, ...);
-
-        /**
-         * Writes a formatted error message to the log. The level will be
          * 'LEVEL_ERROR + lvlOff'. Not that a high level offset value might
          * downgrade the message to warning or even info level.
          *
@@ -611,16 +642,6 @@ namespace log {
          * @param lvlOff The log level offset
          */
         void WriteError(int lvlOff, const char *fmt, ...);
-
-        /**
-         * Writes a formatted error message to the log. The level will be
-         * 'LEVEL_ERROR + lvlOff'. Not that a high level offset value might
-         * downgrade the message to warning or even info level.
-         *
-         * @param fmt The log message
-         * @param lvlOff The log level offset
-         */
-        void WriteError(int lvlOff, const wchar_t *fmt, ...);
 
         /**
          * Writes a formatted error message to the log. The level will be
@@ -632,29 +653,12 @@ namespace log {
 
         /**
          * Writes a formatted error message to the log. The level will be
-         * 'LEVEL_INFO'.
-         *
-         * @param fmt The log message
-         */
-        void WriteInfo(const wchar_t *fmt, ...);
-
-        /**
-         * Writes a formatted error message to the log. The level will be
          * 'LEVEL_INFO + lvlOff'.
          *
          * @param fmt The log message
          * @param lvlOff The log level offset
          */
         void WriteInfo(int lvlOff, const char *fmt, ...);
-
-        /**
-         * Writes a formatted error message to the log. The level will be
-         * 'LEVEL_INFO + lvlOff'.
-         *
-         * @param fmt The log message
-         * @param lvlOff The log level offset
-         */
-        void WriteInfo(int lvlOff, const wchar_t *fmt, ...);
 
         /**
          * Writes a pre-formatted message with specified log level, time stamp
@@ -666,7 +670,7 @@ namespace log {
          * @param msg The message text itself
          */
         void WriteMessage(UINT level, TimeStamp time, SourceID sid,
-            const vislib::StringA& msg);
+            const std::string& msg);
 
         /**
          * Writes a pre-formatted message with specified log level, time stamp
@@ -681,18 +685,6 @@ namespace log {
             const char *fmt, va_list argptr);
 
         /**
-         * Writes a pre-formatted message with specified log level, time stamp
-         * and source id to the log.
-         *
-         * @param level The level of the message
-         * @param time The time stamp of the message
-         * @param sid The object id of the source of the message
-         * @param msg The message text itself
-         */
-        void WriteMessageVaW(UINT level, TimeStamp time, SourceID sid,
-            const wchar_t *fmt, va_list argptr);
-
-        /**
          * Writes a formatted messages with the specified log level to the log
          * file. The format of the message is similar to the printf functions.
          * A new line character is automatically appended if the last 
@@ -704,34 +696,12 @@ namespace log {
         void WriteMsg(UINT level, const char *fmt, ...);
 
         /**
-         * Writes a formatted messages with the specified log level to the log
-         * file. The format of the message is similar to the printf functions.
-         * A new line character is automatically appended if the last 
-         * character of fmt is no new line character.
-         *
-         * Note: On Linux systems the unicode implementation is at least buggy.
-         * It's not recommended to use these unicode methodes under Linux.
-         *
-         * @param level The log level of the message.
-         * @param fmt The log message.
-         */
-        void WriteMsg(UINT level, const wchar_t *fmt, ...);
-
-        /**
          * Writes a formatted error message to the log. The level will be
          * 'LEVEL_WARN'.
          *
          * @param fmt The log message
          */
         void WriteWarn(const char *fmt, ...);
-
-        /**
-         * Writes a formatted error message to the log. The level will be
-         * 'LEVEL_WARN'.
-         *
-         * @param fmt The log message
-         */
-        void WriteWarn(const wchar_t *fmt, ...);
 
         /**
          * Writes a formatted error message to the log. The level will be
@@ -742,16 +712,6 @@ namespace log {
          * @param lvlOff The log level offset
          */
         void WriteWarn(int lvlOff, const char *fmt, ...);
-
-        /**
-         * Writes a formatted error message to the log. The level will be
-         * 'LEVEL_WARN + lvlOff'. Not that a high level offset value might
-         * downgrade the message to info level.
-         *
-         * @param fmt The log message
-         * @param lvlOff The log level offset
-         */
-        void WriteWarn(int lvlOff, const wchar_t *fmt, ...);
 
         /**
          * Assignment operator
@@ -769,13 +729,13 @@ namespace log {
          *
          * @return A file name suffix for log files
          */
-        vislib::StringA getFileNameSuffix(void);
+        std::string getFileNameSuffix(void);
 
         /** The main log target */
-        vislib::SmartPtr<vislib::SmartPtr<Target> > mainTarget;
+        std::shared_ptr<Target> mainTarget;
 
         /** The log echo target */
-        vislib::SmartPtr<vislib::SmartPtr<Target> > echoTarget;
+        std::shared_ptr<Target> echoTarget;
 
         /** Flag whether or not to flush any targets after each message */
         bool autoflush;
@@ -786,8 +746,3 @@ namespace log {
 } // namespace utility
 } // namespace core
 } // namespace megamol
-
-#if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(pop)
-#endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_LOG_H_INCLUDED */

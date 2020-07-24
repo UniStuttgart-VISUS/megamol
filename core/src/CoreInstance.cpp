@@ -15,6 +15,7 @@
 #endif /* (_MSC_VER > 1000) */
 
 #include <string>
+#include <memory>
 
 #include "job/PluginsStateFileGeneratorJob.h"
 #include "mmcore/AbstractSlot.h"
@@ -630,7 +631,7 @@ mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key, mmcValu
                 return MMC_ERR_TYPE;
             }
             megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(
-                new utility::LogEchoTarget(function_cast<mmcLogEchoFunction>(const_cast<void*>(value))));
+                std::make_shared<utility::LogEchoTarget>(function_cast<mmcLogEchoFunction>(const_cast<void*>(value))));
             break;
         case MMC_INITVAL_CFGOVERRIDE:
             if (!utility::APIValueUtil::IsStringType(type)) {

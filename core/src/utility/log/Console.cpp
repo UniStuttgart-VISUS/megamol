@@ -64,6 +64,15 @@ void vislib::sys::Console::ConsoleLogTarget::Msg(unsigned int level,
 
 
 /*
+ * vislib::sys::Console::ConsoleLogTarget::Msg
+ */
+void vislib::sys::Console::ConsoleLogTarget::Msg(unsigned int level, megamol::core::utility::log::Log::TimeStamp time,
+    megamol::core::utility::log::Log::SourceID sid, std::string const& msg) {
+    Msg(level, time, sid, msg.c_str());
+}
+
+
+/*
  * vislib::sys::Console::LogEchoTarget
  */
 const vislib::sys::Console::ConsoleLogTarget vislib::sys::Console::LogEchoTarget;
