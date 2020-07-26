@@ -7,7 +7,7 @@
 
 #include "snappy.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
@@ -23,7 +23,7 @@
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/View3D.h"
 #include "vislib/Trace.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 
 #ifdef __unix__
 #    include <limits.h>
@@ -102,7 +102,7 @@ megamol::remote::FBOTransmitter2::~FBOTransmitter2() { this->Release(); }
 
 bool megamol::remote::FBOTransmitter2::create() {
 #if _DEBUG
-    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Creating ...\n");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Creating ...\n");
 #endif
     return true;
 }
@@ -117,7 +117,7 @@ void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::Abstract
     if (!this->render_comp_img_slot_.Param<core::param::BoolParam>()->Value()) {
         initThreads();
 #    if _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: initThreads ... Done");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: initThreads ... Done");
 #    endif
     }
 #else
@@ -143,7 +143,7 @@ void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::Abstract
     int height = this->viewport[5];
 
 #if _DEBUG
-    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Extracting Viewport ... Done");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Extracting Viewport ... Done");
 #endif
 
     // read FBO
@@ -177,7 +177,7 @@ void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::Abstract
     }
 
 #if _DEBUG
-    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: readFBO ... Done");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: readFBO ... Done");
 #endif
 
 
@@ -187,28 +187,28 @@ void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::Abstract
 
     if (aggregate_) {
 #    if _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Simple IceT commit at rank %d\n", mpiRank);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Simple IceT commit at rank %d\n", mpiRank);
 #    endif
         std::array<float, 4> backgroundColor = {0.0f, 0.0f, 0.0f, 1.0f};
         this->extractBkgndColor(backgroundColor);
 
         int tilevp[4] = {xoff, yoff, tile_width, tile_height}; // define current valid pixel viewport for icet
 #    if _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo(
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "IceT gets image with xoff: %d, yoff: %d, tile_width: %d, tile_height: %d\n", xoff, yoff, tile_width,
             tile_height);
 #    endif
         auto const icet_comp_image = icetCompositeImage(col_buf.data(), depth_buf.data(), tilevp, nullptr, nullptr,
             static_cast<const IceTFloat*>(backgroundColor.data()));
 #    if _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - Composite Image Done\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - Composite Image Done\n");
 #    endif
 
         if (mpiRank == 0) {
             icet_col_buf = icetImageGetColorub(icet_comp_image);
             icet_depth_buf = icetImageGetDepthf(icet_comp_image);
 #    if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - ImageGet Done\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - ImageGet Done\n");
 #    endif
             if (this->render_comp_img_slot_.Param<core::param::BoolParam>()->Value()) {
                 glDrawPixels(tile_width, tile_height, GL_RGBA, GL_UNSIGNED_BYTE, icet_col_buf);
@@ -221,24 +221,24 @@ void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::Abstract
 
 
 #if _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Extracting Meta Data ...\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Extracting Meta Data ...\n");
 #endif
         // extract meta data
         float times[2] = {0.0f, 0.0f};
         float bbox[6] = {0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
         float camera[9] = {0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f};
         if (!this->extractMetaData(bbox, times, camera)) {
-            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Could not extract meta data.\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: Could not extract meta data.\n");
         }
 #if _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Extracting Meta Data ... Done\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Extracting Meta Data ... Done\n");
 #endif
         // copy data to read buffer, if possible
         {
             std::lock_guard<std::mutex> read_guard{this->buffer_read_guard_}; //< maybe try_lock instead
 
 #if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Swapping Buffer ...\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Swapping Buffer ...\n");
 #endif
 
             int vp[4] = {0, 0, width, height}; // full viewport is needed here
@@ -275,7 +275,7 @@ void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::Abstract
 
         this->swapBuffers();
 #if _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Swapping Buffer ... Done\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Swapping Buffer ... Done\n");
 #endif
 
 #ifdef WITH_MPI
@@ -291,27 +291,27 @@ void megamol::remote::FBOTransmitter2::transmitterJob() {
             std::vector<char> buf;
             try {
 #if _DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Waiting for request\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Waiting for request\n");
 #endif
                 /*if (!this->comm_->Recv(buf, recv_type::RECV)) {
-                    vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Error during recv in 'transmitterJob'\n");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: Error during recv in 'transmitterJob'\n");
                 }*/
                 while (!this->comm_->Recv(buf, recv_type::RECV) && !this->thread_stop_) {
 #if _DEBUG
-                    vislib::sys::Log::DefaultLog.WriteWarn(
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                         "FBOTransmitter2: Recv failed in 'transmitterJob' trying again\n");
 #endif
                 }
                 /*#if _DEBUG
                                 else {
-                                    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Request received\n");
+                                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Request received\n");
                                 }
                 #endif*/
             } catch (zmq::error_t const& e) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "FBOTransmitter2: Exception during recv in 'transmitterJob': %s\n", e.what());
             } catch (...) {
-                vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Exception during recv in 'transmitterJob'\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: Exception during recv in 'transmitterJob'\n");
             }
 
             // wait for request
@@ -323,14 +323,14 @@ void megamol::remote::FBOTransmitter2::transmitterJob() {
                 //            IceTFloat* icet_depth_buf = nullptr;
                 //            if (aggregate_) {
                 //#if _DEBUG
-                //                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Complex IceT commit at rank
+                //                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Complex IceT commit at rank
                 //                %d\n", rank_);
                 //#endif
                 //                std::array<IceTFloat, 4> backgroundColor = {0, 0, 0, 0};
                 //                auto const icet_comp_image = icetCompositeImage(this->color_buf_send_->data(),
                 //                    this->depth_buf_send_->data(), nullptr, nullptr, nullptr, backgroundColor.data());
                 //#if _DEBUG
-                //                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Recieved IceT image at rank
+                //                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Recieved IceT image at rank
                 //                %d\n", rank_);
                 //#endif
                 //                icet_col_buf = icetImageGetColorub(icet_comp_image);
@@ -374,35 +374,35 @@ void megamol::remote::FBOTransmitter2::transmitterJob() {
                 // send data
                 try {
 #if _DEBUG
-                    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Sending answer\n");
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Sending answer\n");
 #endif
                     if (!this->comm_->Send(buf, send_type::SEND)) {
-                        vislib::sys::Log::DefaultLog.WriteError(
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "FBOTransmitter2: Error during send in 'transmitterJob'\n");
                     }
 #if _DEBUG
                     else {
-                        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Answer sent\n");
+                        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Answer sent\n");
                     }
 #endif
                 } catch (zmq::error_t const& e) {
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "FBOTransmitter2: Exception during send in 'transmitterJob': %s\n", e.what());
                 } catch (...) {
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "FBOTransmitter2: Exception during send in 'transmitterJob'\n");
                 }
             }
         }
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: TransmitterJob died\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: TransmitterJob died\n");
     }
 }
 
 
 bool megamol::remote::FBOTransmitter2::triggerButtonClicked(megamol::core::param::ParamSlot& slot) {
     // happy trigger finger hit button action happened
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
 #ifdef WITH_MPI
     initIceT();
@@ -428,7 +428,7 @@ bool megamol::remote::FBOTransmitter2::triggerButtonClicked(megamol::core::param
 
 
 bool megamol::remote::FBOTransmitter2::extractMetaData(float bbox[6], float frame_times[2], float cam_params[9]) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
@@ -478,10 +478,10 @@ bool megamol::remote::FBOTransmitter2::extractMetaData(float bbox[6], float fram
 
     if (!(retBbox && retTimes && retCam)) {
         if (!mvn.empty()) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "FBOTransmitter2: Unable to find VIEW \"%s\" to extract meta data.\n");
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Could not find VIEW with empty name.\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: Could not find VIEW with empty name.\n");
         }
         success = false;
     }
@@ -492,7 +492,7 @@ bool megamol::remote::FBOTransmitter2::extractMetaData(float bbox[6], float fram
 
 
 bool megamol::remote::FBOTransmitter2::extractViewport(int vvpt[6]) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
@@ -516,10 +516,10 @@ bool megamol::remote::FBOTransmitter2::extractViewport(int vvpt[6]) {
 
     if (!ret) {
         if (!mvn.empty()) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "FBOTransmitter2: Unable to find VIEW \"%s\" to extract viewport.\n");
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Could not find VIEW with empty name.\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: Could not find VIEW with empty name.\n");
         }
         success = false;
     }
@@ -530,7 +530,7 @@ bool megamol::remote::FBOTransmitter2::extractViewport(int vvpt[6]) {
 
 
 bool megamol::remote::FBOTransmitter2::extractBkgndColor(std::array<float, 4>& bkgnd_color) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
@@ -549,10 +549,10 @@ bool megamol::remote::FBOTransmitter2::extractBkgndColor(std::array<float, 4>& b
 
     if (!ret) {
         if (!mvn.empty()) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "FBOTransmitter2: Unable to find VIEW \"%s\" to extract background color.\n");
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Could not find VIEW with empty name.\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: Could not find VIEW with empty name.\n");
         }
         success = false;
     }
@@ -571,21 +571,21 @@ bool megamol::remote::FBOTransmitter2::initMPI() {
         if (c != nullptr) {
             /* New method: let MpiProvider do all the stuff. */
             if ((*c)(core::cluster::mpi::MpiCall::IDX_PROVIDE_MPI)) {
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Got MPI communicator.");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter: Got MPI communicator.");
                 this->mpi_comm_ = c->GetComm();
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(_T("FBOTransmitter: Could not ")
+                megamol::core::utility::log::Log::DefaultLog.WriteError(_T("FBOTransmitter: Could not ")
                                                         _T("retrieve MPI communicator for the MPI-based view ")
                                                         _T("from the registered provider module."));
             }
         }
 
         if (this->mpi_comm_ != MPI_COMM_NULL) {
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("FBOTransmitter: MPI is ready, ")
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("FBOTransmitter: MPI is ready, ")
                                                    _T("retrieving communicator properties ..."));
             ::MPI_Comm_rank(this->mpi_comm_, &this->mpiRank);
             ::MPI_Comm_size(this->mpi_comm_, &this->mpiSize);
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("FBOTransmitter on %hs is %d ")
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("FBOTransmitter on %hs is %d ")
                                                    _T("of %d."),
                 vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(), this->mpiRank, this->mpiSize);
         } /* end if (this->comm != MPI_COMM_NULL) */
@@ -611,13 +611,13 @@ bool megamol::remote::FBOTransmitter2::reconnectCallback(megamol::core::param::P
 bool megamol::remote::FBOTransmitter2::initThreads() {
     if (!connected_) {
 #ifdef _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting ...\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting ...\n");
 #endif
 #ifdef WITH_MPI
 
         if ((aggregate_ && mpiRank == 0) || !aggregate_) {
 #    ifdef _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting rank %d\n", mpiRank);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting rank %d\n", mpiRank);
 #    endif
 #endif // WITH_MPI
             auto const address =
@@ -632,7 +632,7 @@ bool megamol::remote::FBOTransmitter2::initThreads() {
             std::string const registerAddress = std::string("tcp://") + target + std::string(":") + handshake;
 
 #if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: registerAddress: %s\n", registerAddress.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: registerAddress: %s\n", registerAddress.c_str());
 #endif
             registerComm.Connect(registerAddress);
 
@@ -654,37 +654,37 @@ bool megamol::remote::FBOTransmitter2::initThreads() {
             std::vector<char> buf(name.begin(), name.end()); //<TODO there should be a better way
             try {
 #if _DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Sending client name %s\n", name.c_str());
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Sending client name %s\n", name.c_str());
 #endif
                 if (!registerComm.Send(buf)) {
-                    vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Send on 'registerComm' failed\n");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: Send on 'registerComm' failed\n");
                 }
 #if _DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Sent client name\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Sent client name\n");
 #endif
 #if _DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Receiving client ack\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Receiving client ack\n");
 #endif
                 while (!registerComm.Recv(buf)) {
 #if _DEBUG
-                    vislib::sys::Log::DefaultLog.WriteWarn(
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                         "FBOTransmitter2: Recv failed on 'registerComm', trying again\n");
 #endif
                 }
 #if _DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Received client ack\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Received client ack\n");
 #endif
 
 
 #if _DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting comm\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting comm\n");
 #endif
             } catch (std::exception& e) {
-                vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Register died: %s\n", e.what());
+                megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: Register died: %s\n", e.what());
             } catch (vislib::Exception& e) {
-                vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Register died: %s\n", e.GetMsgA());
+                megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: Register died: %s\n", e.GetMsgA());
             } catch (...) {
-                vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Register died\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: Register died\n");
             }
 
             auto const comm_type = static_cast<FBOCommFabric::commtype>(
@@ -707,7 +707,7 @@ bool megamol::remote::FBOTransmitter2::initThreads() {
 
             this->transmitter_thread_ = std::thread(&FBOTransmitter2::transmitterJob, this);
 
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connection established.\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connection established.\n");
 
 #ifdef WITH_MPI
         }
@@ -737,7 +737,7 @@ bool megamol::remote::FBOTransmitter2::shutdownThreads() {
 }
 
 bool megamol::remote::FBOTransmitter2::renderCompChanged(core::param::ParamSlot& slot) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     initIceT();
 
@@ -763,13 +763,13 @@ void megamol::remote::FBOTransmitter2::initIceT() {
     useMpi = initMPI();
     aggregate_ = this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->Value();
     if (aggregate_ && !useMpi) {
-        vislib::sys::Log::DefaultLog.WriteError("Cannot aggregate without MPI!\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Cannot aggregate without MPI!\n");
         this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->SetValue(false);
     }
 
     if (aggregate_) {
 #    if _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initializing IceT at rank %d\n", mpiRank);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initializing IceT at rank %d\n", mpiRank);
 #    endif
         // icet setup
 
@@ -799,14 +799,14 @@ void megamol::remote::FBOTransmitter2::initIceT() {
                 width = this->viewport[4];
                 height = this->viewport[5];
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "FBOTransmitter2: ViewPortExtraction - extractViewport failed\n");
                 return;
             }
         }
 
 #    ifdef _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo(
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "FBOTransmitter2: IceT viewport for rank %d extracted from %s: (%d, %d, %d, %d, %d, %d).", this->mpiRank,
             ((this->validViewport) ? ("View") : ("OpenGL")), this->viewport[0], this->viewport[1], this->viewport[2],
             this->viewport[3], this->viewport[4], this->viewport[5]);
@@ -818,7 +818,7 @@ void megamol::remote::FBOTransmitter2::initIceT() {
         icetAddTile(0, 0, width, height, displayRank);
 
 #    ifdef _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initialized IceT at rank %d\n", mpiRank);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initialized IceT at rank %d\n", mpiRank);
 #    endif
     }
 #endif // WITH_MPI

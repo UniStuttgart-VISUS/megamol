@@ -13,15 +13,15 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"
 #include "vislib/ArrayAllocator.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/types.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include <ctime>
 #include <iostream>
 #include <fstream>
@@ -821,7 +821,7 @@ bool GROLoader::create(void) {
  * GROLoader::getData
  */
 bool GROLoader::getData( core::Call& call) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     MolecularDataCall *dc = dynamic_cast<MolecularDataCall*>( &call);
     if ( dc == NULL ) return false;
@@ -1168,7 +1168,7 @@ void GROLoader::loadFrame( view::AnimDataModule::Frame *frame,
         xtcFile.close();
     //}
 
-    //vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
+    //megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_INFO,
     //"Time for loading frame %i: %f", idx,
     //( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
 }
@@ -1177,7 +1177,7 @@ void GROLoader::loadFrame( view::AnimDataModule::Frame *frame,
  * GROLoader::loadFile
  */
 void GROLoader::loadFile( const vislib::TString& filename) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     this->resetAllData();
 
@@ -1982,7 +1982,7 @@ bool GROLoader::readNumXTCFrames() {
     this->XTCFrameOffset.RemoveLast();
     this->numXTCFrames--;
 
-    vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_INFO,
     "Time for parsing the XTC-file: %f",
     ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
 
@@ -2002,7 +2002,7 @@ void GROLoader::writeToXtcFile(const vislib::TString& filename) {
     float maxFloats[3];
 
     if(data.Count() == 1) {
-        vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_INFO,
           "The PDB-file only contains one frame. No XTC-file has been"
           " written.");
         return;
@@ -2013,7 +2013,7 @@ void GROLoader::writeToXtcFile(const vislib::TString& filename) {
 
     // if the file could not be opened return
     if(!outfile) {
-        vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_ERROR,
          "Could not create file.");
          return;
     }

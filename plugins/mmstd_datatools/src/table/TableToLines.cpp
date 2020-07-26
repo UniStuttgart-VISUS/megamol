@@ -7,8 +7,9 @@
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/PerformanceCounter.h"
+#include "vislib/StringConverter.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -203,7 +204,7 @@ bool TableToLines::pushColumnIndex(std::vector<size_t>& cols, const vislib::TStr
         cols.push_back(columnIndex[c]);
         return true;
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("unknown column '%s'", c.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("unknown column '%s'", c.c_str());
         return false;
     }
 }
@@ -212,7 +213,7 @@ bool TableToLines::assertData(table::TableDataCall *ft) {
     if (this->inputHash == ft->DataHash() && !anythingDirty()) return true;
 
     if (this->inputHash != ft->DataHash()) {
-        vislib::sys::Log::DefaultLog.WriteInfo("TableToLines: Dataset changed -> Updating EnumParams\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("TableToLines: Dataset changed -> Updating EnumParams\n");
         this->columnIndex.clear();
 
         this->slotColumnX.Param<core::param::FlexEnumParam>()->ClearValues();
@@ -531,10 +532,10 @@ bool TableToLines::getLineData(core::Call& call) {
 
         return true;
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(1, e.GetMsg());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(1, e.GetMsg());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
+        megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
             _T("in callback getMultiParticleData."));
         return false;
     }
@@ -564,10 +565,10 @@ bool TableToLines::getLineDataExtent(core::Call& call) {
         c.SetUnlocker(NULL);
         return true;
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(1, e.GetMsg());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(1, e.GetMsg());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
+        megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
             _T("in callback getLineDataExtend."));
         return false;
     }

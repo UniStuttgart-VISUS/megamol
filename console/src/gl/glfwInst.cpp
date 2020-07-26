@@ -9,7 +9,7 @@
 
 #include "gl/glfwInst.h"
 #include "GLFW/glfw3.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 //#include <mutex>
 
 using namespace megamol;
@@ -31,11 +31,11 @@ std::shared_ptr<gl::glfwInst> gl::glfwInst::Instance() {
 gl::glfwInst::glfwInst() : error(false) {
     try {
         if (::glfwInit() != GLFW_TRUE) {
-            vislib::sys::Log::DefaultLog.WriteError("glfwInit failed");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("glfwInit failed");
             error = true;
         }
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("glfwInit failed (exception)");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("glfwInit failed (exception)");
         error = true;
     }
 }

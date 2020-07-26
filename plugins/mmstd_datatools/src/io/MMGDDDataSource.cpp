@@ -8,10 +8,10 @@
 #include "stdafx.h"
 #include "io/MMGDDDataSource.h"
 #include "mmcore/param/FilePathParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/String.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include <cassert>
 
 using namespace megamol;
@@ -50,7 +50,7 @@ bool io::MMGDDDataSource::create(void) {
 }
 
 void io::MMGDDDataSource::loadFrame(core::view::AnimDataModule::Frame *frame, unsigned int idx) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     Frame *f = dynamic_cast<Frame*>(frame);
     if (f == nullptr) return;
     if (this->file == nullptr) {
@@ -78,7 +78,7 @@ void io::MMGDDDataSource::release(void) {
 }
 
 bool io::MMGDDDataSource::filenameChanged(core::param::ParamSlot& slot) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     using vislib::sys::File;
     this->resetFrameCache();
     this->data_hash++;

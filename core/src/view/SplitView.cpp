@@ -13,12 +13,12 @@
 #include "mmcore/view/CallRenderView.h"
 
 #include "vislib/Trace.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol;
 using namespace megamol::core;
-using vislib::sys::Log;
+using megamol::core::utility::log::Log;
 
 enum Orientation { HORIZONTAL = 0, VERTICAL = 1 };
 

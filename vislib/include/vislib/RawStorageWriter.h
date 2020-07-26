@@ -136,7 +136,7 @@ namespace vislib {
         inline void Write(UINT16 d) { this->Write(&d, 2); }
         inline void Write(INT16 d) { this->Write(&d, 2); }
         inline void Write(UINT32 d) { this->Write(&d, 4); }
-        inline void Write(INT32 d) { this->Write(&d, 4); }
+        inline void Write(VL_INT32 d) { this->Write(&d, 4); }
         inline void Write(UINT64 d) { this->Write(&d, 8); }
         inline void Write(INT64 d) { this->Write(&d, 8); }
         inline void Write(float d) { this->Write(&d, 4); }

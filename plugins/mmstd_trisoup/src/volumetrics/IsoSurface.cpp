@@ -14,7 +14,7 @@
 #include <climits>
 #include <cfloat>
 #include <cmath>
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/RawStorageWriter.h"
 #include "volumetrics/MarchingCubeTables.h"
 #include "vislib/math/Plane.h"
@@ -132,7 +132,7 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
             if (attrIdx >= cvd->AttributeCount()) {
                 recalc = false;
             } else if (cvd->Attribute(attrIdx).Type() != core::CallVolumeData::TYPE_FLOAT) {
-                vislib::sys::Log::DefaultLog.WriteError("Only float volumes are supported ATM");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Only float volumes are supported ATM");
                 recalc = false;
             }
         }

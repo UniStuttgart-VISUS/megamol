@@ -21,9 +21,9 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/FilePathParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Vector.h"
 
@@ -154,12 +154,12 @@ bool TriSoupRenderer::Render(view::CallRender3D_2& call) {
     this->GetLights();
     glm::vec4 lightPos = {0.0f, 0.0f, 0.0f, 1.0f};
     if (this->lightMap.size() != 1) {
-        //vislib::sys::Log::DefaultLog.WriteWarn(
+        //megamol::core::utility::log::Log::DefaultLog.WriteWarn(
         //    "[TriSoupRenderer] Only one single point light source is supported by this renderer");
     }
     for (auto light : this->lightMap) {
         if (light.second.lightType != core::view::light::POINTLIGHT) {
-            //vislib::sys::Log::DefaultLog.WriteWarn(
+            //megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             //    "[TriSoupRenderer] Only single point light source is supported by this renderer");
         } else {
             auto lPos = light.second.pl_position;

@@ -9,7 +9,7 @@
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/versioninfo.h"
 #include "versioninfo.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/String.h"
 #include "vislib/UnsupportedOperationException.h"
 #include <iostream>
@@ -55,7 +55,7 @@ void megamol::console::utility::AboutInfo::PrintGreeting(void) {
  * megamol::console::utility::AboutInfo::LogGreeting
  */
 void megamol::console::utility::AboutInfo::LogGreeting(void) {
-    vislib::sys::Log::DefaultLog.WriteInfo("MegaMol Console");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("MegaMol Console");
 }
 
 
@@ -74,7 +74,7 @@ void megamol::console::utility::AboutInfo::PrintVersionInfo(void) {
  * megamol::console::utility::AboutInfo::LogVersionInfo
  */
 void megamol::console::utility::AboutInfo::LogVersionInfo(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, AboutInfo::consoleVersionString());
     vislib::StringA comment = AboutInfo::consoleCommentString();
     comment.Replace("\n", "; ");
@@ -110,7 +110,7 @@ void megamol::console::utility::AboutInfo::LogStartTime(void) {
     now = localtime(&nowtime);
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
     strftime(buffer, 1024, "%#c", now);
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Started %s\n", buffer);
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Started %s\n", buffer);
 }
 
 #ifndef _WIN32

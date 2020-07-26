@@ -46,6 +46,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein_calls;
 using namespace megamol::protein_cuda;
+using namespace megamol::core::utility::log;
         
 /*
  * MoleculeCudaSESRenderer::MoleculeCudaSESRenderer
@@ -151,7 +152,6 @@ bool MoleculeCudaSESRenderer::create( void ) {
     glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, spec);
     glMaterialf( GL_FRONT_AND_BACK, GL_SHININESS, 50.0f);
 
-    using namespace vislib::sys;
     using namespace vislib::graphics::gl;
     
     ShaderSource vertSrc;
@@ -656,7 +656,7 @@ bool MoleculeCudaSESRenderer::Render( Call& call ) {
 	// try to initialize CUDA
 	if( !this->cudaInitalized ) {
         cudaInitalized = this->initCuda( protein, 16, cr3d);
-		vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, 
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_INFO, 
 			"%s: CUDA initialization: %i", this->ClassName(), cudaInitalized );
 	}
 

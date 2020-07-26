@@ -200,8 +200,8 @@ DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
  * vislib::net::TcpServer::SetFlags
  */
 void vislib::net::TcpServer::SetFlags(UINT32 flags) {
-    vislib::sys::Interlocked::Exchange(reinterpret_cast<INT32*>(&this->flags),
-        static_cast<INT32>(flags));
+    vislib::sys::Interlocked::Exchange(reinterpret_cast<VL_INT32*>(&this->flags),
+        static_cast<VL_INT32>(flags));
 }
 
 

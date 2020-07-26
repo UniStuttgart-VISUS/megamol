@@ -11,10 +11,10 @@
 #include "vislib/assert.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/net/IPCommEndPoint.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/net/SocketException.h"
 #include "vislib/String.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 
 using namespace megamol::core;
 
@@ -95,15 +95,15 @@ void cluster::CommChannelServer::MultiSendMessage(const vislib::net::AbstractSim
         } catch(vislib::net::SocketException skex) {
             if ((static_cast<int>(skex.GetErrorCode()) != 10054) 
                     && (static_cast<int>(skex.GetErrorCode()) != 10053)) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Unable to send message to %s: [%d] %s", channel.CounterpartName().PeekBuffer(),
                     static_cast<int>(skex.GetErrorCode()), skex.GetMsgA());
             }
         } catch(vislib::Exception ex) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to send message to %s: %s", channel.CounterpartName().PeekBuffer(), ex.GetMsgA());
         } catch(...) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to send message to %s", channel.CounterpartName().PeekBuffer());
         }
     }
@@ -126,15 +126,15 @@ void cluster::CommChannelServer::SingleSendMessage(const vislib::net::AbstractSi
 			} catch(vislib::net::SocketException skex) {
 				if ((static_cast<int>(skex.GetErrorCode()) != 10054) 
 						&& (static_cast<int>(skex.GetErrorCode()) != 10053)) {
-					vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+					megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 						"Unable to send message to %s: [%d] %s", channel.CounterpartName().PeekBuffer(),
 						static_cast<int>(skex.GetErrorCode()), skex.GetMsgA());
 				}
 			} catch(vislib::Exception ex) {
-				vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 					"Unable to send message to %s: %s", channel.CounterpartName().PeekBuffer(), ex.GetMsgA());
 			} catch(...) {
-				vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 					"Unable to send message to %s", channel.CounterpartName().PeekBuffer());
 			}
 			break;
@@ -185,7 +185,7 @@ void cluster::CommChannelServer::OnCommChannelMessage(cluster::CommChannel& send
  * cluster::CommChannelServer::OnServerError
  */
 bool cluster::CommChannelServer::OnServerError(const vislib::net::CommServer& src, const vislib::Exception& exception) throw() {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Control Channel Server: %s\n", exception.GetMsgA());
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, "Control Channel Server: %s\n", exception.GetMsgA());
     return true; // keep server running
 }
 
@@ -224,10 +224,10 @@ bool cluster::CommChannelServer::OnNewConnection(const vislib::net::CommServer& 
 
         return true; // connection accepted
     } catch(vislib::Exception ex) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Exception on accepting connection: %s\n", ex.GetMsgA());
     } catch(...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Exception on accepting connection: unexpected exception\n");
     }
     return false;

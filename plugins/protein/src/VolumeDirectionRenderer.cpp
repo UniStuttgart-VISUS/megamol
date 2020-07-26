@@ -31,6 +31,7 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
+using namespace megamol::core::utility::log;
 
 
 #define CHECK_FOR_OGL_ERROR() do { GLenum err; err = glGetError();if (err != GL_NO_ERROR) { fprintf(stderr, "%s(%d) glError: %s\n", __FILE__, __LINE__, gluErrorString(err)); } } while(0)
@@ -98,7 +99,6 @@ bool VolumeDirectionRenderer::create(void) {
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
-    using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
     ShaderSource vertSrc;

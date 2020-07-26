@@ -33,7 +33,7 @@
 #include "vislib/Trace.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
@@ -45,6 +45,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
 using namespace megamol::protein_calls;
+using namespace megamol::core::utility::log;
 
 
 #define USE_VERTEX_SKIP_SHADER
@@ -260,7 +261,6 @@ void protein::SolventVolumeRenderer::release ( void ) {
 
 
 bool protein::SolventVolumeRenderer::loadShader(vislib::graphics::gl::GLSLShader& shader, const vislib::StringA& vert, const vislib::StringA& frag) {
-    using namespace vislib::sys;
     using namespace vislib::graphics::gl;
     ShaderSource vertSrc;
     ShaderSource fragSrc;
@@ -1158,7 +1158,7 @@ void protein::SolventVolumeRenderer::FindVisibleSolventMolecules( MolecularDataC
     for( unsigned int i = 0; i < mol->AtomSolventResidueCount(); i++ ) {
         tmpStr.Format( "Solvent Molecule Type %i, count: %i; ", i, int( counter[i]));
         str += tmpStr;
-        vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, "Solvent Molecule Type %i, count: %i", i, int( counter[i]));
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_INFO, "Solvent Molecule Type %i, count: %i", i, int( counter[i]));
     }
 /*    vislib::graphics::gl::SimpleFont f;
     if( f.Initialise() ) {
@@ -2207,7 +2207,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
     orig = ( orig + this->translation) * this->scale;
     vislib::math::Vector<float, 3> nullVec( 0.0f, 0.0f, 0.0f);
 
-//    vislib::sys::Log::DefaultLog.WriteMsg ( vislib::sys::Log::LEVEL_INFO, "rendering %d polymer atoms", atomCntDensity );
+//    megamol::core::utility::log::Log::DefaultLog.WriteMsg ( megamol::core::utility::log::Log::LEVEL_INFO, "rendering %d polymer atoms", atomCntDensity );
 
     float accumulateFactor = accumulateVolume ? this->accumulateFactor.Param<param::FloatParam>()->Value() : 1.0f;
     this->updateVolumeShaderMoleculeVolume.Enable();
@@ -2246,7 +2246,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 #endif
 
     accumulateFactor = accumulateColors ? this->accumulateFactor.Param<param::FloatParam>()->Value() : 1.0f;
-//    vislib::sys::Log::DefaultLog.WriteMsg ( vislib::sys::Log::LEVEL_INFO, "rendering %d solvent atoms", atomCntColor );
+//    megamol::core::utility::log::Log::DefaultLog.WriteMsg ( megamol::core::utility::log::Log::LEVEL_INFO, "rendering %d solvent atoms", atomCntColor );
     vislib::graphics::gl::GLSLShader& volumeColorShader =  coloringByHydroBonds ? this->updateVolumeShaderHBondColor : this->updateVolumeShaderSolventColor;
     volumeColorShader.Enable();
         // set shader params

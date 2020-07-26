@@ -14,7 +14,7 @@
 
 #include "stdafx.h"
 #include "vislib/ArrayAllocator.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/types.h"

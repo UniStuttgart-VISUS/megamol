@@ -6,7 +6,7 @@ namespace mesh {
 void GPURenderTaskCollection::deleteSingleRenderTask(size_t rt_idx) {
 
     if (rt_idx > m_render_task_meta_data.size()) {
-        vislib::sys::Log::DefaultLog.WriteError("RenderTask update error: Index out of bounds.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("RenderTask update error: Index out of bounds.");
         return;
     }
 

@@ -11,10 +11,11 @@
 #include "stdafx.h"
 
 #include "VTKLegacyDataUnstructuredGrid.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 using namespace megamol::protein;
+using namespace megamol::core::utility::log;
 
 
 /*
@@ -50,8 +51,6 @@ VTKLegacyDataUnstructuredGrid::~VTKLegacyDataUnstructuredGrid() {
  * VTKLegacyDataUnstructuredGrid::PeekPointDataByIndex
  */
 const AbstractVTKLegacyData::AttributeArray* VTKLegacyDataUnstructuredGrid::PeekPointDataByIndex(size_t idx) const {
-    using namespace vislib::sys;
-
     if (idx >= this->pointData.Count()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Requested idx out of bound, returning NULL.");
         return NULL;
@@ -66,10 +65,7 @@ const AbstractVTKLegacyData::AttributeArray* VTKLegacyDataUnstructuredGrid::Peek
  */
 const AbstractVTKLegacyData::AttributeArray* VTKLegacyDataUnstructuredGrid::PeekPointDataByName(
     vislib::StringA name) const {
-
-    using namespace vislib::sys;
-
-    // Check whether the id is in use
+// Check whether the id is in use
     bool isUsed = false;
     int idx = -1;
     for (unsigned int i = 0; i < this->pointData.Count(); ++i) {

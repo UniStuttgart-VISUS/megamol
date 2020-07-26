@@ -8,7 +8,7 @@
 #include "mmcore/AbstractNamedObject.h"
 #include "vislib/assert.h"
 #include "vislib/sys/AutoLock.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/UnsupportedOperationException.h"
 
 using namespace megamol::core;
@@ -117,7 +117,7 @@ void AbstractNamedObject::ClearCleanupMark(void) {
 void AbstractNamedObject::PerformCleanup(void) {
     if (this->cleanupMark) {
         // message removed because of quickstart module peeking
-        //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 850,
+        //megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 850,
         //    "Module \"%s\" marked for cleanup\n", this->Name().PeekBuffer());
     }
 

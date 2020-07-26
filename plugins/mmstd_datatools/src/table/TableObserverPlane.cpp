@@ -8,7 +8,7 @@
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/CallClipPlane.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/PerformanceCounter.h"
 #include "vislib/Trace.h"
 #include "vislib/math/Plane.h"
@@ -168,7 +168,7 @@ bool TableObserverPlane::pushColumnIndex(std::vector<size_t>& cols, const vislib
         cols.push_back(columnIndex[c]);
         return true;
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("unknown column '%s'", c.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("unknown column '%s'", c.c_str());
         return false;
     }
 }
@@ -259,7 +259,7 @@ bool TableObserverPlane::assertData(table::TableDataCall *ft, megamol::core::vie
         if (rows == 0) continue;
 
         if (ft->GetColumnsCount() != cols) {
-            vislib::sys::Log::DefaultLog.WriteError("TableObserverPlane cannot cope with changing column count!");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("TableObserverPlane cannot cope with changing column count!");
             return false;
         }
         // check whether the headers are the same
@@ -267,7 +267,7 @@ bool TableObserverPlane::assertData(table::TableDataCall *ft, megamol::core::vie
         for (size_t i = 0; i < ft->GetColumnsCount(); i++) {
             std::string n = this->cleanUpColumnHeader(ft->GetColumnsInfos()[i].Name());
             if (columnIndex.find(n) == columnIndex.end() || columnIndex[n] != i) {
-                vislib::sys::Log::DefaultLog.WriteError("TableObserverPlane does not trust reordered columns!");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("TableObserverPlane does not trust reordered columns!");
                 return false;
             }
         }
@@ -301,7 +301,7 @@ bool TableObserverPlane::assertData(table::TableDataCall *ft, megamol::core::vie
                     }
                     break;
                 case 1: // interpolation
-                    vislib::sys::Log::DefaultLog.WriteError("TableObserverPlane has no implementation for interpolation yet!");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("TableObserverPlane has no implementation for interpolation yet!");
                     return false;
                     break;
             }
@@ -338,10 +338,10 @@ bool TableObserverPlane::getObservedData(core::Call& call) {
 
         return true;
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(1, e.GetMsg());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(1, e.GetMsg());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
+        megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
             _T("in callback getObservedData."));
         return false;
     }
@@ -367,10 +367,10 @@ bool TableObserverPlane::getHash(core::Call& call) {
         out.SetUnlocker(NULL);
         return true;
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(1, e.GetMsg());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(1, e.GetMsg());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
+        megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
             _T("in callback getMultiparticleExtent."));
         return false;
     }

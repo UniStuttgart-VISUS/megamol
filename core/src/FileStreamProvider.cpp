@@ -10,7 +10,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <iostream>
 #include <fstream>
@@ -43,7 +43,7 @@ namespace core {
 
             if (!this->stream.good())
             {
-                vislib::sys::Log::DefaultLog.WriteWarn("Unable to open file '%s' for writing!",
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("Unable to open file '%s' for writing!",
                     this->filePath.Param<core::param::FilePathParam>()->Value());
             }
         }

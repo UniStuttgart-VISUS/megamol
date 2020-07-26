@@ -12,7 +12,7 @@
 #include "vislib/Array.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/sys/BufferedFile.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/sys/SystemException.h"
 #include <string>
@@ -122,10 +122,10 @@ void utility::ParamFileManager::Load() {
 
     vislib::sys::BufferedFile pfile;
     if (!pfile.Open(fn, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Unable to open parameter file.");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, "Unable to open parameter file.");
         return;
     } else {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Reading parameter file \"%s\"", vislib::StringA(fn).PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Reading parameter file \"%s\"", vislib::StringA(fn).PeekBuffer());
     }
 
     while (!pfile.IsEOF()) {
@@ -152,14 +152,14 @@ void utility::ParamFileManager::Load() {
                         }
                     }
                 } catch (vislib::sys::SystemException e) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                         "megamol::console::utility::ParamFileManager::Load: Failed to canonicalize parameter: %s\n", e.GetMsgA());
                 }
 
                 ::mmcSetParameterValueA(hParam, value);
 
             } else {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to get handle for parameter \"%s\"\n", name.PeekBuffer());
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to get handle for parameter \"%s\"\n", name.PeekBuffer());
             }
         }
     }
@@ -179,10 +179,10 @@ void utility::ParamFileManager::Save() {
 
     vislib::sys::BufferedFile pfile;
     if (!pfile.Open(c.filename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::CREATE_OVERWRITE)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to create parameter file.");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to create parameter file.");
         return;
     } else {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Writing parameter file \"%s\"", vislib::StringA(c.filename).PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Writing parameter file \"%s\"", vislib::StringA(c.filename).PeekBuffer());
     }
 
     vislib::sys::WriteFormattedLineToFile(pfile, "#\n");

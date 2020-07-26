@@ -71,7 +71,7 @@ bool OpenBabelLoader::getData(core::Call& call)
 #else
 		if (!input->is_open())
 		{
-			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Could not load file %s", (const char*)T2A(file)); // DEBUG
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Could not load file %s", (const char*)T2A(file)); // DEBUG
 			return false;
 		}
 #endif

@@ -13,10 +13,11 @@
 
 #include "helper_math.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/Array.h"
 
 using namespace megamol;
+using namespace megamol::core::utility::log;
 
 /*
  * protein_cuda::LIC::CalcLicX
@@ -32,7 +33,6 @@ bool protein_cuda::LIC::CalcLicX(UniGrid3D<float3> &grid,
         UniGrid3D<float> &licBuffXAlpha) {
 
     using namespace vislib;
-    using namespace vislib::sys;
     using namespace vislib::math;
 
     //printf("(Re)calculating LIC texture for x-plane.\n"); // DEBUG
@@ -243,7 +243,6 @@ bool protein_cuda::LIC::CalcLicY(UniGrid3D<float3> &grid,
         UniGrid3D<float> &licBuffYAlpha) {
 
     using namespace vislib;
-    using namespace vislib::sys;
     using namespace vislib::math;
 
     //printf("(Re)calculating LIC texture for y-plane.\n"); // DEBUG
@@ -455,7 +454,6 @@ bool protein_cuda::LIC::CalcLicZ(UniGrid3D<float3> &grid,
         UniGrid3D<float> &licBuffZAlpha) {
 
     using namespace vislib;
-    using namespace vislib::sys;
     using namespace vislib::math;
 
     //printf("(Re)calculating LIC texture for z-plane.\n"); // DEBUG

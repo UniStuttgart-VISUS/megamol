@@ -20,7 +20,7 @@
 #include "tinyply.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/File.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol {
 namespace stdplugin {

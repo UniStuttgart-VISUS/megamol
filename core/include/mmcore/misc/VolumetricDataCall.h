@@ -17,7 +17,7 @@
 #include "mmcore/misc/VolumetricDataCallTypes.h"
 
 #include "vislib/Array.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 namespace megamol {
@@ -135,7 +135,7 @@ namespace misc {
 				return this->data;
 			}
 			else {
-				vislib::sys::Log::DefaultLog.WriteError("Trying to get volume data from VRAM: Volume data location set to RAM.");
+				megamol::core::utility::log::Log::DefaultLog.WriteError("Trying to get volume data from VRAM: Volume data location set to RAM.");
 				return nullptr;
 			}
         }
@@ -150,7 +150,7 @@ namespace misc {
 				return this->data;
 			}
 			else {
-				vislib::sys::Log::DefaultLog.WriteError("Trying to get volume data from VRAM: Volume data location set to RAM.");
+				megamol::core::utility::log::Log::DefaultLog.WriteError("Trying to get volume data from VRAM: Volume data location set to RAM.");
 				return nullptr;
 			}
         }
@@ -160,7 +160,7 @@ namespace misc {
 				return vram_volume_name;
 			}
 			else {
-				vislib::sys::Log::DefaultLog.WriteError("Trying to get volume data from RAM: Volume data location set to VRAM.");
+				megamol::core::utility::log::Log::DefaultLog.WriteError("Trying to get volume data from RAM: Volume data location set to VRAM.");
 				return 0;
 			}
 		}

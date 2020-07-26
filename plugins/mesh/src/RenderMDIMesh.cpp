@@ -176,7 +176,7 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 	if ((!(*task_call)(0)) )
 		return false;
 	
-	//vislib::sys::Log::DefaultLog.WriteError("Hey listen!");
+	//megamol::core::utility::log::Log::DefaultLog.WriteError("Hey listen!");
 	
 	// Set GL state (otherwise bounding box or view cube rendering state is used)
 	glDisable(GL_BLEND);

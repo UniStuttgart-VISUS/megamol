@@ -19,8 +19,8 @@
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/assert.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol;
@@ -176,7 +176,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
         while (genus != 0 && step <= maxSteps) {
             this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value(), probeRadius);
             this->isGenus0(0, &genus);
-            vislib::sys::Log::DefaultLog.WriteInfo(
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "Step %u: Mesh with radius %f has genus %u", step, probeRadius, genus);
             probeRadius += stepSize;
             step++;
@@ -193,7 +193,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
         while (genus != 0 && step <= maxSteps) {
             this->load(vislib::StringA(""), probeRadius, ctmd->FrameID());
             this->isGenus0(ctmd->FrameID(), &genus);
-            vislib::sys::Log::DefaultLog.WriteInfo(
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "Step %u: Mesh with radius %f has genus %u", step, probeRadius, genus);
             probeRadius += stepSize;
             step++;
@@ -502,7 +502,7 @@ bool MSMSGenus0Generator::getExtentCallback(core::Call& caller) {
         while (genus != 0 && step <= maxSteps) {
             this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value(), probeRadius);
             this->isGenus0(0, &genus);
-            vislib::sys::Log::DefaultLog.WriteInfo(
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "Step %u: Mesh with radius %f has genus %u", step, probeRadius, genus);
             probeRadius += stepSize;
             step++;
@@ -540,7 +540,7 @@ bool MSMSGenus0Generator::getExtentCallback(core::Call& caller) {
  * MSMSGenus0Generator::load
  */
 bool MSMSGenus0Generator::load(const vislib::TString& filename, float probe_radius, unsigned int frameID) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     vislib::StringA vertFilename(filename);
     vertFilename.Append(".vert");
@@ -759,7 +759,7 @@ bool MSMSGenus0Generator::load(const vislib::TString& filename, float probe_radi
  */
 bool MSMSGenus0Generator::isGenus0(uint32_t frameID, uint32_t* out_genus) {
     if (this->obj.Count() < frameID) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Requested non-existing frame %u out of %u frames", frameID, static_cast<uint32_t>(this->obj.Count()));
         return false;
     }

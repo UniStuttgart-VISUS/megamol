@@ -85,22 +85,22 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
     auto* inVol = this->volumeSlot.CallAs<VolumetricDataCall>();
     inVol->SetFrameID(outData.FrameID());
     if (!(*inVol)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("ParticleVisibilityFromVolume: cannot get extents of volume");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleVisibilityFromVolume: cannot get extents of volume");
         return false;
     }
     if (!(*inVol)(0)) {
-        vislib::sys::Log::DefaultLog.WriteError("ParticleVisibilityFromVolume: cannot get volume data");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleVisibilityFromVolume: cannot get volume data");
         return false;
     }
     if (inVol->FrameID() != inData.FrameID()) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "ParticleVisibilityFromVolume: frameIDs of particles and volume do not match: %u (vol) - %u (parts)", inVol->FrameID(),
             inData.FrameID());
         return false;
     }
 
     if (!inVol->IsUniform(0) || !inVol->IsUniform(1) || !inVol->IsUniform(2)) {
-        vislib::sys::Log::DefaultLog.WriteError("ParticleVisibilityFromVolume: input Volume has to be uniform!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleVisibilityFromVolume: input Volume has to be uniform!");
         return false;
     }
 
@@ -111,14 +111,14 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
         return true;
     }
 
-    vislib::sys::Log::DefaultLog.WriteInfo("Computing Visibility from Volume...");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Computing Visibility from Volume...");
 
     const VolumetricDataCall::Metadata* volMeta = inVol->GetMetadata();
     const auto theVol = inVol->GetData();
 
     if (!volMeta->GridType == VolumetricDataCall::GridType::CARTESIAN ||
         !volMeta->GridType == VolumetricDataCall::GridType::RECTILINEAR) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "ParticleVisibilityFromVolume: input Volume has to be cartesian or rectilinear!");
         return false;
     }
@@ -142,7 +142,7 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
         getFun = &VolumetricDataCall::GetRelativeVoxelValue;
     }
 
-    vislib::sys::Log::DefaultLog.WriteInfo("ParticleVisibilityFromVolume: starting filtering");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ParticleVisibilityFromVolume: starting filtering");
     const auto startTime = std::chrono::high_resolution_clock::now();
 
     unsigned int plc = inData.GetParticleListCount();
@@ -282,7 +282,7 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
 
         auto& outp = outData.AccessParticles(i);
         outp.SetCount(cntLeft);
-        vislib::sys::Log::DefaultLog.WriteInfo(
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "ParticleVisibilityFromVolume: list %d: %lu / %lu particles left", i, cntLeft, cnt);
         if (isInterleaved) {
             theVertexData[i].resize(cntLeft * vdstride);
@@ -312,11 +312,11 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
 
     const auto endTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float, std::milli> diffMillis = endTime - startTime;
-    vislib::sys::Log::DefaultLog.WriteInfo("ParticleVisibilityFromVolume took %f ms.", diffMillis.count());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ParticleVisibilityFromVolume took %f ms.", diffMillis.count());
 
 
     if (volumeIsNotBBoxAligned) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "ParticleVisibilityFromVolume: Volume does not cover all of the domain!");
     }
 

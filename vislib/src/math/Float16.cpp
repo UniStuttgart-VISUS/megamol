@@ -12,7 +12,7 @@
 
 
 /** Absolute of bias of half exponent (-15). */
-static const INT32 FLT16_BIAS = 15;
+static const VL_INT32 FLT16_BIAS = 15;
 
 /** Bitmask for the exponent bits of half. */
 static const UINT16 FLT16_EXPONENT_MASK = 0x7C00;
@@ -31,7 +31,7 @@ static const UINT32 FLT1632_MANTISSA_OFFSET
 static const UINT32 FLT1632_SIGN_OFFSET = (32 - 16);
 
 /** Bias of float exponent. */
-static const INT32 FLT32_BIAS = 127;
+static const VL_INT32 FLT32_BIAS = 127;
 
 /** Bitmask for the exponent bits of float. */
 static const UINT32 FLT32_EXPONENT_MASK = 0x7F800000;
@@ -48,7 +48,7 @@ static const UINT32 FLT32_SIGN_MASK = 0x80000000;
  */
 void vislib::math::Float16::FromFloat32(UINT16 *outHalf, SIZE_T cnt,
         const float *flt) {
-    INT32 exponent = 0;         // Value of exponent of 'flt'.
+    VL_INT32 exponent = 0;         // Value of exponent of 'flt'.
     UINT32 input = 0;           // Bitwise reinterpretation of 'flt'.
     UINT32 mantissa = 0;        // Value of mantissa, biased for half.
     UINT32 sign = 0;            // The sign bit.
@@ -62,7 +62,7 @@ void vislib::math::Float16::FromFloat32(UINT16 *outHalf, SIZE_T cnt,
         sign = (input & FLT32_SIGN_MASK) >> FLT1632_SIGN_OFFSET;
 
         /* Retrieve value of exponent. */
-        exponent = static_cast<INT32>((input & FLT32_EXPONENT_MASK) 
+        exponent = static_cast<VL_INT32>((input & FLT32_EXPONENT_MASK) 
             >> (FLT_MANT_DIG - 1)) - FLT32_BIAS + FLT16_BIAS;
 
         /* Retrieve value of mantissa. */
@@ -124,7 +124,7 @@ void vislib::math::Float16::FromFloat32(UINT16 *outHalf, SIZE_T cnt,
  */
 void vislib::math::Float16::ToFloat32(float *outFloat, const SIZE_T cnt,
         const UINT16 *half) {
-    INT32 exponent = 0;         // Value of exponent of 'half'.
+    VL_INT32 exponent = 0;         // Value of exponent of 'half'.
     UINT32 mantissa = 0;        // Value of mantissa.
     UINT32 result = 0;          // The result
     UINT32 sign = 0;            // The sign bit.
@@ -136,7 +136,7 @@ void vislib::math::Float16::ToFloat32(float *outFloat, const SIZE_T cnt,
             << FLT1632_SIGN_OFFSET;
 
         /* Retrieve value of exponent. */
-        exponent = static_cast<INT32>((half[i] & FLT16_EXPONENT_MASK) 
+        exponent = static_cast<VL_INT32>((half[i] & FLT16_EXPONENT_MASK) 
             >> Float16::MANT_DIG);
 
         /* Retrieve value of mantissa. */

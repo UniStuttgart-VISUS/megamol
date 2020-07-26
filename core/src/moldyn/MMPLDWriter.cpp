@@ -13,8 +13,8 @@
 #include "mmcore/param/FilePathParam.h"
 #include "vislib/String.h"
 #include "vislib/sys/FastFile.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/Thread.h"
 
 using namespace megamol::core;
 
@@ -69,7 +69,7 @@ void moldyn::MMPLDWriter::release(void) {}
  * moldyn::MMPLDWriter::`
  */
 bool moldyn::MMPLDWriter::run(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value());
     if (filename.IsEmpty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No file name specified. Abort.");
@@ -234,7 +234,7 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
         file.Close();                                                                                                  \
         return false;                                                                                                  \
     }
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     uint8_t const alpha = 255;
     int ver = this->versionSlot.Param<param::EnumParam>()->Value();
 
@@ -438,7 +438,7 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
                 }
             } break;
             default:
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "MMPLDWriter: incoming unknown color type %u", points.GetColourDataType());
                 break;
             }

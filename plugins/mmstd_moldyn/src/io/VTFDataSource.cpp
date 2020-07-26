@@ -13,7 +13,7 @@
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "vislib/sys/error.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/Path.h"
 #include "vislib/PtrArray.h"
 #include "vislib/RawStorageWriter.h"
@@ -22,9 +22,9 @@
 #include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/sys/sysfunctions.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/Trace.h"
-#include "vislib/sys/ConsoleProgressBar.h"
+#include "mmcore/utility/sys/ConsoleProgressBar.h"
 #include "vislib/math/ShallowVector.h"
 #include <cstdint>
 #include "vislib/sys/BufferedFile.h"
@@ -488,7 +488,7 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
     if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         vislib::sys::SystemMessage err(::GetLastError());
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to open VTF-File \"%s\": %s", vislib::StringA(
             this->filename.Param<param::FilePathParam>()->Value()).PeekBuffer(),
             static_cast<const char*>(err));
@@ -501,7 +501,7 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
     }
 
     if (!this->parseHeaderAndFrameIndices(this->filename.Param<param::FilePathParam>()->Value())) {
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to read VTF-Header from file \"%s\". Wrong format?", vislib::StringA(
             this->filename.Param<param::FilePathParam>()->Value()).PeekBuffer());
 
@@ -531,12 +531,12 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n",
             CACHE_SIZE_MIN, cacheSize);
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_WARN, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_INFO, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, msg);
     }
 
     this->initFrameCache(cacheSize);
@@ -648,7 +648,7 @@ bool io::VTFDataSource::parseHeaderAndFrameIndices(const vislib::TString& filena
                 }
                 element = NULL;
             } catch(...) {
-                this->GetCoreInstance()->Log().WriteMsg(50, "Error parsing type line.");
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(50, "Error parsing type line.");
             }
             SAFE_DELETE(element);
         } else if (line[0] == '>') {

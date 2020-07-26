@@ -10,8 +10,8 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/FilePathParam.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/SingleLinkedList.h"
@@ -147,7 +147,7 @@ void SolPathDataSource::clear(void) {
  */
 void SolPathDataSource::loadData(void) {
     using vislib::sys::File;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::sys::MemmappedFile file;
 
     this->filenameslot.ResetDirty();

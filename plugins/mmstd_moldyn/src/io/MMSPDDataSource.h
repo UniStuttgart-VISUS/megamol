@@ -21,7 +21,7 @@
 #include "vislib/sys/File.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/sys/Thread.h"
 #include "vislib/types.h"
 
 
