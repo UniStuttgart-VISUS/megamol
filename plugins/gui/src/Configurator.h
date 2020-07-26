@@ -9,8 +9,8 @@
 #define MEGAMOL_GUI_CONFIGURATOR_H_INCLUDED
 
 
-#include "WindowManager.h"
-#include "graph/GraphManager.h"
+#include "WindowCollection.h"
+#include "graph/GraphCollection.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/SplitterWidget.h"
@@ -52,7 +52,7 @@ public:
     /**
      * Draw configurator window.
      */
-    bool Draw(WindowManager::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance);
+    bool Draw(WindowCollection::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance);
 
     /**
      * Returns required font scalings for graph canvas
@@ -72,7 +72,7 @@ public:
 private:
     // VARIABLES --------------------------------------------------------------
 
-    GraphManager graph_manager;
+    GraphCollection graph_collection;
 
     std::vector<megamol::core::param::ParamSlot*> param_slots;
     megamol::core::param::ParamSlot state_param;

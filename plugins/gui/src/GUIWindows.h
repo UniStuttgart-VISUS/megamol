@@ -13,8 +13,8 @@
 #include "CorporateGreyStyle.h"
 #include "CorporateWhiteStyle.h"
 #include "FileUtils.h"
-#include "WindowManager.h"
-#include "graph/GraphManager.h"
+#include "WindowCollection.h"
+#include "graph/GraphCollection.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/MinimalPopUp.h"
@@ -168,8 +168,8 @@ private:
     /** The currently initialized ImGui API */
     GUIImGuiAPI api;
 
-    /** The window manager. */
-    WindowManager window_manager;
+    /** The window collection. */
+    WindowCollection window_collection;
 
     /** The configurator. */
     megamol::gui::Configurator configurator;
@@ -183,8 +183,8 @@ private:
     /** UID of graph */
     ImGuiID graph_uid;
 
-    /** The graph manager holding the graph of the currently running project. */
-    GraphManager graph_manager;
+    /** The graph collection holding only the graph of the currently running project. */
+    GraphCollection graph_collection;
 
     // Widgets
     FileBrowserWidget file_browser;
@@ -202,11 +202,11 @@ private:
     void validateParameters();
 
     // Window Draw Callbacks
-    void drawParamWindowCallback(WindowManager::WindowConfiguration& wc);
-    void drawFpsWindowCallback(WindowManager::WindowConfiguration& wc);
-    void drawFontWindowCallback(WindowManager::WindowConfiguration& wc);
-    void drawTransferFunctionWindowCallback(WindowManager::WindowConfiguration& wc);
-    void drawConfiguratorWindowCallback(WindowManager::WindowConfiguration& wc);
+    void drawParamWindowCallback(WindowCollection::WindowConfiguration& wc);
+    void drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc);
+    void drawFontWindowCallback(WindowCollection::WindowConfiguration& wc);
+    void drawTransferFunctionWindowCallback(WindowCollection::WindowConfiguration& wc);
+    void drawConfiguratorWindowCallback(WindowCollection::WindowConfiguration& wc);
 
     void drawMenu(void);
     void drawPopUps(void);

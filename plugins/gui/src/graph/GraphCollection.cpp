@@ -1,29 +1,29 @@
 /*
- * GraphManager.cpp
+ * GraphCollection.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "GraphManager.h"
+#include "GraphCollection.h"
 
 
 using namespace megamol;
 using namespace megamol::gui;
 
 
-// GRAPH MANAGER PRESENTATION ####################################################
+// GRAPH COLLECTION PRESENTATION ##############################################
 
-megamol::gui::GraphManagerPresentation::GraphManagerPresentation(void)
+megamol::gui::GraphCollectionPresentation::GraphCollectionPresentation(void)
     : graph_delete_uid(GUI_INVALID_ID), file_browser() {}
 
 
-megamol::gui::GraphManagerPresentation::~GraphManagerPresentation(void) {}
+megamol::gui::GraphCollectionPresentation::~GraphCollectionPresentation(void) {}
 
 
-void megamol::gui::GraphManagerPresentation::Present(
-    megamol::gui::GraphManager& inout_graph_manager, GraphState_t& state) {
+void megamol::gui::GraphCollectionPresentation::Present(
+    megamol::gui::GraphCollection& inout_graph_collection, GraphState_t& state) {
 
     try {
         if (ImGui::GetCurrentContext() == nullptr) {
@@ -42,7 +42,7 @@ void megamol::gui::GraphManagerPresentation::Present(
         ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
         ImGui::BeginTabBar("Graphs", tab_bar_flags);
 
-        for (auto& graph : inout_graph_manager.GetGraphs()) {
+        for (auto& graph : inout_graph_collection.GetGraphs()) {
 
             // Draw graph
             graph->PresentGUI(state);
@@ -62,14 +62,14 @@ void megamol::gui::GraphManagerPresentation::Present(
                     ImGuiID* dragged_slot_uid_ptr = (ImGuiID*)payload->Data;
                     auto drag_slot_uid = (*dragged_slot_uid_ptr);
                     auto drop_slot_uid = graph->present.GetDropSlot();
-                    graph->AddCall(inout_graph_manager.GetCallsStock(), drag_slot_uid, drop_slot_uid);
+                    graph->AddCall(inout_graph_collection.GetCallsStock(), drag_slot_uid, drop_slot_uid);
                 }
             }
         }
         ImGui::EndTabBar();
 
         // Save selected graph
-        this->SaveProjectToFile(state.graph_save, inout_graph_manager, state);
+        this->SaveProjectToFile(state.graph_save, inout_graph_collection, state);
         state.graph_save = false;
 
         // Delete selected graph when tab is closed and unsaved changes should be discarded.
@@ -81,7 +81,7 @@ void megamol::gui::GraphManagerPresentation::Present(
             if (aborted) {
                 this->graph_delete_uid = GUI_INVALID_ID;
             } else if (confirmed || !popup_open) {
-                inout_graph_manager.DeleteGraph(graph_delete_uid);
+                inout_graph_collection.DeleteGraph(graph_delete_uid);
                 this->graph_delete_uid = GUI_INVALID_ID;
                 state.graph_selected_uid = GUI_INVALID_ID;
             }
@@ -100,34 +100,34 @@ void megamol::gui::GraphManagerPresentation::Present(
 }
 
 
-void megamol::gui::GraphManagerPresentation::SaveProjectToFile(
-    bool open_popup, GraphManager& inout_graph_manager, GraphState_t& state) {
+void megamol::gui::GraphCollectionPresentation::SaveProjectToFile(
+    bool open_popup, GraphCollection& inout_graph_collection, GraphState_t& state) {
 
     bool confirmed, aborted;
     bool popup_failed = false;
     std::string project_filename;
     GraphPtr_t graph_ptr;
-    if (inout_graph_manager.GetGraph(state.graph_selected_uid, graph_ptr)) {
+    if (inout_graph_collection.GetGraph(state.graph_selected_uid, graph_ptr)) {
         project_filename = graph_ptr->GetFilename();
     }
     if (this->file_browser.PopUp(
             FileBrowserWidget::FileBrowserFlag::SAVE, "Save Editor Project", open_popup, project_filename)) {
-        popup_failed = !inout_graph_manager.SaveProjectToFile(state.graph_selected_uid, project_filename, true);
+        popup_failed = !inout_graph_collection.SaveProjectToFile(state.graph_selected_uid, project_filename, true);
     }
     MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
 }
 
 
-// GRAPH MANAGER ##############################################################
+// GRAPH COLLECTION ###########################################################
 
-megamol::gui::GraphManager::GraphManager(void) : graphs(), modules_stock(), calls_stock(), graph_name_uid(0) {}
-
-
-megamol::gui::GraphManager::~GraphManager(void) {}
+megamol::gui::GraphCollection::GraphCollection(void) : graphs(), modules_stock(), calls_stock(), graph_name_uid(0) {}
 
 
-ImGuiID megamol::gui::GraphManager::AddGraph(void) {
+megamol::gui::GraphCollection::~GraphCollection(void) {}
+
+
+ImGuiID megamol::gui::GraphCollection::AddGraph(void) {
 
     ImGuiID retval = GUI_INVALID_ID;
 
@@ -154,7 +154,7 @@ ImGuiID megamol::gui::GraphManager::AddGraph(void) {
 }
 
 
-bool megamol::gui::GraphManager::DeleteGraph(ImGuiID graph_uid) {
+bool megamol::gui::GraphCollection::DeleteGraph(ImGuiID graph_uid) {
 
     for (auto iter = this->graphs.begin(); iter != this->graphs.end(); iter++) {
         if ((*iter)->uid == graph_uid) {
@@ -178,7 +178,7 @@ bool megamol::gui::GraphManager::DeleteGraph(ImGuiID graph_uid) {
 }
 
 
-bool megamol::gui::GraphManager::GetGraph(ImGuiID graph_uid, megamol::gui::GraphPtr_t& out_graph_ptr) {
+bool megamol::gui::GraphCollection::GetGraph(ImGuiID graph_uid, megamol::gui::GraphPtr_t& out_graph_ptr) {
 
     if (graph_uid != GUI_INVALID_ID) {
         for (auto& graph_ptr : this->graphs) {
@@ -194,7 +194,7 @@ bool megamol::gui::GraphManager::GetGraph(ImGuiID graph_uid, megamol::gui::Graph
 }
 
 
-bool megamol::gui::GraphManager::LoadCallStock(const megamol::core::CoreInstance* core_instance) {
+bool megamol::gui::GraphCollection::LoadCallStock(const megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -271,7 +271,7 @@ bool megamol::gui::GraphManager::LoadCallStock(const megamol::core::CoreInstance
 }
 
 
-bool megamol::gui::GraphManager::LoadModuleStock(const megamol::core::CoreInstance* core_instance) {
+bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -362,7 +362,7 @@ bool megamol::gui::GraphManager::LoadModuleStock(const megamol::core::CoreInstan
 }
 
 
-ImGuiID megamol::gui::GraphManager::LoadUpdateProjectFromCore(
+ImGuiID megamol::gui::GraphCollection::LoadUpdateProjectFromCore(
     ImGuiID graph_uid, megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
@@ -399,7 +399,7 @@ ImGuiID megamol::gui::GraphManager::LoadUpdateProjectFromCore(
 }
 
 
-ImGuiID megamol::gui::GraphManager::LoadProjectFromCore(megamol::core::CoreInstance* core_instance) {
+ImGuiID megamol::gui::GraphCollection::LoadProjectFromCore(megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -430,7 +430,7 @@ ImGuiID megamol::gui::GraphManager::LoadProjectFromCore(megamol::core::CoreInsta
 }
 
 
-bool megamol::gui::GraphManager::AddProjectFromCore(
+bool megamol::gui::GraphCollection::AddProjectFromCore(
     ImGuiID graph_uid, megamol::core::CoreInstance* core_instance, bool use_stock) {
 
     try {
@@ -666,7 +666,7 @@ bool megamol::gui::GraphManager::AddProjectFromCore(
 }
 
 
-ImGuiID megamol::gui::GraphManager::LoadAddProjectFromFile(ImGuiID graph_uid, const std::string& project_filename) {
+ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID graph_uid, const std::string& project_filename) {
 
     std::string projectstr;
     if (!FileUtils::ReadFile(project_filename, projectstr)) return false;
@@ -1117,7 +1117,7 @@ ImGuiID megamol::gui::GraphManager::LoadAddProjectFromFile(ImGuiID graph_uid, co
 }
 
 
-bool megamol::gui::GraphManager::SaveProjectToFile(
+bool megamol::gui::GraphCollection::SaveProjectToFile(
     ImGuiID graph_uid, const std::string& project_filename, bool overwrite_states) {
 
     std::string projectstr;
@@ -1261,7 +1261,7 @@ bool megamol::gui::GraphManager::SaveProjectToFile(
 }
 
 
-bool megamol::gui::GraphManager::get_module_stock_data(
+bool megamol::gui::GraphCollection::get_module_stock_data(
     Module::StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc) {
 
     mod.class_name = std::string(mod_desc->ClassName());
@@ -1365,7 +1365,7 @@ bool megamol::gui::GraphManager::get_module_stock_data(
 }
 
 
-bool megamol::gui::GraphManager::get_call_stock_data(
+bool megamol::gui::GraphCollection::get_call_stock_data(
     Call::StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc) {
 
     try {
@@ -1390,7 +1390,7 @@ bool megamol::gui::GraphManager::get_call_stock_data(
 }
 
 
-bool megamol::gui::GraphManager::read_project_command_arguments(
+bool megamol::gui::GraphCollection::read_project_command_arguments(
     const std::string& line, size_t arg_count, std::vector<std::string>& out_args) {
 
     /// Can be used for mmCreateView, mmCreateModule and mmCreateCall lua commands
@@ -1451,7 +1451,7 @@ bool megamol::gui::GraphManager::read_project_command_arguments(
 }
 
 
-ImVec2 megamol::gui::GraphManager::project_read_confpos(const std::string& line) {
+ImVec2 megamol::gui::GraphCollection::project_read_confpos(const std::string& line) {
 
     ImVec2 conf_pos(FLT_MAX, FLT_MAX);
 
@@ -1489,7 +1489,7 @@ ImVec2 megamol::gui::GraphManager::project_read_confpos(const std::string& line)
 }
 
 
-bool megamol::gui::GraphManager::project_separate_name_and_namespace(
+bool megamol::gui::GraphCollection::project_separate_name_and_namespace(
     const std::string& full_name, std::string& name_space, std::string& name) {
 
     name = full_name;
@@ -1519,7 +1519,7 @@ bool megamol::gui::GraphManager::project_separate_name_and_namespace(
 }
 
 
-bool megamol::gui::GraphManager::replace_graph_state(
+bool megamol::gui::GraphCollection::replace_graph_state(
     const GraphPtr_t& graph_ptr, const std::string& in_json_string, std::string& out_json_string) {
 
     try {
@@ -1571,7 +1571,7 @@ bool megamol::gui::GraphManager::replace_graph_state(
 }
 
 
-bool megamol::gui::GraphManager::replace_parameter_gui_state(
+bool megamol::gui::GraphCollection::replace_parameter_gui_state(
     const GraphPtr_t& graph_ptr, const std::string& in_json_string, std::string& out_json_string) {
 
     try {
@@ -1622,7 +1622,7 @@ bool megamol::gui::GraphManager::replace_parameter_gui_state(
 }
 
 
-std::vector<size_t> megamol::gui::GraphManager::get_compatible_callee_idxs(
+std::vector<size_t> megamol::gui::GraphCollection::get_compatible_callee_idxs(
     std::shared_ptr<megamol::core::CalleeSlot> callee_slot) {
 
     std::vector<size_t> retval;
@@ -1683,7 +1683,7 @@ std::vector<size_t> megamol::gui::GraphManager::get_compatible_callee_idxs(
 }
 
 
-std::vector<size_t> megamol::gui::GraphManager::get_compatible_caller_idxs(
+std::vector<size_t> megamol::gui::GraphCollection::get_compatible_caller_idxs(
     std::shared_ptr<megamol::core::CallerSlot> caller_slot) {
 
     std::vector<size_t> retval;

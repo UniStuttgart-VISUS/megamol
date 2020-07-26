@@ -144,8 +144,10 @@ bool megamol::gui::PickingBuffer::ProcessMouseClick(megamol::core::view::MouseBu
 bool megamol::gui::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
 
     this->enabled = false;
-    this->available_interactions.clear();
     this->viewport_dim = vp_dim;
+
+    // Clear available interactions
+    this->available_interactions.clear();
 
     if (this->fbo == nullptr) {
         this->fbo = std::make_unique<glowl::FramebufferObject>(this->viewport_dim.x, this->viewport_dim.y, true);
@@ -200,6 +202,7 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
     }
     this->enabled = false;
 
+    // Clear pending manipulations
     this->pending_manipulations.clear();
 
     GLint pixel_data = -1;
@@ -221,7 +224,7 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
         this->cursor_on_interaction_obj = {false, -1};
     }
 
-    // Draw fbo color buffer using blending
+    // Draw fbo color buffer as texture because blending is required
     GLboolean blendEnabled = glIsEnabled(GL_BLEND);
     if (!blendEnabled) {
         glEnable(GL_BLEND);
@@ -247,15 +250,6 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
     if (!blendEnabled) {
         glDisable(GL_BLEND);
     }
-
-    // Blit from fbo to default framebuffer
-    // this->fbo->bindColorbuffer(0);
-    // this->fbo->bindToRead(0);
-    // this->check_opengl_errors();
-    // glBlitFramebuffer(0, 0, this->fbo->getWidth(), this->fbo->getHeight(), 0, 0, this->viewport_dim.x,
-    //    this->viewport_dim.y, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-    // this->check_opengl_errors();
-    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return true;
 }
