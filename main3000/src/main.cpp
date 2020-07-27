@@ -1,6 +1,8 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 
+#include "mmcore/utility/log/Log.h"
+
 #include "AbstractFrontendService.hpp"
 #include "FrontendServiceCollection.hpp"
 #include "OpenGL_GLFW_Service.hpp"
@@ -15,6 +17,13 @@
 bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::frontend::ModuleResource>& module_resources);
 
 int main(int argc, char* argv[]) {
+
+    // setup log
+    megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
+    megamol::core::utility::log::Log::DefaultLog.SetLevel(megamol::core::utility::log::Log::LEVEL_ALL);
+    megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
+    megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(std::make_shared<megamol::core::utility::log::Log::StreamTarget>(std::cout, megamol::core::utility::log::Log::LEVEL_ALL));
+
     megamol::core::CoreInstance core;
     core.Initialise();
 
