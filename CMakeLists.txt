@@ -50,6 +50,9 @@ add_subdirectory(${MEGAMOL_DIR}/input_events)
 # Render API modules
 add_subdirectory(${MEGAMOL_DIR}/render_api)
 
+# GUI modules
+add_subdirectory(${MEGAMOL_DIR}/frontend_gui)
+
 # Vislib
 add_subdirectory(${MEGAMOL_VISLIB_DIR})
 

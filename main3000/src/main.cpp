@@ -150,13 +150,13 @@ bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::front
 
     graph.AddModuleDependencies(module_resources);
 
-    check(graph.CreateModule("GUIView", "::guiview"));
+    /// check(graph.CreateModule("GUIView", "::guiview"));
     check(graph.CreateModule("View3D_2", "::view"));
     check(graph.CreateModule("SphereRenderer", "::spheres"));
     check(graph.CreateModule("TestSpheresDataSource", "::datasource"));
     check(graph.CreateCall("CallRender3D_2", "::view::rendering", "::spheres::rendering"));
     check(graph.CreateCall("MultiParticleDataCall", "::spheres::getdata", "::datasource::getData"));
-    check(graph.CreateCall("CallRenderView", "::guiview::renderview", "::view::render"));
+    /// check(graph.CreateCall("CallRenderView", "::guiview::renderview", "::view::render"));
 
     static std::vector<std::string> view_resource_requests = {
         "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context"};
@@ -188,12 +188,13 @@ bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::front
         megamol::core::view::view_poke_rendering(view, resources[i++]);
     };
 
-    check(graph.SetGraphEntryPoint("::guiview", view_resource_requests, view_rendering_execution));
+    /// check(graph.SetGraphEntryPoint("::guiview", view_resource_requests, view_rendering_execution));
+    check(graph.SetGraphEntryPoint("::view", view_resource_requests, view_rendering_execution));
 
     std::string parameter_name("::datasource::numSpheres");
     auto parameterPtr = graph.FindParameter(parameter_name);
     if (parameterPtr) {
-        parameterPtr->ParseValue("3");
+        parameterPtr->ParseValue("23");
     } else {
         std::cout << "ERROR: could not find parameter: " << parameter_name << std::endl;
         return false;

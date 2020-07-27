@@ -7,7 +7,8 @@
 
 #include "GUI_Service.hpp"
 
- /// #include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/MegaMolGraph.h"
 
 namespace megamol {
 namespace frontend {
@@ -27,6 +28,9 @@ bool GUI_Service::init(void* configPtr) {
 
 bool GUI_Service::init(const Config& config) {
    
+
+
+
     return true;
 }
 
