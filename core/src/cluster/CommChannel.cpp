@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "mmcore/cluster/CommChannel.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/UnsupportedOperationException.h"
 
 using namespace megamol::core;
@@ -128,7 +128,7 @@ cluster::CommChannel& cluster::CommChannel::operator=(const cluster::CommChannel
  * cluster::CommChannel::OnCommunicationError
  */
 bool cluster::CommChannel::OnCommunicationError(vislib::net::SimpleMessageDispatcher& src, const vislib::Exception& exception) throw() {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Communication Channel: %s\n", exception.GetMsgA());
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, "Communication Channel: %s\n", exception.GetMsgA());
     return true; // keep receiver running
 }
 

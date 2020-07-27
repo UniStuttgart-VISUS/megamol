@@ -179,7 +179,7 @@ typedef struct _mmcRenderViewContext {
      * The size of this structure (Must remain first member in any future 
      * version and must always be four-byte integer).
      */
-    INT32 Size;
+    VL_INT32 Size;
 
     /**
      * Boolean to receive whether or not a continuous redraw of this view is 
@@ -950,67 +950,6 @@ MEGAMOLCORE_API size_t MEGAMOLCORE_CALL mmcGetGlobalParameterHash(void *hCore);
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcFreezeOrUpdateView(
     void *hView, bool freeze);
-
-/**
- * Performs a quickstart of a data file
- *
- * @param hCore The core instance handle
- * @param filename The path to the data file to quickstart
- */
-#if defined(UNICODE) || defined(_UNICODE)
-#define mmcQuickstart mmcQuickstartW
-#else
-#define mmcQuickstart mmcQuickstartA
-#endif
-
-/**
- * ANSI Impiementation of mmcQuickstart
- * @see mmcQuickstart
- */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartA(void *hCore, const char *filename);
-
-/**
- * Unicode implementation of mmcQuickstart
- * @see mmcQuickstart
- */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartW(void *hCore, const wchar_t *filename);
-
-/**
- * Registers data file types for quickstart (if supported by the OS)
- *
- * @param hCore The core instance handle
- * @param frontend Path to the front end to be called
- * @param feparams The parameter string to be used when calling the frontend.
- *                 use '$(FILENAME)' to specify the position of the data file name.
- * @param filetype Semicolor separated list of file type extensions to register
- *                 or "*" if all known file type extensions should be used
- * @param unreg If true, the file types will be removed from the quickstart registry instead of added
- * @param overwrite If true, any previous registration will be overwritten.
- *                  If false, previous registrations will be placed as alternative start commands.
- *                  When unregistering and true, all registrations will be removed,
- *                  if false only registrations to this binary will be removed.
- */
-#if defined(UNICODE) || defined(_UNICODE)
-#define mmcQuickstartRegistry mmcQuickstartRegistryW
-#else
-#define mmcQuickstartRegistry mmcQuickstartRegistryA
-#endif
-
-/**
- * ANSI Impiementation of mmcQuickstartRegistry
- * @see mmcQuickstartRegistry
- */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartRegistryA(void *hCore,
-    const char *frontend, const char *feparams,
-    const char *filetype, bool unreg, bool overwrite);
-
-/**
- * Unicode implementation of mmcQuickstartRegistry
- * @see mmcQuickstartRegistry
- */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartRegistryW(void *hCore,
-    const wchar_t *frontend, const wchar_t *feparams,
-    const wchar_t *filetype, bool unreg, bool overwrite);
 
 #ifndef MEGAMOLCORE_EXT_API
 #define MEGAMOLCORE_EXT_API 1

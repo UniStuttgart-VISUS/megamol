@@ -24,7 +24,7 @@ bool megamol::stdplugin::datatools::IColToIdentity::manipulateData(
 
         if (p.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I &&
             p.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I) {
-            vislib::sys::Log::DefaultLog.WriteWarn("IColToIdentity: Particlelist %d has no intensity\n", i);
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("IColToIdentity: Particlelist %d has no intensity\n", i);
             continue;
         }
 

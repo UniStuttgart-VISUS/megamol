@@ -22,11 +22,11 @@
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/net/IPEndPoint.h"
 #include "vislib/PtrArray.h"
-#include "vislib/sys/RunnableThread.h"
+#include "mmcore/utility/sys/RunnableThread.h"
 #include "vislib/SmartRef.h"
 #include "vislib/net/Socket.h"
-#include "vislib/net/SimpleMessageDispatcher.h"
-#include "vislib/net/SimpleMessageDispatchListener.h"
+#include "mmcore/utility/net/SimpleMessageDispatcher.h"
+#include "mmcore/utility/net/SimpleMessageDispatchListener.h"
 #include "vislib/String.h"
 
 

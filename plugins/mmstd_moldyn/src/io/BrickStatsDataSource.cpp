@@ -12,10 +12,10 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/CoreInstance.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/String.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/StringTokeniser.h"
 
@@ -59,9 +59,9 @@ BrickStatsDataSource::~BrickStatsDataSource(void) {
  * moldyn::MMPLDDataSource::create
  */
 bool BrickStatsDataSource::create(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     if (BrickStatsCall::GetTypeSize() != sizeof(BrickStatsCall::BrickStatsType)) {
-        this->GetCoreInstance()->Log().WriteMsg(Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "BrickStatsCall::BrickStatsType has different size across object files!");
         return false;
     }
@@ -87,7 +87,7 @@ void BrickStatsDataSource::release(void) {
  * moldyn::MMPLDDataSource::filenameChanged
  */
 bool BrickStatsDataSource::filenameChanged(param::ParamSlot& slot) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     using vislib::sys::File;
     this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     this->clipbox = this->bbox;
@@ -103,7 +103,7 @@ bool BrickStatsDataSource::filenameChanged(param::ParamSlot& slot) {
     ASSERT(this->filename.Param<param::FilePathParam>() != NULL);
 
     if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value(), File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-        this->GetCoreInstance()->Log().WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPLD-File \"%s\".", vislib::StringA(
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPLD-File \"%s\".", vislib::StringA(
             this->filename.Param<param::FilePathParam>()->Value()).PeekBuffer());
 
         SAFE_DELETE(this->file);
@@ -123,7 +123,7 @@ bool BrickStatsDataSource::filenameChanged(param::ParamSlot& slot) {
 
         auto arr = vislib::StringTokeniserA::Split(line, ',');
         if (arr.Count() != 14) {
-            this->GetCoreInstance()->Log().WriteMsg(Log::LEVEL_ERROR, "Unable to parse line %lu: not enough fields (%u)", lineNum, arr.Count());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to parse line %lu: not enough fields (%u)", lineNum, arr.Count());
             continue;
         }
         try {
@@ -149,7 +149,7 @@ bool BrickStatsDataSource::filenameChanged(param::ParamSlot& slot) {
             this->bbox.GrowToPoint(minX, minY, minZ);
             this->bbox.GrowToPoint(maxX, maxY, maxZ);
         } catch (vislib::FormatException) {
-            this->GetCoreInstance()->Log().WriteMsg(Log::LEVEL_ERROR, "parse error in line %lu", lineNum);
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "parse error in line %lu", lineNum);
         }
     }
 
@@ -217,12 +217,12 @@ bool BrickStatsDataSource::filenameChanged(param::ParamSlot& slot) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n",
         CACHE_SIZE_MIN, cacheSize);
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_WARN, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg);
         cacheSize = CACHE_SIZE_MIN;
         } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_INFO, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, msg);
         }
 
         this->setFrameCount(frmCnt);

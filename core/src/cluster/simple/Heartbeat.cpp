@@ -13,7 +13,7 @@
 #include "mmcore/CoreInstance.h"
 #include "vislib/assert.h"
 #include "vislib/sys/AutoLock.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/net/IPCommEndPoint.h"
 #include "vislib/net/TcpCommChannel.h"
 #include "vislib/Trace.h"
@@ -112,10 +112,10 @@ DWORD cluster::simple::Heartbeat::Connection::receive(void *userData) {
         }
 
     } catch(vislib::Exception ex) {
-        vislib::sys::Log::DefaultLog.WriteError("Heartbeat Connection: %s [%s, %d]",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Heartbeat Connection: %s [%s, %d]",
             ex.GetMsgA(), ex.GetFile(), ex.GetLine());
     } catch(...) {
-        vislib::sys::Log::DefaultLog.WriteError("Heartbeat Connection: Unexpected Exception");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Heartbeat Connection: Unexpected Exception");
     }
 
     parent.removeConn(that); // HAZARD: might already delete this object ... thread object may behave strange
@@ -243,7 +243,7 @@ void cluster::simple::Heartbeat::SetTCData(const void *data, SIZE_T size) {
  * cluster::simple::Heartbeat::OnServerError
  */
 bool cluster::simple::Heartbeat::OnServerError(const vislib::net::CommServer& src, const vislib::Exception& exception) throw() {
-    vislib::sys::Log::DefaultLog.WriteError("Heartbeat server error: %s [%s, %d]",
+    megamol::core::utility::log::Log::DefaultLog.WriteError("Heartbeat server error: %s [%s, %d]",
         exception.GetMsgA(), exception.GetFile(), exception.GetLine());
     return false;
 }
@@ -253,7 +253,7 @@ bool cluster::simple::Heartbeat::OnServerError(const vislib::net::CommServer& sr
  * cluster::simple::Heartbeat::OnNewConnection
  */
 bool cluster::simple::Heartbeat::OnNewConnection(const vislib::net::CommServer& src, vislib::SmartRef<vislib::net::AbstractCommClientChannel> channel) throw() {
-    vislib::sys::Log::DefaultLog.WriteInfo("New heartbeat connection");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("New heartbeat connection");
 
     vislib::SmartPtr<Connection> con = new Connection(*this, channel);
     this->addConn(con);
@@ -266,7 +266,7 @@ bool cluster::simple::Heartbeat::OnNewConnection(const vislib::net::CommServer& 
  * cluster::simple::Heartbeat::OnServerExited
  */
 void cluster::simple::Heartbeat::OnServerExited(const vislib::net::CommServer& src) throw() {
-    vislib::sys::Log::DefaultLog.WriteInfo("Heartbeat server exited");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Heartbeat server exited");
 }
 
 
@@ -274,7 +274,7 @@ void cluster::simple::Heartbeat::OnServerExited(const vislib::net::CommServer& s
  * cluster::simple::Heartbeat::OnServerStarted
  */
 void cluster::simple::Heartbeat::OnServerStarted(const vislib::net::CommServer& src) throw() {
-    vislib::sys::Log::DefaultLog.WriteInfo("Heartbeat server started");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Heartbeat server started");
 }
 
 
@@ -289,11 +289,11 @@ bool cluster::simple::Heartbeat::create(void) {
                 vislib::CharTraitsW::ParseInt(
                     this->GetCoreInstance()->Configuration().ConfigValue("scv-heartbeat-port")));
         } catch(vislib::Exception e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Failed to load heartbeat port configuration: %s [%s, %d]\n",
                 e.GetMsgA(), e.GetFile(), e.GetLine());
         } catch(...) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Failed to load heartbeat port configuration: Unknown exception\n");
         }
     }
@@ -337,7 +337,7 @@ void cluster::simple::Heartbeat::release(void) {
  * cluster::simple::Heartbeat::Run
  */
 DWORD cluster::simple::Heartbeat::Run(void *userData) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     this->run = true;
 
     if (this->client == NULL) {

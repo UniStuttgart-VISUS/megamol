@@ -13,7 +13,7 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/ShallowPoint.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -115,7 +115,7 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
     // if (this->autocomputeSlot.IsDirty()) {
     //    this->autocomputeSlot.ResetDirty();
 
-    //    vislib::sys::Log::DefaultLog.WriteError("OverrideParticleBBox::Autocompute not implemented");
+    //    megamol::core::utility::log::Log::DefaultLog.WriteError("OverrideParticleBBox::Autocompute not implemented");
     //    // TODO: Implement
     //    float minX = FLT_MAX, minY = FLT_MAX, minZ = FLT_MAX;
     //    float maxX = -FLT_MAX, maxY = -FLT_MAX, maxZ = -FLT_MAX;
@@ -225,11 +225,11 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
                 switch (inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataType()) {
                 case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
                     // getPoint = posFromXYZ_SHORT;
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "OverrideParticleBBox does not support re-computation of short coordinates");
                     break;
                 case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
-                    vislib::sys::Log::DefaultLog.WriteInfo("OverrideParticleBBox: skipping empty vertex data");
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("OverrideParticleBBox: skipping empty vertex data");
                     break;
                 }
             }
@@ -248,7 +248,7 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
             doZ ? minZ - rad : l.Z(), doX ? maxX - rad : u.X(), doY ? maxY - rad : u.Y(), doZ ? maxZ - rad : u.Z());
         outData.AccessBoundingBoxes().MakeScaledWorld(1.0f);
         if (this->autocomputeSlot.IsDirty()) {
-            vislib::sys::Log::DefaultLog.WriteInfo("[OverrideParticleBBox] BBox: %f %f %f %f %f %f", doX ? minX : l.X(),
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[OverrideParticleBBox] BBox: %f %f %f %f %f %f", doX ? minX : l.X(),
                 doY ? minY : l.Y(), doZ ? minZ : l.Z(), doX ? maxX : u.X(), doY ? maxY : u.Y(), doZ ? maxZ : u.Z());
             this->autocomputeSlot.ResetDirty();
         }

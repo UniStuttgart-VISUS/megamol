@@ -13,7 +13,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "vislib/forceinline.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <ospray.h>
 #include "OSPRay_plugin/CallOSPRayAPIObject.h"
@@ -139,7 +139,7 @@ OSPRayPKDGeometry::~OSPRayPKDGeometry() { this->Release(); }
 bool OSPRayPKDGeometry::create() {
     auto error = ospLoadModule("pkd");
     if (error != OSPError::OSP_NO_ERROR) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to load OSPRay module: PKD. Error occured in %s:%d", __FILE__, __LINE__);
     }
     return true;

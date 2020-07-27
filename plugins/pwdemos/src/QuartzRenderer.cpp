@@ -17,7 +17,7 @@
 #include "vislib/graphics/gl/glfunctions.h"
 #include "vislib/graphics/graphicsfunctions.h"
 #include "vislib/memutils.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol {
 namespace demos {
@@ -129,7 +129,7 @@ bool QuartzRenderer::Render(core::view::CallRender3D_2& call) {
     std::array<float, 4> lightCol = {0.f, 0.f, 0.f, 1.f};
 
     if (this->lightMap.size() < 1) { // #lights added in configurator
-        vislib::sys::Log::DefaultLog.WriteWarn("No lights available in lightmap");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("No lights available in lightmap");
     } else {
         for (auto light : this->lightMap) {
             lightCol = light.second.lightColor;
@@ -431,10 +431,10 @@ bool QuartzRenderer::Render(core::view::CallRender3D_2& call) {
 bool QuartzRenderer::create(void) {
     using vislib::graphics::gl::GLSLShader;
     using vislib::graphics::gl::ShaderSource;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        vislib::sys::Log::DefaultLog.WriteError("Failed to initialise OpenGL GLSL Shader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to initialise OpenGL GLSL Shader");
         return false;
     }
 
@@ -463,7 +463,7 @@ bool QuartzRenderer::create(void) {
     ::glGenBuffers(1, &ssboLights);
     ::glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboLights);
     if (!::glIsBuffer(ssboLights)) {
-        vislib::sys::Log::DefaultLog.WriteWarn("Failed generating SSBO for lights");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Failed generating SSBO for lights");
         ::glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         ::glDeleteBuffers(1, &ssboLights);
         return false;
@@ -474,7 +474,7 @@ bool QuartzRenderer::create(void) {
     ::glGenBuffers(1, &vbo);
     ::glBindBuffer(GL_ARRAY_BUFFER, vbo);
     if (!::glIsBuffer(vbo)) {
-        vislib::sys::Log::DefaultLog.WriteWarn("Failed generating vbo");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Failed generating vbo");
         ::glBindBuffer(GL_ARRAY_BUFFER, 0);
         ::glDeleteBuffers(1, &vbo);
         return false;
@@ -506,7 +506,7 @@ void QuartzRenderer::release(void) {
 vislib::graphics::gl::GLSLShader* QuartzRenderer::makeShader(const CrystalDataCall::Crystal& c) {
     using vislib::graphics::gl::GLSLShader;
     using vislib::graphics::gl::ShaderSource;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     GLSLShader* s = new GLSLShader();
 

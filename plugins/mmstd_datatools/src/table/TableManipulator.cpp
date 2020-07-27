@@ -12,7 +12,7 @@
 
 #include <limits>
 #include "vislib/StringTokeniser.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol::stdplugin::datatools;
 using namespace megamol::stdplugin::datatools::table;
@@ -150,7 +150,7 @@ bool TableManipulator::processData(core::Call& c) {
             const bool ok = theLua.RunString(scriptString, res);
 
             if (!ok) {
-                vislib::sys::Log::DefaultLog.WriteError("TableManipulator: Lua execution is NOT OK and returned '%s'", res.c_str());
+                megamol::core::utility::log::Log::DefaultLog.WriteError("TableManipulator: Lua execution is NOT OK and returned '%s'", res.c_str());
             }
         }
 
@@ -165,7 +165,7 @@ bool TableManipulator::processData(core::Call& c) {
             outCall->Set(0, 0, NULL, NULL);
         }
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(_T("%hs: Failed to execute processData\n"), ModuleName.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(_T("%hs: Failed to execute processData\n"), ModuleName.c_str());
         return false;
     }
 
@@ -186,7 +186,7 @@ bool TableManipulator::getExtent(core::Call& c) {
         outCall->SetFrameCount(inCall->GetFrameCount());
         outCall->SetDataHash(this->out_datahash); // TODO: this is actually crap if somebody properly checks it
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(_T("Failed to execute %hs::getExtent\n"), ModuleName.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Failed to execute %hs::getExtent\n"), ModuleName.c_str());
         return false;
     }
 

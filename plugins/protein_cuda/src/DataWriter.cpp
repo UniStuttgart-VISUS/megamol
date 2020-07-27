@@ -18,7 +18,7 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "CUDAQuickSurf.h"
 
 #include <thrust/device_vector.h>
@@ -32,6 +32,7 @@
 
 
 using namespace megamol;
+using namespace megamol::core::utility::log;
 
 
 /*
@@ -128,7 +129,6 @@ bool protein_cuda::DataWriter::Start(void) {
 bool protein_cuda::DataWriter::PutStatistics(unsigned int frameIdx0,
         unsigned int frameIdx1, unsigned int avgOffs) {
 
-    using namespace vislib::sys;
     float gridspacing = 1.0f;
 
 	protein_calls::CrystalStructureDataCall *dc = this->dataCallerSlot.CallAs<protein_calls::CrystalStructureDataCall>();
@@ -267,7 +267,6 @@ bool protein_cuda::DataWriter::WriteFrame2VTI(std::string filePrefix,
                                          int dim[3],
                                          int cycle,
                                          float *data) {
-    using namespace vislib::sys;
 
     // TODO
     // + Endianess?
@@ -353,7 +352,6 @@ bool protein_cuda::DataWriter::WriteFrame2VTI(std::string filePrefix,
  */
 bool protein_cuda::DataWriter::WriteDipoleToVTI(unsigned int frameIdx0,
         unsigned int frameIdx1, unsigned int avgOffs) {
-    using namespace vislib::sys;
 
 	protein_calls::CrystalStructureDataCall *dc = this->dataCallerSlot.CallAs<protein_calls::CrystalStructureDataCall>();
     if(dc == NULL) {
@@ -456,7 +454,6 @@ bool protein_cuda::DataWriter::WriteDipoleToVTI(unsigned int frameIdx0,
  */
 bool protein_cuda::DataWriter::WriteTiDisplVTI(unsigned int frameIdx0,
         unsigned int frameIdx1, unsigned int avgOffs) {
-    using namespace vislib::sys;
 
 	protein_calls::CrystalStructureDataCall *dc = this->dataCallerSlot.CallAs<protein_calls::CrystalStructureDataCall>();
     if(dc == NULL) {
@@ -881,7 +878,6 @@ float protein_cuda::DataWriter::GetNearestDistTi(protein_calls::CrystalStructure
  * protein_cuda::DataWriter::create
  */
 bool protein_cuda::DataWriter::create(void) {
-    using namespace vislib::sys;
     // Create OpenGL interoperable CUDA device.
     //cudaGLSetGLDevice(cudaUtilGetMaxGflopsDeviceId());
     //printf("cudaGLSetGLDevice: %s\n", cudaGetErrorString(cudaGetLastError()));
@@ -919,8 +915,6 @@ void protein_cuda::DataWriter::release(void) {
 bool protein_cuda::DataWriter::writeFrame2VTKLegacy(unsigned int frameIdx,
         float gridspacing,
         vislib::TString fileName) {
-
-    using namespace vislib::sys;
 
     std::ofstream outfile;
 

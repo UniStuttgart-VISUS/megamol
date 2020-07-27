@@ -28,7 +28,7 @@
 #include "vislib/math/Point.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/sysfunctions.h"
 #ifdef ENABLE_KEYBOARD_VIEW_CONTROL
 #    include "mmcore/view/Input.h"
@@ -455,7 +455,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
 
     if (!(*this->lastFrameParams == *(this->camParams.DynamicCast<vislib::graphics::CameraParamsStore>())) ||
         !this->hookOnChangeOnlySlot.Param<param::BoolParam>()->Value()) {
-        // vislib::sys::Log::DefaultLog.WriteInfo("view %s: camera has changed, the frame has sensible information.",
+        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("view %s: camera has changed, the frame has sensible information.",
         // this->FullName().PeekBuffer());
         frameIsNew = true;
     } else {
@@ -1345,7 +1345,7 @@ bool view::View3D::onStoreCamera(param::ParamSlot& p) {
     str.Prepend(_T("{"));
     this->cameraSettingsSlot.Param<param::StringParam>()->SetValue(str);
 
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Camera parameters stored in \"%s\"",
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Camera parameters stored in \"%s\"",
         this->cameraSettingsSlot.FullName().PeekBuffer());
     return true;
 }
@@ -1376,14 +1376,14 @@ bool view::View3D::onRestoreCamera(param::ParamSlot& p) {
             this->bboxs.SetWorldSpaceBBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         }
 
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Camera parameters restored from \"%s\"",
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Camera parameters restored from \"%s\"",
             this->cameraSettingsSlot.FullName().PeekBuffer());
     } catch (vislib::Exception ex) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Cannot restore camera parameters from \"%s\": %s (%s; %d)",
             this->cameraSettingsSlot.FullName().PeekBuffer(), ex.GetMsgA(), ex.GetFile(), ex.GetLine());
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Cannot restore camera parameters from \"%s\": unexpected exception",
             this->cameraSettingsSlot.FullName().PeekBuffer());
     }

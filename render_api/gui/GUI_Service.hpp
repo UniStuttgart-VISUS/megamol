@@ -11,7 +11,6 @@
 
 #include "AbstractFrontendService.hpp"
 
-
 namespace megamol {
 namespace frontend {
 

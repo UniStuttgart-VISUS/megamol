@@ -42,7 +42,7 @@
 
 #pragma once
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <string>
 #include "common.h"
 

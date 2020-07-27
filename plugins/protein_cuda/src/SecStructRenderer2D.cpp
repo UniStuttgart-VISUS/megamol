@@ -102,7 +102,7 @@ const GLuint SSBOBindingPoint = 2;
 //		severityText = "Unknown";
 //		break;
 //	}
-//	vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
+//	megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
 //}
 
 /*
@@ -211,17 +211,17 @@ bool SecStructRenderer2D::create(void) {
 			throw vislib::Exception("Could not link line shader", __FILE__, __LINE__);
 		}
 	} catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 			"Unable to compile line shader (@%s): %s\n",
 			vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
 			ce.FailedAction()), ce.GetMsgA());
 		return false;
 	} catch (vislib::Exception e) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 			"Unable to compile line shader: %s\n", e.GetMsgA());
 		return false;
 	} catch (...) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 			"Unable to compile line shader: Unknown exception\n");
 		return false;
 	}
@@ -263,19 +263,19 @@ bool SecStructRenderer2D::create(void) {
 		}
 	}
 	catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 			"Unable to compile tube shader (@%s): %s\n",
 			vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
 			ce.FailedAction()), ce.GetMsgA());
 		return false;
 	}
 	catch (vislib::Exception e) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 			"Unable to compile tube shader: %s\n", e.GetMsgA());
 		return false;
 	}
 	catch (...) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 			"Unable to compile tube shader: Unknown exception\n");
 		return false;
 	}
@@ -311,7 +311,7 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 	if (pdc->DataHash() != this->lastPlaneHash) {
 		if (pdc->GetPlaneCnt() > 0) {
 			auto plane = pdc->GetPlaneData()[0];
-			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Plane set to p=(%f %f %f) n=(%f %f %f)", plane.Point()[0], plane.Point()[1], plane.Point()[2],
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Plane set to p=(%f %f %f) n=(%f %f %f)", plane.Point()[0], plane.Point()[1], plane.Point()[2],
 				plane.Normal()[0], plane.Normal()[1], plane.Normal()[2]);
 			this->transformationMatrix = this->rotatePlaneToXY(plane);
 		}
@@ -626,7 +626,7 @@ bool SecStructRenderer2D::Render(view::CallRender2D& call) {
 				glVertex4f(cAlphas[idx].pos[0], cAlphas[idx].pos[1], 0.0f, 1.0f);
 			}
 		} else {
-			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "One needs to have fake hydrogen bonds to render them correctly");
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, "One needs to have fake hydrogen bonds to render them correctly");
 		}
 
 		glEnd();

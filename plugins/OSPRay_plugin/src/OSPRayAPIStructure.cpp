@@ -7,7 +7,7 @@
 #include "stdafx.h"
 #include "OSPRayAPIStructure.h"
 #include "OSPRay_plugin/CallOSPRayAPIObject.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/Call.h"
 
 
@@ -64,7 +64,7 @@ bool OSPRayAPIStructure::readData(megamol::core::Call &call) {
         this->structureContainer.ospStructures = std::make_pair<std::vector<void*>, structureTypeEnum>(cd->getAPIObjects(), structureTypeEnum::VOLUME);
         break;
     case structureTypeEnum::UNINITIALIZED:
-        vislib::sys::Log::DefaultLog.WriteError("OSPRay API structure type is not set.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRay API structure type is not set.");
         return false;
     }
 

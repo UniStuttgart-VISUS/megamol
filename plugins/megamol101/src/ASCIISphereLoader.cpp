@@ -12,7 +12,8 @@
 #include "CallSpheres.h"
 #include "mmcore/param/FilePathParam.h"
 #include "vislib/StringTokeniser.h"
-#include "vislib/sys/Log.h"
+#include "vislib/StringConverter.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 using namespace megamol::megamol101;
@@ -65,23 +66,23 @@ void ASCIISphereLoader::assertData(void) {
             retval = this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
         } catch (vislib::Exception ex) {
             // a known vislib exception was raised
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unexpected exception: %s at (%s, %d)\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
             retval = false;
         } catch (...) {
             // an unknown exception was raised
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unexpected exception: unkown exception\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unexpected exception: unkown exception\n");
             retval = false;
         }
 
         if (retval) {
             // standard case. The file has been successfully loaded.
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Loaded %I64u spheres from file \"%s\"",
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Loaded %I64u spheres from file \"%s\"",
                 numSpheres,
                 vislib::StringA(this->filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Failed to load file \"%s\"",
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Failed to load file \"%s\"",
                 vislib::StringA(this->filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
             // we are in an erronous state, clean up everything
             this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
@@ -136,7 +137,7 @@ bool ASCIISphereLoader::getExtentCallback(core::Call& caller) {
 bool ASCIISphereLoader::load(const vislib::TString& filename) {
 
     if (filename.IsEmpty()) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "No file to load (filename empty)");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "No file to load (filename empty)");
         return true;
     }
 
@@ -158,7 +159,7 @@ bool ASCIISphereLoader::load(const vislib::TString& filename) {
             if (lineA.StartsWith("#")) continue;                             // this is a comment, move on
             auto result = vislib::StringTokeniserA::Split(lineA, ",", true); // split the line string by commas
             if (result.Count() < 4) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Line %u of '%s' is malformed",
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, "Line %u of '%s' is malformed",
                     static_cast<unsigned int>(lineNum), T2A(filename).PeekBuffer());
                 continue;
             }
@@ -169,7 +170,7 @@ bool ASCIISphereLoader::load(const vislib::TString& filename) {
 
                 if (resString.Contains("#")) { // check if the line contains a comment after the values
                     if (i != 3) {
-                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                             "Line %u of '%s' is malformed", static_cast<unsigned int>(lineNum),
                             T2A(filename).PeekBuffer());
                         error = true;
@@ -180,7 +181,7 @@ bool ASCIISphereLoader::load(const vislib::TString& filename) {
                 try {
                     values[i] = std::stof(std::string(resString));
                 } catch (...) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                         "The value with index %i in line %u of '%s' is malformed", i,
                         static_cast<unsigned int>(lineNum), T2A(filename).PeekBuffer());
                     error = true;
@@ -206,7 +207,7 @@ bool ASCIISphereLoader::load(const vislib::TString& filename) {
             }
         }
     } else {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to open file");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to open file");
         return false;
     }
 

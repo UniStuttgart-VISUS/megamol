@@ -9,9 +9,9 @@
 #include "mmcore/utility/xml/ConditionalParser.h"
 #include "vislib/assert.h"
 #include "vislib/CharTraits.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/String.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/Trace.h"
 #include "vislib/UTF8Encoder.h"
 
@@ -357,7 +357,7 @@ bool ConditionalParser::evaluateCondition(const XML_Char* expression) const {
         }
 
         if (error) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Syntax error while evaluating expression \"%s\" on position \"%d\"."
                 "Setting result to 'false'.\n", exp.PeekBuffer(), pos);
             return false;
@@ -391,7 +391,7 @@ bool ConditionalParser::evaluateCondition(const XML_Char* expression) const {
  */
 bool ConditionalParser::evaluateCondition(const vislib::StringA& expression,
         vislib::StringA *tokenz, unsigned int tokenCount) const {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     if (tokenCount == 0) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,

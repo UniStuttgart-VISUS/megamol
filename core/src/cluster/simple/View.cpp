@@ -22,7 +22,7 @@
 #include "vislib/net/IPHostEntry.h"
 #include "vislib/net/NetworkInformation.h"
 #include "vislib/RawStorageSerialiser.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/sys/Thread.h"
 #include <climits>
 
 
@@ -89,11 +89,11 @@ void cluster::simple::View::Render(const mmcRenderViewContext& context) {
                     vislib::CharTraitsW::ParseInt(
                         this->GetCoreInstance()->Configuration().ConfigValue("scv-heartbeat-port")));
             } catch(vislib::Exception e) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Failed to load heartbeat port configuration: %s [%s, %d]\n",
                     e.GetMsgA(), e.GetFile(), e.GetLine());
             } catch(...) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Failed to load heartbeat port configuration: Unknown exception\n");
             }
         }
@@ -116,11 +116,11 @@ void cluster::simple::View::Render(const mmcRenderViewContext& context) {
                 static_cast<unsigned int>(this->heartBeatPortSlot.Param<param::IntParam>()->Value()));
 
         } catch(vislib::Exception e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Failed to configure heartbeat: %s [%s, %d]\n",
                 e.GetMsgA(), e.GetFile(), e.GetLine());
         } catch(...) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Failed to configure heartbeat: Unknown exception\n");
         }
     }
@@ -316,7 +316,7 @@ void cluster::simple::View::processInitialisationMessage(void) {
                     this->isFirstInitMsg = false;
                     deleteInitMessage = false;
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteError("processInitialisationMessage: %s", result.c_str());
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("processInitialisationMessage: %s", result.c_str());
                 }
             } else {
                 // this needs to be delayed until the 'next' frame, otherwise the graph does not exist yet!!!

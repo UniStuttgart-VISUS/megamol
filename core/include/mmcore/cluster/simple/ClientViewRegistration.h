@@ -14,7 +14,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
-#include "vislib/net/SimpleMessageDispatchListener.h"
+#include "mmcore/utility/net/SimpleMessageDispatchListener.h"
 
 
 namespace megamol {

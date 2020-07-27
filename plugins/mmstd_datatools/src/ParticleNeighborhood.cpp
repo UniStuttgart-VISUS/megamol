@@ -10,7 +10,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <cstdint>
 #include <algorithm>
 #include <cfloat>
@@ -135,7 +135,7 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
         in->SetFrameID(time, true);
 
         if (!(*in)(0)) {
-            vislib::sys::Log::DefaultLog.WriteError("ParticleNeighborhood: could not get frame (%u)", time);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleNeighborhood: could not get frame (%u)", time);
             return false;
         }
 
@@ -326,13 +326,13 @@ bool datatools::ParticleNeighborhood::getExtentCallback(megamol::core::Call& c) 
     //if (!this->assertData(inMpdc, outDpdc)) return false;
     in->SetFrameID(out->FrameID(), true);
     if (!(*in)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("ParticleNeighborhood: could not get current frame extents (%u)", out->FrameID());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleNeighborhood: could not get current frame extents (%u)", out->FrameID());
         return false;
     }
     out->AccessBoundingBoxes().SetObjectSpaceBBox(in->GetBoundingBoxes().ObjectSpaceBBox());
     out->AccessBoundingBoxes().SetObjectSpaceClipBox(in->GetBoundingBoxes().ObjectSpaceClipBox());
     if (in->FrameCount() < 1) {
-        vislib::sys::Log::DefaultLog.WriteError("ParticleNeighborhood: no frame data!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleNeighborhood: no frame data!");
         return false;
     }
     out->SetFrameCount(in->FrameCount());

@@ -87,7 +87,8 @@ bool TSNEProjection::getDataCallback(core::Call& c) {
         }
 
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(_T("Failed to execute %hs::processData\n"), ClassName());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            _T("Failed to execute %hs::processData\n"), ClassName());
         return false;
     }
 
@@ -110,7 +111,8 @@ bool TSNEProjection::getHashCallback(core::Call& c) {
         outCall->SetFrameCount(inCall->GetFrameCount());
         outCall->SetDataHash(this->datahash);
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(_T("Failed to execute %hs::getHashCallback\n"), ClassName());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            _T("Failed to execute %hs::getHashCallback\n"), ClassName());
         return false;
     }
 
@@ -139,7 +141,8 @@ bool megamol::infovis::TSNEProjection::project(megamol::stdplugin::datatools::ta
 
 
     if (outputColumnCount <= 0 || outputColumnCount > columnCount) {
-        vislib::sys::Log::DefaultLog.WriteError(_T("%hs: No valid Dimension Count has been given\n"), ClassName());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            _T("%hs: No valid Dimension Count has been given\n"), ClassName());
         return false;
     }
 
@@ -180,7 +183,7 @@ bool megamol::infovis::TSNEProjection::project(megamol::stdplugin::datatools::ta
 
     // std::stringstream debug;
     // debug << std::endl << result << std::endl;
-    // vislib::sys::Log::DefaultLog.WriteInfo(debug.str().c_str());
+    // megamol::core::utility::log::Log::DefaultLog.WriteInfo(debug.str().c_str());
 
     // generate new columns
     this->columnInfos.clear();

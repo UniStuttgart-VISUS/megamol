@@ -18,6 +18,8 @@
 #ifdef _WIN32
 #include <Windows.h>
 
+typedef INT32 VL_INT32;
+
 #else /* _WIN32 */
 
 #include <cstddef>
@@ -40,7 +42,7 @@ typedef uint16_t UINT16;
 typedef uint16_t WORD;
 
 typedef int32_t INT;
-typedef int32_t INT32;
+typedef int32_t VL_INT32;
 typedef int32_t LONG;
 typedef uint32_t UINT;
 typedef uint32_t UINT32;
@@ -63,7 +65,7 @@ typedef INT64 INT_PTR;
 typedef UINT64 UINT_PTR;
 typedef UINT64 ULONG_PTR;
 #else /* _LIN64 */
-typedef INT32 INT_PTR;
+typedef VL_INT32 INT_PTR;
 typedef UINT32 UINT_PTR;
 typedef UINT32 ULONG_PTR;
 #endif /* _LIN64 */

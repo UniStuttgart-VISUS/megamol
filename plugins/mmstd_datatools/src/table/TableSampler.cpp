@@ -12,7 +12,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <algorithm>
 #include <numeric>
@@ -116,8 +116,8 @@ bool TableSampler::handleCall(core::Call &call) {
     }
 
     if (tableInCall == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "TableSampler requires a table!");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "TableSampler requires a table!");
         return false;
     }
 
@@ -126,7 +126,7 @@ bool TableSampler::handleCall(core::Call &call) {
     (*tableInCall)(0);
 
     if (this->tableInFrameCount != tableInCall->GetFrameCount() || this->tableInDataHash != tableInCall->DataHash() || doResampling) {
-        //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "TableSampler: Sample table.");
+        //megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "TableSampler: Sample table.");
 
         this->dataHash++;
         this->doResampling = false;

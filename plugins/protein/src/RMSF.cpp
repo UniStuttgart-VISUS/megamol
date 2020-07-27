@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "protein/RMSF.h"
 #include <cmath>
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/Array.h"
 #include "vislib/math/ShallowVector.h"
 #include <fstream>

@@ -27,7 +27,7 @@
 
 #include "vislib/PtrArray.h"
 #include "vislib/sys/Event.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/sys/Thread.h"
 
 namespace megamol {
 namespace stdplugin {

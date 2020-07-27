@@ -69,7 +69,7 @@ bool MultiParticleRelister::manipulateData(megamol::core::moldyn::MultiParticleD
             copyData(inData.AccessParticles(0), *prc);
 
         } else {
-            GetCoreInstance()->Log().WriteError("(MultiParticleRelister) Cannot combine data from MultiParticleDataCall and ParticleRelistCall: Particle counts not equal");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("(MultiParticleRelister) Cannot combine data from MultiParticleDataCall and ParticleRelistCall: Particle counts not equal");
         }
 
     }

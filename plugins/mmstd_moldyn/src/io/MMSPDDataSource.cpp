@@ -11,16 +11,16 @@
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "vislib/ArrayAllocator.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/AutoLock.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/File.h"
 #include "vislib/PtrArray.h"
 #include "vislib/RawStorageWriter.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/MemoryFile.h"
@@ -492,7 +492,7 @@ void MMSPDDataSource::Frame::loadFrameText(char *buffer, UINT64 size, const MMSP
                 val /= 255.0f;
             }
 
-            //vislib::sys::Log::DefaultLog.WriteInfo("read: %f", val);
+            //megamol::core::utility::log::Log::DefaultLog.WriteInfo("read: %f", val);
             typeData[type]->Write(val);
         }
 
@@ -798,7 +798,7 @@ bool MMSPDDataSource::create(void) {
  */
 void MMSPDDataSource::loadFrame(core::view::AnimDataModule::Frame *frame,
         unsigned int idx) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     Frame *f = dynamic_cast<Frame*>(frame);
     if (f == NULL) return;
     if (this->file == NULL) {
@@ -885,13 +885,13 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         that->frameIdxLock.Lock();
         that->frameIdx[0] = 0;
-        vislib::sys::Log::DefaultLog.WriteError("Unable to open data file a second time for frame index generation");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open data file a second time for frame index generation");
         that->frameIdxLock.Unlock();
         that->frameIdxEvent.Set();
         return 0;
     }
     f.Seek(that->frameIdx[0]); // lock not required, because i know the main thread is currently waiting to load the first frame
-    vislib::sys::Log::DefaultLog.WriteInfo(50, "Frame index generation started.");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(50, "Frame index generation started.");
 
     const SIZE_T MAX_BUFFER_SIZE = 1024 * 1024;
     char *buffer = new char[MAX_BUFFER_SIZE];
@@ -1175,7 +1175,7 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
         if ((begin == 0) || (end == 0)) {
             throw vislib::Exception("Frame index incomplete", __FILE__, __LINE__);
         } else {
-            vislib::sys::Log::DefaultLog.WriteInfo(50, "Frame index of %u frames completed with ~%u bytes per frame",
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(50, "Frame index of %u frames completed with ~%u bytes per frame",
                 static_cast<unsigned int>(frameCount),
                 static_cast<unsigned int>((end - begin) / frameCount));
 
@@ -1183,7 +1183,7 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
             //that->frameIdxLock.Lock();
             //if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
             //for (unsigned int i = 0; i <= frameCount; i++) {
-            //    vislib::sys::Log::DefaultLog.WriteInfo(250, "    frame %u: %lu", i, that->frameIdx[i]);
+            //    megamol::core::utility::log::Log::DefaultLog.WriteInfo(250, "    frame %u: %lu", i, that->frameIdx[i]);
             //}
             //that->frameIdxLock.Unlock();
 #endif /* DEBUG || _DEBUG */
@@ -1194,7 +1194,7 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
         // sort of failed ...
         that->frameIdxLock.Lock();
         if (that->frameIdx != NULL) that->frameIdx[0] = 0;
-        vislib::sys::Log::DefaultLog.WriteError("Failed to generated frame index: %s [%s:%d]",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to generated frame index: %s [%s:%d]",
             e.GetMsgA(), e.GetFile(), e.GetLine());
         that->frameIdxLock.Unlock();
         that->frameIdxEvent.Set();
@@ -1203,7 +1203,7 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
         // sort of failed ...
         that->frameIdxLock.Lock();
         if (that->frameIdx != NULL) that->frameIdx[0] = 0;
-        vislib::sys::Log::DefaultLog.WriteError("Failed to generated frame index: unexpected exception");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to generated frame index: unexpected exception");
         that->frameIdxLock.Unlock();
         that->frameIdxEvent.Set();
     }
@@ -1245,7 +1245,7 @@ void MMSPDDataSource::clearData(void) {
  * MMSPDDataSource::filenameChanged
  */
 bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     using vislib::sys::File;
     this->clearData();
     this->resetFrameCache();
@@ -1258,7 +1258,7 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
     ASSERT(this->filename.Param<core::param::FilePathParam>() != NULL);
 
     if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value(), File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-        this->GetCoreInstance()->Log().WriteMsg(Log::LEVEL_ERROR, "Unable to open MMSPD-File \"%s\".", vislib::StringA(
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMSPD-File \"%s\".", vislib::StringA(
             this->filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
 
         SAFE_DELETE(this->file);
@@ -1356,7 +1356,7 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         version.Set(majorVer, minorVer);
         for (int i = 10; i < 14; i++) {
             if (buf[i] < 128) {
-                vislib::sys::Log::DefaultLog.WriteWarn("MMSPD file format marker binary guard byte %d illegal", (i - 9));
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("MMSPD file format marker binary guard byte %d illegal", (i - 9));
             }
         }
 
@@ -1381,7 +1381,7 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         if (tokens.Count() < 10) {
             _ERROR_OUT("Header line incomplete");
         } else if (tokens.Count() > 10) {
-            vislib::sys::Log::DefaultLog.WriteWarn("Trailing information on header line will be ignored");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("Trailing information on header line will be ignored");
         }
 
         const char *fieldName = "unknown";
@@ -1465,7 +1465,7 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
                 msg.Format("Particle line %d incomplete", static_cast<int>(typeIdx));
                 _ERROR_OUT(msg);
             } else if (tokens.Count() > 3 + constFieldCnt * 3 + fieldCnt * 2) {
-                vislib::sys::Log::DefaultLog.WriteWarn("Trailing information on particle line %d will be ignored", static_cast<int>(typeIdx));
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("Trailing information on particle line %d will be ignored", static_cast<int>(typeIdx));
             }
 
             type.SetBaseType(tokens[0]);
@@ -1773,17 +1773,17 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         }
 
         if (cacheSize > CACHE_SIZE_MAX) {
-            vislib::sys::Log::DefaultLog.WriteInfo("Frame cache size %u requested limited to %d",
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Frame cache size %u requested limited to %d",
                 cacheSize, static_cast<int>(CACHE_SIZE_MAX));
             cacheSize = CACHE_SIZE_MAX;
         }
         if (cacheSize < CACHE_SIZE_MIN) {
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "Frame cache size forced to %d. Calculated size was %u.\n",
                 static_cast<int>(CACHE_SIZE_MIN), cacheSize);
             cacheSize = CACHE_SIZE_MIN;
         } else {
-            vislib::sys::Log::DefaultLog.WriteInfo("Frame cache size set to %u.\n",
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Frame cache size set to %u.\n",
                 cacheSize);
         }
         this->initFrameCache(cacheSize);
@@ -1809,14 +1809,14 @@ bool MMSPDDataSource::getDataCallback(core::Call& caller) {
 
     Frame *f = NULL;
     if (c2 != NULL) {
-        //vislib::sys::Log::DefaultLog.WriteInfo("MMSPDDataSource: got a request for frame %u", c2->FrameID());
+        //megamol::core::utility::log::Log::DefaultLog.WriteInfo("MMSPDDataSource: got a request for frame %u", c2->FrameID());
         do {
             f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
         } while (c2->IsFrameForced() && f->FrameNumber() != c2->FrameID() && (f->Unlock(), true)); // either the frame is irrelevant, or the frame is okay, or we need to unlock!
         if (f == NULL) return false;
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetFrameID(f->FrameNumber());
-        //vislib::sys::Log::DefaultLog.WriteInfo("MMSPDDataSource: providing frame %u", f->FrameNumber());
+        //megamol::core::utility::log::Log::DefaultLog.WriteInfo("MMSPDDataSource: providing frame %u", f->FrameNumber());
         c2->SetDataHash(this->dataHash);
         f->SetData(*c2, this->dataHeader);
     }
@@ -1834,14 +1834,14 @@ bool MMSPDDataSource::getDirDataCallback(core::Call& caller) {
 
     Frame *f = nullptr;
     if (c2 != nullptr) {
-        //vislib::sys::Log::DefaultLog.WriteInfo("MMSPDDataSource: got a request for frame %u", c2->FrameID());
+        //megamol::core::utility::log::Log::DefaultLog.WriteInfo("MMSPDDataSource: got a request for frame %u", c2->FrameID());
         do {
             f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
         } while (c2->IsFrameForced() && f->FrameNumber() != c2->FrameID() && (f->Unlock(), true)); // either the frame is irrelevant, or the frame is okay, or we need to unlock!
         if (f == nullptr) return false;
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetFrameID(f->FrameNumber());
-        //vislib::sys::Log::DefaultLog.WriteInfo("MMSPDDataSource: providing frame %u", f->FrameNumber());
+        //megamol::core::utility::log::Log::DefaultLog.WriteInfo("MMSPDDataSource: providing frame %u", f->FrameNumber());
         c2->SetDataHash(this->dataHash);
         f->SetDirData(*c2, this->dataHeader);
     }

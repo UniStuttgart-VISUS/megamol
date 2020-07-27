@@ -12,8 +12,8 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/memutils.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/String.h"
@@ -158,7 +158,7 @@ void ParticleFortLoader::release(void) {
  * ParticleFortLoader::assertData
  */
 void ParticleFortLoader::assertData(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     if (this->positionFileNameSlot.IsDirty()
         || this->attributeFileNameSlot.IsDirty()) {

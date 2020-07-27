@@ -7,7 +7,7 @@
 #include "stdafx.h"
 #include "OSPRayQuadMesh.h"
 #include "geometry_calls/CallTriMeshData.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/BoundingBoxes_2.h"
 
 

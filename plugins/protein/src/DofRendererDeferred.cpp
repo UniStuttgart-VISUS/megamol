@@ -18,13 +18,14 @@
 #include <algorithm>
 
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/Vector.h"
 
 #include "DofRendererDeferred.h"
 
 using namespace megamol;
 using namespace vislib;
+using namespace megamol::core::utility::log;
 
 #pragma push_macro("min")
 #undef min
@@ -122,12 +123,12 @@ bool protein::DofRendererDeferred::create(void) {
 
 	// Try to load depth of field shader (mipmap, reduce)
 	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::dof::reduceVertex", vertSrc)) {
-		sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 				"%s: Unable to load vertex shader source: depth of field shader (mipmap, reduce)", this->ClassName());
 		return false;
 	}
 	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::dof::mipmap::reduceFragment", fragSrc)) {
-		sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 				"%s: Unable to load fragment shader source: depth of field shader (mipmap, reduce)", this->ClassName());
 		return false;
 	}
@@ -136,19 +137,19 @@ bool protein::DofRendererDeferred::create(void) {
 			throw Exception("Generic creation failure", __FILE__, __LINE__);
 	}
 	catch(Exception e){
-		sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 				"%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
 		return false;
 	}
 
 	// Try to load depth of field shader (mipmap, blur)
 	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::dof::blurVertex", vertSrc)) {
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"%s: Unable to load vertex shader source: depth of field shader (mipmap, blur)", this->ClassName());
 		return false;
 	}
 	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::dof::mipmap::blurFragment", fragSrc)) {
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"%s: Unable to load fragment shader source: depth of field shader (mipmap, blur)", this->ClassName());
 		return false;
 	}
@@ -157,19 +158,19 @@ bool protein::DofRendererDeferred::create(void) {
 			throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
 	}
 	catch(Exception e){
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
 		return false;
 	}
 
 	// Try to load depth of field shader (shaderx, reduce)
 	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::dof::reduceVertex", vertSrc)) {
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"%s: Unable to load vertex shader source: depth of field shader shaderx, reduce)", this->ClassName());
 		return false;
 	}
 	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::dof::shaderx::reduceFragment", fragSrc)) {
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"%s: Unable to load fragment shader source: depth of field shader (shaderx, reduce)", this->ClassName());
 		return false;
 	}
@@ -178,19 +179,19 @@ bool protein::DofRendererDeferred::create(void) {
 			throw Exception("Generic creation failure", __FILE__, __LINE__);
 	}
 	catch(Exception e){
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
 		return false;
 	}
 
 	// Try to load depth of field shader (shaderx, blur)
 	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::dof::blurVertex", vertSrc)) {
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"%s: Unable to load vertex shader source: depth of field shader shaderx, blur)", this->ClassName());
 		return false;
 	}
 	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::dof::shaderx::blurFragment", fragSrc)) {
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"%s: Unable to load fragment shader source: depth of field shader (shaderx, blur)", this->ClassName());
 		return false;
 	}
@@ -199,19 +200,19 @@ bool protein::DofRendererDeferred::create(void) {
 			throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
 	}
 	catch(Exception e){
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
 		return false;
 	}
 
 	// Try to load shader for gaussian filter (horizontal)
 	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"%s: Unable to load vertex shader source: gaussian filter (horizontal)", this->ClassName());
 		return false;
 	}
 	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::gaussian::fragmentHoriz", fragSrc)) {
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"%s: Unable to load fragment shader source: gaussian filter (horizontal)", this->ClassName());
 		return false;
 	}
@@ -220,19 +221,19 @@ bool protein::DofRendererDeferred::create(void) {
 			throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
 	}
 	catch(Exception e){
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
 		return false;
 	}
 
 	// Try to load shader for gaussian filter (vertical)
 	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"%s: Unable to load vertex shader source: gaussian filter (vertical)", this->ClassName());
 		return false;
 	}
 	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::gaussian::fragmentVert", fragSrc)) {
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"%s: Unable to load fragment shader source: gaussian filter (vertical)", this->ClassName());
 		return false;
 	}
@@ -241,19 +242,19 @@ bool protein::DofRendererDeferred::create(void) {
 			throw Exception("Generic creation failure", __FILE__, __LINE__);
 	}
 	catch(Exception e){
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
 		return false;
 	}
 
 	// Try to load shader for gaussian filter (lee)
 	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"%s: Unable to load vertex shader source: gaussian filter (lee)", this->ClassName());
 		return false;
 	}
 	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::gaussian::fragmentLee", fragSrc)) {
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"%s: Unable to load fragment shader source: gaussian filter (lee)", this->ClassName());
 		return false;
 	}
@@ -262,7 +263,7 @@ bool protein::DofRendererDeferred::create(void) {
 			throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
 	}
 	catch(Exception e){
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
 		return false;
 	}
@@ -534,7 +535,7 @@ bool protein::DofRendererDeferred::createFbo(GLuint width, GLuint height) {
 
 	GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER);
 	if(status != GL_FRAMEBUFFER_COMPLETE) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 				"Could not create fbo");
 		return false;
 	}

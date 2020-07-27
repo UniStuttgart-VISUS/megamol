@@ -18,6 +18,7 @@
 
 using namespace megamol;
 using namespace megamol::protein_cuda;
+using namespace megamol::core::utility::log;
 
 
 /*
@@ -51,7 +52,6 @@ SurfacePotentialRendererSlave::~SurfacePotentialRendererSlave(void) {
  */
 bool SurfacePotentialRendererSlave::create(void) {
 
-    using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
     // Init extensions

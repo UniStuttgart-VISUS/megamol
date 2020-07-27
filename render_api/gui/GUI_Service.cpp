@@ -7,8 +7,7 @@
 
 #include "GUI_Service.hpp"
 
-#include "vislib/sys/Log.h"
-
+ /// #include "mmcore/utility/log/Log.h"
 
 namespace megamol {
 namespace frontend {

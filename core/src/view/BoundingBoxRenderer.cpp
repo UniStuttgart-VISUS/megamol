@@ -15,7 +15,7 @@
 #include "mmcore/thecam/math/functions.h"
 
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -81,33 +81,33 @@ bool BoundingBoxRenderer::create(void) {
     // TODO the vislib shaders have to die a slow and painful death
     vislib::graphics::gl::ShaderSource bbVertSrc, bbFragSrc;
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("boundingbox::vertex", bbVertSrc)) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load vertex shader source for bounding box line shader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load vertex shader source for bounding box line shader");
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("boundingbox::fragment", bbFragSrc)) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load fragment shader source for bounding box line shader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load fragment shader source for bounding box line shader");
     }
     try {
         if (!this->lineShader.Create(bbVertSrc.Code(), bbVertSrc.Count(), bbFragSrc.Code(), bbFragSrc.Count())) {
             throw vislib::Exception("Shader creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to create bounding box line shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to create bounding box line shader: %s\n", e.GetMsgA());
         return false;
     }
 
     vislib::graphics::gl::ShaderSource vcVertSrc, vcFragSrc;
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("viewcube::vertex", vcVertSrc)) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load vertex shader source for view cube shader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load vertex shader source for view cube shader");
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("viewcube::fragment", vcFragSrc)) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load fragment shader source for view cube shader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load fragment shader source for view cube shader");
     }
     try {
         if (!this->cubeShader.Create(vcVertSrc.Code(), vcVertSrc.Count(), vcFragSrc.Code(), vcFragSrc.Count())) {
             throw vislib::Exception("Shader creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to create view cube shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to create view cube shader: %s\n", e.GetMsgA());
         return false;
     }
 
@@ -164,7 +164,7 @@ void BoundingBoxRenderer::release(void) {
 bool BoundingBoxRenderer::GetExtents(CallRender3D_2& call) {
     CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<CallRender3D_2>();
     if (chainedCall == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "The BoundingBoxRenderer does not work without a renderer attached to its right");
         return false;
     }
@@ -193,7 +193,7 @@ bool BoundingBoxRenderer::Render(CallRender3D_2& call) {
 
     CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<CallRender3D_2>();
     if (chainedCall == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "The BoundingBoxRenderer does not work without a renderer attached to its right");
         return false;
     }

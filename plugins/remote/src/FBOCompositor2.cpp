@@ -13,7 +13,7 @@
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/Camera_2.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "snappy.h"
 
@@ -145,13 +145,13 @@ bool megamol::remote::FBOCompositor2::GetExtents(megamol::core::view::CallRender
     auto& out_bbox = call.AccessBoundingBoxes();
 
 #if _DEBUG && VERBOSE
-    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex GetExtent\n");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex GetExtent\n");
 #endif
 
     std::lock_guard<std::mutex> write_guard(this->buffer_write_guard_);
 
 #if _DEBUG && VERBOSE
-    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex GetExtent\n");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex GetExtent\n");
 #endif
 
     if (!this->fbo_msg_write_->empty()) {
@@ -217,12 +217,12 @@ bool megamol::remote::FBOCompositor2::Render(megamol::core::view::CallRender3D_2
     // if yes, resize textures and upload afterward
     if (data_has_changed_.load()) {
 #if _DEBUG && VERBOSE
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex Render\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex Render\n");
 #endif
         std::lock_guard<std::mutex> write_guard(this->buffer_write_guard_);
 
 #if _DEBUG && VERBOSE
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex Render\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex Render\n");
 #endif
         if (only_req_frame) {
             for (int i = 0; i < 2; ++i) {
@@ -375,7 +375,7 @@ bool megamol::remote::FBOCompositor2::initThreads() {
         // close_future_ = close_promise_.get_future();
 
 #if _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Starting collector thread\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Starting collector thread\n");
 #endif
         /*auto const addresses =
             std::string{T2A(this->addressesSlot_.Param<megamol::core::param::StringParam>()->Value())};*/
@@ -402,45 +402,45 @@ void megamol::remote::FBOCompositor2::receiverJob(
             std::vector<char> buf{'r', 'e', 'q'};
             try {
 #if _DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Sending request\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Sending request\n");
 #endif
                 if (!comm.Send(buf, send_type::SEND)) {
-                    vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: Exception during send in 'receiverJob'\n");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: Exception during send in 'receiverJob'\n");
                 }
 #if _DEBUG
                 else {
-                    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Request sent\n");
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Request sent\n");
                 }
 #endif
             } catch (...) {
-                vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: Exception during send in 'receiverJob'\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: Exception during send in 'receiverJob'\n");
             }
 
             // receive requested frame info
             try {
 #if _DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Waiting for answer\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Waiting for answer\n");
 #endif
                 /*if (!comm.Recv(buf, recv_type::RECV)) {
-                    vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: Exception during recv in 'receiverJob'\n");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: Exception during recv in 'receiverJob'\n");
                 }*/
                 // std::future_status status;
                 while (!comm.Recv(buf, recv_type::RECV) && !shutdown_) {
                     // status = close.wait_for(std::chrono::milliseconds(1));
                     // if (status == std::future_status::ready) break;
 #if _DEBUG
-                    vislib::sys::Log::DefaultLog.WriteWarn(
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                         "FBOCompositor2: Recv failed in 'receiverJob', trying again\n");
 #endif
                 }
                 if (shutdown_) break;
                 /*#if _DEBUG
                                 else {
-                                    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Answer received\n");
+                                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Answer received\n");
                                 }
                 #endif*/
             } catch (...) {
-                vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: Exception during recv in 'receiverJob'\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: Exception during recv in 'receiverJob'\n");
             }
 
             fbo_msg_header_t header;
@@ -456,7 +456,7 @@ void megamol::remote::FBOCompositor2::receiverJob(
 
             if (header.depth_buf_size <= 1 || header.color_buf_size <= 1) {
 #if _DEBUG
-                vislib::sys::Log::DefaultLog.WriteWarn(
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "FBOCompositor2: Bad size for alloc color/depth; col_buf size: %d; col_comp_buf size: %d; "
                     "depth_buf size: %d; depth_comp_buf size: %d;\n",
                     fbo_col_size, header.color_buf_size, fbo_depth_size, header.depth_buf_size);
@@ -483,7 +483,7 @@ void megamol::remote::FBOCompositor2::receiverJob(
             std::copy(buf_ptr, buf_ptr + fbo_depth_size, depth_buf.begin());*/
 
 #ifdef _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo(
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "FBOCompositor2: Got message with col_buf size %d and depth_buf size %d\n", col_buf.size(),
                 depth_buf.size());
 #endif
@@ -502,24 +502,24 @@ void megamol::remote::FBOCompositor2::receiverJob(
 #if 0
         {
 #    if _DEBUG
-    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex receiverJob Heartbeat\n");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex receiverJob Heartbeat\n");
 #    endif
             std::shared_lock<std::shared_mutex> heartbeat_guard(heartbeat_lock_);
 
 #    if _DEBUG
-    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex receiverJob Heartbeat\n");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex receiverJob Heartbeat\n");
 #    endif
             heartbeat_.wait(heartbeat_guard);
         }
 #endif
         }
-        vislib::sys::Log::DefaultLog.WriteWarn("FBOCompositor2: Closing receiverJob\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("FBOCompositor2: Closing receiverJob\n");
     } catch (std::exception& e) {
-        vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: ReceiverJob died: %s\n", e.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: ReceiverJob died: %s\n", e.what());
     } catch (vislib::Exception& e) {
-        vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: ReceiverJob died: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: ReceiverJob died: %s\n", e.GetMsgA());
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: ReceiverJob died\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: ReceiverJob died\n");
     }
 }
 
@@ -545,13 +545,13 @@ void megamol::remote::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& 
         {
 
 #if _DEBUG && VERBOSE
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex collectorJob\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex collectorJob\n");
 #endif
 
             std::scoped_lock<std::mutex, std::mutex> guard(buffer_recv_guard_, buffer_write_guard_);
 
 #if _DEBUG && VERBOSE
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex collectorJob\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex collectorJob\n");
 #endif
             this->fbo_msg_write_.reset(new std::vector<fbo_msg_t>);
             this->fbo_msg_write_->resize(jobs.size());
@@ -588,17 +588,17 @@ void megamol::remote::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& 
             {
 
 #if _DEBUG && VERBOSE
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex collectorJob collect\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex collectorJob collect\n");
 #endif
 
                 std::lock_guard<std::mutex> fbo_recv_guard(this->buffer_recv_guard_);
 
 #if _DEBUG && VERBOSE
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex colectorJob collect\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex colectorJob collect\n");
 #endif
 
 #ifdef _DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Got all messages ... comitting\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Got all messages ... comitting\n");
 #endif
 
                 for (size_t i = 0; i < fbo_msg_futures.size(); ++i) {
@@ -621,17 +621,17 @@ void megamol::remote::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& 
         float const target_fps = target_bandwidth / msg_size;
 
 #    if _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Bandwidth %f\n", bandwidth);
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Target FPS %f\n", target_fps);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Bandwidth %f\n", bandwidth);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Target FPS %f\n", target_fps);
 #    endif
         {
 #    if _DEBUG
-    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex collector Job heartbeat\n");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex collector Job heartbeat\n");
 #    endif
             std::unique_lock<std::shared_mutex> heartbeat_guard(heartbeat_lock_);
 
 #    if _DEBUG
-    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex collectorJob heartbeat\n");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex collectorJob heartbeat\n");
 #    endif
 
             std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<size_t>(1000.0f / target_fps)));
@@ -643,16 +643,16 @@ void megamol::remote::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& 
         }
 
         // deinitialization
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Sending close signals\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Sending close signals\n");
         for (auto& sig : recv_close_sig) {
             sig.set_value(true);
         }
         for (auto& job : jobs) {
             job.join();
         }
-        vislib::sys::Log::DefaultLog.WriteWarn("FBOCompositor2: Closing collectorJob\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("FBOCompositor2: Closing collectorJob\n");
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: CollectorJob\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: CollectorJob\n");
     }
 }
 
@@ -664,7 +664,7 @@ void megamol::remote::FBOCompositor2::registerJob(std::vector<std::string>& addr
         std::vector<char> buf;
 
 #if _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo(
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "FBOCompositor2: Starting client registration of %d clients\n", numNodes);
 #endif
 
@@ -673,41 +673,41 @@ void megamol::remote::FBOCompositor2::registerJob(std::vector<std::string>& addr
 
             try {
 #if _DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Receiving client address\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Receiving client address\n");
 #endif
                 while (!registerComm_.Recv(buf) && !shutdown_) {
 #if _DEBUG
-                    vislib::sys::Log::DefaultLog.WriteWarn(
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                         "FBOCompositor2: Recv failed on 'registerComm', trying again\n");
 #endif
                 }
 #if _DEBUG
                 if (!shutdown_) {
-                    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Received client address\n");
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Received client address\n");
                 }
 #endif
             } catch (zmq::error_t const& e) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "FBOCompositor2: Failed to recv on register socket %s\n", e.what());
             }
             std::string str{buf.begin(), buf.end()};
 
             if (shutdown_) break;
 #if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Received address: %s\n", str.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Received address: %s\n", str.c_str());
 #endif
             addresses.push_back(str);
 
             try {
 #if _DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Sending client ack\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Sending client ack\n");
 #endif
                 registerComm_.Send(buf);
 #if _DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Sent client ack\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Sent client ack\n");
 #endif
             } catch (zmq::error_t const& e) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "FBOCompositor2: Failed to send  on register socket %s\n", e.what());
             }
         } while (addresses.size() < numNodes);
@@ -715,7 +715,7 @@ void megamol::remote::FBOCompositor2::registerJob(std::vector<std::string>& addr
             this->isRegistered_.store(true);
         }
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: RegisterJob died\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: RegisterJob died\n");
     }
 }
 
@@ -797,7 +797,7 @@ std::vector<megamol::remote::FBOCommFabric> megamol::remote::FBOCompositor2::con
         if (comm.Connect(el)) {
             ret.push_back(std::move(comm));
         } else {
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "FBOCompositor2: Could not connect socket to address %s\n", el.c_str());
         }
     }

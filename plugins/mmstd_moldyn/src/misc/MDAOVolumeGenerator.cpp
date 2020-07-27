@@ -78,7 +78,7 @@ bool MDAOVolumeGenerator::Init()
 
     std::stringstream outmsg;
     outmsg << "[MDAOVolumeGenerator] Voxelization Features enabled: Compute Shader " << computeAvailable << ", Clear Texture " << clearAvailable << std::endl;
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, outmsg.str().c_str());
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, outmsg.str().c_str());
 
     if (computeAvailable) {
         // Try to initialize the compute shader
@@ -94,7 +94,7 @@ bool MDAOVolumeGenerator::Init()
                 << vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction())
                 << ": "
                 << ce.GetMsgA() << std::endl;
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, outmsg.str().c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, outmsg.str().c_str());
             return false;
         }
     }
@@ -126,7 +126,7 @@ bool MDAOVolumeGenerator::Init()
 
         // Compile and Link
         if (!this->volumeShader.Compile(vert.Code(), vert.Count(), geom.Code(), geom.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "[MDAOVolumeGenerator] Unable to compile shader: Unknown error\n");
             return false;
         }

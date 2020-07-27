@@ -13,7 +13,7 @@
 //#include "vislib/memutils.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/VersionNumber.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/xmlUtils.h"
 #include <sstream>
 #include <fstream>
@@ -109,7 +109,7 @@ void utility::BTFParser::Comment(unsigned int level, const XML_Char *text,
  */
 bool utility::BTFParser::CheckBaseTag(const utility::xml::XmlReader& reader) {
     if (!reader.BaseTag().Equals(MMXML_STRING("btf"))) {
-        vislib::sys::Log::DefaultLog.WriteMsg(1, 
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, 
             "BTF file does not specify <btf/> as base tag");
         return false;
     }
@@ -155,17 +155,17 @@ bool utility::BTFParser::CheckBaseTag(const utility::xml::XmlReader& reader) {
     }
 
     if (!typeValid) {
-        vislib::sys::Log::DefaultLog.WriteMsg(1, 
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, 
             "base tag attribute \"type\" not present or invalid.");
         return false;
     }
     if (!versionValid) {
-        vislib::sys::Log::DefaultLog.WriteMsg(1, 
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, 
             "base tag attribute \"version\" not present or invalid.");
         return false;
     }
     if (!nmspcValid) {
-        vislib::sys::Log::DefaultLog.WriteMsg(1, 
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, 
             "base tag attribute \"namespace\" not present or invalid.");
         return false;
     }
@@ -220,8 +220,8 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
             }
         }
         if (filename != NULL) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO + 150,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_INFO + 150,
                 "Including BTF \"%s\" ...", vislib::StringA(filename).PeekBuffer());
             if (!this->factory.LoadBTF(vislib::StringA(filename))) {
                 vislib::StringA msg;

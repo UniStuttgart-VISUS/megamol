@@ -28,7 +28,7 @@ megamol::gui::FileBrowserWidget::FileBrowserWidget(void)
     , additional_lines(0) {
 #else
 {
-    vislib::sys::Log::DefaultLog.WriteWarn(
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
         "Filesystem functionality is not available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 #endif // GUI_USE_FILESYSTEM
 }
@@ -58,7 +58,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
             // Set initial window size of pop up
             ImGui::SetNextWindowSize(ImVec2(400.0f, 500.0f));
 #else
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "Filesystem functionality is not available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 #endif // GUI_USE_FILESYSTEM
         }
@@ -286,11 +286,12 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
         ImGui::PopID();
 
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -362,7 +363,7 @@ bool megamol::gui::FileBrowserWidget::splitPath(
             out_file.clear();
         }
     } catch (fsns::filesystem_error e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -377,7 +378,7 @@ void megamol::gui::FileBrowserWidget::validateDirectory(const std::string& path_
         fsns::path tmp_path = static_cast<fsns::path>(path_str);
         this->valid_directory = (fsns::status_known(fsns::status(tmp_path)) && fsns::is_directory(tmp_path));
     } catch (fsns::filesystem_error e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
     }
@@ -443,7 +444,7 @@ void megamol::gui::FileBrowserWidget::validateFile(
         }
 
     } catch (fsns::filesystem_error e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
     }

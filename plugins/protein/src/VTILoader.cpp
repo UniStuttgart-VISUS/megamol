@@ -17,7 +17,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "vislib/sys/File.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/String.h"
 #include "vislib/Exception.h"
 #include <string>
@@ -31,6 +31,7 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
+using namespace megamol::core::utility::log;
 
 #pragma push_macro("min")
 #undef min
@@ -109,7 +110,7 @@ void VTILoader::release(void) {
  * VTILoader::getData
  */
 bool VTILoader::getData(core::Call& call) {
-    using namespace vislib::sys;
+    
 
     // Get data call
 	protein_calls::VTIDataCall *dc = dynamic_cast<protein_calls::VTIDataCall*>(&call);
@@ -210,7 +211,6 @@ bool VTILoader::getExtent(core::Call& call) {
 
 //    printf("Getextent started\n");
 
-    using namespace vislib::sys;
 
     // Check parameters
     if (this->filenameSlot.IsDirty()) { // Files have to be loaded first
@@ -315,7 +315,6 @@ bool VTILoader::getExtent(core::Call& call) {
  */
 bool VTILoader::loadFile(const vislib::StringA& filename) {
 
-    using namespace vislib::sys;
 
     // Test whether the filename is invalid or empty
     if (filename.IsEmpty()) {
@@ -323,8 +322,8 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
                 this->ClassName());
         return true;
     }
-    File file;
-    if (!file.Open(filename, File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
+    vislib::sys::File file;
+    if (!file.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to open file '%s'",
                 this->ClassName(), filename.PeekBuffer());
         return false;
@@ -387,8 +386,8 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
     }
     this->setFrameCount(this->nFrames);
 
-    File::FileSize fileSize =
-            File::GetSize(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
+    vislib::sys::File::FileSize fileSize =
+            vislib::sys::File::GetSize(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
 
 #ifdef VERBOSE
     time_t t = clock(); // DEBUG
@@ -404,7 +403,7 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
     // Read data file to char buffer
     char *buffer = new char[(unsigned int)fileSize];
     if(!file.Open(this->filenameSlot.Param<core::param::FilePathParam>()->Value(),
-            File::READ_ONLY, File::SHARE_EXCLUSIVE, File::OPEN_ONLY)) return false;
+            vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::OPEN_ONLY)) return false;
     file.Read(buffer, fileSize);
     file.Close();
 
@@ -619,7 +618,7 @@ view::AnimDataModule::Frame* VTILoader::constructFrame(void) const {
  * VTILoader::loadFrame
  */
 void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) {
-    using namespace vislib::sys;
+    
     using namespace vislib;
 
     VTILoader::Frame *fr = dynamic_cast<VTILoader::Frame*>(frame);
@@ -646,8 +645,8 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
     }
 
     // Try to open the current frames file
-    File file;
-    File::FileSize fileSize = File::GetSize(frameFile);
+    vislib::sys::File file;
+    vislib::sys::File::FileSize fileSize = vislib::sys::File::GetSize(frameFile);
 
 #if defined(VERBOSE)
     time_t t = clock();
@@ -655,7 +654,7 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
 
     // Read data file to char buffer
 	char *buffer = new char[(unsigned int)fileSize];
-    file.Open(frameFile, File::READ_ONLY, File::SHARE_EXCLUSIVE, File::OPEN_ONLY);
+    file.Open(frameFile, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::OPEN_ONLY);
     file.Read(buffer, fileSize);
     file.Close();
 

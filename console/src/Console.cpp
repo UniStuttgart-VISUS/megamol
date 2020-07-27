@@ -14,6 +14,7 @@
 #include <iomanip>
 #include <map>
 #include <thread>
+#include <memory>
 
 #include "mmcore/api/MegaMolCore.h"
 
@@ -157,10 +158,10 @@ int main(int argc, char* argv[]) {
     } catch(vislib::Exception e) {
         vislib::StringA msg;
         msg.Format("Exception in (%s, %d): %s\n", e.GetFile(), e.GetLine(), e.GetMsgA());
-        vislib::sys::Log::DefaultLog.WriteError(msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(msg);
         retVal = -1;
     } catch(...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Exception.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unknown Exception.");
         retVal = -1;
     }
 
@@ -190,10 +191,10 @@ void initTraceAndLog() {
     vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL);
 
     // VISlib Log
-    vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
-    vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_ALL);
-    vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-    vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::StreamTarget(stdout, vislib::sys::Log::LEVEL_ALL));
+    megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
+    megamol::core::utility::log::Log::DefaultLog.SetLevel(megamol::core::utility::log::Log::LEVEL_ALL);
+    megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
+    megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(std::make_shared<megamol::core::utility::log::Log::StreamTarget>(std::cout, megamol::core::utility::log::Log::LEVEL_ALL));
     megamol::console::utility::AboutInfo::LogGreeting();
     megamol::console::utility::AboutInfo::LogVersionInfo();
     megamol::console::utility::AboutInfo::LogStartTime();
@@ -208,8 +209,8 @@ void printErrorsAndWarnings(megamol::console::utility::CmdLineParser* parser) {
 void loadCmdFromFile(megamol::console::utility::CmdLineParser* parser, vislib::sys::TCmdLineProvider& cmdline, char** argv, int& retVal) {
     const TCHAR* cmdlinefile = parser->CmdLineFile();
     if (cmdlinefile == NULL) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to retreive command line file name.\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to retreive command line file name.\n");
 
     } else {
         vislib::TString cmdlinefilename(cmdlinefile);
@@ -226,12 +227,12 @@ void loadCmdFromFile(megamol::console::utility::CmdLineParser* parser, vislib::s
                 ::printErrorsAndWarnings(parser);
 
             } else {
-                vislib::sys::Log::DefaultLog.WriteInfo(
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                     "Read command line from \"%s\"\n", vislib::StringA(cmdlinefilename).PeekBuffer());
             }
 
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to open file \"%s\"\n", vislib::StringA(cmdlinefilename).PeekBuffer());
         }
     }
@@ -245,8 +246,8 @@ void echoCmdLine(vislib::sys::TCmdLineProvider& cmdline) {
         cmdlineecho.Append(vislib::StringA(cmdline.ArgV()[i]));
     }
 
-    vislib::sys::Log::DefaultLog.WriteInfo("%s\n", cmdlineecho.PeekBuffer());
-    if (vislib::sys::Log::DefaultLog.GetEchoLevel() < vislib::sys::Log::LEVEL_INFO) {
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("%s\n", cmdlineecho.PeekBuffer());
+    if (megamol::core::utility::log::Log::DefaultLog.GetEchoLevel() < megamol::core::utility::log::Log::LEVEL_INFO) {
         std::cout << cmdlineecho << std::endl;
     }
 }
@@ -293,17 +294,6 @@ void setupCore(megamol::console::utility::CmdLineParser *& parser) {
 
     // log
 
-    //MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore, // is now deprecated
-    //    MMC_INITVAL_INCOMINGLOG, MMC_TYPE_VOIDP, 
-    //    static_cast<void*>(&Log::DefaultLog)));
-    // HAZARD!!! Cross-Heap-Allocation Problem
-    // instead inquire the core log
-    vislib::sys::Log *corelog = nullptr;
-    MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore, MMC_INITVAL_CORELOG, MMC_TYPE_VOIDP, static_cast<void*>(&corelog)));
-    if (corelog != nullptr) {
-        vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(corelog, vislib::sys::Log::LEVEL_ALL));
-        vislib::sys::Log::DefaultLog.EchoOfflineMessages(true);
-    }
 
     void (MEGAMOLCORE_CALLBACK *echoFunc)(unsigned int level, const char* message)
 #ifdef _WIN32
@@ -369,7 +359,7 @@ void setupCore(megamol::console::utility::CmdLineParser *& parser) {
             pw.Parse(winInf);
             vislib::TString cfgVal(pw.ToString());
             if (!::mmcSetConfigurationValue(hCore, MMC_CFGID_VARIABLE, cfgName, cfgVal)) {
-                vislib::sys::Log::DefaultLog.WriteWarn("Failed to reflect window settings for %s", vislib::StringA(winId).PeekBuffer());
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("Failed to reflect window settings for %s", vislib::StringA(winId).PeekBuffer());
             }
         }
     }
@@ -378,19 +368,19 @@ void setupCore(megamol::console::utility::CmdLineParser *& parser) {
 
     if (parser->SetVSync()) {
         if (!::mmcSetConfigurationValue(hCore, MMC_CFGID_VARIABLE, _T("vsync"), parser->SetVSyncOff() ? _T("off") : _T("on"))) {
-            vislib::sys::Log::DefaultLog.WriteWarn("Failed to set vsync parameter");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("Failed to set vsync parameter");
         }
     }
 
     if (parser->ShowGUI() || parser->HideGUI()) {
         if (!::mmcSetConfigurationValue(hCore, MMC_CFGID_VARIABLE, _T("consolegui"), parser->ShowGUI() ? _T("true") : _T("false"))) {
-            vislib::sys::Log::DefaultLog.WriteWarn("Failed to set consolegui parameter");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("Failed to set consolegui parameter");
         }
     }
 
     if (parser->UseKHRDebug()) {
         if (!::mmcSetConfigurationValue(hCore, MMC_CFGID_VARIABLE, _T("useKHRdebug"), parser->UseKHRDebug() ? _T("true") : _T("false"))) {
-            vislib::sys::Log::DefaultLog.WriteWarn("Failed to set KHR debug");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("Failed to set KHR debug");
         }
     }
 
@@ -399,7 +389,7 @@ void setupCore(megamol::console::utility::CmdLineParser *& parser) {
     vislib::SingleLinkedList<vislib::TString> quickstarts;
     parser->GetQuickstarts(quickstarts);
     if (parser->HasQuickstartRegistrations() || !quickstarts.IsEmpty()) {
-        vislib::sys::Log::DefaultLog.WriteWarn("Quickstarts are no longer supported. All corresponding command line arguments are ignored.");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Quickstarts are no longer supported. All corresponding command line arguments are ignored.");
     }
 
     megamol::console::utility::ParamFileManager::Instance().hCore = hCore;
@@ -413,15 +403,15 @@ void setupCore(megamol::console::utility::CmdLineParser *& parser) {
 void processPendingActions(void) {
     while (::mmcHasPendingJobInstantiationRequests(hCore)) {
         if (!megamol::console::JobManager::Instance().InstantiatePendingJob(hCore)) {
-            vislib::sys::Log::DefaultLog.WriteError("Unable to instantiate the requested job.");
-            vislib::sys::Log::DefaultLog.WriteError("Skipping remaining instantiation requests");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to instantiate the requested job.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Skipping remaining instantiation requests");
             break;
         }
     }
     while (::mmcHasPendingViewInstantiationRequests(hCore)) {
         if (!megamol::console::WindowManager::Instance().InstantiatePendingView(hCore)) { // <-- GLFW and OpenGL context/window start life when instantiating the first view
-            vislib::sys::Log::DefaultLog.WriteError("Unable to instantiate the requested view.");
-            vislib::sys::Log::DefaultLog.WriteError("Skipping remaining instantiation requests");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to instantiate the requested view.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Skipping remaining instantiation requests");
             break;
         }
     }
@@ -461,7 +451,7 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
     int loadedLuaProjects = 0;
     countProjects(projects, loadedProjects, loadedLuaProjects);
     if (loadedLuaProjects > 0 && loadedLuaProjects != loadedProjects) {
-        vislib::sys::Log::DefaultLog.WriteError("You cannot mix loading legacy projects and lua projects!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("You cannot mix loading legacy projects and lua projects!");
         return -66;
     }
 
@@ -495,7 +485,7 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
     for (auto& pv : paramValues) {
         ::megamol::console::CoreHandle hParam;
         if (!::mmcGetParameter(hCore, pv.first, hParam)) {
-            vislib::sys::Log::DefaultLog.WriteError("Unable to get handle for parameter \"%s\".\n", vislib::StringA(pv.first).PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to get handle for parameter \"%s\".\n", vislib::StringA(pv.first).PeekBuffer());
             continue;
         }
         ::mmcSetParameterValue(hParam, pv.second);

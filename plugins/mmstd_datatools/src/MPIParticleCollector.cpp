@@ -7,7 +7,7 @@
 #include "stdafx.h"
 #include "MPIParticleCollector.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -61,8 +61,8 @@ bool datatools::MPIParticleCollector::manipulateData(
         MultiParticleDataCall::Particles::VertexDataType vdt = p.GetVertexDataType();
         unsigned int vsize = MultiParticleDataCall::Particles::VertexDataSize[vdt];
 
-        //vislib::sys::Log::DefaultLog.WriteInfo("Count = %lu", cnt);
-        //vislib::sys::Log::DefaultLog.WriteInfo("csize = %u, vsize = %u", csize, vsize);
+        //megamol::core::utility::log::Log::DefaultLog.WriteInfo("Count = %lu", cnt);
+        //megamol::core::utility::log::Log::DefaultLog.WriteInfo("csize = %u, vsize = %u", csize, vsize);
 
         std::vector<uint64_t> counts;
         std::vector<int32_t> vertSizes, colSizes, vertOffsets, colOffsets;
@@ -87,11 +87,11 @@ bool datatools::MPIParticleCollector::manipulateData(
                     colOffsets[x] = colOffsets[x - 1] + counts[x - 1] * csize;
                 }
             }
-            //vislib::sys::Log::DefaultLog.WriteInfo("allCount = %lu", allCount);
+            //megamol::core::utility::log::Log::DefaultLog.WriteInfo("allCount = %lu", allCount);
             if (allCount * csize > std::numeric_limits<int>::max() ||
                 allCount * vsize > std::numeric_limits<int>::max()) {
                 // this is so bad there is no way to fix it
-                vislib::sys::Log::DefaultLog.WriteError("allCount is more powerful than MPI, kill me now. Try subsampling more aggressively", allCount);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("allCount is more powerful than MPI, kill me now. Try subsampling more aggressively", allCount);
                 abort();
             }
             p.SetCount(allCount);
@@ -103,7 +103,7 @@ bool datatools::MPIParticleCollector::manipulateData(
         vertexData.resize(cnt * vsize);
         colorData.resize(cnt * csize);
 
-        vislib::sys::Log::DefaultLog.FlushLog();
+        megamol::core::utility::log::Log::DefaultLog.FlushLog();
 
 #    pragma omp parallel for
         for (long long idx = 0; idx < cnt; ++idx) {
@@ -136,21 +136,21 @@ bool datatools::MPIParticleCollector::initMPI() {
         if (c != nullptr) {
             /* New method: let MpiProvider do all the stuff. */
             if ((*c)(core::cluster::mpi::MpiCall::IDX_PROVIDE_MPI)) {
-                vislib::sys::Log::DefaultLog.WriteInfo("Got MPI communicator.");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("Got MPI communicator.");
                 this->comm = c->GetComm();
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(_T("Could not ")
+                megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Could not ")
                                                         _T("retrieve MPI communicator for the MPI-based view ")
                                                         _T("from the registered provider module."));
             }
         }
 
         if (this->comm != MPI_COMM_NULL) {
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("MPI is ready, ")
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("MPI is ready, ")
                                                    _T("retrieving communicator properties ..."));
             ::MPI_Comm_rank(this->comm, &this->mpiRank);
             ::MPI_Comm_size(this->comm, &this->mpiSize);
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("This MPIParticleCollector on %hs is %d ")
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("This MPIParticleCollector on %hs is %d ")
                                                    _T("of %d."),
                 vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(), this->mpiRank, this->mpiSize);
         } /* end if (this->comm != MPI_COMM_NULL) */

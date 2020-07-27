@@ -168,17 +168,17 @@ bool RaycastVolumeRenderer::create() {
             return false;
         if (!m_render_to_framebuffer_aggr_shdr.Link()) return false;
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
         return false;
     }
 
@@ -310,7 +310,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         if (!updateTransferFunction()) return false;
         compute_shdr = &this->m_raycast_volume_compute_aggr_shdr;
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown raycast mode.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unknown raycast mode.");
         return false;
     }
 
@@ -605,7 +605,7 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
     auto const metadata = cd->GetMetadata();
 
     if (!metadata->GridType == core::misc::CARTESIAN) {
-        vislib::sys::Log::DefaultLog.WriteError("RaycastVolumeRenderer only works with cartesian grids (for now)");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("RaycastVolumeRenderer only works with cartesian grids (for now)");
         return false;
     }
 
@@ -633,7 +633,7 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
             format = GL_RED;
             type = GL_FLOAT;
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("Floating point values with a length != 4 byte are invalid.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Floating point values with a length != 4 byte are invalid.");
             return false;
         }
         break;
@@ -647,7 +647,7 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
             format = GL_RED;
             type = GL_UNSIGNED_SHORT;
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("Unsigned integers with a length greater than 2 are invalid.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Unsigned integers with a length greater than 2 are invalid.");
             return false;
         }
         break;
@@ -657,12 +657,12 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
             format = GL_RED;
             type = GL_SHORT;
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("Integers with a length != 2 are invalid.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Integers with a length != 2 are invalid.");
             return false;
         }
         break;
     case core::misc::BITS:
-        vislib::sys::Log::DefaultLog.WriteError("Invalid datatype.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Invalid datatype.");
         return false;
         break;
     }

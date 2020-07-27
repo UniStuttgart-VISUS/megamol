@@ -17,7 +17,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 #define STATIC_ARRAY_COUNT(ary) (sizeof(ary) / sizeof(*(ary)))
@@ -139,7 +139,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::create(void) {
  */
 DatRawDataFormat megamol::stdplugin::volume::VolumetricDataSource::getOutputDataFormat(void) const {
     using core::misc::VolumetricDataCall;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     auto sizeParam = this->paramOutputDataSize.Param<core::param::EnumParam>();
     auto typeParam = this->paramOutputDataType.Param<core::param::EnumParam>();
@@ -214,7 +214,7 @@ DatRawDataFormat megamol::stdplugin::volume::VolumetricDataSource::getOutputData
  */
 bool megamol::stdplugin::volume::VolumetricDataSource::onFileNameChanged(core::param::ParamSlot& slot) {
     using core::misc::VolumetricDataCall;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     /* Allocate header or prepare it for re-use. */
     if (this->fileInfo == nullptr) {
@@ -423,7 +423,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetData(core::Call& cal
     using core::misc::VolumetricDataCall;
     using core::param::BoolParam;
     using core::param::IntParam;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     int expected = 0;
     bool retval = false;
@@ -702,12 +702,12 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetData(core::Call& cal
                 this->calcMinMax<int16_t>(vdc.GetData(), this->mins, this->maxes, *fileInfo, metadata);
                 break;
             case DR_FORMAT_RAW:
-                vislib::sys::Log::DefaultLog.WriteWarn("Cannot determine min/max of BITS volume. Setting to [0,1].");
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("Cannot determine min/max of BITS volume. Setting to [0,1].");
                 this->mins.resize(this->metadata.Components, 0.0);
                 this->maxes.resize(this->metadata.Components, 1.0);
                 break;
             default:
-                vislib::sys::Log::DefaultLog.WriteWarn("Cannot determine min/max of unknown volume. Setting to [0,1].");
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("Cannot determine min/max of unknown volume. Setting to [0,1].");
                 this->mins.resize(this->metadata.Components, 0.0);
                 this->maxes.resize(this->metadata.Components, 1.0);
                 break;
@@ -728,7 +728,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetData(core::Call& cal
  */
 bool megamol::stdplugin::volume::VolumetricDataSource::onGetExtents(core::Call& call) {
     using core::misc::VolumetricDataCall;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     try {
         VolumetricDataCall& c = dynamic_cast<VolumetricDataCall&>(call);
@@ -771,7 +771,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetExtents(core::Call& 
  */
 bool megamol::stdplugin::volume::VolumetricDataSource::onGetMetadata(core::Call& call) {
     using core::misc::VolumetricDataCall;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     try {
         VolumetricDataCall& c = dynamic_cast<VolumetricDataCall&>(call);
@@ -806,7 +806,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetMetadata(core::Call&
  */
 bool megamol::stdplugin::volume::VolumetricDataSource::onTryGetData(core::Call& call) {
     using core::misc::VolumetricDataCall;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     int expected = 0;
     bool retval = true;
@@ -948,7 +948,7 @@ const int megamol::stdplugin::volume::VolumetricDataSource::LOADER_STATUS_STOPPI
  */
 bool megamol::stdplugin::volume::VolumetricDataSource::onLoadAsyncChanged(core::param::ParamSlot& slot) {
     // VLAUTOSTACKTRACE;
-    // using vislib::sys::Log;
+    // using megamol::core::utility::log::Log;
 
     // bool isEnabled = this->paramLoadAsync.Param<core::param::BoolParam>(
     //    )->Value();
@@ -1005,7 +1005,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onStopAsync(core::Call& c
  * megamol::stdplugin::volume::VolumetricDataSource::release
  */
 void megamol::stdplugin::volume::VolumetricDataSource::release(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     try {
         if (this->loaderThread.IsRunning()) {
@@ -1032,7 +1032,7 @@ void megamol::stdplugin::volume::VolumetricDataSource::release(void) {
  * megamol::stdplugin::volume::VolumetricDataSource::resumeAsyncLoad
  */
 bool megamol::stdplugin::volume::VolumetricDataSource::resumeAsyncLoad(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     Log::DefaultLog.WriteInfo(_T("Resuming volume loader thread..."));
     int expected[] = {LOADER_STATUS_PAUSING, LOADER_STATUS_PAUSED};
     this->spinExchange(this->loaderStatus, LOADER_STATUS_RUNNING, expected, STATIC_ARRAY_COUNT(expected), true);
@@ -1045,7 +1045,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::resumeAsyncLoad(void) {
  * megamol::stdplugin::volume::VolumetricDataSource::startAsyncLoad
  */
 bool megamol::stdplugin::volume::VolumetricDataSource::startAsyncLoad(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     try {
         Log::DefaultLog.WriteInfo(_T("Starting volume loader thread..."));
         this->loaderStatus.store(LOADER_STATUS_RUNNING);
@@ -1065,7 +1065,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::startAsyncLoad(void) {
  * megamol::stdplugin::volume::VolumetricDataSource::stopAsyncLoad
  */
 void megamol::stdplugin::volume::VolumetricDataSource::stopAsyncLoad(const bool isWait) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     try {
         Log::DefaultLog.WriteInfo(_T("Stopping volume loader thread..."));
         this->loaderStatus.store(LOADER_STATUS_STOPPING);
@@ -1084,7 +1084,7 @@ void megamol::stdplugin::volume::VolumetricDataSource::stopAsyncLoad(const bool 
  * megamol::stdplugin::volume::VolumetricDataSource::suspendAsyncLoad
  */
 bool megamol::stdplugin::volume::VolumetricDataSource::suspendAsyncLoad(const bool isWait) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     using vislib::sys::Thread;
 
     int expected = LOADER_STATUS_RUNNING;
@@ -1131,7 +1131,7 @@ void megamol::stdplugin::volume::VolumetricDataSource::BufferSlotUnlocker::Unloc
 DWORD megamol::stdplugin::volume::VolumetricDataSource::loadAsync(void* userData) {
     using core::misc::VolumetricDataCall;
     using core::param::IntParam;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     int expected = 0;
     DWORD retval = 0;
@@ -1269,7 +1269,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::spinExchange(
  */
 size_t megamol::stdplugin::volume::VolumetricDataSource::assertBuffersUnsafe(size_t cntFrames, bool doNotFree) {
     using core::param::IntParam;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     size_t frameSize = this->calcFrameSize();
     size_t retval = 0;

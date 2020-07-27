@@ -35,7 +35,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/ColourParser.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/Matrix.h"
@@ -54,6 +54,7 @@
 #include <vector>
 
 using namespace megamol;
+using namespace megamol::core::utility::log;
 
 
 /*
@@ -585,7 +586,6 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
 #if (defined(CALC_GRID) && (CALC_GRID))
 
     using namespace vislib;
-    using namespace vislib::sys;
     using namespace vislib::math;
 
     if(this->recalcDensityGrid) {
@@ -846,7 +846,6 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
  * protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex
  */
 bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
-    using namespace vislib::sys;
     using namespace vislib::math;
 
 #if (defined(CALC_GRID) && (CALC_GRID))
@@ -1006,7 +1005,6 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid (
 
     //printf("CalcUnigrid start\n"); // DEBUG
 
-    using namespace vislib::sys;
     using namespace vislib::math;
 
     Vector<float, 3> gridMinCoord, gridMaxCoord, gridXAxis, gridYAxis,
@@ -1275,7 +1273,6 @@ void protein_cuda::CrystalStructureVolumeRenderer::ApplyPosFilter(
  * protein_cuda::CrystalStructureVolumeRenderer::create
  */
 bool protein_cuda::CrystalStructureVolumeRenderer::create (void) {
-    using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
     // Init random number generator
@@ -1497,7 +1494,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CreateFbo(UINT width, UINT he
     using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                "%s: (re)creating raycasting fbo.", this->ClassName());
 
     glEnable(GL_TEXTURE_2D);
@@ -1533,7 +1530,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CreateSrcFbo(size_t width, si
     using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                "%s: (re)creating source fbo.", this->ClassName());
 
     glEnable(GL_TEXTURE_2D);
@@ -1758,8 +1755,6 @@ bool protein_cuda::CrystalStructureVolumeRenderer::GetExtents(core::Call& call) 
  *  protein_cuda::CrystalStructureVolumeRenderer::initLIC
  */
 bool protein_cuda::CrystalStructureVolumeRenderer::InitLIC() {
-    using namespace vislib::sys;
-
     // Create randbuffer
     vislib::math::Vector<unsigned int, 3> buffDim(this->licRandBuffSize,
             this->licRandBuffSize, this->licRandBuffSize);
@@ -1840,7 +1835,6 @@ void protein_cuda::CrystalStructureVolumeRenderer::release(void) {
  * protein_cuda::CrystalStructureVolumeRenderer::Render
  */
 bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
-    using namespace vislib::sys;
     using namespace vislib::math;
 
     GLenum err;
@@ -3376,7 +3370,6 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderVolCube() {
  * protein_cuda::CrystalStructureVolumeRenderer::RenderVolume
  */
 bool protein_cuda::CrystalStructureVolumeRenderer::RenderVolume() {
-    using namespace vislib::sys;
     GLenum err;
 
     if(!glIsTexture(this->uniGridTex)||!glIsTexture(this->uniGridDensityTex)) {

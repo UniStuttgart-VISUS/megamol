@@ -17,7 +17,7 @@
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/glfunctions.h"
 #include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/sys/RunnableThread.h"
+#include "mmcore/utility/sys/RunnableThread.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "QuartzCrystalDataCall.h"
 #include "QuartzParticleGridDataCall.h"

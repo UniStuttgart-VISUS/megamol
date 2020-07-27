@@ -14,7 +14,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/ButtonParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/File.h"
 #include <cmath>
 #include <string>
@@ -29,6 +29,7 @@
 using namespace megamol;
 using namespace megamol::protein;
 using namespace megamol::protein_calls;
+using namespace megamol::core::utility::log;
 
 typedef unsigned int uint;
 
@@ -129,7 +130,6 @@ bool PDBWriter::buttonCallback(core::param::ParamSlot& slot) {
  * PDBWriter::Start
  */
 bool PDBWriter::Start(void) {
-    using namespace vislib::sys;
 
     uint frameCnt;
 
@@ -280,7 +280,6 @@ bool PDBWriter::createDirectories(vislib::StringA folder) {
  */
 bool PDBWriter::writePDB(MolecularDataCall *mol) {
     using namespace vislib;
-    using namespace vislib::sys;
 
     uint modelCounter = 1;
 
@@ -476,7 +475,6 @@ bool PDBWriter::writePDB(MolecularDataCall *mol) {
  */
 bool PDBWriter::writePQR(MolecularDataCall *mol) {
     using namespace vislib;
-    using namespace vislib::sys;
 
     uint modelCounter = 1;
 

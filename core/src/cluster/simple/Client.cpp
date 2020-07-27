@@ -15,14 +15,14 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "vislib/assert.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/net/IPCommEndPoint.h"
 #include "vislib/net/NetworkInformation.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageSerialiser.h"
 #include "vislib/net/Socket.h"
 #include "vislib/net/SocketException.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/Trace.h"
 #include "vislib/UTF8Encoder.h"
 #include <signal.h>
@@ -255,7 +255,7 @@ void cluster::simple::Client::release(void) {
  */
 bool cluster::simple::Client::OnMessageReceived(vislib::net::SimpleMessageDispatcher& src,
         const vislib::net::AbstractSimpleMessage& msg) throw() {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::net::SimpleMessage answer;
 
 
@@ -391,7 +391,7 @@ bool cluster::simple::Client::OnMessageReceived(vislib::net::SimpleMessageDispat
  */
 bool cluster::simple::Client::OnCommunicationError(vislib::net::SimpleMessageDispatcher& src,
             const vislib::Exception& exception) throw() {
-    vislib::sys::Log::DefaultLog.WriteWarn("Client: Receiver failed: %s\n", exception.GetMsgA());
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn("Client: Receiver failed: %s\n", exception.GetMsgA());
     return false;
 }
 
@@ -417,7 +417,7 @@ void cluster::simple::Client::OnDispatcherStarted(vislib::net::SimpleMessageDisp
 DWORD cluster::simple::Client::udpReceiverLoop(void *ctxt) {
     cluster::simple::Client *that = static_cast<cluster::simple::Client *>(ctxt);
     Datagram datagram;
-    vislib::sys::Log::DefaultLog.WriteInfo("UDP Receiver started\n");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("UDP Receiver started\n");
     vislib::net::Socket::Startup();
     try {
         vislib::sys::Thread::Reschedule();
@@ -428,18 +428,18 @@ DWORD cluster::simple::Client::udpReceiverLoop(void *ctxt) {
                 throw new vislib::Exception("Udp socket closed", __FILE__, __LINE__);
             }
 
-            vislib::sys::Log::DefaultLog.WriteInfo(200, "UDP receive answered ...");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(200, "UDP receive answered ...");
 
             if (datagram.cntEchoed > 0) {
                 datagram.cntEchoed--;
-                vislib::sys::Log::DefaultLog.WriteInfo(200, "UDP echo requested ...");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(200, "UDP echo requested ...");
                 // echo broadcast
                 vislib::StringA baddr(that->udpEchoBAddrSlot.Param<param::StringParam>()->Value());
                 vislib::net::IPAddress addr;
                 if (addr.Lookup(baddr)) {
                     int bport = that->udpPortSlot.Param<param::IntParam>()->Value();
                     vislib::net::IPEndPoint ep(addr, bport);
-                    vislib::sys::Log::DefaultLog.WriteInfo(200,
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(200,
                         "UDP echo scheduled to %s",
                         ep.ToStringA().PeekBuffer());
                     that->udpInSocket.Send(ep, &datagram, sizeof(datagram));
@@ -455,10 +455,10 @@ DWORD cluster::simple::Client::udpReceiverLoop(void *ctxt) {
                     if (rcn.IsEmpty() || rcn.Equals(mcn)) {
                         vislib::StringA srv(datagram.payload.Strings.str2, datagram.payload.Strings.len2);
                         if (srv.Equals(that->conServerAddr)) {
-                            vislib::sys::Log::DefaultLog.WriteInfo("Already connected to server \"%s\"", srv.PeekBuffer());
+                            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Already connected to server \"%s\"", srv.PeekBuffer());
                         } else {
                             that->conServerAddr = srv;
-                            vislib::sys::Log::DefaultLog.WriteInfo("Trying connect to new server \"%s\"", srv.PeekBuffer());
+                            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Trying connect to new server \"%s\"", srv.PeekBuffer());
                             if (that->tcpChan != NULL) {
                                 that->tcpChan->Close();
                                 //that->tcpChan->Release();
@@ -475,23 +475,23 @@ DWORD cluster::simple::Client::udpReceiverLoop(void *ctxt) {
                                 DWORD sleepTime = 100 + static_cast<DWORD>(500.0f
                                         * static_cast<float>(::rand())
                                         / static_cast<float>(RAND_MAX));
-                                vislib::sys::Log::DefaultLog.WriteInfo(200,
+                                megamol::core::utility::log::Log::DefaultLog.WriteInfo(200,
                                     "Wait %u milliseconds before connecting to %s ...",
                                     sleepTime, srv.PeekBuffer());
                                 vislib::sys::Thread::Sleep(sleepTime);
 
                                 vislib::net::IPEndPoint ep;
                                 float epw = vislib::net::NetworkInformation::GuessRemoteEndPoint(ep, srv);
-                                vislib::sys::Log::DefaultLog.WriteInfo("Guessed remote end point %s with wildness %f\n",
+                                megamol::core::utility::log::Log::DefaultLog.WriteInfo("Guessed remote end point %s with wildness %f\n",
                                     ep.ToStringA().PeekBuffer(), epw);
                                 c->Connect(vislib::net::IPCommEndPoint::Create(ep));
-                                vislib::sys::Log::DefaultLog.WriteInfo(200,
+                                megamol::core::utility::log::Log::DefaultLog.WriteInfo(200,
                                     "TCP connection to %s established",
                                     srv.PeekBuffer());
                                 vislib::net::SimpleMessageDispatcher::Configuration cfg(c);
                                 that->tcpSan.Start(&cfg);
                                 vislib::sys::Thread::Sleep(500);
-                                vislib::sys::Log::DefaultLog.WriteInfo("TCP Connection started to \"%s\"", srv.PeekBuffer());
+                                megamol::core::utility::log::Log::DefaultLog.WriteInfo("TCP Connection started to \"%s\"", srv.PeekBuffer());
 
                                 vislib::StringA compName;
                                 vislib::sys::SystemInformation::ComputerName(compName);
@@ -503,7 +503,7 @@ DWORD cluster::simple::Client::udpReceiverLoop(void *ctxt) {
                                 that->tcpChan = c;
 
                             } catch(vislib::Exception ex) {
-                                vislib::sys::Log::DefaultLog.WriteError("Failed to connect: %s\n", ex.GetMsgA());
+                                megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to connect: %s\n", ex.GetMsgA());
                                 if (that->tcpChan != NULL) {
                                     that->tcpChan->Close();
                                     that->tcpChan = NULL;
@@ -513,7 +513,7 @@ DWORD cluster::simple::Client::udpReceiverLoop(void *ctxt) {
                                     that->tcpSan.Join();
                                 }
                             } catch(...) {
-                                vislib::sys::Log::DefaultLog.WriteError("Failed to connect: unexpected exception\n");
+                                megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to connect: unexpected exception\n");
                                 if (that->tcpChan != NULL) {
                                     that->tcpChan->Close();
                                     that->tcpChan = NULL;
@@ -525,7 +525,7 @@ DWORD cluster::simple::Client::udpReceiverLoop(void *ctxt) {
                             }
                         }
                     } else {
-                        vislib::sys::Log::DefaultLog.WriteInfo("Server Connect Message for other cluster \"%s\" ignored\n", rcn.PeekBuffer());
+                        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Server Connect Message for other cluster \"%s\" ignored\n", rcn.PeekBuffer());
                     }
                 } break;
                 case MSG_SHUTDOWN: {
@@ -533,29 +533,29 @@ DWORD cluster::simple::Client::udpReceiverLoop(void *ctxt) {
                     vislib::StringA rcn(datagram.payload.Strings.str1, datagram.payload.Strings.len1);
                     if (rcn.IsEmpty() || rcn.Equals(mcn)) {
                         // somehow tell teh application to terminate ... :-/
-                        vislib::sys::Log::DefaultLog.WriteInfo("Sending interrupt signal to frontend");
+                        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Sending interrupt signal to frontend");
                         ::raise(SIGINT); // because I known console frontend will respond correctly
                     } else {
-                        vislib::sys::Log::DefaultLog.WriteInfo("Shutdown Message for other cluster \"%s\" ignored\n", rcn.PeekBuffer());
+                        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Shutdown Message for other cluster \"%s\" ignored\n", rcn.PeekBuffer());
                     }
                 } break;
                 default:
-                    vislib::sys::Log::DefaultLog.WriteInfo("UDP Receiver: datagram %u received\n", datagram.msg);
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("UDP Receiver: datagram %u received\n", datagram.msg);
             }
 
         }
     } catch(vislib::net::SocketException sex) {
         DWORD errc = sex.GetErrorCode();
         if (errc != 995) {
-            vislib::sys::Log::DefaultLog.WriteError("UDP Receive error: (%u) %s\n", errc, sex.GetMsgA());
+            megamol::core::utility::log::Log::DefaultLog.WriteError("UDP Receive error: (%u) %s\n", errc, sex.GetMsgA());
         }
     } catch(vislib::Exception ex) {
-        vislib::sys::Log::DefaultLog.WriteError("UDP Receive error: %s\n", ex.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("UDP Receive error: %s\n", ex.GetMsgA());
     } catch(...) {
-        vislib::sys::Log::DefaultLog.WriteError("UDP Receive error: unexpected exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("UDP Receive error: unexpected exception\n");
     }
     vislib::net::Socket::Cleanup();
-    vislib::sys::Log::DefaultLog.WriteInfo("UDP Receiver stopped\n");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("UDP Receiver stopped\n");
     return 0;
 }
 
@@ -588,7 +588,7 @@ bool cluster::simple::Client::onViewRegisters(Call& call) {
  * cluster::simple::Client::onUdpPortChanged
  */
 bool cluster::simple::Client::onUdpPortChanged(param::ParamSlot& slot) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     ASSERT(&slot == &this->udpPortSlot);
     try {
         this->udpInSocket.Close();
@@ -619,7 +619,7 @@ bool cluster::simple::Client::onUdpPortChanged(param::ParamSlot& slot) {
  * cluster::simple::Client::send
  */
 void cluster::simple::Client::send(const vislib::net::AbstractSimpleMessage& msg) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     try {
         if (this->tcpChan != NULL) {
             this->tcpChan->Send(msg, msg.GetMessageSize());

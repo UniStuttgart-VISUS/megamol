@@ -20,9 +20,9 @@
 #include "vislib/net/AbstractCommEndPoint.h"
 #include "vislib/net/CommServer.h"
 #include "vislib/net/CommServerListener.h"
-#include "vislib/sys/RunnableThread.h"
+#include "mmcore/utility/sys/RunnableThread.h"
 #include "vislib/SmartRef.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/sys/Thread.h"
 
 
 namespace megamol {

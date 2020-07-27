@@ -233,7 +233,7 @@ namespace vislib {
             const wchar_t *name) = 0;
 
         /**
-         * Deserialise the INT32 element with name 'name' into 'outValue'.
+         * Deserialise the VL_INT32 element with name 'name' into 'outValue'.
          *
          * @param outValue Receives the deserialised value.
          * @param name     The name of the value to be deserialises. 
@@ -243,11 +243,11 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Deserialise(INT32& outValue, 
+        virtual void Deserialise(VL_INT32& outValue, 
             const char *name = NULL) = 0;
 
         /**
-         * Deserialise the INT32 element with name 'name' into 'outValue'.
+         * Deserialise the VL_INT32 element with name 'name' into 'outValue'.
          *
          * @param outValue Receives the deserialised value.
          * @param name     The name of the value to be deserialises. 
@@ -257,7 +257,7 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Deserialise(INT32& outValue, 
+        virtual void Deserialise(VL_INT32& outValue, 
             const wchar_t *name) = 0;
 
         /**
@@ -634,7 +634,7 @@ namespace vislib {
             const wchar_t *name) = 0;
 
         /**
-         * Serialise the INT32 variable using the name 'name'.
+         * Serialise the VL_INT32 variable using the name 'name'.
          *
          * @param value The value to be serialised.
          * @param name  The name for this value.
@@ -644,11 +644,11 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Serialise(const INT32 value,
+        virtual void Serialise(const VL_INT32 value,
             const char *name = NULL) = 0;
 
         /**
-         * Serialise the INT32 variable using the name 'name'.
+         * Serialise the VL_INT32 variable using the name 'name'.
          *
          * @param value The value to be serialised.
          * @param name  The name for this value.
@@ -658,7 +658,7 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Serialise(const INT32 value,
+        virtual void Serialise(const VL_INT32 value,
             const wchar_t *name) = 0;
 
         /**

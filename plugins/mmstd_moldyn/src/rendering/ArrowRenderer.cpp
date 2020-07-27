@@ -66,23 +66,23 @@ bool ArrowRenderer::create(void) {
 
     try {
         if (!this->arrowShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile arrow shader: Unknown error\n");
             return false;
         }
 
     } catch(vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile arrow shader (@%s): %s\n", 
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
             ce.FailedAction()) ,ce.GetMsgA());
         return false;
     } catch(vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile arrow shader: %s\n", e.GetMsgA());
         return false;
     } catch(...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile arrow shader: Unknown exception\n");
         return false;
     }
@@ -199,11 +199,11 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
     this->GetLights();
     glm::vec4 curlightDir = { 0.0f, 0.0f, 0.0f, 1.0f };
     if (this->lightMap.size() > 1) {
-        vislib::sys::Log::DefaultLog.WriteWarn("ArrowRenderer: Only one single 'Distant Light' source is supported by this renderer");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("ArrowRenderer: Only one single 'Distant Light' source is supported by this renderer");
     }
     for (auto light : this->lightMap) {
         if (light.second.lightType != core::view::light::DISTANTLIGHT) {
-            vislib::sys::Log::DefaultLog.WriteWarn("ArrowRenderer: Only single 'Distant Light' source is supported by this renderer");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("ArrowRenderer: Only single 'Distant Light' source is supported by this renderer");
         }
         else {
             auto use_eyedir = light.second.dl_eye_direction;
@@ -260,7 +260,7 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
 
         if (cflags != nullptr) {
             if (c2->GetParticleListCount() > 1) {
-                vislib::sys::Log::DefaultLog.WriteWarn(
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "ArrowRenderer: Cannot use FlagStorage together with multiple particle lists!");
             } else {
                 useFlags = true;
@@ -353,7 +353,7 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
                     glVertexAttribPointerARB(tpal, 3, GL_FLOAT, GL_FALSE, parts.GetDirDataStride(), parts.GetDirData());
                     break;
                 default:
-                    vislib::sys::Log::DefaultLog.WriteWarn(
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                         "ArrowRenderer: cannot render arrows without directional data!");
                     continue;
             }
