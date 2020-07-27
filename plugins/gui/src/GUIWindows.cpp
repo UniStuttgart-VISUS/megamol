@@ -352,8 +352,8 @@ bool GUIWindows::PostDraw(void) {
     // Draw global parameter widgets -------------------------------------------
 
     /// DEBUG picking
-    auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
-    this->picking_buffer.EnableInteraction(viewport_dim);
+    // auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
+    // this->picking_buffer.EnableInteraction(viewport_dim);
 
     GraphPtr_t graph_ptr;
     if (this->graph_collection.GetGraph(this->graph_uid, graph_ptr)) {
@@ -367,11 +367,11 @@ bool GUIWindows::PostDraw(void) {
     }
 
     /// DEBUG picking
-    unsigned int id = 5;
-    this->picking_buffer.AddInteractionObject(id, this->triangle_widget.GetInteractions(id));
-    this->triangle_widget.Draw(
-        id, glm::vec2(0.0f, 200.0f), viewport_dim, this->picking_buffer.GetPendingManipulations());
-    this->picking_buffer.DisableInteraction();
+    // unsigned int id = 5;
+    // this->picking_buffer.AddInteractionObject(id, this->triangle_widget.GetInteractions(id));
+    // this->triangle_widget.Draw(
+    //    id, glm::vec2(0.0f, 200.0f), viewport_dim, this->picking_buffer.GetPendingManipulations());
+    // this->picking_buffer.DisableInteraction();
 
     // Synchronizing parameter values -----------------------------------------
     if (this->graph_collection.GetGraph(this->graph_uid, graph_ptr)) {

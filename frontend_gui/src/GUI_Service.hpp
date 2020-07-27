@@ -11,9 +11,15 @@
 
 #include "AbstractFrontendService.hpp"
 
+#include "Framebuffer_Events.h"
+#include "KeyboardMouse_Events.h"
+#include "OpenGL_Context.h"
+
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/log/Log.h"
+
+#include <glm/glm.hpp>
 
 
  // Forward declaration
@@ -74,10 +80,17 @@ public:
     // void setShutdown(const bool s = true);
 
 private:
+
+    struct ResourceState {
+        glm::vec2 viewport_size;
+        megamol::input_events::IOpenGL_Context const * opengl_context_ptr;
+    };
+
     std::vector<ModuleResource> m_providedResourceReferences;
     std::vector<ModuleResource> m_requestedResourceReferences;
 
     GUIResource m_gui;
+    ResourceState m_resource_state;
 };
 
 } // namespace frontend
