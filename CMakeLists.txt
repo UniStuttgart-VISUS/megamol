@@ -42,7 +42,7 @@ include(check_mmdep)
 include(ClangFormat)
 
 # External
-include("CMakeExternals.cmake")
+include("externals/CMakeExternals.cmake")
 
 # Vislib
 add_subdirectory(${MEGAMOL_VISLIB_DIR})

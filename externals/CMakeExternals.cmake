@@ -191,7 +191,7 @@ function(require_external NAME)
       GIT_TAG "36b169c88250d0afe51828448dfdeeaa508f13bc"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${BHTSNE_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/cmake/bhtsne/CMakeLists.txt"
+        "${CMAKE_SOURCE_DIR}/externals/bhtsne/CMakeLists.txt"
         "<SOURCE_DIR>/CMakeLists.txt")
 
     add_external_library(bhtsne
@@ -323,7 +323,7 @@ function(require_external NAME)
         GIT_TAG "v1.70"
         BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
         PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-          "${CMAKE_SOURCE_DIR}/cmake/imgui/CMakeLists.txt"
+          "${CMAKE_SOURCE_DIR}/externals/imgui/CMakeLists.txt"
           "<SOURCE_DIR>/CMakeLists.txt")
 
       add_external_library(imgui
@@ -451,7 +451,7 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/akuukka/quickhull.git
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_LIB}" "<INSTALL_DIR>/${QUICKHULL_IMPORT_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/cmake/quickhull/CMakeLists.txt"
+        "${CMAKE_SOURCE_DIR}/externals/quickhull/CMakeLists.txt"
         "<SOURCE_DIR>/CMakeLists.txt"
       CMAKE_ARGS
         -DCMAKE_C_FLAGS=-fPIC
