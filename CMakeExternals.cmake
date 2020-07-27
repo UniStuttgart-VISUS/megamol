@@ -367,7 +367,7 @@ function(require_external NAME)
     if(WIN32)
       set(ZMQ_LIB "${CMAKE_INSTALL_LIBDIR}/libzmq${MSVC_TOOLSET}-mt-s<SUFFIX>-${ZMQ_VER}.lib")
     else()
-      set(ZMQ_LIB "${CMAKE_INSTALL_LIBDIR}/libzmq.lib")
+      set(ZMQ_LIB "${CMAKE_INSTALL_LIBDIR}/libzmq.a")
     endif()
 
     add_external_project(libzmq STATIC
