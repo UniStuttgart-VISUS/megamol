@@ -182,7 +182,6 @@ void OpenGL_GLFW_Service::OpenGL_Context::activate() const {
     if (!ptr) return;
 
 	glfwMakeContextCurrent(static_cast<GLFWwindow*>(ptr));
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
 }
 
 void OpenGL_GLFW_Service::OpenGL_Context::close() const {
@@ -491,6 +490,10 @@ void OpenGL_GLFW_Service::preGraphRender() {
     // rendering via MegaMol View is called after this function finishes
     // in the end this calls the equivalent of ::mmcRenderView(hView, &renderContext)
     // which leads to view.Render()
+
+    ::glfwMakeContextCurrent(m_glfwWindowPtr);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
+    ::glfwMakeContextCurrent(nullptr);
 }
 
 void OpenGL_GLFW_Service::postGraphRender() {
