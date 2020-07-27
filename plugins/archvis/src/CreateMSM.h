@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "MSMDataCall.h"
-#include "archvis/archvis.h"
+#include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 
@@ -33,7 +33,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Create Maﬂstabsmodell from float table input."; }
+    static const char* Description(void) { return "Create Ma√üstabsmodell from float table input."; }
 
     /**
      * Answers whether this module is available on the current system.

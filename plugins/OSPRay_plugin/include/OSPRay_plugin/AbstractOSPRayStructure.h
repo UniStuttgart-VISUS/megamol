@@ -6,7 +6,6 @@
 #pragma once
 
 #include "OSPRay_plugin/CallOSPRayStructure.h"
-#include "OSPRay_plugin/OSPRay_plugin.h"
 #include "CallOSPRayTransformation.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -17,7 +16,7 @@
 namespace megamol {
 namespace ospray {
 
-class OSPRAY_PLUGIN_API AbstractOSPRayStructure : public megamol::core::Module {
+class AbstractOSPRayStructure : public megamol::core::Module {
 protected:
     /** Dtor. */
     virtual ~AbstractOSPRayStructure();

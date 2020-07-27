@@ -8,8 +8,6 @@
 #ifndef MEGAMOL_CINEMATIC_CALLKEYFRAMEKEEPER_H_INCLUDED
 #define MEGAMOL_CINEMATIC_CALLKEYFRAMEKEEPER_H_INCLUDED
 
-#include "Cinematic/Cinematic.h"
-
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/Camera_2.h"

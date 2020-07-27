@@ -9,7 +9,6 @@
 #define MEGAMOL_GEOMETRY_CALLS_LINESDATACALL_H_INCLUDED
 #pragma once
 
-#include "geometry_calls/geometry_calls.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/assert.h"
@@ -24,7 +23,7 @@ namespace geocalls {
     /**
      * Call for lines data
      */
-    class GEOMETRY_CALLS_API LinesDataCall : public core::AbstractGetData3DCall {
+    class LinesDataCall : public core::AbstractGetData3DCall {
     public:
 
         /**
@@ -36,7 +35,7 @@ namespace geocalls {
          * must be multiplied. You can use the index array to reduce the
          * memory overhead in the colour and vertex array.
          */
-        class GEOMETRY_CALLS_API Lines {
+        class Lines {
         public:
 
             /** The possible colour data types */
@@ -696,7 +695,7 @@ namespace geocalls {
         /** Number of curves */
         unsigned int count;
 
-        /** Cubic bézier curves */
+        /** Cubic bÃ©zier curves */
         const Lines *lines;
 
     };

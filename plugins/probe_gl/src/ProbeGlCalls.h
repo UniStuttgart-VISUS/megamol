@@ -9,14 +9,12 @@
 
 #include "mmcore/CallGeneric.h"
 
-#include "probe_gl/probe_gl.h"
-
 #include "ProbeInteractionCollection.h"
 
 namespace megamol {
 namespace probe_gl {
 
-class PROBE_GL_API CallProbeInteraction
+class CallProbeInteraction
     : public core::GenericVersionedCall<std::shared_ptr<ProbeInteractionCollection>, core::Spatial3DMetaData> {
 public:
     inline CallProbeInteraction()

@@ -8,13 +8,12 @@
 #pragma once
 
 #include "mmcore/factories/CallAutoDescription.h"
-#include "OSPRay_plugin/OSPRay_plugin.h"
 #include "OSPRay_plugin/CallOSPRayStructure.h"
 
 namespace megamol {
 namespace ospray {
 
-class OSPRAY_PLUGIN_API CallOSPRayAPIObject : public core::Call{
+class CallOSPRayAPIObject : public core::Call{
 public:
 
     /**

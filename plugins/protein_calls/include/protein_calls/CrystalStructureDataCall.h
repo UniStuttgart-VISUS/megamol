@@ -16,7 +16,6 @@
 #include "mmcore/Call.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "protein_calls/Protein_Calls.h"
 
 namespace megamol {
 namespace protein_calls {
@@ -25,7 +24,7 @@ namespace protein_calls {
 	 * Class providing data call for CrystalStructureDataSource.
 	 * Note: Arrays can be NULL at any time.
 	 */
-	class PROTEIN_CALLS_API CrystalStructureDataCall : public megamol::core::AbstractGetData3DCall {
+	class CrystalStructureDataCall : public megamol::core::AbstractGetData3DCall {
 	public:
 
 		/** Possible atom types */

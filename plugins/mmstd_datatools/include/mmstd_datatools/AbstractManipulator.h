@@ -11,7 +11,6 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmstd_datatools/mmstd_datatools.h"
 
 namespace megamol {
 namespace stdplugin {

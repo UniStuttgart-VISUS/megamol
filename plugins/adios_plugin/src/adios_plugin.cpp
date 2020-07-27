@@ -5,7 +5,6 @@
  */
 
 #include "stdafx.h"
-#include "adios_plugin/adios_plugin.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"

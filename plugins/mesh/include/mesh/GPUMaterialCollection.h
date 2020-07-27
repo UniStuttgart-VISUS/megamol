@@ -16,8 +16,6 @@
 #include <variant>
 #include <vector>
 
-#include "mesh.h"
-
 #include "glowl/GLSLProgram.hpp"
 #include "glowl/Texture.hpp"
 #include "glowl/Texture2D.hpp"
@@ -30,7 +28,7 @@ namespace mesh {
 
 typedef glowl::GLSLProgram Shader;
 
-class MESH_API GPUMaterialCollecton {
+class GPUMaterialCollecton {
 public:
     using TexturePtrType =
         std::variant <

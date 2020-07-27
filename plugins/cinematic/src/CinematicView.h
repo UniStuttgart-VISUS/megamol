@@ -8,8 +8,6 @@
 #ifndef MEGAMOL_CINEMATIC_CINEMATICVIEW_H_INCLUDED
 #define MEGAMOL_CINEMATIC_CINEMATICVIEW_H_INCLUDED
 
-#include "Cinematic/Cinematic.h"
-
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/View3D_2.h"
 #include "mmcore/view/CallRender3D_2.h"

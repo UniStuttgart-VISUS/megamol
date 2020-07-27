@@ -35,7 +35,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools Eigen nanoflann Delaunator bhtsne)
 
   # Installation rules for generated files
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
+  #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")

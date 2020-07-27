@@ -7,13 +7,10 @@
 
 #include "vislib/math/Cuboid.h"
 
-#include "thermodyn.h"
-
-
 namespace megamol {
 namespace thermodyn {
 
-class thermodyn_API BoxDataCall : public core::AbstractGetData3DCall {
+class BoxDataCall : public core::AbstractGetData3DCall {
 public:
     struct box_entry {
         vislib::math::Cuboid<float> box_;

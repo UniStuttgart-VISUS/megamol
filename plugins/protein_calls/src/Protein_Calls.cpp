@@ -5,7 +5,6 @@
  */
 
 #include "stdafx.h"
-#include "protein_calls/Protein_Calls.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"

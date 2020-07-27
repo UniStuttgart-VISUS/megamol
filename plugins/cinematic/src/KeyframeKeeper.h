@@ -8,8 +8,6 @@
 #ifndef MEGAMOL_CINEMATIC_KEYFRAMEKEEPER_H_INCLUDED
 #define MEGAMOL_CINEMATIC_KEYFRAMEKEEPER_H_INCLUDED
 
-#include "Cinematic/Cinematic.h"
-
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"

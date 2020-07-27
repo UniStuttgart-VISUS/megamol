@@ -20,13 +20,12 @@
 #include "vislib/math/Vector.h"
 #include "Interpol.h"
 #include "VTKImageData.h"
-#include "protein_calls/Protein_Calls.h"
 typedef vislib::math::Vector<int, 3> Vec3i;
 
 namespace megamol {
 namespace protein_calls {
 
-	class PROTEIN_CALLS_API VTIDataCall : public core::AbstractGetData3DCall {
+	class VTIDataCall : public core::AbstractGetData3DCall {
 
 	public:
 

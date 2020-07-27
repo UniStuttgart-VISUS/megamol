@@ -5,7 +5,6 @@
  */
 
 #include "stdafx.h"
-#include "geometry_calls/geometry_calls.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"

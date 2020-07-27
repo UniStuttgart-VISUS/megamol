@@ -20,12 +20,11 @@
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/macro_utils.h"
-#include "protein_calls/Protein_Calls.h"
 
 namespace megamol {
 namespace protein_calls {
 
-class PROTEIN_CALLS_API VariantMatchDataCall : public core::Call {
+class VariantMatchDataCall : public core::Call {
 
 public:
 

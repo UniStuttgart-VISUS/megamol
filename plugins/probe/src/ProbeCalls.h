@@ -14,7 +14,7 @@
 namespace megamol {
 namespace probe {
 
-class PROBE_API CallProbes
+class CallProbes
     : public core::GenericVersionedCall<std::shared_ptr<ProbeCollection>, core::Spatial3DMetaData> {
 public:
     inline CallProbes() : GenericVersionedCall<std::shared_ptr<ProbeCollection>, core::Spatial3DMetaData>() {}

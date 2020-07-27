@@ -10,7 +10,6 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/Call.h"
 #include <array>
-#include "OSPRay_plugin/OSPRay_plugin.h"
 
 namespace megamol {
 namespace ospray {
@@ -87,7 +86,7 @@ struct OSPRayMaterialContainer {
 };
 
 
-class OSPRAY_PLUGIN_API CallOSPRayMaterial : public megamol::core::Call {
+class CallOSPRayMaterial : public megamol::core::Call {
 public:
 
     /**

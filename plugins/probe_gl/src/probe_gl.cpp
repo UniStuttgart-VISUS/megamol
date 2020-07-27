@@ -5,7 +5,6 @@
  */
 
 #include "stdafx.h"
-#include "probe_gl/probe_gl.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"

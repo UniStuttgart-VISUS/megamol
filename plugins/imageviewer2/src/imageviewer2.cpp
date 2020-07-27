@@ -5,7 +5,6 @@
  */
 
 #include "stdafx.h"
-#include "imageviewer2/imageviewer2.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"

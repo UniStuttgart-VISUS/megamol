@@ -9,7 +9,6 @@
 #define WAVEFRONT_OBJ_LOADER_H_INCLUDED
 
 #include "mesh/MeshCalls.h"
-#include "mesh/mesh.h"
 #include "mesh/MeshDataAccessCollection.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -19,7 +18,7 @@
 namespace megamol {
 namespace mesh {
 
-class MESH_API WavefrontObjLoader : public core::Module {
+class WavefrontObjLoader : public core::Module {
 public:
     /**
      * Answer the name of this module.

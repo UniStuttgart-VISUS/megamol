@@ -5,7 +5,6 @@
  */
 
 #include "stdafx.h"
-#include "molecularmaps/molecularmaps.h"
 
 #include "MapGenerator.h"
 

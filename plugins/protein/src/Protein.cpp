@@ -9,7 +9,6 @@
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
-#include "protein/Protein.h"
 
 // views
 #include "View3DSpaceMouse.h"

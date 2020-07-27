@@ -6,7 +6,6 @@
  */
 #pragma once
 
-#include "mmstd_datatools/mmstd_datatools.h"
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include <iterator>
@@ -19,7 +18,7 @@ namespace datatools {
     /**
      * Call to transport graph data as edges between pairs (indices) of particles
      */
-    class MMSTD_DATATOOLS_API GraphDataCall : public core::AbstractGetDataCall {
+    class GraphDataCall : public core::AbstractGetDataCall {
     public:
 
         /** Particle index type */

@@ -6,7 +6,6 @@
  */
 
 #include "stdafx.h"
-#include "mmstd_datatools/mmstd_datatools.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"

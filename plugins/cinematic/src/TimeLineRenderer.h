@@ -8,8 +8,6 @@
 #ifndef MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED
 #define MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED
 
-#include "Cinematic/Cinematic.h"
-
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/view/CallRender2D.h"

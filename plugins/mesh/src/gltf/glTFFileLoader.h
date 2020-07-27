@@ -12,13 +12,12 @@
 #include "mmcore/param/ParamSlot.h"
 
 #include "mesh/MeshCalls.h"
-#include "mesh/mesh.h"
 #include "mesh/MeshDataAccessCollection.h"
 
 namespace megamol {
 namespace mesh {
 
-class MESH_API GlTFFileLoader : public core::Module {
+class GlTFFileLoader : public core::Module {
 public:
     /**
      * Answer the name of this module.

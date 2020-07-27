@@ -7,7 +7,6 @@
 
 #include "stdafx.h"
 
-#include "../include/protein_cuda/Protein_CUDA.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 #include "mmcore/versioninfo.h"

@@ -15,15 +15,13 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/MouseFlags.h"
 
-#include "protein_calls/Protein_Calls.h"
-
 namespace megamol {
 namespace protein_calls {
 
 	/**
 	 * TODO
 	 */
-	class PROTEIN_CALLS_API CallMouseInput : public megamol::core::Call {
+	class CallMouseInput : public megamol::core::Call {
 	
 	public:
 	

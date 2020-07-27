@@ -5,7 +5,6 @@
  */
 
 #include "stdafx.h"
-#include "megamol101/megamol101.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"

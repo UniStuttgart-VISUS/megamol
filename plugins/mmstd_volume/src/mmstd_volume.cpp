@@ -6,7 +6,6 @@
  */
 
 #include "stdafx.h"
-#include "mmstd_volume/mmstd_volume.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"

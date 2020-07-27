@@ -8,7 +8,6 @@
 #define MEGAMOL_DATATOOLS_MULTIINDEXLISTDATACALL_H_INCLUDED
 #pragma once
 
-#include "mmstd_datatools/mmstd_datatools.h"
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include <cstdint>
@@ -20,7 +19,7 @@ namespace datatools {
     /**
      * Call transports multiple index lists, e.g. to subselect groups/clusters within data transported by a parallel MultiParticleListDataCall.
      */
-    class MMSTD_DATATOOLS_API MultiIndexListDataCall : public core::AbstractGetDataCall {
+    class MultiIndexListDataCall : public core::AbstractGetDataCall {
     public:
         /** Type for index entries */
         typedef uint32_t index_t;

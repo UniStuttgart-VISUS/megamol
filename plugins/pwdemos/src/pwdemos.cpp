@@ -5,7 +5,6 @@
  */
 
 #include "stdafx.h"
-#include "pwdemos/pwdemos.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"

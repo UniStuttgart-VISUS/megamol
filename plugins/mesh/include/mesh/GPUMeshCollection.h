@@ -14,12 +14,11 @@
 #include <memory>
 #include <vector>
 #include "glowl/Mesh.hpp"
-#include "mesh.h"
 
 namespace megamol {
 namespace mesh {
 
-class MESH_API GPUMeshCollection {
+class GPUMeshCollection {
 public:
     template <typename T> using IteratorPair = std::pair<T, T>;
 

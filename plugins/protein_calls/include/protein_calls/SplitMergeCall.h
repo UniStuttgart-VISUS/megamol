@@ -21,8 +21,6 @@
 #include "vislib/math/Vector.h"
 #include "vislib/String.h"
 #include "vislib/forceinline.h"
-#include "protein_calls/Protein_Calls.h"
-
 
 namespace megamol {
 namespace protein_calls {
@@ -36,7 +34,7 @@ namespace protein_calls {
 	 * allows for that as well.
 	 */
 
-	class PROTEIN_CALLS_API SplitMergeCall : public megamol::core::Call {
+	class SplitMergeCall : public megamol::core::Call {
 	public:
 
 		/**
@@ -47,7 +45,7 @@ namespace protein_calls {
 			SPLITMERGE_GUIDE_HORIZONTAL = 1
 		};
 
-		class PROTEIN_CALLS_API SplitMergeGuide {
+		class SplitMergeGuide {
 		public:
 
 			/** Ctor. */
@@ -173,7 +171,7 @@ namespace protein_calls {
 		 * data source proper is encapsulated in mappable, while the 'data space'
 		 * markers and parameters are set here.
 		 */
-		class PROTEIN_CALLS_API SplitMergeSeries {
+		class SplitMergeSeries {
 		public:
 			/** Ctor. */
 			SplitMergeSeries(vislib::StringA name, SplitMergeMappable *mappable) : mappable(mappable),
@@ -319,7 +317,7 @@ namespace protein_calls {
 		/**
 		 * A transition which connects two data points in two series.
 		 */
-		class PROTEIN_CALLS_API SplitMergeTransition {
+		class SplitMergeTransition {
 		public:
 			/** Ctor. */
 			SplitMergeTransition(unsigned int sourceSeries, unsigned int sourceSeriesIdx, float sourceWidth,

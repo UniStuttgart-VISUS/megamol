@@ -13,15 +13,13 @@
 #include "mmcore/CallGeneric.h"
 #include "mmcore/view/Camera_2.h"
 
-#include "compositing_gl.h"
-
 #include "glowl/FramebufferObject.hpp"
 #include "glowl/Texture2D.hpp"
 
 namespace megamol {
 namespace compositing {
 
-class COMPOSITING_GL_API CallTexture2D
+class CallTexture2D
     : public core::GenericVersionedCall<std::shared_ptr<glowl::Texture2D>, core::BasicMetaData> {
 public:
     inline CallTexture2D() : GenericVersionedCall<std::shared_ptr<glowl::Texture2D>, core::BasicMetaData>() {}
@@ -31,7 +29,7 @@ public:
     static const char* Description(void) { return "Transports a shared pointer to an OpenGL texture object"; }
 };
 
-class COMPOSITING_GL_API CallCamera : public core::GenericVersionedCall<core::view::Camera_2, core::BasicMetaData> {
+class CallCamera : public core::GenericVersionedCall<core::view::Camera_2, core::BasicMetaData> {
 public:
     inline CallCamera() : GenericVersionedCall<core::view::Camera_2, core::BasicMetaData>() {}
     ~CallCamera() = default;
@@ -40,7 +38,7 @@ public:
     static const char* Description(void) { return "Transports a camera (copy)"; }
 };
 
-class COMPOSITING_GL_API CallFramebufferGL
+class CallFramebufferGL
     : public core::GenericVersionedCall<std::shared_ptr<glowl::FramebufferObject>, core::BasicMetaData> {
 public:
     inline CallFramebufferGL()

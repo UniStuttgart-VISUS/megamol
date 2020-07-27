@@ -12,8 +12,6 @@
 #include <set>
 #include <vector>
 
-#include "mesh.h"
-
 #include "glowl/BufferObject.hpp"
 #include "glowl/Mesh.hpp"
 
@@ -22,7 +20,7 @@
 namespace megamol {
 namespace mesh {
 
-class MESH_API GPURenderTaskCollection {
+class GPURenderTaskCollection {
 public:
     // template<typename T>
     // using IteratorPair = std::pair< T, T>;

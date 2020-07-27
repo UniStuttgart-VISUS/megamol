@@ -20,8 +20,6 @@
 #include "vislib/String.h"
 #include "vislib/math/Vector.h"
 
-#include "protein_calls/Protein_Calls.h"
-
 namespace megamol {
 namespace protein_calls {
 
@@ -29,7 +27,7 @@ namespace protein_calls {
      * Class for binding site calls and data interfaces.
      */
 
-	class PROTEIN_CALLS_API BindingSiteCall : public megamol::core::Call {
+	class BindingSiteCall : public megamol::core::Call {
     public:
         /**
          * Answer the name of the objects of this description.
