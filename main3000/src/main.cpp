@@ -39,6 +39,7 @@ int main(int argc, char* argv[]) {
     megamol::frontend::GUI_Service gui_service;
     megamol::frontend::GUI_Service::Config guiConfig;
     guiConfig.imgui_api = megamol::frontend::GUI_Service::ImGuiAPI::OPEN_GL;
+    guiConfig.core_instance = &core;
     // priority must be higher than priority of gl_service (=0)
     gui_service.setPriority(23); 
 

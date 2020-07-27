@@ -17,9 +17,8 @@ if(BUILD_GUI)
   set_target_properties(${PROJECT_NAME}
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT_NAME ${PROJECT_NAME})
-  target_include_directories(${PROJECT_NAME} PUBLIC "gui")
-  
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} core vislib PUBLIC input_events)
+  target_include_directories(${PROJECT_NAME} PUBLIC "src")
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} vislib core gui PUBLIC input_events)
 
   # Grouping in Visual Studio
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)

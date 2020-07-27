@@ -11,19 +11,37 @@
 
 #include "AbstractFrontendService.hpp"
 
+#include "mmcore/CoreInstance.h"
+#include "mmcore/MegaMolGraph.h"
+#include "mmcore/utility/log/Log.h"
+
+
+ // Forward declaration
+namespace megamol {
+namespace gui {
+class GUI_Wrapper;
+}
+}
+
 namespace megamol {
 namespace frontend {
+
 
 class GUI_Service final : public AbstractFrontendService {
 
 public:
+
+    struct GUIResource {
+        std::shared_ptr<megamol::gui::GUI_Wrapper> ptr;
+    };
 
     enum ImGuiAPI {
         OPEN_GL
     };
 
     struct Config {
-        ImGuiAPI imgui_api = OPEN_GL;
+        ImGuiAPI imgui_api = GUI_Service::ImGuiAPI::OPEN_GL;
+        megamol::core::CoreInstance* core_instance = nullptr;
     };
 
 	std::string serviceName() override { return "GUI_Service"; }
@@ -56,13 +74,10 @@ public:
     // void setShutdown(const bool s = true);
 
 private:
-
-    // this holds references to the event structs we fill. the events are passed to the renderers/views using
-    // const std::vector<ModuleResource>& getModuleResources() override
     std::vector<ModuleResource> m_providedResourceReferences;
-
-    // this holds references to the event structs we use. 
     std::vector<ModuleResource> m_requestedResourceReferences;
+
+    GUIResource m_gui;
 };
 
 } // namespace frontend
