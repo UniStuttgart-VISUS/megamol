@@ -20,8 +20,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   #file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
 
   # Target definition
-  #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
+  #add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${shader_files} ${source_files})
+  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files})
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -44,4 +44,15 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   source_group("Header Files" FILES ${header_files})
   source_group("Source Files" FILES ${source_files})
   #source_group("Shaders" FILES ${shader_files})
+
+  # Register plugin
+  if (WIN32)
+    target_link_libraries(mmconsole PRIVATE ${PROJECT_NAME})
+    target_link_options(mmconsole PRIVATE "/WHOLEARCHIVE:${PROJECT_NAME}")
+  else ()
+    target_link_libraries(mmconsole PRIVATE
+      -Wl,--whole-archive
+      ${PROJECT_NAME}
+      -Wl,--no-whole-archive)
+  endif ()
 endif()
