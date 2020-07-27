@@ -389,6 +389,9 @@ function(require_external NAME)
     set_target_properties(libzmq PROPERTIES
       INTERFACE_COMPILE_DEFINITIONS "ZMQ_STATIC")
 
+    # TODO libzmq cmake does a lot more checks and options. This will probably work only in some configurations.
+    target_link_libraries(libzmq INTERFACE ws2_32 iphlpapi)
+
     add_external_headeronly_project(libcppzmq
       DEPENDS libzmq
       GIT_REPOSITORY https://github.com/zeromq/cppzmq.git
