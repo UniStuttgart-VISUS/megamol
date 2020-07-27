@@ -107,7 +107,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
 
             if (this->valid_directory) {
                 // Parent directory selectable
-                std::string tag_parent = "..";
+                std::string tag_parent("..");
                 if (ImGui::Selectable(tag_parent.c_str(), false, select_flags)) {
                     fsns::path tmp_file_path = static_cast<fsns::path>(this->file_path_str);
                     if (tmp_file_path.has_parent_path()) {
@@ -390,7 +390,7 @@ void megamol::gui::FileBrowserWidget::validateFile(
 
     // Validating file
     try {
-        const std::string ext = ".lua";
+        const std::string ext(".lua");
         this->file_error.clear();
         this->file_warning.clear();
         this->additional_lines = 0;

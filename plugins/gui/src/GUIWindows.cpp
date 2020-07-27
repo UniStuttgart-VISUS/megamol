@@ -24,7 +24,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-GUIWindows::GUIWindows()
+GUIWindows::GUIWindows(void)
     : core_instance(nullptr)
     , param_slots()
     , style_param("style", "Color style, theme")
@@ -81,7 +81,7 @@ GUIWindows::GUIWindows()
 }
 
 
-GUIWindows::~GUIWindows() { this->destroyContext(); }
+GUIWindows::~GUIWindows(void) { this->destroyContext(); }
 
 
 bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
@@ -106,7 +106,7 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 }
 
 
-bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceTime) {
+bool GUIWindows::PreDraw(glm::vec2 viewport_size, double instanceTime) {
 
     if (this->api == GUIImGuiAPI::NONE) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -145,18 +145,15 @@ bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceT
     this->checkMultipleHotkeyAssignement();
 
     // Set IO stuff for next frame --------------------------------------------
-    auto viewportWidth = viewport.Width();
-    auto viewportHeight = viewport.Height();
-
     ImGuiIO& io = ImGui::GetIO();
-    io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
+    io.DisplaySize = ImVec2(viewport_size.x, viewport_size.y);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
 
-    if ((instanceTime - this->state.last_instance_time) < 0.0) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            __LINE__);
-    }
+    // if ((instanceTime - this->state.last_instance_time) < 0.0) {
+    //    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+    //        "Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+    //        __LINE__);
+    //}
     io.DeltaTime = ((instanceTime - this->state.last_instance_time) > 0.0)
                        ? (static_cast<float>(instanceTime - this->state.last_instance_time))
                        : (io.DeltaTime);
@@ -942,7 +939,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
 
     // Mode
     megamol::gui::ParameterPresentation::ParameterExtendedModeButton(wc.param_extended_mode);
-    // std::string mode_help = "Expert mode enables buttons for additional parameter presentation options.";
+    // std::string mode_help("Expert mode enables buttons for additional parameter presentation options.");
     // this->tooltip.HelpMarker(mode_help);
     ImGui::SameLine();
 
@@ -1240,7 +1237,7 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
         }
         ImGui::SameLine();
         ImGui::TextUnformatted("Copy to Clipborad");
-        std::string help = "Values are copied in chronological order (newest first)";
+        std::string help("Values are copied in chronological order (newest first)");
         this->tooltip.Marker(help);
     }
 }
@@ -1265,10 +1262,10 @@ void GUIWindows::drawFontWindowCallback(WindowCollection::WindowConfiguration& w
 
     ImGui::Separator();
     ImGui::TextUnformatted("Load Font from File");
-    std::string help = "Same font can be loaded multiple times with different font size.";
+    std::string help("Same font can be loaded multiple times with different font size.");
     this->tooltip.Marker(help);
 
-    std::string label = "Font Size";
+    std::string label("Font Size");
     ImGui::InputFloat(label.c_str(), &wc.buf_font_size, 1.0f, 10.0f, "%.2f", ImGuiInputTextFlags_None);
     // Validate font size
     if (wc.buf_font_size <= 0.0f) {
@@ -1360,9 +1357,9 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     bool open = true;
     if (ImGui::BeginPopupModal("About", &open, (ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))) {
 
-        const std::string eMail = "megamol@visus.uni-stuttgart.de";
-        const std::string webLink = "https://megamol.org/";
-        const std::string gitLink = "https://github.com/UniStuttgart-VISUS/megamol";
+        const std::string eMail("megamol@visus.uni-stuttgart.de");
+        const std::string webLink("https://megamol.org/");
+        const std::string gitLink("https://github.com/UniStuttgart-VISUS/megamol");
 
         std::string about = std::string("MegaMol - Version ") + std::to_string(MEGAMOL_CORE_MAJOR_VER) + (".") +
                             std::to_string(MEGAMOL_CORE_MINOR_VER) + ("\ngit# ") + std::string(MEGAMOL_CORE_COMP_REV) +

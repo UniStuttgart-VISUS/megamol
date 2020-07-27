@@ -1,7 +1,7 @@
 /*
  * WidgetPicking_gl.h
  *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -11,9 +11,8 @@
 
 #include "GUIUtils.h"
 
-#include "mmcore/view/Input.h"
-
 #include "mmcore/utility/log/Log.h"
+#include "mmcore/view/Input.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <queue>

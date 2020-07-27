@@ -102,7 +102,7 @@ void megamol::gui::GroupPresentation::Present(
                 ImGui::TextDisabled("Group");
                 ImGui::Separator();
 
-                std::string view = "Collapse";
+                std::string view("Collapse");
                 if (this->collapsed_view) {
                     view = "Expand";
                 }

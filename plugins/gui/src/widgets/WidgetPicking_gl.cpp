@@ -1,7 +1,7 @@
 /*,
- * PickingBuffer_gl.cpp
+ * WidgetPicking_gl.cpp
  *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 

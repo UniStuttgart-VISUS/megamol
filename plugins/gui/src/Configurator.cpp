@@ -94,7 +94,7 @@ bool megamol::gui::Configurator::Draw(
         // Show pop-up before calling this->graph_collection.LoadModulesCallsStock().
         /// Rendering of pop-up requires two complete draw calls!
         bool open = true;
-        std::string popup_label = "Loading";
+        std::string popup_label("Loading");
         if (this->init_state == 0) {
             ImGui::OpenPopup(popup_label.c_str());
         }
@@ -467,7 +467,7 @@ void megamol::gui::Configurator::add_empty_project(void) {
         // Add initial GUIView and set as view instance
         GraphPtr_t graph_ptr;
         if (this->graph_collection.GetGraph(graph_uid, graph_ptr)) {
-            std::string guiview_class_name = "GUIView";
+            std::string guiview_class_name("GUIView");
             ImGuiID module_uid = graph_ptr->AddModule(this->graph_collection.GetModulesStock(), guiview_class_name);
             ModulePtr_t module_ptr;
             if (graph_ptr->GetModule(module_uid, module_ptr)) {

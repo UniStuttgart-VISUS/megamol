@@ -170,7 +170,7 @@ void megamol::gui::ParameterPresentation::LoadTransferFunctionTexture(
 bool megamol::gui::ParameterPresentation::OptionButton(const std::string& id, const std::string& label, bool dirty) {
 
     bool retval = false;
-    std::string widget_name = "option_button";
+    std::string widget_name("option_button");
     std::string widget_id = widget_name + id;
     ImGui::PushID(widget_id.c_str());
 
@@ -224,7 +224,7 @@ bool megamol::gui::ParameterPresentation::KnobButton(
 
     const float pi = 3.14159265358f;
 
-    std::string widget_name = "knob_widget_background";
+    std::string widget_name("knob_widget_background");
     std::string widget_id = widget_name + id;
     ImGui::PushID(widget_id.c_str());
 
@@ -673,7 +673,7 @@ bool megamol::gui::ParameterPresentation::widget_button(megamol::gui::ParameterP
     // LOCAL -----------------------------------------------------------
     if (scope == WidgetScope::LOCAL) {
         std::string button_hotkey = keycode.ToString();
-        std::string hotkey = "";
+        std::string hotkey("");
         std::string edit_label = label;
 
         bool hotkey_in_tooltip = false;
@@ -1391,7 +1391,9 @@ megamol::gui::Parameter::~Parameter(void) {}
 
 
 std::string megamol::gui::Parameter::GetValueString(void) {
-    std::string value_string = "UNKNOWN PARAMETER TYPE";
+
+    std::string value_string("UNKNOWN PARAMETER TYPE");
+
     auto visitor = [this, &value_string](auto&& arg) {
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_same_v<T, bool>) {

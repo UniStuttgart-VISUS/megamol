@@ -303,7 +303,7 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVector_t& par
     if (presentation != param::AbstractParamPresentation::Presentation::Group_Animation) return false;
 
     ImGuiStyle& style = ImGui::GetStyle();
-    const std::string group_label = "Animation";
+    const std::string group_label("Animation");
     const ImVec2 button_size =
         ImVec2(1.5f * ImGui::GetFrameHeightWithSpacing(), 1.5f * ImGui::GetFrameHeightWithSpacing());
     const float knob_size = 2.5f * ImGui::GetFrameHeightWithSpacing();
@@ -423,7 +423,7 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVector_t& par
 
     // Time -------------------------------------------------------------------
     ImGui::BeginGroup();
-    std::string label = "time";
+    std::string label("time");
     float font_size = ImGui::CalcTextSize(label.c_str()).x;
     ImGui::SetCursorPosX(cursor_pos.x + (knob_size - font_size) / 2.0f);
     ImGui::TextUnformatted(label.c_str());

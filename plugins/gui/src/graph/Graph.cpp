@@ -2673,7 +2673,7 @@ bool megamol::gui::Graph::delete_disconnected_calls(void) {
 const std::string megamol::gui::Graph::generate_unique_group_name(void) {
 
     int new_name_id = 0;
-    std::string new_name_prefix = "Group_";
+    std::string new_name_prefix("Group_");
     for (auto& group : this->groups) {
         if (group->name.find(new_name_prefix) == 0) {
             std::string int_postfix = group->name.substr(new_name_prefix.length());

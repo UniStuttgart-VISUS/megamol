@@ -13,11 +13,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
-  # GLFW
-  if(USE_GLFW)
-    require_external(glfw3)
-  endif()
-
   ## ImGui
   require_external(imgui)
   set_source_files_properties(${imgui_files} PROPERTIES GENERATED TRUE)
@@ -31,6 +26,12 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files} ${imgui_files} ${shader_files} ${resource_files})
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
     
+  # GLFW
+  if(USE_GLFW)
+    require_external(glfw3)
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
+  endif()
+
   # Add C++ filesystem support, except for "stampede".
   if(UNIX)
     cmake_host_system_information(RESULT fqdn QUERY FQDN)
@@ -51,9 +52,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     "include" "src"
     "${SOURCE_DIR}/examples/" "${SOURCE_DIR}/misc/cpp/")
   target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad PUBLIC imgui )
-  if(USE_GLFW)
-      target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
-  endif()   
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

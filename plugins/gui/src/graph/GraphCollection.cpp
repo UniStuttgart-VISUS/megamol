@@ -241,7 +241,7 @@ bool megamol::gui::GraphCollection::LoadCallStock(const megamol::core::CoreInsta
             // Get core calls
             plugin_name = "Core"; // (core_instance->GetAssemblyName() = "")
             for (auto& c_desc : core_instance->GetCallDescriptionManager()) {
-                std::string class_name = std::string(c_desc->ClassName());
+                std::string class_name(c_desc->ClassName());
                 if (std::find_if(this->calls_stock.begin(), this->calls_stock.end(),
                         [class_name](const Call::StockCall& call) { return (call.class_name == class_name); }) ==
                     this->calls_stock.end()) {
@@ -326,7 +326,7 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
             // Get core modules
             plugin_name = "Core"; // (core_instance->GetAssemblyName() = "")
             for (auto& m_desc : core_instance->GetModuleDescriptionManager()) {
-                std::string class_name = std::string(m_desc->ClassName());
+                std::string class_name(m_desc->ClassName());
                 if (std::find_if(this->modules_stock.begin(), this->modules_stock.end(),
                         [class_name](const Module::StockModule& mod) { return (mod.class_name == class_name); }) ==
                     this->modules_stock.end()) {
@@ -340,9 +340,9 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
             // Sorting module by alphabetically ascending class names.
             std::sort(this->modules_stock.begin(), this->modules_stock.end(),
                 [](Module::StockModule mod1, Module::StockModule mod2) {
-                    std::string a_str = mod1.class_name;
+                    std::string a_str(mod1.class_name);
                     for (auto& c : a_str) c = std::toupper(c);
-                    std::string b_str = mod2.class_name;
+                    std::string b_str(mod2.class_name);
                     for (auto& c : b_str) c = std::toupper(c);
                     return (a_str < b_str);
                 });
@@ -480,7 +480,7 @@ bool megamol::gui::GraphCollection::AddProjectFromCore(
         for (auto ano = anoc->ChildList_Begin(); ano != anoc->ChildList_End(); ++ano) {
             auto vi = dynamic_cast<megamol::core::ViewInstance*>(ano->get());
             if ((vi != nullptr) && (vi->View() != nullptr)) {
-                std::string vin = std::string(vi->Name().PeekBuffer());
+                std::string vin(vi->Name().PeekBuffer());
                 view_instances[std::string(vi->View()->FullName().PeekBuffer())] = vin;
             }
         }
@@ -489,7 +489,7 @@ bool megamol::gui::GraphCollection::AddProjectFromCore(
         // Load call connections to temporary data structure since not all call slots are yet available for being
         // connected.
         const auto module_func = [&, this](megamol::core::Module* mod) {
-            std::string full_name = std::string(mod->FullName().PeekBuffer());
+            std::string full_name(mod->FullName().PeekBuffer());
 
             /// TODO ...
             /// Skip if module already exists
@@ -499,7 +499,7 @@ bool megamol::gui::GraphCollection::AddProjectFromCore(
             //    }
             //}
 
-            std::string class_name = std::string(mod->ClassName());
+            std::string class_name(mod->ClassName());
             std::string module_name;
             std::string module_namespace;
             if (!this->project_separate_name_and_namespace(full_name, module_namespace, module_name)) {
@@ -569,7 +569,7 @@ bool megamol::gui::GraphCollection::AddProjectFromCore(
                 // Parameter
                 auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
                 if (param_slot != nullptr) {
-                    std::string param_full_name = std::string(param_slot->Name().PeekBuffer());
+                    std::string param_full_name(param_slot->Name().PeekBuffer());
 
                     if (use_stock) {
                         for (auto& parameter : module_ptr->parameters) {
@@ -681,10 +681,10 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID graph_uid,
     std::string projectstr;
     if (!FileUtils::ReadFile(project_filename, projectstr)) return false;
 
-    const std::string lua_view = "mmCreateView";
-    const std::string lua_module = "mmCreateModule";
-    const std::string lua_param = "mmSetParamValue";
-    const std::string lua_call = "mmCreateCall";
+    const std::string luacmd_view("mmCreateView");
+    const std::string luacmd_module("mmCreateModule");
+    const std::string luacmd_param("mmSetParamValue");
+    const std::string luacmd_call("mmCreateCall");
 
     GraphPtr_t graph_ptr;
     this->GetGraph(graph_uid, graph_ptr);
@@ -714,7 +714,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID graph_uid,
         size_t lines_count = lines.size();
         for (unsigned int i = 0; i < lines_count; i++) {
             // Lua command must start at beginning after removeing leading spaces
-            if (lines[i].rfind(lua_view, 0) == 0) {
+            if (lines[i].rfind(luacmd_view, 0) == 0) {
 
                 size_t arg_count = 3;
                 std::vector<std::string> args;
@@ -722,21 +722,21 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID graph_uid,
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Project File '%s' line %i: Error parsing lua command '%s' "
                         "requiring %i arguments. [%s, %s, line %d]\n",
-                        project_filename.c_str(), (i + 1), lua_view.c_str(), arg_count, __FILE__, __FUNCTION__,
+                        project_filename.c_str(), (i + 1), luacmd_view.c_str(), arg_count, __FILE__, __FUNCTION__,
                         __LINE__);
                     return GUI_INVALID_ID;
                 }
 
-                std::string view_instance = args[0];
-                std::string view_class_name = args[1];
-                std::string view_full_name = args[2];
+                std::string view_instance(args[0]);
+                std::string view_class_name(args[1]);
+                std::string view_full_name(args[2]);
                 std::string view_namespace;
                 std::string view_name;
                 if (!this->project_separate_name_and_namespace(view_full_name, view_namespace, view_name)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Project File '%s' line %i: Invalid view name argument "
                         "(3rd) in lua command '%s'. [%s, %s, line %d]\n",
-                        project_filename.c_str(), (i + 1), lua_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), luacmd_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
                 }
 
@@ -804,7 +804,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID graph_uid,
         if (!found_main_view) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Project File '%s': Missing main view lua command '%s'. [%s, %s, line %d]\n", project_filename.c_str(),
-                lua_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                luacmd_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
         }
         // Save filename for graph (before saving states!)
         graph_ptr->SetFilename(project_filename);
@@ -812,7 +812,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID graph_uid,
         // Find and create modules
         for (unsigned int i = 0; i < lines_count; i++) {
             // Lua command must start at beginning after removeing leading spaces
-            if (lines[i].rfind(lua_module, 0) == 0) {
+            if (lines[i].rfind(luacmd_module, 0) == 0) {
 
                 size_t arg_count = 2;
                 std::vector<std::string> args;
@@ -820,20 +820,20 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID graph_uid,
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Project File '%s' line %i: Error parsing lua command '%s' "
                         "requiring %i arguments. [%s, %s, line %d]\n",
-                        project_filename.c_str(), (i + 1), lua_module.c_str(), arg_count, __FILE__, __FUNCTION__,
+                        project_filename.c_str(), (i + 1), luacmd_module.c_str(), arg_count, __FILE__, __FUNCTION__,
                         __LINE__);
                     return GUI_INVALID_ID;
                 }
 
-                std::string module_class_name = args[0];
-                std::string module_full_name = args[1];
+                std::string module_class_name(args[0]);
+                std::string module_full_name(args[1]);
                 std::string module_namespace;
                 std::string module_name;
                 if (!this->project_separate_name_and_namespace(module_full_name, module_namespace, module_name)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Project File '%s' line %i: Invalid module name argument "
                         "(2nd) in lua command '%s'. [%s, %s, line %d]\n",
-                        project_filename.c_str(), (i + 1), lua_module.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), luacmd_module.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
                 }
 
@@ -886,7 +886,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID graph_uid,
         // Find and create calls
         for (unsigned int i = 0; i < lines_count; i++) {
             // Lua command must start at beginning after removing leading spaces
-            if (lines[i].rfind(lua_call, 0) == 0) {
+            if (lines[i].rfind(luacmd_call, 0) == 0) {
 
                 size_t arg_count = 3;
                 std::vector<std::string> args;
@@ -894,14 +894,14 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID graph_uid,
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Project File '%s' line %i: Error parsing lua command '%s' "
                         "requiring %i arguments. [%s, %s, line %d]\n",
-                        project_filename.c_str(), (i + 1), lua_call.c_str(), arg_count, __FILE__, __FUNCTION__,
+                        project_filename.c_str(), (i + 1), luacmd_call.c_str(), arg_count, __FILE__, __FUNCTION__,
                         __LINE__);
                     return GUI_INVALID_ID;
                 }
 
-                std::string call_class_name = args[0];
-                std::string caller_slot_full_name = args[1];
-                std::string callee_slot_full_name = args[2];
+                std::string call_class_name(args[0]);
+                std::string caller_slot_full_name(args[1]);
+                std::string callee_slot_full_name(args[2]);
 
                 std::string caller_slot_name;
                 std::string caller_slot_namespace;
@@ -910,7 +910,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID graph_uid,
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Project File '%s' line %i: Invalid caller slot name "
                         "argument (2nd) in lua command '%s'. [%s, %s, line %d]\n",
-                        project_filename.c_str(), (i + 1), lua_call.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), luacmd_call.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 }
 
                 std::string callee_slot_name;
@@ -920,7 +920,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID graph_uid,
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Project File '%s' line %i: Invalid callee slot name "
                         "argument (3nd) in lua command '%s'. [%s, %s, line %d]\n",
-                        project_filename.c_str(), (i + 1), lua_call.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), luacmd_call.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 }
 
                 /// DEBUG
@@ -995,9 +995,9 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID graph_uid,
         // Find and create parameters
         for (unsigned int i = 0; i < lines_count; i++) {
             // Lua command must start at beginning after removeing leading spaces
-            if (lines[i].rfind(lua_param, 0) == 0) {
-                const std::string start_delimieter = "[=[";
-                const std::string end_delimieter = "]=]";
+            if (lines[i].rfind(luacmd_param, 0) == 0) {
+                const std::string start_delimieter("[=[");
+                const std::string end_delimieter("]=]");
 
                 std::string param_line = lines[i];
 
@@ -1005,14 +1005,14 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID graph_uid,
                 if (first_bracket_idx == std::string::npos) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Project File '%s' line %i: Missing opening brackets for '%s'. [%s, %s, line %d]\n",
-                        project_filename.c_str(), (i + 1), lua_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), luacmd_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
                 }
                 size_t first_delimiter_idx = param_line.find(',');
                 if (first_delimiter_idx == std::string::npos) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Project File '%s' line %i: Missing argument delimiter ',' for '%s'. [%s, %s, line %d]\n",
-                        project_filename.c_str(), (i + 1), lua_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), luacmd_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
                 }
 
@@ -1022,7 +1022,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID graph_uid,
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Project File '%s' line %i: Parameter name argument should "
                         "be enclosed in '\"' for '%s'. [%s, %s, line %d]\n",
-                        project_filename.c_str(), (i + 1), lua_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        project_filename.c_str(), (i + 1), luacmd_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
                 }
                 param_slot_full_name = param_slot_full_name.substr(1, param_slot_full_name.size() - 2);
@@ -1438,8 +1438,8 @@ bool megamol::gui::GraphCollection::read_project_command_arguments(
 
     // Getting arguments
     std::string arg;
-    const char args_delim = ',';
-    const std::string args_string_delim = "\"";
+    const char args_delim(',');
+    const std::string args_string_delim("\"");
     size_t str_delim_idx_1 = std::string::npos;
     size_t str_delim_idx_2 = std::string::npos;
     size_t delim_idx = std::string::npos;
@@ -1482,9 +1482,9 @@ ImVec2 megamol::gui::GraphCollection::project_read_confpos(const std::string& li
 
     ImVec2 conf_pos(FLT_MAX, FLT_MAX);
 
-    std::string x_start_tag = "--confPos={X=";
-    std::string y_start_tag = ",Y=";
-    std::string end_tag = "}";
+    std::string x_start_tag("--confPos={X=");
+    std::string y_start_tag(",Y=");
+    std::string end_tag("}");
     size_t x_start_idx = line.find(x_start_tag);
     size_t y_start_idx = line.find(y_start_tag);
     size_t end_idx = line.find(end_tag);

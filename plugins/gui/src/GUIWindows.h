@@ -9,6 +9,17 @@
 #define MEGAMOL_GUI_GUIWINDOWS_H_INCLUDED
 
 
+#ifdef _WIN32
+#    ifdef GUI_EXPORTS
+#        define GUI_API __declspec(dllexport)
+#    else
+#        define GUI_API __declspec(dllimport)
+#    endif
+#else // _WIN32
+#    define GUI_API
+#endif // _WIN32
+
+
 #include "Configurator.h"
 #include "CorporateGreyStyle.h"
 #include "CorporateWhiteStyle.h"
@@ -41,17 +52,17 @@
 namespace megamol {
 namespace gui {
 
-class GUIWindows {
+class GUI_API GUIWindows {
 public:
     /**
      * CTOR.
      */
-    GUIWindows();
+    GUIWindows(void);
 
     /**
      * DTOR.
      */
-    virtual ~GUIWindows();
+    virtual ~GUIWindows(void);
 
     /**
      * Create ImGui context using OpenGL.
@@ -64,11 +75,10 @@ public:
      * Setup and enable ImGui context for subsequent use.
      *
      * @param module_fullname   The full name of the parent module incorporating this GUI (needed for module filtering).
-     * @param viewport          The currently available viewport.
+     * @param viewport_size     The currently available size of the viewport.
      * @param instanceTime      The current instance time.
      */
-    bool PreDraw(vislib::math::Rectangle<int> viewport, double instanceTime);
-
+    bool PreDraw(glm::vec2 viewport_size, double instanceTime);
 
     /**
      * Actual Gui windows drawing and final rednering of pushed ImGui draw commands.

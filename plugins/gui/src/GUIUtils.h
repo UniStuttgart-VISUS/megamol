@@ -11,10 +11,8 @@
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-
 #include <imgui.h>
 #include <imgui_internal.h>
-
 #include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
 
@@ -37,9 +35,9 @@
 #include <vector>
 
 #include "mmcore/param/AbstractParamPresentation.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
 
-#include "mmcore/utility/log/Log.h"
 #include "vislib/UTF8Encoder.h"
 
 
