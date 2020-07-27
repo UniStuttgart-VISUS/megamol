@@ -58,11 +58,6 @@ Plugin200Instance::ptr_type PluginManager::LoadPlugin(
 
     plugin->SetAssemblyFileName("FILENAME_REMOVED_IN_STATIC_BUILD"); // TODO
 
-    // connect static objects
-    //plugin200->connectStatics(Plugin200Instance::StaticConnectorType::Log, static_cast<void*>(&vislib::sys::Log::DefaultLog));
-    plugin->connectStatics(
-        Plugin200Instance::StaticConnectorType::Log, static_cast<void*>(&coreInst.Log()));
-
     // initialize factories
     plugin->GetModuleDescriptionManager();
 

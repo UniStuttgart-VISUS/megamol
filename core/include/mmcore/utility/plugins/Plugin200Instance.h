@@ -102,18 +102,6 @@ namespace plugins {
         virtual const factories::ModuleDescriptionManager& GetModuleDescriptionManager(void) const;
 
         /**
-         * Connect static objects of the core with their counterparts in the
-         * plugin instance.
-         *
-         * @param which Id of the static object to be connected
-         * @param value The value to connect to
-         *
-         * @remark Do not implement this method manually, but use the macro
-         * 'MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics'
-         */
-        virtual void connectStatics(StaticConnectorType which, void* value) = 0;
-
-        /**
          * Stores the lib object as part of this instance
          *
          * @param lib The lib object to be stored
