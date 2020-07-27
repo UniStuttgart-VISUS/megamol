@@ -250,8 +250,6 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     
 
-    // glReadBuffer(GL_DEPTH_ATTACHMENT);
-
 
     glBindFramebuffer(GL_TEXTURE_2D, nuFBb2);
     glBindTexture(GL_TEXTURE_2D, imStoreI2);
@@ -1044,39 +1042,50 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
                     if (test) {
                         // vislib::sys::Log::DefaultLog.WriteInfo("N");
                         tex[i * w + j] = 1.0;
-                        tex2[i * w + j] = 1u;
+                        tex2[i * w + j] = 0u;
                     } else {
                         // vislib::sys::Log::DefaultLog.WriteInfo("J");
                         tex[i * w + j] = 0.0;
-                        tex2[i * w + j] = 0u;
+                        tex2[i * w + j] = 1u;
                     }
                 }
             }
+            glBindFramebuffer(GL_FRAMEBUFFER, nuFBb);
+
+            glBindTexture(GL_TEXTURE_2D, depthStore);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, &tex[0]);
+            glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_STENCIL_TEXTURE_MODE, GL_STENCIL_INDEX);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
+            glDrawPixels(w, h, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
+
             vislib::sys::Log::DefaultLog.WriteInfo("size of Array tex2: %i", tex2.size());
         }
         //glDisable(GL_STENCIL_TEST);
         glStencilFunc(GL_EQUAL, 0u, 0xFF);
         if (call.frametype == 1 || call.frametype == 0) {
             glDepthMask(GL_FALSE);
-            glClear(GL_STENCIL_BUFFER_BIT);
+            //glClear(GL_STENCIL_BUFFER_BIT);
+            
             glBindFramebuffer(GL_FRAMEBUFFER, nuFBb);
             
-            glBindRenderbuffer(GL_RENDERBUFFER, nuDRB);
-            glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8, w, h);
-            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, nuDRB);
-            glStencilMask(0xFF);
-            glDrawPixels(w, h, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
-            
-            glStencilMask(0x00);
-            if (glGetError() != GL_NO_ERROR) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR");
-            glEnable(GL_STENCIL_TEST);
-
-
+            glActiveTexture(GL_TEXTURE10);
             glBindTexture(GL_TEXTURE_2D, imStoreI);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
             glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
             glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
             glClear(GL_COLOR_BUFFER_BIT);
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            glEnable(GL_STENCIL_TEST);
+            glStencilMask(0xFF);
+            glStencilFunc(GL_EQUAL, 1, 0xFF);
+
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depthStore, 0);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
+   
+
+            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR");
+
         }
         if (call.frametype == 2) {
             glBindFramebuffer(GL_FRAMEBUFFER, nuFBb2);
@@ -1317,17 +1326,14 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
         glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("frametype"), call.frametype);
 
+            
 
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_STENCIL_TEST);
-        
-
-        glStencilMask(0x00);
-
+        //glStencilMask(0x00);
+        glBindTexture(GL_TEXTURE_2D, imStoreI);
         glDepthFunc(GL_ALWAYS);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-
+        glDisable(GL_STENCIL_TEST);
         // vislib::sys::Log::DefaultLog.WriteInfo("h %i", glIsEnabled(GL_DEPTH_TEST));
         m_render_to_framebuffer_shdr->Disable();
         // glDeleteTextures(1, &imStoreI);
