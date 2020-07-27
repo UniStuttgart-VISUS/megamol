@@ -61,6 +61,5 @@ public:
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeriesCall>();
     }
-    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
 };
 } // namespace megamol::infovis

@@ -196,6 +196,5 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::GraphDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MultiIndexListDataCall>();
     }
-    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
 };
 } // namespace megamol::stdplugin::datatools

@@ -13,12 +13,9 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
-
 #include "geometry_calls/CallTriMeshData.h"
 #include "geometry_calls/LinesDataCall.h"
 
-
-/* anonymous namespace hides this type from any other object files */
 namespace megamol::geocalls {
     /** Implementing the instance class of this plugin */
     class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
@@ -65,6 +62,5 @@ namespace megamol::geocalls {
             //
 
         }
-        MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };
 } // namespace megamol::geocalls

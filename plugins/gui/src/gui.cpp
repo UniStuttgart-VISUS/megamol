@@ -42,7 +42,5 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::gui::GUIView>();
         this->module_descriptions.RegisterAutoDescription<megamol::gui::OverlayRenderer>();
     }
-
-    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
 };
 } // namespace megamol::gui

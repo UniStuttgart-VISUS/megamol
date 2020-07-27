@@ -38,4 +38,15 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   source_group("Public Header Files" FILES ${public_header_files})
   source_group("Header Files" FILES ${header_files})
   source_group("Source Files" FILES ${source_files})
+
+  # Register plugin
+  if (WIN32)
+    target_link_libraries(mmconsole PRIVATE ${PROJECT_NAME})
+    target_link_options(mmconsole PRIVATE "/WHOLEARCHIVE:${PROJECT_NAME}")
+  else ()
+    target_link_libraries(mmconsole PRIVATE
+      -Wl,--whole-archive
+      ${PROJECT_NAME}
+      -Wl,--no-whole-archive)
+  endif ()
 endif()
