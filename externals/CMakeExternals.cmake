@@ -2,7 +2,7 @@
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/script-externals")
   message(STATUS "Downloading external scripts")
   execute_process(COMMAND
-    ${GIT_EXECUTABLE} clone https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
+    ${GIT_EXECUTABLE} clone -b v2.0 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
@@ -206,7 +206,6 @@ function(require_external NAME)
     include(GNUInstallDirs)
 
     if(WIN32)
-      #set(GLAD_LIB "lib/glad.lib")
       set(GLAD_LIB "bin/glad.dll")
       set(GLAD_LIB_IMPORT "lib/glad.lib")
     else()
@@ -214,19 +213,15 @@ function(require_external NAME)
       set(GLAD_LIB "bin/libglad.so")
     endif()
 
-    add_external_project(glad_git SHARED
-      GIT_REPOSITORY https://github.com/geringsj/glad.git
-      GIT_TAG "master"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLAD_LIB}" "<INSTALL_DIR>/${GLAD_LIB_IMPORT}"
-      #CMAKE_ARGS 
-      #  -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=True
-    )
+    add_external_project(glad SHARED
+      SOURCE_DIR glad
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLAD_LIB}" "<INSTALL_DIR>/${GLAD_LIB_IMPORT}")
 
     add_external_library(glad
-      PROJECT glad_git
+      PROJECT glad
       IMPORT_LIBRARY ${GLAD_LIB_IMPORT}
       LIBRARY ${GLAD_LIB})
-	
+
     # glad needs to announce dll export also in header files used by megamol libraries	
     target_compile_definitions(glad INTERFACE GLAD_GLAPI_EXPORT)
 
