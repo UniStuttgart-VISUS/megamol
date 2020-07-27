@@ -107,7 +107,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
 
             if (this->valid_directory) {
                 // Parent directory selectable
-                std::string tag_parent = "..";
+                std::string tag_parent("..");
                 if (ImGui::Selectable(tag_parent.c_str(), false, select_flags)) {
                     fsns::path tmp_file_path = static_cast<fsns::path>(this->file_path_str);
                     if (tmp_file_path.has_parent_path()) {
@@ -135,17 +135,17 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
                     // Update child paths
                     this->child_paths.clear();
 
-                    std::vector<ChildDataType> paths;
-                    std::vector<ChildDataType> files;
+                    std::vector<ChildData_t> paths;
+                    std::vector<ChildData_t> files;
                     try {
                         fsns::path tmp_file_path = static_cast<fsns::path>(this->file_path_str);
                         for (const auto& entry : fsns::directory_iterator(tmp_file_path)) {
                             if (fsns::status_known(fsns::status(entry.path()))) {
                                 bool is_directory = fsns::is_directory(entry.path());
                                 if (is_directory) {
-                                    paths.emplace_back(ChildDataType(entry.path(), is_directory));
+                                    paths.emplace_back(ChildData_t(entry.path(), is_directory));
                                 } else {
-                                    files.emplace_back(ChildDataType(entry.path(), is_directory));
+                                    files.emplace_back(ChildData_t(entry.path(), is_directory));
                                 }
                             }
                         }
@@ -153,14 +153,14 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
                     }
 
                     // Sort path case insensitive alphabetically ascending
-                    std::sort(paths.begin(), paths.end(), [](ChildDataType const& a, ChildDataType const& b) {
+                    std::sort(paths.begin(), paths.end(), [](ChildData_t const& a, ChildData_t const& b) {
                         std::string a_str = a.first.filename().generic_u8string();
                         for (auto& c : a_str) c = std::toupper(c);
                         std::string b_str = b.first.filename().generic_u8string();
                         for (auto& c : b_str) c = std::toupper(c);
                         return (a_str < b_str);
                     });
-                    std::sort(files.begin(), files.end(), [](ChildDataType const& a, ChildDataType const& b) {
+                    std::sort(files.begin(), files.end(), [](ChildData_t const& a, ChildData_t const& b) {
                         std::string a_str = a.first.filename().generic_u8string();
                         for (auto& c : a_str) c = std::toupper(c);
                         std::string b_str = b.first.filename().generic_u8string();
@@ -390,7 +390,7 @@ void megamol::gui::FileBrowserWidget::validateFile(
 
     // Validating file
     try {
-        const std::string ext = ".lua";
+        const std::string ext(".lua");
         this->file_error.clear();
         this->file_warning.clear();
         this->additional_lines = 0;

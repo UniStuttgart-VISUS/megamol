@@ -25,13 +25,13 @@ class Module;
 class Call;
 class CallSlot;
 class Parameter;
-typedef std::shared_ptr<Parameter> ParamPtrType;
-typedef std::shared_ptr<Call> CallPtrType;
-typedef std::shared_ptr<CallSlot> CallSlotPtrType;
+typedef std::shared_ptr<Parameter> ParamPtr_t;
+typedef std::shared_ptr<Call> CallPtr_t;
+typedef std::shared_ptr<CallSlot> CallSlotPtr_t;
 
 // Types
-typedef std::shared_ptr<Module> ModulePtrType;
-typedef std::vector<ModulePtrType> ModulePtrVectorType;
+typedef std::shared_ptr<Module> ModulePtr_t;
+typedef std::vector<ModulePtr_t> ModulePtrVector_t;
 
 
 /** ************************************************************************
@@ -60,7 +60,7 @@ public:
     ModulePresentation(void);
     ~ModulePresentation(void);
 
-    static ImVec2 GetDefaultModulePosition(const GraphCanvasType& canvas);
+    static ImVec2 GetDefaultModulePosition(const GraphCanvas_t& canvas);
 
     inline ImVec2 GetSize(void) { return this->size; }
 
@@ -84,15 +84,15 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    void Present(megamol::gui::PresentPhase phase, Module& inout_module, GraphItemsStateType& state);
-    void Update(Module& inout_module, const GraphCanvasType& in_canvas);
+    void Present(megamol::gui::PresentPhase phase, Module& inout_module, GraphItemsState_t& state);
+    void Update(Module& inout_module, const GraphCanvas_t& in_canvas);
 
-    inline bool found_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {
+    inline bool found_uid(UIDVector_t& modules_uid_vector, ImGuiID module_uid) const {
         return (
             std::find(modules_uid_vector.begin(), modules_uid_vector.end(), module_uid) != modules_uid_vector.end());
     }
 
-    inline void erase_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {
+    inline void erase_uid(UIDVector_t& modules_uid_vector, ImGuiID module_uid) const {
         for (auto iter = modules_uid_vector.begin(); iter != modules_uid_vector.end(); iter++) {
             if ((*iter) == module_uid) {
                 modules_uid_vector.erase(iter);
@@ -101,7 +101,7 @@ private:
         }
     }
 
-    inline void add_uid(UIDVectorType& modules_uid_vector, ImGuiID module_uid) const {
+    inline void add_uid(UIDVector_t& modules_uid_vector, ImGuiID module_uid) const {
         if (!this->found_uid(modules_uid_vector, module_uid)) {
             modules_uid_vector.emplace_back(module_uid);
         }
@@ -133,7 +133,7 @@ public:
     std::string description;
     std::string plugin_name;
     bool is_view;
-    ParamVectorType parameters;
+    ParamVector_t parameters;
 
     // Init when adding module to graph
     std::string name;
@@ -144,11 +144,11 @@ public:
     Module(ImGuiID uid);
     ~Module();
 
-    bool AddCallSlot(CallSlotPtrType callslot);
+    bool AddCallSlot(CallSlotPtr_t callslot);
     bool DeleteCallSlots(void);
-    bool GetCallSlot(ImGuiID callslot_uid, CallSlotPtrType& out_callslot_ptr);
-    const CallSlotPtrVectorType& GetCallSlots(CallSlotType type) { return this->callslots[type]; }
-    const CallSlotPtrMapType& GetCallSlots(void) { return this->callslots; }
+    bool GetCallSlot(ImGuiID callslot_uid, CallSlotPtr_t& out_callslot_ptr);
+    const CallSlotPtrVector_t& GetCallSlots(CallSlotType type) { return this->callslots[type]; }
+    const CallSlotPtrMap_t& GetCallSlots(void) { return this->callslots; }
 
     const inline std::string FullName(void) const {
         std::string fullname = "::" + this->name;
@@ -160,15 +160,15 @@ public:
 
     // Presentation ----------------------------------------------------
 
-    inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
+    inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsState_t& state) {
         this->present.Present(phase, *this, state);
     }
-    inline void UpdateGUI(const GraphCanvasType& in_canvas) { this->present.Update(*this, in_canvas); }
+    inline void UpdateGUI(const GraphCanvas_t& in_canvas) { this->present.Update(*this, in_canvas); }
 
 private:
     // VARIABLES --------------------------------------------------------------
 
-    CallSlotPtrMapType callslots;
+    CallSlotPtrMap_t callslots;
 };
 
 

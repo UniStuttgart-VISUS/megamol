@@ -31,7 +31,7 @@ megamol::gui::GroupPresentation::~GroupPresentation(void) {}
 
 
 void megamol::gui::GroupPresentation::Present(
-    megamol::gui::PresentPhase phase, megamol::gui::Group& inout_group, GraphItemsStateType& state) {
+    megamol::gui::PresentPhase phase, megamol::gui::Group& inout_group, GraphItemsState_t& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -102,7 +102,7 @@ void megamol::gui::GroupPresentation::Present(
                 ImGui::TextDisabled("Group");
                 ImGui::Separator();
 
-                std::string view = "Collapse";
+                std::string view("Collapse");
                 if (this->collapsed_view) {
                     view = "Expand";
                 }
@@ -254,7 +254,7 @@ void megamol::gui::GroupPresentation::Present(
 }
 
 
-void megamol::gui::GroupPresentation::SetPosition(Group& inout_group, const GraphCanvasType& in_canvas, ImVec2 pos) {
+void megamol::gui::GroupPresentation::SetPosition(Group& inout_group, const GraphCanvas_t& in_canvas, ImVec2 pos) {
 
     ImVec2 pos_delta = (pos - this->position);
 
@@ -271,7 +271,7 @@ void megamol::gui::GroupPresentation::SetPosition(Group& inout_group, const Grap
 
 
 void megamol::gui::GroupPresentation::UpdatePositionSize(
-    megamol::gui::Group& inout_group, const GraphCanvasType& in_canvas) {
+    megamol::gui::Group& inout_group, const GraphCanvas_t& in_canvas) {
 
     float line_height = ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming;
 
@@ -390,7 +390,7 @@ megamol::gui::Group::~Group() {
 }
 
 
-bool megamol::gui::Group::AddModule(const ModulePtrType& module_ptr) {
+bool megamol::gui::Group::AddModule(const ModulePtr_t& module_ptr) {
 
     if (module_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -483,7 +483,7 @@ bool megamol::gui::Group::ContainsModule(ImGuiID module_uid) {
 }
 
 
-ImGuiID megamol::gui::Group::AddInterfaceSlot(const CallSlotPtrType& callslot_ptr, bool auto_add) {
+ImGuiID megamol::gui::Group::AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr, bool auto_add) {
 
     if (callslot_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -514,7 +514,7 @@ ImGuiID megamol::gui::Group::AddInterfaceSlot(const CallSlotPtrType& callslot_pt
     }
 
     if (parent_module_group_uid) {
-        InterfaceSlotPtrType interfaceslot_ptr =
+        InterfaceSlotPtr_t interfaceslot_ptr =
             std::make_shared<InterfaceSlot>(megamol::gui::GenerateUniqueID(), auto_add);
         if (interfaceslot_ptr != nullptr) {
             interfaceslot_ptr->present.group.uid = this->uid;
@@ -588,7 +588,7 @@ bool megamol::gui::Group::InterfaceSlot_ContainsCallSlot(ImGuiID callslot_uid) {
 }
 
 
-bool megamol::gui::Group::GetInterfaceSlot(ImGuiID interfaceslot_uid, InterfaceSlotPtrType& interfaceslot_ptr) {
+bool megamol::gui::Group::GetInterfaceSlot(ImGuiID interfaceslot_uid, InterfaceSlotPtr_t& interfaceslot_ptr) {
 
     if (interfaceslot_uid != GUI_INVALID_ID) {
         for (auto& interfaceslots_map : this->interfaceslots) {

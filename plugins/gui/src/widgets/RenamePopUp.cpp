@@ -30,7 +30,7 @@ bool megamol::gui::RenamePopUp::PopUp(const std::string& label_id, bool open_pop
     }
     if (ImGui::BeginPopupModal(label_id.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 
-        std::string text_label = "New Name";
+        std::string text_label("New Name");
         auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
         if (ImGui::InputText(text_label.c_str(), &this->rename_string, flags)) {
             rename = this->rename_string;

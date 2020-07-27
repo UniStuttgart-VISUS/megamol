@@ -25,10 +25,10 @@ megamol::gui::ParameterGroups::ParameterGroups(void)
     /// View3D_2::anim
     GroupWidgetData animation;
     animation.active = false;
-    animation.type.emplace(ParamType::BOOL, 1);
-    animation.type.emplace(ParamType::BUTTON, 3);
-    animation.type.emplace(ParamType::FLOAT, 2);
-    animation.callback = [&, this](ParamPtrVectorType& params,
+    animation.type.emplace(Param_t::BOOL, 1);
+    animation.type.emplace(Param_t::BUTTON, 3);
+    animation.type.emplace(Param_t::FLOAT, 2);
+    animation.callback = [&, this](ParamPtrVector_t& params,
                              megamol::core::param::AbstractParamPresentation::Presentation presentation,
                              megamol::gui::ParameterPresentation::WidgetScope in_scope) -> bool {
         return this->group_widget_animation(params, presentation, in_scope);
@@ -40,7 +40,7 @@ megamol::gui::ParameterGroups::ParameterGroups(void)
 megamol::gui::ParameterGroups::~ParameterGroups(void) {}
 
 
-bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVectorType& inout_params,
+bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVector_t& inout_params,
     const std::string& in_module_fullname, const std::string& in_search, bool in_extended, bool in_ignore_extended,
     megamol::gui::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor) {
@@ -58,7 +58,7 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVectorType& in
     }
 
     // Analyse parameter group membership and draw ungrouped parameters
-    ParamGroupType group_map;
+    ParamGroup_t group_map;
     for (auto& param : inout_params) {
         auto param_namespace = param.GetNameSpace();
         if (!in_ignore_extended) {
@@ -112,7 +112,7 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVectorType& in
                         ImGui::SameLine();
 
                         ParameterPresentation::OptionButton(
-                            "param_groups", "", (group_widget_id.second.GetGUIPresentation() != PresentType::Basic));
+                            "param_groups", "", (group_widget_id.second.GetGUIPresentation() != Present_t::Basic));
                         if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) {
                             for (auto& present_name_pair : group_widget_id.second.GetPresentationNameMap()) {
                                 if (group_widget_id.second.IsPresentationCompatible(present_name_pair.first)) {
@@ -233,7 +233,7 @@ void megamol::gui::ParameterGroups::draw_parameter(megamol::gui::Parameter& inou
     megamol::gui::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor) {
 
-    if ((inout_param.type == ParamType::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {
+    if ((inout_param.type == Param_t::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {
         inout_param.present.ConnectExternalTransferFunctionEditor(in_external_tf_editor);
     }
 
@@ -255,7 +255,7 @@ void megamol::gui::ParameterGroups::draw_parameter(megamol::gui::Parameter& inou
             if (inout_param.PresentGUI(in_scope)) {
 
                 // Open window calling the transfer function editor callback
-                if ((inout_param.type == ParamType::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {
+                if ((inout_param.type == Param_t::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {
                     if (out_open_external_tf_editor != nullptr) (*out_open_external_tf_editor) = true;
                     auto param_fullname = std::string(in_module_fullname.c_str()) + "::" + inout_param.full_name;
                     in_external_tf_editor->SetConnectedParameter(&inout_param, param_fullname);
@@ -266,8 +266,8 @@ void megamol::gui::ParameterGroups::draw_parameter(megamol::gui::Parameter& inou
 }
 
 
-void megamol::gui::ParameterGroups::draw_grouped_parameters(const std::string& in_group_name,
-    ParamPtrVectorType& params, const std::string& in_module_fullname, const std::string& in_search,
+void megamol::gui::ParameterGroups::draw_grouped_parameters(const std::string& in_group_name, ParamPtrVector_t& params,
+    const std::string& in_module_fullname, const std::string& in_search,
     megamol::gui::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor) {
 
@@ -296,14 +296,14 @@ void megamol::gui::ParameterGroups::draw_grouped_parameters(const std::string& i
 }
 
 
-bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& params,
+bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVector_t& params,
     megamol::core::param::AbstractParamPresentation::Presentation presentation,
     megamol::gui::ParameterPresentation::WidgetScope in_scope) {
 
     if (presentation != param::AbstractParamPresentation::Presentation::Group_Animation) return false;
 
     ImGuiStyle& style = ImGui::GetStyle();
-    const std::string group_label = "Animation";
+    const std::string group_label("Animation");
     const ImVec2 button_size =
         ImVec2(1.5f * ImGui::GetFrameHeightWithSpacing(), 1.5f * ImGui::GetFrameHeightWithSpacing());
     const float knob_size = 2.5f * ImGui::GetFrameHeightWithSpacing();
@@ -321,13 +321,13 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
     Parameter* param_time = nullptr;
     Parameter* param_speed = nullptr;
     for (auto& param_ptr : params) {
-        if ((param_ptr->GetName() == "play") && (param_ptr->type == ParamType::BOOL)) {
+        if ((param_ptr->GetName() == "play") && (param_ptr->type == Param_t::BOOL)) {
             param_play = param_ptr;
         }
-        if ((param_ptr->GetName() == "time") && (param_ptr->type == ParamType::FLOAT)) {
+        if ((param_ptr->GetName() == "time") && (param_ptr->type == Param_t::FLOAT)) {
             param_time = param_ptr;
         }
-        if ((param_ptr->GetName() == "speed") && (param_ptr->type == ParamType::FLOAT)) {
+        if ((param_ptr->GetName() == "speed") && (param_ptr->type == Param_t::FLOAT)) {
             param_speed = param_ptr;
         }
     }
@@ -423,7 +423,7 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVectorType& p
 
     // Time -------------------------------------------------------------------
     ImGui::BeginGroup();
-    std::string label = "time";
+    std::string label("time");
     float font_size = ImGui::CalcTextSize(label.c_str()).x;
     ImGui::SetCursorPosX(cursor_pos.x + (knob_size - font_size) / 2.0f);
     ImGui::TextUnformatted(label.c_str());

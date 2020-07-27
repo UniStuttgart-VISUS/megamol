@@ -43,7 +43,7 @@ megamol::gui::ModulePresentation::~ModulePresentation(void) {}
 
 
 void megamol::gui::ModulePresentation::Present(
-    megamol::gui::PresentPhase phase, megamol::gui::Module& inout_module, megamol::gui::GraphItemsStateType& state) {
+    megamol::gui::PresentPhase phase, megamol::gui::Module& inout_module, megamol::gui::GraphItemsState_t& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -194,11 +194,11 @@ void megamol::gui::ModulePresentation::Present(
                                 if (this->selected) {
                                     for (auto& module_uid : state.interact.modules_selected_uids) {
                                         state.interact.modules_add_group_uids.emplace_back(
-                                            UIDPairType(module_uid, GUI_INVALID_ID));
+                                            UIDPair_t(module_uid, GUI_INVALID_ID));
                                     }
                                 } else {
                                     state.interact.modules_add_group_uids.emplace_back(
-                                        UIDPairType(inout_module.uid, GUI_INVALID_ID));
+                                        UIDPair_t(inout_module.uid, GUI_INVALID_ID));
                                 }
                             }
                             if (!state.groups.empty()) {
@@ -210,11 +210,11 @@ void megamol::gui::ModulePresentation::Present(
                                     if (this->selected) {
                                         for (auto& module_uid : state.interact.modules_selected_uids) {
                                             state.interact.modules_add_group_uids.emplace_back(
-                                                UIDPairType(module_uid, group_pair.first));
+                                                UIDPair_t(module_uid, group_pair.first));
                                         }
                                     } else {
                                         state.interact.modules_add_group_uids.emplace_back(
-                                            UIDPairType(inout_module.uid, group_pair.first));
+                                            UIDPair_t(inout_module.uid, group_pair.first));
                                     }
                                 }
                             }
@@ -462,7 +462,7 @@ void megamol::gui::ModulePresentation::Present(
 }
 
 
-ImVec2 megamol::gui::ModulePresentation::GetDefaultModulePosition(const GraphCanvasType& canvas) {
+ImVec2 megamol::gui::ModulePresentation::GetDefaultModulePosition(const GraphCanvas_t& canvas) {
 
     return ((ImVec2((2.0f * GUI_GRAPH_BORDER), (2.0f * GUI_GRAPH_BORDER)) + // ImGui::GetTextLineHeightWithSpacing()) +
                 (canvas.position - canvas.offset)) /
@@ -470,7 +470,7 @@ ImVec2 megamol::gui::ModulePresentation::GetDefaultModulePosition(const GraphCan
 }
 
 
-void megamol::gui::ModulePresentation::Update(megamol::gui::Module& inout_module, const GraphCanvasType& in_canvas) {
+void megamol::gui::ModulePresentation::Update(megamol::gui::Module& inout_module, const GraphCanvas_t& in_canvas) {
 
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -535,8 +535,8 @@ megamol::gui::Module::Module(ImGuiID uid)
     , callslots()
     , present() {
 
-    this->callslots.emplace(megamol::gui::CallSlotType::CALLER, std::vector<CallSlotPtrType>());
-    this->callslots.emplace(megamol::gui::CallSlotType::CALLEE, std::vector<CallSlotPtrType>());
+    this->callslots.emplace(megamol::gui::CallSlotType::CALLER, std::vector<CallSlotPtr_t>());
+    this->callslots.emplace(megamol::gui::CallSlotType::CALLEE, std::vector<CallSlotPtr_t>());
 }
 
 
@@ -547,7 +547,7 @@ megamol::gui::Module::~Module() {
 }
 
 
-bool megamol::gui::Module::AddCallSlot(megamol::gui::CallSlotPtrType callslot) {
+bool megamol::gui::Module::AddCallSlot(megamol::gui::CallSlotPtr_t callslot) {
 
     if (callslot == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -600,7 +600,7 @@ bool megamol::gui::Module::DeleteCallSlots(void) {
 }
 
 
-bool megamol::gui::Module::GetCallSlot(ImGuiID callslot_uid, megamol::gui::CallSlotPtrType& out_callslot_ptr) {
+bool megamol::gui::Module::GetCallSlot(ImGuiID callslot_uid, megamol::gui::CallSlotPtr_t& out_callslot_ptr) {
 
     if (callslot_uid != GUI_INVALID_ID) {
         for (auto& callslot_map : this->GetCallSlots()) {

@@ -1,12 +1,12 @@
 /*
- * WindowManager.h
+ * WindowCollection.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_WINDOWMANAGER_INCLUDED
-#define MEGAMOL_GUI_WINDOWMANAGER_INCLUDED
+#ifndef MEGAMOL_GUI_WINDOWCOLLECTION_INCLUDED
+#define MEGAMOL_GUI_WINDOWCOLLECTION_INCLUDED
 
 
 #include "GUIUtils.h"
@@ -18,7 +18,7 @@ namespace gui {
 /**
  * This class controls the placement and appearance of windows tied to one GUIView.
  */
-class WindowManager {
+class WindowCollection {
 
 public:
     /** Identifiers for the window draw callbacks. */
@@ -117,9 +117,9 @@ public:
     // --------------------------------------------------------------------
     // WINDOWs
 
-    WindowManager() = default;
+    WindowCollection() = default;
 
-    ~WindowManager(void) = default;
+    ~WindowCollection(void) = default;
 
     /**
      * Register callback function for given callback id.
@@ -244,4 +244,4 @@ private:
 } // namespace gui
 } // namespace megamol
 
-#endif // MEGAMOL_GUI_WINDOWMANAGER_INCLUDED
+#endif // MEGAMOL_GUI_WINDOWCOLLECTION_INCLUDED

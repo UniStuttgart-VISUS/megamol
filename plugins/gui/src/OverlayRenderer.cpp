@@ -499,7 +499,7 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         auto param_sufix = this->paramSufix.Param<param::StringParam>()->Value();
         std::string sufix = std::string(param_sufix.PeekBuffer());
 
-        std::string text = "";
+        std::string text("");
         if (auto* float_param = this->m_parameter_ptr.DynamicCast<param::FloatParam>()) {
             auto value = float_param->Value();
             std::stringstream stream;

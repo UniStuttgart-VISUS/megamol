@@ -11,10 +11,8 @@
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-
 #include <imgui.h>
 #include <imgui_internal.h>
-
 #include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
 
@@ -37,9 +35,9 @@
 #include <vector>
 
 #include "mmcore/param/AbstractParamPresentation.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
 
-#include "mmcore/utility/log/Log.h"
 #include "vislib/UTF8Encoder.h"
 
 
@@ -83,8 +81,8 @@ namespace gui {
 // Forward declaration
 class CallSlot;
 class InterfaceSlot;
-typedef std::shared_ptr<megamol::gui::CallSlot> CallSlotPtrType;
-typedef std::shared_ptr<megamol::gui::InterfaceSlot> InterfaceSlotPtrType;
+typedef std::shared_ptr<megamol::gui::CallSlot> CallSlotPtr_t;
+typedef std::shared_ptr<megamol::gui::InterfaceSlot> InterfaceSlotPtr_t;
 
 /** Available ImGui APIs */
 enum GUIImGuiAPI { NONE, OpenGL };
@@ -97,23 +95,23 @@ enum HotkeyIndex : size_t {
     SAVE_PROJECT = 3,
     INDEX_COUNT = 4
 };
-typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyDataType;
-typedef std::array<megamol::gui::HotkeyDataType, megamol::gui::HotkeyIndex::INDEX_COUNT> HotkeyArrayType;
+typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyData_t;
+typedef std::array<megamol::gui::HotkeyData_t, megamol::gui::HotkeyIndex::INDEX_COUNT> HotkeyArray_t;
 
-typedef megamol::core::param::AbstractParamPresentation::Presentation PresentType;
-typedef megamol::core::param::AbstractParamPresentation::ParamType ParamType;
-typedef std::map<int, std::string> EnumStorageType;
+typedef megamol::core::param::AbstractParamPresentation::Presentation Present_t;
+typedef megamol::core::param::AbstractParamPresentation::ParamType Param_t;
+typedef std::map<int, std::string> EnumStorage_t;
 
-typedef std::array<float, 5> FontScalingArrayType;
+typedef std::array<float, 5> FontScalingArray_t;
 
 /* Data type holding a pair of uids. */
-typedef std::vector<ImGuiID> UIDVectorType;
-typedef std::pair<ImGuiID, ImGuiID> UIDPairType;
-typedef std::vector<UIDPairType> UIDPairVectorType;
+typedef std::vector<ImGuiID> UIDVector_t;
+typedef std::pair<ImGuiID, ImGuiID> UIDPair_t;
+typedef std::vector<UIDPair_t> UIDPairVector_t;
 
 /* Data type holding current group uid and group name pairs. */
-typedef std::pair<ImGuiID, std::string> GroupPairType;
-typedef std::vector<megamol::gui::GroupPairType> GroupPairVectorType;
+typedef std::pair<ImGuiID, std::string> GraphGroupPair_t;
+typedef std::vector<megamol::gui::GraphGroupPair_t> GraphGroupPairVector_t;
 
 enum PresentPhase : size_t { INTERACTION = 0, RENDERING = 1 };
 
@@ -124,7 +122,7 @@ typedef struct _canvas_ {
     ImVec2 scrolling; // in
     float zooming;    // in
     ImVec2 offset;    // in
-} GraphCanvasType;
+} GraphCanvas_t;
 
 /* Data type holding information on graph item interaction. */
 typedef struct _interact_state_ {
@@ -136,48 +134,48 @@ typedef struct _interact_state_ {
     ImGuiID group_hovered_uid;  // in out
     bool group_layout;          // out
 
-    UIDVectorType modules_selected_uids;      // in out
-    ImGuiID module_hovered_uid;               // in out
-    ImGuiID module_mainview_uid;              // out
-    UIDPairVectorType modules_add_group_uids; // out
-    UIDVectorType modules_remove_group_uids;  // out
-    bool modules_layout;                      // out
+    UIDVector_t modules_selected_uids;      // in out
+    ImGuiID module_hovered_uid;             // in out
+    ImGuiID module_mainview_uid;            // out
+    UIDPairVector_t modules_add_group_uids; // out
+    UIDVector_t modules_remove_group_uids;  // out
+    bool modules_layout;                    // out
 
     ImGuiID call_selected_uid; // in out
     ImGuiID call_hovered_uid;  // in out
 
     ImGuiID slot_dropped_uid; // in out
 
-    ImGuiID callslot_selected_uid;         // in out
-    ImGuiID callslot_hovered_uid;          // in out
-    UIDPairType callslot_add_group_uid;    // in out
-    UIDPairType callslot_remove_group_uid; // in out
-    CallSlotPtrType callslot_compat_ptr;   // in
+    ImGuiID callslot_selected_uid;       // in out
+    ImGuiID callslot_hovered_uid;        // in out
+    UIDPair_t callslot_add_group_uid;    // in out
+    UIDPair_t callslot_remove_group_uid; // in out
+    CallSlotPtr_t callslot_compat_ptr;   // in
 
-    ImGuiID interfaceslot_selected_uid;            // in out
-    ImGuiID interfaceslot_hovered_uid;             // in out
-    InterfaceSlotPtrType interfaceslot_compat_ptr; // in
+    ImGuiID interfaceslot_selected_uid;          // in out
+    ImGuiID interfaceslot_hovered_uid;           // in out
+    InterfaceSlotPtr_t interfaceslot_compat_ptr; // in
 
-} GraphItemsInteractType;
+} GraphItemsInteract_t;
 
 /* Data type holding shared state of graph items. */
 typedef struct _graph_item_state_ {
-    megamol::gui::GraphCanvasType canvas;          // (see above)
-    megamol::gui::GraphItemsInteractType interact; // (see above)
-    megamol::gui::HotkeyArrayType hotkeys;         // in out
-    megamol::gui::GroupPairVectorType groups;      // in
-} GraphItemsStateType;
+    megamol::gui::GraphCanvas_t canvas;          // (see above)
+    megamol::gui::GraphItemsInteract_t interact; // (see above)
+    megamol::gui::HotkeyArray_t hotkeys;         // in out
+    megamol::gui::GraphGroupPairVector_t groups; // in
+} GraphItemsState_t;
 
 /* Data type holding shared state of graphs. */
 typedef struct _graph_state_ {
-    FontScalingArrayType font_scalings;    // in
-    float graph_width;                     // in
-    bool show_parameter_sidebar;           // in
-    megamol::gui::HotkeyArrayType hotkeys; // in out
-    ImGuiID graph_selected_uid;            // out
-    bool graph_delete;                     // out
-    bool graph_save;                       // out
-} GraphStateType;
+    FontScalingArray_t font_scalings;    // in
+    float graph_width;                   // in
+    bool show_parameter_sidebar;         // in
+    megamol::gui::HotkeyArray_t hotkeys; // in out
+    ImGuiID graph_selected_uid;          // out
+    bool graph_delete;                   // out
+    bool graph_save;                     // out
+} GraphState_t;
 
 
 /********** Global Unique ID **********/

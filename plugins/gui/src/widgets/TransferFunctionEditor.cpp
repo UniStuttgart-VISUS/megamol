@@ -250,7 +250,7 @@ void TransferFunctionEditor::SetConnectedParameter(Parameter* param_ptr, const s
     this->connected_parameter_ptr = nullptr;
     this->connected_parameter_name = "";
     if (param_ptr != nullptr) {
-        if (param_ptr->type == ParamType::TRANSFERFUNCTION) {
+        if (param_ptr->type == Param_t::TRANSFERFUNCTION) {
             if (this->connected_parameter_ptr != param_ptr) {
                 this->connected_parameter_ptr = param_ptr;
                 this->connected_parameter_name = param_full_name;
@@ -544,7 +544,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                 if (this->connected_parameter_ptr != nullptr) {
                     std::string tf;
                     if (this->GetTransferFunction(tf)) {
-                        if (this->connected_parameter_ptr->type == ParamType::TRANSFERFUNCTION) {
+                        if (this->connected_parameter_ptr->type == Param_t::TRANSFERFUNCTION) {
                             this->connected_parameter_ptr->SetValue(tf);
                             this->connected_parameter_ptr->present.SetTransferFunctionEditorHash(
                                 this->connected_parameter_ptr->GetTransferFunctionHash());

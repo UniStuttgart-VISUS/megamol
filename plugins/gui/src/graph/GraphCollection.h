@@ -1,12 +1,12 @@
 /*
- * GraphManager.h
+ * GraphCollection.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_GRAPH_GRAPHMANAGER_H_INCLUDED
-#define MEGAMOL_GUI_GRAPH_GRAPHMANAGER_H_INCLUDED
+#ifndef MEGAMOL_GUI_GRAPH_GRAPHCOLLECTION_H_INCLUDED
+#define MEGAMOL_GUI_GRAPH_GRAPHCOLLECTION_H_INCLUDED
 
 
 #include "Graph.h"
@@ -27,26 +27,26 @@ namespace gui {
 
 
 // Forward declarations
-class GraphManager;
+class GraphCollection;
 
 // Types
-typedef std::shared_ptr<Graph> GraphPtrType;
-typedef std::vector<GraphPtrType> GraphsType;
-typedef std::map<megamol::core::param::AbstractParam*, std::shared_ptr<megamol::gui::Parameter>> ParamInterfaceMapType;
+typedef std::shared_ptr<Graph> GraphPtr_t;
+typedef std::vector<GraphPtr_t> Graphs_t;
+typedef std::map<megamol::core::param::AbstractParam*, std::shared_ptr<megamol::gui::Parameter>> ParamInterfaceMap_t;
 
 
 /** ************************************************************************
- * Defines GUI graph manager presentation.
+ * Defines GUI graph collection presentation.
  */
-class GraphManagerPresentation {
+class GraphCollectionPresentation {
 public:
-    friend class GraphManager;
+    friend class GraphCollection;
     // FUNCTIONS --------------------------------------------------------------
 
-    GraphManagerPresentation(void);
-    ~GraphManagerPresentation(void);
+    GraphCollectionPresentation(void);
+    ~GraphCollectionPresentation(void);
 
-    void SaveProjectToFile(bool open_popup, GraphManager& inout_graph_manager, GraphStateType& state);
+    void SaveProjectToFile(bool open_popup, GraphCollection& inout_graph_collection, GraphState_t& state);
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -56,33 +56,33 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    void Present(GraphManager& inout_graph_manager, GraphStateType& state);
+    void Present(GraphCollection& inout_graph_collection, GraphState_t& state);
 };
 
 
 /** ************************************************************************
- * Defines the graph manager.
+ * Defines the graph collection.
  */
-class GraphManager {
+class GraphCollection {
 public:
     // VARIABLES --------------------------------------------------------------
 
-    GraphManagerPresentation present;
+    GraphCollectionPresentation present;
 
     // FUNCTIONS --------------------------------------------------------------
 
-    GraphManager(void);
-    ~GraphManager(void);
+    GraphCollection(void);
+    ~GraphCollection(void);
 
     ImGuiID AddGraph(void);
     bool DeleteGraph(ImGuiID graph_uid);
-    bool GetGraph(ImGuiID graph_uid, GraphPtrType& out_graph_ptr);
-    const GraphsType& GetGraphs(void) { return this->graphs; }
+    bool GetGraph(ImGuiID graph_uid, GraphPtr_t& out_graph_ptr);
+    const Graphs_t& GetGraphs(void) { return this->graphs; }
 
     bool LoadModuleStock(const megamol::core::CoreInstance* core_instance);
     bool LoadCallStock(const megamol::core::CoreInstance* core_instance);
-    inline const ModuleStockVectorType& GetModulesStock(void) { return this->modules_stock; }
-    inline const CallStockVectorType& GetCallsStock(void) { return this->calls_stock; }
+    inline const ModuleStockVector_t& GetModulesStock(void) { return this->modules_stock; }
+    inline const CallStockVector_t& GetCallsStock(void) { return this->calls_stock; }
 
     ImGuiID LoadUpdateProjectFromCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance);
 
@@ -95,14 +95,14 @@ public:
 
     // Presentation ----------------------------------------------------
 
-    void PresentGUI(GraphStateType& state) { this->present.Present(*this, state); }
+    void PresentGUI(GraphState_t& state) { this->present.Present(*this, state); }
 
 private:
     // VARIABLES --------------------------------------------------------------
 
-    GraphsType graphs;
-    ModuleStockVectorType modules_stock;
-    CallStockVectorType calls_stock;
+    Graphs_t graphs;
+    ModuleStockVector_t modules_stock;
+    CallStockVector_t calls_stock;
     unsigned int graph_name_uid;
 
     // FUNCTIONS --------------------------------------------------------------
@@ -117,9 +117,9 @@ private:
     bool project_separate_name_and_namespace(const std::string& full_name, std::string& name_space, std::string& name);
 
     bool replace_graph_state(
-        const GraphPtrType& graph_ptr, const std::string& in_json_string, std::string& out_json_string);
+        const GraphPtr_t& graph_ptr, const std::string& in_json_string, std::string& out_json_string);
     bool replace_parameter_gui_state(
-        const GraphPtrType& graph_ptr, const std::string& in_json_string, std::string& out_json_string);
+        const GraphPtr_t& graph_ptr, const std::string& in_json_string, std::string& out_json_string);
 
     inline const std::string generate_unique_graph_name(void) {
         return ("Project_" + std::to_string(++graph_name_uid));
@@ -133,4 +133,4 @@ private:
 } // namespace gui
 } // namespace megamol
 
-#endif // MEGAMOL_GUI_GRAPH_GRAPHMANAGER_H_INCLUDED
+#endif // MEGAMOL_GUI_GRAPH_GRAPHCOLLECTION_H_INCLUDED
