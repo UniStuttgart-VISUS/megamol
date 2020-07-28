@@ -214,18 +214,20 @@ function(require_external NAME)
       set(GLAD_LIB "bin/libglad.so")
     endif()
 
-    add_external_project(glad SHARED
+    add_external_project(glad_git SHARED
       GIT_REPOSITORY https://github.com/geringsj/glad.git
       GIT_TAG "master"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLAD_LIB}" "<INSTALL_DIR>/${GLAD_LIB_IMPORT}"
-      CMAKE_ARGS 
-        -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=True
+      #CMAKE_ARGS 
+      #  -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=True
     )
 
     add_external_library(glad
+      PROJECT glad_git
       IMPORT_LIBRARY ${GLAD_LIB_IMPORT}
       LIBRARY ${GLAD_LIB})
-
+	
+    # glad needs to announce dll export also in header files used by megamol libraries	
     target_compile_definitions(glad INTERFACE GLAD_GLAPI_EXPORT)
 
   # glfw3
