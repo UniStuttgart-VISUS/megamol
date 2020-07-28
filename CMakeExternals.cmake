@@ -2,7 +2,7 @@
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/script-externals")
   message(STATUS "Downloading external scripts")
   execute_process(COMMAND
-    ${GIT_EXECUTABLE} clone -b v1.0 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
+    ${GIT_EXECUTABLE} clone https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
@@ -196,6 +196,37 @@ function(require_external NAME)
 
     add_external_library(bhtsne
       LIBRARY ${BHTSNE_LIB})
+
+  #glad 
+  elseif(NAME STREQUAL "glad")
+    if(TARGET glad)
+      return()
+    endif()
+
+    include(GNUInstallDirs)
+
+    if(WIN32)
+      #set(GLAD_LIB "lib/glad.lib")
+      set(GLAD_LIB "bin/glad.dll")
+      set(GLAD_LIB_IMPORT "lib/glad.lib")
+    else()
+      #set(GLAD_LIB "lib/libglad.a")
+      set(GLAD_LIB "bin/libglad.so")
+    endif()
+
+    add_external_project(glad SHARED
+      GIT_REPOSITORY https://github.com/geringsj/glad.git
+      GIT_TAG "master"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLAD_LIB}" "<INSTALL_DIR>/${GLAD_LIB_IMPORT}"
+      CMAKE_ARGS 
+        -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=True
+    )
+
+    add_external_library(glad
+      IMPORT_LIBRARY ${GLAD_LIB_IMPORT}
+      LIBRARY ${GLAD_LIB})
+
+    target_compile_definitions(glad INTERFACE GLAD_GLAPI_EXPORT)
 
   # glfw3
   elseif(NAME STREQUAL "glfw3")
