@@ -180,11 +180,20 @@ void MDAOVolumeGenerator::StartInsertion(const vislib::math::Cuboid< float >& ob
     auto bmin = obb.GetLeftBottomBack();
     this->boundsMin = glm::vec3(bmin.GetX(), bmin.GetY(), bmin.GetZ());
 
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE); checkGLError;
-    glEnable(GL_BLEND); checkGLError;
+    // Save previous OpenGL state
+    pointsizeEnabled = glIsEnabled(GL_VERTEX_PROGRAM_POINT_SIZE);
+    if (!pointsizeEnabled) {
+        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE); checkGLError;
+    }
+    blendEnabled = glIsEnabled(GL_BLEND);
+    if (!blendEnabled) {
+        glEnable(GL_BLEND);
+    }
+    blendSrc;
+    blendDst;
+    glGetIntegerv(GL_BLEND_SRC, &blendSrc);
+    glGetIntegerv(GL_BLEND_DST, &blendDst);
     glBlendFunc(GL_ONE, GL_ONE); checkGLError;
-
-    // Store old viewport
     glGetIntegerv(GL_VIEWPORT, viewport);
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
 
@@ -225,12 +234,18 @@ void MDAOVolumeGenerator::EndInsertion()
     volumeShader.Disable(); checkGLError;
 
     glBindVertexArray(0);
+
+    // Reset previous OpenGL state
     glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
     glBindTexture(GL_TEXTURE_3D, 0);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_BLEND);
-    //glDisable(GL_VERTEX_PROGRAM_POINT_SIZE); /// Do not disable. Is required globally.
+    glBlendFunc(static_cast<GLenum>(blendSrc), static_cast<GLenum>(blendDst));
+    if (!blendEnabled) {
+        glDisable(GL_BLEND);
+    }
+    if (!pointsizeEnabled) {
+        glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    }
 
     ++dataVersion;
 
