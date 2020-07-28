@@ -82,7 +82,7 @@ inline void CorporateGreyStyle(int is3D = 0) {
     style.PopupBorderSize = 1;
     style.FrameBorderSize = static_cast<float>(is3D);
 
-    style.WindowRounding = 3;
+    style.WindowRounding = 0; // 3;
     style.ChildRounding = 3;
     style.FrameRounding = 3;
     style.ScrollbarRounding = 2;

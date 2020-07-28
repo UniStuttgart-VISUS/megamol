@@ -16,7 +16,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/File.h"
 #include "vislib/StringConverter.h"
 #include <cmath>
@@ -31,6 +31,7 @@
 
 using namespace megamol;
 using namespace megamol::protein;
+using namespace megamol::core::utility::log;
 
 
 /*
@@ -101,7 +102,6 @@ bool VTIWriter::IsRunning(void) const {
  * VTIWriter::Start
  */
 bool VTIWriter::Start(void) {
-    using namespace vislib::sys;
 
 	protein_calls::VTIDataCall *dc = this->dataCallerSlot.CallAs<protein_calls::VTIDataCall>();
     if (dc == NULL) {
@@ -417,7 +417,6 @@ bool VTIWriter::writeDataArray(const protein_calls::VTIDataCall *dc, bool isPoin
  * VTIWriter::writeFile
  */
 bool VTIWriter::writeFile(protein_calls::VTIDataCall *dc) {
-    using namespace vislib::sys;
 
     // Generate filename based on frame number
     std::string filename;

@@ -21,6 +21,7 @@ FloatParam::FloatParam(float initVal)
     ASSERT(this->minVal <= this->maxVal);
     ASSERT(this->minVal <= this->val);
     ASSERT(this->val <= this->maxVal);
+    this->InitPresentation(AbstractParamPresentation::ParamType::FLOAT);
 }
 
 
@@ -33,6 +34,7 @@ FloatParam::FloatParam(float initVal, float minVal)
     ASSERT(this->minVal <= this->maxVal);
     ASSERT(this->minVal <= this->val);
     ASSERT(this->val <= this->maxVal);
+    this->InitPresentation(AbstractParamPresentation::ParamType::FLOAT);
 }
 
 
@@ -44,6 +46,7 @@ FloatParam::FloatParam(float initVal, float minVal, float maxVal)
     ASSERT(this->minVal <= this->maxVal);
     ASSERT(this->minVal <= this->val);
     ASSERT(this->val <= this->maxVal);
+    this->InitPresentation(AbstractParamPresentation::ParamType::FLOAT);
 }
 
 

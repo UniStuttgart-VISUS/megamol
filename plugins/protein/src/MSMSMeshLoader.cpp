@@ -18,8 +18,8 @@
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/assert.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol;
@@ -491,7 +491,7 @@ bool MSMSMeshLoader::getExtentCallback(core::Call& caller) {
  * MSMSMeshLoader::load
  */
 bool MSMSMeshLoader::load(const vislib::TString& filename, unsigned int frameID) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     vislib::StringA vertFilename(filename);
     vertFilename.Append(".vert");

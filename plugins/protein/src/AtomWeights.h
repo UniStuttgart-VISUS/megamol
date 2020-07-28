@@ -7,7 +7,7 @@
 #ifndef MMPROTEINPLUGIN_ATOMWEIGHTS_H_INCLUDED
 #define MMPROTEINPLUGIN_ATOMWEIGHTS_H_INCLUDED
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <string>
 #include <algorithm>
@@ -32,7 +32,7 @@ static float getElementWeightByProtonCount(unsigned int protonCount) {
 
 	// TODO extend to whole periodic table
 
-	vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Unknown element detected (%u)", protonCount);
+	megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, "Unknown element detected (%u)", protonCount);
 	return 0.0f;
 }
 
@@ -58,7 +58,7 @@ static float getElementWeightBySymbolString(const vislib::StringA& elementString
 	// TODO extend to whole periodic table
 	// TODO use switch with constexpr (only possible with VS 2015)
 
-	vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Unknown element detected (%c)", es.PeekBuffer());
+	megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, "Unknown element detected (%c)", es.PeekBuffer());
 	return 0.0f;
 }
 

@@ -18,6 +18,7 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
+using namespace megamol::core::utility::log;
 
 
 /*
@@ -44,7 +45,6 @@ bool VolumeSliceRenderer::create() {
 	if( !vislib::graphics::gl::GLSLShader::InitialiseExtensions() )
 		return false;
     
-	using namespace vislib::sys;
 	using namespace vislib::graphics::gl;
 
 	ShaderSource vertSrc;

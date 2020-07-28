@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "TetraVoxelizer.h"
 #include "JobStructures.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/ShallowPoint.h"
 #include "MarchingCubeTables.h"
 #include "vislib/math/Vector.h"
@@ -69,7 +69,7 @@ vislib::math::Point<int, 3> TetraVoxelizer::moreNeighbors[6]  = {
 };
 
 void TetraVoxelizer::debugPrintTriangle(vislib::math::ShallowShallowTriangle<float, 3> &tri) {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
         "[%08u] (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f)",
         vislib::sys::Thread::CurrentID(),
         tri.PeekCoordinates()[0][0], tri.PeekCoordinates()[0][1], tri.PeekCoordinates()[0][2],
@@ -78,7 +78,7 @@ void TetraVoxelizer::debugPrintTriangle(vislib::math::ShallowShallowTriangle<flo
 }
 
 void TetraVoxelizer::debugPrintTriangle(vislib::math::ShallowShallowTriangle<double, 3> &tri) {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
         "[%08u] (%03.3lf, %03.3lf, %03.3lf), (%03.3lf, %03.3lf, %03.3lf), (%03.3lf, %03.3lf, %03.3lf)",
         vislib::sys::Thread::CurrentID(),
         tri.PeekCoordinates()[0][0], tri.PeekCoordinates()[0][1], tri.PeekCoordinates()[0][2],
@@ -148,7 +148,7 @@ void TetraVoxelizer::CollectCell(FatVoxel *theVolume, unsigned int x, unsigned i
 
     //vislib::math::ShallowShallowTriangle<float, 3> sst2(cell.triangles);
 #ifdef ULTRADEBUG
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
         "[%08u] collecting (%04u, %04u, %04u)\n", vislib::sys::Thread::CurrentID(), x, y, z);
 #endif /* ULTRADEBUG */
     for (unsigned int triIdx = 0; triIdx < cell.numTriangles; triIdx++) {
@@ -170,14 +170,14 @@ void TetraVoxelizer::CollectCell(FatVoxel *theVolume, unsigned int x, unsigned i
 
         cellFIFO.Append(vislib::math::Point<unsigned int, 4>(x, y, z, triIdx));
 #ifdef ULTRADEBUG
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
             "[%08u] appending  (%04u, %04u, %04u)[%u]\n", vislib::sys::Thread::CurrentID(), x, y, z, l);
 #endif /* ULTRADEBUG */
         while(cellFIFO.Count() > 0) {
             vislib::math::Point<unsigned int, 4> p = cellFIFO.First();
             cellFIFO.RemoveFirst();
 #ifdef ULTRADEBUG
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                 "[%08u] growing    (%04u, %04u, %04u)[%u]\n", vislib::sys::Thread::CurrentID(),
                 p.X(), p.Y(), p.Z(), p.W());
 #endif /* ULTRADEBUG */
@@ -245,7 +245,7 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, Surface &surf,
                 cell.consumedTriangles = -2;
 
 #ifdef ULTRADEBUG
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                 "[%08u] grew to (%04u, %04u, %04u)",
                 vislib::sys::Thread::CurrentID(), p.X(), p.Y(), p.Z());
 #endif /* ULTRADEBUG */
@@ -279,7 +279,7 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, Surface &surf,
 
 #ifdef ULTRADEBUG
     if (cells > 0) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
             "[%08u] grew volume from (%04u, %04u, %04u) yielding %u cells and a volume of %f",
             vislib::sys::Thread::CurrentID(), x, y, z, cells, cells * sjd->CellSize * sjd->CellSize * sjd->CellSize);
     }
@@ -392,7 +392,7 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
 
                 Triangle neighbTriangle(neighbCell.triangles + 3 * 3 * niTriIdx);
 #ifdef ULTRADEBUG
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                     "[%08u] comparing with (%04u, %04u, %04u)[%u/%u]", vislib::sys::Thread::CurrentID(),
                     neighbCrd.X(), neighbCrd.Y(), neighbCrd.Z(), niTriIdx, neighbCell.numTriangles);
                 debugPrintTriangle(neighbTriangle);
@@ -400,7 +400,7 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
 #endif /* ULTRADEBUG */
                 if (Dowel::HaveCommonEdge(neighbTriangle, triangle)) {
 #ifdef ULTRADEBUG
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                         "[%08u] -> has common edge", vislib::sys::Thread::CurrentID());
 #endif /* ULTRADEBUG */
                     /*if (!(neighbCell.consumedTriangles & (1 << niTriIdx)))*/
@@ -468,7 +468,7 @@ VISLIB_FORCEINLINE void TetraVoxelizer::ProcessTriangle(vislib::math::ShallowSha
         tmpTriangle = triangle;
     }
 #ifdef ULTRADEBUG
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
         "[%08u] consuming  (%04u, %04u, %04u)[%u/%u]"
         " (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f)\n",
         vislib::sys::Thread::CurrentID(), x, y, z, triIdx,
@@ -942,7 +942,7 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
 
 
 DWORD TetraVoxelizer::Run(void *userData) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     unsigned int vertFloatSize = 0;
     VoxelizerFloat currRad = 0.f;
@@ -1215,7 +1215,7 @@ DWORD TetraVoxelizer::Run(void *userData) {
     ARY_SAFE_DELETE(volume);
 
 #ifdef ULTRADEBUG
-    vislib::sys::Log::DefaultLog.WriteInfo("job done: (%u,%u,%u)", sjd->gridX, sjd->gridY, sjd->gridZ);
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("job done: (%u,%u,%u)", sjd->gridX, sjd->gridY, sjd->gridZ);
 #endif /* ULTRADEBUG */
 
     // TODO: it would really help if this dude already checked for finished neighbors and took the globalID from there

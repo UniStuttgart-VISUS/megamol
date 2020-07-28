@@ -2,7 +2,7 @@
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/script-externals")
   message(STATUS "Downloading external scripts")
   execute_process(COMMAND
-    ${GIT_EXECUTABLE} clone https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
+    ${GIT_EXECUTABLE} clone -b v1.0 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
@@ -660,6 +660,64 @@ function(require_external NAME)
       LIBRARY_RELEASE "${VTKM_LIB_WORKLET}"
       LIBRARY_DEBUG "${VTKM_LIB_DEBUG_WORKLET}")
 
+  elseif(NAME STREQUAL "fmt")
+    if(TARGET fmt)
+      return()
+    endif()
+  
+    if(WIN32)
+      set(FMT_LIB "lib/fmt<SUFFIX>.lib")
+    else()
+      include(GNUInstallDirs)
+      set(FMT_LIB "${CMAKE_INSTALL_LIBDIR}/libfmt.a")
+    endif()
+  
+    add_external_project(fmt STATIC
+      GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+      GIT_TAG "6.2.1"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${FMT_LIB}"
+      DEBUG_SUFFIX "d"
+      CMAKE_ARGS
+        -DFMT_DOC=OFF
+        -DFMT_TEST=OFF
+        -DCMAKE_C_FLAGS=-fPIC
+        -DCMAKE_CXX_FLAGS=-fPIC)
+  
+    add_external_library(fmt
+      LIBRARY ${FMT_LIB}
+      DEBUG_SUFFIX "d")
+  elseif(NAME STREQUAL "spdlog")
+    if(TARGET spdlog)
+      return()
+    endif()
+
+    require_external(fmt)
+  
+    if(WIN32)
+      set(SPDLOG_LIB "lib/spdlog<SUFFIX>.lib")
+    else()
+      include(GNUInstallDirs)
+      set(SPDLOG_LIB "${CMAKE_INSTALL_LIBDIR}/libspdlog.a")
+    endif()
+  
+    external_get_property(fmt BINARY_DIR)
+
+    add_external_project(spdlog STATIC
+      GIT_REPOSITORY https://github.com/gabime/spdlog.git
+      GIT_TAG "v1.5.0"
+      DEPENDS fmt
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${SPDLOG_LIB}"
+      DEBUG_SUFFIX "d"
+      CMAKE_ARGS
+        -DSPDLOG_BUILD_EXAMPLE=OFF
+        -DSPDLOG_BUILD_TESTS=OFF
+        -DSPDLOG_FMT_EXTERNAL=ON
+        -Dfmt_DIR=${BINARY_DIR})
+  
+    add_external_library(spdlog
+      LIBRARY ${SPDLOG_LIB}
+      DEBUG_SUFFIX "d"
+      DEPENDS fmt)
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")
   endif()

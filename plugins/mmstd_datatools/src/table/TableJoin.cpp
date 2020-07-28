@@ -72,7 +72,7 @@ bool TableJoin::processData(core::Call &c) {
 
         // check time compatibility
         if (firstInCall->GetFrameCount() != secondInCall->GetFrameCount()) {
-            vislib::sys::Log::DefaultLog.WriteError(_T("%hs: Cannot join tables. ")
+            megamol::core::utility::log::Log::DefaultLog.WriteError(_T("%hs: Cannot join tables. ")
                 _T("They are required to have equal frame count\n"), ModuleName.c_str());
             return false;
         }
@@ -125,7 +125,7 @@ bool TableJoin::processData(core::Call &c) {
         outCall->SetDataHash(hash_combine(this->firstDataHash, this->secondDataHash));
         outCall->Set(this->column_count, this->rows_count, this->column_info.data(), this->data.data());
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(_T("Failed to execute %hs::processData\n"),
+        megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Failed to execute %hs::processData\n"),
             ModuleName.c_str());
         return false;
     }
@@ -174,7 +174,7 @@ bool TableJoin::getExtent(core::Call &c) {
         outCall->SetDataHash(hash_combine(this->firstDataHash, this->secondDataHash));
     }
     catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(_T("Failed to execute %hs::getExtent\n"), ModuleName.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Failed to execute %hs::getExtent\n"), ModuleName.c_str());
         return false;
     }
 

@@ -133,14 +133,14 @@ namespace vislib {
             outValue = static_cast<UINT16>(T::ParseInt(this->value(name)));
         }
 
-        virtual void Deserialise(INT32& outValue, 
+        virtual void Deserialise(VL_INT32& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<INT32>(T::ParseInt(this->value(name)));
+            outValue = static_cast<VL_INT32>(T::ParseInt(this->value(name)));
         }
 
-        virtual void Deserialise(INT32& outValue, 
+        virtual void Deserialise(VL_INT32& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<INT32>(T::ParseInt(this->value(name)));
+            outValue = static_cast<VL_INT32>(T::ParseInt(this->value(name)));
         }
 
         virtual void Deserialise(UINT32& outValue, 
@@ -273,14 +273,14 @@ namespace vislib {
             this->Serialise(static_cast<unsigned int>(value), name);
         }
 
-        virtual void Serialise(const INT32 value,
+        virtual void Serialise(const VL_INT32 value,
                 const char *name = NULL) {
             vislib::StringA s;
             s.Format("%d", value);
             this->Serialise(s, name);
         }
 
-        virtual void Serialise(const INT32 value,
+        virtual void Serialise(const VL_INT32 value,
                 const wchar_t *name) {
             vislib::StringA s;
             s.Format("%d", value);
