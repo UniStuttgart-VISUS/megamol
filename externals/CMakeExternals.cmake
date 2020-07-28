@@ -210,12 +210,13 @@ function(require_external NAME)
       set(GLAD_LIB_IMPORT "lib/glad.lib")
     else()
       #set(GLAD_LIB "lib/libglad.a")
-      set(GLAD_LIB "bin/libglad.so")
+      set(GLAD_LIB "lib/libglad.so")
+      set(GLAD_LIB2 "lib/libglad.so.1")
     endif()
 
     add_external_project(glad SHARED
       SOURCE_DIR glad
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLAD_LIB}" "<INSTALL_DIR>/${GLAD_LIB_IMPORT}")
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLAD_LIB}" "<INSTALL_DIR>/${GLAD_LIB2}" "<INSTALL_DIR>/${GLAD_LIB_IMPORT}")
 
     add_external_library(glad
       PROJECT glad
