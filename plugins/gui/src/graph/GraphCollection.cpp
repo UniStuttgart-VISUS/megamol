@@ -575,13 +575,13 @@ bool megamol::gui::GraphCollection::AddProjectFromCore(
                         for (auto& parameter : module_ptr->parameters) {
                             if (parameter.full_name == param_full_name) {
                                 megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
-                                    (*param_slot), parameter, true, false);
+                                    (*param_slot), parameter, true, false, false);
                             }
                         }
                     } else {
                         std::shared_ptr<Parameter> param_ptr;
                         megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(
-                            (*param_slot), param_ptr, false, true);
+                            (*param_slot), param_ptr, false, false, true);
                         module_ptr->parameters.emplace_back((*param_ptr));
                     }
                 }
@@ -1210,7 +1210,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                                     std::string new_configurator_graph_state;
                                     this->replace_graph_state(
                                         graph_ptr, parameter.GetValueString(), new_configurator_graph_state);
-                                    parameter.SetValue(new_configurator_graph_state);
+                                    parameter.SetValue(new_configurator_graph_state, false, true);
                                     wrote_graph_state = true;
                                 }
                             }
@@ -1221,7 +1221,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                                 std::string new_parameter_gui_state;
                                 this->replace_parameter_gui_state(
                                     graph_ptr, parameter.GetValueString(), new_parameter_gui_state);
-                                parameter.SetValue(new_parameter_gui_state);
+                                parameter.SetValue(new_parameter_gui_state, false, true);
                                 wrote_parameter_gui_state = true;
                             }
                         }
