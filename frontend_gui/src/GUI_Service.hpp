@@ -71,7 +71,7 @@ public:
     // expose the resources and input events this RAPI provides: Keyboard inputs, Mouse inputs, GLFW Window events, Framebuffer resize events
     std::vector<ModuleResource>& getProvidedResources() override;
     const std::vector<std::string> getRequestedResourceNames() const override;
-    void setRequestedResources(std::vector<ModuleResource>& resources) override;
+    void setRequestedResources(std::vector<ModuleResource> resources) override;
 
     // from AbstractFrontendService:
     // int setPriority(const int p) // priority initially 0

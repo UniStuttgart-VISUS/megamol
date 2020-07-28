@@ -192,7 +192,7 @@ const std::vector<std::string> GUI_Service::getRequestedResourceNames() const {
 }
 
 
-void GUI_Service::setRequestedResources(std::vector<ModuleResource>& resources) {
+void GUI_Service::setRequestedResources(std::vector<ModuleResource> resources) {
 
     this->m_requestedResourceReferences = resources;
 }
