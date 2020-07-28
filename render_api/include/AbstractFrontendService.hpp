@@ -62,7 +62,7 @@ public:
     virtual std::vector<ModuleResource>& getProvidedResources() = 0;
 
     virtual const std::vector<std::string> getRequestedResourceNames() const = 0;
-    virtual void setRequestedResources(std::vector<ModuleResource>& resources) = 0;
+    virtual void setRequestedResources(std::vector<ModuleResource> resources) = 0;
 };
 
 

@@ -142,10 +142,6 @@ bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::front
     }
 
 #else
-    // for_all services: register render resources
-    // graph.addResources(all_resources)
-
-    // lua_service.set_zmq( central_resources.request(zmq_instance) )
 
 	#    define check(X) if (!X) return false;
 

@@ -517,7 +517,7 @@ const std::vector<std::string> OpenGL_GLFW_Service::getRequestedResourceNames() 
 	return {};
 }
 
-void OpenGL_GLFW_Service::setRequestedResources(std::vector<ModuleResource>& resources) {
+void OpenGL_GLFW_Service::setRequestedResources(std::vector<ModuleResource> resources) {
 }
 
 const void* OpenGL_GLFW_Service::getSharedDataPtr() const { return &m_sharedData; }
