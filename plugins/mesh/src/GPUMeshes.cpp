@@ -56,6 +56,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
                 primtive_type = GL_PATCHES;
             }
 
+            std::vector<GLsizei> strides;
             std::vector<glowl::VertexLayout::Attribute> attribs;
             std::vector<std::pair<uint8_t*, uint8_t*>> vb_iterators;
             std::pair<uint8_t*, uint8_t*> ib_iterators;
@@ -64,6 +65,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
             for (auto attrib : mesh.attributes) {
 
+                strides.push_back(0); // stride for tight packing
                 attribs.push_back(glowl::VertexLayout::Attribute(attrib.component_cnt,
                     MeshDataAccessCollection::convertToGLType(attrib.component_type), GL_FALSE /*ToDO*/,
                     attrib.offset));
@@ -72,7 +74,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
                 vb_iterators.push_back({attrib.data, attrib.data + attrib.byte_size});
             }
 
-            glowl::VertexLayout vertex_descriptor(0, attribs);
+            glowl::VertexLayout vertex_descriptor(strides, attribs);
             mesh_collection->addMesh(vertex_descriptor, vb_iterators, ib_iterators,
                 MeshDataAccessCollection::convertToGLType(mesh.indices.type), GL_STATIC_DRAW, primtive_type);
         }

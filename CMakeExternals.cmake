@@ -61,7 +61,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(glowl
       GIT_REPOSITORY https://github.com/invor/glowl.git
-      GIT_TAG "v0.3"
+      GIT_TAG "v0.4a"
       INCLUDE_DIR "include")
 
   # json
