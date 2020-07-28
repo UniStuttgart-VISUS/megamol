@@ -46,7 +46,7 @@ void megamol::gui::ModulePresentation::Present(
     megamol::gui::PresentPhase phase, megamol::gui::Module& inout_module, megamol::gui::GraphItemsStateType& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
@@ -451,11 +451,12 @@ void megamol::gui::ModulePresentation::Present(
         }
 
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 }
@@ -549,14 +550,14 @@ megamol::gui::Module::~Module() {
 bool megamol::gui::Module::AddCallSlot(megamol::gui::CallSlotPtrType callslot) {
 
     if (callslot == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Pointer to given call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     auto type = callslot->type;
     for (auto& callslot_ptr : this->callslots[type]) {
         if (callslot_ptr == callslot) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Pointer to call slot already registered in modules call slot list. [%s, %s, line %d]\n", __FILE__,
                 __FUNCTION__, __LINE__);
             return false;
@@ -577,7 +578,7 @@ bool megamol::gui::Module::DeleteCallSlots(void) {
                 (*callslot_iter)->DisconnectParentModule();
 
                 if ((*callslot_iter).use_count() > 1) {
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Unclean deletion. Found %i references pointing to call slot. [%s, %s, line %d]\n",
                         (*callslot_iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 }
@@ -587,11 +588,12 @@ bool megamol::gui::Module::DeleteCallSlots(void) {
             callslots_map.second.clear();
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return true;

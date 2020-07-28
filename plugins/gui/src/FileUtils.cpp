@@ -19,35 +19,38 @@ size_t megamol::gui::FileUtils::LoadRawFile(std::string name, void** outData) {
 
     vislib::StringW filename = static_cast<vislib::StringW>(name.c_str());
     if (filename.IsEmpty()) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to load file: No file name given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return 0;
     }
 
     if (!vislib::sys::File::Exists(filename)) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load file \"%s\": Not existing. [%s, %s, line %d]\n",
-            name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to load file \"%s\": Not existing. [%s, %s, line %d]\n", name.c_str(), __FILE__, __FUNCTION__,
+            __LINE__);
         return 0;
     }
 
     size_t size = static_cast<size_t>(vislib::sys::File::GetSize(filename));
     if (size < 1) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load file \"%s\": File is empty. [%s, %s, line %d]\n",
-            name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to load file \"%s\": File is empty. [%s, %s, line %d]\n", name.c_str(), __FILE__, __FUNCTION__,
+            __LINE__);
         return 0;
     }
 
     vislib::sys::FastFile f;
     if (!f.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load file \"%s\": Unable to open file. [%s, %s, line %d]\n",
-            name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to load file \"%s\": Unable to open file. [%s, %s, line %d]\n", name.c_str(), __FILE__,
+            __FUNCTION__, __LINE__);
         return 0;
     }
 
     *outData = new BYTE[size];
     size_t num = static_cast<size_t>(f.Read(*outData, size));
     if (num != size) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to load file \"%s\": Unable to read whole file. [%s, %s, line %d]\n", name.c_str(), __FILE__,
             __FUNCTION__, __LINE__);
         ARY_SAFE_DELETE(*outData);
@@ -67,17 +70,18 @@ bool megamol::gui::FileUtils::WriteFile(const std::string& filename, const std::
             file << in_content.c_str();
             file.close();
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to create file. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             file.close();
             return false;
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -97,17 +101,18 @@ bool megamol::gui::FileUtils::ReadFile(const std::string& filename, std::string&
             out_content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
             file.close();
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to open file. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             file.close();
             return false;
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 

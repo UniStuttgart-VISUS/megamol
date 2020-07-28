@@ -26,13 +26,18 @@
 #include "vislib/UTF8Encoder.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/Environment.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/Path.h"
-#include "vislib/sys/Process.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/sys/sysfunctions.h"
 
 #include "lua.hpp"
+
+#ifdef _WIN32
+#    include <Windows.h>
+#else /* _WIN32 */
+#    include <unistd.h>
+#endif /* _WIN32 */
 
 //#define LUA_FULL_ENVIRONMENT
 
@@ -353,9 +358,7 @@ int megamol::core::LuaState::SetLogFile(lua_State* L) {
         // TODO do we need to make an OS-dependent path here?
         auto p = luaL_checkstring(L, 1);
         if (!megamol::core::utility::Configuration::logFilenameLocked) {
-            if (this->conf->instanceLog != nullptr) {
-                this->conf->instanceLog->SetLogFileName(vislib::sys::Path::Resolve(p), USE_LOG_SUFFIX);
-            }
+            megamol::core::utility::log::Log::DefaultLog.SetLogFileName(vislib::sys::Path::Resolve(p), USE_LOG_SUFFIX);
         }
     }
     return 0;
@@ -366,9 +369,7 @@ int megamol::core::LuaState::SetLogLevel(lua_State* L) {
     if (this->checkConfiguring(MMC_LUA_MMSETLOGLEVEL)) {
         auto l = luaL_checkstring(L, 1);
         if (!megamol::core::utility::Configuration::logLevelLocked) {
-            if (this->conf->instanceLog != nullptr) {
-                this->conf->instanceLog->SetLevel(parseLevelAttribute(l));
-            }
+            megamol::core::utility::log::Log::DefaultLog.SetLevel(parseLevelAttribute(l));
         }
     }
     return 0;
@@ -379,9 +380,7 @@ int megamol::core::LuaState::SetEchoLevel(lua_State* L) {
     if (this->checkConfiguring(MMC_LUA_MMSETECHOLEVEL)) {
         auto l = luaL_checkstring(L, 1);
         if (!megamol::core::utility::Configuration::logEchoLevelLocked) {
-            if (this->conf->instanceLog != nullptr) {
-                this->conf->instanceLog->SetEchoLevel(parseLevelAttribute(l));
-            }
+            megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(parseLevelAttribute(l));
         }
     }
     return 0;
@@ -458,30 +457,30 @@ int megamol::core::LuaState::GetEnvValue(lua_State* L) {
 
 
 UINT megamol::core::LuaState::parseLevelAttribute(const std::string attr) {
-    UINT retval = vislib::sys::Log::LEVEL_ERROR;
+    UINT retval = megamol::core::utility::log::Log::LEVEL_ERROR;
     if (iequals(attr, "error")) {
-        retval = vislib::sys::Log::LEVEL_ERROR;
+        retval = megamol::core::utility::log::Log::LEVEL_ERROR;
     } else if (iequals(attr, "warn")) {
-        retval = vislib::sys::Log::LEVEL_WARN;
+        retval = megamol::core::utility::log::Log::LEVEL_WARN;
     } else if (iequals(attr, "warning")) {
-        retval = vislib::sys::Log::LEVEL_WARN;
+        retval = megamol::core::utility::log::Log::LEVEL_WARN;
     } else if (iequals(attr, "info")) {
-        retval = vislib::sys::Log::LEVEL_INFO;
+        retval = megamol::core::utility::log::Log::LEVEL_INFO;
     } else if (iequals(attr, "none")) {
-        retval = vislib::sys::Log::LEVEL_NONE;
+        retval = megamol::core::utility::log::Log::LEVEL_NONE;
     } else if (iequals(attr, "null")) {
-        retval = vislib::sys::Log::LEVEL_NONE;
+        retval = megamol::core::utility::log::Log::LEVEL_NONE;
     } else if (iequals(attr, "zero")) {
-        retval = vislib::sys::Log::LEVEL_NONE;
+        retval = megamol::core::utility::log::Log::LEVEL_NONE;
     } else if (iequals(attr, "all")) {
-        retval = vislib::sys::Log::LEVEL_ALL;
+        retval = megamol::core::utility::log::Log::LEVEL_ALL;
     } else if (iequals(attr, "*")) {
-        retval = vislib::sys::Log::LEVEL_ALL;
+        retval = megamol::core::utility::log::Log::LEVEL_ALL;
     } else {
         try {
             retval = std::stoi(attr);
         } catch (...) {
-            retval = vislib::sys::Log::LEVEL_ERROR;
+            retval = megamol::core::utility::log::Log::LEVEL_ERROR;
         }
     }
     return retval;
@@ -491,7 +490,11 @@ UINT megamol::core::LuaState::parseLevelAttribute(const std::string attr) {
 int megamol::core::LuaState::GetProcessID(lua_State* L) {
     //    if (this->checkRunning("mmGetProcessID")) {
     vislib::StringA str;
-    unsigned int id = vislib::sys::Process::CurrentID();
+#ifdef _WIN32
+    unsigned int id = GetCurrentProcessId();
+#else /* _WIN32 */
+    unsigned int id = getpid();
+#endif /* _WIN32 */
     str.Format("%u", id);
     lua_pushstring(L, str.PeekBuffer());
     return 1;
@@ -557,7 +560,7 @@ int megamol::core::LuaState::GetModuleParams(lua_State* L) {
                     }
                     lua_pushstring(L, answer.str().c_str());
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "LuaState: ParamSlot %s has a parent which is not a Module!", ps.FullName().PeekBuffer());
                 }
             });
@@ -1203,7 +1206,7 @@ int megamol::core::LuaState::ReadTextFile(lua_State* L) {
             std::stringstream buffer;
             buffer << t.rdbuf();
 
-            // vislib::sys::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": read from file '%s':\n%s\n", filename,
+            // megamol::core::utility::log::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": read from file '%s':\n%s\n", filename,
             // buffer.str().c_str());
 
             lua_remove(L, 1); // get rid of the filename on the stack, leaving the function pointer
@@ -1221,7 +1224,7 @@ int megamol::core::LuaState::ReadTextFile(lua_State* L) {
                     lua_error(L);
                 } else {
                     const auto newString = luaL_checkstring(L, 1);
-                    // vislib::sys::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": transformed into:\n%s\n",
+                    // megamol::core::utility::log::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": transformed into:\n%s\n",
                     // newString);
                     return 1;
                 }

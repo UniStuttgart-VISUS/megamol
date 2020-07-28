@@ -16,7 +16,7 @@
 #include "mmcore/CoreInstance.h"
 
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "ToonRendererDeferred.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
@@ -105,12 +105,12 @@ bool ToonRendererDeferred::create(void) {
 
     // Try to load the gradient shader
     if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::sobel::vertex", vertSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load gradient vertex shader source", this->ClassName() );
         return false;
     }
     if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::sobel::fragment", fragSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load gradient fragment shader source", this->ClassName() );
         return false;
     }
@@ -119,19 +119,19 @@ bool ToonRendererDeferred::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     }
     catch(vislib::Exception &e){
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Try to load the ssao shader
     if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::ssao::vertex", vertSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load gradient vertex shader source", this->ClassName() );
         return false;
     }
     if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::ssao::fragment", fragSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load gradient fragment shader source", this->ClassName() );
         return false;
     }
@@ -140,19 +140,19 @@ bool ToonRendererDeferred::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     }
     catch(vislib::Exception &e){
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Try to load the toon shader
     if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::toon::vertex", vertSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load toon vertex shader source", this->ClassName() );
         return false;
     }
     if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::toon::fragment", fragSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load toon fragment shader source", this->ClassName() );
         return false;
     }
@@ -161,7 +161,7 @@ bool ToonRendererDeferred::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     }
     catch(vislib::Exception &e){
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
@@ -513,7 +513,7 @@ bool ToonRendererDeferred::createFBO(UINT width, UINT height) {
 
     GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE) {
-      vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Could not create FBO");
+      megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Could not create FBO");
       return false;
     }
 

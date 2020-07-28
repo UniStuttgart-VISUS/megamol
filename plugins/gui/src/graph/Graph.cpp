@@ -89,7 +89,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
 
     try {
         if (ImGui::GetCurrentContext() == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return;
         }
@@ -514,11 +514,12 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         ImGui::PopID();
 
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 }
@@ -539,7 +540,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
 
         if (!json.is_object()) {
 #ifdef GUI_VERBOSE
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 #endif // GUI_VERBOSE
             return false;
@@ -561,7 +562,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                             this->change_show_parameter_sidebar = true;
                             this->show_parameter_sidebar = tmp_show_parameter_sidebar;
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteError(
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'show_parameter_sidebar' as boolean. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
@@ -569,7 +570,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                         if (config_state.at("parameter_sidebar_width").is_number_float()) {
                             config_state.at("parameter_sidebar_width").get_to(this->parameter_sidebar_width);
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteError(
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read first value of "
                                 "'parameter_sidebar_width' as float. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
@@ -578,7 +579,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                         if (config_state.at("show_grid").is_boolean()) {
                             config_state.at("show_grid").get_to(this->show_grid);
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteError(
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'show_grid' as boolean. [%s, %s, line %d]\n", __FILE__,
                                 __FUNCTION__, __LINE__);
                         }
@@ -590,7 +591,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                                 call->present.label_visible = this->show_call_names;
                             }
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteError(
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'show_call_names' as boolean. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
@@ -612,7 +613,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                                 }
                             }
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteError(
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'show_slot_names' as boolean. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
@@ -623,7 +624,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                                 mod->present.label_visible = this->show_module_names;
                             }
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteError(
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'show_module_names' as boolean. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
@@ -632,7 +633,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                             config_state.at("params_visible").get_to(this->params_visible);
                             /// Do not apply. Already refelcted in parameter gui state.
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteError(
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'params_visible' as boolean. [%s, %s, line %d]\n", __FILE__,
                                 __FUNCTION__, __LINE__);
                         }
@@ -641,7 +642,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                             config_state.at("params_readonly").get_to(this->params_readonly);
                             /// Do not apply. Already refelcted in parameter gui state.
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteError(
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'params_readonly' as boolean. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
@@ -654,7 +655,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                                 }
                             }
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteError(
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'param_extended_mode' as boolean. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
@@ -664,7 +665,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                             if (config_state.at("canvas_scrolling")[0].is_number_float()) {
                                 config_state.at("canvas_scrolling")[0].get_to(this->graph_state.canvas.scrolling.x);
                             } else {
-                                vislib::sys::Log::DefaultLog.WriteError(
+                                megamol::core::utility::log::Log::DefaultLog.WriteError(
                                     "JSON state: Failed to read first value of 'canvas_scrolling' as float. [%s, %s, "
                                     "line %d]\n",
                                     __FILE__, __FUNCTION__, __LINE__);
@@ -672,14 +673,15 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                             if (config_state.at("canvas_scrolling")[1].is_number_float()) {
                                 config_state.at("canvas_scrolling")[1].get_to(this->graph_state.canvas.scrolling.y);
                             } else {
-                                vislib::sys::Log::DefaultLog.WriteError(
+                                megamol::core::utility::log::Log::DefaultLog.WriteError(
                                     "JSON state: Failed to read second value of 'canvas_scrolling' as float. [%s, %s, "
                                     "line %d]\n",
                                     __FILE__, __FUNCTION__, __LINE__);
                             }
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteError("JSON state: Failed to read 'canvas_scrolling' as "
-                                                                    "array of size two. [%s, %s, line %d]\n",
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                "JSON state: Failed to read 'canvas_scrolling' as "
+                                "array of size two. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
                         // canvas_zooming
@@ -687,8 +689,9 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                             config_state.at("canvas_zooming").get_to(this->graph_state.canvas.zooming);
                             this->reset_zooming = false;
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteError("JSON state: Failed to read first value of "
-                                                                    "'canvas_zooming' as float. [%s, %s, line %d]\n",
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                "JSON state: Failed to read first value of "
+                                "'canvas_zooming' as float. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
 
@@ -707,7 +710,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                                         if (position_item.at("graph_position")[0].is_number_float()) {
                                             position_item.at("graph_position")[0].get_to(module_position.x);
                                         } else {
-                                            vislib::sys::Log::DefaultLog.WriteError(
+                                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                                 "JSON state: Failed to read first value of 'graph_position' as float. "
                                                 "[%s, %s, line %d]\n",
                                                 __FILE__, __FUNCTION__, __LINE__);
@@ -716,14 +719,14 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                                         if (position_item.at("graph_position")[1].is_number_float()) {
                                             position_item.at("graph_position")[1].get_to(module_position.y);
                                         } else {
-                                            vislib::sys::Log::DefaultLog.WriteError(
+                                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                                 "JSON state: Failed to read second value of 'graph_position' as float. "
                                                 "[%s, %s, line %d]\n",
                                                 __FILE__, __FUNCTION__, __LINE__);
                                             valid = false;
                                         }
                                     } else {
-                                        vislib::sys::Log::DefaultLog.WriteError(
+                                        megamol::core::utility::log::Log::DefaultLog.WriteError(
                                             "JSON state: Failed to read 'graph_position' as array of size two. [%s, "
                                             "%s, line %d]\n",
                                             __FILE__, __FUNCTION__, __LINE__);
@@ -740,7 +743,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                                             }
                                         }
                                         if (!module_found) {
-                                            vislib::sys::Log::DefaultLog.WriteError(
+                                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                                 "JSON state: Unable to find module '%s' to apply graph position in "
                                                 "configurator. [%s, %s, line %d]\n",
                                                 module_fullname.c_str(), __FILE__, __FUNCTION__, __LINE__);
@@ -766,7 +769,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                                                 calleslot_fullnames.emplace_back(
                                                     callslot_item.value().get<std::string>());
                                             } else {
-                                                vislib::sys::Log::DefaultLog.WriteError(
+                                                megamol::core::utility::log::Log::DefaultLog.WriteError(
                                                     "JSON state: Failed to read value of call slot as string. [%s, %s, "
                                                     "line %d]\n",
                                                     __FILE__, __FUNCTION__, __LINE__);
@@ -830,7 +833,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                                                     }
                                                 }
                                                 if (!group_found) {
-                                                    vislib::sys::Log::DefaultLog.WriteError(
+                                                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                                                         "JSON state: Unable to find group '%s' to add interface slot. "
                                                         "[%s, %s, line %d]\n",
                                                         group_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
@@ -849,35 +852,35 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
         if (found) {
             this->update = true;
 #ifdef GUI_VERBOSE
-            vislib::sys::Log::DefaultLog.WriteInfo(
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[Configurator] Read graph state for '%s' from JSON string.", inout_graph.name.c_str());
 #endif // GUI_VERBOSE
         } else {
 #ifdef GUI_VERBOSE
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "Could not find graph state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 #endif // GUI_VERBOSE
             return false;
         }
 
     } catch (nlohmann::json::type_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::invalid_iterator& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::out_of_range& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::other_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -937,33 +940,34 @@ bool megamol::gui::GraphPresentation::StateToJSON(Graph& inout_graph, nlohmann::
                 }
             }
 #ifdef GUI_VERBOSE
-            vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Wrote graph state to JSON.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[Configurator] Wrote graph state to JSON.");
 #endif // GUI_VERBOSE
         } else {
-            vislib::sys::Log::DefaultLog.WriteWarn("State of project '%s' is not being saved. Save project to file in "
-                                                   "order to get its state saved. [%s, %s, line %d]\n",
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "State of project '%s' is not being saved. Save project to file in "
+                "order to get its state saved. [%s, %s, line %d]\n",
                 inout_graph.name.c_str(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
     } catch (nlohmann::json::type_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::invalid_iterator& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::out_of_range& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::other_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -1402,7 +1406,7 @@ void megamol::gui::GraphPresentation::present_canvas_dragged_call(megamol::gui::
         if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE)) {
             ImGuiID* selected_slot_uid_ptr = (ImGuiID*)payload->Data;
             if (selected_slot_uid_ptr == nullptr) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Pointer to drag and drop payload data is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                     __LINE__);
                 return;
@@ -1986,20 +1990,21 @@ ImGuiID megamol::gui::Graph::AddEmptyModule(void) {
         this->ForceSetDirty();
 
 #ifdef GUI_VERBOSE
-        vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Added empty module to project.\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[Configurator] Added empty module to project.\n");
 #endif // GUI_VERBOSE
 
         return mod_uid;
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     }
 
-    vislib::sys::Log::DefaultLog.WriteError(
+    megamol::core::utility::log::Log::DefaultLog.WriteError(
         "Unable to add empty module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return GUI_INVALID_ID;
 }
@@ -2054,23 +2059,25 @@ ImGuiID megamol::gui::Graph::AddModule(
                 this->ForceSetDirty();
 
 #ifdef GUI_VERBOSE
-                vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Added module '%s' (uid %i) to project '%s'.\n",
-                    mod_ptr->class_name.c_str(), mod_ptr->uid, this->name.c_str());
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                    "[Configurator] Added module '%s' (uid %i) to project '%s'.\n", mod_ptr->class_name.c_str(),
+                    mod_ptr->uid, this->name.c_str());
 #endif // GUI_VERBOSE
 
                 return mod_uid;
             }
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     }
 
-    vislib::sys::Log::DefaultLog.WriteError("Unable to find module in stock: '%s'. [%s, %s, line %d]\n",
+    megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to find module in stock: '%s'. [%s, %s, line %d]\n",
         module_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
     return GUI_INVALID_ID;
 }
@@ -2109,14 +2116,14 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
                 }
 
 #ifdef GUI_VERBOSE
-                vislib::sys::Log::DefaultLog.WriteInfo(
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                     "[Configurator] Deleted module '%s' (uid %i) from  project '%s'.\n", (*iter)->class_name.c_str(),
                     (*iter)->uid, this->name.c_str());
 #endif // GUI_VERBOSE
 
                 // 5) Delete module
                 if ((*iter).use_count() > 1) {
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Unclean deletion. Found %i references pointing to module. [%s, %s, line %d]\n",
                         (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 }
@@ -2135,15 +2142,17 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
         }
 
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
-    vislib::sys::Log::DefaultLog.WriteWarn("Invalid module uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+        "Invalid module uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
 
@@ -2167,7 +2176,8 @@ bool megamol::gui::Graph::AddCall(const CallStockVectorType& stock_calls, ImGuiI
     try {
         if ((slot_1_uid == GUI_INVALID_ID) || (slot_2_uid == GUI_INVALID_ID)) {
 #ifdef GUI_VERBOSE
-            /// vislib::sys::Log::DefaultLog.WriteError("Invalid slot uid given. [%s, %s, line %d]\n", __FILE__,
+            /// megamol::core::utility::log::Log::DefaultLog.WriteError("Invalid slot uid given. [%s, %s, line %d]\n",
+            /// __FILE__,
             /// __FUNCTION__,
             /// __LINE__);
 #endif // GUI_VERBOSE
@@ -2255,11 +2265,12 @@ bool megamol::gui::Graph::AddCall(const CallStockVectorType& stock_calls, ImGuiI
             }
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -2272,7 +2283,7 @@ bool megamol::gui::Graph::AddCall(
 
     try {
         if ((callslot_1 == nullptr) || (callslot_2 == nullptr)) {
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
@@ -2281,7 +2292,7 @@ bool megamol::gui::Graph::AddCall(
         }
         auto compat_idx = CallSlot::GetCompatibleCallIndex(callslot_1, callslot_2);
         if (compat_idx == GUI_INVALID_ID) {
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "Unable to find index of compatible call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
@@ -2297,11 +2308,12 @@ bool megamol::gui::Graph::AddCall(
         return this->AddCall(call_ptr, callslot_1, callslot_2);
 
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 }
@@ -2310,12 +2322,12 @@ bool megamol::gui::Graph::AddCall(
 bool megamol::gui::Graph::AddCall(CallPtrType& call_ptr, CallSlotPtrType callslot_1, CallSlotPtrType callslot_2) {
 
     if (call_ptr == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Pointer to call is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if ((callslot_1 == nullptr) || (callslot_2 == nullptr)) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -2347,8 +2359,9 @@ bool megamol::gui::Graph::AddCall(CallPtrType& call_ptr, CallSlotPtrType callslo
         this->ForceSetDirty();
 
 #ifdef GUI_VERBOSE
-        vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Added call '%s' (uid %i) to project '%s'.\n",
-            call_ptr->class_name.c_str(), call_ptr->uid, this->name.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "[Configurator] Added call '%s' (uid %i) to project '%s'.\n", call_ptr->class_name.c_str(), call_ptr->uid,
+            this->name.c_str());
 #endif // GUI_VERBOSE
 
         // Add connected call slots to interface of group of the parent module
@@ -2378,7 +2391,7 @@ bool megamol::gui::Graph::AddCall(CallPtrType& call_ptr, CallSlotPtrType callslo
         return true;
     } else {
         this->DeleteCall(call_ptr->uid);
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Unable to create call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -2448,12 +2461,12 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
                     (*iter)->DisconnectCallSlots();
 
                     if ((*iter).use_count() > 1) {
-                        vislib::sys::Log::DefaultLog.WriteError(
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "Unclean deletion. Found %i references pointing to call. [%s, %s, line %d]\n",
                             (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                     }
 #ifdef GUI_VERBOSE
-                    vislib::sys::Log::DefaultLog.WriteInfo(
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                         "[Configurator] Deleted call '%s' (uid %i) from  project '%s'.\n", (*iter)->class_name.c_str(),
                         (*iter)->uid, this->name.c_str());
 #endif // GUI_VERBOSE
@@ -2466,11 +2479,12 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
             }
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return true;
@@ -2487,17 +2501,19 @@ ImGuiID megamol::gui::Graph::AddGroup(const std::string& group_name) {
         this->ForceSetDirty();
 
 #ifdef GUI_VERBOSE
-        vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Added group '%s' (uid %i) to project '%s'.\n",
-            group_ptr->name.c_str(), group_ptr->uid, this->name.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "[Configurator] Added group '%s' (uid %i) to project '%s'.\n", group_ptr->name.c_str(), group_ptr->uid,
+            this->name.c_str());
 #endif // GUI_VERBOSE
         return group_id;
 
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     }
 
@@ -2528,12 +2544,12 @@ bool megamol::gui::Graph::DeleteGroup(ImGuiID group_uid) {
                 this->present.ResetStatePointers();
 
                 if ((*iter).use_count() > 1) {
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Unclean deletion. Found %i references pointing to group. [%s, %s, line %d]\n",
                         (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 }
 #ifdef GUI_VERBOSE
-                vislib::sys::Log::DefaultLog.WriteInfo(
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                     "[Configurator] Deleted group '%s' (uid %i) from  project '%s'.\n", (*iter)->name.c_str(),
                     (*iter)->uid, this->name.c_str());
 #endif // GUI_VERBOSE
@@ -2547,15 +2563,17 @@ bool megamol::gui::Graph::DeleteGroup(ImGuiID group_uid) {
             }
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
-    vislib::sys::Log::DefaultLog.WriteWarn("Invalid group uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+        "Invalid group uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
 
@@ -2587,11 +2605,12 @@ ImGuiID megamol::gui::Graph::AddGroupModule(const std::string& group_name, const
             }
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     }
 
@@ -2639,11 +2658,12 @@ bool megamol::gui::Graph::delete_disconnected_calls(void) {
             }
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 

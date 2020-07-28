@@ -9,7 +9,7 @@ using namespace megamol;
 using namespace megamol::infovis;
 using namespace megamol::stdplugin::datatools;
 
-using vislib::sys::Log;
+using megamol::core::utility::log::Log;
 
 HistogramRenderer2D::HistogramRenderer2D()
     : Renderer2D()
@@ -224,20 +224,20 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
     }
     auto tfCall = this->transferFunctionCallerSlot.CallAs<core::view::CallGetTransferFunction>();
     if (tfCall == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "HistogramRenderer2D requires a transfer function!");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "HistogramRenderer2D requires a transfer function!");
         return false;
     }
     auto readFlagsCall = this->flagStorageReadCallerSlot.CallAs<core::FlagCallRead_GL>();
     if (readFlagsCall == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "HistogramRenderer2D requires a read flag storage!");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "HistogramRenderer2D requires a read flag storage!");
         return false;
     }
     auto writeFlagsCall = this->flagStorageWriteCallerSlot.CallAs<core::FlagCallWrite_GL>();
     if (writeFlagsCall == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "HistogramRenderer2D requires a write flag storage!");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "HistogramRenderer2D requires a write flag storage!");
         return false;
     }
 
@@ -279,7 +279,8 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
 
     auto binsParam = static_cast<size_t>(this->numberOfBinsParam.Param<core::param::IntParam>()->Value());
     if (dataChanged || readFlagsCall->hasUpdate() || this->bins != binsParam) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Calculate Histogram");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_INFO, "Calculate Histogram");
 
         this->bins = binsParam;
 

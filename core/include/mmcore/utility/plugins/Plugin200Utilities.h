@@ -93,8 +93,6 @@ namespace plugins {
     ci->libs_cnt = 0; \
     delete ci;
 
-#include "vislib/sys/Log.h"
-
 /*
  * Usage
  * class plugin_instance : public Plugin200Instance {
@@ -103,18 +101,8 @@ namespace plugins {
  *     ...
  * };
  */
-#define MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics \
-    virtual void connectStatics(StaticConnectorType which, void* value) { \
-        switch (which) { \
-            case StaticConnectorType::Log: \
-                vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(nullptr), false); \
-                vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_NONE); \
-                vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(static_cast<vislib::sys::Log*>(value))); \
-                vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL); \
-                vislib::sys::Log::DefaultLog.EchoOfflineMessages(true); \
-                break; \
-        } \
-    }
+#define MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics                                              \
+    virtual void connectStatics(StaticConnectorType which, void* value) {}
 
 #include "vislib/Exception.h"
 #include <exception>

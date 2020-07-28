@@ -9,7 +9,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/ModuleNamespace.h"
 #include "vislib/sys/AutoLock.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;
 
@@ -102,7 +102,7 @@ void JobInstance::ClearCleanupMark(void) {
 void JobInstance::PerformCleanup(void) {
     if (this->CleanupMark()) {
         // this should never happen!
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
             "Internal Error: JobInstance marked for cleanup.\n");
     }
     ModuleNamespace::PerformCleanup();

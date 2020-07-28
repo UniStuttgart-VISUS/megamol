@@ -65,7 +65,7 @@ Plugin200Instance::ptr_type PluginManager::LoadPlugin(
     //plugin->store_lib(lib); // TODO update for static plugins
 
     // report success
-    coreInst.Log().WriteInfo("Plugin %s loaded: %u Modules, %u Calls",
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Plugin %s loaded: %u Modules, %u Calls",
                              plugin->GetAssemblyName().c_str(),
                              plugin->GetModuleDescriptionManager().Count(),
                              plugin->GetCallDescriptionManager().Count());

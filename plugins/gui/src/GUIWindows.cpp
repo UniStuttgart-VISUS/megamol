@@ -87,7 +87,7 @@ GUIWindows::~GUIWindows() { this->destroyContext(); }
 bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 
     if (instance == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -109,18 +109,18 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceTime) {
 
     if (this->api == GUIImGuiAPI::NONE) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if (this->context == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if (this->core_instance == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
@@ -153,7 +153,7 @@ bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceT
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
 
     if ((instanceTime - this->state.last_instance_time) < 0.0) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
             __LINE__);
     }
@@ -205,20 +205,20 @@ bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceT
 bool GUIWindows::PostDraw(void) {
 
     if (this->api == GUIImGuiAPI::NONE) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
     if (ImGui::GetCurrentContext() != this->context) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Unknown ImGui context ... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     ImGui::SetCurrentContext(this->context);
     if (this->context == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -249,7 +249,7 @@ bool GUIWindows::PostDraw(void) {
                     }
                 }
                 if (this->state.font_index == GUI_INVALID_ID) {
-                    vislib::sys::Log::DefaultLog.WriteWarn(
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                         "Could not find font '%s' for loaded state. [%s, %s, line %d]\n", wc.font_name.c_str(),
                         __FILE__, __FUNCTION__, __LINE__);
                 }
@@ -332,7 +332,7 @@ bool GUIWindows::PostDraw(void) {
             if (cb) {
                 cb(wc);
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Missing valid callback for WindowDrawCallback: '%d'. [%s, %s, line %d]\n", (int)wc.win_callback,
                     __FILE__, __FUNCTION__, __LINE__);
             }
@@ -634,7 +634,7 @@ bool GUIWindows::createContext(void) {
 
     // Check for successfully created tf editor
     if (this->tf_editor_ptr == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Pointer to transfer function editor is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -650,7 +650,7 @@ bool GUIWindows::createContext(void) {
     IMGUI_CHECKVERSION();
     this->context = ImGui::CreateContext(current_fonts);
     if (this->context == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to create ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -797,7 +797,7 @@ bool GUIWindows::createContext(void) {
                 }
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
         // Configurator Graph Font: Add default font at first n indices for exclusive use in configurator graph.
@@ -1211,9 +1211,10 @@ void GUIWindows::drawFpsWindowCallback(WindowManager::WindowConfiguration& wc) {
 #elif _WIN32
             ImGui::SetClipboardText(overlay.c_str());
 #else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Current Performance Monitor Value:\n%s", overlay.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[GUI] Current Performance Monitor Value:\n%s", overlay.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1231,9 +1232,10 @@ void GUIWindows::drawFpsWindowCallback(WindowManager::WindowConfiguration& wc) {
 #elif _WIN32
             ImGui::SetClipboardText(stream.str().c_str());
 #else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] All Performance Monitor Values:\n%s", stream.str().c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[GUI] All Performance Monitor Values:\n%s", stream.str().c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1379,9 +1381,9 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
 #elif _WIN32
             ImGui::SetClipboardText(eMail.c_str());
 #else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] E-Mail address:\n%s", eMail.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] E-Mail address:\n%s", eMail.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1395,9 +1397,9 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
 #elif _WIN32
             ImGui::SetClipboardText(webLink.c_str());
 #else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Website link:\n%s", webLink.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Website link:\n%s", webLink.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1410,9 +1412,9 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
 #elif _WIN32
             ImGui::SetClipboardText(gitLink.c_str());
 #else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] GitHub link:\n%s", gitLink.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] GitHub link:\n%s", gitLink.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1528,7 +1530,7 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
                         if (!found) {
                             hotkeylist.emplace_back(keyCode);
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteWarn(
+                            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                                 "The hotkey [%s] of the parameter \"%s\" has already been assigned. "
                                 ">>> If this hotkey is pressed, there will be no effect on this parameter!",
                                 keyCode.ToString().c_str(), param.full_name.c_str());
@@ -1557,11 +1559,11 @@ void megamol::gui::GUIWindows::shutdown(void) {
 
     if (this->core_instance != nullptr) {
 #ifdef GUI_VERBOSE
-        vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Shutdown MegaMol instance.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Shutdown MegaMol instance.");
 #endif // GUI_VERBOSE
         this->core_instance->Shutdown();
     } else {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 }
@@ -1621,7 +1623,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
         nlohmann::json json;
         json = nlohmann::json::parse(in_json_string);
         if (!json.is_object()) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
@@ -1635,7 +1637,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
                 if (gui_state.at("menu_visible").is_boolean()) {
                     gui_state.at("menu_visible").get_to(this->state.menu_visible);
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "JSON state: Failed to read 'menu_visible' as boolean. [%s, %s, line %d]\n", __FILE__,
                         __FUNCTION__, __LINE__);
                 }
@@ -1644,7 +1646,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
                     gui_state.at("project_file").get_to(this->state.project_file);
                     GUIUtils::Utf8Decode(this->state.project_file);
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "JSON state: Failed to read 'project_file' as string. [%s, %s, line %d]\n", __FILE__,
                         __FUNCTION__, __LINE__);
                 }
@@ -1653,32 +1655,32 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
 
         if (found_gui) {
 #ifdef GUI_VERBOSE
-            vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Read gui state from JSON string.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Read gui state from JSON string.");
 #endif // GUI_VERBOSE
         } else {
-            /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find gui state in JSON. [%s, %s, line
+            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Could not find gui state in JSON. [%s, %s, line
             /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
     } catch (nlohmann::json::type_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::invalid_iterator& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::out_of_range& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::other_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -1709,27 +1711,27 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_to_json(nlohmann::json& 
         }
 
 #ifdef GUI_VERBOSE
-        vislib::sys::Log::DefaultLog.WriteInfo("[GUI] Wrote parameter state to JSON.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote parameter state to JSON.");
 #endif // GUI_VERBOSE
 
     } catch (nlohmann::json::type_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::invalid_iterator& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::out_of_range& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::other_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }

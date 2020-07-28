@@ -38,7 +38,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "RMS.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <ctime>
 
 
@@ -57,6 +57,7 @@ using namespace megamol;
 using namespace megamol::protein_cuda;
 using namespace megamol::core;
 using namespace megamol::protein_calls;
+using namespace megamol::core::utility::log;
 
 // TODO Make diagram renderer react to singleFrame-parameter
 
@@ -671,7 +672,6 @@ bool ProteinVariantMatch::computeDensityMap(
 
     this->atomPosTmp.Validate(atomCnt*4);
 
-    using namespace vislib::sys;
     using namespace vislib::math;
 
     float gridXAxisLen, gridYAxisLen, gridZAxisLen;
@@ -839,8 +839,6 @@ bool ProteinVariantMatch::computeMatch(param::ParamSlot& p) {
  * ProteinVariantMatch::computeMatchSurfMapping
  */
 bool ProteinVariantMatch::computeMatchSurfMapping() {
-    using namespace vislib::sys;
-
     unsigned int posCnt0, posCnt1;
     this->minMatchSurfacePotentialVal = 1000000.0f;
     this->maxMatchSurfacePotentialVal = 0.0f;
@@ -1833,7 +1831,7 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
     }
 
 #if defined(USE_TIMER)
-    vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_INFO,
             "%s: time for matching surfaces of %u variants %f sec", this->ClassName(),
             this->nVariants,(double(clock()-t)/double(CLOCKS_PER_SEC)));
 #endif // defined(USE_TIMER)
@@ -1926,8 +1924,6 @@ bool ProteinVariantMatch::getRMSPosArray(
         MolecularDataCall *mol,
         HostArr<float> &posArr,
         unsigned int &cnt) {
-    using namespace vislib::sys;
-
     cnt = 0;
 
     // Use all particles for RMS fitting

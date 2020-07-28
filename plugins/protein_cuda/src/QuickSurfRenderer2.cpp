@@ -30,7 +30,7 @@
 #include "vislib/Trace.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
@@ -42,6 +42,7 @@ using namespace megamol::core;
 using namespace megamol::protein_cuda;
 using namespace megamol::core::moldyn;
 using namespace megamol::protein_calls;
+using namespace megamol::core::utility::log;
 
 
 /*
@@ -201,7 +202,6 @@ bool QuickSurfRenderer2::create(void) {
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
-    using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
     ShaderSource vertSrc;

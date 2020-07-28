@@ -15,7 +15,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "omp.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #define _USE_MATH_DEFINES
 #include <chrono>
 #include <functional>
@@ -145,7 +145,7 @@ bool datatools::ParticlesToDensity::getExtentCallback(megamol::core::Call& c) {
     // if (!this->assertData(inMpdc, outDpdc)) return false;
     inMpdc->SetFrameID(out->FrameID(), true);
     if (!(*inMpdc)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "ParticlesToDensity: could not get current frame extents (%u)", time - 1);
         return false;
     }
@@ -169,11 +169,11 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
 
     inMpdc->SetFrameID(outVol->FrameID(), true);
     if (!(*inMpdc)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get extents.");
         return false;
     }
     if (!(*inMpdc)(0)) {
-        vislib::sys::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get data.");
         return false;
     }
     if (this->time != inMpdc->FrameID() || this->in_datahash != inMpdc->DataHash() || this->anythingDirty()) {
@@ -241,7 +241,7 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
  */
 bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn::MultiParticleDataCall* c2) {
 
-    vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: starting volume creation");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ParticlesToDensity: starting volume creation");
     const auto startTime = std::chrono::high_resolution_clock::now();
     size_t totalParticles = 0;
 
@@ -426,7 +426,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 
     maxDens = *std::max_element(vol[0].begin(), vol[0].end());
     minDens = *std::min_element(vol[0].begin(), vol[0].end());
-    vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Captured density %f -> %f", minDens, maxDens);
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ParticlesToDensity: Captured density %f -> %f", minDens, maxDens);
 
     if (this->normalizeSlot.Param<core::param::BoolParam>()->Value()) {
         auto const rcpValRange = 1.0f / (maxDens - minDens);
@@ -441,7 +441,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     std::ofstream raw_file{"bolla.raw", std::ios::binary};
     raw_file.write(reinterpret_cast<char const*>(vol[0].data()), vol[0].size() * sizeof(float));
     raw_file.close();
-    vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Debug file written\n");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ParticlesToDensity: Debug file written\n");
 #endif
 
     // Cleanup
@@ -449,7 +449,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 
     const auto endTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float, std::milli> diffMillis = endTime - startTime;
-    vislib::sys::Log::DefaultLog.WriteInfo(
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         "ParticlesToDensity: creation of %u x %u x %u volume from %llu particles took %f ms.", sx, sy, sz,
         totalParticles, diffMillis.count());
 

@@ -13,7 +13,7 @@
 
 #include "mmcore/view/Input.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <queue>
@@ -128,7 +128,7 @@ private:
     inline void check_opengl_errors(void) const {
         auto err = glGetError();
         if (err != 0) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "OpenGL Error: %i. [%s, %s, line %d]\n", err, __FILE__, __FUNCTION__, __LINE__);
         }
     }

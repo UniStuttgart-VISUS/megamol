@@ -12,7 +12,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/Call.h"
 
 #include "mmcore/view/CallGetTransferFunction.h"
@@ -105,7 +105,7 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
     } else if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
         vertexLength = 4;
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("[OSPRaySphereGeometry] Vertex type not supported.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[OSPRaySphereGeometry] Vertex type not supported.");
         return false;
     }
     // reserve space for vertex data object
@@ -222,7 +222,7 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
             }*/
         }
     } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB) {
-        //vislib::sys::Log::DefaultLog.WriteError("File format deprecated. Convert your data.");
+        //megamol::core::utility::log::Log::DefaultLog.WriteError("File format deprecated. Convert your data.");
         colorLength = 4;
         //convertedColorType = OSP_FLOAT4;
         cd_rgba.reserve(parts.GetCount() * colorLength);

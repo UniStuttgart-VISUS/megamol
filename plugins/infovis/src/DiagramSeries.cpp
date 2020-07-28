@@ -5,6 +5,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
+#include "vislib/StringConverter.h"
 
 using namespace megamol::infovis;
 using namespace megamol::stdplugin::datatools;

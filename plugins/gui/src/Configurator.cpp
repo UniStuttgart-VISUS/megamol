@@ -77,12 +77,12 @@ bool megamol::gui::Configurator::Draw(
     WindowManager::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if (ImGui::GetCurrentContext() == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -194,7 +194,7 @@ void megamol::gui::Configurator::UpdateStateParameter(void) {
 void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
@@ -265,9 +265,10 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
 #elif _WIN32
                 ImGui::SetClipboardText(docu_link.c_str());
 #else // LINUX
-                vislib::sys::Log::DefaultLog.WriteWarn(
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Readme Link:\n%s", docu_link.c_str());
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                    "[Configurator] Readme Link:\n%s", docu_link.c_str());
 #endif
             }
             ImGui::EndMenu();
@@ -439,7 +440,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
                     }
                     this->show_module_list_child = false;
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "No project loaded. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 }
             }
@@ -472,16 +473,16 @@ void megamol::gui::Configurator::add_empty_project(void) {
                 auto graph_module = graph_ptr->GetModules().back();
                 graph_module->is_view_instance = true;
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Unable to add initial gui view module: '%s'. [%s, %s, line %d]\n", guiview_class_name.c_str(),
                     __FILE__, __FUNCTION__, __LINE__);
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to get last added graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     } else {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 }
@@ -500,7 +501,7 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
         json = nlohmann::json::parse(in_json_string);
 
         if (!json.is_object()) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
@@ -514,7 +515,7 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
                 if (config_state.at("show_module_list_sidebar").is_boolean()) {
                     config_state.at("show_module_list_sidebar").get_to(this->show_module_list_sidebar);
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "JSON state: Failed to read 'show_module_list_sidebar' as boolean. [%s, %s, line %d]\n",
                         __FILE__, __FUNCTION__, __LINE__);
                 }
@@ -523,8 +524,9 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
                 if (config_state.at("module_list_sidebar_width").is_number_float()) {
                     config_state.at("module_list_sidebar_width").get_to(this->module_list_sidebar_width);
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteError("JSON state: Failed to read first value of "
-                                                            "'module_list_sidebar_width' as float. [%s, %s, line %d]\n",
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "JSON state: Failed to read first value of "
+                        "'module_list_sidebar_width' as float. [%s, %s, line %d]\n",
                         __FILE__, __FUNCTION__, __LINE__);
                 }
 
@@ -551,34 +553,35 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
 
         if (found) {
 #ifdef GUI_VERBOSE
-            vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Read configurator state from JSON string.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[Configurator] Read configurator state from JSON string.");
 #endif // GUI_VERBOSE
         } else {
 #ifdef GUI_VERBOSE
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "Could not find configurator state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 #endif // GUI_VERBOSE
             return false;
         }
 
     } catch (nlohmann::json::type_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::invalid_iterator& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::out_of_range& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::other_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -600,27 +603,27 @@ bool megamol::gui::Configurator::configurator_state_to_json(nlohmann::json& out_
             graph_ptr->GUIStateToJSON(out_json);
         }
 #ifdef GUI_VERBOSE
-        vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Wrote configurator state to JSON.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[Configurator] Wrote configurator state to JSON.");
 #endif // GUI_VERBOSE
 
     } catch (nlohmann::json::type_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::invalid_iterator& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::out_of_range& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::other_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }

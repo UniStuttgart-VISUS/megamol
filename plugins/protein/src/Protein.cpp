@@ -99,7 +99,7 @@
 #include "vislib/vislibversion.h"
 
 #include "vislib/Trace.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol::protein {
 /** Implementing the instance class of this plugin */

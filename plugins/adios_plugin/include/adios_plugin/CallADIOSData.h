@@ -12,7 +12,7 @@
 #include <vector>
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol {
 namespace adios {

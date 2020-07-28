@@ -153,7 +153,7 @@ void io::XYZLoader::assertData(void) {
 
     vislib::sys::FastFile file;
     if (!file.Open(filenameSlot.Param<core::param::FilePathParam>()->Value(), vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        GetCoreInstance()->Log().WriteError("Unable to open file \"%s\"", vislib::StringA(filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open file \"%s\"", vislib::StringA(filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
         return;
     }
     vislib::sys::TextFileReader reader(&file);
@@ -168,7 +168,7 @@ void io::XYZLoader::assertData(void) {
         try {
             partCnt = static_cast<size_t>(vislib::CharTraitsA::ParseUInt64(l.PeekBuffer()));
         } catch (...) {
-            GetCoreInstance()->Log().WriteWarn("Unable to parse atom count from first line in \"%s\"",
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("Unable to parse atom count from first line in \"%s\"",
                 vislib::StringA(filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
         }
     }
@@ -190,17 +190,17 @@ void io::XYZLoader::assertData(void) {
         vislib::Array<vislib::StringA> parts(vislib::StringTokeniserA::Split(l, ' ', true));
         if (parts.Count() != (hasEl ? 4 : 3)) {
             if (warning) {
-                GetCoreInstance()->Log().WriteWarn("Problem parsing \"%s\":",
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("Problem parsing \"%s\":",
                     vislib::StringA(filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
                 warning = false;
             }
         }
         if (parts.Count() < (hasEl ? 4 : 3)) {
-            GetCoreInstance()->Log().WriteError("Line %u has too few tokens; line will be ignored", lineNum);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Line %u has too few tokens; line will be ignored", lineNum);
             continue;
         }
         if (parts.Count() > (hasEl ? 4 : 3)) {
-            GetCoreInstance()->Log().WriteWarn("Line %u has too many tokens; trailing tokens will be ignored", lineNum);
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("Line %u has too many tokens; trailing tokens will be ignored", lineNum);
         }
         std::string el = (hasEl && grpEl) ? parts[0].PeekBuffer() : "";
         int o = hasEl ? 1 : 0;
@@ -212,11 +212,11 @@ void io::XYZLoader::assertData(void) {
             z = static_cast<float>(vislib::CharTraitsA::ParseDouble(parts[o + 2]));
         } catch (...) {
             if (warning) {
-                GetCoreInstance()->Log().WriteWarn("Problem parsing \"%s\":",
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("Problem parsing \"%s\":",
                     vislib::StringA(filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
                 warning = false;
             }
-            GetCoreInstance()->Log().WriteError("Failed to parse coordinates at line %u: (%f, %f, %f); line will be ignored", lineNum, x, y, z);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to parse coordinates at line %u: (%f, %f, %f); line will be ignored", lineNum, x, y, z);
             continue;
         }
 

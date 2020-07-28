@@ -14,7 +14,7 @@
 #include "AbstractParam.h"
 
 #include "vislib/String.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "json.hpp"
 

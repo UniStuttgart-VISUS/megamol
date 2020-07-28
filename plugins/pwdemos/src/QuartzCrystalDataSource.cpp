@@ -7,9 +7,9 @@
 #include "stdafx.h"
 #include "QuartzCrystalDataSource.h"
 #include "mmcore/param/FilePathParam.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/CharTraits.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/Vector.h"
 
@@ -83,7 +83,7 @@ void CrystalDataSource::release(void) {
  * CrystalDataSource::loadFile
  */
 void CrystalDataSource::loadFile(const vislib::TString& filename) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::sys::ASCIIFileBuffer file(vislib::sys::ASCIIFileBuffer::PARSING_WORDS);
     if (!file.LoadFile(filename)) {
         Log::DefaultLog.WriteError("Unable to read file \"%s\"", vislib::StringA(filename).PeekBuffer());

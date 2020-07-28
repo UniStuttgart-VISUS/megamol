@@ -53,7 +53,6 @@
 #include "mmcore/factories/ModuleAutoDescription.h"
 #include "vislib/vislibversion.h"
 
-#include "vislib/sys/Log.h"
 #include "vislib/Trace.h"
 
 namespace megamol::protein_cuda {

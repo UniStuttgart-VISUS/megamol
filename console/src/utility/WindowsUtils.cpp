@@ -8,7 +8,7 @@
 #ifdef _WIN32
 #include "utility/WindowsUtils.h"
 #include "vislib/String.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/VersionNumber.h"
 #include <strsafe.h>
 #include <iostream>

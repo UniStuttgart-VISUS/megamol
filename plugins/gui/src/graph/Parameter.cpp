@@ -46,7 +46,7 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
     bool retval = false;
 
     if (ImGui::GetCurrentContext() == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -132,11 +132,12 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
         ImGui::PopID();
 
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -654,7 +655,8 @@ bool megamol::gui::ParameterPresentation::present_parameter(
     std::visit(visitor, inout_parameter.GetValue());
 
     if (error) {
-        vislib::sys::Log::DefaultLog.WriteError("No widget presentation '%s' available for '%s' . [%s, %s, line %d]\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "No widget presentation '%s' available for '%s' . [%s, %s, line %d]\n",
             this->GetPresentationName(this->GetGUIPresentation()).c_str(),
             megamol::core::param::AbstractParamPresentation::GetTypeName(inout_parameter.type).c_str(), __FILE__,
             __FUNCTION__, __LINE__);
@@ -1089,7 +1091,7 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
 
     if (this->use_external_tf_editor) {
         if (this->tf_editor_external_ptr == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Pointer to external transfer function editor is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                 __LINE__);
             return false;
@@ -1181,9 +1183,10 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
 #elif _WIN32
             ImGui::SetClipboardText(value.c_str());
 #else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Transfer Function JSON String:\n%s", value.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[Configurator] Transfer Function JSON String:\n%s", value.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1196,7 +1199,7 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
 #elif _WIN32
             inout_parameter.SetValue(std::string(ImGui::GetClipboardText()));
 #else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 #endif
             value = std::get<std::string>(inout_parameter.GetValue());
@@ -1651,8 +1654,9 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
         auto maxval = p_ptr->MaxValue();
         out_param.maxval = glm::vec4(maxval.X(), maxval.Y(), maxval.Z(), maxval.W());
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("Found unknown parameter type. Please extend parameter types "
-                                                "for the configurator. [%s, %s, line %d]\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Found unknown parameter type. Please extend parameter types "
+            "for the configurator. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         out_param.type = ParamType::UNKNOWN;
         return false;
@@ -1746,7 +1750,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
             std::monostate(), std::monostate());
         out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val);
     } else {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Found unknown parameter type. Please extend parameter types for the configurator. "
             "[%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
@@ -1890,7 +1894,7 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
             type_error = true;
         }
     } else {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Found unknown parameter type. Please extend parameter types for the configurator. "
             "[%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
@@ -1898,7 +1902,7 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
     }
 
     if (type_error) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Mismatch of parameter types. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -2037,7 +2041,7 @@ bool megamol::gui::Parameter::WriteCoreParameterValue(
             type_error = true;
         }
     } else {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Found unknown parameter type. Please extend parameter types for the configurator. "
             "[%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
@@ -2045,7 +2049,7 @@ bool megamol::gui::Parameter::WriteCoreParameterValue(
     }
 
     if (type_error) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Mismatch of parameter types. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }

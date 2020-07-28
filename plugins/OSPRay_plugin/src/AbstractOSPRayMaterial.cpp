@@ -7,7 +7,7 @@
 #include "stdafx.h"
 #include "AbstractOSPRayMaterial.h"
 #include "OSPRay_plugin/CallOSPRayMaterial.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 
