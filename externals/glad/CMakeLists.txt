@@ -45,32 +45,3 @@ install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/)
 install(EXPORT gladConfig DESTINATION share/glad/cmake)
 
 export(TARGETS ${PROJECT_NAME} FILE gladConfig.cmake)
-
-# set_target_properties(glad PROPERTIES LINKER_LANGUAGE C)
-# set_target_properties(glad PROPERTIES PUBLIC_HEADER ${header_files})
-# 
-# target_compile_definitions(glad 
-#   PUBLIC GLAD_GLAPI_EXPORT_BUILD
-#   PUBLIC GLAD_GLAPI_EXPORT)
-# 
-# #set_target_properties(glad PROPERTIES INTERFACE_COMPILE_DEFINITIONS "GLAD_GLAPI_EXPORT_BUILD" "GLAD_GLAPI_EXPORT")
-# 
-# target_include_directories(glad 
-#   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src"
-#   $<INSTALL_INTERFACE:include>)
-# 
-# target_link_libraries(glad PRIVATE ${OPENGL_LIBRARIES})
-# 
-# include(GNUInstallDirs)
-# 
-# install(TARGETS glad
-#     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-# 
-# # Installation rules for generated files
-# if(WIN32)
-#   install(TARGETS glad RUNTIME DESTINATION "bin")
-#   install(TARGETS glad ARCHIVE DESTINATION "lib")
-# else()
-#   install(TARGETS glad DESTINATION "lib" EXPORT glad-target)
-# endif()
