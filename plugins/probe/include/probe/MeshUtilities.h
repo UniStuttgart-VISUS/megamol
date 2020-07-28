@@ -12,7 +12,6 @@
 #include "igl/lscm.h"
 #include "mesh/MeshCalls.h"
 #include "nanoflann.hpp"
-#include "vislib/sys/Log.h"
 
 namespace megamol {
 namespace probe {
@@ -129,7 +128,7 @@ public:
     float calcTriangleArea(uint32_t idx) {
 
         if (idx >= this->_faces.rows()) {
-            vislib::sys::Log::DefaultLog.WriteError("[MeshUtility] Id is out of range");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[MeshUtility] Id is out of range");
             return -1;
         }
 
@@ -547,7 +546,8 @@ private:
 
     void buildKDTree(const mesh::MeshDataAccessCollection::VertexAttribute* pos_attr) {
         if (this->_mesh.attributes[_pos_attribute_idx].data == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError("[MeshUtility] Cannot construct KD Tree. No mesh set.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[MeshUtility] Cannot construct KD Tree. No mesh set.");
             return;
         }
 

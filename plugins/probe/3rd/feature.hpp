@@ -92,14 +92,16 @@ pcl::Feature<PointInT, PointOutT>::initCompute ()
 {
   if (!PCLBase<PointInT>::initCompute ())
   {
-    vislib::sys::Log::DefaultLog.WriteError ("[pcl::%s::initCompute] Init failed.\n", getClassName ().c_str ());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[pcl::%s::initCompute] Init failed.\n", getClassName().c_str());
     return (false);
   }
 
   // If the dataset is empty, just return
   if (input_->points.empty ())
   {
-    vislib::sys::Log::DefaultLog.WriteError ("[pcl::%s::compute] input_ is empty!\n", getClassName ().c_str ());
+      megamol::core::utility::log::Log::DefaultLog.WriteError(
+          "[pcl::%s::compute] input_ is empty!\n", getClassName().c_str());
     // Cleanup
     deinitCompute ();
     return (false);
@@ -130,9 +132,9 @@ pcl::Feature<PointInT, PointOutT>::initCompute ()
   {
     if (k_ != 0)
     {
-      vislib::sys::Log::DefaultLog.WriteError ("[pcl::%s::compute] ", getClassName ().c_str ());
-      vislib::sys::Log::DefaultLog.WriteError ("Both radius (%f) and K (%d) defined! ", search_radius_, k_);
-      vislib::sys::Log::DefaultLog.WriteError ("Set one of them to zero first and then re-run compute ().\n");
+      megamol::core::utility::log::Log::DefaultLog.WriteError ("[pcl::%s::compute] ", getClassName ().c_str ());
+      megamol::core::utility::log::Log::DefaultLog.WriteError ("Both radius (%f) and K (%d) defined! ", search_radius_, k_);
+      megamol::core::utility::log::Log::DefaultLog.WriteError ("Set one of them to zero first and then re-run compute ().\n");
       // Cleanup
       deinitCompute ();
       return (false);
@@ -162,8 +164,8 @@ pcl::Feature<PointInT, PointOutT>::initCompute ()
     }
     else
     {
-      vislib::sys::Log::DefaultLog.WriteError ("[pcl::%s::compute] Neither radius nor K defined! ", getClassName ().c_str ());
-      vislib::sys::Log::DefaultLog.WriteError ("Set one of them to a positive number first and then re-run compute ().\n");
+      megamol::core::utility::log::Log::DefaultLog.WriteError ("[pcl::%s::compute] Neither radius nor K defined! ", getClassName ().c_str ());
+      megamol::core::utility::log::Log::DefaultLog.WriteError ("Set one of them to a positive number first and then re-run compute ().\n");
       // Cleanup
       deinitCompute ();
       return (false);
