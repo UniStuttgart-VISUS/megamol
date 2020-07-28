@@ -275,13 +275,13 @@ void pcl::Poisson<PointNT>::execute(poisson::CoredVectorMeshData& mesh, poisson:
 
 
     if (solver_divide_ < min_depth_) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[pcl::Poisson] solver_divide_ must be at least as large as min_depth_: %d >= %d\n", solver_divide_,
             min_depth_);
         solver_divide_ = min_depth_;
     }
     if (iso_divide_ < min_depth_) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[pcl::Poisson] iso_divide_ must be at least as large as min_depth_: %d >= %d\n", iso_divide_, min_depth_);
         iso_divide_ = min_depth_;
     }
@@ -345,7 +345,9 @@ void pcl::Poisson<PointNT>::performReconstruction(
         execute<5>(mesh, center, scale);
         break;
     }
-    default: { vislib::sys::Log::DefaultLog.WriteError("Degree %d not supported\n", degree_); }
+    default: {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Degree %d not supported\n", degree_);
+    }
     }
 
     // Write output PolygonMesh

@@ -12,6 +12,7 @@
 #include <tuple>
 #include <vector>
 #include "blend2d.h"
+#include "mmcore/utility/log/Log.h"
 
 
 namespace megamol {
@@ -89,7 +90,8 @@ template <typename T> uint8_t* DrawTextureUtility::draw(std::vector<T>& data, T 
 
     // extract image
     if (_img.getData(&this->_img_data) != BL_SUCCESS) {
-        vislib::sys::Log::DefaultLog.WriteError("[DrawTextureUtility] Could not receive image data from blend2d.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[DrawTextureUtility] Could not receive image data from blend2d.");
     }
 
     this->_pixel_data = reinterpret_cast<uint8_t*>(this->_img_data.pixelData);
@@ -119,7 +121,8 @@ inline uint8_t* DrawTextureUtility::draw(std::vector<T>& data, std::array<float,
 
     // extract image
     if (_img.getData(&this->_img_data) != BL_SUCCESS) {
-        vislib::sys::Log::DefaultLog.WriteError("[DrawTextureUtility] Could not receive image data from blend2d.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[DrawTextureUtility] Could not receive image data from blend2d.");
     }
 
     this->_pixel_data = reinterpret_cast<uint8_t*>(this->_img_data.pixelData);
