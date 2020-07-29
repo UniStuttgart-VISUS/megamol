@@ -24,21 +24,12 @@ ospray::PkdBuilder::~PkdBuilder() { Release(); }
 bool ospray::PkdBuilder::manipulateData(
     core::moldyn::MultiParticleDataCall& outData, core::moldyn::MultiParticleDataCall& inData) {
 
-    if ((inData.DataHash() != inDataHash) || (inData.FrameID() != frameID) || (inData.DataHash() == 0)) {
+    if ((inData.DataHash() != inDataHash) || (inData.FrameID() != frameID)) {
         inDataHash = inData.DataHash();
         //outDataHash++;
         frameID = inData.FrameID();
 
-
-        // outData = inData;
-
-        outData.SetFrameID(frameID);
-        outData.SetDataHash(inDataHash);
-        outData.SetParticleListCount(inData.GetParticleListCount());
-        outData.AccessBoundingBoxes().SetObjectSpaceBBox(inData.AccessBoundingBoxes().ObjectSpaceBBox());
-        outData.AccessBoundingBoxes().SetObjectSpaceClipBox(inData.AccessBoundingBoxes().ObjectSpaceClipBox());
-
-        outData.SetUnlocker(inData.GetUnlocker());
+        outData = inData;
 
         models.resize(inData.GetParticleListCount());
 
@@ -66,9 +57,9 @@ bool ospray::PkdBuilder::manipulateData(
                 megamol::core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA, &models[i].position[0].w, 16);
             out.SetGlobalRadius(parts.GetGlobalRadius());
         }
-    }    
 
-    inData.SetUnlocker(nullptr, false);
+        outData.SetUnlocker(nullptr, false);
+    }    
 
     return true;
 }
