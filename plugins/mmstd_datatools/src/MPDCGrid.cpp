@@ -112,7 +112,7 @@ bool megamol::stdplugin::datatools::MPDCGrid::getExtentCallback(core::Call& c) {
     auto inData = data_in_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
     if (inData == nullptr) return false;
 
-    inData->SetFrameID(outData->FrameID());
+    inData->SetFrameID(outData->FrameID(), outData->IsFrameForced());
     if (!(*inData)(1)) return false;
 
     outData->SetFrameCount(inData->FrameCount());
