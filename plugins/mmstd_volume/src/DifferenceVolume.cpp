@@ -12,7 +12,7 @@
 
 #include "mmcore/param/BoolParam.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 /*
@@ -105,11 +105,11 @@ megamol::stdplugin::volume::DifferenceVolume::getDifferenceType(
  */
 bool megamol::stdplugin::volume::DifferenceVolume::checkCompatibility(
         const core::misc::VolumetricMetadata_t& md) const {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     auto reqType = getDifferenceType(md);
 
     if (getFrameSize(this->metadata) != getFrameSize(md)) {
-        Log::DefaultLog.WriteError(L"The volume resolution must not change "
+        Log::DefaultLog.WriteError("The volume resolution must not change "
             "over time in order for %hs to work.",
             DifferenceVolume::ClassName());
         return false;
@@ -117,14 +117,14 @@ bool megamol::stdplugin::volume::DifferenceVolume::checkCompatibility(
 
     if ((this->metadata.ScalarLength != md.ScalarLength)
             && (md.ScalarType == reqType)) {
-        Log::DefaultLog.WriteError(L"The scalar size must not change over time "
+        Log::DefaultLog.WriteError("The scalar size must not change over time "
             "in order for %hs to work.",
             DifferenceVolume::ClassName());
         return false;
     }
 
     if (this->metadata.ScalarType != reqType) {
-        Log::DefaultLog.WriteError(L"The scalar type must not change over time "
+        Log::DefaultLog.WriteError("The scalar type must not change over time "
             "in order for %hs to work.",
             DifferenceVolume::ClassName());
         return false;
@@ -148,7 +148,7 @@ bool megamol::stdplugin::volume::DifferenceVolume::create(void) {
 bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
     using core::misc::VolumetricDataCall;
     using core::param::BoolParam;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     auto dst = dynamic_cast<VolumetricDataCall *>(&call);
     auto src = this->slotIn.CallAs<VolumetricDataCall>();
@@ -157,14 +157,14 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
 
     /* Sanity checks. */
     if (dst == nullptr) {
-        Log::DefaultLog.WriteError(L"Call %hs of %hs received a wrong request.",
+        Log::DefaultLog.WriteError("Call %hs of %hs received a wrong request.",
             VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_DATA),
             DifferenceVolume::ClassName());
         return false;
     }
 
     if (src == nullptr) {
-        Log::DefaultLog.WriteError(L"Call %hs of %hs has a wrong source.",
+        Log::DefaultLog.WriteError("Call %hs of %hs has a wrong source.",
             VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_DATA),
             DifferenceVolume::ClassName());
         return false;
@@ -181,13 +181,13 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
 
     /* Establish what acceptable data are if the source changed. */
     if (localUpdate || (!ignoreHash && (this->hashData != src->DataHash()))) {
-        Log::DefaultLog.WriteInfo(L"Volume data or local configuration have "
-            L"changed, resetting reference for difference computation.");
+        Log::DefaultLog.WriteInfo("Volume data or local configuration have "
+            "changed, resetting reference for difference computation.");
 
         /* Check for compatibility of the incoming data. */
         if (src->GetMetadata()->GridType != core::misc::CARTESIAN) {
-            Log::DefaultLog.WriteError(L"%hs is only supported for Cartesian "
-                L"grids.", DifferenceVolume::ClassName());
+            Log::DefaultLog.WriteError("%hs is only supported for Cartesian "
+                "grids.", DifferenceVolume::ClassName());
             return false;
         }
 
@@ -198,7 +198,7 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
                 break;
 
             default:
-                Log::DefaultLog.WriteError(L"%hs is not supported for scalar "
+                Log::DefaultLog.WriteError("%hs is not supported for scalar "
                     "type %u.", DifferenceVolume::ClassName(),
                     src->GetMetadata()->ScalarType);
                 return false;
@@ -220,7 +220,7 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
 
     /* If the data we have need an update, compute it. */
     if (this->frameID != src->FrameID()) {
-        Log::DefaultLog.WriteInfo(L"%hs is rebuilding the volume.",
+        Log::DefaultLog.WriteInfo("%hs is rebuilding the volume.",
             DifferenceVolume::ClassName());
 
         if (!VolumetricDataCall::GetMetadata(*src)) {
@@ -233,7 +233,7 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
         }
 
         if (!(*src)(VolumetricDataCall::IDX_GET_DATA)) {
-            Log::DefaultLog.WriteError(L"%hs failed to call %hs.",
+            Log::DefaultLog.WriteError("%hs failed to call %hs.",
                 DifferenceVolume::ClassName(),
                 VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_DATA));
             return false;
@@ -252,8 +252,8 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
 
         if (src->FrameID() < 1) {
             /* There is no predecessor, so the frame is the difference. */
-            Log::DefaultLog.WriteInfo(L"The data provided to %hs do not have a "
-                L"predecessor. The previous volume is considered to be zero.",
+            Log::DefaultLog.WriteInfo("The data provided to %hs do not have a "
+                "predecessor. The previous volume is considered to be zero.",
                 DifferenceVolume::ClassName());
             auto& prev = this->cache[increment(this->frameIdx)];
             prev.resize(cur.size());
@@ -261,8 +261,8 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
 
         } else if (src->FrameID() - 1 != this->frameID) {
             /* We do not have the previous frame cached, so get it. */
-            Log::DefaultLog.WriteInfo(L"Load previous frame %u to compute the "
-                L"difference to the current one.", src->FrameID() - 1);
+            Log::DefaultLog.WriteInfo("Load previous frame %u to compute the "
+                "difference to the current one.", src->FrameID() - 1);
             src->SetFrameID(src->FrameID() - 1, true);
             if (!VolumetricDataCall::GetMetadata(*src)) {
                 return false;
@@ -275,7 +275,7 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
 
             assert(src->IsFrameForced());
             if (!(*src)(VolumetricDataCall::IDX_GET_DATA)) {
-                Log::DefaultLog.WriteError(L"%hs failed to call %hs.",
+                Log::DefaultLog.WriteError("%hs failed to call %hs.",
                     DifferenceVolume::ClassName(),
                     VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_DATA));
                     return false;
@@ -321,8 +321,8 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
                         } break;
 
                     default:
-                        Log::DefaultLog.WriteError(L"%hs cannot process "
-                            L"%u-byte SIGNED_INTEGER data.",
+                        Log::DefaultLog.WriteError("%hs cannot process "
+                            "%u-byte SIGNED_INTEGER data.",
                             DifferenceVolume::ClassName(),
                             this->metadata.ScalarLength);
                         return false;
@@ -360,8 +360,8 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
                         } break;
 
                     case 8: {
-                        Log::DefaultLog.WriteWarn(L"Conversion from UINT64 "
-                            L"to INT64 in %hs might cause data truncation.",
+                        Log::DefaultLog.WriteWarn("Conversion from UINT64 "
+                            "to INT64 in %hs might cause data truncation.",
                             DifferenceVolume::ClassName());
                         auto c = reinterpret_cast<std::uint64_t *>(cur.data());
                         auto p = reinterpret_cast<std::uint64_t *>(prev.data());
@@ -370,8 +370,8 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
                         } break;
 
                     default:
-                        Log::DefaultLog.WriteError(L"%hs cannot process "
-                            L"%u-byte UNSIGNED_INTEGER data.",
+                        Log::DefaultLog.WriteError("%hs cannot process "
+                            "%u-byte UNSIGNED_INTEGER data.",
                             DifferenceVolume::ClassName(),
                             this->metadata.ScalarLength);
                         return false;
@@ -395,8 +395,8 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
                         } break;
 
                     default:
-                        Log::DefaultLog.WriteError(L"%hs cannot process "
-                            L"%u-byte FLOATING_POINT data.",
+                        Log::DefaultLog.WriteError("%hs cannot process "
+                            "%u-byte FLOATING_POINT data.",
                             DifferenceVolume::ClassName(),
                             this->metadata.ScalarLength);
                         return false;
@@ -425,20 +425,20 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
  */
 bool megamol::stdplugin::volume::DifferenceVolume::onGetExtents(core::Call& call) {
     using core::misc::VolumetricDataCall;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     auto dst = dynamic_cast<VolumetricDataCall *>(&call);
     auto src = this->slotIn.CallAs<VolumetricDataCall>();
 
     if (dst == nullptr) {
-        Log::DefaultLog.WriteError(L"Call %hs of %hs received a wrong request.",
+        Log::DefaultLog.WriteError("Call %hs of %hs received a wrong request.",
             VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_EXTENTS),
             DifferenceVolume::ClassName());
         return false;
     }
 
     if (src == nullptr) {
-        Log::DefaultLog.WriteError(L"Call %hs of %hs has a wrong source.",
+        Log::DefaultLog.WriteError("Call %hs of %hs has a wrong source.",
             VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_EXTENTS),
             DifferenceVolume::ClassName());
         return false;
@@ -446,7 +446,7 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetExtents(core::Call& call
 
     *src = *dst;
     if (!(*src)(VolumetricDataCall::IDX_GET_EXTENTS)) {
-        Log::DefaultLog.WriteError(L"%hs failed to call %hs.",
+        Log::DefaultLog.WriteError("%hs failed to call %hs.",
             DifferenceVolume::ClassName(),
             VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_EXTENTS));
         return false;
@@ -464,20 +464,20 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetExtents(core::Call& call
 bool megamol::stdplugin::volume::DifferenceVolume::onGetMetadata(
         core::Call& call) {
     using core::misc::VolumetricDataCall;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     auto dst = dynamic_cast<VolumetricDataCall *>(&call);
     auto src = this->slotIn.CallAs<VolumetricDataCall>();
 
     if (dst == nullptr) {
-        Log::DefaultLog.WriteError(L"Call %hs of %hs received a wrong request.",
+        Log::DefaultLog.WriteError("Call %hs of %hs received a wrong request.",
             VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_METADATA),
             DifferenceVolume::ClassName());
         return false;
     }
 
     if (src == nullptr) {
-        Log::DefaultLog.WriteError(L"Call %hs of %hs has a wrong source.",
+        Log::DefaultLog.WriteError("Call %hs of %hs has a wrong source.",
             VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_METADATA),
             DifferenceVolume::ClassName());
         return false;

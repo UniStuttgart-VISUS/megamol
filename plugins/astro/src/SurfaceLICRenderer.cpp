@@ -16,7 +16,7 @@
 #include "vislib/graphics/gl/GLSLComputeShader.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "glowl/Texture.hpp"
 #include "glowl/Texture2D.hpp"
@@ -133,17 +133,17 @@ bool SurfaceLICRenderer::create() {
             return false;
         if (!this->render_to_framebuffer_shdr.Link()) return false;
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to compile shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to compile shader: Unknown exception\n");
         return false;
     }
 }
@@ -232,7 +232,7 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
     cd->SetFrameID(req_frame, true);
 
     if (cd->GetComponents() != 3) {
-        vislib::sys::Log::DefaultLog.WriteError("Input velocities must be vectors with 3 components");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Input velocities must be vectors with 3 components");
         return false;
     }
 

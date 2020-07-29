@@ -14,7 +14,7 @@
 
 #include "vislib/math/mathfunctions.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 /*
@@ -103,7 +103,7 @@ bool megamol::astro::AstroSchulz::getData(AstroDataCall& call, const unsigned in
 
     do {
         if (!call(AstroDataCall::CallForGetData)) {
-            vislib::sys::Log::DefaultLog.WriteWarn(L"%hs failed in %hs.",
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("%hs failed in %hs.",
                 AstroDataCall::FunctionName(AstroDataCall::CallForGetData), AstroSchulz::ClassName());
             return false;
         }
@@ -232,27 +232,27 @@ void megamol::astro::AstroSchulz::convert(float* dst, const std::size_t col, con
  */
 bool megamol::astro::AstroSchulz::getData(core::Call& call) {
     using megamol::stdplugin::datatools::table::TableDataCall;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     auto ast = this->slotAstroData.CallAs<AstroDataCall>();
     auto tab = static_cast<TableDataCall*>(&call);
 
     if (ast == nullptr) {
-        Log::DefaultLog.WriteWarn(L"AstroDataCall is not connected "
-                                  L"in AstroSchulz.",
+        Log::DefaultLog.WriteWarn("AstroDataCall is not connected "
+                                  "in AstroSchulz.",
             nullptr);
         return false;
     }
     if (tab == nullptr) {
-        Log::DefaultLog.WriteWarn(L"TableDataCall is not connected "
-                                  L"in AstroSchulz.",
+        Log::DefaultLog.WriteWarn("TableDataCall is not connected "
+                                  "in AstroSchulz.",
             nullptr);
         return false;
     }
 
     if (!(*ast)(AstroDataCall::CallForGetExtent)) {
-        Log::DefaultLog.WriteWarn(L"AstroDataCall::CallForGetExtent failed "
-                                  L"in AstroSchulz.",
+        Log::DefaultLog.WriteWarn("AstroDataCall::CallForGetExtent failed "
+                                  "in AstroSchulz.",
             nullptr);
         return false;
     }
@@ -289,12 +289,12 @@ bool megamol::astro::AstroSchulz::getData(core::Call& call) {
 bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
     using namespace core::param;
     using megamol::stdplugin::datatools::table::TableDataCall;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     auto ast = this->slotAstroData.CallAs<AstroDataCall>();
     if (ast == nullptr) {
-        Log::DefaultLog.WriteWarn(L"AstroDataCall is not connected "
-                                  L"in AstroSchulz.",
+        Log::DefaultLog.WriteWarn("AstroDataCall is not connected "
+                                  "in AstroSchulz.",
             nullptr);
         return false;
     }
@@ -568,10 +568,10 @@ bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
     }
 
     if (this->paramsInclude.back().Param<BoolParam>()->Value()) {
-        Log::DefaultLog.WriteInfo(L"Creating union of all astro frames ...");
+        Log::DefaultLog.WriteInfo("Creating union of all astro frames ...");
 
         if (!(*ast)(AstroDataCall::CallForGetExtent)) {
-            Log::DefaultLog.WriteInfo(L"Failed to get extents of astro data.");
+            Log::DefaultLog.WriteInfo("Failed to get extents of astro data.");
             return false;
         }
 
@@ -584,7 +584,7 @@ bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
 
             const auto cntFrames = ast->FrameCount();
             for (auto frameID = 0; frameID < cntFrames; ++frameID) {
-                Log::DefaultLog.WriteInfo(L"Adding astro frame %u to the union.", frameID);
+                Log::DefaultLog.WriteInfo("Adding astro frame %u to the union.", frameID);
                 if (!AstroSchulz::getData(*ast, frameID)) {
                     return false;
                 }
@@ -621,8 +621,8 @@ bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
         // Copy the data into the table as necessary.
         bool hashChanged = this->hashInput != ast->DataHash();
         if (isParamChange || hashChanged || (this->frameID != frameID)) {
-            Log::DefaultLog.WriteInfo(L"Astro data are new (frame %u), filling "
-                                      L"table ...",
+            Log::DefaultLog.WriteInfo("Astro data are new (frame %u), filling "
+                                      "table ...",
                 frameID);
             this->frameID = frameID;
             this->hashInput = ast->DataHash();
@@ -844,7 +844,7 @@ bool megamol::astro::AstroSchulz::getHash(core::Call& call) {
  * megamol::astro::AstroSchulz::getRanges
  */
 bool megamol::astro::AstroSchulz::getRanges(const unsigned int start, const unsigned int cnt) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     // Note: option to disable column implies that the columns are not generated
     // before the first data are retrieved. Therefore, we need to test-retrieve
@@ -854,8 +854,8 @@ bool megamol::astro::AstroSchulz::getRanges(const unsigned int start, const unsi
         ranges.resize(this->columns.size());
     }
 
-    Log::DefaultLog.WriteInfo(L"Scanning astro trajectory for global "
-                              L"min/max ranges. Please wait while MegaMol is working for you ...",
+    Log::DefaultLog.WriteInfo("Scanning astro trajectory for global "
+                              "min/max ranges. Please wait while MegaMol is working for you ...",
         nullptr);
 
     std::generate(ranges.begin(), ranges.end(), AstroSchulz::initialiseRange);
@@ -876,8 +876,8 @@ bool megamol::astro::AstroSchulz::getRanges(const unsigned int start, const unsi
 
     for (std::size_t c = 0; c < this->columns.size(); ++c) {
         if (this->isQuantitative(c)) {
-            Log::DefaultLog.WriteInfo(L"Values of column \"%hs\" are within "
-                                      L"[%f, %f].",
+            Log::DefaultLog.WriteInfo("Values of column \"%hs\" are within "
+                                      "[%f, %f].",
                 this->columns[c].Name().c_str(), this->ranges[c].first, this->ranges[c].second);
         }
     }

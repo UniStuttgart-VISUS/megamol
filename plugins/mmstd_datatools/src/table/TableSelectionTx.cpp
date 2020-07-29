@@ -9,7 +9,7 @@
 #include "TableSelectionTx.h"
 
 #include "mmcore/param/BoolParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol::stdplugin::datatools;
 using namespace megamol::stdplugin::datatools::table;
@@ -140,7 +140,7 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
 
     // validateFlagCount() only increases the buffer, therefore numberOfFlags > numberOfRows is also valid.
     if (numberOfFlags < numberOfRows) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "TableSelectionTx: invalid table/flag storage size!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("TableSelectionTx: invalid table/flag storage size!");
         return false;
     }
 
@@ -180,17 +180,17 @@ bool TableSelectionTx::validateCalls() {
     auto *flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core::FlagCallWrite_GL>();
 
     if (tableInCall == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "TableSelectionTx requires a table!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("TableSelectionTx requires a table!");
         return false;
     }
 
     if (flagsReadInCall == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "TableSelectionTx requires a read flag storage!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("TableSelectionTx requires a read flag storage!");
         return false;
     }
 
     if (flagsWriteInCall == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "TableSelectionTx requires a write flag storage!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("TableSelectionTx requires a write flag storage!");
         return false;
     }
 

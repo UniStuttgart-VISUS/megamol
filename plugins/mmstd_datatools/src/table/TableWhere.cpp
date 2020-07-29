@@ -1,7 +1,7 @@
 /*
  * TableWhere.cpp
  *
- * Copyright (C) 2019 Visualisierungsinstitut der Universit‰t Stuttgart
+ * Copyright (C) 2019 Visualisierungsinstitut der Universit√§t Stuttgart
  * Alle Rechte vorbehalten.
  */
 
@@ -111,7 +111,7 @@ void megamol::stdplugin::datatools::table::TableWhere::release(void) { }
 bool megamol::stdplugin::datatools::table::TableWhere::prepareData(
         TableDataCall& src, const unsigned int frameID) {
     using namespace core::param;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     /* Request the source data. */
     src.SetFrameID(frameID);

@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "VolumetricGlobalMinMax.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 /*
  * megamol::astro::VolumetricGlobalMinMax::VolumetricGlobalMinMax
@@ -73,19 +73,19 @@ bool megamol::astro::VolumetricGlobalMinMax::onUnsupportedCallback(megamol::core
 
 bool megamol::astro::VolumetricGlobalMinMax::pipeVolumetricDataCall(megamol::core::Call &call, unsigned int funcIdx) {
     using megamol::core::misc::VolumetricDataCall;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     auto dst = dynamic_cast<VolumetricDataCall*>(&call);
     auto src = this->slotVolumetricDataIn.CallAs<VolumetricDataCall>();
 
     if (dst == nullptr) {
-        Log::DefaultLog.WriteError(L"Call %hs of %hs received a wrong request.",
+        Log::DefaultLog.WriteError("Call %hs of %hs received a wrong request.",
                                    VolumetricDataCall::FunctionName(funcIdx),
                                    VolumetricGlobalMinMax::ClassName());
         return false;
     }
     if (src == nullptr) {
-        Log::DefaultLog.WriteError(L"Call %hs of %hs has a wrong source.",
+        Log::DefaultLog.WriteError("Call %hs of %hs has a wrong source.",
                                    VolumetricDataCall::FunctionName(funcIdx),
                                    VolumetricGlobalMinMax::ClassName());
         return false;
@@ -93,7 +93,7 @@ bool megamol::astro::VolumetricGlobalMinMax::pipeVolumetricDataCall(megamol::cor
 
     *src = *dst;
     if (!(*src)(funcIdx)) {
-        Log::DefaultLog.WriteError(L"%hs failed to call %hs.",
+        Log::DefaultLog.WriteError("%hs failed to call %hs.",
                                    VolumetricGlobalMinMax::ClassName(),
                                    VolumetricDataCall::FunctionName(funcIdx));
 
@@ -116,7 +116,7 @@ bool megamol::astro::VolumetricGlobalMinMax::pipeVolumetricDataCall(megamol::cor
                 this->maxValues.resize(metadata->Components, std::numeric_limits<double>::lowest());
             } else {
                 if (this->minValues.size() != metadata->Components) {
-                    Log::DefaultLog.WriteError(L"Unexpected number of components.");
+                    Log::DefaultLog.WriteError("Unexpected number of components.");
                     return false;
                 }
             }
@@ -144,7 +144,7 @@ bool megamol::astro::VolumetricGlobalMinMax::pipeVolumetricDataCall(megamol::cor
     auto metadata = dst->GetMetadata();
     if (metadata != nullptr) {
         if (this->minValues.size() != metadata->Components) {
-            Log::DefaultLog.WriteError(L"Unexpected number of components.");
+            Log::DefaultLog.WriteError("Unexpected number of components.");
             return false;
         }
         for (size_t i = 0; i < this->minValues.size(); ++i) {

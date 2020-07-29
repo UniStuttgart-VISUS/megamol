@@ -1,7 +1,7 @@
 /*
  * TableSort.cpp
  *
- * Copyright (C) 2019 Visualisierungsinstitut der Universität Stuttgart
+ * Copyright (C) 2019 Visualisierungsinstitut der UniversitÃ¤t Stuttgart
  * Alle Rechte vorbehalten.
  */
 
@@ -60,7 +60,7 @@ bool megamol::stdplugin::datatools::table::TableSort::create(void) {
 bool megamol::stdplugin::datatools::table::TableSort::prepareData(
         TableDataCall& src, const unsigned int frameID) {
     using namespace core::param;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     /* Request the source data. */
     src.SetFrameID(frameID);
@@ -108,8 +108,8 @@ bool megamol::stdplugin::datatools::table::TableSort::prepareData(
             }
 
             if (column == this->columns.size()) {
-                Log::DefaultLog.WriteError(L"The column \"hs\" cannot be used for "
-                    L"sorting, because it does not exist in the source data.",
+                Log::DefaultLog.WriteError("The column \"hs\" cannot be used for "
+                    "sorting, because it does not exist in the source data.",
                     c.c_str());
             }
         }

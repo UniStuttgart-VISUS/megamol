@@ -1,7 +1,7 @@
 /*
  * TableProcessorBase.cpp
  *
- * Copyright (C) 2019 Visualisierungsinstitut der Universit‰t Stuttgart
+ * Copyright (C) 2019 Visualisierungsinstitut der Universit√§t Stuttgart
  * Alle Rechte vorbehalten.
  */
 
@@ -11,9 +11,7 @@
 #include <cassert>
 #include <limits>
 
-#include "vislib/sys/Log.h"
-
-
+#include "mmcore/utility/log/Log.h"
 
 /*
  * megamol::stdplugin::datatools::table::TableProcessorBase::TableProcessorBase
@@ -44,7 +42,7 @@ megamol::stdplugin::datatools::table::TableProcessorBase::TableProcessorBase(voi
 bool megamol::stdplugin::datatools::table::TableProcessorBase::getData(
         core::Call& call) {
     using namespace core::param;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     auto src = this->slotInput.CallAs<TableDataCall>();
     auto dst = dynamic_cast<TableDataCall *>(&call);
@@ -83,13 +81,13 @@ bool megamol::stdplugin::datatools::table::TableProcessorBase::getData(
  */
 bool megamol::stdplugin::datatools::table::TableProcessorBase::getHash(
         core::Call& call) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     auto src = this->slotInput.CallAs<TableDataCall>();
     auto dst = dynamic_cast<TableDataCall *>(&call);
 
     /* Sanity checks. */
     if (src == nullptr) {
-        Log::DefaultLog.WriteError(L"The input slot of type %hs is invalid",
+        Log::DefaultLog.WriteError("The input slot of type %hs is invalid",
             TableDataCall::ClassName());
         return false;
     }
@@ -103,7 +101,7 @@ bool megamol::stdplugin::datatools::table::TableProcessorBase::getHash(
     /* Obtain extents and hash of the source data. */
     src->SetFrameID(dst->GetFrameID());
     if (!(*src)(1)) {
-        Log::DefaultLog.WriteError(L"The call to %hs of %hs failed.",
+        Log::DefaultLog.WriteError("The call to %hs of %hs failed.",
             TableDataCall::FunctionName(1), TableDataCall::ClassName());
         return false;
     }
