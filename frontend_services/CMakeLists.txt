@@ -1,12 +1,12 @@
 #
-# MegaMol™ Render API modules
+# MegaMol™ Frontend Services
 # Copyright 2019, by MegaMol TEAM
 # Alle Rechte vorbehalten. All rights reserved.
 #
-option(BUILD_RAPI "build render APIs" ON)
+option(BUILD_FRONTEND_SERVICES "build frontend services" ON)
 
-if(BUILD_RAPI)
-  project(render_api)
+if(BUILD_FRONTEND_SERVICES)
+  project(frontend_services)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
   
   require_external(glad)
@@ -26,12 +26,12 @@ if(BUILD_RAPI)
     OUTPUT_NAME ${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME} PUBLIC "opengl_glfw" "include" "service_collection")
 
-  add_library(abstract_render_api INTERFACE)
-  target_include_directories(abstract_render_api INTERFACE
+  add_library(abstract_frontend_service INTERFACE)
+  target_include_directories(abstract_frontend_service INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
     $<INSTALL_INTERFACE:include/>
   )
-  target_link_libraries(abstract_render_api INTERFACE module_resources)
+  target_link_libraries(abstract_frontend_service INTERFACE module_resources)
   
   #if(WIN32)
   #  set(VERSION_LIBRARY "Version.lib")
@@ -43,7 +43,7 @@ if(BUILD_RAPI)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
   endif()
 
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_render_api vislib glad)
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_frontend_service vislib glad)
 
   ## Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
   #set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")

@@ -47,8 +47,8 @@ include("externals/CMakeExternals.cmake")
 # Module Resources, Input Events interfaces 
 add_subdirectory(${MEGAMOL_DIR}/module_resources)
 
-# Render API modules
-add_subdirectory(${MEGAMOL_DIR}/render_api)
+# Frontend Services (e.g. OpenGL_GLFW provider)
+add_subdirectory(${MEGAMOL_DIR}/frontend_services)
 
 # GUI modules
 add_subdirectory(${MEGAMOL_DIR}/frontend_gui)
