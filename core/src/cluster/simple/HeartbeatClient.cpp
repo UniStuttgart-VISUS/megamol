@@ -9,7 +9,7 @@
 #include "mmcore/cluster/simple/HeartbeatClient.h"
 #include "vislib/assert.h"
 #include "vislib/net/IPCommEndPoint.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/net/Socket.h"
 
 using namespace megamol::core;
@@ -84,11 +84,11 @@ bool cluster::simple::HeartbeatClient::Sync(unsigned char tier, vislib::RawStora
             return true;
         }
     } catch(vislib::Exception ex) {
-        vislib::sys::Log::DefaultLog.WriteError("HeartbeatClient: %s [%s, %u]\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("HeartbeatClient: %s [%s, %u]\n",
             ex.GetMsgA(), ex.GetFile(), ex.GetLine());
 
     } catch(...) {
-        vislib::sys::Log::DefaultLog.WriteError("HeartbeatClient: Unexpected Exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("HeartbeatClient: Unexpected Exception\n");
     }
 
     return false;
@@ -99,7 +99,7 @@ bool cluster::simple::HeartbeatClient::Sync(unsigned char tier, vislib::RawStora
  * cluster::simple::HeartbeatClient::connector
  */
 DWORD cluster::simple::HeartbeatClient::connector(void *userData) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     HeartbeatClient *that = static_cast<HeartbeatClient*>(userData);
     ASSERT(that != NULL);
 
@@ -108,8 +108,8 @@ DWORD cluster::simple::HeartbeatClient::connector(void *userData) {
     unsigned short port = static_cast<unsigned short>(that->port);
     if (port == 0) return 0;
 
-    Log::DefaultLog.WriteInfo(L"Establishing connection to heartbeat server %s:%u\n",
-        server.PeekBuffer(), port);
+    Log::DefaultLog.WriteInfo("Establishing connection to heartbeat server %s:%u\n",
+        vislib::StringA(server), port);
 
     try {
         vislib::SmartRef<vislib::net::TcpCommChannel> c = vislib::net::TcpCommChannel::Create(vislib::net::TcpCommChannel::FLAG_NODELAY);

@@ -27,12 +27,12 @@
 #include "vislib/net/IPAddress.h"
 #include "vislib/net/IPCommEndPoint.h"
 #include "vislib/net/NetworkInformation.h"
-#include "vislib/net/ShallowSimpleMessage.h"
+#include "mmcore/utility/net/ShallowSimpleMessage.h"
 #include "vislib/net/Socket.h"
 #include "vislib/net/TcpCommChannel.h"
 #include "vislib/sys/AutoLock.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 //#include "vislib/SocketException.h"
 //#include "AbstractNamedObject.h"
 //#include "vislib/Thread.h"
@@ -91,7 +91,7 @@ void cluster::simple::Server::Client::Close(void) {
 bool cluster::simple::Server::Client::OnCommunicationError(
     vislib::net::SimpleMessageDispatcher& src, const vislib::Exception& exception) throw() {
     if (!this->terminationImminent) {
-        vislib::sys::Log::DefaultLog.WriteWarn("Server: Communication error: %s", exception.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Server: Communication error: %s", exception.GetMsgA());
     }
     return false; // everything is lost anyway
 }
@@ -101,7 +101,7 @@ bool cluster::simple::Server::Client::OnCommunicationError(
  * cluster::simple::Server::Client::OnDispatcherExited
  */
 void cluster::simple::Server::Client::OnDispatcherExited(vislib::net::SimpleMessageDispatcher& src) throw() {
-    vislib::sys::Log::DefaultLog.WriteInfo(
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         "Server: Client Connection %s", this->terminationImminent ? "closed" : "lost");
     // parent.clients will be updated as sfx as soon as the receiver thread terminates
     // vislib::sys::AutoLock(this->parent.clientsLock);
@@ -114,7 +114,7 @@ void cluster::simple::Server::Client::OnDispatcherExited(vislib::net::SimpleMess
  * cluster::simple::Server::Client::OnDispatcherStarted
  */
 void cluster::simple::Server::Client::OnDispatcherStarted(vislib::net::SimpleMessageDispatcher& src) throw() {
-    vislib::sys::Log::DefaultLog.WriteInfo("Server: Client Connection Accepted; Receiver Thread started.");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Server: Client Connection Accepted; Receiver Thread started.");
 }
 
 
@@ -123,7 +123,7 @@ void cluster::simple::Server::Client::OnDispatcherStarted(vislib::net::SimpleMes
  */
 bool cluster::simple::Server::Client::OnMessageReceived(
     vislib::net::SimpleMessageDispatcher& src, const vislib::net::AbstractSimpleMessage& msg) throw() {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::net::SimpleMessage answer;
 
     switch (msg.GetHeader().GetMessageID()) {
@@ -266,7 +266,7 @@ bool cluster::simple::Server::Client::OnMessageReceived(
  * cluster::simple::Server::Client::send
  */
 void cluster::simple::Server::Client::send(const vislib::net::AbstractSimpleMessage& msg) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     try {
         this->dispatcher.GetChannel()->Send(
             msg, msg.GetMessageSize(), vislib::net::AbstractCommChannel::TIMEOUT_INFINITE, true);
@@ -412,7 +412,7 @@ bool cluster::simple::Server::create(void) {
             bool run = vislib::CharTraitsW::ParseBool(this->instance()->Configuration().ConfigValue("scsrun"));
             this->serverRunningSlot.Param<param::BoolParam>()->SetValue(run);
         } catch (...) {
-            vislib::sys::Log::DefaultLog.WriteError("Unable to parse configuration value scsrun");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to parse configuration value scsrun");
         }
     }
 
@@ -465,7 +465,7 @@ bool cluster::simple::Server::Terminate(void) {
  */
 bool cluster::simple::Server::OnNewConnection(
     const vislib::net::CommServer& src, vislib::SmartRef<vislib::net::AbstractCommClientChannel> channel) throw() {
-    vislib::sys::Log::DefaultLog.WriteInfo("Incoming TCP connection");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Incoming TCP connection");
     vislib::sys::AutoLock(this->clientsLock);
     if (this->singleClientSlot.Param<param::BoolParam>()->Value()) {
         if (this->clients.Count() > 0) {
@@ -528,16 +528,16 @@ bool cluster::simple::Server::onUdpTargetUpdated(param::ParamSlot& slot) {
         if (addr.Lookup(host)) {
             this->udpTarget.SetIPAddress(addr); // TODO: makes no sense must be best available broadcast address
             this->udpTarget.SetPort(port);
-            vislib::sys::Log::DefaultLog.WriteInfo("UDPTarget set to %s\n", this->udpTarget.ToStringA().PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("UDPTarget set to %s\n", this->udpTarget.ToStringA().PeekBuffer());
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to set new udp target: %s is not a valid IPv4 host\n", host.PeekBuffer());
         }
 
     } catch (vislib::Exception ex) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to set new udp target: %s\n", ex.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to set new udp target: %s\n", ex.GetMsgA());
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to set new udp target: unexpected exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to set new udp target: unexpected exception\n");
     }
 
     return true;
@@ -566,7 +566,7 @@ bool cluster::simple::Server::onViewNameUpdated(param::ParamSlot& slot) {
         }
     }
     if (av == NULL) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to connect SimpleClusterServer to view \"%s\": not found or incompatible type\n",
             viewmodname.PeekBuffer());
     }
@@ -583,7 +583,7 @@ void cluster::simple::Server::disconnectView(void) {
         this->viewSlot.DisconnectCalls();
         this->viewSlot.ConnectCall(NULL);
         this->viewConStatus = -1; // disconnected
-        vislib::sys::Log::DefaultLog.WriteInfo("SCS: View Disconnected");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("SCS: View Disconnected");
         this->stopServer();
         if (this->camUpdateThread.IsRunning()) {
             this->camUpdateThread.Join();
@@ -600,7 +600,7 @@ void cluster::simple::Server::newViewConnected(void) {
     ASSERT(this->viewSlot.CallAs<view::CallRenderView>() != NULL);
     ASSERT(this->viewSlot.CallAs<view::CallRenderView>()->PeekCalleeSlot() != NULL);
     ASSERT(this->viewSlot.CallAs<view::CallRenderView>()->PeekCalleeSlot()->Parent() != NULL);
-    vislib::sys::Log::DefaultLog.WriteInfo("SCS: View \"%s\" Connected",
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("SCS: View \"%s\" Connected",
         this->viewSlot.CallAs<view::CallRenderView>()->PeekCalleeSlot()->Parent()->FullName().PeekBuffer());
     this->viewConStatus = 1;
     this->onServerReconnectClicked(this->serverReconnectSlot);
@@ -620,9 +620,9 @@ void cluster::simple::Server::sendUDPDiagram(cluster::simple::Datagram& datagram
         datagram.cntEchoed = 0;
         if (this->udpTarget.GetIPAddress4()[3] != 0) { // assume it's not a broadcast address
             if (this->prohibitUDPEchoSlot.Param<core::param::BoolParam>()->Value()) {
-                vislib::sys::Log::DefaultLog.WriteInfo("SCS: UDP echo broadcast prohibited");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("SCS: UDP echo broadcast prohibited");
             } else {
-                vislib::sys::Log::DefaultLog.WriteInfo("SCS: requesting UDP echo");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("SCS: requesting UDP echo");
                 datagram.cntEchoed++;
             }
         }
@@ -631,13 +631,13 @@ void cluster::simple::Server::sendUDPDiagram(cluster::simple::Datagram& datagram
             VLTRACE(
                 VISLIB_TRCELVL_INFO, "Server >>> UDP Datagram sent to %s\n", this->udpTarget.ToStringA().PeekBuffer());
         } else {
-            vislib::sys::Log::DefaultLog.WriteWarn("SCS: No udp target set to send the message");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("SCS: No udp target set to send the message");
         }
 
     } catch (vislib::Exception ex) {
-        vislib::sys::Log::DefaultLog.WriteError("SCS: Unable to send udp message: %s\n", ex.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SCS: Unable to send udp message: %s\n", ex.GetMsgA());
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("SCS: Unable to send udp message: unexpected exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SCS: Unable to send udp message: unexpected exception\n");
     }
 }
 
@@ -700,11 +700,11 @@ bool cluster::simple::Server::onServerEndPointChanged(param::ParamSlot& slot) {
  */
 bool cluster::simple::Server::onServerReconnectClicked(param::ParamSlot& slot) {
     if (!this->serverThread.IsRunning()) {
-        if (&slot == &this->serverReconnectSlot) vislib::sys::Log::DefaultLog.WriteWarn("TCP-Server is not running");
+        if (&slot == &this->serverReconnectSlot) megamol::core::utility::log::Log::DefaultLog.WriteWarn("TCP-Server is not running");
         return true;
     }
     if (this->viewSlot.CallAs<Call>() == NULL) {
-        if (&slot == &this->serverReconnectSlot) vislib::sys::Log::DefaultLog.WriteWarn("No view connected");
+        if (&slot == &this->serverReconnectSlot) megamol::core::utility::log::Log::DefaultLog.WriteWarn("No view connected");
         return true;
     }
     Datagram datagram;
@@ -737,7 +737,7 @@ bool cluster::simple::Server::onServerReconnectClicked(param::ParamSlot& slot) {
  * cluster::simple::Server::onServerRestartClicked
  */
 bool cluster::simple::Server::onServerRestartClicked(param::ParamSlot& slot) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     this->stopServer();
 
     if (!this->serverRunningSlot.Param<param::BoolParam>()->Value()) {

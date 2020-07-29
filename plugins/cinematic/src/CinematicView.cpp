@@ -163,7 +163,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->selectedSkyboxSideParam.ResetDirty();
         if (this->rendering) {
             this->selectedSkyboxSideParam.Param<param::EnumParam>()->SetValue(static_cast<int>(this->sbSide), false);
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[CINEMATIC VIEW] [resHeightParam] Changes are not applied while rendering is running.");
         } else {
             this->sbSide = static_cast<CinematicView::SkyboxSides>(
@@ -178,7 +178,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->resHeightParam.ResetDirty();
         if (this->rendering) {
             this->resHeightParam.Param<param::IntParam>()->SetValue(this->cineHeight, false);
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[CINEMATIC VIEW] [resHeightParam] Changes are not applied while rendering is running.");
         } else {
             this->cineHeight = this->resHeightParam.Param<param::IntParam>()->Value();
@@ -188,7 +188,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->resWidthParam.ResetDirty();
         if (this->rendering) {
             this->resWidthParam.Param<param::IntParam>()->SetValue(this->cineWidth, false);
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[CINEMATIC VIEW] [resWidthParam] Changes are not applied while rendering is running.");
         } else {
             this->cineWidth = this->resWidthParam.Param<param::IntParam>()->Value();
@@ -198,7 +198,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->fpsParam.ResetDirty();
         if (this->rendering) {
             this->fpsParam.Param<param::IntParam>()->SetValue(static_cast<int>(this->fps), false);
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[CINEMATIC VIEW] [fpsParam] Changes are not applied while rendering is running.");
         } else {
             this->fps = static_cast<unsigned int>(this->fpsParam.Param<param::IntParam>()->Value());
@@ -478,7 +478,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         // Check if fbo in cr3d was reset by renderer to indicate that no new frame is available (e.g. see remote/FBOCompositor2 Render())
         this->png_data.write_lock = ((cr3d->FrameBufferObject() != nullptr) ? (0) : (1));
         if (this->png_data.write_lock > 0) {
-            vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC RENDERING] Waiting for next frame (Received empty FBO from renderer) ...\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[CINEMATIC RENDERING] Waiting for next frame (Received empty FBO from renderer) ...\n");
         }
         // Lock writing frame to file for specific tim
         std::chrono::duration<double> diff = (std::chrono::system_clock::now() - this->png_data.start_time);
@@ -566,12 +566,12 @@ bool CinematicView::render_to_file_setup() {
 
     unsigned int maxFrame = (unsigned int)(ccc->GetTotalAnimTime() * (float)this->fps);
     if (firstFrame > maxFrame) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[CINEMATIC VIEW] [render_to_file_setup] Max frame count exceeded. Limiting first frame to maximum frame %d", maxFrame);
         firstFrame = maxFrame;
     }
     if (firstFrame > lastFrame) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[CINEMATIC VIEW] [render_to_file_setup] First frame exceeds last frame. Limiting first frame to last frame %d", lastFrame);
         firstFrame = lastFrame;
     }
@@ -615,7 +615,7 @@ bool CinematicView::render_to_file_setup() {
             "[CINEMATIC VIEW] [render_to_file_setup] Cannot allocate image buffer.", __FILE__, __LINE__);
     }
 
-    vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STARTED rendering of complete animation.");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STARTED rendering of complete animation.");
 
     return true;
 }
@@ -719,7 +719,7 @@ bool CinematicView::render_to_file_write() {
             this->png_data.file.Close();
         } catch (...) {
         }
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[CINEMATIC VIEW] [render_to_file_write] Wrote png file %d for animation time %f ...\n", this->png_data.cnt,
             this->png_data.animTime);
 
@@ -791,7 +791,7 @@ bool CinematicView::render_to_file_cleanup() {
         vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render_to_file_cleanup] pngdata.infoptr is not nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
-    vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STOPPED rendering.");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STOPPED rendering.");
 
     return true;
 }

@@ -149,7 +149,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
      auto keyframes = ccc->GetKeyframes();
     if (keyframes == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Pointer to keyframe array is nullptr.");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Pointer to keyframe array is nullptr.");
         return false;
     }
 
@@ -433,7 +433,7 @@ bool TimeLineRenderer::recalcAxesData(void) {
     // Check for too small viewport
     if ((this->axes[Axis::X].startPos.x >= this->axes[Axis::X].endPos.x) ||
         (this->axes[Axis::Y].startPos.y >= this->axes[Axis::Y].endPos.y)) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [GetExtents] Viewport is too small to calculate proper dimensions of time line diagram.");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [GetExtents] Viewport is too small to calculate proper dimensions of time line diagram.");
         return false;
     }
 
@@ -518,7 +518,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
     auto keyframes = ccc->GetKeyframes();
     if (keyframes == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [OnMouseButton] Pointer to keyframe array is nullptr.");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [OnMouseButton] Pointer to keyframe array is nullptr.");
         return false;
     }
 
@@ -797,7 +797,7 @@ bool TimeLineRenderer::OnMouseMove(double x, double y) {
             if (this->axisScaleMode == 1) { // x axis
 
                 this->axes[Axis::X].scaleFactor += diffX * sensitivityX;
-                //vislib::sys::Log::DefaultLog.WriteInfo("[axes[Axis::X].scaleFactor] %f", this->axes[Axis::X].scaleFactor);
+                //megamol::core::utility::log::Log::DefaultLog.WriteInfo("[axes[Axis::X].scaleFactor] %f", this->axes[Axis::X].scaleFactor);
 
                 this->axes[Axis::X].scaleFactor = (this->axes[Axis::X].scaleFactor < 1.0f) ? (1.0f) : (this->axes[Axis::X].scaleFactor);
                 this->recalcAxesData();
@@ -805,7 +805,7 @@ bool TimeLineRenderer::OnMouseMove(double x, double y) {
             else if (this->axisScaleMode == 2) { // y axis
 
                 this->axes[Axis::Y].scaleFactor += diffY * sensitivityY;
-                //vislib::sys::Log::DefaultLog.WriteInfo("[axes[Axis::Y].scaleFactor] %f", this->axes[Axis::Y].scaleFactor);
+                //megamol::core::utility::log::Log::DefaultLog.WriteInfo("[axes[Axis::Y].scaleFactor] %f", this->axes[Axis::Y].scaleFactor);
 
                 this->axes[Axis::Y].scaleFactor = (this->axes[Axis::Y].scaleFactor < 1.0f) ? (1.0f) : (this->axes[Axis::Y].scaleFactor);
                 this->recalcAxesData();

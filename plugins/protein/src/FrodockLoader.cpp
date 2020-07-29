@@ -13,15 +13,15 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"
 #include "vislib/ArrayAllocator.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/types.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/net/SocketException.h"
 #include "vislib/net/IPEndPoint.h"
 #include "vislib/net/DNS.h"
@@ -126,7 +126,7 @@ bool FrodockLoader::create(void) {
     try {
         vislib::net::Socket::Startup();
     } catch( vislib::net::SocketException e ) {
-        vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_ERROR, "Socket Exception during startup: %s", e.GetMsgA() );
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_ERROR, "Socket Exception during startup: %s", e.GetMsgA() );
     }
     return true;
 }
@@ -136,7 +136,7 @@ bool FrodockLoader::create(void) {
  * FrodockLoader::getData
  */
 bool FrodockLoader::getData( core::Call& call) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
 	megamol::protein_calls::MolecularDataCall *dc = dynamic_cast<megamol::protein_calls::MolecularDataCall*>(&call);
     if ( dc == NULL ) return false;
@@ -380,7 +380,7 @@ void FrodockLoader::release(void) {
     try {
         vislib::net::Socket::Cleanup();
     } catch( vislib::net::SocketException e ) {
-        vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_ERROR, "Socket Exception during cleanup: %s", e.GetMsgA() );
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_ERROR, "Socket Exception during cleanup: %s", e.GetMsgA() );
     }
 }
 
@@ -389,7 +389,7 @@ void FrodockLoader::release(void) {
  * FrodockLoader::loadFile
  */
 void FrodockLoader::loadFile( const vislib::TString& filename) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     // counter variable
     int cnt;

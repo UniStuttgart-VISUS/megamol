@@ -17,7 +17,7 @@
 #include "mmcore/view/special/TitleRenderer.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/sysfunctions.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/sys/Thread.h"
 
 using namespace megamol::core;
 

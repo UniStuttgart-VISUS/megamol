@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "gl/Window.h"
 #include "utility/HotFixes.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "WindowManager.h"
 #include <cassert>
 #include <algorithm>
@@ -101,7 +101,7 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
 
             // According to glfw docs width and height means the content area of the window without window decorations.
             hWnd = ::glfwCreateWindow(w, h, title, nullptr, share);
-            vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", w, h);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", w, h);
             if (hWnd != nullptr) {
                 if (placement.pos) ::glfwSetWindowPos(hWnd, placement.x, placement.y);
             }
@@ -113,13 +113,13 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
             GLFWmonitor *mon = mons[std::min<int>(monCnt - 1, placement.mon)];
             const GLFWvidmode* mode = glfwGetVideoMode(mon);
 
-            if (placement.pos) vislib::sys::Log::DefaultLog.WriteWarn("Ignoring window placement position when requesting fullscreen.");
+            if (placement.pos) megamol::core::utility::log::Log::DefaultLog.WriteWarn("Ignoring window placement position when requesting fullscreen.");
             if (placement.size) {
                 if ((placement.w != mode->width) || (placement.h != mode->height)) {
-                    vislib::sys::Log::DefaultLog.WriteWarn("Changing screen resolution is currently not supported.");
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn("Changing screen resolution is currently not supported.");
                 }
             }
-            if (placement.noDec) vislib::sys::Log::DefaultLog.WriteWarn("Ignoring no-decorations setting when requesting fullscreen.");
+            if (placement.noDec) megamol::core::utility::log::Log::DefaultLog.WriteWarn("Ignoring no-decorations setting when requesting fullscreen.");
 
             ::glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
             ::glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
@@ -132,7 +132,7 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
 
             /* note we do not use a real fullscreen mode, since then we would have focus-iconify problems */
             hWnd = ::glfwCreateWindow(mode->width, mode->height, title, nullptr, share);
-            vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", mode->width, mode->height);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", mode->width, mode->height);
             int x, y;
             ::glfwGetMonitorPos(mon, &x, &y);
             ::glfwSetWindowPos(hWnd, x, y);
@@ -154,10 +154,10 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
 
             GLint vp[4];
             glGetIntegerv(GL_VIEWPORT, vp);
-            vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: viewport size w: %d, h: %d\n", vp[2], vp[3]);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Console::Window: viewport size w: %d, h: %d\n", vp[2], vp[3]);
 
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Could not create GLFW Window. You probably do not have OpenGL support. Your graphics hardware might "
                 "be very old, your drivers could be outdated or you are running in a remote desktop session.");
             // we should do a proper shutdown now, but that is too expensive given the expected lifetime of this front end.
@@ -227,7 +227,7 @@ void gl::Window::Update(uint32_t frameID) {
 
         int actualw = 0, actualh = 0;
         glfwGetWindowSize(hWnd, &actualw, &actualh);
-        vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Actual window size: w: %d, h: %d\n", actualw, actualh);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Console::Window: Actual window size: w: %d, h: %d\n", actualw, actualh);
 
         glfwSetWindowAttrib(hWnd, GLFW_RESIZABLE, GLFW_TRUE);
     }
@@ -277,7 +277,7 @@ void gl::Window::Update(uint32_t frameID) {
 #ifdef _WIN32
         // TODO fix this for EGL + Win
         if (this->topMost) {
-            vislib::sys::Log::DefaultLog.WriteInfo("Periodic reordering of windows.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Periodic reordering of windows.");
             SetWindowPos(glfwGetWin32Window(this->hWnd), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
         }
 #endif
@@ -300,12 +300,39 @@ void gl::Window::glfw_onKey_func(GLFWwindow* wnd, int k, int s, int a, int m) {
 
     core::view::Modifiers mods;
     // Parameter m is not platform independent, see https://github.com/glfw/glfw/issues/1630.
-    // Therefore set modifiers by checking key status for platform independent uniform behavior.
-    if (glfwGetKey(wnd, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) mods |= core::view::Modifier::SHIFT;
-    if (glfwGetKey(wnd, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS) mods |= core::view::Modifier::CTRL;
-    if (glfwGetKey(wnd, GLFW_KEY_LEFT_ALT) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS) mods |= core::view::Modifier::ALT;
+    // We want here consistent modifier state, in the sense that the modifier is evaluated on the keyboard state after
+    // the current key event. A simple solution for this would be to just check glfwGetKey() key here and set the
+    // modifiers based on this. The problem with this is, that glfwGetKey only returns a cached state and therefore
+    // does not know when the modifier key was pressed outside of the window, when it is not in focus.
+    // The new solution is, that we keep using the GLFW modifier state, but in addition we will evaluate the current
+    // event to overwrite modifiers when have a event the modifier keys itself.
+    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods |= core::view::Modifier::SHIFT;
+    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= core::view::Modifier::CTRL;
+    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= core::view::Modifier::ALT;
 
-	that->uiLayers.OnKey(key, action, mods);
+    if (k == GLFW_KEY_LEFT_SHIFT || k == GLFW_KEY_RIGHT_SHIFT) {
+        if (a == GLFW_RELEASE) {
+            mods.reset(core::view::Modifier::SHIFT);
+        } else {
+            mods.set(core::view::Modifier::SHIFT);
+        }
+    }
+    if (k == GLFW_KEY_LEFT_CONTROL || k == GLFW_KEY_RIGHT_CONTROL) {
+        if (a == GLFW_RELEASE) {
+            mods.reset(core::view::Modifier::CTRL);
+        } else {
+            mods.set(core::view::Modifier::CTRL);
+        }
+    }
+    if (k == GLFW_KEY_LEFT_ALT || k == GLFW_KEY_RIGHT_ALT) {
+        if (a == GLFW_RELEASE) {
+            mods.reset(core::view::Modifier::ALT);
+        } else {
+            mods.set(core::view::Modifier::ALT);
+        }
+    }
+
+    that->uiLayers.OnKey(key, action, mods);
 }
 
 void gl::Window::glfw_onChar_func(GLFWwindow* wnd, unsigned int charcode) {
@@ -336,10 +363,11 @@ void gl::Window::glfw_onMouseButton_func(GLFWwindow* wnd, int b, int a, int m) {
 
     core::view::Modifiers mods;
     // Parameter m is not platform independent, see https://github.com/glfw/glfw/issues/1630.
-    // Therefore set modifiers by checking key status for platform independent uniform behavior.
-    if (glfwGetKey(wnd, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) mods |= core::view::Modifier::SHIFT;
-    if (glfwGetKey(wnd, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS) mods |= core::view::Modifier::CTRL;
-    if (glfwGetKey(wnd, GLFW_KEY_LEFT_ALT) == GLFW_PRESS || glfwGetKey(wnd, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS) mods |= core::view::Modifier::ALT;
+    // But this should only play a role on the key events of the modifier keys itself.
+    // Therefore we can ignore this here. See comment in keyboard callback for more details.
+    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods |= core::view::Modifier::SHIFT;
+    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= core::view::Modifier::CTRL;
+    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= core::view::Modifier::ALT;
 
     if (that->mouseCapture) {
         that->mouseCapture->OnMouseButton(btn, action, mods);
@@ -381,7 +409,7 @@ void gl::Window::on_resize(int w, int h) {
     if ((w > 0) && (h > 0)) {
         ::glViewport(0, 0, w, h);
         ::mmcResizeView(hView, w, h);
-        vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Resize window (w: %d, h: %d)\n", w, h);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Console::Window: Resize window (w: %d, h: %d)\n", w, h);
 		uiLayers.OnResize(w, h);
     }
 }

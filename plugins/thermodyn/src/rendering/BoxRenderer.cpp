@@ -36,11 +36,11 @@ bool megamol::thermodyn::rendering::BoxRenderer::create() {
 
         boxShader_.Link();
     } catch (vislib::graphics::gl::GLSLShader::CompileException& ce) {
-        vislib::sys::Log::DefaultLog.WriteError("BoxRenderer: Unable to compile therm_box shader: %s ... %s\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("BoxRenderer: Unable to compile therm_box shader: %s ... %s\n",
             vislib::graphics::gl::GLSLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
         return false;
     } catch (vislib::graphics::gl::OpenGLException& oe) {
-        vislib::sys::Log::DefaultLog.WriteError("BoxRenderer: Failed to create therm_box shader: %s\n", oe.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("BoxRenderer: Failed to create therm_box shader: %s\n", oe.GetMsgA());
 
         return false;
     }
@@ -78,7 +78,7 @@ bool megamol::thermodyn::rendering::BoxRenderer::Render(megamol::core::view::Cal
         boxes.emplace_back(BoxDataCall::box_entry_t{
             inParCall->AccessBoundingBoxes().ObjectSpaceBBox(), "bbox", {1.0f, 1.0f, 1.0f, 0.5f}});
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("BoxRenderer: Could not establish call\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("BoxRenderer: Could not establish call\n");
         return false;
     }
 
@@ -156,7 +156,7 @@ bool megamol::thermodyn::rendering::BoxRenderer::GetExtents(core::view::CallRend
         call.AccessBoundingBoxes().SetBoundingBox(inParCall->AccessBoundingBoxes().ObjectSpaceBBox());
         call.AccessBoundingBoxes().SetClipBox(inParCall->AccessBoundingBoxes().ObjectSpaceClipBox());
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("BoxRenderer: Could not establish call\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("BoxRenderer: Could not establish call\n");
         return false;
     }
 

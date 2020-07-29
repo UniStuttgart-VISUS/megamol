@@ -213,7 +213,7 @@ bool KeyframeKeeper::CallForSetSelectedKeyframe(core::Call& c) {
     if (!appliedChanges) {
         this->selectedKeyframe = this->interpolateKeyframe(ccc->GetSelectedKeyframe().GetAnimTime());
         ccc->SetSelectedKeyframe(this->selectedKeyframe);
-        //vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForSetSelectedKeyframe] Selected keyframe doesn't exist. Changes are omitted.");
+        //megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForSetSelectedKeyframe] Selected keyframe doesn't exist. Changes are omitted.");
     }
     this->updateEditParameters(this->selectedKeyframe);
 
@@ -290,7 +290,7 @@ bool KeyframeKeeper::CallForSetCtrlPoints(core::Call& c) {
     this->endCtrllPos = ccc->GetEndControlPointPosition();
     if ((prev_StartCP != this->startCtrllPos) || (prev_EndCP != this->endCtrllPos)) {
         this->addControlPointUndoAction(KeyframeKeeper::Undo::Action::UNDO_CONTROLPOINT_MODIFY, this->startCtrllPos, this->endCtrllPos, prev_StartCP, prev_EndCP);
-        //vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForSetCtrlPoints] ADDED undo for CTRL POINT ......");
+        //megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForSetCtrlPoints] ADDED undo for CTRL POINT ......");
     }
     this->refreshInterpolCamPos(this->interpolSteps);
     ccc->SetControlPointPosition(this->startCtrllPos, this->endCtrllPos);
@@ -324,7 +324,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         // Try adding keyframe to array
         if (!this->addKeyframe(tmp_kf, true)) {
             if (!this->replaceKeyframe(this->selectedKeyframe, tmp_kf, true)) {
-                vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Unable to apply settings to new/selected keyframe.");
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Unable to apply settings to new/selected keyframe.");
             }
         }
     }
@@ -355,7 +355,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             if (tt < this->keyframes.back().GetAnimTime()) {
                 tt = this->keyframes.back().GetAnimTime();
                 this->setTotalAnimTimeParam.Param<param::FloatParam>()->SetValue(tt, false);
-                vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Total time is smaller than time of last keyframe. Delete Keyframe(s) to reduce total time to desired value.");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Total time is smaller than time of last keyframe. Delete Keyframe(s) to reduce total time to desired value.");
             }
         }
         this->totalAnimTime = tt;
@@ -423,7 +423,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             this->refreshInterpolCamPos(this->interpolSteps);
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentPosParam] No existing keyframe selected.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentPosParam] No existing keyframe selected.");
         }
     }
     // resetViewParam -------------------------------------------------------
@@ -450,7 +450,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [ResetViewParam] No existing keyframe selected.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [ResetViewParam] No existing keyframe selected.");
         }
     }
     // editCurrentViewParam -------------------------------------------------
@@ -476,7 +476,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentViewParam] No existing keyframe selected.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentViewParam] No existing keyframe selected.");
         }
     }
     // editCurrentUpParam -----------------------------------------------------
@@ -502,7 +502,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentUpParam] No existing keyframe selected.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentUpParam] No existing keyframe selected.");
         }
     }
     // editCurrentApertureParam -----------------------------------------------------
@@ -518,7 +518,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentApertureParam] No existing keyframe selected.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentApertureParam] No existing keyframe selected.");
         }
     }
     // fileNameParam ----------------------------------------------------------
@@ -606,7 +606,7 @@ bool KeyframeKeeper::addUndoAction(KeyframeKeeper::Undo::Action act, Keyframe kf
     retVal = true;
 
     if (!retVal) {
-        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [addUndoAction] Failed to add new undo action.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [addUndoAction] Failed to add new undo action.");
     }
 
     return retVal;
@@ -655,10 +655,10 @@ bool KeyframeKeeper::undoAction(void) {
             default: break;
         }
     }    
-    //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [undoAction] Undo queue index: %d - Undo queue size: %d", this->undoQueueIndex, this->undoQueue.size());
+    //megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [undoAction] Undo queue index: %d - Undo queue size: %d", this->undoQueueIndex, this->undoQueue.size());
 
     if (!retVal) {
-        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [undoAction] Failed to undo changes.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [undoAction] Failed to undo changes.");
     }
 
     return retVal;
@@ -706,10 +706,10 @@ bool KeyframeKeeper::redoAction(void) {
         default: break;
         }
     }
-    //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Undo queue index: %d - Undo queue size: %d", this->undoQueueIndex, this->undoQueue.size());
+    //megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Undo queue index: %d - Undo queue size: %d", this->undoQueueIndex, this->undoQueue.size());
 
     if (!retVal) {
-        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [redoAction] Failed to redo changes.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [redoAction] Failed to redo changes.");
     }
 
     return retVal;
@@ -722,7 +722,7 @@ void KeyframeKeeper::linearizeSimTangent(Keyframe stkf) {
     if (this->simTangentStatus) {
         // Linearize tangent only between existing keyframes
         if (this->getKeyframeIndex(this->keyframes, stkf) < 0) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [linearizeSimTangent] Select existing keyframe before trying to linearize the tangent.");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [linearizeSimTangent] Select existing keyframe before trying to linearize the tangent.");
             this->simTangentStatus = false;
         }
         else if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
@@ -758,7 +758,7 @@ void KeyframeKeeper::linearizeSimTangent(Keyframe stkf) {
             this->simTangentStatus = false;
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [linearizeSimTangent] Select existing keyframe to finish linearizing the tangent.");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [linearizeSimTangent] Select existing keyframe to finish linearizing the tangent.");
         }
     }
 }
@@ -903,7 +903,7 @@ bool KeyframeKeeper::replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool add_un
             }
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [replace Keyframe] Could not find keyframe which should be replaced.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [replace Keyframe] Could not find keyframe which should be replaced.");
             return false;
         }
     }
@@ -944,7 +944,7 @@ bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool add_undo) {
             this->updateEditParameters(this->selectedKeyframe);
         }
         else {
-            //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [deleteKeyframe] No existing keyframe selected.");
+            //megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [deleteKeyframe] No existing keyframe selected.");
             return false;
         }
     }
@@ -960,7 +960,7 @@ bool KeyframeKeeper::addKeyframe(Keyframe kf, bool add_undo) {
     // Check if keyframe already exists
     for (unsigned int i = 0; i < this->keyframes.size(); i++) {
         if (this->keyframes[i].GetAnimTime() == time) {
-            //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [addKeyframe] Keyframe already exists.");
+            //megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [addKeyframe] Keyframe already exists.");
             return false;
         }
     }
@@ -1177,7 +1177,7 @@ glm::vec3 KeyframeKeeper::vec3_interpolation(float u, glm::vec3 v0, glm::vec3 v1
 bool KeyframeKeeper::saveKeyframes() {
 
     if (this->filename.empty()) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [saveKeyframes] No filename given. Using default filename.");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [saveKeyframes] No filename given. Using default filename.");
         time_t t = std::time(0);  // get time now
         struct tm *now = nullptr;
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
@@ -1203,7 +1203,7 @@ bool KeyframeKeeper::saveKeyframes() {
         std::ofstream outfile;
         outfile.open(this->filename.c_str(), std::ios::binary);
         if (!outfile.good()) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] Failed to create keyframe file.");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] Failed to create keyframe file.");
             return false;
         }
 
@@ -1263,7 +1263,7 @@ bool KeyframeKeeper::saveKeyframes() {
         }
 
         outfile.close();
-        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully stored keyframes to file: %s", this->filename.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully stored keyframes to file: %s", this->filename.c_str());
         return true;
     } 
     catch (...) {
@@ -1275,14 +1275,14 @@ bool KeyframeKeeper::saveKeyframes() {
 bool KeyframeKeeper::loadKeyframes() {
 
     if (this->filename.empty()) {
-        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] No filename given.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] No filename given.");
         return false;
     }
     else {
         std::ifstream infile;
         infile.open(this->filename.c_str());
         if (!infile.good()) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] Failed to open keyframe file.");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] Failed to open keyframe file.");
             return false;
         }
 
@@ -1361,7 +1361,7 @@ bool KeyframeKeeper::loadKeyframes() {
                     valid = valid && this->keyframes[i].Deserialise(json.at("keyframes").at(i));
                 }
                 if (!valid) {
-                    vislib::sys::Log::DefaultLog.WriteWarn("JSON ERROR - Could not deserialise keyframes.");
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn("JSON ERROR - Could not deserialise keyframes.");
                 }
             }
             else {
@@ -1410,7 +1410,7 @@ bool KeyframeKeeper::loadKeyframes() {
         }
 
         infile.close();
-        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully loaded keyframes from file: %s", this->filename.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully loaded keyframes from file: %s", this->filename.c_str());
     }
     return true;
 }

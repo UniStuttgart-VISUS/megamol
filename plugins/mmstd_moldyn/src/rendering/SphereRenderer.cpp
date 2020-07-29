@@ -267,7 +267,7 @@ bool SphereRenderer::create(void) {
 
     // Check initial render mode
     if (!this->isRenderModeAvailable(this->renderMode)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
             "[SphereRenderer] Render mode '%s' is not available - falling back to render mode '%s'.",
             (this->getRenderModeString(this->renderMode)).c_str(), (this->getRenderModeString(RenderMode::SIMPLE)).c_str());
         // Always available fallback render mode
@@ -421,14 +421,14 @@ bool SphereRenderer::createResources() {
     vislib::StringA geoShaderName;
 
     if (!this->isRenderModeAvailable(this->renderMode)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
             "[SphereRenderer] Render mode: '%s' is not available - falling back to render mode '%s'.",
             (this->getRenderModeString(this->renderMode)).c_str(), (this->getRenderModeString(RenderMode::SIMPLE)).c_str());
         this->renderMode = RenderMode::SIMPLE; // Fallback render mode ...
         return false;
     }
     else {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "[SphereRenderer] Using render mode '%s'.",
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "[SphereRenderer] Using render mode '%s'.",
             (this->getRenderModeString(this->renderMode)).c_str());
     }
 
@@ -462,15 +462,15 @@ bool SphereRenderer::createResources() {
             }
             if (!this->sphereShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
                 this->fragShader->Code(), this->fragShader->Count())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                    megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
             glBindAttribLocation(this->sphereShader, 0, "inPosition");
             glBindAttribLocation(this->sphereShader, 1, "inColor");
             glBindAttribLocation(this->sphereShader, 2, "inColIdx");
             if (!this->sphereShader.Link()) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "[SphereRenderer] Unable to link sphere shader: Unknown error\n");
                 return false;
             }
@@ -494,7 +494,7 @@ bool SphereRenderer::createResources() {
             if (!this->sphereGeometryShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
                 this->geoShader->Code(), this->geoShader->Count(), this->fragShader->Code(),
                 this->fragShader->Count())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Unable to compile sphere geometry shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
@@ -502,7 +502,7 @@ bool SphereRenderer::createResources() {
             glBindAttribLocation(this->sphereGeometryShader, 1, "inColor");
             glBindAttribLocation(this->sphereGeometryShader, 2, "inColIdx");
             if (!this->sphereGeometryShader.Link()) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Unable to link sphere geometry shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
@@ -562,16 +562,16 @@ bool SphereRenderer::createResources() {
             }
             if (!this->sphereShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
                 this->fragShader->Code(), this->fragShader->Count())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                    megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
             glBindAttribLocation(this->sphereShader, 0, "inPosition");
             glBindAttribLocation(this->sphereShader, 1, "inColor");
             glBindAttribLocation(this->sphereShader, 2, "inColIdx");
             if (!this->sphereShader.Link()) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to link sphere shader: Unknown error\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                    megamol::core::utility::log::Log::LEVEL_ERROR, "[SphereRenderer] Unable to link sphere shader: Unknown error\n");
                 return false;
             }
             glGenVertexArrays(1, &this->vertArray);
@@ -616,16 +616,16 @@ bool SphereRenderer::createResources() {
             }
             if (!this->sphereShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
                 this->fragShader->Code(), this->fragShader->Count())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                    megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
             glBindAttribLocation(this->sphereShader, 0, "inPosition");
             glBindAttribLocation(this->sphereShader, 1, "inColor");
             glBindAttribLocation(this->sphereShader, 2, "inColIdx");
             if (!this->sphereShader.Link()) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to link sphere shader: Unknown error\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                    megamol::core::utility::log::Log::LEVEL_ERROR, "[SphereRenderer] Unable to link sphere shader: Unknown error\n");
                 return false;
             }
 
@@ -649,13 +649,13 @@ bool SphereRenderer::createResources() {
             if (!this->sphereGeometryShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
                 this->geoShader->Code(), this->geoShader->Count(), this->fragShader->Code(),
                 this->fragShader->Count())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Unable to compile sphere geometry shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
             glBindAttribLocation(this->sphereGeometryShader, 0, "position");
             if (!this->sphereGeometryShader.Link()) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Unable to link sphere geometry shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
@@ -689,8 +689,8 @@ bool SphereRenderer::createResources() {
                 "sphere_mdao::deferred::fragment::AmbientOcclusion"));
             if (!this->lightingShader.Create(this->vertShader->Code(), this->vertShader->Count(),
                 this->fragShader->Code(), this->fragShader->Count())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "Unable to compile mdao lightning shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                    megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile mdao lightning shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
 
@@ -698,8 +698,8 @@ bool SphereRenderer::createResources() {
             this->volGen = new misc::MDAOVolumeGenerator();
             this->volGen->SetShaderSourceFactory(&this->GetCoreInstance()->ShaderSourceFactory());
             if (!this->volGen->Init()) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "Error initializing volume generator. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                    megamol::core::utility::log::Log::LEVEL_ERROR, "Error initializing volume generator. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
 
@@ -719,16 +719,16 @@ bool SphereRenderer::createResources() {
             }
             if (!this->sphereShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
                 this->fragShader->Code(), this->fragShader->Count())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                    megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
             glBindAttribLocation(this->sphereShader, 0, "inPosition");
             glBindAttribLocation(this->sphereShader, 1, "inColor");
             glBindAttribLocation(this->sphereShader, 2, "inColIdx");
             if (!this->sphereShader.Link()) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to link sphere shader: Unknown error\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                    megamol::core::utility::log::Log::LEVEL_ERROR, "[SphereRenderer] Unable to link sphere shader: Unknown error\n");
                 return false;
             }
         } break;
@@ -738,20 +738,20 @@ bool SphereRenderer::createResources() {
         }
     }
     catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile sphere shader (@%s): %s. [%s, %s, line %d]\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: %s. [%s, %s, line %d]\n", e.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile sphere shader: %s. [%s, %s, line %d]\n", e.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown exception. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown exception. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -920,7 +920,7 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
     }
 
     if (!silent && !warnstr.empty()) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, warnstr.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, warnstr.c_str());
     }
 
     return (warnstr.empty());
@@ -930,7 +930,7 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
 bool SphereRenderer::isFlagStorageAvailable(vislib::SmartPtr<ShaderSource::Snippet>& out_flag_snippet) {
 
     if (out_flag_snippet != nullptr) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Pointer to flag snippet parameter is not nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Pointer to flag snippet parameter is not nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     auto flagc = this->readFlagsSlot.CallAs<FlagCallRead_GL>();
 
@@ -976,7 +976,7 @@ bool SphereRenderer::isFlagStorageAvailable(vislib::SmartPtr<ShaderSource::Snipp
     out_flag_snippet = new ShaderSource::StringSnippet(flag_snippet_str.c_str());
 
     if (!warnstr.empty()) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, warnstr.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, warnstr.c_str());
         return false;
     }
     return true;
@@ -1093,11 +1093,11 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     this->GetLights();
     this->curlightDir = { 0.0f, 0.0f, 0.0f, 1.0f };
     if (this->lightMap.size() > 1) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only one single 'Distant Light' source is supported by this renderer");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SphereRenderer] Only one single 'Distant Light' source is supported by this renderer");
     }
     for (auto light : this->lightMap) {
         if (light.second.lightType != core::view::light::DISTANTLIGHT) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only single 'Distant Light' source is supported by this renderer");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SphereRenderer] Only single 'Distant Light' source is supported by this renderer");
         }
         else {
             auto use_eyedir = light.second.dl_eye_direction;
@@ -1351,7 +1351,7 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2& call, MultiParticleDataCal
                     this->streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
                     // streamer.UploadChunk<float, float>(x, [](float f) -> float { return f + 100.0; },
                     //    numItems, sync, dstOff, dstLen);
-                    // vislib::sys::Log::DefaultLog.WriteInfo("[SphereRenderer] Uploading chunk %u at %lu len %lu", x,
+                    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("[SphereRenderer] Uploading chunk %u at %lu len %lu", x,
                     // dstOff, dstLen);
                     glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
                     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -1526,7 +1526,7 @@ bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCa
                 const char* whence = currVert < currCol ? currVert : currCol;
                 UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
                 this->waitSingle(this->fences[this->currBuf]);
-                /// vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Memcopying %u bytes from %016" PRIxPTR " to %016" PRIxPTR ". [%s, %s, line %d]\n", vertsThisTime * vertStride, whence, mem, __FILE__, __FUNCTION__, __LINE__);
+                /// megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Memcopying %u bytes from %016" PRIxPTR " to %016" PRIxPTR ". [%s, %s, line %d]\n", vertsThisTime * vertStride, whence, mem, __FILE__, __FUNCTION__, __LINE__);
                 memcpy(mem, whence, vertsThisTime * vertStride);
                 glFlushMappedNamedBufferRange(
                     this->theSingleBuffer, bufSize * this->currBuf, vertsThisTime * vertStride);
@@ -1549,7 +1549,7 @@ bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCa
             }
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                 "[SphereRenderer] Splat mode does not support not interleaved data so far ...");
         }
 
@@ -1626,7 +1626,7 @@ bool SphereRenderer::renderBufferArray(view::CallRender3D_2& call, MultiParticle
                 const char* whence = currVert < currCol ? currVert : currCol;
                 UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
                 this->waitSingle(this->fences[this->currBuf]);
-                /// vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Memcopying %u bytes from %016" PRIxPTR " to %016" PRIxPTR ". [%s, %s, line %d]\n", vertsThisTime * vertStride, whence, mem, __FILE__, __FUNCTION__, __LINE__);
+                /// megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Memcopying %u bytes from %016" PRIxPTR " to %016" PRIxPTR ". [%s, %s, line %d]\n", vertsThisTime * vertStride, whence, mem, __FILE__, __FUNCTION__, __LINE__);
                 memcpy(mem, whence, vertsThisTime * vertStride);
                 glFlushMappedNamedBufferRange(
                     this->theSingleBuffer, numVerts * this->currBuf, vertsThisTime * vertStride);
@@ -1652,7 +1652,7 @@ bool SphereRenderer::renderBufferArray(view::CallRender3D_2& call, MultiParticle
             }
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                 "[SphereRenderer] BufferArray mode does not support not interleaved data so far ...");
         }
 
@@ -2169,7 +2169,7 @@ bool SphereRenderer::makeColorString(
         outCode = "    inColor = globalCol;\n";
         break;
     case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[SphereRenderer] Cannot pack an unaligned RGB color into an SSBO! Giving up.");
         ret = false;
         break;
@@ -2335,26 +2335,26 @@ std::shared_ptr<GLSLShader> SphereRenderer::makeShader(std::shared_ptr<ShaderSou
     std::shared_ptr<GLSLShader> sh = std::make_shared<GLSLShader>(GLSLShader());
     try {
         if (!sh->Create(vert->Code(), vert->Count(), frag->Code(), frag->Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return nullptr;
         }
     }
     catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile sphere shader (@%s): %s. [%s, %s, line %d]\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return nullptr;
     }
     catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: %s. [%s, %s, line %d]\n", e.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile sphere shader: %s. [%s, %s, line %d]\n", e.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return nullptr;
     }
     catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown exception. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown exception. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return nullptr;
     }
     return sh;
@@ -2467,7 +2467,7 @@ void SphereRenderer::getGLSLVersion(int &outMajor, int &outMinor) const {
         outMinor = std::atoi(glslVerStr.substr(found + 1, 1).c_str());
     }
     else {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
             "[SphereRenderer] No valid GL_SHADING_LANGUAGE_VERSION string found: %s", glslVerStr.c_str());
     }
 }
@@ -2547,8 +2547,8 @@ bool SphereRenderer::rebuildGBuffer() {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->gBuffer.depth, 0);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Framebuffer not complete. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Framebuffer not complete. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);

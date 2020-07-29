@@ -42,7 +42,6 @@ inline void CorporateWhiteStyle(int is3D = 0) {
     colors[ImGuiCol_Border] = border;
     colors[ImGuiCol_BorderShadow] = transparent;
 
-
     colors[ImGuiCol_FrameBg] = white;
     colors[ImGuiCol_FrameBgHovered] = hover;
     colors[ImGuiCol_FrameBgActive] = active;
@@ -104,7 +103,7 @@ inline void CorporateWhiteStyle(int is3D = 0) {
     style.PopupBorderSize = 1;
     style.FrameBorderSize = static_cast<float>(is3D);
 
-    style.WindowRounding = 3;
+    style.WindowRounding = 0; // 3;
     style.ChildRounding = 3;
     style.FrameRounding = 3;
     style.ScrollbarRounding = 2;

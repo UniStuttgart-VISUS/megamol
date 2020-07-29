@@ -16,7 +16,7 @@
 #include "mmcore/CoreInstance.h"
 
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "SSAORendererDeferred.h"
 
@@ -111,12 +111,12 @@ bool SSAORendererDeferred::create(void) {
 
     // Try to load the ssao shader
     if(!ci->ShaderSourceFactory().MakeShaderSource("SSAOdeferred::ssao::vertex", vertSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load ssao vertex shader source", this->ClassName() );
         return false;
     }
     if(!ci->ShaderSourceFactory().MakeShaderSource("SSAOdeferred::ssao::fragment", fragSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load ssao fragment shader source", this->ClassName() );
         return false;
     }
@@ -125,19 +125,19 @@ bool SSAORendererDeferred::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     }
     catch(vislib::Exception e){
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Try to load the deferred shader
     if(!ci->ShaderSourceFactory().MakeShaderSource("SSAOdeferred::deferred::vertex", vertSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load deferred vertex shader source", this->ClassName() );
         return false;
     }
     if(!ci->ShaderSourceFactory().MakeShaderSource("SSAOdeferred::deferred::fragment", fragSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load deferred fragment shader source", this->ClassName() );
         return false;
     }
@@ -146,19 +146,19 @@ bool SSAORendererDeferred::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     }
     catch(vislib::Exception e){
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Try to load the filter shaders
     if(!ci->ShaderSourceFactory().MakeShaderSource("SSAOdeferred::filter::vertex", vertSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load filter vertex shader source", this->ClassName() );
         return false;
     }
     if(!ci->ShaderSourceFactory().MakeShaderSource("SSAOdeferred::filter::fragmentHor", fragSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load filter fragment shader source", this->ClassName() );
         return false;
     }
@@ -167,12 +167,12 @@ bool SSAORendererDeferred::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     }
     catch(vislib::Exception e){
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
     if(!ci->ShaderSourceFactory().MakeShaderSource("SSAOdeferred::filter::fragmentVert", fragSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load filter fragment shader source", this->ClassName() );
         return false;
     }
@@ -181,7 +181,7 @@ bool SSAORendererDeferred::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     }
     catch(vislib::Exception e){
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
@@ -595,7 +595,7 @@ bool SSAORendererDeferred::createFBO(UINT width, UINT height) {
 
     GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE) {
-      vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Could not create FBO");
+      megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Could not create FBO");
       return false;
     }
 

@@ -12,7 +12,7 @@
 #include "mmcore/view/CallRenderDeferred3D.h"
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/view/BlinnPhongRendererDeferred.h"
 
 using namespace megamol;
@@ -59,13 +59,13 @@ bool view::BlinnPhongRendererDeferred::create(void) {
 
     // Try to load fragment shader
     if (!ci->ShaderSourceFactory().MakeShaderSource("deferred::blinnPhongFrag", fragSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, 
             "%s: Unable to load fragment shader source", this->ClassName() );
         return false;
     }
     // Try to load vertex shader
     if (!ci->ShaderSourceFactory().MakeShaderSource("deferred::vertex", vertSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, 
             "%s: Unable to load vertex shader source", this->ClassName() );
         return false;
     }
@@ -74,7 +74,7 @@ bool view::BlinnPhongRendererDeferred::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     }
     catch( vislib::Exception e ){
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, 
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }

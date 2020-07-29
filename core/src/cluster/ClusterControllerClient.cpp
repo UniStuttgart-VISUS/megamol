@@ -9,7 +9,7 @@
 #include "mmcore/cluster/ClusterControllerClient.h"
 #include "mmcore/cluster/CallRegisterAtController.h"
 #include "mmcore/param/StringParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/net/IPEndPoint.h"
 #include "vislib/net/NetworkInformation.h"
 
@@ -44,7 +44,7 @@ cluster::ClusterControllerClient::~ClusterControllerClient(void) {
 void cluster::ClusterControllerClient::SendUserMsg(
         const UINT32 msgType, const BYTE *msgBody, const SIZE_T msgSize) {
     if (this->ctrlr == NULL) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Cannot 'SendUserMsg[%d]': ClusterControllerClient is not connected to the controller\n",
             __LINE__);
         return;
@@ -60,7 +60,7 @@ void cluster::ClusterControllerClient::SendUserMsg(
         const cluster::ClusterController::PeerHandle& hPeer,
         const UINT32 msgType, const BYTE *msgBody, const SIZE_T msgSize) {
     if (this->ctrlr == NULL) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Cannot 'SendUserMsg[%d]': ClusterControllerClient is not connected to the controller\n",
             __LINE__);
         return;

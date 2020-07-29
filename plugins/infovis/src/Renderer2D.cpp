@@ -3,8 +3,8 @@
 
 #include "mmcore/CoreInstance.h"
 
+#include "mmcore/utility/log/Log.h"
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/sys/Log.h"
 
 using namespace megamol;
 using namespace megamol::infovis;
@@ -36,24 +36,24 @@ bool Renderer2D::makeProgram(std::string prefix, vislib::graphics::gl::GLSLShade
 
     try {
         if (!program.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", pref.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "Unable to compile %s: Unknown error\n", pref.PeekBuffer());
             return false;
         }
         makeDebugLabel(GL_PROGRAM, program.ProgramHandle(), prefix.c_str());
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
-            pref.PeekBuffer(),
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile %s (@%s):\n%s\n", pref.PeekBuffer(),
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s:\n%s\n", pref.PeekBuffer(), e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile %s:\n%s\n", pref.PeekBuffer(), e.GetMsgA());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown exception\n", pref.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile %s: Unknown exception\n", pref.PeekBuffer());
         return false;
     }
 
@@ -74,29 +74,29 @@ bool Renderer2D::makeProgram(std::string prefix, vislib::graphics::gl::GLSLGeome
 
     try {
         if (!program.Compile(vert.Code(), vert.Count(), geom.Code(), geom.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", pref.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "Unable to compile %s: Unknown error\n", pref.PeekBuffer());
             return false;
         }
         if (!program.Link()) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to link %s: Unknown error\n", pref.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to link %s: Unknown error\n", pref.PeekBuffer());
             return false;
         }
         makeDebugLabel(GL_PROGRAM, program.ProgramHandle(), prefix.c_str());
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
-            pref.PeekBuffer(),
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile %s (@%s):\n%s\n", pref.PeekBuffer(),
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s:\n%s\n", pref.PeekBuffer(), e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile %s:\n%s\n", pref.PeekBuffer(), e.GetMsgA());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown exception\n", pref.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile %s: Unknown exception\n", pref.PeekBuffer());
         return false;
     }
 
@@ -126,29 +126,29 @@ bool Renderer2D::makeProgram(std::string prefix, vislib::graphics::gl::GLSLTesse
         if (!program.Compile(vert.Code(), vert.Count(), haveTess ? control.Code() : nullptr,
                 haveTess ? control.Count() : 0, haveTess ? eval.Code() : nullptr, haveTess ? eval.Count() : 0,
                 haveGeom ? geom.Code() : nullptr, haveGeom ? geom.Count() : 0, frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", pref.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "Unable to compile %s: Unknown error\n", pref.PeekBuffer());
             return false;
         }
         if (!program.Link()) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to link %s: Unknown error\n", pref.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to link %s: Unknown error\n", pref.PeekBuffer());
             return false;
         }
         makeDebugLabel(GL_PROGRAM, program.ProgramHandle(), prefix.c_str());
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
-            pref.PeekBuffer(),
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile %s (@%s):\n%s\n", pref.PeekBuffer(),
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: %s\n", pref.PeekBuffer(), e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile %s: %s\n", pref.PeekBuffer(), e.GetMsgA());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown exception\n", pref.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile %s: Unknown exception\n", pref.PeekBuffer());
         return false;
     }
     return true;
@@ -164,29 +164,29 @@ bool Renderer2D::makeProgram(std::string prefix, vislib::graphics::gl::GLSLCompu
 
     try {
         if (!program.Compile(comp.Code(), comp.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", pref.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "Unable to compile %s: Unknown error\n", pref.PeekBuffer());
             return false;
         }
         if (!program.Link()) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to link %s: Unknown error\n", pref.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to link %s: Unknown error\n", pref.PeekBuffer());
             return false;
         }
         makeDebugLabel(GL_PROGRAM, program.ProgramHandle(), prefix.c_str());
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
-            pref.PeekBuffer(),
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile %s (@%s):\n%s\n", pref.PeekBuffer(),
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: %s\n", pref.PeekBuffer(), e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile %s: %s\n", pref.PeekBuffer(), e.GetMsgA());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown exception\n", pref.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile %s: Unknown exception\n", pref.PeekBuffer());
         return false;
     }
     return true;
