@@ -471,7 +471,9 @@ void OpenGL_GLFW_Service::updateProvidedResources() {
 void OpenGL_GLFW_Service::digestChangedRequestedResources() {
     if (m_glfwWindowPtr == nullptr) return;
 
-    if (this->m_windowEvents.should_close_events.size() && this->m_windowEvents.should_close_events.back())
+	auto& should_close_events = this->m_windowEvents.should_close_events;
+
+    if (should_close_events.size() && std::count(should_close_events.begin(), should_close_events.end(), true))
         this->setShutdown(true); // cleanup of this RAPI and dependent GL stuff is triggered via this shutdown hint
 }
 
@@ -483,7 +485,7 @@ void OpenGL_GLFW_Service::resetProvidedResources() {
 }
 
 void OpenGL_GLFW_Service::preGraphRender() {
-    if (m_glfwWindowPtr == nullptr) return;
+    // if (m_glfwWindowPtr == nullptr) return;
 
     // e.g. start frame timer
 
@@ -521,28 +523,26 @@ void OpenGL_GLFW_Service::setRequestedResources(std::vector<ModuleResource> reso
 
 const void* OpenGL_GLFW_Service::getSharedDataPtr() const { return &m_sharedData; }
 
-void OpenGL_GLFW_Service::updateWindowTitle() {}
-
 void OpenGL_GLFW_Service::glfw_onKey_func(const int key, const int scancode, const int action, const int mods) {
 
-    input_events::Key key_ = static_cast<input_events::Key>(key);
-    input_events::KeyAction action_(input_events::KeyAction::RELEASE);
+    module_resources::Key key_ = static_cast<module_resources::Key>(key);
+    module_resources::KeyAction action_(module_resources::KeyAction::RELEASE);
     switch (action) {
     case GLFW_PRESS:
-        action_ = input_events::KeyAction::PRESS;
+        action_ = module_resources::KeyAction::PRESS;
         break;
     case GLFW_REPEAT:
-        action_ = input_events::KeyAction::REPEAT;
+        action_ = module_resources::KeyAction::REPEAT;
         break;
     case GLFW_RELEASE:
-        action_ = input_events::KeyAction::RELEASE;
+        action_ = module_resources::KeyAction::RELEASE;
         break;
     }
 
-    input_events::Modifiers mods_;
-    if ((mods & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods_ |= input_events::Modifier::SHIFT;
-    if ((mods & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods_ |= input_events::Modifier::CTRL;
-    if ((mods & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods_ |= input_events::Modifier::ALT;
+    module_resources::Modifiers mods_;
+    if ((mods & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods_ |= module_resources::Modifier::SHIFT;
+    if ((mods & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods_ |= module_resources::Modifier::CTRL;
+    if ((mods & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods_ |= module_resources::Modifier::ALT;
 
     this->m_keyboardEvents.key_events.emplace_back(std::make_tuple(key_, action_, mods_));
     // m_data.uiLayers.OnKey(key, action, mods);
@@ -569,14 +569,14 @@ void OpenGL_GLFW_Service::glfw_onMouseCursorPosition_func(const double xpos, con
 }
 
 void OpenGL_GLFW_Service::glfw_onMouseButton_func(const int button, const int action, const int mods) {
-    input_events::MouseButton btn = static_cast<input_events::MouseButton>(button);
-    input_events::MouseButtonAction btnaction =
-        (action == GLFW_PRESS) ? input_events::MouseButtonAction::PRESS : input_events::MouseButtonAction::RELEASE;
+    module_resources::MouseButton btn = static_cast<module_resources::MouseButton>(button);
+    module_resources::MouseButtonAction btnaction =
+        (action == GLFW_PRESS) ? module_resources::MouseButtonAction::PRESS : module_resources::MouseButtonAction::RELEASE;
 
-    input_events::Modifiers btnmods;
-    if ((mods & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) btnmods |= input_events::Modifier::SHIFT;
-    if ((mods & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) btnmods |= input_events::Modifier::CTRL;
-    if ((mods & GLFW_MOD_ALT) == GLFW_MOD_ALT) btnmods |= input_events::Modifier::ALT;
+    module_resources::Modifiers btnmods;
+    if ((mods & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) btnmods |= module_resources::Modifier::SHIFT;
+    if ((mods & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) btnmods |= module_resources::Modifier::CTRL;
+    if ((mods & GLFW_MOD_ALT) == GLFW_MOD_ALT) btnmods |= module_resources::Modifier::ALT;
 
     this->m_mouseEvents.buttons_events.emplace_back(std::make_tuple(btn, btnaction, btnmods));
 
@@ -624,7 +624,7 @@ void OpenGL_GLFW_Service::glfw_onMouseCursorEnter_func(const bool entered) {
 }
 
 void OpenGL_GLFW_Service::glfw_onFramebufferSize_func(const int widthpx, const int heightpx) {
-    this->m_framebufferEvents.size_events.emplace_back(input_events::FramebufferState{widthpx, heightpx});
+    this->m_framebufferEvents.size_events.emplace_back(module_resources::FramebufferState{widthpx, heightpx});
 }
 
 void OpenGL_GLFW_Service::glfw_onWindowSize_func(const int width, const int height) { // in screen coordinates, of the window

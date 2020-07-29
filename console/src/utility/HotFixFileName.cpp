@@ -14,7 +14,7 @@
 
 using namespace megamol;
 using namespace megamol::console;
-using namespace megamol::input_events;
+using namespace megamol::module_resources;
 
 extern "C" {
 

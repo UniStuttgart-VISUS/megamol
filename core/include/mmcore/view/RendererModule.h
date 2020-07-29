@@ -27,7 +27,7 @@ namespace view {
 /**
  * Base class of rendering modules.
  */
-template <class C> class MEGAMOLCORE_API RendererModule : public Module, public megamol::input_events::AbstractInputScope {
+template <class C> class MEGAMOLCORE_API RendererModule : public Module, public megamol::module_resources::AbstractInputScope {
 public:
     /** Ctor. */
     RendererModule()

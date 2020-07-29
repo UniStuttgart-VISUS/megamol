@@ -13,16 +13,16 @@
 
 #include "KeyboardMouseInput.h"
 // TODO: do this include correctly via CMake.
-// the structs used here are now located in the input_events CMake module.
+// the structs used here are now located in the module_resources CMake module.
 
 namespace megamol {
-namespace input_events {
+namespace module_resources {
 
-using megamol::input_events::Key;
-using megamol::input_events::KeyAction;
-using megamol::input_events::Modifiers;
-using megamol::input_events::MouseButton;
-using megamol::input_events::MouseButtonAction;
+using megamol::module_resources::Key;
+using megamol::module_resources::KeyAction;
+using megamol::module_resources::Modifiers;
+using megamol::module_resources::MouseButton;
+using megamol::module_resources::MouseButtonAction;
 
 class AbstractInputScope {
 public:
@@ -66,7 +66,7 @@ protected:
     virtual ~AbstractInputScope() = default;
 };
 
-} /* end namespace input_events */
+} /* end namespace module_resources */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_ABSTRACTINPUTSCOPE_H_INCLUDED */

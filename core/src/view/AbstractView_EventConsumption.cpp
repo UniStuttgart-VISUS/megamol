@@ -10,7 +10,7 @@
 #include "Framebuffer_Events.h"
 #include "KeyboardMouse_Events.h"
 #include "Window_Events.h"
-#include "OpenGL_Context.h"
+#include "IOpenGL_Context.h"
 
 #include <chrono>
 
@@ -18,7 +18,7 @@ namespace megamol {
 namespace core {
 namespace view {
 
-using namespace megamol::input_events;
+using namespace megamol::module_resources;
 
 // shorthand notation to unpack a ModuleResource to some type. 
 // if the type is present in the resource is made available as an 'events' variable in the if statemtnt.
@@ -70,10 +70,10 @@ void view_consume_framebuffer_events(AbstractView& view, megamol::frontend::Modu
 static std::chrono::high_resolution_clock::time_point render_view_context_timer_start;
 
 void view_poke_rendering(AbstractView& view, megamol::frontend::ModuleResource const& resource) {
-    megamol::input_events::IOpenGL_Context const * maybe_opengl = nullptr;
+    megamol::module_resources::IOpenGL_Context const * maybe_opengl = nullptr;
 
     if (resource.getIdentifier() == "IOpenGL_Context")
-		maybe_opengl = &resource.getResource<megamol::input_events::IOpenGL_Context>();
+		maybe_opengl = &resource.getResource<megamol::module_resources::IOpenGL_Context>();
 	
 	static bool started_timer = false;
 	if (!started_timer) {

@@ -79,7 +79,7 @@ void GUI_Service::digestChangedRequestedResources() {
     /// TODO
 
     /// KeyboardEvents = resource index 1
-    auto keyboard_events = &this->m_requestedResourceReferences[1].getResource<megamol::input_events::KeyboardEvents>();
+    auto keyboard_events = &this->m_requestedResourceReferences[1].getResource<megamol::module_resources::KeyboardEvents>();
     for (auto& key_event : keyboard_events->key_events) {
         auto key = std::get<0>(key_event);
         auto action = std::get<1>(key_event);
@@ -91,7 +91,7 @@ void GUI_Service::digestChangedRequestedResources() {
     }
 
     /// MouseEvents = resource index 2
-    auto mouse_events = &this->m_requestedResourceReferences[2].getResource<megamol::input_events::MouseEvents>();
+    auto mouse_events = &this->m_requestedResourceReferences[2].getResource<megamol::module_resources::MouseEvents>();
     for (auto& pos_event  : mouse_events->position_events) {
         auto x_pos = std::get<0>(pos_event);
         auto y_pos = std::get<1>(pos_event);
@@ -110,10 +110,10 @@ void GUI_Service::digestChangedRequestedResources() {
     }
 
     /// IOpenGL_Context = resource index 3
-    this->m_resource_state.opengl_context_ptr = &this->m_requestedResourceReferences[3].getResource<megamol::input_events::IOpenGL_Context>();
+    this->m_resource_state.opengl_context_ptr = &this->m_requestedResourceReferences[3].getResource<megamol::module_resources::IOpenGL_Context>();
          
     /// FramebufferEvents = resource index 4
-    auto framebuffer_events = &this->m_requestedResourceReferences[4].getResource<megamol::input_events::FramebufferEvents>();
+    auto framebuffer_events = &this->m_requestedResourceReferences[4].getResource<megamol::module_resources::FramebufferEvents>();
     for (auto& size_event : framebuffer_events->size_events) {
         m_resource_state.viewport_size.x = size_event.width;
         m_resource_state.viewport_size.y = size_event.height;

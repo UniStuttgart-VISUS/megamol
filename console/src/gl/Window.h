@@ -28,8 +28,8 @@ namespace megamol {
 namespace console {
 namespace gl {
 
-    using namespace megamol::input_events;
-    using megamol::input_events::AbstractUILayer;
+    using namespace megamol::module_resources;
+    using megamol::module_resources::AbstractUILayer;
 
     /**
      * Class of viewing windows.

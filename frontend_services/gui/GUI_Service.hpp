@@ -13,7 +13,7 @@
 
 #include "Framebuffer_Events.h"
 #include "KeyboardMouse_Events.h"
-#include "OpenGL_Context.h"
+#include "IOpenGL_Context.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
@@ -83,7 +83,7 @@ private:
 
     struct ResourceState {
         glm::vec2 viewport_size;
-        megamol::input_events::IOpenGL_Context const * opengl_context_ptr;
+        megamol::module_resources::IOpenGL_Context const * opengl_context_ptr;
     };
 
     std::vector<ModuleResource> m_providedResourceReferences;
