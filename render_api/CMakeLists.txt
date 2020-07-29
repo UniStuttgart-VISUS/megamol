@@ -8,6 +8,8 @@ option(BUILD_RAPI "build render APIs" ON)
 if(BUILD_RAPI)
   project(render_api)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+  
+  require_external(glad)
 
 
   # Check option dependencies: First list item is always the current build option,
@@ -40,9 +42,7 @@ if(BUILD_RAPI)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
   endif()
 
-  add_subdirectory(glad)
-
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} glad_ vislib PUBLIC input_events)
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC input_events vislib glad)
 
   ## Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
   #set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")

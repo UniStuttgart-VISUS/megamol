@@ -11,14 +11,14 @@
 #include <chrono>
 #include <vector>
 
-#include "glad.h"
+#include "glad/glad.h"
 #ifdef _WIN32
 #    include <Windows.h>
 #    undef min
 #    undef max
-#    include "glad_wgl.h"
+#    include "glad/glad_wgl.h"
 #else
-#    include "glad_glx.h"
+#    include "glad/glad_glx.h"
 #endif
 
 #include <GLFW/glfw3.h>

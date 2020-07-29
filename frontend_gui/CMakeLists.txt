@@ -8,6 +8,8 @@ option(BUILD_FRONTEND_GUI "build frontend_gui" ON)
 if(BUILD_FRONTEND_GUI)
   project(frontend_gui)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+  
+  require_external(glad)
 
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.hpp")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -18,7 +20,7 @@ if(BUILD_FRONTEND_GUI)
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT_NAME ${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME} PUBLIC "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} vislib core gui PUBLIC input_events)
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} vislib core gui PUBLIC input_events glad)
 
   # Grouping in Visual Studio
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
