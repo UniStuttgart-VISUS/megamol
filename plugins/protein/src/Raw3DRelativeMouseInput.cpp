@@ -10,7 +10,7 @@
 #include "Raw3DRelativeMouseInput.h"
 
 #include "vislib/assert.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/StringConverter.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/sys/SystemException.h"
@@ -133,7 +133,7 @@ LRESULT WINAPI Raw3DRelativeMouseInput::wndProc(HWND hWnd, UINT msg,
     if (msg == WM_INPUT) {
 
 #if INPUT_DEBUG
-		vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, "Raw Input Received");
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_INFO, "Raw Input Received");
 #endif
 		
 		bool newData = false; // set if new motion data was received by ProcessRawInput
@@ -153,7 +153,7 @@ LRESULT WINAPI Raw3DRelativeMouseInput::wndProc(HWND hWnd, UINT msg,
 		 */
 		// Get the data from the raw input - return of -1 is an error
 		if (GetRawInputData(hRawInput, RID_INPUT, pRawInput, &inputSize, sizeof(RAWINPUTHEADER)) == static_cast<UINT>(-1)) {
-			vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_ERROR,
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_ERROR,
 				"Could not get initial raw input data.");
 		}
 
@@ -176,12 +176,12 @@ LRESULT WINAPI Raw3DRelativeMouseInput::wndProc(HWND hWnd, UINT msg,
 		// TODO: MSDN says there is an alignment error with this function under WOW64 - correct for this
 		nCount = GetRawInputBuffer(pRawInput, &inputSize, sizeof(RAWINPUTHEADER));
 		if (nCount == static_cast<UINT>(-1)) {
-			vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_ERROR,
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_ERROR,
 				"Could not get first raw input data buffer.");
 		}
 
 #if INPUT_DEBUG
-		vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, "Initial buffer count: %d", nCount);
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_INFO, "Initial buffer count: %d", nCount);
 #endif
 
 		// Keep checking the buffer and clearing out data until the most recent is obtained
@@ -215,7 +215,7 @@ LRESULT WINAPI Raw3DRelativeMouseInput::wndProc(HWND hWnd, UINT msg,
 			inputSize = bufferSize;
 			nCount = GetRawInputBuffer(pRawInput, &inputSize, sizeof(RAWINPUTHEADER));
 #if INPUT_DEBUG
-			vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, "Next buffer count: %d", nCount);
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_INFO, "Next buffer count: %d", nCount);
 #endif
 		}
 
@@ -248,7 +248,7 @@ bool Raw3DRelativeMouseInput::ProcessRawData(PRAWINPUT pRawInput) {
 	// get information about device type
 	if (GetRawInputDeviceInfo(pRawInput->header.hDevice, RIDI_DEVICEINFO,
 		&sDeviceInfo, &cbSize) != cbSize) {
-		vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_ERROR,
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_ERROR,
 			"Error while retrieving raw input device info.");
 		// don't return yet - data still received, so run the DefRawInputProc below
 	} else {
@@ -268,7 +268,7 @@ bool Raw3DRelativeMouseInput::ProcessRawData(PRAWINPUT pRawInput) {
 				flag = true;
 
 #if INPUT_DEBUG
-				vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
+				megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_INFO,
 					"Position data received: x=%d, y=%d, z=%d", pData[0], pData[1], pData[2]);
 #endif
 				// check for rotation data, too
@@ -280,7 +280,7 @@ bool Raw3DRelativeMouseInput::ProcessRawData(PRAWINPUT pRawInput) {
 					flag = true;	
 
 #if INPUT_DEBUG				
-				vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
+				megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_INFO,
 					"Rotation data received: rx=%d, ry=%d, rz=%d", pData[3], pData[4], pData[5]);
 #endif
 				}
@@ -293,7 +293,7 @@ bool Raw3DRelativeMouseInput::ProcessRawData(PRAWINPUT pRawInput) {
 				flag = true;
 
 #if INPUT_DEBUG
-				vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
+				megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_INFO,
 					"Rotation data received: rx=%d, ry=%d, rz=%d", pData[0], pData[1], pData[2]);
 #endif				
 			} else if (pRawInput->data.hid.bRawData[0] == 0x03) { // Button data
@@ -308,11 +308,11 @@ bool Raw3DRelativeMouseInput::ProcessRawData(PRAWINPUT pRawInput) {
 				}
 
 #if INPUT_DEBUG
-				vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
+				megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_INFO,
 					"Button data received: %x", keyState);
 #endif
 			} else { // error of unknown nature
-				vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_ERROR,
+				megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_ERROR,
 					"Data received was not pos, rot, or button data.");
 				// don't return yet - data still received, so run DefRawInputProc below
 			}

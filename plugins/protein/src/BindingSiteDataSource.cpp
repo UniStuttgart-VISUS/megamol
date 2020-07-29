@@ -4,7 +4,7 @@
 #include "protein_calls/BindingSiteCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/IntParam.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "vislib/sys/BufferedFile.h"
@@ -71,7 +71,7 @@ void BindingSiteDataSource::release() {
  * BindingSiteDataSource::getData
  */
 bool BindingSiteDataSource::getData( Call& call) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     BindingSiteCall *site = dynamic_cast<BindingSiteCall*>( &call);
     if ( !site ) return false;
@@ -110,7 +110,7 @@ bool BindingSiteDataSource::getData( Call& call) {
  * BindingSiteDataSource::loadPDBFile
  */
 void BindingSiteDataSource::loadPDBFile( const vislib::TString& filename) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     
     // temp variables
     unsigned int i, j, lineCnt, bsIdx, /*resCnt,*/ cnt;

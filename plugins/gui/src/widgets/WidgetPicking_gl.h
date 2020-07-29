@@ -1,7 +1,7 @@
 /*
  * WidgetPicking_gl.h
  *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -11,9 +11,8 @@
 
 #include "GUIUtils.h"
 
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
-
-#include "vislib/sys/Log.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <queue>
@@ -128,7 +127,7 @@ private:
     inline void check_opengl_errors(void) const {
         auto err = glGetError();
         if (err != 0) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "OpenGL Error: %i. [%s, %s, line %d]\n", err, __FILE__, __FUNCTION__, __LINE__);
         }
     }
@@ -162,8 +161,8 @@ private:
 
     std::shared_ptr<glowl::GLSLProgram> shader;
 
-    glm::vec4 color;
     glm::vec2 pixel_direction;
+    bool selected;
 };
 
 

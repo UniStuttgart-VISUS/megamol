@@ -265,7 +265,7 @@ int ParallelCoordinatesRenderer2D::mouseXtoAxis(float x) {
     int integral = static_cast<int>(std::round(f));
     if (integral >= static_cast<int>(this->columnCount) || integral < 0) return -1;
     if (frac > 0.7 || frac < 0.3) {
-        // vislib::sys::Log::DefaultLog.WriteInfo("picking axis %i at mouse position of axis %i",
+        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("picking axis %i at mouse position of axis %i",
         // axisIndirection[integral], integral);
         return axisIndirection[integral];
     } else {
@@ -323,14 +323,14 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
     if (floats == nullptr) return;
     auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (tc == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "ParallelCoordinatesRenderer2D requires a transfer function!");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "ParallelCoordinatesRenderer2D requires a transfer function!");
         return;
     }
     auto flagsc = readFlagsSlot.CallAs<core::FlagCallRead_GL>();
     if (flagsc == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "ParallelCoordinatesRenderer2D requires a flag storage!");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "ParallelCoordinatesRenderer2D requires a flag storage!");
         return;
     }
 
@@ -354,7 +354,7 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
                 {floats->GetColumnsInfos()[colcol].MinimumValue(), floats->GetColumnsInfos()[colcol].MaximumValue()});
             this->otherItemsAttribSlot.ResetDirty();
         } catch (std::out_of_range& ex) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "ParallelCoordinatesRenderer2D: tried to color lines by non-existing column '%s'",
                 this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value().c_str());
         }
@@ -677,7 +677,8 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #endif
 
     this->enableProgramAndBind(prog);
-    // vislib::sys::Log::DefaultLog.WriteInfo("setting tf range to [%f, %f]", tf->Range()[0], tf->Range()[1]);
+    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("setting tf range to [%f, %f]", tf->Range()[0],
+    // tf->Range()[1]);
     tf->BindConvenience(prog, GL_TEXTURE5, 5);
 
     glUniform4fv(prog.ParameterLocation("color"), 1, color);
@@ -686,7 +687,7 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
         auto colcol = this->columnIndex.at(this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value());
         glUniform1i(prog.ParameterLocation("colorColumn"), colcol);
     } catch (std::out_of_range& ex) {
-        // vislib::sys::Log::DefaultLog.WriteError(
+        // megamol::core::utility::log::Log::DefaultLog.WriteError(
         //    "ParallelCoordinatesRenderer2D: tried to color lines by non-existing column '%s'",
         //    this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value().c_str());
         glUniform1i(prog.ParameterLocation("colorColumn"), -1);
@@ -826,7 +827,8 @@ void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
     // glUniform2f(drawItemContinuousProgram.ParameterLocation("bottomLeft"), 0.0f, 0.0f);
     // glUniform2f(drawItemContinuousProgram.ParameterLocation("topRight"), windowWidth, windowHeight);
     densityFBO.BindColourTexture();
-    // vislib::sys::Log::DefaultLog.WriteInfo("setting tf range to [%f, %f]", tf->Range()[0], tf->Range()[1]);
+    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("setting tf range to [%f, %f]", tf->Range()[0],
+    // tf->Range()[1]);
     tf->BindConvenience(drawItemContinuousProgram, GL_TEXTURE5, 5);
     glUniform1i(this->drawItemContinuousProgram.ParameterLocation("fragmentCount"), 1);
     glUniform4fv(this->drawItemContinuousProgram.ParameterLocation("clearColor"), 1, backgroundColor);
@@ -901,7 +903,7 @@ void ParallelCoordinatesRenderer2D::drawParcos(void) {
             }
 
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("could not create FBO");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("could not create FBO");
         }
         break;
     }
@@ -930,7 +932,7 @@ void ParallelCoordinatesRenderer2D::load_filters() {
             i++;
         }
     } catch (nlohmann::json::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "ParallelCoordinatesRenderer2D: could not parse serialized filters (exception %i)!", e.id);
         return;
     }
@@ -958,7 +960,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     if (fc == nullptr) return false;
     auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (tc == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "%s cannot draw without a transfer function!", ParallelCoordinatesRenderer2D::ClassName());
         return false;
     }
@@ -1039,7 +1041,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
                 if ((i & core::FlagStorage::SELECTED) > 0) numSelected++;
                 if ((i & core::FlagStorage::SOFTSELECTED) > 0) numSoftSelected++;
             }
-            vislib::sys::Log::DefaultLog.WriteInfo(
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "ParallelCoordinateRenderer2D: %lu items: %lu enabled, %lu filtered, %lu selected, %lu "
                 "soft-selected.",
                 f.size(), numEnabled, numFiltered, numSelected, numSoftSelected);

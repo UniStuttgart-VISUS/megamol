@@ -31,7 +31,8 @@
 #endif
 
 #include "vislib/graphics/FpsCounter.h"
-#include "vislib/sys/Log.h"
+
+/// #include "mmcore/utility/log/Log.h"
 
 #include <functional>
 #include <iostream>
@@ -181,7 +182,6 @@ void OpenGL_GLFW_Service::OpenGL_Context::activate() const {
     if (!ptr) return;
 
 	glfwMakeContextCurrent(static_cast<GLFWwindow*>(ptr));
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
 }
 
 void OpenGL_GLFW_Service::OpenGL_Context::close() const {
@@ -284,7 +284,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
             m_data.currentWidth = m_data.initialConfig.windowPlacement.w;
             m_data.currentHeight = m_data.initialConfig.windowPlacement.h;
         } else {
-            vislib::sys::Log::DefaultLog.WriteWarn("No useful window size given. Making one up");
+            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("No useful window size given. Making one up");
             // no useful window size given, derive one from monitor resolution
             m_data.currentWidth = mode->width * 3 / 4;
             m_data.currentHeight = mode->height * 3 / 4;
@@ -294,14 +294,14 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     // options for fullscreen mode
     if (m_data.initialConfig.windowPlacement.fullScreen) {
         if (m_data.initialConfig.windowPlacement.pos)
-            vislib::sys::Log::DefaultLog.WriteWarn("Ignoring window placement position when requesting fullscreen.");
+            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Ignoring window placement position when requesting fullscreen.");
 
         if (m_data.initialConfig.windowPlacement.size &&
             ((m_data.initialConfig.windowPlacement.w != mode->width) || (m_data.initialConfig.windowPlacement.h != mode->height)))
-            vislib::sys::Log::DefaultLog.WriteWarn("Changing screen resolution is currently not supported.");
+            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Changing screen resolution is currently not supported.");
 
         if (m_data.initialConfig.windowPlacement.noDec)
-            vislib::sys::Log::DefaultLog.WriteWarn("Ignoring no-decorations setting when requesting fullscreen.");
+            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Ignoring no-decorations setting when requesting fullscreen.");
 
         /* note we do not use a real fullscrene mode, since then we would have focus-iconify problems */
         m_data.currentWidth = mode->width;
@@ -333,11 +333,10 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     m_opengl_context = &m_opengl_context_impl;
 
     if (!m_glfwWindowPtr) {
-        vislib::sys::Log::DefaultLog.WriteInfo("OpenGL_GLFW_Service: Failed to create GLFW window.");
+        /// megamol::core::utility::log::Log::DefaultLog.WriteInfo("OpenGL_GLFW_Service: Failed to create GLFW window.");
         return false;
     }
-    vislib::sys::Log::DefaultLog.WriteInfo(
-        "OpenGL_GLFW_Service: Create window with size w: %d, h: %d\n", m_data.currentWidth, m_data.currentHeight);
+    /// megamol::core::utility::log::Log::DefaultLog.WriteInfo("OpenGL_GLFW_Service: Create window with size w: %d, h: %d\n", m_data.currentWidth, m_data.currentHeight);
 
     ::glfwMakeContextCurrent(m_glfwWindowPtr);
 
@@ -354,7 +353,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     // }
 
     if(gladLoadGL() == 0)
-		vislib::sys::Log::DefaultLog.WriteInfo("OpenGL_GLFW_Service: failed to load GL via glad\n");
+		/// megamol::core::utility::log::Log::DefaultLog.WriteInfo("OpenGL_GLFW_Service: failed to load GL via glad\n");
 #ifdef _WIN32
     gladLoadWGL(wglGetCurrentDC());
 #else
@@ -491,6 +490,10 @@ void OpenGL_GLFW_Service::preGraphRender() {
     // rendering via MegaMol View is called after this function finishes
     // in the end this calls the equivalent of ::mmcRenderView(hView, &renderContext)
     // which leads to view.Render()
+
+    ::glfwMakeContextCurrent(m_glfwWindowPtr);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
+    ::glfwMakeContextCurrent(nullptr);
 }
 
 void OpenGL_GLFW_Service::postGraphRender() {

@@ -17,7 +17,7 @@
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/ParamUpdateListener.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"

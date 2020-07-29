@@ -109,7 +109,7 @@ bool GrimRenderer::create(void) {
         //    vert.WholeCode().PeekBuffer(),
         //    frag.WholeCode().PeekBuffer());
         if (!this->sphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -118,7 +118,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::simplesphere::vertex", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::simplesphere::fragment", frag)) { return false; }
         if (!this->vanillaSphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -127,7 +127,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::init::vertex", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::init::fragment", frag)) { return false; }
         if (!this->initDepthShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -136,7 +136,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::depthmap::initvert", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::depthmap::initfrag", frag)) { return false; }
         if (!this->initDepthMapShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -145,7 +145,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::depthmap::initvert", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::depthmap::mipfrag", frag)) { return false; }
         if (!this->depthMipShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -154,7 +154,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::vert", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::frag", frag)) { return false; }
         if (!this->pointShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -163,7 +163,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::simplevert", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::simplefrag", frag)) { return false; }
         if (!this->initDepthPointShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -172,7 +172,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::simplevert", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::simplefrag", frag)) { return false; }
         if (!this->vertCntShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -181,7 +181,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point2::lesssimplevert", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::simplefrag", frag)) { return false; }
         if (!this->vertCntShade2r.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -191,7 +191,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::deferred::otherSphereVertex", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::deferred::spherefragment", frag)) { return false; }
         if (!this->deferredSphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -200,7 +200,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::deferred::spherevertex", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::deferred::spherefragment", frag)) { return false; }
         if (!this->deferredVanillaSphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -209,7 +209,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth6::pointvertex", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::deferred::pointfragment", frag)) { return false; }
         if (!this->deferredPointShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -218,24 +218,24 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth6::deferredShader::vert", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth6::deferredShader::frag", frag)) { return false; }
         if (!this->deferredShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
 
 
     } catch(vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile %s shader (@%s): %s\n", shaderName,
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
             ce.FailedAction()) ,ce.GetMsgA());
         return false;
     } catch(vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile %s shader: %s\n", shaderName, e.GetMsgA());
         return false;
     } catch(...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile %s shader: Unknown exception\n", shaderName);
         return false;
     }
@@ -440,7 +440,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                     throw vislib::Exception("dsFBO.Create failed\n", __FILE__, __LINE__);
                 }
             } catch(vislib::Exception ex) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Failed to created dsFBO: %s", ex.GetMsgA());
             }
         }
@@ -582,7 +582,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                 glGetError();
                 glGenBuffersARB(2, ci.data);
                 if (glGetError() != GL_NO_ERROR) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "glGenBuffersARB failed");
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "glGenBuffersARB failed");
                     throw vislib::Exception("glGenBuffersARB failed", __FILE__, __LINE__);
                 }
                 vramUploadQuota--;
@@ -592,11 +592,11 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                     GLenum err;
                     glBufferDataARB(GL_ARRAY_BUFFER, vbpp * parts.GetCount(), parts.GetVertexData(), GL_STATIC_DRAW);
                     if ((err = glGetError()) != GL_NO_ERROR) {
-                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
+                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
                         throw vislib::Exception("glBufferDataARB failed", __FILE__, __LINE__);
                     }
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                         "Currently only data without stride is supported for caching");
                     throw vislib::Exception("Currently only data without stride is supported for caching", __FILE__, __LINE__);
                 }
@@ -606,11 +606,11 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                     GLenum err;
                     glBufferDataARB(GL_ARRAY_BUFFER, cbpp * parts.GetCount(), parts.GetColourData(), GL_STATIC_DRAW);
                     if ((err = glGetError()) != GL_NO_ERROR) {
-                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
+                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
                         throw vislib::Exception("glBufferDataARB failed", __FILE__, __LINE__);
                     }
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                         "Currently only data without stride is supported for caching");
                     throw vislib::Exception("Currently only data without stride is supported for caching", __FILE__, __LINE__);
                 }
@@ -771,7 +771,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                 glGetError();
                 glGenBuffersARB(2, ci.data);
                 if (glGetError() != GL_NO_ERROR) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "glGenBuffersARB failed");
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "glGenBuffersARB failed");
                     throw vislib::Exception("glGenBuffersARB failed", __FILE__, __LINE__);
                 }
                 vramUploadQuota--;
@@ -781,11 +781,11 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                     GLenum err;
                     glBufferDataARB(GL_ARRAY_BUFFER, vbpp * parts.GetCount(), parts.GetVertexData(), GL_STATIC_DRAW);
                     if ((err = glGetError()) != GL_NO_ERROR) {
-                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
+                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
                         throw vislib::Exception("glBufferDataARB failed", __FILE__, __LINE__);
                     }
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                         "Currently only data without stride is supported for caching");
                     throw vislib::Exception("Currently only data without stride is supported for caching", __FILE__, __LINE__);
                 }
@@ -795,11 +795,11 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                     GLenum err;
                     glBufferDataARB(GL_ARRAY_BUFFER, cbpp * parts.GetCount(), parts.GetColourData(), GL_STATIC_DRAW);
                     if ((err = glGetError()) != GL_NO_ERROR) {
-                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
+                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
                         throw vislib::Exception("glBufferDataARB failed", __FILE__, __LINE__);
                     }
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                         "Currently only data without stride is supported for caching");
                     throw vislib::Exception("Currently only data without stride is supported for caching", __FILE__, __LINE__);
                 }

@@ -21,11 +21,12 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "vislib/sys/File.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol;
 using namespace megamol::protein;
+using namespace megamol::core::utility::log;
 
 #define VERBOSE
 #define SWAP_BYTES
@@ -113,7 +114,6 @@ void VTKLegacyDataLoaderUnstructuredGrid::release(void) {}
  * VTKLegacyDataLoaderUnstructuredGrid::getData
  */
 bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
-    using namespace vislib::sys;
 
     // Get unstructured grid data call
     VTKLegacyDataCallUnstructuredGrid* dc = dynamic_cast<VTKLegacyDataCallUnstructuredGrid*>(&call);
@@ -350,8 +350,6 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getExtent(core::Call& call) {
  * VTKLegacyDataLoaderUnstructuredGrid::loadFile
  */
 bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filename) {
-    using namespace vislib::sys;
-
     /* Test whether the filename is invalid or empty */
 
     if (filename.IsEmpty()) {
@@ -359,7 +357,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
         return true;
     }
 
-    File file;
+    vislib::sys::File file;
 
     /* Generate filename pattern based on the given filename */
 
@@ -409,7 +407,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
 #endif                                            // defined(VERBOSE)
 
 
-            if (File::Exists(frameFile)) {
+            if (vislib::sys::File::Exists(frameFile)) {
                 this->nFrames++;
             } else {
                 search_done = true;
@@ -451,7 +449,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
     }
 
     // Try to open the first frames file
-    File::FileSize fileSize = File::GetSize(frameFile);
+    vislib::sys::File::FileSize fileSize = vislib::sys::File::GetSize(frameFile);
 
 #if defined(VERBOSE)
     time_t t = clock();
@@ -459,7 +457,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
 
     // Read data file to char buffer
     char* buffer = new char[(unsigned int)fileSize];
-    file.Open(frameFile, File::READ_ONLY, File::SHARE_EXCLUSIVE, File::OPEN_ONLY);
+    file.Open(frameFile, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::OPEN_ONLY);
     file.Read(buffer, fileSize);
     file.Close();
 
@@ -631,7 +629,6 @@ core::view::AnimDataModule::Frame* VTKLegacyDataLoaderUnstructuredGrid::construc
  * VTKLegacyDataLoaderUnstructuredGrid::loadFrame
  */
 void VTKLegacyDataLoaderUnstructuredGrid::loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx) {
-    using namespace vislib::sys;
     using namespace vislib;
 
     size_t dataCnt = 0, fieldArrayCnt;
@@ -661,8 +658,8 @@ void VTKLegacyDataLoaderUnstructuredGrid::loadFrame(core::view::AnimDataModule::
     }
 
     // Try to open the current frames file
-    File file;
-    File::FileSize fileSize = File::GetSize(frameFile);
+    vislib::sys::File file;
+    vislib::sys::File::FileSize fileSize = vislib::sys::File::GetSize(frameFile);
 
 #if defined(VERBOSE)
     time_t t = clock();
@@ -670,7 +667,8 @@ void VTKLegacyDataLoaderUnstructuredGrid::loadFrame(core::view::AnimDataModule::
 
     // Read data file to char buffer
     char* buffer = new char[(unsigned int)fileSize];
-    file.Open(frameFile, File::READ_ONLY, File::SHARE_EXCLUSIVE, File::OPEN_ONLY);
+    file.Open(
+        frameFile, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::OPEN_ONLY);
     file.Read(buffer, fileSize);
     file.Close();
 
@@ -900,8 +898,6 @@ void VTKLegacyDataLoaderUnstructuredGrid::readCellTypes(char*& buffPt, core::vie
  * VTKLegacyDataLoaderUnstructuredGrid::readHeaderData
  */
 void VTKLegacyDataLoaderUnstructuredGrid::readHeaderData(char*& buffPt, core::view::AnimDataModule::Frame* frame) {
-    using namespace vislib::sys;
-
     VTKLegacyDataLoaderUnstructuredGrid::Frame* fr = dynamic_cast<VTKLegacyDataLoaderUnstructuredGrid::Frame*>(frame);
     if (fr == NULL) {
         return;

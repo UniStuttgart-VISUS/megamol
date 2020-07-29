@@ -15,7 +15,7 @@
 #include "vislib/sys/AutoLock.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
 #include "mmcore/view/Renderer2DModule.h"
@@ -52,6 +52,7 @@ Module::~Module(void) {
  * Module::Create
  */
 bool Module::Create(std::vector<megamol::frontend::ModuleResource> resources) {
+    using megamol::core::utility::log::Log;
 
 	const megamol::input_events::IOpenGL_Context* opengl_context = nullptr;
     auto opengl_context_it = std::find_if(resources.begin(), resources.end(),
@@ -64,7 +65,6 @@ bool Module::Create(std::vector<megamol::frontend::ModuleResource> resources) {
 	if (opengl_context)
 		opengl_context->activate();
 
-    using vislib::sys::Log;
     ASSERT(this->instance() != NULL);
     if (!this->created) {
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
@@ -130,6 +130,7 @@ vislib::StringA Module::GetDemiRootName() const {
  * Module::Release
  */
 void Module::Release(std::vector<megamol::frontend::ModuleResource> resources) {
+    using megamol::core::utility::log::Log;
 
     auto opengl_context_it = std::find_if(resources.begin(), resources.end(),
         [&](megamol::frontend::ModuleResource& dep) { return dep.getIdentifier() == "IOpenGL_Context"; });
@@ -143,7 +144,6 @@ void Module::Release(std::vector<megamol::frontend::ModuleResource> resources) {
 	if (opengl_context)
 		opengl_context->activate();
 
-    using vislib::sys::Log;
     if (this->created) {
         this->release();
         this->created = false;

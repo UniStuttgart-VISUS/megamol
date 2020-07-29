@@ -3,7 +3,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/BoolParam.h"
 #include <iostream>
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <cassert>
 #include "vislib/sys/AutoLock.h"
 #include <sstream>

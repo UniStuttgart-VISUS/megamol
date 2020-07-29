@@ -40,10 +40,10 @@ megamol::gui::InterfaceSlotPresentation::~InterfaceSlotPresentation(void) {}
 
 
 void megamol::gui::InterfaceSlotPresentation::Present(
-    PresentPhase phase, megamol::gui::InterfaceSlot& inout_interfaceslot, megamol::gui::GraphItemsStateType& state) {
+    PresentPhase phase, megamol::gui::InterfaceSlot& inout_interfaceslot, megamol::gui::GraphItemsState_t& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
@@ -236,11 +236,12 @@ void megamol::gui::InterfaceSlotPresentation::Present(
         ImGui::PopID();
 
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 }
@@ -278,17 +279,17 @@ megamol::gui::InterfaceSlot::~InterfaceSlot(void) {
 
 
 bool megamol::gui::InterfaceSlot::AddCallSlot(
-    const CallSlotPtrType& callslot_ptr, const InterfaceSlotPtrType& parent_interfaceslot_ptr) {
+    const CallSlotPtr_t& callslot_ptr, const InterfaceSlotPtr_t& parent_interfaceslot_ptr) {
 
     try {
         if (callslot_ptr == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
         if (parent_interfaceslot_ptr == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Pointer to interface slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
@@ -298,22 +299,23 @@ bool megamol::gui::InterfaceSlot::AddCallSlot(
 
             callslot_ptr->present.group.interfaceslot_ptr = parent_interfaceslot_ptr;
 #ifdef GUI_VERBOSE
-            vislib::sys::Log::DefaultLog.WriteInfo(
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[Configurator] Added call slot '%s' to interface slot of group.\n", callslot_ptr->name.c_str());
 #endif // GUI_VERBOSE
             return true;
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
-    /// vislib::sys::Log::DefaultLog.WriteError("Call slot '%s' is incompatible to interface slot of group. [%s, %s,
-    /// line %d]\n", callslot_ptr->name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+    /// megamol::core::utility::log::Log::DefaultLog.WriteError("Call slot '%s' is incompatible to interface slot of
+    /// group. [%s, %s, line %d]\n", callslot_ptr->name.c_str(), __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
 
@@ -326,7 +328,7 @@ bool megamol::gui::InterfaceSlot::RemoveCallSlot(ImGuiID callslot_uid) {
 
                 (*iter)->present.group.interfaceslot_ptr = nullptr;
 #ifdef GUI_VERBOSE
-                vislib::sys::Log::DefaultLog.WriteInfo(
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                     "[Configurator] Removed call slot '%s' from interface slot of group.\n", (*iter)->name.c_str());
 #endif // GUI_VERBOSE
                 (*iter).reset();
@@ -336,11 +338,12 @@ bool megamol::gui::InterfaceSlot::RemoveCallSlot(ImGuiID callslot_uid) {
             }
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return false;
@@ -360,8 +363,8 @@ bool megamol::gui::InterfaceSlot::ContainsCallSlot(ImGuiID callslot_uid) {
 
 bool megamol::gui::InterfaceSlot::IsConnectionValid(InterfaceSlot& interfaceslot) {
 
-    CallSlotPtrType callslot_ptr_1;
-    CallSlotPtrType callslot_ptr_2;
+    CallSlotPtr_t callslot_ptr_1;
+    CallSlotPtr_t callslot_ptr_2;
     if (this->GetCompatibleCallSlot(callslot_ptr_1) && interfaceslot.GetCompatibleCallSlot(callslot_ptr_2)) {
         // Check for different group
         if (this->present.group.uid != interfaceslot.present.group.uid) {
@@ -381,17 +384,17 @@ bool megamol::gui::InterfaceSlot::IsConnectionValid(CallSlot& callslot) {
     } else {
         // Call slot can only be added if parent module is not part of same group
         if (callslot.GetParentModule() == nullptr) {
-            /// vislib::sys::Log::DefaultLog.WriteError("Call slots must have connceted parent module. [%s, %s, line
-            /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            /// megamol::core::utility::log::Log::DefaultLog.WriteError("Call slots must have connceted parent module.
+            /// [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         if (callslot.GetParentModule()->present.group.uid == this->present.group.uid) {
-            /// vislib::sys::Log::DefaultLog.WriteError("Parent module of call slot should not be in same group as the
-            /// interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            /// megamol::core::utility::log::Log::DefaultLog.WriteError("Parent module of call slot should not be in
+            /// same group as the interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         // Check for compatibility of call slots
-        CallSlotPtrType interface_callslot_ptr;
+        CallSlotPtr_t interface_callslot_ptr;
         if (this->GetCompatibleCallSlot(interface_callslot_ptr)) {
             if (interface_callslot_ptr->IsConnectionValid(callslot)) {
                 return true;
@@ -402,7 +405,7 @@ bool megamol::gui::InterfaceSlot::IsConnectionValid(CallSlot& callslot) {
 }
 
 
-bool megamol::gui::InterfaceSlot::GetCompatibleCallSlot(CallSlotPtrType& out_callslot_ptr) {
+bool megamol::gui::InterfaceSlot::GetCompatibleCallSlot(CallSlotPtr_t& out_callslot_ptr) {
 
     out_callslot_ptr.reset();
     if (!this->callslots.empty()) {
@@ -442,32 +445,35 @@ bool megamol::gui::InterfaceSlot::is_callslot_compatible(CallSlot& callslot) {
     // Callee interface slots can only have one call slot
     if (this->callslots.size() > 0) {
         if ((this->GetCallSlotType() == CallSlotType::CALLEE)) {
-            /// vislib::sys::Log::DefaultLog.WriteError("Callee interface slots can only have one call slot connceted.
+            /// megamol::core::utility::log::Log::DefaultLog.WriteError("Callee interface slots can only have one call
+            /// slot connceted.
             /// [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
     }
     // Call slot can only be added if not already part of this interface
     if (this->ContainsCallSlot(callslot.uid)) {
-        /// vislib::sys::Log::DefaultLog.WriteError("Call slots can only be added if not already part of this interface.
+        /// megamol::core::utility::log::Log::DefaultLog.WriteError("Call slots can only be added if not already part of
+        /// this interface.
         /// [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Call slot can only be added if not already part of other interface
     if (callslot.present.group.interfaceslot_ptr != nullptr) {
-        /// vislib::sys::Log::DefaultLog.WriteError("Call slots can only be added if not already part of other
-        /// interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        /// megamol::core::utility::log::Log::DefaultLog.WriteError("Call slots can only be added if not already part of
+        /// other interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Call slot can only be added if parent module is part of same group
     if (callslot.GetParentModule() == nullptr) {
-        /// vislib::sys::Log::DefaultLog.WriteError("Call slots must have connceted parent module. [%s, %s, line %d]\n",
+        /// megamol::core::utility::log::Log::DefaultLog.WriteError("Call slots must have connceted parent module. [%s,
+        /// %s, line %d]\n",
         /// __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if (callslot.GetParentModule()->present.group.uid != this->present.group.uid) {
-        /// vislib::sys::Log::DefaultLog.WriteError("Parent module of call slot should be in same group as the
-        /// interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        /// megamol::core::utility::log::Log::DefaultLog.WriteError("Parent module of call slot should be in same group
+        /// as the interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Check for compatibility (with all available call slots...)
@@ -482,8 +488,8 @@ bool megamol::gui::InterfaceSlot::is_callslot_compatible(CallSlot& callslot) {
     bool compatible = (compatible_slot_count == this->callslots.size());
     // Check for existing incompatible call slots
     if ((compatible_slot_count > 0) && (compatible_slot_count != this->callslots.size())) {
-        /// vislib::sys::Log::DefaultLog.WriteError("Interface slot contains incompatible call slots. [%s, %s, line
-        /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        /// megamol::core::utility::log::Log::DefaultLog.WriteError("Interface slot contains incompatible call slots.
+        /// [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     return compatible;
 }

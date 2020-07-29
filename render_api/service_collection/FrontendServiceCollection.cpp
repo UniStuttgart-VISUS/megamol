@@ -116,8 +116,9 @@ namespace frontend {
 	}
 
 	void FrontendServiceCollection::postGraphRender() {
-        for_each_service {
-			service.get().postGraphRender();
+        // traverse post update in reverse order
+        for(auto it = m_services.rbegin(); it != m_services.rend(); it++) {
+			(*it).get().postGraphRender();
 		}
 	}
 

@@ -50,7 +50,7 @@ extern "C" {
 #include "libqhull/merge.h"
 }
 #include "transforms.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace pcl {
 

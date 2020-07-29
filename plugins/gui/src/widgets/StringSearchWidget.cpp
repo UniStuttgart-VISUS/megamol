@@ -38,7 +38,7 @@ bool megamol::gui::StringSearchWidget::Widget(const std::string& id, const std::
         this->search_focus = false;
     }
 
-    std::string complete_label = "Search (?)";
+    std::string complete_label("Search (?)");
     auto width = ImGui::GetContentRegionAvail().x - ImGui::GetCursorPosX() + 4.0f * style.ItemInnerSpacing.x -
                  ImGui::CalcTextSize(complete_label.c_str()).x;
     const float min_width = 50.0f;

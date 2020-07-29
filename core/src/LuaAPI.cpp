@@ -18,18 +18,18 @@
 #include <map>
 #include <sstream>
 #include <string>
+//#include "processthreadsapi.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/LuaAPI.h"
 #include "mmcore/utility/Configuration.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/Environment.h"
-#include "vislib/sys/Log.h"
 #include "vislib/sys/Path.h"
-#include "vislib/sys/Process.h"
-#include "vislib/sys/SystemInformation.h"
 #include "vislib/sys/sysfunctions.h"
 
 #include "lua.hpp"
@@ -407,30 +407,30 @@ int megamol::core::LuaAPI::GetEnvValue(lua_State* L) {
 
 
 UINT megamol::core::LuaAPI::parseLevelAttribute(const std::string attr) {
-    UINT retval = vislib::sys::Log::LEVEL_ERROR;
+    UINT retval = megamol::core::utility::log::Log::LEVEL_ERROR;
     if (iequals(attr, "error")) {
-        retval = vislib::sys::Log::LEVEL_ERROR;
+        retval = megamol::core::utility::log::Log::LEVEL_ERROR;
     } else if (iequals(attr, "warn")) {
-        retval = vislib::sys::Log::LEVEL_WARN;
+        retval = megamol::core::utility::log::Log::LEVEL_WARN;
     } else if (iequals(attr, "warning")) {
-        retval = vislib::sys::Log::LEVEL_WARN;
+        retval = megamol::core::utility::log::Log::LEVEL_WARN;
     } else if (iequals(attr, "info")) {
-        retval = vislib::sys::Log::LEVEL_INFO;
+        retval = megamol::core::utility::log::Log::LEVEL_INFO;
     } else if (iequals(attr, "none")) {
-        retval = vislib::sys::Log::LEVEL_NONE;
+        retval = megamol::core::utility::log::Log::LEVEL_NONE;
     } else if (iequals(attr, "null")) {
-        retval = vislib::sys::Log::LEVEL_NONE;
+        retval = megamol::core::utility::log::Log::LEVEL_NONE;
     } else if (iequals(attr, "zero")) {
-        retval = vislib::sys::Log::LEVEL_NONE;
+        retval = megamol::core::utility::log::Log::LEVEL_NONE;
     } else if (iequals(attr, "all")) {
-        retval = vislib::sys::Log::LEVEL_ALL;
+        retval = megamol::core::utility::log::Log::LEVEL_ALL;
     } else if (iequals(attr, "*")) {
-        retval = vislib::sys::Log::LEVEL_ALL;
+        retval = megamol::core::utility::log::Log::LEVEL_ALL;
     } else {
         try {
             retval = std::stoi(attr);
         } catch (...) {
-            retval = vislib::sys::Log::LEVEL_ERROR;
+            retval = megamol::core::utility::log::Log::LEVEL_ERROR;
         }
     }
     return retval;
@@ -439,7 +439,7 @@ UINT megamol::core::LuaAPI::parseLevelAttribute(const std::string attr) {
 
 int megamol::core::LuaAPI::GetProcessID(lua_State* L) {
     vislib::StringA str;
-    unsigned int id = vislib::sys::Process::CurrentID();
+    unsigned int id = GetCurrentProcessId();
     str.Format("%u", id);
     lua_pushstring(L, str.PeekBuffer());
     return 1;
@@ -894,7 +894,7 @@ int megamol::core::LuaAPI::ReadTextFile(lua_State* L) {
             std::ostringstream buffer;
             buffer << t.rdbuf();
 
-            // vislib::sys::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": read from file '%s':\n%s\n", filename,
+            // megamol::core::utility::log::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": read from file '%s':\n%s\n", filename,
             // buffer.str().c_str());
 
             lua_remove(L, 1); // get rid of the filename on the stack, leaving the function pointer
@@ -910,7 +910,7 @@ int megamol::core::LuaAPI::ReadTextFile(lua_State* L) {
                     luaApiInterpreter_.ThrowError(MMC_LUA_MMREADTEXTFILE ": function did not return a string, this is bad.");
                 } else {
                     const auto newString = luaL_checkstring(L, 1);
-                    // vislib::sys::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": transformed into:\n%s\n",
+                    // megamol::core::utility::log::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": transformed into:\n%s\n",
                     // newString);
                     return 1;
                 }

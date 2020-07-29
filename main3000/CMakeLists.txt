@@ -26,7 +26,7 @@ if(BUILD_MAIN3000)
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT_NAME ${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME} PRIVATE "src" "include")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core render_api libcxxopts input_events)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core render_api frontend_gui libcxxopts input_events)
 
   target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS})
 

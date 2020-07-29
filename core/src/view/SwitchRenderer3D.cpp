@@ -10,7 +10,7 @@
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/ButtonParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol::core;
@@ -105,7 +105,7 @@ bool view::SwitchRenderer3D::Render(Call& call) {
 bool view::SwitchRenderer3D::onSwitchRenderer(param::ParamSlot& param) {
     int newVal = (this->selectedRendererSlot.Param<param::EnumParam>()->Value() == 2) ? 1 : 2;
     this->selectedRendererSlot.Param<param::EnumParam>()->SetValue(newVal);
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 200,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 200,
         "Switching to renderer no. %d\n", newVal);
     return true;
 }

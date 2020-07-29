@@ -26,10 +26,10 @@ megamol::gui::CallPresentation::~CallPresentation(void) {}
 
 
 void megamol::gui::CallPresentation::Present(
-    megamol::gui::PresentPhase phase, megamol::gui::Call& inout_call, megamol::gui::GraphItemsStateType& state) {
+    megamol::gui::PresentPhase phase, megamol::gui::Call& inout_call, megamol::gui::GraphItemsState_t& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
@@ -218,11 +218,12 @@ void megamol::gui::CallPresentation::Present(
             }
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 }
@@ -254,7 +255,8 @@ bool megamol::gui::Call::IsConnected(void) {
         }
     }
     if (connected != 2) {
-        /// vislib::sys::Log::DefaultLog.WriteWarn("Call has only one connected call slot. [%s, %s, line %d]\n",
+        /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Call has only one connected call slot. [%s, %s, line
+        /// %d]\n",
         /// __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -263,16 +265,16 @@ bool megamol::gui::Call::IsConnected(void) {
 
 
 bool megamol::gui::Call::ConnectCallSlots(
-    megamol::gui::CallSlotPtrType callslot_1, megamol::gui::CallSlotPtrType callslot_2) {
+    megamol::gui::CallSlotPtr_t callslot_1, megamol::gui::CallSlotPtr_t callslot_2) {
 
     if ((callslot_1 == nullptr) || (callslot_2 == nullptr)) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Pointer to given call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if ((this->connected_callslots[callslot_1->type] != nullptr) ||
         (this->connected_callslots[callslot_2->type] != nullptr)) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Call is already connected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -297,21 +299,23 @@ bool megamol::gui::Call::DisconnectCallSlots(ImGuiID calling_callslot_uid) {
             }
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return true;
 }
 
 
-const megamol::gui::CallSlotPtrType& megamol::gui::Call::GetCallSlot(megamol::gui::CallSlotType type) {
+const megamol::gui::CallSlotPtr_t& megamol::gui::Call::GetCallSlot(megamol::gui::CallSlotType type) {
 
     if (this->connected_callslots[type] == nullptr) {
-        /// vislib::sys::Log::DefaultLog.WriteWarn("Returned pointer to call slot is nullptr. [%s, %s, line %d]\n",
+        /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Returned pointer to call slot is nullptr. [%s, %s,
+        /// line %d]\n",
         /// __FILE__, __FUNCTION__, __LINE__);
     }
     return this->connected_callslots[type];

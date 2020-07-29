@@ -11,7 +11,7 @@
 #include "mmcore/view/CallRender3D_2.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol {
 namespace demos {
@@ -138,11 +138,11 @@ bool CrystalRenderer::Render(core::view::CallRender3D_2& call) {
 	this->GetLights();
     glm::vec4 lightPos = {0.0f, 0.0f, 0.0f, 1.0f};
     if (this->lightMap.size() != 1) {
-		vislib::sys::Log::DefaultLog.WriteWarn("[BezierCPUMeshRenderer] Only one single point light source is supported by this renderer");
+		megamol::core::utility::log::Log::DefaultLog.WriteWarn("[BezierCPUMeshRenderer] Only one single point light source is supported by this renderer");
     }
     for (auto light : this->lightMap) {
         if (light.second.lightType != core::view::light::POINTLIGHT) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[BezierCPUMeshRenderer] Only single point light source is supported by this renderer");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[BezierCPUMeshRenderer] Only single point light source is supported by this renderer");
         } else {
             auto lPos = light.second.pl_position;
             //light.second.lightColor;

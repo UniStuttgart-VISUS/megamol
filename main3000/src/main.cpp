@@ -1,9 +1,12 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 
+#include "mmcore/utility/log/Log.h"
+
 #include "AbstractFrontendService.hpp"
 #include "FrontendServiceCollection.hpp"
 #include "OpenGL_GLFW_Service.hpp"
+#include "GUI_Service.hpp"
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
@@ -14,6 +17,13 @@
 bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::frontend::ModuleResource>& module_resources);
 
 int main(int argc, char* argv[]) {
+
+    // setup log
+    megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
+    megamol::core::utility::log::Log::DefaultLog.SetLevel(megamol::core::utility::log::Log::LEVEL_ALL);
+    megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
+    megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(std::make_shared<megamol::core::utility::log::Log::StreamTarget>(std::cout, megamol::core::utility::log::Log::LEVEL_ALL));
+
     megamol::core::CoreInstance core;
     core.Initialise();
 
@@ -25,6 +35,13 @@ int main(int argc, char* argv[]) {
     openglConfig.windowTitlePrefix = openglConfig.windowTitlePrefix + " ~ Main3000";
     openglConfig.versionMajor = 4;
     openglConfig.versionMinor = 6;
+
+    megamol::frontend::GUI_Service gui_service;
+    megamol::frontend::GUI_Service::Config guiConfig;
+    guiConfig.imgui_api = megamol::frontend::GUI_Service::ImGuiAPI::OPEN_GL;
+    guiConfig.core_instance = &core;
+    // priority must be higher than priority of gl_service (=0)
+    gui_service.setPriority(23); 
 
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
@@ -39,6 +56,7 @@ int main(int argc, char* argv[]) {
 	// leading to the shutdown of megamol.
     megamol::frontend::FrontendServiceCollection services;
     services.add(gl_service, &openglConfig);
+    services.add(gui_service, &guiConfig);
 
     services.init(); // runs init(config_ptr) on all services with provided config sructs
 
@@ -129,13 +147,13 @@ bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::front
 
     graph.AddModuleDependencies(module_resources);
 
-    check(graph.CreateModule("GUIView", "::guiview"));
+    /// check(graph.CreateModule("GUIView", "::guiview"));
     check(graph.CreateModule("View3D_2", "::view"));
     check(graph.CreateModule("SphereRenderer", "::spheres"));
     check(graph.CreateModule("TestSpheresDataSource", "::datasource"));
     check(graph.CreateCall("CallRender3D_2", "::view::rendering", "::spheres::rendering"));
     check(graph.CreateCall("MultiParticleDataCall", "::spheres::getdata", "::datasource::getData"));
-    check(graph.CreateCall("CallRenderView", "::guiview::renderview", "::view::render"));
+    /// check(graph.CreateCall("CallRenderView", "::guiview::renderview", "::view::render"));
 
     static std::vector<std::string> view_resource_requests = {
         "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context"};
@@ -167,12 +185,13 @@ bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::front
         megamol::core::view::view_poke_rendering(view, resources[i++]);
     };
 
-    check(graph.SetGraphEntryPoint("::guiview", view_resource_requests, view_rendering_execution));
+    /// check(graph.SetGraphEntryPoint("::guiview", view_resource_requests, view_rendering_execution));
+    check(graph.SetGraphEntryPoint("::view", view_resource_requests, view_rendering_execution));
 
     std::string parameter_name("::datasource::numSpheres");
     auto parameterPtr = graph.FindParameter(parameter_name);
     if (parameterPtr) {
-        parameterPtr->ParseValue("3");
+        parameterPtr->ParseValue("23");
     } else {
         std::cout << "ERROR: could not find parameter: " << parameter_name << std::endl;
         return false;

@@ -14,7 +14,7 @@
 #include "vislib/math/mathfunctions.h"
 #include "vislib/graphics/gl/OutlineFont.h"
 #include "vislib/sys/sysfunctions.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "HelvUC.inc"
 
