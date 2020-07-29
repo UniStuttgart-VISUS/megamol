@@ -531,7 +531,7 @@ function(require_external NAME)
 
     add_external_project(spdlog STATIC
       GIT_REPOSITORY https://github.com/gabime/spdlog.git
-      GIT_TAG "v1.5.0"
+      GIT_TAG "v1.7.0"
       DEPENDS fmt
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${SPDLOG_LIB}"
       DEBUG_SUFFIX "d"
