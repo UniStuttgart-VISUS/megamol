@@ -37,9 +37,11 @@ namespace frontend {
 	}
 
 	void FrontendServiceCollection::close() {
-        for_each_service {
-            service.get().close();
-        }
+        // close services in reverse order,
+        // hopeully avoiding dangling references to closed resources
+        for(auto it = m_services.rbegin(); it != m_services.rend(); it++) {
+            (*it).get().close();
+		}
 	}
 
 	std::vector<ModuleResource>& FrontendServiceCollection::getProvidedResources() {
@@ -70,6 +72,7 @@ namespace frontend {
 				if (modulePtr) {
                     resources.push_back(*modulePtr);
                 } else {
+					// if a requested resource can not be found we fail and should stop program execution
                     std::cout << "could not find resource: " << name << " for service: " << service.get().serviceName() << std::endl;
                     return false;
                 }

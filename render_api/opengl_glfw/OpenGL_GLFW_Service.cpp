@@ -485,15 +485,11 @@ void OpenGL_GLFW_Service::resetProvidedResources() {
 void OpenGL_GLFW_Service::preGraphRender() {
     if (m_glfwWindowPtr == nullptr) return;
 
-    // start frame timer
+    // e.g. start frame timer
 
     // rendering via MegaMol View is called after this function finishes
     // in the end this calls the equivalent of ::mmcRenderView(hView, &renderContext)
     // which leads to view.Render()
-
-    ::glfwMakeContextCurrent(m_glfwWindowPtr);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
-    ::glfwMakeContextCurrent(nullptr);
 }
 
 void OpenGL_GLFW_Service::postGraphRender() {
@@ -506,6 +502,9 @@ void OpenGL_GLFW_Service::postGraphRender() {
     // m_data.uiLayers.OnDraw();
 
     ::glfwSwapBuffers(m_glfwWindowPtr);
+
+    ::glfwMakeContextCurrent(m_glfwWindowPtr);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
     ::glfwMakeContextCurrent(nullptr);
 }
 
