@@ -12,7 +12,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
-#include "vislib/sys/ConsoleProgressBar.h"
+#include "mmcore/utility/sys/ConsoleProgressBar.h"
 
 #include "omp.h"
 
