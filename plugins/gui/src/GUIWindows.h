@@ -9,12 +9,23 @@
 #define MEGAMOL_GUI_GUIWINDOWS_H_INCLUDED
 
 
+#ifdef _WIN32
+#    ifdef GUI_EXPORTS
+#        define GUI_API __declspec(dllexport)
+#    else
+#        define GUI_API __declspec(dllimport)
+#    endif
+#else // _WIN32
+#    define GUI_API
+#endif // _WIN32
+
+
 #include "Configurator.h"
 #include "CorporateGreyStyle.h"
 #include "CorporateWhiteStyle.h"
 #include "FileUtils.h"
-#include "WindowManager.h"
-#include "graph/GraphManager.h"
+#include "WindowCollection.h"
+#include "graph/GraphCollection.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/MinimalPopUp.h"
@@ -41,17 +52,17 @@
 namespace megamol {
 namespace gui {
 
-class GUIWindows {
+class GUI_API GUIWindows {
 public:
     /**
      * CTOR.
      */
-    GUIWindows();
+    GUIWindows(void);
 
     /**
      * DTOR.
      */
-    virtual ~GUIWindows();
+    virtual ~GUIWindows(void);
 
     /**
      * Create ImGui context using OpenGL.
@@ -64,11 +75,10 @@ public:
      * Setup and enable ImGui context for subsequent use.
      *
      * @param module_fullname   The full name of the parent module incorporating this GUI (needed for module filtering).
-     * @param viewport          The currently available viewport.
+     * @param viewport_size     The currently available size of the viewport.
      * @param instanceTime      The current instance time.
      */
-    bool PreDraw(vislib::math::Rectangle<int> viewport, double instanceTime);
-
+    bool PreDraw(glm::vec2 viewport_size, double instanceTime);
 
     /**
      * Actual Gui windows drawing and final rednering of pushed ImGui draw commands.
@@ -160,7 +170,7 @@ private:
     megamol::core::param::ParamSlot autostart_configurator;
 
     /** Hotkeys */
-    std::array<megamol::gui::HotkeyDataType, GuiHotkeyIndex::INDEX_COUNT> hotkeys;
+    std::array<megamol::gui::HotkeyData_t, GuiHotkeyIndex::INDEX_COUNT> hotkeys;
 
     /** The ImGui context created and used by this GUIWindows */
     ImGuiContext* context;
@@ -168,8 +178,8 @@ private:
     /** The currently initialized ImGui API */
     GUIImGuiAPI api;
 
-    /** The window manager. */
-    WindowManager window_manager;
+    /** The window collection. */
+    WindowCollection window_collection;
 
     /** The configurator. */
     megamol::gui::Configurator configurator;
@@ -183,8 +193,8 @@ private:
     /** UID of graph */
     ImGuiID graph_uid;
 
-    /** The graph manager holding the graph of the currently running project. */
-    GraphManager graph_manager;
+    /** The graph collection holding only the graph of the currently running project. */
+    GraphCollection graph_collection;
 
     // Widgets
     FileBrowserWidget file_browser;
@@ -202,11 +212,11 @@ private:
     void validateParameters();
 
     // Window Draw Callbacks
-    void drawParamWindowCallback(WindowManager::WindowConfiguration& wc);
-    void drawFpsWindowCallback(WindowManager::WindowConfiguration& wc);
-    void drawFontWindowCallback(WindowManager::WindowConfiguration& wc);
-    void drawTransferFunctionWindowCallback(WindowManager::WindowConfiguration& wc);
-    void drawConfiguratorWindowCallback(WindowManager::WindowConfiguration& wc);
+    void drawParamWindowCallback(WindowCollection::WindowConfiguration& wc);
+    void drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc);
+    void drawFontWindowCallback(WindowCollection::WindowConfiguration& wc);
+    void drawTransferFunctionWindowCallback(WindowCollection::WindowConfiguration& wc);
+    void drawConfiguratorWindowCallback(WindowCollection::WindowConfiguration& wc);
 
     void drawMenu(void);
     void drawPopUps(void);

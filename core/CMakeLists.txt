@@ -68,7 +68,7 @@ if(BUILD_CORE)
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
     PUBLIC ${EXPAT_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glad glm glowl zlib libpng json lua ${EXPAT_LIBRARIES}
+    PUBLIC vislib glm glowl zlib libpng json lua ${EXPAT_LIBRARIES}
     PRIVATE libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
   # Add libunwind.

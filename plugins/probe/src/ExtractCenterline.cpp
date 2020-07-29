@@ -13,6 +13,7 @@
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "normal_3d_omp.h"
+#include "mmcore/utility/log/Log.h"
 #include <atomic>
 
 

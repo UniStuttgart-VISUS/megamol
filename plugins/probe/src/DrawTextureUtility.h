@@ -12,6 +12,7 @@
 #include <tuple>
 #include <vector>
 #include "blend2d.h"
+#include "mmcore/utility/log/Log.h"
 
 
 namespace megamol {
