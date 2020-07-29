@@ -5,8 +5,8 @@
 
 #include "AbstractFrontendService.hpp"
 #include "FrontendServiceCollection.hpp"
-#include "OpenGL_GLFW_Service.hpp"
 #include "GUI_Service.hpp"
+#include "OpenGL_GLFW_Service.hpp"
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
@@ -22,7 +22,9 @@ int main(int argc, char* argv[]) {
     megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
     megamol::core::utility::log::Log::DefaultLog.SetLevel(megamol::core::utility::log::Log::LEVEL_ALL);
     megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
-    megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(std::make_shared<megamol::core::utility::log::Log::StreamTarget>(std::cout, megamol::core::utility::log::Log::LEVEL_ALL));
+    megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(
+        std::make_shared<megamol::core::utility::log::Log::StreamTarget>(
+            std::cout, megamol::core::utility::log::Log::LEVEL_ALL));
 
     megamol::core::CoreInstance core;
     core.Initialise();
@@ -35,43 +37,53 @@ int main(int argc, char* argv[]) {
     openglConfig.windowTitlePrefix = openglConfig.windowTitlePrefix + " ~ Main3000";
     openglConfig.versionMajor = 4;
     openglConfig.versionMinor = 6;
+    gl_service.setPriority(1);
 
     megamol::frontend::GUI_Service gui_service;
     megamol::frontend::GUI_Service::Config guiConfig;
     guiConfig.imgui_api = megamol::frontend::GUI_Service::ImGuiAPI::OPEN_GL;
     guiConfig.core_instance = &core;
-    // priority must be higher than priority of gl_service (=0)
-    gui_service.setPriority(23); 
+    // priority must be higher than priority of gl_service (=1)
+    // service callbacks get called in order of priority of the service.
+    // postGraphRender() and close() are called in reverse order of priorities.
+    gui_service.setPriority(23);
 
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
-	// the main loop is organized around services that can 'do something' in different parts of the main loop
-	// a service is something that implements the AbstractFrontendService interface from 'megamol\render_api\include'
-	// a central mechanism that allows services to communicate with each other and with graph modules are _resources_ (see ModuleResource in 'megamol\render_api\include')
-	// services may provide resources to the system and they may request resources they need themselves for functioning.
-	// think of a resource as a struct (or some type of your choice) that gets wrapped by a helper structure and gets a name attached to it.
-	// the fronend makes sure (at least attempts to) to hand each service the resources it requested, or else fail execution of megamol with an error message.
-	// resource assignment is done by the name of the resource, so this is a very loose interface based on trust.
-	// type safety of resources is ensured in the sense that extracting the wrong type from a ModuleResource will lead to an unhandled bad type cast exception, 
-	// leading to the shutdown of megamol.
+    // the main loop is organized around services that can 'do something' in different parts of the main loop
+    // a service is something that implements the AbstractFrontendService interface from 'megamol\render_api\include'
+    // a central mechanism that allows services to communicate with each other and with graph modules are _resources_
+    // (see ModuleResource in 'megamol\render_api\include') services may provide resources to the system and they may
+    // request resources they need themselves for functioning. think of a resource as a struct (or some type of your
+    // choice) that gets wrapped by a helper structure and gets a name attached to it. the fronend makes sure (at least
+    // attempts to) to hand each service the resources it requested, or else fail execution of megamol with an error
+    // message. resource assignment is done by the name of the resource, so this is a very loose interface based on
+    // trust. type safety of resources is ensured in the sense that extracting the wrong type from a ModuleResource will
+    // lead to an unhandled bad type cast exception, leading to the shutdown of megamol.
+    bool run_megamol = true;
     megamol::frontend::FrontendServiceCollection services;
     services.add(gl_service, &openglConfig);
     services.add(gui_service, &guiConfig);
 
-    services.init(); // runs init(config_ptr) on all services with provided config sructs
+    const bool init_ok = services.init(); // runs init(config_ptr) on all services with provided config sructs
+
+    if (!init_ok) {
+        std::cout << "ERROR: some service could not be initialized successfully. abort. " << std::endl;
+        services.close();
+        return 1;
+    }
 
     // graph is also a resource that may be accessed by services
     // TODO: how to solve const and non-const resources?
     // TODO: graph manipulation during execution of graph modules is problematic, undefined?
     services.getProvidedResources().push_back({"MegaMolGraph", graph});
 
-    bool run_megamol = true;
-	// distribute registered resources among registered services. 
+    // distribute registered resources among registered services.
     const bool resources_ok = services.assignRequestedResources();
-	// for each service we call their resource callbacks here:
-	//    std::vector<ModuleResource>& getProvidedResources()
-	//    std::vector<std::string> getRequestedResourceNames()
-	//    void setRequestedResources(std::vector<ModuleResource>& resources)
+    // for each service we call their resource callbacks here:
+    //    std::vector<ModuleResource>& getProvidedResources()
+    //    std::vector<std::string> getRequestedResourceNames()
+    //    void setRequestedResources(std::vector<ModuleResource>& resources)
     if (!resources_ok) {
         std::cout << "ERROR: frontend could not assign requested service resources. abort. " << std::endl;
         run_megamol = false;
@@ -93,11 +105,11 @@ int main(int argc, char* argv[]) {
         services.digestChangedRequestedResources();
 
         // services tell us wheter we should shut down megamol
-		// TODO: service needs to mark intself as shutdown by calling this->setShutdown() during digestChangedRequestedResources()
-        if (services.shouldShutdown())
-			break;
+        // TODO: service needs to mark intself as shutdown by calling this->setShutdown() during
+        // digestChangedRequestedResources()
+        if (services.shouldShutdown()) break;
 
-        {// put this in render function so LUA can call it
+        {                              // put this in render function so LUA can call it
             services.preGraphRender(); // e.g. start frame timer, clear render buffers
 
             graph.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
@@ -143,7 +155,8 @@ bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::front
 
 #else
 
-	#    define check(X) if (!X) return false;
+#    define check(X)                                                                                                   \
+        if (!X) return false;
 
     graph.AddModuleDependencies(module_resources);
 
@@ -158,7 +171,7 @@ bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::front
     static std::vector<std::string> view_resource_requests = {
         "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context"};
 
-	// note: this is work in progress and more of a working prototype than a final design
+    // note: this is work in progress and more of a working prototype than a final design
     // callback executed by the graph for each frame
     // knows how to make a view module process input events and start the rendering
     auto view_rendering_execution = [&](megamol::core::Module::ptr_type module_ptr,
