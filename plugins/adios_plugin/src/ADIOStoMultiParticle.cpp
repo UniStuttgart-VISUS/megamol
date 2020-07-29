@@ -9,10 +9,8 @@
 #include "ADIOStoMultiParticle.h"
 #include "adios_plugin/CallADIOSData.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <numeric>
-#include <complex.h>
-#include <complex.h>
 
 
 namespace megamol {
@@ -47,7 +45,7 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
     if (cad == nullptr) return false;
 
     if (!(*cad)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("ADIOStoMultiParticle: Error during GetHeader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("ADIOStoMultiParticle: Error during GetHeader");
         return false;
     }
     bool dathashChanged = (mpdc->DataHash() != cad->getDataHash());
@@ -64,7 +62,7 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
             cad->inquire("y");
             cad->inquire("z");
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("ADIOStoMultiParticle: No particle positions found");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("ADIOStoMultiParticle: No particle positions found");
             return false;
         }
 
@@ -100,7 +98,7 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
         if (cad->isInVars("list_offset")) {
             cad->inquire("list_offset");
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("Expected list_offset variable to be set");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Expected list_offset variable to be set");
             return false;
         }
         // list_box
@@ -110,7 +108,7 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
 
 
         if (!(*cad)(0)) {
-            vislib::sys::Log::DefaultLog.WriteError("ADIOStoMultiParticle: Error during GetData");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("ADIOStoMultiParticle: Error during GetData");
             return false;
         }
 
@@ -138,7 +136,7 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
                 vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ;
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("ADIOStoMultiParticle: No particle positions found");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("ADIOStoMultiParticle: No particle positions found");
             return false;
         }
         std::vector<float> box = cad->getData("global_box")->GetAsFloat();

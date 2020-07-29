@@ -10,7 +10,7 @@
 
 #include "json.hpp"
 #include "mmcore/view/Camera_2.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol {
 namespace core {

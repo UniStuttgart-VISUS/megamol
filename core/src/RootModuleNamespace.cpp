@@ -23,10 +23,10 @@
 #if defined(DEBUG) || defined(_DEBUG)
 #include "vislib/sys/AutoLock.h"
 #endif
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/Stack.h"
 #include "vislib/String.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/sys/Thread.h"
 #include "vislib/Trace.h"
 #include "vislib/UTF8Encoder.h"
 #include <memory>
@@ -38,7 +38,7 @@ using namespace megamol::core;
  * RootModuleNamespace::RootModuleNamespace
  */
 RootModuleNamespace::RootModuleNamespace(void) : ModuleNamespace(""), lock() {
-    // vislib::sys::Log::DefaultLog.WriteInfo("RootModuleNamespace Lock address: %x\n", std::addressof(this->lock));
+    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("RootModuleNamespace Lock address: %x\n", std::addressof(this->lock));
     // intentionally empty ATM
 }
 
@@ -101,8 +101,8 @@ ModuleNamespace::ptr_type RootModuleNamespace::FindNamespace(
 
             } else {
                 if (!quiet) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(
-                        vislib::sys::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                        megamol::core::utility::log::Log::LEVEL_ERROR,
                         "name conflicts with a namespace object\n");
                 }
                 return NULL;

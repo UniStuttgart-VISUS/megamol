@@ -91,7 +91,7 @@ bool megamol::thermodyn::PhaseSeparator::getDataCallback(core::Call& c) {
     if (inCall->DataHash() != inDataHash_ || inCall->FrameID() != frameID_) {
         auto const plc = inCall->GetParticleListCount();
         if (plc > 1) {
-            vislib::sys::Log::DefaultLog.WriteWarn("PhaseSeparator: You have to select a specific list entry\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("PhaseSeparator: You have to select a specific list entry\n");
             return false;
         }
 
@@ -100,7 +100,7 @@ bool megamol::thermodyn::PhaseSeparator::getDataCallback(core::Call& c) {
 
         if (parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_I &&
             parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_DOUBLE_I) {
-            vislib::sys::Log::DefaultLog.WriteWarn("PhaseSeparator: Require density as ICol stream\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("PhaseSeparator: Require density as ICol stream\n");
             return false;
         }
 

@@ -53,11 +53,11 @@ bool megamol::core::view::CameraSerializer::deserialize(
     const std::string text) const {
     nlohmann::json obj = nlohmann::json::parse(text);
     if (!obj.is_array()) {
-        vislib::sys::Log::DefaultLog.WriteError("The input text does not contain a json array");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("The input text does not contain a json array");
         return false;
     }
     if (obj.size() > N) {
-        vislib::sys::Log::DefaultLog.WriteError("The number of objects in the text is smaller than the array size");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("The number of objects in the text is smaller than the array size");
         return false;
     }
     for (nlohmann::json::iterator it = obj.begin(); it != obj.end(); ++it) {
@@ -83,11 +83,11 @@ bool megamol::core::view::CameraSerializer::deserialize(
     const std::string text) const {
     nlohmann::json obj = nlohmann::json::parse(text);
     if (!obj.is_array()) {
-        vislib::sys::Log::DefaultLog.WriteError("The input text does not contain a json array");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("The input text does not contain a json array");
         return false;
     }
     if (obj.size() > N) {
-        vislib::sys::Log::DefaultLog.WriteError("The number of objects in the text is smaller than the array size");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("The number of objects in the text is smaller than the array size");
         return false;
     }
     for (nlohmann::json::iterator it = obj.begin(); it != obj.end(); ++it) {

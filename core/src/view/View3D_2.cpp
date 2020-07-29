@@ -42,7 +42,7 @@
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/KeyCode.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/sysfunctions.h"
 #include <glm/gtx/string_cast.hpp>
 
@@ -801,10 +801,8 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
             this->cursor2d.SetButtonState(2, down);
 
             if (!anyManipulatorActive) {
-                if ((altPressed ^ this->arcballDefault) || ctrlPressed) {
-                    this->translateManipulator.setActive(
-                        wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
-                }
+                this->translateManipulator.setActive(
+                    wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
             }
 
             break;
@@ -875,7 +873,7 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
                 static_cast<int>(this->mouseY), glm::vec4(rotCenter, 1.0));
         }
 
-        if (this->translateManipulator.manipulating()) {
+        if (this->translateManipulator.manipulating() && !this->rotateManipulator.manipulating() ) {
 
             // compute proper step size by computing pixel world size at distance to rotCenter
             glm::vec3 currCamPos(static_cast<glm::vec4>(this->cam.position()));
@@ -1004,7 +1002,7 @@ bool View3D_2::onStoreCamera(param::ParamSlot& p) {
 
     auto path = this->determineCameraFilePath();
     if (path.empty()) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The camera output file path could not be determined. This is probably due to the usage of .mmprj project "
             "files. Please use a .lua project file instead");
         return false;
@@ -1015,7 +1013,7 @@ bool View3D_2::onStoreCamera(param::ParamSlot& p) {
         std::ifstream file(path);
         if (file.good()) {
             file.close();
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "The camera output file path already contains a camera file with the name '%s'. Override mode is "
                 "deactivated, so no camera is stored",
                 path.c_str());
@@ -1032,12 +1030,12 @@ bool View3D_2::onStoreCamera(param::ParamSlot& p) {
         file << outString;
         file.close();
     } else {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The camera output file could not be written to '%s' because the file could not be opened.", path.c_str());
         return false;
     }
 
-    vislib::sys::Log::DefaultLog.WriteInfo("Camera statistics successfully written to '%s'", path.c_str());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Camera statistics successfully written to '%s'", path.c_str());
     return true;
 }
 
@@ -1049,7 +1047,7 @@ bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
         std::string camstring(this->cameraSettingsSlot.Param<param::StringParam>()->Value());
         cam_type::minimal_state_type minstate;
         if (!this->serializer.deserialize(minstate, camstring)) {
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "The entered camera string was not valid. No change of the camera has been performed");
         } else {
             this->cam = minstate;
@@ -1059,7 +1057,7 @@ bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
 
     auto path = this->determineCameraFilePath();
     if (path.empty()) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The camera file path could not be determined. This is probably due to the usage of .mmprj project "
             "files. Please use a .lua project file instead");
         return false;
@@ -1070,13 +1068,13 @@ bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
     if (file.is_open()) {
         text.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     } else {
-        vislib::sys::Log::DefaultLog.WriteWarn("The camera output file at '%s' could not be opened.", path.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("The camera output file at '%s' could not be opened.", path.c_str());
         return false;
     }
     auto copy = this->savedCameras;
     bool success = this->serializer.deserialize(copy, text);
     if (!success) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The reading of the camera parameters did not work properly. No changes were made.");
         return false;
     }
@@ -1084,7 +1082,7 @@ bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
     if (this->savedCameras.back().second) {
         this->cam = this->savedCameras.back().first;
     } else {
-        vislib::sys::Log::DefaultLog.WriteWarn("The stored default cam was not valid. The old default cam is used");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("The stored default cam was not valid. The old default cam is used");
     }
     return true;
 }

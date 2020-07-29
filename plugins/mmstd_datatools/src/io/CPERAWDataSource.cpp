@@ -16,7 +16,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 
@@ -84,16 +84,16 @@ bool CPERAWDataSource::assertData() {
 #endif
         fclose(f);
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("Cannot get size of file %s", fname);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Cannot get size of file %s", fname);
         return false;
     }
 
     if (len < headerLen) {
-        vislib::sys::Log::DefaultLog.WriteError("File %s has illegal content: not enough information for both bounding boxes", fname);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("File %s has illegal content: not enough information for both bounding boxes", fname);
         return false;
     }
     if (len == headerLen) {
-        vislib::sys::Log::DefaultLog.WriteWarn("File %s is empty", fname);
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("File %s is empty", fname);
         return true;
     }
 
@@ -101,7 +101,7 @@ bool CPERAWDataSource::assertData() {
     size_t const payload = len - headerLen; // we have two float bounding boxes up front
 
     if (payload % pointStride != 0) {
-        vislib::sys::Log::DefaultLog.WriteError("File %s has illegal content: payload is not a multiple of %u bytes: %llu", fname, pointStride, payload);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("File %s has illegal content: payload is not a multiple of %u bytes: %llu", fname, pointStride, payload);
         return false;
     }
 
@@ -114,9 +114,9 @@ bool CPERAWDataSource::assertData() {
         file.read(reinterpret_cast<char *>(&localBBox[x]), 4);
     }
 
-    vislib::sys::Log::DefaultLog.WriteInfo("File %s global bbox: (%f, %f, %f - %f, %f, %f)", fname, 
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("File %s global bbox: (%f, %f, %f - %f, %f, %f)", fname, 
         globalBBox[0], globalBBox[1], globalBBox[2], globalBBox[3], globalBBox[4], globalBBox[5]);
-    vislib::sys::Log::DefaultLog.WriteInfo("File %s local bbox : (%f, %f, %f - %f, %f, %f)", fname,
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("File %s local bbox : (%f, %f, %f - %f, %f, %f)", fname,
         localBBox[0], localBBox[1], localBBox[2], localBBox[3], localBBox[4], localBBox[5]);
 
     // data.clear();

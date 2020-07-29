@@ -15,8 +15,9 @@
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "vislib/Trace.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/PerformanceCounter.h"
+#include "vislib/StringConverter.h"
 
 using namespace megamol::stdplugin::datatools;
 using namespace megamol;
@@ -222,7 +223,7 @@ bool TableToParticles::pushColumnIndex(std::vector<uint32_t>& cols, const vislib
         cols.push_back(columnIndex[c]);
         return true;
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("unknown column '%s'", c.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("unknown column '%s'", c.c_str());
         return false;
     }
 }
@@ -231,7 +232,7 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
     if (this->inputHash == ft->DataHash() && this->myTime == ft->GetFrameID() && !anythingDirty() && this->lastTimeStep == frameID) return true;
 
     if (this->inputHash != ft->DataHash()) {
-        vislib::sys::Log::DefaultLog.WriteInfo("TableToParticles: Dataset changed -> Updating EnumParams\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("TableToParticles: Dataset changed -> Updating EnumParams\n");
         this->columnIndex.clear();
 
         this->slotColumnX.Param<core::param::FlexEnumParam>()->ClearValues();
@@ -487,14 +488,14 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
             auto* diffptr = glm::value_ptr(diff);
             float(&diffarr)[9] = *reinterpret_cast<float(*)[9]>(diffptr);
             if (std::any_of(std::begin(diffarr), std::end(diffarr), [](float f) { return f > 0.01f; })) {
-                vislib::sys::Log::DefaultLog.WriteWarn(
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "TableToParticles: difference too large when encoding matrix as quaternion:\n%s\n", glm::to_string(diff).c_str());
-                vislib::sys::Log::DefaultLog.WriteWarn(
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "TableToParticles: matrix =\n%s\n", glm::to_string(rotate_world_into_tensor).c_str());
-                vislib::sys::Log::DefaultLog.WriteWarn("TableToParticles: quat = %s\n", glm::to_string(quat).c_str());
-                vislib::sys::Log::DefaultLog.WriteWarn(
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("TableToParticles: quat = %s\n", glm::to_string(quat).c_str());
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "TableToParticles: reconstructed matrix =\n%s\n", glm::to_string(rotMatRec).c_str());
-                vislib::sys::Log::DefaultLog.WriteWarn(
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "TableToParticles: ---------------------------------------------------------------\n");
             }
             // end
@@ -674,10 +675,10 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
         }
         return true;
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(1, e.GetMsg());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(1, e.GetMsg());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
+        megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
                                                    _T("in callback getMultiParticleData."));
         return false;
     }
@@ -725,10 +726,10 @@ bool TableToParticles::getMultiparticleExtent(core::Call& call) {
         }
         return true;
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(1, e.GetMsg());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(1, e.GetMsg());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
+        megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
                                                    _T("in callback getMultiparticleExtent."));
         return false;
     }

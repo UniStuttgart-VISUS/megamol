@@ -6,7 +6,7 @@
  */
 #include "stdafx.h"
 #include "mmcore/profiler/Manager.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/Stack.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include "mmcore/CallerSlot.h"
@@ -33,7 +33,7 @@ profiler::Manager& profiler::Manager::Instance(void) {
 void profiler::Manager::SetMode(Mode mode) {
     if (this->mode != mode) {
         this->mode = mode;
-        vislib::sys::Log::DefaultLog.WriteInfo("Profiler modus set to %d", static_cast<int>(mode));
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Profiler modus set to %d", static_cast<int>(mode));
 
         if (mode == PROFILE_NONE) {
             this->UnselectAll();
@@ -81,7 +81,7 @@ void profiler::Manager::UnselectAll(void) {
         this->connections.Lock();
     }
     this->connections.Unlock();
-    vislib::sys::Log::DefaultLog.WriteInfo("All calls removed from profiling");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("All calls removed from profiling");
 }
 
 
@@ -116,7 +116,7 @@ void profiler::Manager::Select(const vislib::StringA& caller) {
     }
 
     if (call == NULL) {
-        vislib::sys::Log::DefaultLog.WriteError("Failed to select call at %s for profiling: not found", caller.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to select call at %s for profiling: not found", caller.PeekBuffer());
         return;
     }
     ASSERT(call->PeekCalleeSlot() != NULL);
@@ -124,9 +124,9 @@ void profiler::Manager::Select(const vislib::StringA& caller) {
 
     if (!call->PeekCalleeSlot()->IsCallProfiling(call)) {
         const_cast<CalleeSlot*>(call->PeekCalleeSlot())->AddCallProfiling(call);
-        vislib::sys::Log::DefaultLog.WriteInfo("Call at %s added to profiling", caller.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Call at %s added to profiling", caller.PeekBuffer());
     } else {
-        vislib::sys::Log::DefaultLog.WriteWarn("Call at %s not added to profiling: already profiling", caller.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Call at %s not added to profiling: already profiling", caller.PeekBuffer());
     }
 }
 

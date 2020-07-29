@@ -35,11 +35,11 @@
 #include "vislib/net/DNS.h"
 #include "vislib/net/IPHostEntry.h"
 #include "vislib/net/NetworkInformation.h"
-#include "vislib/net/ShallowSimpleMessage.h"
+#include "mmcore/utility/net/ShallowSimpleMessage.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/CmdLineProvider.h"
-#include "vislib/sys/SystemInformation.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/sys/SystemInformation.h"
+#include "mmcore/utility/sys/Thread.h"
 #include "vislib/tchar.h"
 
 
@@ -354,7 +354,7 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
                 }
                 break;
             default:
-                vislib::sys::Log::DefaultLog.WriteWarn(
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "Rank %d got an unknown message with ID %d\n", this->mpiRank, msg.GetHeader().GetMessageID());
             } /* end switch (msg.GetHeader().GetMessageID()) */
         }     /* end while (offset < state.RelaySize) */
@@ -384,26 +384,26 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
         SyncDataSourcesCall* ss = this->syncDataSlot.CallAs<SyncDataSourcesCall>();
         if (ss != nullptr) {
             if (!(*ss)(0)) { // check for dirty filenamesslot
-                vislib::sys::Log::DefaultLog.WriteError("MPIClusterView: SyncData GetDirty callback failed..\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("MPIClusterView: SyncData GetDirty callback failed..\n");
                 return;
             }
             int fnameDirty = ss->getFilenameDirty();
             int allFnameDirty = 0;
             MPI_Allreduce(&fnameDirty, &allFnameDirty, 1, MPI_INT, MPI_LAND, this->comm);
-            vislib::sys::Log::DefaultLog.WriteInfo("MPIClusterView: allFnameDirty: %d\n", allFnameDirty);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("MPIClusterView: allFnameDirty: %d\n", allFnameDirty);
 
             if (allFnameDirty) {
                 if (!(*ss)(1)) { // finally set the filename in the data source
-                    vislib::sys::Log::DefaultLog.WriteError("MPIClusterView: SyncData SetFilename callback failed..\n");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("MPIClusterView: SyncData SetFilename callback failed..\n");
                     return;
                 }
                 ss->resetFilenameDirty();
             }
             if (!allFnameDirty && fnameDirty) {
-                vislib::sys::Log::DefaultLog.WriteInfo("MPIClusterView: Waiting for data in MPI world to be ready.\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("MPIClusterView: Waiting for data in MPI world to be ready.\n");
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteInfo("MPIClusterView: No sync object connected.\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("MPIClusterView: No sync object connected.\n");
         }
 #endif
 
@@ -445,7 +445,7 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
 
     } else {
         this->renderFallbackView();
-        vislib::sys::Log::DefaultLog.WriteInfo("Waiting for all nodes to create the module graph.\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Waiting for all nodes to create the module graph.\n");
     } /* end if (canRender) */
 
 #ifdef WITH_MPI
@@ -595,7 +595,7 @@ megamol::core::cluster::mpi::View::SwapGroupApi::SwapGroupApi(void) : isAvailabl
                          (this->wglQueryFrameCountNV != nullptr) && (this->wglResetFrameCountNV != nullptr));
 #endif /* (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP)) */
 
-    vislib::sys::Log::DefaultLog.WriteInfo(_T("Swap lock is%s available."), (this->isAvailable ? _T("") : _T(" not")));
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("Swap lock is%s available."), (this->isAvailable ? _T("") : _T(" not")));
 }
 
 
@@ -741,7 +741,7 @@ bool megamol::core::cluster::mpi::View::initialiseMpi(void) {
                 _TRACE_MESSAGING("MPIClusterView: Got MPI communicator.");
                 this->comm = c->GetComm();
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(_T("MPIClusterView: Could not ")
+                megamol::core::utility::log::Log::DefaultLog.WriteError(_T("MPIClusterView: Could not ")
                                                         _T("retrieve MPI communicator for the MPI-based view ")
                                                         _T("from the registered provider module."));
             }
@@ -749,7 +749,7 @@ bool megamol::core::cluster::mpi::View::initialiseMpi(void) {
         } else {
             /* Legacy implementation: do it directly and remember that. */
 #    ifdef _WIN32
-            vislib::sys::Log::DefaultLog.WriteWarn(_T("MPIClusterView: Performing legacy MPI ")
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(_T("MPIClusterView: Performing legacy MPI ")
                                                    _T("initialisation in module %hs, because no MpiProvider was ")
                                                    _T("registered. Please change your project file as this ")
                                                    _T("legacy behaviour might be removed in future versions."),
@@ -760,22 +760,22 @@ bool megamol::core::cluster::mpi::View::initialiseMpi(void) {
             ::MPI_Init(&argc, &argv);
             this->comm = MPI_COMM_WORLD;
             this->isMpiInitialised = retval;
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("MPIClusterView: MPI was initialised ")
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("MPIClusterView: MPI was initialised ")
                                                    _T("by module %hs."),
                 View::ClassName());
 #    else  /* _WIN32 */
-            vislib::sys::Log::DefaultLog.WriteError(_T("MPI cannot be ")
+            megamol::core::utility::log::Log::DefaultLog.WriteError(_T("MPI cannot be ")
                                                     _T("initialised lazily on platforms other than Windows. ")
                                                     _T("Please initialise MPI before using this module."));
 #    endif /* _WIN32 */
         }  /* end if (c != nullptr) */
 
         if (this->comm != MPI_COMM_NULL) {
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("MPIClusterView: MPI is ready, ")
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("MPIClusterView: MPI is ready, ")
                                                    _T("retrieving communicator properties ..."));
             ::MPI_Comm_rank(this->comm, &this->mpiRank);
             ::MPI_Comm_size(this->comm, &this->mpiSize);
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("MPIClusterView on %hs is %d ")
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("MPIClusterView on %hs is %d ")
                                                    _T("of %d."),
                 vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(), this->mpiRank, this->mpiSize);
         } /* end if (this->comm != MPI_COMM_NULL) */

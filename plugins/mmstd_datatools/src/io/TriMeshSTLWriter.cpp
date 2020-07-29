@@ -12,7 +12,7 @@
 
 #include "geometry_calls/CallTriMeshData.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <stdexcept>
 
@@ -176,7 +176,7 @@ namespace megamol
 					}
 					catch (const std::runtime_error& ex)
 					{
-						vislib::sys::Log::DefaultLog.WriteError("Request for writing to STL file failed: %s", ex.what());
+						megamol::core::utility::log::Log::DefaultLog.WriteError("Request for writing to STL file failed: %s", ex.what());
 
 						return false;
 					}

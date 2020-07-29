@@ -8,7 +8,7 @@ set(expat_SRCS
   src/xmltok_ns.c)
 
 add_library(expat STATIC ${expat_SRCS})
-target_compile_definitions(${PROJECT_NAME} PRIVATE XML_UNICODE_WCHAR_T XML_LARGE_SIZE)
+target_compile_definitions(${PROJECT_NAME} PRIVATE XML_LARGE_SIZE)
 target_include_directories(expat PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 if(UNIX)

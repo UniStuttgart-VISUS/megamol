@@ -11,7 +11,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"
@@ -90,7 +90,7 @@ void SIFFDataSource::release(void) {
  */
 bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
     using vislib::sys::File;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::sys::FastFile file;
 
     if (!file.Open(this->filenameSlot.Param<core::param::FilePathParam>()->Value(),

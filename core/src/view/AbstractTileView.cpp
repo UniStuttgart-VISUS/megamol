@@ -89,7 +89,7 @@ view::AbstractTileView::~AbstractTileView(void) {
  * view::AbstractTileView::initTileViewParameters
  */
 void view::AbstractTileView::initTileViewParameters(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     const utility::Configuration& cfg = this->GetCoreInstance()->Configuration();
     vislib::StringA v;
 

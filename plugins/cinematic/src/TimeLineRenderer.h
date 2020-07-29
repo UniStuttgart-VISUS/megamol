@@ -31,7 +31,7 @@
 #include "vislib/graphics/InputModifiers.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Matrix.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "Keyframe.h"
 #include "CallKeyframeKeeper.h"

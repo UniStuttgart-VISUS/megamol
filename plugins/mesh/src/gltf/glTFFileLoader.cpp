@@ -208,11 +208,11 @@ bool megamol::mesh::GlTFFileLoader::checkAndLoadGltfModel() {
 
         bool ret = loader.LoadASCIIFromFile(&*m_gltf_model, &err, &war, filename);
         if (!err.empty()) {
-            vislib::sys::Log::DefaultLog.WriteError("Err: %s\n", err.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Err: %s\n", err.c_str());
         }
 
         if (!ret) {
-            vislib::sys::Log::DefaultLog.WriteError("Failed to parse glTF\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to parse glTF\n");
         }
 
         return true;

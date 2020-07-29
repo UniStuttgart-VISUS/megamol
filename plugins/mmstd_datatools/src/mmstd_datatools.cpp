@@ -86,6 +86,7 @@
 #include "table/TableJoin.h"
 #include "table/TableObserverPlane.h"
 #include "table/TableSampler.h"
+#include "table/TableSelectionTx.h"
 #include "table/TableSort.h"
 #include "table/TableWhere.h"
 #include "table/TableToLines.h"
@@ -220,6 +221,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableColumnFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSampler>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableFlagFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSelectionTx>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSort>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableWhere>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocities>();
