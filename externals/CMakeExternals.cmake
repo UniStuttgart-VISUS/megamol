@@ -207,7 +207,7 @@ function(require_external NAME)
       set(FMT_LIB "lib/fmt<SUFFIX>.lib")
     else()
       include(GNUInstallDirs)
-      set(FMT_LIB "${CMAKE_INSTALL_LIBDIR}/libfmt.a")
+      set(FMT_LIB "${CMAKE_INSTALL_LIBDIR}/libfmt<SUFFIX>.a")
     endif()
 
     add_external_project(fmt STATIC
@@ -524,7 +524,7 @@ function(require_external NAME)
       set(SPDLOG_LIB "lib/spdlog<SUFFIX>.lib")
     else()
       include(GNUInstallDirs)
-      set(SPDLOG_LIB "${CMAKE_INSTALL_LIBDIR}/libspdlog.a")
+      set(SPDLOG_LIB "${CMAKE_INSTALL_LIBDIR}/libspdlog<SUFFIX>.a")
     endif()
 
     external_get_property(fmt BINARY_DIR)
