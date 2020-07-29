@@ -74,11 +74,11 @@ void GUI_Service::digestChangedRequestedResources() {
 
     // check for updates in required resources
 
-    /// MegaMolGraph
+    /// MegaMolGraph = resource index 0
     auto megamol_graph = &this->m_requestedResourceReferences[0].getResource<megamol::core::MegaMolGraph>(); 
     /// TODO
 
-    /// KeyboardEvents
+    /// KeyboardEvents = resource index 1
     auto keyboard_events = &this->m_requestedResourceReferences[1].getResource<megamol::input_events::KeyboardEvents>();
     for (auto& key_event : keyboard_events->key_events) {
         auto key = std::get<0>(key_event);
@@ -90,7 +90,7 @@ void GUI_Service::digestChangedRequestedResources() {
         gui->OnChar(codepoint);
     }
 
-    /// MouseEvents
+    /// MouseEvents = resource index 2
     auto mouse_events = &this->m_requestedResourceReferences[2].getResource<megamol::input_events::MouseEvents>();
     for (auto& pos_event  : mouse_events->position_events) {
         auto x_pos = std::get<0>(pos_event);
@@ -109,10 +109,10 @@ void GUI_Service::digestChangedRequestedResources() {
         gui->OnMouseButton(button, action, modifiers);
     }
 
-    /// IOpenGL_Context
+    /// IOpenGL_Context = resource index 3
     this->m_resource_state.opengl_context_ptr = &this->m_requestedResourceReferences[3].getResource<megamol::input_events::IOpenGL_Context>();
          
-    /// FramebufferEvents
+    /// FramebufferEvents = resource index 4
     auto framebuffer_events = &this->m_requestedResourceReferences[4].getResource<megamol::input_events::FramebufferEvents>();
     for (auto& size_event : framebuffer_events->size_events) {
         m_resource_state.viewport_size.x = size_event.width;
@@ -163,11 +163,11 @@ std::vector<ModuleResource>& GUI_Service::getProvidedResources() {
 const std::vector<std::string> GUI_Service::getRequestedResourceNames() const {
 
 	return {
-        {"MegaMolGraph"},      // index 0
-        {"KeyboardEvents"},    // index 1
-        {"MouseEvents"},       // index 2
-        {"IOpenGL_Context"},   // index 3
-        {"FramebufferEvents"}  // index 4
+        {"MegaMolGraph"},      // resource index 0
+        {"KeyboardEvents"},    // resource index 1
+        {"MouseEvents"},       // resource index 2
+        {"IOpenGL_Context"},   // resource index 3
+        {"FramebufferEvents"}  // resource index 4
     };
 }
 
