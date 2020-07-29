@@ -2029,7 +2029,7 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
                     Parameter param_slot(megamol::gui::GenerateUniqueID(), p.type, p.storage, p.minval, p.maxval);
                     param_slot.full_name = p.full_name;
                     param_slot.description = p.description;
-                    param_slot.SetValueString(p.default_value, true);
+                    param_slot.SetValueString(p.default_value, true, true);
                     param_slot.present.SetGUIVisible(p.gui_visibility);
                     param_slot.present.SetGUIReadOnly(p.gui_read_only);
                     param_slot.present.SetGUIPresentation(p.gui_presentation);

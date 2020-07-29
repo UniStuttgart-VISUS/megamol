@@ -42,7 +42,7 @@ include(check_mmdep)
 include(ClangFormat)
 
 # External
-include("CMakeExternals.cmake")
+include("externals/CMakeExternals.cmake")
 
 # Input and Event interfaces 
 add_subdirectory(${MEGAMOL_DIR}/input_events)

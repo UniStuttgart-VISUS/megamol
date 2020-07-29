@@ -235,13 +235,14 @@ public:
         megamol::core::param::ParamSlot& in_param_slot, megamol::gui::Parameter::StockParameter& out_param);
 
     static bool ReadNewCoreParameterToNewParameter(megamol::core::param::ParamSlot& in_param_slot,
-        std::shared_ptr<megamol::gui::Parameter>& out_param, bool set_default_val, bool save_core_param_pointer);
+        std::shared_ptr<megamol::gui::Parameter>& out_param, bool set_default_val, bool set_dirty,
+        bool save_core_param_pointer);
 
     static bool ReadCoreParameterToParameter(vislib::SmartPtr<megamol::core::param::AbstractParam>& in_param_ptr,
-        megamol::gui::Parameter& out_param, bool set_default_val);
+        megamol::gui::Parameter& out_param, bool set_default_val, bool set_dirty);
 
     static bool ReadNewCoreParameterToExistingParameter(megamol::core::param::ParamSlot& in_param_slot,
-        megamol::gui::Parameter& out_param, bool set_default_val, bool save_core_param_pointer);
+        megamol::gui::Parameter& out_param, bool set_default_val, bool set_dirty, bool save_core_param_pointer);
 
     static bool WriteCoreParameterGUIState(
         megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr);
@@ -285,15 +286,17 @@ public:
 
     // SET ----------------------------------
 
-    bool SetValueString(const std::string& val_str, bool set_default_val = false);
+    bool SetValueString(const std::string& val_str, bool set_default_val = false, bool set_dirty = true);
 
-    template <typename T> void SetValue(T val, bool set_default_val = false) {
+    template <typename T> void SetValue(T val, bool set_default_val = false, bool set_dirty = true) {
         if (std::holds_alternative<T>(this->value)) {
 
             // Set value
             if (std::get<T>(this->value) != val) {
                 this->value = val;
-                this->value_dirty = true;
+                if (set_dirty) {
+                    this->value_dirty = true;
+                }
 
                 // Check for new flex enum entry
                 if (this->type == Param_t::FLEXENUM) {

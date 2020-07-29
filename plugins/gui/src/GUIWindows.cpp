@@ -388,7 +388,8 @@ bool GUIWindows::PostDraw(void) {
                         megamol::gui::Parameter::WriteCoreParameterValue(param, param.core_param_ptr);
                         param.ResetValueDirty();
                     } else {
-                        megamol::gui::Parameter::ReadCoreParameterToParameter(param.core_param_ptr, param, false);
+                        megamol::gui::Parameter::ReadCoreParameterToParameter(
+                            param.core_param_ptr, param, false, false);
                     }
                 }
             }
@@ -1594,7 +1595,7 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
             for (auto& param : module_ptr->parameters) {
                 if (!param.core_param_ptr.IsNull()) {
-                    megamol::gui::Parameter::ReadCoreParameterToParameter(param.core_param_ptr, param, false);
+                    megamol::gui::Parameter::ReadCoreParameterToParameter(param.core_param_ptr, param, false, false);
                 }
             }
         }
