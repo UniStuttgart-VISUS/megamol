@@ -767,7 +767,7 @@ void KeyframeKeeper::linearizeSimTangent(Keyframe stkf) {
 void KeyframeKeeper::snapKeyframe2AnimFrame(Keyframe& inout_kf) {
 
     if (this->fps == 0) {
-        vislib::sys::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [snapKeyframe2AnimFrame] FPS is ZERO. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [snapKeyframe2AnimFrame] FPS is ZERO. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 
@@ -806,7 +806,7 @@ void KeyframeKeeper::setSameSpeed() {
         // Get total values
         float totTime = this->keyframes.back().GetAnimTime() - this->keyframes.front().GetAnimTime();
         if (totTime == 0.0f) {
-            vislib::sys::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [setSameSpeed] totTime is ZERO. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [setSameSpeed] totTime is ZERO. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return;
         }
         float totDist = 0.0f;
@@ -848,7 +848,7 @@ void KeyframeKeeper::setSameSpeed() {
 void KeyframeKeeper::refreshInterpolCamPos(unsigned int s) {
 
     if (s == 0) {
-        vislib::sys::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [refreshInterpolCamPos] Interpolation step count should be greater than zero. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [refreshInterpolCamPos] Interpolation step count should be greater than zero. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 
@@ -1228,37 +1228,37 @@ bool KeyframeKeeper::saveKeyframes() {
             outfile << json.dump(2); 
         }
         catch (nlohmann::json::type_error& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::exception& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::parse_error& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::invalid_iterator& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::out_of_range& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::other_error& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (...) {
-            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -1296,7 +1296,7 @@ bool KeyframeKeeper::loadKeyframes() {
             json = nlohmann::json::parse(content);
             // Check for valid JSON object
             if (!json.is_object()) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[KEYFRAME KEEPER] Given string is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
@@ -1306,49 +1306,49 @@ bool KeyframeKeeper::loadKeyframes() {
                 json.at("total_animation_time").get_to(this->totalAnimTime);
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'total_animation_time'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'total_animation_time'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
             if (json.at("spline_tangent_length").is_number()) {
                 json.at("spline_tangent_length").get_to(this->splineTangentLength);
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'spline_tangent_length'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'spline_tangent_length'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
             if (json.at("first_ctrl_point").at("x").is_number()) {
                 json.at("first_ctrl_point").at("x").get_to(this->startCtrllPos.x);
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'x'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'x'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
             if (json.at("first_ctrl_point").at("y").is_number()) {
                 json.at("first_ctrl_point").at("y").get_to(this->startCtrllPos.y);
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'y'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'y'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
             if (json.at("first_ctrl_point").at("z").is_number()) {
                 json.at("first_ctrl_point").at("z").get_to(this->startCtrllPos.z);
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'z'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'z'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
             if (json.at("last_ctrl_point").at("x").is_number()) {
                 json.at("last_ctrl_point").at("x").get_to(this->endCtrllPos.x);
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'x'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'x'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
             if (json.at("last_ctrl_point").at("y").is_number()) {
                 json.at("last_ctrl_point").at("y").get_to(this->endCtrllPos.y);
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'y'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'y'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
             if (json.at("last_ctrl_point").at("z").is_number()) {
                 json.at("last_ctrl_point").at("z").get_to(this->endCtrllPos.z);
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'z'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'z'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
 
             // Get keyframe data
@@ -1365,41 +1365,41 @@ bool KeyframeKeeper::loadKeyframes() {
                 }
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'keyframes' array. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'keyframes' array. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
         }
         catch (nlohmann::json::type_error& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::exception& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::parse_error& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::invalid_iterator& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::out_of_range& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::other_error& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (...) {
-            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
