@@ -1,6 +1,16 @@
 file(GLOB utils RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ *)
+
+message("Include utils:")
+
 foreach(util ${utils})
-  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${util}/CMakeLists.txt)
-    add_subdirectory(${util})
+  if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${util}")
+    if("${util}" STREQUAL "tableselection")
+      message("-- Found util: ${util} -- ignored")
+    elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${util}/CMakeLists.txt")
+      message("-- Found util: ${util} -- add to build")
+      add_subdirectory(${util})
+    else()
+      message("-- Found util: ${util} -- no CMakeLists.txt")
+    endif()
   endif()
 endforeach()
