@@ -26,7 +26,7 @@ megamol::gui::CallPresentation::~CallPresentation(void) {}
 
 
 void megamol::gui::CallPresentation::Present(
-    megamol::gui::PresentPhase phase, megamol::gui::Call& inout_call, megamol::gui::GraphItemsStateType& state) {
+    megamol::gui::PresentPhase phase, megamol::gui::Call& inout_call, megamol::gui::GraphItemsState_t& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -265,7 +265,7 @@ bool megamol::gui::Call::IsConnected(void) {
 
 
 bool megamol::gui::Call::ConnectCallSlots(
-    megamol::gui::CallSlotPtrType callslot_1, megamol::gui::CallSlotPtrType callslot_2) {
+    megamol::gui::CallSlotPtr_t callslot_1, megamol::gui::CallSlotPtr_t callslot_2) {
 
     if ((callslot_1 == nullptr) || (callslot_2 == nullptr)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -311,7 +311,7 @@ bool megamol::gui::Call::DisconnectCallSlots(ImGuiID calling_callslot_uid) {
 }
 
 
-const megamol::gui::CallSlotPtrType& megamol::gui::Call::GetCallSlot(megamol::gui::CallSlotType type) {
+const megamol::gui::CallSlotPtr_t& megamol::gui::Call::GetCallSlot(megamol::gui::CallSlotType type) {
 
     if (this->connected_callslots[type] == nullptr) {
         /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Returned pointer to call slot is nullptr. [%s, %s,

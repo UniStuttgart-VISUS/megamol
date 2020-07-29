@@ -1,19 +1,19 @@
 /*
- * WindowManager.cpp
+ * WindowCollection.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "WindowManager.h"
+#include "WindowCollection.h"
 
 
 using namespace megamol;
 using namespace megamol::gui;
 
 
-void WindowManager::SoftResetWindowSizePos(WindowConfiguration& window_config) {
+void WindowCollection::SoftResetWindowSizePos(WindowConfiguration& window_config) {
     assert(ImGui::GetCurrentContext() != nullptr);
 
     ImGuiIO& io = ImGui::GetIO();
@@ -57,7 +57,7 @@ void WindowManager::SoftResetWindowSizePos(WindowConfiguration& window_config) {
 }
 
 
-void WindowManager::ResetWindowPosSize(WindowConfiguration& window_config) {
+void WindowCollection::ResetWindowPosSize(WindowConfiguration& window_config) {
     assert(ImGui::GetCurrentContext() != nullptr);
 
     ImVec2 pos = window_config.win_position;
@@ -68,7 +68,7 @@ void WindowManager::ResetWindowPosSize(WindowConfiguration& window_config) {
 }
 
 
-bool WindowManager::AddWindowConfiguration(WindowConfiguration& window_config) {
+bool WindowCollection::AddWindowConfiguration(WindowConfiguration& window_config) {
     if (window_config.win_name.empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "No valid window name given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -85,7 +85,7 @@ bool WindowManager::AddWindowConfiguration(WindowConfiguration& window_config) {
 }
 
 
-bool WindowManager::DeleteWindowConfiguration(const std::string& window_name) {
+bool WindowCollection::DeleteWindowConfiguration(const std::string& window_name) {
     if (!this->windowConfigurationExists(window_name)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Could not find window with name '%s'. [%s, %s, line %d]\n", window_name.c_str(), __FILE__, __FUNCTION__,
@@ -102,7 +102,7 @@ bool WindowManager::DeleteWindowConfiguration(const std::string& window_name) {
 }
 
 
-bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
+bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
 
     try {
         if (in_json_string.empty()) {
@@ -479,7 +479,7 @@ bool WindowManager::StateFromJsonString(const std::string& in_json_string) {
 }
 
 
-bool WindowManager::StateToJSON(nlohmann::json& out_json) {
+bool WindowCollection::StateToJSON(nlohmann::json& out_json) {
 
     try {
         /// Append to given json

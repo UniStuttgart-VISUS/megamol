@@ -29,7 +29,7 @@ namespace gui {
 
 // Forward declarations
 class Parameter;
-typedef std::shared_ptr<Parameter> ParamPtrType;
+typedef std::shared_ptr<Parameter> ParamPtr_t;
 
 
 /**
