@@ -539,13 +539,14 @@ function(require_external NAME)
         -DSPDLOG_BUILD_EXAMPLE=OFF
         -DSPDLOG_BUILD_TESTS=OFF
         -DSPDLOG_FMT_EXTERNAL=ON
-        -DSPDLOG_COMPILED_LIB=ON
         -Dfmt_DIR=${BINARY_DIR})
 
     add_external_library(spdlog
       LIBRARY ${SPDLOG_LIB}
       DEBUG_SUFFIX "d"
       DEPENDS fmt)
+
+    target_compile_definitions(spdlog INTERFACE SPDLOG_FMT_EXTERNAL;SPDLOG_COMPILED_LIB)
 
   # tinyobjloader
   elseif(NAME STREQUAL "tinyobjloader")
