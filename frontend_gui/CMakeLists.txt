@@ -5,7 +5,7 @@
 #
 option(BUILD_FRONTEND_GUI "build frontend_gui" ON)
 
-if(BUILD_GUI)
+if(BUILD_FRONTEND_GUI)
   project(frontend_gui)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
