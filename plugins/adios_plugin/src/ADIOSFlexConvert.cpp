@@ -7,12 +7,11 @@
 
 #include "stdafx.h"
 #include "ADIOSFlexConvert.h"
-#include <complex.h>
 #include <numeric>
 #include "adios_plugin/CallADIOSData.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/FlexEnumParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol {
 namespace adios {
@@ -76,7 +75,7 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
     if (cad == nullptr) return false;
 
     if (!(*cad)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("[ADIOSFlexConvert] Error during GetHeader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexConvert] Error during GetHeader");
         return false;
     }
     bool dathashChanged = (mpdc->DataHash() != cad->getDataHash());
@@ -106,47 +105,47 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
 
         if (pos_str != "undef") {
             if (!cad->inquire(pos_str)) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[ADIOSFlexConvert] variable \"%s\" does not exist.", pos_str.c_str());
             }
         }
         if (col_str != "undef") {
             if (!cad->inquire(col_str)) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[ADIOSFlexConvert] variable \"%s\" does not exist.", col_str.c_str());
             }
         }
         if (box_str != "undef") {
             if (!cad->inquire(box_str)) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[ADIOSFlexConvert] variable \"%s\" does not exist.", box_str.c_str());
             }
         }
 
         if (x_str != "undef" || y_str != "undef" || z_str != "undef") {
             if (!cad->inquire(x_str)) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[ADIOSFlexConvert] variable \"%s\" does not exist.", x_str.c_str());
             }
 
             if (!cad->inquire(y_str)) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[ADIOSFlexConvert] variable \"%s\" does not exist.", y_str.c_str());
             }
 
             if (!cad->inquire(z_str)) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[ADIOSFlexConvert] variable \"%s\" does not exist.", z_str.c_str());
             }
         } else {
             if (pos_str == "undef") {
-                vislib::sys::Log::DefaultLog.WriteError("[ADIOSFlexConvert] No positions set");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexConvert] No positions set");
                 return false;
             }
         }
   
         if (!(*cad)(0)) {
-            vislib::sys::Log::DefaultLog.WriteError("[ADIOSFlexConvert] Error during GetData");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexConvert] Error during GetData");
             return false;
         }
 

@@ -29,11 +29,11 @@
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/RendererModule.h"
 
+#include "mmcore/utility/log/Log.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/sys/File.h"
-#include "vislib/sys/Log.h"
 
 #include <chrono>
 #include <glm/gtc/matrix_transform.hpp>
@@ -128,7 +128,7 @@ private:
     // Explicit numbering required as indices in transpctrl_icons array.
     enum TranspCtrlIcon : size_t {
         PLAY = 0,
-        STOP = 1, /// unused
+        STOP = 1, /// so far unused
         PAUSE = 2,
         FAST_REWIND = 3,
         FAST_FORWARD = 4,

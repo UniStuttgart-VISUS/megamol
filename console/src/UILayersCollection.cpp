@@ -6,7 +6,7 @@
  */
 
 #include "UILayersCollection.hpp"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <algorithm>
 
@@ -24,7 +24,7 @@ std::shared_ptr<AbstractUILayer> UILayersCollection::lastEventCaptureUILayer() {
 void UILayersCollection::AddUILayer(std::shared_ptr<AbstractUILayer>& uiLayer) {
     auto it = std::find(m_uiLayers.begin(), m_uiLayers.end(), uiLayer);
     if (it != m_uiLayers.end()) {
-        vislib::sys::Log::DefaultLog.WriteWarn("uiLayer already part of the collection");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("uiLayer already part of the collection");
         return;
     }
     m_uiLayers.push_back(uiLayer);

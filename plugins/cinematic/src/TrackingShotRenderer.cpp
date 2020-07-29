@@ -64,7 +64,7 @@ bool TrackingShotRenderer::create(void) {
 
     // Initialise render utils
     if (!this->utils.Initialise(this->GetCoreInstance())) {
-        vislib::sys::Log::DefaultLog.WriteError("[TRACKINGSHOT RENDERER] [create] Couldn't initialize render utils.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[TRACKINGSHOT RENDERER] [create] Couldn't initialize render utils.");
         return false;
     }
 
@@ -205,7 +205,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     // Get pointer to keyframes array
     auto keyframes = ccc->GetKeyframes();
     if (keyframes == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [Render] Pointer to keyframe array is nullptr.");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [Render] Pointer to keyframe array is nullptr.");
         return false;
     }
 
@@ -270,7 +270,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     // Push spline ------------------------------------------------------------
     auto interpolKeyframes = ccc->GetInterpolCamPositions();
     if (interpolKeyframes == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [Render] Pointer to interpolated camera positions array is nullptr.");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [Render] Pointer to interpolated camera positions array is nullptr.");
         return false;
     }
     auto color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SPLINE);
@@ -325,7 +325,7 @@ bool TrackingShotRenderer::OnMouseButton(MouseButton button, MouseButtonAction a
     if (ccc == nullptr) return false;
     auto keyframes = ccc->GetKeyframes();
     if (keyframes == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [OnMouseButton] Pointer to keyframe array is nullptr.");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [OnMouseButton] Pointer to keyframe array is nullptr.");
         return false;
     }
 
@@ -338,7 +338,7 @@ bool TrackingShotRenderer::OnMouseButton(MouseButton button, MouseButtonAction a
             if (this->manipulators.CheckForHitManipulator(this->mouseX, this->mouseY)) {
                 this->manipulatorGrabbed = true;
                 consumed = true;
-                //vislib::sys::Log::DefaultLog.WriteInfo("[TRACKINGSHOT RENDERER] [OnMouseButton] MANIPULATOR SELECTED.");
+                //megamol::core::utility::log::Log::DefaultLog.WriteInfo("[TRACKINGSHOT RENDERER] [OnMouseButton] MANIPULATOR SELECTED.");
             }
             else {
                 // Check if new keyframe position is selected
@@ -347,7 +347,7 @@ bool TrackingShotRenderer::OnMouseButton(MouseButton button, MouseButtonAction a
                     ccc->SetSelectedKeyframeTime((*keyframes)[index].GetAnimTime());
                     if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
                     consumed = true;
-                    //vislib::sys::Log::DefaultLog.WriteInfo("[TRACKINGSHOT RENDERER] [OnMouseButton] KEYFRAME SELECT.");
+                    //megamol::core::utility::log::Log::DefaultLog.WriteInfo("[TRACKINGSHOT RENDERER] [OnMouseButton] KEYFRAME SELECT.");
                 }
             }
         }
@@ -363,7 +363,7 @@ bool TrackingShotRenderer::OnMouseButton(MouseButton button, MouseButtonAction a
 
                 consumed = true;
                 this->manipulators.ResetHitManipulator();
-                //vislib::sys::Log::DefaultLog.WriteInfo("[TRACKINGSHOT RENDERER] [OnMouseButton] MANIPULATOR CHANGED.");
+                //megamol::core::utility::log::Log::DefaultLog.WriteInfo("[TRACKINGSHOT RENDERER] [OnMouseButton] MANIPULATOR CHANGED.");
             }
             // ! Mode MUST alwasy be reset on left button 'up', if MOUSE moves out of viewport during manipulator is grabbed !
             this->manipulatorGrabbed = false;

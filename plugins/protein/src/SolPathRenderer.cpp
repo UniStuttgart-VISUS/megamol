@@ -43,7 +43,7 @@ SolPathRenderer::~SolPathRenderer(void) {
  * SolPathRenderer::create
  */
 bool SolPathRenderer::create(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     if (!isExtAvailable( "GL_ARB_vertex_program")  || !ogl_IsVersionGEQ(2,0)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to initialise opengl extensions for ARB shaders and OGL 2.0");

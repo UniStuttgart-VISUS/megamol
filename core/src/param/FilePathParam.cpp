@@ -41,7 +41,7 @@ const UINT32 FilePathParam::FLAG_TOBECREATED = 0x00000003;
  */
 FilePathParam::FilePathParam(const vislib::StringA& initVal, UINT32 flags)
         : AbstractParam(), flags(flags), val(initVal) {
-    // intentionally empty
+    this->InitPresentation(AbstractParamPresentation::ParamType::FILEPATH);
 }
 
 
@@ -50,7 +50,7 @@ FilePathParam::FilePathParam(const vislib::StringA& initVal, UINT32 flags)
  */
 FilePathParam::FilePathParam(const vislib::StringW& initVal, UINT32 flags)
         : AbstractParam(), flags(flags), val(initVal) {
-    // intentionally empty
+    this->InitPresentation(AbstractParamPresentation::ParamType::FILEPATH);
 }
 
 
@@ -59,7 +59,7 @@ FilePathParam::FilePathParam(const vislib::StringW& initVal, UINT32 flags)
  */
 FilePathParam::FilePathParam(const char *initVal, UINT32 flags)
         : AbstractParam(), flags(flags), val(initVal) {
-    // intentionally empty
+    this->InitPresentation(AbstractParamPresentation::ParamType::FILEPATH);
 }
 
 
@@ -68,7 +68,7 @@ FilePathParam::FilePathParam(const char *initVal, UINT32 flags)
  */
 FilePathParam::FilePathParam(const wchar_t *initVal, UINT32 flags)
         : AbstractParam(), flags(flags), val(initVal) {
-    // intentionally empty
+    this->InitPresentation(AbstractParamPresentation::ParamType::FILEPATH);
 }
 
 

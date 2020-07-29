@@ -9,11 +9,11 @@
 #include "WavefrontObjDataSource.h"
 #include "vislib/Array.h"
 #include "vislib/assert.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/File.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/sys/Path.h"
 #include "vislib/sys/PerformanceCounter.h"
 #include "vislib/PtrArray.h"
@@ -48,7 +48,7 @@ WavefrontObjDataSource::~WavefrontObjDataSource(void) {
  * WavefrontObjDataSource::load
  */
 bool WavefrontObjDataSource::load(const vislib::TString& filename) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     if (filename.IsEmpty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Filename is empty");
@@ -385,7 +385,7 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
  * WavefrontObjDataSource::loadMaterialLibrary
  */
 void WavefrontObjDataSource::loadMaterialLibrary(const vislib::TString& filename, vislib::Array<vislib::StringA>& names) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     ASSERT(names.Count() == this->mats.Count());
 
     if (filename.IsEmpty()) {

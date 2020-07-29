@@ -23,7 +23,9 @@ param::Vector3fParam::Vector3fParam(const vislib::math::Vector<float, 3>& initVa
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
     ASSERT(this->isLessOrEqual(this->minVal, this->val));
     ASSERT(this->isLessOrEqual(this->val, this->maxVal));
+    this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR3F);
 }
+
 
 
 /*
@@ -35,6 +37,7 @@ param::Vector3fParam::Vector3fParam(
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
     ASSERT(this->isLessOrEqual(this->minVal, this->val));
     ASSERT(this->isLessOrEqual(this->val, this->maxVal));
+    this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR3F);
 }
 
 
@@ -47,6 +50,7 @@ param::Vector3fParam::Vector3fParam(const vislib::math::Vector<float, 3>& initVa
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
     ASSERT(this->isLessOrEqual(this->minVal, this->val));
     ASSERT(this->isLessOrEqual(this->val, this->maxVal));
+    this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR3F);
 }
 
 

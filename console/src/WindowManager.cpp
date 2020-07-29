@@ -13,7 +13,7 @@
 #include "mmcore/api/MegaMolCore.h"
 #include "utility/ConfigHelper.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "JobManager.h"
 #include "utility/HotFixFileName.h"
 #include "utility/HotFixes.h"
@@ -90,7 +90,7 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     // get instance name
     const char* pendInstName = ::mmcGetPendingViewInstanceName(hCore);
     if ((pendInstName == nullptr) || (pendInstName[0] == 0)) {
-        vislib::sys::Log::DefaultLog.WriteError("Pending instance name empty");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Pending instance name empty");
         return false;
     }
 
@@ -203,7 +203,7 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     std::shared_ptr<gl::Window> w =
         std::make_shared<gl::Window>((vislib::StringA(TitlePrefix) + pendInstName).PeekBuffer(), wp, share);
     if (!w || !w->IsAlive()) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to create window");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to create window");
         return false;
     }
 

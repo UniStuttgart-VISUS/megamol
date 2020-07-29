@@ -14,7 +14,7 @@
 #include "vislib/graphics/BitmapImage.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/RawStorage.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <fstream>
 
 using namespace sg::graphics;
@@ -65,10 +65,10 @@ JpegBitmapCodec::JpegBitmapCodec(void) : AbstractBitmapCodec(), quality(75) {
         if (SUCCEEDED(hr)) {
             comOK = true;
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("Could not create WICImagingFactory. At %s:%u", __FILE__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Could not create WICImagingFactory. At %s:%u", __FILE__, __LINE__);
         }
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("COM already initialized with different threading model. At %s:%u", __FILE__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("COM already initialized with different threading model. At %s:%u", __FILE__, __LINE__);
         hr = S_FALSE;
     }
 #endif
@@ -239,7 +239,7 @@ bool JpegBitmapCodec::loadFromMemory(const void *mem, SIZE_T size) {
                 this->image().SetChannelLabel(0, BitmapImage::CHANNEL_BLUE);
                 stride = 3;
             } else {
-                vislib::sys::Log::DefaultLog.WriteError("Unknown image format");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Unknown image format");
                 stride = 3;
                 // create error image
                 this->image().CreateImage(1, 1, 3, BitmapImage::CHANNELTYPE_BYTE);
@@ -278,7 +278,7 @@ bool JpegBitmapCodec::saveToMemory(vislib::RawStorage &mem) const {
 
     //  Setup memory stream, which is needed to stage raw image bits
     if (CreateStreamOnHGlobal(NULL, TRUE, &outputStream) != S_OK) {
-        vislib::sys::Log::DefaultLog.WriteError("Could not create output stream. At %s:%u",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Could not create output stream. At %s:%u",
             __FILE__, __LINE__);
     }
 
@@ -322,7 +322,7 @@ bool JpegBitmapCodec::saveToMemory(vislib::RawStorage &mem) const {
                 pixelFormat = GUID_WICPixelFormat32bppGrayFloat;
                 stride = 4;
             } else {
-                vislib::sys::Log::DefaultLog.WriteError("Unsupported image format - channels: %u, type: %u. At %s:%u",
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Unsupported image format - channels: %u, type: %u. At %s:%u",
                     this->image().GetChannelCount(), this->image().GetChannelType(), __FILE__, __LINE__);
             }
         } else if (this->image().GetChannelCount() == 3) {
@@ -336,12 +336,12 @@ bool JpegBitmapCodec::saveToMemory(vislib::RawStorage &mem) const {
                     pixelFormat = GUID_WICPixelFormat24bppBGR;
                     stride = 3;
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteError("Unsupported channel labels- channels: [%u, %u, %u]. At %s:%u",
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("Unsupported channel labels- channels: [%u, %u, %u]. At %s:%u",
                         this->image().GetChannelLabel(0), this->image().GetChannelLabel(1), this->image().GetChannelLabel(2),
                         __FILE__, __LINE__);
                 }
             } else {
-                vislib::sys::Log::DefaultLog.WriteError("Unsupported channel count - channels: %u, type: %u. At %s:%u",
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Unsupported channel count - channels: %u, type: %u. At %s:%u",
                     this->image().GetChannelCount(), this->image().GetChannelType(), __FILE__, __LINE__);
             }
         }

@@ -70,7 +70,7 @@ bool CameraSerializer::deserialize(
     nlohmann::json obj = nlohmann::json::parse(text);
     outCameras.clear();
     if (!obj.is_array()) {
-        vislib::sys::Log::DefaultLog.WriteError("The input text does not contain a json array");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("The input text does not contain a json array");
         return false;
     }
     for (nlohmann::json::iterator it = obj.begin(); it != obj.end(); ++it) {

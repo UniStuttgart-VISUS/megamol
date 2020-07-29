@@ -26,6 +26,7 @@ param::Vector4fParam::Vector4fParam(const vislib::math::Vector<float, 4>& initVa
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
     ASSERT(this->isLessOrEqual(this->minVal, this->val));
     ASSERT(this->isLessOrEqual(this->val, this->maxVal));
+    this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR4F);
 }
 
 
@@ -38,6 +39,7 @@ param::Vector4fParam::Vector4fParam(
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
     ASSERT(this->isLessOrEqual(this->minVal, this->val));
     ASSERT(this->isLessOrEqual(this->val, this->maxVal));
+    this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR4F);
 }
 
 
@@ -50,6 +52,7 @@ param::Vector4fParam::Vector4fParam(const vislib::math::Vector<float, 4>& initVa
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
     ASSERT(this->isLessOrEqual(this->minVal, this->val));
     ASSERT(this->isLessOrEqual(this->val, this->maxVal));
+    this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR4F);
 }
 
 

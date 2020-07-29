@@ -32,12 +32,12 @@
 #include "mmcore/param/ParamUpdateListener.h"
 #include "mmcore/cluster/SyncDataSourcesCall.h"
 
-#include "vislib/net/AbstractSimpleMessage.h"
+#include "mmcore/utility/net/AbstractSimpleMessage.h"
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStoragePool.h"
 #include "vislib/Serialiser.h"
-#include "vislib/net/SimpleMessageDispatchListener.h"
+#include "mmcore/utility/net/SimpleMessageDispatchListener.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
 

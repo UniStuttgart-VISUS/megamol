@@ -1,41 +1,35 @@
 /*
  * RaycastVolumeRenderer.h
  *
- * Copyright (C) 2018-2019 by Universitaet Stuttgart (VISUS).
+ * Copyright (C) 2018-2020 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
 
 #ifndef RAYCAST_VOLUME_RENDERER_H_INCLUDED
 #define RAYCAST_VOLUME_RENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-
-#include <algorithm>
-#include <array>
-#include <limits>
-#include <memory>
-#include <string>
-#include <utility>
-#include <vector>
-
-#include "vislib/graphics/gl/GLSLComputeShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#pragma once
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/Renderer3DModule_2.h"
+
+#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib/graphics/gl/GLSLComputeShader.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 
 #include "glowl/Texture2D.hpp"
 #include "glowl/Texture3D.hpp"
+
+#include <array>
+#include <limits>
+#include <memory>
 
 namespace megamol {
 namespace stdplugin {
 namespace volume {
 
-class RaycastVolumeRenderer : public core::view::Renderer3DModule_2 {
+class RaycastVolumeRenderer : public megamol::core::view::Renderer3DModule_2 {
 public:
     /**
      * Answer the name of this module.
@@ -77,12 +71,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create() override;
+    bool create();
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release() override;
+    void release();
 
     /**
      * The get extents callback. The module should set the members of
@@ -93,7 +87,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::view::CallRender3D_2& call) override;
+    bool GetExtents(core::view::CallRender3D_2& call) override;
 
     /**
      * The render callback.
@@ -102,35 +96,65 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core::view::CallRender3D_2& call) override;
+    bool Render(core::view::CallRender3D_2& call) override;
 
-    /**
-     * Get and update data by calling input modules
-     */
-    bool updateVolumeData();
+    bool updateVolumeData(const unsigned int frameID);
+
+    bool updateTransferFunction();
 
 private:
-    std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_raycast_volume_compute_shdr;
-    std::unique_ptr<vislib::graphics::gl::GLSLShader> m_render_to_framebuffer_shdr;
+    vislib::graphics::gl::GLSLComputeShader m_raycast_volume_compute_shdr;
+    vislib::graphics::gl::GLSLComputeShader m_raycast_volume_compute_iso_shdr;
+    vislib::graphics::gl::GLSLComputeShader m_raycast_volume_compute_aggr_shdr;
+    vislib::graphics::gl::GLSLShader m_render_to_framebuffer_shdr;
+    vislib::graphics::gl::GLSLShader m_render_to_framebuffer_aggr_shdr;
 
     std::unique_ptr<glowl::Texture2D> m_render_target;
+    std::unique_ptr<glowl::Texture2D> m_normal_target;
+    std::unique_ptr<glowl::Texture2D> m_depth_target;
 
     std::unique_ptr<glowl::Texture3D> m_volume_texture;
 
-    std::size_t m_volume_datahash = std::numeric_limits<std::size_t>::max();
+    GLuint tf_texture;
+
+    size_t m_volume_datahash = std::numeric_limits<size_t>::max();
     int m_frame_id = -1;
 
-    glm::vec3 m_volume_origin;
-    glm::vec3 m_volume_extents;
-    glm::vec3 m_volume_resolution;
+    float m_volume_origin[3];
+    float m_volume_extents[3];
+    float m_volume_resolution[3];
 
-    /** caller slot */
-    core::CallerSlot m_volumetricData_callerSlot;
-    core::CallerSlot m_transferFunction_callerSlot;
+    /** Parameters for changing the behavior */
+    core::param::ParamSlot m_mode;
 
     core::param::ParamSlot m_ray_step_ratio_param;
+    core::param::ParamSlot m_opacity_threshold;
+    core::param::ParamSlot m_iso_value;
+    core::param::ParamSlot m_opacity;
+
+    core::param::ParamSlot m_use_lighting_slot;
+    core::param::ParamSlot m_ka_slot;
+    core::param::ParamSlot m_kd_slot;
+    core::param::ParamSlot m_ks_slot;
+    core::param::ParamSlot m_shininess_slot;
+    core::param::ParamSlot m_ambient_color;
+    core::param::ParamSlot m_specular_color;
+    core::param::ParamSlot m_light_color;
+    core::param::ParamSlot m_material_color;
+
+    core::param::ParamSlot paramOverride;
+    core::param::ParamSlot paramMinOverride;
+    core::param::ParamSlot paramMaxOverride;
+
+    /** caller slot */
+    megamol::core::CallerSlot m_renderer_callerSlot;
+    megamol::core::CallerSlot m_volumetricData_callerSlot;
+    megamol::core::CallerSlot m_transferFunction_callerSlot;
 
     std::array<float, 2> valRange;
+
+    /** FBO for chaining renderers */
+    vislib::graphics::gl::FramebufferObject fbo;
 };
 
 } // namespace volume

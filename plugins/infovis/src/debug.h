@@ -11,7 +11,7 @@
 #include <iomanip>
 #include <ostream>
 #include <vector>
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace zen {
 namespace gl {
@@ -115,28 +115,32 @@ inline debug_action make_debug_action_ostream(std::ostream& stream) {
     };
 }
 
-inline debug_action make_debug_action_Log(vislib::sys::Log& l) {
+inline debug_action make_debug_action_Log(megamol::core::utility::log::Log& l) {
     return [&](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, GLchar const* message,
                GLvoid const* userParam) {
         static const vislib::StringA separator(
             "----------- KHR_DEBUG Callback ---------------------------------------------------------");
 
-        auto m = (void (vislib::sys::Log::*)(const char*, ...)) & vislib::sys::Log::WriteInfo;
+        auto m = (void (megamol::core::utility::log::Log::*)(const char*, ...)) &
+                 megamol::core::utility::log::Log::WriteInfo;
         switch (type) {
         case GL_DEBUG_TYPE_ERROR:
         case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-            m = (void (vislib::sys::Log::*)(const char*, ...)) & vislib::sys::Log::WriteError;
+            m = (void (megamol::core::utility::log::Log::*)(const char*, ...)) &
+                megamol::core::utility::log::Log::WriteError;
             break;
         case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
         case GL_DEBUG_TYPE_PORTABILITY:
         case GL_DEBUG_TYPE_PERFORMANCE:
         case GL_DEBUG_TYPE_OTHER:
-            m = (void (vislib::sys::Log::*)(const char*, ...)) & vislib::sys::Log::WriteWarn;
+            m = (void (megamol::core::utility::log::Log::*)(const char*, ...)) &
+                megamol::core::utility::log::Log::WriteWarn;
             break;
         case GL_DEBUG_TYPE_MARKER:
         case GL_DEBUG_TYPE_POP_GROUP:
         case GL_DEBUG_TYPE_PUSH_GROUP:
-            m = (void (vislib::sys::Log::*)(const char*, ...)) & vislib::sys::Log::WriteInfo;
+            m = (void (megamol::core::utility::log::Log::*)(const char*, ...)) &
+                megamol::core::utility::log::Log::WriteInfo;
             break;
         }
         (l.*m)("%s", separator);

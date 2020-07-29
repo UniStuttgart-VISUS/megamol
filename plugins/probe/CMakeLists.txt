@@ -34,7 +34,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     LIBRARY ${QHULL_LIB})
 
   add_external_headeronly_project(asmjit INTERFACE
-    GIT_REPOSITORY https://github.com/asmjit/asmjit.git)
+    GIT_REPOSITORY https://github.com/asmjit/asmjit.git
+    GIT_TAG "8474400e82c3ea65bd828761539e5d9b25f6bd83" )
   #add_external_library(asmjit
   #  INCLUDE_DIR "src/asmjit_ext/")
     
@@ -50,7 +51,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   external_get_property(asmjit SOURCE_DIR)
   add_external_project(blend2d SHARED
     GIT_REPOSITORY https://github.com/blend2d/blend2d.git
-    GIT_TAG "c102cd5ce8c4ab999e54ab7359d2189c72233bc7"
+    GIT_TAG "8aeac6cb34b00898ae725bd76eb3bb2c7cffcf86"
     BUILD_BYPRODUCTS "<INSTALL_DIR>/${BLEND2D_IMPORT_LIB}" "<INSTALL_DIR>/${BLEND2D_LIB}"
     CMAKE_ARGS -DASMJIT_DIR=${SOURCE_DIR})
   add_external_library(blend2d

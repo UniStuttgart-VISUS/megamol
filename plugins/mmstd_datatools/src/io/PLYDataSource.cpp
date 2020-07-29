@@ -239,7 +239,7 @@ bool io::PLYDataSource::assertData() {
     instream.close();
     instream.open(filename.Param<core::param::FilePathParam>()->Value(), std::ios::binary);
     if (instream.fail()) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to open PLY File \"%s\".",
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to open PLY File \"%s\".",
             vislib::StringA(filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
         return true;
     }
@@ -271,7 +271,7 @@ bool io::PLYDataSource::assertData() {
             }
             this->vertex_count = vertexCount;
         } else {
-            vislib::sys::Log::DefaultLog.WriteWarn("One of the position labels could not be found");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("One of the position labels could not be found");
         }
     }
     if (std::none_of(selectedNormal.begin(), selectedNormal.end(), [](std::string s) { return s.empty(); })) {
@@ -291,7 +291,7 @@ bool io::PLYDataSource::assertData() {
                 normalPointers.norm_double = new double[elemCount];
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteWarn("One of the normal labels could not be found");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("One of the normal labels could not be found");
         }
     }
     if (std::none_of(selectedColor.begin(), selectedColor.end(), [](std::string s) { return s.empty(); })) {
@@ -313,7 +313,7 @@ bool io::PLYDataSource::assertData() {
                 colorPointers.col_double = new double[elemCount];
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteWarn("One of the color labels could not be found");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("One of the color labels could not be found");
         }
     }
     if (!selectedIndices.empty()) {
@@ -332,7 +332,7 @@ bool io::PLYDataSource::assertData() {
             }
             this->face_count = faceCount;
         } else {
-            vislib::sys::Log::DefaultLog.WriteWarn("The triangle index label could not be found");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("The triangle index label could not be found");
         }
     }
 
@@ -358,7 +358,7 @@ bool io::PLYDataSource::assertData() {
             auto ms = readData[i].max_size();
             instream.read(reinterpret_cast<char*>(readData[i].data()), elementCount[i] * readsize);
             if (instream.fail()) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Reading of the field with index %i failed", static_cast<int>(i));
                 this->clearAllFields();
                 return false;
@@ -602,7 +602,7 @@ bool io::PLYDataSource::assertData() {
                             }
                         }
                     } else {
-                        vislib::sys::Log::DefaultLog.WriteError("Unexpected file ending during vertex parsing");
+                        megamol::core::utility::log::Log::DefaultLog.WriteError("Unexpected file ending during vertex parsing");
                         return false;
                     }
                 }
@@ -615,7 +615,7 @@ bool io::PLYDataSource::assertData() {
                         if (elementIndexMap.count(selectedIndices)) {
                             uint64_t faceSize = static_cast<uint64_t>(std::stoul(split[0]));
                             if (faceSize != 3) {
-                                vislib::sys::Log::DefaultLog.WriteError(
+                                megamol::core::utility::log::Log::DefaultLog.WriteError(
                                     "The PlyDataSource is currently only able to handle triangular faces");
                                 return false;
                             }
@@ -633,7 +633,7 @@ bool io::PLYDataSource::assertData() {
                             }
                         }
                     } else {
-                        vislib::sys::Log::DefaultLog.WriteError("Unexpected file ending during face parsing");
+                        megamol::core::utility::log::Log::DefaultLog.WriteError("Unexpected file ending during face parsing");
                         return false;
                     }
                 }
@@ -650,7 +650,7 @@ bool io::PLYDataSource::assertData() {
  */
 bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     this->clearAllFields();
     this->data_hash++;
@@ -845,12 +845,12 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
                 } else if (icompare(line.substr(14, 3), "big")) {
                     this->isLittleEndian = false;
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteWarn(
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                         "Endianness could not be determined, assuming little endian");
                     this->isLittleEndian = true;
                 }
             } else {
-                vislib::sys::Log::DefaultLog.WriteWarn("File format could not be determined, assuming ASCII");
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("File format could not be determined, assuming ASCII");
                 this->hasBinaryFormat = false;
             }
         }
@@ -871,7 +871,7 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
  * io::PLYDataSource::fileUpdate
  */
 bool io::PLYDataSource::fileUpdate(core::param::ParamSlot& slot) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     this->clearAllFields();
 

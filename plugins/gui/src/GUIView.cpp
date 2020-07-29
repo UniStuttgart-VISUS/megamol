@@ -22,7 +22,7 @@ GUIView::GUIView()
     this->render_view_slot.SetCompatibleCall<core::view::CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->render_view_slot);
 
-    for (auto slot : this->gui.GetParams()) {
+    for (auto& slot : this->gui.GetParams()) {
         this->MakeSlotAvailable(slot);
     }
 }
@@ -59,18 +59,21 @@ float GUIView::DefaultTime(double instTime) const {
 
 
 unsigned int GUIView::GetCameraSyncNumber(void) const {
-    vislib::sys::Log::DefaultLog.WriteWarn("Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+        "Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return 0u;
 }
 
 
 void GUIView::SerialiseCamera(vislib::Serialiser& serialiser) const {
-    vislib::sys::Log::DefaultLog.WriteWarn("Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+        "Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 }
 
 
 void GUIView::DeserialiseCamera(vislib::Serialiser& serialiser) {
-    vislib::sys::Log::DefaultLog.WriteWarn("Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+        "Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 }
 
 
@@ -247,7 +250,7 @@ bool GUIView::OnRenderView(megamol::core::Call& call) {
     ::ZeroMemory(&context, sizeof(context));
     context.Time = crv->Time();
     context.InstanceTime = crv->InstanceTime();
-    // TODO: Affinity
+    // XXX: Affinity
     this->Render(context);
 
     this->overrideCall = nullptr;
