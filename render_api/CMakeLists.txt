@@ -31,6 +31,7 @@ if(BUILD_RAPI)
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
     $<INSTALL_INTERFACE:include/>
   )
+  target_link_libraries(abstract_render_api INTERFACE module_resources)
   
   #if(WIN32)
   #  set(VERSION_LIBRARY "Version.lib")
@@ -42,7 +43,7 @@ if(BUILD_RAPI)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
   endif()
 
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC input_events vislib glad)
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_render_api vislib glad)
 
   ## Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
   #set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")

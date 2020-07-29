@@ -50,7 +50,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src"
     "3rd/min_sphere_of_spheres")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls tinyply Eigen nanoflann mmpld_io input_events)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls tinyply Eigen nanoflann mmpld_io)
   if(MPI_C_FOUND)
     target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif()

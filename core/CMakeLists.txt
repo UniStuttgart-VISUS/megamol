@@ -68,8 +68,8 @@ if(BUILD_CORE)
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
     PUBLIC ${EXPAT_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glm glowl zlib libpng json lua ${EXPAT_LIBRARIES} render_api 
-    PRIVATE libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} abstract_render_api input_events)
+    PUBLIC vislib glm glowl zlib libpng json lua ${EXPAT_LIBRARIES} module_resources
+    PRIVATE libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} abstract_render_api) # abstract render api used by MegaMolGraph
 
   # Add libunwind.
   if(UNIX)

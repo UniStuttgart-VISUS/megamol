@@ -83,7 +83,7 @@ void GUI_Service::digestChangedRequestedResources() {
              }
         }
         else if (res.getIdentifier() == "KeyboardEvents") {
-             auto resource = &res.getResource<megamol::input_events::KeyboardEvents>();
+             auto resource = &res.getResource<megamol::module_resources::KeyboardEvents>();
              if (resource != nullptr) {
                  if (resource->key_events.size() > 0) {
                      auto key_event = resource->key_events.back();
@@ -98,7 +98,7 @@ void GUI_Service::digestChangedRequestedResources() {
              }
         }
         else if (res.getIdentifier() == "MouseEvents") {
-             auto resource = &res.getResource<megamol::input_events::MouseEvents>();
+             auto resource = &res.getResource<megamol::module_resources::MouseEvents>();
              if (resource != nullptr) {
                 if (resource->position_events.size() > 0) {
                     auto pos_event = resource->position_events.back();
@@ -122,13 +122,13 @@ void GUI_Service::digestChangedRequestedResources() {
              }
         }
         else if (res.getIdentifier() == "IOpenGL_Context") {
-             auto resource = &res.getResource<megamol::input_events::IOpenGL_Context>();
+             auto resource = &res.getResource<megamol::module_resources::IOpenGL_Context>();
              if (resource != nullptr) {
                  this->m_resource_state.opengl_context_ptr = resource;
              }
          }
         else if (res.getIdentifier() == "FramebufferEvents") {
-            auto resource = &res.getResource<megamol::input_events::FramebufferEvents>();
+            auto resource = &res.getResource<megamol::module_resources::FramebufferEvents>();
             if (resource != nullptr) {
                 if (resource->size_events.size() > 0) {
                     auto size = resource->size_events.back();

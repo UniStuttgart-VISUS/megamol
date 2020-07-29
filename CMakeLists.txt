@@ -44,8 +44,8 @@ include(ClangFormat)
 # External
 include("externals/CMakeExternals.cmake")
 
-# Input and Event interfaces 
-add_subdirectory(${MEGAMOL_DIR}/input_events)
+# Module Resources, Input Events interfaces 
+add_subdirectory(${MEGAMOL_DIR}/module_resources)
 
 # Render API modules
 add_subdirectory(${MEGAMOL_DIR}/render_api)

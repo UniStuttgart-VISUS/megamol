@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace megamol {
-namespace input_events {
+namespace module_resources {
 
 struct FramebufferState {
     int width = 1;
@@ -40,7 +40,7 @@ struct FramebufferEvents {
 	}
 };
 
-namespace input = input_events;
+namespace input = module_resources;
 
-} /* end namespace input_events */
+} /* end namespace module_resources */
 } /* end namespace megamol */

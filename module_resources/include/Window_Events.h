@@ -12,7 +12,7 @@
 #include <vector>
 
 namespace megamol {
-namespace input_events {
+namespace module_resources {
 
 struct WindowState {
     int width = 1;
@@ -66,7 +66,7 @@ struct WindowEvents {
     }
 };
 
-namespace input = input_events;
+namespace input = module_resources;
 
-} /* end namespace input_events */
+} /* end namespace module_resources */
 } /* end namespace megamol */

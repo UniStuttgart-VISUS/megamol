@@ -14,7 +14,9 @@
 #include "KeyboardMouse_Events.h"
 #include "Framebuffer_Events.h"
 #include "Window_Events.h"
-#include "OpenGL_Context.h"
+#include "IOpenGL_Context.h"
+
+// #include "mmcore/utility/log/Log.h"
 
 #include <memory>
 
@@ -31,10 +33,10 @@ struct WindowPlacement {
 };
 
 class OpenGL_GLFW_Service final : public AbstractFrontendService {
-    using KeyboardEvents = megamol::input_events::KeyboardEvents;
-    using MouseEvents = megamol::input_events::MouseEvents;
-    using WindowEvents = megamol::input_events::WindowEvents;
-    using FramebufferEvents = megamol::input_events::FramebufferEvents;
+    using KeyboardEvents = megamol::module_resources::KeyboardEvents;
+    using MouseEvents = megamol::module_resources::MouseEvents;
+    using WindowEvents = megamol::module_resources::WindowEvents;
+    using FramebufferEvents = megamol::module_resources::FramebufferEvents;
 
 public:
 
@@ -105,7 +107,7 @@ public:
     void glfw_onFramebufferSize_func(const int widthpx, const int heightpx);
 
 private:
-	struct OpenGL_Context : public megamol::input_events::IOpenGL_Context {
+	struct OpenGL_Context : public megamol::module_resources::IOpenGL_Context {
         void* ptr = nullptr;
 
 		void activate() const override;
@@ -115,7 +117,6 @@ private:
     // abstract away GLFW library details behind pointer-to-implementation. only use GLFW header in .cpp
     struct PimplData;
     std::unique_ptr<PimplData, std::function<void(PimplData*)>> m_pimpl;
-    void updateWindowTitle();
 
     // GLFW fills those events and we propagate them to the View3D/the MegaMol graph
     KeyboardEvents m_keyboardEvents;
@@ -123,7 +124,7 @@ private:
     WindowEvents m_windowEvents;
     FramebufferEvents m_framebufferEvents;
 	OpenGL_Context m_opengl_context_impl;
-	input_events::IOpenGL_Context* m_opengl_context;
+	module_resources::IOpenGL_Context* m_opengl_context;
 
     // this holds references to the event structs we fill. the events are passed to the renderers/views using
     // const std::vector<ModuleResource>& getModuleResources() override

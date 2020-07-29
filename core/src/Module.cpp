@@ -23,7 +23,7 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #endif
 
-#include "OpenGL_Context.h"
+#include "IOpenGL_Context.h"
 
 using namespace megamol::core;
 
@@ -54,12 +54,12 @@ Module::~Module(void) {
 bool Module::Create(std::vector<megamol::frontend::ModuleResource> resources) {
     using megamol::core::utility::log::Log;
 
-	const megamol::input_events::IOpenGL_Context* opengl_context = nullptr;
+	const megamol::module_resources::IOpenGL_Context* opengl_context = nullptr;
     auto opengl_context_it = std::find_if(resources.begin(), resources.end(),
         [&](megamol::frontend::ModuleResource& dep) { return dep.getIdentifier() == "IOpenGL_Context"; });
 
     if (opengl_context_it != resources.end()) {
-        opengl_context = &opengl_context_it->getResource<megamol::input_events::IOpenGL_Context>();
+        opengl_context = &opengl_context_it->getResource<megamol::module_resources::IOpenGL_Context>();
     }
 
 	if (opengl_context)
@@ -135,10 +135,10 @@ void Module::Release(std::vector<megamol::frontend::ModuleResource> resources) {
     auto opengl_context_it = std::find_if(resources.begin(), resources.end(),
         [&](megamol::frontend::ModuleResource& dep) { return dep.getIdentifier() == "IOpenGL_Context"; });
 
-	const megamol::input_events::IOpenGL_Context* opengl_context = nullptr;
+	const megamol::module_resources::IOpenGL_Context* opengl_context = nullptr;
 
     if (opengl_context_it != resources.end()) {
-        opengl_context = &opengl_context_it->getResource<megamol::input_events::IOpenGL_Context>();
+        opengl_context = &opengl_context_it->getResource<megamol::module_resources::IOpenGL_Context>();
     }
 
 	if (opengl_context)

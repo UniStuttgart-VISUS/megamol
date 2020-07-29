@@ -9,9 +9,9 @@
 #include "AbstractInputScope.h"
 
 namespace megamol {
-namespace input_events {
+namespace module_resources {
 
-class AbstractUILayer : public megamol::input_events::AbstractInputScope {
+class AbstractUILayer : public megamol::module_resources::AbstractInputScope {
 public:
     virtual bool Enabled() { return true; }
 
@@ -23,5 +23,5 @@ protected:
     virtual ~AbstractUILayer() = default;
 };
 
-} /* end namespace input_events */
+} /* end namespace module_resources */
 } /* end namespace megamol */

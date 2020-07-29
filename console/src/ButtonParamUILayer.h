@@ -15,14 +15,14 @@
 namespace megamol {
 namespace console {
 
-	using megamol::input_events::Key;
-	using megamol::input_events::KeyAction;
-	using megamol::input_events::Modifiers;
+	using megamol::module_resources::Key;
+	using megamol::module_resources::KeyAction;
+	using megamol::module_resources::Modifiers;
 
     /**
      * This UI layer implements hot key for button parameter.
      */
-    class ButtonParamUILayer : public megamol::input_events::AbstractUILayer {
+    class ButtonParamUILayer : public megamol::module_resources::AbstractUILayer {
     public:
         ButtonParamUILayer(void * coreHandle, void * viewHandle);
         virtual ~ButtonParamUILayer();

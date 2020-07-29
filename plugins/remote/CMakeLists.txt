@@ -36,7 +36,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PUBLIC "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core image_calls glm libzmq libcppzmq snappy input_events)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core image_calls glm libzmq libcppzmq snappy)
   if(MPI_C_FOUND)
     target_link_libraries(${PROJECT_NAME} PRIVATE IceTCore IceTGL IceTMPI MPI::MPI_C)
   endif()
