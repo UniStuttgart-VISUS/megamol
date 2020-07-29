@@ -27,13 +27,13 @@ class CallSlot;
 enum CallSlotType { CALLEE, CALLER };
 #    define _CALL_SLOT_TYPE_
 #endif
-typedef std::shared_ptr<Parameter> ParamPtrType;
-typedef std::shared_ptr<CallSlot> CallSlotPtrType;
-typedef std::shared_ptr<Module> ModulePtrType;
+typedef std::shared_ptr<Parameter> ParamPtr_t;
+typedef std::shared_ptr<CallSlot> CallSlotPtr_t;
+typedef std::shared_ptr<Module> ModulePtr_t;
 
 // Types
-typedef std::shared_ptr<Call> CallPtrType;
-typedef std::vector<CallPtrType> CallPtrVectorType;
+typedef std::shared_ptr<Call> CallPtr_t;
+typedef std::vector<CallPtr_t> CallPtrVector_t;
 
 
 /** ************************************************************************
@@ -62,7 +62,7 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    void Present(megamol::gui::PresentPhase phase, Call& inout_call, GraphItemsStateType& state);
+    void Present(megamol::gui::PresentPhase phase, Call& inout_call, GraphItemsState_t& state);
 };
 
 
@@ -95,20 +95,20 @@ public:
     ~Call();
 
     bool IsConnected(void);
-    bool ConnectCallSlots(CallSlotPtrType callslot_1, CallSlotPtrType callslot_2);
+    bool ConnectCallSlots(CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
     bool DisconnectCallSlots(ImGuiID calling_callslot_uid = GUI_INVALID_ID);
-    const CallSlotPtrType& GetCallSlot(CallSlotType type);
+    const CallSlotPtr_t& GetCallSlot(CallSlotType type);
 
     // Presentation ----------------------------------------------------
 
-    inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
+    inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsState_t& state) {
         this->present.Present(phase, *this, state);
     }
 
 private:
     // VARIABLES --------------------------------------------------------------
 
-    std::map<CallSlotType, CallSlotPtrType> connected_callslots;
+    std::map<CallSlotType, CallSlotPtr_t> connected_callslots;
 };
 
 
