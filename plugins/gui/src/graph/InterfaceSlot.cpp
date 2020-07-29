@@ -40,7 +40,7 @@ megamol::gui::InterfaceSlotPresentation::~InterfaceSlotPresentation(void) {}
 
 
 void megamol::gui::InterfaceSlotPresentation::Present(
-    PresentPhase phase, megamol::gui::InterfaceSlot& inout_interfaceslot, megamol::gui::GraphItemsStateType& state) {
+    PresentPhase phase, megamol::gui::InterfaceSlot& inout_interfaceslot, megamol::gui::GraphItemsState_t& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -279,7 +279,7 @@ megamol::gui::InterfaceSlot::~InterfaceSlot(void) {
 
 
 bool megamol::gui::InterfaceSlot::AddCallSlot(
-    const CallSlotPtrType& callslot_ptr, const InterfaceSlotPtrType& parent_interfaceslot_ptr) {
+    const CallSlotPtr_t& callslot_ptr, const InterfaceSlotPtr_t& parent_interfaceslot_ptr) {
 
     try {
         if (callslot_ptr == nullptr) {
@@ -363,8 +363,8 @@ bool megamol::gui::InterfaceSlot::ContainsCallSlot(ImGuiID callslot_uid) {
 
 bool megamol::gui::InterfaceSlot::IsConnectionValid(InterfaceSlot& interfaceslot) {
 
-    CallSlotPtrType callslot_ptr_1;
-    CallSlotPtrType callslot_ptr_2;
+    CallSlotPtr_t callslot_ptr_1;
+    CallSlotPtr_t callslot_ptr_2;
     if (this->GetCompatibleCallSlot(callslot_ptr_1) && interfaceslot.GetCompatibleCallSlot(callslot_ptr_2)) {
         // Check for different group
         if (this->present.group.uid != interfaceslot.present.group.uid) {
@@ -394,7 +394,7 @@ bool megamol::gui::InterfaceSlot::IsConnectionValid(CallSlot& callslot) {
             return false;
         }
         // Check for compatibility of call slots
-        CallSlotPtrType interface_callslot_ptr;
+        CallSlotPtr_t interface_callslot_ptr;
         if (this->GetCompatibleCallSlot(interface_callslot_ptr)) {
             if (interface_callslot_ptr->IsConnectionValid(callslot)) {
                 return true;
@@ -405,7 +405,7 @@ bool megamol::gui::InterfaceSlot::IsConnectionValid(CallSlot& callslot) {
 }
 
 
-bool megamol::gui::InterfaceSlot::GetCompatibleCallSlot(CallSlotPtrType& out_callslot_ptr) {
+bool megamol::gui::InterfaceSlot::GetCompatibleCallSlot(CallSlotPtr_t& out_callslot_ptr) {
 
     out_callslot_ptr.reset();
     if (!this->callslots.empty()) {

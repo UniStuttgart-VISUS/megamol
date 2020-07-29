@@ -26,8 +26,8 @@ namespace gui {
 class Graph;
 
 // Types
-typedef std::vector<Module::StockModule> ModuleStockVectorType;
-typedef std::vector<Call::StockCall> CallStockVectorType;
+typedef std::vector<Module::StockModule> ModuleStockVector_t;
+typedef std::vector<Call::StockCall> CallStockVector_t;
 
 
 /** ************************************************************************
@@ -88,7 +88,7 @@ private:
     bool canvas_hovered;
     float current_font_scaling;
     // State propagated and shared by all graph items.
-    megamol::gui::GraphItemsStateType graph_state;
+    megamol::gui::GraphItemsState_t graph_state;
 
     // Widgets
     StringSearchWidget search_widget;
@@ -98,7 +98,7 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    void Present(Graph& inout_graph, GraphStateType& state);
+    void Present(Graph& inout_graph, GraphState_t& state);
     bool StateToJSON(Graph& inout_graph, nlohmann::json& out_json);
 
     void present_menu(Graph& inout_graph);
@@ -110,16 +110,16 @@ private:
     void present_canvas_multiselection(Graph& inout_graph);
 
     void layout_graph(Graph& inout_graph);
-    void layout(const ModulePtrVectorType& modules, const GroupPtrVectorType& groups, ImVec2 init_position);
+    void layout(const ModulePtrVector_t& modules, const GroupPtrVector_t& groups, ImVec2 init_position);
 
     bool connected_callslot(
-        const ModulePtrVectorType& modules, const GroupPtrVectorType& groups, const CallSlotPtrType& callslot_ptr);
-    bool connected_interfaceslot(const ModulePtrVectorType& modules, const GroupPtrVectorType& groups,
-        const InterfaceSlotPtrType& interfaceslot_ptr);
-    bool contains_callslot(const ModulePtrVectorType& modules, ImGuiID callslot_uid);
-    bool contains_interfaceslot(const GroupPtrVectorType& groups, ImGuiID interfaceslot_uid);
-    bool contains_module(const ModulePtrVectorType& modules, ImGuiID module_uid);
-    bool contains_group(const GroupPtrVectorType& groups, ImGuiID group_uid);
+        const ModulePtrVector_t& modules, const GroupPtrVector_t& groups, const CallSlotPtr_t& callslot_ptr);
+    bool connected_interfaceslot(
+        const ModulePtrVector_t& modules, const GroupPtrVector_t& groups, const InterfaceSlotPtr_t& interfaceslot_ptr);
+    bool contains_callslot(const ModulePtrVector_t& modules, ImGuiID callslot_uid);
+    bool contains_interfaceslot(const GroupPtrVector_t& groups, ImGuiID interfaceslot_uid);
+    bool contains_module(const ModulePtrVector_t& modules, ImGuiID module_uid);
+    bool contains_group(const GroupPtrVector_t& groups, ImGuiID group_uid);
 };
 
 
@@ -140,24 +140,24 @@ public:
     Graph(const std::string& graph_name);
     ~Graph(void);
 
-    ImGuiID AddModule(const ModuleStockVectorType& stock_modules, const std::string& module_class_name);
+    ImGuiID AddModule(const ModuleStockVector_t& stock_modules, const std::string& module_class_name);
     ImGuiID AddEmptyModule(void);
     bool DeleteModule(ImGuiID module_uid);
-    inline const ModulePtrVectorType& GetModules(void) { return this->modules; }
-    bool GetModule(ImGuiID module_uid, ModulePtrType& out_module_ptr);
+    inline const ModulePtrVector_t& GetModules(void) { return this->modules; }
+    bool GetModule(ImGuiID module_uid, ModulePtr_t& out_module_ptr);
 
-    bool AddCall(const CallStockVectorType& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid);
-    bool AddCall(const CallStockVectorType& stock_calls, CallSlotPtrType callslot_1, CallSlotPtrType callslot_2);
-    bool AddCall(CallPtrType& call_ptr, CallSlotPtrType callslot_1, CallSlotPtrType callslot_2);
+    bool AddCall(const CallStockVector_t& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid);
+    bool AddCall(const CallStockVector_t& stock_calls, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
+    bool AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
 
     bool DeleteCall(ImGuiID call_uid);
-    inline const CallPtrVectorType& GetCalls(void) { return this->calls; }
+    inline const CallPtrVector_t& GetCalls(void) { return this->calls; }
 
     ImGuiID AddGroup(const std::string& group_name = "");
     bool DeleteGroup(ImGuiID group_uid);
-    inline const GroupPtrVectorType& GetGroups(void) { return this->groups; }
-    bool GetGroup(ImGuiID group_uid, GroupPtrType& out_group_ptr);
-    ImGuiID AddGroupModule(const std::string& group_name, const ModulePtrType& module_ptr);
+    inline const GroupPtrVector_t& GetGroups(void) { return this->groups; }
+    bool GetGroup(ImGuiID group_uid, GroupPtr_t& out_group_ptr);
+    ImGuiID AddGroupModule(const std::string& group_name, const ModulePtr_t& module_ptr);
 
     inline bool IsDirty(void) const { return this->dirty_flag; }
     inline void ResetDirty(void) { this->dirty_flag = false; }
@@ -172,7 +172,7 @@ public:
 
     // Presentation ----------------------------------------------------
 
-    inline void PresentGUI(GraphStateType& state) { this->present.Present(*this, state); }
+    inline void PresentGUI(GraphState_t& state) { this->present.Present(*this, state); }
     bool GUIStateFromJsonString(const std::string& json_string) {
         return this->present.StateFromJsonString(*this, json_string);
     }
@@ -182,9 +182,9 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     unsigned int group_name_uid;
-    ModulePtrVectorType modules;
-    CallPtrVectorType calls;
-    GroupPtrVectorType groups;
+    ModulePtrVector_t modules;
+    CallPtrVector_t calls;
+    GroupPtrVector_t groups;
     bool dirty_flag;
     std::string filename;
 

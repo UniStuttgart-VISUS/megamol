@@ -23,8 +23,8 @@ namespace gui {
 class Group;
 
 // Types
-typedef std::shared_ptr<Group> GroupPtrType;
-typedef std::vector<GroupPtrType> GroupPtrVectorType;
+typedef std::shared_ptr<Group> GroupPtr_t;
+typedef std::vector<GroupPtr_t> GroupPtrVector_t;
 
 
 /** ************************************************************************
@@ -65,9 +65,9 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    void Present(megamol::gui::PresentPhase phase, Group& inout_group, GraphItemsStateType& state);
-    void UpdatePositionSize(Group& inout_group, const GraphCanvasType& in_canvas);
-    void SetPosition(Group& inout_group, const GraphCanvasType& in_canvas, ImVec2 pos);
+    void Present(megamol::gui::PresentPhase phase, Group& inout_group, GraphItemsState_t& state);
+    void UpdatePositionSize(Group& inout_group, const GraphCanvas_t& in_canvas);
+    void SetPosition(Group& inout_group, const GraphCanvas_t& in_canvas, ImVec2 pos);
 };
 
 
@@ -89,16 +89,16 @@ public:
     Group(ImGuiID uid);
     ~Group();
 
-    bool AddModule(const ModulePtrType& module_ptr);
+    bool AddModule(const ModulePtr_t& module_ptr);
     bool RemoveModule(ImGuiID module_uid);
     bool ContainsModule(ImGuiID module_uid);
-    inline const ModulePtrVectorType& GetModules(void) { return this->modules; }
+    inline const ModulePtrVector_t& GetModules(void) { return this->modules; }
     inline bool Empty(void) { return (this->modules.empty()); }
 
-    ImGuiID AddInterfaceSlot(const CallSlotPtrType& callslot_ptr, bool auto_add = true);
-    bool GetInterfaceSlot(ImGuiID interfaceslot_uid, InterfaceSlotPtrType& interfaceslot_ptr);
-    inline InterfaceSlotPtrMapType& GetInterfaceSlots(void) { return this->interfaceslots; }
-    inline InterfaceSlotPtrVectorType& GetInterfaceSlots(CallSlotType type) { return this->interfaceslots[type]; }
+    ImGuiID AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr, bool auto_add = true);
+    bool GetInterfaceSlot(ImGuiID interfaceslot_uid, InterfaceSlotPtr_t& interfaceslot_ptr);
+    inline InterfaceSlotPtrMap_t& GetInterfaceSlots(void) { return this->interfaceslots; }
+    inline InterfaceSlotPtrVector_t& GetInterfaceSlots(CallSlotType type) { return this->interfaceslots[type]; }
     bool DeleteInterfaceSlot(ImGuiID interfaceslot_uid);
     bool ContainsInterfaceSlot(ImGuiID interfaceslot_uid);
     bool InterfaceSlot_RemoveCallSlot(ImGuiID callslot_uid, bool force = false);
@@ -108,19 +108,19 @@ public:
 
     // Presentation ----------------------------------------------------
 
-    inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
+    inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsState_t& state) {
         this->present.Present(phase, *this, state);
     }
-    inline void UpdateGUI(const GraphCanvasType& in_canvas) { this->present.UpdatePositionSize(*this, in_canvas); }
-    inline void SetGUIPosition(const GraphCanvasType& in_canvas, ImVec2 pos) {
+    inline void UpdateGUI(const GraphCanvas_t& in_canvas) { this->present.UpdatePositionSize(*this, in_canvas); }
+    inline void SetGUIPosition(const GraphCanvas_t& in_canvas, ImVec2 pos) {
         this->present.SetPosition(*this, in_canvas, pos);
     }
 
 private:
     // VARIABLES --------------------------------------------------------------
 
-    ModulePtrVectorType modules;
-    InterfaceSlotPtrMapType interfaceslots;
+    ModulePtrVector_t modules;
+    InterfaceSlotPtrMap_t interfaceslots;
 };
 
 
