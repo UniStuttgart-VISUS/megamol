@@ -111,15 +111,15 @@ float megamol::astro::DirectionToColour::angle(const glm::vec2& v1,
 const std::uint8_t *megamol::astro::DirectionToColour::getDirections(
         const core::moldyn::SimpleSphericalParticles& particles) {
     using core::moldyn::SimpleSphericalParticles;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     switch (particles.GetDirDataType()) {
         case SimpleSphericalParticles::DIRDATA_FLOAT_XYZ:
             return static_cast<const std::uint8_t *>(particles.GetDirData());
 
         default:
-            Log::DefaultLog.WriteWarn(L"The input particles do not have "
-                L"directional information.");
+            Log::DefaultLog.WriteWarn("The input particles do not have "
+                "directional information.");
             return nullptr;
     }
 }
@@ -327,7 +327,7 @@ bool megamol::astro::DirectionToColour::getData(core::Call& call) {
     using core::moldyn::SimpleSphericalParticles;
     using core::param::ColorParam;
     using core::param::EnumParam;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     auto src = this->slotInput.CallAs<MultiParticleDataCall>();
     auto dst = dynamic_cast<MultiParticleDataCall *>(&call);
@@ -337,13 +337,13 @@ bool megamol::astro::DirectionToColour::getData(core::Call& call) {
 
     /* Sanity checks. */
     if (src == nullptr) {
-        Log::DefaultLog.WriteError(L"The input slot of %hs is invalid.",
+        Log::DefaultLog.WriteError("The input slot of %hs is invalid.",
             DirectionToColour::ClassName());
         return false;
     }
 
     if (dst == nullptr) {
-        Log::DefaultLog.WriteError(L"The output slot of %hs is invalid.",
+        Log::DefaultLog.WriteError("The output slot of %hs is invalid.",
             DirectionToColour::ClassName());
         return false;
     }
@@ -351,7 +351,7 @@ bool megamol::astro::DirectionToColour::getData(core::Call& call) {
     /* Request the source data. */
     *src = *dst;
     if (!(*src)(0)) {
-        Log::DefaultLog.WriteError(L"The call to %hs failed in %hs.",
+        Log::DefaultLog.WriteError("The call to %hs failed in %hs.",
             MultiParticleDataCall::FunctionName(0),
             MultiParticleDataCall::ClassName());
         return false;
@@ -467,20 +467,20 @@ bool megamol::astro::DirectionToColour::getData(core::Call& call) {
  */
 bool megamol::astro::DirectionToColour::getExtent(core::Call& call) {
     using core::moldyn::MultiParticleDataCall;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     auto src = this->slotInput.CallAs<MultiParticleDataCall>();
     auto dst = dynamic_cast<MultiParticleDataCall *>(&call);
 
     /* Sanity checks. */
     if (src == nullptr) {
-        Log::DefaultLog.WriteError(L"The input slot of %hs is invalid.",
+        Log::DefaultLog.WriteError("The input slot of %hs is invalid.",
             DirectionToColour::ClassName());
         return false;
     }
 
     if (dst == nullptr) {
-        Log::DefaultLog.WriteError(L"The output slot of %hs is invalid.",
+        Log::DefaultLog.WriteError("The output slot of %hs is invalid.",
             DirectionToColour::ClassName());
         return false;
     }

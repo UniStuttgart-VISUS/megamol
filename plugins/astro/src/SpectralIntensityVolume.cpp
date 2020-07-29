@@ -176,7 +176,7 @@ bool megamol::astro::SpectralIntensityVolume::getExtentCallback(core::Call& c) {
     // if (!this->assertData(inMpdc, outDpdc)) return false;
     ast->SetFrameID(out->FrameID(), true);
     if (!(*ast)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "SpectralIntensityVolume: could not get current frame extents (%u)", time - 1);
         return false;
     }
@@ -213,62 +213,62 @@ bool megamol::astro::SpectralIntensityVolume::getDataCallback(core::Call& c) {
     mdc->SetFrameID(outVol->FrameID(), true);
     mwdc->SetFrameID(outVol->FrameID(), true);
     if (!(*ast)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get extents.");
         return false;
     }
     if (!(*ast)(0)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get data.");
         return false;
     }
     if (!(*vdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume metadata.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume metadata.");
         return false;
     }
     if (!(*vdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume extents.");
         return false;
     }
     if (!(*vdc)(core::misc::VolumetricDataCall::IDX_GET_DATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume data.");
         return false;
     }
     if (!(*tdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume metadata.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume metadata.");
         return false;
     }
     if (!(*tdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume extents.");
         return false;
     }
     if (!(*tdc)(core::misc::VolumetricDataCall::IDX_GET_DATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume data.");
         return false;
     }
     if (!(*mdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume metadata.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume metadata.");
         return false;
     }
     if (!(*mdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume extents.");
         return false;
     }
     if (!(*mdc)(core::misc::VolumetricDataCall::IDX_GET_DATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume data.");
         return false;
     }
 
     if (!(*mwdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "SpectralIntensityVolume: Unable to get molecular weight volume metadata.");
         return false;
     }
     if (!(*mwdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "SpectralIntensityVolume: Unable to get molecular weight volume extents.");
         return false;
     }
     if (!(*mwdc)(core::misc::VolumetricDataCall::IDX_GET_DATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get molecular weight volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get molecular weight volume data.");
         return false;
     }
     if (this->time != ast->FrameID() || this->time != vdc->FrameID() || this->time != tdc->FrameID() ||
@@ -346,62 +346,62 @@ bool megamol::astro::SpectralIntensityVolume::getLSUDataCallback(core::Call& c) 
     mdc->SetFrameID(outVol->FrameID(), true);
     mwdc->SetFrameID(outVol->FrameID(), true);
     if (!(*ast)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get extents.");
         return false;
     }
     if (!(*ast)(0)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get data.");
         return false;
     }
     if (!(*vdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume metadata.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume metadata.");
         return false;
     }
     if (!(*vdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume extents.");
         return false;
     }
     if (!(*vdc)(core::misc::VolumetricDataCall::IDX_GET_DATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume data.");
         return false;
     }
     if (!(*tdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume metadata.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume metadata.");
         return false;
     }
     if (!(*tdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume extents.");
         return false;
     }
     if (!(*tdc)(core::misc::VolumetricDataCall::IDX_GET_DATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume data.");
         return false;
     }
     if (!(*mdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume metadata.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume metadata.");
         return false;
     }
     if (!(*mdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume extents.");
         return false;
     }
     if (!(*mdc)(core::misc::VolumetricDataCall::IDX_GET_DATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume data.");
         return false;
     }
 
     if (!(*mwdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "SpectralIntensityVolume: Unable to get molecular weight volume metadata.");
         return false;
     }
     if (!(*mwdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "SpectralIntensityVolume: Unable to get molecular weight volume extents.");
         return false;
     }
     if (!(*mwdc)(core::misc::VolumetricDataCall::IDX_GET_DATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get molecular weight volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get molecular weight volume data.");
         return false;
     }
     if (this->time != ast->FrameID() || this->time != vdc->FrameID() || this->time != tdc->FrameID() ||
@@ -479,62 +479,62 @@ bool megamol::astro::SpectralIntensityVolume::getAbsorptionDataCallback(core::Ca
     mdc->SetFrameID(outVol->FrameID(), true);
     mwdc->SetFrameID(outVol->FrameID(), true);
     if (!(*ast)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get extents.");
         return false;
     }
     if (!(*ast)(0)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get data.");
         return false;
     }
     if (!(*vdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume metadata.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume metadata.");
         return false;
     }
     if (!(*vdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume extents.");
         return false;
     }
     if (!(*vdc)(core::misc::VolumetricDataCall::IDX_GET_DATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume data.");
         return false;
     }
     if (!(*tdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume metadata.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume metadata.");
         return false;
     }
     if (!(*tdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume extents.");
         return false;
     }
     if (!(*tdc)(core::misc::VolumetricDataCall::IDX_GET_DATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume data.");
         return false;
     }
     if (!(*mdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume metadata.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume metadata.");
         return false;
     }
     if (!(*mdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume extents.");
         return false;
     }
     if (!(*mdc)(core::misc::VolumetricDataCall::IDX_GET_DATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume data.");
         return false;
     }
 
     if (!(*mwdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "SpectralIntensityVolume: Unable to get molecular weight volume metadata.");
         return false;
     }
     if (!(*mwdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "SpectralIntensityVolume: Unable to get molecular weight volume extents.");
         return false;
     }
     if (!(*mwdc)(core::misc::VolumetricDataCall::IDX_GET_DATA)) {
-        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get molecular weight volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get molecular weight volume data.");
         return false;
     }
     if (this->time != ast->FrameID() || this->time != vdc->FrameID() || this->time != tdc->FrameID() ||
@@ -590,7 +590,7 @@ bool megamol::astro::SpectralIntensityVolume::getAbsorptionDataCallback(core::Ca
 bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::VolumetricDataCall const& volumeIn,
     core::misc::VolumetricDataCall const& tempIn, core::misc::VolumetricDataCall const& massIn,
     core::misc::VolumetricDataCall const& mwIn, AstroDataCall& astroIn) {
-    vislib::sys::Log::DefaultLog.WriteInfo("SpectralIntensityVolume: Starting volume creation.");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("SpectralIntensityVolume: Starting volume creation.");
 
     auto const sx = this->xResSlot.Param<core::param::IntParam>()->Value();
     auto const sy = this->yResSlot.Param<core::param::IntParam>()->Value();
@@ -780,7 +780,7 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
     if (vol_sx != temp_vol_sx || vol_sx != mass_vol_sx || vol_sx != mw_vol_sx || vol_sy != temp_vol_sy ||
         vol_sy != mass_vol_sy || vol_sy != mw_vol_sy || vol_sz != temp_vol_sz || vol_sz != mass_vol_sz ||
         vol_sz != mw_vol_sz) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "SpectralIntensityVolume: Input volume size not compatible to requested output.");
         return false;
     }
@@ -909,7 +909,7 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
                     auto const quat = core::thecam::math::quaternion<glm::quat>::from_vectors(base, org_dir);
                     dir = core::thecam::math::rotate(rand, quat);
                 } catch (...) {
-                    vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Math gone wrong");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Math gone wrong");
                 }
 
                 //double att = 0.0;
@@ -981,7 +981,7 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
 
     max_dens_ = *std::max_element(vol_[0].begin(), vol_[0].end());
     min_dens_ = *std::min_element(vol_[0].begin(), vol_[0].end());
-    vislib::sys::Log::DefaultLog.WriteInfo(
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         "SpectralIntensityVolume: Captured intensity %f -> %f", min_dens_, max_dens_);
 
     if (this->normalizeSlot.Param<core::param::BoolParam>()->Value()) {
@@ -997,7 +997,7 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
     std::ofstream raw_file{"int.raw", std::ios::binary};
     raw_file.write(reinterpret_cast<char const*>(vol_[0].data()), vol_[0].size() * sizeof(float));
     raw_file.close();
-    vislib::sys::Log::DefaultLog.WriteInfo("SpectralIntensityVolume: Debug file written\n");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("SpectralIntensityVolume: Debug file written\n");
 #endif
 
     // Cleanup
@@ -1010,7 +1010,7 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
 bool megamol::astro::SpectralIntensityVolume::createBremsstrahlungVolume(core::misc::VolumetricDataCall const& volumeIn,
     core::misc::VolumetricDataCall const& tempIn, core::misc::VolumetricDataCall const& massIn,
     core::misc::VolumetricDataCall const& mwIn, AstroDataCall& astroIn) {
-    vislib::sys::Log::DefaultLog.WriteInfo("SpectralIntensityVolume: Starting volume creation.");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("SpectralIntensityVolume: Starting volume creation.");
 
     sx = this->xResSlot.Param<core::param::IntParam>()->Value();
     sy = this->yResSlot.Param<core::param::IntParam>()->Value();
@@ -1047,13 +1047,13 @@ bool megamol::astro::SpectralIntensityVolume::createBremsstrahlungVolume(core::m
 
 
     if (vol_sx != temp_vol_sx || vol_sy != temp_vol_sy || vol_sz != temp_vol_sz) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "SpectralIntensityVolume: Density and temperature volume are not compatible. Aborting.");
         return false;
     }
 
     if (vol_sx != sx || vol_sy != sy || vol_sz != sz) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "SpectralIntensityVolume: Selected resolution not compatible to input. Resetting to %d %d %d.", vol_sx,
             vol_sy, vol_sz);
         sx = vol_sx;
@@ -1071,7 +1071,7 @@ bool megamol::astro::SpectralIntensityVolume::createBremsstrahlungVolume(core::m
 
     max_dens_ = *std::max_element(vol_[0].begin(), vol_[0].end());
     min_dens_ = *std::min_element(vol_[0].begin(), vol_[0].end());
-    vislib::sys::Log::DefaultLog.WriteInfo(
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         "SpectralIntensityVolume: Captured intensity %f -> %f", min_dens_, max_dens_);
 
     if (this->normalizeSlot.Param<core::param::BoolParam>()->Value()) {
@@ -1089,7 +1089,7 @@ bool megamol::astro::SpectralIntensityVolume::createBremsstrahlungVolume(core::m
 bool megamol::astro::SpectralIntensityVolume::createAbsorptionVolume(core::misc::VolumetricDataCall const& volumeIn,
     core::misc::VolumetricDataCall const& tempIn, core::misc::VolumetricDataCall const& massIn,
     core::misc::VolumetricDataCall const& mwIn, AstroDataCall& astroIn) {
-    vislib::sys::Log::DefaultLog.WriteInfo("SpectralIntensityVolume: Starting volume creation.");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("SpectralIntensityVolume: Starting volume creation.");
 
     sx = this->xResSlot.Param<core::param::IntParam>()->Value();
     sy = this->yResSlot.Param<core::param::IntParam>()->Value();
@@ -1138,13 +1138,13 @@ bool megamol::astro::SpectralIntensityVolume::createAbsorptionVolume(core::misc:
 
     if (vol_sx != temp_vol_sx || vol_sy != temp_vol_sy || vol_sz != temp_vol_sz || vol_sx != mw_vol_sx ||
         vol_sy != mw_vol_sy || vol_sz != mw_vol_sz) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "SpectralIntensityVolume: Density and temperature volume are not compatible. Aborting.");
         return false;
     }
 
     if (vol_sx != sx || vol_sy != sy || vol_sz != sz) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "SpectralIntensityVolume: Selected resolution not compatible to input. Resetting to %d %d %d.", vol_sx,
             vol_sy, vol_sz);
         sx = vol_sx;
@@ -1169,7 +1169,7 @@ bool megamol::astro::SpectralIntensityVolume::createAbsorptionVolume(core::misc:
 
     max_dens_ = *std::max_element(vol_[0].begin(), vol_[0].end());
     min_dens_ = *std::min_element(vol_[0].begin(), vol_[0].end());
-    vislib::sys::Log::DefaultLog.WriteInfo(
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         "SpectralIntensityVolume: Captured intensity %f -> %f", min_dens_, max_dens_);
 
     if (this->normalizeSlot.Param<core::param::BoolParam>()->Value()) {

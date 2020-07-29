@@ -14,7 +14,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;
 using namespace megamol::astro;
@@ -45,7 +45,7 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
 
     std::ifstream file(filepath, std::ios::binary);
     if (!file.is_open()) {
-        vislib::sys::Log::DefaultLog.WriteError("Could not open input file \"%s\"", filepath.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Could not open input file \"%s\"", filepath.c_str());
         return false;
     }
     // determine size of the file
@@ -557,7 +557,7 @@ bool Contest2019DataLoader::create(void) { return true; }
  * Contest2019DataLoader::loadFrame
  */
 void Contest2019DataLoader::loadFrame(view::AnimDataModule::Frame* frame, unsigned int idx) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     Frame* f = dynamic_cast<Frame*>(frame);
     // the allocation of the dummy frames here is stupid and should be done globally to avoid too many allocations.
     // the parallel nature of the AnimDataModule makes this impossible
@@ -662,7 +662,7 @@ bool Contest2019DataLoader::filenameChangedCallback(param::ParamSlot& slot) {
             if (toLoadCount < 0) {
                 done = true;
             } else {
-                vislib::sys::Log::DefaultLog.WriteWarn(
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "Could not find the suggested input file \"%s\"", curFilename.c_str());
                 missedFiles++;
             }
@@ -673,7 +673,7 @@ bool Contest2019DataLoader::filenameChangedCallback(param::ParamSlot& slot) {
             done = true;
         }
         if (missedFiles > MAX_MISSED_FILE_NUMBER) {
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "Already could not open %i files, aborting further checking", int(MAX_MISSED_FILE_NUMBER));
             done = true;
             return false;
