@@ -23,19 +23,19 @@ class Call;
 class Module;
 class Parameter;
 class InterfaceSlot;
-typedef std::shared_ptr<Parameter> ParamPtrType;
-typedef std::shared_ptr<Call> CallPtrType;
-typedef std::shared_ptr<Module> ModulePtrType;
-typedef std::shared_ptr<InterfaceSlot> InterfaceSlotPtrType;
+typedef std::shared_ptr<Parameter> ParamPtr_t;
+typedef std::shared_ptr<Call> CallPtr_t;
+typedef std::shared_ptr<Module> ModulePtr_t;
+typedef std::shared_ptr<InterfaceSlot> InterfaceSlotPtr_t;
 
 // Types
 #ifndef _CALL_SLOT_TYPE_
 enum CallSlotType { CALLEE, CALLER };
 #    define _CALL_SLOT_TYPE_
 #endif
-typedef std::shared_ptr<CallSlot> CallSlotPtrType;
-typedef std::vector<CallSlotPtrType> CallSlotPtrVectorType;
-typedef std::map<CallSlotType, CallSlotPtrVectorType> CallSlotPtrMapType;
+typedef std::shared_ptr<CallSlot> CallSlotPtr_t;
+typedef std::vector<CallSlotPtr_t> CallSlotPtrVector_t;
+typedef std::map<CallSlotType, CallSlotPtrVector_t> CallSlotPtrMap_t;
 
 
 /** ************************************************************************
@@ -46,7 +46,7 @@ public:
     friend class CallSlot;
 
     struct GroupState {
-        InterfaceSlotPtrType interfaceslot_ptr;
+        InterfaceSlotPtr_t interfaceslot_ptr;
     };
 
     // VARIABLES --------------------------------------------------------------
@@ -80,8 +80,8 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    void Present(megamol::gui::PresentPhase phase, CallSlot& inout_callslot, GraphItemsStateType& state);
-    void Update(CallSlot& inout_callslot, const GraphCanvasType& in_canvas);
+    void Present(megamol::gui::PresentPhase phase, CallSlot& inout_callslot, GraphItemsState_t& state);
+    void Update(CallSlot& inout_callslot, const GraphCanvas_t& in_canvas);
 };
 
 
@@ -114,34 +114,33 @@ public:
     ~CallSlot();
 
     bool CallsConnected(void) const;
-    bool ConnectCall(const CallPtrType& call_ptr);
+    bool ConnectCall(const CallPtr_t& call_ptr);
     bool DisconnectCall(ImGuiID call_uid);
     bool DisconnectCalls(void);
-    const std::vector<CallPtrType>& GetConnectedCalls(void);
+    const std::vector<CallPtr_t>& GetConnectedCalls(void);
 
     bool IsParentModuleConnected(void) const;
-    bool ConnectParentModule(ModulePtrType parent_module);
+    bool ConnectParentModule(ModulePtr_t parent_module);
     bool DisconnectParentModule(void);
-    const ModulePtrType& GetParentModule(void);
+    const ModulePtr_t& GetParentModule(void);
 
-    static ImGuiID GetCompatibleCallIndex(const CallSlotPtrType& callslot_1, const CallSlotPtrType& callslot_2);
-    static ImGuiID GetCompatibleCallIndex(
-        const CallSlotPtrType& callslot, const CallSlot::StockCallSlot& stock_callslot);
+    static ImGuiID GetCompatibleCallIndex(const CallSlotPtr_t& callslot_1, const CallSlotPtr_t& callslot_2);
+    static ImGuiID GetCompatibleCallIndex(const CallSlotPtr_t& callslot, const CallSlot::StockCallSlot& stock_callslot);
 
     bool IsConnectionValid(CallSlot& callslot);
 
     // Presentation ----------------------------------------------------
 
-    inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
+    inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsState_t& state) {
         this->present.Present(phase, *this, state);
     }
-    inline void UpdateGUI(const GraphCanvasType& in_canvas) { this->present.Update(*this, in_canvas); }
+    inline void UpdateGUI(const GraphCanvas_t& in_canvas) { this->present.Update(*this, in_canvas); }
 
 private:
     // VARIABLES --------------------------------------------------------------
 
-    ModulePtrType parent_module;
-    std::vector<CallPtrType> connected_calls;
+    ModulePtr_t parent_module;
+    std::vector<CallPtr_t> connected_calls;
 };
 
 

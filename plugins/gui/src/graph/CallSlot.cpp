@@ -38,7 +38,7 @@ megamol::gui::CallSlotPresentation::CallSlotPresentation(void)
 megamol::gui::CallSlotPresentation::~CallSlotPresentation(void) {}
 
 void megamol::gui::CallSlotPresentation::Present(
-    PresentPhase phase, megamol::gui::CallSlot& inout_callslot, megamol::gui::GraphItemsStateType& state) {
+    PresentPhase phase, megamol::gui::CallSlot& inout_callslot, megamol::gui::GraphItemsState_t& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -275,7 +275,7 @@ void megamol::gui::CallSlotPresentation::Present(
 
 
 void megamol::gui::CallSlotPresentation::Update(
-    megamol::gui::CallSlot& inout_callslot, const GraphCanvasType& in_canvas) {
+    megamol::gui::CallSlot& inout_callslot, const GraphCanvas_t& in_canvas) {
 
     if (inout_callslot.IsParentModuleConnected()) {
         auto slot_count = inout_callslot.GetParentModule()->GetCallSlots(inout_callslot.type).size();
@@ -330,7 +330,7 @@ bool megamol::gui::CallSlot::CallsConnected(void) const {
 }
 
 
-bool megamol::gui::CallSlot::ConnectCall(const megamol::gui::CallPtrType& call_ptr) {
+bool megamol::gui::CallSlot::ConnectCall(const megamol::gui::CallPtr_t& call_ptr) {
 
     if (call_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -401,7 +401,7 @@ bool megamol::gui::CallSlot::DisconnectCalls(void) {
 }
 
 
-const std::vector<megamol::gui::CallPtrType>& megamol::gui::CallSlot::GetConnectedCalls(void) {
+const std::vector<megamol::gui::CallPtr_t>& megamol::gui::CallSlot::GetConnectedCalls(void) {
 
     /// Check for unclean references
     for (auto& call_ptr : this->connected_calls) {
@@ -418,7 +418,7 @@ const std::vector<megamol::gui::CallPtrType>& megamol::gui::CallSlot::GetConnect
 bool megamol::gui::CallSlot::IsParentModuleConnected(void) const { return (this->parent_module != nullptr); }
 
 
-bool megamol::gui::CallSlot::ConnectParentModule(megamol::gui::ModulePtrType parent_module) {
+bool megamol::gui::CallSlot::ConnectParentModule(megamol::gui::ModulePtr_t parent_module) {
 
     if (parent_module == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -450,7 +450,7 @@ bool megamol::gui::CallSlot::DisconnectParentModule(void) {
 }
 
 
-const megamol::gui::ModulePtrType& megamol::gui::CallSlot::GetParentModule(void) {
+const megamol::gui::ModulePtr_t& megamol::gui::CallSlot::GetParentModule(void) {
 
     if (this->parent_module == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -461,7 +461,7 @@ const megamol::gui::ModulePtrType& megamol::gui::CallSlot::GetParentModule(void)
 
 
 ImGuiID megamol::gui::CallSlot::GetCompatibleCallIndex(
-    const CallSlotPtrType& callslot_1, const CallSlotPtrType& callslot_2) {
+    const CallSlotPtr_t& callslot_1, const CallSlotPtr_t& callslot_2) {
 
     if ((callslot_1 != nullptr) && (callslot_2 != nullptr)) {
         if (callslot_1->GetParentModule() != callslot_2->GetParentModule() && (callslot_1->type != callslot_2->type)) {
@@ -480,7 +480,7 @@ ImGuiID megamol::gui::CallSlot::GetCompatibleCallIndex(
 
 
 ImGuiID megamol::gui::CallSlot::GetCompatibleCallIndex(
-    const CallSlotPtrType& callslot, const CallSlot::StockCallSlot& stock_callslot) {
+    const CallSlotPtr_t& callslot, const CallSlot::StockCallSlot& stock_callslot) {
 
     if (callslot != nullptr) {
         if (callslot->type != stock_callslot.type) {

@@ -25,11 +25,11 @@
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/utility/SDFFont.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/RendererModule.h"
 
-#include "mmcore/utility/log/Log.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"

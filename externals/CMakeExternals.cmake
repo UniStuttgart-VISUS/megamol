@@ -2,7 +2,7 @@
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/script-externals")
   message(STATUS "Downloading external scripts")
   execute_process(COMMAND
-    ${GIT_EXECUTABLE} clone -b v1.0 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
+    ${GIT_EXECUTABLE} clone -b v2.0 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
@@ -191,11 +191,40 @@ function(require_external NAME)
       GIT_TAG "36b169c88250d0afe51828448dfdeeaa508f13bc"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${BHTSNE_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/cmake/bhtsne/CMakeLists.txt"
+        "${CMAKE_SOURCE_DIR}/externals/bhtsne/CMakeLists.txt"
         "<SOURCE_DIR>/CMakeLists.txt")
 
     add_external_library(bhtsne
       LIBRARY ${BHTSNE_LIB})
+
+  #glad 
+  elseif(NAME STREQUAL "glad")
+    if(TARGET glad)
+      return()
+    endif()
+
+    include(GNUInstallDirs)
+
+    if(WIN32)
+      set(GLAD_LIB "bin/glad.dll")
+      set(GLAD_LIB_IMPORT "lib/glad.lib")
+    else()
+      #set(GLAD_LIB "lib/libglad.a")
+      set(GLAD_LIB "lib/libglad.so")
+      set(GLAD_LIB2 "lib/libglad.so.1")
+    endif()
+
+    add_external_project(glad SHARED
+      SOURCE_DIR glad
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLAD_LIB}" "<INSTALL_DIR>/${GLAD_LIB2}" "<INSTALL_DIR>/${GLAD_LIB_IMPORT}")
+
+    add_external_library(glad
+      PROJECT glad
+      IMPORT_LIBRARY ${GLAD_LIB_IMPORT}
+      LIBRARY ${GLAD_LIB})
+
+    # glad needs to announce dll export also in header files used by megamol libraries	
+    target_compile_definitions(glad INTERFACE GLAD_GLAPI_EXPORT)
 
   # glfw3
   elseif(NAME STREQUAL "glfw3")
@@ -290,7 +319,7 @@ function(require_external NAME)
         GIT_TAG "v1.70"
         BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
         PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-          "${CMAKE_SOURCE_DIR}/cmake/imgui/CMakeLists.txt"
+          "${CMAKE_SOURCE_DIR}/externals/imgui/CMakeLists.txt"
           "<SOURCE_DIR>/CMakeLists.txt")
 
       add_external_library(imgui
@@ -418,7 +447,7 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/akuukka/quickhull.git
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_LIB}" "<INSTALL_DIR>/${QUICKHULL_IMPORT_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/cmake/quickhull/CMakeLists.txt"
+        "${CMAKE_SOURCE_DIR}/externals/quickhull/CMakeLists.txt"
         "<SOURCE_DIR>/CMakeLists.txt"
       CMAKE_ARGS
         -DCMAKE_C_FLAGS=-fPIC
@@ -669,7 +698,7 @@ function(require_external NAME)
       set(FMT_LIB "lib/fmt<SUFFIX>.lib")
     else()
       include(GNUInstallDirs)
-      set(FMT_LIB "${CMAKE_INSTALL_LIBDIR}/libfmt.a")
+      set(FMT_LIB "${CMAKE_INSTALL_LIBDIR}/libfmt<SUFFIX>.a")
     endif()
   
     add_external_project(fmt STATIC
@@ -697,7 +726,7 @@ function(require_external NAME)
       set(SPDLOG_LIB "lib/spdlog<SUFFIX>.lib")
     else()
       include(GNUInstallDirs)
-      set(SPDLOG_LIB "${CMAKE_INSTALL_LIBDIR}/libspdlog.a")
+      set(SPDLOG_LIB "${CMAKE_INSTALL_LIBDIR}/libspdlog<SUFFIX>.a")
     endif()
   
     external_get_property(fmt BINARY_DIR)
