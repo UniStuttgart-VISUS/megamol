@@ -32,7 +32,8 @@ megamol::gui::ParameterPresentation::ParameterPresentation(Param_t type)
     , tf_editor_hash(0)
     , file_browser()
     , tooltip()
-    , image_widget() {
+    , image_widget()
+    , rotation_widget() {
 
     this->InitPresentation(type);
 }
@@ -635,6 +636,25 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                     retval = true;
                 }
                 error = false;
+            }
+        } break;
+            // 3D ROTATION //////////////////////////////////////////////////
+        case (Present_t::Rotation3D): {
+            // FLOAT -----------------------------------------------
+            if constexpr (std::is_same_v<T, glm::vec4>) {
+                switch (inout_parameter.type) {
+                    // VECTOR 4 ----------------------------------------
+                case (Param_t::VECTOR4F): {
+                    auto value = arg;
+                    if (this->widget_rotation3D(scope, param_label, value, glm::vec4(0.0f), glm::vec4(1.0f))) {
+                        inout_parameter.SetValue(value, false, true);
+                        retval = true;
+                    }
+                    error = false;
+                } break;
+                default:
+                    break;
+                }
             }
         } break;
         default:
@@ -1313,6 +1333,33 @@ bool megamol::gui::ParameterPresentation::widget_knob(
     }
 
     return retval;
+}
+
+
+bool megamol::gui::ParameterPresentation::widget_rotation3D(
+    WidgetScope scope, const std::string& label, glm::vec4& value, glm::vec4 minval, glm::vec4 maxval) {
+
+    bool retval = false;
+
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    // LOCAL -----------------------------------------------------------
+    if (scope == ParameterPresentation::WidgetScope::LOCAL) {
+        ImGui::TextUnformatted(label.c_str());
+
+
+        this->rotation_widget;
+
+
+
+    }
+    // GLOBAL -----------------------------------------------------------
+    else if (scope == ParameterPresentation::WidgetScope::GLOBAL) {
+
+        // no global implementation ...
+    }
+
+    return false;
 }
 
 

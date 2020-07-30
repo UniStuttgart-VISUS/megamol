@@ -59,7 +59,8 @@ public:
         TransferFunction = 1 << 5,      // Transfer function editor widget
         Knob = 1 << 6,                  // Knob widget for int and float
         PinValueToMouse = 1 << 7,       // Pin parameter value to mouse position
-        Group_Animation = 1 << 8        // Animation widget group
+        Rotation3D = 1 << 8,            // Widget for 3D rotation (orbital manipulator)
+        Group_Animation = 1 << 9        // Animation widget group
     };
 
     /**

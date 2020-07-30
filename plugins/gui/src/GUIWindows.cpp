@@ -677,7 +677,7 @@ bool GUIWindows::createContext(void) {
 
     // MAIN Window ------------------------------------------------------------
     buf_win.win_name = "All Parameters";
-    buf_win.win_show = false;
+    buf_win.win_show = true;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
     buf_win.win_flags = ImGuiWindowFlags_NoScrollbar;
     buf_win.win_callback = WindowCollection::DrawCallbacks::MAIN_PARAMETERS;
