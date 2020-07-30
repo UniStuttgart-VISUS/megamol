@@ -1351,7 +1351,6 @@ bool megamol::gui::ParameterPresentation::widget_rotation3D(
         this->rotation_widget;
 
 
-
     }
     // GLOBAL -----------------------------------------------------------
     else if (scope == ParameterPresentation::WidgetScope::GLOBAL) {

@@ -52,8 +52,8 @@ void WindowCollection::SoftResetWindowSizePos(WindowConfiguration& window_config
         win_pos.y = io.DisplaySize.y - (win_size.y); //+ style.DisplayWindowPadding.y);
     }
 
-    ImGui::SetWindowSize(window_config.win_name.c_str(), ImVec2(width, height), ImGuiCond_Always);
-    ImGui::SetWindowPos(window_config.win_name.c_str(), win_pos, ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(win_pos, ImGuiCond_Always);
 }
 
 
@@ -63,8 +63,8 @@ void WindowCollection::ResetWindowPosSize(WindowConfiguration& window_config) {
     ImVec2 pos = window_config.win_position;
     ImVec2 size = window_config.win_size;
 
-    ImGui::SetWindowSize(window_config.win_name.c_str(), size, ImGuiCond_Always);
-    ImGui::SetWindowPos(window_config.win_name.c_str(), pos, ImGuiCond_Always);
+    ImGui::SetNextWindowSize(size, ImGuiCond_Always);
+    ImGui::SetNextWindowPos(pos, ImGuiCond_Always);
 }
 
 
