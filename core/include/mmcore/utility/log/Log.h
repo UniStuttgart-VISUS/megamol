@@ -157,7 +157,7 @@ namespace log {
 
         };
 
-        /** 
+        /**
          * Ctor. Constructs a new log file without a physical file. 
          *
          * @param level Sets the current log level.

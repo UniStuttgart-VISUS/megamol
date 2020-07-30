@@ -198,6 +198,34 @@ function(require_external NAME)
     add_external_library(bhtsne
       LIBRARY ${BHTSNE_LIB})
 
+  # fmt
+  elseif(NAME STREQUAL "fmt")
+    if(TARGET fmt)
+      return()
+    endif()
+
+    if(WIN32)
+      set(FMT_LIB "lib/fmt<SUFFIX>.lib")
+    else()
+      include(GNUInstallDirs)
+      set(FMT_LIB "${CMAKE_INSTALL_LIBDIR}/libfmt<SUFFIX>.a")
+    endif()
+
+    add_external_project(fmt STATIC
+      GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+      GIT_TAG "6.2.1"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${FMT_LIB}"
+      DEBUG_SUFFIX "d"
+      CMAKE_ARGS
+        -DFMT_DOC=OFF
+        -DFMT_TEST=OFF
+        -DCMAKE_C_FLAGS=-fPIC
+        -DCMAKE_CXX_FLAGS=-fPIC)
+
+    add_external_library(fmt
+      LIBRARY ${FMT_LIB}
+      DEBUG_SUFFIX "d")
+
   #glad 
   elseif(NAME STREQUAL "glad")
     if(TARGET glad)
@@ -485,6 +513,44 @@ function(require_external NAME)
       IMPORT_LIBRARY ${SNAPPY_IMPORT_LIB}
       LIBRARY ${SNAPPY_LIB})
 
+  # spdlog
+  elseif(NAME STREQUAL "spdlog")
+    if(TARGET spdlog)
+      return()
+    endif()
+
+    require_external(fmt)
+
+    if(WIN32)
+      set(SPDLOG_LIB "lib/spdlog<SUFFIX>.lib")
+    else()
+      include(GNUInstallDirs)
+      set(SPDLOG_LIB "${CMAKE_INSTALL_LIBDIR}/libspdlog<SUFFIX>.a")
+    endif()
+
+    external_get_property(fmt BINARY_DIR)
+
+    add_external_project(spdlog STATIC
+      GIT_REPOSITORY https://github.com/gabime/spdlog.git
+      GIT_TAG "v1.7.0"
+      DEPENDS fmt
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${SPDLOG_LIB}"
+      DEBUG_SUFFIX "d"
+      CMAKE_ARGS
+        -DSPDLOG_BUILD_EXAMPLE=OFF
+        -DSPDLOG_BUILD_TESTS=OFF
+        -DSPDLOG_FMT_EXTERNAL=ON
+        -Dfmt_DIR=${BINARY_DIR}
+        -DCMAKE_C_FLAGS=-fPIC
+        -DCMAKE_CXX_FLAGS=-fPIC)
+
+    add_external_library(spdlog
+      LIBRARY ${SPDLOG_LIB}
+      DEBUG_SUFFIX "d"
+      DEPENDS fmt)
+
+    target_compile_definitions(spdlog INTERFACE SPDLOG_FMT_EXTERNAL;SPDLOG_COMPILED_LIB)
+
   # tinyobjloader
   elseif(NAME STREQUAL "tinyobjloader")
     if(TARGET tinyobjloader)
@@ -689,65 +755,6 @@ function(require_external NAME)
       PROJECT vtkm
       LIBRARY_RELEASE "${VTKM_LIB_WORKLET}"
       LIBRARY_DEBUG "${VTKM_LIB_DEBUG_WORKLET}")
-
-  elseif(NAME STREQUAL "fmt")
-    if(TARGET fmt)
-      return()
-    endif()
-  
-    if(WIN32)
-      set(FMT_LIB "lib/fmt<SUFFIX>.lib")
-    else()
-      include(GNUInstallDirs)
-      set(FMT_LIB "${CMAKE_INSTALL_LIBDIR}/libfmt<SUFFIX>.a")
-    endif()
-  
-    add_external_project(fmt STATIC
-      GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-      GIT_TAG "6.2.1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${FMT_LIB}"
-      DEBUG_SUFFIX "d"
-      CMAKE_ARGS
-        -DFMT_DOC=OFF
-        -DFMT_TEST=OFF
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC)
-  
-    add_external_library(fmt
-      LIBRARY ${FMT_LIB}
-      DEBUG_SUFFIX "d")
-  elseif(NAME STREQUAL "spdlog")
-    if(TARGET spdlog)
-      return()
-    endif()
-
-    require_external(fmt)
-  
-    if(WIN32)
-      set(SPDLOG_LIB "lib/spdlog<SUFFIX>.lib")
-    else()
-      include(GNUInstallDirs)
-      set(SPDLOG_LIB "${CMAKE_INSTALL_LIBDIR}/libspdlog<SUFFIX>.a")
-    endif()
-  
-    external_get_property(fmt BINARY_DIR)
-
-    add_external_project(spdlog STATIC
-      GIT_REPOSITORY https://github.com/gabime/spdlog.git
-      GIT_TAG "v1.5.0"
-      DEPENDS fmt
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${SPDLOG_LIB}"
-      DEBUG_SUFFIX "d"
-      CMAKE_ARGS
-        -DSPDLOG_BUILD_EXAMPLE=OFF
-        -DSPDLOG_BUILD_TESTS=OFF
-        -DSPDLOG_FMT_EXTERNAL=ON
-        -Dfmt_DIR=${BINARY_DIR})
-  
-    add_external_library(spdlog
-      LIBRARY ${SPDLOG_LIB}
-      DEBUG_SUFFIX "d"
-      DEPENDS fmt)
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")
   endif()
