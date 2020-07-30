@@ -143,6 +143,7 @@ function(require_external NAME)
         -DADIOS2_USE_BZip2=OFF
         -DADIOS2_USE_Fortran=OFF
         -DADIOS2_USE_HDF5=OFF
+        -DADIOS2_USE_PNG=OFF
         -DADIOS2_USE_Python=OFF
         -DADIOS2_USE_SST=OFF
         -DADIOS2_USE_SZ=OFF
