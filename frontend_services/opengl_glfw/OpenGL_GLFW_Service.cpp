@@ -245,14 +245,15 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     } else {
         initSharedContext(m_data.sharedData);
     }
-    // from here on, use m_sharedData to access reference to SharedData for RAPI objects; the owner will clean it up
-    // correctly
+    // from here on, use m_sharedData to access reference to SharedData for RAPI objects; 
+    // the owner will clean it up correctly
     if (m_data.sharedDataPtr) {
         // glfw already initialized by other render api
     } else {
         const bool success_glfw = glfwInit();
-        if (!success_glfw)
+        if (!success_glfw) {
 			return false; // glfw had error on init; abort
+        }
     }
 
     // init glfw window and OpenGL Context
@@ -340,20 +341,10 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
 
     ::glfwMakeContextCurrent(m_glfwWindowPtr);
 
-    if (m_data.initialConfig.windowPlacement.pos ||
-        m_data.initialConfig.windowPlacement
-            .fullScreen) // note the m_data window position got overwritten with monitor position for fullscreen mode
-        ::glfwSetWindowPos(
-            m_glfwWindowPtr, m_data.initialConfig.windowPlacement.x, m_data.initialConfig.windowPlacement.y);
-
-    // TODO: when do we need this?
-    // if (config.windowPlacement.fullScreen ||
-    //     config.windowPlacement.noDec) {
-    //     ::glfwSetInputMode(m_glfwWindowPtr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    // }
-
-    if(gladLoadGL() == 0)
+    //if(gladLoadGLLoader((GLADloadproc) glfwGetProcAddress) == 0) {
+    if(gladLoadGL() == 0) {
 		/// megamol::core::utility::log::Log::DefaultLog.WriteInfo("OpenGL_GLFW_Service: failed to load GL via glad\n");
+    }
 #ifdef _WIN32
     gladLoadWGL(wglGetCurrentDC());
 #else
@@ -368,7 +359,19 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
 		glDebugMessageCallback(opengl_debug_message_callback, nullptr);
     }
 
-    ::glfwSetWindowUserPointer(m_glfwWindowPtr, this); // this is ok, as long as no one derives from this RAPI
+    // TODO: when do we need this?
+    // if (config.windowPlacement.fullScreen ||
+    //     config.windowPlacement.noDec) {
+    //     ::glfwSetInputMode(m_glfwWindowPtr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // }
+
+    ::glfwSetWindowUserPointer(m_glfwWindowPtr, this); // this is ok, as long as no one derives from this class
+
+    if (m_data.initialConfig.windowPlacement.pos ||
+        m_data.initialConfig.windowPlacement
+            .fullScreen) // note the m_data window position got overwritten with monitor position for fullscreen mode
+        ::glfwSetWindowPos(
+            m_glfwWindowPtr, m_data.initialConfig.windowPlacement.x, m_data.initialConfig.windowPlacement.y);
 
     // set callbacks
     ::glfwSetKeyCallback(m_glfwWindowPtr, &outer_glfw_onKey_func);
@@ -410,10 +413,6 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     // set current framebuffer state
     glfwGetFramebufferSize(m_glfwWindowPtr, &this->m_framebufferEvents.previous_state.width,
         &this->m_framebufferEvents.previous_state.height);
-
-    // TODO: implement OpenGL Debug
-    // if (config.enableKHRDebug)
-    //    megamol::core::utility::KHR::startDebug();
 
     if (m_data.initialConfig.enableVsync) ::glfwSwapInterval(0);
 
