@@ -275,56 +275,58 @@ bool GUIWindows::PostDraw(void) {
             wc.buf_tfe_reset = false;
         }
 
-        // Change window flags depending on current view of transfer function editor
-        if (wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) {
-            if (this->tf_editor_ptr->IsMinimized()) {
-                wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
-                               ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
-            } else {
-                wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
-            }
-            wc.tfe_view_minimized = this->tf_editor_ptr->IsMinimized();
-            wc.tfe_view_vertical = this->tf_editor_ptr->IsVertical();
-        }
-
-        // Always set configurator window size to current viewport
-        if (wc.win_callback == WindowCollection::DrawCallbacks::CONFIGURATOR) {
-            float y_offset = (this->state.menu_visible) ? (ImGui::GetFrameHeight()) : (0.0f);
-            wc.win_size = ImVec2(viewport.x, viewport.y - y_offset);
-            wc.win_position = ImVec2(0.0f, y_offset);
-            wc.win_reset = true;
-        }
-
-        // Apply soft reset of window position and size (before calling window callback)
-        if (wc.win_soft_reset) {
-            this->window_collection.SoftResetWindowSizePos(wc);
-            wc.win_soft_reset = false;
-        }
-
-        // Force window menu
-        if (this->state.menu_visible && ImGui::IsMouseReleased(0)) {
-            float y_offset = ImGui::GetFrameHeight();
-            if (wc.win_position.y < y_offset) {
-                wc.win_position.y = y_offset;
-                wc.win_reset = true;
-            }
-        }
-        // Apply window position and size reset (before calling window callback)
-        if (wc.win_reset) {
-            this->window_collection.ResetWindowPosSize(wc);
-            wc.win_reset = false;
-        }
-
-        ImGui::SetNextWindowBgAlpha(1.0f);
-
         // Draw window content
         if (wc.win_show) {
+
+            // Change window flags depending on current view of transfer function editor
+            if (wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) {
+                if (this->tf_editor_ptr->IsMinimized()) {
+                    wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
+                                   ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
+                } else {
+                    wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
+                }
+                wc.tfe_view_minimized = this->tf_editor_ptr->IsMinimized();
+                wc.tfe_view_vertical = this->tf_editor_ptr->IsVertical();
+            }
+
+            ImGui::SetNextWindowBgAlpha(1.0f);
 
             // Begin Window
             if (!ImGui::Begin(wc.win_name.c_str(), &wc.win_show, wc.win_flags)) {
                 ImGui::End(); // early ending
                 return;
             }
+
+            // Always set configurator window size to current viewport
+            if (wc.win_callback == WindowCollection::DrawCallbacks::CONFIGURATOR) {
+                float y_offset = (this->state.menu_visible) ? (ImGui::GetFrameHeight()) : (0.0f);
+                wc.win_size = ImVec2(viewport.x, viewport.y - y_offset);
+                wc.win_position = ImVec2(0.0f, y_offset);
+                wc.win_reset = true;
+            }
+
+            // Force window menu
+            if (wc.win_soft_reset || wc.win_reset || (this->state.menu_visible && ImGui::IsMouseReleased(0))) {
+                float y_offset = ImGui::GetFrameHeight();
+                if (wc.win_position.y < y_offset) {
+                    wc.win_position.y = y_offset;
+                    ImGui::SetWindowPos(wc.win_position, ImGuiCond_Always);
+                }
+            }
+
+            // Apply soft reset of window position and size (before calling window callback)
+            if (wc.win_soft_reset) {
+                this->window_collection.SoftResetWindowSizePosition(wc);
+                wc.win_soft_reset = false;
+            }
+
+            // Apply window position and size reset (before calling window callback)
+            if (wc.win_reset) {
+                this->window_collection.ResetWindowSizePosition(wc);
+                wc.win_reset = false;
+            }
+
 
             // Calling callback drawing window content
             auto cb = this->window_collection.WindowCallback(wc.win_callback);
