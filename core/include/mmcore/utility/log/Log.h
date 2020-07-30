@@ -21,6 +21,7 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/msvc_sink.h"
 #include "spdlog/sinks/ostream_sink.h"
+#include "spdlog/details/os.h"
 #include "spdlog/spdlog.h"
 
 namespace megamol {
