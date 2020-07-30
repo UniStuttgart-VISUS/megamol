@@ -539,7 +539,9 @@ function(require_external NAME)
         -DSPDLOG_BUILD_EXAMPLE=OFF
         -DSPDLOG_BUILD_TESTS=OFF
         -DSPDLOG_FMT_EXTERNAL=ON
-        -Dfmt_DIR=${BINARY_DIR})
+        -Dfmt_DIR=${BINARY_DIR}
+        -DCMAKE_C_FLAGS=-fPIC
+        -DCMAKE_CXX_FLAGS=-fPIC)
 
     add_external_library(spdlog
       LIBRARY ${SPDLOG_LIB}
