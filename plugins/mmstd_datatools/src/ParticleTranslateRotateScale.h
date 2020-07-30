@@ -72,7 +72,10 @@ namespace datatools {
         core::param::ParamSlot quaternionSlot;
         core::param::ParamSlot scaleSlot;
 
-        float** finalData;
+        size_t hash = -1;
+        unsigned int frameID = -1;
+
+        std::vector<std::vector<float>> finalData;
     };
 
 } /* end namespace datatools */
