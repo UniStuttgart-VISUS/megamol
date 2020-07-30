@@ -6,6 +6,8 @@
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
+#include "mmcore/utility/log/Log.h"
+
 // splits a string of the form "::one::two::three::" into an array of strings {"one", "two", "three"}
 static std::vector<std::string> splitPathName(std::string const& path) {
     std::vector<std::string> result;
@@ -20,7 +22,10 @@ static std::vector<std::string> splitPathName(std::string const& path) {
     return result;
 }
 
-static void log(std::string text) { std::cout << "MegaMolGraph: " << text << std::endl; }
+static void log(std::string text) { 
+	const std::string msg = "MegaMolGraph: " + text + "\n"; 
+	megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
+}
 
 static megamol::core::param::AbstractParam* getParameterFromParamSlot(megamol::core::param::ParamSlot* param_slot) {
 

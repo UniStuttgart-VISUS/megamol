@@ -32,10 +32,15 @@
 
 #include "vislib/graphics/FpsCounter.h"
 
-/// #include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <functional>
 #include <iostream>
+
+static void log(const char* text) {
+	const std::string msg = "OpenGL_GLFW_Service: " + std::string(text) + "\n"; 
+	megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
+}
 
 static std::string get_message_id_name(GLuint id) {
     if (id == 0x0500) {
@@ -120,7 +125,7 @@ struct SharedData {
     GLFWwindow* borrowed_glfwContextWindowPtr{nullptr}; //
     // The SharedData idea is a bit broken here: on one hand, each window needs its own handle and GL context, on the
     // other hand a GL context can share its resources with others when its glfwWindow* handle gets passed to creation
-    // of another Window/OpenGL context. So this handle is private, but can be used by other RAPI instances too.
+    // of another Window/OpenGL context. So this handle is private, but can be used by other GLFW service instances too.
 };
 
 void initSharedContext(SharedData& context) {
@@ -192,8 +197,8 @@ void OpenGL_GLFW_Service::OpenGL_Context::close() const {
 
 
 struct OpenGL_GLFW_Service::PimplData {
-    SharedData sharedData;              // personal data we share with other RAPIs
-    SharedData* sharedDataPtr{nullptr}; // if we get shared data from another OGL RAPI object, we access it using this
+    SharedData sharedData;              // personal data we share with other GLFW service instances, for GL sharing
+    SharedData* sharedDataPtr{nullptr}; // if we get shared data from another OGL GLFW service object, we access it using this
                                         // ptr and leave our own shared data un-initialized
 
     GLFWwindow* glfwContextWindowPtr{nullptr}; // _my own_ gl context!
@@ -245,10 +250,10 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     } else {
         initSharedContext(m_data.sharedData);
     }
-    // from here on, use m_sharedData to access reference to SharedData for RAPI objects; 
+    // from here on, use m_sharedData to access reference to SharedData for member objects; 
     // the owner will clean it up correctly
     if (m_data.sharedDataPtr) {
-        // glfw already initialized by other render api
+        // glfw already initialized by other GLFW service
     } else {
         const bool success_glfw = glfwInit();
         if (!success_glfw) {
@@ -285,7 +290,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
             m_data.currentWidth = m_data.initialConfig.windowPlacement.w;
             m_data.currentHeight = m_data.initialConfig.windowPlacement.h;
         } else {
-            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("No useful window size given. Making one up");
+            log("No useful window size given. Making one up");
             // no useful window size given, derive one from monitor resolution
             m_data.currentWidth = mode->width * 3 / 4;
             m_data.currentHeight = mode->height * 3 / 4;
@@ -295,14 +300,14 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     // options for fullscreen mode
     if (m_data.initialConfig.windowPlacement.fullScreen) {
         if (m_data.initialConfig.windowPlacement.pos)
-            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Ignoring window placement position when requesting fullscreen.");
+            log("Ignoring window placement position when requesting fullscreen.");
 
         if (m_data.initialConfig.windowPlacement.size &&
             ((m_data.initialConfig.windowPlacement.w != mode->width) || (m_data.initialConfig.windowPlacement.h != mode->height)))
-            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Changing screen resolution is currently not supported.");
+            log("Changing screen resolution is currently not supported.");
 
         if (m_data.initialConfig.windowPlacement.noDec)
-            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Ignoring no-decorations setting when requesting fullscreen.");
+            log("Ignoring no-decorations setting when requesting fullscreen.");
 
         /* note we do not use a real fullscrene mode, since then we would have focus-iconify problems */
         m_data.currentWidth = mode->width;
@@ -334,19 +339,23 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     m_opengl_context = &m_opengl_context_impl;
 
     if (!m_glfwWindowPtr) {
-        /// megamol::core::utility::log::Log::DefaultLog.WriteInfo("OpenGL_GLFW_Service: Failed to create GLFW window.");
+        log("Failed to create GLFW window. Maybe OpenGL is not vailable in your current setup. Ask the person responsible.");
         return false;
     }
-    /// megamol::core::utility::log::Log::DefaultLog.WriteInfo("OpenGL_GLFW_Service: Create window with size w: %d, h: %d\n", m_data.currentWidth, m_data.currentHeight);
+    log(("Create window with size w: " + std::to_string(m_data.currentWidth) + " h: " + std::to_string(m_data.currentHeight)).c_str());
 
     ::glfwMakeContextCurrent(m_glfwWindowPtr);
 
     //if(gladLoadGLLoader((GLADloadproc) glfwGetProcAddress) == 0) {
     if(gladLoadGL() == 0) {
-		/// megamol::core::utility::log::Log::DefaultLog.WriteInfo("OpenGL_GLFW_Service: failed to load GL via glad\n");
+        log("Failed to load OpenGL functions via glad");
+        return false;
     }
 #ifdef _WIN32
-    gladLoadWGL(wglGetCurrentDC());
+    if (gladLoadWGL(wglGetCurrentDC()) == 0) {
+        log("Failed to load OpenGL WGL functions via glad");
+        return false;
+    }
 #else
     Display* display = XOpenDisplay(NULL);
     gladLoadGLX(display, DefaultScreen(display));
@@ -357,6 +366,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
 		glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 		glDebugMessageCallback(opengl_debug_message_callback, nullptr);
+        log("Enabled OpenGL debug context. Will print debug messages.");
     }
 
     // TODO: when do we need this?
@@ -419,7 +429,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     ::glfwShowWindow(m_glfwWindowPtr);
     ::glfwMakeContextCurrent(nullptr);
 
-	// make the events and resources managed/provided by this RAPI available to the outside world
+	// make the events and resources managed/provided by this service available to the outside world
 	m_renderResourceReferences = {
 		{"KeyboardEvents", m_keyboardEvents},
 		{"MouseEvents", m_mouseEvents},
@@ -428,11 +438,12 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
 		{"IOpenGL_Context", *m_opengl_context}
 	};
 
+    log("Successfully initialized OpenGL GLFW service");
     return true;
 }
 
 void OpenGL_GLFW_Service::close() {
-    if (!m_pimpl) // this API object is not initialized
+    if (!m_pimpl) // this GLFW context service is not initialized
         return;
 
     const bool close_glfw = (m_data.sharedDataPtr == nullptr);
@@ -465,15 +476,14 @@ void OpenGL_GLFW_Service::updateProvidedResources() {
     // While it is necessary to process events in the event queue,
     // some window systems will send some events directly to the application,
     // which in turn causes callbacks to be called outside of regular event processing.
+
+	auto& should_close_events = this->m_windowEvents.should_close_events;
+    if (should_close_events.size() && std::count(should_close_events.begin(), should_close_events.end(), true))
+        this->setShutdown(true); // cleanup of this service and dependent GL stuff is triggered via this shutdown hint
 }
 
 void OpenGL_GLFW_Service::digestChangedRequestedResources() {
-    if (m_glfwWindowPtr == nullptr) return;
-
-	auto& should_close_events = this->m_windowEvents.should_close_events;
-
-    if (should_close_events.size() && std::count(should_close_events.begin(), should_close_events.end(), true))
-        this->setShutdown(true); // cleanup of this RAPI and dependent GL stuff is triggered via this shutdown hint
+	// we dont depend on outside resources
 }
 
 void OpenGL_GLFW_Service::resetProvidedResources() {
@@ -499,9 +509,6 @@ void OpenGL_GLFW_Service::postGraphRender() {
     // end frame timer
     // update window name
 
-	// TODO: kill UI layers or make sure they make sense
-    // m_data.uiLayers.OnDraw();
-
     ::glfwSwapBuffers(m_glfwWindowPtr);
 
     ::glfwMakeContextCurrent(m_glfwWindowPtr);
@@ -514,10 +521,12 @@ std::vector<ModuleResource>& OpenGL_GLFW_Service::getProvidedResources() {
 }
 
 const std::vector<std::string> OpenGL_GLFW_Service::getRequestedResourceNames() const {
+	// we dont depend on outside resources
 	return {};
 }
 
 void OpenGL_GLFW_Service::setRequestedResources(std::vector<ModuleResource> resources) {
+	// we dont depend on outside resources
 }
 
 const void* OpenGL_GLFW_Service::getSharedDataPtr() const { return &m_sharedData; }
@@ -544,27 +553,15 @@ void OpenGL_GLFW_Service::glfw_onKey_func(const int key, const int scancode, con
     if ((mods & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods_ |= module_resources::Modifier::ALT;
 
     this->m_keyboardEvents.key_events.emplace_back(std::make_tuple(key_, action_, mods_));
-    // m_data.uiLayers.OnKey(key, action, mods);
-    //this->ui_events.onKey_list.emplace_back(std::make_tuple(key_, action_, mods_));
 }
 
 void OpenGL_GLFW_Service::glfw_onChar_func(const unsigned int codepoint) {
-    //::glfwMakeContextCurrent(m_glfwWindowPtr);
-    // m_data.uiLayers.OnChar(charcode);
-    //this->ui_events.onChar_list.emplace_back(charcode);
     this->m_keyboardEvents.codepoint_events.emplace_back(codepoint);
 }
 
 void OpenGL_GLFW_Service::glfw_onMouseCursorPosition_func(const double xpos, const double ypos) {
 
     this->m_mouseEvents.position_events.emplace_back(std::make_tuple(xpos, ypos));
-    //::glfwMakeContextCurrent(m_glfwWindowPtr);
-    // if (m_data.mouseCapture) {
-    //    m_data.mouseCapture->OnMouseMove(x, y);
-    //} else {
-    //    m_data.uiLayers.OnMouseMove(x, y);
-    //}
-    //this->ui_events.onMouseMove_list.emplace_back(std::make_tuple(xpos, ypos));
 }
 
 void OpenGL_GLFW_Service::glfw_onMouseButton_func(const int button, const int action, const int mods) {
@@ -578,44 +575,11 @@ void OpenGL_GLFW_Service::glfw_onMouseButton_func(const int button, const int ac
     if ((mods & GLFW_MOD_ALT) == GLFW_MOD_ALT) btnmods |= module_resources::Modifier::ALT;
 
     this->m_mouseEvents.buttons_events.emplace_back(std::make_tuple(btn, btnaction, btnmods));
-
-    //this->ui_events.onMouseButton_list.emplace_back(std::make_tuple(btn, btnaction, mods));
-
-    // if (m_data.mouseCapture) {
-    //    m_data.mouseCapture->OnMouseButton(btn, action, mods);
-    //} else {
-    //    if (m_data.uiLayers.OnMouseButton(btn, action, mods))
-    //        if (action == frontend::MouseButtonAction::PRESS)
-    //            m_data.mouseCapture = m_data.uiLayers.lastEventCaptureUILayer();
-    //}
-
-    // if (m_data.mouseCapture) {
-    //    bool anyPressed = false;
-    //    for (int mbi = GLFW_MOUSE_BUTTON_1; mbi <= GLFW_MOUSE_BUTTON_LAST; ++mbi) {
-    //        if (::glfwGetMouseButton(m_glfwWindowPtr, mbi) == GLFW_PRESS) {
-    //            anyPressed = true;
-    //            break;
-    //        }
-    //    }
-    //    if (!anyPressed) {
-    //        m_data.mouseCapture.reset();
-    //        double x, y;
-    //        ::glfwGetCursorPos(m_glfwWindowPtr, &x, &y);
-    //        glfw_onMouseMove_func(x, y); // to inform all of the new location
-    //    }
-    //}
 }
 
 void OpenGL_GLFW_Service::glfw_onMouseScroll_func(const double xoffset, const double yoffset) {
 
 	this->m_mouseEvents.scroll_events.emplace_back(std::make_tuple(xoffset, yoffset));
-
-    //this->ui_events.onMouseWheel_list.emplace_back(std::make_tuple(xoffset, yoffset));
-    // if (m_data.mouseCapture) {
-    //    m_data.mouseCapture->OnMouseScroll(xoffset, yoffset);
-    //} else {
-    //    m_data.uiLayers.OnMouseScroll(xoffset, yoffset);
-    //}
 }
 
 void OpenGL_GLFW_Service::glfw_onMouseCursorEnter_func(const bool entered) {

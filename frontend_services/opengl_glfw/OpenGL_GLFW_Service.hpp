@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_OPENGL_GLFW_RAPI_HPP_INCLUDED
-#define MEGAMOL_OPENGL_GLFW_RAPI_HPP_INCLUDED
 #pragma once
 
 #include "AbstractFrontendService.hpp"
@@ -15,8 +13,6 @@
 #include "Framebuffer_Events.h"
 #include "Window_Events.h"
 #include "IOpenGL_Context.h"
-
-// #include "mmcore/utility/log/Log.h"
 
 #include <memory>
 
@@ -71,11 +67,12 @@ public:
     void preGraphRender() override;  // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
     void postGraphRender() override; // clean up after rendering, e.g. stop and show frame-timers in GLFW window
 
-    // expose the resources and input events this RAPI provides: Keyboard inputs, Mouse inputs, GLFW Window events, Framebuffer resize events
+    // expose the resources and input events this service provides: Keyboard inputs, Mouse inputs, GLFW Window events, Framebuffer resize events
     std::vector<ModuleResource>& getProvidedResources() override;
     const std::vector<std::string> getRequestedResourceNames() const override;
     void setRequestedResources(std::vector<ModuleResource> resources) override;
 
+    // TODO: this is obsolete with Module Resources mechanism, remove?
     const void* getSharedDataPtr() const override; // ptr non-owning, share data should be only borrowed
 
     // from AbstractFrontendService:
@@ -133,5 +130,3 @@ private:
 
 } // namespace frontend
 } // namespace megamol
-
-#endif MEGAMOL_OPENGL_GLFW_RAPI_HPP_INCLUDED
