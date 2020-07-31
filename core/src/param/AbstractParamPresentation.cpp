@@ -48,9 +48,9 @@ AbstractParamPresentation::AbstractParamPresentation(void)
     this->presentation_name_map.emplace(Presentation::FilePath, "File Path");
     this->presentation_name_map.emplace(Presentation::TransferFunction, "Transfer Function");
     this->presentation_name_map.emplace(Presentation::Knob, "Knob");
-    this->presentation_name_map.emplace(Presentation::Knob, "Knob");
     this->presentation_name_map.emplace(Presentation::PinValueToMouse, "Pin Value To Mouse");
-    this->presentation_name_map.emplace(Presentation::Rotation3D, "3D Rotation");
+    this->presentation_name_map.emplace(Presentation::Rotation3D_Direction, "3D Rotation - Direction");
+    this->presentation_name_map.emplace(Presentation::Rotation3D_Axes, "3D Rotation -Axes");
     this->presentation_name_map.emplace(Presentation::Group_Animation, "Animation");
 }
 
@@ -117,7 +117,7 @@ bool AbstractParamPresentation::InitPresentation(AbstractParamPresentation::Para
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::VECTOR4F): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse | Presentation::Color | Presentation::Rotation3D;
+            this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse | Presentation::Color | Presentation::Rotation3D_Direction | Presentation::Rotation3D_Direction;
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::GROUP_ANIMATION): {

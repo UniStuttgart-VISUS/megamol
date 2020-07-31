@@ -154,8 +154,8 @@ private:
     bool widget_pinvaluetomouse(WidgetScope scope, const std::string& label, const std::string& value);
     bool widget_transfer_function_editor(WidgetScope scope, Parameter& inout_parameter);
     bool widget_knob(WidgetScope scope, const std::string& label, float& value, float minval, float maxval);
-    bool widget_rotation3D(
-        WidgetScope scope, const std::string& label, glm::vec4& value, glm::vec4 minval, glm::vec4 maxval);
+    bool widget_rotation3D(Present_t present, WidgetScope scope, const std::string& label, glm::vec4& value,
+        glm::vec4 minval, glm::vec4 maxval);
 };
 
 
