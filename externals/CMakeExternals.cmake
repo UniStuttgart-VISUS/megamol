@@ -356,12 +356,14 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/BrutPitt/imGuIZMO.quat.git
       GIT_TAG "v3.0"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUIZMOQUAT_LIB}"
+      DEPENDS imgui
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
           "${CMAKE_SOURCE_DIR}/externals/imguizmoquat/CMakeLists.txt"
           "<SOURCE_DIR>/CMakeLists.txt")
 
     add_external_library(imguizmoquat
-        LIBRARY ${IMGUIZMOQUAT_LIB})
+        LIBRARY ${IMGUIZMOQUAT_LIB}
+        INTERFACE_LIBRARIES imgui)
 
     external_get_property(imguizmoquat SOURCE_DIR)
     target_include_directories(imguizmoquat INTERFACE "${SOURCE_DIR}/imGuIZMO.quat")

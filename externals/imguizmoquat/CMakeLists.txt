@@ -21,6 +21,6 @@ install(TARGETS imguizmoquat DESTINATION "lib")
 install(FILES ${IMGUIZMOQUAT_PUBLIC_HDRS} ${IMGUIZMOQUAT_PRIVATE_HDRS} DESTINATION "include")
 
 target_compile_definitions(imguizmoquat PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLAD IMGUIZMO_IMGUI_FOLDER= )
-target_link_libraries(imguizmoquat PUBLIC imgui)
+#target_link_libraries(imguizmoquat PUBLIC imgui)
 
 target_include_directories(${PROJECT_NAME} PUBLIC "${SOURCE_DIR}/examples/" "${SOURCE_DIR}/misc/cpp/")
