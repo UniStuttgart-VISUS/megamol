@@ -340,11 +340,11 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 if (itr->type == HIGHLIGHT) {
                     auto manipulation = *itr;
 
-                    // std::array<GlyphVectorProbeData, 1> per_probe_data = {
-                    //    m_vector_probe_glyph_data[manipulation.obj_id]};
-                    // per_probe_data[0].state = 1;
-                    //
-                    // rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
+                    std::array<GlyphVectorProbeData, 1> per_probe_data = {
+                        m_vector_probe_glyph_data[manipulation.obj_id]};
+                    per_probe_data[0].state = 1;
+                    
+                    rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
 
                     bool my_tool_active = true;
                     float my_color[4] = {0.0, 0.0, 0.0, 0.0};
@@ -383,19 +383,30 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                         ImGui::EndChild();
                         ImGui::End();
                     }
-
                 }
                 else if (itr->type == DEHIGHLIGHT) {
                     auto manipulation = *itr;
 
-                    // std::array<GlyphVectorProbeData, 1> per_probe_data = {
-                    //    m_vector_probe_glyph_data[manipulation.obj_id]};
-                    //
-                    // rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
+                    std::array<GlyphVectorProbeData, 1> per_probe_data = {
+                       m_vector_probe_glyph_data[manipulation.obj_id]};
+                    
+                    rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
                 } else if (itr->type == SELECT) {
                     auto manipulation = *itr;
 
-                    // rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
+                    m_vector_probe_glyph_data[manipulation.obj_id].state = 2;
+                    std::array<GlyphVectorProbeData, 1> per_probe_data = {
+                        m_vector_probe_glyph_data[manipulation.obj_id]};
+
+                    rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
+                } else if (itr->type == DESELECT) {
+                    auto manipulation = *itr;
+
+                    m_vector_probe_glyph_data[manipulation.obj_id].state = 0;
+                    std::array<GlyphVectorProbeData, 1> per_probe_data = {
+                        m_vector_probe_glyph_data[manipulation.obj_id]};
+
+                    rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
                 } else if (itr->type == TOGGLE_SHOW_GLYPHS) {
 
                     m_show_glyphs = !m_show_glyphs;

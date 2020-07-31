@@ -38,33 +38,25 @@ void main() {
         discard;
     }
 
-    // For debugging purposes, hightlight glyph up and glyph right directions
-    if(uv_coords.x > 0.99 && uv_coords.x > uv_coords.y && uv_coords.y > 0.9) 
-    {
-        albedo_out = vec4(1.0);
-        normal_out = vec3(0.0,0.0,1.0);
-        depth_out = gl_FragCoord.z;
-        return;
+    vec4 glyph_border_color = vec4(1.0);
+
+    if(mesh_shader_params[draw_id].state == 1) {
+        glyph_border_color = vec4(1.0,1.0,0.0,1.0);
     }
-    else if(uv_coords.y > 0.99 && uv_coords.x < uv_coords.y && uv_coords.x > 0.9)
-    {
-        albedo_out = vec4(1.0);
-        normal_out = vec3(0.0,0.0,1.0);
-        depth_out = gl_FragCoord.z;
-        return;
+    else if(mesh_shader_params[draw_id].state == 2) {
+        glyph_border_color = vec4(1.0,0.58,0.0,1.0);
     }
-    else if(uv_coords.x < 0.01 && uv_coords.x < uv_coords.y && uv_coords.y < 0.05)
+
+    // Highlight glyph up and glyph right directions
+    if( (uv_coords.x > 0.99 && uv_coords.x > uv_coords.y && uv_coords.y > 0.9) ||
+        (uv_coords.y > 0.99 && uv_coords.x < uv_coords.y && uv_coords.x > 0.9) ||
+        (uv_coords.x < 0.01 && uv_coords.x < uv_coords.y && uv_coords.y < 0.05) ||
+        (uv_coords.y < 0.01 && uv_coords.x > uv_coords.y && uv_coords.x < 0.05) )
     {
-        albedo_out = vec4(1.0);
+        albedo_out = glyph_border_color;
         normal_out = vec3(0.0,0.0,1.0);
         depth_out = gl_FragCoord.z;
-        return;
-    }
-    else if(uv_coords.y < 0.01 && uv_coords.x > uv_coords.y && uv_coords.x < 0.05)
-    {
-        albedo_out = vec4(1.0);
-        normal_out = vec3(0.0,0.0,1.0);
-        depth_out = gl_FragCoord.z;
+        objID_out = mesh_shader_params[draw_id].probe_id;
         return;
     }
     
@@ -130,11 +122,6 @@ void main() {
     float tf_max = mesh_shader_params[draw_id].tf_max;
     out_colour = texture(tf_tx, vec2((sample_magnitude - tf_min) / (tf_max-tf_min), 0.5) ).rgb;
     //out_colour = fakeViridis( (sample_magnitude + 2.0) / 16.0);
-
-    if(mesh_shader_params[draw_id].state == 1)
-    {
-        out_colour = vec3(1.0,0.0,1.0);
-    }
 
     albedo_out = vec4(out_colour,1.0);
     normal_out = vec3(0.0,0.0,1.0);

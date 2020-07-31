@@ -204,6 +204,17 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                     if (m_show_probes) {
                         rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
                     }
+                } else if (itr->type == DESELECT) {
+                    // TODO remove from list and apply hightlight to render task
+                    auto manipulation = *itr;
+                    // itr = pending_manips.erase(itr);
+
+                    m_probe_draw_data[manipulation.obj_id].highlighted = 0;
+                    std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[manipulation.obj_id]};
+
+                    if (m_show_probes) {
+                        rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
+                    }
                 } else if (itr->type == TOGGLE_SHOW_PROBES) {
                     m_show_probes = !m_show_probes;
 
