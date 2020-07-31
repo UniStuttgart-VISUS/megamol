@@ -2,6 +2,7 @@
 #include "mmcore/MegaMolGraph.h"
 
 #include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/log/StreamTarget.h"
 
 #include "AbstractFrontendService.hpp"
 #include "FrontendServiceCollection.hpp"
@@ -23,7 +24,7 @@ int main(int argc, char* argv[]) {
     megamol::core::utility::log::Log::DefaultLog.SetLevel(megamol::core::utility::log::Log::LEVEL_ALL);
     megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
     megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(
-        std::make_shared<megamol::core::utility::log::Log::StreamTarget>(
+        std::make_shared<megamol::core::utility::log::StreamTarget>(
             std::cout, megamol::core::utility::log::Log::LEVEL_ALL));
 
     megamol::core::CoreInstance core;
