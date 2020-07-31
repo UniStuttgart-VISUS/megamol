@@ -86,10 +86,59 @@ void main()
     gl_ClipDistance[0] = -1.0;
   }
   gl_Position = projection * modelView * vertex;
-  gl_Position.z = 0.7;//new
 }
     ]]>
   </snippet>
+
+    <snippet name="vertexShaderMainT" type="string">
+		<![CDATA[
+void main()
+{
+#define DOLINES
+//#define DOSTRIPS
+
+  // id of line segment
+  uint instanceID = gl_VertexID / ((dimensionCount - 1) * 6);
+  out_.itemID = instanceID;
+  // ID of Dimension being look at
+  uint theID = gl_VertexID % ((dimensionCount - 1) * 6);
+  theID = (theID / 6) + ((theID % 6) / 2) - ((theID % 6) / 3);
+
+  out_.dataDimension = pc_dimension(theID);
+  out_.worldSpaceAxis = theID;
+  
+  out_.dataID = pc_item_dataID(out_.itemID, out_.dataDimension);
+  
+  float value = out_.itemID / float(itemCount - 1);
+  if (colorColumn != -1) {
+    value = pc_item_dataValue_unscaled(pc_item_dataID(out_.itemID, colorColumn));
+  }
+  if (bitflag_test(flags[out_.itemID], FLAG_SELECTED, FLAG_SELECTED)) {
+    out_.color = color;
+  } else {
+    out_.color = mix(color, tflookup(value), tfColorFactor);
+  }
+
+  vec4 vertex = pc_item_vertex(out_.itemID, out_.dataID, out_.dataDimension, out_.worldSpaceAxis);
+  vertex.y += (gl_VertexID % 2) * axisHeight * 0.002;
+
+#if 0
+  else
+  {
+    const vec4 center = vec4(vertex.x, 0.5 * scaling.y, vertex.z, vertex.w);
+    float alpha = smoothstep(0.0, 1.0, float(tick) * 0.001f);
+    vertex = mix(center, vertex, alpha);
+  }
+#endif
+  if (bitflag_test(flags[out_.itemID], fragmentTestMask, fragmentPassMask)) {
+    gl_ClipDistance[0] = 1.0;
+  } else {
+    gl_ClipDistance[0] = -1.0;
+  }
+  gl_Position = projection * modelView * vertex;
+}
+    ]]>
+</snippet>
 
   <namespace name="discrete">
     <shader name="vert">
@@ -166,6 +215,82 @@ void main()
       </snippet>
     </shader>
   </namespace>
+
+	<namespace name="discreteT">
+		<shader name="vert">
+			<snippet type="version">440</snippet>
+			<snippet name="::core_utils::tflookup" />
+			<snippet name="::core_utils::tfconvenience" />
+			<snippet name="::pc::extensions" />
+			<snippet name="::pc::useLineStrip" />
+			<snippet name="::pc::buffers" />
+			<snippet name="::pc::uniforms" />
+			<snippet name="::pc::instancingOffset" />
+			<snippet name="::pc::common" />
+			<snippet name="::bitflags::main" />
+			<!-- BEGIN Output data -->
+			<snippet type="string">
+				<![CDATA[
+out Interface
+{
+      ]]>
+			</snippet>
+			<snippet name="::pc_item_draw::interface" />
+			<snippet type="string">
+				<![CDATA[
+} out_;
+        ]]>
+			</snippet>
+			<!-- END Output data -->
+			<snippet name="::pc_item_draw::vertexShaderMainT" />
+		</shader>
+
+		<shader name="frag">
+			<snippet type="version">440</snippet>
+			<snippet name="::pc::extensions" />
+			<snippet name="::pc::useLineStrip" />
+			<snippet name="::pc::earlyFragmentTests" />
+			<snippet name="::pc::buffers" />
+			<snippet name="::pc::uniforms" />
+			<snippet name="::pc::common" />
+			<snippet name="::bitflags::main" />
+			<!-- Input data -->
+			<snippet type="string">
+				<![CDATA[
+in Interface
+{
+      ]]>
+			</snippet>
+			<snippet name="::pc_item_draw::interface" />
+			<snippet type="string">
+				<![CDATA[
+} in_;
+        ]]>
+			</snippet>
+			<snippet type="string">
+				<![CDATA[
+layout(location = 0) out vec4 fragColor;
+layout(early_fragment_tests) in;
+//out float gl_FragDepth;
+
+void main()
+{
+  if (bitflag_test(flags[in_.itemID], fragmentTestMask, fragmentPassMask)) {
+  //if (bitflag_test(flags[in_.itemID], 5, 1)) {
+    //gl_FragDepth = 0.0;
+	
+	//fragColor = vec4(vec3(gl_FragCoord.z), 1.0);
+	fragColor = in_.color;
+  } else {
+    discard;
+    //fragColor = vec4(vec3(0.2), 1.0);
+  }
+  
+}
+      ]]>
+			</snippet>
+		</shader>
+	</namespace>
 
   <namespace name="continuous">
     <snippet name="uniforms" type="string">

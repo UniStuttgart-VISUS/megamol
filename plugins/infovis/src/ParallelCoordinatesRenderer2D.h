@@ -235,6 +235,7 @@ private:
     vislib::graphics::gl::GLSLShader drawScalesProgram;
     vislib::graphics::gl::GLSLShader drawFilterIndicatorsProgram;
     vislib::graphics::gl::GLSLShader drawItemsDiscreteProgram;
+    vislib::graphics::gl::GLSLShader drawItemsTriangleProgram;
     vislib::graphics::gl::GLSLTesselationShader drawItemsDiscreteTessProgram;
     vislib::graphics::gl::GLSLShader drawPickIndicatorProgram;
     vislib::graphics::gl::GLSLShader drawStrokeIndicatorProgram;

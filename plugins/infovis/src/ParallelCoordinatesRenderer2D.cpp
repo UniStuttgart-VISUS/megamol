@@ -225,7 +225,7 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glGenBuffers(1, &filtersBuffer);
     glGenBuffers(1, &minmaxBuffer);
     glGenBuffers(1, &counterBuffer);
-
+    vislib::sys::Log::DefaultLog.WriteInfo("GENERATED");
     nuFB = std::make_shared<glowl::FramebufferObject>(1, 1, true);
     nuFB->createColorAttachment(GL_RGB32F, GL_RGB, GL_FLOAT);
     //  vislib::sys::Log::DefaultLog.WriteInfo(
@@ -280,6 +280,7 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     if (!makeProgram("::pc_item_pick::indicator", this->drawPickIndicatorProgram)) return false;
 
     if (!makeProgram("::pc_item_draw::discrete", this->drawItemsDiscreteProgram)) return false;
+    if (!makeProgram("::pc_item_draw::discreteT", this->drawItemsTriangleProgram)) return false;
     if (!makeProgram("::pc_item_draw::muhaha", this->traceItemsDiscreteProgram)) return false;
 
     if (!makeProgram("::pc_item_draw::discTess", drawItemsDiscreteTessProgram)) return false;
@@ -735,7 +736,8 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #    ifdef USE_TESSELLATION
     vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteTessProgram;
 #    else
-    vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteProgram;
+    //vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteProgram;
+    vislib::graphics::gl::GLSLShader& prog = this->drawItemsTriangleProgram;
 #    endif
 #endif
 
@@ -768,8 +770,8 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #    else
     // glDrawArraysInstanced(GL_LINE_STRIP, 0, this->columnCount, this->itemCount);
     // glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, this->columnCount * 2, this->itemCount);
-    glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
-    // glDrawArrays(GL_TRIANGLES, 0, (this->columnCount - 1) * 6 * this->itemCount);
+    //glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
+     glDrawArrays(GL_TRIANGLES, 0, (this->columnCount - 1) * 6 * this->itemCount);
 #    endif
 #endif
     prog.Disable();
@@ -1028,8 +1030,11 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     }
 
     if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         if (tex.size() != w * h) {
+            //glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
+
             tex.clear();
             tex.resize(w * h);
             tex2.clear();
@@ -1051,17 +1056,73 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
                 }
             }
             glBindFramebuffer(GL_FRAMEBUFFER, nuFBb);
+            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+
+            glActiveTexture(GL_TEXTURE10);
+            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+
+            glBindTexture(GL_TEXTURE_2D, imStoreI);
+            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+            
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
+            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+            
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
+            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+            
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+            glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
+            glClear(GL_COLOR_BUFFER_BIT);
 
             glBindTexture(GL_TEXTURE_2D, depthStore);
+            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+
             glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, &tex[0]);
+            if (glGetError() != GL_NO_ERROR) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+
+            //glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
+            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR2");
+
             glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_STENCIL_TEXTURE_MODE, GL_STENCIL_INDEX);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
+            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR3");
+            
+            glBindFramebuffer(GL_FRAMEBUFFER, nuFBb);
+            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR6");            
+            
+
+
+
             glDrawPixels(w, h, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
+            if (glGetError() == GL_INVALID_ENUM)
+                vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR3");
 
             vislib::sys::Log::DefaultLog.WriteInfo("size of Array tex2: %i", tex2.size());
+            vislib::sys::Log::DefaultLog.WriteInfo("w: %i", w);
+            vislib::sys::Log::DefaultLog.WriteInfo("h: %i", h);
+            vislib::sys::Log::DefaultLog.WriteInfo("dsID: %i", depthStore);
+            vislib::sys::Log::DefaultLog.WriteInfo("tex2.0: %i", tex2[0]);
+            vislib::sys::Log::DefaultLog.WriteInfo("tex2.1; %i", tex2[1]);
         }
         //glDisable(GL_STENCIL_TEST);
-        glStencilFunc(GL_EQUAL, 0u, 0xFF);
+
         if (call.frametype == 1 || call.frametype == 0) {
             glDepthMask(GL_FALSE);
             //glClear(GL_STENCIL_BUFFER_BIT);
@@ -1081,10 +1142,14 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             glStencilFunc(GL_EQUAL, 1, 0xFF);
 
             glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depthStore, 0);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
-   
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+            //glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
+            glBindTexture(GL_TEXTURE_2D, imStoreI);
 
-            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR");
 
         }
         if (call.frametype == 2) {
@@ -1100,7 +1165,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         
         glDisable(GL_DEPTH_TEST);
 
-        glViewport(0, 0, w, h);
+        //glViewport(0, 0, w, h);
     }
     windowAspect = static_cast<float>(call.GetViewport().AspectRatio());
 
@@ -1119,7 +1184,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         pm = jit * pm;
     }
     if (call.frametype == 2) {
-        auto jit = glm::translate(glm::mat4(1.0f), glm::vec3(2.0 / call.GetViewport().Width(), 0, 0));
+        auto jit = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(), 0, 0));
         pm = jit * pm;
     }
 
@@ -1326,8 +1391,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
         glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("frametype"), call.frametype);
 
-            
-
+      
         //glStencilMask(0x00);
         glBindTexture(GL_TEXTURE_2D, imStoreI);
         glDepthFunc(GL_ALWAYS);
