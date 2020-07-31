@@ -1347,15 +1347,19 @@ bool megamol::gui::ParameterPresentation::widget_rotation3D(Present_t present, W
 
     // LOCAL -----------------------------------------------------------
     if (scope == ParameterPresentation::WidgetScope::LOCAL) {
-        ImGui::TextUnformatted(label.c_str());
+
 
         glm::quat rotation;
 
         if (present == Present_t::Rotation3D_Direction) {
-            this->rotation_widget.gizmo3D_direction(rotation);
+            this->rotation_widget.gizmo3D_direction(value);
         } else if (present == Present_t::Rotation3D_Axes) {
-            this->rotation_widget.gizmo3D_axes(rotation);
+            this->rotation_widget.gizmo3D_axes(value);
         }
+        ImGui::SameLine();
+
+        ImGui::TextUnformatted(label.c_str());
+
     }
     // GLOBAL -----------------------------------------------------------
     else if (scope == ParameterPresentation::WidgetScope::GLOBAL) {
