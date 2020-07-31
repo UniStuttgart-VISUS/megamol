@@ -24,7 +24,7 @@
 #include "vislib/graphics/gl/AbstractOpenGLShader.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "mmcore/utility/ColourParser.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include <GL/glu.h>
@@ -37,6 +37,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
 using namespace megamol::protein_calls;
+using namespace megamol::core::utility::log;
 
 #pragma push_macro("min")
 #undef min
@@ -317,8 +318,6 @@ bool MoleculeSESRenderer::create( void ) {
     glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, spec);
     glMaterialf( GL_FRONT_AND_BACK, GL_SHININESS, 50.0f);
 
-
-    using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
 	ShaderSource compSrc;
@@ -971,7 +970,7 @@ bool MoleculeSESRenderer::Render( Call& call ) {
                     }
                 }
             }
-            vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_INFO,
                 "%s: RS computed in: %f s\n", this->ClassName(), 
                 ( double( clock() - t) / double( CLOCKS_PER_SEC)));
         }

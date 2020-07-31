@@ -218,7 +218,7 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData* meshCall, CallTriMeshData* ca
 
     if (meshCall->Count() > 0 && cavityMeshCall->Count() > 0) {
         if (meshCall->Objects()[0].GetVertexCount() != cavityMeshCall->Objects()[0].GetVertexCount()) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "The vertex counts of the protein mesh and the cavity mesh do not match");
             return false;
         }
@@ -232,12 +232,12 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData* meshCall, CallTriMeshData* ca
     std::set<int> allowedSet;
     auto tid = static_cast<uint32_t>(this->tunnelIdParam.Param<param::IntParam>()->Value());
     if (tunnelCall->getTunnelNumber() == 0) {
-        vislib::sys::Log::DefaultLog.WriteError("No tunnel descriptions found");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("No tunnel descriptions found");
         return false;
     }
     if (static_cast<int>(tid) >= tunnelCall->getTunnelNumber()) {
         tid = 0;
-        vislib::sys::Log::DefaultLog.WriteWarn("The given tunnel id was too large, using id 0 instead");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("The given tunnel id was too large, using id 0 instead");
     }
 
     for (int j = 0; j < tunnelCall->getTunnelDescriptions()[tid].atomIdentifiers.size(); j++) {
@@ -284,7 +284,7 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData* meshCall, CallTriMeshData* ca
     }
 
     if (!found) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "The %i th object had no atom index attribute and can therefore not be processed", 0);
         return false;
     }
@@ -318,11 +318,11 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData* meshCall, CallTriMeshData* ca
     for (uint32_t j = 0; j < cavityMeshCall->Count(); j++) {
         const auto& mesh = cavityMeshCall->Objects()[j];
         if (mesh.GetVertexCount() != vertCount) {
-            vislib::sys::Log::DefaultLog.WriteError("Vertex count mismatch");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Vertex count mismatch");
             return false;
         }
         if (mesh.GetTriDataType() != mesh.DT_UINT32) {
-            vislib::sys::Log::DefaultLog.WriteError("Triangle data type mismatch");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Triangle data type mismatch");
             return false;
         }
 
@@ -341,7 +341,7 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData* meshCall, CallTriMeshData* ca
     }
 
     if (maxCount == 0) {
-        vislib::sys::Log::DefaultLog.WriteError("No matching mesh found");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("No matching mesh found");
         return false;
     }
 
@@ -441,7 +441,7 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData* meshCall, CallTriMeshData* ca
      * third step: find start vertex for the connected component
      */
     if (bsCall->GetBindingSiteCount() < 1) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "There are not binding sites provided. No further computation is possible!");
         return false;
     }

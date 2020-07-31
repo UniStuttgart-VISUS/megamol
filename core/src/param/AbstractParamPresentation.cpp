@@ -127,7 +127,7 @@ bool AbstractParamPresentation::InitPresentation(AbstractParamPresentation::Para
         }
         return true;
     }
-    vislib::sys::Log::DefaultLog.WriteWarn(
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
         "Parameter presentation should only be initilised once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
@@ -138,7 +138,7 @@ void AbstractParamPresentation::SetGUIPresentation(AbstractParamPresentation::Pr
         this->presentation = present;
     }
     else {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Incompatible parameter presentation. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 }
@@ -158,7 +158,7 @@ bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::strin
         nlohmann::json json;
         json = nlohmann::json::parse(in_json_string);
         if (!json.is_object()) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
@@ -180,7 +180,7 @@ bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::strin
                             gui_state.at("gui_visibility").get_to(gui_visibility);
                         }
                         else {
-                            vislib::sys::Log::DefaultLog.WriteError(
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'gui_visibility' as boolean. [%s, %s, line %d]\n", __FILE__,
                                 __FUNCTION__, __LINE__);
                             valid = false;
@@ -192,7 +192,7 @@ bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::strin
                             gui_state.at("gui_read-only").get_to(gui_read_only);
                         }
                         else {
-                            vislib::sys::Log::DefaultLog.WriteError(
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'gui_read-only' as boolean. [%s, %s, line %d]\n", __FILE__,
                                 __FUNCTION__, __LINE__);
                             valid = false;
@@ -205,7 +205,7 @@ bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::strin
                                 static_cast<Presentation>(gui_state.at("gui_presentation_mode").get<int>());
                         }
                         else {
-                            vislib::sys::Log::DefaultLog.WriteError(
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'gui_presentation_mode' as integer. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                             valid = false;
@@ -224,37 +224,37 @@ bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::strin
 
         if (retval) {
 #ifdef GUI_VERBOSE
-            vislib::sys::Log::DefaultLog.WriteInfo("[AbstractParamPresentation] Read parameter state from JSON string.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[AbstractParamPresentation] Read parameter state from JSON string.");
 #endif // GUI_VERBOSE
         }
         else {
-            /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON for '%s' [%s, %s, line
+            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON for '%s' [%s, %s, line
             /// %d]\n", param_fullname.c_str(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
     }
     catch (nlohmann::json::type_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (nlohmann::json::invalid_iterator& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (nlohmann::json::out_of_range& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (nlohmann::json::other_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -276,32 +276,32 @@ bool AbstractParamPresentation::ParameterGUIStateToJSON(nlohmann::json& inout_js
             static_cast<int>(this->GetGUIPresentation());
 
 #ifdef GUI_VERBOSE
-        vislib::sys::Log::DefaultLog.WriteInfo("[AbstractParamPresentation] Wrote parameter state to JSON.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[AbstractParamPresentation] Wrote parameter state to JSON.");
 #endif // GUI_VERBOSE
 
     }
     catch (nlohmann::json::type_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (nlohmann::json::invalid_iterator& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (nlohmann::json::out_of_range& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (nlohmann::json::other_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }

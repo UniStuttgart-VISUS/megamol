@@ -16,7 +16,7 @@
 #include "mmcore/param/IntParam.h"
 
 #include "vislib/math/ShallowVector.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -308,7 +308,7 @@ void HydroBondFilter::filterHBonds(MolecularDataCall& mdc) {
 			copied += 2;
 		}
 	}
-	vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "%u hydrogen bonds out of %u survived the filtering.\n", copyCount, mdc.HydrogenBondCount());
+	megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "%u hydrogen bonds out of %u survived the filtering.\n", copyCount, mdc.HydrogenBondCount());
 
 	for (unsigned int i = 0; i < static_cast<unsigned int>(this->hydrogenBondsFiltered.size()); i++) {
 		if (fake) {

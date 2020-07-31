@@ -31,10 +31,10 @@ megamol::gui::GroupPresentation::~GroupPresentation(void) {}
 
 
 void megamol::gui::GroupPresentation::Present(
-    megamol::gui::PresentPhase phase, megamol::gui::Group& inout_group, GraphItemsStateType& state) {
+    megamol::gui::PresentPhase phase, megamol::gui::Group& inout_group, GraphItemsState_t& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
@@ -102,7 +102,7 @@ void megamol::gui::GroupPresentation::Present(
                 ImGui::TextDisabled("Group");
                 ImGui::Separator();
 
-                std::string view = "Collapse";
+                std::string view("Collapse");
                 if (this->collapsed_view) {
                     view = "Expand";
                 }
@@ -243,17 +243,18 @@ void megamol::gui::GroupPresentation::Present(
         }
 
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 }
 
 
-void megamol::gui::GroupPresentation::SetPosition(Group& inout_group, const GraphCanvasType& in_canvas, ImVec2 pos) {
+void megamol::gui::GroupPresentation::SetPosition(Group& inout_group, const GraphCanvas_t& in_canvas, ImVec2 pos) {
 
     ImVec2 pos_delta = (pos - this->position);
 
@@ -270,7 +271,7 @@ void megamol::gui::GroupPresentation::SetPosition(Group& inout_group, const Grap
 
 
 void megamol::gui::GroupPresentation::UpdatePositionSize(
-    megamol::gui::Group& inout_group, const GraphCanvasType& in_canvas) {
+    megamol::gui::Group& inout_group, const GraphCanvas_t& in_canvas) {
 
     float line_height = ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming;
 
@@ -389,10 +390,10 @@ megamol::gui::Group::~Group() {
 }
 
 
-bool megamol::gui::Group::AddModule(const ModulePtrType& module_ptr) {
+bool megamol::gui::Group::AddModule(const ModulePtr_t& module_ptr) {
 
     if (module_ptr == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Pointer to module is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -401,7 +402,7 @@ bool megamol::gui::Group::AddModule(const ModulePtrType& module_ptr) {
     for (auto& mod : this->modules) {
         if (mod->uid == module_ptr->uid) {
 #ifdef GUI_VERBOSE
-            vislib::sys::Log::DefaultLog.WriteInfo(
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[Configurator] Module '%s' is already part of group '%s'.\n", mod->name.c_str(), this->name.c_str());
 #endif // GUI_VERBOSE
             return false;
@@ -418,7 +419,7 @@ bool megamol::gui::Group::AddModule(const ModulePtrType& module_ptr) {
     this->RestoreInterfaceslots();
 
 #ifdef GUI_VERBOSE
-    vislib::sys::Log::DefaultLog.WriteInfo(
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         "[Configurator] Added module '%s' to group '%s'.\n", module_ptr->name.c_str(), this->name.c_str());
 #endif // GUI_VERBOSE
     return true;
@@ -443,8 +444,9 @@ bool megamol::gui::Group::RemoveModule(ImGuiID module_uid) {
                 (*mod_iter)->present.group.name = "";
 
 #ifdef GUI_VERBOSE
-                vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Removed module '%s' from group '%s'.\n",
-                    (*mod_iter)->name.c_str(), this->name.c_str());
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                    "[Configurator] Removed module '%s' from group '%s'.\n", (*mod_iter)->name.c_str(),
+                    this->name.c_str());
 #endif // GUI_VERBOSE
                 (*mod_iter).reset();
                 this->modules.erase(mod_iter);
@@ -455,15 +457,17 @@ bool megamol::gui::Group::RemoveModule(ImGuiID module_uid) {
             }
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
-    vislib::sys::Log::DefaultLog.WriteWarn("Invalid module uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+        "Invalid module uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
 
@@ -479,10 +483,10 @@ bool megamol::gui::Group::ContainsModule(ImGuiID module_uid) {
 }
 
 
-ImGuiID megamol::gui::Group::AddInterfaceSlot(const CallSlotPtrType& callslot_ptr, bool auto_add) {
+ImGuiID megamol::gui::Group::AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr, bool auto_add) {
 
     if (callslot_ptr == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     }
@@ -504,20 +508,21 @@ ImGuiID megamol::gui::Group::AddInterfaceSlot(const CallSlotPtrType& callslot_pt
             }
         }
     } else {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Call slot has no parent module connected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     }
 
     if (parent_module_group_uid) {
-        InterfaceSlotPtrType interfaceslot_ptr =
+        InterfaceSlotPtr_t interfaceslot_ptr =
             std::make_shared<InterfaceSlot>(megamol::gui::GenerateUniqueID(), auto_add);
         if (interfaceslot_ptr != nullptr) {
             interfaceslot_ptr->present.group.uid = this->uid;
             this->interfaceslots[callslot_ptr->type].emplace_back(interfaceslot_ptr);
 #ifdef GUI_VERBOSE
-            vislib::sys::Log::DefaultLog.WriteInfo("[Configurator] Added interface slot (uid %i) to group '%s'.\n",
-                interfaceslot_ptr->uid, this->name.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[Configurator] Added interface slot (uid %i) to group '%s'.\n", interfaceslot_ptr->uid,
+                this->name.c_str());
 #endif // GUI_VERBOSE
 
             if (interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr)) {
@@ -526,8 +531,9 @@ ImGuiID megamol::gui::Group::AddInterfaceSlot(const CallSlotPtrType& callslot_pt
             }
         }
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("Parent module of call slot which should be added to group interface "
-                                                "is not part of any group. [%s, %s, line %d]\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Parent module of call slot which should be added to group interface "
+            "is not part of any group. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     }
@@ -557,11 +563,12 @@ bool megamol::gui::Group::InterfaceSlot_RemoveCallSlot(ImGuiID callslots_uid, bo
             this->DeleteInterfaceSlot(interfaceslot_uid);
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return retval;
@@ -581,7 +588,7 @@ bool megamol::gui::Group::InterfaceSlot_ContainsCallSlot(ImGuiID callslot_uid) {
 }
 
 
-bool megamol::gui::Group::GetInterfaceSlot(ImGuiID interfaceslot_uid, InterfaceSlotPtrType& interfaceslot_ptr) {
+bool megamol::gui::Group::GetInterfaceSlot(ImGuiID interfaceslot_uid, InterfaceSlotPtr_t& interfaceslot_ptr) {
 
     if (interfaceslot_uid != GUI_INVALID_ID) {
         for (auto& interfaceslots_map : this->interfaceslots) {
@@ -614,13 +621,13 @@ bool megamol::gui::Group::DeleteInterfaceSlot(ImGuiID interfaceslot_uid) {
                     }
 
                     if ((*iter).use_count() > 1) {
-                        vislib::sys::Log::DefaultLog.WriteError(
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "Unclean deletion. Found %i references pointing to interface slot. [%s, %s, line %d]\n",
                             (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                     }
 
 #ifdef GUI_VERBOSE
-                    vislib::sys::Log::DefaultLog.WriteInfo(
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                         "[Configurator] Deleted interface slot (uid %i) from group '%s'.\n", (*iter)->uid,
                         this->name.c_str());
 #endif // GUI_VERBOSE

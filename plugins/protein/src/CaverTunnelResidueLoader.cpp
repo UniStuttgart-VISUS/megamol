@@ -14,7 +14,7 @@
 #include "vislib/math/Dimension.h"
 #include "vislib/math/Point.h"
 #include "vislib/sys/FastFile.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/TextFileReader.h"
 
 #include <string>
@@ -89,7 +89,7 @@ void CaverTunnelResidueLoader::release(void) {
  */
 bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
     using vislib::sys::File;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     this->data_hash++;
 

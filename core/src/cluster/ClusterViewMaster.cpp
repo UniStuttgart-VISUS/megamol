@@ -26,10 +26,10 @@
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/net/NetworkInformation.h"
-#include "vislib/net/ShallowSimpleMessage.h"
+#include "mmcore/utility/net/ShallowSimpleMessage.h"
 #include "vislib/net/SimpleMessageHeaderData.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 
 using namespace megamol::core;
 
@@ -149,7 +149,7 @@ void cluster::ClusterViewMaster::release(void) {
  * cluster::ClusterViewMaster::onViewNameChanged
  */
 bool cluster::ClusterViewMaster::onViewNameChanged(param::ParamSlot& slot) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     {
         vislib::sys::AutoLock lock(this->ModuleGraphLock());
         if (!this->viewSlot.ConnectCall(NULL)) { // disconnect old call
@@ -269,7 +269,7 @@ void cluster::ClusterViewMaster::OnClusterUserMessage(cluster::ClusterController
  */
 void cluster::ClusterViewMaster::OnCommChannelMessage(
     cluster::CommChannelServer& server, cluster::CommChannel& channel, const vislib::net::AbstractSimpleMessage& msg) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::net::SimpleMessage outMsg;
 
     switch (msg.GetHeader().GetMessageID()) {
@@ -560,7 +560,7 @@ unsigned short cluster::ClusterViewMaster::defaultServerPort(void) const {
             return static_cast<unsigned short>(vislib::CharTraitsW::ParseInt(cfg.ConfigValue("cmvport")));
         }
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
             "Unable to parse configuration value \"cmvport\" as int. Configuration value ignored.");
     }
     return 17126;
@@ -599,7 +599,7 @@ vislib::TString cluster::ClusterViewMaster::defaultVSyncServerAddress(void) cons
             netysyncport = static_cast<unsigned short>(vislib::CharTraitsW::ParseInt(cfg.ConfigValue("cmvvsyncport")));
         }
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
             "Unable to parse configuration value \"cmvnetysyncportport\" as int. Configuration value ignored.");
     }
 
@@ -634,14 +634,14 @@ bool cluster::ClusterViewMaster::onServerAddressChanged(param::ParamSlot& slot) 
     }
 
     if (wildness > 0.8) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Guessed server end point \"%s\" from \"%s\" with too high wildness: %f\n", ep.ToStringA().PeekBuffer(),
             address.PeekBuffer(), wildness);
         return true;
     }
 
-    vislib::sys::Log::DefaultLog.WriteMsg(
-        (wildness > 0.3) ? vislib::sys::Log::LEVEL_WARN : vislib::sys::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+        (wildness > 0.3) ? megamol::core::utility::log::Log::LEVEL_WARN : megamol::core::utility::log::Log::LEVEL_INFO,
         "Starting server on \"%s\" guessed from \"%s\" with wildness: %f\n", ep.ToStringA().PeekBuffer(),
         address.PeekBuffer(), wildness);
 

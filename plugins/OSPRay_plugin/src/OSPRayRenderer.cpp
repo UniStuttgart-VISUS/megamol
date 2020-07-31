@@ -12,7 +12,7 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/math/Vector.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "mmcore/CoreInstance.h"
 
@@ -80,23 +80,23 @@ bool OSPRayRenderer::create() {
 
     try {
         if (!this->osprayShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to compile ospray shader: Unknown error\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile ospray shader: Unknown error\n");
             return false;
         }
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile ospray shader: (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile ospray shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile ospray shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile ospray shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile ospray shader: Unknown exception\n");
         return false;
     }
 
@@ -270,7 +270,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
             ospCommit(world);
             auto t2 = std::chrono::high_resolution_clock::now();
             const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-            vislib::sys::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
                 242, "[OSPRayRenderer] Commiting World took: %d microseconds", duration);
         }
         if (material_has_changed && !data_has_changed) {
@@ -319,7 +319,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         accum_time.count += 1;
         if (accum_time.amount >= static_cast<unsigned long long int>(1e6)) {
             const unsigned long long int mean_rendertime = accum_time.amount / accum_time.count;
-            vislib::sys::Log::DefaultLog.WriteMsg(242, "[OSPRayRenderer] Rendering took: %d microseconds", mean_rendertime);
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(242, "[OSPRayRenderer] Rendering took: %d microseconds", mean_rendertime);
             accum_time.count = 0;
             accum_time.amount = 0;
         }

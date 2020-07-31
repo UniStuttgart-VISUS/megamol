@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "gl/Window.h"
 #include "utility/HotFixes.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "WindowManager.h"
 #include <cassert>
 #include <algorithm>
@@ -101,7 +101,7 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
 
             // According to glfw docs width and height means the content area of the window without window decorations.
             hWnd = ::glfwCreateWindow(w, h, title, nullptr, share);
-            vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", w, h);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", w, h);
             if (hWnd != nullptr) {
                 if (placement.pos) ::glfwSetWindowPos(hWnd, placement.x, placement.y);
             }
@@ -113,13 +113,13 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
             GLFWmonitor *mon = mons[std::min<int>(monCnt - 1, placement.mon)];
             const GLFWvidmode* mode = glfwGetVideoMode(mon);
 
-            if (placement.pos) vislib::sys::Log::DefaultLog.WriteWarn("Ignoring window placement position when requesting fullscreen.");
+            if (placement.pos) megamol::core::utility::log::Log::DefaultLog.WriteWarn("Ignoring window placement position when requesting fullscreen.");
             if (placement.size) {
                 if ((placement.w != mode->width) || (placement.h != mode->height)) {
-                    vislib::sys::Log::DefaultLog.WriteWarn("Changing screen resolution is currently not supported.");
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn("Changing screen resolution is currently not supported.");
                 }
             }
-            if (placement.noDec) vislib::sys::Log::DefaultLog.WriteWarn("Ignoring no-decorations setting when requesting fullscreen.");
+            if (placement.noDec) megamol::core::utility::log::Log::DefaultLog.WriteWarn("Ignoring no-decorations setting when requesting fullscreen.");
 
             ::glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
             ::glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
@@ -132,7 +132,7 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
 
             /* note we do not use a real fullscreen mode, since then we would have focus-iconify problems */
             hWnd = ::glfwCreateWindow(mode->width, mode->height, title, nullptr, share);
-            vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", mode->width, mode->height);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", mode->width, mode->height);
             int x, y;
             ::glfwGetMonitorPos(mon, &x, &y);
             ::glfwSetWindowPos(hWnd, x, y);
@@ -154,10 +154,10 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
 
             GLint vp[4];
             glGetIntegerv(GL_VIEWPORT, vp);
-            vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: viewport size w: %d, h: %d\n", vp[2], vp[3]);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Console::Window: viewport size w: %d, h: %d\n", vp[2], vp[3]);
 
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Could not create GLFW Window. You probably do not have OpenGL support. Your graphics hardware might "
                 "be very old, your drivers could be outdated or you are running in a remote desktop session.");
             // we should do a proper shutdown now, but that is too expensive given the expected lifetime of this front end.
@@ -227,7 +227,7 @@ void gl::Window::Update(uint32_t frameID) {
 
         int actualw = 0, actualh = 0;
         glfwGetWindowSize(hWnd, &actualw, &actualh);
-        vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Actual window size: w: %d, h: %d\n", actualw, actualh);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Console::Window: Actual window size: w: %d, h: %d\n", actualw, actualh);
 
         glfwSetWindowAttrib(hWnd, GLFW_RESIZABLE, GLFW_TRUE);
     }
@@ -277,7 +277,7 @@ void gl::Window::Update(uint32_t frameID) {
 #ifdef _WIN32
         // TODO fix this for EGL + Win
         if (this->topMost) {
-            vislib::sys::Log::DefaultLog.WriteInfo("Periodic reordering of windows.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Periodic reordering of windows.");
             SetWindowPos(glfwGetWin32Window(this->hWnd), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
         }
 #endif
@@ -409,7 +409,7 @@ void gl::Window::on_resize(int w, int h) {
     if ((w > 0) && (h > 0)) {
         ::glViewport(0, 0, w, h);
         ::mmcResizeView(hView, w, h);
-        vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Resize window (w: %d, h: %d)\n", w, h);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Console::Window: Resize window (w: %d, h: %d)\n", w, h);
 		uiLayers.OnResize(w, h);
     }
 }

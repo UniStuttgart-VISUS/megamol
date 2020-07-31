@@ -15,7 +15,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/ColourParser.h"
 #include "vislib/math/ShallowVector.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/math/ShallowVector.h"
 #include "mmcore/CoreInstance.h"
 #include <string>

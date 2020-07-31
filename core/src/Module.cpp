@@ -15,7 +15,7 @@
 #include "vislib/sys/AutoLock.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
 #include "mmcore/view/Renderer2DModule.h"
@@ -50,7 +50,7 @@ Module::~Module(void) {
  * Module::Create
  */
 bool Module::Create(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     ASSERT(this->instance() != NULL);
     if (!this->created) {
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
@@ -112,7 +112,7 @@ vislib::StringA Module::GetDemiRootName() const {
  * Module::Release
  */
 void Module::Release(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     if (this->created) {
         this->release();
         this->created = false;

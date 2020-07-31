@@ -71,7 +71,7 @@ bool ReplacementRenderer::create(void) {
 
     // Initialise render utils
     if (!this->utils.Initialise(this->GetCoreInstance())) {
-        vislib::sys::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't initialize the font.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't initialize the font.");
         return false;
     }
 

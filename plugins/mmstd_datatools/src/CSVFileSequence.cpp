@@ -15,7 +15,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/IntParam.h"
 #include "vislib/sys/File.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/String.h"
 
 using namespace megamol;
@@ -257,7 +257,7 @@ void stdplugin::datatools::CSVFileSequence::checkParameters(void) {
  * CSVFileSequence::onFileNameTemplateChanged
  */
 bool stdplugin::datatools::CSVFileSequence::onFileNameTemplateChanged(core::param::ParamSlot& slot) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     ASSERT(&slot == &this->fileNameTemplateSlot);
     // D:\data\Kohler\nial\nialout50_*5{0..599+2}*.crist
     //  Syntax: *[[DIG][{MIN..MAX[+STEP]}]*]
@@ -426,7 +426,7 @@ bool stdplugin::datatools::CSVFileSequence::onFileNameSlotNameChanged(core::para
     this->ModuleGraphLock().LockExclusive();
     core::param::StringParam *P = this->fileNameSlotNameSlot.Param<core::param::StringParam>();
     if ((P != NULL) && (this->findFileNameSlot() == NULL)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to connect to file name parameter slot \"%s\". Parameter resetted.",
             vislib::StringA(P->Value()).PeekBuffer());
         P->SetValue("", false);
@@ -465,7 +465,7 @@ core::param::ParamSlot *stdplugin::datatools::CSVFileSequence::findFileNameSlot(
  * CSVFileSequence::assertData
  */
 void stdplugin::datatools::CSVFileSequence::assertData(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     if (!this->needDataUpdate) return;
     vislib::TString filename;
     this->needDataUpdate = false;

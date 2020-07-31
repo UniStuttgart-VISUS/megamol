@@ -200,7 +200,8 @@ TransferFunctionEditor::TransferFunctionEditor(void)
 void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool connected_parameter_mode) {
 
     if (connected_parameter_mode && (this->connected_parameter_ptr == nullptr)) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Missing active parameter to edit");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[TransferFunctionEditor] Missing active parameter to edit");
         return;
     }
 
@@ -210,7 +211,8 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
         tfs, this->nodes, this->mode, tex_size, new_range);
 
     if (!ok) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Could not parse transfer function");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[TransferFunctionEditor] Could not parse transfer function");
         return;
     }
 
@@ -248,14 +250,14 @@ void TransferFunctionEditor::SetConnectedParameter(Parameter* param_ptr, const s
     this->connected_parameter_ptr = nullptr;
     this->connected_parameter_name = "";
     if (param_ptr != nullptr) {
-        if (param_ptr->type == ParamType::TRANSFERFUNCTION) {
+        if (param_ptr->type == Param_t::TRANSFERFUNCTION) {
             if (this->connected_parameter_ptr != param_ptr) {
                 this->connected_parameter_ptr = param_ptr;
                 this->connected_parameter_name = param_full_name;
                 this->SetTransferFunction(std::get<std::string>(this->connected_parameter_ptr->GetValue()), true);
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Wrong parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
@@ -542,7 +544,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                 if (this->connected_parameter_ptr != nullptr) {
                     std::string tf;
                     if (this->GetTransferFunction(tf)) {
-                        if (this->connected_parameter_ptr->type == ParamType::TRANSFERFUNCTION) {
+                        if (this->connected_parameter_ptr->type == Param_t::TRANSFERFUNCTION) {
                             this->connected_parameter_ptr->SetValue(tf);
                             this->connected_parameter_ptr->present.SetTransferFunctionEditorHash(
                                 this->connected_parameter_ptr->GetTransferFunctionHash());

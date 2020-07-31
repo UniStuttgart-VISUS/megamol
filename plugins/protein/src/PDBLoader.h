@@ -17,7 +17,7 @@
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/Cuboid.h"
-#include "vislib/sys/RunnableThread.h"
+#include "mmcore/utility/sys/RunnableThread.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "ForceDataCall.h"
 #include "Stride.h"

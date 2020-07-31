@@ -57,7 +57,7 @@ bool RemapIColValues::manipulateData(
 
         if ((tarD.get_count() > 0) && ((*inMapData)(ParticleFilterMapDataCall::GET_DATA))) {
             if (inMapData->Size() != tarD.get_count()) {
-                vislib::sys::Log::DefaultLog.WriteError("Filtered particle data and map data not compatible");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Filtered particle data and map data not compatible");
                 inMapData->Unlock();
                 inIColData->Unlock();
                 return false;
@@ -65,7 +65,7 @@ bool RemapIColValues::manipulateData(
 
             for (size_t i = 0; i < tarD.get_count(); ++i) {
                 if (inMapData->Data()[i] >= srcD.get_count()) {
-                    vislib::sys::Log::DefaultLog.WriteError("Unfiltered particle data and map data not compatible");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("Unfiltered particle data and map data not compatible");
                     inMapData->Unlock();
                     inIColData->Unlock();
                     return false;

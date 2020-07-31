@@ -47,7 +47,7 @@ bool ProbeToTable::getData(core::Call& call) {
     }
 
     if (!(*cpd)(0)) {
-        vislib::sys::Log::DefaultLog.WriteError("[ProbeToTable] Error during GetData");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[ProbeToTable] Error during GetData");
         return false;
     }
 

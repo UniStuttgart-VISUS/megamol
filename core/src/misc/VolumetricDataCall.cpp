@@ -194,7 +194,7 @@ const float megamol::core::misc::VolumetricDataCall::GetRelativeVoxelValue(const
 
     if (!this->metadata->IsUniform || !this->metadata->GridType == GridType::CARTESIAN ||
         !this->metadata->GridType == GridType::RECTILINEAR) {
-        vislib::sys::Log::DefaultLog.WriteError("GetRelativeVoxelValue: unsupported grid!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("GetRelativeVoxelValue: unsupported grid!");
 
     } else {
         uint64_t idx =
@@ -203,7 +203,7 @@ const float megamol::core::misc::VolumetricDataCall::GetRelativeVoxelValue(const
         switch (this->metadata->ScalarType) {
         case UNKNOWN:
         case BITS:
-            vislib::sys::Log::DefaultLog.WriteError("GetRelativeVoxelValue: unsupported scalar type!");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("GetRelativeVoxelValue: unsupported scalar type!");
             break;
 
         case SIGNED_INTEGER: 
@@ -245,7 +245,7 @@ const float megamol::core::misc::VolumetricDataCall::GetAbsoluteVoxelValue(
 
     if (!this->metadata->IsUniform || !this->metadata->GridType == GridType::CARTESIAN ||
         !this->metadata->GridType == GridType::RECTILINEAR) {
-        vislib::sys::Log::DefaultLog.WriteError("GetAbsoluteVoxelValue: unsupported grid!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("GetAbsoluteVoxelValue: unsupported grid!");
 
     } else {
         uint64_t idx =
@@ -254,7 +254,7 @@ const float megamol::core::misc::VolumetricDataCall::GetAbsoluteVoxelValue(
         switch (this->metadata->ScalarType) {
         case UNKNOWN:
         case BITS:
-            vislib::sys::Log::DefaultLog.WriteError("GetAbsoluteVoxelValue: unsupported scalar type!");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("GetAbsoluteVoxelValue: unsupported scalar type!");
             break;
 
         case SIGNED_INTEGER: {

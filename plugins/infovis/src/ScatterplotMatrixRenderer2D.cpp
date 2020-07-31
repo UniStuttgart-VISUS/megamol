@@ -20,7 +20,7 @@ using namespace megamol;
 using namespace megamol::infovis;
 using namespace megamol::stdplugin::datatools;
 
-using vislib::sys::Log;
+using megamol::core::utility::log::Log;
 
 const GLuint PlotSSBOBindingPoint = 2;
 const GLuint ValueSSBOBindingPoint = 3;
@@ -103,9 +103,14 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , axisTicksRedundantParam("axisTicksRedundant", "Enable redundant (inner) ticks")
     , axisTickLengthParam("axisTickLength", "Line length for the ticks")
     , axisTickSizeParam("axisTickSize", "Sets the fontsize for the ticks")
+    , drawOuterLabelsParam("drawOuterLabels", "Draw labels outside of the matrix")
+    , drawDiagonalLabelsParam("drawDiagonalLabels", "Draw labels at matrix diagonal")
+    , cellInvertYParam("cellInvertY", "Draw diagonal top left to bottom right")
     , cellSizeParam("cellSize", "Aspect ratio scaling x axis length")
     , cellMarginParam("cellMargin", "Set the scaling of y axis")
     , cellNameSizeParam("cellNameSize", "Sets the fontsize for cell names, i.e., column names")
+    , outerXLabelMarginParam("outerXLabelMarginParam", "Margin between tick labels and name labels on outer x axis")
+    , outerYLabelMarginParam("outerYLabelMarginParam", "Margin between tick labels and name labels on outer y axis")
     , alphaScalingParam("alphaScaling", "Scaling factor for overall alpha")
     , alphaAttenuateSubpixelParam("alphaAttenuateSubpixel", "Attenuate alpha of points that have subpixel size")
     , mouse({0, 0, BrushState::NOP})
@@ -206,11 +211,20 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->axisTicksRedundantParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->axisTicksRedundantParam);
 
-    this->axisTickLengthParam << new core::param::FloatParam(0.5f, 0.5f);
+    this->axisTickLengthParam << new core::param::FloatParam(0.5f, 0.0f);
     this->MakeSlotAvailable(&this->axisTickLengthParam);
 
     this->axisTickSizeParam << new core::param::FloatParam(0.5f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->axisTickSizeParam);
+
+    this->drawOuterLabelsParam << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->drawOuterLabelsParam);
+
+    this->drawDiagonalLabelsParam << new core::param::BoolParam(true);
+    this->MakeSlotAvailable(&this->drawDiagonalLabelsParam);
+
+    this->cellInvertYParam << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->cellInvertYParam);
 
     this->cellSizeParam << new core::param::FloatParam(10.0f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->cellSizeParam);
@@ -220,6 +234,12 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
 
     this->cellNameSizeParam << new core::param::FloatParam(2.0f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->cellNameSizeParam);
+
+    this->outerXLabelMarginParam << new core::param::FloatParam(0.0f, 0.0f);
+    this->MakeSlotAvailable(&this->outerXLabelMarginParam);
+
+    this->outerYLabelMarginParam << new core::param::FloatParam(0.5f, 0.0f);
+    this->MakeSlotAvailable(&this->outerYLabelMarginParam);
 
     this->alphaScalingParam << new core::param::FloatParam(1.0f, 0.0f);
     this->MakeSlotAvailable(&this->alphaScalingParam);
@@ -232,6 +252,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     dataParams.push_back(&this->labelSelectorParam);
     dataParams.push_back(&this->labelSizeParam);
     dataParams.push_back(&this->triangulationSmoothnessParam);
+    dataParams.push_back(&this->cellInvertYParam);
     dataParams.push_back(&this->cellSizeParam);
     dataParams.push_back(&this->cellMarginParam);
 
@@ -483,11 +504,13 @@ void ScatterplotMatrixRenderer2D::updateColumns() {
     const auto columnInfos = this->floatTable->GetColumnsInfos();
     const float size = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
     const float margin = this->cellMarginParam.Param<core::param::FloatParam>()->Value();
+    const bool invertY = this->cellInvertYParam.Param<core::param::BoolParam>()->Value();
 
     plots.clear();
     for (GLuint y = 0; y < columnCount; ++y) {
+        GLfloat offsetY = (invertY ? (columnCount - y - 1) : y) * (size + margin);
         for (GLuint x = 0; x < y; ++x) {
-            plots.push_back({x, y, x * (size + margin), y * (size + margin), size, size, columnInfos[x].MinimumValue(),
+            plots.push_back({x, y, x * (size + margin), offsetY, size, size, columnInfos[x].MinimumValue(),
                 columnInfos[y].MinimumValue(), columnInfos[x].MaximumValue(), columnInfos[y].MaximumValue(),
                 rangeToSmallStep(columnInfos[x].MinimumValue(), columnInfos[x].MaximumValue()),
                 rangeToSmallStep(columnInfos[y].MinimumValue(), columnInfos[y].MaximumValue())});
@@ -502,6 +525,23 @@ void ScatterplotMatrixRenderer2D::updateColumns() {
 void ScatterplotMatrixRenderer2D::drawMinimalisticAxis() {
     debugPush(1, "drawMinimalisticAxis");
 
+    const auto axisColor = this->axisColorParam.Param<core::param::ColorParam>()->Value();
+    const auto columnCount = this->floatTable->GetColumnsCount();
+    const auto columnInfos = this->floatTable->GetColumnsInfos();
+
+    const float size = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
+    const float margin = this->cellMarginParam.Param<core::param::FloatParam>()->Value();
+    const float nameSize = this->cellNameSizeParam.Param<core::param::FloatParam>()->Value();
+    const GLsizei numTicks = this->axisTicksParam.Param<core::param::IntParam>()->Value();
+    const GLfloat tickLength = this->axisTickLengthParam.Param<core::param::FloatParam>()->Value();
+    const float tickSize = this->axisTickSizeParam.Param<core::param::FloatParam>()->Value();
+    const bool drawOuter = this->drawOuterLabelsParam.Param<core::param::BoolParam>()->Value();
+    const bool drawDiagonal = this->drawDiagonalLabelsParam.Param<core::param::BoolParam>()->Value();
+    const bool invertY = this->cellInvertYParam.Param<core::param::BoolParam>()->Value();
+    const float xLabelMargin = this->outerXLabelMarginParam.Param<core::param::FloatParam>()->Value();
+    const float yLabelMargin = this->outerYLabelMarginParam.Param<core::param::FloatParam>()->Value();
+    const float totalSize = columnCount * (size + margin) - margin;
+
     this->minimalisticAxisShader.Enable();
 
     // Transformation uniform.
@@ -509,14 +549,19 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis() {
         getModelViewProjection().PeekComponents());
 
     // Other uniforms.
-    const GLfloat tickLength = this->axisTickLengthParam.Param<core::param::FloatParam>()->Value();
-    const GLsizei numTicks = this->axisTicksParam.Param<core::param::IntParam>()->Value();
     glUniform4fv(this->minimalisticAxisShader.ParameterLocation("axisColor"), 1,
         this->axisColorParam.Param<core::param::ColorParam>()->Value().data());
     glUniform1ui(this->minimalisticAxisShader.ParameterLocation("numTicks"), numTicks);
     glUniform1f(this->minimalisticAxisShader.ParameterLocation("tickLength"), tickLength);
     glUniform1i(this->minimalisticAxisShader.ParameterLocation("redundantTicks"),
         this->axisTicksRedundantParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
+    glUniform1i(this->minimalisticAxisShader.ParameterLocation("drawOuter"),
+        this->drawOuterLabelsParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
+    glUniform1i(this->minimalisticAxisShader.ParameterLocation("drawDiagonal"),
+        this->drawDiagonalLabelsParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
+    glUniform1i(this->minimalisticAxisShader.ParameterLocation("invertY"),
+        this->cellInvertYParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
+    glUniform1i(this->minimalisticAxisShader.ParameterLocation("columnCount"), columnCount);
 
     // Line width.
     auto axisWidth = this->axisWidthParam.Param<core::param::FloatParam>()->Value();
@@ -526,7 +571,7 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis() {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle(0));
     const GLsizei numVerticesPerLine = 2;
     const GLsizei numBorderVertices = numVerticesPerLine * 4;
-    const GLsizei numTickVertices = numVerticesPerLine * numTicks * 2;
+    const GLsizei numTickVertices = numVerticesPerLine * numTicks * 4;
     const GLsizei numItems = numBorderVertices + numTickVertices;
     glDrawArraysInstanced(GL_LINES, 0, numItems, this->plots.size());
 
@@ -535,36 +580,67 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis() {
 
     this->axisFont.ClearBatchDrawCache();
 
-    const auto axisColor = this->axisColorParam.Param<core::param::ColorParam>()->Value();
-    const auto columnCount = this->floatTable->GetColumnsCount();
-    const auto columnInfos = this->floatTable->GetColumnsInfos();
-
-    const float size = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
-    const float margin = this->cellMarginParam.Param<core::param::FloatParam>()->Value();
-    const float nameSize = this->cellNameSizeParam.Param<core::param::FloatParam>()->Value();
-    const float tickSize = this->axisTickSizeParam.Param<core::param::FloatParam>()->Value();
-
     for (size_t i = 0; i < columnCount; ++i) {
-        const float xyBL = i * (size + margin);
-        const float xyTL = i * (size + margin) + size;
+        // this will be bottom left of diagonal cell
+        const float offsetX = i * (size + margin);
+        const float offsetY = (invertY ? (columnCount - i - 1) : i) * (size + margin);
+
         std::string label = columnInfos[i].Name();
-        this->axisFont.DrawString(axisColor.data(), xyBL, xyTL, size, size, nameSize, false, label.c_str(),
-            core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
 
-        const float tickStart = i * (size + margin);
-        const float tickEnd = (i + 1) * (size + margin) - margin;
+        // draw labels
+        // horizontal
+        if (drawOuter && i < columnCount - 1) {
+            if (invertY) {
+                this->axisFont.DrawString(axisColor.data(), offsetX, -tickLength - tickSize - xLabelMargin, size, size,
+                    nameSize, false, label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_TOP);
+            } else {
+                this->axisFont.DrawString(axisColor.data(), offsetX,
+                    totalSize + tickLength + tickSize + xLabelMargin + size, size, size, nameSize, false, label.c_str(),
+                    core::utility::AbstractFont::ALIGN_CENTER_BOTTOM);
+            }
+        }
+        // vertical
+        if (drawOuter && i > 0) {
+            this->axisFont.SetRotation(90.0, 0.0, 0.0, 1.0);
+            this->axisFont.DrawString(axisColor.data(), offsetY, tickLength + tickSize + yLabelMargin + size, size,
+                size, nameSize, false, label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_BOTTOM);
+            this->axisFont.ResetRotation();
+        }
+        // diagonal
+        if (drawDiagonal) {
+            this->axisFont.DrawString(axisColor.data(), offsetX, offsetY + size, size, size, nameSize, false,
+                label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+        }
 
+        // draw tick labels
+        float horizontalY = offsetY + (invertY ? -margin + tickLength : size + margin - tickLength);
         for (size_t tick = 0; tick < numTicks; ++tick) {
             const float t = static_cast<float>(tick) / (numTicks - 1);
-            const float p = lerp(tickStart, tickEnd, t);
+            const float px = lerp(offsetX, offsetX + size, t);
+            const float py = lerp(offsetY, offsetY + size, t);
             const float pValue = lerp(columnInfos[i].MinimumValue(), columnInfos[i].MaximumValue(), t);
             const std::string pLabel = to_string(pValue);
-            if (i < columnCount - 1) {
-                this->axisFont.DrawString(axisColor.data(), p, xyTL + tickLength, tickSize, false, pLabel.c_str(),
-                    core::utility::AbstractFont::ALIGN_CENTER_TOP);
+            if (drawOuter && i < columnCount - 1) {
+                if (invertY) {
+                    this->axisFont.DrawString(axisColor.data(), px, -tickLength, tickSize, false, pLabel.c_str(),
+                        core::utility::AbstractFont::ALIGN_CENTER_TOP);
+                } else {
+                    this->axisFont.DrawString(axisColor.data(), px, totalSize + tickLength, tickSize, false,
+                        pLabel.c_str(), core::utility::AbstractFont::ALIGN_CENTER_BOTTOM);
+                }
             }
-            if (i > 0) {
-                this->axisFont.DrawString(axisColor.data(), xyBL - margin + tickLength, p, tickSize, false,
+            if (drawDiagonal && i < columnCount - 1) {
+                this->axisFont.DrawString(axisColor.data(), px, horizontalY, tickSize, false, pLabel.c_str(),
+                    invertY ? core::utility::AbstractFont::ALIGN_CENTER_BOTTOM
+                            : core::utility::AbstractFont::ALIGN_CENTER_TOP);
+            }
+
+            if (drawOuter && i > 0) {
+                this->axisFont.DrawString(axisColor.data(), -tickLength, py, tickSize, false, pLabel.c_str(),
+                    core::utility::AbstractFont::ALIGN_RIGHT_MIDDLE);
+            }
+            if (drawDiagonal && i > 0) {
+                this->axisFont.DrawString(axisColor.data(), offsetX - margin + tickLength, py, tickSize, false,
                     pLabel.c_str(), core::utility::AbstractFont::ALIGN_LEFT_MIDDLE);
             }
         }
@@ -586,6 +662,7 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis() {
     const float nameSize = this->cellNameSizeParam.Param<core::param::FloatParam>()->Value();
     const float tickLabelSize = this->axisTickSizeParam.Param<core::param::FloatParam>()->Value();
     const GLfloat tickLength = this->axisTickLengthParam.Param<core::param::FloatParam>()->Value();
+    const bool invertY = this->cellInvertYParam.Param<core::param::BoolParam>()->Value();
 
     // Compute cell size in viewport space.
     GLfloat viewport[4];
@@ -638,12 +715,13 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis() {
     this->axisFont.ClearBatchDrawCache();
 
     for (size_t i = 0; i < columnCount; ++i) {
-        const float cellStart = i * (size + margin);
-        const float cellEnd = (i + 1) * (size + margin) - margin;
+        // this will be bottom left of diagonal cell
+        const float offsetX = i * (size + margin);
+        const float offsetY = (invertY ? (columnCount - i - 1) : i) * (size + margin);
 
         // Labels
         std::string label = columnInfos[i].Name();
-        this->axisFont.DrawString(axisColor.data(), cellStart, cellEnd, size, size, nameSize, false, label.c_str(),
+        this->axisFont.DrawString(axisColor.data(), offsetX, offsetY + size, size, size, nameSize, false, label.c_str(),
             core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
 
         float delta = columnInfos[i].MaximumValue() - columnInfos[i].MinimumValue();
@@ -651,23 +729,25 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis() {
         float tickSize = rangeToSmallStep(columnInfos[i].MaximumValue(), columnInfos[i].MinimumValue()) * 25;
         float firstTick = ceil(columnInfos[i].MinimumValue() / tickSize) * tickSize;
 
+        float horizontalY = offsetY + (invertY ? -margin + tickLength : size + margin - tickLength);
+
         for (float tickPos = firstTick; tickPos <= columnInfos[i].MaximumValue(); tickPos += tickSize) {
             float normalized = (tickPos - columnInfos[i].MinimumValue()) / delta;
             float offset = normalized * size;
-
-            float pos = cellStart + offset;
 
             const std::string pLabel = to_string(tickPos);
 
             // Tick labels for x axis
             if (i < columnCount - 1) {
-                this->axisFont.DrawString(axisColor.data(), pos, cellEnd + tickLength, tickLabelSize, false,
-                    pLabel.c_str(), core::utility::AbstractFont::ALIGN_CENTER_TOP);
+                this->axisFont.DrawString(axisColor.data(), offsetX + offset, horizontalY, tickLabelSize, false,
+                    pLabel.c_str(),
+                    invertY ? core::utility::AbstractFont::ALIGN_CENTER_BOTTOM
+                            : core::utility::AbstractFont::ALIGN_CENTER_TOP);
             }
             // Tick labels for y axis
             if (i > 0) {
-                this->axisFont.DrawString(axisColor.data(), cellStart - margin + tickLength, pos, tickLabelSize, false,
-                    pLabel.c_str(), core::utility::AbstractFont::ALIGN_LEFT_MIDDLE);
+                this->axisFont.DrawString(axisColor.data(), offsetX - margin + tickLength, offsetY + offset,
+                    tickLabelSize, false, pLabel.c_str(), core::utility::AbstractFont::ALIGN_LEFT_MIDDLE);
             }
         }
     }
@@ -1030,39 +1110,68 @@ void ScatterplotMatrixRenderer2D::drawMouseLabels() {
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
     const float nameSize = this->cellNameSizeParam.Param<core::param::FloatParam>()->Value();
+    const GLsizei numTicks = this->axisTicksParam.Param<core::param::IntParam>()->Value();
+    const GLfloat tickLength = this->axisTickLengthParam.Param<core::param::FloatParam>()->Value();
+    const float tickSize = this->axisTickSizeParam.Param<core::param::FloatParam>()->Value();
+    const bool invertY = this->cellInvertYParam.Param<core::param::BoolParam>()->Value();
+    const float xLabelMargin = this->outerXLabelMarginParam.Param<core::param::FloatParam>()->Value();
+    const float yLabelMargin = this->outerYLabelMarginParam.Param<core::param::FloatParam>()->Value();
 
     if (this->mouse.x < 0 || this->mouse.y < 0) {
         return;
     }
 
-    int cellIdX = static_cast<int>(this->mouse.x / (cellSize + cellMargin));
-    int cellIdY = static_cast<int>(this->mouse.y / (cellSize + cellMargin));
+    // cell ids as global grid coords
+    const int cellPosIdX = static_cast<int>(this->mouse.x / (cellSize + cellMargin));
+    const int cellPosIdY = static_cast<int>(this->mouse.y / (cellSize + cellMargin));
+    if (this->mouse.x - static_cast<float>(cellPosIdX) * (cellSize + cellMargin) > cellSize ||
+        this->mouse.y - static_cast<float>(cellPosIdY) * (cellSize + cellMargin) > cellSize) {
+        return;
+    }
 
-    if (cellIdX >= columnCount || cellIdY >= columnCount || cellIdX + 1 >= cellIdY ||
-        this->mouse.x - static_cast<float>(cellIdX) * (cellSize + cellMargin) > cellSize ||
-        this->mouse.y - static_cast<float>(cellIdY) * (cellSize + cellMargin) > cellSize) {
+    // map to actual column ids
+    const int cellColIdX = cellPosIdX;
+    const int cellColIdY = invertY ? (columnCount - cellPosIdY - 1) : cellPosIdY;
+
+    if (cellColIdX >= columnCount || cellColIdY >= columnCount || cellColIdX >= cellColIdY) {
         return;
     }
 
     auto oldMode = this->axisFont.GetBatchDrawMode();
     this->axisFont.SetBatchDrawMode(false);
 
+    // bottom left of cell
+    const float offsetX = static_cast<float>(cellPosIdX) * (cellSize + cellMargin);
+    const float offsetY = static_cast<float>(cellPosIdY) * (cellSize + cellMargin);
+
     // Labels
-    std::string labelX = columnInfos[cellIdX].Name();
-    const float xLabelLeft = static_cast<float>(cellIdX) * (cellSize + cellMargin);
-    const float xLabelTop = static_cast<float>(cellIdY) * (cellSize + cellMargin);
-    this->axisFont.DrawString(axisColor.data(), xLabelLeft, xLabelTop, cellSize, cellSize, nameSize, false,
-        labelX.c_str(), core::utility::AbstractFont::ALIGN_CENTER_TOP);
+    std::string labelX = columnInfos[cellColIdX].Name();
+    std::string labelY = columnInfos[cellColIdY].Name();
+
+    this->axisFont.DrawString(axisColor.data(), offsetX, offsetY - tickLength - tickSize - xLabelMargin, cellSize,
+        cellSize, nameSize, false, labelX.c_str(), core::utility::AbstractFont::ALIGN_CENTER_TOP);
 
     this->axisFont.SetRotation(90.0, 0.0, 0.0, 1.0);
-
-    std::string labelY = columnInfos[cellIdY].Name();
-    const float yLabelLeft = static_cast<float>(cellIdX + 1) * (cellSize + cellMargin) - cellMargin;
-    const float yLabelTop = static_cast<float>(cellIdY) * (cellSize + cellMargin);
-    this->axisFont.DrawString(axisColor.data(), yLabelTop, -yLabelLeft, cellSize, cellSize, nameSize, false,
-        labelY.c_str(), core::utility::AbstractFont::ALIGN_CENTER_TOP);
-
+    this->axisFont.DrawString(axisColor.data(), offsetY, -offsetX + cellSize + tickLength + tickSize + yLabelMargin,
+        cellSize, cellSize, nameSize, false, labelY.c_str(), core::utility::AbstractFont::ALIGN_CENTER_BOTTOM);
     this->axisFont.ResetRotation();
+
+    // draw tick labels
+    // float horizontalY = offsetY + (invertY ? -margin + tickLength : size + margin - tickLength);
+    for (size_t tick = 0; tick < numTicks; ++tick) {
+        const float t = static_cast<float>(tick) / (numTicks - 1);
+        const float px = lerp(offsetX, offsetX + cellSize, t);
+        const float py = lerp(offsetY, offsetY + cellSize, t);
+        const float pValueX = lerp(columnInfos[cellColIdX].MinimumValue(), columnInfos[cellColIdX].MaximumValue(), t);
+        const float pValueY = lerp(columnInfos[cellColIdY].MinimumValue(), columnInfos[cellColIdY].MaximumValue(), t);
+        const std::string pLabelX = to_string(pValueX);
+        const std::string pLabelY = to_string(pValueY);
+
+        this->axisFont.DrawString(axisColor.data(), px, offsetY - tickLength, tickSize, false, pLabelX.c_str(),
+            core::utility::AbstractFont::ALIGN_CENTER_TOP);
+        this->axisFont.DrawString(axisColor.data(), offsetX - tickLength, py, tickSize, false, pLabelY.c_str(),
+            core::utility::AbstractFont::ALIGN_RIGHT_MIDDLE);
+    }
 
     this->axisFont.SetBatchDrawMode(oldMode);
 }

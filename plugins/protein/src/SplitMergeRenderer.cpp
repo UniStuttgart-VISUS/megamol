@@ -23,7 +23,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
 using namespace vislib::graphics::gl;
-using vislib::sys::Log;
+using megamol::core::utility::log::Log;
 
 vislib::Array<int> *SplitMergeRenderer::FastMapWrapper::sortedSeries;
 protein_calls::SplitMergeCall *SplitMergeRenderer::FastMapWrapper::diagram;

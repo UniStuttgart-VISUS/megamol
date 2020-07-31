@@ -64,7 +64,7 @@ bool SimplestSphereRenderer::create(void) {
 
     // TUTORIAL Shader creation should always happen in the create method of a renderer.
 
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
     using namespace vislib::graphics::gl;
 
     ShaderSource vertSrc;

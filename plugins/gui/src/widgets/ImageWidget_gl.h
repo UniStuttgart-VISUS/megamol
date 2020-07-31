@@ -17,8 +17,8 @@
 
 #include "mmcore/misc/PngBitmapCodec.h"
 
+#include "mmcore/utility/log/Log.h"
 #include "vislib/graphics/BitmapImage.h"
-#include "vislib/sys/Log.h"
 
 
 namespace megamol {

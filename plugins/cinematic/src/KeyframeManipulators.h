@@ -15,7 +15,7 @@
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Cuboid.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>

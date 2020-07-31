@@ -29,7 +29,7 @@
  */
 #include "mmcore/CallerSlot.h"
 #include "vislib/RawStorage.h"
-#include "vislib/graphics/AbstractBitmapCodec.h"
+#include "mmcore/utility/graphics/AbstractBitmapCodec.h"
 
 using namespace megamol::core;
 

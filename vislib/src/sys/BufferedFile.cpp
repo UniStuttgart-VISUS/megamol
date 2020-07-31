@@ -11,7 +11,6 @@
 #include "vislib/IllegalParamException.h"
 #include "vislib/sys/IOException.h"
 #include "vislib/memutils.h"
-#include "vislib/sys/SystemInformation.h"
 #include "vislib/UnsupportedOperationException.h"
 
 #ifdef _WIN32
