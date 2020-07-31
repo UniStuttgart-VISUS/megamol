@@ -28,11 +28,12 @@ public:
 
     ~ParameterOrbitalWidget(void) = default;
 
-    bool gizmo3D_direction(glm::vec4& inout_rotation);
-    bool gizmo3D_axes(glm::vec4& inout_rotation);
+    bool gizmo3D_rotation_axes(glm::vec4& inout_rotation);
+    bool gizmo3D_rotation_direction(glm::vec3& inout_direction);
 
 private:
-    quat m_rotation;
+    ::quat m_rotation;
+    ::vec3 m_direction;
 };
 
 

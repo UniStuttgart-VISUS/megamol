@@ -1445,7 +1445,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         /// Serialize current state to parameter.
         this->save_state_to_parameter();
         /// Save to file
-        popup_failed = !this->graph_collection.SaveProjectToFile(this->graph_uid, this->state.project_file, false);
+        popup_failed = !this->graph_collection.SaveProjectToFile(this->graph_uid, this->state.project_file, true);
     }
     MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
