@@ -345,7 +345,6 @@ function(require_external NAME)
     endif()
 
     require_external(imgui)
-    set_source_files_properties(${imgui_files} PROPERTIES GENERATED TRUE)
 
     if(WIN32)
       set(IMGUIZMOQUAT_LIB "lib/imGuIZMOquat.lib")
