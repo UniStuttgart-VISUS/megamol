@@ -345,9 +345,9 @@ function(require_external NAME)
     require_external(imgui)
 
     if(WIN32)
-      set(IMGUIZMOQUAT_LIB "lib/imGuIZMOquat.lib")
+      set(IMGUIZMOQUAT_LIB "lib/imguizmoquat.lib")
     else()
-      set(IMGUIZMOQUAT_LIB "lib/imGuIZMOquat.a")
+      set(IMGUIZMOQUAT_LIB "lib/imguizmoquat.a")
     endif()
 
     if(WIN32)
