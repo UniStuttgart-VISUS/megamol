@@ -347,7 +347,7 @@ function(require_external NAME)
     if(WIN32)
       set(IMGUIZMOQUAT_LIB "lib/imguizmoquat.lib")
     else()
-      set(IMGUIZMOQUAT_LIB "lib/imguizmoquat.a")
+      set(IMGUIZMOQUAT_LIB "lib/libimguizmoquat.a")
     endif()
 
     if(WIN32)
