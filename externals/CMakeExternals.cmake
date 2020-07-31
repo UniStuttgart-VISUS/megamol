@@ -307,7 +307,6 @@ function(require_external NAME)
   # imgui
   elseif(NAME STREQUAL "imgui")
     if(NOT TARGET imgui)
-      
       if(WIN32)
         set(IMGUI_LIB "lib/imgui.lib")
       else()
@@ -324,7 +323,6 @@ function(require_external NAME)
 
       add_external_library(imgui
         LIBRARY ${IMGUI_LIB})
-
     endif()
 
     external_get_property(imgui SOURCE_DIR)
@@ -352,11 +350,22 @@ function(require_external NAME)
       set(IMGUIZMOQUAT_LIB "lib/imGuIZMOquat.a")
     endif()
 
+    if(WIN32)
+      set(IMGUI_LIB "lib/imgui.lib")
+    else()
+      set(IMGUI_LIB "lib/libimgui.a")
+    endif()
+
+    external_get_property(imgui INSTALL_DIR)
+
     add_external_project(imguizmoquat STATIC
       GIT_REPOSITORY https://github.com/BrutPitt/imGuIZMO.quat.git
       GIT_TAG "v3.0"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUIZMOQUAT_LIB}"
       DEPENDS imgui
+      CMAKE_ARGS
+        -DIMGUI_LIBRARY:PATH=${INSTALL_DIR}/${IMGUI_LIB}
+        -DIMGUI_INCLUDE_DIR:PATH=${INSTALL_DIR}/include
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
           "${CMAKE_SOURCE_DIR}/externals/imguizmoquat/CMakeLists.txt"
           "<SOURCE_DIR>/CMakeLists.txt")
