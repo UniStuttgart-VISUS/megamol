@@ -345,6 +345,7 @@ function(require_external NAME)
     endif()
 
     require_external(imgui)
+    set_source_files_properties(${imgui_files} PROPERTIES GENERATED TRUE)
 
     if(WIN32)
       set(IMGUIZMOQUAT_LIB "lib/imGuIZMOquat.lib")
@@ -362,8 +363,7 @@ function(require_external NAME)
           "<SOURCE_DIR>/CMakeLists.txt")
 
     add_external_library(imguizmoquat
-        LIBRARY ${IMGUIZMOQUAT_LIB}
-        INTERFACE_LIBRARIES imgui)
+        LIBRARY ${IMGUIZMOQUAT_LIB})
 
     external_get_property(imguizmoquat SOURCE_DIR)
     target_include_directories(imguizmoquat INTERFACE "${SOURCE_DIR}/imGuIZMO.quat")

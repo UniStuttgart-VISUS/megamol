@@ -19,17 +19,21 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "resources/*")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "shaders/*")
 
+  # glm
   require_external(glm)
+  # glad
   require_external(glad)
+  # imgui
   require_external(imgui)
   set_source_files_properties(${imgui_files} PROPERTIES GENERATED TRUE)
+  # imguizmoquat
   require_external(imguizmoquat)
 
-  # Target definition
+  # target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files} ${imgui_files} ${shader_files} ${resource_files})
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
     
-  # GLFW
+  # glfw
   if(USE_GLFW)
     require_external(glfw3)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
