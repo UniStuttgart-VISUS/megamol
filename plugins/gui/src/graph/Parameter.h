@@ -14,7 +14,7 @@
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ImageWidget_gl.h"
-#include "widgets/ParameterorbitalWidget.h"
+#include "widgets/ParameterOrbitalWidget.h"
 #include "widgets/TransferFunctionEditor.h"
 
 #include "mmcore/param/BoolParam.h"
