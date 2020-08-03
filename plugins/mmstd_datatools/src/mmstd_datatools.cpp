@@ -86,6 +86,7 @@
 #include "table/TableJoin.h"
 #include "table/TableObserverPlane.h"
 #include "table/TableSampler.h"
+#include "table/TableSelectionTx.h"
 #include "table/TableToLines.h"
 #include "table/TableToParticles.h"
 
@@ -218,6 +219,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableColumnFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSampler>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableFlagFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSelectionTx>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocities>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleNeighborhood>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermodyn>();
