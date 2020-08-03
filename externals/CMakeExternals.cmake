@@ -366,6 +366,8 @@ function(require_external NAME)
       CMAKE_ARGS
         -DIMGUI_LIBRARY:PATH=${INSTALL_DIR}/${IMGUI_LIB}
         -DIMGUI_INCLUDE_DIR:PATH=${INSTALL_DIR}/include
+        -DCMAKE_C_FLAGS=-fPIC
+        -DCMAKE_CXX_FLAGS=-fPIC
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
           "${CMAKE_SOURCE_DIR}/externals/imguizmoquat/CMakeLists.txt"
           "<SOURCE_DIR>/CMakeLists.txt")
