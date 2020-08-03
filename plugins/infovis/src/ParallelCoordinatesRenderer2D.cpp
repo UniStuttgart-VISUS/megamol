@@ -1003,7 +1003,7 @@ void ParallelCoordinatesRenderer2D::load_filters() {
 
 
 bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
-    int w = call.GetViewport().Width();
+    int w = call.GetViewport().Width() ;
     int h = call.GetViewport().Height();
 
     windowWidth = call.GetViewport().Width();
@@ -1017,19 +1017,40 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
     glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &origFBOr);
 
-    if (false && this->halveRes.Param<core::param::BoolParam>()->Value()) {
-        nuFB->resize(w, h);
-        nuFB->bind();
-        nuFB->getColorAttachment(0)->bindTexture();
+    if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
+        w = w / 2;
+        //nuFB->resize(w, h);
+        //nuFB->bind();
+        //nuFB->getColorAttachment(0)->bindTexture();
         // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, nuFB->getColorAttachment(0)->getName(), 0);
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
         // nuFB->createColorAttachment(GL_RGBA, GL_RGBA, GL_FLOAT);
-        nuFB->bindColorbuffer(0);
+        //nuFB->bindColorbuffer(0);
+
+        if (call.frametype == 1 || call.frametype == 0) {
+            glBindFramebuffer(GL_FRAMEBUFFER, nuFBb);
+
+            glActiveTexture(GL_TEXTURE10);
+            glBindTexture(GL_TEXTURE_2D, imStoreI);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
+            glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
+            glClear(GL_COLOR_BUFFER_BIT);
+        }
+        if (call.frametype == 2) {
+            glBindFramebuffer(GL_FRAMEBUFFER, nuFBb2);
+            glActiveTexture(GL_TEXTURE11);
+            glBindTexture(GL_TEXTURE_2D, imStoreI2);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI2, 0);
+            glClearColor(0.2, 0, 0, 1);
+            glClear(GL_COLOR_BUFFER_BIT);
+        }
 
         glViewport(0, 0, w, h);
     }
 
-    if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
+    if (false && this->halveRes.Param<core::param::BoolParam>()->Value()) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         if (tex.size() != w * h) {
@@ -1184,7 +1205,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         pm = jit * pm;
     }
     if (call.frametype == 2) {
-        auto jit = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(), 0, 0));
+        auto jit = glm::translate(glm::mat4(1.0f), glm::vec3(2.0 / call.GetViewport().Width(), 0, 0));
         pm = jit * pm;
     }
 
@@ -1296,38 +1317,22 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     // glDepthMask(GL_TRUE);
 
-    if (false && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+    if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
         glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
-
-        if (glGetError() == GL_INVALID_ENUM) {
-            vislib::sys::Log::DefaultLog.WriteInfo("A INVALID ENUM");
-        }
-        if (glGetError() == GL_INVALID_VALUE) {
-            vislib::sys::Log::DefaultLog.WriteInfo("A INVALID VALUE");
-        }
-        if (glGetError() == GL_NO_ERROR) {
-            vislib::sys::Log::DefaultLog.WriteInfo("A NO ERROR");
-        }
-        if (glGetError() == GL_INVALID_OPERATION) {
-            vislib::sys::Log::DefaultLog.WriteInfo("A INVAL OP");
-        }
-        if (glGetError() == GL_INVALID_FRAMEBUFFER_OPERATION) {
-            vislib::sys::Log::DefaultLog.WriteInfo("A INVAL FB OP");
-        }
-        if (glGetError() == GL_OUT_OF_MEMORY) {
-            vislib::sys::Log::DefaultLog.WriteInfo("A OOM");
-        }
 
         m_render_to_framebuffer_shdr->Enable();
 
         if (call.frametype == 0 || call.frametype == 1) {
             glActiveTexture(GL_TEXTURE10);
-            nuFB->getColorAttachment(0)->bindTexture();
+            //nuFB->getColorAttachment(0)->bindTexture();
+            glBindTexture(GL_TEXTURE_2D, imStoreI);
+            
             glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2D"), 10);
         }
         if (call.frametype == 2) {
             glActiveTexture(GL_TEXTURE11);
-            nuFB->getColorAttachment(0)->bindTexture();
+            //nuFB->getColorAttachment(0)->bindTexture();
+            glBindTexture(GL_TEXTURE_2D, imStoreI2);
             glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2Db"), 11);
         }
 
@@ -1335,27 +1340,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
 
         glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
-        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("h"), call.GetViewport().Height());
-
-        if (glGetError() == GL_INVALID_ENUM) {
-            vislib::sys::Log::DefaultLog.WriteInfo("INVALID ENUM");
-        }
-        if (glGetError() == GL_INVALID_VALUE) {
-            vislib::sys::Log::DefaultLog.WriteInfo("INVALID VALUE");
-        }
-        if (glGetError() == GL_NO_ERROR) {
-            vislib::sys::Log::DefaultLog.WriteInfo("NO ERROR");
-        }
-        if (glGetError() == GL_INVALID_OPERATION) {
-            vislib::sys::Log::DefaultLog.WriteInfo("INVAL OP");
-        }
-        if (glGetError() == GL_INVALID_FRAMEBUFFER_OPERATION) {
-            vislib::sys::Log::DefaultLog.WriteInfo("INVAL FB OP");
-        }
-        if (glGetError() == GL_OUT_OF_MEMORY) {
-            vislib::sys::Log::DefaultLog.WriteInfo("OOM");
-        }
-
+        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("h"), call.GetViewport().Width());
 
         glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("frametype"), call.frametype);
 
@@ -1363,8 +1348,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         m_render_to_framebuffer_shdr->Disable();
     }
 
-
-    if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
+    //  Method for DepthTest
+    if (false && this->halveRes.Param<core::param::BoolParam>()->Value()) {
 
         glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
 

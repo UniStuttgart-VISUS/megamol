@@ -120,8 +120,25 @@ void main()
   }
 
   vec4 vertex = pc_item_vertex(out_.itemID, out_.dataID, out_.dataDimension, out_.worldSpaceAxis);
-  vertex.y += (gl_VertexID % 2) * axisHeight * 0.002;
+  //vertex.y += (gl_VertexID % 2) * axisHeight * 0.002;
+  
+  vec2 tempL = vec2(0, (gl_VertexID % 2) * axisHeight * 0.002);
+  vec2 tempR = vec2(0.0, 0.0);
+  if(out_.worldSpaceAxis != 0 && out_.worldSpaceAxis != dimensionCount - 1){
+    float dDataL = pc_item_dataValue(pc_item_dataID(out_.dataID, pc_dimension(theID)), pc_dimension(theID)) - pc_item_dataValue(pc_item_dataID(out_.dataID, pc_dimension(theID-1)), pc_dimension(theID-1));
+	float dDataR = pc_item_dataValue(pc_item_dataID(out_.dataID, pc_dimension(theID+1)), pc_dimension(theID+1)) - pc_item_dataValue(pc_item_dataID(out_.dataID, pc_dimension(theID)), pc_dimension(theID));
+	
+	tempL = vec2(-dDataL * axisHeight, axisDistance);
+	tempR = vec2(-dDataR * axisHeight, axisDistance);
 
+	tempL = normalize(tempL) * 0.003 * axisHeight;;
+	tempR = normalize(tempR) * 0.003 * axisHeight;;
+	tempL += tempR;
+    
+  }
+  vec2 offset = tempL;
+  vertex = vertex + (-0.5 + (gl_VertexID % 2)) * vec4(offset, 0.0, 0.0);
+  
 #if 0
   else
   {

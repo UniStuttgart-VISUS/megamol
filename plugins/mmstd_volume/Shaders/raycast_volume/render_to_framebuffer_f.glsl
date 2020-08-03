@@ -20,7 +20,7 @@ void main()
         }
         if(int(uv_coord.x*h) % 2 == 1){
             //frag_out = vec4(0,0,1,1);
-            frag_out = texture(src_tx2Db, vec2(uv_coord.x + (1.0/h),uv_coord.y));
+            frag_out = texture(src_tx2Db, vec2(uv_coord.x+(1.0/h), uv_coord.y));
         }
     }
 }
