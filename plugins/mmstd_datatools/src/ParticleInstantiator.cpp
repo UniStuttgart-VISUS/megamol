@@ -7,6 +7,7 @@
 #include "stdafx.h"
 #include "ParticleInstantiator.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/ButtonParam.h"
 #include "glm/glm.hpp"
 
 using namespace megamol;
@@ -16,13 +17,22 @@ using namespace megamol::stdplugin;
 datatools::ParticleInstantiator::ParticleInstantiator(void)
         : AbstractParticleManipulator("outData", "indata")
     , numInstancesParam("instances", "number of dataset replications in X, Y, Z direction")
-    , instanceOffsetParam("instOffset", "offset per instance in X, Y, Z") {
+    , instanceOffsetParam("instOffset", "offset per instance in X, Y, Z")
+    , setFromClipboxParam("fromClipbox", "set offsets based on size of clipbox")
+    , setFromBoundingboxParam("fromBBox", "set offsets based on size of bounding box") {
 
     this->numInstancesParam << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f), vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f));
     this->MakeSlotAvailable(&this->numInstancesParam);
 
     this->instanceOffsetParam << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
     this->MakeSlotAvailable(&this->instanceOffsetParam);
+
+    this->setFromClipboxParam << new core::param::ButtonParam();
+    this->MakeSlotAvailable(&this->setFromClipboxParam);
+
+    this->setFromBoundingboxParam << new core::param::ButtonParam();
+    this->MakeSlotAvailable(&this->setFromBoundingboxParam);
+
 }
 
 datatools::ParticleInstantiator::~ParticleInstantiator(void) {
@@ -30,12 +40,14 @@ datatools::ParticleInstantiator::~ParticleInstantiator(void) {
 }
 
 bool datatools::ParticleInstantiator::InterfaceIsDirty() {
-    return this->numInstancesParam.IsDirty() || this->instanceOffsetParam.IsDirty();
+    return this->numInstancesParam.IsDirty() || this->instanceOffsetParam.IsDirty() || this->setFromBoundingboxParam.IsDirty() || this->setFromClipboxParam.IsDirty();
 }
 
 void datatools::ParticleInstantiator::InterfaceResetDirty() {
     this->numInstancesParam.ResetDirty();
     this->instanceOffsetParam.ResetDirty();
+    this->setFromBoundingboxParam.ResetDirty();
+    this->setFromClipboxParam.ResetDirty();
 }
 
 bool datatools::ParticleInstantiator::manipulateData(
@@ -46,6 +58,15 @@ bool datatools::ParticleInstantiator::manipulateData(
     outData = inData; // also transfers the unlocker to 'outData'
     inData.SetUnlocker(nullptr, false); // keep original data locked
                                         // original data will be unlocked through outData
+
+    if (this->setFromClipboxParam.IsDirty()) {
+        this->instanceOffsetParam.Param<core::param::Vector3fParam>()->SetValue(vislib::math::Vector<float, 3>(
+            inData.AccessBoundingBoxes().ObjectSpaceClipBox().GetSize().PeekDimension()));
+    }
+    if (this->setFromBoundingboxParam.IsDirty()) {
+        this->instanceOffsetParam.Param<core::param::Vector3fParam>()->SetValue(vislib::math::Vector<float, 3>(
+            inData.AccessBoundingBoxes().ObjectSpaceBBox().GetSize().PeekDimension()));
+    }
 
     unsigned int plc = inData.GetParticleListCount();
     auto ni_temp = this->numInstancesParam.Param<core::param::Vector3fParam>()->Value();

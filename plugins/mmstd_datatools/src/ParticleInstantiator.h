@@ -57,6 +57,9 @@ namespace datatools {
         megamol::core::param::ParamSlot numInstancesParam;
         megamol::core::param::ParamSlot instanceOffsetParam;
 
+        megamol::core::param::ParamSlot setFromClipboxParam;
+        megamol::core::param::ParamSlot setFromBoundingboxParam;
+
         SIZE_T hash = -1;
         unsigned int frameID = -1;
         std::vector<std::vector<float>> vertData;
