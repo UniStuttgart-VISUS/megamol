@@ -75,14 +75,15 @@ protected:
     bool GetExtents(core::view::CallRender3D_2& call) override;
 
 private:
-    static std::pair<std::vector<float>, std::vector<float>> prepareData(
-        std::vector<BoxDataCall::box_entry_t> const& data) {
-        std::vector<float> pos;
-        pos.reserve(data.size() * 72);
-        std::vector<float> col;
-        col.reserve(data.size() * 96);
+    std::pair<std::vector<float>, std::vector<float>> drawData;
+    static void prepareData(std::vector<BoxDataCall::box_entry_t> const& indata,
+        std::pair<std::vector<float>, std::vector<float>>& outdata) {
+        auto& pos = outdata.first;
+        pos.reserve(indata.size() * 72);
+        auto& col = outdata.second;
+        col.reserve(indata.size() * 96);
 
-        for (auto const& e : data) {
+        for (auto const& e : indata) {
             auto const& box = e.box_;
             auto lef = box.GetLeft();
             auto bot = box.GetBottom();
@@ -201,8 +202,6 @@ private:
                 col.push_back(e.color_[3]);
             }
         }
-
-        return std::make_pair(pos, col);
     }
 
     core::CallerSlot dataInSlot_;
