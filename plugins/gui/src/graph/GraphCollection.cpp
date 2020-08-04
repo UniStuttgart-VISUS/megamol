@@ -208,9 +208,7 @@ bool megamol::gui::GraphCollection::LoadCallStock(const megamol::core::CoreInsta
     if (!this->calls_stock.empty()) {
         return true;
         // megamol::core::utility::log::Log::DefaultLog.WriteWarn("Call stock already exists. Deleting exiting stock and
-        // "
-        //                                       "recreating new one. [%s, %s, line %d]\n",
-        //    __FILE__, __FUNCTION__, __LINE__);
+        // recreating new one. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
     bool retval = true;
@@ -294,9 +292,7 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
     if (!this->modules_stock.empty()) {
         return true;
         // megamol::core::utility::log::Log::DefaultLog.WriteWarn("Module stock already exists. Deleting exiting stock
-        // and "
-        //                                       "recreating new one. [%s, %s, line %d]\n",
-        //    __FILE__, __FUNCTION__, __LINE__);
+        // and recreating new one. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
     bool retval = true;

@@ -35,6 +35,7 @@
 
 #include "mmcore/CoreInstance.h"
 
+#include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/versioninfo.h"
 
@@ -81,7 +82,7 @@ public:
     bool PreDraw(glm::vec2 viewport_size, double instanceTime);
 
     /**
-     * Actual Gui windows drawing and final rednering of pushed ImGui draw commands.
+     * Actual drawing of Gui windows and final rendering of pushed ImGui draw commands.
      */
     bool PostDraw(void);
 
@@ -156,8 +157,11 @@ private:
 
     // VARIABLES --------------------------------------------------------------
 
-    /** Pointer to core isntance. */
+    /** Pointer to core instance. */
     megamol::core::CoreInstance* core_instance;
+
+    /** Pointer to megamol graph of the core. */
+    megamol::core::MegaMolGraph* core_graph;
 
     /** List of pointers to all paramters. */
     std::vector<megamol::core::param::ParamSlot*> param_slots;

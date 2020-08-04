@@ -42,7 +42,7 @@ bool GUI_Service::init(const Config& config) {
             this->m_gui.ptr = std::make_shared<megamol::gui::GUI_Wrapper>();
 
             if (check_gui_not_nullptr) {
-                if (this->m_gui.ptr->Get()->CreateContext_GL(config.core_instance)) {
+                if (this->m_gui.ptr->Get()->CreateContext_GL(nullptr)) { // config.core_instance
                     this->m_providedResourceReferences = { {"GUIResource", this->m_gui} };
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("Successfully initialized GUI service.\n");
                     return true;
@@ -75,38 +75,71 @@ void GUI_Service::digestChangedRequestedResources() {
     // check for updates in required resources
 
     /// MegaMolGraph = resource index 0
-    auto megamol_graph = &this->m_requestedResourceReferences[0].getResource<megamol::core::MegaMolGraph>(); 
-    /// TODO
+    auto megamol_graph_ptr = &this->m_requestedResourceReferences[0].getResource<megamol::core::MegaMolGraph>(); 
+
+    /// WARNING: Changing a constant type will lead to an undefined behavior!
+    auto graph = const_cast<megamol::core::MegaMolGraph*>(megamol_graph_ptr);
+    // TODO
 
     /// KeyboardEvents = resource index 1
     auto keyboard_events = &this->m_requestedResourceReferences[1].getResource<megamol::module_resources::KeyboardEvents>();
-    for (auto& key_event : keyboard_events->key_events) {
-        auto key = std::get<0>(key_event);
-        auto action = std::get<1>(key_event);
-        auto modifiers = std::get<2>(key_event);
-        gui->OnKey(key, action, modifiers);
+    std::vector<keyboard_event_iter_t> consumed_keyboard_events;
+    for (auto it = keyboard_events->key_events.begin(); it != keyboard_events->key_events.end(); it++) {
+        auto key = std::get<0>((*it));
+        auto action = std::get<1>((*it));
+        auto modifiers = std::get<2>((*it));
+        if (gui->OnKey(key, action, modifiers)) {
+            consumed_keyboard_events.emplace_back(it);
+        }
     }
-    for (auto& codepoint : keyboard_events->codepoint_events) {
-        gui->OnChar(codepoint);
+    for (auto& it : consumed_keyboard_events) {
+        const_cast<megamol::module_resources::KeyboardEvents*>(keyboard_events)->key_events.erase(it);
+    }
+    std::vector<codepoint_event_iter_t> consumed_codepoint_events;
+    for (auto it = keyboard_events->codepoint_events.begin(); it != keyboard_events->codepoint_events.end(); it++) {
+        if (gui->OnChar((*it))) {
+            consumed_codepoint_events.emplace_back(it);
+        }
+    }
+    for (auto& it : consumed_codepoint_events) {
+        const_cast<megamol::module_resources::KeyboardEvents*>(keyboard_events)->codepoint_events.erase(it);
     }
 
     /// MouseEvents = resource index 2
     auto mouse_events = &this->m_requestedResourceReferences[2].getResource<megamol::module_resources::MouseEvents>();
-    for (auto& pos_event  : mouse_events->position_events) {
-        auto x_pos = std::get<0>(pos_event);
-        auto y_pos = std::get<1>(pos_event);
-        gui->OnMouseMove(x_pos, y_pos);
+    std::vector<mouse_pos_event_iter_t> consumed_mouse_pos_events;
+    for (auto it = mouse_events->position_events.begin(); it != mouse_events->position_events.end(); it++) {
+        auto x_pos = std::get<0>((*it));
+        auto y_pos = std::get<1>((*it));
+        if (gui->OnMouseMove(x_pos, y_pos)) {
+            consumed_mouse_pos_events.emplace_back(it);
+        }
     }
-    for (auto& scroll_event  : mouse_events->scroll_events) {
-        auto x_scroll = std::get<0>(scroll_event);
-        auto y_scroll = std::get<1>(scroll_event);
-        gui->OnMouseScroll(x_scroll, y_scroll);
+    for (auto& it : consumed_mouse_pos_events) {
+        const_cast<megamol::module_resources::MouseEvents*>(mouse_events)->position_events.erase(it);
     }
-    for (auto& btn_event  : mouse_events->buttons_events) {
-        auto button = std::get<0>(btn_event);
-        auto action = std::get<1>(btn_event);
-        auto modifiers = std::get<2>(btn_event);
-        gui->OnMouseButton(button, action, modifiers);
+    std::vector<mouse_scroll_event_iter_t> consumed_mouse_scroll_events;
+    for (auto it = mouse_events->scroll_events.begin(); it != mouse_events->scroll_events.end(); it++) {
+        auto x_scroll = std::get<0>((*it));
+        auto y_scroll = std::get<1>((*it));
+        if (gui->OnMouseScroll(x_scroll, y_scroll)) {
+            consumed_mouse_scroll_events.emplace_back(it);
+        }
+    }
+    for (auto& it : consumed_mouse_scroll_events) {
+        const_cast<megamol::module_resources::MouseEvents*>(mouse_events)->scroll_events.erase(it);
+    }
+    std::vector<mouse_btn_event_iter_t> consumed_mouse_btn_events;
+    for (auto it = mouse_events->buttons_events.begin(); it != mouse_events->buttons_events.end(); it++) {
+        auto button = std::get<0>((*it));
+        auto action = std::get<1>((*it));
+        auto modifiers = std::get<2>((*it));
+        if (gui->OnMouseButton(button, action, modifiers)) {
+            consumed_mouse_btn_events.emplace_back(it);
+        }
+    }
+    for (auto& it : consumed_mouse_btn_events) {
+        const_cast<megamol::module_resources::MouseEvents*>(mouse_events)->buttons_events.erase(it);
     }
 
     /// IOpenGL_Context = resource index 3
@@ -118,6 +151,8 @@ void GUI_Service::digestChangedRequestedResources() {
         m_resource_state.viewport_size.x = size_event.width;
         m_resource_state.viewport_size.y = size_event.height;
     }
+
+    //TODO Check for shutdown event
 }
 
 

@@ -80,6 +80,11 @@ public:
     // void setShutdown(const bool s = true);
 
 private:
+    typedef std::vector<std::tuple<megamol::module_resources::MouseButton, megamol::module_resources::MouseButtonAction, megamol::module_resources::Modifiers>>::const_iterator mouse_btn_event_iter_t; 
+    typedef std::vector<std::tuple<megamol::module_resources::Key, megamol::module_resources::KeyAction, megamol::module_resources::Modifiers>>::const_iterator keyboard_event_iter_t;
+    typedef std::vector<std::tuple<double, double>>::const_iterator mouse_pos_event_iter_t;
+    typedef std::vector<std::tuple<double, double>>::const_iterator mouse_scroll_event_iter_t;
+    typedef std::vector<unsigned int>::const_iterator codepoint_event_iter_t;
 
     struct ResourceState {
         glm::vec2 viewport_size;

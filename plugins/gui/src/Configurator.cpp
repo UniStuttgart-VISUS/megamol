@@ -76,14 +76,15 @@ Configurator::~Configurator() {}
 bool megamol::gui::Configurator::Draw(
     WindowCollection::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance) {
 
-    if (core_instance == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
     if (ImGui::GetCurrentContext() == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    if (core_instance == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 

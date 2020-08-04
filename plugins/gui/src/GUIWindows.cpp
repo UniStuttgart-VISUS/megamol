@@ -26,6 +26,7 @@ using namespace megamol::gui;
 
 GUIWindows::GUIWindows(void)
     : core_instance(nullptr)
+    , core_graph(nullptr)
     , param_slots()
     , style_param("style", "Color style, theme")
     , state_param(GUI_GUI_STATE_PARAM_NAME, "Current state of all windows.")
@@ -87,9 +88,8 @@ GUIWindows::~GUIWindows(void) { this->destroyContext(); }
 bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 
     if (instance == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
     }
     this->core_instance = instance;
 
@@ -125,19 +125,19 @@ bool GUIWindows::PreDraw(glm::vec2 viewport_size, double instanceTime) {
             "Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    if (this->core_instance == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
 
     // Set ImGui context
     ImGui::SetCurrentContext(this->context);
-    this->core_instance->SetCurrentImGuiContext(this->context);
+    if (this->core_instance != nullptr) {
+        this->core_instance->SetCurrentImGuiContext(this->context);
+    }
 
     // Loading and/or updating currently running core graph
-    /// TODO No update is done yet
-    this->graph_collection.LoadCallStock(core_instance);
-    this->graph_uid = this->graph_collection.LoadUpdateProjectFromCore(this->graph_uid, this->core_instance);
+    if (this->core_instance != nullptr) {
+        this->graph_collection.LoadCallStock(core_instance);
+        /// TODO No update is done yet
+        this->graph_uid = this->graph_collection.LoadUpdateProjectFromCore(this->graph_uid, this->core_instance);
+    }
 
     if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM])) {
         this->shutdown();
@@ -800,9 +800,6 @@ bool GUIWindows::createContext(void) {
                     font_paths.emplace_back(font_path);
                 }
             }
-        } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
         // Configurator Graph Font: Add default font at first n indices for exclusive use in configurator graph.
         /// Workaround: Using different font sizes for different graph zooming factors to improve font readability when
@@ -860,6 +857,7 @@ bool GUIWindows::createContext(void) {
 bool GUIWindows::destroyContext(void) {
 
     this->core_instance = nullptr;
+    this->core_graph = nullptr;
 
     if (this->api != GUIImGuiAPI::NONE) {
         if (this->context != nullptr) {
@@ -938,6 +936,7 @@ void GUIWindows::drawTransferFunctionWindowCallback(WindowCollection::WindowConf
 
 void GUIWindows::drawConfiguratorWindowCallback(WindowCollection::WindowConfiguration& wc) {
 
+    /// TODO Decide wheather to pass core_instance or new megamol core graph
     this->configurator.Draw(wc, this->core_instance);
 }
 
@@ -1163,9 +1162,11 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
         wc.ms_mode = WindowCollection::TimingModes::MS;
     }
 
-    ImGui::TextDisabled("Frame ID:");
-    ImGui::SameLine();
-    ImGui::Text("%u", this->core_instance->GetFrameID());
+    if (this->core_instance != nullptr) {
+        ImGui::TextDisabled("Frame ID:");
+        ImGui::SameLine();
+        ImGui::Text("%u", this->core_instance->GetFrameID());
+    }
 
     ImGui::SameLine(
         ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() - style.ItemSpacing.x - style.ItemInnerSpacing.x));
@@ -1561,14 +1562,12 @@ bool megamol::gui::GUIWindows::isHotkeyPressed(megamol::core::view::KeyCode keyc
 
 void megamol::gui::GUIWindows::shutdown(void) {
 
+    /// TODO Decide wheather to use core_instance or new frontend
     if (this->core_instance != nullptr) {
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Shutdown MegaMol instance.");
 #endif // GUI_VERBOSE
         this->core_instance->Shutdown();
-    } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 }
 
