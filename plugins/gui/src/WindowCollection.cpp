@@ -13,7 +13,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-void WindowCollection::SoftResetWindowSizePos(WindowConfiguration& window_config) {
+void WindowCollection::SoftResetWindowSizePosition(WindowConfiguration& window_config) {
     assert(ImGui::GetCurrentContext() != nullptr);
 
     ImGuiIO& io = ImGui::GetIO();
@@ -22,18 +22,18 @@ void WindowCollection::SoftResetWindowSizePos(WindowConfiguration& window_config
     float height = window_config.win_reset_size.y;
 
     if (width > io.DisplaySize.x) {
-        width = io.DisplaySize.x; // -(2.0f * style.DisplayWindowPadding.x);
+        width = io.DisplaySize.x;
     }
     if (height > io.DisplaySize.y) {
-        height = io.DisplaySize.y; // - (2.0f * style.DisplayWindowPadding.y);
+        height = io.DisplaySize.y;
     }
 
     auto win_pos = ImGui::GetWindowPos();
     if (win_pos.x < 0) {
-        win_pos.x = 0.0f; // style.DisplayWindowPadding.x;
+        win_pos.x = 0.0f;
     }
     if (win_pos.y < 0) {
-        win_pos.y = 0.0f; // style.DisplayWindowPadding.y;
+        win_pos.y = 0.0f;
     }
 
     ImVec2 win_size;
@@ -43,28 +43,28 @@ void WindowCollection::SoftResetWindowSizePos(WindowConfiguration& window_config
         win_size = ImVec2(width, height);
     }
 
-    float win_width = io.DisplaySize.x - (win_pos.x); // +style.DisplayWindowPadding.x);
+    float win_width = io.DisplaySize.x - (win_pos.x);
     if (win_width < win_size.x) {
-        win_pos.x = io.DisplaySize.x - (win_size.x); // + style.DisplayWindowPadding.x);
+        win_pos.x = io.DisplaySize.x - (win_size.x);
     }
-    float win_height = io.DisplaySize.y - (win_pos.y); // + style.DisplayWindowPadding.y);
+    float win_height = io.DisplaySize.y - (win_pos.y);
     if (win_height < win_size.y) {
-        win_pos.y = io.DisplaySize.y - (win_size.y); //+ style.DisplayWindowPadding.y);
+        win_pos.y = io.DisplaySize.y - (win_size.y);
     }
 
-    ImGui::SetWindowSize(window_config.win_name.c_str(), ImVec2(width, height), ImGuiCond_Always);
-    ImGui::SetWindowPos(window_config.win_name.c_str(), win_pos, ImGuiCond_Always);
+    ImGui::SetWindowSize(ImVec2(width, height), ImGuiCond_Always);
+    ImGui::SetWindowPos(win_pos, ImGuiCond_Always);
 }
 
 
-void WindowCollection::ResetWindowPosSize(WindowConfiguration& window_config) {
+void WindowCollection::ResetWindowSizePosition(WindowConfiguration& window_config) {
     assert(ImGui::GetCurrentContext() != nullptr);
 
     ImVec2 pos = window_config.win_position;
     ImVec2 size = window_config.win_size;
 
-    ImGui::SetWindowSize(window_config.win_name.c_str(), size, ImGuiCond_Always);
-    ImGui::SetWindowPos(window_config.win_name.c_str(), pos, ImGuiCond_Always);
+    ImGui::SetWindowSize(size, ImGuiCond_Always);
+    ImGui::SetWindowPos(pos, ImGuiCond_Always);
 }
 
 

@@ -14,6 +14,7 @@
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ImageWidget_gl.h"
+#include "widgets/ParameterOrbitalWidget.h"
 #include "widgets/TransferFunctionEditor.h"
 
 #include "mmcore/param/BoolParam.h"
@@ -125,6 +126,7 @@ private:
     FileBrowserWidget file_browser;
     HoverToolTip tooltip;
     ImageWidget image_widget;
+    ParameterOrbitalWidget rotation_widget;
 
     // FUNCTIONS --------------------------------------------------------------
     bool Present(Parameter& inout_param, WidgetScope scope);
@@ -152,6 +154,10 @@ private:
     bool widget_pinvaluetomouse(WidgetScope scope, const std::string& label, const std::string& value);
     bool widget_transfer_function_editor(WidgetScope scope, Parameter& inout_parameter);
     bool widget_knob(WidgetScope scope, const std::string& label, float& value, float minval, float maxval);
+    bool widget_rotation_axes(
+        WidgetScope scope, const std::string& label, glm::vec4& value, glm::vec4 minval, glm::vec4 maxval);
+    bool widget_rotation_direction(
+        WidgetScope scope, const std::string& label, glm::vec3& value, glm::vec3 minval, glm::vec3 maxval);
 };
 
 

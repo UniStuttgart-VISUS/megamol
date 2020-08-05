@@ -11,14 +11,14 @@
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-#include <imgui.h>
-#include <imgui_internal.h>
+#include "imgui.h"
 #include "imgui_impl_opengl3.h"
+#include "imgui_internal.h"
 #include "imgui_stdlib.h"
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 #include "json.hpp"
 

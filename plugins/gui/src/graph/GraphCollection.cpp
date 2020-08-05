@@ -113,7 +113,7 @@ void megamol::gui::GraphCollectionPresentation::SaveProjectToFile(
     }
     if (this->file_browser.PopUp(
             FileBrowserWidget::FileBrowserFlag::SAVE, "Save Editor Project", open_popup, project_filename)) {
-        popup_failed = !inout_graph_collection.SaveProjectToFile(state.graph_selected_uid, project_filename, true);
+        popup_failed = !inout_graph_collection.SaveProjectToFile(state.graph_selected_uid, project_filename, false);
     }
     MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
@@ -1136,7 +1136,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID graph_uid,
 
 
 bool megamol::gui::GraphCollection::SaveProjectToFile(
-    ImGuiID graph_uid, const std::string& project_filename, bool overwrite_states) {
+    ImGuiID graph_uid, const std::string& project_filename, bool core_graph) {
 
     std::string projectstr;
     std::stringstream confInstances, confModules, confCalls, confParams;
@@ -1195,7 +1195,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
 
                     for (auto& parameter : module_ptr->parameters) {
 
-                        if (overwrite_states) {
+                        if (!core_graph) {
                             // Writing state parameters
                             /// ! Needs filename set for graph because this is how the graph state is found
                             /// inside the JSON state
@@ -1223,7 +1223,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                         }
 
                         // Only write parameters with other values than the default - ignore button parameters
-                        if (parameter.DefaultValueMismatch() && (parameter.type != Param_t::BUTTON)) {
+                        if ((core_graph || parameter.DefaultValueMismatch()) && (parameter.type != Param_t::BUTTON)) {
                             // Encode to UTF-8 string
                             vislib::StringA valueString;
                             vislib::UTF8Encoder::Encode(
