@@ -26,6 +26,7 @@
 #include "mmcore/utility/log/OfflineTarget.h"
 #include "mmcore/utility/log/FileTarget.h"
 
+#include "spdlog/details/os.h"
 #include "spdlog/spdlog.h"
 
 
