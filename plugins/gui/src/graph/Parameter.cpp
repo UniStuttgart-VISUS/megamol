@@ -32,7 +32,8 @@ megamol::gui::ParameterPresentation::ParameterPresentation(Param_t type)
     , tf_editor_hash(0)
     , file_browser()
     , tooltip()
-    , image_widget() {
+    , image_widget()
+    , rotation_widget() {
 
     this->InitPresentation(type);
 }
@@ -635,6 +636,46 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                     retval = true;
                 }
                 error = false;
+            }
+        } break;
+            // 3D ROTATION //////////////////////////////////////////////////
+        case (Present_t::Rotation3D_Axes): {
+            // FLOAT -----------------------------------------------
+            if constexpr (std::is_same_v<T, glm::vec4>) {
+                switch (inout_parameter.type) {
+                    // VECTOR 4 ----------------------------------------
+                case (Param_t::VECTOR4F): {
+                    auto value = arg;
+                    if (this->widget_rotation_axes(scope, param_label, value, inout_parameter.GetMinValue<T>(),
+                            inout_parameter.GetMaxValue<T>())) {
+                        inout_parameter.SetValue(value, false, true);
+                        retval = true;
+                    }
+                    error = false;
+                } break;
+                default:
+                    break;
+                }
+            }
+        } break;
+            // 3D DIRECTION //////////////////////////////////////////////////
+        case (Present_t::Rotation3D_Direction): {
+            // FLOAT -----------------------------------------------
+            if constexpr (std::is_same_v<T, glm::vec3>) {
+                switch (inout_parameter.type) {
+                    // VECTOR 3 ----------------------------------------
+                case (Param_t::VECTOR3F): {
+                    auto value = arg;
+                    if (this->widget_rotation_direction(scope, param_label, value, inout_parameter.GetMinValue<T>(),
+                            inout_parameter.GetMaxValue<T>())) {
+                        inout_parameter.SetValue(value, false, true);
+                        retval = true;
+                    }
+                    error = false;
+                } break;
+                default:
+                    break;
+                }
             }
         } break;
         default:
@@ -1305,6 +1346,55 @@ bool megamol::gui::ParameterPresentation::widget_knob(
         } else {
             ImGui::TextUnformatted("Max: inf");
         }
+    }
+    // GLOBAL -----------------------------------------------------------
+    else if (scope == ParameterPresentation::WidgetScope::GLOBAL) {
+
+        // no global implementation ...
+    }
+
+    return retval;
+}
+
+
+bool megamol::gui::ParameterPresentation::widget_rotation_axes(
+    WidgetScope scope, const std::string& label, glm::vec4& value, glm::vec4 minval, glm::vec4 maxval) {
+
+    bool retval = false;
+    // LOCAL -----------------------------------------------------------
+    if (scope == ParameterPresentation::WidgetScope::LOCAL) {
+
+        auto x_cursor_pos = ImGui::GetCursorPosX();
+        retval = this->widget_vector4f(scope, label, value, minval, maxval);
+        ImGui::SetCursorPosX(x_cursor_pos);
+        retval |= this->rotation_widget.gizmo3D_rotation_axes(value);
+        // ImGui::SameLine();
+        // ImGui::TextUnformatted(label.c_str());
+    }
+    // GLOBAL -----------------------------------------------------------
+    else if (scope == ParameterPresentation::WidgetScope::GLOBAL) {
+
+        // no global implementation ...
+    }
+
+    return retval;
+}
+
+
+bool megamol::gui::ParameterPresentation::widget_rotation_direction(
+    WidgetScope scope, const std::string& label, glm::vec3& value, glm::vec3 minval, glm::vec3 maxval) {
+
+    bool retval = false;
+    // LOCAL -----------------------------------------------------------
+    if (scope == ParameterPresentation::WidgetScope::LOCAL) {
+
+        auto x_cursor_pos = ImGui::GetCursorPosX();
+        retval = this->widget_vector3f(scope, label, value, minval, maxval);
+        ImGui::SetCursorPosX(x_cursor_pos);
+        retval |= this->rotation_widget.gizmo3D_rotation_direction(value);
+        // ImGui::SameLine();
+        // ImGui::TextUnformatted(label.c_str());
+
     }
     // GLOBAL -----------------------------------------------------------
     else if (scope == ParameterPresentation::WidgetScope::GLOBAL) {
