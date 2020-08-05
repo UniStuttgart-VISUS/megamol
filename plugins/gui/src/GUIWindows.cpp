@@ -253,6 +253,7 @@ bool GUIWindows::PostDraw(void) {
             }
             wc.buf_font_reset = false;
         }
+
         // Loading changed window state of transfer function editor (even if window is not shown)
         if ((wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) && wc.buf_tfe_reset) {
             this->tf_editor_ptr->SetMinimized(wc.tfe_view_minimized);
@@ -276,7 +277,6 @@ bool GUIWindows::PostDraw(void) {
 
         // Draw window content
         if (wc.win_show) {
-            ImGui::SetNextWindowBgAlpha(1.0f);
 
             // Change window flags depending on current view of transfer function editor
             if (wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) {
@@ -289,6 +289,8 @@ bool GUIWindows::PostDraw(void) {
                 wc.tfe_view_minimized = this->tf_editor_ptr->IsMinimized();
                 wc.tfe_view_vertical = this->tf_editor_ptr->IsVertical();
             }
+
+            ImGui::SetNextWindowBgAlpha(1.0f);
 
             // Begin Window
             if (!ImGui::Begin(wc.win_name.c_str(), &wc.win_show, wc.win_flags)) {
@@ -304,25 +306,27 @@ bool GUIWindows::PostDraw(void) {
                 wc.win_reset = true;
             }
 
-            // Apply soft reset of window position and size (before calling window callback)
-            if (wc.win_soft_reset) {
-                this->window_collection.SoftResetWindowSizePos(wc);
-                wc.win_soft_reset = false;
-            }
-
             // Force window menu
-            if (this->state.menu_visible && ImGui::IsMouseReleased(0)) {
+            if (wc.win_soft_reset || wc.win_reset || (this->state.menu_visible && ImGui::IsMouseReleased(0))) {
                 float y_offset = ImGui::GetFrameHeight();
                 if (wc.win_position.y < y_offset) {
                     wc.win_position.y = y_offset;
-                    wc.win_reset = true;
+                    ImGui::SetWindowPos(wc.win_position, ImGuiCond_Always);
                 }
             }
+
+            // Apply soft reset of window position and size (before calling window callback)
+            if (wc.win_soft_reset) {
+                this->window_collection.SoftResetWindowSizePosition(wc);
+                wc.win_soft_reset = false;
+            }
+
             // Apply window position and size reset (before calling window callback)
             if (wc.win_reset) {
-                this->window_collection.ResetWindowPosSize(wc);
+                this->window_collection.ResetWindowSizePosition(wc);
                 wc.win_reset = false;
             }
+
 
             // Calling callback drawing window content
             auto cb = this->window_collection.WindowCallback(wc.win_callback);
@@ -677,7 +681,7 @@ bool GUIWindows::createContext(void) {
 
     // MAIN Window ------------------------------------------------------------
     buf_win.win_name = "All Parameters";
-    buf_win.win_show = false;
+    buf_win.win_show = true;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
     buf_win.win_flags = ImGuiWindowFlags_NoScrollbar;
     buf_win.win_callback = WindowCollection::DrawCallbacks::MAIN_PARAMETERS;
@@ -1441,7 +1445,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         /// Serialize current state to parameter.
         this->save_state_to_parameter();
         /// Save to file
-        popup_failed = !this->graph_collection.SaveProjectToFile(this->graph_uid, this->state.project_file, false);
+        popup_failed = !this->graph_collection.SaveProjectToFile(this->graph_uid, this->state.project_file, true);
     }
     MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
