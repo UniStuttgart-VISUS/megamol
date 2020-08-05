@@ -3,6 +3,7 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
 
 #include "thermodyn/BoxDataCall.h"
@@ -13,10 +14,17 @@
 #include "glm/gtx/transform.hpp"
 
 
-megamol::thermodyn::rendering::BoxRenderer::BoxRenderer() : dataInSlot_("dataIn", "Input of boxes to render") {
+megamol::thermodyn::rendering::BoxRenderer::BoxRenderer()
+    : dataInSlot_("dataIn", "Input of boxes to render")
+    , calculateGlobalBoundingBoxParam("calcBoundingBoxEachFrame",
+          "Recalculate the global bounding box each frame. This is resource instensive and "
+          "might lead to bad frame rates") {
     dataInSlot_.SetCompatibleCall<BoxDataCallDescription>();
     dataInSlot_.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&dataInSlot_);
+
+    calculateGlobalBoundingBoxParam.SetParameter(new core::param::BoolParam(false));
+    this->MakeSlotAvailable(&this->calculateGlobalBoundingBoxParam);
 }
 
 
@@ -151,24 +159,24 @@ bool megamol::thermodyn::rendering::BoxRenderer::GetExtents(core::view::CallRend
         call.AccessBoundingBoxes().SetBoundingBox(inBoxCall->AccessBoundingBoxes().ObjectSpaceBBox());
         call.AccessBoundingBoxes().SetClipBox(inBoxCall->AccessBoundingBoxes().ObjectSpaceClipBox());
 
-        // this old code calculates the bounding box from the data instead of just reading it
-        /*
-        if (!(*inBoxCall)(0)) return false;
-        auto const boxes = inBoxCall->GetBoxes();
+        if (this->calculateGlobalBoundingBoxParam.Param<core::param::BoolParam>()->Value()) {
+            if (!(*inBoxCall)(0)) return false;
+            auto const boxes = inBoxCall->GetBoxes();
 
-        if (boxes == nullptr || boxes->empty()) {
-            call.AccessBoundingBoxes().SetBoundingBox({-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f});
-            call.AccessBoundingBoxes().SetClipBox({-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f});
-        } else {
+            if (boxes == nullptr || boxes->empty()) {
+                call.AccessBoundingBoxes().SetBoundingBox({-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f});
+                call.AccessBoundingBoxes().SetClipBox({-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f});
+            } else {
 
-            vislib::math::Cuboid<float> box = (*boxes)[0].box_;
-            for (size_t i = 1; i < boxes->size(); ++i) {
-                box.Union((*boxes)[i].box_);
+                vislib::math::Cuboid<float> box = (*boxes)[0].box_;
+                for (size_t i = 1; i < boxes->size(); ++i) {
+                    box.Union((*boxes)[i].box_);
+                }
+
+                call.AccessBoundingBoxes().SetBoundingBox(box);
+                call.AccessBoundingBoxes().SetClipBox(box);
             }
-
-            call.AccessBoundingBoxes().SetBoundingBox(box);
-            call.AccessBoundingBoxes().SetClipBox(box);
-        }*/
+        }
     } else if ((inParCall = dataInSlot_.CallAs<core::moldyn::MultiParticleDataCall>()) != nullptr) {
         if (!(*inParCall)(1)) return false;
 

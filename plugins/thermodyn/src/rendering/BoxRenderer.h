@@ -4,6 +4,7 @@
 #include "mmcore/view/Renderer3DModule_2.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
+#include "mmcore/param/ParamSlot.h"
 #include "thermodyn/BoxDataCall.h"
 
 
@@ -207,6 +208,8 @@ private:
     core::CallerSlot dataInSlot_;
 
     size_t inDataHash_ = std::numeric_limits<size_t>::max();
+
+    core::param::ParamSlot calculateGlobalBoundingBoxParam;
 
     unsigned int frameID_ = 0;
 
