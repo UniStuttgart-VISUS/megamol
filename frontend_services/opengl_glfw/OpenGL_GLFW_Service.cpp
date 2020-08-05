@@ -156,6 +156,13 @@ void outer_glfw_onMouseScroll_func(GLFWwindow* wnd, double xoffset, double yoffs
     that->glfw_onMouseScroll_func(xoffset, yoffset);
 }
 
+const char* outer_glfw_getClipboardString(void* user_data) {
+	return glfwGetClipboardString(reinterpret_cast<GLFWwindow*>(user_data));
+}
+void outer_glfw_setClipboardString(void* user_data, const char* string) {
+	glfwSetClipboardString(reinterpret_cast<GLFWwindow*>(user_data), string);
+}
+
 // window events
 void outer_glfw_onWindowSize_func(GLFWwindow* wnd, int width /* in screen coordinates of the window */, int height) {
     that->glfw_onWindowSize_func(width, height);
@@ -429,6 +436,11 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     ::glfwShowWindow(m_glfwWindowPtr);
     ::glfwMakeContextCurrent(nullptr);
 
+	m_windowEvents._clipboard_user_data = m_glfwWindowPtr;
+	m_windowEvents._getClipboardString_Func = outer_glfw_getClipboardString;
+	m_windowEvents._setClipboardString_Func = outer_glfw_setClipboardString;
+	m_windowEvents.previous_state.time = glfwGetTime();
+
 	// make the events and resources managed/provided by this service available to the outside world
 	m_renderResourceReferences = {
 		{"KeyboardEvents", m_keyboardEvents},
@@ -471,6 +483,8 @@ void OpenGL_GLFW_Service::updateProvidedResources() {
 	// event struct get filled via GLFW callbacks when new input events come in during glfwPollEvents()
     if (m_data.sharedDataPtr == nullptr) // nobody shared context with us, so we must be primary context provider
 		::glfwPollEvents(); // may only be called from main thread
+
+    m_windowEvents.time = glfwGetTime();
     // from GLFW Docs:
     // Do not assume that callbacks will only be called through glfwPollEvents().
     // While it is necessary to process events in the event queue,
@@ -619,6 +633,21 @@ void OpenGL_GLFW_Service::glfw_onPathDrop_func(const int path_count, const char*
 
     this->m_windowEvents.dropped_path_events.push_back(paths_);
 }
+
+// { glfw calls used somewhere by imgui but not covered by this class
+// glfwGetWin32Window(g_Window);
+// 
+// glfwGetMouseButton(g_Window, i) != 0;
+// glfwGetCursorPos(g_Window, &mouse_x, &mouse_y);
+// glfwSetCursorPos(g_Window, (double)mouse_pos_backup.x, (double)mouse_pos_backup.y);
+// 
+// glfwSetCursor(g_Window, g_MouseCursors);
+// glfwGetInputMode(g_Window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED)
+// glfwSetInputMode(g_Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+// glfwSetInputMode(g_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+// glfwCreateStandardCursor(GLFW_RESIZE_ALL_CURSOR);
+// glfwDestroyCursor(g_MouseCursors[cursor_n]);
+// }
 
 } // namespace frontend
 } // namespace megamol
