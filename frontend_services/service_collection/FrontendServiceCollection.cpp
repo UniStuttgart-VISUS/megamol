@@ -48,6 +48,7 @@ namespace frontend {
 		return m_serviceResources;
 	}
 
+	// TODO: using the requested resource dependencies we can derive correct update order of services
 	bool FrontendServiceCollection::assignRequestedResources() {
 		// gather resources from all services
 		for_each_service {

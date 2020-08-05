@@ -22,6 +22,10 @@ struct WindowState {
     bool is_iconified = false;
     float x_contentscale = 1.0f;
     float y_contentscale = 1.0f;
+    double time = 0.0;
+	// std::vector<std::string> dropped_paths;
+	// std::string get_clipboard_state;
+	// std::string set_clipboard_state;
 };
 struct WindowEvents {
     std::vector<std::tuple<int, int>> size_events;
@@ -30,10 +34,26 @@ struct WindowEvents {
     std::vector<bool> is_iconified_events;
     std::vector<std::tuple<float, float>> content_scale_events;
     std::vector<std::vector<std::string>> dropped_path_events;
+    double time = 0.0;
 
     WindowState previous_state;
 
+	// persistent state, only set once, do not change
+	const char* getClipboardString() {
+		return _getClipboardString_Func(_clipboard_user_data);
+	}
+
+	void setClipboardString(const char* string) {
+		_setClipboardString_Func(_clipboard_user_data, string);
+	}
+
+    const char* (*_getClipboardString_Func)(void* user_data) = nullptr;
+    void (*_setClipboardString_Func)(void* user_data, const char* string) = nullptr;
+    void* _clipboard_user_data = nullptr;
+
 	void apply_state() {
+
+		previous_state.time = time;
 
 		if (size_events.size()) {
 			this->previous_state.width = std::get<0>(size_events.back());
@@ -63,6 +83,7 @@ struct WindowEvents {
         is_iconified_events.clear();
         content_scale_events.clear();
         dropped_path_events.clear();
+        time = 0.0;
     }
 };
 

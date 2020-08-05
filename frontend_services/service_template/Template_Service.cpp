@@ -110,6 +110,9 @@ void Template_Service::digestChangedRequestedResources() {
 
     // ModuleResource::getResource<>() returns CONST references. if you know what you are doing you may modify resources that are not yours.
     modify_resource(const_cast<ExternalResource_1&>( resources[0].getResource<ExternalResource_1>() ));
+
+    if (need_to_shutdown)
+        this->setShutdown();
 }
 
 void Template_Service::resetProvidedResources() {
