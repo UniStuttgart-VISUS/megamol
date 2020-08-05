@@ -151,7 +151,7 @@ public:
      *
      * @param window_config  The window configuration.
      */
-    void SoftResetWindowSizePos(WindowConfiguration& window_config);
+    void SoftResetWindowSizePosition(WindowConfiguration& window_config);
 
     /**
      * Reset position and size after new state has been loaded.
@@ -161,7 +161,7 @@ public:
      *
      * @param window_config  The window configuration.
      */
-    void ResetWindowPosSize(WindowConfiguration& window_config);
+    void ResetWindowSizePosition(WindowConfiguration& window_config);
 
     // --------------------------------------------------------------------
     // CONFIGURATIONs
