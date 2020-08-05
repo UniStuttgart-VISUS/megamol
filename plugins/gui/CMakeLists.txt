@@ -56,7 +56,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src" 
     "${SOURCE_DIR}/examples/" "${SOURCE_DIR}/misc/cpp/")
-  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad imguizmoquat abstract_frontend_service PUBLIC imgui)
+  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad abstract_frontend_service PUBLIC imgui imguizmoquat)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

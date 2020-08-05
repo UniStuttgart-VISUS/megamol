@@ -95,6 +95,8 @@ void GUI_Service::digestChangedRequestedResources() {
     for (auto& it : consumed_keyboard_events) {
         const_cast<megamol::module_resources::KeyboardEvents*>(keyboard_events)->key_events.erase(it);
     }
+    consumed_keyboard_events.clear();
+
     std::vector<codepoint_event_iter_t> consumed_codepoint_events;
     for (auto it = keyboard_events->codepoint_events.begin(); it != keyboard_events->codepoint_events.end(); it++) {
         if (gui->OnChar((*it))) {
@@ -104,6 +106,7 @@ void GUI_Service::digestChangedRequestedResources() {
     for (auto& it : consumed_codepoint_events) {
         const_cast<megamol::module_resources::KeyboardEvents*>(keyboard_events)->codepoint_events.erase(it);
     }
+    consumed_codepoint_events.clear();
 
     /// MouseEvents = resource index 2
     auto mouse_events = &this->m_requestedResourceReferences[2].getResource<megamol::module_resources::MouseEvents>();
@@ -118,6 +121,7 @@ void GUI_Service::digestChangedRequestedResources() {
     for (auto& it : consumed_mouse_pos_events) {
         const_cast<megamol::module_resources::MouseEvents*>(mouse_events)->position_events.erase(it);
     }
+    consumed_mouse_pos_events.clear();
     std::vector<mouse_scroll_event_iter_t> consumed_mouse_scroll_events;
     for (auto it = mouse_events->scroll_events.begin(); it != mouse_events->scroll_events.end(); it++) {
         auto x_scroll = std::get<0>((*it));
@@ -129,6 +133,7 @@ void GUI_Service::digestChangedRequestedResources() {
     for (auto& it : consumed_mouse_scroll_events) {
         const_cast<megamol::module_resources::MouseEvents*>(mouse_events)->scroll_events.erase(it);
     }
+    consumed_mouse_scroll_events.clear();
     std::vector<mouse_btn_event_iter_t> consumed_mouse_btn_events;
     for (auto it = mouse_events->buttons_events.begin(); it != mouse_events->buttons_events.end(); it++) {
         auto button = std::get<0>((*it));
@@ -141,6 +146,7 @@ void GUI_Service::digestChangedRequestedResources() {
     for (auto& it : consumed_mouse_btn_events) {
         const_cast<megamol::module_resources::MouseEvents*>(mouse_events)->buttons_events.erase(it);
     }
+    consumed_mouse_btn_events.clear();
 
     /// IOpenGL_Context = resource index 3
     this->m_resource_state.opengl_context_ptr = &this->m_requestedResourceReferences[3].getResource<megamol::module_resources::IOpenGL_Context>();
