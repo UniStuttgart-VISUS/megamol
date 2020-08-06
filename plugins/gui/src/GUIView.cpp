@@ -87,23 +87,26 @@ void GUIView::Render(const mmcRenderViewContext& context) {
         crv->SetInstanceTime(context.InstanceTime);
         crv->SetTime(
             -1.0f); // Should be negative to trigger animation! (see View3D.cpp line ~660 | View2D.cpp line ~350)
-        auto viewport = crv->GetViewport();
-        this->gui.PreDraw(glm::vec2(static_cast<float>(viewport.Width()), static_cast<float>(viewport.Height())),
-            crv->InstanceTime());
+        auto viewport_rect = crv->GetViewport();
+        auto viewport =
+            glm::vec2(static_cast<float>(viewport_rect.Width()), static_cast<float>(viewport_rect.Height()));
+        this->gui.PreDraw(viewport, viewport, crv->InstanceTime());
         (*crv)(core::view::AbstractCallRender::FnRender);
         this->gui.PostDraw();
     } else {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         if (this->overrideCall != nullptr) {
-            auto viewport = this->overrideCall->GetViewport();
-            this->gui.PreDraw(glm::vec2(static_cast<float>(viewport.Width()), static_cast<float>(viewport.Height())),
-                context.InstanceTime);
+            auto viewport_rect = this->overrideCall->GetViewport();
+            auto viewport =
+                glm::vec2(static_cast<float>(viewport_rect.Width()), static_cast<float>(viewport_rect.Height()));
+            this->gui.PreDraw(viewport, viewport, context.InstanceTime);
             this->gui.PostDraw();
         } else {
             GLint vp[4];
             glGetIntegerv(GL_VIEWPORT, vp);
-            this->gui.PreDraw(glm::vec2(static_cast<float>(vp[2]), static_cast<float>(vp[3])), context.InstanceTime);
+            auto viewport = glm::vec2(static_cast<float>(vp[2]), static_cast<float>(vp[3]));
+            this->gui.PreDraw(viewport, viewport, context.InstanceTime);
             this->gui.PostDraw();
         }
     }
