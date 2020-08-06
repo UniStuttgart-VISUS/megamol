@@ -115,7 +115,7 @@ bool megamol::gui::Configurator::Draw(
         this->graph_collection.LoadModuleStock(core_instance);
 
         // Load inital project
-        /// this->graph_collection.LoadProjectFromCore(core_instance);
+        this->graph_collection.LoadProjectFromCore(core_instance);
         /// or: this->add_empty_project();
 
         // Enable drag and drop of files for configurator (if glfw is available here)

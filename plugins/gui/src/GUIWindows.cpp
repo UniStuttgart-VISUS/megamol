@@ -382,19 +382,18 @@ bool GUIWindows::PostDraw(void) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
             for (auto& param : module_ptr->parameters) {
                 if (!param.core_param_ptr.IsNull()) {
-
+                    // Write changed gui state to core parameter
                     if (param.present.IsGUIStateDirty()) {
                         megamol::gui::Parameter::WriteCoreParameterGUIState(param, param.core_param_ptr);
                         param.present.ResetGUIStateDirty();
                     }
-
+                    // Write changed parameter value to core parameter
                     if (param.IsValueDirty()) {
                         megamol::gui::Parameter::WriteCoreParameterValue(param, param.core_param_ptr);
                         param.ResetValueDirty();
-                    } else {
-                        megamol::gui::Parameter::ReadCoreParameterToParameter(
-                            param.core_param_ptr, param, false, false);
                     }
+                    // Read current parameter value and GUI state fro core parameter
+                    megamol::gui::Parameter::ReadCoreParameterToParameter(param.core_param_ptr, param, false, false);
                 }
             }
         }
