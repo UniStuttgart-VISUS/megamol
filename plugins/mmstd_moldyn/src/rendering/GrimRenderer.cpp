@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "GrimRenderer.h"
-
+#include "glm/glm.hpp"
 
 using namespace megamol::core;
 using namespace megamol::stdplugin::moldyn::rendering;
@@ -44,7 +44,7 @@ GrimRenderer::CellInfo::~CellInfo(void) {
 /****************************************************************************/
 // GrimRenderer
 
-GrimRenderer::GrimRenderer(void) : view::Renderer3DModule(),
+GrimRenderer::GrimRenderer(void) : view::Renderer3DModule_2(),
         sphereShader(), vanillaSphereShader(), initDepthShader(),
         initDepthMapShader(), depthMipShader(), pointShader(),
         initDepthPointShader(), vertCntShader(), vertCntShade2r(), fbo(),
@@ -262,7 +262,7 @@ bool GrimRenderer::create(void) {
 }
 
 
-bool GrimRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
+bool GrimRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) {
 
     auto cr = &call;
     if (cr == NULL) return false;
@@ -275,14 +275,14 @@ bool GrimRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
     cr->AccessBoundingBoxes() = pgdc->AccessBoundingBoxes();
 
     ///XXX REMOVE for new camera usage
-    float scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    if (scaling > 0.0000001) {
-        scaling = 10.0f / scaling;
-    }
-    else {
-        scaling = 1.0f;
-    }
-    cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
+    //float scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+    //if (scaling > 0.0000001) {
+    //    scaling = 10.0f / scaling;
+    //}
+    //else {
+    //    scaling = 1.0f;
+    //}
+    //cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
 
     return true;
 }
@@ -308,7 +308,20 @@ void GrimRenderer::release(void) {
 }
 
 
-bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
+void GrimRenderer::set_cam_uniforms(vislib::graphics::gl::GLSLShader& shader, glm::mat4 view_matrix_inv,
+    glm::mat4 view_matrix_inv_transp, glm::mat4 mvp_matrix, glm::mat4 mvp_matrix_transp, glm::mat4 mvp_matrix_inv,
+    glm::vec4 camPos, glm::vec4 curlightDir) {
+    glUniformMatrix4fv(
+        shader.ParameterLocation("mv_inv"), 1, GL_FALSE, glm::value_ptr(view_matrix_inv));
+    glUniformMatrix4fv(shader.ParameterLocation("mv_inv_transp"), 1, GL_FALSE, glm::value_ptr(view_matrix_inv_transp));
+    glUniformMatrix4fv(shader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(shader.ParameterLocation("mvp_transp"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_transp));
+    glUniformMatrix4fv(shader.ParameterLocation("mvp_inv"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_inv));
+    glUniform4fv(shader.ParameterLocation("light_pos"), 1, glm::value_ptr(curlightDir));
+    glUniform4fv(shader.ParameterLocation("cam_pos"), 1, glm::value_ptr(camPos));
+}
+
+bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
     auto cr = &call;
     if (cr == NULL) return false;
@@ -343,12 +356,13 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
     // ask for extend to calculate the data scaling
     pgdc->SetFrameID(static_cast<unsigned int>(cr->Time()));
     if (!(*pgdc)(1)) return false;
-    float scaling = pgdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    if (scaling > 0.0000001) {
-        scaling = 10.0f / scaling;
-    } else {
-        scaling = 1.0f;
-    }
+    //float scaling = pgdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+    //if (scaling > 0.0000001) {
+    //    scaling = 10.0f / scaling;
+    //} else {
+    //    scaling = 1.0f;
+    //}
+    const float scaling = 1.0f;
 
     // fetch real data
     pgdc->SetFrameID(static_cast<unsigned int>(cr->Time()));
@@ -372,36 +386,78 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
     unsigned int typecnt = pgdc->TypesCount();
 
     ///XXX Use this for new camera usage
-    //// Camera 
-    //view::Camera_2 cam;
-    //cr->GetCamera(cam);
-    //cam_type::snapshot_type snapshot;
-    //cam_type::matrix_type viewTemp, projTemp;
-    //cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-    //glm::vec4 camPos = snapshot.position;
-    //glm::vec4 camView = snapshot.view_vector;
-    //glm::vec4 camRight = snapshot.right_vector;
-    //glm::vec4 camUp = snapshot.up_vector;
-    //float half_aperture_angle = cam.half_aperture_angle_radians();
+    // Camera 
+    view::Camera_2 cam;
+    cr->GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+    glm::mat4 view_matrix = viewTemp;
+    glm::mat4 proj_matrix = projTemp;
+    glm::mat4 view_matrix_inv = glm::inverse(view_matrix);
+    glm::mat4 view_matrix_inv_transp = glm::transpose(view_matrix_inv);
+    glm::mat4 mvp_matrix = proj_matrix * view_matrix;
+    glm::mat4 mvp_matrix_transp = glm::transpose(mvp_matrix);
+    glm::mat4 mvp_matrix_inv = glm::inverse(mvp_matrix);
+    glm::vec4 camPos = snapshot.position;
+    glm::vec4 camView = snapshot.view_vector;
+    glm::vec4 camRight = snapshot.right_vector;
+    glm::vec4 camUp = snapshot.up_vector;
+    float half_aperture_angle = cam.half_aperture_angle_radians();
     //// Viewport
-    //auto viewport = call.GetViewport();
+    auto viewport = call.GetViewport();
+
+    // Lights
+    this->GetLights();
+    glm::vec4 curlightDir = {0.0f, 0.0f, 0.0f, 1.0f};
+    if (this->lightMap.size() > 1) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[SphereRenderer] Only one single 'Distant Light' source is supported by this renderer");
+    }
+    for (auto light : this->lightMap) {
+        if (light.second.lightType != core::view::light::DISTANTLIGHT) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[SphereRenderer] Only single 'Distant Light' source is supported by this renderer");
+        } else {
+            auto use_eyedir = light.second.dl_eye_direction;
+            if (use_eyedir) {
+                curlightDir = -camView;
+            } else {
+                auto lightDir = light.second.dl_direction;
+                if (lightDir.size() == 3) {
+                    curlightDir[0] = lightDir[0];
+                    curlightDir[1] = lightDir[1];
+                    curlightDir[2] = lightDir[2];
+                }
+                if (lightDir.size() == 4) {
+                    curlightDir[3] = lightDir[3];
+                }
+                /// View Space Lighting. Comment line to change to Object Space Lighting.
+                // this->curlightDir = this->curMVtransp * this->curlightDir;
+            }
+            /// TODO Implement missing distant light parameters:
+            // light.second.dl_angularDiameter;
+            // light.second.lightColor;
+            // light.second.lightIntensity;
+        }
+    }
 
     // update fbo size, if required
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-    if ((this->fbo.GetWidth() != static_cast<UINT>(viewport[2]))
-            || (this->fbo.GetHeight() != static_cast<UINT>(viewport[3]))
+    //GLint viewport[4];
+    //glGetIntegerv(GL_VIEWPORT, viewport);
+    if ((this->fbo.GetWidth() != viewport.Width())
+            || (this->fbo.GetHeight() != viewport.Height())
             || this->deferredShadingSlot.IsDirty()) {
         this->deferredShadingSlot.ResetDirty();
 
         this->fbo.Release();
-        this->fbo.Create(viewport[2], viewport[3],
+        this->fbo.Create(viewport.Width(), viewport.Height(),
                 GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, // colour buffer
                 vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
                 GL_DEPTH_COMPONENT24); // depth buffer
 
-        unsigned int dmw = vislib::math::NextPowerOfTwo(viewport[2]);
-        unsigned int dmh = vislib::math::NextPowerOfTwo(viewport[3]);
+        unsigned int dmw = vislib::math::NextPowerOfTwo(viewport.Width());
+        unsigned int dmh = vislib::math::NextPowerOfTwo(viewport.Height());
         dmh += dmh / 2;
         if ((this->depthmap[0].GetWidth() != dmw) || (this->depthmap[0].GetHeight() != dmh)) {
             for (int i = 0; i < 2; i++) {
@@ -436,7 +492,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
             sap.format = GL_STENCIL_INDEX;
 
             try {
-                if (!this->dsFBO.Create(viewport[2], viewport[3], 3, cap, dap, sap)) {
+                if (!this->dsFBO.Create(viewport.Width(), viewport.Height(), 3, cap, dap, sap)) {
                     throw vislib::Exception("dsFBO.Create failed\n", __FILE__, __LINE__);
                 }
             } catch(vislib::Exception ex) {
@@ -467,9 +523,10 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glLineWidth(5.0f);
 
-    float viewDist = 
-        0.5f * cr->GetCameraParameters()->VirtualViewSize().Height() /
-        tanf(cr->GetCameraParameters()->HalfApertureAngle());
+    float viewDist =
+        // was: virtualviewsize.height!
+        0.5f * cam.resolution_gate().height() /
+        tanf(half_aperture_angle);
 
     // depth-sort of cells
     std::vector<vislib::Pair<unsigned int, float> > &dists = this->cellDists;
@@ -482,13 +539,13 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         CellInfo& info = infos[idx];
         const vislib::math::Cuboid<float> &bbox = cell.GetBoundingBox();
 
-        vislib::math::Point<float, 3> cellPos(
+        glm::vec3 cellPos(
             (bbox.Left() + bbox.Right()) * 0.5f * scaling,
             (bbox.Bottom() + bbox.Top()) * 0.5f * scaling,
             (bbox.Back() + bbox.Front()) * 0.5f * scaling);
 
-        vislib::math::Vector<float, 3> cellDistV = cellPos - cr->GetCameraParameters()->Position();
-        float cellDist = cr->GetCameraParameters()->Front().Dot(cellDistV);
+        glm::vec3 cellDistV = cellPos - glm::vec3(camPos);
+        float cellDist = glm::dot(glm::vec3(camView),cellDistV);
 
         dists[i].Second() = cellDist;
 
@@ -516,7 +573,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
     this->fbo.Enable();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glScalef(scaling, scaling, scaling);
+    //glScalef(scaling, scaling, scaling);
 
     // initialize depth buffer
 #ifdef _WIN32
@@ -526,6 +583,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
     printf("[initd1");
 #endif
     this->initDepthPointShader.Enable();
+    set_cam_uniforms(this->initDepthPointShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix, mvp_matrix_transp,
+        mvp_matrix_inv, camPos, curlightDir);
     glPointSize(1.0f);
     for (int i = cellcnt - 1; i >= 0; i--) { // front to back
         unsigned int idx = dists[i].First();
@@ -646,22 +705,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                     }
                     break;
                 case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
-                    float skale = cell->GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
-                    glEnableClientState(GL_VERTEX_ARRAY);
-                    if (ci.data[0] != 0) {
-                        glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
-                        glVertexPointer(3, GL_SHORT, 0, NULL);
-                    } else {
-                        glVertexPointer(3, GL_SHORT, /* unsigned short is not supported! */
-                            parts.GetVertexDataStride(), parts.GetVertexData());
-                    }
-                    matrixpooper = true;
-                    glMatrixMode(GL_MODELVIEW);
-                    glPushMatrix();
-                    glTranslatef(cell->GetBoundingBox().Left(),
-                        cell->GetBoundingBox().Bottom(),
-                        cell->GetBoundingBox().Back());
-                    glScalef(skale, skale, skale);
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "GrimRenderer: vertices with short coords are deprecated!");
                 } break;
 
                 default:
@@ -670,9 +715,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
             glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
             glBindBufferARB(GL_ARRAY_BUFFER, 0);
             glDisableClientState(GL_VERTEX_ARRAY);
-            if (matrixpooper) {
-                glPopMatrix();
-            }
         }
     }
 #ifdef SPEAK_CELL_USAGE
@@ -683,11 +725,10 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     float viewportStuff[4] = {
-        0.0f, 0.0f,
-        //cr->GetCameraParameters()->TileRect().Left(),
-        //cr->GetCameraParameters()->TileRect().Bottom(),
-        cr->GetCameraParameters()->TileRect().Width(),
-        cr->GetCameraParameters()->TileRect().Height()};
+        0.0f, 0.0f, viewport.Width(), viewport.Height()
+        //cr->GetCameraParameters()->TileRect().Width(),
+        //cr->GetCameraParameters()->TileRect().Height()
+        };
     float defaultPointSize = glm::max(viewportStuff[2], viewportStuff[3]);
     glPointSize(defaultPointSize);
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
@@ -696,11 +737,13 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
     this->initDepthShader.Enable();
+    set_cam_uniforms(this->initDepthShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix, mvp_matrix_transp,
+        mvp_matrix_inv, camPos, curlightDir);
 
     glUniform4fv(this->initDepthShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fv(this->initDepthShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fv(this->initDepthShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fv(this->initDepthShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+    glUniform3fv(this->initDepthShader.ParameterLocation("camIn"), 1, glm::value_ptr(camView));
+    glUniform3fv(this->initDepthShader.ParameterLocation("camRight"), 1, glm::value_ptr(camRight));
+    glUniform3fv(this->initDepthShader.ParameterLocation("camUp"), 1, glm::value_ptr(camUp));
     // no clipping plane for now
     glColor4ub(192, 192, 192, 255);
     glDisableClientState(GL_COLOR_ARRAY);
@@ -835,24 +878,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                     }
                     break;
                 case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
-                    float skale = cell->GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
-                    glEnableClientState(GL_VERTEX_ARRAY);
-                    glUniform4f(this->initDepthShader.ParameterLocation("inConsts1"),
-                        ptype.GetGlobalRadius() / skale, 0.0f, 0.0f, 0.0f);
-                    if (ci.data[0] != 0) {
-                        glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
-                        glVertexPointer(3, GL_SHORT, 0, NULL);
-                    } else {
-                        glVertexPointer(3, GL_SHORT, /* unsigned short is not supported! */
-                            parts.GetVertexDataStride(), parts.GetVertexData());
-                    }
-                    matrixpooper = true;
-                    glMatrixMode(GL_MODELVIEW);
-                    glPushMatrix();
-                    glTranslatef(cell->GetBoundingBox().Left(),
-                        cell->GetBoundingBox().Bottom(),
-                        cell->GetBoundingBox().Back());
-                    glScalef(skale, skale, skale);
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "GrimRenderer: vertices with short coords are deprecated!");
                 } break;
 
                 default:
@@ -862,9 +889,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
             glBindBufferARB(GL_ARRAY_BUFFER, 0);
             glDisableClientState(GL_VERTEX_ARRAY);
 
-            if (matrixpooper) {
-                glPopMatrix();
-            }
         }
 
         //glBegin(GL_LINES);
@@ -982,6 +1006,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         glLoadIdentity();
 
         this->initDepthMapShader.Enable();
+        set_cam_uniforms(this->initDepthMapShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+            mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
         this->initDepthMapShader.SetParameter("datex", 0);
 
         glBegin(GL_QUADS);
@@ -1001,6 +1027,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         int ls = vislib::math::Min(lh, lw);
 
         this->depthMipShader.Enable();
+        set_cam_uniforms(this->depthMipShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+            mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
         this->depthMipShader.SetParameter("datex", 0);
         this->depthMipShader.SetParameter("src", 0, 0);
         this->depthMipShader.SetParameter("dst", 0, ly);
@@ -1056,6 +1084,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
 
         this->depthmap[0].Enable();
         this->initDepthMapShader.Enable();
+        set_cam_uniforms(this->initDepthMapShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+            mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
         this->initDepthMapShader.SetParameter("datex", 0);
         this->depthmap[1].BindColourTexture();
 
@@ -1135,11 +1165,13 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         glPointSize(1.0f);
         if (useVertCull) {
             this->vertCntShade2r.Enable();
+            set_cam_uniforms(this->vertCntShade2r, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+                mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
 
             glUniform4fv(this->vertCntShade2r.ParameterLocation("viewAttr"), 1, viewportStuff);
-            glUniform3fv(this->vertCntShade2r.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-            glUniform3fv(this->vertCntShade2r.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-            glUniform3fv(this->vertCntShade2r.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+            glUniform3fv(this->vertCntShade2r.ParameterLocation("camIn"), 1, glm::value_ptr(camView));
+            glUniform3fv(this->vertCntShade2r.ParameterLocation("camRight"), 1, glm::value_ptr(camRight));
+            glUniform3fv(this->vertCntShade2r.ParameterLocation("camUp"), 1, glm::value_ptr(camUp));
             this->vertCntShade2r.SetParameter("depthTexParams", this->depthmap[0].GetWidth(),
                 this->depthmap[0].GetHeight() * 2 / 3, maxLevel);
 
@@ -1153,6 +1185,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
             glDisableClientState(GL_COLOR_ARRAY);
         } else {
             this->vertCntShader.Enable();
+            set_cam_uniforms(this->vertCntShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+                mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
         }
 
 #ifdef SPEAK_CELL_USAGE
@@ -1218,26 +1252,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                         }
                         break;
                     case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
-                        float skale = cell.GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
-                        glEnableClientState(GL_VERTEX_ARRAY);
-                        if (useVertCull) {
-                            glUniform4f(this->vertCntShade2r.ParameterLocation("inConsts1"),
-                                ptype.GetGlobalRadius() / skale, minC, maxC, float(colTabSize));
-                        }
-                        if (ci.data[0] != 0) {
-                            glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
-                            glVertexPointer(3, GL_SHORT, 0, NULL);
-                        } else {
-                            glVertexPointer(3, GL_SHORT, /* unsigned short is not supported! */
-                                parts.GetVertexDataStride(), parts.GetVertexData());
-                        }
-                        matrixpooper = true;
-                        glMatrixMode(GL_MODELVIEW);
-                        glPushMatrix();
-                        glTranslatef(cell.GetBoundingBox().Left(),
-                            cell.GetBoundingBox().Bottom(),
-                            cell.GetBoundingBox().Back());
-                        glScalef(skale, skale, skale);
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "GrimRenderer: vertices with short coords are deprecated!");
                     } break;
 
                     default:
@@ -1248,10 +1264,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                 glBindBufferARB(GL_ARRAY_BUFFER, 0);
                 //glDisableClientState(GL_COLOR_ARRAY);
                 glDisableClientState(GL_VERTEX_ARRAY);
-
-                if (matrixpooper) {
-                    glPopMatrix();
-                }
             }
 
         }
@@ -1442,24 +1454,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                         }
                         break;
                     case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
-                        float skale = cell.GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
-                        glEnableClientState(GL_VERTEX_ARRAY);
-                        glUniform4f(daPointShader->ParameterLocation("inConsts1"),
-                            ptype.GetGlobalRadius() / skale, minC, maxC, float(colTabSize));
-                        if (ci.data[0] != 0) {
-                            glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
-                            glVertexPointer(3, GL_SHORT, 0, NULL);
-                        } else {
-                            glVertexPointer(3, GL_SHORT, /* unsigned short is not supported! */
-                                parts.GetVertexDataStride(), parts.GetVertexData());
-                        }
-                        matrixpooper = true;
-                        glMatrixMode(GL_MODELVIEW);
-                        glPushMatrix();
-                        glTranslatef(cell.GetBoundingBox().Left(),
-                            cell.GetBoundingBox().Bottom(),
-                            cell.GetBoundingBox().Back());
-                        glScalef(skale, skale, skale);
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "GrimRenderer: vertices with short coords are deprecated!");
                     } break;
 
                     default:
@@ -1471,10 +1467,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                 glDisableClientState(GL_VERTEX_ARRAY);
                 glDisableVertexAttribArrayARB(cial2);
                 glDisable(GL_TEXTURE_1D);
-
-                if (matrixpooper) {
-                    glPopMatrix();
-                }
             }
 
         }
@@ -1494,9 +1486,9 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
 #endif /* SUPSAMP_LOOP */
 
         glUniform4fv(daSphereShader->ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fv(daSphereShader->ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-        glUniform3fv(daSphereShader->ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-        glUniform3fv(daSphereShader->ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+        glUniform3fv(daSphereShader->ParameterLocation("camIn"), 1, glm::value_ptr(camView));
+        glUniform3fv(daSphereShader->ParameterLocation("camRight"), 1, glm::value_ptr(camRight));
+        glUniform3fv(daSphereShader->ParameterLocation("camUp"), 1, glm::value_ptr(camUp));
         if (useVertCull) {
             daSphereShader->SetParameter("depthTexParams", this->depthmap[0].GetWidth(), this->depthmap[0].GetHeight() * 2 / 3, maxLevel);
 
@@ -1646,24 +1638,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                         }
                         break;
                     case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
-                        float skale = cell.GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
-                        glEnableClientState(GL_VERTEX_ARRAY);
-                        glUniform4f(daSphereShader->ParameterLocation("inConsts1"),
-                            ptype.GetGlobalRadius() / skale, minC, maxC, float(colTabSize));
-                        if (ci.data[0] != 0) {
-                            glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
-                            glVertexPointer(3, GL_SHORT, 0, NULL);
-                        } else {
-                            glVertexPointer(3, GL_SHORT, /* unsigned short is not supported! */
-                                parts.GetVertexDataStride(), parts.GetVertexData());
-                        }
-                        matrixpooper = true;
-                        glMatrixMode(GL_MODELVIEW);
-                        glPushMatrix();
-                        glTranslatef(cell.GetBoundingBox().Left(),
-                            cell.GetBoundingBox().Bottom(),
-                            cell.GetBoundingBox().Back());
-                        glScalef(skale, skale, skale);
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "GrimRenderer: vertices with short coords are deprecated!");
                     } break;
 
                     default:
@@ -1676,10 +1652,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                 glDisableClientState(GL_VERTEX_ARRAY);
                 glDisableVertexAttribArrayARB(cial);
                 glDisable(GL_TEXTURE_1D);
-
-                if (matrixpooper) {
-                    glPopMatrix();
-                }
             }
 
         }
@@ -1775,6 +1747,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         glDisable(GL_DEPTH_TEST);
 
         this->deferredShader.Enable();
+        set_cam_uniforms(this->deferredShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+            mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
 
         glActiveTextureARB(GL_TEXTURE0_ARB);
         this->dsFBO.BindColourTexture(0);
@@ -1789,9 +1763,9 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
 
         vislib::math::Vector<float, 4> lightPos;
         vislib::math::ShallowVector<float, 3> lp(lightPos.PeekComponents());
-        vislib::math::Vector<float, 3> ray(cr->GetCameraParameters()->Front());
-        vislib::math::Vector<float, 3> up(cr->GetCameraParameters()->Up());
-        vislib::math::Vector<float, 3> right(cr->GetCameraParameters()->Right());
+        vislib::math::Vector<float, 3> ray(glm::value_ptr(camView));
+        vislib::math::Vector<float, 3> up(glm::value_ptr(camUp));
+        vislib::math::Vector<float, 3> right(glm::value_ptr(camRight));
 
         lp = right;
         lp *= -0.5f;
@@ -1799,11 +1773,11 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         lp += up;
         lightPos[3] = 0.0f;
 
-        up *= sinf(cr->GetCameraParameters()->HalfApertureAngle());
-        right *= sinf(cr->GetCameraParameters()->HalfApertureAngle())
-            * static_cast<float>(viewport[2]) / static_cast<float>(viewport[3]);
+        up *= sinf(half_aperture_angle);
+        right *= sinf(half_aperture_angle)
+            * static_cast<float>(viewport.Width()) / static_cast<float>(viewport.Height());
 
-        this->deferredShader.SetParameterArray3("ray", 1, cr->GetCameraParameters()->Front().PeekComponents());
+        this->deferredShader.SetParameterArray3("ray", 1, glm::value_ptr(camView));
         this->deferredShader.SetParameterArray3("lightPos", 1, lightPos.PeekComponents());
 
         glMatrixMode(GL_PROJECTION);
