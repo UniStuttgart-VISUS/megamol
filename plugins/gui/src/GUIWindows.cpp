@@ -112,7 +112,7 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 }
 
 
-bool GUIWindows::PreDraw(glm::vec2 viewport_size, double instanceTime) {
+bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instanceTime) {
 
     if (this->api == GUIImGuiAPI::NONE) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -152,8 +152,10 @@ bool GUIWindows::PreDraw(glm::vec2 viewport_size, double instanceTime) {
 
     // Set IO stuff for next frame --------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
-    io.DisplaySize = ImVec2(viewport_size.x, viewport_size.y);
-    io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
+    io.DisplaySize = ImVec2(window_size.x, window_size.y);
+    if ((window_size.x > 0.0f) && (window_size.y > 0.0f)) {
+        io.DisplayFramebufferScale = ImVec2(framebuffer_size.x / window_size.x, framebuffer_size.y / window_size.y);
+    }
 
     if ((instanceTime - this->state.last_instance_time) < 0.0) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -1258,8 +1260,9 @@ void GUIWindows::drawFontWindowCallback(WindowCollection::WindowConfiguration& w
 
     ImFont* font_current = ImGui::GetFont();
     if (ImGui::BeginCombo("Select available Font", font_current->GetDebugName())) {
-        for (int n = 0; n < (io.Fonts->Fonts.Size - 1); n++) { // ! n < size-1 for skipping last added font which is
-                                                               // exclusively used by configurator for the graph.
+        for (int n = this->graph_fonts_reserved; n < io.Fonts->Fonts.Size;
+             n++) { // first fonts until index this->graph_fonts_reserved are exclusively used by configurator for the
+                    // graph.
             if (ImGui::Selectable(io.Fonts->Fonts[n]->GetDebugName(), (io.Fonts->Fonts[n] == font_current)))
                 io.FontDefault = io.Fonts->Fonts[n];
         }

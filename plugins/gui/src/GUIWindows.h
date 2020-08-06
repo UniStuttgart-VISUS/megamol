@@ -76,11 +76,11 @@ public:
     /**
      * Setup and enable ImGui context for subsequent use.
      *
-     * @param module_fullname   The full name of the parent module incorporating this GUI (needed for module filtering).
-     * @param viewport_size     The currently available size of the viewport.
-     * @param instanceTime      The current instance time.
+     * @param framebuffer_size   The currently available size of the framebuffer.
+     * @param window_size        The currently available size of the window.
+     * @param instanceTime       The current instance time.
      */
-    bool PreDraw(glm::vec2 viewport_size, double instanceTime);
+    bool PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instanceTime);
 
     /**
      * Actual drawing of Gui windows and final rendering of pushed ImGui draw commands.

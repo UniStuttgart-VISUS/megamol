@@ -34,7 +34,8 @@ bool GUI_Service::init(const Config& config) {
 
     // init resource state
     this->m_resource_state.time = 0.0;
-    this->m_resource_state.viewport_size = glm::vec2(1.0f, 1.0f);
+    this->m_resource_state.framebuffer_size = glm::vec2(1.0f, 1.0f);
+    this->m_resource_state.window_size = glm::vec2(1.0f, 1.0f);
     this->m_resource_state.opengl_context_ptr = nullptr;
 
     // init gui
@@ -84,7 +85,11 @@ void GUI_Service::digestChangedRequestedResources() {
     /// WindowEvents = resource index 1
     auto window_events = &this->m_requestedResourceReferences[1].getResource<megamol::module_resources::WindowEvents>();
     this->m_resource_state.time = window_events->time;
-    
+    for (auto& size_event : window_events->size_events) {
+        m_resource_state.window_size.x = static_cast<float>(std::get<0>(size_event));
+        m_resource_state.window_size.y = static_cast<float>(std::get<1>(size_event));
+    }
+
     /// KeyboardEvents = resource index 2
     auto keyboard_events = &this->m_requestedResourceReferences[2].getResource<megamol::module_resources::KeyboardEvents>();
 
@@ -152,8 +157,8 @@ void GUI_Service::digestChangedRequestedResources() {
     /// FramebufferEvents = resource index 5
     auto framebuffer_events = &this->m_requestedResourceReferences[5].getResource<megamol::module_resources::FramebufferEvents>();
     for (auto& size_event : framebuffer_events->size_events) {
-        m_resource_state.viewport_size.x = size_event.width;
-        m_resource_state.viewport_size.y = size_event.height;
+        m_resource_state.framebuffer_size.x = static_cast<float>(size_event.width);
+        m_resource_state.framebuffer_size.y = static_cast<float>(size_event.height);
     }
 
     /// TODO Check for shutdown event
@@ -173,7 +178,7 @@ void GUI_Service::preGraphRender() {
 
     if (this->m_resource_state.opengl_context_ptr) {
         this->m_resource_state.opengl_context_ptr->activate();
-        gui->PreDraw(m_resource_state.viewport_size, this->m_resource_state.time);
+        gui->PreDraw(this->m_resource_state.framebuffer_size, this->m_resource_state.window_size, this->m_resource_state.time);
         this->m_resource_state.opengl_context_ptr->close();
     }
 }
