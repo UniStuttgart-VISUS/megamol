@@ -289,11 +289,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
 
     const float tfw_item_width = ImGui::GetContentRegionAvail().x * 0.75f;
     ImGui::PushItemWidth(tfw_item_width); // set general proportional item width
-
     ImVec2 image_size = ImVec2(tfw_item_width, 30.0f);
-    if (!this->showOptions) {
-        if (image_size.x < 275.0f) image_size.x = 275;
-    }
 
     ImGui::BeginGroup();
     this->drawTextureBox(image_size, this->flip_legend);
@@ -308,15 +304,6 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
 
     if (this->showOptions) {
         ImGui::Separator();
-
-        /*
-        if (connected_parameter_mode) {
-            ImGui::TextUnformatted("Parameter:");
-            ImGui::TextColored(GUI_COLOR_TEXT_WARN,
-                ((this->connected_parameter_ptr == nullptr) ? ("-")
-                                                            : (this->connected_parameter_ptr->GetName().c_str())));
-        }
-        */
 
         // Legend alignment ---------------------------------------------------
         ImGui::BeginGroup();
@@ -629,7 +616,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     float width_delta = 0.0f;
     float height_delta = 0.0f;
     if (flip_legend) {
-        init_pos.x += width;
+        init_pos.x += width + item_x_spacing / 2.0f;
         init_pos.y -= (height + item_y_spacing);
         height_delta = height / static_cast<float>(scale_count - 1);
     } else {
