@@ -41,6 +41,7 @@
 
 #include "vislib/math/Rectangle.h"
 
+#include <ctime>
 #include <iomanip>
 #include <sstream>
 

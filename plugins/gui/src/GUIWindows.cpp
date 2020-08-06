@@ -155,11 +155,11 @@ bool GUIWindows::PreDraw(glm::vec2 viewport_size, double instanceTime) {
     io.DisplaySize = ImVec2(viewport_size.x, viewport_size.y);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
 
-    // if ((instanceTime - this->state.last_instance_time) < 0.0) {
-    //    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-    //        "Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-    //        __LINE__);
-    //}
+    if ((instanceTime - this->state.last_instance_time) < 0.0) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
+    }
     io.DeltaTime = ((instanceTime - this->state.last_instance_time) > 0.0)
                        ? (static_cast<float>(instanceTime - this->state.last_instance_time))
                        : (io.DeltaTime);
@@ -755,7 +755,7 @@ bool GUIWindows::createContext(void) {
     this->state.win_save_state = false;
     this->state.win_save_delay = 0.0f;
     this->state.win_delete = "";
-    this->state.last_instance_time = 0.0f;
+    this->state.last_instance_time = 0.0;
     this->state.open_popup_about = false;
     this->state.open_popup_save = false;
     this->state.project_file = "";
@@ -1037,9 +1037,8 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Copy to new Window")) {
-                    // using instance time as hidden unique id
-                    std::string window_name =
-                        "Parameters###parameters_" + std::to_string(this->state.last_instance_time);
+                    std::srand(std::time(nullptr));
+                    std::string window_name = "Parameters###parameters_" + std::to_string(std::rand());
                     WindowCollection::WindowConfiguration buf_win;
                     buf_win.win_name = window_name;
                     buf_win.win_show = true;
