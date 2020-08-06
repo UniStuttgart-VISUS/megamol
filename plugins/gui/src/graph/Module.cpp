@@ -26,7 +26,8 @@ megamol::gui::ModulePresentation::ModulePresentation(void)
     , size(ImVec2(0.0f, 0.0f))
     , selected(false)
     , update(true)
-    , show_params(false)
+    , param_child_show(false)
+    , param_child_height(0.0f)
     , set_screen_position(ImVec2(FLT_MAX, FLT_MAX))
     , set_selected_slot_position(false)
     , param_groups()
@@ -380,16 +381,16 @@ void megamol::gui::ModulePresentation::Present(
 
                             if (parameter_button) {
                                 param_child_pos = ImGui::GetCursorScreenPos();
-                                param_child_pos.y += ImGui::GetFrameHeight();
+                                param_child_pos.x += ImGui::GetFrameHeight();
                                 if (ImGui::ArrowButton("###parameter_toggle",
-                                        ((this->show_params) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+                                        ((this->param_child_show) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
                                     if (hovered) {
-                                        this->show_params = !this->show_params;
+                                        this->param_child_show = !this->param_child_show;
                                     }
                                 }
                                 ImGui::SetItemAllowOverlap();
                                 if (hovered) {
-                                    other_item_hovered = other_item_hovered || this->tooltip.ToolTip("Parameters");
+                                    other_item_hovered |= this->tooltip.ToolTip("Parameters");
                                 }
                             }
                         }
@@ -401,40 +402,40 @@ void megamol::gui::ModulePresentation::Present(
                         ImDrawCornerFlags_All, border);
 
                     // Parameter Child Window
-                    if (this->label_visible && this->show_params) {
+                    if (this->label_visible && this->param_child_show) {
                         ImGui::PushStyleColor(ImGuiCol_ChildBg, COLOR_MODULE_BACKGROUND);
-                        ImGui::SetCursorScreenPos(param_child_pos);
 
-                        float param_height = 0.0f;
-                        for (auto& parameter : inout_module.parameters) {
-                            param_height += parameter.GetGUIHeight();
+                        float avail_height = (state.canvas.position.y + state.canvas.size.y) - param_child_pos.y;
+                        this->param_child_height = std::min(state.canvas.size.y, this->param_child_height);
+                        if (this->param_child_height > avail_height) {
+                            param_child_pos.y -= (this->param_child_height - avail_height);
                         }
-                        param_height += style.ScrollbarSize;
-                        float avail_height =
-                            (state.canvas.position.y + state.canvas.size.y) - ImGui::GetCursorScreenPos().y;
-                        float child_height = std::min(avail_height, param_height);
-                        float child_width = 325.0f * state.canvas.zooming;
-                        auto child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar |
-                                           ImGuiWindowFlags_AlwaysHorizontalScrollbar | ImGuiWindowFlags_NoMove |
-                                           ImGuiWindowFlags_NavFlattened;
-                        ImGui::BeginChild(
-                            "module_parameter_child", ImVec2(child_width, child_height), true, child_flags);
 
-                        /// Close parameter window when clicked outside
-                        // if (mouse_clicked_anywhere && !ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
-                        //    this->show_params = false;
-                        //}
+                        ImGui::SetCursorScreenPos(param_child_pos);
+                        float child_width = 325.0f * state.canvas.zooming;
+                        auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove |
+                                           ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                                           ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NavFlattened;
+                        ImGui::BeginChild(
+                            "module_parameter_child", ImVec2(child_width, this->param_child_height), true, child_flags);
+
+                        float cursor_pos_y = ImGui::GetCursorPosY();
 
                         // Draw parameters
                         /// Use extended mode currently set in parameter
-                        this->param_groups.PresentGUI(inout_module.parameters, inout_module.FullName(), "", false, true,
+                        this->param_groups.PresentGUI(inout_module.parameters, inout_module.FullName(), "",
+                            vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN), false,
                             ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr);
+
+                        this->param_child_height = ImGui::GetCursorPosY() - cursor_pos_y + ImGui::GetFrameHeight();
 
                         ImGui::EndChild();
 
                         ImGui::PopStyleColor();
+
+                        // Close child window on 'Escape'
                         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
-                            this->show_params = false;
+                            this->param_child_show = false;
                         }
                     }
                 }

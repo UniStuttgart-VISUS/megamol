@@ -366,7 +366,8 @@ bool GUIWindows::PostDraw(void) {
 
             /// TODO Pass picked UID to parameters
 
-            module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(), "", false, true,
+            module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(), "",
+                vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN), false,
                 ParameterPresentation::WidgetScope::GLOBAL, this->tf_editor_ptr, nullptr);
         }
     }
@@ -1081,8 +1082,8 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
 
                 bool out_open_external_tf_editor;
                 module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, currentSearchString,
-                    wc.param_extended_mode, false, ParameterPresentation::WidgetScope::LOCAL, this->tf_editor_ptr,
-                    &out_open_external_tf_editor);
+                    vislib::math::Ternary(wc.param_extended_mode), true, ParameterPresentation::WidgetScope::LOCAL,
+                    this->tf_editor_ptr, &out_open_external_tf_editor);
 
                 if (out_open_external_tf_editor) {
                     const auto func = [](WindowCollection::WindowConfiguration& wc) {

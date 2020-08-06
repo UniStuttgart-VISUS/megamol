@@ -1360,8 +1360,8 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
 
                     // Draw parameters
                     module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(),
-                        search_string, this->param_extended_mode, false, ParameterPresentation::WidgetScope::LOCAL,
-                        nullptr, nullptr);
+                        search_string, vislib::math::Ternary(this->param_extended_mode), true,
+                        ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr);
                 }
                 this->tooltip.ToolTip(module_ptr->description, ImGui::GetID(module_ptr->name.c_str()), 0.75f, 5.0f);
 
