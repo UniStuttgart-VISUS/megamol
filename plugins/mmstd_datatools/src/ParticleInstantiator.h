@@ -65,6 +65,8 @@ namespace datatools {
         std::vector<std::vector<float>> vertData;
         std::vector<std::vector<uint8_t>> colData;
         std::vector<std::vector<float>> dirData;
+        std::vector<bool> has_global_radius;
+        std::vector<bool> has_global_color;
     };
 
 } /* end namespace datatools */

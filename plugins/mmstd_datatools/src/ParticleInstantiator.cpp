@@ -84,14 +84,31 @@ bool datatools::ParticleInstantiator::manipulateData(
         vertData.resize(plc);
         colData.resize(plc);
         dirData.resize(plc);
+        has_global_color.resize(plc);
+        has_global_radius.resize(plc);
         for (auto i = 0; i < plc; ++i) {
             // first copy everything into a defined format
             // XYZR, RGBA, VXVYVZ, no IDs (might waste space for radii, but we are wasting space here bigtime anyway)
             const auto& p = inData.AccessParticles(i);
             const auto& s = p.GetParticleStore();
+            int vert_components = 3;
+            has_global_radius[i] = true;
+            has_global_color[i] = false;
 
-            vertData[i].resize(p.GetCount() * 4 * numTotalInstances);
-            colData[i].resize(p.GetCount() * 4 * numTotalInstances);
+            if (p.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR) {
+                vert_components = 4;
+                has_global_radius[i] = false;
+            }
+            if (p.GetColourData() == nullptr) {
+                has_global_color[i] = true;
+            }
+
+            vertData[i].resize(p.GetCount() * vert_components * numTotalInstances);
+            if (has_global_color[i]) {
+                colData[i].resize(0);
+            } else {
+                colData[i].resize(p.GetCount() * 4 * numTotalInstances);
+            }
             dirData[i].resize(p.GetCount() * 3 * numTotalInstances);
 
             const auto& xacc = s.GetXAcc();
@@ -103,16 +120,13 @@ bool datatools::ParticleInstantiator::manipulateData(
             const auto& cbacc = s.GetCBAcc();
             const auto& caacc = s.GetCAAcc();
 
-            for (uint64_t j = 0; j < p.GetCount(); ++j) {
-                //vertData[i][j * 4 + 0] = xacc->Get_f(j);
-                //vertData[i][j * 4 + 1] = yacc->Get_f(j);
-                //vertData[i][j * 4 + 2] = zacc->Get_f(j);
-                //vertData[i][j * 4 + 3] = racc->Get_f(j);
-
-                colData[i][j * 4 + 0] = cracc->Get_f(j) * 255;
-                colData[i][j * 4 + 1] = cgacc->Get_f(j) * 255;
-                colData[i][j * 4 + 2] = cbacc->Get_f(j) * 255;
-                colData[i][j * 4 + 3] = caacc->Get_f(j) * 255;
+            if (!has_global_color[i]) {
+                for (uint64_t j = 0; j < p.GetCount(); ++j) {
+                    colData[i][j * 4 + 0] = cracc->Get_f(j) * 255;
+                    colData[i][j * 4 + 1] = cgacc->Get_f(j) * 255;
+                    colData[i][j * 4 + 2] = cbacc->Get_f(j) * 255;
+                    colData[i][j * 4 + 3] = caacc->Get_f(j) * 255;
+                }
             }
 
             if (p.GetDirData() != nullptr) {
@@ -131,18 +145,23 @@ bool datatools::ParticleInstantiator::manipulateData(
             for (auto instX = 0; instX < numInstances.x; instX++) {
                 for (auto instY = 0; instY < numInstances.y; instY++) {
                     for (auto instZ = 0; instZ < numInstances.z; instZ++) {
-                        const auto instSize = p.GetCount() * 4;
+                        const auto instSize = p.GetCount() * vert_components;
                         const auto offset = (instSize * instX) + (instSize * numInstances.x * instY) + (instSize * numInstances.x * numInstances.y * instZ);
                         for (uint64_t j = 0; j < p.GetCount(); ++j) {
-                            vertData[i][offset + j * 4 + 0] = xacc->Get_f(j) + instOffsets.x * static_cast<float>(instX);
-                            vertData[i][offset + j * 4 + 1] = yacc->Get_f(j) + instOffsets.y * static_cast<float>(instY);
-                            vertData[i][offset + j * 4 + 2] = zacc->Get_f(j) + instOffsets.z * static_cast<float>(instZ);
-                            vertData[i][offset + j * 4 + 3] = racc->Get_f(j);
+                            vertData[i][offset + j * vert_components + 0] = xacc->Get_f(j) + instOffsets.x * static_cast<float>(instX);
+                            vertData[i][offset + j * vert_components + 1] = yacc->Get_f(j) + instOffsets.y * static_cast<float>(instY);
+                            vertData[i][offset + j * vert_components + 2] = zacc->Get_f(j) + instOffsets.z * static_cast<float>(instZ);
+                            if (!has_global_radius[i]) {
+                                vertData[i][offset + j * vert_components + 3] = racc->Get_f(j);
+                            }
                         }
                         if (instX + instY + instZ > 0) {
-                            const auto colInstSize = p.GetCount() * 4;
-                            const auto coloffset = (colInstSize * instX) + (colInstSize * numInstances.x * instY) + (colInstSize * numInstances.x * numInstances.y * instZ);
-                            memcpy(&colData[i][coloffset], &colData[i][0], colInstSize * sizeof(uint8_t));
+                            if (!has_global_color[i]) {
+                                const auto colInstSize = p.GetCount() * 4;
+                                const auto coloffset = (colInstSize * instX) + (colInstSize * numInstances.x * instY) +
+                                                       (colInstSize * numInstances.x * numInstances.y * instZ);
+                                memcpy(&colData[i][coloffset], &colData[i][0], colInstSize * sizeof(uint8_t));
+                            }
 
                             if (p.GetDirData() != nullptr) {
                                 const auto dirInstSize = p.GetCount() * 3;
@@ -159,8 +178,22 @@ bool datatools::ParticleInstantiator::manipulateData(
     for (auto i = 0; i < plc; ++i) {
         const auto& p = inData.AccessParticles(i);
         outData.AccessParticles(i).SetCount(p.GetCount() * numTotalInstances);
-        outData.AccessParticles(i).SetVertexData(core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR, vertData[i].data(), 0);
-        outData.AccessParticles(i).SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA, colData[i].data(), 0);
+        if (has_global_radius[i]) {
+            outData.AccessParticles(i).SetVertexData(
+                core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, vertData[i].data(), 0);
+            outData.AccessParticles(i).SetGlobalRadius(p.GetGlobalRadius());
+        } else {
+            outData.AccessParticles(i).SetVertexData(
+                core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR, vertData[i].data(), 0);
+        }
+        if (has_global_color[i]) {
+            outData.AccessParticles(i).SetGlobalColour(p.GetGlobalColour()[0], p.GetGlobalColour()[1], p.GetGlobalColour()[2], p.GetGlobalColour()[3]);
+            outData.AccessParticles(i).SetColourData(
+                core::moldyn::SimpleSphericalParticles::COLDATA_NONE, nullptr, 0);
+        } else {
+            outData.AccessParticles(i).SetColourData(
+                core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA, colData[i].data(), 0);
+        }
         if (p.GetDirData() != nullptr) {
             outData.AccessParticles(i).SetDirData(core::moldyn::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ, dirData[i].data(), 0);
         } else {
