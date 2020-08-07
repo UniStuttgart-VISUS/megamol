@@ -567,7 +567,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     // upload to gpu-cache
     int vramUploadQuota = VRAM_UPLOAD_QUOTA; // upload no more then X VBO per frame
 
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 2, -1, "grim-init-depth");
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 2, -1, "grim-init-depth-points");
     // z-buffer-filling
 #if defined(DEBUG) || defined(_DEBUG)
     UINT oldlevel = vislib::Trace::GetInstance().GetLevel();
@@ -726,7 +726,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     this->initDepthPointShader.Disable();
     glPopDebugGroup();
 
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 3, -1, "grim-init-depth2");
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 3, -1, "grim-init-depth-disks");
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     float viewportStuff[4] = {
