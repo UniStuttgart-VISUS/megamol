@@ -300,8 +300,7 @@ void GrimRenderer::set_cam_uniforms(vislib::graphics::gl::GLSLShader& shader, gl
     glm::mat4 view_matrix_inv_transp, glm::mat4 mvp_matrix, glm::mat4 mvp_matrix_transp, glm::mat4 mvp_matrix_inv,
     glm::vec4 camPos, glm::vec4 curlightDir) {
 
-    glUniformMatrix4fv(
-        shader.ParameterLocation("mv_inv"), 1, GL_FALSE, glm::value_ptr(view_matrix_inv));
+    glUniformMatrix4fv(shader.ParameterLocation("mv_inv"), 1, GL_FALSE, glm::value_ptr(view_matrix_inv));
     glUniformMatrix4fv(shader.ParameterLocation("mv_inv_transp"), 1, GL_FALSE, glm::value_ptr(view_matrix_inv_transp));
     glUniformMatrix4fv(shader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp_matrix));
     glUniformMatrix4fv(shader.ParameterLocation("mvp_transp"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_transp));
@@ -394,12 +393,12 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     glm::vec4 curlightDir = {0.0f, 0.0f, 0.0f, 1.0f};
     if (this->lightMap.size() > 1) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[SphereRenderer] Only one single 'Distant Light' source is supported by this renderer");
+            "Only one single 'Distant Light' source is supported by this renderer");
     }
     for (auto light : this->lightMap) {
         if (light.second.lightType != core::view::light::DISTANTLIGHT) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[SphereRenderer] Only single 'Distant Light' source is supported by this renderer");
+                "Only single 'Distant Light' source is supported by this renderer");
         } else {
             auto use_eyedir = light.second.dl_eye_direction;
             if (use_eyedir) {
@@ -424,7 +423,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         }
     }
 
-    // update fbo size, if required
+    // update fbo size, if required ///////////////////////////////////////////
     auto viewport = call.GetViewport();
     if ((this->fbo.GetWidth() != viewport.Width())
             || (this->fbo.GetHeight() != viewport.Height())
@@ -502,13 +501,10 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         this->cacheSizeUsed = 0;
     }
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glLineWidth(5.0f);
+    // depth-sort of cells ////////////////////////////////////////////////////
 
     float viewDist = 0.5f * cam.resolution_gate().height() / tanf(half_aperture_angle);
 
-    // depth-sort of cells
     std::vector<vislib::Pair<unsigned int, float> > &dists = this->cellDists;
     std::vector<CellInfo> &infos = this->cellInfos;
     // -> The usage of these references is required in order to get performance !!! WTF !!!
@@ -539,6 +535,14 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     }
     std::sort(dists.begin(), dists.end(), GrimRenderer::depthSort);
 
+    /// TODO save previous opengl state: LINEWIDTH, POINTSIZE, BLEND, DEPTH, FBO, GL_VERTEX_PROGRAM_POINT_SIZE
+
+    // init depth points //////////////////////////////////////////////////////
+#ifdef _WIN32
+#pragma region Depthbuffer initialization
+#endif /* _WIN32 */
+
+    glLineWidth(5.0f);
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
 
@@ -551,13 +555,10 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     UINT oldlevel = vislib::Trace::GetInstance().GetLevel();
     vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_NONE);
 #endif
+
     this->fbo.Enable();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // initialize depth buffer
-#ifdef _WIN32
-#pragma region Depthbuffer initialization
-#endif /* _WIN32 */
 #ifdef SPEAK_CELL_USAGE
     printf("[initd1");
 #endif
@@ -576,7 +577,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 #ifdef SPEAK_CELL_USAGE
         printf("-%d", i);
 #endif
-
         for (unsigned int j = 0; j < typecnt; j++) {
             const ParticleGridDataCall::Particles &parts = cell->AccessParticleLists()[j];
             const ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
@@ -659,7 +659,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
             }
 
             // radius and position
-            bool matrixpooper = false;
             switch (ptype.GetVertexDataType()) {
                 case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                     continue;
@@ -702,20 +701,18 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     this->initDepthPointShader.Disable();
     glPopDebugGroup();
 
+    // init depth disks ///////////////////////////////////////////////////////
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 3, -1, "grim-init-depth-disks");
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    float viewportStuff[4] = {
-        0.0f, 0.0f, viewport.Width(), viewport.Height()
-        //cr->GetCameraParameters()->TileRect().Width(),
-        //cr->GetCameraParameters()->TileRect().Height()
-        };
+    float viewportStuff[4] = { 0.0f, 0.0f, viewport.Width(), viewport.Height() };
     float defaultPointSize = glm::max(viewportStuff[2], viewportStuff[3]);
-    glPointSize(defaultPointSize);
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
+
+    glPointSize(defaultPointSize);
 
     this->initDepthShader.Enable();
     set_cam_uniforms(this->initDepthShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix, mvp_matrix_transp,
@@ -725,6 +722,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     glUniform3fv(this->initDepthShader.ParameterLocation("camIn"), 1, glm::value_ptr(camView));
     glUniform3fv(this->initDepthShader.ParameterLocation("camRight"), 1, glm::value_ptr(camRight));
     glUniform3fv(this->initDepthShader.ParameterLocation("camUp"), 1, glm::value_ptr(camUp));
+
     // no clipping plane for now
     glColor4ub(192, 192, 192, 255);
     glDisableClientState(GL_COLOR_ARRAY);
@@ -751,7 +749,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 #ifdef SPEAK_CELL_USAGE
         printf("-%d", i);
 #endif
-
         for (unsigned int j = 0; j < typecnt; j++) {
             const ParticleGridDataCall::Particles &parts = cell->AccessParticleLists()[j];
             const ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
@@ -834,7 +831,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
             }
 
             // radius and position
-            bool matrixpooper = false;
             switch (ptype.GetVertexDataType()) {
                 case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                     continue;
@@ -869,7 +865,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
             glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
             glBindBufferARB(GL_ARRAY_BUFFER, 0);
             glDisableClientState(GL_VERTEX_ARRAY);
-
         }
 
         //glBegin(GL_LINES);
@@ -890,15 +885,19 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
     this->initDepthShader.Disable();
     glPopDebugGroup();
+
 #ifdef _WIN32
 #pragma endregion Depthbuffer initialization
 #endif /* _WIN32 */
 
+        // issue queries //////////////////////////////////////////////////////
 #ifdef _WIN32
 #pragma region issue occlusion queries for all cells to find hidden ones
 #endif /* _WIN32 */
+
     if (useCellCull) {
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 4, -1, "grim-issue-queries");
+
         // occlusion queries ftw
         glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
         glDepthMask(GL_FALSE);
@@ -965,12 +964,15 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 #ifdef _WIN32
 #pragma endregion issue occlusion queries
 #endif /* _WIN32 */
+
     this->fbo.Disable();
     // END Depth buffer initialized
 
+    // depth mipmap ///////////////////////////////////////////////////////////
 #ifdef _WIN32
 #pragma region depth buffer mipmaping
 #endif /* _WIN32 */
+
     int maxLevel = 0;
     if (useVertCull) {
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 5, -1, "grim-depth-mipmap");
@@ -1133,6 +1135,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     vislib::Trace::GetInstance().SetLevel(oldlevel);
 #endif
 
+    // image output ///////////////////////////////////////////////////////////
     unsigned int visCnt = 0;
     unsigned int visPart = 0;
 
@@ -1146,6 +1149,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 #ifdef _WIN32
 #pragma region speakVertCount
 #endif /* _WIN32 */
+
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 5, -1, "grim-count-visible-points");
         GLuint allQuery;
         glGenOcclusionQueriesNV(1, &allQuery);
@@ -1202,7 +1206,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 #ifdef SPEAK_CELL_USAGE
             printf("-%d", i);
 #endif
-
             for (unsigned int j = 0; j < typecnt; j++) {
                 const ParticleGridDataCall::Particles &parts = cell.AccessParticleLists()[j];
                 const ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
@@ -1212,7 +1215,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
                 visPart += parts.GetCount();
 
                 // radius and position
-                bool matrixpooper = false;
                 switch (ptype.GetVertexDataType()) {
                     case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                         continue;
@@ -1278,7 +1280,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 #endif /* _WIN32 */
 
     } else {
-
         //
         // GENERATE VISIBLE IMAGE OUTPUT
         //
@@ -1299,13 +1300,13 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
             // REACTIVATE TARGET FBO
             cr->EnableOutputBuffer();
-
         }
 
 #ifdef SPEAK_CELL_USAGE
         printf("[drawd");
 #endif
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 6, -1, "grim-draw-dots");
+
         // draw visible data (dots)
         glEnable(GL_DEPTH_TEST);
         glPointSize(1.0f);
@@ -1333,7 +1334,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 #ifdef SPEAK_CELL_USAGE
             printf("-%d", i);
 #endif
-
             for (unsigned int j = 0; j < typecnt; j++) {
                 const ParticleGridDataCall::Particles &parts = cell.AccessParticleLists()[j];
                 const ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
@@ -1419,7 +1419,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
                 }
 
                 // radius and position
-                bool matrixpooper = false;
                 switch (ptype.GetVertexDataType()) {
                     case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                         continue;
@@ -1469,6 +1468,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 #endif
         daPointShader->Disable();
         glPopDebugGroup();
+
+        // draw spheres ///////////////////////////////////////////////////////
 #ifdef SPEAK_CELL_USAGE
         printf("[draws");
 #endif
@@ -1606,7 +1607,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
                 }
 
                 // radius and position
-                bool matrixpooper = false;
                 switch (ptype.GetVertexDataType()) {
                     case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                         continue;
@@ -1673,7 +1673,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glDisable(GL_TEXTURE_2D);
 
-    // remove unused cache item
+    // remove unused cache item ///////////////////////////////////////////////
     if ((this->cacheSizeUsed * 5 / 4) > this->cacheSize) {
         for (int i = cellcnt - 1; i >= 0; i--) { // front to back
             unsigned int idx = dists[i].First();
@@ -1734,6 +1734,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         }
     }
 
+    // deferred shading ///////////////////////////////////////////////////////
     if (deferredShading) {
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 8, -1, "grim-deferred-shading");
         cr->EnableOutputBuffer();
@@ -1816,7 +1817,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glPopDebugGroup();
     }
 
-    //// DEBUG OUTPUT OF FBO
+    //// DEBUG OUTPUT OF FBO --------------------------------------------------
     //cr->EnableOutputBuffer();
     //glEnable(GL_TEXTURE_2D);
     //glDisable(GL_LIGHTING);
