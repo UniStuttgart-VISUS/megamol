@@ -7,17 +7,19 @@
 
 #include "stdafx.h"
 #include "GrimRenderer.h"
-#include "glm/glm.hpp"
+
 
 using namespace megamol::core;
 using namespace megamol::stdplugin::moldyn::rendering;
 
 
-// #define SPEAK_CELL_USAGE 1
+//#define SPEAK_CELL_USAGE 1
 //#define SPEAK_VRAM_CACHE_USAGE 1
+
 #define VRAM_UPLOAD_QUOTA 0
 //#define VRAM_UPLOAD_QUOTA 25
 //#define VRAM_UPLOAD_QUOTA 100
+
 //#define SUPSAMP_LOOP 1
 //#define SUPSAMP_LOOPCNT 1
 //#define SUPSAMP_LOOPCNT 2
@@ -81,9 +83,9 @@ GrimRenderer::GrimRenderer(void) : view::Renderer3DModule_2(),
     this->MakeSlotAvailable(&this->deferredShadingSlot);
     this->deferredShadingSlot.ForceSetDirty();
 
-    this->cacheSize = 256 * 1024 * 1024; // TODO: Any way to get this better?
-    //this->cacheSize = 256 * 1024; // TODO: Any way to get this better?
-    //this->cacheSize = 1; // TODO: Any way to get this better?
+    this->cacheSize = 256 * 1024 * 1024;    // TODO: Any way to get this better?
+    //this->cacheSize = 256 * 1024;         // TODO: Any way to get this better?
+    //this->cacheSize = 1;                  // TODO: Any way to get this better?
 }
 
 
@@ -240,19 +242,15 @@ bool GrimRenderer::create(void) {
         return false;
     }
 
-    glEnable(GL_TEXTURE_1D);
+    // Fallback transfer function texture
     glGenTextures(1, &this->greyTF);
-    unsigned char tex[6] = {
-        0, 0, 0,  255, 255, 255
-    };
+    unsigned char tex[6] = { 0, 0, 0, 255, 255, 255 };
     glBindTexture(GL_TEXTURE_1D, this->greyTF);
     glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 2, 0, GL_RGB, GL_UNSIGNED_BYTE, tex);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glBindTexture(GL_TEXTURE_1D, 0);
-
-    glDisable(GL_TEXTURE_1D);
 
     this->fbo.Create(1, 1); // year, right.
     this->depthmap[0].Create(1, 1);
@@ -273,16 +271,6 @@ bool GrimRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) {
 
     cr->SetTimeFramesCount(pgdc->FrameCount());
     cr->AccessBoundingBoxes() = pgdc->AccessBoundingBoxes();
-
-    ///XXX REMOVE for new camera usage
-    //float scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    //if (scaling > 0.0000001) {
-    //    scaling = 10.0f / scaling;
-    //}
-    //else {
-    //    scaling = 1.0f;
-    //}
-    //cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
 
     return true;
 }
@@ -311,6 +299,7 @@ void GrimRenderer::release(void) {
 void GrimRenderer::set_cam_uniforms(vislib::graphics::gl::GLSLShader& shader, glm::mat4 view_matrix_inv,
     glm::mat4 view_matrix_inv_transp, glm::mat4 mvp_matrix, glm::mat4 mvp_matrix_transp, glm::mat4 mvp_matrix_inv,
     glm::vec4 camPos, glm::vec4 curlightDir) {
+
     glUniformMatrix4fv(
         shader.ParameterLocation("mv_inv"), 1, GL_FALSE, glm::value_ptr(view_matrix_inv));
     glUniformMatrix4fv(shader.ParameterLocation("mv_inv_transp"), 1, GL_FALSE, glm::value_ptr(view_matrix_inv_transp));
@@ -320,6 +309,7 @@ void GrimRenderer::set_cam_uniforms(vislib::graphics::gl::GLSLShader& shader, gl
     glUniform4fv(shader.ParameterLocation("light_pos"), 1, glm::value_ptr(curlightDir));
     glUniform4fv(shader.ParameterLocation("cam_pos"), 1, glm::value_ptr(camPos));
 }
+
 
 bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
@@ -356,12 +346,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     // ask for extend to calculate the data scaling
     pgdc->SetFrameID(static_cast<unsigned int>(cr->Time()));
     if (!(*pgdc)(1)) return false;
-    //float scaling = pgdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    //if (scaling > 0.0000001) {
-    //    scaling = 10.0f / scaling;
-    //} else {
-    //    scaling = 1.0f;
-    //}
+
     const float scaling = 1.0f;
 
     // fetch real data
@@ -385,7 +370,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     unsigned int cellcnt = pgdc->CellsCount();
     unsigned int typecnt = pgdc->TypesCount();
 
-    ///XXX Use this for new camera usage
     // Camera 
     view::Camera_2 cam;
     cr->GetCamera(cam);
@@ -404,8 +388,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     glm::vec4 camRight = snapshot.right_vector;
     glm::vec4 camUp = snapshot.up_vector;
     float half_aperture_angle = cam.half_aperture_angle_radians();
-    //// Viewport
-    auto viewport = call.GetViewport();
 
     // Lights
     this->GetLights();
@@ -443,8 +425,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     }
 
     // update fbo size, if required
-    //GLint viewport[4];
-    //glGetIntegerv(GL_VIEWPORT, viewport);
+    auto viewport = call.GetViewport();
     if ((this->fbo.GetWidth() != viewport.Width())
             || (this->fbo.GetHeight() != viewport.Height())
             || this->deferredShadingSlot.IsDirty()) {
@@ -525,15 +506,12 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glLineWidth(5.0f);
 
-    float viewDist =
-        // was: virtualviewsize.height!
-        0.5f * cam.resolution_gate().height() /
-        tanf(half_aperture_angle);
+    float viewDist = 0.5f * cam.resolution_gate().height() / tanf(half_aperture_angle);
 
     // depth-sort of cells
     std::vector<vislib::Pair<unsigned int, float> > &dists = this->cellDists;
     std::vector<CellInfo> &infos = this->cellInfos;
-    // The usage of these references is required in order to get performance !!! WTF !!!
+    // -> The usage of these references is required in order to get performance !!! WTF !!!
 
     for (unsigned int i = 0; i < cellcnt; i++) {
         unsigned int idx = dists[i].First();
@@ -575,8 +553,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 #endif
     this->fbo.Enable();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    //glScalef(scaling, scaling, scaling);
 
     // initialize depth buffer
 #ifdef _WIN32
@@ -1421,8 +1397,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
 
+                        // Bind transfer function texture
                         glEnable(GL_TEXTURE_1D);
-
                         view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
                         if ((cgtf != NULL) && ((*cgtf)())) {
                             glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
@@ -1509,9 +1485,9 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glUniform3fv(daSphereShader->ParameterLocation("camIn"), 1, glm::value_ptr(camView));
         glUniform3fv(daSphereShader->ParameterLocation("camRight"), 1, glm::value_ptr(camRight));
         glUniform3fv(daSphereShader->ParameterLocation("camUp"), 1, glm::value_ptr(camUp));
+
         if (useVertCull) {
             daSphereShader->SetParameter("depthTexParams", this->depthmap[0].GetWidth(), this->depthmap[0].GetHeight() * 2 / 3, maxLevel);
-
             glEnable(GL_TEXTURE_2D);
             glActiveTextureARB(GL_TEXTURE2_ARB);
             this->depthmap[0].BindColourTexture();
@@ -1545,7 +1521,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 #ifdef SPEAK_CELL_USAGE
             printf("-%d", i);
 #endif
-
             for (unsigned int j = 0; j < typecnt; j++) {
                 const ParticleGridDataCall::Particles &parts = cell.AccessParticleLists()[j];
                 const ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
@@ -1609,8 +1584,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
 
+                        // Bind transfer function texture
                         glEnable(GL_TEXTURE_1D);
-
                         view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
                         if ((cgtf != NULL) && ((*cgtf)())) {
                             glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
