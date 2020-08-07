@@ -928,6 +928,11 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glDepthMask(GL_FALSE);
         glDisable(GL_CULL_FACE);
 
+        // this shader is so simple it should also work for the boxes.
+        this->initDepthPointShader.Enable();
+        set_cam_uniforms(this->initDepthPointShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+            mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
+
         // also disable texturing and any fancy shading features
         for (int i = cellcnt - 1; i >= 0; i--) { // front to back
             const ParticleGridDataCall::GridCell& cell = pgdc->Cells()[i];
