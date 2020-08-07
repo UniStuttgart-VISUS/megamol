@@ -450,6 +450,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
             || this->deferredShadingSlot.IsDirty()) {
         this->deferredShadingSlot.ResetDirty();
 
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "grim-fbo-resize");
         this->fbo.Release();
         this->fbo.Create(viewport.Width(), viewport.Height(),
                 GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, // colour buffer
@@ -500,6 +501,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
                     "Failed to created dsFBO: %s", ex.GetMsgA());
             }
         }
+        glPopDebugGroup();
     }
 
     if (this->cellDists.size() != cellcnt) {
@@ -565,6 +567,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     // upload to gpu-cache
     int vramUploadQuota = VRAM_UPLOAD_QUOTA; // upload no more then X VBO per frame
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 2, -1, "grim-init-depth");
     // z-buffer-filling
 #if defined(DEBUG) || defined(_DEBUG)
     UINT oldlevel = vislib::Trace::GetInstance().GetLevel();
@@ -721,7 +724,9 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     printf("]\n");
 #endif
     this->initDepthPointShader.Disable();
+    glPopDebugGroup();
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 3, -1, "grim-init-depth2");
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     float viewportStuff[4] = {
@@ -908,6 +913,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 #endif
 
     this->initDepthShader.Disable();
+    glPopDebugGroup();
 #ifdef _WIN32
 #pragma endregion Depthbuffer initialization
 #endif /* _WIN32 */
@@ -916,6 +922,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 #pragma region issue occlusion queries for all cells to find hidden ones
 #endif /* _WIN32 */
     if (useCellCull) {
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 4, -1, "grim-issue-queries");
         // occlusion queries ftw
         glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
         glDepthMask(GL_FALSE);
@@ -972,6 +979,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glDepthMask(GL_TRUE);
         glEnable(GL_CULL_FACE);
         // reenable other state
+        glPopDebugGroup();
     }
 #ifdef _WIN32
 #pragma endregion issue occlusion queries
@@ -984,6 +992,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 #endif /* _WIN32 */
     int maxLevel = 0;
     if (useVertCull) {
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 5, -1, "grim-depth-mipmap");
         // create depth mipmap
         this->depthmap[0].Enable();
 
@@ -1132,6 +1141,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glPopMatrix();
 
         glBindTexture(GL_TEXTURE_2D, 0);
+        glPopDebugGroup();
         // END generation of depth-max mipmap
     }
 #ifdef _WIN32
