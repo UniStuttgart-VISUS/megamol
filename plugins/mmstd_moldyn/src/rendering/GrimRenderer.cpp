@@ -450,6 +450,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
             || this->deferredShadingSlot.IsDirty()) {
         this->deferredShadingSlot.ResetDirty();
 
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "grim-fbo-resize");
         this->fbo.Release();
         this->fbo.Create(viewport.Width(), viewport.Height(),
                 GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, // colour buffer
@@ -500,6 +501,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
                     "Failed to created dsFBO: %s", ex.GetMsgA());
             }
         }
+        glPopDebugGroup();
     }
 
     if (this->cellDists.size() != cellcnt) {
@@ -565,6 +567,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     // upload to gpu-cache
     int vramUploadQuota = VRAM_UPLOAD_QUOTA; // upload no more then X VBO per frame
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 2, -1, "grim-init-depth-points");
     // z-buffer-filling
 #if defined(DEBUG) || defined(_DEBUG)
     UINT oldlevel = vislib::Trace::GetInstance().GetLevel();
@@ -721,7 +724,9 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     printf("]\n");
 #endif
     this->initDepthPointShader.Disable();
+    glPopDebugGroup();
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 3, -1, "grim-init-depth-disks");
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     float viewportStuff[4] = {
@@ -908,6 +913,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 #endif
 
     this->initDepthShader.Disable();
+    glPopDebugGroup();
 #ifdef _WIN32
 #pragma endregion Depthbuffer initialization
 #endif /* _WIN32 */
@@ -916,10 +922,16 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 #pragma region issue occlusion queries for all cells to find hidden ones
 #endif /* _WIN32 */
     if (useCellCull) {
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 4, -1, "grim-issue-queries");
         // occlusion queries ftw
         glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
         glDepthMask(GL_FALSE);
         glDisable(GL_CULL_FACE);
+
+        // this shader is so simple it should also work for the boxes.
+        this->initDepthPointShader.Enable();
+        set_cam_uniforms(this->initDepthPointShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+            mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
 
         // also disable texturing and any fancy shading features
         for (int i = cellcnt - 1; i >= 0; i--) { // front to back
@@ -972,6 +984,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glDepthMask(GL_TRUE);
         glEnable(GL_CULL_FACE);
         // reenable other state
+        glPopDebugGroup();
     }
 #ifdef _WIN32
 #pragma endregion issue occlusion queries
@@ -984,6 +997,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 #endif /* _WIN32 */
     int maxLevel = 0;
     if (useVertCull) {
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 5, -1, "grim-depth-mipmap");
         // create depth mipmap
         this->depthmap[0].Enable();
 
@@ -1132,6 +1146,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glPopMatrix();
 
         glBindTexture(GL_TEXTURE_2D, 0);
+        glPopDebugGroup();
         // END generation of depth-max mipmap
     }
 #ifdef _WIN32
@@ -1155,7 +1170,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 #ifdef _WIN32
 #pragma region speakVertCount
 #endif /* _WIN32 */
-
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 5, -1, "grim-count-visible-points");
         GLuint allQuery;
         glGenOcclusionQueriesNV(1, &allQuery);
         glBeginOcclusionQueryNV(allQuery);
@@ -1281,6 +1296,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         if (speak && speakVertCount) {
             printf("VERTEX COUNT: %u\n", static_cast<unsigned int>(totalSchnitzels));
         }
+        glPopDebugGroup();
 #ifdef _WIN32
 #pragma endregion speakVertCount
 #endif /* _WIN32 */
@@ -1290,7 +1306,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         //
         // GENERATE VISIBLE IMAGE OUTPUT
         //
-
         if (deferredShading) {
 #if defined(DEBUG) || defined(_DEBUG)
             UINT oldlevel = vislib::Trace::GetInstance().GetLevel();
@@ -1314,11 +1329,14 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 #ifdef SPEAK_CELL_USAGE
         printf("[drawd");
 #endif
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 6, -1, "grim-draw-dots");
         // draw visible data (dots)
         glEnable(GL_DEPTH_TEST);
         glPointSize(1.0f);
         glDisableClientState(GL_COLOR_ARRAY);
         daPointShader->Enable();
+        set_cam_uniforms(*daPointShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+            mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
         for (int i = cellcnt - 1; i >= 0; i--) { // front to back
             const ParticleGridDataCall::GridCell& cell = pgdc->Cells()[i];
             CellInfo& info = infos[i];
@@ -1474,13 +1492,15 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         printf("]\n");
 #endif
         daPointShader->Disable();
-
+        glPopDebugGroup();
 #ifdef SPEAK_CELL_USAGE
         printf("[draws");
 #endif
         // draw visible data (spheres)
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 7, -1, "grim-draw-spheres");
         daSphereShader->Enable();
-
+        set_cam_uniforms(*daSphereShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix, mvp_matrix_transp,
+            mvp_matrix_inv, camPos, curlightDir);
 #ifdef SUPSAMP_LOOP
         for (int supsamppass = 0; supsamppass < SUPSAMP_LOOPCNT; supsamppass++) {
 #endif /* SUPSAMP_LOOP */
@@ -1666,6 +1686,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         if (deferredShading) {
             this->dsFBO.Disable();
         }
+        glPopDebugGroup();
     }
 
     if (speakCellPerc) {
@@ -1739,7 +1760,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     }
 
     if (deferredShading) {
-
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 8, -1, "grim-deferred-shading");
         cr->EnableOutputBuffer();
 
         glEnable(GL_TEXTURE_2D);
@@ -1747,8 +1768,9 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glDisable(GL_DEPTH_TEST);
 
         this->deferredShader.Enable();
-        set_cam_uniforms(this->deferredShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
-            mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
+        // useless, everything is identity here
+        //set_cam_uniforms(this->deferredShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+        //    mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
 
         glActiveTextureARB(GL_TEXTURE0_ARB);
         this->dsFBO.BindColourTexture(0);
@@ -1816,7 +1838,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glActiveTextureARB(GL_TEXTURE0_ARB);
 
         this->deferredShader.Disable();
-
+        glPopDebugGroup();
     }
 
     //// DEBUG OUTPUT OF FBO
