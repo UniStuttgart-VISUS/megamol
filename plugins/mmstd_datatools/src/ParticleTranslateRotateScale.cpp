@@ -14,7 +14,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
-#include "vislib/math/Matrix4.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -38,12 +37,16 @@ datatools::ParticleTranslateRotateScale::ParticleTranslateRotateScale(void)
 
     this->quaternionSlot.SetParameter(new core::param::Vector4fParam(vislib::math::Vector<float, 4>(0, 0, 0, 1)));
     this->MakeSlotAvailable(&this->quaternionSlot);
+    this->quaternionSlot.Parameter()->SetGUIPresentation(
+        core::param::AbstractParamPresentation::Presentation::Rotation3D_Axes);
 
     this->scaleSlot.SetParameter(new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1, 1, 1)));
     this->MakeSlotAvailable(&this->scaleSlot);
 
     this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
+
+
 }
 
 
@@ -181,7 +184,7 @@ bool datatools::ParticleTranslateRotateScale::manipulateData(
             vislib::math::Cuboid<float> newBoxLocal;
             newBoxLocal.Set(
                 lbb_local.x, lbb_local.y, lbb_local.z, rtf_local.x, rtf_local.y, rtf_local.z);
-
+            _global_box = newBoxLocal;
             MultiParticleDataCall::Particles& outp = outData.AccessParticles(i);
             outp.SetBBox(newBoxLocal);
             outp.SetCount(cnt);
@@ -201,10 +204,10 @@ bool datatools::ParticleTranslateRotateScale::manipulateData(
                 lbb = glm::min(lbb, glm::vec3(bbox.Left(), bbox.Bottom(), bbox.Back()));
                 rtf = glm::max(rtf, glm::vec3(bbox.Right(), bbox.Top(), bbox.Front()));
             }
-            vislib::math::Cuboid<float> newBox;
-            newBox.Set(lbb.x, lbb.y, lbb.z, rtf.x, rtf.y, rtf.z);
-            outData.AccessBoundingBoxes().SetObjectSpaceBBox(newBox);
-            outData.AccessBoundingBoxes().SetObjectSpaceClipBox(newBox);
+            
+            _global_box.Set(lbb.x, lbb.y, lbb.z, rtf.x, rtf.y, rtf.z);
+            outData.AccessBoundingBoxes().SetObjectSpaceBBox(_global_box);
+            outData.AccessBoundingBoxes().SetObjectSpaceClipBox(_global_box);
         }
     }
     outData.SetDataHash(this->hash);
@@ -212,6 +215,21 @@ bool datatools::ParticleTranslateRotateScale::manipulateData(
 
     return true;
 }
+
+bool datatools::ParticleTranslateRotateScale::manipulateExtent(
+    core::moldyn::MultiParticleDataCall& outData, core::moldyn::MultiParticleDataCall& inData) {
+
+    outData = inData;
+
+    if (!_global_box.IsEmpty()) {
+        outData.AccessBoundingBoxes().SetObjectSpaceBBox(_global_box);
+        outData.AccessBoundingBoxes().SetObjectSpaceClipBox(_global_box);
+    }
+
+    return true;
+}
+
+
 
 void datatools::ParticleTranslateRotateScale::colorTransferGray(core::moldyn::MultiParticleDataCall::Particles& p,
     float const* transferTable, unsigned int tableSize, std::vector<float>& rgbaArray) {

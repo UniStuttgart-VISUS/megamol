@@ -62,6 +62,7 @@ namespace datatools {
         virtual bool manipulateData(
             megamol::core::moldyn::MultiParticleDataCall& outData,
             megamol::core::moldyn::MultiParticleDataCall& inData);
+        virtual bool manipulateExtent(core::moldyn::MultiParticleDataCall &outData, core::moldyn::MultiParticleDataCall &inData) override;
         void colorTransferGray(core::moldyn::MultiParticleDataCall::Particles& p, float const* transferTable, unsigned tableSize,
                                std::vector<float> &rgbaArray);
         megamol::core::CallerSlot getTFSlot;
@@ -76,6 +77,7 @@ namespace datatools {
         unsigned int frameID = -1;
 
         std::vector<std::vector<float>> finalData;
+        vislib::math::Cuboid<float> _global_box;
     };
 
 } /* end namespace datatools */
