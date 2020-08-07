@@ -1494,7 +1494,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         // draw visible data (spheres)
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 7, -1, "grim-draw-spheres");
         daSphereShader->Enable();
-
+        set_cam_uniforms(*daSphereShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix, mvp_matrix_transp,
+            mvp_matrix_inv, camPos, curlightDir);
 #ifdef SUPSAMP_LOOP
         for (int supsamppass = 0; supsamppass < SUPSAMP_LOOPCNT; supsamppass++) {
 #endif /* SUPSAMP_LOOP */
