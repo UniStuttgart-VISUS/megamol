@@ -1330,7 +1330,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glPointSize(1.0f);
         glDisableClientState(GL_COLOR_ARRAY);
         daPointShader->Enable();
-        set_cam_uniforms(this->initDepthPointShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+        set_cam_uniforms(*daPointShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
             mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
         for (int i = cellcnt - 1; i >= 0; i--) { // front to back
             const ParticleGridDataCall::GridCell& cell = pgdc->Cells()[i];
