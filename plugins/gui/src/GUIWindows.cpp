@@ -37,6 +37,7 @@ GUIWindows::GUIWindows(void)
     , tf_editor_ptr(nullptr)
     , configurator()
     , state()
+    , shutdown(false)
     , graph_fonts_reserved(0)
     , graph_uid(GUI_INVALID_ID)
     , graph_collection()
@@ -112,7 +113,7 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 }
 
 
-bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instanceTime) {
+bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instance_time) {
 
     if (this->api == GUIImGuiAPI::NONE) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -140,7 +141,8 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     }
 
     if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM])) {
-        this->shutdown();
+        this->triggerCoreInstanceShutdown();
+        this->shutdown = true;
         return true;
     }
     if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU])) {
@@ -157,16 +159,16 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         io.DisplayFramebufferScale = ImVec2(framebuffer_size.x / window_size.x, framebuffer_size.y / window_size.y);
     }
 
-    if ((instanceTime - this->state.last_instance_time) < 0.0) {
+    if ((instance_time - this->state.last_instance_time) < 0.0) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
             __LINE__);
     }
-    io.DeltaTime = ((instanceTime - this->state.last_instance_time) > 0.0)
-                       ? (static_cast<float>(instanceTime - this->state.last_instance_time))
+    io.DeltaTime = ((instance_time - this->state.last_instance_time) > 0.0)
+                       ? (static_cast<float>(instance_time - this->state.last_instance_time))
                        : (io.DeltaTime);
-    this->state.last_instance_time = ((instanceTime - this->state.last_instance_time) > 0.0)
-                                         ? (instanceTime)
+    this->state.last_instance_time = ((instance_time - this->state.last_instance_time) > 0.0)
+                                         ? (instance_time)
                                          : (this->state.last_instance_time + io.DeltaTime);
 
     // Changes that need to be applied before next frame ----------------------
@@ -941,7 +943,7 @@ void GUIWindows::drawTransferFunctionWindowCallback(WindowCollection::WindowConf
 
 void GUIWindows::drawConfiguratorWindowCallback(WindowCollection::WindowConfiguration& wc) {
 
-    /// TODO Decide wheather to pass core_instance or new megamol core graph
+    /// TODO Decide whether to pass core_instance or new megamol core graph
     this->configurator.Draw(wc, this->core_instance);
 }
 
@@ -1313,7 +1315,8 @@ void GUIWindows::drawMenu(void) {
 
         if (ImGui::MenuItem("Exit", "ALT + 'F4'")) {
             // Exit program
-            this->shutdown();
+            this->triggerCoreInstanceShutdown();
+            this->shutdown = true;
         }
         ImGui::EndMenu();
     }
@@ -1565,9 +1568,8 @@ bool megamol::gui::GUIWindows::isHotkeyPressed(megamol::core::view::KeyCode keyc
 }
 
 
-void megamol::gui::GUIWindows::shutdown(void) {
+void megamol::gui::GUIWindows::triggerCoreInstanceShutdown(void) {
 
-    /// TODO Decide wheather to use core_instance or new frontend
     if (this->core_instance != nullptr) {
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Shutdown MegaMol instance.");

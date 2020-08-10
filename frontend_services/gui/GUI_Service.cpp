@@ -46,7 +46,7 @@ bool GUI_Service::init(const Config& config) {
             if (check_gui_not_nullptr) {
                 if (this->m_gui.ptr->Get()->CreateContext_GL(config.core_instance)) {  
                     this->m_providedResourceReferences = { {"GUIResource", this->m_gui} };
-                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Successfully initialized GUI service.\n");
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Successfully initialized GUI service.");
                     return true;
                 }
             }
@@ -75,12 +75,17 @@ void GUI_Service::digestChangedRequestedResources() {
     auto gui = this->m_gui.ptr->Get();
     // check for updates in required resources:
 
+    // Trigger shutdown
+    this->setShutdown(gui->ShouldShutdown());
+
     /// MegaMolGraph = resource index 0
     auto megamol_graph_ptr = &this->m_requestedResourceReferences[0].getResource<megamol::core::MegaMolGraph>(); 
     /// WARNING: Changing a constant type will lead to an undefined behavior!
     auto graph = const_cast<megamol::core::MegaMolGraph*>(megamol_graph_ptr);
-    // TODO
 
+    ///
+    // TODO
+    ///
 
     /// WindowEvents = resource index 1
     auto window_events = &this->m_requestedResourceReferences[1].getResource<megamol::module_resources::WindowEvents>();
@@ -160,8 +165,6 @@ void GUI_Service::digestChangedRequestedResources() {
         m_resource_state.framebuffer_size.x = static_cast<float>(size_event.width);
         m_resource_state.framebuffer_size.y = static_cast<float>(size_event.height);
     }
-
-    /// TODO Check for shutdown event
 }
 
 

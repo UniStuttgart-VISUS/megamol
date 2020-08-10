@@ -78,9 +78,9 @@ public:
      *
      * @param framebuffer_size   The currently available size of the framebuffer.
      * @param window_size        The currently available size of the window.
-     * @param instanceTime       The current instance time.
+     * @param instance_time      The current instance time.
      */
-    bool PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instanceTime);
+    bool PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instance_time);
 
     /**
      * Actual drawing of Gui windows and final rendering of pushed ImGui draw commands.
@@ -117,6 +117,11 @@ public:
      * Return list of parameter slots provided by this class. Make available in module which uses this class.
      */
     inline const std::vector<megamol::core::param::ParamSlot*> GetParams(void) const { return this->param_slots; }
+
+    /**
+     * Return true if user triggered shutdown inside gui.
+     */
+    bool ShouldShutdown(void) { return this->shutdown; }
 
 private:
     /** Available GUI styles. */
@@ -192,6 +197,9 @@ private:
     /** The current local state of the gui. */
     StateBuffer state;
 
+    /** Flag indicating user triggered shutdown. */
+    bool shutdown;
+
     /** Numer of fonts reserved for the configurator graph canvas. */
     unsigned int graph_fonts_reserved;
 
@@ -229,7 +237,7 @@ private:
     bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
     void checkMultipleHotkeyAssignement(void);
     bool isHotkeyPressed(megamol::core::view::KeyCode keycode);
-    void shutdown(void);
+    void triggerCoreInstanceShutdown(void);
 
     void save_state_to_parameter(void);
     bool gui_and_parameters_state_from_json_string(const std::string& in_json_string);
