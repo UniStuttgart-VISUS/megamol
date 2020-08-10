@@ -1668,11 +1668,11 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glDisable(GL_TEXTURE_2D);
 
         glPopDebugGroup();
+    }
 
-        if (speakCellPerc) {
-            printf("CELLS VISIBLE: %f%%\n", float(visCnt * 100) / float(cellcnt));
-            printf("PARTICLES IN VISIBLE CELLS: %u\n", visPart);
-        }
+    if (speakCellPerc) {
+        printf("CELLS VISIBLE: %f%%\n", float(visCnt * 100) / float(cellcnt));
+        printf("PARTICLES IN VISIBLE CELLS: %u\n", visPart);
     }
 
     // remove unused cache item ///////////////////////////////////////////////
