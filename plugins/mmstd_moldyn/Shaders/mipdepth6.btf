@@ -377,6 +377,7 @@ uniform float hitsideFlag;
 uniform vec4 clipDat;
 uniform vec4 clipCol;
 uniform vec4 viewAttr;
+uniform int use_shading;
 // new camera
 uniform mat4 mv_inv;
 uniform mat4 mv_inv_transp;
@@ -498,8 +499,11 @@ void main(void) {
 
         <snippet type="string">
 <![CDATA[
-  //gl_FragData[0] = vec4(color.rgb, 1.0);
-  gl_FragData[0] = vec4(LocalLighting(ray, normal, lightDir.xyz, color.rgb), 1.0);
+  if (bool(use_shading)) {
+    gl_FragData[0] = vec4(LocalLighting(ray, normal, lightDir.xyz, color.rgb), 1.0);
+  } else {
+    gl_FragData[0] = vec4(color.rgb, 1.0);
+  }
   
   //normal = normalize((mv_inv_transp * vec4(normal, 1.0)).xyz);
   gl_FragData[1] = vec4(normal.xyz, clamp((pointSize - 4.0) * 0.25, 0.0, 1.0));

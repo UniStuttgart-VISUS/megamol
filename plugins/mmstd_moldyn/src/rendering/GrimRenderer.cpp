@@ -1487,6 +1487,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glUniform3fv(daSphereShader->ParameterLocation("camIn"), 1, glm::value_ptr(camView));
         glUniform3fv(daSphereShader->ParameterLocation("camRight"), 1, glm::value_ptr(camRight));
         glUniform3fv(daSphereShader->ParameterLocation("camUp"), 1, glm::value_ptr(camUp));
+        glUniform1i(daSphereShader->ParameterLocation("use_shading"), static_cast<int>(!deferredShading));
 
         if (useVertCull) {
             daSphereShader->SetParameter("depthTexParams", this->depthmap[0].GetWidth(), this->depthmap[0].GetHeight() * 2 / 3, maxLevel);
