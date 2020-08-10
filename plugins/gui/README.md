@@ -228,7 +228,7 @@ In order to add a new custom widget for a group of parameters sharing the same n
 
 #### Default gui state 
 
-```json
+```lua
 mmSetParamValue("::gui::state",[=[{
   "GUI": {
     "menu_visible": true,
