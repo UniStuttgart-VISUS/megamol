@@ -1140,36 +1140,11 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     // ------------------------------------------------------------------------
 
     // Set OpenGL state ----------------------------------------------------
-    GLboolean blendEnabled;
-    GLint blendSrc;
-    GLint blendDst;
-    GLboolean depthEnabled;
-    GLint depthFunc;
-    GLboolean clipEnabled;
-    GLboolean pointsizeEnabled;
-    if (currentRenderMode != RenderMode::SPLAT) {
-        blendEnabled = glIsEnabled(GL_BLEND);
-        if (blendEnabled) {
-            glDisable(GL_BLEND);
-        }
-        glGetIntegerv(GL_BLEND_SRC, &blendSrc);
-        glGetIntegerv(GL_BLEND_DST, &blendDst);
-        depthEnabled = glIsEnabled(GL_DEPTH_TEST);
-        if (!depthEnabled) {
-            glEnable(GL_DEPTH_TEST);
-        }
-        glGetIntegerv(GL_DEPTH_FUNC, &depthFunc);
-        // Necessary for early depth test in fragment shader (default):
-        glDepthFunc(GL_LESS);
-        clipEnabled = glIsEnabled(GL_CLIP_DISTANCE0);
-        if (!clipEnabled) {
-            glEnable(GL_CLIP_DISTANCE0);
-        }
-        pointsizeEnabled = glIsEnabled(GL_VERTEX_PROGRAM_POINT_SIZE);
-        if (!pointsizeEnabled) {
-            glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-        }
-    }
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS); // Necessary for early depth test in fragment shader (default)
+    glEnable(GL_CLIP_DISTANCE0);
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     bool retval = false;
     switch (currentRenderMode) {
@@ -1199,23 +1174,14 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
         break;
     }
 
-    // Reset OpenGL state --------------------------------------------------
-    if (currentRenderMode != RenderMode::SPLAT) {
-        if (!pointsizeEnabled) {
-            glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
-        }
-        if (!clipEnabled) {
-            glDisable(GL_CLIP_DISTANCE0);
-        }
-        glDepthFunc(static_cast<GLenum>(depthFunc));
-        if (!depthEnabled) {
-            glDisable(GL_DEPTH_TEST);
-        }
-        glBlendFunc(static_cast<GLenum>(blendSrc), static_cast<GLenum>(blendDst));
-        if (blendEnabled) {
-            glEnable(GL_BLEND);
-        }
-    }
+    // Reset default OpenGL state ---------------------------------------------
+    glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    glDisable(GL_CLIP_DISTANCE0);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_POINT_SPRITE);
 
     // Save some current data
     this->lastVpHeight = this->curVpHeight;
@@ -1484,37 +1450,17 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2& call, MultiParticleDataCal
 bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
 
     // Set OpenGL state -----------------------------------------------
-    // Blending
-    GLboolean blendEnabled = glIsEnabled(GL_BLEND);
-    if (!blendEnabled) {
-        glEnable(GL_BLEND);
-    }
-    GLint blendSrc;
-    GLint blendDst;
-    glGetIntegerv(GL_BLEND_SRC, &blendSrc);
-    glGetIntegerv(GL_BLEND_DST, &blendDst);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_POINT_SPRITE);
+    glEnable(GL_BLEND);
     // Should be default for splat rendering (Hint: Background colour should not be WHITE)
     glBlendFunc(GL_ONE, GL_ONE);
-    GLint blendEqu;
-    glGetIntegerv(GL_BLEND_EQUATION, &blendEqu);
     glBlendEquation(GL_FUNC_ADD);
 
     // Maybe for blending against white, remove pre-mult alpha and use this:
     // @gl.blendFuncSeparate @gl.SRC_ALPHA, @gl.ONE_MINUS_SRC_ALPHA, @gl.ONE, @gl.ONE_MINUS_SRC_ALPHA
     //glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     // glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
-
-    // Depth
-    GLboolean depthEnabled = glIsEnabled(GL_DEPTH_TEST);
-    if (depthEnabled) {
-        glDisable(GL_DEPTH_TEST);
-    }
-
-    // Point Sprite
-    GLboolean spriteEnabled = glIsEnabled(GL_POINT_SPRITE);
-    if (!spriteEnabled) {
-        glEnable(GL_POINT_SPRITE);
-    }
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->theSingleBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->theSingleBuffer);
@@ -1614,19 +1560,6 @@ bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCa
         newShader->Disable();
 
         flagPartsCount += parts.GetCount();
-    }
-
-    // Reset OpenGL state ---------------------------------------------
-    glBlendFunc(static_cast<GLenum>(blendSrc), static_cast<GLenum>(blendDst));
-    glBlendEquation(static_cast<GLenum>(blendEqu));
-    if (!blendEnabled) {
-        glDisable(GL_BLEND);
-    }
-    if (depthEnabled) {
-        glEnable(GL_DEPTH_TEST);
-    }
-    if (!spriteEnabled) {
-        glDisable(GL_POINT_SPRITE);
     }
 
     mpdc->Unlock();

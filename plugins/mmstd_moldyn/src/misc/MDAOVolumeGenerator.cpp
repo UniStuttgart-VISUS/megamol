@@ -181,18 +181,8 @@ void MDAOVolumeGenerator::StartInsertion(const vislib::math::Cuboid< float >& ob
     this->boundsMin = glm::vec3(bmin.GetX(), bmin.GetY(), bmin.GetZ());
 
     // Save previous OpenGL state
-    pointsizeEnabled = glIsEnabled(GL_VERTEX_PROGRAM_POINT_SIZE);
-    if (!pointsizeEnabled) {
-        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE); checkGLError;
-    }
-    blendEnabled = glIsEnabled(GL_BLEND);
-    if (!blendEnabled) {
-        glEnable(GL_BLEND);
-    }
-    blendSrc;
-    blendDst;
-    glGetIntegerv(GL_BLEND_SRC, &blendSrc);
-    glGetIntegerv(GL_BLEND_DST, &blendDst);
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE); checkGLError;
+    glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE); checkGLError;
     glGetIntegerv(GL_VIEWPORT, viewport);
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
@@ -239,13 +229,9 @@ void MDAOVolumeGenerator::EndInsertion()
     glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
     glBindTexture(GL_TEXTURE_3D, 0);
-    glBlendFunc(static_cast<GLenum>(blendSrc), static_cast<GLenum>(blendDst));
-    if (!blendEnabled) {
-        glDisable(GL_BLEND);
-    }
-    if (!pointsizeEnabled) {
-        glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
-    }
+
+    glDisable(GL_BLEND);
+    glDisable(GL_VERTEX_PROGRAM_POINT_SIZE); /// ! Do not disable, still required in sphere renderer !
 
     ++dataVersion;
 

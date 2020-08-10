@@ -59,10 +59,6 @@ namespace misc {
         // Previous OpenGL State
         GLint viewport[4];
         GLint prevFBO;
-        GLboolean pointsizeEnabled;
-        GLboolean blendEnabled;
-        GLint blendSrc;
-        GLint blendDst;
     };
 
 } /* end namespace misc */

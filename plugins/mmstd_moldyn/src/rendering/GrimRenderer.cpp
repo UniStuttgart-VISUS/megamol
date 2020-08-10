@@ -535,8 +535,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     }
     std::sort(dists.begin(), dists.end(), GrimRenderer::depthSort);
 
-    /// TODO save previous opengl state: LINEWIDTH, POINTSIZE, BLEND, DEPTH, FBO, GL_VERTEX_PROGRAM_POINT_SIZE
-
     // init depth points //////////////////////////////////////////////////////
 #ifdef _WIN32
 #pragma region Depthbuffer initialization
@@ -545,6 +543,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     glLineWidth(5.0f);
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     // upload to gpu-cache
     int vramUploadQuota = VRAM_UPLOAD_QUOTA; // upload no more then X VBO per frame
@@ -703,7 +702,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
     // init depth disks ///////////////////////////////////////////////////////
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 3, -1, "grim-init-depth-disks");
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     float viewportStuff[4] = { 0.0f, 0.0f, viewport.Width(), viewport.Height() };
     float defaultPointSize = glm::max(viewportStuff[2], viewportStuff[3]);
@@ -957,7 +955,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         glDepthMask(GL_TRUE);
-        glEnable(GL_CULL_FACE);
         // reenable other state
         glPopDebugGroup();
     }
@@ -967,6 +964,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
     this->fbo.Disable();
     // END Depth buffer initialized
+
+    glEnable(GL_CULL_FACE);
 
     // depth mipmap ///////////////////////////////////////////////////////////
 #ifdef _WIN32
@@ -984,7 +983,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glClear(GL_COLOR_BUFFER_BIT);
 
         glEnable(GL_TEXTURE_2D);
-        glEnable(GL_DEPTH_TEST);
         glDisable(GL_LIGHTING);
         glDisable(GL_DEPTH_TEST);
         glActiveTextureARB(GL_TEXTURE0_ARB);
@@ -1745,6 +1743,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glEnable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);
         glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
 
         this->deferredShader.Enable();
         // useless, everything is identity here
@@ -1867,6 +1866,23 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         CellInfo& info = infos[i];
         info.wasvisible = info.isvisible;
     }
+
+    // Reset default OpenGL state ---------------------------------------------
+    glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    glDisable(GL_CLIP_DISTANCE0);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_POINT_SPRITE);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_1D);
+    glDisable(GL_LIGHTING);
+    glPointSize(1.0f);
+    glLineWidth(1.0f);
 
     return true;
 }
