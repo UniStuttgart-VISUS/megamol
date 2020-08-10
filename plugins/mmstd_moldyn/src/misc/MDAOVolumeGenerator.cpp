@@ -182,7 +182,7 @@ void MDAOVolumeGenerator::StartInsertion(const vislib::math::Cuboid< float >& ob
 
     // Save previous OpenGL state
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE); checkGLError;
-    glEnable(GL_BLEND);
+    glEnable(GL_BLEND); checkGLError;
     glBlendFunc(GL_ONE, GL_ONE); checkGLError;
     glGetIntegerv(GL_VIEWPORT, viewport);
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
@@ -230,7 +230,9 @@ void MDAOVolumeGenerator::EndInsertion()
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
     glBindTexture(GL_TEXTURE_3D, 0);
 
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_BLEND);
+
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE); /// ! Do not disable, still required in sphere renderer !
 
     ++dataVersion;
