@@ -522,12 +522,14 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName, std
         log("error. could not find module: " + moduleName);
         return false;
     }
-
+    
     auto module_ptr = module_it->modulePtr;
 
 	auto resources = get_requested_resources(execution_resource_requests);
 
 	this->graph_entry_points.push_back({moduleName, module_ptr, resources, callback});
+
+    module_it->isGraphEntryPoint = true;
 
     return true;
 }
