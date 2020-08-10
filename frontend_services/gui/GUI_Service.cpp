@@ -73,19 +73,19 @@ void GUI_Service::digestChangedRequestedResources() {
 
     if (!check_gui_not_nullptr) return;
     auto gui = this->m_gui.ptr->Get();
-    // check for updates in required resources:
 
     // Trigger shutdown
     this->setShutdown(gui->ShouldShutdown());
 
+    // Check for updates in requested resources --------------------------------
+
     /// MegaMolGraph = resource index 0
     auto megamol_graph_ptr = &this->m_requestedResourceReferences[0].getResource<megamol::core::MegaMolGraph>(); 
-    /// WARNING: Changing a constant type will lead to an undefined behavior!
-    auto graph = const_cast<megamol::core::MegaMolGraph*>(megamol_graph_ptr);
 
-    ///
-    // TODO
-    ///
+    // Synchronise changes between core graph and gui graph
+    /// WARNING: Changing a constant type will lead to an undefined behavior!
+    auto core_graph = const_cast<megamol::core::MegaMolGraph*>(megamol_graph_ptr);
+    gui->SynchronizeGraphs(core_graph);
 
     /// WindowEvents = resource index 1
     auto window_events = &this->m_requestedResourceReferences[1].getResource<megamol::module_resources::WindowEvents>();

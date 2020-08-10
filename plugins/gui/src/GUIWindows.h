@@ -34,7 +34,6 @@
 #include "widgets/WidgetPicking_gl.h"
 
 #include "mmcore/CoreInstance.h"
-
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/versioninfo.h"
@@ -119,9 +118,16 @@ public:
     inline const std::vector<megamol::core::param::ParamSlot*> GetParams(void) const { return this->param_slots; }
 
     /**
-     * Return true if user triggered shutdown inside gui.
+     * Return true if user triggered shutdown via gui.
      */
     bool ShouldShutdown(void) { return this->shutdown; }
+
+    /**
+     * Synchronise changes between core graph and gui graph.
+     *
+     * @param core_graph    If no core_graph is given, try to synchronise 'old' graph via core_instance.
+     */
+    bool SynchronizeGraphs(megamol::core::MegaMolGraph* core_graph = nullptr);
 
 private:
     /** Available GUI styles. */
@@ -165,9 +171,6 @@ private:
 
     /** Pointer to core instance. */
     megamol::core::CoreInstance* core_instance;
-
-    /** Pointer to megamol graph of the core. */
-    megamol::core::MegaMolGraph* core_graph;
 
     /** List of pointers to all paramters. */
     std::vector<megamol::core::param::ParamSlot*> param_slots;

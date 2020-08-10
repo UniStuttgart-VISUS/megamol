@@ -14,6 +14,7 @@
 #include "widgets/MinimalPopUp.h"
 
 #include "mmcore/CoreInstance.h"
+#include "mmcore/MegaMolGraph.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
@@ -75,8 +76,8 @@ public:
     ~GraphCollection(void);
 
     ImGuiID AddGraph(void);
-    bool DeleteGraph(ImGuiID graph_uid);
-    bool GetGraph(ImGuiID graph_uid, GraphPtr_t& out_graph_ptr);
+    bool DeleteGraph(ImGuiID in_graph_uid);
+    bool GetGraph(ImGuiID in_graph_uid, GraphPtr_t& out_graph_ptr);
     const Graphs_t& GetGraphs(void) { return this->graphs; }
 
     bool LoadModuleStock(const megamol::core::CoreInstance* core_instance);
@@ -84,14 +85,19 @@ public:
     inline const ModuleStockVector_t& GetModulesStock(void) { return this->modules_stock; }
     inline const CallStockVector_t& GetCallsStock(void) { return this->calls_stock; }
 
-    ImGuiID LoadUpdateProjectFromCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance);
+    ImGuiID LoadUpdateProjectFromCore(ImGuiID in_graph_uid, megamol::core::CoreInstance* core_instance);
+    ImGuiID LoadUpdateProjectFromCore(ImGuiID in_graph_uid, megamol::core::MegaMolGraph* core_graph);
 
-    ImGuiID LoadProjectFromCore(megamol::core::CoreInstance* core_instance);
-    bool AddProjectFromCore(ImGuiID graph_uid, megamol::core::CoreInstance* core_instance, bool use_stock);
+    ImGuiID LoadProjectFromCore(megamol::core::CoreInstance* core_instance) {
+        return LoadUpdateProjectFromCore(GUI_INVALID_ID, core_instance);
+    }
 
-    ImGuiID LoadAddProjectFromFile(ImGuiID graph_uid, const std::string& project_filename);
+    bool AddProjectFromCore(ImGuiID in_graph_uid, megamol::core::CoreInstance* core_instance, bool use_stock);
+    bool AddProjectFromCore(ImGuiID in_graph_uid, megamol::core::MegaMolGraph* core_graph, bool use_stock);
 
-    bool SaveProjectToFile(ImGuiID graph_uid, const std::string& project_filename, bool core_graph);
+    ImGuiID LoadAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
+
+    bool SaveProjectToFile(ImGuiID in_graph_uid, const std::string& project_filename, bool core_graph);
 
     // Presentation ----------------------------------------------------
 

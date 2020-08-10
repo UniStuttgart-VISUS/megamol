@@ -26,7 +26,6 @@ using namespace megamol::gui;
 
 GUIWindows::GUIWindows(void)
     : core_instance(nullptr)
-    , core_graph(nullptr)
     , param_slots()
     , style_param("style", "Color style, theme")
     , state_param(GUI_GUI_STATE_PARAM_NAME, "Current state of all windows.")
@@ -98,12 +97,6 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
         // Init OpenGL for ImGui
         const char* glsl_version = "#version 130"; /// "#version 150" or nullptr
         if (ImGui_ImplOpenGL3_Init(glsl_version)) {
-
-            /// TODO: imgui and new frontend are linked against different GLAD targets, fix this via reorganizing CMake
-            /// targets megamol\build\_deps\imgui - src\examples\imgui_impl_opengl3.cpp comment line 138:
-            /// //glGetIntegerv(GL_TEXTURE_BINDING_2D, &current_texture);
-
-
             this->api = GUIImGuiAPI::OpenGL;
             return true;
         }
@@ -131,13 +124,6 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     ImGui::SetCurrentContext(this->context);
     if (this->core_instance != nullptr) {
         this->core_instance->SetCurrentImGuiContext(this->context);
-    }
-
-    // Loading and/or updating currently running core graph
-    if (this->core_instance != nullptr) {
-        this->graph_collection.LoadCallStock(core_instance);
-        /// TODO No update is done yet
-        this->graph_uid = this->graph_collection.LoadUpdateProjectFromCore(this->graph_uid, this->core_instance);
     }
 
     if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM])) {
@@ -381,28 +367,6 @@ bool GUIWindows::PostDraw(void) {
     //    id, glm::vec2(0.0f, 200.0f), viewport_dim, this->picking_buffer.GetPendingManipulations());
     // this->picking_buffer.DisableInteraction();
 
-    // Synchronizing parameter values -----------------------------------------
-    if (this->graph_collection.GetGraph(this->graph_uid, graph_ptr)) {
-        for (auto& module_ptr : graph_ptr->GetModules()) {
-            for (auto& param : module_ptr->parameters) {
-                if (!param.core_param_ptr.IsNull()) {
-                    // Write changed gui state to core parameter
-                    if (param.present.IsGUIStateDirty()) {
-                        megamol::gui::Parameter::WriteCoreParameterGUIState(param, param.core_param_ptr);
-                        param.present.ResetGUIStateDirty();
-                    }
-                    // Write changed parameter value to core parameter
-                    if (param.IsValueDirty()) {
-                        megamol::gui::Parameter::WriteCoreParameterValue(param, param.core_param_ptr);
-                        param.ResetValueDirty();
-                    }
-                    // Read current parameter value and GUI state fro core parameter
-                    megamol::gui::Parameter::ReadCoreParameterToParameter(param.core_param_ptr, param, false, false);
-                }
-            }
-        }
-    }
-
     // Draw pop-ups ------------------------------------------------------------
     this->drawPopUps();
 
@@ -641,6 +605,58 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
 }
 
 
+bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* core_graph) {
+
+    bool retval = true;
+
+    // Load and/or update currently running core graph ------------------------
+    /// Valid pointer to core instance is currently essentially required for loading any graph.
+    if (this->core_instance != nullptr) {
+        // Load all known calls from core instance once
+        bool call_stock_loaded = this->graph_collection.LoadCallStock(core_instance);
+        if (call_stock_loaded) {
+            if (core_graph != nullptr) {
+                /// Load 'new' megamol graph created by new frontend
+                // TODO No update is done yet
+                this->graph_uid = this->graph_collection.LoadUpdateProjectFromCore(this->graph_uid, core_graph);
+            } else if (this->core_instance != nullptr) {
+                /// Load 'old' megamol graph residing in core instance
+                // TODO No update is done yet
+                this->graph_uid =
+                    this->graph_collection.LoadUpdateProjectFromCore(this->graph_uid, this->core_instance);
+            }
+            retval &= (GUI_INVALID_ID != this->graph_uid);
+        }
+    }
+
+    // Synchronizing parameter values -------------------------------------
+    GraphPtr_t graph_ptr;
+    if (this->graph_collection.GetGraph(this->graph_uid, graph_ptr)) {
+        for (auto& module_ptr : graph_ptr->GetModules()) {
+            for (auto& param : module_ptr->parameters) {
+                if (!param.core_param_ptr.IsNull()) {
+                    // Write changed gui state to core parameter
+                    if (param.present.IsGUIStateDirty()) {
+                        retval &= megamol::gui::Parameter::WriteCoreParameterGUIState(param, param.core_param_ptr);
+                        param.present.ResetGUIStateDirty();
+                    }
+                    // Write changed parameter value to core parameter
+                    if (param.IsValueDirty()) {
+                        retval &= megamol::gui::Parameter::WriteCoreParameterValue(param, param.core_param_ptr);
+                        param.ResetValueDirty();
+                    }
+                    // Read current parameter value and GUI state fro core parameter
+                    retval &= megamol::gui::Parameter::ReadCoreParameterToParameter(
+                        param.core_param_ptr, param, false, false);
+                }
+            }
+        }
+    }
+
+    return retval;
+}
+
+
 bool GUIWindows::createContext(void) {
 
     // Check for successfully created tf editor
@@ -864,7 +880,6 @@ bool GUIWindows::createContext(void) {
 bool GUIWindows::destroyContext(void) {
 
     this->core_instance = nullptr;
-    this->core_graph = nullptr;
 
     if (this->api != GUIImGuiAPI::NONE) {
         if (this->context != nullptr) {
@@ -943,7 +958,7 @@ void GUIWindows::drawTransferFunctionWindowCallback(WindowCollection::WindowConf
 
 void GUIWindows::drawConfiguratorWindowCallback(WindowCollection::WindowConfiguration& wc) {
 
-    /// TODO Decide whether to pass core_instance or new megamol core graph
+    /// TODO Decide whether to pass core_instance or new megamol core graph?
     this->configurator.Draw(wc, this->core_instance);
 }
 

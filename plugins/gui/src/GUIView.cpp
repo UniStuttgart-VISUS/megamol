@@ -82,6 +82,7 @@ void GUIView::Render(const mmcRenderViewContext& context) {
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
     }
+    this->gui.SynchronizeGraphs();
     if (crv) {
         crv->SetOutputBuffer(GL_BACK);
         crv->SetInstanceTime(context.InstanceTime);
