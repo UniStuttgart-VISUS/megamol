@@ -431,6 +431,6 @@ mmSetParamValue("::gui::state",[=[{
 }]=])
 ```
 
-### Plugin Class Dependencies
+#### Plugin Class Dependencies
 
 ![gui plugin class dependencies](class_dependencies.png)
