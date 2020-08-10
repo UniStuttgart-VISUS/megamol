@@ -53,12 +53,12 @@ uniform mat4 mv_inv_transp;
 uniform mat4 mvp;
 uniform mat4 mvp_inv;
 uniform mat4 mvp_transp;
-uniform vec4 light_pos;
+uniform vec4 light_dir;
 uniform vec4 cam_pos;
 // end new camera
 out vec4 objPos;
 out vec4 camPos;
-out vec4 lightPos;
+out vec4 lightDir;
 out float squarRad;
 out float rad;
 
@@ -105,10 +105,10 @@ void main(void) {
     camPos1.xyz -= objPos1.xyz; // cam pos to glyph space
     camPos2.xyz -= objPos2.xyz;
 
-    lightPos = mv_inv * light_pos;
-    lightPos.w = 1.0;
+    lightDir = light_dir;
+    lightDir.w = 1.0;
 
-    // Sphere-Touch-Plane-Approach™
+    // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
     vec4 d, p, q, h, dd;
 
@@ -339,12 +339,12 @@ uniform mat4 mv_inv_transp;
 uniform mat4 mvp;
 uniform mat4 mvp_inv;
 uniform mat4 mvp_transp;
-uniform vec4 light_pos;
+uniform vec4 light_dir;
 uniform vec4 cam_pos;
 // end new camera
 out vec4 objPos;
 out vec4 camPos;
-out vec4 lightPos;
+out vec4 lightDir;
 out float squarRad;
 out float rad;
 
@@ -403,7 +403,7 @@ void main(void) {
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
 
     // calculate light position in glyph space
-    lightPos = mv_inv * light_pos;
+    lightDir = light_dir;
 ]]>
         </snippet>
 
@@ -433,9 +433,9 @@ void main(void) {
 
 #ifdef SMALL_SPRITE_LIGHTING
     // for normal crowbaring on very small sprites
-    lightPos.w = (clamp(gl_PointSize, 1.0, 5.0) - 1.0) / 4.0;
+    lightDir.w = (clamp(gl_PointSize, 1.0, 5.0) - 1.0) / 4.0;
 #else
-    lightPos.w = 1.0;
+    lightDir.w = 1.0;
 #endif // SMALL_SPRITE_LIGHTING
     
 #ifdef RETICLE

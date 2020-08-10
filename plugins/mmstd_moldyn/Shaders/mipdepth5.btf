@@ -37,7 +37,7 @@ uniform mat4 mv_inv_transp;
 uniform mat4 mvp;
 uniform mat4 mvp_inv;
 uniform mat4 mvp_transp;
-uniform vec4 light_pos;
+uniform vec4 light_dir;
 uniform vec4 cam_pos;
 // end new camera
 out vec4 objPos;
@@ -230,7 +230,7 @@ uniform mat4 mv_inv_transp;
 uniform mat4 mvp;
 uniform mat4 mvp_inv;
 uniform mat4 mvp_transp;
-uniform vec4 light_pos;
+uniform vec4 light_dir;
 uniform vec4 cam_pos;
 // end new camera
 out vec4 objPos;

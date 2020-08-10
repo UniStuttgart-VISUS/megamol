@@ -305,7 +305,7 @@ void GrimRenderer::set_cam_uniforms(vislib::graphics::gl::GLSLShader& shader, gl
     glUniformMatrix4fv(shader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp_matrix));
     glUniformMatrix4fv(shader.ParameterLocation("mvp_transp"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_transp));
     glUniformMatrix4fv(shader.ParameterLocation("mvp_inv"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_inv));
-    glUniform4fv(shader.ParameterLocation("light_pos"), 1, glm::value_ptr(curlightDir));
+    glUniform4fv(shader.ParameterLocation("light_dir"), 1, glm::value_ptr(curlightDir));
     glUniform4fv(shader.ParameterLocation("cam_pos"), 1, glm::value_ptr(camPos));
 }
 
@@ -540,7 +540,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     // init depth points //////////////////////////////////////////////////////
 #ifdef _WIN32
 #pragma region Depthbuffer initialization
-#endif /* _WIN32 */
+#endif // _WIN32 
 
     glLineWidth(5.0f);
     glDisable(GL_BLEND);
@@ -655,7 +655,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
                 this->cacheSizeUsed += cbpp * parts.GetCount();
 #ifdef SPEAK_VRAM_CACHE_USAGE
                 printf("VRAM-Cache: Add[%d; %u] %u/%u\n", i, j, this->cacheSizeUsed, this->cacheSize);
-#endif /* SPEAK_VRAM_CACHE_USAGE */
+#endif // SPEAK_VRAM_CACHE_USAGE
             }
 
             // radius and position
@@ -827,7 +827,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
                 this->cacheSizeUsed += cbpp * parts.GetCount();
 #ifdef SPEAK_VRAM_CACHE_USAGE
                 printf("VRAM-Cache: Add[%d; %u] %u/%u\n", i, j, this->cacheSizeUsed, this->cacheSize);
-#endif /* SPEAK_VRAM_CACHE_USAGE */
+#endif // SPEAK_VRAM_CACHE_USAGE 
             }
 
             // radius and position
@@ -888,12 +888,12 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
 #ifdef _WIN32
 #pragma endregion Depthbuffer initialization
-#endif /* _WIN32 */
+#endif // _WIN32
 
         // issue queries //////////////////////////////////////////////////////
 #ifdef _WIN32
 #pragma region issue occlusion queries for all cells to find hidden ones
-#endif /* _WIN32 */
+#endif // _WIN32
 
     if (useCellCull) {
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 4, -1, "grim-issue-queries");
@@ -963,7 +963,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     }
 #ifdef _WIN32
 #pragma endregion issue occlusion queries
-#endif /* _WIN32 */
+#endif // _WIN32
 
     this->fbo.Disable();
     // END Depth buffer initialized
@@ -971,7 +971,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     // depth mipmap ///////////////////////////////////////////////////////////
 #ifdef _WIN32
 #pragma region depth buffer mipmaping
-#endif /* _WIN32 */
+#endif // _WIN32
 
     int maxLevel = 0;
     if (useVertCull) {
@@ -1129,7 +1129,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     }
 #ifdef _WIN32
 #pragma endregion depth buffer mipmaping
-#endif /* _WIN32 */
+#endif // _WIN32
 
 #if defined(DEBUG) || defined(_DEBUG)
     vislib::Trace::GetInstance().SetLevel(oldlevel);
@@ -1148,7 +1148,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         //
 #ifdef _WIN32
 #pragma region speakVertCount
-#endif /* _WIN32 */
+#endif // _WIN32
 
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 5, -1, "grim-count-visible-points");
         GLuint allQuery;
@@ -1277,7 +1277,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glPopDebugGroup();
 #ifdef _WIN32
 #pragma endregion speakVertCount
-#endif /* _WIN32 */
+#endif // _WIN32 
 
     } else {
         //
@@ -1302,15 +1302,16 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
             cr->EnableOutputBuffer();
         }
 
+        glEnable(GL_DEPTH_TEST);
+        glPointSize(1.0f);
+        glDisableClientState(GL_COLOR_ARRAY);
+
+        // draw points ///////////////////////////////////////////////////////
 #ifdef SPEAK_CELL_USAGE
         printf("[drawd");
 #endif
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 6, -1, "grim-draw-dots");
-
         // draw visible data (dots)
-        glEnable(GL_DEPTH_TEST);
-        glPointSize(1.0f);
-        glDisableClientState(GL_COLOR_ARRAY);
         daPointShader->Enable();
         set_cam_uniforms(*daPointShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
             mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
@@ -1480,7 +1481,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
             mvp_matrix_inv, camPos, curlightDir);
 #ifdef SUPSAMP_LOOP
         for (int supsamppass = 0; supsamppass < SUPSAMP_LOOPCNT; supsamppass++) {
-#endif /* SUPSAMP_LOOP */
+#endif // SUPSAMP_LOOP
 
         glUniform4fv(daSphereShader->ParameterLocation("viewAttr"), 1, viewportStuff);
         glUniform3fv(daSphereShader->ParameterLocation("camIn"), 1, glm::value_ptr(camView));
@@ -1656,22 +1657,23 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
 #ifdef SUPSAMP_LOOP
         }
-#endif /* SUPSAMP_LOOP */
+#endif // SUPSAMP_LOOP
 
         if (deferredShading) {
             this->dsFBO.Disable();
         }
+
+        daSphereShader->Disable();
+        glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+        glDisable(GL_TEXTURE_2D);
+
         glPopDebugGroup();
-    }
 
-    if (speakCellPerc) {
-        printf("CELLS VISIBLE: %f%%\n", float(visCnt * 100) / float(cellcnt));
-        printf("PARTICLES IN VISIBLE CELLS: %u\n", visPart);
+        if (speakCellPerc) {
+            printf("CELLS VISIBLE: %f%%\n", float(visCnt * 100) / float(cellcnt));
+            printf("PARTICLES IN VISIBLE CELLS: %u\n", visPart);
+        }
     }
-
-    daSphereShader->Disable();
-    glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
-    glDisable(GL_TEXTURE_2D);
 
     // remove unused cache item ///////////////////////////////////////////////
     if ((this->cacheSizeUsed * 5 / 4) > this->cacheSize) {
@@ -1729,7 +1731,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
                 this->cacheSizeUsed -= (vbpp + cbpp) * parts.GetCount();
 #ifdef SPEAK_VRAM_CACHE_USAGE
                 printf("VRAM-Cache: Del[%d; %u] %u/%u\n", i, j, this->cacheSizeUsed, this->cacheSize);
-#endif /* SPEAK_VRAM_CACHE_USAGE */
+#endif // SPEAK_VRAM_CACHE_USAGE
             }
         }
     }
@@ -1759,24 +1761,26 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         this->deferredShader.SetParameter("normal", 1);
         this->deferredShader.SetParameter("pos", 2);
 
-        vislib::math::Vector<float, 4> lightPos;
-        vislib::math::ShallowVector<float, 3> lp(lightPos.PeekComponents());
+
         vislib::math::Vector<float, 3> ray(glm::value_ptr(camView));
         vislib::math::Vector<float, 3> up(glm::value_ptr(camUp));
         vislib::math::Vector<float, 3> right(glm::value_ptr(camRight));
 
-        lp = right;
-        lp *= -0.5f;
-        lp -= ray;
-        lp += up;
-        lightPos[3] = 0.0f;
+        //vislib::math::Vector<float, 4> lightDir;
+        //vislib::math::ShallowVector<float, 3> lp(lightDir.PeekComponents());
+        //lp = right;
+        //lp *= -0.5f;
+        //lp -= ray;
+        //lp += up;
+        //lightDir[3] = 0.0f;
+        //this->deferredShader.SetParameterArray3("lightDir", 1, lightDir.PeekComponents());
+        this->deferredShader.SetParameterArray4("lightDir", 1, glm::value_ptr(curlightDir));
 
         up *= sinf(half_aperture_angle);
         right *= sinf(half_aperture_angle)
             * static_cast<float>(viewport.Width()) / static_cast<float>(viewport.Height());
 
         this->deferredShader.SetParameterArray3("ray", 1, glm::value_ptr(camView));
-        this->deferredShader.SetParameterArray3("lightPos", 1, lightPos.PeekComponents());
 
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
