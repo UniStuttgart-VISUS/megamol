@@ -1226,7 +1226,8 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
 #else // LINUX
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Transfer Function JSON String:\n%s", value.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[GUI] Transfer Function JSON String:\n%s", value.c_str());
 #endif
         }
         ImGui::SameLine();

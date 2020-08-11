@@ -615,15 +615,6 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
 
     bool sync_success = true;
 
-    // Synchronize Core graph -> GUI graph ------------------------------------
-    sync_success &= this->configurator.GetGraphCollection()->LoadUpdateProjectFromCore(
-        this->graph_uid, ((core_graph == nullptr) ? (this->core_instance) : (nullptr)), core_graph);
-    if (!sync_success) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            __LINE__);
-    }
-
     // Synchronize GUI graph -> Core graph ------------------------------------
     if (core_graph != nullptr) {
         bool graph_sync_success = true;
@@ -649,7 +640,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
                 default:
                     break;
                 }
-                queue->pop(); // TODO pop always?
+                queue->pop();
             }
         }
         if (!graph_sync_success) {
@@ -658,6 +649,15 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
                 __LINE__);
         }
         sync_success &= graph_sync_success;
+    }
+
+    // Synchronize Core graph -> GUI graph ------------------------------------
+    sync_success &= this->configurator.GetGraphCollection()->LoadUpdateProjectFromCore(
+        this->graph_uid, ((core_graph == nullptr) ? (this->core_instance) : (nullptr)), core_graph);
+    if (!sync_success) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
     }
 
     // Synchronize parameter values -------------------------------------------
@@ -1451,7 +1451,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
 #else // LINUX
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("E-Mail address:\n%s", eMail.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] E-Mail address:\n%s", eMail.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1467,7 +1467,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
 #else // LINUX
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Website link:\n%s", webLink.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Website link:\n%s", webLink.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1482,7 +1482,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
 #else // LINUX
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("GitHub link:\n%s", gitLink.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] GitHub link:\n%s", gitLink.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1628,7 +1628,7 @@ void megamol::gui::GUIWindows::triggerCoreInstanceShutdown(void) {
 
     if (this->core_instance != nullptr) {
 #ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Shutdown MegaMol instance.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Shutdown MegaMol instance.");
 #endif // GUI_VERBOSE
         this->core_instance->Shutdown();
     }
@@ -1722,11 +1722,11 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
 
         if (found_gui) {
 #ifdef GUI_VERBOSE
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Read gui state from JSON string.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Read gui state from JSON string.");
 #endif // GUI_VERBOSE
         } else {
-            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Could not find gui state in JSON. [%s, %s, line
-            /// %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Could not find gui state in JSON. [%s, %s,
+            /// line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -1778,7 +1778,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_to_json(nlohmann::json& 
         }
 
 #ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Wrote parameter state to JSON.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote parameter state to JSON.");
 #endif // GUI_VERBOSE
 
     } catch (nlohmann::json::type_error& e) {

@@ -425,7 +425,8 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
         if (found) {
             if (valid) {
 #ifdef GUI_VERBOSE
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("Read window configurations from JSON string.");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                    "[GUI] Read window configurations from JSON string.");
 #endif // GUI_VERBOSE
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -434,8 +435,8 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                 return false;
             }
         } else { // !found
-            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Could not find window configuration state in
-            /// JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Could not find window configuration state
+            /// in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -539,7 +540,7 @@ bool WindowCollection::StateToJSON(nlohmann::json& out_json) {
             }
         }
 #ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Wrote window configurations to JSON.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote window configurations to JSON.");
 #endif // GUI_VERBOSE
 
     } catch (nlohmann::json::type_error& e) {

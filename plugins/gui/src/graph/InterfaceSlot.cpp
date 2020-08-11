@@ -70,8 +70,8 @@ bool megamol::gui::InterfaceSlot::AddCallSlot(
         return false;
     }
 
-    /// megamol::core::utility::log::Log::DefaultLog.WriteError("Call slot '%s' is incompatible to interface slot of
-    /// group. [%s, %s, line %d]\n", callslot_ptr->name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+    /// megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Call slot '%s' is incompatible to interface slot
+    /// of group. [%s, %s, line %d]\n", callslot_ptr->name.c_str(), __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
 
@@ -140,13 +140,14 @@ bool megamol::gui::InterfaceSlot::IsConnectionValid(CallSlot& callslot) {
     } else {
         // Call slot can only be added if parent module is not part of same group
         if (callslot.GetParentModule() == nullptr) {
-            /// megamol::core::utility::log::Log::DefaultLog.WriteError("Call slots must have connceted parent module.
+            /// megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Call slots must have connceted parent
+            /// module.
             /// [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         if (callslot.GetParentModule()->present.group.uid == this->present.group.uid) {
-            /// megamol::core::utility::log::Log::DefaultLog.WriteError("Parent module of call slot should not be in
-            /// same group as the interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            /// megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Parent module of call slot should not be
+            /// in same group as the interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         // Check for compatibility of call slots
@@ -201,35 +202,35 @@ bool megamol::gui::InterfaceSlot::is_callslot_compatible(CallSlot& callslot) {
     // Callee interface slots can only have one call slot
     if (this->callslots.size() > 0) {
         if ((this->GetCallSlotType() == CallSlotType::CALLEE)) {
-            /// megamol::core::utility::log::Log::DefaultLog.WriteError("Callee interface slots can only have one call
-            /// slot connceted.
+            /// megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Callee interface slots can only have one
+            /// call slot connceted.
             /// [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
     }
     // Call slot can only be added if not already part of this interface
     if (this->ContainsCallSlot(callslot.uid)) {
-        /// megamol::core::utility::log::Log::DefaultLog.WriteError("Call slots can only be added if not already part of
-        /// this interface.
+        /// megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Call slots can only be added if not already
+        /// part of this interface.
         /// [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Call slot can only be added if not already part of other interface
     if (callslot.present.group.interfaceslot_ptr != nullptr) {
-        /// megamol::core::utility::log::Log::DefaultLog.WriteError("Call slots can only be added if not already part of
-        /// other interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        /// megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Call slots can only be added if not already
+        /// part of other interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Call slot can only be added if parent module is part of same group
     if (callslot.GetParentModule() == nullptr) {
-        /// megamol::core::utility::log::Log::DefaultLog.WriteError("Call slots must have connceted parent module. [%s,
-        /// %s, line %d]\n",
+        /// megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Call slots must have connceted parent module.
+        /// [%s, %s, line %d]\n",
         /// __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if (callslot.GetParentModule()->present.group.uid != this->present.group.uid) {
-        /// megamol::core::utility::log::Log::DefaultLog.WriteError("Parent module of call slot should be in same group
-        /// as the interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        /// megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Parent module of call slot should be in same
+        /// group as the interface. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Check for compatibility (with all available call slots...)
@@ -244,7 +245,8 @@ bool megamol::gui::InterfaceSlot::is_callslot_compatible(CallSlot& callslot) {
     bool compatible = (compatible_slot_count == this->callslots.size());
     // Check for existing incompatible call slots
     if ((compatible_slot_count > 0) && (compatible_slot_count != this->callslots.size())) {
-        /// megamol::core::utility::log::Log::DefaultLog.WriteError("Interface slot contains incompatible call slots.
+        /// megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Interface slot contains incompatible call
+        /// slots.
         /// [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     return compatible;

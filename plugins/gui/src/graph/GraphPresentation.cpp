@@ -950,7 +950,7 @@ bool megamol::gui::GraphPresentation::StateToJSON(Graph& inout_graph, nlohmann::
                 }
             }
 #ifdef GUI_VERBOSE
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Wrote graph state to JSON.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote graph state to JSON.");
 #endif // GUI_VERBOSE
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(

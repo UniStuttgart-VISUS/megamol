@@ -272,7 +272,7 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
 #else // LINUX
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("Readme Link:\n%s", docu_link.c_str());
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Readme Link:\n%s", docu_link.c_str());
 #endif
             }
             ImGui::EndMenu();
@@ -558,7 +558,7 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
 
         if (found) {
 #ifdef GUI_VERBOSE
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Read configurator state from JSON string.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Read configurator state from JSON string.");
 #endif // GUI_VERBOSE
         } else {
 #ifdef GUI_VERBOSE
@@ -608,7 +608,7 @@ bool megamol::gui::Configurator::configurator_state_to_json(nlohmann::json& out_
             graph_ptr->GUIStateToJSON(out_json);
         }
 #ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Wrote configurator state to JSON.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote configurator state to JSON.");
 #endif // GUI_VERBOSE
 
     } catch (nlohmann::json::type_error& e) {

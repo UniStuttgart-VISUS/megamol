@@ -152,8 +152,8 @@ bool megamol::gui::CallSlot::DisconnectParentModule(void) {
 
     if (parent_module == nullptr) {
 #ifdef GUI_VERBOSE
-/// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Pointer to parent module is already nullptr. [%s, %s, line
-/// %d]\n", __FILE__,
+/// megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Pointer to parent module is already nullptr. [%s, %s,
+/// line %d]\n", __FILE__,
 /// __FUNCTION__, __LINE__);
 #endif // GUI_VERBOSE
         return false;
@@ -216,21 +216,22 @@ bool megamol::gui::CallSlot::IsConnectionValid(CallSlot& callslot) {
 
     // Check for different type
     if (this->type == callslot.type) {
-        /// megamol::core::utility::log::Log::DefaultLog.WriteError("Call slots must have different types. [%s, %s, line
-        /// %d]\n",
+        /// megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Call slots must have different types. [%s,
+        /// %s, line %d]\n",
         /// __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Check for present parent module
     if ((callslot.GetParentModule() == nullptr) || (this->GetParentModule() == nullptr)) {
-        /// megamol::core::utility::log::Log::DefaultLog.WriteError("Call slots must have a connected parent module.
+        /// megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Call slots must have a connected parent
+        /// module.
         /// [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Check for different parent module
     if ((this->GetParentModule()->uid == callslot.GetParentModule()->uid)) {
-        /// megamol::core::utility::log::Log::DefaultLog.WriteError("Call slots must have different parent modules. [%s,
-        /// %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        /// megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Call slots must have different parent
+        /// modules. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Check for at least one found compatible call index

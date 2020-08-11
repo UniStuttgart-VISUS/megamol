@@ -71,7 +71,7 @@ ImGuiID megamol::gui::Graph::AddEmptyModule(void) {
         this->ForceSetDirty();
 
 #ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Added empty module to project.\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Added empty module to project.\n");
 #endif // GUI_VERBOSE
 
         return mod_uid;
@@ -144,8 +144,9 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
                 this->ForceSetDirty();
 
 #ifdef GUI_VERBOSE
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("Added module '%s' (uid %i) to project '%s'.\n",
-                    mod_ptr->class_name.c_str(), mod_ptr->uid, this->name.c_str());
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                    "[GUI] Added module '%s' (uid %i) to project '%s'.\n", mod_ptr->class_name.c_str(), mod_ptr->uid,
+                    this->name.c_str());
 #endif // GUI_VERBOSE
 
                 return mod_uid;
@@ -274,7 +275,8 @@ bool megamol::gui::Graph::AddCall(const CallStockVector_t& stock_calls, ImGuiID 
     try {
         if ((slot_1_uid == GUI_INVALID_ID) || (slot_2_uid == GUI_INVALID_ID)) {
 #ifdef GUI_VERBOSE
-            /// megamol::core::utility::log::Log::DefaultLog.WriteError("Invalid slot uid given. [%s, %s, line %d]\n",
+            /// megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Invalid slot uid given. [%s, %s, line
+            /// %d]\n",
             /// __FILE__,
             /// __FUNCTION__,
             /// __LINE__);
@@ -461,7 +463,7 @@ bool megamol::gui::Graph::AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1,
         if (call_ptr->GetCallSlot(CallSlotType::CALLEE)->GetParentModule() != nullptr) {
             queue_data.caller = call_ptr->GetCallSlot(CallSlotType::CALLEE)->GetParentModule()->FullName();
         }
-        this->sync_queue->push(SyncQueueData_t(QueueChange::DELETE_MODULE, queue_data));
+        this->sync_queue->push(SyncQueueData_t(QueueChange::ADD_CALL, queue_data));
 
         this->calls.emplace_back(call_ptr);
         this->ForceSetDirty();
@@ -587,7 +589,7 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
                     if ((*iter)->GetCallSlot(CallSlotType::CALLEE)->GetParentModule() != nullptr) {
                         queue_data.caller = (*iter)->GetCallSlot(CallSlotType::CALLEE)->GetParentModule()->FullName();
                     }
-                    this->sync_queue->push(SyncQueueData_t(QueueChange::DELETE_MODULE, queue_data));
+                    this->sync_queue->push(SyncQueueData_t(QueueChange::DELETE_CALL, queue_data));
 
                     (*iter).reset();
                     this->calls.erase(iter);
@@ -620,7 +622,7 @@ ImGuiID megamol::gui::Graph::AddGroup(const std::string& group_name) {
         this->ForceSetDirty();
 
 #ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Added group '%s' (uid %i) to project '%s'.\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Added group '%s' (uid %i) to project '%s'.\n",
             group_ptr->name.c_str(), group_ptr->uid, this->name.c_str());
 #endif // GUI_VERBOSE
         return group_id;

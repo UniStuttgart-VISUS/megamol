@@ -41,7 +41,7 @@ bool megamol::gui::Call::IsConnected(void) {
         }
     }
     if (connected != 2) {
-        /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Call has only one connected call slot. [%s,
+        /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Call has only one connected call slot. [%s,
         /// %s, line %d]\n",
         /// __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -100,8 +100,8 @@ bool megamol::gui::Call::DisconnectCallSlots(ImGuiID calling_callslot_uid) {
 const megamol::gui::CallSlotPtr_t& megamol::gui::Call::GetCallSlot(megamol::gui::CallSlotType type) {
 
     if (this->connected_callslots[type] == nullptr) {
-        /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Returned pointer to call slot is nullptr. [%s, %s,
-        /// line %d]\n",
+        /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Returned pointer to call slot is nullptr. [%s,
+        /// %s, line %d]\n",
         /// __FILE__, __FUNCTION__, __LINE__);
     }
     return this->connected_callslots[type];
