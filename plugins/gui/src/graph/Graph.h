@@ -145,6 +145,7 @@ public:
     bool DeleteModule(ImGuiID module_uid);
     inline const ModulePtrVector_t& GetModules(void) { return this->modules; }
     bool GetModule(ImGuiID module_uid, ModulePtr_t& out_module_ptr);
+    bool ModuleExists(const std::string& module_fullname);
 
     bool AddCall(const CallStockVector_t& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid);
     bool AddCall(const CallStockVector_t& stock_calls, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);

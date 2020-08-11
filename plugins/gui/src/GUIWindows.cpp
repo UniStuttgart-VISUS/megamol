@@ -612,11 +612,19 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
     if (this->core_instance != nullptr) {
         // Load all known calls from core instance once
         bool call_stock_loaded = this->graph_collection.LoadCallStock(core_instance);
+        // Synchronise graphs
         if (call_stock_loaded) {
-            // Synchronise graphs
+            // Core graph -> GUI graph
             if (!this->graph_collection.LoadUpdateProjectFromCore(
                     this->graph_uid, ((core_graph == nullptr) ? (this->core_instance) : (nullptr)), core_graph)) {
                 return false;
+            }
+            // GUI graph -> Core graph
+            if (core_graph != nullptr) {
+                // Modules
+
+                // Calls
+
             }
         }
     }

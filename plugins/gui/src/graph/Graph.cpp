@@ -2170,6 +2170,14 @@ bool megamol::gui::Graph::GetModule(ImGuiID module_uid, megamol::gui::ModulePtr_
 }
 
 
+bool megamol::gui::Graph::ModuleExists(const std::string& module_fullname) {
+
+    return (std::find_if(this->modules.begin(), this->modules.end(), [&](megamol::gui::ModulePtr_t& module_ptr) {
+        return (module_ptr->FullName() == module_fullname);
+    }) != this->modules.end());
+}
+
+
 bool megamol::gui::Graph::AddCall(const CallStockVector_t& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid) {
 
     try {
