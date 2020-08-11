@@ -139,7 +139,7 @@ ImGuiID megamol::gui::GraphCollection::AddGraph(void) {
             retval = graph_ptr->uid;
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[Configurator] Added graph %s' (uid %i). \n", graph_ptr->name.c_str(), graph_ptr->uid);
+                "Added graph %s' (uid %i). \n", graph_ptr->name.c_str(), graph_ptr->uid);
 #endif // GUI_VERBOSE
         }
     } catch (std::exception e) {
@@ -162,7 +162,7 @@ bool megamol::gui::GraphCollection::DeleteGraph(ImGuiID in_graph_uid) {
         if ((*iter)->uid == in_graph_uid) {
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[Configurator] Deleted graph %s' (uid %i). \n", (*iter)->name.c_str(), (*iter)->uid);
+                "Deleted graph %s' (uid %i). \n", (*iter)->name.c_str(), (*iter)->uid);
 #endif // GUI_VERBOSE
 
             if ((*iter).use_count() > 1) {
@@ -256,8 +256,7 @@ bool megamol::gui::GraphCollection::LoadCallStock(const megamol::core::CoreInsta
 
 
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "[Configurator] Reading available calls (#%i) ... DONE (duration: %.3f seconds)\n",
-            this->calls_stock.size(), delta_time);
+            "Reading available calls (#%i) ... DONE (duration: %.3f seconds)\n", this->calls_stock.size(), delta_time);
 
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -348,8 +347,8 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
             static_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - start_time).count();
 
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "[Configurator] Reading available modules (#%i) ... DONE (duration: %.3f seconds)\n",
-            this->modules_stock.size(), delta_time);
+            "Reading available modules (#%i) ... DONE (duration: %.3f seconds)\n", this->modules_stock.size(),
+            delta_time);
 
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -365,100 +364,66 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
 }
 
 
-ImGuiID megamol::gui::GraphCollection::LoadUpdateProjectFromCore(
-    ImGuiID in_graph_uid, megamol::core::CoreInstance* core_instance) {
+bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(
+    ImGuiID& inout_graph_uid, megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* core_graph) {
 
-    if (core_instance == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
+    if (inout_graph_uid != GUI_INVALID_ID) return true;
 
-    /// TODO Do update graph
-    if (in_graph_uid != GUI_INVALID_ID) return in_graph_uid;
-
-    GraphPtr_t graph_ptr;
-    ImGuiID current_graph_id = in_graph_uid;
-
-    if (current_graph_id == GUI_INVALID_ID) {
+    ImGuiID valid_graph_id = inout_graph_uid;
+    if (valid_graph_id == GUI_INVALID_ID) {
         // Create new graph
-        current_graph_id = this->AddGraph();
-        if (current_graph_id == GUI_INVALID_ID) {
+        valid_graph_id = this->AddGraph();
+        if (valid_graph_id == GUI_INVALID_ID) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Failed to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return GUI_INVALID_ID;
-        }
-    }
-    if (!this->GetGraph(current_graph_id, graph_ptr)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to find graph for given uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return GUI_INVALID_ID;
-    }
-
-    if (this->AddProjectFromCore(current_graph_id, core_instance, false)) {
-        return graph_ptr->uid;
-    } else {
-        this->DeleteGraph(current_graph_id);
-    }
-
-    return GUI_INVALID_ID;
-}
-
-
-ImGuiID megamol::gui::GraphCollection::LoadUpdateProjectFromCore(
-    ImGuiID in_graph_uid, megamol::core::MegaMolGraph* core_graph) {
-
-    if (core_graph == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Pointer to core graph is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    /// TODO Do update graph
-    if (in_graph_uid != GUI_INVALID_ID) return in_graph_uid;
-
-    GraphPtr_t graph_ptr;
-    ImGuiID current_graph_id = in_graph_uid;
-
-    if (current_graph_id == GUI_INVALID_ID) {
-        // Create new graph
-        current_graph_id = this->AddGraph();
-        if (current_graph_id == GUI_INVALID_ID) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Failed to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return GUI_INVALID_ID;
-        }
-    }
-    if (!this->GetGraph(current_graph_id, graph_ptr)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to find graph for given uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return GUI_INVALID_ID;
-    }
-
-    if (this->AddProjectFromCore(current_graph_id, core_graph, false)) {
-        return graph_ptr->uid;
-    } else {
-        this->DeleteGraph(current_graph_id);
-    }
-
-    return GUI_INVALID_ID;
-}
-
-
-bool megamol::gui::GraphCollection::AddProjectFromCore(
-    ImGuiID in_graph_uid, megamol::core::CoreInstance* core_instance, bool use_stock) {
-
-    try {
-        if (core_instance == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
+    }
 
+    GraphPtr_t graph_ptr;
+    if (!this->GetGraph(valid_graph_id, graph_ptr)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to find graph for given uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    if (this->AddUpdateProjectFromCore(valid_graph_id, core_instance, core_graph, false)) {
+        inout_graph_uid = valid_graph_id;
+        return true;
+    }
+    // else { this->DeleteGraph(valid_graph_id); }
+
+    return false;
+}
+
+
+bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_uid,
+    megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* core_graph, bool use_stock) {
+
+    // Load call connections to temporary data structure, since not all call slots are available for being
+    // connected while modules are created consecutively.
+    struct CallData {
+        std::string call_class_name;
+        std::string caller_module_full_name;
+        std::string caller_module_callslot_name;
+        std::string callee_module_full_name;
+        std::string callee_module_callslot_name;
+    };
+    std::vector<CallData> call_data;
+
+    try {
         GraphPtr_t graph_ptr;
         if (!this->GetGraph(in_graph_uid, graph_ptr)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to find graph for given uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+
+        const bool use_core_graph = (core_graph != nullptr);
+        const bool use_core_instance = (core_instance != nullptr);
+        if (use_core_graph == use_core_instance) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Invalid references to the graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -470,326 +435,104 @@ bool megamol::gui::GraphCollection::AddProjectFromCore(
         //    /// TODO Delete removed modules
         //}
 
-        // Temporary data structure holding call connection data
-        struct CallData {
-            std::string call_class_name;
-            std::string caller_module_full_name;
-            std::string caller_module_callslot_name;
-            std::string callee_module_full_name;
-            std::string callee_module_callslot_name;
-        };
-        std::vector<CallData> call_data;
-
-        // Search for view instance
+        // Create list of all module pointers depending on available graph ans search for view instances / graph entry
+        // points
+        std::vector<megamol::core::Module*> module_ptr_list;
         std::map<std::string, std::string> view_instances;
-        vislib::sys::AutoLock lock(core_instance->ModuleGraphRoot()->ModuleGraphLock());
-        megamol::core::AbstractNamedObjectContainer::const_ptr_type anoc =
-            megamol::core::AbstractNamedObjectContainer::dynamic_pointer_cast(core_instance->ModuleGraphRoot());
-        for (auto ano = anoc->ChildList_Begin(); ano != anoc->ChildList_End(); ++ano) {
-            auto vi = dynamic_cast<megamol::core::ViewInstance*>(ano->get());
-            if ((vi != nullptr) && (vi->View() != nullptr)) {
-                std::string vin(vi->Name().PeekBuffer());
-                view_instances[std::string(vi->View()->FullName().PeekBuffer())] = vin;
-            }
-        }
-
-        // Create modules and get additional module information.
-        // Load call connections to temporary data structure since not all call slots are yet available for being
-        // connected.
-        const auto module_func = [&, this](megamol::core::Module* mod) {
-            std::string full_name(mod->FullName().PeekBuffer());
-
-            /// TODO ...
-            /// Skip if module already exists
-            // if (update_modules) {
-            //    for (auto& module_ptr : graph_ptr->GetModules()) {
-            //        if (module_ptr->FullName() == full_name) return;
-            //    }
-            //}
-
-            std::string class_name(mod->ClassName());
-            std::string module_name;
-            std::string module_namespace;
-            if (!this->project_separate_name_and_namespace(full_name, module_namespace, module_name)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "Core Project: Invalid module name '%s'. [%s, %s, line %d]\n", full_name.c_str(), __FILE__,
-                    __FUNCTION__, __LINE__);
-            }
-
-            /// DEBUG
-            /// megamol::core::utility::log::Log::DefaultLog.WriteInfo(">>>> Class: '%s' NameSpace: '%s' Name: '%s'.\n",
-            /// mod->ClassName(), module_namespace.c_str(), module_name.c_str());
-
-            // Ensure unique module name is not yet assigned
-            if (graph_ptr->UniqueModuleRename(module_name)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "Renamed existing module '%s' while adding module with same name. "
-                    "This is required for successful unambiguous parameter addressing which uses the module name. [%s, "
-                    "%s, line %d]\n",
-                    module_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-            }
-
-            // Creating new module
-            ImGuiID moduel_uid = GUI_INVALID_ID;
-            ModulePtr_t module_ptr;
-            if (use_stock) {
-                moduel_uid = graph_ptr->AddModule(this->modules_stock, class_name);
-                graph_ptr->GetModule(moduel_uid, module_ptr);
-            } else {
-                moduel_uid = graph_ptr->AddEmptyModule();
-                if (graph_ptr->GetModule(moduel_uid, module_ptr)) {
-                    module_ptr->class_name = class_name;
-                    auto mod_desc =
-                        core_instance->GetModuleDescriptionManager().Find(vislib::StringA(class_name.c_str()));
-                    if (mod_desc != nullptr) {
-                        module_ptr->description = std::string(mod_desc->Description());
-                    }
-                    module_ptr->plugin_name = "[n/a]";
-                    core::view::AbstractView* viewptr = dynamic_cast<core::view::AbstractView*>(mod);
-                    module_ptr->is_view = (viewptr != nullptr);
-                    module_ptr->present.label_visible = graph_ptr->present.GetModuleLabelVisibility();
-                }
-            }
-            if (module_ptr != nullptr) {
-                module_ptr->name = module_name;
-
-                // Instance Name
-                module_ptr->is_view_instance = false;
-                if (view_instances.find(std::string(mod->FullName().PeekBuffer())) != view_instances.end()) {
-                    graph_ptr->name = view_instances[std::string(mod->FullName().PeekBuffer())];
-                    module_ptr->is_view_instance = (graph_ptr->IsMainViewSet()) ? (false) : (true);
-                }
-
-                // Add module to group
-                graph_ptr->AddGroupModule(module_namespace, module_ptr);
-            } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "Unable to get created module. [%s, %s, line %d]\n", full_name.c_str(), __FILE__, __FUNCTION__,
-                    __LINE__);
-                return;
-            }
-
-            megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator se = mod->ChildList_End();
-            for (megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator si =
-                     mod->ChildList_Begin();
-                 si != se; ++si) {
-
-                // Parameter
-                auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
-                if (param_slot != nullptr) {
-                    std::string param_full_name(param_slot->Name().PeekBuffer());
-
-                    if (use_stock) {
-                        for (auto& parameter : module_ptr->parameters) {
-                            if (parameter.full_name == param_full_name) {
-                                megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
-                                    (*param_slot), parameter, true, false, false);
-                            }
-                        }
-                    } else {
-                        std::shared_ptr<Parameter> param_ptr;
-                        megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(
-                            (*param_slot), param_ptr, false, false, true);
-                        module_ptr->parameters.emplace_back((*param_ptr));
-                    }
-                }
-
-                // Collect call connection data
-                std::shared_ptr<core::CallerSlot> caller_slot =
-                    std::dynamic_pointer_cast<megamol::core::CallerSlot>((*si));
-                if (caller_slot) {
-                    const megamol::core::Call* call = caller_slot->CallAs<megamol::core::Call>();
-                    if (call != nullptr) {
-                        CallData cd;
-                        cd.call_class_name = std::string(call->ClassName());
-                        cd.caller_module_full_name =
-                            std::string(call->PeekCallerSlot()->Parent()->FullName().PeekBuffer());
-                        cd.caller_module_callslot_name = std::string(call->PeekCallerSlot()->Name().PeekBuffer());
-                        cd.callee_module_full_name =
-                            std::string(call->PeekCalleeSlot()->Parent()->FullName().PeekBuffer());
-                        cd.callee_module_callslot_name = std::string(call->PeekCalleeSlot()->Name().PeekBuffer());
-                        call_data.emplace_back(cd);
-
-                        if (!use_stock) {
-                            auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID());
-                            callslot_ptr->name = std::string(caller_slot->Name().PeekBuffer());
-                            callslot_ptr->description = std::string(caller_slot->Description().PeekBuffer());
-                            callslot_ptr->compatible_call_idxs = this->get_compatible_caller_idxs(caller_slot);
-                            callslot_ptr->type = CallSlotType::CALLER;
-                            callslot_ptr->present.label_visible = graph_ptr->present.GetCallSlotLabelVisibility();
-                            callslot_ptr->ConnectParentModule(module_ptr);
-
-                            module_ptr->AddCallSlot(callslot_ptr);
-                        }
-                    }
-                }
-                std::shared_ptr<core::CalleeSlot> callee_slot =
-                    std::dynamic_pointer_cast<megamol::core::CalleeSlot>((*si));
-                if (callee_slot && !use_stock) {
-                    auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID());
-                    callslot_ptr->name = std::string(callee_slot->Name().PeekBuffer());
-                    callslot_ptr->description = std::string(callee_slot->Description().PeekBuffer());
-                    callslot_ptr->compatible_call_idxs = this->get_compatible_callee_idxs(callee_slot);
-                    callslot_ptr->type = CallSlotType::CALLEE;
-                    callslot_ptr->present.label_visible = graph_ptr->present.GetCallSlotLabelVisibility();
-                    callslot_ptr->ConnectParentModule(module_ptr);
-
-                    module_ptr->AddCallSlot(callslot_ptr);
-                }
-            }
-        };
-        core_instance->EnumModulesNoLock(nullptr, module_func);
-
-        for (auto& cd : call_data) {
-            CallSlotPtr_t callslot_1 = nullptr;
-            for (auto& mod : graph_ptr->GetModules()) {
-                if (mod->FullName() == cd.caller_module_full_name) {
-                    for (auto& callslot : mod->GetCallSlots(CallSlotType::CALLER)) {
-                        if (callslot->name == cd.caller_module_callslot_name) {
-                            callslot_1 = callslot;
-                        }
-                    }
-                }
-            }
-            CallSlotPtr_t callslot_2 = nullptr;
-            for (auto& mod : graph_ptr->GetModules()) {
-                if (mod->FullName() == cd.callee_module_full_name) {
-                    for (auto& callslot : mod->GetCallSlots(CallSlotType::CALLEE)) {
-                        if (callslot->name == cd.callee_module_callslot_name) {
-                            callslot_2 = callslot;
-                        }
-                    }
-                }
-            }
-            graph_ptr->AddCall(this->GetCallsStock(), callslot_1, callslot_2);
-        }
-
-        graph_ptr->present.SetLayoutGraph();
-        /// graph_ptr->ResetDirty();
-
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "[Configurator] Successfully loaded project '%s' from running MegaMol.\n", graph_ptr->name.c_str());
-
-    } catch (std::exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    return true;
-}
-
-
-bool megamol::gui::GraphCollection::AddProjectFromCore(
-    ImGuiID in_graph_uid, megamol::core::MegaMolGraph* core_graph, bool use_stock) {
-
-    try {
-        if (core_graph == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Pointer to core graph is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-
-        GraphPtr_t graph_ptr;
-        if (!this->GetGraph(in_graph_uid, graph_ptr)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Unable to find graph for given uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-
-        /// TODO ...
-        /// Check if only module changes should be considered
-        // bool update_modules = false;
-        // if (!graph_ptr->GetModules().empty()) {
-        //    update_modules = true;
-        //    /// TODO Delete removed modules
-        //}
-
-        // Temporary data structure holding call connection data
-        struct CallData {
-            std::string call_class_name;
-            std::string caller_module_full_name;
-            std::string caller_module_callslot_name;
-            std::string callee_module_full_name;
-            std::string callee_module_callslot_name;
-        };
-        std::vector<CallData> call_data;
-
-        // Create modules and get additional module information.
-        // Load call connections to temporary data structure since not all call slots are yet available for being
-        // connected.
-        for (auto& module_inst : core_graph->ListModules()) {
-            auto modulePtr = module_inst.modulePtr;
-
-            /// TODO ...
-            /// Skip if module already exists
-            // if (update_modules) {
-            //    for (auto& module_ptr : graph_ptr->GetModules()) {
-            //        if (module_ptr->FullName() == full_name) return;
-            //    }
-            //}
-
-            std::string full_name(modulePtr->FullName().PeekBuffer());
-            std::string class_name(modulePtr->ClassName());
-            std::string module_name;
-            std::string module_namespace;
-            if (!this->project_separate_name_and_namespace(full_name, module_namespace, module_name)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "Core Project: Invalid module name '%s'. [%s, %s, line %d]\n", full_name.c_str(), __FILE__,
-                    __FUNCTION__, __LINE__);
-            }
-
-            /// DEBUG
-            /// megamol::core::utility::log::Log::DefaultLog.WriteInfo(">>>> Class: '%s' NameSpace: '%s' Name: '%s'.\n",
-            /// mod->ClassName(), module_namespace.c_str(), module_name.c_str());
-
-            // Ensure unique module name is not yet assigned
-            if (graph_ptr->UniqueModuleRename(module_name)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "Renamed existing module '%s' while adding module with same name. "
-                    "This is required for successful unambiguous parameter addressing which uses the module name. [%s, "
-                    "%s, line %d]\n",
-                    module_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-            }
-
-            // Creating new module
-            ImGuiID moduel_uid = GUI_INVALID_ID;
-            ModulePtr_t module_ptr;
-            if (use_stock) {
-                moduel_uid = graph_ptr->AddModule(this->modules_stock, class_name);
-                graph_ptr->GetModule(moduel_uid, module_ptr);
-            } else {
-                moduel_uid = graph_ptr->AddEmptyModule();
-                if (graph_ptr->GetModule(moduel_uid, module_ptr)) {
-                    module_ptr->class_name = class_name;
-
-                    std::string mod_desc = "[n/a]";
-                    //   = core_instance->GetModuleDescriptionManager().Find(vislib::StringA(class_name.c_str()));
-                    // if (mod_desc != nullptr) {
-                    //    module_ptr->description = std::string(mod_desc->Description());
-                    //}
-                    module_ptr->plugin_name = "[n/a]";
-                    core::view::AbstractView* viewptr = dynamic_cast<core::view::AbstractView*>(modulePtr.get());
-                    module_ptr->is_view = (viewptr != nullptr);
-                    module_ptr->present.label_visible = graph_ptr->present.GetModuleLabelVisibility();
-                }
-            }
-            if (module_ptr != nullptr) {
-                module_ptr->name = module_name;
-                module_ptr->is_view_instance = false;
-                // Entry point ==  view instance
+        if (use_core_graph) {
+            for (auto& module_inst : core_graph->ListModules()) {
+                module_ptr_list.emplace_back(module_inst.modulePtr.get());
                 bool graph_entry = module_inst.isGraphEntryPoint;
                 if (graph_entry) {
-                    graph_ptr->name = module_name;
-                    module_ptr->is_view_instance = (graph_ptr->IsMainViewSet()) ? (false) : (true);
+                    view_instances[std::string(module_inst.modulePtr->FullName().PeekBuffer())] =
+                        std::string(module_inst.modulePtr->Name().PeekBuffer());
                 }
+            }
+        } else if (use_core_instance) {
+            const auto module_func = [&, this](megamol::core::Module* mod) { module_ptr_list.emplace_back(mod); };
+            core_instance->EnumModulesNoLock(nullptr, module_func);
 
+            // Search for view instance
+            vislib::sys::AutoLock lock(core_instance->ModuleGraphRoot()->ModuleGraphLock());
+            megamol::core::AbstractNamedObjectContainer::const_ptr_type anoc =
+                megamol::core::AbstractNamedObjectContainer::dynamic_pointer_cast(core_instance->ModuleGraphRoot());
+            for (auto ano = anoc->ChildList_Begin(); ano != anoc->ChildList_End(); ++ano) {
+                auto vi = dynamic_cast<megamol::core::ViewInstance*>(ano->get());
+                if ((vi != nullptr) && (vi->View() != nullptr)) {
+                    view_instances[std::string(vi->View()->FullName().PeekBuffer())] =
+                        std::string(vi->Name().PeekBuffer());
+                }
+            }
+        }
+
+        // Create modules and get additional module information.
+        for (auto& module_ptr : module_ptr_list) {
+            std::string full_name(module_ptr->FullName().PeekBuffer());
+
+            /// TODO ...
+            /// Skip if module already exists
+            // if (update_modules) {
+            //    for (auto& module_ptr : graph_ptr->GetModules()) {
+            //        if (module_ptr->FullName() == full_name) return;
+            //    }
+            //}
+
+            std::string class_name(module_ptr->ClassName());
+            std::string module_name;
+            std::string module_namespace;
+            if (!this->project_separate_name_and_namespace(full_name, module_namespace, module_name)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "Core Project: Invalid module name '%s'. [%s, %s, line %d]\n", full_name.c_str(), __FILE__,
+                    __FUNCTION__, __LINE__);
+            }
+            /// DEBUG
+            /// megamol::core::utility::log::Log::DefaultLog.WriteInfo(">>>> Class: '%s' NameSpace: '%s' Name: '%s'.\n",
+            /// mod->ClassName(), module_namespace.c_str(), module_name.c_str());
+
+            // Ensure unique module name is not yet assigned
+            if (graph_ptr->UniqueModuleRename(module_name)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "Renamed existing module '%s' while adding module with same name. "
+                    "This is required for successful unambiguous parameter addressing which uses the module name. [%s, "
+                    "%s, line %d]\n",
+                    module_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            }
+
+            // Create new module
+            ImGuiID moduel_uid = GUI_INVALID_ID;
+            ModulePtr_t new_module_ptr;
+            if (use_stock) {
+                moduel_uid = graph_ptr->AddModule(this->modules_stock, class_name);
+                graph_ptr->GetModule(moduel_uid, new_module_ptr);
+            } else {
+                moduel_uid = graph_ptr->AddEmptyModule();
+                if (graph_ptr->GetModule(moduel_uid, new_module_ptr)) {
+                    new_module_ptr->class_name = class_name;
+                    new_module_ptr->description = "[n/a]";
+                    if (use_core_instance) {
+                        auto mod_desc =
+                            core_instance->GetModuleDescriptionManager().Find(vislib::StringA(class_name.c_str()));
+                        if (mod_desc != nullptr) {
+                            new_module_ptr->description = std::string(mod_desc->Description());
+                        }
+                    }
+                    new_module_ptr->plugin_name = "[n/a]";
+                    core::view::AbstractView* viewptr = dynamic_cast<core::view::AbstractView*>(module_ptr);
+                    new_module_ptr->is_view = (viewptr != nullptr);
+                    new_module_ptr->present.label_visible = graph_ptr->present.GetModuleLabelVisibility();
+                }
+            }
+            // Set remaining module data
+            if (new_module_ptr != nullptr) {
+                new_module_ptr->name = module_name;
+                // Instance Name
+                new_module_ptr->is_view_instance = false;
+                if (view_instances.find(full_name) != view_instances.end()) {
+                    graph_ptr->name = view_instances[full_name];
+                    new_module_ptr->is_view_instance = (graph_ptr->IsMainViewSet()) ? (false) : (true);
+                }
                 // Add module to group
-                graph_ptr->AddGroupModule(module_namespace, module_ptr);
+                graph_ptr->AddGroupModule(module_namespace, new_module_ptr);
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Unable to get created module. [%s, %s, line %d]\n", full_name.c_str(), __FILE__, __FUNCTION__,
@@ -798,9 +541,9 @@ bool megamol::gui::GraphCollection::AddProjectFromCore(
             }
 
             megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator se =
-                modulePtr->ChildList_End();
+                module_ptr->ChildList_End();
             for (megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator si =
-                     modulePtr->ChildList_Begin();
+                     module_ptr->ChildList_Begin();
                  si != se; ++si) {
 
                 // Parameter
@@ -809,7 +552,7 @@ bool megamol::gui::GraphCollection::AddProjectFromCore(
                     std::string param_full_name(param_slot->Name().PeekBuffer());
 
                     if (use_stock) {
-                        for (auto& parameter : module_ptr->parameters) {
+                        for (auto& parameter : new_module_ptr->parameters) {
                             if (parameter.full_name == param_full_name) {
                                 megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
                                     (*param_slot), parameter, true, false, false);
@@ -819,7 +562,7 @@ bool megamol::gui::GraphCollection::AddProjectFromCore(
                         std::shared_ptr<Parameter> param_ptr;
                         megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(
                             (*param_slot), param_ptr, false, false, true);
-                        module_ptr->parameters.emplace_back((*param_ptr));
+                        new_module_ptr->parameters.emplace_back((*param_ptr));
                     }
                 }
 
@@ -846,9 +589,9 @@ bool megamol::gui::GraphCollection::AddProjectFromCore(
                             callslot_ptr->compatible_call_idxs = this->get_compatible_caller_idxs(caller_slot);
                             callslot_ptr->type = CallSlotType::CALLER;
                             callslot_ptr->present.label_visible = graph_ptr->present.GetCallSlotLabelVisibility();
-                            callslot_ptr->ConnectParentModule(module_ptr);
+                            callslot_ptr->ConnectParentModule(new_module_ptr);
 
-                            module_ptr->AddCallSlot(callslot_ptr);
+                            new_module_ptr->AddCallSlot(callslot_ptr);
                         }
                     }
                 }
@@ -861,9 +604,9 @@ bool megamol::gui::GraphCollection::AddProjectFromCore(
                     callslot_ptr->compatible_call_idxs = this->get_compatible_callee_idxs(callee_slot);
                     callslot_ptr->type = CallSlotType::CALLEE;
                     callslot_ptr->present.label_visible = graph_ptr->present.GetCallSlotLabelVisibility();
-                    callslot_ptr->ConnectParentModule(module_ptr);
+                    callslot_ptr->ConnectParentModule(new_module_ptr);
 
-                    module_ptr->AddCallSlot(callslot_ptr);
+                    new_module_ptr->AddCallSlot(callslot_ptr);
                 }
             }
         }
@@ -896,7 +639,7 @@ bool megamol::gui::GraphCollection::AddProjectFromCore(
         /// graph_ptr->ResetDirty();
 
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "[Configurator] Successfully loaded project '%s' from running MegaMol.\n", graph_ptr->name.c_str());
+            "Successfully loaded project '%s' from running MegaMol.\n", graph_ptr->name.c_str());
 
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -1359,8 +1102,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
         graph_ptr->ResetDirty();
 
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "[Configurator] Successfully loaded project '%s' from file '%s'.\n", graph_ptr->name.c_str(),
-            project_filename.c_str());
+            "Successfully loaded project '%s' from file '%s'.\n", graph_ptr->name.c_str(), project_filename.c_str());
 
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -1499,7 +1241,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
             if (FileUtils::WriteFile(project_filename, projectstr)) {
 
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                    "[Configurator] Successfully saved project '%s' to file '%s'.\n", found_graph_ptr->name.c_str(),
+                    "Successfully saved project '%s' to file '%s'.\n", found_graph_ptr->name.c_str(),
                     project_filename.c_str());
                 return true;
             }
@@ -1545,7 +1287,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
     try {
         /// Following code is adapted from megamol::core::job::job::PluginsStateFileGeneratorJob.cpp
 
-        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("[Configurator] Creating module '%s' ...",
+        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("Creating module '%s' ...",
         // mod_desc->ClassName());
 
         megamol::core::Module::ptr_type new_mod(mod_desc->CreateModule(nullptr));

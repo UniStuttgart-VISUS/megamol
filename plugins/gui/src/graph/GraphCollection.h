@@ -85,18 +85,21 @@ public:
     inline const ModuleStockVector_t& GetModulesStock(void) { return this->modules_stock; }
     inline const CallStockVector_t& GetCallsStock(void) { return this->calls_stock; }
 
-    ImGuiID LoadUpdateProjectFromCore(ImGuiID in_graph_uid, megamol::core::CoreInstance* core_instance);
-    ImGuiID LoadUpdateProjectFromCore(ImGuiID in_graph_uid, megamol::core::MegaMolGraph* core_graph);
+    bool LoadUpdateProjectFromCore(
+        ImGuiID& inout_graph_uid, megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* core_graph);
 
-    ImGuiID LoadProjectFromCore(megamol::core::CoreInstance* core_instance) {
-        return LoadUpdateProjectFromCore(GUI_INVALID_ID, core_instance);
+    ImGuiID LoadProjectFromCore(megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* core_graph) {
+        ImGuiID graph_id = GUI_INVALID_ID;
+        if (LoadUpdateProjectFromCore(graph_id, core_instance, core_graph)) {
+            return graph_id;
+        }
+        return GUI_INVALID_ID;
     }
 
-    bool AddProjectFromCore(ImGuiID in_graph_uid, megamol::core::CoreInstance* core_instance, bool use_stock);
-    bool AddProjectFromCore(ImGuiID in_graph_uid, megamol::core::MegaMolGraph* core_graph, bool use_stock);
+    bool AddUpdateProjectFromCore(ImGuiID in_graph_uid, megamol::core::CoreInstance* core_instance,
+        megamol::core::MegaMolGraph* core_graph, bool use_stock);
 
     ImGuiID LoadAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
-
     bool SaveProjectToFile(ImGuiID in_graph_uid, const std::string& project_filename, bool core_graph);
 
     // Presentation ----------------------------------------------------

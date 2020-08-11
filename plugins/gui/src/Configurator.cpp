@@ -115,7 +115,7 @@ bool megamol::gui::Configurator::Draw(
         this->graph_collection.LoadModuleStock(core_instance);
 
         // Load inital project
-        this->graph_collection.LoadProjectFromCore(core_instance);
+        this->graph_collection.LoadProjectFromCore(core_instance, nullptr);
         /// or: this->add_empty_project();
 
         // Enable drag and drop of files for configurator (if glfw is available here)
@@ -214,7 +214,7 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
                     this->open_popup_load = true;
                 }
                 if (ImGui::MenuItem("Running")) {
-                    this->graph_collection.LoadProjectFromCore(core_instance);
+                    this->graph_collection.LoadProjectFromCore(core_instance, nullptr);
                 }
                 ImGui::EndMenu();
             }
@@ -227,9 +227,8 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
                 }
                 if (ImGui::MenuItem(
                         "Running", nullptr, false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
-                    this->graph_collection.AddProjectFromCore(
-                        this->graph_state.graph_selected_uid, core_instance, true);
-                    // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
+                    this->graph_collection.AddUpdateProjectFromCore(
+                        this->graph_state.graph_selected_uid, core_instance, nullptr, true);
                 }
                 ImGui::EndMenu();
             }

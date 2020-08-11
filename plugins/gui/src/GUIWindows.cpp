@@ -607,29 +607,21 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
 
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* core_graph) {
 
-    bool retval = true;
-
     // Load and/or update currently running core graph ------------------------
-    /// Valid pointer to core instance is currently essentially required for loading any graph.
+    /// Valid pointer to core instance is currently essentially required for loading all available calls.
     if (this->core_instance != nullptr) {
         // Load all known calls from core instance once
         bool call_stock_loaded = this->graph_collection.LoadCallStock(core_instance);
         if (call_stock_loaded) {
-            if (core_graph != nullptr) {
-                /// Load 'new' megamol graph created by new frontend
-                // TODO No update is done yet
-                this->graph_uid = this->graph_collection.LoadUpdateProjectFromCore(this->graph_uid, core_graph);
-            } else if (this->core_instance != nullptr) {
-                /// Load 'old' megamol graph residing in core instance
-                // TODO No update is done yet
-                this->graph_uid =
-                    this->graph_collection.LoadUpdateProjectFromCore(this->graph_uid, this->core_instance);
+            // Synchronise graphs
+            if (!this->graph_collection.LoadUpdateProjectFromCore(
+                    this->graph_uid, ((core_graph == nullptr) ? (this->core_instance) : (nullptr)), core_graph)) {
+                return false;
             }
-            retval &= (GUI_INVALID_ID != this->graph_uid);
         }
     }
 
-    // Synchronizing parameter values -------------------------------------
+    // Synchronise parameter values -------------------------------------------
     GraphPtr_t graph_ptr;
     if (this->graph_collection.GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
@@ -637,23 +629,22 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
                 if (!param.core_param_ptr.IsNull()) {
                     // Write changed gui state to core parameter
                     if (param.present.IsGUIStateDirty()) {
-                        retval &= megamol::gui::Parameter::WriteCoreParameterGUIState(param, param.core_param_ptr);
+                        megamol::gui::Parameter::WriteCoreParameterGUIState(param, param.core_param_ptr);
                         param.present.ResetGUIStateDirty();
                     }
                     // Write changed parameter value to core parameter
                     if (param.IsValueDirty()) {
-                        retval &= megamol::gui::Parameter::WriteCoreParameterValue(param, param.core_param_ptr);
+                        megamol::gui::Parameter::WriteCoreParameterValue(param, param.core_param_ptr);
                         param.ResetValueDirty();
                     }
                     // Read current parameter value and GUI state fro core parameter
-                    retval &= megamol::gui::Parameter::ReadCoreParameterToParameter(
-                        param.core_param_ptr, param, false, false);
+                    megamol::gui::Parameter::ReadCoreParameterToParameter(param.core_param_ptr, param, false, false);
                 }
             }
         }
     }
 
-    return retval;
+    return true;
 }
 
 
