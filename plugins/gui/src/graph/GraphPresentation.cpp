@@ -90,7 +90,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
     try {
         if (ImGui::GetCurrentContext() == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return;
         }
         ImGuiIO& io = ImGui::GetIO();
@@ -515,11 +515,11 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
 
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 }
@@ -541,7 +541,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
         if (!json.is_object()) {
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 #endif // GUI_VERBOSE
             return false;
         }
@@ -563,7 +563,8 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                             this->show_parameter_sidebar = tmp_show_parameter_sidebar;
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read 'show_parameter_sidebar' as boolean. [%s, %s, line %d]\n",
+                                "[GUI] JSON state: Failed to read 'show_parameter_sidebar' as boolean. [%s, %s, line "
+                                "%d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
                         // parameter_sidebar_width
@@ -571,7 +572,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                             config_state.at("parameter_sidebar_width").get_to(this->parameter_sidebar_width);
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read first value of "
+                                "[GUI] JSON state: Failed to read first value of "
                                 "'parameter_sidebar_width' as float. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
@@ -580,8 +581,8 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                             config_state.at("show_grid").get_to(this->show_grid);
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read 'show_grid' as boolean. [%s, %s, line %d]\n", __FILE__,
-                                __FUNCTION__, __LINE__);
+                                "[GUI] JSON state: Failed to read 'show_grid' as boolean. [%s, %s, line %d]\n",
+                                __FILE__, __FUNCTION__, __LINE__);
                         }
 
                         // show_call_names
@@ -592,7 +593,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                             }
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read 'show_call_names' as boolean. [%s, %s, line %d]\n",
+                                "[GUI] JSON state: Failed to read 'show_call_names' as boolean. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
                         // show_slot_names
@@ -614,7 +615,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                             }
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read 'show_slot_names' as boolean. [%s, %s, line %d]\n",
+                                "[GUI] JSON state: Failed to read 'show_slot_names' as boolean. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
                         // show_module_names
@@ -625,7 +626,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                             }
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read 'show_module_names' as boolean. [%s, %s, line %d]\n",
+                                "[GUI] JSON state: Failed to read 'show_module_names' as boolean. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
                         // params_visible
@@ -634,8 +635,8 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                             /// Do not apply. Already refelcted in parameter gui state.
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read 'params_visible' as boolean. [%s, %s, line %d]\n", __FILE__,
-                                __FUNCTION__, __LINE__);
+                                "[GUI] JSON state: Failed to read 'params_visible' as boolean. [%s, %s, line %d]\n",
+                                __FILE__, __FUNCTION__, __LINE__);
                         }
                         // params_readonly
                         if (config_state.at("params_readonly").is_boolean()) {
@@ -643,7 +644,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                             /// Do not apply. Already refelcted in parameter gui state.
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read 'params_readonly' as boolean. [%s, %s, line %d]\n",
+                                "[GUI] JSON state: Failed to read 'params_readonly' as boolean. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
                         // param_extended_mode
@@ -656,7 +657,8 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                             }
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read 'param_extended_mode' as boolean. [%s, %s, line %d]\n",
+                                "[GUI] JSON state: Failed to read 'param_extended_mode' as boolean. [%s, %s, line "
+                                "%d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
                         // canvas_scrolling
@@ -666,7 +668,8 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                                 config_state.at("canvas_scrolling")[0].get_to(this->graph_state.canvas.scrolling.x);
                             } else {
                                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                    "JSON state: Failed to read first value of 'canvas_scrolling' as float. [%s, %s, "
+                                    "[GUI] JSON state: Failed to read first value of 'canvas_scrolling' as float. [%s, "
+                                    "%s, "
                                     "line %d]\n",
                                     __FILE__, __FUNCTION__, __LINE__);
                             }
@@ -674,13 +677,14 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                                 config_state.at("canvas_scrolling")[1].get_to(this->graph_state.canvas.scrolling.y);
                             } else {
                                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                    "JSON state: Failed to read second value of 'canvas_scrolling' as float. [%s, %s, "
+                                    "[GUI] JSON state: Failed to read second value of 'canvas_scrolling' as float. "
+                                    "[%s, %s, "
                                     "line %d]\n",
                                     __FILE__, __FUNCTION__, __LINE__);
                             }
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read 'canvas_scrolling' as "
+                                "[GUI] JSON state: Failed to read 'canvas_scrolling' as "
                                 "array of size two. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
@@ -690,7 +694,7 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                             this->reset_zooming = false;
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read first value of "
+                                "[GUI] JSON state: Failed to read first value of "
                                 "'canvas_zooming' as float. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                         }
@@ -711,7 +715,8 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                                             position_item.at("graph_position")[0].get_to(module_position.x);
                                         } else {
                                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                                "JSON state: Failed to read first value of 'graph_position' as float. "
+                                                "[GUI] JSON state: Failed to read first value of 'graph_position' as "
+                                                "float. "
                                                 "[%s, %s, line %d]\n",
                                                 __FILE__, __FUNCTION__, __LINE__);
                                             valid = false;
@@ -720,14 +725,16 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                                             position_item.at("graph_position")[1].get_to(module_position.y);
                                         } else {
                                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                                "JSON state: Failed to read second value of 'graph_position' as float. "
+                                                "[GUI] JSON state: Failed to read second value of 'graph_position' as "
+                                                "float. "
                                                 "[%s, %s, line %d]\n",
                                                 __FILE__, __FUNCTION__, __LINE__);
                                             valid = false;
                                         }
                                     } else {
                                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                            "JSON state: Failed to read 'graph_position' as array of size two. [%s, "
+                                            "[GUI] JSON state: Failed to read 'graph_position' as array of size two. "
+                                            "[%s, "
                                             "%s, line %d]\n",
                                             __FILE__, __FUNCTION__, __LINE__);
                                         valid = false;
@@ -744,7 +751,8 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                                         }
                                         if (!module_found) {
                                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                                "JSON state: Unable to find module '%s' to apply graph position in "
+                                                "[GUI] JSON state: Unable to find module '%s' to apply graph position "
+                                                "in "
                                                 "configurator. [%s, %s, line %d]\n",
                                                 module_fullname.c_str(), __FILE__, __FUNCTION__, __LINE__);
                                         }
@@ -770,7 +778,8 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                                                     callslot_item.value().get<std::string>());
                                             } else {
                                                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                                    "JSON state: Failed to read value of call slot as string. [%s, %s, "
+                                                    "[GUI] JSON state: Failed to read value of call slot as string. "
+                                                    "[%s, %s, "
                                                     "line %d]\n",
                                                     __FILE__, __FUNCTION__, __LINE__);
                                                 valid = false;
@@ -834,7 +843,8 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                                                 }
                                                 if (!group_found) {
                                                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                                        "JSON state: Unable to find group '%s' to add interface slot. "
+                                                        "[GUI] JSON state: Unable to find group '%s' to add interface "
+                                                        "slot. "
                                                         "[%s, %s, line %d]\n",
                                                         group_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                                                 }
@@ -853,35 +863,35 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
             this->update = true;
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[Configurator] Read graph state for '%s' from JSON string.", inout_graph.name.c_str());
+                "[GUI] Read graph state for '%s' from JSON string.", inout_graph.name.c_str());
 #endif // GUI_VERBOSE
         } else {
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "Could not find graph state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Could not find graph state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 #endif // GUI_VERBOSE
             return false;
         }
 
     } catch (nlohmann::json::type_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::out_of_range& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::other_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -940,11 +950,11 @@ bool megamol::gui::GraphPresentation::StateToJSON(Graph& inout_graph, nlohmann::
                 }
             }
 #ifdef GUI_VERBOSE
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[Configurator] Wrote graph state to JSON.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Wrote graph state to JSON.");
 #endif // GUI_VERBOSE
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "State of project '%s' is not being saved. Save project to file in "
+                "[GUI] State of project '%s' is not being saved. Save project to file in "
                 "order to get its state saved. [%s, %s, line %d]\n",
                 inout_graph.name.c_str(), __FILE__, __FUNCTION__, __LINE__);
             return false;
@@ -952,23 +962,24 @@ bool megamol::gui::GraphPresentation::StateToJSON(Graph& inout_graph, nlohmann::
 
     } catch (nlohmann::json::type_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::out_of_range& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::other_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
         return false;
     }
 
@@ -1407,8 +1418,8 @@ void megamol::gui::GraphPresentation::present_canvas_dragged_call(megamol::gui::
             ImGuiID* selected_slot_uid_ptr = (ImGuiID*)payload->Data;
             if (selected_slot_uid_ptr == nullptr) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "Pointer to drag and drop payload data is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                    __LINE__);
+                    "[GUI] Pointer to drag and drop payload data is nullptr. [%s, %s, line %d]\n", __FILE__,
+                    __FUNCTION__, __LINE__);
                 return;
             }
 

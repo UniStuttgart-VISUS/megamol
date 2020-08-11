@@ -206,11 +206,8 @@ private:
     /** Numer of fonts reserved for the configurator graph canvas. */
     unsigned int graph_fonts_reserved;
 
-    /** UID of graph */
+    /** UID of currently running graph */
     ImGuiID graph_uid;
-
-    /** The graph collection holding only the graph of the currently running project. */
-    GraphCollection graph_collection;
 
     // Widgets
     FileBrowserWidget file_browser;

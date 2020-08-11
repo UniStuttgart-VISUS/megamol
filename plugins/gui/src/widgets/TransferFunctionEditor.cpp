@@ -200,8 +200,7 @@ TransferFunctionEditor::TransferFunctionEditor(void)
 void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool connected_parameter_mode) {
 
     if (connected_parameter_mode && (this->connected_parameter_ptr == nullptr)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[TransferFunctionEditor] Missing active parameter to edit");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Missing active parameter to edit");
         return;
     }
 
@@ -211,8 +210,7 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
         tfs, this->nodes, this->mode, tex_size, new_range);
 
     if (!ok) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[TransferFunctionEditor] Could not parse transfer function");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Could not parse transfer function");
         return;
     }
 
@@ -258,7 +256,7 @@ void TransferFunctionEditor::SetConnectedParameter(Parameter* param_ptr, const s
             }
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Wrong parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Wrong parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
 }
@@ -385,8 +383,8 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                 this->textureInvalid = true;
             }
         }
-        help = "[Enable] for overwriting value range propagated from connected module(s).\n"
-               "[Disable] for recovery of last value range or last value range propagated from connected module(s).";
+        help = "for overwriting value range propagated from connected module(s).\n"
+               "for recovery of last value range or last value range propagated from connected module(s).";
         this->tooltip.Marker(help);
 
         // Value slider -------------------------------------------------------
@@ -406,7 +404,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             this->nodes[this->currentNode][4] = new_x;
             this->textureInvalid = true;
         }
-        help = "[Ctrl-Click] for keyboard input";
+        help = "for keyboard input";
         this->tooltip.Marker(help);
 
         // Sigma slider -------------------------------------------------------
@@ -415,7 +413,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                 this->nodes[this->currentNode][5] = this->widget_buffer.gauss_sigma;
                 this->textureInvalid = true;
             }
-            help = "[Ctrl-Click] for keyboard input";
+            help = "for keyboard input";
             this->tooltip.Marker(help);
         }
 
@@ -447,9 +445,9 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             this->nodes[this->currentNode][3] = edit_col[3];
             this->textureInvalid = true;
         }
-        help = "[Click] on the colored square to open a color picker.\n"
-               "[CTRL+Click] on individual component to input value.\n"
-               "[Right-Click] on the individual color widget to show options.";
+        help = "on the colored square to open a color picker.\n"
+               "on individual component to input value.\n"
+               "on the individual color widget to show options.";
         this->tooltip.Marker(help);
 
         // Interpolation mode -------------------------------------------------

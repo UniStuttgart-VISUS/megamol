@@ -352,7 +352,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
         out_param.maxval = glm::vec4(maxval.X(), maxval.Y(), maxval.Z(), maxval.W());
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Found unknown parameter type. Please extend parameter types "
+            "[GUI] Found unknown parameter type. Please extend parameter types "
             "for the configurator. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         out_param.type = Param_t::UNKNOWN;
@@ -449,7 +449,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
         out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val, set_dirty);
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Found unknown parameter type. Please extend parameter types for the configurator. "
+            "[GUI] Found unknown parameter type. Please extend parameter types for the configurator. "
             "[%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -593,7 +593,7 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         }
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Found unknown parameter type. Please extend parameter types for the configurator. "
+            "[GUI] Found unknown parameter type. Please extend parameter types for the configurator. "
             "[%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -601,7 +601,7 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
 
     if (type_error) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Mismatch of parameter types. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Mismatch of parameter types. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -740,7 +740,7 @@ bool megamol::gui::Parameter::WriteCoreParameterValue(
         }
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Found unknown parameter type. Please extend parameter types for the configurator. "
+            "[GUI] Found unknown parameter type. Please extend parameter types for the configurator. "
             "[%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -748,7 +748,7 @@ bool megamol::gui::Parameter::WriteCoreParameterValue(
 
     if (type_error) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Mismatch of parameter types. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Mismatch of parameter types. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 

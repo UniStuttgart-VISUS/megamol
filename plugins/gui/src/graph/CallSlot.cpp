@@ -35,7 +35,7 @@ bool megamol::gui::CallSlot::CallsConnected(void) const {
     for (auto& call_ptr : this->connected_calls) {
         if (call_ptr == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Pointer to one of the connected calls is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                "[GUI] Pointer to one of the connected calls is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                 __LINE__);
         }
     }
@@ -47,13 +47,13 @@ bool megamol::gui::CallSlot::ConnectCall(const megamol::gui::CallPtr_t& call_ptr
 
     if (call_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "Pointer to given call is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Pointer to given call is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if (this->type == CallSlotType::CALLER) {
         if (this->connected_calls.size() > 0) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "Caller slots can only be connected to one call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                "[GUI] Caller slots can only be connected to one call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                 __LINE__);
             return false;
         }
@@ -80,11 +80,11 @@ bool megamol::gui::CallSlot::DisconnectCall(ImGuiID call_uid) {
         }
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return false;
@@ -103,11 +103,11 @@ bool megamol::gui::CallSlot::DisconnectCalls(void) {
 
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return true;
@@ -120,7 +120,7 @@ const std::vector<megamol::gui::CallPtr_t>& megamol::gui::CallSlot::GetConnected
     for (auto& call_ptr : this->connected_calls) {
         if (call_ptr == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Pointer to one of the connected calls is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                "[GUI] Pointer to one of the connected calls is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                 __LINE__);
         }
     }
@@ -135,12 +135,12 @@ bool megamol::gui::CallSlot::ConnectParentModule(megamol::gui::ModulePtr_t paren
 
     if (parent_module == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "Pointer to given parent module is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Pointer to given parent module is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if (this->parent_module != nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "Pointer to parent module is already set. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Pointer to parent module is already set. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     this->parent_module = parent_module;
@@ -167,7 +167,8 @@ const megamol::gui::ModulePtr_t& megamol::gui::CallSlot::GetParentModule(void) {
 
     if (this->parent_module == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "Returned pointer to parent module is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Returned pointer to parent module is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
     }
     return this->parent_module;
 }

@@ -39,7 +39,7 @@ bool megamol::gui::Group::AddModule(const ModulePtr_t& module_ptr) {
 
     if (module_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Pointer to module is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Pointer to module is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -48,7 +48,7 @@ bool megamol::gui::Group::AddModule(const ModulePtr_t& module_ptr) {
         if (mod->uid == module_ptr->uid) {
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[Configurator] Module '%s' is already part of group '%s'.\n", mod->name.c_str(), this->name.c_str());
+                "[GUI] Module '%s' is already part of group '%s'.\n", mod->name.c_str(), this->name.c_str());
 #endif // GUI_VERBOSE
             return false;
         }
@@ -65,7 +65,7 @@ bool megamol::gui::Group::AddModule(const ModulePtr_t& module_ptr) {
 
 #ifdef GUI_VERBOSE
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-        "[Configurator] Added module '%s' to group '%s'.\n", module_ptr->name.c_str(), this->name.c_str());
+        "[GUI] Added module '%s' to group '%s'.\n", module_ptr->name.c_str(), this->name.c_str());
 #endif // GUI_VERBOSE
     return true;
 }
@@ -90,8 +90,7 @@ bool megamol::gui::Group::RemoveModule(ImGuiID module_uid) {
 
 #ifdef GUI_VERBOSE
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                    "[Configurator] Removed module '%s' from group '%s'.\n", (*mod_iter)->name.c_str(),
-                    this->name.c_str());
+                    "[GUI] Removed module '%s' from group '%s'.\n", (*mod_iter)->name.c_str(), this->name.c_str());
 #endif // GUI_VERBOSE
                 (*mod_iter).reset();
                 this->modules.erase(mod_iter);
@@ -103,16 +102,16 @@ bool megamol::gui::Group::RemoveModule(ImGuiID module_uid) {
         }
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
     megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        "Invalid module uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        "[GUI] Invalid module uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
 
@@ -132,7 +131,7 @@ ImGuiID megamol::gui::Group::AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr,
 
     if (callslot_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     }
 
@@ -154,7 +153,7 @@ ImGuiID megamol::gui::Group::AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr,
         }
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Call slot has no parent module connected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Call slot has no parent module connected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     }
 
@@ -166,8 +165,7 @@ ImGuiID megamol::gui::Group::AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr,
             this->interfaceslots[callslot_ptr->type].emplace_back(interfaceslot_ptr);
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[Configurator] Added interface slot (uid %i) to group '%s'.\n", interfaceslot_ptr->uid,
-                this->name.c_str());
+                "[GUI] Added interface slot (uid %i) to group '%s'.\n", interfaceslot_ptr->uid, this->name.c_str());
 #endif // GUI_VERBOSE
 
             if (interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr)) {
@@ -177,7 +175,7 @@ ImGuiID megamol::gui::Group::AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr,
         }
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Parent module of call slot which should be added to group interface "
+            "[GUI] Parent module of call slot which should be added to group interface "
             "is not part of any group. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
@@ -209,11 +207,11 @@ bool megamol::gui::Group::InterfaceSlot_RemoveCallSlot(ImGuiID callslots_uid, bo
         }
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return retval;
@@ -267,14 +265,14 @@ bool megamol::gui::Group::DeleteInterfaceSlot(ImGuiID interfaceslot_uid) {
 
                     if ((*iter).use_count() > 1) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "Unclean deletion. Found %i references pointing to interface slot. [%s, %s, line %d]\n",
+                            "[GUI] Unclean deletion. Found %i references pointing to interface slot. [%s, %s, line "
+                            "%d]\n",
                             (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                     }
 
 #ifdef GUI_VERBOSE
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                        "[Configurator] Deleted interface slot (uid %i) from group '%s'.\n", (*iter)->uid,
-                        this->name.c_str());
+                        "[GUI] Deleted interface slot (uid %i) from group '%s'.\n", (*iter)->uid, this->name.c_str());
 #endif // GUI_VERBOSE
 
                     (*iter).reset();

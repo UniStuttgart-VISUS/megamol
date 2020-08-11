@@ -128,7 +128,7 @@ private:
         auto err = glGetError();
         if (err != 0) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "OpenGL Error: %i. [%s, %s, line %d]\n", err, __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] OpenGL Error: %i. [%s, %s, line %d]\n", err, __FILE__, __FUNCTION__, __LINE__);
         }
     }
 };

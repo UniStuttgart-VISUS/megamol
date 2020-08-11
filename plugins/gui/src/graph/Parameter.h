@@ -221,7 +221,7 @@ public:
             }
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
 
@@ -230,7 +230,7 @@ public:
             this->minval = minval;
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
 
@@ -239,7 +239,7 @@ public:
             this->maxval = maxval;
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
 
@@ -248,7 +248,7 @@ public:
             this->storage = store;
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
 

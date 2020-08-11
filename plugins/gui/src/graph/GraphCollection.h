@@ -31,6 +31,7 @@ namespace gui {
 class GraphCollection;
 
 // Types
+typedef std::shared_ptr<GraphCollection> GraphCollectionhPtr_t;
 typedef std::shared_ptr<Graph> GraphPtr_t;
 typedef std::vector<GraphPtr_t> Graphs_t;
 typedef std::map<megamol::core::param::AbstractParam*, std::shared_ptr<megamol::gui::Parameter>> ParamInterfaceMap_t;

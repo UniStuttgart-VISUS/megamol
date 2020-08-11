@@ -39,10 +39,10 @@ class Graph {
 public:
     enum QueueChange { ADD_MODULE, DELETE_MODULE, ADD_CALL, DELETE_CALL };
     struct QueueData {
-        std::string classname;
-        std::string id;
-        std::string caller;
-        std::string callee;
+        std::string classname = "";
+        std::string id = "";
+        std::string caller = "";
+        std::string callee = "";
     };
     typedef std::tuple<QueueChange, QueueData> SyncQueueData_t;
     typedef std::queue<SyncQueueData_t> SyncQueue_t;

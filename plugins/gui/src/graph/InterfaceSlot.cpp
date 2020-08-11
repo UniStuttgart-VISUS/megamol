@@ -40,13 +40,13 @@ bool megamol::gui::InterfaceSlot::AddCallSlot(
     try {
         if (callslot_ptr == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
         if (parent_interfaceslot_ptr == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Pointer to interface slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Pointer to interface slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -56,17 +56,17 @@ bool megamol::gui::InterfaceSlot::AddCallSlot(
             callslot_ptr->present.group.interfaceslot_ptr = parent_interfaceslot_ptr;
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[Configurator] Added call slot '%s' to interface slot of group.\n", callslot_ptr->name.c_str());
+                "[GUI] Added call slot '%s' to interface slot of group.\n", callslot_ptr->name.c_str());
 #endif // GUI_VERBOSE
             return true;
         }
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -85,7 +85,7 @@ bool megamol::gui::InterfaceSlot::RemoveCallSlot(ImGuiID callslot_uid) {
                 (*iter)->present.group.interfaceslot_ptr = nullptr;
 #ifdef GUI_VERBOSE
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                    "[Configurator] Removed call slot '%s' from interface slot of group.\n", (*iter)->name.c_str());
+                    "[GUI] Removed call slot '%s' from interface slot of group.\n", (*iter)->name.c_str());
 #endif // GUI_VERBOSE
                 (*iter).reset();
                 this->callslots.erase(iter);
@@ -95,11 +95,11 @@ bool megamol::gui::InterfaceSlot::RemoveCallSlot(ImGuiID callslot_uid) {
         }
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return false;

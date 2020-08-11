@@ -48,7 +48,7 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
 
     if (ImGui::GetCurrentContext() == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -134,11 +134,11 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
 
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -697,7 +697,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
 
     if (error) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "No widget presentation '%s' available for '%s' . [%s, %s, line %d]\n",
+            "[GUI] No widget presentation '%s' available for '%s' . [%s, %s, line %d]\n",
             this->GetPresentationName(this->GetGUIPresentation()).c_str(),
             megamol::core::param::AbstractParamPresentation::GetTypeName(inout_parameter.type).c_str(), __FILE__,
             __FUNCTION__, __LINE__);
@@ -793,7 +793,7 @@ bool megamol::gui::ParameterPresentation::widget_string(
         ImGui::TextUnformatted(label.c_str());
         ImGui::EndGroup();
 
-        this->help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
+        this->help = "to confirm changes.";
     }
     return retval;
 }
@@ -808,9 +808,9 @@ bool megamol::gui::ParameterPresentation::widget_color(
         auto color_flags = ImGuiColorEditFlags_AlphaPreview; // | ImGuiColorEditFlags_Float;
         retval = ImGui::ColorEdit4(label.c_str(), glm::value_ptr(value), color_flags);
 
-        this->help = "[Click] on the colored square to open a color picker.\n"
-                     "[CTRL+Click] on individual component to input value.\n"
-                     "[Right-Click] on the individual color widget to show options.";
+        this->help = "on the colored square to open a color picker.\n"
+                     "on individual component to input value.\n"
+                     "on the individual color widget to show options.";
     }
     return retval;
 }
@@ -1133,8 +1133,8 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
     if (this->use_external_tf_editor) {
         if (this->tf_editor_external_ptr == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Pointer to external transfer function editor is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                __LINE__);
+                "[GUI] Pointer to external transfer function editor is nullptr. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
             return false;
         }
         isActive = !(this->tf_editor_external_ptr->GetConnectedParameterName().empty());
@@ -1225,9 +1225,8 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
             ImGui::SetClipboardText(value.c_str());
 #else // LINUX
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[Configurator] Transfer Function JSON String:\n%s", value.c_str());
+                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Transfer Function JSON String:\n%s", value.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1241,7 +1240,7 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
             inout_parameter.SetValue(std::string(ImGui::GetClipboardText()));
 #else // LINUX
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 #endif
             value = std::get<std::string>(inout_parameter.GetValue());
             if (this->use_external_tf_editor) {

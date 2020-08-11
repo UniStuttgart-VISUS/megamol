@@ -39,7 +39,6 @@ GUIWindows::GUIWindows(void)
     , shutdown(false)
     , graph_fonts_reserved(0)
     , graph_uid(GUI_INVALID_ID)
-    , graph_collection()
     , file_browser()
     , search_widget()
     , tooltip()
@@ -89,7 +88,7 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 
     if (instance == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     this->core_instance = instance;
 
@@ -110,13 +109,13 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
     if (this->api == GUIImGuiAPI::NONE) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line %d]\n",
+            "[GUI] Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if (this->context == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -147,7 +146,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
     if ((instance_time - this->state.last_instance_time) < 0.0) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            "[GUI] Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
             __LINE__);
     }
     io.DeltaTime = ((instance_time - this->state.last_instance_time) > 0.0)
@@ -199,20 +198,20 @@ bool GUIWindows::PostDraw(void) {
 
     if (this->api == GUIImGuiAPI::NONE) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line %d]\n",
+            "[GUI] Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
     if (ImGui::GetCurrentContext() != this->context) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "Unknown ImGui context ... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown ImGui context ... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     ImGui::SetCurrentContext(this->context);
     if (this->context == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -243,7 +242,7 @@ bool GUIWindows::PostDraw(void) {
                 }
                 if (this->state.font_index == GUI_INVALID_ID) {
                     megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                        "Could not find font '%s' for loaded state. [%s, %s, line %d]\n", wc.font_name.c_str(),
+                        "[GUI] Could not find font '%s' for loaded state. [%s, %s, line %d]\n", wc.font_name.c_str(),
                         __FILE__, __FUNCTION__, __LINE__);
                 }
             }
@@ -256,7 +255,7 @@ bool GUIWindows::PostDraw(void) {
             this->tf_editor_ptr->SetVertical(wc.tfe_view_vertical);
 
             GraphPtr_t graph_ptr;
-            if (this->graph_collection.GetGraph(this->graph_uid, graph_ptr)) {
+            if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
                 for (auto& module_ptr : graph_ptr->GetModules()) {
                     std::string module_full_name = module_ptr->FullName();
                     for (auto& param : module_ptr->parameters) {
@@ -330,8 +329,8 @@ bool GUIWindows::PostDraw(void) {
                 cb(wc);
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "Missing valid callback for WindowDrawCallback: '%d'. [%s, %s, line %d]\n", (int)wc.win_callback,
-                    __FILE__, __FUNCTION__, __LINE__);
+                    "[GUI] Missing valid callback for WindowDrawCallback: '%d'. [%s, %s, line %d]\n",
+                    (int)wc.win_callback, __FILE__, __FUNCTION__, __LINE__);
             }
 
             // Saving current window position and size for all window configurations for possible state saving.
@@ -350,7 +349,7 @@ bool GUIWindows::PostDraw(void) {
     // this->picking_buffer.EnableInteraction(viewport_dim);
 
     GraphPtr_t graph_ptr;
-    if (this->graph_collection.GetGraph(this->graph_uid, graph_ptr)) {
+    if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
 
             /// TODO Pass picked UID to parameters
@@ -504,7 +503,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     // Check for parameter hotkeys
     hotkeyPressed = false;
     GraphPtr_t graph_ptr;
-    if (this->graph_collection.GetGraph(this->graph_uid, graph_ptr)) {
+    if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
             if (check_all_modules || this->considerModule(module_ptr->FullName(), modules_list)) {
                 for (auto& param : module_ptr->parameters) {
@@ -608,27 +607,28 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* core_graph) {
 
     // Load all known calls from core instance once ---------------------------
-    if (!this->graph_collection.LoadCallStock(core_instance)) {
+    if (!this->configurator.GetGraphCollection()->LoadCallStock(core_instance)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Failed to load call stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Failed to load call stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
     bool sync_success = true;
 
     // Synchronize Core graph -> GUI graph ------------------------------------
-    sync_success &= this->graph_collection.LoadUpdateProjectFromCore(
+    sync_success &= this->configurator.GetGraphCollection()->LoadUpdateProjectFromCore(
         this->graph_uid, ((core_graph == nullptr) ? (this->core_instance) : (nullptr)), core_graph);
     if (!sync_success) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
     }
 
     // Synchronize GUI graph -> Core graph ------------------------------------
     if (core_graph != nullptr) {
         bool graph_sync_success = true;
         GraphPtr_t graph_ptr;
-        if (this->graph_collection.GetGraph(this->graph_uid, graph_ptr)) {
+        if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
             auto queue = graph_ptr->GetSyncQueue();
             while (!queue->empty()) {
                 auto change = std::get<0>(queue->back());
@@ -649,12 +649,12 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
                 default:
                     break;
                 }
-                queue->pop();
+                queue->pop(); // TODO pop always?
             }
         }
         if (!graph_sync_success) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Failed to synchronize gui graph with core graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                "[GUI] Failed to synchronize gui graph with core graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                 __LINE__);
         }
         sync_success &= graph_sync_success;
@@ -662,7 +662,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
 
     // Synchronize parameter values -------------------------------------------
     GraphPtr_t graph_ptr;
-    if (this->graph_collection.GetGraph(this->graph_uid, graph_ptr)) {
+    if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
         bool param_sync_success = true;
         for (auto& module_ptr : graph_ptr->GetModules()) {
             for (auto& param : module_ptr->parameters) {
@@ -687,7 +687,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
         }
         if (!param_sync_success) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Failed to synchronize parameter values. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Failed to synchronize parameter values. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
         sync_success &= param_sync_success;
     }
@@ -701,7 +701,8 @@ bool GUIWindows::createContext(void) {
     // Check for successfully created tf editor
     if (this->tf_editor_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Pointer to transfer function editor is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Pointer to transfer function editor is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
         return false;
     }
 
@@ -717,7 +718,7 @@ bool GUIWindows::createContext(void) {
     this->context = ImGui::CreateContext(current_fonts);
     if (this->context == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to create ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unable to create ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     ImGui::SetCurrentContext(this->context);
@@ -1031,10 +1032,10 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
 
     // Info
     std::string help_marker = "[INFO]";
-    std::string param_help = "[Hover] Show Parameter Description Tooltip\n"
-                             "[Right-Click] Context Menu\n"
-                             "[Drag & Drop] Move Module to other Parameter Window\n"
-                             "[Enter],[Tab],[Left-Click outside Widget] Confirm input changes";
+    std::string param_help = "Show Parameter Description Tooltip\n"
+                             "Context Menu\n"
+                             "Move Module to other Parameter Window\n"
+                             "Confirm input changes";
     ImGui::AlignTextToFramePadding();
     ImGui::TextDisabled(help_marker.c_str());
     this->tooltip.ToolTip(param_help);
@@ -1061,7 +1062,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
     auto currentSearchString = this->search_widget.GetSearchString();
     GraphPtr_t graph_ptr;
     // Listing modules and their parameters
-    if (this->graph_collection.GetGraph(this->graph_uid, graph_ptr)) {
+    if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
             std::string module_label = module_ptr->FullName();
 
@@ -1277,7 +1278,7 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
             ImGui::SetClipboardText(overlay.c_str());
 #else // LINUX
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[GUI] Current Performance Monitor Value:\n%s", overlay.c_str());
 #endif
@@ -1298,7 +1299,7 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
             ImGui::SetClipboardText(stream.str().c_str());
 #else // LINUX
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[GUI] All Performance Monitor Values:\n%s", stream.str().c_str());
 #endif
@@ -1396,9 +1397,9 @@ void GUIWindows::drawMenu(void) {
                     }
                     ImGui::EndPopup();
                 }
-                this->tooltip.ToolTip("[Right-Click] Open Context Menu for Deleting Window Permanently.");
+                this->tooltip.ToolTip("Open Context Menu for Deleting Window Permanently.");
             } else {
-                this->tooltip.ToolTip("['Window Hotkey'] Show/Hide Window.\n[Shift]+['Window Hotkey'] Reset Size "
+                this->tooltip.ToolTip("Reset Size "
                                       "and Position of Window.");
             }
         };
@@ -1449,8 +1450,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
             ImGui::SetClipboardText(eMail.c_str());
 #else // LINUX
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] E-Mail address:\n%s", eMail.c_str());
+                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("E-Mail address:\n%s", eMail.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1465,8 +1466,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
             ImGui::SetClipboardText(webLink.c_str());
 #else // LINUX
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Website link:\n%s", webLink.c_str());
+                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Website link:\n%s", webLink.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1480,8 +1481,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
             ImGui::SetClipboardText(gitLink.c_str());
 #else // LINUX
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] GitHub link:\n%s", gitLink.c_str());
+                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("GitHub link:\n%s", gitLink.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1510,7 +1511,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         /// Serialize current state to parameter.
         this->save_state_to_parameter();
         /// Save to file
-        popup_failed = !this->graph_collection.SaveProjectToFile(this->graph_uid, this->state.project_file, true);
+        popup_failed = !this->configurator.GetGraphCollection()->SaveProjectToFile(
+            this->graph_uid, this->state.project_file, true);
     }
     MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
@@ -1577,7 +1579,7 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
         }
 
         GraphPtr_t graph_ptr;
-        if (this->graph_collection.GetGraph(this->graph_uid, graph_ptr)) {
+        if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 for (auto& param : module_ptr->parameters) {
 
@@ -1598,7 +1600,7 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
                             hotkeylist.emplace_back(keyCode);
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                                "The hotkey [%s] of the parameter \"%s\" has already been assigned. "
+                                "[GUI] The hotkey [%s] of the parameter \"%s\" has already been assigned. "
                                 ">>> If this hotkey is pressed, there will be no effect on this parameter!",
                                 keyCode.ToString().c_str(), param.full_name.c_str());
                         }
@@ -1626,7 +1628,7 @@ void megamol::gui::GUIWindows::triggerCoreInstanceShutdown(void) {
 
     if (this->core_instance != nullptr) {
 #ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Shutdown MegaMol instance.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Shutdown MegaMol instance.");
 #endif // GUI_VERBOSE
         this->core_instance->Shutdown();
     }
@@ -1651,7 +1653,7 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
     }
 
     GraphPtr_t graph_ptr;
-    if (this->graph_collection.GetGraph(this->graph_uid, graph_ptr)) {
+    if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
             for (auto& param : module_ptr->parameters) {
                 if (!param.core_param_ptr.IsNull()) {
@@ -1666,7 +1668,7 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
 bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const std::string& in_json_string) {
 
     GraphPtr_t graph_ptr;
-    if (this->graph_collection.GetGraph(this->graph_uid, graph_ptr)) {
+    if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
             std::string module_full_name = module_ptr->FullName();
             module_ptr->present.param_groups.ParameterGroupGUIStateFromJSONString(in_json_string, module_full_name);
@@ -1689,7 +1691,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
         json = nlohmann::json::parse(in_json_string);
         if (!json.is_object()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -1703,7 +1705,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
                     gui_state.at("menu_visible").get_to(this->state.menu_visible);
                 } else {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "JSON state: Failed to read 'menu_visible' as boolean. [%s, %s, line %d]\n", __FILE__,
+                        "[GUI] JSON state: Failed to read 'menu_visible' as boolean. [%s, %s, line %d]\n", __FILE__,
                         __FUNCTION__, __LINE__);
                 }
                 // project_file (supports UTF-8)
@@ -1712,7 +1714,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
                     GUIUtils::Utf8Decode(this->state.project_file);
                 } else {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "JSON state: Failed to read 'project_file' as string. [%s, %s, line %d]\n", __FILE__,
+                        "[GUI] JSON state: Failed to read 'project_file' as string. [%s, %s, line %d]\n", __FILE__,
                         __FUNCTION__, __LINE__);
                 }
             }
@@ -1720,7 +1722,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
 
         if (found_gui) {
 #ifdef GUI_VERBOSE
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Read gui state from JSON string.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Read gui state from JSON string.");
 #endif // GUI_VERBOSE
         } else {
             /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Could not find gui state in JSON. [%s, %s, line
@@ -1730,23 +1732,23 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
 
     } catch (nlohmann::json::type_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::out_of_range& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::other_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -1764,7 +1766,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_to_json(nlohmann::json& 
         inout_json[GUI_JSON_TAG_GUISTATE]["menu_visible"] = this->state.menu_visible;
 
         GraphPtr_t graph_ptr;
-        if (this->graph_collection.GetGraph(this->graph_uid, graph_ptr)) {
+        if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 std::string module_full_name = module_ptr->FullName();
                 module_ptr->present.param_groups.ParameterGroupGUIStateToJSON(inout_json, module_full_name);
@@ -1776,28 +1778,29 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_to_json(nlohmann::json& 
         }
 
 #ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote parameter state to JSON.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Wrote parameter state to JSON.");
 #endif // GUI_VERBOSE
 
     } catch (nlohmann::json::type_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::out_of_range& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::other_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
         return false;
     }
 

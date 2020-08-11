@@ -41,8 +41,8 @@ bool megamol::gui::Call::IsConnected(void) {
         }
     }
     if (connected != 2) {
-        /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Call has only one connected call slot. [%s, %s, line
-        /// %d]\n",
+        /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Call has only one connected call slot. [%s,
+        /// %s, line %d]\n",
         /// __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -55,13 +55,13 @@ bool megamol::gui::Call::ConnectCallSlots(
 
     if ((callslot_1 == nullptr) || (callslot_2 == nullptr)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "Pointer to given call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Pointer to given call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if ((this->connected_callslots[callslot_1->type] != nullptr) ||
         (this->connected_callslots[callslot_2->type] != nullptr)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "Call is already connected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Call is already connected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if (callslot_1->IsConnectionValid((*callslot_2))) {
@@ -86,11 +86,11 @@ bool megamol::gui::Call::DisconnectCallSlots(ImGuiID calling_callslot_uid) {
         }
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return true;

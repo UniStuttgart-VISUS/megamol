@@ -22,9 +22,10 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
     , groups()
     , dirty_flag(true)
     , present()
-    , sync_queue() {
+    , sync_queue(nullptr) {
 
     this->sync_queue = std::make_shared<SyncQueue_t>();
+    ASSERT(this->sync_queue != nullptr);
 }
 
 
@@ -69,31 +70,23 @@ ImGuiID megamol::gui::Graph::AddEmptyModule(void) {
         this->modules.emplace_back(mod_ptr);
         this->ForceSetDirty();
 
-        if (this->sync_queue == nullptr) return false;
-        QueueData queue_data;
-        queue_data.classname = "module";
-        queue_data.id = "";
-        queue_data.caller = "";
-        queue_data.callee = "";
-        this->sync_queue->push(SyncQueueData_t(QueueChange::ADD_MODULE, queue_data));
-
 #ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[Configurator] Added empty module to project.\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Added empty module to project.\n");
 #endif // GUI_VERBOSE
 
         return mod_uid;
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     }
 
     megamol::core::utility::log::Log::DefaultLog.WriteError(
-        "Unable to add empty module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        "[GUI] Unable to add empty module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return GUI_INVALID_ID;
 }
 
@@ -142,13 +135,17 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
                     }
                 }
 
+                QueueData queue_data;
+                queue_data.classname = mod_ptr->class_name;
+                queue_data.id = mod_ptr->FullName();
+                this->sync_queue->push(SyncQueueData_t(QueueChange::ADD_MODULE, queue_data));
+
                 this->modules.emplace_back(mod_ptr);
                 this->ForceSetDirty();
 
 #ifdef GUI_VERBOSE
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                    "[Configurator] Added module '%s' (uid %i) to project '%s'.\n", mod_ptr->class_name.c_str(),
-                    mod_ptr->uid, this->name.c_str());
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("Added module '%s' (uid %i) to project '%s'.\n",
+                    mod_ptr->class_name.c_str(), mod_ptr->uid, this->name.c_str());
 #endif // GUI_VERBOSE
 
                 return mod_uid;
@@ -156,16 +153,17 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
         }
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     }
 
-    megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to find module in stock: '%s'. [%s, %s, line %d]\n",
-        module_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+    megamol::core::utility::log::Log::DefaultLog.WriteError(
+        "[GUI] Unable to find module in stock: '%s'. [%s, %s, line %d]\n", module_class_name.c_str(), __FILE__,
+        __FUNCTION__, __LINE__);
     return GUI_INVALID_ID;
 }
 
@@ -204,14 +202,19 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
 
 #ifdef GUI_VERBOSE
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                    "[Configurator] Deleted module '%s' (uid %i) from  project '%s'.\n", (*iter)->class_name.c_str(),
+                    "[GUI] Deleted module '%s' (uid %i) from  project '%s'.\n", (*iter)->class_name.c_str(),
                     (*iter)->uid, this->name.c_str());
 #endif // GUI_VERBOSE
 
                 // 5) Delete module
+                QueueData queue_data;
+                queue_data.classname = (*iter)->class_name;
+                queue_data.id = (*iter)->FullName();
+                this->sync_queue->push(SyncQueueData_t(QueueChange::DELETE_MODULE, queue_data));
+
                 if ((*iter).use_count() > 1) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "Unclean deletion. Found %i references pointing to module. [%s, %s, line %d]\n",
+                        "[GUI] Unclean deletion. Found %i references pointing to module. [%s, %s, line %d]\n",
                         (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 }
                 (*iter).reset();
@@ -230,16 +233,16 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
 
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
     megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        "Invalid module uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        "[GUI] Invalid module uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
 
@@ -361,11 +364,11 @@ bool megamol::gui::Graph::AddCall(const CallStockVector_t& stock_calls, ImGuiID 
         }
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -379,7 +382,7 @@ bool megamol::gui::Graph::AddCall(
     try {
         if ((callslot_1 == nullptr) || (callslot_2 == nullptr)) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         if (!callslot_1->IsConnectionValid((*callslot_2))) {
@@ -388,7 +391,7 @@ bool megamol::gui::Graph::AddCall(
         auto compat_idx = CallSlot::GetCompatibleCallIndex(callslot_1, callslot_2);
         if (compat_idx == GUI_INVALID_ID) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "Unable to find index of compatible call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Unable to find index of compatible call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         Call::StockCall call_stock_data = stock_calls[compat_idx];
@@ -404,11 +407,11 @@ bool megamol::gui::Graph::AddCall(
 
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 }
@@ -418,12 +421,12 @@ bool megamol::gui::Graph::AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1,
 
     if (call_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Pointer to call is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Pointer to call is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if ((callslot_1 == nullptr) || (callslot_2 == nullptr)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -450,13 +453,22 @@ bool megamol::gui::Graph::AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1,
     if (call_ptr->ConnectCallSlots(callslot_1, callslot_2) && callslot_1->ConnectCall(call_ptr) &&
         callslot_2->ConnectCall(call_ptr)) {
 
+        QueueData queue_data;
+        queue_data.classname = call_ptr->class_name;
+        if (call_ptr->GetCallSlot(CallSlotType::CALLER)->GetParentModule() != nullptr) {
+            queue_data.caller = call_ptr->GetCallSlot(CallSlotType::CALLER)->GetParentModule()->FullName();
+        }
+        if (call_ptr->GetCallSlot(CallSlotType::CALLEE)->GetParentModule() != nullptr) {
+            queue_data.caller = call_ptr->GetCallSlot(CallSlotType::CALLEE)->GetParentModule()->FullName();
+        }
+        this->sync_queue->push(SyncQueueData_t(QueueChange::DELETE_MODULE, queue_data));
+
         this->calls.emplace_back(call_ptr);
         this->ForceSetDirty();
 
 #ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "[Configurator] Added call '%s' (uid %i) to project '%s'.\n", call_ptr->class_name.c_str(), call_ptr->uid,
-            this->name.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Added call '%s' (uid %i) to project '%s'.\n",
+            call_ptr->class_name.c_str(), call_ptr->uid, this->name.c_str());
 #endif // GUI_VERBOSE
 
         // Add connected call slots to interface of group of the parent module
@@ -487,7 +499,7 @@ bool megamol::gui::Graph::AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1,
     } else {
         this->DeleteCall(call_ptr->uid);
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "Unable to create call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unable to create call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 }
@@ -557,14 +569,26 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
 
                     if ((*iter).use_count() > 1) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "Unclean deletion. Found %i references pointing to call. [%s, %s, line %d]\n",
+                            "[GUI] Unclean deletion. Found %i references pointing to call. [%s, %s, line %d]\n",
                             (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                     }
 #ifdef GUI_VERBOSE
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                        "[Configurator] Deleted call '%s' (uid %i) from  project '%s'.\n", (*iter)->class_name.c_str(),
+                        "[GUI] Deleted call '%s' (uid %i) from  project '%s'.\n", (*iter)->class_name.c_str(),
                         (*iter)->uid, this->name.c_str());
 #endif // GUI_VERBOSE
+
+
+                    QueueData queue_data;
+                    queue_data.classname = (*iter)->class_name;
+                    if ((*iter)->GetCallSlot(CallSlotType::CALLER)->GetParentModule() != nullptr) {
+                        queue_data.caller = (*iter)->GetCallSlot(CallSlotType::CALLER)->GetParentModule()->FullName();
+                    }
+                    if ((*iter)->GetCallSlot(CallSlotType::CALLEE)->GetParentModule() != nullptr) {
+                        queue_data.caller = (*iter)->GetCallSlot(CallSlotType::CALLEE)->GetParentModule()->FullName();
+                    }
+                    this->sync_queue->push(SyncQueueData_t(QueueChange::DELETE_MODULE, queue_data));
+
                     (*iter).reset();
                     this->calls.erase(iter);
 
@@ -575,11 +599,11 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
         }
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return true;
@@ -596,19 +620,18 @@ ImGuiID megamol::gui::Graph::AddGroup(const std::string& group_name) {
         this->ForceSetDirty();
 
 #ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "[Configurator] Added group '%s' (uid %i) to project '%s'.\n", group_ptr->name.c_str(), group_ptr->uid,
-            this->name.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Added group '%s' (uid %i) to project '%s'.\n",
+            group_ptr->name.c_str(), group_ptr->uid, this->name.c_str());
 #endif // GUI_VERBOSE
         return group_id;
 
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     }
 
@@ -640,13 +663,13 @@ bool megamol::gui::Graph::DeleteGroup(ImGuiID group_uid) {
 
                 if ((*iter).use_count() > 1) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "Unclean deletion. Found %i references pointing to group. [%s, %s, line %d]\n",
+                        "[GUI] Unclean deletion. Found %i references pointing to group. [%s, %s, line %d]\n",
                         (*iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 }
 #ifdef GUI_VERBOSE
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                    "[Configurator] Deleted group '%s' (uid %i) from  project '%s'.\n", (*iter)->name.c_str(),
-                    (*iter)->uid, this->name.c_str());
+                    "[GUI] Deleted group '%s' (uid %i) from  project '%s'.\n", (*iter)->name.c_str(), (*iter)->uid,
+                    this->name.c_str());
 #endif // GUI_VERBOSE
                 (*iter).reset();
                 this->groups.erase(iter);
@@ -659,16 +682,16 @@ bool megamol::gui::Graph::DeleteGroup(ImGuiID group_uid) {
         }
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
     megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        "Invalid group uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        "[GUI] Invalid group uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
 
@@ -701,11 +724,11 @@ ImGuiID megamol::gui::Graph::AddGroupModule(const std::string& group_name, const
         }
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
     }
 
@@ -754,11 +777,11 @@ bool megamol::gui::Graph::delete_disconnected_calls(void) {
         }
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 

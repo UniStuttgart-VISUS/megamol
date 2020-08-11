@@ -45,15 +45,15 @@ bool megamol::gui::Module::AddCallSlot(megamol::gui::CallSlotPtr_t callslot) {
 
     if (callslot == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "Pointer to given call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Pointer to given call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     auto type = callslot->type;
     for (auto& callslot_ptr : this->callslots[type]) {
         if (callslot_ptr == callslot) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Pointer to call slot already registered in modules call slot list. [%s, %s, line %d]\n", __FILE__,
-                __FUNCTION__, __LINE__);
+                "[GUI] Pointer to call slot already registered in modules call slot list. [%s, %s, line %d]\n",
+                __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
     }
@@ -73,7 +73,7 @@ bool megamol::gui::Module::DeleteCallSlots(void) {
 
                 if ((*callslot_iter).use_count() > 1) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "Unclean deletion. Found %i references pointing to call slot. [%s, %s, line %d]\n",
+                        "[GUI] Unclean deletion. Found %i references pointing to call slot. [%s, %s, line %d]\n",
                         (*callslot_iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 }
 
@@ -83,11 +83,11 @@ bool megamol::gui::Module::DeleteCallSlots(void) {
         }
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return true;

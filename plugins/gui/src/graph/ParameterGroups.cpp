@@ -145,7 +145,8 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVector_t& inou
                                     group.second.first, group_widget_id.second.GetGUIPresentation(), in_scope)) {
 
                                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                    "No widget presentation '%s' available for group widget '%s'. [%s, %s, line %d]\n",
+                                    "[GUI] No widget presentation '%s' available for group widget '%s'. [%s, %s, line "
+                                    "%d]\n",
                                     group_widget_id.second
                                         .GetPresentationName(group_widget_id.second.GetGUIPresentation())
                                         .c_str(),
@@ -333,8 +334,8 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVector_t& par
     }
     if ((param_play == nullptr) || (param_time == nullptr) || (param_speed == nullptr)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to find all required parameters by name for animation group widget. [%s, %s, line %d]\n", __FILE__,
-            __FUNCTION__, __LINE__);
+            "[GUI] Unable to find all required parameters by name for animation group widget. [%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -354,8 +355,8 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVector_t& par
     if ((!this->image_buttons.play.IsLoaded()) || (!this->image_buttons.pause.IsLoaded()) ||
         (!this->image_buttons.fastforward.IsLoaded()) || (!this->image_buttons.fastrewind.IsLoaded())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to load all required button textures for animation group widget. [%s, %s, line %d]\n", __FILE__,
-            __FUNCTION__, __LINE__);
+            "[GUI] Unable to load all required button textures for animation group widget. [%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 

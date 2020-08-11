@@ -272,7 +272,7 @@ bool megamol::gui::PickingBuffer::CreatShader(
 
     if (prgm_error) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n",
+            "[GUI] Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n",
             shader_ptr->getDebugLabel().c_str(), shader_ptr->getLog().c_str(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
