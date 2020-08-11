@@ -26,6 +26,14 @@
 #endif
 
 
+/// TEMP
+namespace megamol {
+namespace core {
+class MegaMolGraph;
+}
+} // namespace megamol
+///
+
 namespace megamol {
 namespace gui {
 
@@ -69,10 +77,15 @@ public:
      */
     void UpdateStateParameter(void);
 
+    /**
+     * Return graph collection.
+     */
+    const GraphCollectionhPtr_t& GetGraphCollection(void) { return this->graph_collection; }
+
 private:
     // VARIABLES --------------------------------------------------------------
 
-    GraphCollection graph_collection;
+    GraphCollectionhPtr_t graph_collection;
 
     std::vector<megamol::core::param::ParamSlot*> param_slots;
     megamol::core::param::ParamSlot state_param;

@@ -29,7 +29,7 @@ megamol::gui::FileBrowserWidget::FileBrowserWidget(void)
 #else
 {
     megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        "Filesystem functionality is not available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        "[GUI] Filesystem functionality is not available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 #endif // GUI_USE_FILESYSTEM
 }
 
@@ -59,7 +59,8 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
             ImGui::SetNextWindowSize(ImVec2(400.0f, 500.0f));
 #else
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "Filesystem functionality is not available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Filesystem functionality is not available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
 #endif // GUI_USE_FILESYSTEM
         }
 
@@ -287,11 +288,11 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
 
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -364,7 +365,7 @@ bool megamol::gui::FileBrowserWidget::splitPath(
         }
     } catch (fsns::filesystem_error e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return true;
@@ -379,7 +380,7 @@ void megamol::gui::FileBrowserWidget::validateDirectory(const std::string& path_
         this->valid_directory = (fsns::status_known(fsns::status(tmp_path)) && fsns::is_directory(tmp_path));
     } catch (fsns::filesystem_error e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 }
@@ -445,7 +446,7 @@ void megamol::gui::FileBrowserWidget::validateFile(
 
     } catch (fsns::filesystem_error e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 }

@@ -26,7 +26,7 @@ std::vector<std::string> megamol::gui::Configurator::dropped_files;
 
 
 megamol::gui::Configurator::Configurator()
-    : graph_collection()
+    : graph_collection(nullptr)
     , param_slots()
     , state_param(GUI_CONFIGURATOR_STATE_PARAM_NAME, "State of the configurator.")
     , init_state(0)
@@ -67,6 +67,9 @@ megamol::gui::Configurator::Configurator()
     this->graph_state.graph_selected_uid = GUI_INVALID_ID;
     this->graph_state.graph_delete = false;
     this->graph_state.graph_save = false;
+
+    this->graph_collection = std::make_shared<GraphCollection>();
+    ASSERT(this->graph_collection != nullptr);
 }
 
 
@@ -78,13 +81,13 @@ bool megamol::gui::Configurator::Draw(
 
     if (ImGui::GetCurrentContext() == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
     if (core_instance == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -92,7 +95,7 @@ bool megamol::gui::Configurator::Draw(
     if (this->init_state < 2) {
         /// Step 1] (two frames!)
 
-        // Show pop-up before calling this->graph_collection.LoadModulesCallsStock().
+        // Show pop-up before calling this->graph_collection->LoadModulesCallsStock().
         /// Rendering of pop-up requires two complete draw calls!
         bool open = true;
         std::string popup_label("Loading");
@@ -111,11 +114,12 @@ bool megamol::gui::Configurator::Draw(
         /// Step 2] (one frame)
 
         // Load available modules and calls and currently loaded project from core once(!)
-        this->graph_collection.LoadCallStock(core_instance);
-        this->graph_collection.LoadModuleStock(core_instance);
+        this->graph_collection->LoadCallStock(core_instance);
+        this->graph_collection->LoadModuleStock(core_instance);
 
         // Load inital project
-        this->graph_collection.LoadProjectFromCore(core_instance);
+        /// XXX Prevent loading of current core project twice when already loaded via saved configurator state
+        /// this->graph_collection->LoadProjectFromCore(core_instance, nullptr);
         /// or: this->add_empty_project();
 
         // Enable drag and drop of files for configurator (if glfw is available here)
@@ -151,7 +155,7 @@ bool megamol::gui::Configurator::Draw(
             // ... only if configurator is focused.
             if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
                 for (auto& dropped_file : megamol::gui::Configurator::dropped_files) {
-                    this->graph_collection.LoadAddProjectFromFile(this->graph_state.graph_selected_uid, dropped_file);
+                    this->graph_collection->LoadAddProjectFromFile(this->graph_state.graph_selected_uid, dropped_file);
                 }
             }
             megamol::gui::Configurator::dropped_files.clear();
@@ -166,7 +170,7 @@ bool megamol::gui::Configurator::Draw(
             this->draw_window_module_list(this->module_list_sidebar_width);
             ImGui::SameLine();
         }
-        this->graph_collection.PresentGUI(this->graph_state);
+        this->graph_collection->PresentGUI(this->graph_state);
         // Process Pop-ups
         this->drawPopUps();
 
@@ -196,7 +200,7 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
 
     if (core_instance == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 
@@ -214,7 +218,7 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
                     this->open_popup_load = true;
                 }
                 if (ImGui::MenuItem("Running")) {
-                    this->graph_collection.LoadProjectFromCore(core_instance);
+                    this->graph_collection->LoadProjectFromCore(core_instance, nullptr);
                 }
                 ImGui::EndMenu();
             }
@@ -227,9 +231,8 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
                 }
                 if (ImGui::MenuItem(
                         "Running", nullptr, false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
-                    this->graph_collection.AddProjectFromCore(
-                        this->graph_state.graph_selected_uid, core_instance, true);
-                    // this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
+                    this->graph_collection->AddUpdateProjectFromCore(
+                        this->graph_state.graph_selected_uid, core_instance, nullptr, true);
                 }
                 ImGui::EndMenu();
             }
@@ -268,9 +271,8 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
                 ImGui::SetClipboardText(docu_link.c_str());
 #else // LINUX
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                    "[Configurator] Readme Link:\n%s", docu_link.c_str());
+                    "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Readme Link:\n%s", docu_link.c_str());
 #endif
             }
             ImGui::EndMenu();
@@ -315,7 +317,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
     std::string compat_callslot_name;
     CallSlotPtr_t selected_callslot_ptr;
     GraphPtr_t selected_graph_ptr;
-    if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
+    if (this->graph_collection->GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
 
         auto callslot_id = selected_graph_ptr->present.GetSelectedCallSlot();
         if (callslot_id != GUI_INVALID_ID) {
@@ -342,7 +344,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
     }
 
     ImGuiID id = 1;
-    for (auto& mod : this->graph_collection.GetModulesStock()) {
+    for (auto& mod : this->graph_collection->GetModulesStock()) {
 
         // Filter module by given search string
         search_filter = true;
@@ -391,7 +393,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
             if (add_module) {
                 if (selected_graph_ptr != nullptr) {
                     ImGuiID module_uid =
-                        selected_graph_ptr->AddModule(this->graph_collection.GetModulesStock(), mod.class_name);
+                        selected_graph_ptr->AddModule(this->graph_collection->GetModulesStock(), mod.class_name);
                     ModulePtr_t module_ptr;
                     if (selected_graph_ptr->GetModule(module_uid, module_ptr)) {
 
@@ -402,8 +404,9 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
                             for (auto& callslot_map : module_ptr->GetCallSlots()) {
                                 for (auto& callslot_ptr : callslot_map.second) {
                                     if (callslot_ptr->name == compat_callslot_name) {
-                                        added_call = selected_graph_ptr->AddCall(this->graph_collection.GetCallsStock(),
-                                            selected_callslot_ptr, callslot_ptr);
+                                        added_call =
+                                            selected_graph_ptr->AddCall(this->graph_collection->GetCallsStock(),
+                                                selected_callslot_ptr, callslot_ptr);
                                         if (added_call) {
                                             module_ptr->present.SetSelectedSlotPosition();
                                         }
@@ -443,7 +446,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
                     this->show_module_list_child = false;
                 } else {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "No project loaded. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                        "[GUI] No project loaded. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 }
             }
             // Hover tool tip
@@ -462,30 +465,30 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
 
 void megamol::gui::Configurator::add_empty_project(void) {
 
-    ImGuiID graph_uid = this->graph_collection.AddGraph();
+    ImGuiID graph_uid = this->graph_collection->AddGraph();
     if (graph_uid != GUI_INVALID_ID) {
 
         // Add initial GUIView and set as view instance
         GraphPtr_t graph_ptr;
-        if (this->graph_collection.GetGraph(graph_uid, graph_ptr)) {
+        if (this->graph_collection->GetGraph(graph_uid, graph_ptr)) {
             std::string guiview_class_name("GUIView");
-            ImGuiID module_uid = graph_ptr->AddModule(this->graph_collection.GetModulesStock(), guiview_class_name);
+            ImGuiID module_uid = graph_ptr->AddModule(this->graph_collection->GetModulesStock(), guiview_class_name);
             ModulePtr_t module_ptr;
             if (graph_ptr->GetModule(module_uid, module_ptr)) {
                 auto graph_module = graph_ptr->GetModules().back();
                 graph_module->is_view_instance = true;
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "Unable to add initial gui view module: '%s'. [%s, %s, line %d]\n", guiview_class_name.c_str(),
-                    __FILE__, __FUNCTION__, __LINE__);
+                    "[GUI] Unable to add initial gui view module: '%s'. [%s, %s, line %d]\n",
+                    guiview_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
             }
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Unable to get last added graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Unable to get last added graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unable to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 }
 
@@ -504,7 +507,7 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
 
         if (!json.is_object()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -518,7 +521,7 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
                     config_state.at("show_module_list_sidebar").get_to(this->show_module_list_sidebar);
                 } else {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "JSON state: Failed to read 'show_module_list_sidebar' as boolean. [%s, %s, line %d]\n",
+                        "[GUI] JSON state: Failed to read 'show_module_list_sidebar' as boolean. [%s, %s, line %d]\n",
                         __FILE__, __FUNCTION__, __LINE__);
                 }
 
@@ -527,7 +530,7 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
                     config_state.at("module_list_sidebar_width").get_to(this->module_list_sidebar_width);
                 } else {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "JSON state: Failed to read first value of "
+                        "[GUI] JSON state: Failed to read first value of "
                         "'module_list_sidebar_width' as float. [%s, %s, line %d]\n",
                         __FILE__, __FUNCTION__, __LINE__);
                 }
@@ -538,13 +541,13 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
 
                     // Load graph from file
                     // ImGuiID graph_uid =
-                    auto graph_uid = this->graph_collection.LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
+                    auto graph_uid = this->graph_collection->LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
 
                     // Overwrite graph states with the one found in this project
                     /// TODO Comment for ignoring graph state stored in this project
                     if (graph_uid != GUI_INVALID_ID) {
                         GraphPtr_t graph_ptr;
-                        if (this->graph_collection.GetGraph(graph_uid, graph_ptr)) {
+                        if (this->graph_collection->GetGraph(graph_uid, graph_ptr)) {
                             // Let graph search for his configurator state
                             graph_ptr->GUIStateFromJsonString(in_json_string);
                         }
@@ -555,36 +558,36 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
 
         if (found) {
 #ifdef GUI_VERBOSE
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[Configurator] Read configurator state from JSON string.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Read configurator state from JSON string.");
 #endif // GUI_VERBOSE
         } else {
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "Could not find configurator state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Could not find configurator state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
 #endif // GUI_VERBOSE
             return false;
         }
 
     } catch (nlohmann::json::type_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::out_of_range& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::other_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -601,32 +604,33 @@ bool megamol::gui::Configurator::configurator_state_to_json(nlohmann::json& out_
         out_json[GUI_JSON_TAG_CONFIGURATOR]["show_module_list_sidebar"] = this->show_module_list_sidebar;
         out_json[GUI_JSON_TAG_CONFIGURATOR]["module_list_sidebar_width"] = this->module_list_sidebar_width;
 
-        for (auto& graph_ptr : this->graph_collection.GetGraphs()) {
+        for (auto& graph_ptr : this->graph_collection->GetGraphs()) {
             graph_ptr->GUIStateToJSON(out_json);
         }
 #ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[Configurator] Wrote configurator state to JSON.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote configurator state to JSON.");
 #endif // GUI_VERBOSE
 
     } catch (nlohmann::json::type_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::out_of_range& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::other_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
         return false;
     }
 
@@ -643,12 +647,12 @@ void megamol::gui::Configurator::drawPopUps(void) {
     bool popup_failed = false;
     std::string project_filename;
     GraphPtr_t graph_ptr;
-    if (this->graph_collection.GetGraph(this->add_project_graph_uid, graph_ptr)) {
+    if (this->graph_collection->GetGraph(this->add_project_graph_uid, graph_ptr)) {
         project_filename = graph_ptr->GetFilename();
     }
     if (this->file_browser.PopUp(
             FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->open_popup_load, project_filename)) {
-        popup_failed = !this->graph_collection.LoadAddProjectFromFile(this->add_project_graph_uid, project_filename);
+        popup_failed = !this->graph_collection->LoadAddProjectFromFile(this->add_project_graph_uid, project_filename);
         this->add_project_graph_uid = GUI_INVALID_ID;
     }
     MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
@@ -657,7 +661,7 @@ void megamol::gui::Configurator::drawPopUps(void) {
 
     // Module Stock List Child Window ------------------------------------------
     GraphPtr_t selected_graph_ptr;
-    if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
+    if (this->graph_collection->GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
 
         ImGuiID selected_callslot_uid = selected_graph_ptr->present.GetSelectedCallSlot();
         ImGuiID selected_group_uid = selected_graph_ptr->present.GetSelectedGroup();

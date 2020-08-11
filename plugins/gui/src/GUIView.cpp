@@ -60,20 +60,20 @@ float GUIView::DefaultTime(double instTime) const {
 
 unsigned int GUIView::GetCameraSyncNumber(void) const {
     megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        "Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        "[GUI] Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return 0u;
 }
 
 
 void GUIView::SerialiseCamera(vislib::Serialiser& serialiser) const {
     megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        "Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        "[GUI] Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 }
 
 
 void GUIView::DeserialiseCamera(vislib::Serialiser& serialiser) {
     megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        "Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        "[GUI] Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 }
 
 
@@ -82,6 +82,7 @@ void GUIView::Render(const mmcRenderViewContext& context) {
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
     }
+    this->gui.SynchronizeGraphs();
     if (crv) {
         crv->SetOutputBuffer(GL_BACK);
         crv->SetInstanceTime(context.InstanceTime);
