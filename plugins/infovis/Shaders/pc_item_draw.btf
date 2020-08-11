@@ -122,19 +122,43 @@ void main()
   vec4 vertex = pc_item_vertex(out_.itemID, out_.dataID, out_.dataDimension, out_.worldSpaceAxis);
   //vertex.y += (gl_VertexID % 2) * axisHeight * 0.002;
   
-  vec2 tempL = vec2(0, (gl_VertexID % 2) * axisHeight * 0.002);
+  vec2 tempL = vec2(0, (gl_VertexID % 2) * axisHeight * 0.2);
   vec2 tempR = vec2(0.0, 0.0);
-  if(out_.worldSpaceAxis != 0 && out_.worldSpaceAxis != dimensionCount - 1){
-    float dDataL = pc_item_dataValue(pc_item_dataID(out_.dataID, pc_dimension(theID)), pc_dimension(theID)) - pc_item_dataValue(pc_item_dataID(out_.dataID, pc_dimension(theID-1)), pc_dimension(theID-1));
-	float dDataR = pc_item_dataValue(pc_item_dataID(out_.dataID, pc_dimension(theID+1)), pc_dimension(theID+1)) - pc_item_dataValue(pc_item_dataID(out_.dataID, pc_dimension(theID)), pc_dimension(theID));
-	
-	tempL = vec2(-dDataL * axisHeight, axisDistance);
-	tempR = vec2(-dDataR * axisHeight, axisDistance);
+  float thickness = 0.009 * axisHeight;
+  if(out_.worldSpaceAxis != 0 && out_.worldSpaceAxis != dimensionCount){
+	float dDataL = pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(out_.worldSpaceAxis)), pc_dimension(out_.worldSpaceAxis)) - pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(out_.worldSpaceAxis-1)), pc_dimension(out_.worldSpaceAxis-1));
+	float dDataR = pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(out_.worldSpaceAxis+1)), pc_dimension(out_.worldSpaceAxis+1)) - pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(out_.worldSpaceAxis)), pc_dimension(out_.worldSpaceAxis));
+	//out_.color = vec4(1.0, abs(dDataR), 0.0, 1.0);
+	tempL = vec2(axisDistance, dDataL * axisHeight);
+	tempR = vec2(axisDistance, dDataR * axisHeight);
+	vec2 oL = vec2(-dDataL * axisHeight, axisDistance);
+	vec2 oR = vec2(-dDataR * axisHeight, axisDistance);
+	out_.color = vec4(scaling, 0.0, 1.0);
 
-	tempL = normalize(tempL) * 0.003 * axisHeight;;
-	tempR = normalize(tempR) * 0.003 * axisHeight;;
-	tempL += tempR;
-    
+    tempL = normalize(tempL);
+    tempR = normalize(tempR);
+
+	oL = thickness * normalize(oL);
+	oR = thickness * normalize(oR);
+
+    vec2 h = normalize(oL + oR);
+	h = h * thickness / (dot(oR, h)/(length(oR)*length(h)));
+	tempL = h;
+  }
+  if(out_.worldSpaceAxis == 0){
+    float dDataL = pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(theID+1)), pc_dimension(theID+1)) - pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(theID)), pc_dimension(theID));
+    //tempL = vec2(axisDistance, dDataL*axisHeight);
+	vec2 oL = vec2(-dDataL * axisHeight, axisDistance);
+	oL = thickness * normalize(oL);
+	tempL = vec2(0.0, 1.0) * thickness * thickness / dot(oL, vec2(0.0, 1.0));
+	out_.color = vec4(pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(theID+1)), pc_dimension(theID+1)), 0.0, 1.0, 1.0);
+  }
+  if(out_.worldSpaceAxis == dimensionCount - 1){
+    float dDataL = pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(theID)), pc_dimension(theID)) - pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(theID-1)), pc_dimension(theID-1));
+    vec2 oL = vec2(-dDataL * axisHeight, axisDistance);
+	oL = thickness * normalize(oL);
+	tempL = vec2(0.0, 1.0) * thickness * thickness / dot(oL, vec2(0.0, 1.0));
+	out_.color = vec4(1.0, 0.0, 1.0, 1.0);
   }
   vec2 offset = tempL;
   vertex = vertex + (-0.5 + (gl_VertexID % 2)) * vec4(offset, 0.0, 0.0);

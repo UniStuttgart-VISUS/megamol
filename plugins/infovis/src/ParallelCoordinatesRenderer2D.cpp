@@ -1350,7 +1350,6 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     //  Method for DepthTest
     if (false && this->halveRes.Param<core::param::BoolParam>()->Value()) {
-
         glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
 
         m_render_to_framebuffer_shdr->Enable();
