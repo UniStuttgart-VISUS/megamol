@@ -96,6 +96,12 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
         // Init OpenGL for ImGui
         const char* glsl_version = "#version 130"; /// "#version 150" or nullptr
         if (ImGui_ImplOpenGL3_Init(glsl_version)) {
+
+            /// TODO: imgui and new frontend are linked against different GLAD targets, fix this via reorganizing CMake
+            /// targets megamol\build\_deps\imgui - src\examples\imgui_impl_opengl3.cpp comment line 138:
+            /// //glGetIntegerv(GL_TEXTURE_BINDING_2D, &current_texture);
+
+
             this->api = GUIImGuiAPI::OpenGL;
             return true;
         }
@@ -354,7 +360,8 @@ bool GUIWindows::PostDraw(void) {
 
             /// TODO Pass picked UID to parameters
 
-            module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(), "", false, true,
+            module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(), "",
+                vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN), false,
                 ParameterPresentation::WidgetScope::GLOBAL, this->tf_editor_ptr, nullptr);
         }
     }
@@ -1140,8 +1147,8 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
 
                 bool out_open_external_tf_editor;
                 module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, currentSearchString,
-                    wc.param_extended_mode, false, ParameterPresentation::WidgetScope::LOCAL, this->tf_editor_ptr,
-                    &out_open_external_tf_editor);
+                    vislib::math::Ternary(wc.param_extended_mode), true, ParameterPresentation::WidgetScope::LOCAL,
+                    this->tf_editor_ptr, &out_open_external_tf_editor);
 
                 if (out_open_external_tf_editor) {
                     const auto func = [](WindowCollection::WindowConfiguration& wc) {
@@ -1626,6 +1633,7 @@ bool megamol::gui::GUIWindows::isHotkeyPressed(megamol::core::view::KeyCode keyc
 
 void megamol::gui::GUIWindows::triggerCoreInstanceShutdown(void) {
 
+    /// TODO Decide wheather to use core_instance or new frontend
     if (this->core_instance != nullptr) {
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Shutdown MegaMol instance.");

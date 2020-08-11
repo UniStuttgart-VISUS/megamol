@@ -22,7 +22,6 @@ megamol::gui::ParameterPresentation::ParameterPresentation(Param_t type)
     , help()
     , description()
     , widget_store()
-    , height(0.0f)
     , set_focus(0)
     , guistate_dirty(false)
     , tf_editor_external_ptr(nullptr)
@@ -143,21 +142,6 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
     }
 
     return retval;
-}
-
-
-float megamol::gui::ParameterPresentation::GetHeight(Parameter& inout_parameter) {
-
-    float height = 0.0f;
-    if (this->IsGUIVisible() || this->extended) {
-        height = (ImGui::GetFrameHeightWithSpacing() * (1.15f));
-        if (inout_parameter.type == Param_t::TRANSFERFUNCTION) {
-            if (this->show_tf_editor) {
-                height = (ImGui::GetFrameHeightWithSpacing() * (10.0f) + (150.0f + 30.0f));
-            }
-        }
-    }
-    return height;
 }
 
 
@@ -1178,8 +1162,8 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
                 this->use_external_tf_editor = false;
                 this->tf_editor_external_ptr->SetConnectedParameter(nullptr, "");
             }
+            ImGui::SameLine();
         }
-        ImGui::SameLine();
 
         if (this->use_external_tf_editor) {
 

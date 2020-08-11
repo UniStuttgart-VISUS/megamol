@@ -380,7 +380,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         }
         // Process module/call/group deletion
         if ((this->graph_state.interact.process_deletion) ||
-            (this->canvas_hovered &&
+            (!io.WantTextInput &&
                 std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]))) {
             if (!this->graph_state.interact.modules_selected_uids.empty()) {
                 for (auto& module_uid : this->graph_state.interact.modules_selected_uids) {
@@ -1371,8 +1371,8 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
 
                     // Draw parameters
                     module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(),
-                        search_string, this->param_extended_mode, false, ParameterPresentation::WidgetScope::LOCAL,
-                        nullptr, nullptr);
+                        search_string, vislib::math::Ternary(this->param_extended_mode), true,
+                        ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr);
                 }
                 this->tooltip.ToolTip(module_ptr->description, ImGui::GetID(module_ptr->name.c_str()), 0.75f, 5.0f);
 

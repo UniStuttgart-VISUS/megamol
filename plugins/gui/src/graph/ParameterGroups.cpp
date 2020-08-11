@@ -41,8 +41,8 @@ megamol::gui::ParameterGroups::~ParameterGroups(void) {}
 
 
 bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVector_t& inout_params,
-    const std::string& in_module_fullname, const std::string& in_search, bool in_extended, bool in_ignore_extended,
-    megamol::gui::ParameterPresentation::WidgetScope in_scope,
+    const std::string& in_module_fullname, const std::string& in_search, vislib::math::Ternary in_extended,
+    bool in_indent, megamol::gui::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor) {
 
     if (out_open_external_tf_editor != nullptr) (*out_open_external_tf_editor) = false;
@@ -54,15 +54,15 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVector_t& inou
         /// LOCAL
 
         ImGui::BeginGroup();
-        ImGui::Indent();
+        if (in_indent) ImGui::Indent();
     }
 
     // Analyse parameter group membership and draw ungrouped parameters
     ParamGroup_t group_map;
     for (auto& param : inout_params) {
         auto param_namespace = param.GetNameSpace();
-        if (!in_ignore_extended) {
-            param.present.extended = in_extended;
+        if (!in_extended.IsUnknown()) {
+            param.present.extended = in_extended.IsTrue();
         }
 
         if (!param_namespace.empty()) {
@@ -94,7 +94,7 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVector_t& inou
 
                 if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
 
-                    if (in_extended) {
+                    if (in_extended.IsTrue()) {
                         // Visibility
                         bool visible = group_widget_id.second.IsGUIVisible();
                         if (ImGui::RadioButton("###visibile", visible)) {
@@ -129,7 +129,7 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVector_t& inou
                     }
 
                     // Call group widget draw function
-                    if (group_widget_id.second.IsGUIVisible() || in_extended) {
+                    if (group_widget_id.second.IsGUIVisible() || in_extended.IsTrue()) {
 
                         if (group_widget_id.second.IsGUIReadOnly()) {
                             GUIUtils::ReadOnlyWigetStyle(true);
@@ -191,7 +191,7 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVector_t& inou
     if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
         /// LOCAL
 
-        ImGui::Unindent();
+        if (in_indent) ImGui::Unindent();
         ImGui::EndGroup();
     }
 
@@ -417,7 +417,7 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVector_t& par
         speed *= 1.5f;
     }
 
-    ImGui::PopStyleColor(3);
+    ImGui::PopStyleColor(2);
 
     // ImGui::SameLine();
     ImVec2 cursor_pos = ImGui::GetCursorPos();

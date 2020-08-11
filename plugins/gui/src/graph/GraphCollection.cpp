@@ -506,7 +506,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
             }
         }
         // Collect call connection data from core graph
-        //if (use_core_graph) {
+        // if (use_core_graph) {
         //    for (auto& call : core_graph->ListCalls()) {
         //    }
         //}

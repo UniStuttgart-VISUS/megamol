@@ -255,7 +255,6 @@ public:
     // Presentation ----------------------------------------------------
 
     inline bool PresentGUI(ParameterPresentation::WidgetScope scope) { return this->present.Present(*this, scope); }
-    inline float GetGUIHeight(void) { return this->present.GetHeight(*this); }
 
 private:
     // VARIABLES --------------------------------------------------------------
