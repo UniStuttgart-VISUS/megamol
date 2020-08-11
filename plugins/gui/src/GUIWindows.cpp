@@ -624,7 +624,6 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
                 // Modules
 
                 // Calls
-
             }
         }
     }

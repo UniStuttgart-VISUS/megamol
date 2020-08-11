@@ -9,9 +9,9 @@
 #define MEGAMOL_GUI_GRAPH_GRAPHCOLLECTION_H_INCLUDED
 
 
+#include "GraphCollectionPresentation.h"
+
 #include "Graph.h"
-#include "widgets/FileBrowserWidget.h"
-#include "widgets/MinimalPopUp.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
@@ -34,31 +34,6 @@ class GraphCollection;
 typedef std::shared_ptr<Graph> GraphPtr_t;
 typedef std::vector<GraphPtr_t> Graphs_t;
 typedef std::map<megamol::core::param::AbstractParam*, std::shared_ptr<megamol::gui::Parameter>> ParamInterfaceMap_t;
-
-
-/** ************************************************************************
- * Defines GUI graph collection presentation.
- */
-class GraphCollectionPresentation {
-public:
-    friend class GraphCollection;
-    // FUNCTIONS --------------------------------------------------------------
-
-    GraphCollectionPresentation(void);
-    ~GraphCollectionPresentation(void);
-
-    void SaveProjectToFile(bool open_popup, GraphCollection& inout_graph_collection, GraphState_t& state);
-
-private:
-    // VARIABLES --------------------------------------------------------------
-
-    FileBrowserWidget file_browser;
-    ImGuiID graph_delete_uid;
-
-    // FUNCTIONS --------------------------------------------------------------
-
-    void Present(GraphCollection& inout_graph_collection, GraphState_t& state);
-};
 
 
 /** ************************************************************************

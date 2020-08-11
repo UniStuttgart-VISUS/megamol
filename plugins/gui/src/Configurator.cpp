@@ -115,6 +115,7 @@ bool megamol::gui::Configurator::Draw(
         this->graph_collection.LoadModuleStock(core_instance);
 
         // Load inital project
+        /// XXX Prevent loading of current core project twice when already loaded via saved configurator state
         this->graph_collection.LoadProjectFromCore(core_instance, nullptr);
         /// or: this->add_empty_project();
 
