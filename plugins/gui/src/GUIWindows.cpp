@@ -607,51 +607,92 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
 
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* core_graph) {
 
-    // Load and/or update currently running core graph ------------------------
-    /// Valid pointer to core instance is currently essentially required for loading all available calls.
-    if (this->core_instance != nullptr) {
-        // Load all known calls from core instance once
-        bool call_stock_loaded = this->graph_collection.LoadCallStock(core_instance);
-        // Synchronise graphs
-        if (call_stock_loaded) {
-            // Core graph -> GUI graph
-            if (!this->graph_collection.LoadUpdateProjectFromCore(
-                    this->graph_uid, ((core_graph == nullptr) ? (this->core_instance) : (nullptr)), core_graph)) {
-                return false;
-            }
-            // GUI graph -> Core graph
-            if (core_graph != nullptr) {
-                // Modules
-
-                // Calls
-            }
-        }
+    // Load all known calls from core instance once ---------------------------
+    if (!this->graph_collection.LoadCallStock(core_instance)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Failed to load call stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
     }
 
-    // Synchronise parameter values -------------------------------------------
+    bool sync_success = true;
+
+    // Synchronize Core graph -> GUI graph ------------------------------------
+    sync_success &= this->graph_collection.LoadUpdateProjectFromCore(
+        this->graph_uid, ((core_graph == nullptr) ? (this->core_instance) : (nullptr)), core_graph);
+    if (!sync_success) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
+
+    // Synchronize GUI graph -> Core graph ------------------------------------
+    if (core_graph != nullptr) {
+        bool graph_sync_success = true;
+        GraphPtr_t graph_ptr;
+        if (this->graph_collection.GetGraph(this->graph_uid, graph_ptr)) {
+            auto queue = graph_ptr->GetSyncQueue();
+            while (!queue->empty()) {
+                auto change = std::get<0>(queue->back());
+                auto data = std::get<1>(queue->back());
+                switch (change) {
+                case (Graph::QueueChange::ADD_MODULE): {
+                    graph_sync_success &= core_graph->CreateModule(data.classname, data.id);
+                } break;
+                case (Graph::QueueChange::DELETE_MODULE): {
+                    graph_sync_success &= core_graph->DeleteModule(data.id);
+                } break;
+                case (Graph::QueueChange::ADD_CALL): {
+                    graph_sync_success &= core_graph->CreateCall(data.classname, data.caller, data.callee);
+                } break;
+                case (Graph::QueueChange::DELETE_CALL): {
+                    graph_sync_success &= core_graph->DeleteCall(data.caller, data.callee);
+                } break;
+                default:
+                    break;
+                }
+                queue->pop();
+            }
+        }
+        if (!graph_sync_success) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Failed to synchronize gui graph with core graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
+        }
+        sync_success &= graph_sync_success;
+    }
+
+    // Synchronize parameter values -------------------------------------------
     GraphPtr_t graph_ptr;
     if (this->graph_collection.GetGraph(this->graph_uid, graph_ptr)) {
+        bool param_sync_success = true;
         for (auto& module_ptr : graph_ptr->GetModules()) {
             for (auto& param : module_ptr->parameters) {
                 if (!param.core_param_ptr.IsNull()) {
                     // Write changed gui state to core parameter
                     if (param.present.IsGUIStateDirty()) {
-                        megamol::gui::Parameter::WriteCoreParameterGUIState(param, param.core_param_ptr);
+                        param_sync_success &=
+                            megamol::gui::Parameter::WriteCoreParameterGUIState(param, param.core_param_ptr);
                         param.present.ResetGUIStateDirty();
                     }
                     // Write changed parameter value to core parameter
                     if (param.IsValueDirty()) {
-                        megamol::gui::Parameter::WriteCoreParameterValue(param, param.core_param_ptr);
+                        param_sync_success &=
+                            megamol::gui::Parameter::WriteCoreParameterValue(param, param.core_param_ptr);
                         param.ResetValueDirty();
                     }
                     // Read current parameter value and GUI state fro core parameter
-                    megamol::gui::Parameter::ReadCoreParameterToParameter(param.core_param_ptr, param, false, false);
+                    param_sync_success &= megamol::gui::Parameter::ReadCoreParameterToParameter(
+                        param.core_param_ptr, param, false, false);
                 }
             }
         }
+        if (!param_sync_success) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Failed to synchronize parameter values. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        }
+        sync_success &= param_sync_success;
     }
 
-    return true;
+    return sync_success;
 }
 
 

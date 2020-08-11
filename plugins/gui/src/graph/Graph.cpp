@@ -21,7 +21,11 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
     , calls()
     , groups()
     , dirty_flag(true)
-    , present() {}
+    , present()
+    , sync_queue() {
+
+    this->sync_queue = std::make_shared<SyncQueue_t>();
+}
 
 
 megamol::gui::Graph::~Graph(void) {
@@ -64,6 +68,14 @@ ImGuiID megamol::gui::Graph::AddEmptyModule(void) {
         auto mod_ptr = std::make_shared<Module>(mod_uid);
         this->modules.emplace_back(mod_ptr);
         this->ForceSetDirty();
+
+        if (this->sync_queue == nullptr) return false;
+        QueueData queue_data;
+        queue_data.classname = "module";
+        queue_data.id = "";
+        queue_data.caller = "";
+        queue_data.callee = "";
+        this->sync_queue->push(SyncQueueData_t(QueueChange::ADD_MODULE, queue_data));
 
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[Configurator] Added empty module to project.\n");

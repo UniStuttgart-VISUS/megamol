@@ -15,6 +15,9 @@
 #include "Group.h"
 #include "Module.h"
 
+#include <queue>
+#include <tuple>
+
 
 namespace megamol {
 namespace gui {
@@ -34,6 +37,17 @@ typedef std::vector<Call::StockCall> CallStockVector_t;
 
 class Graph {
 public:
+    enum QueueChange { ADD_MODULE, DELETE_MODULE, ADD_CALL, DELETE_CALL };
+    struct QueueData {
+        std::string classname;
+        std::string id;
+        std::string caller;
+        std::string callee;
+    };
+    typedef std::tuple<QueueChange, QueueData> SyncQueueData_t;
+    typedef std::queue<SyncQueueData_t> SyncQueue_t;
+    typedef std::shared_ptr<SyncQueue_t> SyncQueuePtr_t;
+
     // VARIABLES --------------------------------------------------------------
 
     const ImGuiID uid;
@@ -76,6 +90,8 @@ public:
     const std::string GetFilename(void) const { return this->filename; }
     void SetFilename(const std::string& filename) { this->filename = filename; }
 
+    const SyncQueuePtr_t& GetSyncQueue(void) { return this->sync_queue; }
+
     // Presentation ----------------------------------------------------
 
     inline void PresentGUI(GraphState_t& state) { this->present.Present(*this, state); }
@@ -93,6 +109,7 @@ private:
     GroupPtrVector_t groups;
     bool dirty_flag;
     std::string filename;
+    SyncQueuePtr_t sync_queue;
 
     // FUNCTIONS --------------------------------------------------------------
 
