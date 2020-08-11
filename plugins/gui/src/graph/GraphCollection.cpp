@@ -459,7 +459,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                     }
                 }
 
-                // Collect call connection data
+                // Collect call connection data from core instance graph
                 if (use_core_instance) {
                     std::shared_ptr<core::CallerSlot> caller_slot =
                         std::dynamic_pointer_cast<megamol::core::CallerSlot>((*si));
@@ -505,12 +505,11 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 }
             }
         }
-        // Collect call connection data
-        if (use_core_graph) {
-            for (auto& call : core_graph->ListCalls()) {
-                call.first->PeekCalleeSlot()->FullName();
-            }
-        }
+        // Collect call connection data from core graph
+        //if (use_core_graph) {
+        //    for (auto& call : core_graph->ListCalls()) {
+        //    }
+        //}
         // Create calls
         for (auto& cd : call_data) {
             CallSlotPtr_t callslot_1 = nullptr;

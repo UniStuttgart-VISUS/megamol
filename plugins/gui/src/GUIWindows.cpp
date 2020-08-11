@@ -640,7 +640,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
                 default:
                     break;
                 }
-                queue->pop();
+                queue->pop(); // pop even when sync fails!
             }
         }
         if (!graph_sync_success) {
