@@ -5,6 +5,15 @@
  * Alle Rechte vorbehalten.
  */
 
+/**
+ * USED HOTKEYS:
+ *
+ * - Selection, Drag & Drop:    Left Mouse Button
+ * - Context Menu:              Right Mouse Button
+ * - Zooming:                   Mouse Wheel
+ * - Scrolling:                 Ctrl  +  Left Mouse Button
+ */
+
 #include "stdafx.h"
 #include "GraphPresentation.h"
 
@@ -1071,6 +1080,8 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
         this->update = true;
     }
     ImGui::SameLine();
+    this->tooltip.Marker("Middle Mouse Button");
+    ImGui::SameLine();
     ImGui::TextUnformatted(delimiter.c_str());
     ImGui::SameLine();
 
@@ -1088,6 +1099,8 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
     if (ImGui::Button("Reset###reset_zooming")) {
         this->reset_zooming = true;
     }
+    ImGui::SameLine();
+    this->tooltip.Marker("Mouse Wheel");
     ImGui::SameLine();
     ImGui::TextUnformatted(delimiter.c_str());
     ImGui::SameLine();
@@ -1292,7 +1305,7 @@ void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_
     if ((ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) || this->reset_zooming) {
 
         // Scrolling (2 = Middle Mouse Button)
-        if (ImGui::IsMouseDragging(2, 0.0f)) {
+        if (ImGui::IsMouseDragging(2)) { // io.KeyCtrl && ImGui::IsMouseDragging(0)) {
             this->graph_state.canvas.scrolling =
                 this->graph_state.canvas.scrolling + ImGui::GetIO().MouseDelta / this->graph_state.canvas.zooming;
             this->update = true;
