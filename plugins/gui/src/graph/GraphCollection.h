@@ -62,7 +62,7 @@ public:
     inline const CallStockVector_t& GetCallsStock(void) { return this->calls_stock; }
 
     bool LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid, megamol::core::CoreInstance* core_instance,
-        megamol::core::MegaMolGraph* core_graph, bool permanent_graph = false);
+        megamol::core::MegaMolGraph* core_graph, bool running_graph = false);
 
     ImGuiID LoadProjectFromCore(megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* core_graph) {
         ImGuiID graph_id = GUI_INVALID_ID;

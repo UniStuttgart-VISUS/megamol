@@ -257,7 +257,7 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
 
 
 bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid,
-    megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* core_graph, bool permanent_graph) {
+    megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* core_graph, bool running_graph) {
 
     ImGuiID valid_graph_id = inout_graph_uid;
     if (valid_graph_id == GUI_INVALID_ID) {
@@ -278,7 +278,7 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_gra
     }
 
     if (this->AddUpdateProjectFromCore(valid_graph_id, core_instance, core_graph, false)) {
-        graph_ptr->present.SetPermanent(permanent_graph);
+        graph_ptr->present.SetRunning(running_graph);
         inout_graph_uid = valid_graph_id;
         return true;
     }

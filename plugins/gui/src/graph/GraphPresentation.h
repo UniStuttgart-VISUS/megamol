@@ -64,9 +64,9 @@ public:
     bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
     bool GetCallLabelVisibility(void) const { return this->show_call_names; }
     bool GetCanvasHoverd(void) const { return this->canvas_hovered; }
-    inline bool IsPermanent(void) const { return this->permanent; }
+    inline bool IsRunning(void) const { return this->running; }
 
-    inline void SetPermanent(bool p) { this->permanent = p; }
+    inline void SetRunning(bool p) { this->running = p; }
     void SetLayoutGraph(void) { this->graph_layout = 1; }
 
 private:
@@ -88,7 +88,7 @@ private:
     bool multiselect_done;
     bool canvas_hovered;
     float current_font_scaling;
-    bool permanent;
+    bool running;
     // State propagated and shared by all graph items.
     megamol::gui::GraphItemsState_t graph_state;
 

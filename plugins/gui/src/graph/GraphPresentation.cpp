@@ -35,7 +35,7 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
     , multiselect_done(false)
     , canvas_hovered(false)
     , current_font_scaling(1.0f)
-    , permanent(false)
+    , running(false)
     , graph_state()
     , search_widget()
     , splitter_widget()
@@ -164,7 +164,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             tab_flags |= ImGuiTabItemFlags_UnsavedDocument;
         }
         std::string graph_label = "    " + inout_graph.name + "  ###graph" + std::to_string(graph_uid);
-        if (this->IsPermanent()) {
+        if (this->IsRunning()) {
             graph_label = "    [RUNNING]    " + graph_label;
         }
         // Checking for closed tab below
@@ -506,7 +506,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         // Set delete flag if tab was closed
         bool popup_try_close_permanent = false;
         if (!open) {
-            if (this->IsPermanent()) {
+            if (this->IsRunning()) {
                 popup_try_close_permanent = true;
             } else {
                 state.graph_delete = true;
@@ -516,7 +516,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         // Propoagate unhandeled hotkeys back to configurator state
         state.hotkeys = this->graph_state.hotkeys;
 
-        // Try closing tab of permanent graph pop-up
+        // Prevent closing tab of running project pop-up
         bool tmp;
         MinimalPopUp::PopUp(
             "Close Project", popup_try_close_permanent, "Running Project can not be closed!", "OK", tmp, "", tmp);
@@ -1004,6 +1004,8 @@ bool megamol::gui::GraphPresentation::StateToJSON(Graph& inout_graph, nlohmann::
 
 void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_graph) {
 
+    const std::string delimiter(" | ");
+
     const float child_height = ImGui::GetFrameHeightWithSpacing() * 1.0f;
     auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened;
     ImGui::BeginChild("graph_menu", ImVec2(0.0f, child_height), false, child_flags);
@@ -1036,20 +1038,58 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
         }
     }
     ImGui::SameLine();
+    ImGui::TextUnformatted(delimiter.c_str());
+    ImGui::SameLine();
 
+    auto button_size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
+
+    const float scroll_fac = 10.0f;
     ImGui::Text("Scrolling: %.2f,%.2f", this->graph_state.canvas.scrolling.x, this->graph_state.canvas.scrolling.y);
+    ImGui::SameLine();
+    ImGui::TextUnformatted("H:");
+    ImGui::SameLine();
+    if (ImGui::Button("+###hor_incr_scrolling", button_size)) {
+        this->graph_state.canvas.scrolling.x += scroll_fac;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("-###hor_decr_scrolling", button_size)) {
+        this->graph_state.canvas.scrolling.x -= scroll_fac;
+    }
+    ImGui::SameLine();
+    ImGui::TextUnformatted("V:");
+    ImGui::SameLine();
+    if (ImGui::Button("+###vert_incr_scrolling", button_size)) {
+        this->graph_state.canvas.scrolling.y += scroll_fac;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("-###vert_decr_scrolling", button_size)) {
+        this->graph_state.canvas.scrolling.y -= scroll_fac;
+    }
     ImGui::SameLine();
     if (ImGui::Button("Reset###reset_scrolling")) {
         this->graph_state.canvas.scrolling = ImVec2(0.0f, 0.0f);
         this->update = true;
     }
     ImGui::SameLine();
+    ImGui::TextUnformatted(delimiter.c_str());
+    ImGui::SameLine();
 
+    const float zoom_fac = 1.1f; // =10%
     ImGui::Text("Zooming: %.2f", this->graph_state.canvas.zooming);
+    ImGui::SameLine();
+    if (ImGui::Button("+###incr_zooming", button_size)) {
+        this->graph_state.canvas.zooming *= zoom_fac;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("-###decr_zooming", button_size)) {
+        this->graph_state.canvas.zooming /= zoom_fac;
+    }
     ImGui::SameLine();
     if (ImGui::Button("Reset###reset_zooming")) {
         this->reset_zooming = true;
     }
+    ImGui::SameLine();
+    ImGui::TextUnformatted(delimiter.c_str());
     ImGui::SameLine();
 
     if (ImGui::Checkbox("Grid", &this->show_grid)) {
