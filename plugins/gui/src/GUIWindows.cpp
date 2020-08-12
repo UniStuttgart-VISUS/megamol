@@ -613,7 +613,7 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
 
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* core_graph) {
 
-    // Load all known calls from core instance once ---------------------------
+    // 1) Load all known calls from core instance once ---------------------------
     if (!this->configurator.GetGraphCollection()->LoadCallStock(core_instance)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Failed to load call stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -622,7 +622,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
 
     bool sync_success = true;
 
-    // Synchronize GUI graph -> Core graph ------------------------------------
+    // 2) Synchronize GUI graph -> Core graph ------------------------------------
     if (core_graph != nullptr) {
         bool graph_sync_success = true;
         GraphPtr_t graph_ptr;
@@ -658,16 +658,16 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
         sync_success &= graph_sync_success;
     }
 
-    // Synchronize Core graph -> GUI graph ------------------------------------
+    // 3) Synchronize Core graph -> GUI graph ------------------------------------
     sync_success &= this->configurator.GetGraphCollection()->LoadUpdateProjectFromCore(
-        this->graph_uid, ((core_graph == nullptr) ? (this->core_instance) : (nullptr)), core_graph);
+        this->graph_uid, ((core_graph == nullptr) ? (this->core_instance) : (nullptr)), core_graph, true);
     if (!sync_success) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
             __LINE__);
     }
 
-    // Synchronize parameter values -------------------------------------------
+    // 4) Synchronize parameter values -------------------------------------------
     GraphPtr_t graph_ptr;
     if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
         bool param_sync_success = true;

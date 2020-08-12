@@ -61,8 +61,8 @@ public:
     inline const ModuleStockVector_t& GetModulesStock(void) { return this->modules_stock; }
     inline const CallStockVector_t& GetCallsStock(void) { return this->calls_stock; }
 
-    bool LoadUpdateProjectFromCore(
-        ImGuiID& inout_graph_uid, megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* core_graph);
+    bool LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid, megamol::core::CoreInstance* core_instance,
+        megamol::core::MegaMolGraph* core_graph, bool permanent_graph = false);
 
     ImGuiID LoadProjectFromCore(megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* core_graph) {
         ImGuiID graph_id = GUI_INVALID_ID;

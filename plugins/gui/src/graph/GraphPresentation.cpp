@@ -35,6 +35,7 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
     , multiselect_done(false)
     , canvas_hovered(false)
     , current_font_scaling(1.0f)
+    , permanent(false)
     , graph_state()
     , search_widget()
     , splitter_widget()
@@ -163,6 +164,10 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             tab_flags |= ImGuiTabItemFlags_UnsavedDocument;
         }
         std::string graph_label = "    " + inout_graph.name + "  ###graph" + std::to_string(graph_uid);
+        if (this->IsPermanent()) {
+            graph_label = "    [RUNNING]    " + graph_label;
+        }
+        // Checking for closed tab below
         bool open = true;
         if (ImGui::BeginTabItem(graph_label.c_str(), &open, tab_flags)) {
             // Context menu
@@ -499,12 +504,22 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             this->graph_state.interact.modules_layout = false;
         }
         // Set delete flag if tab was closed
+        bool popup_try_close_permanent = false;
         if (!open) {
-            state.graph_delete = true;
-            state.graph_selected_uid = inout_graph.uid;
+            if (this->IsPermanent()) {
+                popup_try_close_permanent = true;
+            } else {
+                state.graph_delete = true;
+                state.graph_selected_uid = inout_graph.uid;
+            }
         }
         // Propoagate unhandeled hotkeys back to configurator state
         state.hotkeys = this->graph_state.hotkeys;
+
+        // Try closing tab of permanent graph pop-up
+        bool tmp;
+        MinimalPopUp::PopUp(
+            "Close Project", popup_try_close_permanent, "Running Project can not be closed!", "OK", tmp, "", tmp);
 
         // Rename pop-up
         if (this->rename_popup.PopUp("Rename Project", popup_rename, inout_graph.name)) {

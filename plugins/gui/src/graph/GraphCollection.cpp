@@ -81,7 +81,7 @@ bool megamol::gui::GraphCollection::GetGraph(ImGuiID in_graph_uid, megamol::gui:
             }
         }
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[GUI] Unable to find graph for gicen graph uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unable to find graph for given graph uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     return false;
 }
@@ -256,8 +256,8 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
 }
 
 
-bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(
-    ImGuiID& inout_graph_uid, megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* core_graph) {
+bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid,
+    megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* core_graph, bool permanent_graph) {
 
     ImGuiID valid_graph_id = inout_graph_uid;
     if (valid_graph_id == GUI_INVALID_ID) {
@@ -278,6 +278,7 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(
     }
 
     if (this->AddUpdateProjectFromCore(valid_graph_id, core_instance, core_graph, false)) {
+        graph_ptr->present.SetPermanent(permanent_graph);
         inout_graph_uid = valid_graph_id;
         return true;
     }
