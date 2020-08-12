@@ -293,11 +293,12 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
 
     // Apply updates from core graph to gui graph
     //     Implemented synchronisations:
-    //     - Add module(s)
+    //     - Add module(s)      - Core Graph and Core Instance
+    //     - Add call(s)        - Core Graph
     /// TODO
-    ///     - Delete module(s)
-    ///     - Add call(s)
-    ///     - Delete call(s)
+    ///     - Add call(s)       - Core Instance
+    ///     - Delete module(s)  - Core Graph and Core Instance
+    ///     - Delete call(s)    - Core Graph and Core Instance
     try {
         GraphPtr_t graph_ptr;
         if (!this->GetGraph(in_graph_uid, graph_ptr)) {
@@ -481,7 +482,8 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                                 auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID());
                                 callslot_ptr->name = std::string(caller_slot->Name().PeekBuffer());
                                 callslot_ptr->description = std::string(caller_slot->Description().PeekBuffer());
-                                callslot_ptr->compatible_call_idxs = this->get_compatible_caller_idxs(caller_slot);
+                                callslot_ptr->compatible_call_idxs =
+                                    this->get_compatible_caller_idxs(caller_slot.get());
                                 callslot_ptr->type = CallSlotType::CALLER;
                                 callslot_ptr->present.label_visible = graph_ptr->present.GetCallSlotLabelVisibility();
                                 callslot_ptr->ConnectParentModule(new_module_ptr);
@@ -496,7 +498,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                         auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID());
                         callslot_ptr->name = std::string(callee_slot->Name().PeekBuffer());
                         callslot_ptr->description = std::string(callee_slot->Description().PeekBuffer());
-                        callslot_ptr->compatible_call_idxs = this->get_compatible_callee_idxs(callee_slot);
+                        callslot_ptr->compatible_call_idxs = this->get_compatible_callee_idxs(callee_slot.get());
                         callslot_ptr->type = CallSlotType::CALLEE;
                         callslot_ptr->present.label_visible = graph_ptr->present.GetCallSlotLabelVisibility();
                         callslot_ptr->ConnectParentModule(new_module_ptr);
@@ -506,11 +508,116 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 }
             }
         }
-        // Collect call connection data from core graph
-        // if (use_core_graph) {
-        //    for (auto& call : core_graph->ListCalls()) {
-        //    }
-        //}
+        // Add/Create call connection data from core graph
+        if (use_core_graph) {
+            for (auto& call : core_graph->ListCalls()) {
+                auto call_ptr = call.first;
+                if (call_ptr == nullptr) continue;
+
+                bool add_new = true;
+                for (auto& call_ptr : graph_ptr->GetCalls()) {
+                    std::string class_name = call_ptr->class_name;
+                    std::string from, to;
+                    bool valid_ptr = false;
+                    auto caller_ptr = call_ptr->GetCallSlot(megamol::gui::CallSlotType::CALLER);
+                    if (caller_ptr != nullptr) {
+                        if (caller_ptr->GetParentModule() != nullptr) {
+                            from = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->name;
+                            valid_ptr = true;
+                        }
+                    }
+                    if (!valid_ptr) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] Pointer to caller slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                            __LINE__);
+                    }
+                    valid_ptr = false;
+                    auto callee_ptr = call_ptr->GetCallSlot(megamol::gui::CallSlotType::CALLEE);
+                    if (callee_ptr != nullptr) {
+                        if (callee_ptr->GetParentModule() != nullptr) {
+                            to = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->name;
+                            valid_ptr = true;
+                        }
+                    }
+                    if (!valid_ptr) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                            __LINE__);
+                    }
+                    if ((class_name == call.second.className) && (from == call.second.from) && (to == call.second.to)) {
+                        add_new = false;
+                    }
+                }
+                if (!add_new) continue;
+
+                auto call_class_name = call.second.className;
+                std::string call_caller_name;
+                std::string call_caller_parent_name;
+                if (!this->project_separate_name_and_namespace(
+                        call.second.from, call_caller_parent_name, call_caller_name)) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] Core Project: Invalid call slot name '%s'. [%s, %s, line %d]\n",
+                        call.second.from.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                }
+                std::string call_callee_name;
+                std::string call_callee_parent_name;
+                if (!this->project_separate_name_and_namespace(
+                        call.second.to, call_callee_parent_name, call_callee_name)) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] Core Project: Invalid call slot name '%s'. [%s, %s, line %d]\n", call.second.to.c_str(),
+                        __FILE__, __FUNCTION__, __LINE__);
+                }
+                // Full module name required
+                call_callee_parent_name = "::" + call_callee_parent_name;
+                call_caller_parent_name = "::" + call_caller_parent_name;
+
+                auto call_caller_ptr = call_ptr->PeekCallerSlot();
+                if (call_caller_ptr != nullptr) {
+                    CallData cd;
+                    cd.call_class_name = call_class_name;
+                    cd.caller_module_full_name = call_caller_parent_name;
+                    cd.caller_module_callslot_name = call_caller_name;
+                    cd.callee_module_full_name = call_callee_parent_name;
+                    cd.callee_module_callslot_name = call_callee_name;
+                    call_data.emplace_back(cd);
+
+                    if (!use_stock) {
+                        // Search for parent module and add caller slot
+                        for (auto& module_ptr : graph_ptr->GetModules()) {
+                            if (module_ptr->FullName() == call_caller_parent_name) {
+                                auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID());
+                                callslot_ptr->name = std::string(call_caller_ptr->Name().PeekBuffer());
+                                callslot_ptr->description = std::string(call_caller_ptr->Description().PeekBuffer());
+                                callslot_ptr->compatible_call_idxs = this->get_compatible_caller_idxs(call_caller_ptr);
+                                callslot_ptr->type = CallSlotType::CALLER;
+                                callslot_ptr->present.label_visible = graph_ptr->present.GetCallSlotLabelVisibility();
+                                callslot_ptr->ConnectParentModule(module_ptr);
+
+                                module_ptr->AddCallSlot(callslot_ptr);
+                            }
+                        }
+                    }
+                }
+
+                auto call_callee_ptr = call_ptr->PeekCalleeSlot();
+                if ((call_callee_ptr != nullptr) && !use_stock) {
+                    // Search for parent module and add callee slot
+                    for (auto& module_ptr : graph_ptr->GetModules()) {
+                        if (module_ptr->FullName() == call_callee_parent_name) {
+                            auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID());
+                            callslot_ptr->name = std::string(call_callee_ptr->Name().PeekBuffer());
+                            callslot_ptr->description = std::string(call_callee_ptr->Description().PeekBuffer());
+                            callslot_ptr->compatible_call_idxs = this->get_compatible_callee_idxs(call_callee_ptr);
+                            callslot_ptr->type = CallSlotType::CALLEE;
+                            callslot_ptr->present.label_visible = graph_ptr->present.GetCallSlotLabelVisibility();
+                            callslot_ptr->ConnectParentModule(module_ptr);
+
+                            module_ptr->AddCallSlot(callslot_ptr);
+                        }
+                    }
+                }
+            }
+        }
         // Create calls
         for (auto& cd : call_data) {
             CallSlotPtr_t callslot_1 = nullptr;
@@ -533,10 +640,16 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                     }
                 }
             }
-            graph_ptr->AddCall(this->GetCallsStock(), callslot_1, callslot_2);
-            gui_graph_changed = true;
+            if (graph_ptr->AddCall(this->GetCallsStock(), callslot_1, callslot_2)) {
+                gui_graph_changed = true;
+            }
         }
         if (gui_graph_changed) {
+            // Clear queue, since changes do not have to be propagates back to core graph
+            auto queue = graph_ptr->GetSyncQueue();
+            while (!queue->empty()) {
+                queue->pop();
+            }
             graph_ptr->present.SetLayoutGraph();
             // graph_ptr->ResetDirty();
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
@@ -1215,7 +1328,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
             CallSlot::StockCallSlot csd;
             csd.name = std::string(caller_slot->Name().PeekBuffer());
             csd.description = std::string(caller_slot->Description().PeekBuffer());
-            csd.compatible_call_idxs = this->get_compatible_caller_idxs(caller_slot);
+            csd.compatible_call_idxs = this->get_compatible_caller_idxs(caller_slot.get());
             csd.type = CallSlotType::CALLER;
 
             mod.callslots[csd.type].emplace_back(csd);
@@ -1226,7 +1339,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
             CallSlot::StockCallSlot csd;
             csd.name = std::string(callee_slot->Name().PeekBuffer());
             csd.description = std::string(callee_slot->Description().PeekBuffer());
-            csd.compatible_call_idxs = this->get_compatible_callee_idxs(callee_slot);
+            csd.compatible_call_idxs = this->get_compatible_callee_idxs(callee_slot.get());
             csd.type = CallSlotType::CALLEE;
 
             mod.callslots[csd.type].emplace_back(csd);
@@ -1514,10 +1627,11 @@ bool megamol::gui::GraphCollection::replace_parameter_gui_state(
 
 
 std::vector<size_t> megamol::gui::GraphCollection::get_compatible_callee_idxs(
-    std::shared_ptr<megamol::core::CalleeSlot> callee_slot) {
+    const megamol::core::CalleeSlot* callee_slot) {
 
     std::vector<size_t> retval;
     retval.clear();
+    if (callee_slot == nullptr) return retval;
 
     SIZE_T callbackCount = callee_slot->GetCallbackCount();
     std::vector<std::string> callNames, funcNames;
@@ -1575,10 +1689,11 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_callee_idxs(
 
 
 std::vector<size_t> megamol::gui::GraphCollection::get_compatible_caller_idxs(
-    std::shared_ptr<megamol::core::CallerSlot> caller_slot) {
+    const megamol::core::CallerSlot* caller_slot) {
 
     std::vector<size_t> retval;
     retval.clear();
+    if (caller_slot == nullptr) return retval;
 
     SIZE_T callCount = caller_slot->GetCompCallCount();
     for (SIZE_T i = 0; i < callCount; ++i) {

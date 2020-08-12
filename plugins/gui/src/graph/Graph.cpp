@@ -175,6 +175,11 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
         for (auto iter = this->modules.begin(); iter != this->modules.end(); iter++) {
             if ((*iter)->uid == module_uid) {
 
+                QueueData queue_data;
+                queue_data.classname = (*iter)->class_name;
+                queue_data.id = (*iter)->FullName();
+                this->sync_queue->push(SyncQueueData_t(QueueChange::DELETE_MODULE, queue_data));
+
                 this->present.ResetStatePointers();
 
                 // 1) Reset module and call slot pointers in groups
@@ -208,11 +213,6 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
 #endif // GUI_VERBOSE
 
                 // 5) Delete module
-                QueueData queue_data;
-                queue_data.classname = (*iter)->class_name;
-                queue_data.id = (*iter)->FullName();
-                this->sync_queue->push(SyncQueueData_t(QueueChange::DELETE_MODULE, queue_data));
-
                 if ((*iter).use_count() > 1) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[GUI] Unclean deletion. Found %i references pointing to module. [%s, %s, line %d]\n",
@@ -457,11 +457,29 @@ bool megamol::gui::Graph::AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1,
 
         QueueData queue_data;
         queue_data.classname = call_ptr->class_name;
-        if (call_ptr->GetCallSlot(CallSlotType::CALLER)->GetParentModule() != nullptr) {
-            queue_data.caller = call_ptr->GetCallSlot(CallSlotType::CALLER)->GetParentModule()->FullName();
+        bool valid_ptr = false;
+        auto caller_ptr = call_ptr->GetCallSlot(megamol::gui::CallSlotType::CALLER);
+        if (caller_ptr != nullptr) {
+            if (caller_ptr->GetParentModule() != nullptr) {
+                queue_data.caller = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->name;
+                valid_ptr = true;
+            }
         }
-        if (call_ptr->GetCallSlot(CallSlotType::CALLEE)->GetParentModule() != nullptr) {
-            queue_data.caller = call_ptr->GetCallSlot(CallSlotType::CALLEE)->GetParentModule()->FullName();
+        if (!valid_ptr) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Pointer to caller slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        }
+        valid_ptr = false;
+        auto callee_ptr = call_ptr->GetCallSlot(megamol::gui::CallSlotType::CALLEE);
+        if (callee_ptr != nullptr) {
+            if (callee_ptr->GetParentModule() != nullptr) {
+                queue_data.callee = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->name;
+                valid_ptr = true;
+            }
+        }
+        if (!valid_ptr) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
         this->sync_queue->push(SyncQueueData_t(QueueChange::ADD_CALL, queue_data));
 
@@ -565,6 +583,36 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
             for (auto iter = this->calls.begin(); iter != this->calls.end(); iter++) {
                 if ((*iter)->uid == delete_call_uid) {
 
+                    QueueData queue_data;
+                    queue_data.classname = (*iter)->class_name;
+                    bool valid_ptr = false;
+                    auto caller_ptr = (*iter)->GetCallSlot(megamol::gui::CallSlotType::CALLER);
+                    if (caller_ptr != nullptr) {
+                        if (caller_ptr->GetParentModule() != nullptr) {
+                            queue_data.caller = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->name;
+                            valid_ptr = true;
+                        }
+                    }
+                    if (!valid_ptr) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] Pointer to caller slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                            __LINE__);
+                    }
+                    valid_ptr = false;
+                    auto callee_ptr = (*iter)->GetCallSlot(megamol::gui::CallSlotType::CALLEE);
+                    if (callee_ptr != nullptr) {
+                        if (callee_ptr->GetParentModule() != nullptr) {
+                            queue_data.callee = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->name;
+                            valid_ptr = true;
+                        }
+                    }
+                    if (!valid_ptr) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                            __LINE__);
+                    }
+                    this->sync_queue->push(SyncQueueData_t(QueueChange::DELETE_CALL, queue_data));
+
                     this->present.ResetStatePointers();
 
                     (*iter)->DisconnectCallSlots();
@@ -579,17 +627,6 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
                         "[GUI] Deleted call '%s' (uid %i) from  project '%s'.\n", (*iter)->class_name.c_str(),
                         (*iter)->uid, this->name.c_str());
 #endif // GUI_VERBOSE
-
-
-                    QueueData queue_data;
-                    queue_data.classname = (*iter)->class_name;
-                    if ((*iter)->GetCallSlot(CallSlotType::CALLER)->GetParentModule() != nullptr) {
-                        queue_data.caller = (*iter)->GetCallSlot(CallSlotType::CALLER)->GetParentModule()->FullName();
-                    }
-                    if ((*iter)->GetCallSlot(CallSlotType::CALLEE)->GetParentModule() != nullptr) {
-                        queue_data.caller = (*iter)->GetCallSlot(CallSlotType::CALLEE)->GetParentModule()->FullName();
-                    }
-                    this->sync_queue->push(SyncQueueData_t(QueueChange::DELETE_CALL, queue_data));
 
                     (*iter).reset();
                     this->calls.erase(iter);

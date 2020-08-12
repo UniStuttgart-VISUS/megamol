@@ -110,8 +110,8 @@ private:
         return ("Project_" + std::to_string(++graph_name_uid));
     }
 
-    std::vector<size_t> get_compatible_callee_idxs(std::shared_ptr<megamol::core::CalleeSlot> callee_slot);
-    std::vector<size_t> get_compatible_caller_idxs(std::shared_ptr<megamol::core::CallerSlot> caller_slot);
+    std::vector<size_t> get_compatible_callee_idxs(const megamol::core::CalleeSlot* callee_slot);
+    std::vector<size_t> get_compatible_caller_idxs(const megamol::core::CallerSlot* caller_slot);
 };
 
 
