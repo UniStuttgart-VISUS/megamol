@@ -174,7 +174,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         }
         std::string graph_label = "    " + inout_graph.name + "  ###graph" + std::to_string(graph_uid);
         if (this->IsRunning()) {
-            graph_label = "    [RUNNING]    " + graph_label;
+            graph_label = "    [RUNNING]  " + graph_label;
         }
         // Checking for closed tab below
         bool open = true;

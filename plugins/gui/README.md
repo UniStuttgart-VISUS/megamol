@@ -431,6 +431,10 @@ mmSetParamValue("::gui::state",[=[{
 }]=])
 ```
 
+#### GUI Graph Structure
+
+![gui graph structure](graph_structure.png)
+
 #### Plugin Class Dependencies
 
 ![gui plugin class dependencies](class_dependencies.png)
