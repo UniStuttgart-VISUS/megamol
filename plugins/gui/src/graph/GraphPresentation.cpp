@@ -44,7 +44,6 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
     , multiselect_done(false)
     , canvas_hovered(false)
     , current_font_scaling(1.0f)
-    , running(false)
     , graph_state()
     , search_widget()
     , splitter_widget()
@@ -173,7 +172,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             tab_flags |= ImGuiTabItemFlags_UnsavedDocument;
         }
         std::string graph_label = "    " + inout_graph.name + "  ###graph" + std::to_string(graph_uid);
-        if (this->IsRunning()) {
+        if (inout_graph.IsRunning()) {
             graph_label = "    [RUNNING]  " + graph_label;
         }
         // Checking for closed tab below
@@ -515,7 +514,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         // Set delete flag if tab was closed
         bool popup_try_close_permanent = false;
         if (!open) {
-            if (this->IsRunning()) {
+            if (inout_graph.IsRunning()) {
                 popup_try_close_permanent = true;
             } else {
                 state.graph_delete = true;
