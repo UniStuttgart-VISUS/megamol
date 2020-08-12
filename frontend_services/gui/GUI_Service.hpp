@@ -99,4 +99,4 @@ private:
 } // namespace frontend
 } // namespace megamol
 
-#endif MEGAMOL_GUI_SERVICE_HPP_INCLUDED
+#endif // MEGAMOL_GUI_SERVICE_HPP_INCLUDED

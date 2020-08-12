@@ -18,7 +18,12 @@
 #include <map>
 #include <sstream>
 #include <string>
-//#include "processthreadsapi.h"
+
+#ifndef _WIN32    
+#include <sys/types.h>
+#include <unistd.h>
+#endif // _WIN32
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
@@ -34,11 +39,11 @@
 
 #include "lua.hpp"
 
-//#define LUA_FULL_ENVIRONMENT
+ //#define LUA_FULL_ENVIRONMENT
 
-/*****************************************************************************/
+ /*****************************************************************************/
 
-// clang-format off
+ // clang-format off
 #define MMC_LUA_MMGETBITHWIDTH "mmGetBitWidth"
 #define MMC_LUA_MMGETCONFIGURATION "mmGetConfiguration"
 #define MMC_LUA_MMGETOS "mmGetOS"
@@ -104,7 +109,7 @@ void megamol::core::LuaAPI::commonInit() {
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::DeleteModule>(MMC_LUA_MMDELETEMODULE, "(string name)\n\tDelete the module called <name>.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::CreateCall>(MMC_LUA_MMCREATECALL, "(string className, string from, string to)\n\tCreate a call of type <className>, connecting CallerSlot <from> and CalleeSlot <to>.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::CreateChainCall>(MMC_LUA_MMCREATECHAINCALL, "(string className, string chainStart, string to)\n\tAppend a call of type "
-    "<className>, connection the rightmost CallerSlot starting at <chainStart> and CalleeSlot <to>.");
+        "<className>, connection the rightmost CallerSlot starting at <chainStart> and CalleeSlot <to>.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::DeleteCall>(MMC_LUA_MMDELETECALL, "(string from, string to)\n\tDelete the call connecting CallerSlot <from> and CalleeSlot <to>.");
 
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetEnvValue>(MMC_LUA_MMGETENVVALUE, "(string name)\n\tReturn the value of env variable <name>.");
@@ -119,18 +124,18 @@ void megamol::core::LuaAPI::commonInit() {
 
     if (!imperative_only_) {
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetModuleParams>(MMC_LUA_MMGETMODULEPARAMS, "(string name)\n\tReturns a 0x1-separated list of module name and all parameters."
-                                  "\n\tFor each parameter the name, description, definition, and value are returned.");
+            "\n\tFor each parameter the name, description, definition, and value are returned.");
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetParamDescription>(MMC_LUA_MMGETPARAMDESCRIPTION, "(string name)\n\tReturn the description of a parameter slot.");
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetParamValue>(MMC_LUA_MMGETPARAMVALUE, "(string name)\n\tReturn the value of a parameter slot.");
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::QueryModuleGraph>(MMC_LUA_MMQUERYMODULEGRAPH, "()\n\tShow the instantiated modules and their children.");
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ListCalls>(MMC_LUA_MMLISTCALLS, "()\n\tReturn a list of instantiated calls (class id, instance id, from, to).");
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ListModules>(MMC_LUA_MMLISTMODULES, "(string basemodule_or_namespace)"
-        "\n\tReturn a list of instantiated modules (class id, instance id), starting from a certain module downstream or inside a namespace."
-        "\n\tWill use the graph root if an empty string is passed.");
+            "\n\tReturn a list of instantiated modules (class id, instance id), starting from a certain module downstream or inside a namespace."
+            "\n\tWill use the graph root if an empty string is passed.");
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ListInstatiations>(MMC_LUA_MMLISTINSTANTIATIONS, "()\n\tReturn a list of instantiation names");
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ListParameters>(MMC_LUA_MMLISTPARAMETERS, "(string baseModule_or_namespace)"
-        "\n\tReturn all parameters, their type and value, starting from a certain module downstream or inside a namespace."
-        "\n\tWill use the graph root if an empty string is passed.");
+            "\n\tReturn all parameters, their type and value, starting from a certain module downstream or inside a namespace."
+            "\n\tWill use the graph root if an empty string is passed.");
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::Flush>(MMC_LUA_MMFLUSH, "()\n\tInserts a flush event into graph manipulation queues.");
     }
 }
@@ -164,7 +169,8 @@ bool megamol::core::LuaAPI::RunFile(const std::string& envName, const std::strin
         std::ostringstream buffer;
         buffer << input.rdbuf();
         return RunString(envName, buffer.str(), result, fileName);
-    } else {
+    }
+    else {
         return false;
     }
 }
@@ -173,13 +179,14 @@ bool megamol::core::LuaAPI::RunFile(const std::string& envName, const std::strin
 bool megamol::core::LuaAPI::RunFile(const std::string& envName, const std::wstring& fileName, std::string& result) {
     vislib::sys::File input;
     if (input.Open(fileName.c_str(), vislib::sys::File::AccessMode::READ_ONLY, vislib::sys::File::ShareMode::SHARE_READ,
-            vislib::sys::File::CreationMode::OPEN_ONLY)) {
+        vislib::sys::File::CreationMode::OPEN_ONLY)) {
         vislib::StringA contents;
         vislib::sys::ReadTextFile(contents, input);
         input.Close();
         const std::string narrowFileName(fileName.begin(), fileName.end());
         return RunString(envName, std::string(contents), result, narrowFileName);
-    } else {
+    }
+    else {
         return false;
     }
 }
@@ -286,9 +293,11 @@ int megamol::core::LuaAPI::PluginLoaderInfo(lua_State* L) {
     bool inc = true;
     if (iequals(a, "include")) {
         inc = true;
-    } else if (iequals(a, "exclude")) {
+    }
+    else if (iequals(a, "exclude")) {
         inc = false;
-    } else {
+    }
+    else {
         luaApiInterpreter_.ThrowError("the third parameter of mmPluginLoaderInfo must be 'include' or 'exclude'.");
     }
     // TODO
@@ -399,7 +408,8 @@ int megamol::core::LuaAPI::GetEnvValue(lua_State* L) {
     if (vislib::sys::Environment::IsSet(name)) {
         lua_pushstring(L, vislib::sys::Environment::GetVariable(name));
         return 1;
-    } else {
+    }
+    else {
         lua_pushnil(L);
         return 1;
     }
@@ -410,26 +420,36 @@ UINT megamol::core::LuaAPI::parseLevelAttribute(const std::string attr) {
     UINT retval = megamol::core::utility::log::Log::LEVEL_ERROR;
     if (iequals(attr, "error")) {
         retval = megamol::core::utility::log::Log::LEVEL_ERROR;
-    } else if (iequals(attr, "warn")) {
+    }
+    else if (iequals(attr, "warn")) {
         retval = megamol::core::utility::log::Log::LEVEL_WARN;
-    } else if (iequals(attr, "warning")) {
+    }
+    else if (iequals(attr, "warning")) {
         retval = megamol::core::utility::log::Log::LEVEL_WARN;
-    } else if (iequals(attr, "info")) {
+    }
+    else if (iequals(attr, "info")) {
         retval = megamol::core::utility::log::Log::LEVEL_INFO;
-    } else if (iequals(attr, "none")) {
+    }
+    else if (iequals(attr, "none")) {
         retval = megamol::core::utility::log::Log::LEVEL_NONE;
-    } else if (iequals(attr, "null")) {
+    }
+    else if (iequals(attr, "null")) {
         retval = megamol::core::utility::log::Log::LEVEL_NONE;
-    } else if (iequals(attr, "zero")) {
+    }
+    else if (iequals(attr, "zero")) {
         retval = megamol::core::utility::log::Log::LEVEL_NONE;
-    } else if (iequals(attr, "all")) {
+    }
+    else if (iequals(attr, "all")) {
         retval = megamol::core::utility::log::Log::LEVEL_ALL;
-    } else if (iequals(attr, "*")) {
+    }
+    else if (iequals(attr, "*")) {
         retval = megamol::core::utility::log::Log::LEVEL_ALL;
-    } else {
+    }
+    else {
         try {
             retval = std::stoi(attr);
-        } catch (...) {
+        }
+        catch (...) {
             retval = megamol::core::utility::log::Log::LEVEL_ERROR;
         }
     }
@@ -439,7 +459,11 @@ UINT megamol::core::LuaAPI::parseLevelAttribute(const std::string attr) {
 
 int megamol::core::LuaAPI::GetProcessID(lua_State* L) {
     vislib::StringA str;
+#ifdef _WIN32    
     unsigned int id = GetCurrentProcessId();
+#else
+    unsigned int id = static_cast<unsigned int>(getpid());
+#endif // _WIN32
     str.Format("%u", id);
     lua_pushstring(L, str.PeekBuffer());
     return 1;
@@ -454,7 +478,7 @@ int megamol::core::LuaAPI::GetModuleParams(lua_State* L) {
     std::ostringstream answer;
     if (mod != nullptr) {
         answer << mod->FullName() << "\1";
-        for (auto &ps: slots) {
+        for (auto &ps : slots) {
             answer << ps->Name() << "\1";
             answer << ps->Description() << "\1";
             auto par = ps->Parameter();
@@ -468,7 +492,8 @@ int megamol::core::LuaAPI::GetModuleParams(lua_State* L) {
         }
         lua_pushstring(L, answer.str().c_str());
         return 1;
-    } else {
+    }
+    else {
         answer << "Cannot find module \"" << moduleName << "\"";
         luaApiInterpreter_.ThrowError(answer.str());
         return 0;
@@ -498,7 +523,7 @@ bool megamol::core::LuaAPI::getParamSlot(
     //    luaApiInterpreter_.ThrowError(err);
     //    return false;
     //}
-    
+
     return false;
 }
 
@@ -631,7 +656,7 @@ int megamol::core::LuaAPI::CreateModule(lua_State* L) {
 int megamol::core::LuaAPI::DeleteModule(lua_State* L) {
     const auto *moduleName = luaL_checkstring(L, 1);
 
-    if(!graph_.DeleteModule(moduleName)) {
+    if (!graph_.DeleteModule(moduleName)) {
         luaApiInterpreter_.ThrowError("cannot delete module \"" + std::string(moduleName) + "\" (check MegaMol log)");
     }
     return 0;
@@ -685,7 +710,7 @@ int megamol::core::LuaAPI::DeleteCall(lua_State* L) {
 
     if (!graph_.DeleteCall(from, to)) {
         luaApiInterpreter_.ThrowError("cannot delete call from \"" + std::string(from) + "\" to \"" + std::string(to) +
-                              "\" (check MegaMol log)");
+            "\" (check MegaMol log)");
     }
     return 0;
 }
@@ -902,26 +927,30 @@ int megamol::core::LuaAPI::ReadTextFile(lua_State* L) {
             if (lua_type(L, 1) == LUA_TNIL) {
                 // no transformation function, just return the string
                 return 1;
-            } else {
+            }
+            else {
                 // call the function pointer
                 lua_pcall(L, 1, 1, 0);
                 n = lua_gettop(L);
                 if (n != 1) {
                     luaApiInterpreter_.ThrowError(MMC_LUA_MMREADTEXTFILE ": function did not return a string, this is bad.");
-                } else {
+                }
+                else {
                     const auto newString = luaL_checkstring(L, 1);
                     // megamol::core::utility::log::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": transformed into:\n%s\n",
                     // newString);
                     return 1;
                 }
             }
-        } else {
+        }
+        else {
             std::string err = MMC_LUA_MMREADTEXTFILE ": cannot open file '";
             err += filename;
             err += "'.";
             luaApiInterpreter_.ThrowError(err);
         }
-    } else {
+    }
+    else {
         luaApiInterpreter_.ThrowError(MMC_LUA_MMREADTEXTFILE " requires two parameters, fileName and a function pointer");
     }
     return 0;

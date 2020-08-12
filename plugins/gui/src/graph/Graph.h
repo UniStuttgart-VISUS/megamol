@@ -15,7 +15,7 @@
 #include "Group.h"
 #include "Module.h"
 
-#include <queue>
+#include <deque>
 #include <tuple>
 
 
@@ -45,7 +45,7 @@ public:
         std::string callee = "";
     };
     typedef std::tuple<QueueChange, QueueData> SyncQueueData_t;
-    typedef std::queue<SyncQueueData_t> SyncQueue_t;
+    typedef std::deque<SyncQueueData_t> SyncQueue_t;
     typedef std::shared_ptr<SyncQueue_t> SyncQueuePtr_t;
 
     // VARIABLES --------------------------------------------------------------
@@ -92,6 +92,9 @@ public:
 
     const SyncQueuePtr_t& GetSyncQueue(void) { return this->sync_queue; }
 
+    inline bool IsRunning(void) const { return this->running; }
+    inline void SetRunning(bool p) { this->running = p; }
+
     // Presentation ----------------------------------------------------
 
     inline void PresentGUI(GraphState_t& state) { this->present.Present(*this, state); }
@@ -110,6 +113,7 @@ private:
     bool dirty_flag;
     std::string filename;
     SyncQueuePtr_t sync_queue;
+    bool running;
 
     // FUNCTIONS --------------------------------------------------------------
 

@@ -53,7 +53,7 @@ public:
 private:
 #ifdef GUI_USE_FILESYSTEM
 
-    typedef std::pair<fsns::path, bool> ChildData_t;
+    typedef std::pair<stdfs::path, bool> ChildData_t;
 
     // VARIABLES --------------------------------------------------------------
 
@@ -72,7 +72,7 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    bool splitPath(const fsns::path& in_file_path, std::string& out_path, std::string& out_file);
+    bool splitPath(const stdfs::path& in_file_path, std::string& out_path, std::string& out_file);
     void validateDirectory(const std::string& path_str);
     void validateFile(const std::string& file_str, FileBrowserFlag flag);
 

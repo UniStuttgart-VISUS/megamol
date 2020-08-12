@@ -278,7 +278,7 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_gra
     }
 
     if (this->AddUpdateProjectFromCore(valid_graph_id, core_instance, core_graph, false)) {
-        graph_ptr->present.SetRunning(running_graph);
+        graph_ptr->SetRunning(running_graph);
         inout_graph_uid = valid_graph_id;
         return true;
     }
@@ -646,10 +646,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         }
         if (gui_graph_changed) {
             // Clear queue, since changes do not have to be propagates back to core graph
-            auto queue = graph_ptr->GetSyncQueue();
-            while (!queue->empty()) {
-                queue->pop();
-            }
+            graph_ptr->GetSyncQueue()->clear();
             graph_ptr->present.SetLayoutGraph();
             // graph_ptr->ResetDirty();
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(

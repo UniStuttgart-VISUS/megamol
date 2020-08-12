@@ -22,7 +22,8 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
     , groups()
     , dirty_flag(true)
     , present()
-    , sync_queue(nullptr) {
+    , sync_queue(nullptr)
+    , running(false) {
 
     this->sync_queue = std::make_shared<SyncQueue_t>();
     ASSERT(this->sync_queue != nullptr);
@@ -135,10 +136,11 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
                     }
                 }
 
+                // Add data to queue for synchronization with core graph
                 QueueData queue_data;
                 queue_data.classname = mod_ptr->class_name;
                 queue_data.id = mod_ptr->FullName();
-                this->sync_queue->push(SyncQueueData_t(QueueChange::ADD_MODULE, queue_data));
+                this->sync_queue->push_front(SyncQueueData_t(QueueChange::ADD_MODULE, queue_data));
 
                 this->modules.emplace_back(mod_ptr);
                 this->ForceSetDirty();
@@ -175,10 +177,11 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
         for (auto iter = this->modules.begin(); iter != this->modules.end(); iter++) {
             if ((*iter)->uid == module_uid) {
 
+                // Add data to queue for synchronization with core graph
                 QueueData queue_data;
                 queue_data.classname = (*iter)->class_name;
                 queue_data.id = (*iter)->FullName();
-                this->sync_queue->push(SyncQueueData_t(QueueChange::DELETE_MODULE, queue_data));
+                this->sync_queue->push_front(SyncQueueData_t(QueueChange::DELETE_MODULE, queue_data));
 
                 this->present.ResetStatePointers();
 
@@ -455,6 +458,7 @@ bool megamol::gui::Graph::AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1,
     if (call_ptr->ConnectCallSlots(callslot_1, callslot_2) && callslot_1->ConnectCall(call_ptr) &&
         callslot_2->ConnectCall(call_ptr)) {
 
+        // Add data to queue for synchronization with core graph
         QueueData queue_data;
         queue_data.classname = call_ptr->class_name;
         bool valid_ptr = false;
@@ -481,8 +485,7 @@ bool megamol::gui::Graph::AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1,
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
-        this->sync_queue->push(SyncQueueData_t(QueueChange::ADD_CALL, queue_data));
-
+        this->sync_queue->push_front(SyncQueueData_t(QueueChange::ADD_CALL, queue_data));
         this->calls.emplace_back(call_ptr);
         this->ForceSetDirty();
 
@@ -583,6 +586,7 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
             for (auto iter = this->calls.begin(); iter != this->calls.end(); iter++) {
                 if ((*iter)->uid == delete_call_uid) {
 
+                    // Add data to queue for synchronization with core graph
                     QueueData queue_data;
                     queue_data.classname = (*iter)->class_name;
                     bool valid_ptr = false;
@@ -611,7 +615,7 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
                             "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                             __LINE__);
                     }
-                    this->sync_queue->push(SyncQueueData_t(QueueChange::DELETE_CALL, queue_data));
+                    this->sync_queue->push_front(SyncQueueData_t(QueueChange::DELETE_CALL, queue_data));
 
                     this->present.ResetStatePointers();
 

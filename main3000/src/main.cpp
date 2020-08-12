@@ -12,8 +12,24 @@
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
 #include <cxxopts.hpp>
-#include <filesystem>
 #include "mmcore/LuaAPI.h"
+
+// Filesystem
+#if defined(_HAS_CXX17) || ((defined(_MSC_VER) && (_MSC_VER > 1916))) // C++2017 or since VS2019
+#    include <filesystem>
+namespace stdfs = std::filesystem;
+#else
+// WINDOWS
+#    ifdef _WIN32
+#        include <filesystem>
+namespace stdfs = std::experimental::filesystem;
+#    else
+// LINUX
+#        include <experimental/filesystem>
+namespace stdfs = std::experimental::filesystem;
+#    endif
+#endif
+
 
 bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::frontend::ModuleResource>& module_resources);
 
@@ -77,7 +93,7 @@ int main(int argc, char* argv[]) {
     // graph is also a resource that may be accessed by services
     // TODO: how to solve const and non-const resources?
     // TODO: graph manipulation during execution of graph modules is problematic, undefined?
-    services.getProvidedResources().push_back({"MegaMolGraph", graph});
+    services.getProvidedResources().push_back({ "MegaMolGraph", graph });
 
     // distribute registered resources among registered services.
     const bool resources_ok = services.assignRequestedResources();
@@ -138,17 +154,18 @@ bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::front
     cxxopts::Options options(argv[0], "MegaMol Frontend 3000");
     options.positional_help("<additional project files>");
     options.add_options()("project-files", "projects to load", cxxopts::value<std::vector<std::string>>());
-    options.parse_positional({"project-files"});
+    options.parse_positional({ "project-files" });
     auto parsed_options = options.parse(argc, argv);
     std::string res;
     if (parsed_options.count("project-files")) {
         const auto& v = parsed_options["project-files"].as<std::vector<std::string>>();
         for (const auto& p : v) {
-            if (std::filesystem::exists(p)) {
+            if (stdfs::exists(p)) {
                 if (!lua_api.RunFile(p, res)) {
                     std::cout << "Project file \"" << p << "\" did not execute correctly: " << res << std::endl;
                 }
-            } else {
+            }
+            else {
                 std::cout << "Project file \"" << p << "\" does not exist!" << std::endl;
             }
         }
@@ -170,13 +187,13 @@ bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::front
     /// check(graph.CreateCall("CallRenderView", "::guiview::renderview", "::view::render"));
 
     static std::vector<std::string> view_resource_requests = {
-        "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context"};
+        "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context" };
 
     // note: this is work in progress and more of a working prototype than a final design
     // callback executed by the graph for each frame
     // knows how to make a view module process input events and start the rendering
     auto view_rendering_execution = [&](megamol::core::Module::ptr_type module_ptr,
-                                        std::vector<megamol::frontend::ModuleResource> const& resources) {
+        std::vector<megamol::frontend::ModuleResource> const& resources) {
         megamol::core::view::AbstractView* view_ptr =
             dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
 
@@ -184,7 +201,7 @@ bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::front
 
         if (!view_ptr) {
             std::cout << "error. module is not a view module. could not set as graph rendering entry point."
-                      << std::endl;
+                << std::endl;
             return false;
         }
 
@@ -206,7 +223,8 @@ bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::front
     auto parameterPtr = graph.FindParameter(parameter_name);
     if (parameterPtr) {
         parameterPtr->ParseValue("23");
-    } else {
+    }
+    else {
         std::cout << "ERROR: could not find parameter: " << parameter_name << std::endl;
         return false;
     }
