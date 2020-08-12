@@ -623,40 +623,79 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
     bool sync_success = true;
 
     // 2) Synchronize GUI graph -> Core graph ------------------------------------
-    if (core_graph != nullptr) {
-        bool graph_sync_success = true;
-        GraphPtr_t graph_ptr;
-        if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
-            auto queue = graph_ptr->GetSyncQueue();
-            while (!queue->empty()) {
-                auto change = std::get<0>(queue->back());
-                auto data = std::get<1>(queue->back());
-                switch (change) {
-                case (Graph::QueueChange::ADD_MODULE): {
+    bool graph_sync_success = true;
+    GraphPtr_t graph_ptr;
+    if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
+        auto queue = graph_ptr->GetSyncQueue();
+        while (!queue->empty()) {
+            auto change = std::get<0>(queue->front());
+            auto data = std::get<1>(queue->front());
+            switch (change) {
+            case (Graph::QueueChange::ADD_MODULE): {
+                if (core_graph != nullptr) {
                     graph_sync_success &= core_graph->CreateModule(data.classname, data.id);
-                } break;
-                case (Graph::QueueChange::DELETE_MODULE): {
-                    graph_sync_success &= core_graph->DeleteModule(data.id);
-                } break;
-                case (Graph::QueueChange::ADD_CALL): {
-                    graph_sync_success &= core_graph->CreateCall(data.classname, data.caller, data.callee);
-                } break;
-                case (Graph::QueueChange::DELETE_CALL): {
-                    graph_sync_success &= core_graph->DeleteCall(data.caller, data.callee);
-                } break;
-                default:
-                    break;
                 }
-                queue->pop_back(); // pop even when sync fails!
+                // else if (this->core_instance) {
+                // auto mod_desc =
+                // this->core_instance->GetModuleDescriptionManager().Find(vislib::StringA(data.classname.c_str()));
+                // auto new_mod(mod_desc->CreateModule(vislib::StringA(data.id.c_str())));
+                // if (new_mod != nullptr) {
+                //    graph_sync_success &= true;
+                //    vislib::sys::AutoLock lock(core_instance->ModuleGraphRoot()->ModuleGraphLock());
+                //    this->core_instance->ModuleGraphRoot()->AddChild(new_mod); // const
+                //}
+                // }
+            } break;
+            case (Graph::QueueChange::DELETE_MODULE): {
+                if (core_graph != nullptr) {
+                    graph_sync_success &= core_graph->DeleteModule(data.id);
+                }
+                // else if (this->core_instance) {
+                // megamol::core::Module* mod_ptr = nullptr;
+                // const auto fun = [this, &mod_ptr](megamol::core::Module* m) {
+                //    mod_ptr = m;
+                //};
+                // auto mod_ptr = this->core_instance->FindModuleNoLock<megamol::core::Module>(data.id, fun);
+                // if (mod_ptr != nullptr) {
+                //    this->core_instance->ModuleGraphRoot()->RemoveChild(mod_ptr);
+                //}
+                // }
+            } break;
+            case (Graph::QueueChange::ADD_CALL): {
+                if (core_graph != nullptr) {
+                    graph_sync_success &= core_graph->CreateCall(data.classname, data.caller, data.callee);
+                }
+                // else if (this->core_instance) {
+                // auto call_desc =
+                // this->core_instance->GetCallDescriptionManager().Find(vislib::StringA(data.classname.c_str()));
+                // auto new_call(call_desc->CreateCall());
+                // if (call_desc != nullptr) {
+                //    graph_sync_success &= true;
+                //    ...
+                //}
+                // }
+            } break;
+            case (Graph::QueueChange::DELETE_CALL): {
+                if (core_graph != nullptr) {
+                    graph_sync_success &= core_graph->DeleteCall(data.caller, data.callee);
+                }
+                // else if (this->core_instance) {
+                // ...
+                // }
+            } break;
+            default:
+                break;
             }
+            queue->pop(); // pop even when sync fails!
         }
-        if (!graph_sync_success) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Failed to synchronize gui graph with core graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                __LINE__);
-        }
-        sync_success &= graph_sync_success;
     }
+    if (!graph_sync_success) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Failed to synchronize gui graph with core graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
+    }
+    sync_success &= graph_sync_success;
+
 
     // 3) Synchronize Core graph -> GUI graph ------------------------------------
     sync_success &= this->configurator.GetGraphCollection()->LoadUpdateProjectFromCore(
@@ -668,8 +707,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
     }
 
     // 4) Synchronize parameter values -------------------------------------------
-    GraphPtr_t graph_ptr;
-    if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
+    if (graph_ptr != nullptr) {
         bool param_sync_success = true;
         for (auto& module_ptr : graph_ptr->GetModules()) {
             for (auto& param : module_ptr->parameters) {

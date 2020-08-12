@@ -15,7 +15,7 @@
 #include "Group.h"
 #include "Module.h"
 
-#include <deque>
+#include <queue>
 #include <tuple>
 
 
@@ -45,7 +45,7 @@ public:
         std::string callee = "";
     };
     typedef std::tuple<QueueChange, QueueData> SyncQueueData_t;
-    typedef std::deque<SyncQueueData_t> SyncQueue_t;
+    typedef std::queue<SyncQueueData_t> SyncQueue_t;
     typedef std::shared_ptr<SyncQueue_t> SyncQueuePtr_t;
 
     // VARIABLES --------------------------------------------------------------
@@ -117,7 +117,6 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    bool delete_disconnected_calls(void);
     const std::string generate_unique_group_name(void);
     const std::string generate_unique_module_name(const std::string& name);
 };
