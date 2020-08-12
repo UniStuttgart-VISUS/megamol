@@ -13,11 +13,10 @@ using namespace megamol::core;
 using namespace megamol::stdplugin::moldyn::rendering;
 
 
-//#define SPEAK_CELL_USAGE 1
-//#define SPEAK_VRAM_CACHE_USAGE 1
-
-#define VRAM_UPLOAD_QUOTA 0
-//#define VRAM_UPLOAD_QUOTA 25
+// #define SPEAK_CELL_USAGE 1
+#define SPEAK_VRAM_CACHE_USAGE 1
+//#define VRAM_UPLOAD_QUOTA 0
+#define VRAM_UPLOAD_QUOTA 25
 //#define VRAM_UPLOAD_QUOTA 100
 
 //#define SUPSAMP_LOOP 1
@@ -83,9 +82,10 @@ GrimRenderer::GrimRenderer(void) : view::Renderer3DModule_2(),
     this->MakeSlotAvailable(&this->deferredShadingSlot);
     this->deferredShadingSlot.ForceSetDirty();
 
-    this->cacheSize = 256 * 1024 * 1024;    // TODO: Any way to get this better?
-    //this->cacheSize = 256 * 1024;         // TODO: Any way to get this better?
-    //this->cacheSize = 1;                  // TODO: Any way to get this better?
+    this->cacheSize = 6 * 1024 * 1024 * 1024; // TODO: Any way to get this better?
+    //this->cacheSize = 256 * 1024 * 1024; // TODO: Any way to get this better?
+    //this->cacheSize = 256 * 1024; // TODO: Any way to get this better?
+    //this->cacheSize = 1; // TODO: Any way to get this better?
 }
 
 
@@ -1270,7 +1270,15 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glDeleteOcclusionQueriesNV(1, &allQuery);
 
         if (speak && speakVertCount) {
-            printf("VERTEX COUNT: %u\n", static_cast<unsigned int>(totalSchnitzels));
+            unsigned int totalSpheres = 0;
+            for (int i = 0; i < static_cast<int>(cellcnt); i++) {
+                const ParticleGridDataCall::GridCell& cell = pgdc->Cells()[i];
+                for (unsigned int j = 0; j < typecnt; j++) {
+                    const ParticleGridDataCall::Particles& parts = cell.AccessParticleLists()[j];
+                    totalSpheres += parts.GetCount();
+                }
+            }
+            printf("VERTEX COUNT: %u (%f%%)\n", static_cast<unsigned int>(totalSchnitzels), static_cast<float>(totalSchnitzels) / static_cast<float>(totalSpheres) * 100.0f);
         }
         glPopDebugGroup();
 #ifdef _WIN32
