@@ -432,7 +432,8 @@ void megamol::gui::ModulePresentation::Present(
                         ImGui::PopStyleColor();
 
                         bool param_popup_hovered = false;
-                        /// Also check for hovered items because selectable list might fold out below child window border
+                        /// Also check for hovered items because selectable list might fold out below child window
+                        /// border
                         bool item_hovered = ImGui::IsAnyItemHovered();
                         if ((ImGui::GetMousePos().x >= param_child_pos.x) &&
                                 (ImGui::GetMousePos().x <= (param_child_pos.x + param_child_width)) &&

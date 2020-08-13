@@ -47,7 +47,7 @@ public:
      *
      * @return Hotkeys of configurator.
      */
-    megamol::gui::HotkeyArray_t& GetHotkeys(void) { return this->graph_state.hotkeys; }
+    inline megamol::gui::HotkeyArray_t& GetHotkeys(void) { return this->graph_state.hotkeys; }
 
     /**
      * Draw configurator window.
