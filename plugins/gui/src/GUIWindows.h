@@ -37,6 +37,7 @@
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/versioninfo.h"
+#include "mmcore/view/AbstractView_EventConsumption.h"
 
 #include "vislib/math/Rectangle.h"
 
