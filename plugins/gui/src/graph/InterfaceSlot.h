@@ -41,7 +41,6 @@ public:
     const ImGuiID uid;
     InterfaceSlotPresentation present;
 
-
     // FUNCTIONS --------------------------------------------------------------
 
     InterfaceSlot(ImGuiID uid, bool auto_create);

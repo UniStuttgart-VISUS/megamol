@@ -21,7 +21,6 @@
 
 #include "utility/plugins/PluginManager.h"
 
-
 /// TEMP
 namespace megamol {
 namespace core {
@@ -29,6 +28,7 @@ class MegaMolGraph;
 }
 } // namespace megamol
 ///
+
 
 namespace megamol {
 namespace gui {

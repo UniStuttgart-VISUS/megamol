@@ -56,6 +56,7 @@ class MegaMolGraph;
 } // namespace megamol
 ///
 
+
 namespace megamol {
 namespace gui {
 

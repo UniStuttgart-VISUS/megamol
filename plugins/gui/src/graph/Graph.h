@@ -92,6 +92,9 @@ public:
 
     const SyncQueuePtr_t& GetSyncQueue(void) { return this->sync_queue; }
 
+    inline bool IsRunning(void) const { return this->running; }
+    inline void SetRunning(bool p) { this->running = p; }
+
     // Presentation ----------------------------------------------------
 
     inline void PresentGUI(GraphState_t& state) { this->present.Present(*this, state); }
@@ -110,10 +113,10 @@ private:
     bool dirty_flag;
     std::string filename;
     SyncQueuePtr_t sync_queue;
+    bool running;
 
     // FUNCTIONS --------------------------------------------------------------
 
-    bool delete_disconnected_calls(void);
     const std::string generate_unique_group_name(void);
     const std::string generate_unique_module_name(const std::string& name);
 };

@@ -25,7 +25,6 @@
 #    include "GLFW/glfw3.h"
 #endif
 
-
 /// TEMP
 namespace megamol {
 namespace core {
@@ -33,6 +32,7 @@ class MegaMolGraph;
 }
 } // namespace megamol
 ///
+
 
 namespace megamol {
 namespace gui {

@@ -22,7 +22,8 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
     , groups()
     , dirty_flag(true)
     , present()
-    , sync_queue(nullptr) {
+    , sync_queue(nullptr)
+    , running(false) {
 
     this->sync_queue = std::make_shared<SyncQueue_t>();
     ASSERT(this->sync_queue != nullptr);
@@ -135,6 +136,7 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
                     }
                 }
 
+                // Add data to queue for synchronization with core graph
                 QueueData queue_data;
                 queue_data.classname = mod_ptr->class_name;
                 queue_data.id = mod_ptr->FullName();
@@ -190,11 +192,18 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
                     }
                 }
 
-                // 2)  Remove call slots
-                (*iter)->DeleteCallSlots();
+                // 2)  Delete calls
+                for (auto& callslot_map : (*iter)->GetCallSlots()) {
+                    for (auto& callslot_ptr : callslot_map.second) {
+                        for (auto& call_ptr : callslot_ptr->GetConnectedCalls()) {
+                            auto call_uid = call_ptr->uid;
+                            this->DeleteCall(call_uid);
+                        }
+                    }
+                }
 
-                // 3) Delete calls which are no longer connected
-                this->delete_disconnected_calls();
+                // 3)  Remove call slots
+                (*iter)->DeleteCallSlots();
 
                 // 4) Automatically restore interfaceslots
                 if (module_group_ptr != nullptr) {
@@ -207,12 +216,13 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
                     (*iter)->uid, this->name.c_str());
 #endif // GUI_VERBOSE
 
-                // 5) Delete module
+                // Add data to queue for synchronization with core graph
                 QueueData queue_data;
                 queue_data.classname = (*iter)->class_name;
                 queue_data.id = (*iter)->FullName();
                 this->sync_queue->push(SyncQueueData_t(QueueChange::DELETE_MODULE, queue_data));
 
+                // 5) Delete module
                 if ((*iter).use_count() > 1) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[GUI] Unclean deletion. Found %i references pointing to module. [%s, %s, line %d]\n",
@@ -455,13 +465,32 @@ bool megamol::gui::Graph::AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1,
     if (call_ptr->ConnectCallSlots(callslot_1, callslot_2) && callslot_1->ConnectCall(call_ptr) &&
         callslot_2->ConnectCall(call_ptr)) {
 
+        // Add data to queue for synchronization with core graph
         QueueData queue_data;
         queue_data.classname = call_ptr->class_name;
-        if (call_ptr->GetCallSlot(CallSlotType::CALLER)->GetParentModule() != nullptr) {
-            queue_data.caller = call_ptr->GetCallSlot(CallSlotType::CALLER)->GetParentModule()->FullName();
+        bool valid_ptr = false;
+        auto caller_ptr = call_ptr->GetCallSlot(megamol::gui::CallSlotType::CALLER);
+        if (caller_ptr != nullptr) {
+            if (caller_ptr->GetParentModule() != nullptr) {
+                queue_data.caller = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->name;
+                valid_ptr = true;
+            }
         }
-        if (call_ptr->GetCallSlot(CallSlotType::CALLEE)->GetParentModule() != nullptr) {
-            queue_data.caller = call_ptr->GetCallSlot(CallSlotType::CALLEE)->GetParentModule()->FullName();
+        if (!valid_ptr) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Pointer to caller slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        }
+        valid_ptr = false;
+        auto callee_ptr = call_ptr->GetCallSlot(megamol::gui::CallSlotType::CALLEE);
+        if (callee_ptr != nullptr) {
+            if (callee_ptr->GetParentModule() != nullptr) {
+                queue_data.callee = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->name;
+                valid_ptr = true;
+            }
+        }
+        if (!valid_ptr) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
         this->sync_queue->push(SyncQueueData_t(QueueChange::ADD_CALL, queue_data));
 
@@ -565,6 +594,37 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
             for (auto iter = this->calls.begin(); iter != this->calls.end(); iter++) {
                 if ((*iter)->uid == delete_call_uid) {
 
+                    // Add data to queue for synchronization with core graph
+                    QueueData queue_data;
+                    queue_data.classname = (*iter)->class_name;
+                    bool valid_ptr = false;
+                    auto caller_ptr = (*iter)->GetCallSlot(megamol::gui::CallSlotType::CALLER);
+                    if (caller_ptr != nullptr) {
+                        if (caller_ptr->GetParentModule() != nullptr) {
+                            queue_data.caller = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->name;
+                            valid_ptr = true;
+                        }
+                    }
+                    if (!valid_ptr) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] Pointer to caller slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                            __LINE__);
+                    }
+                    valid_ptr = false;
+                    auto callee_ptr = (*iter)->GetCallSlot(megamol::gui::CallSlotType::CALLEE);
+                    if (callee_ptr != nullptr) {
+                        if (callee_ptr->GetParentModule() != nullptr) {
+                            queue_data.callee = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->name;
+                            valid_ptr = true;
+                        }
+                    }
+                    if (!valid_ptr) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                            __LINE__);
+                    }
+                    this->sync_queue->push(SyncQueueData_t(QueueChange::DELETE_CALL, queue_data));
+
                     this->present.ResetStatePointers();
 
                     (*iter)->DisconnectCallSlots();
@@ -579,17 +639,6 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
                         "[GUI] Deleted call '%s' (uid %i) from  project '%s'.\n", (*iter)->class_name.c_str(),
                         (*iter)->uid, this->name.c_str());
 #endif // GUI_VERBOSE
-
-
-                    QueueData queue_data;
-                    queue_data.classname = (*iter)->class_name;
-                    if ((*iter)->GetCallSlot(CallSlotType::CALLER)->GetParentModule() != nullptr) {
-                        queue_data.caller = (*iter)->GetCallSlot(CallSlotType::CALLER)->GetParentModule()->FullName();
-                    }
-                    if ((*iter)->GetCallSlot(CallSlotType::CALLEE)->GetParentModule() != nullptr) {
-                        queue_data.caller = (*iter)->GetCallSlot(CallSlotType::CALLEE)->GetParentModule()->FullName();
-                    }
-                    this->sync_queue->push(SyncQueueData_t(QueueChange::DELETE_CALL, queue_data));
 
                     (*iter).reset();
                     this->calls.erase(iter);
@@ -759,35 +808,6 @@ bool megamol::gui::Graph::IsMainViewSet(void) {
         }
     }
     return false;
-}
-
-
-bool megamol::gui::Graph::delete_disconnected_calls(void) {
-
-    bool retval = false;
-    try {
-        UIDVector_t call_uids;
-        for (auto& call : this->calls) {
-            if (!call->IsConnected()) {
-                call_uids.emplace_back(call->uid);
-            }
-        }
-        for (auto& id : call_uids) {
-            if (this->DeleteCall(id)) {
-                retval = true;
-            }
-        }
-    } catch (std::exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    return retval;
 }
 
 

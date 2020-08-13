@@ -21,7 +21,6 @@
 
 #include "utility/plugins/PluginManager.h"
 
-
 /// TEMP
 namespace megamol {
 namespace core {
@@ -29,6 +28,7 @@ class MegaMolGraph;
 }
 } // namespace megamol
 ///
+
 
 namespace megamol {
 namespace gui {
@@ -40,7 +40,7 @@ class GraphCollection;
 // Types
 typedef std::shared_ptr<GraphCollection> GraphCollectionhPtr_t;
 typedef std::shared_ptr<Graph> GraphPtr_t;
-typedef std::vector<GraphPtr_t> Graphs_t;
+typedef std::vector<GraphPtr_t> GraphPtrVector_t;
 typedef std::map<megamol::core::param::AbstractParam*, std::shared_ptr<megamol::gui::Parameter>> ParamInterfaceMap_t;
 
 
@@ -61,15 +61,15 @@ public:
     ImGuiID AddGraph(void);
     bool DeleteGraph(ImGuiID in_graph_uid);
     bool GetGraph(ImGuiID in_graph_uid, GraphPtr_t& out_graph_ptr);
-    const Graphs_t& GetGraphs(void) { return this->graphs; }
+    const GraphPtrVector_t& GetGraphs(void) { return this->graphs; }
 
     bool LoadModuleStock(const megamol::core::CoreInstance* core_instance);
     bool LoadCallStock(const megamol::core::CoreInstance* core_instance);
     inline const ModuleStockVector_t& GetModulesStock(void) { return this->modules_stock; }
     inline const CallStockVector_t& GetCallsStock(void) { return this->calls_stock; }
 
-    bool LoadUpdateProjectFromCore(
-        ImGuiID& inout_graph_uid, megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* core_graph);
+    bool LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid, megamol::core::CoreInstance* core_instance,
+        megamol::core::MegaMolGraph* core_graph, bool running_graph = false);
 
     ImGuiID LoadProjectFromCore(megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* core_graph) {
         ImGuiID graph_id = GUI_INVALID_ID;
@@ -92,7 +92,7 @@ public:
 private:
     // VARIABLES --------------------------------------------------------------
 
-    Graphs_t graphs;
+    GraphPtrVector_t graphs;
     ModuleStockVector_t modules_stock;
     CallStockVector_t calls_stock;
     unsigned int graph_name_uid;
@@ -117,8 +117,8 @@ private:
         return ("Project_" + std::to_string(++graph_name_uid));
     }
 
-    std::vector<size_t> get_compatible_callee_idxs(std::shared_ptr<megamol::core::CalleeSlot> callee_slot);
-    std::vector<size_t> get_compatible_caller_idxs(std::shared_ptr<megamol::core::CallerSlot> caller_slot);
+    std::vector<size_t> get_compatible_callee_idxs(const megamol::core::CalleeSlot* callee_slot);
+    std::vector<size_t> get_compatible_caller_idxs(const megamol::core::CallerSlot* caller_slot);
 };
 
 
