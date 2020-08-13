@@ -416,7 +416,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
                         }
                         // Place new module at mouse pos if added via separate module list child window.
                         else if (this->show_module_list_child) {
-                            module_ptr->present.position = this->module_list_popup_pos;
+                            module_ptr->present.SetScreenPosition(ImGui::GetMousePos());
                         }
 
                         // If there is a group selected or hoverd or the new call is connceted to module which is part
@@ -663,27 +663,35 @@ void megamol::gui::Configurator::drawPopUps(void) {
     GraphPtr_t selected_graph_ptr;
     if (this->graph_collection->GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
 
+        if (this->show_module_list_child && ImGui::IsMouseDoubleClicked(0) &&
+            selected_graph_ptr->present.IsCanvasHoverd()) {
+            this->show_module_list_child = false;
+        }
+
         ImGuiID selected_callslot_uid = selected_graph_ptr->present.GetSelectedCallSlot();
         ImGuiID selected_group_uid = selected_graph_ptr->present.GetSelectedGroup();
 
         bool valid_double_click =
             (ImGui::IsMouseDoubleClicked(0) && !this->show_module_list_child &&
-                selected_graph_ptr->present.GetCanvasHoverd() && (selected_group_uid == GUI_INVALID_ID));
+                selected_graph_ptr->present.IsCanvasHoverd() && (selected_group_uid == GUI_INVALID_ID));
         bool double_click_callslot =
-            (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->present.GetCanvasHoverd() &&
+            (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->present.IsCanvasHoverd() &&
                 (selected_callslot_uid != GUI_INVALID_ID) &&
                 ((!this->show_module_list_child) || (this->last_selected_callslot_uid != selected_callslot_uid)));
 
         if (valid_double_click || double_click_callslot) {
             std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
             this->last_selected_callslot_uid = selected_callslot_uid;
+            // Force consume double click!
+            ImGuiIO& io = ImGui::GetIO();
+            io.MouseDoubleClicked[0] = false;
+            /// io.MouseClicked[0] = false;
         }
     }
     if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
         this->show_module_list_child = true;
         this->module_list_popup_pos = ImGui::GetMousePos();
         this->module_list_popup_hovered_group_uid = selected_graph_ptr->present.GetHoveredGroup();
-        ImGui::SetNextWindowPos(this->module_list_popup_pos);
     }
     if (this->show_module_list_child) {
         ImGuiStyle& style = ImGui::GetStyle();
@@ -691,10 +699,19 @@ void megamol::gui::Configurator::drawPopUps(void) {
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
         ImGui::PushStyleColor(ImGuiCol_ChildBg, tmpcol);
         ImGui::SetCursorScreenPos(this->module_list_popup_pos);
-        float graph_width = 250.0f;
-        float child_height = std::min(350.0f, (ImGui::GetContentRegionAvail().y - ImGui::GetWindowPos().y));
+        const float child_width = 250.0f;
+        const float child_height = 350.0f;
+        float diff_width = (ImGui::GetWindowSize().x - this->module_list_popup_pos.x);
+        float diff_height = (ImGui::GetWindowSize().y - this->module_list_popup_pos.y);
+        if (diff_width < child_width) {
+            this->module_list_popup_pos.x -= (child_width - diff_width);
+        }
+        if (diff_height < child_height) {
+            this->module_list_popup_pos.y -= (child_height - diff_height);
+        }
+        ImGui::SetCursorScreenPos(this->module_list_popup_pos);
         auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NavFlattened;
-        ImGui::BeginChild("module_list_child", ImVec2(graph_width, child_height), true, child_flags);
+        ImGui::BeginChild("module_list_child", ImVec2(child_width, child_height), true, child_flags);
         if (ImGui::Button("Close") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
             this->show_module_list_child = false;
         }

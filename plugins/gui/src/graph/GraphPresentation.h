@@ -63,7 +63,7 @@ public:
     bool GetModuleLabelVisibility(void) const { return this->show_module_names; }
     bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
     bool GetCallLabelVisibility(void) const { return this->show_call_names; }
-    bool GetCanvasHoverd(void) const { return this->canvas_hovered; }
+    bool IsCanvasHoverd(void) const { return this->canvas_hovered; }
 
     void SetLayoutGraph(void) { this->graph_layout = 1; }
 
