@@ -40,6 +40,7 @@ GUIWindows::GUIWindows(void)
     , graph_uid(GUI_INVALID_ID)
     , file_browser()
     , search_widget()
+    , tf_editor_ptr(nullptr)
     , tooltip()
     , picking_buffer()
     , triangle_widget() {
