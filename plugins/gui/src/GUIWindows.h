@@ -121,7 +121,7 @@ public:
     /**
      * Return true if user triggered shutdown via gui.
      */
-    bool ShouldShutdown(void) { return this->shutdown; }
+    inline bool ShouldShutdown(void) const { return this->shutdown; }
 
     /**
      * Synchronise changes between core graph and gui graph.
@@ -202,7 +202,7 @@ private:
     StateBuffer state;
 
     /** Flag indicating user triggered shutdown. */
-    bool shutdown;
+    bool shutdown = false;
 
     /** Numer of fonts reserved for the configurator graph canvas. */
     unsigned int graph_fonts_reserved;
