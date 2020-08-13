@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
     openglConfig.windowTitlePrefix = openglConfig.windowTitlePrefix + " ~ Main3000";
     openglConfig.versionMajor = 4;
-    openglConfig.versionMinor = 6;
+    openglConfig.versionMinor = 0;
     gl_service.setPriority(1);
 
     megamol::frontend::GUI_Service gui_service;
@@ -214,6 +214,8 @@ bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::front
         megamol::core::view::view_consume_window_events(view, resources[i++]);
         megamol::core::view::view_consume_framebuffer_events(view, resources[i++]);
         megamol::core::view::view_poke_rendering(view, resources[i++]);
+        
+        return true;
     };
 
     /// check(graph.SetGraphEntryPoint("::guiview", view_resource_requests, view_rendering_execution));
