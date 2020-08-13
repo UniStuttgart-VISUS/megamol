@@ -1763,7 +1763,6 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
         }
 
         bool found_gui = false;
-        bool valid = true;
         nlohmann::json json;
         json = nlohmann::json::parse(in_json_string);
         if (!json.is_object()) {

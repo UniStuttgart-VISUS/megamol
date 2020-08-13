@@ -13,3 +13,5 @@ using namespace megamol;
 using namespace megamol::gui;
 
 ImGuiID megamol::gui::gui_generated_uid = 0;
+
+ImGuiID GenerateUniqueID(void) { return (++megamol::gui::gui_generated_uid); }

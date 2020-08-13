@@ -16,7 +16,7 @@ using namespace megamol::gui;
 
 
 megamol::gui::GraphCollectionPresentation::GraphCollectionPresentation(void)
-    : graph_delete_uid(GUI_INVALID_ID), file_browser() {}
+    : file_browser(), graph_delete_uid(GUI_INVALID_ID) {}
 
 
 megamol::gui::GraphCollectionPresentation::~GraphCollectionPresentation(void) {}

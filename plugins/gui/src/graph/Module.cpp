@@ -19,6 +19,7 @@ using namespace megamol::gui;
 
 megamol::gui::Module::Module(ImGuiID uid)
     : uid(uid)
+    , present()    
     , class_name()
     , description()
     , plugin_name()
@@ -26,8 +27,7 @@ megamol::gui::Module::Module(ImGuiID uid)
     , parameters()
     , name()
     , is_view_instance(false)
-    , callslots()
-    , present() {
+    , callslots() {
 
     this->callslots.emplace(megamol::gui::CallSlotType::CALLER, std::vector<CallSlotPtr_t>());
     this->callslots.emplace(megamol::gui::CallSlotType::CALLEE, std::vector<CallSlotPtr_t>());

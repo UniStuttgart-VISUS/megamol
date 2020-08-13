@@ -14,7 +14,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::Group::Group(ImGuiID uid) : uid(uid), name(), modules(), interfaceslots(), present() {}
+megamol::gui::Group::Group(ImGuiID uid) : uid(uid), present(), name(), modules(), interfaceslots() {}
 
 
 megamol::gui::Group::~Group() {

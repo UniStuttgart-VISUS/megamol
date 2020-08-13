@@ -16,12 +16,12 @@ using namespace megamol::gui;
 megamol::gui::Graph::Graph(const std::string& graph_name)
     : uid(megamol::gui::GenerateUniqueID())
     , name(graph_name)
+    , present()    
     , group_name_uid(0)
     , modules()
     , calls()
     , groups()
     , dirty_flag(true)
-    , present()
     , sync_queue(nullptr)
     , running(false) {
 
