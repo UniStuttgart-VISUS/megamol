@@ -428,16 +428,17 @@ void megamol::gui::ModulePresentation::Present(
                             ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr);
 
                         this->param_child_height = ImGui::GetCursorPosY() - cursor_pos_y + ImGui::GetFrameHeight();
-
                         ImGui::EndChild();
-
                         ImGui::PopStyleColor();
 
                         bool param_popup_hovered = false;
+                        /// Also check for hovered items because selectable list might fold out below child window border
+                        bool item_hovered = ImGui::IsAnyItemHovered();
                         if ((ImGui::GetMousePos().x >= param_child_pos.x) &&
-                            (ImGui::GetMousePos().x <= (param_child_pos.x + param_child_width)) &&
-                            (ImGui::GetMousePos().y >= param_child_pos.y) &&
-                            (ImGui::GetMousePos().y <= (param_child_pos.y + this->param_child_height))) {
+                                (ImGui::GetMousePos().x <= (param_child_pos.x + param_child_width)) &&
+                                (ImGui::GetMousePos().y >= param_child_pos.y) &&
+                                (ImGui::GetMousePos().y <= (param_child_pos.y + this->param_child_height)) ||
+                            item_hovered) {
                             param_popup_hovered = true;
                         }
 
