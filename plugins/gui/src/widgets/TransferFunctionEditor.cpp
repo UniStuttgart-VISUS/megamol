@@ -169,7 +169,7 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , range_overwrite(false)
     , mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , textureInvalid(true)
-    , textureSize(256)    
+    , textureSize(256)
     , pendingChanges(true)
     , activeChannels{false, false, false, false}
     , currentNode(0)

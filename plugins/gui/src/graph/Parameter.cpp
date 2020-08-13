@@ -16,17 +16,17 @@ using namespace megamol::gui;
 megamol::gui::Parameter::Parameter(ImGuiID uid, Param_t type, Stroage_t store, Min_t minval, Max_t maxval)
     : uid(uid)
     , type(type)
-    , present(type)    
+    , present(type)
     , full_name()
     , description()
-    , core_param_ptr(nullptr)    
+    , core_param_ptr(nullptr)
     , minval(minval)
     , maxval(maxval)
     , storage(store)
     , value()
     , tf_string_hash(0)
     , default_value()
-    , default_value_mismatch(false)     
+    , default_value_mismatch(false)
     , value_dirty(false) {
 
     // Initialize variant types which should/can not be changed afterwards.

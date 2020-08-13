@@ -21,7 +21,7 @@ using namespace megamol::gui;
 megamol::gui::InterfaceSlotPresentation::InterfaceSlotPresentation(void)
     : group()
     , label_visible(false)
-    , tooltip()    
+    , tooltip()
     , selected(false)
     , label()
     , last_compat_callslot_uid(GUI_INVALID_ID)

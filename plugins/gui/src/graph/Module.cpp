@@ -19,7 +19,7 @@ using namespace megamol::gui;
 
 megamol::gui::Module::Module(ImGuiID uid)
     : uid(uid)
-    , present()    
+    , present()
     , class_name()
     , description()
     , plugin_name()
