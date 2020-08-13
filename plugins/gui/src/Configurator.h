@@ -17,6 +17,7 @@
 #include "widgets/StringSearchWidget.h"
 
 #include "mmcore/CoreInstance.h"
+///#include "mmcore/MegaMolGraph.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
 
@@ -100,6 +101,7 @@ private:
     bool show_module_list_sidebar;
     bool show_module_list_child;
     ImVec2 module_list_popup_pos;
+    bool module_list_popup_hovered;
     ImGuiID last_selected_callslot_uid;
     megamol::gui::GraphState_t graph_state;
     bool open_popup_load;

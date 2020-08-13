@@ -43,6 +43,7 @@ public:
         std::string id = "";
         std::string caller = "";
         std::string callee = "";
+        bool graph_entry = false;
     };
     typedef std::tuple<QueueChange, QueueData> SyncQueueData_t;
     typedef std::queue<SyncQueueData_t> SyncQueue_t;

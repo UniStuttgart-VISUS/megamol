@@ -33,7 +33,6 @@ GUIWindows::GUIWindows(void)
     , context(nullptr)
     , api(GUIImGuiAPI::NONE)
     , window_collection()
-    , tf_editor_ptr(nullptr)
     , configurator()
     , state()
     , shutdown(false)
@@ -634,6 +633,37 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
             case (Graph::QueueChange::ADD_MODULE): {
                 if (core_graph != nullptr) {
                     // graph_sync_success &= core_graph->CreateModule(data.classname, data.id);
+                    // if (graph_sync_success && data.graph_entry) {
+                    // static std::vector<std::string> view_resource_requests = {
+                    //    "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context"};
+                    // auto view_rendering_execution =
+                    //    [&](megamol::core::Module::ptr_type module_ptr,
+                    //        std::vector<megamol::frontend::ModuleResource> const& resources) {
+                    //        megamol::core::view::AbstractView* view_ptr =
+                    //            dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
+
+                    //        assert(view_resource_requests.size() == resources.size());
+
+                    //        if (!view_ptr) {
+                    //            std::cout << "error. module is not a view module. could not set as graph rendering
+                    //            "
+                    //                         "entry point."
+                    //                      << std::endl;
+                    //            return false;
+                    //        }
+
+                    //        megamol::core::view::AbstractView& view = *view_ptr;
+
+                    //        int i = 0;
+                    //        // resources are in order of initial requests
+                    //        megamol::core::view::view_consume_keyboard_events(view, resources[i++]);
+                    //        megamol::core::view::view_consume_mouse_events(view, resources[i++]);
+                    //        megamol::core::view::view_consume_window_events(view, resources[i++]);
+                    //        megamol::core::view::view_consume_framebuffer_events(view, resources[i++]);
+                    //        megamol::core::view::view_poke_rendering(view, resources[i++]);
+                    //    };
+                    // core_graph->SetGraphEntryPoint(data.id, view_resource_requests, view_rendering_execution);
+                    // }
                 }
                 // else if (this->core_instance) {
                 // auto mod_desc =

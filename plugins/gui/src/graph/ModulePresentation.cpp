@@ -411,12 +411,12 @@ void megamol::gui::ModulePresentation::Present(
                         }
 
                         ImGui::SetCursorScreenPos(param_child_pos);
-                        float child_width = 325.0f * state.canvas.zooming;
+                        float param_child_width = 325.0f * state.canvas.zooming;
                         auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove |
                                            ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
                                            ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NavFlattened;
-                        ImGui::BeginChild(
-                            "module_parameter_child", ImVec2(child_width, this->param_child_height), true, child_flags);
+                        ImGui::BeginChild("module_parameter_child", ImVec2(param_child_width, this->param_child_height),
+                            true, child_flags);
 
                         float cursor_pos_y = ImGui::GetCursorPosY();
 
@@ -427,13 +427,24 @@ void megamol::gui::ModulePresentation::Present(
                             ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr);
 
                         this->param_child_height = ImGui::GetCursorPosY() - cursor_pos_y + ImGui::GetFrameHeight();
-
                         ImGui::EndChild();
-
                         ImGui::PopStyleColor();
 
-                        // Close child window on 'Escape'
-                        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+                        bool param_popup_hovered = false;
+                        /// Also check for hovered items because selectable list might fold out below child window
+                        /// border
+                        bool item_hovered = ImGui::IsAnyItemHovered();
+                        if ((ImGui::GetMousePos().x >= param_child_pos.x) &&
+                                (ImGui::GetMousePos().x <= (param_child_pos.x + param_child_width)) &&
+                                (ImGui::GetMousePos().y >= param_child_pos.y) &&
+                                (ImGui::GetMousePos().y <= (param_child_pos.y + this->param_child_height)) ||
+                            item_hovered) {
+                            param_popup_hovered = true;
+                        }
+
+                        // Close child window on 'Escape' and 'Mouse Click' outside param window
+                        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)) ||
+                            (ImGui::IsMouseClicked(0) && !param_popup_hovered)) {
                             this->param_child_show = false;
                         }
                     }

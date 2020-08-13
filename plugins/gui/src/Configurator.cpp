@@ -37,6 +37,7 @@ megamol::gui::Configurator::Configurator()
     , show_module_list_sidebar(false)
     , show_module_list_child(false)
     , module_list_popup_pos()
+    , module_list_popup_hovered(false)
     , last_selected_callslot_uid(GUI_INVALID_ID)
     , graph_state()
     , open_popup_load(false)
@@ -663,8 +664,7 @@ void megamol::gui::Configurator::drawPopUps(void) {
     GraphPtr_t selected_graph_ptr;
     if (this->graph_collection->GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
 
-        if (this->show_module_list_child && ImGui::IsMouseDoubleClicked(0) &&
-            selected_graph_ptr->present.IsCanvasHoverd()) {
+        if (this->show_module_list_child && ImGui::IsMouseClicked(0) && !this->module_list_popup_hovered) {
             this->show_module_list_child = false;
         }
 
@@ -719,6 +719,13 @@ void megamol::gui::Configurator::drawPopUps(void) {
         this->draw_window_module_list(0.0f);
         ImGui::EndChild();
         ImGui::PopStyleColor();
+        this->module_list_popup_hovered = false;
+        if ((ImGui::GetMousePos().x >= this->module_list_popup_pos.x) &&
+            (ImGui::GetMousePos().x <= (this->module_list_popup_pos.x + child_width)) &&
+            (ImGui::GetMousePos().y >= this->module_list_popup_pos.y) &&
+            (ImGui::GetMousePos().y <= (this->module_list_popup_pos.y + child_height))) {
+            this->module_list_popup_hovered = true;
+        }
     }
 }
 

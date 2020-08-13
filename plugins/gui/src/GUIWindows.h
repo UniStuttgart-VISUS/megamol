@@ -34,6 +34,8 @@
 #include "widgets/WidgetPicking_gl.h"
 
 #include "mmcore/CoreInstance.h"
+///#include "mmcore/MegaMolGraph.h"
+///#include "mmcore/view/AbstractView_EventConsumption.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/versioninfo.h"
 
