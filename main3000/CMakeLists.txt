@@ -6,7 +6,7 @@
 option(BUILD_MAIN3000 "build main3000" ON)
 
 if(BUILD_MAIN3000)
-  project(main3000)
+  project(${MAIN3000_NAME})
 
   require_external(libcxxopts)
 
@@ -27,8 +27,7 @@ if(BUILD_MAIN3000)
     OUTPUT_NAME ${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME} PRIVATE "src" "include")
   target_link_libraries(${PROJECT_NAME} PRIVATE core frontend_services libcxxopts)
-
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS})
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_DL_LIBS})
 
   # Grouping in Visual Studio
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
@@ -42,4 +41,13 @@ if(BUILD_MAIN3000)
       install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
     endif()
   endif ()
+  
+  if(UNIX)
+    include(GNUInstallDirs)
+    set(cfg_LIB_PATH "../lib") # relative path from bin to lib dir
+    set(MAIN3000_SHELL_START_SCRIPT "mmmain3000.sh")
+    configure_file(extra/mmmain3000.sh.in ${CMAKE_BINARY_DIR}/${MAIN3000_SHELL_START_SCRIPT} @ONLY)
+    install(PROGRAMS ${CMAKE_BINARY_DIR}/${MAIN3000_SHELL_START_SCRIPT} DESTINATION "bin")
+  endif()  
+
 endif()
