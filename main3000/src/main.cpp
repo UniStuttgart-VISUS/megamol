@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
     openglConfig.windowTitlePrefix = openglConfig.windowTitlePrefix + " ~ Main3000";
     openglConfig.versionMajor = 4;
-    openglConfig.versionMinor = 0;
+    openglConfig.versionMinor = 5;
     gl_service.setPriority(1);
 
     megamol::frontend::GUI_Service gui_service;
