@@ -87,9 +87,8 @@ GUIWindows::~GUIWindows(void) { this->destroyContext(); }
 bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 
     if (instance == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
     }
     this->core_instance = instance;
 
@@ -97,6 +96,12 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
         // Init OpenGL for ImGui
         const char* glsl_version = "#version 130"; /// "#version 150" or nullptr
         if (ImGui_ImplOpenGL3_Init(glsl_version)) {
+
+            /// TODO: imgui and new frontend are linked against different GLAD targets, fix this via reorganizing CMake
+            /// targets megamol\build\_deps\imgui - src\examples\imgui_impl_opengl3.cpp comment line 138:
+            /// //glGetIntegerv(GL_TEXTURE_BINDING_2D, &current_texture);
+
+
             this->api = GUIImGuiAPI::OpenGL;
             return true;
         }
@@ -106,7 +111,7 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 }
 
 
-bool GUIWindows::PreDraw(glm::vec2 viewport_size, double instanceTime) {
+bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instanceTime) {
 
     if (this->api == GUIImGuiAPI::NONE) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -119,19 +124,19 @@ bool GUIWindows::PreDraw(glm::vec2 viewport_size, double instanceTime) {
             "Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    if (this->core_instance == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
 
     // Set ImGui context
     ImGui::SetCurrentContext(this->context);
-    this->core_instance->SetCurrentImGuiContext(this->context);
+    if (this->core_instance != nullptr) {
+        this->core_instance->SetCurrentImGuiContext(this->context);
+    }
 
     // Loading and/or updating currently running core graph
-    /// TODO No update is done yet
-    this->graph_collection.LoadCallStock(core_instance);
-    this->graph_uid = this->graph_collection.LoadUpdateProjectFromCore(this->graph_uid, this->core_instance);
+    if (this->core_instance != nullptr) {
+        this->graph_collection.LoadCallStock(core_instance);
+        /// TODO No update is done yet
+        this->graph_uid = this->graph_collection.LoadUpdateProjectFromCore(this->graph_uid, this->core_instance);
+    }
 
     if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM])) {
         this->shutdown();
@@ -146,14 +151,16 @@ bool GUIWindows::PreDraw(glm::vec2 viewport_size, double instanceTime) {
 
     // Set IO stuff for next frame --------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
-    io.DisplaySize = ImVec2(viewport_size.x, viewport_size.y);
-    io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
+    io.DisplaySize = ImVec2(window_size.x, window_size.y);
+    if ((window_size.x > 0.0f) && (window_size.y > 0.0f)) {
+        io.DisplayFramebufferScale = ImVec2(framebuffer_size.x / window_size.x, framebuffer_size.y / window_size.y);
+    }
 
-    // if ((instanceTime - this->state.last_instance_time) < 0.0) {
-    //    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-    //        "Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-    //        __LINE__);
-    //}
+    if ((instanceTime - this->state.last_instance_time) < 0.0) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
+    }
     io.DeltaTime = ((instanceTime - this->state.last_instance_time) > 0.0)
                        ? (static_cast<float>(instanceTime - this->state.last_instance_time))
                        : (io.DeltaTime);
@@ -359,7 +366,8 @@ bool GUIWindows::PostDraw(void) {
 
             /// TODO Pass picked UID to parameters
 
-            module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(), "", false, true,
+            module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(), "",
+                vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN), false,
                 ParameterPresentation::WidgetScope::GLOBAL, this->tf_editor_ptr, nullptr);
         }
     }
@@ -376,19 +384,18 @@ bool GUIWindows::PostDraw(void) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
             for (auto& param : module_ptr->parameters) {
                 if (!param.core_param_ptr.IsNull()) {
-
+                    // Write changed gui state to core parameter
                     if (param.present.IsGUIStateDirty()) {
                         megamol::gui::Parameter::WriteCoreParameterGUIState(param, param.core_param_ptr);
                         param.present.ResetGUIStateDirty();
                     }
-
+                    // Write changed parameter value to core parameter
                     if (param.IsValueDirty()) {
                         megamol::gui::Parameter::WriteCoreParameterValue(param, param.core_param_ptr);
                         param.ResetValueDirty();
-                    } else {
-                        megamol::gui::Parameter::ReadCoreParameterToParameter(
-                            param.core_param_ptr, param, false, false);
                     }
+                    // Read current parameter value and GUI state fro core parameter
+                    megamol::gui::Parameter::ReadCoreParameterToParameter(param.core_param_ptr, param, false, false);
                 }
             }
         }
@@ -749,7 +756,7 @@ bool GUIWindows::createContext(void) {
     this->state.win_save_state = false;
     this->state.win_save_delay = 0.0f;
     this->state.win_delete = "";
-    this->state.last_instance_time = 0.0f;
+    this->state.last_instance_time = 0.0;
     this->state.open_popup_about = false;
     this->state.open_popup_save = false;
     this->state.project_file = "";
@@ -798,9 +805,6 @@ bool GUIWindows::createContext(void) {
                     font_paths.emplace_back(font_path);
                 }
             }
-        } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
         // Configurator Graph Font: Add default font at first n indices for exclusive use in configurator graph.
         /// Workaround: Using different font sizes for different graph zooming factors to improve font readability when
@@ -936,6 +940,7 @@ void GUIWindows::drawTransferFunctionWindowCallback(WindowCollection::WindowConf
 
 void GUIWindows::drawConfiguratorWindowCallback(WindowCollection::WindowConfiguration& wc) {
 
+    /// TODO Decide wheather to pass core_instance or new megamol core graph
     this->configurator.Draw(wc, this->core_instance);
 }
 
@@ -1032,9 +1037,8 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Copy to new Window")) {
-                    // using instance time as hidden unique id
-                    std::string window_name =
-                        "Parameters###parameters_" + std::to_string(this->state.last_instance_time);
+                    std::srand(std::time(nullptr));
+                    std::string window_name = "Parameters###parameters_" + std::to_string(std::rand());
                     WindowCollection::WindowConfiguration buf_win;
                     buf_win.win_name = window_name;
                     buf_win.win_show = true;
@@ -1078,8 +1082,8 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
 
                 bool out_open_external_tf_editor;
                 module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, currentSearchString,
-                    wc.param_extended_mode, false, ParameterPresentation::WidgetScope::LOCAL, this->tf_editor_ptr,
-                    &out_open_external_tf_editor);
+                    vislib::math::Ternary(wc.param_extended_mode), true, ParameterPresentation::WidgetScope::LOCAL,
+                    this->tf_editor_ptr, &out_open_external_tf_editor);
 
                 if (out_open_external_tf_editor) {
                     const auto func = [](WindowCollection::WindowConfiguration& wc) {
@@ -1161,9 +1165,11 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
         wc.ms_mode = WindowCollection::TimingModes::MS;
     }
 
-    ImGui::TextDisabled("Frame ID:");
-    ImGui::SameLine();
-    ImGui::Text("%u", this->core_instance->GetFrameID());
+    if (this->core_instance != nullptr) {
+        ImGui::TextDisabled("Frame ID:");
+        ImGui::SameLine();
+        ImGui::Text("%u", this->core_instance->GetFrameID());
+    }
 
     ImGui::SameLine(
         ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() - style.ItemSpacing.x - style.ItemInnerSpacing.x));
@@ -1253,8 +1259,9 @@ void GUIWindows::drawFontWindowCallback(WindowCollection::WindowConfiguration& w
 
     ImFont* font_current = ImGui::GetFont();
     if (ImGui::BeginCombo("Select available Font", font_current->GetDebugName())) {
-        for (int n = 0; n < (io.Fonts->Fonts.Size - 1); n++) { // ! n < size-1 for skipping last added font which is
-                                                               // exclusively used by configurator for the graph.
+        for (int n = this->graph_fonts_reserved; n < io.Fonts->Fonts.Size;
+             n++) { // first fonts until index this->graph_fonts_reserved are exclusively used by configurator for the
+                    // graph.
             if (ImGui::Selectable(io.Fonts->Fonts[n]->GetDebugName(), (io.Fonts->Fonts[n] == font_current)))
                 io.FontDefault = io.Fonts->Fonts[n];
         }
@@ -1559,14 +1566,12 @@ bool megamol::gui::GUIWindows::isHotkeyPressed(megamol::core::view::KeyCode keyc
 
 void megamol::gui::GUIWindows::shutdown(void) {
 
+    /// TODO Decide wheather to use core_instance or new frontend
     if (this->core_instance != nullptr) {
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Shutdown MegaMol instance.");
 #endif // GUI_VERBOSE
         this->core_instance->Shutdown();
-    } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 }
 

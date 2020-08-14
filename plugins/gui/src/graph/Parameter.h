@@ -112,7 +112,6 @@ private:
     std::string help;
     std::string description;
     std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
-    float height;
     unsigned int set_focus;
     bool guistate_dirty;
 
@@ -130,7 +129,6 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
     bool Present(Parameter& inout_param, WidgetScope scope);
-    float GetHeight(Parameter& inout_param);
 
     bool present_parameter(Parameter& inout_parameter, WidgetScope scope);
 
@@ -369,7 +367,6 @@ public:
     // Presentation ----------------------------------------------------
 
     inline bool PresentGUI(ParameterPresentation::WidgetScope scope) { return this->present.Present(*this, scope); }
-    inline float GetGUIHeight(void) { return this->present.GetHeight(*this); }
 
 private:
     // VARIABLES --------------------------------------------------------------

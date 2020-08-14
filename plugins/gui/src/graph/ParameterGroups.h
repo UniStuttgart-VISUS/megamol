@@ -16,6 +16,8 @@
 
 #include "mmcore/param/AbstractParamPresentation.h"
 
+#include "vislib/math/Ternary.h"
+
 
 namespace megamol {
 namespace gui {
@@ -32,7 +34,7 @@ public:
     ~ParameterGroups(void);
 
     bool PresentGUI(megamol::gui::ParamVector_t& inout_params, const std::string& in_module_fullname,
-        const std::string& in_search, bool in_extended, bool in_ignore_extended,
+        const std::string& in_search, vislib::math::Ternary in_extended, bool in_indent,
         megamol::gui::ParameterPresentation::WidgetScope in_scope,
         const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor);
 
