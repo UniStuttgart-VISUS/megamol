@@ -181,10 +181,7 @@ typedef struct _graph_state_ {
 /********** Global Unique ID **********/
 
 extern ImGuiID gui_generated_uid;
-
-namespace {
-static ImGuiID GenerateUniqueID(void) { return (++megamol::gui::gui_generated_uid); }
-} // namespace
+inline ImGuiID GenerateUniqueID(void) { return (++megamol::gui::gui_generated_uid); }
 
 
 /********** Class **********/

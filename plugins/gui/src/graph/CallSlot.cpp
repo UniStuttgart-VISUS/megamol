@@ -18,7 +18,7 @@ using namespace megamol::gui;
 
 
 megamol::gui::CallSlot::CallSlot(ImGuiID uid)
-    : uid(uid), name(), description(), compatible_call_idxs(), type(), parent_module(), connected_calls(), present() {}
+    : uid(uid), present(), name(), description(), compatible_call_idxs(), type(), parent_module(), connected_calls() {}
 
 
 megamol::gui::CallSlot::~CallSlot() {

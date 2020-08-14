@@ -389,7 +389,6 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVector_t& par
     float time = std::get<float>(param_time->GetValue());
     float speed = std::get<float>(param_speed->GetValue());
     std::string button_label;
-    ImTextureID button_tex;
 
     /// PLAY - PAUSE
     if (!play) {

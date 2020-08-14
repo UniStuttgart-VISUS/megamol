@@ -17,7 +17,6 @@
 #include "widgets/StringSearchWidget.h"
 
 #include "mmcore/CoreInstance.h"
-///#include "mmcore/MegaMolGraph.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
 
@@ -25,14 +24,6 @@
 #ifdef GUI_USE_GLFW
 #    include "GLFW/glfw3.h"
 #endif
-
-/// TEMP
-namespace megamol {
-namespace core {
-class MegaMolGraph;
-}
-} // namespace megamol
-///
 
 
 namespace megamol {
@@ -56,7 +47,7 @@ public:
      *
      * @return Hotkeys of configurator.
      */
-    megamol::gui::HotkeyArray_t& GetHotkeys(void) { return this->graph_state.hotkeys; }
+    inline megamol::gui::HotkeyArray_t& GetHotkeys(void) { return this->graph_state.hotkeys; }
 
     /**
      * Draw configurator window.

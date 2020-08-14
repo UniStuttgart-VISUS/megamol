@@ -234,7 +234,6 @@ bool megamol::gui::ParameterPresentation::KnobButton(
     float half_thickness = (thickness / 2.0f);
     ImU32 outline_color_front = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonHovered]);
     ImU32 outline_color_shadow = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBgHovered]);
-    ImVec2 outline_offset_shadow = ImVec2(half_thickness, half_thickness);
 
     // Shadow
     draw_list->AddCircle(widget_center, half_knob_size - thickness, outline_color_shadow, 24, thickness);
@@ -304,7 +303,6 @@ bool megamol::gui::ParameterPresentation::ParameterExtendedModeButton(bool& inou
 
     megamol::gui::ParameterPresentation::OptionButton("param_mode_button", "Mode");
     if (ImGui::BeginPopupContextItem("param_mode_button_context", 0)) { // 0 = left mouse button
-        bool changed = false;
         if (ImGui::MenuItem("Basic###param_mode_button_basic_mode", nullptr, !inout_extended_mode, true)) {
             inout_extended_mode = false;
             retval = true;

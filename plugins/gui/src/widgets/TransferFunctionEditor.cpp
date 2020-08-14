@@ -168,8 +168,8 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , last_range({0.0f, 1.0f})
     , range_overwrite(false)
     , mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
-    , textureSize(256)
     , textureInvalid(true)
+    , textureSize(256)
     , pendingChanges(true)
     , activeChannels{false, false, false, false}
     , currentNode(0)
@@ -551,7 +551,6 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
 
 void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_legend) {
 
-    ImGuiStyle& style = ImGui::GetStyle();
     ImVec2 pos = ImGui::GetCursorScreenPos();
 
     ImVec2 image_size = size;

@@ -22,6 +22,7 @@ megamol::gui::ModulePresentation::ModulePresentation(void)
     : group()
     , label_visible(true)
     , position(ImVec2(FLT_MAX, FLT_MAX))
+    , param_groups()
     , size(ImVec2(0.0f, 0.0f))
     , selected(false)
     , update(true)
@@ -29,7 +30,6 @@ megamol::gui::ModulePresentation::ModulePresentation(void)
     , param_child_height(0.0f)
     , set_screen_position(ImVec2(FLT_MAX, FLT_MAX))
     , set_selected_slot_position(false)
-    , param_groups()
     , tooltip()
     , rename_popup() {
 
@@ -434,10 +434,10 @@ void megamol::gui::ModulePresentation::Present(
                         /// Also check for hovered items because selectable list might fold out below child window
                         /// border
                         bool item_hovered = ImGui::IsAnyItemHovered();
-                        if ((ImGui::GetMousePos().x >= param_child_pos.x) &&
+                        if (((ImGui::GetMousePos().x >= param_child_pos.x) &&
                                 (ImGui::GetMousePos().x <= (param_child_pos.x + param_child_width)) &&
                                 (ImGui::GetMousePos().y >= param_child_pos.y) &&
-                                (ImGui::GetMousePos().y <= (param_child_pos.y + this->param_child_height)) ||
+                                (ImGui::GetMousePos().y <= (param_child_pos.y + this->param_child_height))) ||
                             item_hovered) {
                             param_popup_hovered = true;
                         }

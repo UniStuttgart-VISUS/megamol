@@ -331,15 +331,17 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         std::vector<megamol::core::Module*> module_ptr_list;
         std::map<std::string, std::string> view_instances;
         if (use_core_graph) {
-            // for (auto& module_inst : core_graph->ListModules()) {
-            //    std::string module_fullname = std::string(module_inst.modulePtr->FullName().PeekBuffer());
-            //    if (!graph_ptr->ModuleExists(module_fullname)) {
-            //        module_ptr_list.emplace_back(module_inst.modulePtr.get());
-            //        if (module_inst.isGraphEntryPoint) {
-            //            view_instances[module_fullname] = std::string(module_inst.modulePtr->Name().PeekBuffer());
-            //        }
-            //    }
-            //}
+            /*
+            for (auto& module_inst : core_graph->ListModules()) {
+                std::string module_fullname = std::string(module_inst.modulePtr->FullName().PeekBuffer());
+                if (!graph_ptr->ModuleExists(module_fullname)) {
+                    module_ptr_list.emplace_back(module_inst.modulePtr.get());
+                    if (module_inst.isGraphEntryPoint) {
+                        view_instances[module_fullname] = std::string(module_inst.modulePtr->Name().PeekBuffer());
+                    }
+                }
+            }
+            */
         } else if (use_core_instance) {
             const auto module_func = [&, this](megamol::core::Module* mod) {
                 std::string module_fullname = std::string(mod->FullName().PeekBuffer());
@@ -508,77 +510,77 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         }
         // Add/Create call connection data from core graph
         if (use_core_graph) {
-            // for (auto& call : core_graph->ListCalls()) {
-            //    auto call_ptr = call.first;
-            //    if (call_ptr == nullptr) continue;
+            /*
+            for (auto& call : core_graph->ListCalls()) {
+                auto call_ptr = call.first;
+                if (call_ptr == nullptr) continue;
 
-            //    bool add_new = true;
-            //    for (auto& call_ptr : graph_ptr->GetCalls()) {
-            //        std::string class_name = call_ptr->class_name;
-            //        std::string from, to;
-            //        bool valid_ptr = false;
-            //        auto caller_ptr = call_ptr->GetCallSlot(megamol::gui::CallSlotType::CALLER);
-            //        if (caller_ptr != nullptr) {
-            //            if (caller_ptr->GetParentModule() != nullptr) {
-            //                from = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->name;
-            //                valid_ptr = true;
-            //            }
-            //        }
-            //        if (!valid_ptr) {
-            //            megamol::core::utility::log::Log::DefaultLog.WriteError(
-            //                "[GUI] Pointer to caller slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            //                __LINE__);
-            //        }
-            //        valid_ptr = false;
-            //        auto callee_ptr = call_ptr->GetCallSlot(megamol::gui::CallSlotType::CALLEE);
-            //        if (callee_ptr != nullptr) {
-            //            if (callee_ptr->GetParentModule() != nullptr) {
-            //                to = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->name;
-            //                valid_ptr = true;
-            //            }
-            //        }
-            //        if (!valid_ptr) {
-            //            megamol::core::utility::log::Log::DefaultLog.WriteError(
-            //                "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            //                __LINE__);
-            //        }
-            //        if ((class_name == call.second.className) && (from == call.second.from) && (to == call.second.to))
-            //        {
-            //            add_new = false;
-            //        }
-            //    }
-            //    if (!add_new) continue;
+                bool add_new = true;
+                for (auto& call_ptr : graph_ptr->GetCalls()) {
+                    std::string class_name = call_ptr->class_name;
+                    std::string from, to;
+                    bool valid_ptr = false;
+                    auto caller_ptr = call_ptr->GetCallSlot(megamol::gui::CallSlotType::CALLER);
+                    if (caller_ptr != nullptr) {
+                        if (caller_ptr->GetParentModule() != nullptr) {
+                            from = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->name;
+                            valid_ptr = true;
+                        }
+                    }
+                    if (!valid_ptr) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] Pointer to caller slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                            __LINE__);
+                    }
+                    valid_ptr = false;
+                    auto callee_ptr = call_ptr->GetCallSlot(megamol::gui::CallSlotType::CALLEE);
+                    if (callee_ptr != nullptr) {
+                        if (callee_ptr->GetParentModule() != nullptr) {
+                            to = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->name;
+                            valid_ptr = true;
+                        }
+                    }
+                    if (!valid_ptr) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                            __LINE__);
+                    }
+                    if ((class_name == call.second.className) && (from == call.second.from) && (to == call.second.to)) {
+                        add_new = false;
+                    }
+                }
+                if (!add_new) continue;
 
-            //    auto call_class_name = call.second.className;
-            //    std::string call_caller_name;
-            //    std::string call_caller_parent_name;
-            //    if (!this->project_separate_name_and_namespace(
-            //            call.second.from, call_caller_parent_name, call_caller_name)) {
-            //        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            //            "[GUI] Core Project: Invalid call slot name '%s'. [%s, %s, line %d]\n",
-            //            call.second.from.c_str(), __FILE__, __FUNCTION__, __LINE__);
-            //    }
-            //    std::string call_callee_name;
-            //    std::string call_callee_parent_name;
-            //    if (!this->project_separate_name_and_namespace(
-            //            call.second.to, call_callee_parent_name, call_callee_name)) {
-            //        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            //            "[GUI] Core Project: Invalid call slot name '%s'. [%s, %s, line %d]\n",
-            //            call.second.to.c_str(),
-            //            __FILE__, __FUNCTION__, __LINE__);
-            //    }
-            //    // Full module name required
-            //    call_callee_parent_name = "::" + call_callee_parent_name;
-            //    call_caller_parent_name = "::" + call_caller_parent_name;
+                auto call_class_name = call.second.className;
+                std::string call_caller_name;
+                std::string call_caller_parent_name;
+                if (!this->project_separate_name_and_namespace(
+                        call.second.from, call_caller_parent_name, call_caller_name)) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] Core Project: Invalid call slot name '%s'. [%s, %s, line %d]\n",
+                        call.second.from.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                }
+                std::string call_callee_name;
+                std::string call_callee_parent_name;
+                if (!this->project_separate_name_and_namespace(
+                        call.second.to, call_callee_parent_name, call_callee_name)) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] Core Project: Invalid call slot name '%s'. [%s, %s, line %d]\n", call.second.to.c_str(),
+                        __FILE__, __FUNCTION__, __LINE__);
+                }
+                // Full module name required
+                call_callee_parent_name = "::" + call_callee_parent_name;
+                call_caller_parent_name = "::" + call_caller_parent_name;
 
-            //    CallData cd;
-            //    cd.call_class_name = call_class_name;
-            //    cd.caller_module_full_name = call_caller_parent_name;
-            //    cd.caller_module_callslot_name = call_caller_name;
-            //    cd.callee_module_full_name = call_callee_parent_name;
-            //    cd.callee_module_callslot_name = call_callee_name;
-            //    call_data.emplace_back(cd);
-            //}
+                CallData cd;
+                cd.call_class_name = call_class_name;
+                cd.caller_module_full_name = call_caller_parent_name;
+                cd.caller_module_callslot_name = call_caller_name;
+                cd.callee_module_full_name = call_callee_parent_name;
+                cd.callee_module_callslot_name = call_callee_name;
+                call_data.emplace_back(cd);
+            }
+            */
         }
         // Create calls
         for (auto& cd : call_data) {

@@ -37,12 +37,12 @@ bool megamol::gui::PickingBuffer::ProcessMouseMove(double x, double y) {
     this->cursor_x = x;
     this->cursor_y = y;
 
-    double dx_fbo = x - this->cursor_x;
-    double dy_fbo = y - this->cursor_y;
-    if (this->fbo != nullptr) {
-        dx_fbo = dx / this->fbo->getWidth();
-        dy_fbo = -dy / this->fbo->getHeight();
-    }
+    // double dx_fbo = x - this->cursor_x;
+    // double dy_fbo = y - this->cursor_y;
+    // if (this->fbo != nullptr) {
+    //     dx_fbo = dx / this->fbo->getWidth();
+    //     dy_fbo = -dy / this->fbo->getHeight();
+    // }
 
     if (this->active_interaction_obj.first) {
 
@@ -301,7 +301,6 @@ void megamol::gui::PickableTriangle::Draw(
     glm::vec4 color = glm::vec4(0.0f, 0.0f, 1.0, 1.0f);
 
     // Process pending manipulations
-    bool highlighted = false;
     for (auto& manip : pending_manipulations) {
         if (id == manip.obj_id) {
             if (manip.type == InteractionType::MOVE_ALONG_AXIS_SCREEN) {

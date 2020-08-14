@@ -18,7 +18,7 @@ using namespace megamol::gui;
 
 
 megamol::gui::Call::Call(ImGuiID uid)
-    : uid(uid), class_name(), description(), plugin_name(), functions(), connected_callslots(), present() {
+    : uid(uid), present(), class_name(), description(), plugin_name(), functions(), connected_callslots() {
 
     this->connected_callslots.emplace(CallSlotType::CALLER, nullptr);
     this->connected_callslots.emplace(CallSlotType::CALLEE, nullptr);
