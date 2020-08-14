@@ -257,7 +257,8 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
 
 
 bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid,
-    megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* core_graph, bool running_graph) {
+    megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* megamol_graph,
+    vislib::math::Ternary running_graph) {
 
     ImGuiID valid_graph_id = inout_graph_uid;
     if (valid_graph_id == GUI_INVALID_ID) {
@@ -277,7 +278,7 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_gra
         return false;
     }
 
-    if (this->AddUpdateProjectFromCore(valid_graph_id, core_instance, core_graph, false)) {
+    if (this->AddUpdateProjectFromCore(valid_graph_id, core_instance, megamol_graph, false)) {
         graph_ptr->SetRunning(running_graph);
         inout_graph_uid = valid_graph_id;
         return true;
@@ -289,7 +290,7 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_gra
 
 
 bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_uid,
-    megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* core_graph, bool use_stock) {
+    megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* megamol_graph, bool use_stock) {
 
     // Apply updates from core graph to gui graph
     //     Implemented synchronisations:
@@ -307,9 +308,9 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
             return false;
         }
 
-        const bool use_core_graph = (core_graph != nullptr);
+        const bool use_megamol_graph = (megamol_graph != nullptr);
         const bool use_core_instance = (core_instance != nullptr);
-        if (use_core_graph == use_core_instance) {
+        if (use_megamol_graph == use_core_instance) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Invalid references to the graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
@@ -330,9 +331,9 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         // and search for view instance/graph entry points
         std::vector<megamol::core::Module*> module_ptr_list;
         std::map<std::string, std::string> view_instances;
-        if (use_core_graph) {
-            /*
-            for (auto& module_inst : core_graph->ListModules()) {
+        if (use_megamol_graph) {
+            /* XXX
+            for (auto& module_inst : megamol_graph->ListModules()) {
                 std::string module_fullname = std::string(module_inst.modulePtr->FullName().PeekBuffer());
                 if (!graph_ptr->ModuleExists(module_fullname)) {
                     module_ptr_list.emplace_back(module_inst.modulePtr.get());
@@ -509,9 +510,9 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
             }
         }
         // Add/Create call connection data from core graph
-        if (use_core_graph) {
-            /*
-            for (auto& call : core_graph->ListCalls()) {
+        if (use_megamol_graph) {
+            /* XXX
+            for (auto& call : megamol_graph->ListCalls()) {
                 auto call_ptr = call.first;
                 if (call_ptr == nullptr) continue;
 
@@ -1078,7 +1079,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
 
 
 bool megamol::gui::GraphCollection::SaveProjectToFile(
-    ImGuiID in_graph_uid, const std::string& project_filename, bool core_graph) {
+    ImGuiID in_graph_uid, const std::string& project_filename, bool megamol_graph) {
 
     std::string projectstr;
     std::stringstream confInstances, confModules, confCalls, confParams;
@@ -1137,7 +1138,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
 
                     for (auto& parameter : module_ptr->parameters) {
 
-                        if (!core_graph) {
+                        if (!megamol_graph) {
                             // Writing state parameters
                             /// ! Needs filename set for graph because this is how the graph state is found
                             /// inside the JSON state
@@ -1165,7 +1166,8 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                         }
 
                         // Only write parameters with other values than the default - ignore button parameters
-                        if ((core_graph || parameter.DefaultValueMismatch()) && (parameter.type != Param_t::BUTTON)) {
+                        if ((megamol_graph || parameter.DefaultValueMismatch()) &&
+                            (parameter.type != Param_t::BUTTON)) {
                             // Encode to UTF-8 string
                             vislib::StringA valueString;
                             vislib::UTF8Encoder::Encode(

@@ -15,6 +15,8 @@
 #include "Group.h"
 #include "Module.h"
 
+#include "vislib/math/Ternary.h"
+
 #include <queue>
 #include <tuple>
 
@@ -93,8 +95,8 @@ public:
 
     const SyncQueuePtr_t& GetSyncQueue(void) { return this->sync_queue; }
 
-    inline bool IsRunning(void) const { return this->running; }
-    inline void SetRunning(bool p) { this->running = p; }
+    inline vislib::math::Ternary RunningState(void) const { return this->running_state; }
+    inline void SetRunning(vislib::math::Ternary p) { this->running_state = p; }
 
     // Presentation ----------------------------------------------------
 
@@ -114,7 +116,7 @@ private:
     bool dirty_flag;
     std::string filename;
     SyncQueuePtr_t sync_queue;
-    bool running;
+    vislib::math::Ternary running_state;
 
     // FUNCTIONS --------------------------------------------------------------
 
