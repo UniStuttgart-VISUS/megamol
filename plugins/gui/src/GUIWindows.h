@@ -126,9 +126,9 @@ public:
     /**
      * Synchronise changes between core graph and gui graph.
      *
-     * @param core_graph    If no core_graph is given, try to synchronise 'old' graph via core_instance.
+     * @param megamol_graph    If no megamol_graph is given, try to synchronise 'old' graph via core_instance.
      */
-    bool SynchronizeGraphs(megamol::core::MegaMolGraph* core_graph = nullptr);
+    bool SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph = nullptr);
 
 private:
     /** Available GUI styles. */

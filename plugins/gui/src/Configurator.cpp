@@ -118,8 +118,21 @@ bool megamol::gui::Configurator::Draw(
         this->graph_collection->LoadCallStock(core_instance);
         this->graph_collection->LoadModuleStock(core_instance);
 
+        // Loading separate gui graph for running graph of core instance,
+        // because initial gui graph is hidden. It should not be manipulated
+        // since there is no synchronization for the core instance graph (yet)
+        auto graph_count = this->graph_collection->GetGraphs().size();
+        if (graph_count == 1) {
+            auto graph_ptr = this->graph_collection->GetGraphs().front();
+            if (graph_ptr->RunningState().IsFalse()) {
+                this->graph_collection->LoadProjectFromCore(core_instance, nullptr);
+            }
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Invalid expected number of graphs: %i (should be 1). [%s, %s, line %d]\n", graph_count, __FILE__,
+                __FUNCTION__, __LINE__);
+        }
         // Load inital project
-        /// XXX Prevent loading of current core project twice when already loaded via saved configurator state
         /// this->graph_collection->LoadProjectFromCore(core_instance, nullptr);
         /// or: this->add_empty_project();
 

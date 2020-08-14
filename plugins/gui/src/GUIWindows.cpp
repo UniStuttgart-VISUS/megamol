@@ -611,7 +611,7 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
 }
 
 
-bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* core_graph) {
+bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph) {
 
     // 1) Load all known calls from core instance once ---------------------------
     if (!this->configurator.GetGraphCollection()->LoadCallStock(core_instance)) {
@@ -636,8 +636,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
             auto data = std::get<1>(queue->front());
             switch (change) {
             case (Graph::QueueChange::ADD_MODULE): {
-                if (core_graph != nullptr) {
-                    graph_sync_success &= core_graph->CreateModule(data.classname, data.id);
+                if (megamol_graph != nullptr) {
+                    graph_sync_success &= megamol_graph->CreateModule(data.classname, data.id);
                     // Create/Add new graph entry
                     if (graph_sync_success && data.graph_entry) {
                         /// XXX This code is copied from main3000.cpp ---------
@@ -664,7 +664,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
                                 megamol::core::view::view_consume_framebuffer_events(view, resources[i++]);
                                 megamol::core::view::view_poke_rendering(view, resources[i++]);
                             };
-                        core_graph->SetGraphEntryPoint(data.id, view_resource_requests, view_rendering_execution);
+                        megamol_graph->SetGraphEntryPoint(data.id, view_resource_requests, view_rendering_execution);
                         /// XXX -----------------------------------------------
                     }
                 }
@@ -680,8 +680,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
                 // }
             } break;
             case (Graph::QueueChange::DELETE_MODULE): {
-                if (core_graph != nullptr) {
-                    graph_sync_success &= core_graph->DeleteModule(data.id);
+                if (megamol_graph != nullptr) {
+                    graph_sync_success &= megamol_graph->DeleteModule(data.id);
                 }
                 // else if (this->core_instance) {
                 // megamol::core::Module* mod_ptr = nullptr;
@@ -695,8 +695,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
                 // }
             } break;
             case (Graph::QueueChange::ADD_CALL): {
-                if (core_graph != nullptr) {
-                    graph_sync_success &= core_graph->CreateCall(data.classname, data.caller, data.callee);
+                if (megamol_graph != nullptr) {
+                    graph_sync_success &= megamol_graph->CreateCall(data.classname, data.caller, data.callee);
                 }
                 // else if (this->core_instance) {
                 // auto call_desc =
@@ -709,8 +709,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
                 // }
             } break;
             case (Graph::QueueChange::DELETE_CALL): {
-                if (core_graph != nullptr) {
-                    graph_sync_success &= core_graph->DeleteCall(data.caller, data.callee);
+                if (megamol_graph != nullptr) {
+                    graph_sync_success &= megamol_graph->DeleteCall(data.caller, data.callee);
                 }
                 // else if (this->core_instance) {
                 // ...
@@ -731,10 +731,13 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
 
 
     // 3) Synchronize Core graph -> GUI graph ------------------------------------
-    /// vislib::math::Ternary::TRI_FALSE: Hide running graph of core instance
+    // Create new gui graph for running graph once and then check for updates
+    /// vislib::math::Ternary::TRI_TRUE:  Show running mogamol graph in configurator
+    /// vislib::math::Ternary::TRI_FALSE: Hide running graph of core instance in cofigurator,
+    ///     because this graph has no synchronization and should not be edited
     sync_success &= this->configurator.GetGraphCollection()->LoadUpdateProjectFromCore(this->graph_uid,
-        ((core_graph == nullptr) ? (this->core_instance) : (nullptr)), core_graph,
-        ((core_graph == nullptr) ? (vislib::math::Ternary::TRI_FALSE) : (vislib::math::Ternary::TRI_TRUE)));
+        ((megamol_graph == nullptr) ? (this->core_instance) : (nullptr)), megamol_graph,
+        ((megamol_graph == nullptr) ? (vislib::math::Ternary::TRI_FALSE) : (vislib::math::Ternary::TRI_TRUE)));
     if (!sync_success) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,

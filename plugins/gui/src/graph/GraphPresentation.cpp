@@ -98,7 +98,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
 
     try {
         /// Hide running graph of core instance
-        if (inout_graph.RunningState() == vislib::math::Ternary::TRI_FALSE) return;
+        if (inout_graph.RunningState().IsFalse()) return;
 
         if (ImGui::GetCurrentContext() == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -175,7 +175,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             tab_flags |= ImGuiTabItemFlags_UnsavedDocument;
         }
         std::string graph_label = "    " + inout_graph.name + "  ###graph" + std::to_string(graph_uid);
-        if (inout_graph.RunningState() == vislib::math::Ternary::TRI_TRUE) {
+        if (inout_graph.RunningState().IsTrue()) {
             graph_label = "    [RUNNING]  " + graph_label;
         }
         // Checking for closed tab below
@@ -517,7 +517,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         // Set delete flag if tab was closed
         bool popup_prevent_close_permanent = false;
         if (!open) {
-            if (inout_graph.RunningState() == vislib::math::Ternary::TRI_TRUE) {
+            if (inout_graph.RunningState().IsTrue()) {
                 popup_prevent_close_permanent = true;
             } else {
                 state.graph_delete = true;
