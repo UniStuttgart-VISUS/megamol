@@ -624,10 +624,12 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
 
     bool sync_success = true;
 
+    GraphPtr_t graph_ptr;
+    bool found_graph = this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr);
+
     // 2) Synchronize GUI graph -> Core graph ------------------------------------
     bool graph_sync_success = true;
-    GraphPtr_t graph_ptr;
-    if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
+    if (found_graph) {
         auto queue = graph_ptr->GetSyncQueue();
         while (!queue->empty()) {
             auto change = std::get<0>(queue->front());
@@ -729,8 +731,10 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
 
 
     // 3) Synchronize Core graph -> GUI graph ------------------------------------
-    sync_success &= this->configurator.GetGraphCollection()->LoadUpdateProjectFromCore(
-        this->graph_uid, ((core_graph == nullptr) ? (this->core_instance) : (nullptr)), core_graph, true);
+    /// vislib::math::Ternary::TRI_FALSE: Hide running graph of core instance
+    sync_success &= this->configurator.GetGraphCollection()->LoadUpdateProjectFromCore(this->graph_uid,
+        ((core_graph == nullptr) ? (this->core_instance) : (nullptr)), core_graph,
+        ((core_graph == nullptr) ? (vislib::math::Ternary::TRI_FALSE) : (vislib::math::Ternary::TRI_TRUE)));
     if (!sync_success) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
@@ -738,7 +742,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* co
     }
 
     // 4) Synchronize parameter values -------------------------------------------
-    if (graph_ptr != nullptr) {
+    if (found_graph) {
         bool param_sync_success = true;
         for (auto& module_ptr : graph_ptr->GetModules()) {
             for (auto& param : module_ptr->parameters) {

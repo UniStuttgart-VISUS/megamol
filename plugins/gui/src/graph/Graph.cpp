@@ -23,7 +23,7 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
     , groups()
     , dirty_flag(true)
     , sync_queue(nullptr)
-    , running(false) {
+    , running_state(vislib::math::Ternary::TRI_UNKNOWN) {
 
     this->sync_queue = std::make_shared<SyncQueue_t>();
     ASSERT(this->sync_queue != nullptr);

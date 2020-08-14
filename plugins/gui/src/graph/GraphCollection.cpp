@@ -257,7 +257,8 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
 
 
 bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid,
-    megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* core_graph, bool running_graph) {
+    megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* core_graph,
+    vislib::math::Ternary running_graph) {
 
     ImGuiID valid_graph_id = inout_graph_uid;
     if (valid_graph_id == GUI_INVALID_ID) {

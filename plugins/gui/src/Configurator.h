@@ -17,7 +17,6 @@
 #include "widgets/StringSearchWidget.h"
 
 #include "mmcore/CoreInstance.h"
-#include "mmcore/MegaMolGraph.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
 
