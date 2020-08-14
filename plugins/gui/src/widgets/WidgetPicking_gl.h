@@ -113,7 +113,7 @@ private:
 
     bool enabled;
 
-    std::shared_ptr<glowl::GLSLProgram> fbo_tex_shader;
+    std::shared_ptr<glowl::GLSLProgram> fbo_shader;
 
     // FUNCTIONS --------------------------------------------------------------
 

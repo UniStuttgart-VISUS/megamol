@@ -35,7 +35,7 @@ megamol::gui::PickingBuffer::PickingBuffer(void)
     , pending_manipulations()
     , fbo(nullptr)
     , enabled(false)
-    , fbo_tex_shader(nullptr) {}
+    , fbo_shader(nullptr) {}
 
 
 megamol::gui::PickingBuffer::~PickingBuffer(void) { this->fbo.reset(); }
@@ -172,7 +172,6 @@ bool megamol::gui::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
         this->fbo->resize(this->viewport_dim.x, this->viewport_dim.y);
     }
 
-    glEnable(GL_DEPTH_TEST);
     this->fbo->bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     GLint in[1] = {0};
@@ -190,6 +189,8 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
         return false;
     }
     this->enabled = false;
+    GUI_GL_CHECK_ERROR
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // Clear pending manipulations
     this->pending_manipulations.clear();
@@ -217,7 +218,7 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
     }
 
     // Draw fbo color buffer as texture because blending is required
-    if (this->fbo_tex_shader == nullptr) {
+    if (this->fbo_shader == nullptr) {
         std::string vertex_src = "#version 130 \n"
                                  "out vec2 uv_coord; \n"
                                  "void main(void) { \n"
@@ -239,18 +240,21 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
                                    "uniform sampler2D depth_tex; \n"
                                    "layout(location = 0) out vec4 outFragColor; \n"
                                    "void main(void) { \n"
-                                   "    gl_FragDepth = texture(depth_tex, uv_coord).g; \n"
-                                   "    outFragColor = texture(col_tex, uv_coord).rgba; \n"
+                                   "    vec4 color = texture(col_tex, uv_coord).rgba; \n"
+                                   "    if (color == vec4(0.0)) discard; \n"
+                                   "    float depth = texture(depth_tex, uv_coord).g; \n"
+                                   "    gl_FragDepth = 0.9998; \n" ////////// <================ !!!!!
+                                   "    outFragColor = color; \n"
                                    "} ";
 
-        if (!PickingBuffer::CreatShader(this->fbo_tex_shader, vertex_src, fragment_src)) return false;
+        if (!PickingBuffer::CreatShader(this->fbo_shader, vertex_src, fragment_src)) return false;
     }
 
-    glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_DEPTH_TEST);
 
-    this->fbo_tex_shader->use();
+    this->fbo_shader->use();
 
     glActiveTexture(GL_TEXTURE0);
     this->fbo->bindColorbuffer(0);
@@ -258,13 +262,14 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
     glActiveTexture(GL_TEXTURE1);
     this->fbo->bindColorbuffer(1);
 
-    this->fbo_tex_shader->setUniform("col_tex", 0);
-    this->fbo_tex_shader->setUniform("depth_tex", 1);
+    this->fbo_shader->setUniform("col_tex", 0);
+    this->fbo_shader->setUniform("depth_tex", 1);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     glUseProgram(0);
     glDisable(GL_BLEND);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     return true;
 }
@@ -309,7 +314,7 @@ void megamol::gui::PickableTriangle::Draw(
     glm::mat4 ortho = glm::ortho(0.0f, vp_dim.x, 0.0f, vp_dim.y, -1.0f, 1.0f);
     glm::vec3 dir0 = glm::vec3(this->pixel_direction.x, this->pixel_direction.y, -1.0f);
     glm::vec3 dir1 = glm::vec3(dir0.y / 2.0f, -dir0.x / 2.0f, 1.0f);
-    glm::vec3 dir2 = glm::vec3(-dir0.y / 2.0f, dir0.x / 2.0f, 1.0f);
+    glm::vec3 dir2 = glm::vec3(-dir0.y / 2.0f, dir0.x / 2.0f, 0.0f);
 
     glm::vec3 vp_vec = glm::vec3(vp_dim.x, vp_dim.y, 0.0f);
     dir0 = vp_vec / 2.0f + dir0;
@@ -337,21 +342,20 @@ void megamol::gui::PickableTriangle::Draw(
 
     // Create shader once
     if (this->shader == nullptr) {
-        std::string vertex_src =
-            "#version 130 \n"
-            "uniform mat4 ortho; \n"
-            "uniform vec3 dir0; \n"
-            "uniform vec3 dir1; \n"
-            "uniform vec3 dir2; \n"
-            "uniform vec4 color; \n"
-            "out vec4 frag_color; \n"
-            "void main(void) {  \n"
-            "    vec3 pos = dir0; \n"
-            "    frag_color = color; \n"
-            "    if (gl_VertexID == 1) { pos = dir1; } \n"       // frag_color = vec4(0.0, 0.0, 0.0, 1.0); } \n"
-            "    else if (gl_VertexID == 2)  { pos = dir2; } \n" // frag_color = vec4(0.0, 0.0, 0.0, 1.0); } \n"
-            "    gl_Position = ortho * vec4(pos.xyz, 1.0); \n"
-            "} ";
+        std::string vertex_src = "#version 130 \n"
+                                 "uniform mat4 ortho; \n"
+                                 "uniform vec3 dir0; \n"
+                                 "uniform vec3 dir1; \n"
+                                 "uniform vec3 dir2; \n"
+                                 "uniform vec4 color; \n"
+                                 "out vec4 frag_color; \n"
+                                 "void main(void) {  \n"
+                                 "    vec3 pos = dir0; \n"
+                                 "    frag_color = color; \n"
+                                 "    if (gl_VertexID == 1) { pos = dir1; } \n"
+                                 "    else if (gl_VertexID == 2)  { pos = dir2; } \n"
+                                 "    gl_Position = ortho * vec4(pos.xyz, 1.0); \n"
+                                 "} ";
 
         std::string fragment_src = "#version 130  \n"
                                    "#extension GL_ARB_explicit_attrib_location : require \n"
@@ -360,8 +364,7 @@ void megamol::gui::PickableTriangle::Draw(
                                    "layout(location = 0) out vec4 outFragColor; \n"
                                    "layout(location = 1) out vec2 outFragInfo; \n"
                                    "void main(void) { \n"
-                                   "    float depth  = gl_FragCoord.z; \n"
-                                   "    outFragColor = vec4(frag_color.rgb, 1.0-depth); \n"
+                                   "    outFragColor = frag_color; \n"
                                    "    outFragInfo  = vec2(float(id), depth); \n"
                                    "} ";
 
