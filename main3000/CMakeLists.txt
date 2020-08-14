@@ -5,6 +5,9 @@
 #
 option(BUILD_MAIN3000 "build main3000" ON)
 
+# Use different binary name when comiling with linux, e.g. mmmain3000
+set(MAIN3000_NAME main3000)
+
 if(BUILD_MAIN3000)
   project(${MAIN3000_NAME})
 

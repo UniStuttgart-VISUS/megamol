@@ -39,7 +39,7 @@ bool GUI_Service::init(const Config& config) {
     this->m_resource_state.opengl_context_ptr = nullptr;
 
     // init gui
-    if (config.imgui_api == GUI_Service::ImGuiAPI::OPEN_GL) {
+    if (config.imgui_api == GUI_Service::ImGuiAPI::OPEN_GL) { 
         if (this->m_gui.ptr == nullptr) {
             this->m_gui.ptr = std::make_shared<megamol::gui::GUI_Wrapper>();
 

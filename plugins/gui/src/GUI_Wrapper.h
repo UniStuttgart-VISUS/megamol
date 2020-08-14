@@ -29,7 +29,7 @@ public:
     typedef std::shared_ptr<megamol::gui::GUIWindows> GUIWindowsPtr_t;
     GUI_Wrapper(void);
     ~GUI_Wrapper(void);
-    inline const GUIWindowsPtr_t& Get(void) const { return this->m_gui; }
+    const GUIWindowsPtr_t& Get(void) { return this->m_gui; }
 
 private:
     GUIWindowsPtr_t m_gui;

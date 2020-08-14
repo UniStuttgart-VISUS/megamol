@@ -61,8 +61,10 @@ void view_consume_window_events(AbstractView& view, megamol::frontend::ModuleRes
 
 void view_consume_framebuffer_events(AbstractView& view, megamol::frontend::ModuleResource const& resource) {
     GET_RESOURCE(FramebufferEvents)//{
-		for (auto& e: events.size_events)
-			view.Resize(static_cast<unsigned int>(e.width), static_cast<unsigned int>(e.height));
+        /// XXX Permanent resize might be required for new views getting right size without new framebuffer event
+        view.Resize(static_cast<unsigned int>(events.previous_state.width), static_cast<unsigned int>(events.previous_state.height));
+		//for (auto& e: events.size_events)
+		//	view.Resize(static_cast<unsigned int>(e.width), static_cast<unsigned int>(e.height));
     }
 }
 
