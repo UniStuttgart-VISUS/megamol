@@ -537,23 +537,22 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
                 }
 
             } else if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
-                for (auto& config_item : header_item.value().items()) {
-                    std::string json_graph_id = config_item.key(); /// = graph filename
-
-                    // Load graph from file
-                    // ImGuiID graph_uid =
-                    auto graph_uid = this->graph_collection->LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
-
-                    // Overwrite graph states with the one found in this project
-                    /// TODO Comment for ignoring graph state stored in this project
-                    if (graph_uid != GUI_INVALID_ID) {
-                        GraphPtr_t graph_ptr;
-                        if (this->graph_collection->GetGraph(graph_uid, graph_ptr)) {
-                            // Let graph search for his configurator state
-                            graph_ptr->GUIStateFromJsonString(in_json_string);
-                        }
-                    }
-                }
+                /// DISABLED - todo: prevent multiple loading of same project file
+                // for (auto& config_item : header_item.value().items()) {
+                //    std::string json_graph_id = config_item.key(); /// = graph filename
+                //    // Load graph from file
+                //    // ImGuiID graph_uid =
+                //    auto graph_uid = this->graph_collection.LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
+                //    // Overwrite graph states with the one found in this project
+                //    /// TODO Comment for ignoring graph state stored in this project
+                //    if (graph_uid != GUI_INVALID_ID) {
+                //        GraphPtr_t graph_ptr;
+                //        if (this->graph_collection.GetGraph(graph_uid, graph_ptr)) {
+                //            // Let graph search for his configurator state
+                //            graph_ptr->GUIStateFromJsonString(in_json_string);
+                //        }
+                //    }
+                //}
             }
         }
 
