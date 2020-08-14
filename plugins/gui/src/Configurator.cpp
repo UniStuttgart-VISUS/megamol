@@ -680,10 +680,6 @@ void megamol::gui::Configurator::drawPopUps(void) {
             this->show_module_list_child = false;
         }
 
-        if (this->show_module_list_child && ImGui::IsMouseClicked(0) && !this->module_list_popup_hovered) {
-            this->show_module_list_child = false;
-        }
-
         ImGuiID selected_callslot_uid = selected_graph_ptr->present.GetSelectedCallSlot();
         ImGuiID selected_group_uid = selected_graph_ptr->present.GetSelectedGroup();
 
