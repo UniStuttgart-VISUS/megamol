@@ -26,7 +26,8 @@ megamol::gui::ModulePresentation::ModulePresentation(void)
     , size(ImVec2(0.0f, 0.0f))
     , selected(false)
     , update(true)
-    , show_params(false)
+    , param_child_show(false)
+    , param_child_height(0.0f)
     , set_screen_position(ImVec2(FLT_MAX, FLT_MAX))
     , set_selected_slot_position(false)
     , param_groups()
@@ -43,10 +44,10 @@ megamol::gui::ModulePresentation::~ModulePresentation(void) {}
 
 
 void megamol::gui::ModulePresentation::Present(
-    megamol::gui::PresentPhase phase, megamol::gui::Module& inout_module, megamol::gui::GraphItemsStateType& state) {
+    megamol::gui::PresentPhase phase, megamol::gui::Module& inout_module, megamol::gui::GraphItemsState_t& state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
@@ -194,11 +195,11 @@ void megamol::gui::ModulePresentation::Present(
                                 if (this->selected) {
                                     for (auto& module_uid : state.interact.modules_selected_uids) {
                                         state.interact.modules_add_group_uids.emplace_back(
-                                            UIDPairType(module_uid, GUI_INVALID_ID));
+                                            UIDPair_t(module_uid, GUI_INVALID_ID));
                                     }
                                 } else {
                                     state.interact.modules_add_group_uids.emplace_back(
-                                        UIDPairType(inout_module.uid, GUI_INVALID_ID));
+                                        UIDPair_t(inout_module.uid, GUI_INVALID_ID));
                                 }
                             }
                             if (!state.groups.empty()) {
@@ -210,11 +211,11 @@ void megamol::gui::ModulePresentation::Present(
                                     if (this->selected) {
                                         for (auto& module_uid : state.interact.modules_selected_uids) {
                                             state.interact.modules_add_group_uids.emplace_back(
-                                                UIDPairType(module_uid, group_pair.first));
+                                                UIDPair_t(module_uid, group_pair.first));
                                         }
                                     } else {
                                         state.interact.modules_add_group_uids.emplace_back(
-                                            UIDPairType(inout_module.uid, group_pair.first));
+                                            UIDPair_t(inout_module.uid, group_pair.first));
                                     }
                                 }
                             }
@@ -380,16 +381,16 @@ void megamol::gui::ModulePresentation::Present(
 
                             if (parameter_button) {
                                 param_child_pos = ImGui::GetCursorScreenPos();
-                                param_child_pos.y += ImGui::GetFrameHeight();
+                                param_child_pos.x += ImGui::GetFrameHeight();
                                 if (ImGui::ArrowButton("###parameter_toggle",
-                                        ((this->show_params) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+                                        ((this->param_child_show) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
                                     if (hovered) {
-                                        this->show_params = !this->show_params;
+                                        this->param_child_show = !this->param_child_show;
                                     }
                                 }
                                 ImGui::SetItemAllowOverlap();
                                 if (hovered) {
-                                    other_item_hovered = other_item_hovered || this->tooltip.ToolTip("Parameters");
+                                    other_item_hovered |= this->tooltip.ToolTip("Parameters");
                                 }
                             }
                         }
@@ -401,40 +402,51 @@ void megamol::gui::ModulePresentation::Present(
                         ImDrawCornerFlags_All, border);
 
                     // Parameter Child Window
-                    if (this->label_visible && this->show_params) {
+                    if (this->label_visible && this->param_child_show) {
                         ImGui::PushStyleColor(ImGuiCol_ChildBg, COLOR_MODULE_BACKGROUND);
-                        ImGui::SetCursorScreenPos(param_child_pos);
 
-                        float param_height = 0.0f;
-                        for (auto& parameter : inout_module.parameters) {
-                            param_height += parameter.GetGUIHeight();
+                        float avail_height = (state.canvas.position.y + state.canvas.size.y) - param_child_pos.y;
+                        this->param_child_height = std::min(state.canvas.size.y, this->param_child_height);
+                        if (this->param_child_height > avail_height) {
+                            param_child_pos.y -= (this->param_child_height - avail_height);
                         }
-                        param_height += style.ScrollbarSize;
-                        float avail_height =
-                            (state.canvas.position.y + state.canvas.size.y) - ImGui::GetCursorScreenPos().y;
-                        float child_height = std::min(avail_height, param_height);
-                        float child_width = 325.0f * state.canvas.zooming;
-                        auto child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar |
-                                           ImGuiWindowFlags_AlwaysHorizontalScrollbar | ImGuiWindowFlags_NoMove |
-                                           ImGuiWindowFlags_NavFlattened;
-                        ImGui::BeginChild(
-                            "module_parameter_child", ImVec2(child_width, child_height), true, child_flags);
 
-                        /// Close parameter window when clicked outside
-                        // if (mouse_clicked_anywhere && !ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
-                        //    this->show_params = false;
-                        //}
+                        ImGui::SetCursorScreenPos(param_child_pos);
+                        float param_child_width = 325.0f * state.canvas.zooming;
+                        auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove |
+                                           ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                                           ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NavFlattened;
+                        ImGui::BeginChild("module_parameter_child", ImVec2(param_child_width, this->param_child_height),
+                            true, child_flags);
+
+                        float cursor_pos_y = ImGui::GetCursorPosY();
 
                         // Draw parameters
                         /// Use extended mode currently set in parameter
-                        this->param_groups.PresentGUI(inout_module.parameters, inout_module.FullName(), "", false, true,
+                        this->param_groups.PresentGUI(inout_module.parameters, inout_module.FullName(), "",
+                            vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN), false,
                             ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr);
 
+                        this->param_child_height = ImGui::GetCursorPosY() - cursor_pos_y + ImGui::GetFrameHeight();
                         ImGui::EndChild();
-
                         ImGui::PopStyleColor();
-                        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
-                            this->show_params = false;
+
+                        bool param_popup_hovered = false;
+                        /// Also check for hovered items because selectable list might fold out below child window
+                        /// border
+                        bool item_hovered = ImGui::IsAnyItemHovered();
+                        if ((ImGui::GetMousePos().x >= param_child_pos.x) &&
+                                (ImGui::GetMousePos().x <= (param_child_pos.x + param_child_width)) &&
+                                (ImGui::GetMousePos().y >= param_child_pos.y) &&
+                                (ImGui::GetMousePos().y <= (param_child_pos.y + this->param_child_height)) ||
+                            item_hovered) {
+                            param_popup_hovered = true;
+                        }
+
+                        // Close child window on 'Escape' and 'Mouse Click' outside param window
+                        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)) ||
+                            (ImGui::IsMouseClicked(0) && !param_popup_hovered)) {
+                            this->param_child_show = false;
                         }
                     }
                 }
@@ -451,17 +463,18 @@ void megamol::gui::ModulePresentation::Present(
         }
 
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 }
 
 
-ImVec2 megamol::gui::ModulePresentation::GetDefaultModulePosition(const GraphCanvasType& canvas) {
+ImVec2 megamol::gui::ModulePresentation::GetDefaultModulePosition(const GraphCanvas_t& canvas) {
 
     return ((ImVec2((2.0f * GUI_GRAPH_BORDER), (2.0f * GUI_GRAPH_BORDER)) + // ImGui::GetTextLineHeightWithSpacing()) +
                 (canvas.position - canvas.offset)) /
@@ -469,7 +482,7 @@ ImVec2 megamol::gui::ModulePresentation::GetDefaultModulePosition(const GraphCan
 }
 
 
-void megamol::gui::ModulePresentation::Update(megamol::gui::Module& inout_module, const GraphCanvasType& in_canvas) {
+void megamol::gui::ModulePresentation::Update(megamol::gui::Module& inout_module, const GraphCanvas_t& in_canvas) {
 
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -534,8 +547,8 @@ megamol::gui::Module::Module(ImGuiID uid)
     , callslots()
     , present() {
 
-    this->callslots.emplace(megamol::gui::CallSlotType::CALLER, std::vector<CallSlotPtrType>());
-    this->callslots.emplace(megamol::gui::CallSlotType::CALLEE, std::vector<CallSlotPtrType>());
+    this->callslots.emplace(megamol::gui::CallSlotType::CALLER, std::vector<CallSlotPtr_t>());
+    this->callslots.emplace(megamol::gui::CallSlotType::CALLEE, std::vector<CallSlotPtr_t>());
 }
 
 
@@ -546,17 +559,17 @@ megamol::gui::Module::~Module() {
 }
 
 
-bool megamol::gui::Module::AddCallSlot(megamol::gui::CallSlotPtrType callslot) {
+bool megamol::gui::Module::AddCallSlot(megamol::gui::CallSlotPtr_t callslot) {
 
     if (callslot == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Pointer to given call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     auto type = callslot->type;
     for (auto& callslot_ptr : this->callslots[type]) {
         if (callslot_ptr == callslot) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Pointer to call slot already registered in modules call slot list. [%s, %s, line %d]\n", __FILE__,
                 __FUNCTION__, __LINE__);
             return false;
@@ -577,7 +590,7 @@ bool megamol::gui::Module::DeleteCallSlots(void) {
                 (*callslot_iter)->DisconnectParentModule();
 
                 if ((*callslot_iter).use_count() > 1) {
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Unclean deletion. Found %i references pointing to call slot. [%s, %s, line %d]\n",
                         (*callslot_iter).use_count(), __FILE__, __FUNCTION__, __LINE__);
                 }
@@ -587,18 +600,19 @@ bool megamol::gui::Module::DeleteCallSlots(void) {
             callslots_map.second.clear();
         }
     } catch (std::exception e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return true;
 }
 
 
-bool megamol::gui::Module::GetCallSlot(ImGuiID callslot_uid, megamol::gui::CallSlotPtrType& out_callslot_ptr) {
+bool megamol::gui::Module::GetCallSlot(ImGuiID callslot_uid, megamol::gui::CallSlotPtr_t& out_callslot_ptr) {
 
     if (callslot_uid != GUI_INVALID_ID) {
         for (auto& callslot_map : this->GetCallSlots()) {

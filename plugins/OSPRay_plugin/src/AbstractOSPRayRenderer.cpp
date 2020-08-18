@@ -17,9 +17,9 @@
 #include "ospcommon/box.h"
 #include "ospray/ospray.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/Path.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 
 
 #include <stdio.h>
@@ -29,7 +29,7 @@ namespace megamol {
 namespace ospray {
 
 void ospErrorCallback(OSPError err, const char* details) {
-    vislib::sys::Log::DefaultLog.WriteError("OSPRay Error %u: %s", err, details);
+    megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRay Error %u: %s", err, details);
 }
 
 AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
@@ -918,7 +918,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 } else if (element.ospStructures.second == structureTypeEnum::VOLUME) {
                     baseStructures[entry.first].push_back(reinterpret_cast<OSPVolume>(structure));
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteError("OSPRAY_API_STRUCTURE: Something went wrong.");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRAY_API_STRUCTURE: Something went wrong.");
                 }
             }
             // General geometry execution
@@ -1138,7 +1138,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                             ospCommit(indexData);
                             ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()), "index", indexData);
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteError("OSPRay cannot render meshes without index array");
+                            megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRay cannot render meshes without index array");
                             returnValue = false;
                         }
                         if (element.mesh_textures != nullptr) {
@@ -1178,7 +1178,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
             case geometryTypeEnum::STREAMLINES:
                 if (element.vertexData == nullptr && element.mesh == nullptr) {
                     // returnValue = false;
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[AbstractOSPRayRenderer]Streamline geometry detected but no data found.");
                     break;
                 }
@@ -1219,7 +1219,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                             ospCommit(indexData);
                             ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()), "index", indexData);
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteError("OSPRay cannot render meshes without index array");
+                            megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRay cannot render meshes without index array");
                             returnValue = false;
                         }
 

@@ -339,6 +339,8 @@ protected:
     /** The angle rotate step in degrees */
     param::ParamSlot viewKeyAngleStepSlot;
 
+    param::ParamSlot viewKeyFixToWorldUpSlot;
+
     /** sensitivity for mouse rotation in WASD mode */
     param::ParamSlot mouseSensitivitySlot;
 

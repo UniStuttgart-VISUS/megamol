@@ -20,10 +20,6 @@
 #include "vislib/Stack.h"
 #include "vislib/String.h"
 
-#ifdef WIN32
-#define XML_UNICODE
-#define XML_UNICODE_WCHAR_T
-#endif
 #define XML_STATIC // We're linking expat as static library
 #include <expat.h>
 

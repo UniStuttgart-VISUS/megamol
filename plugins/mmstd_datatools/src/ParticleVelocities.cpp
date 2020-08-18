@@ -9,7 +9,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include <nanoflann.hpp>
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/math/ShallowPoint.h"
 #include <cstdint>
@@ -129,12 +129,12 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
         // load previous Frame
         in->SetFrameID(time - 1, true);
         //if (!(*in)(1)) {
-        //    vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get previous frame extents (%u)", time - 1);
+        //    megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleVelocities: could not get previous frame extents (%u)", time - 1);
         //    return false;
         //}
         do {
             if (!(*in)(0)) {
-                vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get previous frame (%u)", time - 1);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleVelocities: could not get previous frame (%u)", time - 1);
                 return false;
             }
         } while (in->FrameID() != time - 1); // did we get correct frame?
@@ -159,11 +159,11 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
                         stride = 16;
                         break;
                     case MultiParticleDataCall::Particles::VertexDataType::VERTDATA_SHORT_XYZ:
-                        vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: cannot process short position vertices");
+                        megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleVelocities: cannot process short position vertices");
                         this->cachedVertexDataType[i] = MultiParticleDataCall::Particles::VertexDataType::VERTDATA_NONE;
                         continue;
                     default:
-                        vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: cannot process unknown position type");
+                        megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleVelocities: cannot process unknown position type");
                         this->cachedVertexDataType[i] = MultiParticleDataCall::Particles::VertexDataType::VERTDATA_NONE;
                         continue;
                 }
@@ -183,16 +183,16 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
         in->SetFrameID(time, true);
         do {
             if (!(*in)(1)) {
-                vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame extents (%u)", time - 1);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame extents (%u)", time - 1);
                 return false;
             }
             if (!(*in)(0)) {
-                vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame (%u)", time - 1);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame (%u)", time - 1);
                 return false;
             }
         } while (in->FrameID() != time); // did we get correct frame?
         if (cachedNumLists != in->GetParticleListCount()) {
-            vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: inconsistent number of lists"
+            megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleVelocities: inconsistent number of lists"
                 "between frames %u (%u) and %u (%u)", time - 1, cachedNumLists, time, in->GetParticleListCount());
             return false;
         }
@@ -209,13 +209,13 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
         vislib::math::Vector<float, 3> diff;
         for (auto i = 0; i < cachedNumLists; i++) {
             if (cachedVertexDataType[i] != in->AccessParticles(i).GetVertexDataType()) {
-                vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: inconsistent vertex data type"
+                megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleVelocities: inconsistent vertex data type"
                     "between frames %u (%u) and %u (%u)in list %u", time - 1, cachedVertexDataType[i],
                     time, in->AccessParticles(i).GetVertexDataType(), i);
                 return false;
             }
             if (cachedListLength[i] != in->AccessParticles(i).GetCount()) {
-                vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: inconsistent list length"
+                megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleVelocities: inconsistent list length"
                     "between frames %u (%u) and %u (%u)in list %u", time - 1, cachedListLength[i],
                     time, in->AccessParticles(i).GetCount(), i);
                 return false;
@@ -273,13 +273,13 @@ bool datatools::ParticleVelocities::getExtentCallback(megamol::core::Call& c) {
     //if (!this->assertData(inMpdc, outDpdc)) return false;
     inMpdc->SetFrameID(out->FrameID(), true);
     if (!(*inMpdc)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame extents (%u)", time - 1);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame extents (%u)", time - 1);
         return false;
     }
     out->AccessBoundingBoxes().SetObjectSpaceBBox(inMpdc->GetBoundingBoxes().ObjectSpaceBBox());
     out->AccessBoundingBoxes().SetObjectSpaceClipBox(inMpdc->GetBoundingBoxes().ObjectSpaceClipBox());
     if (inMpdc->FrameCount() < 2) {
-        vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: you cannot use this module for single-timestep data!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleVelocities: you cannot use this module for single-timestep data!");
         return false;
     }
     out->SetFrameCount(inMpdc->FrameCount() - 1);

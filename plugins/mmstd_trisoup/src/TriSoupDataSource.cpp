@@ -8,8 +8,8 @@
 #include "stdafx.h"
 #include "TriSoupDataSource.h"
 #include "vislib/assert.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Vector.h"
 
@@ -39,7 +39,7 @@ TriSoupDataSource::~TriSoupDataSource(void) {
 bool TriSoupDataSource::load(const vislib::TString& filename) {
     using vislib::sys::MemmappedFile;
     using vislib::sys::File;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
 #define FILE_READ(A, B) if ((B) != file.Read((A), (B))) {\
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,\

@@ -33,6 +33,8 @@ DistantLight::DistantLight(void)
     this->MakeSlotAvailable(&this->dl_direction);
     this->MakeSlotAvailable(&this->dl_angularDiameter);
     this->MakeSlotAvailable(&this->dl_eye_direction);
+
+    this->dl_direction.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Rotation3D_Direction);
 }
 
 /*

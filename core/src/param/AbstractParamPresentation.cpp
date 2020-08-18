@@ -13,21 +13,21 @@ using namespace megamol::core::param;
 
 const std::string AbstractParamPresentation::GetTypeName(ParamType type) {
     switch (type) {
-    case(BOOL): return "BoolParam";
-    case(BUTTON): return "ButtonParam";
-    case(COLOR): return "ColorParam";
-    case(ENUM): return "EnumParam";
-    case(FILEPATH): return "FilePathParam";
-    case(FLEXENUM): return "FlexEnumParam";
-    case(FLOAT): return "FloatParam";
-    case(INT): return "IntParam";
-    case(STRING): return "StringParam";
-    case(TERNARY): return "TernaryParam";
-    case(TRANSFERFUNCTION): return "TransferFunctionParam";
-    case(VECTOR2F): return "Vector2fParam";
-    case(VECTOR3F): return "Vector3fParam";
-    case(VECTOR4F): return "Vector4fParam";
-    case(GROUP_ANIMATION): return "AnimationGroup";
+    case(ParamType::BOOL): return "BoolParam";
+    case(ParamType::BUTTON): return "ButtonParam";
+    case(ParamType::COLOR): return "ColorParam";
+    case(ParamType::ENUM): return "EnumParam";
+    case(ParamType::FILEPATH): return "FilePathParam";
+    case(ParamType::FLEXENUM): return "FlexEnumParam";
+    case(ParamType::FLOAT): return "FloatParam";
+    case(ParamType::INT): return "IntParam";
+    case(ParamType::STRING): return "StringParam";
+    case(ParamType::TERNARY): return "TernaryParam";
+    case(ParamType::TRANSFERFUNCTION): return "TransferFunctionParam";
+    case(ParamType::VECTOR2F): return "Vector2fParam";
+    case(ParamType::VECTOR3F): return "Vector3fParam";
+    case(ParamType::VECTOR4F): return "Vector4fParam";
+    case(ParamType::GROUP_ANIMATION): return "AnimationGroup";
     default: return "UNKNOWN";
     }
 }
@@ -49,6 +49,8 @@ AbstractParamPresentation::AbstractParamPresentation(void)
     this->presentation_name_map.emplace(Presentation::TransferFunction, "Transfer Function");
     this->presentation_name_map.emplace(Presentation::Knob, "Knob");
     this->presentation_name_map.emplace(Presentation::PinValueToMouse, "Pin Value To Mouse");
+    this->presentation_name_map.emplace(Presentation::Rotation3D_Direction, "3D Rotation - Direction");
+    this->presentation_name_map.emplace(Presentation::Rotation3D_Axes, "3D Rotation - Axes");
     this->presentation_name_map.emplace(Presentation::Group_Animation, "Animation");
 }
 
@@ -111,11 +113,11 @@ bool AbstractParamPresentation::InitPresentation(AbstractParamPresentation::Para
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::VECTOR3F): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse;
+            this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse | Presentation::Rotation3D_Direction;
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::VECTOR4F): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse | Presentation::Color;
+            this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse | Presentation::Color | Presentation::Rotation3D_Axes;
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::GROUP_ANIMATION): {
@@ -127,7 +129,7 @@ bool AbstractParamPresentation::InitPresentation(AbstractParamPresentation::Para
         }
         return true;
     }
-    vislib::sys::Log::DefaultLog.WriteWarn(
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
         "Parameter presentation should only be initilised once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
@@ -138,7 +140,7 @@ void AbstractParamPresentation::SetGUIPresentation(AbstractParamPresentation::Pr
         this->presentation = present;
     }
     else {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Incompatible parameter presentation. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 }
@@ -158,7 +160,7 @@ bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::strin
         nlohmann::json json;
         json = nlohmann::json::parse(in_json_string);
         if (!json.is_object()) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
@@ -180,7 +182,7 @@ bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::strin
                             gui_state.at("gui_visibility").get_to(gui_visibility);
                         }
                         else {
-                            vislib::sys::Log::DefaultLog.WriteError(
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'gui_visibility' as boolean. [%s, %s, line %d]\n", __FILE__,
                                 __FUNCTION__, __LINE__);
                             valid = false;
@@ -192,7 +194,7 @@ bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::strin
                             gui_state.at("gui_read-only").get_to(gui_read_only);
                         }
                         else {
-                            vislib::sys::Log::DefaultLog.WriteError(
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'gui_read-only' as boolean. [%s, %s, line %d]\n", __FILE__,
                                 __FUNCTION__, __LINE__);
                             valid = false;
@@ -205,7 +207,7 @@ bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::strin
                                 static_cast<Presentation>(gui_state.at("gui_presentation_mode").get<int>());
                         }
                         else {
-                            vislib::sys::Log::DefaultLog.WriteError(
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                 "JSON state: Failed to read 'gui_presentation_mode' as integer. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                             valid = false;
@@ -224,37 +226,37 @@ bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::strin
 
         if (retval) {
 #ifdef GUI_VERBOSE
-            vislib::sys::Log::DefaultLog.WriteInfo("[AbstractParamPresentation] Read parameter state from JSON string.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[AbstractParamPresentation] Read parameter state from JSON string.");
 #endif // GUI_VERBOSE
         }
         else {
-            /// vislib::sys::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON for '%s' [%s, %s, line
+            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON for '%s' [%s, %s, line
             /// %d]\n", param_fullname.c_str(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
     }
     catch (nlohmann::json::type_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (nlohmann::json::invalid_iterator& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (nlohmann::json::out_of_range& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (nlohmann::json::other_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -276,32 +278,32 @@ bool AbstractParamPresentation::ParameterGUIStateToJSON(nlohmann::json& inout_js
             static_cast<int>(this->GetGUIPresentation());
 
 #ifdef GUI_VERBOSE
-        vislib::sys::Log::DefaultLog.WriteInfo("[AbstractParamPresentation] Wrote parameter state to JSON.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[AbstractParamPresentation] Wrote parameter state to JSON.");
 #endif // GUI_VERBOSE
 
     }
     catch (nlohmann::json::type_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (nlohmann::json::invalid_iterator& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (nlohmann::json::out_of_range& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (nlohmann::json::other_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }

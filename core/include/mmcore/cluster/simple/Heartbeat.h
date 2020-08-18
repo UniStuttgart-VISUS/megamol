@@ -20,9 +20,9 @@
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/Event.h"
 #include "vislib/RawStorage.h"
-#include "vislib/sys/RunnableThread.h"
+#include "mmcore/utility/sys/RunnableThread.h"
 #include "vislib/SingleLinkedList.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/sys/Thread.h"
 
 //#include "mmcore/view/AbstractTileView.h"
 //#include "vislib/AbstractSimpleMessage.h"

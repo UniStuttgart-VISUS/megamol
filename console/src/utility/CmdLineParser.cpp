@@ -8,7 +8,7 @@
 #include "CmdLineParser.h"
 #include "vislib/assert.h"
 #include "vislib/CharTraits.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/StringConverter.h"
 #include "AboutInfo.h"
 #include "utility/HotFixes.h"
@@ -341,7 +341,7 @@ megamol::console::utility::CmdLineParser::WindowPositions(void) const {
             vislib::TString val = arg->GetValueString();
 
             if (id.IsEmpty() || val.IsEmpty()) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                     "Parser option \"--winpos\" with empty \"id\" or \"value\" ignored");
             } else {
                 retval.Append(id);
@@ -411,21 +411,21 @@ unsigned int megamol::console::utility::CmdLineParser::parseAsLogLevel(
     try {
         vislib::TString str(arg->GetValueString());
         if (str.Equals(_T("error"), false)) {
-            return vislib::sys::Log::LEVEL_ERROR;
+            return megamol::core::utility::log::Log::LEVEL_ERROR;
         } else if (str.Equals(_T("warn"), false)) {
-            return vislib::sys::Log::LEVEL_WARN;
+            return megamol::core::utility::log::Log::LEVEL_WARN;
         } else if (str.Equals(_T("warning"), false)) {
-            return vislib::sys::Log::LEVEL_WARN;
+            return megamol::core::utility::log::Log::LEVEL_WARN;
         } else if (str.Equals(_T("info"), false)) {
-            return vislib::sys::Log::LEVEL_INFO;
+            return megamol::core::utility::log::Log::LEVEL_INFO;
         } else if (str.Equals(_T("none"), false)) {
-            return vislib::sys::Log::LEVEL_NONE;
+            return megamol::core::utility::log::Log::LEVEL_NONE;
         } else if (str.Equals(_T("null"), false)) {
-            return vislib::sys::Log::LEVEL_NONE;
+            return megamol::core::utility::log::Log::LEVEL_NONE;
         } else if (str.Equals(_T("zero"), false)) {
-            return vislib::sys::Log::LEVEL_NONE;
+            return megamol::core::utility::log::Log::LEVEL_NONE;
         } else if (str.Equals(_T("all"), false)) {
-            return vislib::sys::Log::LEVEL_ALL;
+            return megamol::core::utility::log::Log::LEVEL_ALL;
         }
     } catch(...) {
     }

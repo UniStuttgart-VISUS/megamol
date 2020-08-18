@@ -25,7 +25,7 @@ bool megamol::stdplugin::datatools::ParticleIdentitySort::manipulateData(
         auto& p = outData.AccessParticles(i);
 
         if (p.GetIDDataType() == core::moldyn::SimpleSphericalParticles::IDDATA_NONE) {
-            vislib::sys::Log::DefaultLog.WriteWarn("ParticleIdentitySort: Particlelist %d has no indentity array\n", i);
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("ParticleIdentitySort: Particlelist %d has no indentity array\n", i);
             continue;
         }
 

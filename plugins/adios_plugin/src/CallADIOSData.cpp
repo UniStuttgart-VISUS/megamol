@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "adios_plugin/CallADIOSData.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <algorithm>
 
 namespace megamol {
@@ -51,11 +51,11 @@ bool CallADIOSData::inquire(const std::string &varname) {
         if (std::find(this->availableVars.begin(), this->availableVars.end(), varname) != this->availableVars.end()) {
             this->inqVars.push_back(varname);
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("[CallADIOSData] Variable %s is not in available varialbes", varname.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[CallADIOSData] Variable %s is not in available varialbes", varname.c_str());
             return false;
         }
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("[CallADIOSData] No available Vars. Read header first.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[CallADIOSData] No available Vars. Read header first.");
         return false;
     }
     // erase non-unique occurrences

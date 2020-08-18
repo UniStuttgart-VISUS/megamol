@@ -200,7 +200,8 @@ TransferFunctionEditor::TransferFunctionEditor(void)
 void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool connected_parameter_mode) {
 
     if (connected_parameter_mode && (this->connected_parameter_ptr == nullptr)) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Missing active parameter to edit");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[TransferFunctionEditor] Missing active parameter to edit");
         return;
     }
 
@@ -210,7 +211,8 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
         tfs, this->nodes, this->mode, tex_size, new_range);
 
     if (!ok) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Could not parse transfer function");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[TransferFunctionEditor] Could not parse transfer function");
         return;
     }
 
@@ -248,14 +250,14 @@ void TransferFunctionEditor::SetConnectedParameter(Parameter* param_ptr, const s
     this->connected_parameter_ptr = nullptr;
     this->connected_parameter_name = "";
     if (param_ptr != nullptr) {
-        if (param_ptr->type == ParamType::TRANSFERFUNCTION) {
+        if (param_ptr->type == Param_t::TRANSFERFUNCTION) {
             if (this->connected_parameter_ptr != param_ptr) {
                 this->connected_parameter_ptr = param_ptr;
                 this->connected_parameter_name = param_full_name;
                 this->SetTransferFunction(std::get<std::string>(this->connected_parameter_ptr->GetValue()), true);
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Wrong parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
@@ -287,11 +289,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
 
     const float tfw_item_width = ImGui::GetContentRegionAvail().x * 0.75f;
     ImGui::PushItemWidth(tfw_item_width); // set general proportional item width
-
     ImVec2 image_size = ImVec2(tfw_item_width, 30.0f);
-    if (!this->showOptions) {
-        if (image_size.x < 300.0f) image_size.x = 300.0f;
-    }
 
     ImGui::BeginGroup();
     this->drawTextureBox(image_size, this->flip_legend);
@@ -307,15 +305,6 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
     if (this->showOptions) {
         ImGui::Separator();
 
-        /*
-        if (connected_parameter_mode) {
-            ImGui::TextUnformatted("Parameter:");
-            ImGui::TextColored(GUI_COLOR_TEXT_WARN,
-                ((this->connected_parameter_ptr == nullptr) ? ("-")
-                                                            : (this->connected_parameter_ptr->GetName().c_str())));
-        }
-        */
-
         // Legend alignment ---------------------------------------------------
         ImGui::BeginGroup();
         if (ImGui::RadioButton("Vertical", this->flip_legend)) {
@@ -327,7 +316,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             this->flip_legend = false;
             this->textureInvalid = true;
         }
-        ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x);
+        ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x + ImGui::GetScrollX());
         ImGui::TextUnformatted("Legend Alignment");
         ImGui::EndGroup();
 
@@ -542,7 +531,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                 if (this->connected_parameter_ptr != nullptr) {
                     std::string tf;
                     if (this->GetTransferFunction(tf)) {
-                        if (this->connected_parameter_ptr->type == ParamType::TRANSFERFUNCTION) {
+                        if (this->connected_parameter_ptr->type == Param_t::TRANSFERFUNCTION) {
                             this->connected_parameter_ptr->SetValue(tf);
                             this->connected_parameter_ptr->present.SetTransferFunctionEditorHash(
                                 this->connected_parameter_ptr->GetTransferFunctionHash());
@@ -627,7 +616,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     float width_delta = 0.0f;
     float height_delta = 0.0f;
     if (flip_legend) {
-        init_pos.x += width;
+        init_pos.x += width + item_x_spacing / 2.0f;
         init_pos.y -= (height + item_y_spacing);
         height_delta = height / static_cast<float>(scale_count - 1);
     } else {
@@ -691,11 +680,11 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
         // Middle Values
         float mid_value_width = (width - min_item_width - max_item_width - (2.0f * item_x_spacing));
         if ((mid_value_width > mid_item_width)) {
-            ImGui::SameLine((width / 2.0f) - (mid_item_width / 2.0f));
+            ImGui::SameLine((width / 2.0f) - (mid_item_width / 2.0f) + ImGui::GetScrollX());
             ImGui::TextUnformatted(mid_label_str.c_str());
         }
         // Max Value
-        ImGui::SameLine(width - max_item_width);
+        ImGui::SameLine(width - max_item_width + ImGui::GetScrollX());
         ImGui::TextUnformatted(max_label_str.c_str());
     }
 
