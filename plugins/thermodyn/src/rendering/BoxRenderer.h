@@ -79,10 +79,13 @@ private:
     std::pair<std::vector<float>, std::vector<float>> drawData;
     static void prepareData(std::vector<BoxDataCall::box_entry_t> const& indata,
         std::pair<std::vector<float>, std::vector<float>>& outdata) {
+
         auto& pos = outdata.first;
         pos.reserve(indata.size() * 72);
         auto& col = outdata.second;
         col.reserve(indata.size() * 96);
+        pos.clear();
+        col.clear();
 
         for (auto const& e : indata) {
             auto const& box = e.box_;
